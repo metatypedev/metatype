@@ -1,0 +1,401 @@
+import Dataloader from "https://cdn.skypack.dev/dataloader@2.0.0?dts";
+import { parse } from "https://cdn.skypack.dev/graphql@16.2.0?dts";
+import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
+import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
+import { b, ensure, JSONValue, mapo, Maybe } from "./utils.ts";
+import { findOperation, FragmentDefs } from "./graphql.ts";
+import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
+import type { TypeNode } from "./typegraph.ts";
+import * as log from "std/log/mod.ts";
+import { sha1 } from "./crypto.ts";
+import type {
+  Batcher,
+  Resolver,
+  Runtime,
+  RuntimeConfig,
+} from "./runtimes/Runtime.ts";
+import { ResolverError } from "./errors.ts";
+
+const introspectionDefStatic = await Deno.readTextFile(
+  "./src/typegraphs/introspection.json"
+).then((d) => JSON.parse(d));
+
+export const initTypegraph = async (
+  payload: string,
+  customRuntime: RuntimeResolver = {},
+  config: Record<string, RuntimeConfig> = {},
+  introspectionDef: any = introspectionDefStatic
+) => {
+  const parsed = JSON.parse(payload);
+
+  const introspection = introspectionDef
+    ? await TypeGraph.init(
+        introspectionDef,
+        {
+          typegraph: await TypeGraphRuntime.init(parsed, [], {}, config),
+        },
+        null,
+        {}
+      )
+    : null;
+  const tg = await TypeGraph.init(parsed, customRuntime, introspection, {});
+
+  const engine = new Engine(tg);
+  return engine;
+};
+
+interface ComputeStageProps {
+  dependencies: string[];
+  parent?: ComputeStage;
+  args: Record<string, (deps: any) => unknown>;
+  policies: Record<string, string[]>;
+  resolver?: Resolver;
+  outType: TypeNode; // only temp
+  runtime: Runtime;
+  materializer?: TypeMaterializer;
+  batcher: Batcher;
+  node: string;
+  path: string[];
+}
+
+export type PolicyStage = () => Promise<boolean | null>;
+export type PolicyStages = Record<string, PolicyStage>;
+export type PolicyStagesFactory = (claim: Record<string, any>) => PolicyStages;
+/*
+..
+a(b: c) {
+  ..
+}
+..
+*/
+export class ComputeStage {
+  props: ComputeStageProps;
+
+  constructor(props: ComputeStageProps) {
+    this.props = props;
+  }
+
+  id(): string {
+    return this.props.path.join(".");
+  }
+
+  toString(): string {
+    return `dep ${this.props.dependencies
+      .map((d) =>
+        this.props.parent && d === this.props.parent.id() ? `${d} (P)` : d
+      )
+      .join(", ")}\nid  ${this.id()}\ntype ${
+      this.props.outType.typedef
+    }\narg ${JSON.stringify(this.props.args)}\n--`;
+  }
+}
+
+const authorize = async (
+  stageId: string,
+  checks: string[],
+  policiesRegistry: PolicyStages,
+  verbose: boolean
+): Promise<true | null> => {
+  if (Object.values(checks).length < 1) {
+    // null = inherit
+    return null;
+  }
+  const [check, ...nextChecks] = checks;
+  const decision = await policiesRegistry[check]();
+  verbose && console.log(stageId, decision);
+
+  if (decision === null) {
+    // next policy
+    return authorize(stageId, nextChecks, policiesRegistry, verbose);
+  }
+
+  if (!decision) {
+    // exception = reject
+    throw Error(`authorization failed for ${check} in ${stageId}`);
+  }
+
+  // true = pass
+  return true;
+};
+
+export class Engine {
+  tg: TypeGraph;
+  name: string;
+  queryCache: Record<string, [ComputeStage[], PolicyStagesFactory]>;
+  logger: log.Logger;
+
+  constructor(tg: TypeGraph) {
+    this.tg = tg;
+    this.name = tg.tg.types[0].name;
+    this.queryCache = {};
+    this.logger = log.getLogger("engine");
+  }
+
+  async terminate() {
+    return this.tg.deinit();
+  }
+
+  async compute(
+    plan: ComputeStage[],
+    policesFactory: PolicyStagesFactory,
+    context: Record<string, unknown>,
+    variables: Record<string, unknown>,
+    verbose: boolean
+  ): Promise<JSONValue> {
+    const ret = {};
+    const cache: Record<string, unknown> = {};
+    const lenses: Record<string, unknown> = {};
+    const policiesRegistry = policesFactory(context);
+
+    for await (const stage of plan) {
+      const {
+        dependencies,
+        args,
+        policies,
+        resolver,
+        path,
+        parent,
+        batcher,
+        node,
+      } = stage.props;
+
+      const decisions = await Promise.all(
+        Object.values(policies).map((checks) =>
+          authorize(stage.id(), checks, policiesRegistry, verbose)
+        )
+      );
+      if (
+        node !== "" &&
+        !parent &&
+        (decisions.some((d) => d === null) || decisions.length < 1)
+      ) {
+        // root level field inherit false
+        throw Error(`authorization missing in ${stage.id()}`);
+      }
+
+      const deps = dependencies
+        .filter((dep) => dep !== parent?.id())
+        .filter((dep) => !(parent && dep.startsWith(`${parent.id()}.`)))
+        .reduce((agg, dep) => ({ ...agg, [dep]: cache[dep] }), {});
+
+      //verbose && console.log("dep", stage.id(), deps);
+      const previousValues = parent ? cache[parent.id()] : ([{}] as any);
+      const lens = parent ? lenses[parent.id()] : ([ret] as any);
+
+      const res = await Promise.all(
+        previousValues.map((parent: any) =>
+          resolver!({
+            ...mapo(args, (e) => e(parent)),
+            ...variables,
+            _: {
+              parent: parent ?? {},
+              context,
+              ...deps,
+            },
+          })
+        )
+      );
+
+      // or no cache if no further usage
+      cache[stage.id()] = batcher(res);
+
+      ensure(
+        lens.length === res.length,
+        `cannot align array results ${lens.length} != ${res.length}`
+      );
+      const field = path[path.length - 1] as any;
+      if (node !== "") {
+        lens.forEach((l: any, i: number) => {
+          l[field] = res[i];
+        });
+
+        lenses[stage.id()] = batcher(lens).flatMap((l: any) => {
+          return l[field] ?? [];
+        });
+      }
+    }
+
+    return ret;
+  }
+
+  traverse(
+    operation: ast.OperationDefinitionNode,
+    fragments: FragmentDefs,
+    verbose: boolean
+  ): [ComputeStage[], PolicyStagesFactory] {
+    const serial = operation.operation === "mutation";
+    const stages = this.tg.traverse(
+      fragments,
+      operation.name?.value ?? "",
+      [],
+      operation.selectionSet,
+      verbose,
+      [],
+      0,
+      undefined,
+      serial
+    );
+
+    const policies = this.tg.preparePolicies(stages);
+    return [stages, policies];
+  }
+
+  materialize(stages: ComputeStage[], verbose: boolean): ComputeStage[] {
+    //verbose && console.log(stages);
+
+    const stagesMat: ComputeStage[] = [];
+    const waitlist = [...stages];
+
+    while (waitlist.length > 0) {
+      const stage = waitlist.shift()!;
+      stagesMat.push(
+        ...stage.props.runtime.materialize(stage, waitlist, verbose)
+      );
+    }
+
+    return stagesMat;
+  }
+
+  optimize(stages: ComputeStage[], verbose: boolean): ComputeStage[] {
+    //verbose && console.log(stages);
+
+    for (const stage of stages) {
+      //verbose && console.log("opti", stage.id());
+    }
+
+    return stages;
+  }
+
+  async getPlan(
+    operation: ast.OperationDefinitionNode,
+    fragments: FragmentDefs,
+    cache: boolean,
+    verbose: boolean
+  ): Promise<[ComputeStage[], PolicyStagesFactory, boolean]> {
+    const id = await sha1(
+      JSON.stringify(operation) + JSON.stringify(fragments)
+    );
+
+    if (cache && id in this.queryCache) {
+      return [...this.queryCache[id], true];
+    }
+
+    // what
+    const [stages, policies] = this.traverse(operation, fragments, verbose);
+    /*
+    this.logger.info(
+      "stages:",
+      ["", ...stages.map((s) => s.toString())].join("\n")
+    );
+    */
+
+    // how
+    const stagesMat = this.materialize(stages, verbose);
+
+    // when
+    const plan = this.optimize(stagesMat, verbose);
+
+    if (cache) {
+      this.queryCache[id] = [plan, policies];
+    }
+
+    return [plan, policies, false];
+  }
+
+  async execute(
+    query: string,
+    operationName: Maybe<string>,
+    variables: Record<string, unknown>,
+    context: Record<string, unknown>
+  ): Promise<{ status: number; [key: string]: JSONValue }> {
+    try {
+      const document = parse(query);
+
+      let [operation, fragments] = findOperation(document, operationName);
+      if (!operation) {
+        throw Error(`operation ${operationName} not found`);
+      }
+
+      const cache = operationName === "IntrospectionQuery";
+      const verbose = operationName !== "IntrospectionQuery";
+
+      verbose && this.logger.info("———");
+      verbose && this.logger.info("op:", operationName);
+
+      const startTime = performance.now();
+      const [plan, policies, cacheHit] = await this.getPlan(
+        operation,
+        fragments,
+        cache,
+        verbose
+      );
+      const planTime = performance.now();
+
+      //logger.info("dag:", stages);
+      const res = await this.compute(
+        plan,
+        policies,
+        context,
+        variables,
+        verbose
+      );
+      const endTime = performance.now();
+
+      verbose &&
+        this.logger.info(
+          `${cacheHit ? "fetched" : "planned"}  in ${(
+            planTime - startTime
+          ).toFixed(2)}ms`
+        );
+      verbose &&
+        this.logger.info(`computed in ${(endTime - planTime).toFixed(2)}ms`);
+      //logger.info("res:", res);
+
+      return { status: 200, data: res };
+    } catch (e) {
+      if (e.hasOwnProperty("isErr")) {
+        // field error
+        console.error("field err:", e.unwrapErr());
+        return {
+          status: 200, // or 502 is nested gateway
+          errors: [
+            {
+              message: e.unwrapErr(),
+              locations: [],
+              path: [],
+              extensions: { timestamp: new Date().toISOString() },
+            },
+          ],
+        };
+      } else if (e instanceof ResolverError) {
+        // field error
+        console.error("field err:", e);
+        return {
+          status: 200, // or 502 is nested gateway
+          errors: [
+            {
+              message: e.message,
+              locations: [],
+              path: [],
+              extensions: { timestamp: new Date().toISOString() },
+            },
+          ],
+        };
+      } else {
+        // request error
+        console.error("request err:", e);
+        return {
+          status: 400,
+          errors: [
+            {
+              message: e.message,
+              locations: [],
+              path: [],
+              extensions: { timestamp: new Date().toISOString() },
+            },
+          ],
+        };
+      }
+    }
+  }
+}

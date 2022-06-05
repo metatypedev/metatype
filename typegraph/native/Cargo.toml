@@ -1,0 +1,22 @@
+[package]
+name = "native"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "native"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.16.5", features = ["extension-module"] }
+dprint-plugin-typescript = "0.68.3"
+structopt = "0.3.26"
+swc_common = { version = "0.18.6", features = ["tty-emitter"] }
+swc_ecma_ast = "0.78.1"
+swc_ecmascript = { version = "0.157.0", features = ["visit", "transforms", "typescript-parser", "parser", "codegen"] }
+migration-core = { path = "libs/prisma-engines/migration-engine/core" }
+lazy_static = "1.4.0"
+tokio = { version = "1.17.0", features = ["full"] }
+log = "0.4.14"
+dict_derive = "0.4.0"
+tempfile = "3.3.0"
