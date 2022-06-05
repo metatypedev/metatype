@@ -615,6 +615,7 @@ dependencies = [
  "dml",
  "either",
  "enumflags2",
+ "indoc",
  "itertools",
  "mongodb-datamodel-connector",
  "once_cell",
