@@ -30,7 +30,7 @@ repos:
       - id: rust-fmt
         name: Rust format
         language: system
-        entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt --all'
+        entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt'
         pass_filenames: false
         types:
           - rust
@@ -38,7 +38,7 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt --all'
+        entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt'
         pass_filenames: false
         types:
           - ts
@@ -51,12 +51,12 @@ repos:
         types:
           - ts
         files: ^typegate/
-      - id: eslint
+      - id: es-lint
         name: Eslint
         language: system
         entry: bash -c 'cd website && pnpm lint'
-        pass_filenames: true
-        types:
+        pass_filenames: false
+        types_or:
           - ts
           - tsx
         files: ^website/
