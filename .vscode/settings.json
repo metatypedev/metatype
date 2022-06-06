@@ -1,0 +1,8 @@
+{
+  "files.exclude": {
+    "typegate/": true,
+    "typegraph/": true,
+    "example/": true,
+    "website/": true
+  }
+}
