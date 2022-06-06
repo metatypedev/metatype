@@ -1,0 +1,4 @@
+include:
+  - project: "metatype/templates"
+    ref: main
+    file: "metatype.yml"
