@@ -32,19 +32,31 @@ repos:
         language: system
         entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt --all'
         pass_filenames: false
-        types: [rust]
-        files: ^(typegate|typegraph)/native
+        types:
+          - rust
+        files: ^(typegate|typegraph)/native/
       - id: deno-fmt
         name: Deno format
         language: system
         entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt --all'
         pass_filenames: false
-        types: [ts]
-        files: ^typegate
+        types:
+          - ts
+        files: ^typegate/
       - id: deno-lint
         name: Deno lint
         language: system
         entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any,no-unused-vars'
         pass_filenames: false
-        types: [ts]
-        files: ^typegate
+        types:
+          - ts
+        files: ^typegate/
+      - id: eslint
+        name: Eslint
+        language: system
+        entry: bash -c 'cd website && pnpm lint'
+        pass_filenames: true
+        types:
+          - ts
+          - tsx
+        files: ^website/

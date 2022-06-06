@@ -31,7 +31,7 @@ export class HTTPRuntime extends Runtime {
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
     config: RuntimeConfig
-  ): Promise<Runtime> {
+  ): Runtime {
     return new HTTPRuntime(args.endpoint as string);
   }
 

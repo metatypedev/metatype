@@ -27,7 +27,7 @@ export class TypeGraphRuntime extends Runtime {
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
     config: RuntimeConfig
-  ): Promise<Runtime> {
+  ): Runtime {
     return new TypeGraphRuntime(typegraph);
   }
 

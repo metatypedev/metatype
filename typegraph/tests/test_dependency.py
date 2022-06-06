@@ -10,7 +10,7 @@ from typegraph.types import typedefs as t
 
 
 class TestDependency:
-    def test_simple_dep(self, overridable) -> None:
+    def est_simple_dep(self, overridable) -> None:
 
         with TypeGraph("single_runtime") as g:
             a = t.integer().named("a")

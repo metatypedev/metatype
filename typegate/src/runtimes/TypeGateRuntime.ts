@@ -16,7 +16,7 @@ export class TypeGateRuntime extends Runtime {
     super();
   }
 
-  static init(): Promise<Runtime> {
+  static init(): Runtime {
     if (!TypeGateRuntime.singleton) {
       TypeGateRuntime.singleton = new TypeGateRuntime();
     }
