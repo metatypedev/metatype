@@ -2,7 +2,7 @@ import { ComputeStage } from "../engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 
-const dummy: Resolver = async ({ a }: { a: number }) => {
+const dummy: Resolver = ({ a }: { a: number }) => {
   return {
     out: a * 2,
     a: 2,
@@ -15,7 +15,7 @@ const dummy: Resolver = async ({ a }: { a: number }) => {
 
 const map: Record<string, Resolver> = {
   function: dummy,
-  identity: async ({ _, ...x }) => JSON.parse(JSON.stringify(x)),
+  identity: ({ _, ...x }) => JSON.parse(JSON.stringify(x)),
 };
 
 export class DenoRuntime extends Runtime {
@@ -25,12 +25,12 @@ export class DenoRuntime extends Runtime {
     super();
   }
 
-  static async init(
+  static init(
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
     config: RuntimeConfig
-  ): Promise<Runtime> {
+  ): Runtime {
     if (!DenoRuntime.singleton) {
       DenoRuntime.singleton = new DenoRuntime();
     }

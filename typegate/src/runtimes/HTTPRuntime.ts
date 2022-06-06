@@ -26,7 +26,7 @@ export class HTTPRuntime extends Runtime {
     this.endpoint = endpoint;
   }
 
-  static async init(
+  static init(
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,

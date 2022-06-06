@@ -20,7 +20,7 @@ const schema = z.object({
   tg_host: z.string(),
   tg_port: z.preprocess(
     (a) => parseInt(z.string().parse(a), 10),
-    z.number().positive().max(65535)
+    z.number().positive().max(65535),
   ),
   version: z.string(),
 });

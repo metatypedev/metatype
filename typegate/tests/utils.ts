@@ -1,4 +1,4 @@
-import { assertEquals, assertExists, assert } from "std/testing/asserts.ts";
+import { assert, assertEquals, assertExists } from "std/testing/asserts.ts";
 import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue, Maybe } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
@@ -30,14 +30,14 @@ class MetaTest {
     return engine;
   }
 
-  async pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
+  pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
     return this.shell(
       ["../typegraph/.venv/bin/python", "-c", code],
       deepMerge(testRuntimesConfig, config)
     );
   }
 
-  async pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
+  pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
     return this.shell(
       ["../typegraph/.venv/bin/python", path],
       deepMerge(testRuntimesConfig, config)
@@ -80,7 +80,7 @@ class MetaTest {
     fact: string,
     fn: (t: Deno.TestContext) => void | Promise<void>
   ): Promise<boolean> {
-    return this.t.step({
+    return await this.t.step({
       name: `should ${fact}`,
       fn,
       //sanitizeOps: false,
@@ -103,7 +103,7 @@ export function test(name: string, fn: (t: MetaTest) => void | Promise<void>) {
 
 const testConfig = parse(Deno.args);
 
-export async function testAll(engineName: string) {
+export function testAll(engineName: string) {
   test(`Auto-tests for ${engineName}`, async (t) => {
     const e = await t.load(engineName);
 

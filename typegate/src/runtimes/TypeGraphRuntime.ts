@@ -1,12 +1,12 @@
 import { TypeGraphDS, TypeMaterializer, TypeNode } from "../typegraph.ts";
 import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLString,
-  parse,
   GraphQLArgs,
-  TypeKind,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
   Kind,
+  parse,
+  TypeKind,
 } from "https://cdn.skypack.dev/graphql@16.2.0?dts";
 import { ensure } from "../utils.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
@@ -22,7 +22,7 @@ export class TypeGraphRuntime extends Runtime {
     this.tg = tg;
   }
 
-  static async init(
+  static init(
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
@@ -49,14 +49,15 @@ export class TypeGraphRuntime extends Runtime {
       if (name === "resolver") {
         return async ({ _: { parent } }) => {
           const resolver = parent[stage.props.node];
-          const ret = resolver();
+          const ret = await resolver();
           return ret;
         };
       }
 
       return async ({ _: { parent } }) => {
         const resolver = parent[stage.props.node];
-        const ret = typeof resolver === "function" ? resolver() : resolver;
+        const ret =
+          typeof resolver === "function" ? await resolver() : resolver;
         return ret;
       };
     })();
@@ -69,7 +70,7 @@ export class TypeGraphRuntime extends Runtime {
     ];
   }
 
-  getSchema = async () => {
+  getSchema = () => {
     const root = this.tg.types[0];
 
     const queriesBind: Record<string, number> = {};
@@ -208,7 +209,7 @@ export class TypeGraphRuntime extends Runtime {
     };
   };
 
-  getType = async ({ name }: { name: string }) => {
+  getType = ({ name }: { name: string }) => {
     const type = this.tg.types.find((type) => type.name === name);
     return type ? this.formatType(type, false, false) : null;
   };
@@ -381,7 +382,7 @@ export class TypeGraphRuntime extends Runtime {
     // enum: enumValues
   };
 
-  policyDescription(type: TypeNode): String {
+  policyDescription(type: TypeNode): string {
     const policies = type.policies.map((p) => this.tg.policies[p].name);
 
     let ret = "\n\nPolicies:\n";

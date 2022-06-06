@@ -4,7 +4,7 @@ test("Simple graph", async (t) => {
   const e = await t.pythonFile("./tests/typegraphs/simple.py");
 
   await t.should("work", async () => {
-    gql`
+    await gql`
       query {
         test(a: 2) {
           a

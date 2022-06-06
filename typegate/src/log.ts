@@ -1,4 +1,4 @@
-import { Logger, handlers, LevelName } from "std/log/mod.ts";
+import { handlers, LevelName, Logger } from "std/log/mod.ts";
 import { basename, extname, fromFileUrl } from "std/path/mod.ts";
 
 const console = new handlers.ConsoleHandler("DEBUG", {
@@ -10,7 +10,7 @@ const defaultLogger = new Logger("default", "NOTSET", { handlers: [console] });
 
 export function getLogger(
   name: ImportMeta | string | null = null,
-  levelName: LevelName = "NOTSET"
+  levelName: LevelName = "NOTSET",
 ): Logger {
   if (!name) {
     return defaultLogger;

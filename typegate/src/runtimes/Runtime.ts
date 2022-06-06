@@ -2,7 +2,7 @@ import { ComputeStage } from "../engine.ts";
 import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { equal } from "std/testing/asserts.ts";
 
-export type Resolver = (args: any) => Promise<any>;
+export type Resolver = (args: any) => Promise<any> | any;
 
 export type Batcher = (x: any) => any;
 
@@ -31,7 +31,7 @@ export abstract class Runtime {
   static collectRelativeStages(
     base: ComputeStage,
     waitlist: ComputeStage[],
-    cursor: number = 0
+    cursor = 0
   ): ComputeStage[] {
     const ret = [];
     while (cursor < waitlist.length) {

@@ -132,7 +132,7 @@ export class Engine {
   }
 
   async terminate() {
-    return this.tg.deinit();
+    return await this.tg.deinit();
   }
 
   async compute(
@@ -311,7 +311,7 @@ export class Engine {
     try {
       const document = parse(query);
 
-      let [operation, fragments] = findOperation(document, operationName);
+      const [operation, fragments] = findOperation(document, operationName);
       if (!operation) {
         throw Error(`operation ${operationName} not found`);
       }
@@ -353,6 +353,7 @@ export class Engine {
 
       return { status: 200, data: res };
     } catch (e) {
+      // deno-lint-ignore no-prototype-builtins
       if (e.hasOwnProperty("isErr")) {
         // field error
         console.error("field err:", e.unwrapErr());

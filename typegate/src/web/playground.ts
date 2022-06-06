@@ -50,9 +50,11 @@ export const renderPlayground = (options: { endpoint: string }) => `
     </div>
   </div>
   <script>window.addEventListener('load', function (event) {
-      GraphQLPlayground.init(document.getElementById('root'), ${JSON.stringify(
-        options
-      )})
+      GraphQLPlayground.init(document.getElementById('root'), ${
+  JSON.stringify(
+    options,
+  )
+})
     })</script>
 </body>
 

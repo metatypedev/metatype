@@ -112,6 +112,7 @@ export class RedisReplicatedMap<T> {
   private subscribe(): SyncContext {
     const { ekey, redisObs } = this;
 
+    // deno-lint-ignore no-this-alias
     const target = this;
     let loop = true;
     let start: (
