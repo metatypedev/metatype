@@ -7,7 +7,7 @@ export class GoogleapisRuntime extends Runtime {
     super();
   }
 
-  static async init(
+  static init(
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,

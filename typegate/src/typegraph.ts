@@ -1,12 +1,12 @@
 import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
 import {
-  GraphQLSchema,
-  GraphQLObjectType,
-  GraphQLString,
-  parse,
   GraphQLArgs,
-  TypeKind,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
   Kind,
+  parse,
+  TypeKind,
 } from "https://cdn.skypack.dev/graphql@16.2.0?dts";
 import { ComputeStage, PolicyStages, PolicyStagesFactory } from "./engine.ts";
 import * as graphql from "./graphql.ts";
@@ -170,7 +170,7 @@ export class TypeGraph {
     fieldArg: ast.ArgumentNode | ast.ObjectFieldNode | undefined,
     argIdx: number,
     parentContext: Record<string, number>,
-    noDefault: boolean = false
+    noDefault = false
   ): [(deps: any) => unknown, Record<string, string[]>, string[]] | null {
     const arg = this.tg.types[argIdx];
 
@@ -383,9 +383,9 @@ export class TypeGraph {
     parentSelectionSet: ast.SelectionSetNode,
     verbose: boolean,
     queryPath: string[] = [],
-    parentIdx: number = 0,
+    parentIdx = 0,
     parentStage: ComputeStage | undefined = undefined,
-    serial: boolean = false
+    serial = false
   ): ComputeStage[] {
     const parentType = this.type(parentIdx);
     const stages: ComputeStage[] = [];
@@ -533,7 +533,6 @@ export class TypeGraph {
                 fieldArgs ?? TypeGraph.emptyArgs,
                 fieldFields ?? TypeGraph.emptyFields,
                 verbose,
-
                 [...queryPath, aliasName ?? fieldName],
                 subSubTypeIdx,
                 stage
@@ -555,7 +554,6 @@ export class TypeGraph {
                 fieldArgs ?? TypeGraph.emptyArgs,
                 fieldFields ?? TypeGraph.emptyFields,
                 verbose,
-
                 [...queryPath, aliasName ?? fieldName],
                 subTypeIdx,
                 stage
@@ -656,7 +654,6 @@ export class TypeGraph {
             fieldArgs ?? TypeGraph.emptyArgs,
             fieldFields ?? TypeGraph.emptyFields,
             verbose,
-
             [...queryPath, fieldName],
             outputIdx,
             stage
@@ -679,7 +676,6 @@ export class TypeGraph {
               fieldArgs ?? TypeGraph.emptyArgs,
               fieldFields ?? TypeGraph.emptyFields,
               verbose,
-
               [...queryPath, aliasName ?? fieldName],
               subSubTypeIdx,
               stage
@@ -700,7 +696,6 @@ export class TypeGraph {
               fieldArgs ?? TypeGraph.emptyArgs,
               fieldFields ?? TypeGraph.emptyFields,
               verbose,
-
               [...queryPath, aliasName ?? fieldName],
               subTypeIdx,
               stage
@@ -774,7 +769,7 @@ export class TypeGraph {
     if (type.typedef === "list") {
       if (edgesRes![0].typedef === "optional") {
         throw Error("D");
-        return (x: any) => x.flat().filter((c: any) => !!c);
+        //return (x: any) => x.flat().filter((c: any) => !!c);
       }
       return (x: any) => ensureArray(x).flat();
     }
@@ -806,6 +801,7 @@ const lazyResolver = <T>(
   fn: (args: any) => Promise<T>
 ): ((args: any) => Promise<T>) => {
   let memo: Promise<T> | undefined = undefined;
+  // deno-lint-ignore require-await
   return async (args: any) => {
     if (!memo) {
       memo = fn(args);

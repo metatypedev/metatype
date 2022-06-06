@@ -1,13 +1,50 @@
 repos:
-- repo: https://github.com/sqlalchemyorg/zimports/
-  rev: v0.6.0
-  hooks:
-  - id: zimports
-- repo: https://github.com/psf/black
-  rev: 22.3.0
-  hooks:
-  - id: black
-- repo: https://gitlab.com/pycqa/flake8
-  rev: 3.9.2
-  hooks:
-  - id: flake8
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.2.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+  - repo: https://github.com/sqlalchemyorg/zimports/
+    rev: v0.6.0
+    hooks:
+      - id: zimports
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v2.27.1
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+  - repo: local
+    hooks:
+      - id: rust-fmt
+        name: Rust format
+        language: system
+        entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt --all'
+        pass_filenames: false
+        types: [rust]
+        files: ^(typegate|typegraph)/native
+      - id: deno-fmt
+        name: Deno format
+        language: system
+        entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt --all'
+        pass_filenames: false
+        types: [ts]
+        files: ^typegate
+      - id: deno-lint
+        name: Deno lint
+        language: system
+        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any,no-unused-vars'
+        pass_filenames: false
+        types: [ts]
+        files: ^typegate

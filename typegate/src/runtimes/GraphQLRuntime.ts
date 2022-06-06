@@ -20,7 +20,7 @@ const stringifyQL = (obj: JSONValue): string => {
 const rebuildGraphQuery = (
   stages: ComputeStage[],
   renames: Record<string, string>
-): String => {
+): string => {
   let ret = "";
   let cursor = 0;
   while (cursor < stages.length) {
@@ -58,7 +58,7 @@ export class GraphQLRuntime extends Runtime {
     this.endpoint = endpoint;
   }
 
-  static async init(
+  static init(
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,

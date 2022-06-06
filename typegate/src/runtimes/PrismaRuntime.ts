@@ -32,7 +32,7 @@ export class PrismaRuntime extends GraphQLRuntime {
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
-    config: RuntimeConfig
+    config: RuntimeConfig,
   ): Promise<Runtime> {
     const schema = `${args.datasource}${args.datamodel}`;
     //console.log(schema);
@@ -85,7 +85,7 @@ export class PrismaRuntime extends GraphQLRuntime {
         throw new ResolverError(
           res.errors
             .map((e: any) => e.user_facing_error?.message ?? e.error)
-            .join("\n")
+            .join("\n"),
         );
       }
       return res.data;

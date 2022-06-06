@@ -3,7 +3,7 @@ import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?d
 export const gq = async (
   url: string,
   query: ast.DocumentNode | string,
-  variables: Record<string, unknown>
+  variables: Record<string, unknown>,
 ) => {
   const q =
     typeof query !== "string" && "kind" in query && query.kind === "Document"

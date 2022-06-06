@@ -16,7 +16,7 @@ export const ensure = (predicat: boolean, message: string | (() => string)) => {
 
 export const collectFields = (
   obj: Record<string, unknown>,
-  fields: string[]
+  fields: string[],
 ) => {
   return fields.reduce((agg, f) => ({ ...agg, [f]: obj[f] }), {});
 };
@@ -26,7 +26,7 @@ export const b = (value: any): string => JSON.stringify(value, null, 2);
 // FIXME remplace all instance
 export const mapo = <V1, V2>(
   vs: Record<string, V1>,
-  map: (e: V1) => V2
+  map: (e: V1) => V2,
 ): Record<string, V2> =>
   Object.entries(vs).reduce((agg, [key, value]) => {
     agg[key] = map(value);
