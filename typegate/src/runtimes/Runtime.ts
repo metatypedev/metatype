@@ -16,7 +16,7 @@ export type RuntimeInit = Record<
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
     config: RuntimeConfig
-  ) => Promise<Runtime>
+  ) => Promise<Runtime> | Runtime
 >;
 
 export abstract class Runtime {

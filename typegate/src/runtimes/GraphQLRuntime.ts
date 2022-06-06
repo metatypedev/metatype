@@ -58,13 +58,13 @@ export class GraphQLRuntime extends Runtime {
     this.endpoint = endpoint;
   }
 
-  static init(
+  static async init(
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
     config: RuntimeConfig
   ): Promise<Runtime> {
-    return new GraphQLRuntime(args.endpoint as string);
+    return await new GraphQLRuntime(args.endpoint as string);
   }
 
   async deinit(): Promise<void> {}
