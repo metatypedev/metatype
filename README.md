@@ -8,16 +8,18 @@
 brew install rustup pipx python3 pnpm
 rustup-initpnpm
 rustup component add rustfmt
-cargo install cargo-watch
-cargo install cargo-edit
+pipx install pre-commit
 pipx install poetry
 pipx install maturin
+cargo install cargo-watch
+cargo install cargo-edit
 npm install --global concurrently
 ```
 
 ### Common
 
 ```
+pre-commit install
 python3 -m venv typegraph/.venv
 python3 -m venv example/.venv
 ./dev.sh
