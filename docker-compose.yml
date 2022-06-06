@@ -1,6 +1,4 @@
-version: '3.6'
-
-volumes: {}   
+volumes: {}
 
 services:
 

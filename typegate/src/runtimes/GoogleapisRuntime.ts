@@ -12,7 +12,7 @@ export class GoogleapisRuntime extends Runtime {
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
     config: RuntimeConfig
-  ): Promise<Runtime> {
+  ): Runtime {
     return new GoogleapisRuntime();
   }
 

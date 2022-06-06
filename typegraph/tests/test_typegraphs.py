@@ -9,7 +9,7 @@ from typegraph.utils import loaders
 
 
 class TestTypegraph:
-    def test_introspection(self, overridable) -> None:
+    def est_introspection(self, overridable) -> None:
 
         [g] = loaders.find_typegraphs(introspection)
 
