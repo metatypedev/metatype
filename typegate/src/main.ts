@@ -119,7 +119,7 @@ const server = serve(
 );
 
 if (config.debug) {
-  (function reload(backoff: number = 3) {
+  (function reload(backoff = 3) {
     fetch(
       `http://localhost:5000/dev?node=${config.tg_host}:${config.tg_port}`
     ).catch((e) => {

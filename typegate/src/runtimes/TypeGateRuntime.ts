@@ -16,7 +16,7 @@ export class TypeGateRuntime extends Runtime {
     super();
   }
 
-  static async init(): Promise<Runtime> {
+  static init(): Promise<Runtime> {
     if (!TypeGateRuntime.singleton) {
       TypeGateRuntime.singleton = new TypeGateRuntime();
     }
@@ -47,7 +47,8 @@ export class TypeGateRuntime extends Runtime {
 
       return async ({ _: { parent }, ...args }) => {
         const resolver = parent[stage.props.node];
-        const ret = typeof resolver === "function" ? resolver(args) : resolver;
+        const ret =
+          typeof resolver === "function" ? await resolver(args) : resolver;
         return ret;
       };
     })();
@@ -60,14 +61,14 @@ export class TypeGateRuntime extends Runtime {
     ];
   }
 
-  typegraphs = async () => {
+  typegraphs = () => {
     return register.list().map((e) => ({
       name: e.name,
       url: `http://${config.tg_host}:${config.tg_port}/${e.name}`,
     }));
   };
 
-  typegraph = async ({ name }: { name: string }) => {
+  typegraph = ({ name }: { name: string }) => {
     const tg = register.get(name);
     if (!tg) {
       return null;
@@ -93,7 +94,7 @@ export class TypeGateRuntime extends Runtime {
     return { name };
   };
 
-  removeTypegraph = async ({ name }: { name: string }) => {
+  removeTypegraph = ({ name }: { name: string }) => {
     return register.remove(name);
   };
 }

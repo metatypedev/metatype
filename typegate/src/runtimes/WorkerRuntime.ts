@@ -1,4 +1,4 @@
-import { deferred, Deferred } from "std/async/deferred.ts";
+import { Deferred, deferred } from "std/async/deferred.ts";
 import { ComputeStage } from "../engine.ts";
 import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
@@ -65,7 +65,7 @@ export class WorkerRuntime extends Runtime {
     return new WorkerRuntime(file, config.lazy as boolean);
   }
 
-  async deinit(): Promise<void> {
+  deinit(): Promise<void> {
     return this.w.terminate();
   }
 
@@ -87,7 +87,7 @@ export class WorkerRuntime extends Runtime {
 
   delegate(name: string): Resolver {
     return async (args: any) => {
-      return this.w.passPayload(name, [args]).then((v) => v[0]);
+      return await this.w.passPayload(name, [args]).then((v) => v[0]);
     };
   }
 }
@@ -181,10 +181,7 @@ class OnDemandWorker {
     return this.lazyWorker;
   }
 
-  private async passBuffer(
-    call: string,
-    buffer: Transferable
-  ): Promise<ArrayBuffer> {
+  private passBuffer(call: string, buffer: Transferable): Promise<ArrayBuffer> {
     const n = this.counter++;
     this.counter %= resetModulus;
     const promise = deferred<ArrayBuffer>();

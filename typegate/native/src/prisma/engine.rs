@@ -6,8 +6,9 @@ use prisma_models::InternalDataModelBuilder;
 use query_connector::error::ConnectorError;
 use query_core::CoreError;
 use query_core::{
-    executor, schema_builder, QueryExecutor, TxId,
+    executor,
     schema::{QuerySchema, QuerySchemaRenderer},
+    schema_builder, QueryExecutor, TxId,
 };
 use request_handlers::{
     GraphQLSchemaRenderer, GraphQlBody, GraphQlHandler, PrismaResponse, TxInput,
