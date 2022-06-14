@@ -19,7 +19,7 @@ const stringifyQL = (obj: JSONValue): string => {
 
 const rebuildGraphQuery = (
   stages: ComputeStage[],
-  renames: Record<string, string>
+  renames: Record<string, string>,
 ): string => {
   let ret = "";
   let cursor = 0;
@@ -37,7 +37,7 @@ const rebuildGraphQuery = (
       ret += Object.entries(stage.props.args)
         .map(
           ([argName, argValue]) =>
-            `${argName}: ${stringifyQL(argValue({}) as JSONValue)}`
+            `${argName}: ${stringifyQL(argValue({}) as JSONValue)}`,
         )
         .join(", ");
       ret += `)`;
@@ -62,7 +62,7 @@ export class GraphQLRuntime extends Runtime {
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
-    config: RuntimeConfig
+    config: RuntimeConfig,
   ): Promise<Runtime> {
     return await new GraphQLRuntime(args.endpoint as string);
   }
@@ -79,7 +79,7 @@ export class GraphQLRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean
+    verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 
@@ -89,10 +89,12 @@ export class GraphQLRuntime extends Runtime {
     const renames: Record<string, string> = {
       ql: "typegraph",
     };
-    const query = `${serial ? "mutation" : "query"} q {${rebuildGraphQuery(
-      fields,
-      renames
-    )} }`;
+    const query = `${serial ? "mutation" : "query"} q {${
+      rebuildGraphQuery(
+        fields,
+        renames,
+      )
+    } }`;
     verbose && console.log("remote graphql:", query);
 
     const queryStage = new ComputeStage({
@@ -132,7 +134,7 @@ export class GraphQLRuntime extends Runtime {
             ...field.props,
             dependencies: [...field.props.dependencies, queryStage.id()],
             resolver,
-          })
+          }),
         );
       } else {
         const resolver: Resolver = ({ _: { parent } }) => {
@@ -145,7 +147,7 @@ export class GraphQLRuntime extends Runtime {
             ...field.props,
             dependencies: [...field.props.dependencies, queryStage.id()],
             resolver,
-          })
+          }),
         );
       }
     }
