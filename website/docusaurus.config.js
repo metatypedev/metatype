@@ -16,6 +16,7 @@ const config = {
   favicon: "img/favicon.ico",
   organizationName: "metatypedev",
   projectName: "metatype",
+  plugins: [require.resolve("docusaurus-lunr-search")],
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
@@ -66,7 +67,7 @@ const config = {
             type: "docSidebar",
             sidebarId: "howToGuides",
             position: "left",
-            label: "How-to guides",
+            label: "Guides",
           },
           {
             type: "docSidebar",
@@ -94,10 +95,10 @@ const config = {
           {
             title: "Docs",
             items: [
-              {
+              /*{
                 label: "Tutorial",
                 to: "/docs/intro",
-              },
+              },*/
             ],
           },
           {
