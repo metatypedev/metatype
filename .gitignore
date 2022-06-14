@@ -9,7 +9,6 @@ __pycache__/
 *.tfstate.*
 crash.log
 *.tfvars
-.env
 
 *.log*
 /node_modules
@@ -19,5 +18,4 @@ crash.log
 /out/
 /build
 *.pem
-.env*
 tsconfig.tsbuildinfo

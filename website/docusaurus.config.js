@@ -14,20 +14,12 @@ const config = {
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
-
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: "facebook", // Usually your GitHub org/user name.
-  projectName: "docusaurus", // Usually your repo name.
-
-  // Even if you don't use internalization, you can use this field to set useful
-  // metadata like html lang. For example, if your site is Chinese, you may want
-  // to replace "en" with "zh-Hans".
+  organizationName: "metatypedev",
+  projectName: "metatype",
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
   },
-
   presets: [
     [
       "classic",
@@ -35,17 +27,11 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
+          editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
         },
         blog: {
           showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
+          editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
@@ -58,21 +44,45 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: "My Site",
+        title: "Metatype",
         logo: {
-          alt: "My Site Logo",
+          alt: "Metatype Logo",
           src: "img/logo.svg",
         },
         items: [
           {
-            type: "doc",
-            docId: "intro",
+            type: "docSidebar",
+            sidebarId: "useCases",
             position: "left",
-            label: "Tutorial",
+            label: "Use cases",
+          },
+          {
+            type: "docSidebar",
+            sidebarId: "tutorials",
+            position: "left",
+            label: "Tutorials",
+          },
+          {
+            type: "docSidebar",
+            sidebarId: "howToGuides",
+            position: "left",
+            label: "How-to guides",
+          },
+          {
+            type: "docSidebar",
+            sidebarId: "concepts",
+            position: "left",
+            label: "Concepts",
+          },
+          {
+            type: "docSidebar",
+            sidebarId: "references",
+            position: "left",
+            label: "References",
           },
           { to: "/blog", label: "Blog", position: "left" },
           {
-            href: "https://github.com/facebook/docusaurus",
+            href: "https://github.com/metatypedev/metatype",
             label: "GitHub",
             position: "right",
           },
@@ -95,15 +105,15 @@ const config = {
             items: [
               {
                 label: "Stack Overflow",
-                href: "https://stackoverflow.com/questions/tagged/docusaurus",
+                href: "https://stackoverflow.com/questions/tagged/metatype",
               },
               {
                 label: "Discord",
-                href: "https://discordapp.com/invite/docusaurus",
+                href: "https://discord.gg/PSyYcEHyw5",
               },
               {
                 label: "Twitter",
-                href: "https://twitter.com/docusaurus",
+                href: "https://twitter.com/metatypedev",
               },
             ],
           },
@@ -116,12 +126,12 @@ const config = {
               },
               {
                 label: "GitHub",
-                href: "https://github.com/facebook/docusaurus",
+                href: "https://github.com/metatypedev/metatype",
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Metatype.`,
       },
       prism: {
         theme: lightCodeTheme,
