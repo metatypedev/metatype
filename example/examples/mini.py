@@ -1,7 +1,6 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import worker
 from typegraph.materializers.graphql import GraphQLRuntime
-
 from typegraph.types import typedefs as t
 
 with TypeGraph("mini") as g:
@@ -24,12 +23,8 @@ with TypeGraph("mini") as g:
         }
     ).named("Post")
 
-    getter = (
-        remote.query(
-            t.struct({"id": t.integer()}),
-            t.optional(post)
-        )
-        .add_policy(allow_all)
+    getter = remote.query(t.struct({"id": t.integer()}), t.optional(post)).add_policy(
+        allow_all
     )
 
     g.expose(post=getter)

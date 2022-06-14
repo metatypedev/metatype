@@ -97,7 +97,7 @@ export class TypeGraph {
   private constructor(
     typegraph: TypeGraphDS,
     runtimeReferences: RuntimeResolver,
-    introspection: TypeGraph | null
+    introspection: TypeGraph | null,
   ) {
     this.tg = typegraph;
     this.runtimeReferences = runtimeReferences;
@@ -109,7 +109,7 @@ export class TypeGraph {
     typegraph: TypeGraphDS,
     staticReference: RuntimeResolver,
     introspection: TypeGraph | null,
-    runtimeConfig: RuntimesConfig
+    runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
     const runtimeReferences = { ...staticReference };
 
@@ -117,13 +117,15 @@ export class TypeGraph {
       if (!(runtime.name in runtimeReferences)) {
         ensure(
           runtime.name in runtimeInit,
-          `cannot find runtime "${runtime.name}" in ${Object.keys(
-            runtimeReferences
-          ).join(", ")}`
+          `cannot find runtime "${runtime.name}" in ${
+            Object.keys(
+              runtimeReferences,
+            ).join(", ")
+          }`,
         );
 
         const mats = typegraph.materializers.filter(
-          (mat) => mat.runtime === idx
+          (mat) => mat.runtime === idx,
         );
 
         console.log(`init ${runtime.name}`);
@@ -131,7 +133,7 @@ export class TypeGraph {
           typegraph,
           mats,
           runtime.data,
-          runtimeConfig[runtime.name] ?? {}
+          runtimeConfig[runtime.name] ?? {},
         );
       }
     }
@@ -140,9 +142,11 @@ export class TypeGraph {
   }
 
   async deinit(): Promise<void> {
-    for await (const [name, runtime] of Object.entries(
-      this.runtimeReferences
-    )) {
+    for await (
+      const [name, runtime] of Object.entries(
+        this.runtimeReferences,
+      )
+    ) {
       console.log(`deinit ${name}`);
       await runtime.deinit();
     }
@@ -170,7 +174,7 @@ export class TypeGraph {
     fieldArg: ast.ArgumentNode | ast.ObjectFieldNode | undefined,
     argIdx: number,
     parentContext: Record<string, number>,
-    noDefault = false
+    noDefault = false,
   ): [(deps: any) => unknown, Record<string, string[]>, string[]] | null {
     const arg = this.tg.types[argIdx];
 
@@ -178,12 +182,11 @@ export class TypeGraph {
       throw Error(`${argIdx} not found in type`);
     }
 
-    let policies =
-      arg.policies.length > 0
-        ? {
-            [arg.name]: arg.policies.map((p) => this.policy(p).name),
-          }
-        : {};
+    let policies = arg.policies.length > 0
+      ? {
+        [arg.name]: arg.policies.map((p) => this.policy(p).name),
+      }
+      : {};
 
     const {
       default_value: defaultValue,
@@ -206,14 +209,16 @@ export class TypeGraph {
       if (arg.typedef === "injection") {
         const ref = arg.data.of as number;
         const name = Object.keys(parentContext).find(
-          (name) => parentContext[name] === ref
+          (name) => parentContext[name] === ref,
         );
 
         if (!name) {
           throw Error(
-            `cannot find injection ${JSON.stringify(
-              arg
-            )} in context ${parentContext}`
+            `cannot find injection ${
+              JSON.stringify(
+                arg,
+              )
+            } in context ${parentContext}`,
           );
         }
 
@@ -230,7 +235,7 @@ export class TypeGraph {
             undefined,
             fieldIdx,
             parentContext,
-            true
+            true,
           );
           if (!nested) {
             continue;
@@ -273,14 +278,14 @@ export class TypeGraph {
     if (arg.typedef === "struct") {
       ensure(
         kind === Kind.OBJECT,
-        `type mismatch, got ${kind} but expected OBJECT for ${arg.name}`
+        `type mismatch, got ${kind} but expected OBJECT for ${arg.name}`,
       );
       const { fields } = argValue as ast.ObjectValueNode;
       const argSchema = arg.data.binds as Record<string, number>;
 
       const fieldArgsIdx: Record<string, ast.ObjectFieldNode> = fields.reduce(
         (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
-        {}
+        {},
       );
 
       const values: Record<string, any> = {};
@@ -290,7 +295,7 @@ export class TypeGraph {
         const nested = this.collectArg(
           fieldArgsIdx[fieldName],
           fieldIdx,
-          parentContext
+          parentContext,
         );
         if (!nested) {
           continue;
@@ -313,7 +318,7 @@ export class TypeGraph {
     if (arg.typedef === "list") {
       ensure(
         kind === Kind.LIST,
-        `type mismatch, got ${kind} but expected LIST for ${arg.name}`
+        `type mismatch, got ${kind} but expected LIST for ${arg.name}`,
       );
       const { values: valueOfs } = argValue as ast.ListValueNode;
       const valueIdx = arg.data.of as number;
@@ -326,7 +331,7 @@ export class TypeGraph {
         const nested = this.collectArg(
           { value: valueOf } as unknown as ast.ArgumentNode,
           valueIdx,
-          parentContext
+          parentContext,
         );
         if (!nested) {
           throw Error("unknown subtype");
@@ -343,7 +348,7 @@ export class TypeGraph {
     if (arg.typedef === "integer") {
       ensure(
         kind === Kind.INT,
-        `type mismatch, got ${kind} but expected INT for ${arg.name}`
+        `type mismatch, got ${kind} but expected INT for ${arg.name}`,
       );
       const { value } = argValue as ast.IntValueNode;
       const parsed = Number(value);
@@ -353,7 +358,7 @@ export class TypeGraph {
     if (arg.typedef === "boolean") {
       ensure(
         kind === Kind.BOOLEAN,
-        `type mismatch, got ${kind} but expected BOOLEAN for ${arg.name}`
+        `type mismatch, got ${kind} but expected BOOLEAN for ${arg.name}`,
       );
       const { value } = argValue as ast.IntValueNode;
       const parsed = Boolean(value);
@@ -363,7 +368,7 @@ export class TypeGraph {
     if (arg.typedef === "string") {
       ensure(
         kind === Kind.STRING,
-        `type mismatch, got ${kind} but expected STRING for ${arg.name}`
+        `type mismatch, got ${kind} but expected STRING for ${arg.name}`,
       );
       const { value } = argValue as ast.StringValueNode;
       const parsed = String(value);
@@ -372,7 +377,7 @@ export class TypeGraph {
 
     throw Error(
       `unknown variable value ${JSON.stringify(arg)} ${JSON.stringify(fieldArg)}
-      (${kind}) for ${arg.name}`
+      (${kind}) for ${arg.name}`,
     );
   }
 
@@ -385,14 +390,14 @@ export class TypeGraph {
     queryPath: string[] = [],
     parentIdx = 0,
     parentStage: ComputeStage | undefined = undefined,
-    serial = false
+    serial = false,
   ): ComputeStage[] {
     const parentType = this.type(parentIdx);
     const stages: ComputeStage[] = [];
 
     const parentSelection = graphql.resolveSelection(
       parentSelectionSet,
-      fragments
+      fragments,
     );
     const fieldSchema = (parentType.data.binds ?? {}) as Record<string, number>;
     verbose &&
@@ -404,8 +409,8 @@ export class TypeGraph {
         parentType.typedef,
         Object.entries(fieldSchema).reduce(
           (agg, [k, v]) => ({ ...agg, [k]: this.type(v).typedef }),
-          {}
-        )
+          {},
+        ),
       );
 
     if (parentType.typedef === "struct" && parentSelection.length < 1) {
@@ -437,8 +442,8 @@ export class TypeGraph {
               kind: Kind.SELECTION_SET,
               selections: [field],
             },
-            verbose
-          )
+            verbose,
+          ),
         );
         continue;
       }
@@ -447,7 +452,7 @@ export class TypeGraph {
       if (fieldName == "__typename") {
         if (fieldArgs && fieldArgs.length > 0) {
           throw Error(
-            `__typename cannot have args ${JSON.stringify(fieldArgs)}`
+            `__typename cannot have args ${JSON.stringify(fieldArgs)}`,
           );
         }
 
@@ -462,7 +467,7 @@ export class TypeGraph {
             batcher: this.nextBatcher(stringTypeNode),
             node: fieldName,
             path: [...queryPath, aliasName ?? fieldName],
-          })
+          }),
         );
 
         continue;
@@ -471,7 +476,7 @@ export class TypeGraph {
       const fieldIdx = fieldSchema[fieldName];
       if (!fieldIdx) {
         throw Error(
-          `${fieldName} not found in ${JSON.stringify(this.type(parentIdx))}`
+          `${fieldName} not found in ${JSON.stringify(this.type(parentIdx))}`,
         );
       }
       const fieldType = this.type(fieldIdx);
@@ -484,7 +489,7 @@ export class TypeGraph {
       if (fieldType.typedef !== "func" && fieldType.typedef !== "gen") {
         if (fieldArgs && fieldArgs.length > 0) {
           throw Error(
-            `unexpected args=${JSON.stringify(fieldArgs)} for ${fieldType}`
+            `unexpected args=${JSON.stringify(fieldArgs)} for ${fieldType}`,
           );
         }
 
@@ -513,8 +518,8 @@ export class TypeGraph {
               verbose,
               [...queryPath, aliasName ?? fieldName],
               fieldIdx,
-              stage
-            )
+              stage,
+            ),
           );
         } else if (
           fieldType.typedef === "optional" &&
@@ -535,8 +540,8 @@ export class TypeGraph {
                 verbose,
                 [...queryPath, aliasName ?? fieldName],
                 subSubTypeIdx,
-                stage
-              )
+                stage,
+              ),
             );
           }
         } else if (
@@ -556,8 +561,8 @@ export class TypeGraph {
                 verbose,
                 [...queryPath, aliasName ?? fieldName],
                 subTypeIdx,
-                stage
-              )
+                stage,
+              ),
             );
           }
         } else {
@@ -589,7 +594,7 @@ export class TypeGraph {
         fieldArgs ?? []
       ).reduce(
         (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
-        {}
+        {},
       );
 
       const nestedDepsUnion = [];
@@ -597,7 +602,7 @@ export class TypeGraph {
         const nested = this.collectArg(
           fieldArgsIdx[argName],
           argIdx,
-          fieldSchema
+          fieldSchema,
         );
         if (!nested) {
           continue;
@@ -620,7 +625,7 @@ export class TypeGraph {
       dependencies.push(
         ...Array.from(new Set(nestedDepsUnion)).map((dep) =>
           [...queryPath, dep].join(".")
-        )
+        ),
       );
 
       const mat = this.tg.materializers[fieldType.data.materializer as number];
@@ -628,7 +633,7 @@ export class TypeGraph {
 
       if (!serial && mat.data.serial) {
         throw Error(
-          `${fieldType.name} via ${mat.name} can only be executed in mutation`
+          `${fieldType.name} via ${mat.name} can only be executed in mutation`,
         );
       }
 
@@ -656,8 +661,8 @@ export class TypeGraph {
             verbose,
             [...queryPath, fieldName],
             outputIdx,
-            stage
-          )
+            stage,
+          ),
         );
       } else if (
         outputType.typedef === "optional" &&
@@ -678,8 +683,8 @@ export class TypeGraph {
               verbose,
               [...queryPath, aliasName ?? fieldName],
               subSubTypeIdx,
-              stage
-            )
+              stage,
+            ),
           );
         }
       } else if (
@@ -698,8 +703,8 @@ export class TypeGraph {
               verbose,
               [...queryPath, aliasName ?? fieldName],
               subTypeIdx,
-              stage
-            )
+              stage,
+            ),
           );
         }
       }
@@ -711,27 +716,26 @@ export class TypeGraph {
   preparePolicies(stages: ComputeStage[]): PolicyStagesFactory {
     const policies = Array.from(
       new Set(
-        stages.flatMap((stage) => Object.values(stage.props.policies).flat())
-      )
+        stages.flatMap((stage) => Object.values(stage.props.policies).flat()),
+      ),
     ).map((policyName) => {
       // bug-prone, lookup first for policies in introspection, then in current typegraph
       if (this.introspection) {
         const introPolicy = this.introspection.tg.policies.find(
-          (p) => p.name === policyName
+          (p) => p.name === policyName,
         );
 
         if (introPolicy) {
-          const mat =
-            this.introspection.tg.materializers[
-              introPolicy.materializer as number
-            ];
+          const mat = this.introspection.tg.materializers[
+            introPolicy.materializer as number
+          ];
           const runtime = this.introspection.tg.runtimes[mat.runtime];
           const rt = this.introspection.runtimeReferences[
             runtime.name
           ] as WorkerRuntime; // temp
           return [introPolicy.name, rt.delegate(mat.name)] as [
             string,
-            Resolver
+            Resolver,
           ];
         }
       }
@@ -791,14 +795,14 @@ export class TypeGraph {
         type.typedef === "boolean" ||
         type.typedef === "gen" ||
         type.typedef === "string",
-      `struct expected but got ${type.typedef}`
+      `struct expected but got ${type.typedef}`,
     );
     return (x: any) => ensureArray(x);
   };
 }
 
 const lazyResolver = <T>(
-  fn: (args: any) => Promise<T>
+  fn: (args: any) => Promise<T>,
 ): ((args: any) => Promise<T>) => {
   let memo: Promise<T> | undefined = undefined;
   // deno-lint-ignore require-await

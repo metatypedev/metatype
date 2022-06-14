@@ -15,7 +15,7 @@ export type RuntimeInit = Record<
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
-    config: RuntimeConfig
+    config: RuntimeConfig,
   ) => Promise<Runtime> | Runtime
 >;
 
@@ -25,13 +25,13 @@ export abstract class Runtime {
   abstract materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean
+    verbose: boolean,
   ): ComputeStage[];
 
   static collectRelativeStages(
     base: ComputeStage,
     waitlist: ComputeStage[],
-    cursor = 0
+    cursor = 0,
   ): ComputeStage[] {
     const ret = [];
     while (cursor < waitlist.length) {
@@ -49,7 +49,7 @@ export abstract class Runtime {
         waitlist.splice(cursor, 1);
         ret.push(
           stage,
-          ...Runtime.collectRelativeStages(stage, waitlist, cursor)
+          ...Runtime.collectRelativeStages(stage, waitlist, cursor),
         );
       } else {
         cursor += 1;

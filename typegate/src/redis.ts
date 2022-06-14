@@ -38,7 +38,7 @@ export class RedisReplicatedMap<T> {
     redis: Redis,
     redisObs: Redis,
     serializer: (elem: T) => Promise<string> | string,
-    deserializer: (value: string) => Promise<T> | T
+    deserializer: (value: string) => Promise<T> | T,
   ) {
     this.instance = crypto.randomUUID();
     this.redis = redis;
@@ -55,7 +55,7 @@ export class RedisReplicatedMap<T> {
     name: string,
     connection: RedisConnectOptions,
     serializer: (elem: T) => Promise<string> | string,
-    deserializer: (value: string) => Promise<T> | T
+    deserializer: (value: string) => Promise<T> | T,
   ) {
     // needs two connections because
     // 1. xread with block delays other commands
@@ -68,7 +68,7 @@ export class RedisReplicatedMap<T> {
       redis,
       redisObs,
       serializer,
-      deserializer
+      deserializer,
     );
   }
 
@@ -87,9 +87,11 @@ export class RedisReplicatedMap<T> {
       memory.set(name, await deserializer(payload));
     }
 
-    for await (const { name, event, instance } of this.sync.start(
-      lastMessage ? lastMessage.xid : 0
-    )) {
+    for await (
+      const { name, event, instance } of this.sync.start(
+        lastMessage ? lastMessage.xid : 0,
+      )
+    ) {
       if (this.instance == instance) {
         continue;
       }
@@ -116,7 +118,7 @@ export class RedisReplicatedMap<T> {
     const target = this;
     let loop = true;
     let start: (
-      cursor: XIdInput
+      cursor: XIdInput,
     ) => AsyncIterableIterator<Record<string, string>> = async function* () {};
 
     const process = new Promise<void>((resolve) => {
@@ -131,7 +133,7 @@ export class RedisReplicatedMap<T> {
               [{ key: ekey, xid: cursor }],
               {
                 block: 5000,
-              }
+              },
             );
             if (!stream) {
               continue;
@@ -167,7 +169,7 @@ export class RedisReplicatedMap<T> {
       ekey,
       "*",
       { name, event: "+", instance: this.instance },
-      { approx: true, elements: 10000 }
+      { approx: true, elements: 10000 },
     );
     await p.flush();
   }
@@ -191,14 +193,14 @@ export class RedisReplicatedMap<T> {
       ekey,
       "*",
       { name, event: "-", instance: this.instance },
-      { approx: true, elements: 10000 }
+      { approx: true, elements: 10000 },
     );
     await p.flush();
     return count;
   }
 
   async filter(
-    predicat: (elem: Record<string, string>) => boolean
+    predicat: (elem: Record<string, string>) => boolean,
   ): Promise<number> {
     const { ekey, redis } = this;
     const [stream] = await redis.xread([{ key: ekey, xid: 0 }], { block: 1 });

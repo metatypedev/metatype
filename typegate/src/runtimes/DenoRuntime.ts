@@ -29,7 +29,7 @@ export class DenoRuntime extends Runtime {
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
-    config: RuntimeConfig
+    config: RuntimeConfig,
   ): Runtime {
     if (!DenoRuntime.singleton) {
       DenoRuntime.singleton = new DenoRuntime();
@@ -42,7 +42,7 @@ export class DenoRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean
+    verbose: boolean,
   ): ComputeStage[] {
     const resolver: Resolver = (() => {
       if (stage.props.node === "__typename") {

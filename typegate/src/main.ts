@@ -100,7 +100,7 @@ const server = serve(
         query,
         operationName,
         variables,
-        headers
+        headers,
       );
       return new Response(JSON.stringify(res), {
         headers: {
@@ -115,13 +115,13 @@ const server = serve(
 
     return new Response("ko", { status: 500 });
   },
-  { port: config.tg_port }
+  { port: config.tg_port },
 );
 
 if (config.debug) {
   (function reload(backoff = 3) {
     fetch(
-      `http://localhost:5000/dev?node=${config.tg_host}:${config.tg_port}`
+      `http://localhost:5000/dev?node=${config.tg_host}:${config.tg_port}`,
     ).catch((e) => {
       setTimeout(reload, 200, backoff - 1);
     });
