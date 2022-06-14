@@ -26,7 +26,7 @@ export class TypeGraphRuntime extends Runtime {
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
-    config: RuntimeConfig
+    config: RuntimeConfig,
   ): Runtime {
     return new TypeGraphRuntime(typegraph);
   }
@@ -36,7 +36,7 @@ export class TypeGraphRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean
+    verbose: boolean,
   ): ComputeStage[] {
     const resolver: Resolver = (() => {
       const name = stage.props.materializer?.name;
@@ -56,8 +56,9 @@ export class TypeGraphRuntime extends Runtime {
 
       return async ({ _: { parent } }) => {
         const resolver = parent[stage.props.node];
-        const ret =
-          typeof resolver === "function" ? await resolver() : resolver;
+        const ret = typeof resolver === "function"
+          ? await resolver()
+          : resolver;
         return ret;
       };
     })();
@@ -76,9 +77,11 @@ export class TypeGraphRuntime extends Runtime {
     const queriesBind: Record<string, number> = {};
     const mutationsBind: Record<string, number> = {};
 
-    for (const [exposedName, exposedTypeIdx] of Object.entries(
-      root.data.binds as Record<string, number>
-    )) {
+    for (
+      const [exposedName, exposedTypeIdx] of Object.entries(
+        root.data.binds as Record<string, number>,
+      )
+    ) {
       const exposedType = this.tg.types[exposedTypeIdx];
       const matIdx = exposedType.data.materializer;
       const mat = this.tg.materializers[matIdx as number];
@@ -91,22 +94,20 @@ export class TypeGraphRuntime extends Runtime {
       }
     }
 
-    const queries =
-      Object.keys(queriesBind).length > 0
-        ? {
-            ...root,
-            data: { ...root.data, binds: queriesBind },
-            name: "Query",
-          }
-        : null;
-    const mutations =
-      Object.keys(mutationsBind).length > 0
-        ? {
-            ...root,
-            data: { ...root.data, binds: mutationsBind },
-            name: "Mutation",
-          }
-        : null;
+    const queries = Object.keys(queriesBind).length > 0
+      ? {
+        ...root,
+        data: { ...root.data, binds: queriesBind },
+        name: "Query",
+      }
+      : null;
+    const mutations = Object.keys(mutationsBind).length > 0
+      ? {
+        ...root,
+        data: { ...root.data, binds: mutationsBind },
+        name: "Mutation",
+      }
+      : null;
 
     return {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L36
@@ -115,7 +116,7 @@ export class TypeGraphRuntime extends Runtime {
         // FIXME prefer traversal
         const collectInputType = (
           type: TypeNode,
-          history: Set<string> = new Set()
+          history: Set<string> = new Set(),
         ): string[] => {
           if (history.has(type.name)) {
             return [];
@@ -125,7 +126,7 @@ export class TypeGraphRuntime extends Runtime {
             return [
               type.name,
               ...Object.values(
-                type.data.binds as Record<string, number>
+                type.data.binds as Record<string, number>,
               ).flatMap((subTypeIdx) =>
                 collectInputType(this.tg.types[subTypeIdx], history)
               ),
@@ -134,13 +135,13 @@ export class TypeGraphRuntime extends Runtime {
           if (type.typedef === "list") {
             return collectInputType(
               this.tg.types[type.data.of as number],
-              history
+              history,
             );
           }
           if (type.typedef === "optional") {
             return collectInputType(
               this.tg.types[type.edges[0] as number],
-              history
+              history,
             );
           }
           return [];
@@ -158,8 +159,7 @@ export class TypeGraphRuntime extends Runtime {
           .concat(mutations ? [mutations] : [])
           .filter((type) => {
             // filter non-native GraphQL types
-            const isEnforced =
-              type.typedef === "injection" ||
+            const isEnforced = type.typedef === "injection" ||
               (type.typedef === "struct" &&
                 Object.values(type.data.binds as Record<string, number>)
                   .map((bind) => this.tg.types[bind])
@@ -169,17 +169,17 @@ export class TypeGraphRuntime extends Runtime {
                 Object.values(type.data.binds as Record<string, number>)
                   .map((bind) => this.tg.types[bind])
                   .every((nested) => nested.data.apply_value));
-            const isQuant =
-              type.typedef === "optional" || type.typedef === "list";
+            const isQuant = type.typedef === "optional" ||
+              type.typedef === "list";
             const isInp = this.tg.types.some(
               (t) =>
                 (t.typedef === "func" || t.typedef === "gen") &&
-                this.tg.types[t.data.input as number] === type
+                this.tg.types[t.data.input as number] === type,
             );
             const isOutQuant =
               (type.typedef === "func" || type.typedef === "gen") &&
               ["list", "optional"].includes(
-                this.tg.types[type.data.output as number].typedef
+                this.tg.types[type.data.output as number].typedef,
               );
             return !isQuant && !isInp && !isOutQuant && !isEnforced;
           })
@@ -187,7 +187,7 @@ export class TypeGraphRuntime extends Runtime {
             const res = this.formatType(
               type,
               false,
-              inputTypes.includes(type.name)
+              inputTypes.includes(type.name),
             );
             return res;
           });
@@ -249,7 +249,7 @@ export class TypeGraphRuntime extends Runtime {
   formatType = (
     type: TypeNode,
     required: boolean,
-    asInput: boolean
+    asInput: boolean,
   ): Record<string, () => unknown> => {
     const common = {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L207
@@ -355,7 +355,7 @@ export class TypeGraphRuntime extends Runtime {
           description: () => `${type.name} input type`,
           inputFields: () => {
             return Object.entries(
-              type.data.binds as Record<string, number>
+              type.data.binds as Record<string, number>,
             ).map(this.formatField(true));
           },
           interfaces: () => [],
@@ -368,7 +368,7 @@ export class TypeGraphRuntime extends Runtime {
           description: () => `${type.name} type`,
           fields: () => {
             return Object.entries(
-              type.data.binds as Record<string, number>
+              type.data.binds as Record<string, number>,
             ).map(this.formatField(false));
           },
           interfaces: () => [],
@@ -396,8 +396,7 @@ export class TypeGraphRuntime extends Runtime {
     return ret;
   }
 
-  formatField =
-    (asInput: boolean) =>
+  formatField = (asInput: boolean) =>
     ([name, typeIdx]: [string, number]) => {
       const type = this.tg.types[typeIdx];
       const common = {
@@ -415,7 +414,7 @@ export class TypeGraphRuntime extends Runtime {
             const inp = this.tg.types[type.data.input as number];
             ensure(
               inp.typedef === "struct",
-              `${type} cannot be an input field, require struct`
+              `${type} cannot be an input field, require struct`,
             );
             return Object.entries(inp.data.binds as Record<string, number>)
               .map(this.formatInputFields)

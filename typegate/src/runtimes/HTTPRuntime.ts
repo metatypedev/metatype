@@ -12,7 +12,7 @@ const traverseLift = (obj: JSONValue): any => {
   if (typeof obj === "object" && obj !== null) {
     return Object.entries(obj).reduce(
       (agg, [k, v]) => ({ ...agg, [k]: () => v }),
-      {}
+      {},
     );
   }
   return obj;
@@ -30,7 +30,7 @@ export class HTTPRuntime extends Runtime {
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
-    config: RuntimeConfig
+    config: RuntimeConfig,
   ): Runtime {
     return new HTTPRuntime(args.endpoint as string);
   }
@@ -48,7 +48,7 @@ export class HTTPRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean
+    verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 
@@ -60,7 +60,7 @@ export class HTTPRuntime extends Runtime {
       new ComputeStage({
         ...stage.props,
         resolver: this.execute(verb as string, path as string),
-      })
+      }),
     );
 
     for (const field of sameRuntime) {
@@ -74,7 +74,7 @@ export class HTTPRuntime extends Runtime {
         new ComputeStage({
           ...field.props,
           resolver,
-        })
+        }),
       );
     }
     return stagesMat;

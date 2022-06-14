@@ -24,7 +24,7 @@ class MetaTest {
       await Deno.readTextFile(`./src/typegraphs/${name}.json`),
       {},
       deepMerge(testRuntimesConfig, config),
-      null
+      null,
     );
     this.engines.push(engine);
     return engine;
@@ -33,14 +33,14 @@ class MetaTest {
   pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
     return this.shell(
       ["../typegraph/.venv/bin/python", "-c", code],
-      deepMerge(testRuntimesConfig, config)
+      deepMerge(testRuntimesConfig, config),
     );
   }
 
   pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
     return this.shell(
       ["../typegraph/.venv/bin/python", path],
-      deepMerge(testRuntimesConfig, config)
+      deepMerge(testRuntimesConfig, config),
     );
   }
 
@@ -66,7 +66,7 @@ class MetaTest {
       stdout,
       {},
       deepMerge(testRuntimesConfig, config),
-      null
+      null,
     );
     this.engines.push(engine);
     return engine;
@@ -78,7 +78,7 @@ class MetaTest {
 
   async should(
     fact: string,
-    fn: (t: Deno.TestContext) => void | Promise<void>
+    fn: (t: Deno.TestContext) => void | Promise<void>,
   ): Promise<boolean> {
     return await this.t.step({
       name: `should ${fact}`,
@@ -113,7 +113,7 @@ export function testAll(engineName: string) {
           `run case ${f.name.replace(".graphql", "")}`,
           async () => {
             await Q.fs(`${engineName}/1`, e);
-          }
+          },
         );
       }
     }
@@ -139,7 +139,7 @@ export class Q {
     query: string,
     headers: Headers,
     variables: Variables,
-    expects: Expect[]
+    expects: Expect[],
   ) {
     this.query = query;
     this.headers = headers;
@@ -156,7 +156,7 @@ export class Q {
         await query,
         null,
         {},
-        {}
+        {},
       );
       await Deno.writeTextFile(output, JSON.stringify(result, null, 2));
     }
@@ -171,7 +171,7 @@ export class Q {
       this.query,
       deepMerge(this.headers, headers),
       this.variables,
-      this.expects
+      this.expects,
     );
   }
 
@@ -180,7 +180,7 @@ export class Q {
       this.query,
       this.headers,
       deepMerge(this.variables, variables),
-      this.expects
+      this.expects,
     );
   }
 
@@ -220,7 +220,7 @@ export class Q {
       this.query,
       null,
       this.variables,
-      this.headers
+      this.headers,
     );
     const res = JSON.parse(JSON.stringify(json));
     const ctx = { status };
