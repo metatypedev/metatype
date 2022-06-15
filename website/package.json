@@ -28,10 +28,15 @@
     "@docusaurus/eslint-plugin": "2.0.0-beta.21",
     "@docusaurus/module-type-aliases": "2.0.0-beta.21",
     "@tsconfig/docusaurus": "^1.0.5",
+    "@types/react": "^18.0.12",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
+    "docusaurus-lunr-search": "^2.1.15",
+    "docusaurus-plugin-drawio": "^0.1.7",
     "eslint": "^8.17.0",
-    "typescript": "^4.7.3"
+    "lunr": "^2.3.9",
+    "typescript": "^4.7.3",
+    "webpack": "^5.73.0"
   },
   "browserslist": {
     "production": [

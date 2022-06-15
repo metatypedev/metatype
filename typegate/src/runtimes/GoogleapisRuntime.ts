@@ -11,7 +11,7 @@ export class GoogleapisRuntime extends Runtime {
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
-    config: RuntimeConfig
+    config: RuntimeConfig,
   ): Runtime {
     return new GoogleapisRuntime();
   }
@@ -52,15 +52,14 @@ export class GoogleapisRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean
+    verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
     const { verb, url } = stage.props.materializer?.data ?? {};
 
-    const iteratorReadMask =
-      stage.props.outType.data.binds &&
+    const iteratorReadMask = stage.props.outType.data.binds &&
       (stage.props.outType.data.binds as Record<string, unknown>)
         .nextPageToken &&
       (stage.props.outType.data.binds as Record<string, unknown>).totalSize;
@@ -74,7 +73,7 @@ export class GoogleapisRuntime extends Runtime {
     }
 
     readMask.sort();
-    for (let i = 0; i < readMask.length - 1; ) {
+    for (let i = 0; i < readMask.length - 1;) {
       const a = readMask[i];
       const b = readMask[i + 1];
       if (b.startsWith(a)) {
@@ -106,7 +105,7 @@ export class GoogleapisRuntime extends Runtime {
             ...field.props,
             dependencies: [...field.props.dependencies, queryStage.id()],
             resolver,
-          })
+          }),
         );
       }
     }

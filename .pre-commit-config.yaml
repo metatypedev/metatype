@@ -38,7 +38,7 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt'
+        entry: bash -c 'cd typegate && deno fmt --ignore=native,workers'
         pass_filenames: false
         types:
           - ts
@@ -46,7 +46,7 @@ repos:
       - id: deno-lint
         name: Deno lint
         language: system
-        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any,no-unused-vars'
+        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any,no-unused-vars --ignore=native'
         pass_filenames: false
         types:
           - ts
