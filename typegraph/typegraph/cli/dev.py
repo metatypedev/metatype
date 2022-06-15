@@ -78,7 +78,7 @@ def serve(config: hypercorn.Config, current_path: Path):
     app.include_router(router)
     app.state.tgs = serialized_tgs
 
-    reload_typegraphs(serialized_tgs, "127.0.0.1:7890")
+    reload_typegraphs(serialized_tgs, "127.0.0.1:7891")
 
     asyncio.run(hypercorn.asyncio.serve(app, config))
 
