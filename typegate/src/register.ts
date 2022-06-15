@@ -8,7 +8,7 @@ const replicatedMap = await RedisReplicatedMap.init<Engine>(
   "typegraph",
   redisConfig,
   (engine) => JSON.stringify(engine.tg.tg),
-  (payload) => initTypegraph(payload)
+  (payload) => initTypegraph(payload),
 );
 
 async function set(payload: string) {
@@ -50,7 +50,7 @@ export const register = {
 
 const typegateEngine = await initTypegraph(
   await Deno.readTextFile("./src/typegraphs/typegate.json"),
-  { typegate: await TypeGateRuntime.init() }
+  { typegate: await TypeGateRuntime.init() },
 );
 
 // no need for a sync

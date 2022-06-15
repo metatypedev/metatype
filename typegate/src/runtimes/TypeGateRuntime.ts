@@ -28,7 +28,7 @@ export class TypeGateRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean
+    verbose: boolean,
   ): ComputeStage[] {
     const resolver: Resolver = (() => {
       const name = stage.props.materializer?.name;
@@ -47,8 +47,9 @@ export class TypeGateRuntime extends Runtime {
 
       return async ({ _: { parent }, ...args }) => {
         const resolver = parent[stage.props.node];
-        const ret =
-          typeof resolver === "function" ? await resolver(args) : resolver;
+        const ret = typeof resolver === "function"
+          ? await resolver(args)
+          : resolver;
         return ret;
       };
     })();
@@ -86,7 +87,7 @@ export class TypeGateRuntime extends Runtime {
     if (localGraphs.includes(name)) {
       await Deno.writeTextFile(
         path.join(dirName, "../typegraphs", `${name}.json`),
-        `${fromString}\n`
+        `${fromString}\n`,
       );
     } else {
       await register.set(fromString);
