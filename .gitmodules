@@ -1,6 +1,8 @@
 [submodule "typegate/native/libs/prisma-engines"]
 	path = typegate/native/libs/prisma-engines
+	shallow = true
 	url = https://github.com/metatypedev/prisma-engines.git
 [submodule "typegraph/native/libs/prisma-engines"]
 	path = typegraph/native/libs/prisma-engines
+	shallow = true
 	url = https://github.com/metatypedev/prisma-engines.git
