@@ -18,6 +18,25 @@ const traverseLift = (obj: JSONValue): any => {
   return obj;
 };
 
+const getPath = (
+  pathPattern: string,
+  queryArgs: Record<string, any>,
+): string => {
+  const pathname = pathPattern.replace(/\{\w+\}/, (match) => {
+    const key = match.substring(1, match.length - 1);
+    if (Object.hasOwnProperty.call(queryArgs, key)) {
+      const value = queryArgs[key];
+      delete queryArgs[key];
+      return value;
+    } else {
+      //? throw??
+      return match;
+    }
+  });
+  const search = new URLSearchParams(queryArgs).toString();
+  return `${pathname}?${search}`;
+};
+
 export class HTTPRuntime extends Runtime {
   endpoint: string;
 
@@ -37,8 +56,10 @@ export class HTTPRuntime extends Runtime {
 
   async deinit(): Promise<void> {}
 
-  execute(method: string, path: string): Resolver {
+  execute(method: string, pathPattern: string): Resolver {
     return async (args) => {
+      const { _, ...queryArgs } = args;
+      const path = getPath(pathPattern, queryArgs);
       const ret = await fetch(join(this.endpoint, path), { method });
       const res = await ret.json();
       return traverseLift(res);
@@ -65,7 +86,7 @@ export class HTTPRuntime extends Runtime {
 
     for (const field of sameRuntime) {
       const resolver: Resolver = ({ _: { parent } }) => {
-        console.log("bb");
+        // console.log("bb");
         const resolver = parent[field.props.node];
         const ret = typeof resolver === "function" ? resolver() : resolver;
         return ret;
