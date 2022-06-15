@@ -9,6 +9,8 @@ services:
       - "7890:8000"
     volumes:
       - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   postgres:
     image: postgres:14
