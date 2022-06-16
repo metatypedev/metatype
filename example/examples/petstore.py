@@ -28,7 +28,7 @@ with TypeGraph("swagger-petstore") as g:
 
     pet = t.struct(
         {
-            "id": t.integer(),
+            "id": t.optional(t.integer()),
             "category": t.optional(g("Category")),
             "name": t.string(),
             "photoUrls": t.list(t.string()),
@@ -51,8 +51,22 @@ with TypeGraph("swagger-petstore") as g:
         "/pet/findByTags", t.struct({"tags": t.list(t.string())}), t.list(g("Pet"))
     ).add_policy(allow_all)
 
+    add_pet = remote.post("/pet", g("Pet"), g("Pet")).add_policy(allow_all)
+
+    update_pet = remote.put("/pet", g("Pet"), g("Pet")).add_policy(allow_all)
+
+    # update_pet_with_form = remote.post(
+    #     "/pet/{petId}",
+    #     t.struct({"petId": t.integer(), "name": t.string(), "status": t.string()}),
+    #     g("Pet"),
+    #     content_type="application/x-www-form-urlencoded",
+    # ).add_policy(allow_all)
+
     g.expose(
         pet=find_pet_by_id,
         petsByStatus=find_pets_by_status,
         petsByTags=find_pets_by_tags,
+        addPet=add_pet,
+        updatePet=update_pet,
+        # updatePetWithForm=update_pet_with_form,
     )

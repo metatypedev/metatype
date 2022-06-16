@@ -15,6 +15,12 @@ class HTTPRuntime(Runtime):
     def get(self, path: str, inp, out):
         return t.func(inp, out, RESTMat(self, "GET", path))
 
+    def post(self, path: str, inp, out):
+        return t.func(inp, out, RESTMat(self, "POST", path))
+
+    def put(self, path: str, inp, out):
+        return t.func(inp, out, RESTMat(self, "POST", path))
+
 
 @dataclass(eq=True, frozen=True)
 class RESTMat(Materializer):

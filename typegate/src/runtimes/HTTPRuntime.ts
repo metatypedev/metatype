@@ -18,23 +18,28 @@ const traverseLift = (obj: JSONValue): any => {
   return obj;
 };
 
-const getPath = (
+interface ReplaceDynamicPathParamsResult {
+  pathname: string;
+  restArgs: Record<string, any>;
+}
+
+const replaceDynamicPathParams = (
   pathPattern: string,
   queryArgs: Record<string, any>,
-): string => {
+): ReplaceDynamicPathParamsResult => {
+  const restArgs = { ...queryArgs };
   const pathname = pathPattern.replace(/\{\w+\}/, (match) => {
     const key = match.substring(1, match.length - 1);
-    if (Object.hasOwnProperty.call(queryArgs, key)) {
-      const value = queryArgs[key];
-      delete queryArgs[key];
+    if (Object.hasOwnProperty.call(restArgs, key)) {
+      const value = restArgs[key];
+      delete restArgs[key];
       return value;
     } else {
       //? throw??
       return match;
     }
   });
-  const search = new URLSearchParams(queryArgs).toString();
-  return `${pathname}?${search}`;
+  return { pathname, restArgs };
 };
 
 export class HTTPRuntime extends Runtime {
@@ -59,11 +64,37 @@ export class HTTPRuntime extends Runtime {
   execute(method: string, pathPattern: string): Resolver {
     return async (args) => {
       const { _, ...queryArgs } = args;
-      const path = getPath(pathPattern, queryArgs);
-      const ret = await fetch(join(this.endpoint, path), { method });
+      const { pathname, restArgs } = replaceDynamicPathParams(
+        pathPattern,
+        queryArgs,
+      );
+      const ret = await this.fetch(method, pathname, restArgs);
       const res = await ret.json();
       return traverseLift(res);
     };
+  }
+
+  private fetch(
+    method: string,
+    pathname: string,
+    args: Record<string, any>,
+  ): Promise<any> {
+    switch (method) {
+      case "GET":
+      case "DELETE": {
+        const search = new URLSearchParams(args).toString();
+        return fetch(join(this.endpoint, `${pathname}?${search}`), { method });
+      }
+
+      default: // POST, PUT, PATCH ...(??)
+        return fetch(join(this.endpoint, pathname), {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method,
+          body: JSON.stringify(args),
+        });
+    }
   }
 
   materialize(
