@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from dataclasses import KW_ONLY
 
-from databases import Database
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
 from typegraph.types import typedefs as t
@@ -144,35 +143,6 @@ GRANT UPDATE
 
 
 """
-
-
-class SQLTarget:
-    def __init__(self, connection) -> None:
-        super().__init__()
-        self.db = Database(connection)
-
-    async def query(self, query, **kwargs):
-        async with self.db:
-            res = await self.db.fetch_all(query=query, values=kwargs)
-            return [r._row for r in res]
-
-    async def list_tables(self):
-        return await self.query(list_tables)
-
-
-async def postgraphile(connection):
-
-    async with Database(connection) as db:
-
-        async with db.transaction():
-
-            query = """
-            CREATE TABLE HighScores (id INTEGER PRIMARY KEY, name VARCHAR(100), score INTEGER)
-            """
-            await db.execute(query=query)
-
-
-######################
 
 
 @dataclass(eq=True, frozen=True)

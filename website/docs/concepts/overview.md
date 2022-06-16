@@ -1,3 +1,0 @@
-# Overview
-
-## What is Metatype ?

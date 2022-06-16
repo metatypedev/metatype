@@ -13,8 +13,7 @@ classifiers = [
 ]
 
 [tool.poetry.scripts]
-tg = 'typegraph.cli.cmds:root'
-typegraph = 'typegraph.cli.cmds:root'
+meta = 'typegraph.cli.cmds:root'
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"

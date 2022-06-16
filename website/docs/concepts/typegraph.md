@@ -1,3 +1,0 @@
-# Typegraph
-
-## Middleware
