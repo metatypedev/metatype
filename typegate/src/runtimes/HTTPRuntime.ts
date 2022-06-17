@@ -42,6 +42,25 @@ const replaceDynamicPathParams = (
   return { pathname, restArgs };
 };
 
+const encodeRequestBody = (
+  body: Record<string, any>,
+  type: string,
+): string | FormData => {
+  switch (type) {
+    case "application/json":
+      return JSON.stringify(body);
+    case "application/x-www-form-urlencoded": {
+      const formData = new FormData();
+      for (const [name, value] of Object.entries(body)) {
+        formData.append(name, value);
+      }
+      return formData;
+    }
+    default:
+      throw new Error(`Content-Type ${type} not supported`);
+  }
+};
+
 export class HTTPRuntime extends Runtime {
   endpoint: string;
 
@@ -61,14 +80,14 @@ export class HTTPRuntime extends Runtime {
 
   async deinit(): Promise<void> {}
 
-  execute(method: string, pathPattern: string): Resolver {
+  execute(method: string, pathPattern: string, contentType: string): Resolver {
     return async (args) => {
       const { _, ...queryArgs } = args;
       const { pathname, restArgs } = replaceDynamicPathParams(
         pathPattern,
         queryArgs,
       );
-      const ret = await this.fetch(method, pathname, restArgs);
+      const ret = await this.fetch(method, pathname, restArgs, contentType);
       const res = await ret.json();
       return traverseLift(res);
     };
@@ -78,21 +97,29 @@ export class HTTPRuntime extends Runtime {
     method: string,
     pathname: string,
     args: Record<string, any>,
+    type: string,
   ): Promise<any> {
+    const headers = {
+      "Accept": "application/json",
+    };
     switch (method) {
       case "GET":
       case "DELETE": {
         const search = new URLSearchParams(args).toString();
-        return fetch(join(this.endpoint, `${pathname}?${search}`), { method });
+        return fetch(join(this.endpoint, `${pathname}?${search}`), {
+          method,
+          headers,
+        });
       }
 
       default: // POST, PUT, PATCH ...(??)
         return fetch(join(this.endpoint, pathname), {
           headers: {
+            ...headers,
             "Content-Type": "application/json",
           },
           method,
-          body: JSON.stringify(args),
+          body: encodeRequestBody(args, type),
         });
     }
   }
@@ -107,11 +134,15 @@ export class HTTPRuntime extends Runtime {
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
 
     console.log(stage.props.materializer);
-    const { verb, path } = stage.props.materializer?.data ?? {};
+    const { verb, path, content_type } = stage.props.materializer?.data ?? {};
     stagesMat.push(
       new ComputeStage({
         ...stage.props,
-        resolver: this.execute(verb as string, path as string),
+        resolver: this.execute(
+          verb as string,
+          path as string,
+          content_type as string,
+        ),
       }),
     );
 

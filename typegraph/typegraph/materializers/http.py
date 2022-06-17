@@ -15,8 +15,8 @@ class HTTPRuntime(Runtime):
     def get(self, path: str, inp, out):
         return t.func(inp, out, RESTMat(self, "GET", path))
 
-    def post(self, path: str, inp, out):
-        return t.func(inp, out, RESTMat(self, "POST", path))
+    def post(self, path: str, inp, out, **kwargs):
+        return t.func(inp, out, RESTMat(self, "POST", path, **kwargs))
 
     def put(self, path: str, inp, out):
         return t.func(inp, out, RESTMat(self, "POST", path))
@@ -27,5 +27,6 @@ class RESTMat(Materializer):
     runtime: Runtime
     verb: str
     path: str
+    content_type: str = "application/json"
     _: KW_ONLY
     materializer_name: str = "rest"
