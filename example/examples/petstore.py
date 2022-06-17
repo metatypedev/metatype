@@ -55,12 +55,12 @@ with TypeGraph("swagger-petstore") as g:
 
     update_pet = remote.put("/pet", g("Pet"), g("Pet")).add_policy(allow_all)
 
-    # update_pet_with_form = remote.post(
-    #     "/pet/{petId}",
-    #     t.struct({"petId": t.integer(), "name": t.string(), "status": t.string()}),
-    #     g("Pet"),
-    #     content_type="application/x-www-form-urlencoded",
-    # ).add_policy(allow_all)
+    update_pet_with_form = remote.post(
+        "/pet/{petId}",
+        t.struct({"petId": t.integer(), "name": t.string(), "status": t.string()}),
+        g("Pet"),
+        content_type="application/x-www-form-urlencoded",
+    ).add_policy(allow_all)
 
     g.expose(
         pet=find_pet_by_id,
@@ -68,5 +68,5 @@ with TypeGraph("swagger-petstore") as g:
         petsByTags=find_pets_by_tags,
         addPet=add_pet,
         updatePet=update_pet,
-        # updatePetWithForm=update_pet_with_form,
+        updatePetWithForm=update_pet_with_form,
     )
