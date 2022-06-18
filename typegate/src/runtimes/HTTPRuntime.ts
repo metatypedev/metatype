@@ -116,7 +116,7 @@ export class HTTPRuntime extends Runtime {
         return fetch(join(this.endpoint, pathname), {
           headers: {
             ...headers,
-            "Content-Type": "application/json",
+            "Content-Type": type,
           },
           method,
           body: encodeRequestBody(args, type),
