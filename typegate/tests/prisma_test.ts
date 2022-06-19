@@ -6,7 +6,10 @@ test("prisma", async (t) => {
   await t.should("drop schema and recreate", async () => {
     await gql`
       mutation a {
-        queryRaw(query: "DROP SCHEMA IF EXISTS test CASCADE", parameters: "[]")
+        executeRaw(
+          query: "DROP SCHEMA IF EXISTS test CASCADE"
+          parameters: "[]"
+        )
       }
     `
       .expectData({
@@ -30,8 +33,50 @@ test("prisma", async (t) => {
       .on(e);
   });
 
-  await t.should("insert a simple message", async () => {
-    const id = "b7831fd1-799d-4b20-9a84-830588f750af";
+  await t.should("insert a simple record", async () => {
+    const id = "b7831fd1-799d-4b20-9a84-830588f750a1";
+    await gql`
+      mutation {
+        createOnerecord(
+          data: {
+            id: ${id}
+            name: "name"
+            age: 1
+          }
+        ) {
+          id
+        }
+      }
+    `
+      .expectData({
+        createOnerecord: { id },
+      })
+      .on(e);
+  });
+
+  await t.should("update a simple record", async () => {
+    const id = "b7831fd1-799d-4b20-9a84-830588f750a2";
+    await gql`
+      mutation {
+        createOnerecord(
+          data: {
+            id: ${id}
+            name: "name"
+            age: 1
+          }
+        ) {
+          id
+        }
+      }
+    `
+      .expectData({
+        createOnerecord: { id },
+      })
+      .on(e);
+  });
+
+  await t.should("delete a simple record", async () => {
+    const id = "b7831fd1-799d-4b20-9a84-830588f750a3";
     await gql`
       mutation {
         createOnerecord(
