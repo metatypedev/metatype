@@ -47,4 +47,3 @@ with TypeGraph("prisma") as g:
         executeRaw=db.executeRaw().add_policy(allow_all),
         createOnemessages=db.generate_insert(messages).add_policy(allow_all),
     )
-

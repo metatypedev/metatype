@@ -1,8 +1,7 @@
+from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import worker
 from typegraph.materializers.graphql import GraphQLRuntime
 from typegraph.types import typedefs as t
-from typegraph import policies
 
 with TypeGraph("allow_all") as g:
 

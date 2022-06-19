@@ -17,26 +17,26 @@ import type {
 import { ResolverError } from "./errors.ts";
 
 const introspectionDefStatic = await Deno.readTextFile(
-  "./src/typegraphs/introspection.json"
+  "./src/typegraphs/introspection.json",
 ).then((d) => JSON.parse(d));
 
 export const initTypegraph = async (
   payload: string,
   customRuntime: RuntimeResolver = {},
   config: Record<string, RuntimeConfig> = {},
-  introspectionDef: any = introspectionDefStatic
+  introspectionDef: any = introspectionDefStatic,
 ) => {
   const parsed = JSON.parse(payload);
 
   const introspection = introspectionDef
     ? await TypeGraph.init(
-        introspectionDef,
-        {
-          typegraph: await TypeGraphRuntime.init(parsed, [], {}, config),
-        },
-        null,
-        {}
-      )
+      introspectionDef,
+      {
+        typegraph: await TypeGraphRuntime.init(parsed, [], {}, config),
+      },
+      null,
+      {},
+    )
     : null;
   const tg = await TypeGraph.init(parsed, customRuntime, introspection, {});
 
@@ -80,13 +80,15 @@ export class ComputeStage {
   }
 
   toString(): string {
-    return `dep ${this.props.dependencies
-      .map((d) =>
-        this.props.parent && d === this.props.parent.id() ? `${d} (P)` : d
-      )
-      .join(", ")}\nid  ${this.id()}\ntype ${
-      this.props.outType.typedef
-    }\narg ${JSON.stringify(this.props.args)}\n--`;
+    return `dep ${
+      this.props.dependencies
+        .map((d) =>
+          this.props.parent && d === this.props.parent.id() ? `${d} (P)` : d
+        )
+        .join(", ")
+    }\nid  ${this.id()}\ntype ${this.props.outType.typedef}\narg ${
+      JSON.stringify(this.props.args)
+    }\n--`;
   }
 }
 
@@ -94,7 +96,7 @@ const authorize = async (
   stageId: string,
   checks: string[],
   policiesRegistry: PolicyStages,
-  verbose: boolean
+  verbose: boolean,
 ): Promise<true | null> => {
   if (Object.values(checks).length < 1) {
     // null = inherit
@@ -140,7 +142,7 @@ export class Engine {
     policesFactory: PolicyStagesFactory,
     context: Record<string, unknown>,
     variables: Record<string, unknown>,
-    verbose: boolean
+    verbose: boolean,
   ): Promise<JSONValue> {
     const ret = {};
     const cache: Record<string, unknown> = {};
@@ -162,7 +164,7 @@ export class Engine {
       const decisions = await Promise.all(
         Object.values(policies).map((checks) =>
           authorize(stage.id(), checks, policiesRegistry, verbose)
-        )
+        ),
       );
       if (
         node !== "" &&
@@ -193,7 +195,7 @@ export class Engine {
               ...deps,
             },
           })
-        )
+        ),
       );
 
       // or no cache if no further usage
@@ -201,7 +203,7 @@ export class Engine {
 
       ensure(
         lens.length === res.length,
-        `cannot align array results ${lens.length} != ${res.length}`
+        `cannot align array results ${lens.length} != ${res.length}`,
       );
       const field = path[path.length - 1] as any;
       if (node !== "") {
@@ -221,7 +223,7 @@ export class Engine {
   traverse(
     operation: ast.OperationDefinitionNode,
     fragments: FragmentDefs,
-    verbose: boolean
+    verbose: boolean,
   ): [ComputeStage[], PolicyStagesFactory] {
     const serial = operation.operation === "mutation";
     const stages = this.tg.traverse(
@@ -233,7 +235,7 @@ export class Engine {
       [],
       0,
       undefined,
-      serial
+      serial,
     );
 
     const policies = this.tg.preparePolicies(stages);
@@ -249,7 +251,7 @@ export class Engine {
     while (waitlist.length > 0) {
       const stage = waitlist.shift()!;
       stagesMat.push(
-        ...stage.props.runtime.materialize(stage, waitlist, verbose)
+        ...stage.props.runtime.materialize(stage, waitlist, verbose),
       );
     }
 
@@ -270,10 +272,10 @@ export class Engine {
     operation: ast.OperationDefinitionNode,
     fragments: FragmentDefs,
     cache: boolean,
-    verbose: boolean
+    verbose: boolean,
   ): Promise<[ComputeStage[], PolicyStagesFactory, boolean]> {
     const id = await sha1(
-      JSON.stringify(operation) + JSON.stringify(fragments)
+      JSON.stringify(operation) + JSON.stringify(fragments),
     );
 
     if (cache && id in this.queryCache) {
@@ -306,7 +308,7 @@ export class Engine {
     query: string,
     operationName: Maybe<string>,
     variables: Record<string, unknown>,
-    context: Record<string, unknown>
+    context: Record<string, unknown>,
   ): Promise<{ status: number; [key: string]: JSONValue }> {
     try {
       const document = parse(query);
@@ -327,7 +329,7 @@ export class Engine {
         operation,
         fragments,
         cache,
-        verbose
+        verbose,
       );
       const planTime = performance.now();
 
@@ -337,15 +339,17 @@ export class Engine {
         policies,
         context,
         variables,
-        verbose
+        verbose,
       );
       const endTime = performance.now();
 
       verbose &&
         this.logger.info(
-          `${cacheHit ? "fetched" : "planned"}  in ${(
-            planTime - startTime
-          ).toFixed(2)}ms`
+          `${cacheHit ? "fetched" : "planned"}  in ${
+            (
+              planTime - startTime
+            ).toFixed(2)
+          }ms`,
         );
       verbose &&
         this.logger.info(`computed in ${(endTime - planTime).toFixed(2)}ms`);
