@@ -10,7 +10,7 @@ const logger = getLogger(import.meta);
 
 const writeWorker = async (
   name: string,
-  codes: Record<string, string>,
+  codes: Record<string, string>
 ): Promise<string> => {
   await Deno.mkdir("./workers", { recursive: true, mode: 0o777 });
   const calls = Object.entries(codes)
@@ -54,11 +54,11 @@ export class WorkerRuntime extends Runtime {
     typegraph: TypeGraphDS,
     materializers: TypeMaterializer[],
     args: Record<string, unknown>,
-    config: RuntimeConfig,
+    config: RuntimeConfig
   ): Promise<Runtime> {
     const codes = materializers.reduce(
       (agg, mat) => ({ ...agg, [mat.name]: mat.data.code }),
-      {},
+      {}
     );
     const name = `${typegraph.types[0].name}.js`;
     const file = await writeWorker(name, codes);
@@ -72,7 +72,7 @@ export class WorkerRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean,
+    verbose: boolean
   ): ComputeStage[] {
     if (!stage.props.materializer) {
       throw new Error("No materializer specified for WorkerRuntime.");
@@ -123,7 +123,7 @@ class OnDemandWorker {
     clearInterval(this.gcInterval);
     this.gcInterval = setInterval(
       () => this.checkJobLess(),
-      inactivityIntervalMs,
+      inactivityIntervalMs
     );
   }
 
@@ -138,8 +138,8 @@ class OnDemandWorker {
       return;
     }
 
-    const activity = (this.counter - this.gcState + resetModulus) %
-      resetModulus;
+    const activity =
+      (this.counter - this.gcState + resetModulus) % resetModulus;
     this.gcState = this.counter;
 
     if (activity <= inactivityThreshold && this.promises.size < 1) {
@@ -195,7 +195,7 @@ class OnDemandWorker {
     const encoded = new TextEncoder().encode(json);
     const res = await this.passBuffer(call, encoded.buffer);
     const decoded = new TextDecoder().decode(res);
-    logger.debug(`call ${this.name} ${call} ${json} ${decoded}`);
+    //logger.debug(`call ${this.name} ${call} ${json} ${decoded}`);
     return JSON.parse(decoded);
   }
 }
