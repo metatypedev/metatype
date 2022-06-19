@@ -374,6 +374,18 @@ class PrismaRuntime(Runtime):
 
     # auto = {None: {t.uuid(): "auto"}}
 
+    def raw(self) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "query": t.string(),
+                    "parameters": t.json(),
+                }
+            ),
+            t.list(t.json()),
+            PrismaInsertMat(self),
+        )
+
     # https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#createmany
     def generate_insert(self, tpe: t.struct) -> t.func:
         return t.func(
@@ -383,11 +395,7 @@ class PrismaRuntime(Runtime):
                     "skipDuplicates": t.boolean().s_optional(),
                 }
             ),
-            t.struct(
-                {
-                    "count": t.integer(),
-                }
-            ),
+            tpe,
             PrismaInsertMat(self),
         )
 

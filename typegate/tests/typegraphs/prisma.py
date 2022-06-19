@@ -1,12 +1,11 @@
 from typegraph import policies
-from typegraph.cli import dev
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
 from typegraph.types import typedefs as t
 
 with TypeGraph("prisma") as g:
 
-    db = PrismaRuntime("postgresql://postgres:password@localhost:5432/db")
+    db = PrismaRuntime("postgresql://postgres:password@localhost:5432/db?schema=test")
 
     allow_all = policies.allow_all()
 
@@ -40,8 +39,9 @@ with TypeGraph("prisma") as g:
     db.manage(users)
 
     g.expose(
+        createOnerecord=db.generate_insert(record).add_policy(allow_all),
+        findManyrecord=db.generate_read(record).add_policy(allow_all),
+        queryRaw=db.raw().add_policy(allow_all),
         createOnemessages=db.generate_insert(messages).add_policy(allow_all),
-        findManymessages=db.generate_read(messages).add_policy(allow_all),
     )
 
-print(dev.serialize_typegraph(g))
