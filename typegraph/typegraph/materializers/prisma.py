@@ -111,6 +111,7 @@ class PrismaUpdateMat(Materializer):
     runtime: "PrismaRuntime"
     _: KW_ONLY
     materializer_name: str = "prisma_update"
+    serial: bool = True
 
 
 @dataclass(eq=True, frozen=True)
@@ -140,6 +141,7 @@ class PrismaDeleteMat(Materializer):
     runtime: "PrismaRuntime"
     _: KW_ONLY
     materializer_name: str = "prisma_delete"
+    serial: bool = True
 
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
@@ -374,7 +376,7 @@ class PrismaRuntime(Runtime):
 
     # auto = {None: {t.uuid(): "auto"}}
 
-    def raw(self) -> t.func:
+    def queryRaw(self) -> t.func:
         return t.func(
             t.struct(
                 {
@@ -383,6 +385,18 @@ class PrismaRuntime(Runtime):
                 }
             ),
             t.list(t.json()),
+            PrismaInsertMat(self),
+        )
+
+    def executeRaw(self) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "query": t.string(),
+                    "parameters": t.json(),
+                }
+            ),
+            t.integer(),
             PrismaInsertMat(self),
         )
 
@@ -397,6 +411,30 @@ class PrismaRuntime(Runtime):
             ),
             tpe,
             PrismaInsertMat(self),
+        )
+
+    def generate_update(self, tpe: t.struct) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "data": clean_virtual_link(tpe),
+                    "skipDuplicates": t.boolean().s_optional(),
+                }
+            ),
+            tpe,
+            PrismaUpdateMat(self),
+        )
+
+    def generate_delete(self, tpe: t.struct) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "data": clean_virtual_link(tpe),
+                    "skipDuplicates": t.boolean().s_optional(),
+                }
+            ),
+            tpe,
+            PrismaDeleteMat(self),
         )
 
     # https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#findmany
