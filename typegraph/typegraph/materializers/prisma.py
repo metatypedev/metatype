@@ -366,6 +366,16 @@ def clean_virtual_link(tpe: t.Type):
     return tpe
 
 
+def only_unique(tpe: t.Type):
+    if isinstance(tpe, t.struct):
+        return t.struct({k: only_unique(v) for k, v in tpe.ids().items()})
+    return tpe
+
+
+def optional_root(tpe: t.struct):
+    return t.struct({k: v.s_optional() for k, v in tpe.of.items()})
+
+
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries
 @dataclass(eq=True, frozen=True)
 class PrismaRuntime(Runtime):
@@ -417,8 +427,8 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "data": clean_virtual_link(tpe),
-                    "skipDuplicates": t.boolean().s_optional(),
+                    "where": only_unique(tpe),
+                    "data": optional_root(tpe),
                 }
             ),
             tpe,
@@ -429,8 +439,7 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "data": clean_virtual_link(tpe),
-                    "skipDuplicates": t.boolean().s_optional(),
+                    "where": only_unique(tpe),
                 }
             ),
             tpe,

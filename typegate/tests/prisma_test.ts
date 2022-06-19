@@ -13,7 +13,7 @@ test("prisma", async (t) => {
       }
     `
       .expectData({
-        queryRaw: [],
+        executeRaw: 0,
       })
       .on(e);
     await shell(["../typegraph/.venv/bin/meta", "prisma", "apply"]);
@@ -73,6 +73,26 @@ test("prisma", async (t) => {
         createOnerecord: { id },
       })
       .on(e);
+
+    await gql`
+      mutation {
+        updateOnerecord(
+          where: {
+            id: ${id}
+          } 
+          data: {
+            name: "name2"
+          }
+        ) {
+          id
+          name
+        }
+      }
+    `
+      .expectData({
+        updateOnerecord: { id, name: "name2" },
+      })
+      .on(e);
   });
 
   await t.should("delete a simple record", async () => {
@@ -92,6 +112,21 @@ test("prisma", async (t) => {
     `
       .expectData({
         createOnerecord: { id },
+      })
+      .on(e);
+    await gql`
+      mutation {
+        deleteOnerecord(
+          where: {
+            id: ${id}
+          } 
+        ) {
+          id
+        }
+      }
+    `
+      .expectData({
+        deleteOnerecord: { id },
       })
       .on(e);
   });

@@ -40,6 +40,8 @@ with TypeGraph("prisma") as g:
 
     g.expose(
         createOnerecord=db.generate_insert(record).add_policy(allow_all),
+        updateOnerecord=db.generate_update(record).add_policy(allow_all),
+        deleteOnerecord=db.generate_delete(record).add_policy(allow_all),
         findManyrecord=db.generate_read(record).add_policy(allow_all),
         queryRaw=db.queryRaw().add_policy(allow_all),
         executeRaw=db.executeRaw().add_policy(allow_all),
