@@ -16,7 +16,24 @@ const config = {
   favicon: "img/favicon.ico",
   organizationName: "metatypedev",
   projectName: "metatype",
-  plugins: [require.resolve("docusaurus-lunr-search")],
+  plugins: [
+    () => ({
+      name: "pyLoader",
+      configureWebpack() {
+        return {
+          module: {
+            rules: [
+              {
+                test: /\.py$/i,
+                loader: "raw-loader",
+              },
+            ],
+          },
+        };
+      },
+    }),
+    require.resolve("docusaurus-lunr-search"),
+  ],
   i18n: {
     defaultLocale: "en",
     locales: ["en"],
