@@ -125,6 +125,39 @@ test("Rest queries", async (t) => {
     }).on(e);
   });
 
+  mf.mock("PATCH@/api/posts/:id", async (req, params) => {
+    const postId = Number(params.id);
+    if (Number.isNaN(postId)) {
+      return new Response(null, { status: 404 });
+    }
+    return new Response(
+      JSON.stringify({
+        ...generatePost(postId),
+        ...(await req.json()),
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  });
+
+  await t.should("work with PATCH", async () => {
+    await gql`
+      query {
+        updatePost(id: 12, content: "New post content") {
+          id
+          title
+          summary
+          content
+        }
+      }
+    `.expectData({
+      updatePost: { ...generatePost(12), content: "New post content" },
+    }).on(e);
+  });
+
   mf.mock("GET@/api/comments", (req) => {
     const params = new URL(req.url).searchParams;
     const postId = Number(params.get("postId") ?? NaN);

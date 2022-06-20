@@ -37,6 +37,10 @@ with TypeGraph("blog") as g:
         "/posts/{id}", t.struct({"id": t.integer()}), g("Post")
     ).add_policy(allow_all)
 
+    update_post = remote.patch(
+        "/posts/{id}", t.struct({"id": t.integer(), "content": t.string()}), g("Post")
+    ).add_policy(allow_all)
+
     get_posts = remote.get("/posts", t.struct({}), t.list(g("Post"))).add_policy(
         allow_all
     )
@@ -74,6 +78,7 @@ with TypeGraph("blog") as g:
 
     g.expose(
         post=post_by_id,
+        updatePost=update_post,
         posts=get_posts,
         postsByTags=get_posts_by_tags,
         comments=get_comments,
