@@ -1,4 +1,3 @@
-from typegraph.cli import dev
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import worker
 from typegraph.materializers.http import HTTPRuntime
@@ -59,6 +58,12 @@ with TypeGraph("blog") as g:
         query_fields=("postId",),
     ).add_policy(allow_all)
 
+    replace_comment = remote.put(
+        "/comments/{id}",
+        g("Comment"),
+        g("Comment"),
+    ).add_policy(allow_all)
+
     delete_comment = remote.delete(
         "/comments/{id}", t.struct({"id": t.integer()}), t.boolean()
     ).add_policy(allow_all)
@@ -68,7 +73,6 @@ with TypeGraph("blog") as g:
         posts=get_posts,
         comments=get_comments,
         postComment=post_comment,
+        replaceComment=replace_comment,
         deleteComment=delete_comment,
     )
-
-print(dev.serialize_typegraph(g))

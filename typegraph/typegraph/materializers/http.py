@@ -12,17 +12,17 @@ class HTTPRuntime(Runtime):
     _: KW_ONLY
     runtime_name: str = "http"
 
-    def get(self, path: str, inp, out):
-        return t.func(inp, out, RESTMat(self, "GET", path))
+    def get(self, path: str, inp, out, **kwargs):
+        return t.func(inp, out, RESTMat(self, "GET", path, **kwargs))
 
     def post(self, path: str, inp, out, **kwargs):
         return t.func(inp, out, RESTMat(self, "POST", path, **kwargs))
 
-    def put(self, path: str, inp, out):
-        return t.func(inp, out, RESTMat(self, "POST", path))
+    def put(self, path: str, inp, out, **kwargs):
+        return t.func(inp, out, RESTMat(self, "PUT", path, **kwargs))
 
-    def delete(self, path: str, inp, out):
-        return t.func(inp, out, RESTMat(self, "DELETE", path))
+    def delete(self, path: str, inp, out, **kwargs):
+        return t.func(inp, out, RESTMat(self, "DELETE", path, **kwargs))
 
 
 @dataclass(eq=True, frozen=True)
