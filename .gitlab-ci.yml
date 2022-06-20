@@ -2,3 +2,10 @@ include:
   - project: "metatype/templates"
     ref: main
     file: "metatype.yml"
+
+test:
+  variables:
+    DENO_VERSION: "1.22.0"
+    DENO_BINDGEN_VERSION: "0.5.0"
+    RUST_VERSION: "1.60.0"
+    PNPM_VERSION: "7.1.9"

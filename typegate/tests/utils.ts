@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertExists } from "std/testing/asserts.ts";
 import { Engine, initTypegraph } from "../src/engine.ts";
-import { JSONValue, Maybe } from "../src/utils.ts";
+import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { exists } from "std/fs/mod.ts";
 import { RuntimesConfig } from "../src/runtimes/Runtime.ts";
@@ -9,6 +9,26 @@ import { deepMerge } from "std/collections/mod.ts";
 const testRuntimesConfig = {
   worker: { lazy: false },
 };
+
+export async function shell(cmd: string[]): Promise<string> {
+  const p = Deno.run({
+    cmd,
+    stdout: "piped",
+    stderr: "piped",
+  });
+
+  const output = await p.output();
+  const stdout = new TextDecoder().decode(output).trim();
+  const error = await p.stderrOutput();
+  const stderr = new TextDecoder().decode(error).trim();
+  p.close();
+
+  if (stderr.length > 0) {
+    throw new Error(stderr);
+  }
+
+  return stdout;
+}
 
 class MetaTest {
   t: Deno.TestContext;
@@ -30,37 +50,31 @@ class MetaTest {
     return engine;
   }
 
-  pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
-    return this.shell(
-      ["../typegraph/.venv/bin/python", "-c", code],
-      deepMerge(testRuntimesConfig, config),
-    );
-  }
-
-  pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
-    return this.shell(
-      ["../typegraph/.venv/bin/python", path],
-      deepMerge(testRuntimesConfig, config),
-    );
-  }
-
-  async shell(cmd: string[], config: RuntimesConfig = {}): Promise<Engine> {
-    const p = Deno.run({
-      cmd,
-      stdout: "piped",
-      stderr: "piped",
-    });
-
-    const output = await p.output();
-    const stdout = new TextDecoder().decode(output).trim();
-    const error = await p.stderrOutput();
-    const stderr = new TextDecoder().decode(error).trim();
-    p.close();
-
-    if (stderr.length > 0) {
-      console.log("stdout", stdout);
-      throw new Error(stderr);
+  async pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
+    const path = await Deno.makeTempFile();
+    try {
+      await Deno.writeTextFile(
+        path,
+        `${code}\nfrom typegraph.cli import dev\nprint(dev.serialize_typegraph(g))`,
+      );
+      return await this.parseTypegraph(
+        ["../typegraph/.venv/bin/python", path],
+        deepMerge(testRuntimesConfig, config),
+      );
+    } finally {
+      await Deno.remove(path);
     }
+  }
+
+  async pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
+    return this.pythonCode(await Deno.readTextFile(path), config);
+  }
+
+  async parseTypegraph(
+    cmd: string[],
+    config: RuntimesConfig = {},
+  ): Promise<Engine> {
+    const stdout = await shell(cmd);
 
     const engine = await initTypegraph(
       stdout,
@@ -121,7 +135,10 @@ export function testAll(engineName: string) {
 }
 
 export function gql(query: readonly string[], ...args: any[]) {
-  return new Q(query[0] as string, {}, {}, []);
+  const template = query
+    .map((q, i) => `${q}${args[i] ? JSON.stringify(args[i]) : ""}`)
+    .join("");
+  return new Q(template, {}, {}, []);
 }
 
 type Context = Record<string, unknown>;
@@ -223,6 +240,11 @@ export class Q {
       this.headers,
     );
     const res = JSON.parse(JSON.stringify(json));
+    if (res.errors) {
+      for (const err of res.errors) {
+        console.error(err.message);
+      }
+    }
     const ctx = { status };
     for (const expect of this.expects) {
       expect(res, ctx);

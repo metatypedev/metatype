@@ -111,6 +111,7 @@ class PrismaUpdateMat(Materializer):
     runtime: "PrismaRuntime"
     _: KW_ONLY
     materializer_name: str = "prisma_update"
+    serial: bool = True
 
 
 @dataclass(eq=True, frozen=True)
@@ -140,6 +141,7 @@ class PrismaDeleteMat(Materializer):
     runtime: "PrismaRuntime"
     _: KW_ONLY
     materializer_name: str = "prisma_delete"
+    serial: bool = True
 
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
@@ -364,6 +366,16 @@ def clean_virtual_link(tpe: t.Type):
     return tpe
 
 
+def only_unique(tpe: t.Type):
+    if isinstance(tpe, t.struct):
+        return t.struct({k: only_unique(v) for k, v in tpe.ids().items()})
+    return tpe
+
+
+def optional_root(tpe: t.struct):
+    return t.struct({k: v.s_optional() for k, v in tpe.of.items()})
+
+
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries
 @dataclass(eq=True, frozen=True)
 class PrismaRuntime(Runtime):
@@ -374,6 +386,30 @@ class PrismaRuntime(Runtime):
 
     # auto = {None: {t.uuid(): "auto"}}
 
+    def queryRaw(self) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "query": t.string(),
+                    "parameters": t.json(),
+                }
+            ),
+            t.list(t.json()),
+            PrismaInsertMat(self),
+        )
+
+    def executeRaw(self) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "query": t.string(),
+                    "parameters": t.json(),
+                }
+            ),
+            t.integer(),
+            PrismaInsertMat(self),
+        )
+
     # https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#createmany
     def generate_insert(self, tpe: t.struct) -> t.func:
         return t.func(
@@ -383,12 +419,31 @@ class PrismaRuntime(Runtime):
                     "skipDuplicates": t.boolean().s_optional(),
                 }
             ),
+            tpe,
+            PrismaInsertMat(self),
+        )
+
+    def generate_update(self, tpe: t.struct) -> t.func:
+        return t.func(
             t.struct(
                 {
-                    "count": t.integer(),
+                    "where": only_unique(tpe),
+                    "data": optional_root(tpe),
                 }
             ),
-            PrismaInsertMat(self),
+            tpe,
+            PrismaUpdateMat(self),
+        )
+
+    def generate_delete(self, tpe: t.struct) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "where": only_unique(tpe),
+                }
+            ),
+            tpe,
+            PrismaDeleteMat(self),
         )
 
     # https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#findmany
