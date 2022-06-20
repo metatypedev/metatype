@@ -195,48 +195,22 @@ export class HTTPRuntime extends Runtime {
       const query = new URLSearchParams(
         associateWith(queryFields, (key) => args[key]),
       ).toString();
-      const ret = await fetch(join(this.endpoint, `${pathname}?${query}`), {
+      const res = await fetch(join(this.endpoint, `${pathname}?${query}`), {
         method,
         headers: {
           "Accept": "application/json",
           "Content-Type": options.content_type,
         },
-        ...(method === "GET" ? {} : { body }),
+        body: method === "GET" || method === "DELETE" ? null : body,
       });
-      const res = await ret.json();
-      return traverseLift(res);
-    };
-  }
-
-  private fetch(
-    method: string,
-    pathname: string,
-    args: Record<string, any>,
-    type: string,
-  ): Promise<any> {
-    const headers = {
-      "Accept": "application/json",
-    };
-    switch (method) {
-      case "GET":
-      case "DELETE": {
-        const search = new URLSearchParams(args).toString();
-        return fetch(join(this.endpoint, `${pathname}?${search}`), {
-          method,
-          headers,
-        });
+      if (res.headers.get("content-type") === "application/json") {
+        return traverseLift(await res.json());
+      } else if (res.headers.get("content-type") === "text/plain") {
+        return traverseLift(await res.text());
+      } else if (res.status === 204) { // no content
+        return traverseLift(true);
       }
-
-      default: // POST, PUT, PATCH ...(??)
-        return fetch(join(this.endpoint, pathname), {
-          headers: {
-            ...headers,
-            "Content-Type": type,
-          },
-          method,
-          body: encodeRequestBody(args, type),
-        });
-    }
+    };
   }
 
   materialize(
