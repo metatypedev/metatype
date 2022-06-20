@@ -98,6 +98,7 @@ export class HTTPRuntime extends Runtime {
         },
         body: method === "GET" || method === "DELETE" ? null : body,
       });
+
       if (res.headers.get("content-type") === "application/json") {
         return traverseLift(await res.json());
       } else if (res.headers.get("content-type") === "text/plain") {

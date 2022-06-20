@@ -21,6 +21,9 @@ class HTTPRuntime(Runtime):
     def put(self, path: str, inp, out, **kwargs):
         return t.func(inp, out, RESTMat(self, "PUT", path, **kwargs))
 
+    def patch(self, path: str, inp, out, **kwargs):
+        return t.func(inp, out, RESTMat(self, "PATCH", path, **kwargs))
+
     def delete(self, path: str, inp, out, **kwargs):
         return t.func(inp, out, RESTMat(self, "DELETE", path, **kwargs))
 
