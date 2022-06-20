@@ -4,6 +4,7 @@ import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { associateWith, intersect, withoutAll } from "std/collections/mod.ts";
 import { join } from "std/path/mod.ts";
 import { JSONValue } from "../utils.ts";
+import { replaceDynamicPathParams } from "./utils/http.ts";
 
 // FIXME better solution require
 const traverseLift = (obj: JSONValue): any => {
@@ -17,30 +18,6 @@ const traverseLift = (obj: JSONValue): any => {
     );
   }
   return obj;
-};
-
-interface ReplaceDynamicPathParamsResult {
-  pathname: string;
-  restArgs: Record<string, any>;
-}
-
-const replaceDynamicPathParams = (
-  pathPattern: string,
-  queryArgs: Record<string, any>,
-): ReplaceDynamicPathParamsResult => {
-  const restArgs = { ...queryArgs };
-  const pathname = pathPattern.replace(/\{\w+\}/, (match) => {
-    const key = match.substring(1, match.length - 1);
-    if (Object.hasOwnProperty.call(restArgs, key)) {
-      const value = restArgs[key];
-      delete restArgs[key];
-      return value;
-    } else {
-      //? throw??
-      return match;
-    }
-  });
-  return { pathname, restArgs };
 };
 
 const encodeRequestBody = (
