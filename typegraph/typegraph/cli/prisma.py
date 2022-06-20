@@ -22,7 +22,7 @@ def diff():
                 print(res["message"])
 
 
-def sync():
+def apply():
     current_path = Path(".").absolute()
     tgs = loaders.import_folder(current_path)
 

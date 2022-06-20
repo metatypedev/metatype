@@ -365,7 +365,11 @@ export class TypeGraph {
       return [() => parsed, policies, []];
     }
 
-    if (arg.typedef === "string") {
+    if (
+      arg.typedef === "string" ||
+      arg.typedef === "uuid" ||
+      arg.typedef === "json"
+    ) {
       ensure(
         kind === Kind.STRING,
         `type mismatch, got ${kind} but expected STRING for ${arg.name}`,
@@ -794,6 +798,7 @@ export class TypeGraph {
         type.typedef === "integer" ||
         type.typedef === "boolean" ||
         type.typedef === "gen" ||
+        type.typedef === "uuid" ||
         type.typedef === "string",
       `struct expected but got ${type.typedef}`,
     );
