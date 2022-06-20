@@ -36,6 +36,7 @@ export interface MatOptions extends Record<string, any> {
   content_type: "application/json" | "application/x-www-form-urlencoded";
   query_fields: string[] | null;
   body_fields: string[] | null;
+  auth_token_field: string | null;
 }
 
 // TODO: name clash case
