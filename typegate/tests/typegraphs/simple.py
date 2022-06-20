@@ -1,5 +1,4 @@
 from typegraph import policies
-from typegraph.cli import dev
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import deno
 from typegraph.types import typedefs as t
@@ -15,4 +14,3 @@ with TypeGraph("testing") as g:
         .named("f")
         .add_policy(policies.allow_all())
     )
-print(dev.serialize_typegraph(g))
