@@ -34,7 +34,7 @@ with TypeGraph("blog") as g:
     ).named("Comment")
 
     post_by_id = remote.get(
-        "/posts/{id}", t.struct({"id": t.integer()}), g("Post")
+        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g("Post"))
     ).add_policy(allow_all)
 
     update_post = remote.patch(

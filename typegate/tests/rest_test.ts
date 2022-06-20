@@ -102,7 +102,13 @@ test("Rest queries", async (t) => {
   });
 
   mf.mock("GET@/api/posts/:id", (_req, params) => {
-    return new Response(JSON.stringify(generatePost(Number(params.id))), {
+    const postId = Number(params.id);
+    if (postId > 1000) {
+      return new Response(null, {
+        status: 404,
+      });
+    }
+    return new Response(JSON.stringify(generatePost(postId)), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -122,6 +128,21 @@ test("Rest queries", async (t) => {
       }
     `.expectData({
       post: generatePost(12),
+    }).on(e);
+  });
+
+  await t.should("return null on 404", async () => {
+    await gql`
+      query {
+        post(id: 1234) {
+          id
+          title
+          summary
+          content
+        }
+      }
+    `.expectData({
+      post: null,
     }).on(e);
   });
 

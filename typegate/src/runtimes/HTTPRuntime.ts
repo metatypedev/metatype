@@ -99,12 +99,20 @@ export class HTTPRuntime extends Runtime {
         body: method === "GET" || method === "DELETE" ? null : body,
       });
 
+      if (res.status > 400) {
+        // TODO: add error message
+        // TODO: only if return type is optional
+        return null;
+      }
+
       if (res.headers.get("content-type") === "application/json") {
         return traverseLift(await res.json());
       } else if (res.headers.get("content-type") === "text/plain") {
         return traverseLift(await res.text());
       } else if (res.status === 204) { // no content
         return traverseLift(true);
+      } else {
+        throw new Error("Unsupported content type");
       }
     };
   }
