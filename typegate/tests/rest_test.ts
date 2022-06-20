@@ -30,26 +30,20 @@ const NEW_COMMENT_ID = 123;
 mf.mock("GET@/api/posts", (_req, _match) => {
   return new Response(JSON.stringify(ALL_POSTS), {
     status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 });
 
 mf.mock("GET@/api/posts/:id", (_req, params) => {
   return new Response(JSON.stringify(generatePost(Number(params.id))), {
     status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 });
-
-// mf.mock("DELETE@/api/posts/:postId", async (req, params) => {
-//   const postId = Number(params.postId);
-//   if (Number.isNaN(postId)) {
-//     return new Response(JSON.stringify({ error: "bad request" }), { status: 400 });
-//   }
-//   const res = JSON.stringify({ postId: Number(params.postId) });
-//   console.log({ res });
-//   return new Response(res, {
-//     status: 200
-//   });
-// });
 
 mf.mock("GET@/api/comments", (req) => {
   const params = new URL(req.url).searchParams;
@@ -59,6 +53,9 @@ mf.mock("GET@/api/comments", (req) => {
   }
   return new Response(JSON.stringify(getComments(postId)), {
     status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 });
 
@@ -69,13 +66,38 @@ mf.mock("POST@/api/comments", async (req) => {
   if (Number.isNaN(postId)) {
     return new Response(JSON.stringify({ error: "not found" }), {
       status: 404,
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
   }
-  return new Response(JSON.stringify({
-    id: NEW_COMMENT_ID,
-    postId,
-    ...(await req.json()),
-  }));
+  return new Response(
+    JSON.stringify({
+      id: NEW_COMMENT_ID,
+      postId,
+      ...(await req.json()),
+    }),
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+});
+
+mf.mock("DELETE@/api/comments/:id", (req, params) => {
+  const postId = Number(params.id);
+  if (Number.isNaN(postId)) {
+    return new Response(JSON.stringify({ error: "bad request" }), {
+      status: 400,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+  return new Response(null, {
+    status: 204,
+  });
 });
 
 test("Rest queries", async (t) => {
@@ -161,16 +183,13 @@ test("Rest queries", async (t) => {
     }).on(e);
   });
 
-  // await t.should("work with DELETE method", async () => {
-  //   await gql`
-  //     mutation {
-  //       deletePost(postId: 12) {
-  //         postId
-  //       }
-  //     }
-  //   `.expectData({
-  //     deletePost: {
-  //       postId: 12
-  //     }
-  //   }).on(e);
+  await t.should("work with DELETE method", async () => {
+    await gql`
+      mutation {
+        deleteComment(id: 12) 
+      }
+    `.expectData({
+      deleteComment: true,
+    }).on(e);
+  });
 });
