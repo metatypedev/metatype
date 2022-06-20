@@ -27,81 +27,17 @@ const getComments = (postId: number) =>
   [12, 34, 95, 203].map((id) => generateComment(id, postId));
 const NEW_COMMENT_ID = 123;
 
-mf.mock("GET@/api/posts", (_req, _match) => {
-  return new Response(JSON.stringify(ALL_POSTS), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-});
-
-mf.mock("GET@/api/posts/:id", (_req, params) => {
-  return new Response(JSON.stringify(generatePost(Number(params.id))), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-});
-
-mf.mock("GET@/api/comments", (req) => {
-  const params = new URL(req.url).searchParams;
-  const postId = Number(params.get("postId") ?? NaN);
-  if (Number.isNaN(postId)) {
-    return new Response("not found", { status: 404 });
-  }
-  return new Response(JSON.stringify(getComments(postId)), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-});
-
-// TODO: query params and body
-mf.mock("POST@/api/comments", async (req) => {
-  const params = new URL(req.url).searchParams;
-  const postId = Number(params.get("postId") ?? NaN);
-  if (Number.isNaN(postId)) {
-    return new Response(JSON.stringify({ error: "not found" }), {
-      status: 404,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
-  return new Response(
-    JSON.stringify({
-      id: NEW_COMMENT_ID,
-      postId,
-      ...(await req.json()),
-    }),
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    },
-  );
-});
-
-mf.mock("DELETE@/api/comments/:id", (req, params) => {
-  const postId = Number(params.id);
-  if (Number.isNaN(postId)) {
-    return new Response(JSON.stringify({ error: "bad request" }), {
-      status: 400,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
-  return new Response(null, {
-    status: 204,
-  });
-});
-
 test("Rest queries", async (t) => {
   const e = await t.pythonFile("./tests/typegraphs/rest.py");
+
+  mf.mock("GET@/api/posts", (_req, _match) => {
+    return new Response(JSON.stringify(ALL_POSTS), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  });
 
   await t.should("work with simple request", async () => {
     await gql`
@@ -136,6 +72,15 @@ test("Rest queries", async (t) => {
     }).on(e);
   });
 
+  mf.mock("GET@/api/posts/:id", (_req, params) => {
+    return new Response(JSON.stringify(generatePost(Number(params.id))), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  });
+
   await t.should("work with dynamic path params", async () => {
     await gql`
       query {
@@ -151,6 +96,20 @@ test("Rest queries", async (t) => {
     }).on(e);
   });
 
+  mf.mock("GET@/api/comments", (req) => {
+    const params = new URL(req.url).searchParams;
+    const postId = Number(params.get("postId") ?? NaN);
+    if (Number.isNaN(postId)) {
+      return new Response("not found", { status: 404 });
+    }
+    return new Response(JSON.stringify(getComments(postId)), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  });
+
   await t.should("work with query params", async () => {
     await gql`
       query {
@@ -163,6 +122,31 @@ test("Rest queries", async (t) => {
     `.expectData({
       comments: getComments(14),
     }).on(e);
+  });
+
+  mf.mock("POST@/api/comments", async (req) => {
+    const params = new URL(req.url).searchParams;
+    const postId = Number(params.get("postId") ?? NaN);
+    if (Number.isNaN(postId)) {
+      return new Response(JSON.stringify({ error: "not found" }), {
+        status: 404,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+    return new Response(
+      JSON.stringify({
+        id: NEW_COMMENT_ID,
+        postId,
+        ...(await req.json()),
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
   });
 
   await t.should("work with query params and body", async () => {
@@ -181,6 +165,61 @@ test("Rest queries", async (t) => {
         content: "Right!",
       },
     }).on(e);
+  });
+
+  mf.mock("PUT@/api/comments/:id", async (req, params) => {
+    const id = Number(params.id);
+    if (Number.isNaN(id)) {
+      return new Response(JSON.stringify({ error: "bad request" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        id,
+        ...(await req.json()),
+      }),
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  });
+
+  await t.should("work with PUT", async () => {
+    await gql`
+      query {
+        replaceComment(id: 12, postId: 123, content: "Some comment") {
+          id
+          content
+        }
+      }
+    `.expectData({
+      replaceComment: {
+        id: 12,
+        content: "Some comment",
+      },
+    }).on(e);
+  });
+
+  mf.mock("DELETE@/api/comments/:id", (req, params) => {
+    const postId = Number(params.id);
+    if (Number.isNaN(postId)) {
+      return new Response(JSON.stringify({ error: "bad request" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+    return new Response(null, {
+      status: 204,
+    });
   });
 
   await t.should("work with DELETE method", async () => {
