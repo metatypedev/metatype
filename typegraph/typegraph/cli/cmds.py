@@ -15,8 +15,8 @@ prisma = typer.Typer()
 
 
 @prisma.command()
-def sync():
-    _prisma.sync()
+def apply():
+    _prisma.apply()
 
 
 @prisma.command()

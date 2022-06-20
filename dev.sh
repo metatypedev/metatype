@@ -3,7 +3,7 @@
 export PYTHONDONTWRITEBYTECODE=1
 export PYTHONUNBUFFERED=1
 export RUSTFLAGS="$RUSTFLAGS -A dead_code -A unused_variables"
-export RUST_LOG=resolvers=DEBUG
+export RUST_LOG=resolvers=DEBUG 
 
 concurrently --kill-others --names graph,ntgra,gate1,ntgat,docus,gate2 \
     "cargo watch --workdir example --ignore example --watch ../typegraph --ignore 'native' --shell 'poetry run meta dev'" \
