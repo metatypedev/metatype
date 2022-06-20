@@ -36,5 +36,6 @@ class RESTMat(Materializer):
     content_type: str = "application/json"
     query_fields: tuple[str, ...] | None = None
     body_fields: tuple[str, ...] | None = None
+    auth_token_field: str | None = None
     _: KW_ONLY
     materializer_name: str = "rest"

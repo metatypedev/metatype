@@ -41,6 +41,13 @@ with TypeGraph("blog") as g:
         "/posts/{id}", t.struct({"id": t.integer(), "content": t.string()}), g("Post")
     ).add_policy(allow_all)
 
+    approve_post = remote.put(
+        "posts/{id}/approved",
+        t.struct({"id": t.integer(), "approved": t.boolean(), "authToken": t.string()}),
+        t.struct({"approved": t.boolean()}),
+        auth_token_field="authToken",
+    ).add_policy(allow_all)
+
     get_posts = remote.get("/posts", t.struct({}), t.list(g("Post"))).add_policy(
         allow_all
     )
@@ -79,6 +86,7 @@ with TypeGraph("blog") as g:
     g.expose(
         post=post_by_id,
         updatePost=update_post,
+        approvePost=approve_post,
         posts=get_posts,
         postsByTags=get_posts_by_tags,
         comments=get_comments,

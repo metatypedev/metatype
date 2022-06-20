@@ -69,6 +69,14 @@ export class HTTPRuntime extends Runtime {
         pathPattern,
         input,
       );
+
+      const authToken = options.auth_token_field === null
+        ? null
+        : args[options.auth_token_field];
+      if (authToken) {
+        delete args[options.auth_token_field!];
+      }
+
       const { body: bodyFields, query: queryFields } = getFieldLists(
         method,
         args,
@@ -95,6 +103,9 @@ export class HTTPRuntime extends Runtime {
         headers: {
           "Accept": "application/json",
           "Content-Type": options.content_type,
+          ...(authToken === null
+            ? {}
+            : { "Authorization": `Bearer ${authToken}` }),
         },
         body: method === "GET" || method === "DELETE" ? null : body,
       });
