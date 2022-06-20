@@ -21,6 +21,9 @@ class HTTPRuntime(Runtime):
     def put(self, path: str, inp, out):
         return t.func(inp, out, RESTMat(self, "POST", path))
 
+    def delete(self, path: str, inp, out):
+        return t.func(inp, out, RESTMat(self, "DELETE", path))
+
 
 @dataclass(eq=True, frozen=True)
 class RESTMat(Materializer):
@@ -28,5 +31,7 @@ class RESTMat(Materializer):
     verb: str
     path: str
     content_type: str = "application/json"
+    query_fields: tuple[str, ...] | None = None
+    body_fields: tuple[str, ...] | None = None
     _: KW_ONLY
     materializer_name: str = "rest"

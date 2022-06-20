@@ -1,6 +1,7 @@
 import { ComputeStage } from "../engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { associateWith, intersect, withoutAll } from "std/collections/mod.ts";
 import { join } from "std/path/mod.ts";
 import { JSONValue } from "../utils.ts";
 
@@ -61,6 +62,101 @@ const encodeRequestBody = (
   }
 };
 
+interface MatOptions extends Record<string, any> {
+  content_type: "application/json" | "application/x-www-form-urlencoded";
+  query_fields: string[] | null;
+  body_fields: string[] | null;
+}
+
+interface FieldLists {
+  query: string[];
+  body: string[];
+}
+
+// TODO: name clash case
+/**
+ * Select which fields of the input go in the query and which ones go in the body
+ * @param method -- HTTP verb
+ * @param args -- GraphQL query input, dynamic path params excluded
+ * @param options -- options from the materializer
+ * @returns list of fields for the query and the body
+ *
+ * If both field lists from `options` are `null`, all the fields go in the query
+ * for GET and DELETE request, and in the body for POST, PUT and PATCH.
+ * If one and only one of the given field lists is `null`, the
+ * corresponding target will receive all the fields not specified in the
+ * non-null list; except for GET and DELETE requests when the body field list,
+ * the body field list will be empty.
+ */
+const getFieldLists = (
+  method: string,
+  args: Record<string, any>,
+  options: MatOptions,
+): FieldLists => {
+  const { query_fields, body_fields } = options;
+  const fields = Object.keys(args);
+  switch (method) {
+    case "GET":
+    case "DELETE":
+      if (query_fields == null) {
+        if (body_fields == null) {
+          return {
+            query: fields,
+            body: [],
+          };
+        } else {
+          return {
+            query: withoutAll(fields, body_fields),
+            body: intersect(fields, body_fields),
+          };
+        }
+      } else {
+        if (body_fields == null) {
+          return {
+            query: intersect(fields, query_fields),
+            body: [],
+          };
+        } else {
+          return {
+            query: intersect(fields, query_fields),
+            body: intersect(fields, body_fields),
+          };
+        }
+      }
+
+    case "POST":
+    case "PUT":
+    case "PATCH":
+      if (query_fields == null) {
+        if (body_fields == null) {
+          return {
+            query: [],
+            body: fields,
+          };
+        } else {
+          return {
+            query: withoutAll(fields, body_fields),
+            body: intersect(fields, body_fields),
+          };
+        }
+      } else {
+        if (body_fields == null) {
+          return {
+            query: intersect(fields, query_fields),
+            body: withoutAll(fields, query_fields),
+          };
+        } else {
+          return {
+            query: intersect(fields, query_fields),
+            body: intersect(fields, body_fields),
+          };
+        }
+      }
+    default:
+      throw new Error(`Unsupported HTTP verb ${method}`);
+  }
+};
+
 export class HTTPRuntime extends Runtime {
   endpoint: string;
 
@@ -80,14 +176,33 @@ export class HTTPRuntime extends Runtime {
 
   async deinit(): Promise<void> {}
 
-  execute(method: string, pathPattern: string, contentType: string): Resolver {
-    return async (args) => {
-      const { _, ...queryArgs } = args;
-      const { pathname, restArgs } = replaceDynamicPathParams(
+  execute(method: string, pathPattern: string, options: MatOptions): Resolver {
+    return async (resolverArgs) => {
+      const { _, ...input } = resolverArgs;
+      const { pathname, restArgs: args } = replaceDynamicPathParams(
         pathPattern,
-        queryArgs,
+        input,
       );
-      const ret = await this.fetch(method, pathname, restArgs, contentType);
+      const { body: bodyFields, query: queryFields } = getFieldLists(
+        method,
+        args,
+        options,
+      );
+      const body = encodeRequestBody(
+        associateWith(bodyFields, (key) => args[key]),
+        options.content_type,
+      );
+      const query = new URLSearchParams(
+        associateWith(queryFields, (key) => args[key]),
+      ).toString();
+      const ret = await fetch(join(this.endpoint, `${pathname}?${query}`), {
+        method,
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": options.content_type,
+        },
+        ...(method === "GET" ? {} : { body }),
+      });
       const res = await ret.json();
       return traverseLift(res);
     };
@@ -134,14 +249,14 @@ export class HTTPRuntime extends Runtime {
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
 
     console.log(stage.props.materializer);
-    const { verb, path, content_type } = stage.props.materializer?.data ?? {};
+    const { verb, path, ...options } = stage.props.materializer?.data ?? {};
     stagesMat.push(
       new ComputeStage({
         ...stage.props,
         resolver: this.execute(
           verb as string,
           path as string,
-          content_type as string,
+          options as MatOptions,
         ),
       }),
     );

@@ -42,14 +42,27 @@ with TypeGraph("blog") as g:
         allow_all
     )
 
+    # delete_post = remote.delete(
+    #     "/posts/{postId}", t.struct({ "postId": t.integer() }), t.struct({"postId": t.integer()})
+    # ).add_policy(allow_all)
+
     get_comments = remote.get(
         "/comments", t.struct({"postId": t.integer()}), t.list(g("Comment"))
+    ).add_policy(allow_all)
+
+    post_comment = remote.post(
+        "/comments",
+        t.struct({"postId": t.integer(), "content": t.string()}),
+        g("Comment"),
+        query_fields=("postId",),
     ).add_policy(allow_all)
 
     g.expose(
         post=post_by_id,
         posts=get_posts,
+        # deletePost=delete_post,
         comments=get_comments,
+        postComment=post_comment,
     )
 
 print(dev.serialize_typegraph(g))
