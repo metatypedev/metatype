@@ -78,9 +78,18 @@ export class HTTPRuntime extends Runtime {
         associateWith(bodyFields, (key) => args[key]),
         options.content_type,
       );
-      const query = new URLSearchParams(
-        associateWith(queryFields, (key) => args[key]),
-      ).toString();
+
+      const searchParams = new URLSearchParams();
+      queryFields.forEach((key) => {
+        const value = args[key];
+        if (Array.isArray(value)) {
+          value.forEach((v) => searchParams.append(key, v));
+        } else {
+          searchParams.append(key, value);
+        }
+      });
+      const query = searchParams.toString();
+
       const res = await fetch(join(this.endpoint, `${pathname}?${query}`), {
         method,
         headers: {

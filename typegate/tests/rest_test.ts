@@ -30,8 +30,20 @@ const NEW_COMMENT_ID = 123;
 test("Rest queries", async (t) => {
   const e = await t.pythonFile("./tests/typegraphs/rest.py");
 
-  mf.mock("GET@/api/posts", (_req, _match) => {
-    return new Response(JSON.stringify(ALL_POSTS), {
+  mf.mock("GET@/api/posts", (req, _match) => {
+    const tags = new URL(req.url).searchParams.getAll("tags");
+    console.log({ tags });
+    const posts = tags.reduce((list, tag) => {
+      switch (tag) {
+        case "even":
+          return list.filter((p) => p.id % 2 === 0);
+        case "m3":
+          return list.filter((p) => p.id % 3 === 0);
+        default:
+          return list;
+      }
+    }, ALL_POSTS);
+    return new Response(JSON.stringify(posts), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -51,6 +63,23 @@ test("Rest queries", async (t) => {
       }
     `.expectData({
       posts: ALL_POSTS,
+    }).on(e);
+  });
+
+  await t.should("work with array args", async () => {
+    await gql`
+      query {
+        postsByTags (tags: ["even", "m3"]) {
+          id
+          title
+          summary
+          content
+        }
+      }
+    `.expectData({
+      postsByTags: ALL_POSTS.filter((p) => p.id % 2 === 0).filter((p) =>
+        p.id % 3 === 0
+      ),
     }).on(e);
   });
 
