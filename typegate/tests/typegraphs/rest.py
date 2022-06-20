@@ -41,6 +41,10 @@ with TypeGraph("blog") as g:
         allow_all
     )
 
+    get_posts_by_tags = remote.get(
+        "/posts", t.struct({"tags": t.list(t.string())}), t.list(g("Post"))
+    ).add_policy(allow_all)
+
     delete_post = remote.delete(
         "/posts/{postId}",
         t.struct({"postId": t.integer()}),
@@ -71,6 +75,7 @@ with TypeGraph("blog") as g:
     g.expose(
         post=post_by_id,
         posts=get_posts,
+        postsByTags=get_posts_by_tags,
         comments=get_comments,
         postComment=post_comment,
         replaceComment=replace_comment,
