@@ -331,6 +331,7 @@ export class TypeGraphRuntime extends Runtime {
       type.typedef === "string" ||
       type.typedef === "uri" ||
       type.typedef === "char" ||
+      type.typedef === "json" ||
       type.typedef === "uuid"
     ) {
       return {

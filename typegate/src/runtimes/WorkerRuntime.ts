@@ -195,7 +195,7 @@ class OnDemandWorker {
     const encoded = new TextEncoder().encode(json);
     const res = await this.passBuffer(call, encoded.buffer);
     const decoded = new TextDecoder().decode(res);
-    logger.debug(`call ${this.name} ${call} ${json} ${decoded}`);
+    //logger.debug(`call ${this.name} ${call} ${json} ${decoded}`);
     return JSON.parse(decoded);
   }
 }

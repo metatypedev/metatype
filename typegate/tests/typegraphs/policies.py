@@ -1,4 +1,3 @@
-from typegraph.cli import dev
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import deno
 from typegraph.materializers import worker
@@ -27,5 +26,3 @@ with TypeGraph("policies") as g:
         pol_false=make_policy("false", lambda args: False),
         pol_two=make_policy("eq_two", lambda args: int(args["a"]) == 2),
     )
-
-print(dev.serialize_typegraph(g))
