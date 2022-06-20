@@ -146,6 +146,40 @@ test("Rest queries", async (t) => {
     }).on(e);
   });
 
+  const AUTH_TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789";
+  mf.mock("PUT@/api/posts/:id/approved", (req, params) => {
+    const postId = Number(params.id);
+    if (Number.isNaN(postId)) {
+      return new Response(null, { status: 404 });
+    }
+    const auth = req.headers.get("authorization");
+    if (auth === `Bearer ${AUTH_TOKEN}`) {
+      return new Response(JSON.stringify({ approved: true }), {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } else {
+      return new Response(null, {
+        status: 403,
+      });
+    }
+  });
+
+  await t.should("work with bearer auth", async () => {
+    await gql`
+      mutation {
+        approvePost(id: 12, approved: true, authToken: ${AUTH_TOKEN}) {
+          approved
+        }
+      }
+    `.expectData({
+      approvePost: {
+        approved: true,
+      },
+    }).on(e);
+  });
+
   mf.mock("PATCH@/api/posts/:id", async (req, params) => {
     const postId = Number(params.id);
     if (Number.isNaN(postId)) {
