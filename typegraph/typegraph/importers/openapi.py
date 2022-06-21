@@ -1,4 +1,5 @@
 import inspect
+from urllib.parse import urljoin
 
 import black
 from box import Box
@@ -16,7 +17,18 @@ def codegen(uri: str):
     openapi.info
     openapi.paths
 
-    return "    pass"
+    if "servers" in openapi:
+        server_url = openapi.servers[0].url
+    else:
+        server_url = "/"
+
+    url = urljoin(uri, server_url)
+
+    cg = ""
+
+    cg += f'    remote = HTTPRuntime("{url}")\n'
+
+    return cg
 
 
 def import_openapi(uri: str, gen: bool):
@@ -29,7 +41,7 @@ def import_openapi(uri: str, gen: bool):
         code = RedBaron(f.read())
 
     imports = [
-        ["typegraph.materializers.http", "RESTMat"],
+        ["typegraph.materializers.http", "HTTPRuntime"],
         ["typegraph.types", "typedefs as t"],
         ["typegraph.graphs.typegraph", "TypeGraph"],
     ]
