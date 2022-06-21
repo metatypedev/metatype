@@ -5,9 +5,3 @@ build-backend = "maturin"
 [project]
 name = "native"
 requires-python = ">=3.6"
-
-[tool.poetry]
-name = "native"
-version = "0.1.0"
-description = ""
-authors = []
