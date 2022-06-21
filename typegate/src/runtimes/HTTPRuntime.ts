@@ -26,9 +26,9 @@ const traverseLift = (obj: JSONValue): any => {
 
 const encodeRequestBody = (
   body: Record<string, any>,
-  type: string,
+  contentType: string,
 ): string | FormData => {
-  switch (type) {
+  switch (contentType) {
     case "application/json":
       return JSON.stringify(body);
     case "application/x-www-form-urlencoded": {
@@ -39,7 +39,7 @@ const encodeRequestBody = (
       return formData;
     }
     default:
-      throw new Error(`Content-Type ${type} not supported`);
+      throw new Error(`Content-Type ${contentType} not supported`);
   }
 };
 
