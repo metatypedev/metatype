@@ -40,7 +40,7 @@ with TypeGraph("swagger-petstore") as g:
     tag = t.struct({"id": t.integer(), "name": t.string()}).named("Tag")
 
     find_pet_by_id = remote.get(
-        r"/pet/{id}", t.struct({"id": t.integer()}), g("Pet")
+        "/pet/{id}", t.struct({"id": t.integer()}), t.optional(g("Pet"))
     ).add_policy(allow_all)
 
     find_pets_by_status = remote.get(
