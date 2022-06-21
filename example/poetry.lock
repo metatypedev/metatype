@@ -347,7 +347,7 @@ version = "0.1.0"
 description = ""
 category = "main"
 optional = false
-python-versions = ">=3.6"
+python-versions = "*"
 develop = true
 
 [package.source]
