@@ -113,18 +113,23 @@ export class HTTPRuntime extends Runtime {
       if (res.status > 400) {
         // TODO: add error message
         // TODO: only if return type is optional
+        // throw new Error(await res.text());
         return null;
       }
 
-      if (res.headers.get("content-type") === "application/json") {
-        return traverseLift(await res.json());
-      } else if (res.headers.get("content-type") === "text/plain") {
-        return traverseLift(await res.text());
-      } else if (res.status === 204) { // no content
-        return traverseLift(true);
-      } else {
-        throw new Error("Unsupported content type");
+      const contentType = res.headers.get("content-type");
+      switch (contentType) {
+        case "application/json":
+          return traverseLift(await res.json());
+        case "text/plain":
+          return traverseLift(await res.text());
       }
+
+      if (res.status === 204) { // no content
+        return traverseLift(true);
+      }
+
+      throw new Error("Unsupported content type");
     };
   }
 
