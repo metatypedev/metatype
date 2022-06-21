@@ -4,9 +4,18 @@ import black
 from box import Box
 import httpx
 from redbaron import RedBaron
+import semver
 
 
-def codegen(openapi):
+def codegen(uri: str):
+    openapi = Box(httpx.get(uri).json())
+    ver = semver.VersionInfo.parse(openapi.openapi)
+    assert ver.major == 3
+    assert ver.minor <= 0
+
+    openapi.info
+    openapi.paths
+
     return "    pass"
 
 
@@ -39,10 +48,8 @@ def import_openapi(uri: str, gen: bool):
         ):
             code.insert(0, f"from {frm} import {imp}\n")
 
-    openapi = Box(httpx.get(uri).json())
-
     wth = code.find("with")
-    wth.value = codegen(openapi)
+    wth.value = codegen(uri)
 
     new_code = black.format_str(code.dumps(), mode=black.FileMode())
 
