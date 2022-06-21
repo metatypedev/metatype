@@ -1,1 +1,221 @@
-{"types":[{"name":"typegate","typedef":"struct","edges":[1,9,14,19],"policies":[],"runtime":2,"data":{"renames":{},"binds":{"typegraphs":1,"typegraph":9,"addTypegraph":14,"removeTypegraph":19}}},{"name":"func_struct_140097933247488_list_typegraph_140097933250464_140097933254592","typedef":"func","edges":[2,3],"policies":[0],"runtime":0,"data":{"materializer":0,"input":2,"output":3}},{"name":"struct_140097933247488","typedef":"struct","edges":[],"policies":[],"runtime":0,"data":{"renames":{},"binds":{}}},{"name":"list_typegraph_140097933250464","typedef":"list","edges":[4],"policies":[],"runtime":0,"data":{"of":4}},{"name":"typegraph","typedef":"struct","edges":[5,7],"policies":[],"runtime":0,"data":{"renames":{},"binds":{"name":5,"url":7}}},{"name":"string_140097933163344","typedef":"string","edges":[6],"policies":[],"runtime":0,"data":{"of":6}},{"name":"char_140097933153120","typedef":"char","edges":[],"policies":[],"runtime":0,"data":{}},{"name":"uri_140097933162240","typedef":"uri","edges":[8],"policies":[],"runtime":0,"data":{"of":8}},{"name":"char_140097933164064","typedef":"char","edges":[],"policies":[],"runtime":0,"data":{}},{"name":"func_structname_140097933247056_optional_typegraph_140097933262704_140097933256464","typedef":"func","edges":[10,13],"policies":[0],"runtime":0,"data":{"materializer":2,"input":10,"output":13}},{"name":"structname_140097933247056","typedef":"struct","edges":[11],"policies":[],"runtime":0,"data":{"renames":{},"binds":{"name":11}}},{"name":"string_140097933247296","typedef":"string","edges":[12],"policies":[],"runtime":0,"data":{"of":12}},{"name":"char_140097933257904","typedef":"char","edges":[],"policies":[],"runtime":0,"data":{}},{"name":"optional_typegraph_140097933262704","typedef":"optional","edges":[4],"policies":[],"runtime":0,"data":{}},{"name":"func_structfromString_140097933262416_optional_typegraph_140097933260640_140097933262224","typedef":"func","edges":[15,18],"policies":[0],"runtime":0,"data":{"materializer":3,"input":15,"output":18}},{"name":"structfromString_140097933262416","typedef":"struct","edges":[16],"policies":[],"runtime":0,"data":{"renames":{},"binds":{"fromString":16}}},{"name":"string_140097933258384","typedef":"string","edges":[17],"policies":[],"runtime":0,"data":{"of":17}},{"name":"char_140097933262752","typedef":"char","edges":[],"policies":[],"runtime":0,"data":{}},{"name":"optional_typegraph_140097933260640","typedef":"optional","edges":[4],"policies":[],"runtime":0,"data":{}},{"name":"func_structname_140097933252000_integer_140097933250320_140097933260352","typedef":"func","edges":[20,23],"policies":[0],"runtime":0,"data":{"materializer":4,"input":20,"output":23}},{"name":"structname_140097933252000","typedef":"struct","edges":[21],"policies":[],"runtime":0,"data":{"renames":{},"binds":{"name":21}}},{"name":"string_140097933249168","typedef":"string","edges":[22],"policies":[],"runtime":0,"data":{"of":22}},{"name":"char_140097933249408","typedef":"char","edges":[],"policies":[],"runtime":0,"data":{}},{"name":"integer_140097933250320","typedef":"integer","edges":[],"policies":[],"runtime":0,"data":{}}],"materializers":[{"name":"typegraphs","runtime":0,"data":{"serial":false}},{"name":"policy","runtime":1,"data":{"serial":false,"code":"(args) => {\n    return true;\n}"}},{"name":"typegraph","runtime":0,"data":{"serial":false}},{"name":"addTypegraph","runtime":0,"data":{"serial":false}},{"name":"removeTypegraph","runtime":0,"data":{"serial":false}}],"runtimes":[{"name":"typegate","data":{}},{"name":"worker","data":{}},{"name":"deno","data":{}}],"policies":[{"name":"__allow_all","materializer":1}]}
+{
+  "types": [
+    {
+      "name": "typegate",
+      "typedef": "struct",
+      "edges": [1, 9, 14, 19],
+      "policies": [],
+      "runtime": 2,
+      "data": {
+        "renames": {},
+        "binds": {
+          "typegraphs": 1,
+          "typegraph": 9,
+          "addTypegraph": 14,
+          "removeTypegraph": 19
+        }
+      }
+    },
+    {
+      "name": "func_struct_139640779780496_list_typegraph_139640779779824_139640779783808",
+      "typedef": "func",
+      "edges": [2, 3],
+      "policies": [0],
+      "runtime": 0,
+      "data": { "materializer": 0, "input": 2, "output": 3 }
+    },
+    {
+      "name": "struct_139640779780496",
+      "typedef": "struct",
+      "edges": [],
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": {} }
+    },
+    {
+      "name": "list_typegraph_139640779779824",
+      "typedef": "list",
+      "edges": [4],
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 4 }
+    },
+    {
+      "name": "typegraph",
+      "typedef": "struct",
+      "edges": [5, 7],
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "name": 5, "url": 7 } }
+    },
+    {
+      "name": "string_139640779778384",
+      "typedef": "string",
+      "edges": [6],
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 6 }
+    },
+    {
+      "name": "char_139640779783952",
+      "typedef": "char",
+      "edges": [],
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "uri_139640779770944",
+      "typedef": "uri",
+      "edges": [8],
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 8 }
+    },
+    {
+      "name": "char_139640779781120",
+      "typedef": "char",
+      "edges": [],
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "func_structname_139640779778720_optional_typegraph_139640779774544_139640779773776",
+      "typedef": "func",
+      "edges": [10, 13],
+      "policies": [0],
+      "runtime": 0,
+      "data": { "materializer": 2, "input": 10, "output": 13 }
+    },
+    {
+      "name": "structname_139640779778720",
+      "typedef": "struct",
+      "edges": [11],
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "name": 11 } }
+    },
+    {
+      "name": "string_139640779774496",
+      "typedef": "string",
+      "edges": [12],
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 12 }
+    },
+    {
+      "name": "char_139640779784048",
+      "typedef": "char",
+      "edges": [],
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "optional_typegraph_139640779774544",
+      "typedef": "optional",
+      "edges": [4],
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "func_structfromString_139640779779248_optional_typegraph_139640779778816_139640779778912",
+      "typedef": "func",
+      "edges": [15, 18],
+      "policies": [0],
+      "runtime": 0,
+      "data": { "materializer": 3, "input": 15, "output": 18 }
+    },
+    {
+      "name": "structfromString_139640779779248",
+      "typedef": "struct",
+      "edges": [16],
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "fromString": 16 } }
+    },
+    {
+      "name": "string_139640779778480",
+      "typedef": "string",
+      "edges": [17],
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 17 }
+    },
+    {
+      "name": "char_139640779774256",
+      "typedef": "char",
+      "edges": [],
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "optional_typegraph_139640779778816",
+      "typedef": "optional",
+      "edges": [4],
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "func_structname_139640779783568_integer_139640779783664_139640779781888",
+      "typedef": "func",
+      "edges": [20, 23],
+      "policies": [0],
+      "runtime": 0,
+      "data": { "materializer": 4, "input": 20, "output": 23 }
+    },
+    {
+      "name": "structname_139640779783568",
+      "typedef": "struct",
+      "edges": [21],
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "name": 21 } }
+    },
+    {
+      "name": "string_139640779780640",
+      "typedef": "string",
+      "edges": [22],
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 22 }
+    },
+    {
+      "name": "char_139640779768448",
+      "typedef": "char",
+      "edges": [],
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "integer_139640779783664",
+      "typedef": "integer",
+      "edges": [],
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    }
+  ],
+  "materializers": [
+    { "name": "typegraphs", "runtime": 0, "data": { "serial": false } },
+    {
+      "name": "policy",
+      "runtime": 1,
+      "data": { "serial": false, "code": "(args) => {\n    return true;\n}" }
+    },
+    { "name": "typegraph", "runtime": 0, "data": { "serial": false } },
+    { "name": "addTypegraph", "runtime": 0, "data": { "serial": false } },
+    { "name": "removeTypegraph", "runtime": 0, "data": { "serial": false } }
+  ],
+  "runtimes": [
+    { "name": "typegate", "data": {} },
+    { "name": "worker", "data": {} },
+    { "name": "deno", "data": {} }
+  ],
+  "policies": [{ "name": "__allow_all", "materializer": 1 }]
+}
