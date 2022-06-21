@@ -66,24 +66,7 @@ test("Rest queries", async (t) => {
     }).on(e);
   });
 
-  await t.should("work with array args", async () => {
-    await gql`
-      query {
-        postsByTags (tags: ["even", "m3"]) {
-          id
-          title
-          summary
-          content
-        }
-      }
-    `.expectData({
-      postsByTags: ALL_POSTS.filter((p) => p.id % 2 === 0).filter((p) =>
-        p.id % 3 === 0
-      ),
-    }).on(e);
-  });
-
-  await t.should("work with simple request (2)", async () => {
+  await t.should("work with simple request and filtered fields", async () => {
     await gql`
       query {
         posts {
@@ -98,6 +81,23 @@ test("Rest queries", async (t) => {
         return postWithoutContent as Omit<Post, "content">;
         // I don't know why I get a TS error without that cast
       }),
+    }).on(e);
+  });
+
+  await t.should("work with array args", async () => {
+    await gql`
+      query {
+        postsByTags (tags: ["even", "m3"]) {
+          id
+          title
+          summary
+          content
+        }
+      }
+    `.expectData({
+      postsByTags: ALL_POSTS.filter((p) => p.id % 2 === 0).filter((p) =>
+        p.id % 3 === 0
+      ),
     }).on(e);
   });
 
