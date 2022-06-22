@@ -117,7 +117,7 @@ export class HTTPRuntime extends Runtime {
         return null;
       }
 
-      const contentType = res.headers.get("content-type");
+      const contentType = res.headers.get("content-type")?.split("; ")[0];
       switch (contentType) {
         case "application/json":
           return traverseLift(await res.json());
@@ -129,7 +129,7 @@ export class HTTPRuntime extends Runtime {
         return traverseLift(true);
       }
 
-      throw new Error("Unsupported content type");
+      throw new Error(`Unsupported content type "${contentType}"`);
     };
   }
 
