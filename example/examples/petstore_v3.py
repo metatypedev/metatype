@@ -10,68 +10,68 @@ with TypeGraph(name="petstore-v3") as g:
     remote = HTTPRuntime("https://petstore3.swagger.io/api/v3")
     t.struct(
         {
-            "id": t.integer(),
-            "petId": t.integer(),
-            "quantity": t.integer(),
-            "shipDate": t.string(),
-            "status": t.string(),
-            "complete": t.boolean(),
+            "id": t.optional(t.integer()),
+            "petId": t.optional(t.integer()),
+            "quantity": t.optional(t.integer()),
+            "shipDate": t.optional(t.string()),
+            "status": t.optional(t.string()),
+            "complete": t.optional(t.boolean()),
         }
     ).named("Order")
     t.struct(
         {
-            "id": t.integer(),
-            "username": t.string(),
-            "address": t.list(g("Address")),
+            "id": t.optional(t.integer()),
+            "username": t.optional(t.string()),
+            "address": t.optional(t.list(g("Address"))),
         }
     ).named("Customer")
     t.struct(
         {
-            "street": t.string(),
-            "city": t.string(),
-            "state": t.string(),
-            "zip": t.string(),
+            "street": t.optional(t.string()),
+            "city": t.optional(t.string()),
+            "state": t.optional(t.string()),
+            "zip": t.optional(t.string()),
         }
     ).named("Address")
     t.struct(
         {
-            "id": t.integer(),
-            "name": t.string(),
+            "id": t.optional(t.integer()),
+            "name": t.optional(t.string()),
         }
     ).named("Category")
     t.struct(
         {
-            "id": t.integer(),
-            "username": t.string(),
-            "firstName": t.string(),
-            "lastName": t.string(),
-            "email": t.string(),
-            "password": t.string(),
-            "phone": t.string(),
-            "userStatus": t.integer(),
+            "id": t.optional(t.integer()),
+            "username": t.optional(t.string()),
+            "firstName": t.optional(t.string()),
+            "lastName": t.optional(t.string()),
+            "email": t.optional(t.string()),
+            "password": t.optional(t.string()),
+            "phone": t.optional(t.string()),
+            "userStatus": t.optional(t.integer()),
         }
     ).named("User")
     t.struct(
         {
-            "id": t.integer(),
-            "name": t.string(),
+            "id": t.optional(t.integer()),
+            "name": t.optional(t.string()),
         }
     ).named("Tag")
     t.struct(
         {
-            "id": t.integer(),
+            "id": t.optional(t.integer()),
             "name": t.string(),
-            "category": g("Category"),
+            "category": t.optional(g("Category")),
             "photoUrls": t.list(t.string()),
-            "tags": t.list(g("Tag")),
-            "status": t.string(),
+            "tags": t.optional(t.list(g("Tag"))),
+            "status": t.optional(t.string()),
         }
     ).named("Pet")
     t.struct(
         {
-            "code": t.integer(),
-            "type": t.string(),
-            "message": t.string(),
+            "code": t.optional(t.integer()),
+            "type": t.optional(t.string()),
+            "message": t.optional(t.string()),
         }
     ).named("ApiResponse")
     g.expose(
@@ -83,7 +83,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/pet/findByStatus",
             t.struct(
                 {
-                    "status": t.string(),
+                    "status": t.optional(t.string()),
                 }
             ),
             t.list(g("Pet")),
@@ -92,7 +92,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/pet/findByTags",
             t.struct(
                 {
-                    "tags": t.list(t.string()),
+                    "tags": t.optional(t.list(t.string())),
                 }
             ),
             t.list(g("Pet")),
@@ -101,7 +101,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/pet/{petId}",
             t.struct(
                 {
-                    "petId": t.integer(),
+                    "petId": t.optional(t.integer()),
                 }
             ),
             t.optional(g("Pet")),
@@ -110,9 +110,9 @@ with TypeGraph(name="petstore-v3") as g:
             "/pet/{petId}",
             t.struct(
                 {
-                    "petId": t.integer(),
-                    "name": t.string(),
-                    "status": t.string(),
+                    "petId": t.optional(t.integer()),
+                    "name": t.optional(t.string()),
+                    "status": t.optional(t.string()),
                 }
             ),
             t.struct({}),
@@ -121,8 +121,8 @@ with TypeGraph(name="petstore-v3") as g:
             "/pet/{petId}",
             t.struct(
                 {
-                    "api_key": t.string(),
-                    "petId": t.integer(),
+                    "api_key": t.optional(t.string()),
+                    "petId": t.optional(t.integer()),
                 }
             ),
             t.struct({}),
@@ -131,8 +131,8 @@ with TypeGraph(name="petstore-v3") as g:
             "/pet/{petId}/uploadImage",
             t.struct(
                 {
-                    "petId": t.integer(),
-                    "additionalMetadata": t.string(),
+                    "petId": t.optional(t.integer()),
+                    "additionalMetadata": t.optional(t.string()),
                 }
             ),
             g("ApiResponse"),
@@ -147,7 +147,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/store/order/{orderId}",
             t.struct(
                 {
-                    "orderId": t.integer(),
+                    "orderId": t.optional(t.integer()),
                 }
             ),
             t.optional(g("Order")),
@@ -156,7 +156,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/store/order/{orderId}",
             t.struct(
                 {
-                    "orderId": t.integer(),
+                    "orderId": t.optional(t.integer()),
                 }
             ),
             t.optional(t.struct({})),
@@ -171,8 +171,8 @@ with TypeGraph(name="petstore-v3") as g:
             "/user/login",
             t.struct(
                 {
-                    "username": t.string(),
-                    "password": t.string(),
+                    "username": t.optional(t.string()),
+                    "password": t.optional(t.string()),
                 }
             ),
             t.string(),
@@ -184,7 +184,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/user/{username}",
             t.struct(
                 {
-                    "username": t.string(),
+                    "username": t.optional(t.string()),
                 }
             ),
             t.optional(g("User")),
@@ -193,7 +193,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/user/{username}",
             t.struct(
                 {
-                    "username": t.string(),
+                    "username": t.optional(t.string()),
                 }
             ),
             t.optional(t.boolean()),
@@ -202,7 +202,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/user/{username}",
             t.struct(
                 {
-                    "username": t.string(),
+                    "username": t.optional(t.string()),
                 }
             ),
             t.optional(t.struct({})),
