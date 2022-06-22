@@ -101,7 +101,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/pet/{petId}",
             t.struct(
                 {
-                    "petId": t.optional(t.integer()),
+                    "petId": t.integer(),
                 }
             ),
             t.optional(g("Pet")),
@@ -110,7 +110,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/pet/{petId}",
             t.struct(
                 {
-                    "petId": t.optional(t.integer()),
+                    "petId": t.integer(),
                     "name": t.optional(t.string()),
                     "status": t.optional(t.string()),
                 }
@@ -122,7 +122,7 @@ with TypeGraph(name="petstore-v3") as g:
             t.struct(
                 {
                     "api_key": t.optional(t.string()),
-                    "petId": t.optional(t.integer()),
+                    "petId": t.integer(),
                 }
             ),
             t.struct({}),
@@ -131,7 +131,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/pet/{petId}/uploadImage",
             t.struct(
                 {
-                    "petId": t.optional(t.integer()),
+                    "petId": t.integer(),
                     "additionalMetadata": t.optional(t.string()),
                 }
             ),
@@ -147,7 +147,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/store/order/{orderId}",
             t.struct(
                 {
-                    "orderId": t.optional(t.integer()),
+                    "orderId": t.integer(),
                 }
             ),
             t.optional(g("Order")),
@@ -156,7 +156,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/store/order/{orderId}",
             t.struct(
                 {
-                    "orderId": t.optional(t.integer()),
+                    "orderId": t.integer(),
                 }
             ),
             t.optional(t.struct({})),
@@ -184,7 +184,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/user/{username}",
             t.struct(
                 {
-                    "username": t.optional(t.string()),
+                    "username": t.string(),
                 }
             ),
             t.optional(g("User")),
@@ -193,7 +193,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/user/{username}",
             t.struct(
                 {
-                    "username": t.optional(t.string()),
+                    "username": t.string(),
                 }
             ),
             t.optional(t.boolean()),
@@ -202,7 +202,7 @@ with TypeGraph(name="petstore-v3") as g:
             "/user/{username}",
             t.struct(
                 {
-                    "username": t.optional(t.string()),
+                    "username": t.string(),
                 }
             ),
             t.optional(t.struct({})),
