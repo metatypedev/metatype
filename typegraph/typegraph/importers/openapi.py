@@ -9,17 +9,19 @@ from redbaron import RedBaron
 import semver
 
 
-def typify(schema: Box, name: str = ""):
+def typify(schema: Box, name: str = "", opt: bool = False):
+    if opt:
+        return f"t.optional({typify(schema, name)})"
+
     if len(name) > 0:
         return f'{typify(schema)}.named("{name}")'
 
     if "$ref" in schema:
-        print(f"SCHEMA: {schema}")
         match = re.match(r"^#/components/schemas/(\w+)$", schema["$ref"])
         if match:
             return f'g("{match.group(1)}")'
         else:
-            raise "Uh oh"
+            raise Exception("Uh oh")
 
     if schema.type == "integer":
         return "t.integer()"
@@ -40,9 +42,12 @@ def typify(schema: Box, name: str = ""):
 
     if schema.type == "object":
         ret = "t.struct({"
+        required = []
+        if "required" in schema:
+            required = schema.required
         if "properties" in schema:
             for prop_name, prop_schema in schema.properties.items():
-                ret += f'"{prop_name}": {typify(prop_schema)},'
+                ret += f'"{prop_name}": {typify(prop_schema, opt = not prop_name in required)},'
         ret += "})"
         return ret
 
