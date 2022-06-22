@@ -66,11 +66,14 @@ OPS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
 
 def input_type(op: Box):
     props = {}
+    required = []
     if "parameters" in op:
         for param in op.parameters:
             # TODO: optional???
             props[param.name] = param.schema
-    return typify(Box({"type": "object", "properties": props}))
+            if "required" in param and param.required:
+                required.append(param.name)
+    return typify(Box({"type": "object", "properties": props, "required": required}))
 
 
 def gen_functions(paths: Box):
