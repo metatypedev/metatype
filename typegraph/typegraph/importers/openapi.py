@@ -1,4 +1,5 @@
 import inspect
+import itertools
 import re
 from urllib.parse import urljoin
 
@@ -7,12 +8,22 @@ from box import Box
 import httpx
 from redbaron import RedBaron
 import semver
+import yaml
 
 
 class Document:
     def __init__(self, uri):
         self.uri = uri
-        self.root = Box(httpx.get(uri).json())
+        self.root = Document.load(uri)
+
+    def load(uri: str):
+        res = httpx.get(uri)
+        if res.headers.get("content-type").find("yaml") >= 0 or re.search(
+            r"\.yaml$", uri
+        ):
+            return Box(yaml.load(res.text, Loader=yaml.Loader))
+        # suppose it is JSON
+        return Box(res.json())
 
     def typify(self, schema: Box, name: str = "", opt: bool = False):
         if opt:
@@ -27,6 +38,19 @@ class Document:
                 return f'g("{match.group(1)}")'
             else:
                 raise Exception("Uh oh")
+
+        if "allOf" in schema:
+            # TODO: merge
+            schemas = [
+                self.resolve_ref(s["$ref"]) if "$ref" in s else s for s in schema.allOf
+            ]
+            return self.typify(
+                Box([*itertools.chain(*[schema.items() for schema in schemas])])
+            )
+
+        if "type" not in schema:
+            print(f"SCHEMA: {schema}")
+            raise Exception("Unsupported schema")
 
         if schema.type == "integer":
             return "t.integer()"
@@ -64,12 +88,23 @@ class Document:
             cg += f"    {self.typify(schema_obj, name)}\n"
         return cg
 
+    def resolve_ref(self, ref: str):
+        match = re.match(r"#/components/([^/]+)/([^/]+)$", ref)
+        if not match:
+            raise Exception(f'Unsupported (external) reference "{ref}"')
+        return self.root.components[match.group(1)][match.group(2)]
+
     def input_type(self, op: Box):
         props = {}
         required = []
         if "parameters" in op:
             for param in op.parameters:
                 # TODO: optional???
+                if "$ref" in param:
+                    param = self.resolve_ref(param["$ref"])
+                if "schema" not in param:
+                    print(f"param: {param}")
+                    raise Exception(f"Unsupported param def")
                 props[param.name] = param.schema
                 if "required" in param and param.required:
                     required.append(param.name)
