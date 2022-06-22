@@ -1,4 +1,5 @@
 import inspect
+import re
 from urllib.parse import urljoin
 
 import black
@@ -6,6 +7,52 @@ from box import Box
 import httpx
 from redbaron import RedBaron
 import semver
+
+
+def typify(schema: dict, name: str = ""):
+    if len(name) > 0:
+        return f'{typify(schema)}.named("{name}")'
+
+    if "$ref" in schema:
+        print(f"SCHEMA: {schema}")
+        match = re.match(r"^#/components/schemas/(\w+)$", schema["$ref"])
+        if match:
+            return f'g("{match.group(1)}")'
+        else:
+            raise "Uh oh"
+
+    if schema.type == "integer":
+        return "t.integer()"
+
+    if schema.type == "number":
+        # formats??
+        return "t.float()"
+
+    if schema.type == "string":
+        # TODO: formats: byte, binary, date, date-time, password
+        return "t.string()"
+
+    if schema.type == "boolean":
+        return "t.boolean()"
+
+    if schema.type == "array":
+        return f't.list({typify(schema["items"])})'
+
+    if schema.type == "object":
+        ret = "t.struct({"
+        for prop_name, prop_schema in schema.properties.items():
+            ret += f'"{prop_name}": {typify(prop_schema)},'
+        ret += "})"
+        return ret
+
+    raise f'Type "{schema.type}" not supported'
+
+
+def gen_schema_defs(schemas: dict):
+    cg = ""
+    for name, schema_obj in schemas.items():
+        cg += f"    {typify(schema_obj, name)}\n"
+    return cg
 
 
 def codegen(uri: str):
@@ -27,6 +74,10 @@ def codegen(uri: str):
     cg = ""
 
     cg += f'    remote = HTTPRuntime("{url}")\n'
+
+    if "components" in openapi:
+        if "schemas" in openapi.components:
+            cg += gen_schema_defs(openapi.components.schemas)
 
     return cg
 
