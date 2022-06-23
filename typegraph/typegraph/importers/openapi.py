@@ -130,98 +130,10 @@ class Document:
             return self.resolve_ref(schema["$ref"])
         return schema
 
-    def input_type(self, path: str, method: str) -> Input:
-        props = {}
-        required = []
-        kwargs = Box({})
-
-        path_obj = self.root.paths[path]
-        op_obj = path_obj[method]
-        params = [*path_obj.get("parameters", []), *op_obj.get("parameters", [])]
-        for param in params:
-            # TODO: optional???
-            if "$ref" in param:
-                param = self.resolve_ref(param["$ref"])
-            if "schema" not in param:
-                print(f"param: {param}")
-                raise Exception(f"Unsupported param def")
-            props[param.name] = param.schema
-            if "required" in param and param.required:
-                required.append(param.name)
-
-        if "requestBody" in op_obj:
-            body = op_obj.requestBody.content
-            types = body.keys()
-            if MIME_TYPES.json in types:
-                content_type = MIME_TYPES.json
-            elif MIME_TYPES.urlenc in types:
-                content_type = MIME_TYPES.json
-            elif MIME_TYPES.multipart in types:
-                content_type = MIME_TYPES.multipart
-            else:
-                raise Exception(f'Unsupported content types "types"')
-            body_schema = self.schema_obj(body[content_type].schema)
-            assert body_schema.type == "object"
-            for name, schema in body_schema.properties.items():
-                # TODO: handle name clash
-                props[name] = schema
-
-            kwargs.content_type = repr(content_type)
-            kwargs.body_fields = repr(tuple(body_schema.properties.keys()))
-
-            if "required" in body_schema:
-                required += body_schema.required
-
-        return Input(
-            self.typify(
-                Box({"type": "object", "properties": props, "required": required})
-            ),
-            kwargs,
-        )
-
-    def gen_function(self, path: str, method: str) -> tuple[str, str]:
-        op_obj = self.root.paths[path][method]
-        inp = self.input_type(path, method)
-        out = "t.struct({})"
-        has_default = "default" in op_obj.responses
-        if has_default or "200" in op_obj.responses:
-            res = op_obj.responses["default" if has_default else "200"]
-            if "content" in res:
-                res = res.content
-                if "application/json" in res:
-                    out = self.typify(res["application/json"].schema)
-                else:
-                    raise Exception(f"Unsupported response types {res.keys()}")
-            else:  # no content
-                out = "t.optional(t.boolean())"
-        if "404" in op_obj.responses:
-            out = f"t.optional({out})"
-        return (
-            op_obj.operationId,
-            f'remote.{method}("{path}", {inp.type}, {out}, {as_kwargs(inp.kwargs)}).add_policy(allow_all())',
-        )
-
-    def gen_functions(self, paths: Box):
+    def gen_functions(self):
         fns = []
-        for path, item in paths.items():
-            if "$ref" in item:
-                raise "$ref not supported in path definition"
-
-            # TODO: params
-
-            METHODS = [
-                "get",
-                "put",
-                "post",
-                "delete",
-                "options",
-                "head",
-                "patch",
-                "trace",
-            ]
-            for method in METHODS:
-                if method in item:
-                    fns.append(self.gen_function(path, method))
+        for path in self.root.paths:
+            fns += Path(self, path).gen_functions()
         return dict(fns)
 
     def codegen(self):
@@ -244,8 +156,106 @@ class Document:
         if "components" in self.root:
             if "schemas" in self.root.components:
                 cg += self.gen_schema_defs(self.root.components.schemas)
-        cg += f"    g.expose({as_kwargs(self.gen_functions(self.root.paths))})"
+        cg += f"    g.expose({as_kwargs(self.gen_functions())})"
         return cg
+
+
+class Path:
+
+    methods = (
+        "get",
+        "put",
+        "post",
+        "delete",
+        "options",
+        "head",
+        "patch",
+        "trace",
+    )
+
+    def __init__(self, doc: Document, path: str):
+        self.doc = doc
+        self.path = path
+        self.path_obj = doc.root.paths[path]
+        if "$ref" in self.path_obj:
+            self.path_obj = doc.resolve_ref(self.path_obj["$ref"])
+
+    def input_type(self, method: str) -> Input:
+        props = {}
+        required = []
+        kwargs = Box({})
+
+        op_obj = self.path_obj[method]
+        params = [*self.path_obj.get("parameters", []), *op_obj.get("parameters", [])]
+        for param in params:
+            # TODO: optional???
+            if "$ref" in param:
+                param = self.doc.resolve_ref(param["$ref"])
+            if "schema" not in param:
+                print(f"param: {param}")
+                raise Exception(f"Unsupported param def")
+            props[param.name] = param.schema
+            if "required" in param and param.required:
+                required.append(param.name)
+
+        if "requestBody" in op_obj:
+            body = op_obj.requestBody.content
+            types = body.keys()
+            if MIME_TYPES.json in types:
+                content_type = MIME_TYPES.json
+            elif MIME_TYPES.urlenc in types:
+                content_type = MIME_TYPES.json
+            elif MIME_TYPES.multipart in types:
+                content_type = MIME_TYPES.multipart
+            else:
+                raise Exception(f'Unsupported content types "types"')
+            body_schema = self.doc.schema_obj(body[content_type].schema)
+            assert body_schema.type == "object"
+            for name, schema in body_schema.properties.items():
+                # TODO: handle name clash
+                props[name] = schema
+
+            kwargs.content_type = repr(content_type)
+            kwargs.body_fields = repr(tuple(body_schema.properties.keys()))
+
+            if "required" in body_schema:
+                required += body_schema.required
+
+        return Input(
+            self.doc.typify(
+                Box({"type": "object", "properties": props, "required": required})
+            ),
+            kwargs,
+        )
+
+    def gen_function(self, method: str) -> tuple[str, str]:
+        op_obj = self.path_obj[method]
+        inp = self.input_type(method)
+        out = "t.struct({})"
+        has_default = "default" in op_obj.responses
+        if has_default or "200" in op_obj.responses:
+            res = op_obj.responses["default" if has_default else "200"]
+            if "content" in res:
+                res = res.content
+                if "application/json" in res:
+                    out = self.doc.typify(res["application/json"].schema)
+                else:
+                    raise Exception(f"Unsupported response types {res.keys()}")
+            else:  # no content
+                out = "t.optional(t.boolean())"
+        if "404" in op_obj.responses:
+            out = f"t.optional({out})"
+        return (
+            op_obj.operationId,
+            f'remote.{method}("{self.path}", {inp.type}, {out}, {as_kwargs(inp.kwargs)}).add_policy(allow_all())',
+        )
+
+    def gen_functions(self):
+        return [
+            self.gen_function(method)
+            for method in self.methods
+            if method in self.path_obj
+        ]
 
 
 def as_kwargs(kwargs: dict[str, str]):
