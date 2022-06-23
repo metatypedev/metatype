@@ -179,8 +179,30 @@ class Document:
             kwargs,
         )
 
+    def gen_function(self, path: str, method: str) -> tuple[str, str]:
+        op_obj = self.root.paths[path][method]
+        inp = self.input_type(path, method)
+        out = "t.struct({})"
+        has_default = "default" in op_obj.responses
+        if has_default or "200" in op_obj.responses:
+            res = op_obj.responses["default" if has_default else "200"]
+            if "content" in res:
+                res = res.content
+                if "application/json" in res:
+                    out = self.typify(res["application/json"].schema)
+                else:
+                    raise Exception(f"Unsupported response types {res.keys()}")
+            else:  # no content
+                out = "t.optional(t.boolean())"
+        if "404" in op_obj.responses:
+            out = f"t.optional({out})"
+        return (
+            op_obj.operationId,
+            f'remote.{method}("{path}", {inp.type}, {out}, {as_kwargs(inp.kwargs)}).add_policy(allow_all())',
+        )
+
     def gen_functions(self, paths: Box):
-        fns = {}
+        fns = []
         for path, item in paths.items():
             if "$ref" in item:
                 raise "$ref not supported in path definition"
@@ -199,29 +221,8 @@ class Document:
             ]
             for method in METHODS:
                 if method in item:
-                    op_obj = item[method]
-                    inp = self.input_type(path, method)
-                    out = "t.struct({})"
-                    has_default = "default" in op_obj.responses
-                    if has_default or "200" in op_obj.responses:
-                        res = op_obj.responses["default" if has_default else "200"]
-                        if "content" in res:
-                            res = res.content
-                            if "application/json" in res:
-                                out = self.typify(res["application/json"].schema)
-                            else:
-                                raise Exception(
-                                    f"Unsupported response types {res.keys()}"
-                                )
-                        else:  # no content
-                            out = "t.optional(t.boolean())"
-                    if "404" in op_obj.responses:
-                        out = f"t.optional({out})"
-                    fns[
-                        op_obj.operationId
-                    ] = f'remote.{method}("{path}", {inp.type}, {out}, {as_kwargs(inp.kwargs)}).add_policy(allow_all())'
-
-        return fns
+                    fns.append(self.gen_function(path, method))
+        return dict(fns)
 
     def codegen(self):
         ver = semver.VersionInfo.parse(self.root.openapi)
