@@ -396,9 +396,31 @@ with TypeGraph(name="devto") as g:
             ),
             t.list(g("ArticleIndex")),
         ).add_policy(allow_all()),
-        createArticle=remote.post("/articles", t.struct({}), t.struct({})).add_policy(
-            allow_all()
-        ),
+        createArticle=remote.post(
+            "/articles",
+            t.struct(
+                {
+                    "article": t.optional(
+                        t.struct(
+                            {
+                                "body_markdown": t.optional(t.string()),
+                                "canonical_url": t.optional(t.string()),
+                                "description": t.optional(t.string()),
+                                "main_image": t.optional(t.string()),
+                                "organization_id": t.optional(t.integer()),
+                                "published": t.optional(t.boolean()),
+                                "series": t.optional(t.string()),
+                                "tags": t.optional(t.list(t.string())),
+                                "title": t.optional(t.string()),
+                            }
+                        )
+                    ),
+                }
+            ),
+            t.struct({}),
+            content_type="application/json",
+            body_fields=("article",),
+        ).add_policy(allow_all()),
         getLatestArticles=remote.get(
             "/articles/latest",
             t.struct(
@@ -450,13 +472,49 @@ with TypeGraph(name="devto") as g:
             t.list(g("ArticleMe")),
         ).add_policy(allow_all()),
         getArticleById=remote.get(
-            "/articles/{id}", t.struct({}), t.optional(g("ArticleShow"))
+            "/articles/{id}",
+            t.struct(
+                {
+                    "id": t.integer(),
+                }
+            ),
+            t.optional(g("ArticleShow")),
         ).add_policy(allow_all()),
         updateArticle=remote.put(
-            "/articles/{id}", t.struct({}), g("ArticleShow")
+            "/articles/{id}",
+            t.struct(
+                {
+                    "id": t.integer(),
+                    "article": t.optional(
+                        t.struct(
+                            {
+                                "body_markdown": t.optional(t.string()),
+                                "canonical_url": t.optional(t.string()),
+                                "description": t.optional(t.string()),
+                                "main_image": t.optional(t.string()),
+                                "organization_id": t.optional(t.integer()),
+                                "published": t.optional(t.boolean()),
+                                "series": t.optional(t.string()),
+                                "tags": t.optional(t.list(t.string())),
+                                "title": t.optional(t.string()),
+                            }
+                        )
+                    ),
+                }
+            ),
+            g("ArticleShow"),
+            content_type="application/json",
+            body_fields=("article",),
         ).add_policy(allow_all()),
         getArticleByPath=remote.get(
-            "/articles/{username}/{slug}", t.struct({}), t.optional(g("ArticleShow"))
+            "/articles/{username}/{slug}",
+            t.struct(
+                {
+                    "username": t.string(),
+                    "slug": t.string(),
+                }
+            ),
+            t.optional(g("ArticleShow")),
         ).add_policy(allow_all()),
         getCommentsByArticleId=remote.get(
             "/comments",
@@ -489,7 +547,9 @@ with TypeGraph(name="devto") as g:
             t.list(g("Follower")),
         ).add_policy(allow_all()),
         getFollowedTags=remote.get(
-            "/follows/tags", t.struct({}), t.list(g("FollowedTag"))
+            "/follows/tags",
+            t.struct({}),
+            t.list(g("FollowedTag")),
         ).add_policy(allow_all()),
         getListings=remote.get(
             "/listings",
@@ -502,9 +562,32 @@ with TypeGraph(name="devto") as g:
             ),
             t.list(g("Listing")),
         ).add_policy(allow_all()),
-        createListing=remote.post("/listings", t.struct({}), t.struct({})).add_policy(
-            allow_all()
-        ),
+        createListing=remote.post(
+            "/listings",
+            t.struct(
+                {
+                    "listing": t.optional(
+                        t.struct(
+                            {
+                                "action": t.optional(t.string()),
+                                "body_markdown": t.string(),
+                                "category": g("ListingCategory"),
+                                "contact_via_connect": t.optional(t.boolean()),
+                                "expires_at": t.optional(t.string()),
+                                "location": t.optional(t.string()),
+                                "organization_id": t.optional(t.integer()),
+                                "tag_list": t.optional(t.string()),
+                                "tags": t.optional(t.list(t.string())),
+                                "title": t.string(),
+                            }
+                        )
+                    ),
+                }
+            ),
+            t.struct({}),
+            content_type="application/json",
+            body_fields=("listing",),
+        ).add_policy(allow_all()),
         getListingsByCategory=remote.get(
             "/listings/category/{category}",
             t.struct(
@@ -517,10 +600,39 @@ with TypeGraph(name="devto") as g:
             t.list(g("Listing")),
         ).add_policy(allow_all()),
         getListingById=remote.get(
-            "/listings/{id}", t.struct({}), t.optional(g("Listing"))
+            "/listings/{id}",
+            t.struct(
+                {
+                    "id": t.integer(),
+                }
+            ),
+            t.optional(g("Listing")),
         ).add_policy(allow_all()),
         updateListing=remote.put(
-            "/listings/{id}", t.struct({}), g("ArticleShow")
+            "/listings/{id}",
+            t.struct(
+                {
+                    "id": t.integer(),
+                    "listing": t.optional(
+                        t.struct(
+                            {
+                                "action": t.optional(t.string()),
+                                "body_markdown": t.optional(t.string()),
+                                "category": t.optional(g("ListingCategory")),
+                                "contact_via_connect": t.optional(t.boolean()),
+                                "expires_at": t.optional(t.string()),
+                                "location": t.optional(t.string()),
+                                "tag_list": t.optional(t.string()),
+                                "tags": t.optional(t.list(t.string())),
+                                "title": t.optional(t.string()),
+                            }
+                        )
+                    ),
+                }
+            ),
+            g("ArticleShow"),
+            content_type="application/json",
+            body_fields=("listing",),
         ).add_policy(allow_all()),
         getOrganization=remote.get(
             "/organizations/{username}",
@@ -624,9 +736,11 @@ with TypeGraph(name="devto") as g:
             ),
             t.list(g("Tag")),
         ).add_policy(allow_all()),
-        getUserMe=remote.get("/users/me", t.struct({}), g("User")).add_policy(
-            allow_all()
-        ),
+        getUserMe=remote.get(
+            "/users/me",
+            t.struct({}),
+            g("User"),
+        ).add_policy(allow_all()),
         getUser=remote.get(
             "/users/{id}",
             t.struct(
@@ -648,15 +762,45 @@ with TypeGraph(name="devto") as g:
             t.list(g("ArticleVideo")),
         ).add_policy(allow_all()),
         getWebhooks=remote.get(
-            "/webhooks", t.struct({}), t.list(g("WebhookIndex"))
+            "/webhooks",
+            t.struct({}),
+            t.list(g("WebhookIndex")),
         ).add_policy(allow_all()),
-        createWebhook=remote.post("/webhooks", t.struct({}), t.struct({})).add_policy(
-            allow_all()
-        ),
+        createWebhook=remote.post(
+            "/webhooks",
+            t.struct(
+                {
+                    "webhook_endpoint": t.optional(
+                        t.struct(
+                            {
+                                "events": t.list(t.string()),
+                                "source": t.string(),
+                                "target_url": t.string(),
+                            }
+                        )
+                    ),
+                }
+            ),
+            t.struct({}),
+            content_type="application/json",
+            body_fields=("webhook_endpoint",),
+        ).add_policy(allow_all()),
         getWebhookById=remote.get(
-            "/webhooks/{id}", t.struct({}), t.optional(g("WebhookShow"))
+            "/webhooks/{id}",
+            t.struct(
+                {
+                    "id": t.integer(),
+                }
+            ),
+            t.optional(g("WebhookShow")),
         ).add_policy(allow_all()),
         deleteWebhook=remote.delete(
-            "/webhooks/{id}", t.struct({}), t.optional(t.struct({}))
+            "/webhooks/{id}",
+            t.struct(
+                {
+                    "id": t.integer(),
+                }
+            ),
+            t.optional(t.struct({})),
         ).add_policy(allow_all()),
     )
