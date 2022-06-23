@@ -59,8 +59,7 @@ class Document:
         return Box(res.json())
 
     def merge_schemas(self, schemas: list[Box]):
-        schemas = [self.resolve_ref(s["$ref"]) if "$ref" in s else s for s in schemas]
-        return Box(merge_all(schemas))
+        return Box(merge_all([self.resolve_ref(s) for s in schemas]))
 
     def typify(self, schema: Box, name: str = "", opt: bool = False):
         if opt:
@@ -74,7 +73,7 @@ class Document:
             if match:
                 return f'g("{match.group(1)}")'
             else:  # unlikely??
-                return self.typify(self.resolve_ref(schema["$ref"]))
+                return self.typify(self.resolve_ref(schema))
 
         if "allOf" in schema:
             return self.typify(self.merge_schemas(schema.allOf))
@@ -119,16 +118,14 @@ class Document:
             cg += f"    {self.typify(schema, name)}\n"
         return cg
 
-    def resolve_ref(self, ref: str):
-        match = re.match(r"#/components/([^/]+)/([^/]+)$", ref)
-        if not match:
-            raise Exception(f'Unsupported (external?) reference "{ref}"')
-        return self.root.components[match.group(1)][match.group(2)]
+    def resolve_ref(self, obj: Box):
+        if "$ref" not in obj:
+            return obj
 
-    def schema_obj(self, schema: Box):
-        if "$ref" in schema:
-            return self.resolve_ref(schema["$ref"])
-        return schema
+        match = re.match(r"#/components/([^/]+)/([^/]+)$", obj["$ref"])
+        if not match:
+            raise Exception(f'Unsupported (external?) reference "{obj["$ref"]}"')
+        return self.root.components[match.group(1)][match.group(2)]
 
     def gen_functions(self):
         fns = []
@@ -176,9 +173,7 @@ class Path:
     def __init__(self, doc: Document, path: str):
         self.doc = doc
         self.path = path
-        self.path_obj = doc.root.paths[path]
-        if "$ref" in self.path_obj:
-            self.path_obj = doc.resolve_ref(self.path_obj["$ref"])
+        self.path_obj = doc.resolve_ref(doc.root.paths[path])
 
     def input_type(self, method: str) -> Input:
         props = {}
@@ -189,8 +184,7 @@ class Path:
         params = [*self.path_obj.get("parameters", []), *op_obj.get("parameters", [])]
         for param in params:
             # TODO: optional???
-            if "$ref" in param:
-                param = self.doc.resolve_ref(param["$ref"])
+            param = self.doc.resolve_ref(param)
             if "schema" not in param:
                 print(f"param: {param}")
                 raise Exception(f"Unsupported param def")
@@ -209,7 +203,7 @@ class Path:
                 content_type = MIME_TYPES.multipart
             else:
                 raise Exception(f'Unsupported content types "types"')
-            body_schema = self.doc.schema_obj(body[content_type].schema)
+            body_schema = self.doc.resolve_ref(body[content_type].schema)
             assert body_schema.type == "object"
             for name, schema in body_schema.properties.items():
                 # TODO: handle name clash
