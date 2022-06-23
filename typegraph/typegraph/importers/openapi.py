@@ -1,5 +1,4 @@
 import inspect
-import itertools
 import re
 from urllib.parse import urljoin
 
@@ -9,6 +8,24 @@ import httpx
 from redbaron import RedBaron
 import semver
 import yaml
+
+
+def merge_into(dest: dict, source: dict):
+    for key, value in source.items():
+        if isinstance(value, dict):
+            node = dest.setdefault(key, {})
+            # ? what if node is not a dict??
+            merge_into(node, value)
+        else:
+            dest[key] = value
+    return dest
+
+
+def merge_all(items: list[dict]):
+    ret = {}
+    for item in items:
+        ret = merge_into(ret, item)
+    return ret
 
 
 class Document:
@@ -25,6 +42,10 @@ class Document:
         # suppose it is JSON
         return Box(res.json())
 
+    def merge_schemas(self, schemas: list[Box]):
+        schemas = [self.resolve_ref(s["$ref"]) if "$ref" in s else s for s in schemas]
+        return Box(merge_all(schemas))
+
     def typify(self, schema: Box, name: str = "", opt: bool = False):
         if opt:
             return f"t.optional({self.typify(schema, name)})"
@@ -40,13 +61,7 @@ class Document:
                 raise Exception("Uh oh")
 
         if "allOf" in schema:
-            # TODO: merge
-            schemas = [
-                self.resolve_ref(s["$ref"]) if "$ref" in s else s for s in schema.allOf
-            ]
-            return self.typify(
-                Box([*itertools.chain(*[schema.items() for schema in schemas])])
-            )
+            return self.typify(self.merge_schemas(schema.allOf))
 
         if "type" not in schema:
             print(f"SCHEMA: {schema}")
