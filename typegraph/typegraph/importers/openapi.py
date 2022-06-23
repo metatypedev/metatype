@@ -57,8 +57,8 @@ class Document:
             match = re.match(r"^#/components/schemas/(\w+)$", schema["$ref"])
             if match:
                 return f'g("{match.group(1)}")'
-            else:
-                raise Exception("Uh oh")
+            else:  # unlikely??
+                return self.typify(self.resolve_ref(schema["$ref"]))
 
         if "allOf" in schema:
             return self.typify(self.merge_schemas(schema.allOf))
@@ -106,7 +106,7 @@ class Document:
     def resolve_ref(self, ref: str):
         match = re.match(r"#/components/([^/]+)/([^/]+)$", ref)
         if not match:
-            raise Exception(f'Unsupported (external) reference "{ref}"')
+            raise Exception(f'Unsupported (external?) reference "{ref}"')
         return self.root.components[match.group(1)][match.group(2)]
 
     def input_type(self, op: Box):
