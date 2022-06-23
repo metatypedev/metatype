@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import inspect
 import re
 from urllib.parse import urljoin
@@ -8,6 +9,15 @@ import httpx
 from redbaron import RedBaron
 import semver
 import yaml
+
+
+MIME_TYPES = Box(
+    {
+        "json": "application/json",
+        "urlenc": "application/x-www-form-urlencoded",
+        "multipart": "multipart/form-data",
+    }
+)
 
 
 def merge_into(dest: dict, source: dict):
@@ -26,6 +36,12 @@ def merge_all(items: list[dict]):
     for item in items:
         ret = merge_into(ret, item)
     return ret
+
+
+@dataclass
+class Input:
+    type: str
+    kwargs: dict
 
 
 class Document:
@@ -99,8 +115,8 @@ class Document:
 
     def gen_schema_defs(self, schemas: Box):
         cg = ""
-        for name, schema_obj in schemas.items():
-            cg += f"    {self.typify(schema_obj, name)}\n"
+        for name, schema in schemas.items():
+            cg += f"    {self.typify(schema, name)}\n"
         return cg
 
     def resolve_ref(self, ref: str):
@@ -109,22 +125,58 @@ class Document:
             raise Exception(f'Unsupported (external?) reference "{ref}"')
         return self.root.components[match.group(1)][match.group(2)]
 
-    def input_type(self, op: Box):
+    def schema_obj(self, schema: Box):
+        if "$ref" in schema:
+            return self.resolve_ref(schema["$ref"])
+        return schema
+
+    def input_type(self, path: str, method: str) -> Input:
         props = {}
         required = []
-        if "parameters" in op:
-            for param in op.parameters:
-                # TODO: optional???
-                if "$ref" in param:
-                    param = self.resolve_ref(param["$ref"])
-                if "schema" not in param:
-                    print(f"param: {param}")
-                    raise Exception(f"Unsupported param def")
-                props[param.name] = param.schema
-                if "required" in param and param.required:
-                    required.append(param.name)
-        return self.typify(
-            Box({"type": "object", "properties": props, "required": required})
+        kwargs = Box({})
+
+        path_obj = self.root.paths[path]
+        op_obj = path_obj[method]
+        params = [*path_obj.get("parameters", []), *op_obj.get("parameters", [])]
+        for param in params:
+            # TODO: optional???
+            if "$ref" in param:
+                param = self.resolve_ref(param["$ref"])
+            if "schema" not in param:
+                print(f"param: {param}")
+                raise Exception(f"Unsupported param def")
+            props[param.name] = param.schema
+            if "required" in param and param.required:
+                required.append(param.name)
+
+        if "requestBody" in op_obj:
+            body = op_obj.requestBody.content
+            types = body.keys()
+            if MIME_TYPES.json in types:
+                content_type = MIME_TYPES.json
+            elif MIME_TYPES.urlenc in types:
+                content_type = MIME_TYPES.json
+            elif MIME_TYPES.multipart in types:
+                content_type = MIME_TYPES.multipart
+            else:
+                raise Exception(f'Unsupported content types "types"')
+            body_schema = self.schema_obj(body[content_type].schema)
+            assert body_schema.type == "object"
+            for name, schema in body_schema.properties.items():
+                # TODO: handle name clash
+                props[name] = schema
+
+            kwargs.content_type = repr(content_type)
+            kwargs.body_fields = repr(tuple(body_schema.properties.keys()))
+
+            if "required" in body_schema:
+                required += body_schema.required
+
+        return Input(
+            self.typify(
+                Box({"type": "object", "properties": props, "required": required})
+            ),
+            kwargs,
         )
 
     def gen_functions(self, paths: Box):
@@ -135,11 +187,20 @@ class Document:
 
             # TODO: params
 
-            OPS = ["get", "put", "post", "delete", "options", "head", "patch", "trace"]
-            for op in OPS:
-                if op in item:
-                    op_obj = item[op]
-                    inp = self.input_type(op_obj)
+            METHODS = [
+                "get",
+                "put",
+                "post",
+                "delete",
+                "options",
+                "head",
+                "patch",
+                "trace",
+            ]
+            for method in METHODS:
+                if method in item:
+                    op_obj = item[method]
+                    inp = self.input_type(path, method)
                     out = "t.struct({})"
                     has_default = "default" in op_obj.responses
                     if has_default or "200" in op_obj.responses:
@@ -158,7 +219,7 @@ class Document:
                         out = f"t.optional({out})"
                     fns[
                         op_obj.operationId
-                    ] = f'remote.{op}("{path}", {inp}, {out}).add_policy(allow_all())'
+                    ] = f'remote.{method}("{path}", {inp.type}, {out}, {as_kwargs(inp.kwargs)}).add_policy(allow_all())'
 
         return fns
 
