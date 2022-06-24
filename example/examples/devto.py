@@ -417,7 +417,7 @@ with TypeGraph(name="devto") as g:
                     ),
                 }
             ),
-            t.struct({}),
+            g("ArticleShow"),
             content_type="application/json",
             body_fields=("article",),
         ).add_policy(allow_all()),
@@ -584,7 +584,7 @@ with TypeGraph(name="devto") as g:
                     ),
                 }
             ),
-            t.struct({}),
+            g("Listing"),
             content_type="application/json",
             body_fields=("listing",),
         ).add_policy(allow_all()),
@@ -781,7 +781,7 @@ with TypeGraph(name="devto") as g:
                     ),
                 }
             ),
-            t.struct({}),
+            g("WebhookShow"),
             content_type="application/json",
             body_fields=("webhook_endpoint",),
         ).add_policy(allow_all()),
@@ -801,6 +801,6 @@ with TypeGraph(name="devto") as g:
                     "id": t.integer(),
                 }
             ),
-            t.optional(t.struct({})),
+            t.optional(t.boolean()),
         ).add_policy(allow_all()),
     )

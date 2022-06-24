@@ -222,21 +222,34 @@ class Path:
             kwargs,
         )
 
+    def success_code(responses: Box) -> str:
+        if "200" in responses:
+            return "200"
+        for status in responses:
+            if re.match(r"^2\d\d", status):
+                return status
+        # ? what if there are more than one 2xx codes
+        if "default" in responses:
+            return "default"
+        raise Exception(f"No success response found in {responses}")
+
     def gen_function(self, method: str) -> tuple[str, str]:
         op_obj = self.path_obj[method]
         inp = self.input_type(method)
-        out = "t.struct({})"
-        has_default = "default" in op_obj.responses
-        if has_default or "200" in op_obj.responses:
-            res = op_obj.responses["default" if has_default else "200"]
+        success_code = Path.success_code(op_obj.responses)
+        if success_code == "204":  # No Content
+            out = "t.boolean()"
+        else:
+            res = op_obj.responses[success_code]
             if "content" in res:
                 res = res.content
                 if "application/json" in res:
                     out = self.doc.typify(res["application/json"].schema)
                 else:
                     raise Exception(f"Unsupported response types {res.keys()}")
-            else:  # no content
-                out = "t.optional(t.boolean())"
+            else:  # no content ??
+                out = "t.struct()"
+        # ? or any 4xx ?
         if "404" in op_obj.responses:
             out = f"t.optional({out})"
         return (
