@@ -8,8 +8,8 @@ name = "native"
 crate-type = ["cdylib"]
 
 [dependencies]
-deno_bindgen = "0.5.0"
-serde = { version = "1.0.136", features = ["derive"] }
+deno_bindgen = "0.5.1"
+serde = { version = "1.0.137", features = ["derive"] }
 query-core = { path = "libs/prisma-engines/query-engine/core" }
 query-connector = { path = "libs/prisma-engines/query-engine/connectors/query-connector" }
 request-handlers = { path = "libs/prisma-engines/query-engine/request-handlers/" }
@@ -23,10 +23,10 @@ mongodb-introspection-connector = { path = "libs/prisma-engines/introspection-en
 
 connection-string = "0.1.14"
 url = "2.2.2"
-thiserror = "1.0.30"
-tokio = { version = "1.17.0", features = ["full"] }
+thiserror = "1.0.31"
+tokio = { version = "1.19.2", features = ["full"] }
 lazy_static = "1.4.0"
-log = "0.4.14"
+log = "0.4.17"
 env_logger = "0.9.0"
-serde_json = "1.0.79"
-dashmap = "5.1.0"
+serde_json = "1.0.81"
+dashmap = "5.3.4"
