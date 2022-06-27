@@ -808,7 +808,7 @@ export class TypeGraph {
 
 const lazyResolver = <T>(
   fn: (args: any) => Promise<T>,
-): ((args: any) => Promise<T>) => {
+): (args: any) => Promise<T> => {
   let memo: Promise<T> | undefined = undefined;
   // deno-lint-ignore require-await
   return async (args: any) => {

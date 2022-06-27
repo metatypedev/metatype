@@ -6,6 +6,6 @@ include:
 test:
   variables:
     DENO_VERSION: "1.22.0"
-    DENO_BINDGEN_VERSION: "0.5.0"
+    DENO_BINDGEN_VERSION: "0.5.1"
     RUST_VERSION: "1.60.0"
     PNPM_VERSION: "7.1.9"
