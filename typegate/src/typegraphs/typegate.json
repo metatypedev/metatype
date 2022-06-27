@@ -17,7 +17,7 @@
       }
     },
     {
-      "name": "func_struct_140299614586912_list_typegraph_140299614588496_140299614596608",
+      "name": "func_struct_4617504704_list_typegraph_4617504848_4617508304",
       "typedef": "func",
       "edges": [2, 3],
       "policies": [0],
@@ -25,7 +25,7 @@
       "data": { "materializer": 0, "input": 2, "output": 3 }
     },
     {
-      "name": "struct_140299614586912",
+      "name": "struct_4617504704",
       "typedef": "struct",
       "edges": [],
       "policies": [],
@@ -33,7 +33,7 @@
       "data": { "renames": {}, "binds": {} }
     },
     {
-      "name": "list_typegraph_140299614588496",
+      "name": "list_typegraph_4617504848",
       "typedef": "list",
       "edges": [4],
       "policies": [],
@@ -49,7 +49,7 @@
       "data": { "renames": {}, "binds": { "name": 5, "url": 7 } }
     },
     {
-      "name": "string_140299614597376",
+      "name": "string_4617507824",
       "typedef": "string",
       "edges": [6],
       "policies": [],
@@ -57,7 +57,7 @@
       "data": { "of": 6 }
     },
     {
-      "name": "char_140299614594256",
+      "name": "char_4617507872",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -65,7 +65,7 @@
       "data": {}
     },
     {
-      "name": "uri_140299614590560",
+      "name": "uri_4617508016",
       "typedef": "uri",
       "edges": [8],
       "policies": [],
@@ -73,7 +73,7 @@
       "data": { "of": 8 }
     },
     {
-      "name": "char_140299614598192",
+      "name": "char_4617508064",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -81,7 +81,7 @@
       "data": {}
     },
     {
-      "name": "func_structname_140299614596080_optional_typegraph_140299614591520_140299614586864",
+      "name": "func_structname_4617508640_optional_typegraph_4617508496_4617508592",
       "typedef": "func",
       "edges": [10, 13],
       "policies": [0],
@@ -89,7 +89,7 @@
       "data": { "materializer": 2, "input": 10, "output": 13 }
     },
     {
-      "name": "structname_140299614596080",
+      "name": "structname_4617508640",
       "typedef": "struct",
       "edges": [11],
       "policies": [],
@@ -97,7 +97,7 @@
       "data": { "renames": {}, "binds": { "name": 11 } }
     },
     {
-      "name": "string_140299614597040",
+      "name": "string_4617508352",
       "typedef": "string",
       "edges": [12],
       "policies": [],
@@ -105,7 +105,7 @@
       "data": { "of": 12 }
     },
     {
-      "name": "char_140299614595744",
+      "name": "char_4617505472",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -113,7 +113,7 @@
       "data": {}
     },
     {
-      "name": "optional_typegraph_140299614591520",
+      "name": "optional_typegraph_4617508496",
       "typedef": "optional",
       "edges": [4],
       "policies": [],
@@ -121,7 +121,7 @@
       "data": {}
     },
     {
-      "name": "func_structfromString_140299614593584_optional_typegraph_140299614601072_140299614596368",
+      "name": "func_structfromString_4617504320_optional_typegraph_4617504080_4617504128",
       "typedef": "func",
       "edges": [15, 18],
       "policies": [0],
@@ -129,7 +129,7 @@
       "data": { "materializer": 3, "input": 15, "output": 18 }
     },
     {
-      "name": "structfromString_140299614593584",
+      "name": "structfromString_4617504320",
       "typedef": "struct",
       "edges": [16],
       "policies": [],
@@ -137,7 +137,7 @@
       "data": { "renames": {}, "binds": { "fromString": 16 } }
     },
     {
-      "name": "string_140299614588208",
+      "name": "string_4617508400",
       "typedef": "string",
       "edges": [17],
       "policies": [],
@@ -145,7 +145,7 @@
       "data": { "of": 17 }
     },
     {
-      "name": "char_140299614598912",
+      "name": "char_4617508448",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -153,7 +153,7 @@
       "data": {}
     },
     {
-      "name": "optional_typegraph_140299614601072",
+      "name": "optional_typegraph_4617504080",
       "typedef": "optional",
       "edges": [4],
       "policies": [],
@@ -161,7 +161,7 @@
       "data": {}
     },
     {
-      "name": "func_structname_140299614590272_integer_140299614601168_140299614588304",
+      "name": "func_structname_4617518672_integer_4617518624_4617518432",
       "typedef": "func",
       "edges": [20, 23],
       "policies": [0],
@@ -169,7 +169,7 @@
       "data": { "materializer": 4, "input": 20, "output": 23 }
     },
     {
-      "name": "structname_140299614590272",
+      "name": "structname_4617518672",
       "typedef": "struct",
       "edges": [21],
       "policies": [],
@@ -177,7 +177,7 @@
       "data": { "renames": {}, "binds": { "name": 21 } }
     },
     {
-      "name": "string_140299614592768",
+      "name": "string_4617518864",
       "typedef": "string",
       "edges": [22],
       "policies": [],
@@ -185,7 +185,7 @@
       "data": { "of": 22 }
     },
     {
-      "name": "char_140299614597184",
+      "name": "char_4617518816",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -193,7 +193,7 @@
       "data": {}
     },
     {
-      "name": "integer_140299614601168",
+      "name": "integer_4617518624",
       "typedef": "integer",
       "edges": [],
       "policies": [],
