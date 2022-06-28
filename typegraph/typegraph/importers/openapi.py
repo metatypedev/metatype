@@ -55,7 +55,7 @@ class Document:
         if res.headers.get("content-type").find("yaml") >= 0 or re.search(
             r"\.yaml$", uri
         ):
-            return Box(yaml.load(res.text, Loader=yaml.Loader))
+            return Box(yaml.safe_load(res.text))
         # suppose it is JSON
         return Box(res.json())
 
