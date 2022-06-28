@@ -19,23 +19,22 @@ with TypeGraph(name="devto") as g:
     ).named("APIError")
     t.struct(
         {
-            "article": t.optional(
-                t.struct(
-                    {
-                        "body_markdown": t.optional(t.string()),
-                        "canonical_url": t.optional(t.string()),
-                        "description": t.optional(t.string()),
-                        "main_image": t.optional(t.string()),
-                        "organization_id": t.optional(t.integer()),
-                        "published": t.optional(t.boolean()),
-                        "series": t.optional(t.string()),
-                        "tags": t.optional(t.list(t.string())),
-                        "title": t.optional(t.string()),
-                    }
-                )
-            ),
+            "article": t.optional(g("ArticleCreate/article")),
         }
     ).named("ArticleCreate")
+    t.struct(
+        {
+            "body_markdown": t.optional(t.string()),
+            "canonical_url": t.optional(t.string()),
+            "description": t.optional(t.string()),
+            "main_image": t.optional(t.string()),
+            "organization_id": t.optional(t.integer()),
+            "published": t.optional(t.boolean()),
+            "series": t.optional(t.string()),
+            "tags": t.optional(t.list(t.string())),
+            "title": t.optional(t.string()),
+        }
+    ).named("ArticleCreate/article")
     t.struct(
         {
             "bg_color_hex": t.optional(t.string()),
@@ -133,23 +132,22 @@ with TypeGraph(name="devto") as g:
     ).named("ArticleShow")
     t.struct(
         {
-            "article": t.optional(
-                t.struct(
-                    {
-                        "body_markdown": t.optional(t.string()),
-                        "canonical_url": t.optional(t.string()),
-                        "description": t.optional(t.string()),
-                        "main_image": t.optional(t.string()),
-                        "organization_id": t.optional(t.integer()),
-                        "published": t.optional(t.boolean()),
-                        "series": t.optional(t.string()),
-                        "tags": t.optional(t.list(t.string())),
-                        "title": t.optional(t.string()),
-                    }
-                )
-            ),
+            "article": t.optional(g("ArticleUpdate/article")),
         }
     ).named("ArticleUpdate")
+    t.struct(
+        {
+            "body_markdown": t.optional(t.string()),
+            "canonical_url": t.optional(t.string()),
+            "description": t.optional(t.string()),
+            "main_image": t.optional(t.string()),
+            "organization_id": t.optional(t.integer()),
+            "published": t.optional(t.boolean()),
+            "series": t.optional(t.string()),
+            "tags": t.optional(t.list(t.string())),
+            "title": t.optional(t.string()),
+        }
+    ).named("ArticleUpdate/article")
     t.struct(
         {
             "cloudinary_video_url": t.string(),
@@ -157,16 +155,17 @@ with TypeGraph(name="devto") as g:
             "path": t.string(),
             "title": t.string(),
             "type_of": t.string(),
-            "user": t.struct(
-                {
-                    "name": t.optional(t.string()),
-                }
-            ),
+            "user": g("ArticleVideo/user"),
             "user_id": t.integer(),
             "video_duration_in_minutes": t.string(),
             "video_source_url": t.string(),
         }
     ).named("ArticleVideo")
+    t.struct(
+        {
+            "name": t.optional(t.string()),
+        }
+    ).named("ArticleVideo/user")
     t.struct(
         {
             "body_html": t.string(),
@@ -214,43 +213,41 @@ with TypeGraph(name="devto") as g:
     t.string().named("ListingCategory")
     t.struct(
         {
-            "listing": t.optional(
-                t.struct(
-                    {
-                        "action": t.optional(t.string()),
-                        "body_markdown": t.string(),
-                        "category": g("ListingCategory"),
-                        "contact_via_connect": t.optional(t.boolean()),
-                        "expires_at": t.optional(t.string()),
-                        "location": t.optional(t.string()),
-                        "organization_id": t.optional(t.integer()),
-                        "tag_list": t.optional(t.string()),
-                        "tags": t.optional(t.list(t.string())),
-                        "title": t.string(),
-                    }
-                )
-            ),
+            "listing": t.optional(g("ListingCreate/listing")),
         }
     ).named("ListingCreate")
     t.struct(
         {
-            "listing": t.optional(
-                t.struct(
-                    {
-                        "action": t.optional(t.string()),
-                        "body_markdown": t.optional(t.string()),
-                        "category": t.optional(g("ListingCategory")),
-                        "contact_via_connect": t.optional(t.boolean()),
-                        "expires_at": t.optional(t.string()),
-                        "location": t.optional(t.string()),
-                        "tag_list": t.optional(t.string()),
-                        "tags": t.optional(t.list(t.string())),
-                        "title": t.optional(t.string()),
-                    }
-                )
-            ),
+            "action": t.optional(t.string()),
+            "body_markdown": t.string(),
+            "category": g("ListingCategory"),
+            "contact_via_connect": t.optional(t.boolean()),
+            "expires_at": t.optional(t.string()),
+            "location": t.optional(t.string()),
+            "organization_id": t.optional(t.integer()),
+            "tag_list": t.optional(t.string()),
+            "tags": t.optional(t.list(t.string())),
+            "title": t.string(),
+        }
+    ).named("ListingCreate/listing")
+    t.struct(
+        {
+            "listing": t.optional(g("ListingUpdate/listing")),
         }
     ).named("ListingUpdate")
+    t.struct(
+        {
+            "action": t.optional(t.string()),
+            "body_markdown": t.optional(t.string()),
+            "category": t.optional(g("ListingCategory")),
+            "contact_via_connect": t.optional(t.boolean()),
+            "expires_at": t.optional(t.string()),
+            "location": t.optional(t.string()),
+            "tag_list": t.optional(t.string()),
+            "tags": t.optional(t.list(t.string())),
+            "title": t.optional(t.string()),
+        }
+    ).named("ListingUpdate/listing")
     t.struct(
         {
             "github_username": t.optional(t.string()),
@@ -273,17 +270,18 @@ with TypeGraph(name="devto") as g:
             "id": t.integer(),
             "image_url": t.string(),
             "path": t.string(),
-            "podcast": t.struct(
-                {
-                    "image_url": t.optional(t.string()),
-                    "slug": t.optional(t.string()),
-                    "title": t.optional(t.string()),
-                }
-            ),
+            "podcast": g("PodcastEpisode/podcast"),
             "title": t.string(),
             "type_of": t.string(),
         }
     ).named("PodcastEpisode")
+    t.struct(
+        {
+            "image_url": t.optional(t.string()),
+            "slug": t.optional(t.string()),
+            "title": t.optional(t.string()),
+        }
+    ).named("PodcastEpisode/podcast")
     t.struct(
         {
             "image_of": t.optional(t.string()),
@@ -346,17 +344,16 @@ with TypeGraph(name="devto") as g:
     ).named("User")
     t.struct(
         {
-            "webhook_endpoint": t.optional(
-                t.struct(
-                    {
-                        "events": t.list(t.string()),
-                        "source": t.string(),
-                        "target_url": t.string(),
-                    }
-                )
-            ),
+            "webhook_endpoint": t.optional(g("WebhookCreate/webhook_endpoint")),
         }
     ).named("WebhookCreate")
+    t.struct(
+        {
+            "events": t.list(t.string()),
+            "source": t.string(),
+            "target_url": t.string(),
+        }
+    ).named("WebhookCreate/webhook_endpoint")
     t.struct(
         {
             "created_at": t.optional(t.string()),
@@ -400,21 +397,7 @@ with TypeGraph(name="devto") as g:
             "/articles",
             t.struct(
                 {
-                    "article": t.optional(
-                        t.struct(
-                            {
-                                "body_markdown": t.optional(t.string()),
-                                "canonical_url": t.optional(t.string()),
-                                "description": t.optional(t.string()),
-                                "main_image": t.optional(t.string()),
-                                "organization_id": t.optional(t.integer()),
-                                "published": t.optional(t.boolean()),
-                                "series": t.optional(t.string()),
-                                "tags": t.optional(t.list(t.string())),
-                                "title": t.optional(t.string()),
-                            }
-                        )
-                    ),
+                    "article": t.optional(g("ArticleCreate/article")),
                 }
             ),
             g("ArticleShow"),
@@ -485,21 +468,7 @@ with TypeGraph(name="devto") as g:
             t.struct(
                 {
                     "id": t.integer(),
-                    "article": t.optional(
-                        t.struct(
-                            {
-                                "body_markdown": t.optional(t.string()),
-                                "canonical_url": t.optional(t.string()),
-                                "description": t.optional(t.string()),
-                                "main_image": t.optional(t.string()),
-                                "organization_id": t.optional(t.integer()),
-                                "published": t.optional(t.boolean()),
-                                "series": t.optional(t.string()),
-                                "tags": t.optional(t.list(t.string())),
-                                "title": t.optional(t.string()),
-                            }
-                        )
-                    ),
+                    "article": t.optional(g("ArticleUpdate/article")),
                 }
             ),
             g("ArticleShow"),
@@ -566,22 +535,7 @@ with TypeGraph(name="devto") as g:
             "/listings",
             t.struct(
                 {
-                    "listing": t.optional(
-                        t.struct(
-                            {
-                                "action": t.optional(t.string()),
-                                "body_markdown": t.string(),
-                                "category": g("ListingCategory"),
-                                "contact_via_connect": t.optional(t.boolean()),
-                                "expires_at": t.optional(t.string()),
-                                "location": t.optional(t.string()),
-                                "organization_id": t.optional(t.integer()),
-                                "tag_list": t.optional(t.string()),
-                                "tags": t.optional(t.list(t.string())),
-                                "title": t.string(),
-                            }
-                        )
-                    ),
+                    "listing": t.optional(g("ListingCreate/listing")),
                 }
             ),
             g("Listing"),
@@ -613,21 +567,7 @@ with TypeGraph(name="devto") as g:
             t.struct(
                 {
                     "id": t.integer(),
-                    "listing": t.optional(
-                        t.struct(
-                            {
-                                "action": t.optional(t.string()),
-                                "body_markdown": t.optional(t.string()),
-                                "category": t.optional(g("ListingCategory")),
-                                "contact_via_connect": t.optional(t.boolean()),
-                                "expires_at": t.optional(t.string()),
-                                "location": t.optional(t.string()),
-                                "tag_list": t.optional(t.string()),
-                                "tags": t.optional(t.list(t.string())),
-                                "title": t.optional(t.string()),
-                            }
-                        )
-                    ),
+                    "listing": t.optional(g("ListingUpdate/listing")),
                 }
             ),
             g("ArticleShow"),
@@ -770,15 +710,7 @@ with TypeGraph(name="devto") as g:
             "/webhooks",
             t.struct(
                 {
-                    "webhook_endpoint": t.optional(
-                        t.struct(
-                            {
-                                "events": t.list(t.string()),
-                                "source": t.string(),
-                                "target_url": t.string(),
-                            }
-                        )
-                    ),
+                    "webhook_endpoint": t.optional(g("WebhookCreate/webhook_endpoint")),
                 }
             ),
             g("WebhookShow"),
