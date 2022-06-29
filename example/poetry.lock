@@ -128,6 +128,14 @@ pyhocon = ">=0.3.54,<0.4.0"
 python-dateutil = ">=2.8.1,<3.0.0"
 
 [[package]]
+name = "deepmerge"
+version = "1.0.1"
+description = "a toolset to deeply merge python dictionaries."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "dukpy"
 version = "0.2.3"
 description = "Simple JavaScript interpreter for Python"
@@ -684,6 +692,7 @@ develop = true
 
 [package.dependencies]
 dataconf = "^1.5.0"
+deepmerge = "^1.0.1"
 fastapi = "^0.78.0"
 frozendict = "2.1.3"
 furl = "^2.1.3"
@@ -821,6 +830,10 @@ colorama = [
 dataconf = [
     {file = "dataconf-1.5.0-py3-none-any.whl", hash = "sha256:b390b929bd4aa0f23dc0e561fb00924743cea2f45941274d0c6f37d4f75a08a6"},
     {file = "dataconf-1.5.0.tar.gz", hash = "sha256:406f72a36229893d18247753f5cfe4b6ed265ff299810b6831b5995f1f74e639"},
+]
+deepmerge = [
+    {file = "deepmerge-1.0.1-py3-none-any.whl", hash = "sha256:f851fff957697cb8f4580b465acf5c2d35841695306ff0abb9cb9c273ad76112"},
+    {file = "deepmerge-1.0.1.tar.gz", hash = "sha256:4b44779ed3d2fb791bb181fc2683423496fea428abb7af37feb23286de7f0a1a"},
 ]
 dukpy = [
     {file = "dukpy-0.2.3-cp27-cp27m-manylinux1_i686.whl", hash = "sha256:edd0862c34f085b60f17fc214c19ab6e38166fd08c85506aeaf370449b3ca20f"},
