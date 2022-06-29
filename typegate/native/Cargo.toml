@@ -10,16 +10,16 @@ crate-type = ["cdylib"]
 [dependencies]
 deno_bindgen = "0.5.1"
 serde = { version = "1.0.137", features = ["derive"] }
-query-core = { path = "libs/prisma-engines/query-engine/core" }
-query-connector = { path = "libs/prisma-engines/query-engine/connectors/query-connector" }
-request-handlers = { path = "libs/prisma-engines/query-engine/request-handlers/" }
-prisma-models = { path = "libs/prisma-engines/query-engine/prisma-models" }
-datamodel = { path = "libs/prisma-engines/libs/datamodel/core" }
-user-facing-errors = { path = "libs/prisma-engines/libs/user-facing-errors/" }
-introspection-connector = { path = "libs/prisma-engines/introspection-engine/connectors/introspection-connector" }
-introspection-core = { path = "libs/prisma-engines/introspection-engine/core" }
-sql-introspection-connector = { path = "libs/prisma-engines/introspection-engine/connectors/sql-introspection-connector" }
-mongodb-introspection-connector = { path = "libs/prisma-engines/introspection-engine/connectors/mongodb-introspection-connector" }
+query-core = { git = "https://github.com/metatypedev/prisma-engines" }
+query-connector = { git = "https://github.com/metatypedev/prisma-engines" }
+request-handlers = { git = "https://github.com/metatypedev/prisma-engines" }
+prisma-models = { git = "https://github.com/metatypedev/prisma-engines" }
+datamodel = { git = "https://github.com/metatypedev/prisma-engines" }
+user-facing-errors = { git = "https://github.com/metatypedev/prisma-engines" }
+introspection-connector = { git = "https://github.com/metatypedev/prisma-engines" }
+introspection-core = { git = "https://github.com/metatypedev/prisma-engines" }
+sql-introspection-connector = { git = "https://github.com/metatypedev/prisma-engines" }
+mongodb-introspection-connector = { git = "https://github.com/metatypedev/prisma-engines" }
 
 connection-string = "0.1.14"
 url = "2.2.2"
