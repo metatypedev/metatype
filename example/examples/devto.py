@@ -608,18 +608,18 @@ with TypeGraph(name="devto") as g:
                 t.list(
                     t.struct(
                         {
-                            "body_markdown": t.optional(t.string()),
-                            "category": t.optional(g("ListingCategory")),
-                            "id": t.optional(t.integer()),
+                            "body_markdown": t.string(),
+                            "category": g("ListingCategory"),
+                            "id": t.integer(),
                             "organization": g("SharedOrganization"),
-                            "processed_html": t.optional(t.string()),
-                            "published": t.optional(t.boolean()),
-                            "slug": t.optional(t.string()),
-                            "tag_list": t.optional(t.string()),
-                            "tags": t.optional(t.list(t.string())),
-                            "title": t.optional(t.string()),
-                            "type_of": t.optional(t.string()),
-                            "user": t.optional(g("SharedUser")),
+                            "processed_html": t.string(),
+                            "published": t.boolean(),
+                            "slug": t.string(),
+                            "tag_list": t.string(),
+                            "tags": t.list(t.string()),
+                            "title": t.string(),
+                            "type_of": t.string(),
+                            "user": g("SharedUser"),
                         }
                     )
                 )
