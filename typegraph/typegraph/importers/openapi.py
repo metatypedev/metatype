@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 
 import black
 from box import Box
+from deepmerge import always_merger
 import httpx
 from redbaron import RedBaron
 import semver
@@ -20,21 +21,12 @@ MIME_TYPES = Box(
 )
 
 
-def merge_into(dest: dict, source: dict):
-    for key, value in source.items():
-        if isinstance(value, dict):
-            node = dest.setdefault(key, {})
-            # ? what if node is not a dict??
-            merge_into(node, value)
-        else:
-            dest[key] = value
-    return dest
-
-
 def merge_all(items: list[dict]):
     ret = {}
     for item in items:
-        ret = merge_into(ret, item)
+        print(f"MERGE: {item} into {ret}")
+        always_merger.merge(ret, item)
+        print(f"MERGED: {ret}")
     return ret
 
 
@@ -48,25 +40,33 @@ class Document:
     def __init__(self, uri):
         self.uri = uri
         self.root = Document.load(uri)
+        self.additional_types = []
 
     def load(uri: str):
         res = httpx.get(uri)
         if res.headers.get("content-type").find("yaml") >= 0 or re.search(
             r"\.yaml$", uri
         ):
-            return Box(yaml.load(res.text, Loader=yaml.Loader))
+            return Box(yaml.safe_load(res.text))
         # suppose it is JSON
         return Box(res.json())
 
     def merge_schemas(self, schemas: list[Box]):
         return Box(merge_all([self.resolve_ref(s) for s in schemas]))
 
-    def typify(self, schema: Box, name: str = "", opt: bool = False):
+    def typify(
+        self,
+        schema: Box,
+        name: str | None = None,
+        write_name: bool = False,
+        opt: bool = False,
+        prop_of: tuple[str, str] | None = None,
+    ):
         if opt:
-            return f"t.optional({self.typify(schema, name)})"
+            return f"t.optional({self.typify(schema, name, prop_of = prop_of)})"
 
-        if len(name) > 0:
-            return f'{self.typify(schema)}.named("{name}")'
+        if name is not None and write_name:
+            return f'{self.typify(schema, name)}.named("{name}")'
 
         if "$ref" in schema:
             match = re.match(r"^#/components/schemas/(\w+)$", schema["$ref"])
@@ -100,13 +100,16 @@ class Document:
             return f't.list({self.typify(schema["items"])})'
 
         if schema.type == "object":
+            if prop_of is not None:
+                type_name = f"{prop_of[0]}/{prop_of[1]}"
+                self.additional_types.append((type_name, schema))
+                return f'g("{type_name}")'
+
             ret = "t.struct({"
-            required = []
-            if "required" in schema:
-                required = schema.required
+            required = schema.required if "required" in schema else []
             if "properties" in schema:
                 for prop_name, prop_schema in schema.properties.items():
-                    ret += f'"{prop_name}": {self.typify(prop_schema, opt = not prop_name in required)},'
+                    ret += f'"{prop_name}": {self.typify(prop_schema, opt = not prop_name in required, prop_of = (name, prop_name))},'
             ret += "})"
             return ret
 
@@ -115,16 +118,26 @@ class Document:
     def gen_schema_defs(self, schemas: Box):
         cg = ""
         for name, schema in schemas.items():
-            cg += f"    {self.typify(schema, name)}\n"
+            cg += f"    {self.typify(schema, name, write_name = True)}\n"
+            while len(self.additional_types) > 0:
+                name, schema = self.additional_types.pop(0)
+                cg += f"    {self.typify(schema, name, write_name = True)}\n"
         return cg
 
-    def resolve_ref(self, obj: Box):
+    def resolve_ref(self, obj: Box, export_name=False):
         if "$ref" not in obj:
+            if export_name:
+                return obj, None
             return obj
 
         match = re.match(r"#/components/([^/]+)/([^/]+)$", obj["$ref"])
         if not match:
             raise Exception(f'Unsupported (external?) reference "{obj["$ref"]}"')
+        if export_name:
+            return (
+                self.root.components[match.group(1)][match.group(2)],
+                match.group(2) if match.group(1) == "schemas" else None,
+            )
         return self.root.components[match.group(1)][match.group(2)]
 
     def gen_functions(self):
@@ -177,7 +190,6 @@ class Path:
 
     def input_type(self, method: str) -> Input:
         props = {}
-        required = []
         kwargs = Box({})
 
         op_obj = self.path_obj[method]
@@ -188,9 +200,9 @@ class Path:
             if "schema" not in param:
                 print(f"param: {param}")
                 raise Exception(f"Unsupported param def")
-            props[param.name] = param.schema
-            if "required" in param and param.required:
-                required.append(param.name)
+            props[param.name] = self.doc.typify(
+                param.schema, opt=not ("required" in param and param.required)
+            )
 
         if "requestBody" in op_obj:
             body = op_obj.requestBody.content
@@ -203,24 +215,29 @@ class Path:
                 content_type = MIME_TYPES.multipart
             else:
                 raise Exception(f'Unsupported content types "types"')
-            body_schema = self.doc.resolve_ref(body[content_type].schema)
+            (body_schema, ref_name) = self.doc.resolve_ref(
+                body[content_type].schema, export_name=True
+            )
             assert body_schema.type == "object"
             for name, schema in body_schema.properties.items():
                 # TODO: handle name clash
-                props[name] = schema
+                props[name] = self.doc.typify(
+                    schema,
+                    opt=not (
+                        "required" in body_schema and name in body_schema.required
+                    ),
+                    prop_of=(ref_name, name) if ref_name is not None else None,
+                )
 
             kwargs.content_type = repr(content_type)
             kwargs.body_fields = repr(tuple(body_schema.properties.keys()))
 
-            if "required" in body_schema:
-                required += body_schema.required
+        type = "t.struct({"
+        for name, ty in props.items():
+            type += f'"{name}":{ty},'
+        type += "})"
 
-        return Input(
-            self.doc.typify(
-                Box({"type": "object", "properties": props, "required": required})
-            ),
-            kwargs,
-        )
+        return Input(type, kwargs)
 
     def success_code(responses: Box) -> str:
         if "200" in responses:

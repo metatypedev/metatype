@@ -51,9 +51,6 @@ export type PrismaRegisterEngineInp = {
 export type PrismaIntrospectionInp = {
   datamodel: string
 }
-export type PrismaIntrospectionOut = {
-  introspection: string
-}
 export type PrismaUnregisterEngineInp = {
   key: string
 }
@@ -61,6 +58,9 @@ export type PrismaQueryInp = {
   key: string
   query: any
   datamodel: string
+}
+export type PrismaIntrospectionOut = {
+  introspection: string
 }
 export type PrismaRegisterEngineOut = {
   engine_id: string
