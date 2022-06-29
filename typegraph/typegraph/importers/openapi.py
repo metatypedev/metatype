@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 
 import black
 from box import Box
+from deepmerge import always_merger
 import httpx
 from redbaron import RedBaron
 import semver
@@ -20,21 +21,12 @@ MIME_TYPES = Box(
 )
 
 
-def merge_into(dest: dict, source: dict):
-    for key, value in source.items():
-        if isinstance(value, dict):
-            node = dest.setdefault(key, {})
-            # ? what if node is not a dict??
-            merge_into(node, value)
-        else:
-            dest[key] = value
-    return dest
-
-
 def merge_all(items: list[dict]):
     ret = {}
     for item in items:
-        ret = merge_into(ret, item)
+        print(f"MERGE: {item} into {ret}")
+        always_merger.merge(ret, item)
+        print(f"MERGED: {ret}")
     return ret
 
 
