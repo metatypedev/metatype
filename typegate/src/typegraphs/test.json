@@ -71,7 +71,7 @@
       "data": {}
     },
     {
-      "name": "integer_140542506975968",
+      "name": "integer_140358618858016",
       "typedef": "integer",
       "edges": [],
       "policies": [],
@@ -79,7 +79,7 @@
       "data": {}
     },
     {
-      "name": "func_structinjection_nested_injection_default_forced_nested_default_nested_inner_default_nested_apply_nested_inner_apply_140542506978560_integer_140542506978608_140542506978800",
+      "name": "func_structinjection_nested_injection_default_forced_nested_default_nested_inner_default_nested_apply_nested_inner_apply_140358618859744_integer_140358618859792_140358618859984",
       "typedef": "func",
       "edges": [9, 32],
       "policies": [],
@@ -87,7 +87,7 @@
       "data": { "materializer": 1, "input": 9, "output": 32 }
     },
     {
-      "name": "structinjection_nested_injection_default_forced_nested_default_nested_inner_default_nested_apply_nested_inner_apply_140542506978560",
+      "name": "structinjection_nested_injection_default_forced_nested_default_nested_inner_default_nested_apply_nested_inner_apply_140358618859744",
       "typedef": "struct",
       "edges": [10, 11, 13, 16, 18, 22, 26, 29],
       "policies": [],
@@ -107,7 +107,7 @@
       }
     },
     {
-      "name": "injection_deps_140542506975392",
+      "name": "injection_deps_140358618857632",
       "typedef": "injection",
       "edges": [5],
       "policies": [],
@@ -115,7 +115,7 @@
       "data": { "of": 5 }
     },
     {
-      "name": "structvalue_140542506976592",
+      "name": "structvalue_140358618858064",
       "typedef": "struct",
       "edges": [12],
       "policies": [],
@@ -123,7 +123,7 @@
       "data": { "renames": {}, "binds": { "value": 12 } }
     },
     {
-      "name": "injection_deps_140542506977024",
+      "name": "injection_deps_140358618858208",
       "typedef": "injection",
       "edges": [5],
       "policies": [],
@@ -131,7 +131,7 @@
       "data": { "of": 5 }
     },
     {
-      "name": "optional_string_140542506977168_140542506977360",
+      "name": "optional_string_140358618858352_140358618858544",
       "typedef": "optional",
       "edges": [14],
       "policies": [],
@@ -139,7 +139,7 @@
       "data": { "default_value": "ddds" }
     },
     {
-      "name": "string_140542506977168",
+      "name": "string_140358618858352",
       "typedef": "string",
       "edges": [15],
       "policies": [],
@@ -147,7 +147,7 @@
       "data": { "of": 15 }
     },
     {
-      "name": "char_140542506977216",
+      "name": "char_140358618858400",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -155,7 +155,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506977456",
+      "name": "string_140358618858640",
       "typedef": "string",
       "edges": [17],
       "policies": [],
@@ -163,7 +163,7 @@
       "data": { "apply_value": "dddsaaa", "apply_sealed": true, "of": 17 }
     },
     {
-      "name": "char_140542506977504",
+      "name": "char_140358618858688",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -171,7 +171,7 @@
       "data": {}
     },
     {
-      "name": "optional_structvalue_140542506977744_140542506977792",
+      "name": "optional_structvalue_140358618858928_140358618858976",
       "typedef": "optional",
       "edges": [19],
       "policies": [],
@@ -179,7 +179,7 @@
       "data": { "default_value": { "value": "a" } }
     },
     {
-      "name": "structvalue_140542506977744",
+      "name": "structvalue_140358618858928",
       "typedef": "struct",
       "edges": [20],
       "policies": [],
@@ -187,7 +187,7 @@
       "data": { "renames": {}, "binds": { "value": 20 } }
     },
     {
-      "name": "string_140542506977600",
+      "name": "string_140358618858784",
       "typedef": "string",
       "edges": [21],
       "policies": [],
@@ -195,7 +195,7 @@
       "data": { "of": 21 }
     },
     {
-      "name": "char_140542506977648",
+      "name": "char_140358618858832",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -203,7 +203,7 @@
       "data": {}
     },
     {
-      "name": "structvalue_140542506978128",
+      "name": "structvalue_140358618859312",
       "typedef": "struct",
       "edges": [23],
       "policies": [],
@@ -211,7 +211,7 @@
       "data": { "renames": {}, "binds": { "value": 23 } }
     },
     {
-      "name": "optional_string_140542506977888_140542506978032",
+      "name": "optional_string_140358618859072_140358618859216",
       "typedef": "optional",
       "edges": [24],
       "policies": [],
@@ -219,7 +219,7 @@
       "data": { "default_value": "b" }
     },
     {
-      "name": "string_140542506977888",
+      "name": "string_140358618859072",
       "typedef": "string",
       "edges": [25],
       "policies": [],
@@ -227,7 +227,7 @@
       "data": { "of": 25 }
     },
     {
-      "name": "char_140542506977936",
+      "name": "char_140358618859120",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -235,7 +235,7 @@
       "data": {}
     },
     {
-      "name": "structvalue_140542506978320",
+      "name": "structvalue_140358618859504",
       "typedef": "struct",
       "edges": [27],
       "policies": [],
@@ -248,7 +248,7 @@
       }
     },
     {
-      "name": "string_140542506978176",
+      "name": "string_140358618859360",
       "typedef": "string",
       "edges": [28],
       "policies": [],
@@ -256,7 +256,7 @@
       "data": { "of": 28 }
     },
     {
-      "name": "char_140542506978224",
+      "name": "char_140358618859408",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -264,7 +264,7 @@
       "data": {}
     },
     {
-      "name": "structvalue_140542506978512",
+      "name": "structvalue_140358618859696",
       "typedef": "struct",
       "edges": [30],
       "policies": [],
@@ -272,7 +272,7 @@
       "data": { "renames": {}, "binds": { "value": 30 } }
     },
     {
-      "name": "string_140542506978368",
+      "name": "string_140358618859552",
       "typedef": "string",
       "edges": [31],
       "policies": [],
@@ -280,7 +280,7 @@
       "data": { "apply_value": "d", "apply_sealed": true, "of": 31 }
     },
     {
-      "name": "char_140542506978416",
+      "name": "char_140358618859600",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -288,7 +288,7 @@
       "data": {}
     },
     {
-      "name": "integer_140542506978608",
+      "name": "integer_140358618859792",
       "typedef": "integer",
       "edges": [],
       "policies": [],
@@ -296,7 +296,7 @@
       "data": {}
     },
     {
-      "name": "func_struct_140542506978848_structstatus_country_countryCode_region_regionName_city_zip_lat_lon_timezone_isp_org_as_query_140542506980816_140542506980912",
+      "name": "func_struct_140358618860032_structstatus_country_countryCode_region_regionName_city_zip_lat_lon_timezone_isp_org_as_query_140358618862000_140358618862096",
       "typedef": "func",
       "edges": [34, 35],
       "policies": [],
@@ -304,7 +304,7 @@
       "data": { "materializer": 2, "input": 34, "output": 35 }
     },
     {
-      "name": "struct_140542506978848",
+      "name": "struct_140358618860032",
       "typedef": "struct",
       "edges": [],
       "policies": [],
@@ -312,7 +312,7 @@
       "data": { "renames": {}, "binds": {} }
     },
     {
-      "name": "structstatus_country_countryCode_region_regionName_city_zip_lat_lon_timezone_isp_org_as_query_140542506980816",
+      "name": "structstatus_country_countryCode_region_regionName_city_zip_lat_lon_timezone_isp_org_as_query_140358618862000",
       "typedef": "struct",
       "edges": [36, 38, 40, 42, 44, 46, 48, 50, 51, 52, 54, 56, 58, 60],
       "policies": [],
@@ -338,7 +338,7 @@
       }
     },
     {
-      "name": "string_140542506978896",
+      "name": "string_140358618860080",
       "typedef": "string",
       "edges": [37],
       "policies": [],
@@ -346,7 +346,7 @@
       "data": { "of": 37 }
     },
     {
-      "name": "char_140542506978944",
+      "name": "char_140358618860128",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -354,7 +354,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506979040",
+      "name": "string_140358618860224",
       "typedef": "string",
       "edges": [39],
       "policies": [],
@@ -362,7 +362,7 @@
       "data": { "of": 39 }
     },
     {
-      "name": "char_140542506979088",
+      "name": "char_140358618860272",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -370,7 +370,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506979184",
+      "name": "string_140358618860368",
       "typedef": "string",
       "edges": [41],
       "policies": [],
@@ -378,7 +378,7 @@
       "data": { "of": 41 }
     },
     {
-      "name": "char_140542506979232",
+      "name": "char_140358618860416",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -386,7 +386,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506979328",
+      "name": "string_140358618860512",
       "typedef": "string",
       "edges": [43],
       "policies": [],
@@ -394,7 +394,7 @@
       "data": { "of": 43 }
     },
     {
-      "name": "char_140542506979376",
+      "name": "char_140358618860560",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -402,7 +402,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506979472",
+      "name": "string_140358618860656",
       "typedef": "string",
       "edges": [45],
       "policies": [],
@@ -410,7 +410,7 @@
       "data": { "of": 45 }
     },
     {
-      "name": "char_140542506979520",
+      "name": "char_140358618860704",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -418,7 +418,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506979616",
+      "name": "string_140358618860800",
       "typedef": "string",
       "edges": [47],
       "policies": [],
@@ -426,7 +426,7 @@
       "data": { "of": 47 }
     },
     {
-      "name": "char_140542506979664",
+      "name": "char_140358618860848",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -434,7 +434,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506979760",
+      "name": "string_140358618860944",
       "typedef": "string",
       "edges": [49],
       "policies": [],
@@ -442,7 +442,7 @@
       "data": { "of": 49 }
     },
     {
-      "name": "char_140542506979808",
+      "name": "char_140358618860992",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -450,7 +450,7 @@
       "data": {}
     },
     {
-      "name": "float_140542506979904",
+      "name": "float_140358618861088",
       "typedef": "float",
       "edges": [],
       "policies": [],
@@ -458,7 +458,7 @@
       "data": {}
     },
     {
-      "name": "float_140542506980000",
+      "name": "float_140358618861184",
       "typedef": "float",
       "edges": [],
       "policies": [],
@@ -466,7 +466,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506980096",
+      "name": "string_140358618861280",
       "typedef": "string",
       "edges": [53],
       "policies": [],
@@ -474,7 +474,7 @@
       "data": { "of": 53 }
     },
     {
-      "name": "char_140542506980144",
+      "name": "char_140358618861328",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -482,7 +482,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506980240",
+      "name": "string_140358618861424",
       "typedef": "string",
       "edges": [55],
       "policies": [],
@@ -490,7 +490,7 @@
       "data": { "of": 55 }
     },
     {
-      "name": "char_140542506980288",
+      "name": "char_140358618861472",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -498,7 +498,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506980384",
+      "name": "string_140358618861568",
       "typedef": "string",
       "edges": [57],
       "policies": [],
@@ -506,7 +506,7 @@
       "data": { "of": 57 }
     },
     {
-      "name": "char_140542506980432",
+      "name": "char_140358618861616",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -514,7 +514,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506980528",
+      "name": "string_140358618861712",
       "typedef": "string",
       "edges": [59],
       "policies": [],
@@ -522,7 +522,7 @@
       "data": { "of": 59 }
     },
     {
-      "name": "char_140542506980576",
+      "name": "char_140358618861760",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -530,7 +530,7 @@
       "data": {}
     },
     {
-      "name": "string_140542506980672",
+      "name": "string_140358618861856",
       "typedef": "string",
       "edges": [61],
       "policies": [],
@@ -538,7 +538,7 @@
       "data": { "of": 61 }
     },
     {
-      "name": "char_140542506980720",
+      "name": "char_140358618861904",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -554,7 +554,7 @@
       "data": {}
     },
     {
-      "name": "func_structidentifier_140542523244944_optional_string_140542523247248_140542549191184_140542549194976",
+      "name": "func_structidentifier_140358634117904_optional_string_140358634115696_140358634119680_140358660043920",
       "typedef": "func",
       "edges": [64, 67],
       "policies": [],
@@ -562,7 +562,7 @@
       "data": { "materializer": 3, "input": 64, "output": 67 }
     },
     {
-      "name": "structidentifier_140542523244944",
+      "name": "structidentifier_140358634117904",
       "typedef": "struct",
       "edges": [65],
       "policies": [],
@@ -570,7 +570,7 @@
       "data": { "renames": {}, "binds": { "identifier": 65 } }
     },
     {
-      "name": "string_140542506980960",
+      "name": "string_140358618862144",
       "typedef": "string",
       "edges": [66],
       "policies": [],
@@ -578,7 +578,7 @@
       "data": { "of": 66 }
     },
     {
-      "name": "char_140542506981008",
+      "name": "char_140358618862192",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -586,7 +586,7 @@
       "data": {}
     },
     {
-      "name": "optional_string_140542523247248_140542549191184",
+      "name": "optional_string_140358634115696_140358634119680",
       "typedef": "optional",
       "edges": [68],
       "policies": [],
@@ -594,7 +594,7 @@
       "data": {}
     },
     {
-      "name": "string_140542523247248",
+      "name": "string_140358634115696",
       "typedef": "string",
       "edges": [69],
       "policies": [],
@@ -602,7 +602,7 @@
       "data": { "of": 69 }
     },
     {
-      "name": "char_140542549190560",
+      "name": "char_140358634120496",
       "typedef": "char",
       "edges": [],
       "policies": [],
@@ -610,7 +610,7 @@
       "data": {}
     },
     {
-      "name": "func_struct_140542549193152_remote_140542506238208",
+      "name": "func_struct_140358660042624_remote_140358619000800",
       "typedef": "func",
       "edges": [71, 72],
       "policies": [],
@@ -618,7 +618,7 @@
       "data": { "materializer": 3, "input": 71, "output": 72 }
     },
     {
-      "name": "struct_140542549193152",
+      "name": "struct_140358660042624",
       "typedef": "struct",
       "edges": [],
       "policies": [],
@@ -653,7 +653,7 @@
       "data": { "materializer": 4, "input": 75, "output": 76 }
     },
     {
-      "name": "structinteger_140542549195120",
+      "name": "structinteger_140358660046704",
       "typedef": "struct",
       "edges": [73],
       "policies": [],
@@ -677,7 +677,7 @@
       "data": { "materializer": 5, "input": 78, "output": 79 }
     },
     {
-      "name": "struct_140542506243200",
+      "name": "struct_140358619004352",
       "typedef": "struct",
       "edges": [],
       "policies": [],
