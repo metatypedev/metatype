@@ -66,7 +66,10 @@ def typify(tpe: Box, opt: bool, name=None, object_as_ref=False):
     if tpe.kind == "LIST":
         return f"t.list({typify(tpe.ofType, False, object_as_ref=True)})"
 
-    if tpe.kind == "OBJECT":
+    if tpe.kind == "UNION":
+        return f't.union([{", ".join(map(lambda variant: typify(variant, False, object_as_ref=True), tpe.possibleTypes))}])'
+
+    if tpe.kind == "OBJECT" or tpe.kind == "INTERFACE":
         cg = "t.struct({"
         for field in tpe.fields:
             cg += struct_field(field.name, field.type)
