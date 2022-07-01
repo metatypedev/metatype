@@ -1,4 +1,5 @@
 import inspect
+import itertools
 
 import black
 from box import Box
@@ -11,6 +12,23 @@ from redbaron import RedBaron
 
 def struct_field(name, type):
     return f'"{name}": {typify(type, True, object_as_ref=True)},'
+
+
+def gen_functions(queries, mutations) -> dict[str, str]:
+    fns = {}
+
+    for field in itertools.chain(
+        queries.fields if queries else [], mutations.fields if mutations else []
+    ):
+        inp = "t.struct({"
+        for arg in field.args or []:
+            # ?? INPUT_OBJECT
+            inp += struct_field(arg.name, arg.type)
+        inp += "})"
+        out = typify(field.type, True, object_as_ref=True)
+        fns[field.name] = f"remote.query({inp}, {out}).add_policy(allow_all())"
+
+    return fns
 
 
 def typify(tpe: Box, opt: bool, name=None, object_as_ref=False):
@@ -73,21 +91,30 @@ def codegen(intros: Box):
     queryType = schema.queryType.name if schema.queryType is not None else None
     mutationType = schema.mutationType.name if schema.mutationType is not None else None
 
-    def skip_type(tpe):
-        return (
-            tpe.kind == "SCALAR"
-            or tpe.name.startswith("__")
-            or tpe.name == queryType
-            or tpe.name == mutationType
-        )
+    queries, mutations = None, None
 
     for tpe in schema.types:
-        if skip_type(tpe):
+        if tpe.kind == "SCALAR" or tpe.name.startswith("__"):
+            continue
+        if tpe.name == queryType:
+            queries = tpe
+            continue
+        if tpe.name == mutationType:
+            mutations = tpe
             continue
         cg += f"    {typify(tpe, False, name=tpe.name)} # kind: {tpe.kind}\n"
 
+    cg += f"    g.expose({as_kwargs(gen_functions(queries, mutations))})\n"
+
     cg += f"    schema = {schema}\n"
 
+    return cg
+
+
+def as_kwargs(kwargs: dict[str, str]):
+    cg = ""
+    for key, val in kwargs.items():
+        cg += f"{key}={val},"
     return cg
 
 
@@ -129,7 +156,7 @@ def import_graphql(uri: str, gen: bool):
     schema = client.execute(query)
 
     wth = code.find("with")
-    wth.value = codegen(Box(schema))
+    wth.value = f'    remote=GraphQLRuntime("{uri}")\n' + codegen(Box(schema))
 
     new_code = black.format_str(code.dumps(), mode=black.FileMode())
 

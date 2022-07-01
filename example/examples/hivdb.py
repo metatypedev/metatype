@@ -1,10 +1,13 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.importers.graphql import import_graphql
+from typegraph.materializers.graphql import GraphQLRuntime
+from typegraph.policies import allow_all
 from typegraph.types import typedefs as t
 
 import_graphql("https://hivdb.stanford.edu/graphql", False)
 
 with TypeGraph(name="hivdb") as g:
+    remote = GraphQLRuntime("https://hivdb.stanford.edu/graphql")
     t.string().named("ASIAlgorithm")  # kind: ENUM
     t.struct(
         {
@@ -87,7 +90,7 @@ with TypeGraph(name="hivdb") as g:
     ).named(
         "ComparableDrugScore"
     )  # kind: OBJECT
-    t.struct({"name": t.optional(t.string()), "xml": t.optional(t.string())}).named(
+    t.struct({"name": t.optional(t.string()), "xml": t.optional(t.string()),}).named(
         "CustomASIAlgorithm"
     )  # kind: INPUT_OBJECT
     t.struct(
@@ -595,6 +598,61 @@ with TypeGraph(name="hivdb") as g:
     ).named(
         "Viewer"
     )  # kind: OBJECT
+    g.expose(
+        currentVersion=remote.query(
+            t.struct({}), t.optional(g("DrugResistanceAlgorithm"))
+        ).add_policy(allow_all()),
+        currentProgramVersion=remote.query(
+            t.struct({}), t.optional(g("SierraVersion"))
+        ).add_policy(allow_all()),
+        sequenceAnalysis=remote.query(
+            t.struct(
+                {
+                    "sequences": t.optional(t.list(g("UnalignedSequenceInput"))),
+                }
+            ),
+            t.optional(t.list(g("SequenceAnalysis"))),
+        ).add_policy(allow_all()),
+        sequenceReadsAnalysis=remote.query(
+            t.struct(
+                {
+                    "sequenceReads": t.optional(t.list(g("SequenceReadsInput"))),
+                }
+            ),
+            t.optional(t.list(g("SequenceReadsAnalysis"))),
+        ).add_policy(allow_all()),
+        mutationsAnalysis=remote.query(
+            t.struct(
+                {
+                    "mutations": t.optional(t.list(t.string())),
+                }
+            ),
+            t.optional(g("MutationsAnalysis")),
+        ).add_policy(allow_all()),
+        patternAnalysis=remote.query(
+            t.struct(
+                {
+                    "patterns": t.optional(t.list(t.list(t.string()))),
+                    "patternNames": t.optional(t.list(t.string())),
+                }
+            ),
+            t.optional(t.list(g("MutationsAnalysis"))),
+        ).add_policy(allow_all()),
+        genes=remote.query(
+            t.struct(
+                {
+                    "names": t.optional(t.list(t.string())),
+                }
+            ),
+            t.optional(t.list(g("Gene"))),
+        ).add_policy(allow_all()),
+        mutationPrevalenceSubtypes=remote.query(
+            t.struct({}), t.optional(t.list(g("MutationPrevalenceSubtype")))
+        ).add_policy(allow_all()),
+        viewer=remote.query(t.struct({}), t.optional(g("Viewer"))).add_policy(
+            allow_all()
+        ),
+    )
     schema = {
         "queryType": {"name": "Root"},
         "mutationType": None,
