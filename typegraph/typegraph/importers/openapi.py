@@ -101,7 +101,7 @@ class Document:
 
         if schema.type == "object":
             if prop_of is not None:
-                type_name = f"{prop_of[0]}/{prop_of[1]}"
+                type_name = f"{prop_of[0]}__{prop_of[1]}"
                 self.additional_types.append((type_name, schema))
                 return f'g("{type_name}")'
 
