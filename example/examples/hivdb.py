@@ -34,7 +34,6 @@ with TypeGraph(name="hivdb") as g:
     ).named(
         "AlignedGeneSequence"
     )  # kind: OBJECT
-    # scalar type Boolean skipped
     t.struct(
         {
             "name": t.optional(t.string()),
@@ -174,7 +173,6 @@ with TypeGraph(name="hivdb") as g:
     )  # kind: OBJECT
     t.string().named("EnumGene")  # kind: ENUM
     t.string().named("EnumSequenceReadsHistogramAggregatesOption")  # kind: ENUM
-    # scalar type Float skipped
     t.struct(
         {
             "gene": t.optional(g("Gene")),
@@ -251,8 +249,6 @@ with TypeGraph(name="hivdb") as g:
     ).named(
         "HIVSubtype"
     )  # kind: OBJECT
-    # scalar type Int skipped
-    # scalar type Long skipped
     t.struct(
         {
             "gene": t.optional(g("Gene")),
@@ -411,23 +407,6 @@ with TypeGraph(name="hivdb") as g:
     ).named(
         "PrettyPairwise"
     )  # kind: OBJECT
-    t.struct(
-        {
-            "currentVersion": t.optional(g("DrugResistanceAlgorithm")),
-            "currentProgramVersion": t.optional(g("SierraVersion")),
-            "sequenceAnalysis": t.optional(t.list(g("SequenceAnalysis"))),
-            "sequenceReadsAnalysis": t.optional(t.list(g("SequenceReadsAnalysis"))),
-            "mutationsAnalysis": t.optional(g("MutationsAnalysis")),
-            "patternAnalysis": t.optional(t.list(g("MutationsAnalysis"))),
-            "genes": t.optional(t.list(g("Gene"))),
-            "mutationPrevalenceSubtypes": t.optional(
-                t.list(g("MutationPrevalenceSubtype"))
-            ),
-            "viewer": t.optional(g("Viewer")),
-        }
-    ).named(
-        "Root"
-    )  # kind: OBJECT
     t.string().named("SIR")  # kind: ENUM
     t.struct(
         {
@@ -572,7 +551,6 @@ with TypeGraph(name="hivdb") as g:
         "Strain"
     )  # kind: OBJECT
     t.string().named("StrainEnum")  # kind: ENUM
-    # scalar type String skipped
     t.string().named("Subtype")  # kind: ENUM
     t.struct(
         {
@@ -617,79 +595,6 @@ with TypeGraph(name="hivdb") as g:
     ).named(
         "Viewer"
     )  # kind: OBJECT
-    t.struct(
-        {
-            "name": t.optional(t.string()),
-            "description": t.optional(t.string()),
-            "locations": t.optional(t.list(t.string())),
-            "args": t.list(g("__InputValue")),
-            "onOperation": t.optional(t.boolean()),
-            "onFragment": t.optional(t.boolean()),
-            "onField": t.optional(t.boolean()),
-        }
-    ).named(
-        "__Directive"
-    )  # kind: OBJECT
-    t.string().named("__DirectiveLocation")  # kind: ENUM
-    t.struct(
-        {
-            "name": t.string(),
-            "description": t.optional(t.string()),
-            "isDeprecated": t.boolean(),
-            "deprecationReason": t.optional(t.string()),
-        }
-    ).named(
-        "__EnumValue"
-    )  # kind: OBJECT
-    t.struct(
-        {
-            "name": t.string(),
-            "description": t.optional(t.string()),
-            "args": t.list(g("__InputValue")),
-            "type": g("__Type"),
-            "isDeprecated": t.boolean(),
-            "deprecationReason": t.optional(t.string()),
-        }
-    ).named(
-        "__Field"
-    )  # kind: OBJECT
-    t.struct(
-        {
-            "name": t.string(),
-            "description": t.optional(t.string()),
-            "type": g("__Type"),
-            "defaultValue": t.optional(t.string()),
-        }
-    ).named(
-        "__InputValue"
-    )  # kind: OBJECT
-    t.struct(
-        {
-            "types": t.list(g("__Type")),
-            "queryType": g("__Type"),
-            "mutationType": t.optional(g("__Type")),
-            "directives": t.list(g("__Directive")),
-            "subscriptionType": t.optional(g("__Type")),
-        }
-    ).named(
-        "__Schema"
-    )  # kind: OBJECT
-    t.struct(
-        {
-            "kind": t.string(),
-            "name": t.optional(t.string()),
-            "description": t.optional(t.string()),
-            "fields": t.optional(t.list(g("__Field"))),
-            "interfaces": t.optional(t.list(g("__Type"))),
-            "possibleTypes": t.optional(t.list(g("__Type"))),
-            "enumValues": t.optional(t.list(g("__EnumValue"))),
-            "inputFields": t.optional(t.list(g("__InputValue"))),
-            "ofType": t.optional(g("__Type")),
-        }
-    ).named(
-        "__Type"
-    )  # kind: OBJECT
-    t.string().named("__TypeKind")  # kind: ENUM
     schema = {
         "queryType": {"name": "Root"},
         "mutationType": None,
