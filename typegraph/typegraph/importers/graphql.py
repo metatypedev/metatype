@@ -70,9 +70,19 @@ def codegen(intros: Box):
 
     cg = ""
 
+    queryType = schema.queryType.name if schema.queryType is not None else None
+    mutationType = schema.mutationType.name if schema.mutationType is not None else None
+
+    def skip_type(tpe):
+        return (
+            tpe.kind == "SCALAR"
+            or tpe.name.startswith("__")
+            or tpe.name == queryType
+            or tpe.name == mutationType
+        )
+
     for tpe in schema.types:
-        if tpe.kind == "SCALAR":
-            cg += f"    # scalar type {tpe.name} skipped\n"
+        if skip_type(tpe):
             continue
         cg += f"    {typify(tpe, False, name=tpe.name)} # kind: {tpe.kind}\n"
 
