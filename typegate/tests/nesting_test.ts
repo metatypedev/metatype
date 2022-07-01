@@ -26,7 +26,6 @@ test("Rest queries", async (t) => {
 
   mf.mock("GET@/api/users/:id", (req, params) => {
     const userId = Number(params.id);
-    console.log(`GET USER: ${userId}`);
     if (userId > 1000) {
       return new Response(null, {
         status: 404,
