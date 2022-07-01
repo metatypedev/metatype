@@ -44,15 +44,19 @@ const _lib = await prepare(opts, {
     nonblocking: true,
   },
 })
-export type PrismaRegisterEngineInp = {
+export type PrismaIntrospectionInp = {
   datamodel: string
-  typegraph: string
+}
+export type PrismaIntrospectionOut = {
+  introspection: string
+}
+export type PrismaQueryInp = {
+  key: string
+  query: any
+  datamodel: string
 }
 export type PrismaUnregisterEngineInp = {
   key: string
-}
-export type PrismaIntrospectionInp = {
-  datamodel: string
 }
 export type PrismaQueryOut = {
   res: string
@@ -60,16 +64,12 @@ export type PrismaQueryOut = {
 export type PrismaUnregisterEngineOut = {
   key: string
 }
-export type PrismaQueryInp = {
-  key: string
-  query: any
-  datamodel: string
-}
 export type PrismaRegisterEngineOut = {
   engine_id: string
 }
-export type PrismaIntrospectionOut = {
-  introspection: string
+export type PrismaRegisterEngineInp = {
+  datamodel: string
+  typegraph: string
 }
 export function init() {
   let rawResult = _lib.symbols.init()
