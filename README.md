@@ -26,6 +26,7 @@ cargo install cargo-watch
 cargo install cargo-edit
 
 npm install --global concurrently
+npm install --global pnpm
 
 deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen/cli.ts
 ```
@@ -47,6 +48,7 @@ cargo install cargo-watch
 cargo install cargo-edit
 
 npm install --global concurrently
+npm install --global pnpm
 
 deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen/cli.ts
 ```
@@ -54,6 +56,10 @@ deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen/cli.ts
 ### Common
 
 ```
+cd website
+pnpm install
+cd ..
+
 pre-commit install
 python3 -m venv typegraph/.venv
 python3 -m venv example/.venv
