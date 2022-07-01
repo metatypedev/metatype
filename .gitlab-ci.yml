@@ -4,6 +4,8 @@ include:
     file: "metatype.yml"
 
 test:
+  tags:
+    - docker
   variables:
     DENO_VERSION: "1.22.0"
     DENO_BINDGEN_VERSION: "0.5.1"
