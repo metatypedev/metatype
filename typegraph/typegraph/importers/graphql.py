@@ -110,8 +110,8 @@ def codegen(intros: Box):
 
     cg += f"    g.expose({as_kwargs(gen_functions(queries, mutations))})\n"
 
-    cg += f"    schema = {schema}\n"
-
+    # View of the introspection data
+    # cg += f"    schema = {schema}\n"
     return cg
 
 
