@@ -46,7 +46,7 @@ impl Introspection {
         let result = match connector.introspect(&datamodel, ctx).await {
             Ok(introspection_result) => {
                 if introspection_result.data_model.is_empty() {
-                    Result::Err(Error::IntrospectionResultEmpty("".to_string()))
+                    Result::Err(Error::IntrospectionResultEmpty)
                 } else {
                     Result::Ok(datamodel::render_datamodel_to_string(
                         &introspection_result.data_model,
