@@ -31,7 +31,8 @@ def gen_functions(queries, mutations) -> dict[str, str]:
     return fns
 
 
-def typify(tpe: Box, opt: bool, name=None, object_as_ref=False):
+def typify(tpe: Box, opt: bool = True, name=None, object_as_ref=False):
+    # A type is nullable by default, unless it is wrapped in a "NON_NULL".
 
     if tpe.kind == "NON_NULL":
         return typify(tpe.ofType, False, name, object_as_ref)
