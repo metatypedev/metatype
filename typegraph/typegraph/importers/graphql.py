@@ -26,7 +26,7 @@ def gen_functions(queries, mutations) -> dict[str, str]:
             inp += struct_field(arg.name, arg.type)
         inp += "})"
         out = typify(field.type, True, object_as_ref=True)
-        fns[field.name] = f"remote.query({inp}, {out}).add_policy(allow_all())"
+        fns[field.name] = f"remote.query({inp}, {out})"
 
     return fns
 
@@ -135,7 +135,6 @@ def import_graphql(uri: str, gen: bool):
         ["typegraph.materializers.graphql", "GraphQLRuntime"],
         ["typegraph.types", "typedefs as t"],
         ["typegraph.graphs.typegraph", "TypeGraph"],
-        ["typegraph.policies", "allow_all"],
     ]
 
     importer = code.find(

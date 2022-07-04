@@ -1,7 +1,6 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.importers.graphql import import_graphql
 from typegraph.materializers.graphql import GraphQLRuntime
-from typegraph.policies import allow_all
 from typegraph.types import typedefs as t
 
 import_graphql("https://hivdb.stanford.edu/graphql", False)
@@ -601,10 +600,10 @@ with TypeGraph(name="hivdb") as g:
     g.expose(
         currentVersion=remote.query(
             t.struct({}), t.optional(g("DrugResistanceAlgorithm"))
-        ).add_policy(allow_all()),
+        ),
         currentProgramVersion=remote.query(
             t.struct({}), t.optional(g("SierraVersion"))
-        ).add_policy(allow_all()),
+        ),
         sequenceAnalysis=remote.query(
             t.struct(
                 {
@@ -612,7 +611,7 @@ with TypeGraph(name="hivdb") as g:
                 }
             ),
             t.optional(t.list(g("SequenceAnalysis"))),
-        ).add_policy(allow_all()),
+        ),
         sequenceReadsAnalysis=remote.query(
             t.struct(
                 {
@@ -620,7 +619,7 @@ with TypeGraph(name="hivdb") as g:
                 }
             ),
             t.optional(t.list(g("SequenceReadsAnalysis"))),
-        ).add_policy(allow_all()),
+        ),
         mutationsAnalysis=remote.query(
             t.struct(
                 {
@@ -628,7 +627,7 @@ with TypeGraph(name="hivdb") as g:
                 }
             ),
             t.optional(g("MutationsAnalysis")),
-        ).add_policy(allow_all()),
+        ),
         patternAnalysis=remote.query(
             t.struct(
                 {
@@ -637,7 +636,7 @@ with TypeGraph(name="hivdb") as g:
                 }
             ),
             t.optional(t.list(g("MutationsAnalysis"))),
-        ).add_policy(allow_all()),
+        ),
         genes=remote.query(
             t.struct(
                 {
@@ -645,13 +644,11 @@ with TypeGraph(name="hivdb") as g:
                 }
             ),
             t.optional(t.list(g("Gene"))),
-        ).add_policy(allow_all()),
+        ),
         mutationPrevalenceSubtypes=remote.query(
             t.struct({}), t.optional(t.list(g("MutationPrevalenceSubtype")))
-        ).add_policy(allow_all()),
-        viewer=remote.query(t.struct({}), t.optional(g("Viewer"))).add_policy(
-            allow_all()
         ),
+        viewer=remote.query(t.struct({}), t.optional(g("Viewer"))),
     )
     schema = {
         "queryType": {"name": "Root"},
