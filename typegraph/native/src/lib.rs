@@ -72,12 +72,18 @@ fn diff(inp: DiffIn) -> PyResult<DiffOut> {
     Ok(res)
 }
 
+#[pyfunction]
+fn format(schema: String) -> PyResult<String> {
+    Ok(datamodel::reformat(&schema, 2).unwrap())
+}
+
 //
 
 #[pymodule]
 fn native(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(migrate, m)?)?;
     m.add_function(wrap_pyfunction!(diff, m)?)?;
+    m.add_function(wrap_pyfunction!(format, m)?)?;
 
     Ok(())
 }
