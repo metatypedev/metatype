@@ -157,3 +157,49 @@ test("prisma", async (t) => {
       .on(e);
   });
 });
+
+test("1:n relationships", async (t) => {
+  const e = await t.pythonFile("./tests/typegraphs/prisma.py");
+
+  await t.should("drop schema and recreate", async () => {
+    await gql`
+      mutation a {
+        executeRaw(
+          query: "DROP SCHEMA IF EXISTS test CASCADE"
+          parameters: "[]"
+        )
+      }
+    `
+      .expectData({
+        executeRaw: 0,
+      })
+      .on(e);
+    await shell(["../typegraph/.venv/bin/meta", "prisma", "apply"]);
+  });
+
+  await t.should("insert a simple record", async () => {
+    const id = 12;
+    await gql`
+      mutation q {
+        createOneusers(
+          data: {
+            id: ${id}
+            name: "name"
+            email: "email@example.com"
+          }
+        ) {
+          id
+          messages {
+            id
+            time
+            message
+          }
+        }
+      }
+    `
+      .expectData({
+        createOneusers: { id, messages: [] },
+      })
+      .on(e);
+  });
+});
