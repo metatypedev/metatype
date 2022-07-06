@@ -38,7 +38,7 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,workers'
+        entry: bash -c 'cd typegate && deno fmt --ignore=native,workers,src/typegraphs'
         pass_filenames: false
         types:
           - ts
