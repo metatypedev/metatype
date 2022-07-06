@@ -42,5 +42,3 @@ async function getHostname() {
   cmd.close();
   return new TextDecoder().decode(stdout).trim();
 }
-
-await getHostname();
