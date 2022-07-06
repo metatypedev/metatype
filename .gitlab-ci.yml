@@ -4,7 +4,19 @@ include:
     file: "metatype.yml"
 
 test:
+  tags:
+    - docker
+  services:
+    - name: postgres:14
+      variables:
+        POSTGRES_DB: db
+        POSTGRES_PASSWORD: password
+    - name: redis:7
+      command:
+        - --requirepass
+        - password
   variables:
+    TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
     DENO_VERSION: "1.22.0"
     DENO_BINDGEN_VERSION: "0.5.1"
     RUST_VERSION: "1.60.0"
