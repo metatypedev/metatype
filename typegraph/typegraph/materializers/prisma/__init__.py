@@ -122,6 +122,7 @@ class PrismaRelation(Materializer):
     runtime: "PrismaRuntime"
     _: KW_ONLY
     materializer_name: str = "prisma_relation"
+    relation: str | None = None
 
     @classmethod
     def check(cls, tpe: t.Type):
@@ -249,7 +250,7 @@ class PrismaRuntime(Runtime):
         self.managed_types.add(tpe.within(self))
         return self
 
-    def link(self, tpe: t.struct, *ids: str):
+    def link(self, tpe: t.struct, *ids: str, **kwargs):
         if (
             not isinstance(tpe, t.struct)
             and not isinstance(tpe, t.list)
@@ -265,7 +266,7 @@ class PrismaRuntime(Runtime):
             for key in ids:
                 keys[key] = target_entity.of[key]
 
-        return t.func(t.struct(keys), tpe, PrismaRelation(self))
+        return t.func(t.struct(keys), tpe, PrismaRelation(self, **kwargs))
 
     def datamodel(self):
         return PrismaSchema(self.managed_types).build()
