@@ -66,32 +66,32 @@ class PrismaModel:
             if PrismaRelation.check(that_entity):
                 if not PrismaRelation.multi(that_entity):
                     for ref_field, ref_type in that_entity.inp.of.items():
-                        ref_field = f"{field_name}_{ref_field}"
+                        ref_field = f"{field_name}{ref_field.title()}"
                         self.fields[ref_field] = PrismaField(ref_field, ref_type)
 
-                that_real_entity = resolve_entity_quantifier(that_entity.out)
-                that_model = schema.models[that_real_entity.node]
+                # that_real_entity = resolve_entity_quantifier(that_entity.out)
+                # that_model = schema.models[that_real_entity.node]
 
-                key = f"tg_{field_name}_{that_real_entity.node}"
+                # key = f"tg_{field_name}_{that_real_entity.node}"
 
-                if PrismaRelation.multi(that_entity):
-                    f = PrismaField(key, None)
-                    f.prisma_type = f"{self.entity.node}"
-                    these_keys = self.entity.ids().keys()
-                    those_keys = that_real_entity.ids().keys()
-                    f.tags.append(
-                        f'@relation(name: "{field_name}_{that_real_entity.node}", fields: [{", ".join(these_keys)}], references: [{", ".join(those_keys)}])'
-                    )
-                    that_model.fields[key] = f
-                elif PrismaRelation.optional(that_entity):
-                    pass
-                else:
-                    f = PrismaField(key, None)
-                    f.prisma_type = f"{self.entity.node}[]"
-                    f.tags.append(
-                        f'@relation(name: "{field_name}_{that_real_entity.node}")'
-                    )
-                    that_model.fields[key] = f
+                # if PrismaRelation.multi(that_entity):
+                #     f = PrismaField(key, None)
+                #     f.prisma_type = f"{self.entity.node}"
+                #     these_keys = self.entity.ids().keys()
+                #     those_keys = that_real_entity.ids().keys()
+                #     f.tags.append(
+                #         f'@relation(name: "{field_name}_{that_real_entity.node}", fields: [{", ".join(these_keys)}], references: [{", ".join(those_keys)}])'
+                #     )
+                #     that_model.fields[key] = f
+                # elif PrismaRelation.optional(that_entity):
+                #     pass
+                # else:
+                #     f = PrismaField(key, None)
+                #     f.prisma_type = f"{self.entity.node}[]"
+                #     f.tags.append(
+                #         f'@relation(name: "{field_name}_{that_real_entity.node}")'
+                #     )
+                #     that_model.fields[key] = f
 
 
 class PrismaSchema:
@@ -154,27 +154,37 @@ def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
         those_keys = f.tpe.inp.of.keys()
         that = resolve_entity_quantifier(f.tpe.out)
 
-        these_keys = [f"{f.name}_{nested_field}" for nested_field in those_keys]
+        these_keys = [f"{f.name}{nested_field.title()}" for nested_field in those_keys]
 
         if PrismaRelation.multi(f.tpe):
             f.prisma_type = f"{that.node}[]"
-            f.tags.append(f'@relation(name: "{f.name}_{that.node}")')
+            relation_name = f.tpe.mat.relation or f"{f.name}_{that.node}"
+            f.tags.append(f'@relation(name: "{relation_name}")')
 
         elif PrismaRelation.optional(f.tpe):
             f.prisma_type = f"{that.node}?"
 
         else:
             f.prisma_type = f"{that.node}"
+            relation_name = f.tpe.mat.relation or f"{f.name}_{that.node}"
             f.tags.append(
-                f'@relation(name: "{f.name}_{that.node}", fields: [{", ".join(these_keys)}], references: [{", ".join(those_keys)}])'
+                f'@relation(name: "{relation_name}", fields: [{", ".join(these_keys)}], references: [{", ".join(those_keys)}])'
             )
         return
 
     if isinstance(f.tpe, t.list):
         of = f.tpe.of
 
+        if isinstance(of, NodeProxy):
+            of = of.get()
         nested = PrismaField(f.name, of)
+        resolve(schema, model, nested)
         f.prisma_type = f"{nested.prisma_type}[]"
+        if PrismaRelation.check(nested.tpe):
+            relation_name = nested.tpe.mat.relation
+            if relation_name is None:
+                raise Exception("Relation name must be specified")
+            f.tags.append(f'@relation(name: "{relation_name}")')
         return
 
     if f.tpe is None:
