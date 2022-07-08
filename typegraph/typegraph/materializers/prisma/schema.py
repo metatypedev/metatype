@@ -6,7 +6,7 @@ from typing import Optional
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.types import typedefs as t
 
-from .utils import resolve_entity_quantifier
+# from .utils import resolve_entity_quantifier
 
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
@@ -106,7 +106,24 @@ class PrismaSchema:
         for model in self.models.values():
             model.link(self)
 
+        from . import PrismaRelation
+
         for model in self.models.values():
+            additional_fields = {}
+            for field in model.fields.values():
+                if PrismaRelation.check(field.tpe):
+                    relation = field.tpe.mat.relation
+                    if field.tpe.mat.owner:
+                        if len(relation.ids) == 0:
+                            relation.ids = list(relation.owner_type.ids())
+                        for key in relation.ids:
+                            field_name = f"{field.name}{key.title()}"
+                            field_type = relation.owner_type.of[key]
+                            additional_fields[field_name] = PrismaField(
+                                field_name, field_type
+                            )
+            model.fields |= additional_fields
+
             for field in model.fields.values():
                 resolve(self, model, field)
 
@@ -151,25 +168,43 @@ def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
     from . import PrismaRelation
 
     if PrismaRelation.check(f.tpe):
-        those_keys = f.tpe.inp.of.keys()
-        that = resolve_entity_quantifier(f.tpe.out)
+        from typegraph.materializers.prisma import OneToMany
 
-        these_keys = [f"{f.name}{nested_field.title()}" for nested_field in those_keys]
-
-        if PrismaRelation.multi(f.tpe):
-            f.prisma_type = f"{that.node}[]"
-            relation_name = f.tpe.mat.relation or f"{f.name}_{that.node}"
-            f.tags.append(f'@relation(name: "{relation_name}")')
-
-        elif PrismaRelation.optional(f.tpe):
-            f.prisma_type = f"{that.node}?"
-
+        relation = f.tpe.mat.relation
+        if isinstance(relation, OneToMany):
+            if f.tpe.mat.owner:
+                f.prisma_type = relation.owner_type.node
+                fields = [f"{f.name}{key.title()}" for key in relation.ids]
+                f.tags.append(
+                    f'@relation(name: "{relation.relation}", fields: [{", ".join(fields)}], references: [{", ".join(relation.ids)}])'
+                )
+            else:
+                f.prisma_type = f"{relation.owned_type.node}[]"
+                # TODO: relation.name
+                f.tags.append(f'@relation(name: "{relation.relation}")')
+            return
         else:
-            f.prisma_type = f"{that.node}"
-            relation_name = f.tpe.mat.relation or f"{f.name}_{that.node}"
-            f.tags.append(
-                f'@relation(name: "{relation_name}", fields: [{", ".join(these_keys)}], references: [{", ".join(those_keys)}])'
-            )
+            raise Exception(f'Relation "{type(relation).__name__}" not supported')
+
+        # those_keys = f.tpe.inp.of.keys()
+        # that = resolve_entity_quantifier(f.tpe.out)
+
+        # these_keys = [f"{f.name}{nested_field.title()}" for nested_field in those_keys]
+
+        # if PrismaRelation.multi(f.tpe):
+        #     f.prisma_type = f"{that.node}[]"
+        #     relation_name = f.tpe.mat.relation or f"{f.name}_{that.node}"
+        #     f.tags.append(f'@relation(name: "{relation_name}")')
+
+        # elif PrismaRelation.optional(f.tpe):
+        #     f.prisma_type = f"{that.node}?"
+
+        # else:
+        #     f.prisma_type = f"{that.node}"
+        #     relation_name = f.tpe.mat.relation or f"{f.name}_{that.node}"
+        #     f.tags.append(
+        #         f'@relation(name: "{relation_name}", fields: [{", ".join(these_keys)}], references: [{", ".join(those_keys)}])'
+        #     )
         return
 
     if isinstance(f.tpe, t.list):

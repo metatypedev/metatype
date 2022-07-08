@@ -16,7 +16,6 @@ from .schema import PrismaSchema
 from .utils import clean_virtual_link
 from .utils import only_unique
 from .utils import optional_root
-from .utils import resolve_entity_quantifier
 
 
 def comp_exp(tpe):
@@ -122,7 +121,10 @@ class PrismaRelation(Materializer):
     runtime: "PrismaRuntime"
     _: KW_ONLY
     materializer_name: str = "prisma_relation"
-    relation: str | None = None
+    relation: "Relation" = dataclasses.field(
+        repr=False, hash=False, metadata={"json_serialize": False}
+    )
+    owner: bool = dataclasses.field(metadata={"json_serialize": False})
 
     @classmethod
     def check(cls, tpe: t.Type):
@@ -148,6 +150,45 @@ class PrismaDeleteMat(Materializer):
     serial: bool = True
 
 
+class Relation:
+    runtime: "PrismaRuntime"
+    owner_type: t.Type
+    owned_type: t.Type
+    relation: str
+
+    def __init__(self, runtime: "PrismaRuntime", owner: t.Type, owned: t.Type):
+        self.runtime = runtime
+        self.owner_type = owner
+        self.owned_type = owned
+        self.relation = f"link_{owner.node}_{owned.node}"
+
+    def named(self, name: str):
+        self.relation = name
+        return self
+
+
+class OneToMany(Relation):
+    ids: tuple[str, ...] = ()
+
+    def __init__(self, runtime: "PrismaRuntime", owner: t.Type, owned: t.Type):
+        Relation.__init__(self, runtime, owner, owned)
+
+    def on(self, *owner_fields: str):
+        self.ids = owner_fields
+        return self
+
+    def owner(self):
+        return t.gen(
+            self.owner_type, PrismaRelation(self.runtime, relation=self, owner=True)
+        )
+
+    def owned(self):
+        return t.gen(
+            t.list(self.owned_type),
+            PrismaRelation(self.runtime, relation=self, owner=False),
+        )
+
+
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries
 @dataclass(eq=True, frozen=True)
 class PrismaRuntime(Runtime):
@@ -155,6 +196,7 @@ class PrismaRuntime(Runtime):
     _: KW_ONLY
     managed_types: Set[t.struct] = dataclasses.field(default_factory=set)
     runtime_name: str = "prisma"
+    # one_to_many_relations: dict[str, OneToMany] = dataclasses.field(default_factory=dict,repr=False, hash=False, metadata={"json_serialize": False})
 
     # auto = {None: {t.uuid(): "auto"}}
 
@@ -250,23 +292,29 @@ class PrismaRuntime(Runtime):
         self.managed_types.add(tpe.within(self))
         return self
 
-    def link(self, tpe: t.struct, *ids: str, **kwargs):
-        if (
-            not isinstance(tpe, t.struct)
-            and not isinstance(tpe, t.list)
-            and not isinstance(tpe, t.optional)
-        ):
-            raise Exception("cannot link non struct")
+    # def link(self, tpe: t.struct, *ids: str, **kwargs):
+    #     if (
+    #         not isinstance(tpe, t.struct)
+    #         and not isinstance(tpe, t.list)
+    #         and not isinstance(tpe, t.optional)
+    #     ):
+    #         raise Exception("cannot link non struct")
 
-        target_entity = resolve_entity_quantifier(tpe)
-        keys = {}
-        if len(ids) == 0:
-            keys = target_entity.ids()
-        else:
-            for key in ids:
-                keys[key] = target_entity.of[key]
+    #     target_entity = resolve_entity_quantifier(tpe)
+    #     keys = {}
+    #     if len(ids) == 0:
+    #         keys = target_entity.ids()
+    #     else:
+    #         for key in ids:
+    #             keys[key] = target_entity.of[key]
 
-        return t.func(t.struct(keys), tpe, PrismaRelation(self, **kwargs))
+    #     return t.func(t.struct({name: t.injection(tpe) for name, tpe in keys.items()}), tpe, PrismaRelation(self, **kwargs))
+
+    def one_to_many(self, owner: t.Type, owned: t.Type):
+        relation = OneToMany(self, owner, owned)
+        # TODO: relation name
+        # self.one_to_many_relations[relation.relation] = relation
+        return relation
 
     def datamodel(self):
         return PrismaSchema(self.managed_types).build()

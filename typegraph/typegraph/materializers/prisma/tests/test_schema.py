@@ -54,21 +54,19 @@ class PrismaSchemaTest(TestCase):
         with TypeGraph(name="test_one_to_many") as g:
             db = PrismaRuntime(postgres)
 
+            postAuthor = db.one_to_many(g("User"), g("Post")).named("postAuthor")
+
             user = t.struct(
                 {
                     "id": t.integer().id,
-                    "posts": t.list(
-                        g("Post", lambda e: db.link(e, relation="postAuthor"))
-                    ),
+                    "posts": postAuthor.owned(),
                 }
             ).named("User")
 
             post = t.struct(
                 {
                     "id": t.integer().id,
-                    "author": g(
-                        "User", lambda e: db.link(e, "id", relation="postAuthor")
-                    ),
+                    "author": postAuthor.owner(),
                 }
             ).named("Post")
 
