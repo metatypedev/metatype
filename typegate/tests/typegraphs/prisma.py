@@ -21,12 +21,14 @@ with TypeGraph("prisma") as g:
 
     db.manage(record)
 
+    messageSender = db.one_to_many(g("users"), g("messages")).named("messageSender")
+
     messages = t.struct(
         {
             "id": t.integer().id,
             "time": t.integer(),
             "message": t.string(),
-            "user2": g("users", lambda e: db.link(e)),
+            "sender": messageSender.owner(),
         }
     ).named("messages")
 
@@ -38,7 +40,7 @@ with TypeGraph("prisma") as g:
             "email": t.string(),
             "name": t.string(),
             # "favoriteMessage": db.link(messages),
-            "messages": db.link(t.list(messages)),
+            "messages": messageSender.owned(),
         }
     ).named("users")
 
