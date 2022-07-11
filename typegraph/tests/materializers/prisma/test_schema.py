@@ -1,15 +1,13 @@
 from os import environ
 from pathlib import Path
 from typing import Iterable
-import unittest
 
 import debugpy
 import native
 from typegraph.graphs.typegraph import TypeGraph
+from typegraph.materializers.prisma import PrismaRuntime
+from typegraph.materializers.prisma.schema import PrismaSchema
 from typegraph.types import typedefs as t
-
-from .. import PrismaRuntime
-from ..schema import PrismaSchema
 
 
 if environ.get("DEBUG", False):
@@ -22,14 +20,10 @@ postgres = environ.get(
 )
 
 
-class TestCase(unittest.TestCase):
-    def assertSchema(self, models: Iterable[t.struct], schema: str):
-        return self.assertEqual(
-            native.format(PrismaSchema(models).build()), native.format(schema)
-        )
+class TestPrismaSchema:
+    def assert_schema(self, models: Iterable[t.struct], schema: str):
+        assert native.format(PrismaSchema(models).build()) == native.format(schema)
 
-
-class PrismaSchemaTest(TestCase):
     def test_simple_model(self):
         model = t.struct(
             {
@@ -38,7 +32,7 @@ class PrismaSchemaTest(TestCase):
             }
         ).named("ModelA")
 
-        self.assertSchema(
+        self.assert_schema(
             {model},
             """
                 model ModelA {
@@ -73,4 +67,4 @@ class PrismaSchemaTest(TestCase):
             with open(
                 Path(__file__).parent.joinpath("schemas/one_to_many.schema"), "r"
             ) as f:
-                self.assertSchema([user, post], f.read())
+                self.assert_schema([user, post], f.read())
