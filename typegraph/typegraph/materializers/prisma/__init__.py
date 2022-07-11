@@ -276,7 +276,14 @@ class PrismaRuntime(Runtime):
                     "take": t.integer().s_optional(),
                 }
             ),
-            t.list(tpe),
+            t.list(
+                t.struct(
+                    {
+                        k: v.out if PrismaRelation.check(v) else v
+                        for k, v in tpe.of.items()
+                    }
+                )
+            ),
             PrismaSelectMat(self),
         )
 
