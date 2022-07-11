@@ -47,13 +47,16 @@ with TypeGraph("prisma") as g:
     db.manage(users)
 
     g.expose(
-        createOnerecord=db.generate_insert(record).add_policy(allow_all),
-        updateOnerecord=db.generate_update(record).add_policy(allow_all),
-        deleteOnerecord=db.generate_delete(record).add_policy(allow_all),
-        findManyrecord=db.generate_read(record).add_policy(allow_all),
-        createOneusers=db.generate_insert(users).add_policy(allow_all),
-        findManyusers=db.generate_read(users).add_policy(allow_all),
-        createOnemessages=db.generate_insert(messages).add_policy(allow_all),
-        queryRaw=db.queryRaw().add_policy(allow_all),
-        executeRaw=db.executeRaw().add_policy(allow_all),
+        **db.gen(
+            {
+                "queryRaw": (t.struct(), "queryRaw", allow_all),
+                "executeRaw": (t.struct(), "queryRaw", allow_all),
+                "findManyRecords": (record, "findMany", allow_all),
+                "createOneRecord": (record, "create", allow_all),
+                "deleteOneRecord": (record, "delete", allow_all),
+                "updateOneRecord": (record, "update", allow_all),
+                "createUser": (users, "create", allow_all),
+                "findUniqueUser": (users, "findUnique", allow_all),
+            }
+        )
     )

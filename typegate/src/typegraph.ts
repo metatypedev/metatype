@@ -602,7 +602,7 @@ export class TypeGraph {
       );
 
       const nestedDepsUnion = [];
-      for (const [argName, argIdx] of Object.entries(argSchema)) {
+      for (const [argName, argIdx] of Object.entries(argSchema ?? {})) {
         const nested = this.collectArg(
           fieldArgsIdx[argName],
           argIdx,
