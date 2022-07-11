@@ -117,6 +117,16 @@ class PrismaUpdateMat(Materializer):
 
 
 @dataclass(eq=True, frozen=True)
+class PrismaOperationMat(Materializer):
+    runtime: "PrismaRuntime"
+    table: str
+    operation: str
+    _: KW_ONLY
+    materializer_name: str = "prisma_operation"
+    serial: bool = False
+
+
+@dataclass(eq=True, frozen=True)
 class PrismaRelation(Materializer):
     runtime: "PrismaRuntime"
     _: KW_ONLY
@@ -189,6 +199,56 @@ class OneToMany(Relation):
         )
 
 
+def get_inp_type(tpe: t.Type) -> t.Type:
+    if isinstance(tpe, t.func):
+        raise Exception("Invalid type")
+
+    if not isinstance(tpe, t.struct):
+        return tpe
+
+    return t.struct(
+        {k: get_inp_type(v) for k, v in tpe.of.items() if not isinstance(v, t.func)}
+    )
+
+
+def get_update_inp_type(tpe: t.Type) -> t.Type:
+    if isinstance(tpe, t.func):
+        raise Exception("Invalid type")
+
+    if not isinstance(tpe, t.struct):
+        return tpe
+
+    return t.struct(
+        {
+            k: get_inp_type(v).s_optional()
+            for k, v in tpe.of.items()
+            if not isinstance(v, t.func)
+        }
+    )
+
+
+def get_out_type(tpe: t.Type) -> t.Type:
+    if isinstance(tpe, t.func):
+        return get_out_type(tpe.out)
+
+    if not isinstance(tpe, t.struct):
+        return tpe
+
+    return t.struct({k: get_out_type(v) for k, v in tpe.of.items()})
+
+
+def get_where_type(tpe: t.struct) -> t.struct:
+    return t.struct(
+        {
+            k: v if isinstance(v, t.optional) else v.s_optional()
+            for k, v in tpe.of.items()
+            if not isinstance(v, t.struct)
+            and not isinstance(v, t.NodeProxy)
+            and not isinstance(v, t.func)
+        }
+    )
+
+
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries
 @dataclass(eq=True, frozen=True)
 class PrismaRuntime(Runtime):
@@ -223,6 +283,75 @@ class PrismaRuntime(Runtime):
             t.integer(),
             PrismaInsertMat(self),
         )
+
+    def gen_find_unique(self, tpe: t.struct) -> t.func:
+        return t.func(
+            t.struct({"where": get_where_type(tpe)}),
+            get_out_type(tpe).s_optional(),
+            PrismaOperationMat(self, tpe.node, "findUnique"),
+        )
+
+    def gen_find_many(self, tpe: t.struct) -> t.func:
+        return t.func(
+            t.struct({"where": get_where_type(tpe)}).s_optional(),
+            t.list(get_out_type(tpe)),
+            PrismaOperationMat(self, tpe.node, "findMany"),
+        )
+
+    def gen_create(self, tpe: t.struct) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "data": get_inp_type(tpe),
+                }
+            ),
+            get_out_type(tpe),
+            PrismaOperationMat(self, tpe.node, "createOne", serial=True),
+        )
+
+    def gen_update(self, tpe: t.struct) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "data": get_update_inp_type(tpe),
+                    "where": get_where_type(tpe),
+                }
+            ),
+            get_out_type(tpe),
+            PrismaOperationMat(self, tpe.node, "updateOne", serial=True),
+        )
+
+    def gen_delete(self, tpe: t.struct) -> t.func:
+        return t.func(
+            t.struct(
+                {"where": get_where_type(tpe)},
+            ),
+            get_out_type(tpe),
+            PrismaOperationMat(self, tpe.node, "deleteOne", serial=True),
+        )
+
+    def gen(self, ops: dict[str, tuple[t.Type, str, t.policy]]) -> dict[str, t.func]:
+        ret = {}
+        for name, op in ops.items():
+            tpe, op, policy = op
+            match op:
+                case "findUnique":
+                    ret[name] = self.gen_find_unique(tpe).add_policy(policy)
+                case "findMany":
+                    ret[name] = self.gen_find_many(tpe).add_policy(policy)
+                case "create":
+                    ret[name] = self.gen_create(tpe).add_policy(policy)
+                case "update":
+                    ret[name] = self.gen_update(tpe).add_policy(policy)
+                case "delete":
+                    ret[name] = self.gen_delete(tpe).add_policy(policy)
+                case "queryRaw":
+                    ret[name] = self.queryRaw().add_policy(policy)
+                case "executeRaw":
+                    ret[name] = self.executeRaw().add_policy(policy)
+                case _:
+                    raise Exception(f'Operation not supported: "{op}"')
+        return ret
 
     # https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#createmany
     def generate_insert(self, tpe: t.struct) -> t.func:

@@ -22,13 +22,13 @@ test("prisma", async (t) => {
   await t.should("return no data when empty", async () => {
     await gql`
       query {
-        findManyrecord {
+        findManyRecords {
           id
         }
       }
     `
       .expectData({
-        findManyrecord: [],
+        findManyRecords: [],
       })
       .on(e);
   });
@@ -37,7 +37,7 @@ test("prisma", async (t) => {
     const id = "b7831fd1-799d-4b20-9a84-830588f750a1";
     await gql`
       mutation {
-        createOnerecord(
+        createOneRecord(
           data: {
             id: ${id}
             name: "name"
@@ -49,7 +49,7 @@ test("prisma", async (t) => {
       }
     `
       .expectData({
-        createOnerecord: { id },
+        createOneRecord: { id },
       })
       .on(e);
   });
@@ -58,7 +58,7 @@ test("prisma", async (t) => {
     const id = "b7831fd1-799d-4b20-9a84-830588f750a2";
     await gql`
       mutation {
-        createOnerecord(
+        createOneRecord(
           data: {
             id: ${id}
             name: "name"
@@ -70,13 +70,13 @@ test("prisma", async (t) => {
       }
     `
       .expectData({
-        createOnerecord: { id },
+        createOneRecord: { id },
       })
       .on(e);
 
     await gql`
       mutation {
-        updateOnerecord(
+        updateOneRecord(
           where: {
             id: ${id}
           } 
@@ -90,7 +90,7 @@ test("prisma", async (t) => {
       }
     `
       .expectData({
-        updateOnerecord: { id, name: "name2" },
+        updateOneRecord: { id, name: "name2" },
       })
       .on(e);
   });
@@ -99,7 +99,7 @@ test("prisma", async (t) => {
     const id = "b7831fd1-799d-4b20-9a84-830588f750a3";
     await gql`
       mutation {
-        createOnerecord(
+        createOneRecord(
           data: {
             id: ${id}
             name: "name"
@@ -111,12 +111,12 @@ test("prisma", async (t) => {
       }
     `
       .expectData({
-        createOnerecord: { id },
+        createOneRecord: { id },
       })
       .on(e);
     await gql`
       mutation {
-        deleteOnerecord(
+        deleteOneRecord(
           where: {
             id: ${id}
           } 
@@ -126,7 +126,7 @@ test("prisma", async (t) => {
       }
     `
       .expectData({
-        deleteOnerecord: { id },
+        deleteOneRecord: { id },
       })
       .on(e);
   });
@@ -135,7 +135,7 @@ test("prisma", async (t) => {
     const id = "b7831fd1-799d-4b20-9a84-830588f750ae";
     const q = gql`
     mutation {
-      createOnerecord(
+      createOneRecord(
         data: {
           id: ${id}
           name: "name"
@@ -148,7 +148,7 @@ test("prisma", async (t) => {
   `;
     await q
       .expectData({
-        createOnerecord: { id },
+        createOneRecord: { id },
       })
       .on(e);
 
@@ -181,7 +181,7 @@ test("1:n relationships", async (t) => {
     const id = 12;
     await gql`
       mutation q {
-        createOneusers(
+        createUser(
           data: {
             id: ${id}
             name: "name"
@@ -193,13 +193,13 @@ test("1:n relationships", async (t) => {
       }
     `
       .expectData({
-        createOneusers: { id },
+        createUser: { id },
       })
       .on(e);
 
     await gql`
       query {
-        findManyusers(where: { id: { equals: ${id} } }) {
+        findUniqueUser(where: { id: ${id} }) {
           id
           name
           email
@@ -210,12 +210,12 @@ test("1:n relationships", async (t) => {
       }
     `
       .expectData({
-        findManyusers: [{
+        findUniqueUser: {
           id,
           name: "name",
           email: "email@example.com",
           messages: [],
-        }],
+        },
       })
       .on(e);
   });

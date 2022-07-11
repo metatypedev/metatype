@@ -89,6 +89,16 @@ export class GraphQLRuntime extends Runtime {
     const renames: Record<string, string> = {
       ql: "typegraph",
     };
+    for (const field of fields) {
+      const { node, materializer: mat } = field.props;
+      if (mat?.name == "prisma_operation") {
+        const { operation, table } = mat.data as {
+          operation: string;
+          table: string;
+        };
+        renames[node] = operation + table;
+      }
+    }
     const query = `${serial ? "mutation" : "query"} q {${
       rebuildGraphQuery(
         fields,
