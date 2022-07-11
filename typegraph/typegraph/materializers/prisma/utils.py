@@ -43,7 +43,7 @@ def clean_virtual_link(tpe: t.Type):
                             }
                         ).s_optional(),
                     }
-                )
+                ).s_optional()
             else:
                 ret[k] = clean_virtual_link(v)
 

@@ -189,16 +189,33 @@ test("1:n relationships", async (t) => {
           }
         ) {
           id
+        }
+      }
+    `
+      .expectData({
+        createOneusers: { id },
+      })
+      .on(e);
+
+    await gql`
+      query {
+        findManyusers(where: { id: { equals: ${id} } }) {
+          id
+          name
+          email
           messages {
             id
-            time
-            message
           }
         }
       }
     `
       .expectData({
-        createOneusers: { id, messages: [] },
+        findManyusers: [{
+          id,
+          name: "name",
+          email: "email@example.com",
+          messages: [],
+        }],
       })
       .on(e);
   });
