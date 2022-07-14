@@ -44,6 +44,9 @@ export class TypeGateRuntime extends Runtime {
       if (name === "typegraph") {
         return this.typegraph;
       }
+      if (name === "typenode") {
+        return this.typenode;
+      }
 
       return async ({ _: { parent }, ...args }) => {
         const resolver = parent[stage.props.node];
@@ -63,10 +66,14 @@ export class TypeGateRuntime extends Runtime {
   }
 
   typegraphs = () => {
-    return register.list().map((e) => ({
-      name: e.name,
-      url: `http://${config.tg_host}:${config.tg_port}/${e.name}`,
-    }));
+    return register.list().map((e) => {
+      const { name, typedef, edges, data } = e.tg.type(0);
+      return {
+        name: e.name,
+        url: `http://${config.tg_host}:${config.tg_port}/${e.name}`,
+        rootType: { idx: 0, name, typedef, edges, data: JSON.stringify(data) },
+      };
+    });
   };
 
   typegraph = ({ name }: { name: string }) => {
@@ -75,9 +82,17 @@ export class TypeGateRuntime extends Runtime {
       return null;
     }
 
+    const { name: rootTypeName, typedef, edges, data } = tg.tg.type(0);
     return {
       name: tg.name,
       url: `http://${config.tg_host}:${config.tg_port}/${tg.name}`,
+      rootType: {
+        idx: 0,
+        name: rootTypeName,
+        typedef,
+        edges,
+        data: JSON.stringify(data),
+      },
     };
   };
 
@@ -97,5 +112,27 @@ export class TypeGateRuntime extends Runtime {
 
   removeTypegraph = ({ name }: { name: string }) => {
     return register.remove(name);
+  };
+
+  typenode = (
+    { typegraphName, idx }: { typegraphName: string; idx: number },
+  ) => {
+    const engine = register.get(typegraphName);
+    if (!engine) {
+      return null;
+    }
+    const tg = engine.tg;
+    const type = tg.type(idx);
+    if (!type) {
+      return null;
+    }
+    const { name, typedef, edges, data } = type;
+    return {
+      idx,
+      name,
+      typedef,
+      edges,
+      data: JSON.stringify(data),
+    };
   };
 }
