@@ -131,7 +131,7 @@ python-dateutil = ">=2.8.1,<3.0.0"
 name = "debugpy"
 version = "1.6.1"
 description = "An implementation of the Debug Adapter Protocol for Python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 
@@ -833,7 +833,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "6f74ed75085af74a723f526459071997983e9747c4aa870cf9f0feb2618c5357"
+content-hash = "05599db925cb44eec0ce2ed2da7debe4232b984bf6aa9154fe02ddcb2c635015"
 
 [metadata.files]
 anyio = [
