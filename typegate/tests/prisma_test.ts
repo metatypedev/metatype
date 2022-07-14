@@ -93,6 +93,26 @@ test("prisma", async (t) => {
         updateOneRecord: { id, name: "name2" },
       })
       .on(e);
+
+    await gql`
+      query {
+        findManyRecords(
+          where: { id: ${id} }
+        ) {
+          id
+          name
+        }
+      }
+    `
+      .expectData({
+        findManyRecords: [
+          {
+            id,
+            name: "name2",
+          },
+        ],
+      })
+      .on(e);
   });
 
   await t.should("delete a simple record", async () => {
