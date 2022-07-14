@@ -10,12 +10,11 @@ from typegraph.graphs.typegraph import NodeProxy
 from typegraph.graphs.typegraph import TypegraphContext
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
+from typegraph.materializers.prisma.schema import PrismaSchema
+from typegraph.materializers.prisma.utils import clean_virtual_link
+from typegraph.materializers.prisma.utils import only_unique
+from typegraph.materializers.prisma.utils import optional_root
 from typegraph.types import typedefs as t
-
-from .schema import PrismaSchema
-from .utils import clean_virtual_link
-from .utils import only_unique
-from .utils import optional_root
 
 
 def comp_exp(tpe):
