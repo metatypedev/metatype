@@ -6,8 +6,6 @@ from typing import Optional
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.types import typedefs as t
 
-# from .utils import resolve_entity_quantifier
-
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
 prisma_types = {
@@ -61,7 +59,7 @@ class PrismaModel:
 
             that_entity = field.tpe
 
-            from . import PrismaRelation
+            from typegraph.materializers.prisma import PrismaRelation
 
             if PrismaRelation.check(that_entity):
                 if not PrismaRelation.multi(that_entity):
@@ -106,7 +104,7 @@ class PrismaSchema:
         for model in self.models.values():
             model.link(self)
 
-        from . import PrismaRelation
+        from typegraph.materializers.prisma import PrismaRelation
 
         for model in self.models.values():
             additional_fields = {}
@@ -165,7 +163,7 @@ def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
         f.prisma_type = "Json"
         return
 
-    from . import PrismaRelation
+    from typegraph.materializers.prisma import PrismaRelation
 
     if PrismaRelation.check(f.tpe):
         from typegraph.materializers.prisma import OneToMany
