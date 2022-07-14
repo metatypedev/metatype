@@ -227,6 +227,32 @@ def get_update_inp_type(tpe: t.Type) -> t.Type:
     )
 
 
+def get_create_input_type(tpe: t.struct) -> t.Type:
+    fields = {}
+    for key, field_type in tpe.of.items():
+        if PrismaRelation.check(field_type):
+            if not field_type.mat.owner:
+                continue
+            out = field_type.out
+            fields[key] = t.struct(
+                {
+                    "create": get_create_input_type(out)
+                    .named(f"Input{out.node}Create")
+                    .s_optional(),
+                    "connect": get_where_type(out)
+                    .named(f"Input{out.node}")
+                    .s_optional(),
+                    # "createMany"
+                    # "connectOrCreate"
+                }
+            )
+        elif isinstance(field_type, t.list) and not isinstance(field_type, t.string):
+            continue
+        else:
+            fields[key] = field_type
+    return t.struct(fields)
+
+
 def get_out_type(tpe: t.Type) -> t.Type:
     if isinstance(tpe, t.func):
         return get_out_type(tpe.out)
@@ -267,7 +293,7 @@ class PrismaRuntime(Runtime):
                     "query": t.string(),
                     "parameters": t.json(),
                 }
-            ),
+            ).named("QueryRawInp"),
             t.list(t.json()),
             PrismaInsertMat(self),
         )
@@ -279,22 +305,24 @@ class PrismaRuntime(Runtime):
                     "query": t.string(),
                     "parameters": t.json(),
                 }
-            ),
+            ).named("ExecuteRawInp"),
             t.integer(),
             PrismaInsertMat(self),
         )
 
     def gen_find_unique(self, tpe: t.struct) -> t.func:
         return t.func(
-            t.struct({"where": get_where_type(tpe)}),
-            get_out_type(tpe).s_optional(),
+            t.struct({"where": get_where_type(tpe).named(f"{tpe.node}WhereUnique")}),
+            get_out_type(tpe).named(f"{tpe.node}UniqueOutput").s_optional(),
             PrismaOperationMat(self, tpe.node, "findUnique"),
         )
 
     def gen_find_many(self, tpe: t.struct) -> t.func:
         return t.func(
-            t.struct({"where": get_where_type(tpe)}).s_optional(),
-            t.list(get_out_type(tpe)),
+            t.struct(
+                {"where": get_where_type(tpe).named(f"{tpe.node}Where").s_optional()}
+            ),
+            t.list(get_out_type(tpe).named(f"{tpe.node}Output")),
             PrismaOperationMat(self, tpe.node, "findMany"),
         )
 
@@ -302,10 +330,10 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "data": get_inp_type(tpe),
+                    "data": get_create_input_type(tpe).named(f"{tpe.node}CreateInput"),
                 }
             ),
-            get_out_type(tpe),
+            get_out_type(tpe).named(f"{tpe.node}CreateOutput"),
             PrismaOperationMat(self, tpe.node, "createOne", serial=True),
         )
 
@@ -313,20 +341,20 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "data": get_update_inp_type(tpe),
-                    "where": get_where_type(tpe),
+                    "data": get_update_inp_type(tpe).named(f"{tpe.node}UpdateInput"),
+                    "where": get_where_type(tpe).named(f"{tpe.node}UpdateOneWhere"),
                 }
             ),
-            get_out_type(tpe),
+            get_out_type(tpe).named(f"{tpe.node}UpdateOutput"),
             PrismaOperationMat(self, tpe.node, "updateOne", serial=True),
         )
 
     def gen_delete(self, tpe: t.struct) -> t.func:
         return t.func(
             t.struct(
-                {"where": get_where_type(tpe)},
+                {"where": get_where_type(tpe).named(f"{tpe.node}DeleteInput")},
             ),
-            get_out_type(tpe),
+            get_out_type(tpe).named(f"{tpe.node}DeleteOutput"),
             PrismaOperationMat(self, tpe.node, "deleteOne", serial=True),
         )
 
