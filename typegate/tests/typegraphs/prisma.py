@@ -50,7 +50,7 @@ with TypeGraph("prisma") as g:
         **db.gen(
             {
                 "queryRaw": (t.struct(), "queryRaw", allow_all),
-                "executeRaw": (t.struct(), "queryRaw", allow_all),
+                "executeRaw": (t.struct(), "executeRaw", allow_all),
                 "findManyRecords": (record, "findMany", allow_all),
                 "createOneRecord": (record, "create", allow_all),
                 "deleteOneRecord": (record, "delete", allow_all),
