@@ -41,9 +41,8 @@ const server = serve(
 
       if (url.pathname === "/") {
         const info = {
-          app: "Typegate",
-          hostname: config.hostname,
-          node: `${config.tg_host}:${config.tg_port}`,
+          app: "typegate",
+          node: `${config.hostname}:${config.tg_port}`,
           version: config.version,
           debug: config.debug,
         };
