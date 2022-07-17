@@ -1,0 +1,8 @@
+[submodule "deploy/cloud"]
+	path = deploy/cloud
+	url = ../cloud.git
+	shallow = true
+[submodule "deploy/charts"]
+	path = deploy/charts
+	url = https://github.com/metatypedev/charts.git
+	shallow = true

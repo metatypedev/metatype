@@ -16,7 +16,13 @@ const schema = z.object({
   redis_url: z
     .string()
     .url()
-    .transform((s) => new URL(s)),
+    .transform((s) => {
+      const url = new URL(s);
+      if (url.password === "") {
+        url.password = Deno.env.get("REDIS_PASSWORD") ?? "";
+      }
+      return url;
+    }),
   tg_host: z.string(),
   tg_port: z.preprocess(
     (a) => parseInt(z.string().parse(a), 10),
@@ -37,8 +43,13 @@ const { data } = parsing;
 export default data;
 
 async function getHostname() {
-  const cmd = Deno.run({ cmd: ["hostname"], stdout: "piped" });
-  const stdout = await cmd.output();
-  cmd.close();
-  return new TextDecoder().decode(stdout).trim();
+  try {
+    const cmd = Deno.run({ cmd: ["hostname"], stdout: "piped" });
+    const stdout = await cmd.output();
+    cmd.close();
+    return new TextDecoder().decode(stdout).trim();
+  } catch (e) {
+    console.debug(`cannot use hostname binary (${e.message}), fallback to env`);
+    return Deno.env.get("HOSTNAME");
+  }
 }

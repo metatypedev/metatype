@@ -57,7 +57,6 @@ export type PrismaRegisterEngineOut = {
 }
 export type PrismaRegisterEngineInp = {
   datamodel: string
-  typegraph: string
 }
 export type PrismaIntrospectionInp = {
   datamodel: string
