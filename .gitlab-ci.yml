@@ -4,19 +4,23 @@ include:
     file: "metatype.yml"
   - project: "devops/templates"
     ref: main
-    file: "buildkit.yml"
+    file: "kaniko.yml"
   - project: "devops/templates"
     ref: main
     file: "terraform.yml"
 
 stages:
-  - build
   - test
+  - build
   - deploy
 
+variables:
+  DENO_VERSION: "1.22.0"
+  DENO_BINDGEN_VERSION: "0.5.1"
+  RUST_VERSION: "1.62.0"
+  PNPM_VERSION: "7.1.9"
+
 test:
-  only:
-    - disabled
   tags:
     - docker
   services:
@@ -30,27 +34,28 @@ test:
         - password
   variables:
     TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
-    DENO_VERSION: "1.22.0"
-    DENO_BINDGEN_VERSION: "0.5.1"
-    RUST_VERSION: "1.62.0"
-    PNPM_VERSION: "7.1.9"
 
-buildkit:
+kaniko:
   tags:
     - docker
+  only:
+    - main
   variables:
-    DENO_VERSION: "1.22.0"
-    DENO_BINDGEN_VERSION: "0.5.1"
-    RUST_VERSION: "1.62.0"
+    KANIKO_BUILD_CONTEXT: ./typegate
     KANIKO_EXTRA_ARGS: |
-      --opt build-arg:DENO_VERSION=$DENO_VERSION
-      --opt build-arg:DENO_BINDGEN_VERSION=$DENO_BINDGEN_VERSION
-      --opt build-arg:RUST_VERSION=$RUST_VERSION
+      --build-arg DENO_VERSION
+      --build-arg DENO_BINDGEN_VERSION 
+      --build-arg RUST_VERSION
+      --build-arg VERSION=$TAG
+      --use-new-run
+      --single-snapshot
 
 terraform:
-  only:
-    - disabled
   tags:
     - docker
+  only:
+    - main
   environment:
     name: production
+  variables:
+    TERRAFORM_PATH: "deploy/cloud/app"
