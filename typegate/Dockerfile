@@ -4,24 +4,26 @@ ARG DENO_VERSION=1.22.0
 
 FROM rust:${RUST_VERSION} AS builder
 
-WORKDIR /app
-
 ARG DENO_VERSION
 ARG DENO_BINDGEN_VERSION
-ENV DENO_INSTALL="/root/.deno"
-ENV PATH="${DENO_INSTALL}/bin:${PATH}"
+ENV DENO_DIR /deno-dir/
+ENV DENO_INSTALL /root/.deno
+ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 
 RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v${DENO_VERSION}
 
 RUN deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen@${DENO_BINDGEN_VERSION}/cli.ts
 
+WORKDIR /app
+COPY import_map.json .
+COPY src ./src
 COPY native ./native
 
 WORKDIR /app/native
-
-RUN cargo fetch --locked
-
 RUN deno_bindgen --release -- --locked
+
+WORKDIR /app
+RUN deno cache --import-map=import_map.json --lock=lock.json --lock-write --no-check src/main.ts
 
 #
 
@@ -31,19 +33,22 @@ FROM debian:stable-slim AS debian
 
 FROM denoland/deno:distroless-${DENO_VERSION} AS runner
 
-#COPY --from=build-env /lib/aarch64-linux-gnu/libz.so.1 /lib/x86_64-linux-gnu/libz.so.1
-COPY --from=debian /lib/x86_64-linux-gnu/libz.so.1 /lib/x86_64-linux-gnu/libz.so.1
+ARG VERSION
+ENV VERSION ${VERSION}
 
 WORKDIR /app
-#USER 1000
+USER 1000
 
+COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
+COPY --from=builder /deno-dir /deno-dir
 COPY --from=builder /app/native/bindings ./native/bindings
 COPY --from=builder /app/native/target/release/libnative.so ./native/target/release/libnative.so
-COPY src ./src
+COPY --from=builder /app/lock.json .
 COPY import_map.json .
+COPY src ./src
 COPY .env.defaults .
-COPY run.sh .
 
 EXPOSE 7890
 
-CMD ["./run.sh"]
+ENTRYPOINT ["/tini", "--"]
+CMD ["deno", "run", "--lock=lock.json", "--cached-only", "--import-map=import_map.json", "--unstable", "--allow-run=hostname", "--allow-env", "--allow-hrtime", "--allow-write", "--allow-ffi", "--allow-read", "--allow-net", "src/main.ts"]
