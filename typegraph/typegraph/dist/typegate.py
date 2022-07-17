@@ -4,7 +4,7 @@ from typegraph.materializers.deno import AddTypeGraphMat
 from typegraph.materializers.deno import RemoveTypeGraphMat
 from typegraph.materializers.deno import TypeGraphMat
 from typegraph.materializers.deno import TypeGraphsMat
-from typegraph.materializers.deno import TypeNodeMat
+from typegraph.materializers.deno import TypesAsGraph
 from typegraph.types import typedefs as t
 
 with TypeGraph("typegate") as g:
@@ -14,16 +14,28 @@ with TypeGraph("typegate") as g:
             "idx": t.integer(),
             "name": t.string(),
             "typedef": t.string(),
-            "edges": t.list(t.integer()),
             "data": t.string(),
         }
     ).named("typenode")
+
+    # edge = t.tuple([t.string(), t.string()]).named("edge")
+    edge = t.struct(
+        {
+            "from": typenode,
+            "to": typenode,
+            "name": t.string(),
+        }
+    ).named("edge")
+
+    types = t.gen(
+        t.struct({"nodes": t.list(typenode), "edges": t.list(edge)}), TypesAsGraph()
+    )
 
     typegraph = t.struct(
         {
             "name": t.string(),
             "url": t.uri(),
-            "rootType": typenode,
+            "types": types,
         }
     ).named("typegraph")
 
@@ -41,11 +53,6 @@ with TypeGraph("typegate") as g:
         ),
         typegraph=t.func(
             t.struct({"name": t.string()}), t.optional(typegraph), TypeGraphMat()
-        ).add_policy(allow_all),
-        typenode=t.func(
-            t.struct({"typegraphName": t.string(), "idx": t.integer()}),
-            t.optional(typenode),
-            TypeNodeMat(),
         ).add_policy(allow_all),
         addTypegraph=t.func(
             t.struct({"fromString": t.string()}),

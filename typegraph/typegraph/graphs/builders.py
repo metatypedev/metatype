@@ -118,7 +118,7 @@ def build(tg: typegraph.TypeGraph):
                 assert [node.inp, node.out] == node.edges
             elif isinstance(node, t.struct):
                 data["binds"] = frozendict({k: build(v) for k, v in node.of.items()})
-            elif isinstance(node, t.list):
+            elif isinstance(node, t.list) or isinstance(node, t.optional):
                 data["of"] = build(node.of)
             elif isinstance(node, t.injection):
                 data["of"] = build(node.of)
