@@ -2,8 +2,21 @@ include:
   - project: "metatype/templates"
     ref: main
     file: "metatype.yml"
+  - project: "devops/templates"
+    ref: main
+    file: "buildkit.yml"
+  - project: "devops/templates"
+    ref: main
+    file: "terraform.yml"
+
+stages:
+  - build
+  - test
+  - deploy
 
 test:
+  only:
+    - disabled
   tags:
     - docker
   services:
@@ -19,5 +32,25 @@ test:
     TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
     DENO_VERSION: "1.22.0"
     DENO_BINDGEN_VERSION: "0.5.1"
-    RUST_VERSION: "1.60.0"
+    RUST_VERSION: "1.62.0"
     PNPM_VERSION: "7.1.9"
+
+buildkit:
+  tags:
+    - docker
+  variables:
+    DENO_VERSION: "1.22.0"
+    DENO_BINDGEN_VERSION: "0.5.1"
+    RUST_VERSION: "1.62.0"
+    KANIKO_EXTRA_ARGS: |
+      --opt build-arg:DENO_VERSION=$DENO_VERSION
+      --opt build-arg:DENO_BINDGEN_VERSION=$DENO_BINDGEN_VERSION
+      --opt build-arg:RUST_VERSION=$RUST_VERSION
+
+terraform:
+  only:
+    - disabled
+  tags:
+    - docker
+  environment:
+    name: production
