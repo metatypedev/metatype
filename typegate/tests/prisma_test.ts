@@ -206,6 +206,13 @@ test("1:n relationships", async (t) => {
             id: ${id}
             name: "name"
             email: "email@example.com"
+            messages: {
+              create: {
+                id: 123
+                time: 12345
+                message: "Hello, Jack!"
+              }
+            }
           }
         ) {
           id
@@ -234,7 +241,7 @@ test("1:n relationships", async (t) => {
           id,
           name: "name",
           email: "email@example.com",
-          messages: [],
+          messages: [{ id: 123 }],
         },
       })
       .on(e);
