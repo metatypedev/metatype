@@ -32,7 +32,11 @@ test:
       command:
         - --requirepass
         - password
+  before_script:
+    - echo $RUST_VERSION
+    - echo $PNPM_VERSION
   variables:
+    PNPM_VERSION: $PNPM_VERSION
     TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
 
 kaniko:
