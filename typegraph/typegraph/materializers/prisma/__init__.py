@@ -136,6 +136,7 @@ class Relation:
     owner_type: t.Type
     owned_type: t.Type
     relation: str
+    cardinality: str
 
     def __init__(self, runtime: "PrismaRuntime", owner: t.Type, owned: t.Type):
         self.runtime = runtime
@@ -153,6 +154,7 @@ class OneToMany(Relation):
 
     def __init__(self, runtime: "PrismaRuntime", owner: t.Type, owned: t.Type):
         Relation.__init__(self, runtime, owner, owned)
+        self.cardinality = "one_to_many"
 
     def on(self, *owner_fields: str):
         self.ids = owner_fields
@@ -198,25 +200,30 @@ def get_update_inp_type(tpe: t.Type) -> t.Type:
     )
 
 
-def get_create_input_type(tpe: t.struct) -> t.Type:
+def get_create_input_type(tpe: t.struct, skip_relations=False) -> t.Type:
     fields = {}
     for key, field_type in tpe.of.items():
         if PrismaRelation.check(field_type):
-            if not field_type.mat.owner:
+            if skip_relations:
                 continue
+            mat = field_type.mat
             out = field_type.out
-            fields[key] = t.struct(
-                {
-                    "create": get_create_input_type(out)
-                    .named(f"Input{out.node}Create")
-                    .s_optional(),
-                    "connect": get_where_type(out)
-                    .named(f"Input{out.node}")
-                    .s_optional(),
-                    # "createMany"
-                    # "connectOrCreate"
-                }
-            )
+            if not mat.owner and mat.relation.cardinality == "one_to_many":
+                assert isinstance(out, t.list)
+                out = out.of
+            entries = {
+                "create": get_create_input_type(out, skip_relations=True)
+                .named(f"Input{out.node}Create")
+                .s_optional(),
+                "connect": get_where_type(out).named(f"Input{out.node}").s_optional(),
+            }
+            if not mat.owner and mat.relation.cardinality == "one_to_many":
+                entries["createMany"] = t.struct(
+                    {"data": t.list(entries["create"].of)}
+                ).s_optional()
+
+            fields[key] = t.struct(entries)
+
         elif isinstance(field_type, t.list) and not isinstance(field_type, t.string):
             continue
         else:
