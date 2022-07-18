@@ -14,11 +14,11 @@ stages:
   - build
   - deploy
 
-variables:
+variables: &variables
   DENO_VERSION: "1.22.0"
   DENO_BINDGEN_VERSION: "0.5.1"
   RUST_VERSION: "1.62.0"
-  PNPM_VERSION: "7.1.9"
+  PNPM_VERSION: "7.5.2"
 
 test:
   tags:
@@ -32,11 +32,8 @@ test:
       command:
         - --requirepass
         - password
-  before_script:
-    - echo $RUST_VERSION
-    - echo $PNPM_VERSION
   variables:
-    PNPM_VERSION: $PNPM_VERSION
+    <<: *variables
     TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
 
 kaniko:
