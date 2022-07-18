@@ -9,15 +9,15 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.16.5", features = ["extension-module"] }
-dprint-plugin-typescript = "0.69.5"
+dprint-plugin-typescript = "0.70.0"
 structopt = "0.3.26"
-swc_common = { version = "0.20.1", features = ["tty-emitter"] }
-swc_ecma_ast = "0.81.0"
-swc_ecmascript = { version = "0.172.0", features = ["visit", "transforms", "typescript-parser", "parser", "codegen"] }
+swc_common = { version = "0.24.1", features = ["tty-emitter"] }
+swc_ecma_ast = "0.85.1"
+swc_ecmascript = { version = "0.182.0", features = ["visit", "transforms", "typescript-parser", "parser", "codegen"] }
 migration-core = { git = "https://github.com/metatypedev/prisma-engines" }
 datamodel = { git = "https://github.com/metatypedev/prisma-engines" }
 lazy_static = "1.4.0"
-tokio = { version = "1.19.2", features = ["full"] }
+tokio = { version = "1.20.0", features = ["full"] }
 log = "0.4.17"
 dict_derive = "0.4.0"
 tempfile = "3.3.0"
