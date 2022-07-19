@@ -241,16 +241,28 @@ def get_out_type(tpe: t.Type) -> t.Type:
     return t.struct({k: get_out_type(v) for k, v in tpe.of.items()})
 
 
-def get_where_type(tpe: t.struct) -> t.struct:
-    return t.struct(
-        {
-            k: v if isinstance(v, t.optional) else v.s_optional()
-            for k, v in tpe.of.items()
-            if not isinstance(v, t.struct)
-            and not isinstance(v, t.NodeProxy)
-            and not isinstance(v, t.func)
-        }
-    )
+def get_where_type(tpe: t.struct, skip_rel=False) -> t.struct:
+    fields = {}
+
+    for k, v in tpe.of.items():
+        if PrismaRelation.check(v):
+            if skip_rel:
+                continue
+            v = v.out
+            if isinstance(v, t.list):
+                v = v.of
+            if isinstance(v, t.NodeProxy):
+                v = v.get()
+            if isinstance(v, t.struct):
+                fields[k] = get_where_type(v, skip_rel=True).s_optional()
+            continue
+        if isinstance(v, t.optional):
+            v = v.of
+        if isinstance(v, t.NodeProxy):
+            v = v.get()
+        fields[k] = v.s_optional()
+
+    return t.struct(fields)
 
 
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries

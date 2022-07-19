@@ -245,5 +245,58 @@ test("1:n relationships", async (t) => {
         },
       })
       .on(e);
+
+    await gql`
+      mutation {
+        createUser(
+          data: {
+            id: 14
+            name: "User 14"
+            email: "user14@example.com"
+            messages: {
+              createMany: {
+                data: [
+                  {
+                    id: 234
+                    time: 23456
+                    message: "Hi"
+                  },
+                  {
+                    id: 235
+                    time: 23467
+                    message: "Are you OK?"
+                  }
+                ]
+              }
+            }
+          }
+        ) {
+          id
+        }
+      }
+    `
+      .expectData({
+        createUser: {
+          id: 14,
+        },
+      })
+      .on(e);
+
+    await gql`
+      query {
+        findMessages(where: { sender: { id: 14 } }) {
+          id
+          time
+          message
+        }
+      }
+    `
+      .expectData({
+        findMessages: [
+          { id: 234, time: 23456, message: "Hi" },
+          { id: 235, time: 23467, message: "Are you OK?" },
+        ],
+      })
+      .on(e);
   });
 });
