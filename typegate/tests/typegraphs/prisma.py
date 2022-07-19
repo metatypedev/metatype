@@ -57,6 +57,7 @@ with TypeGraph("prisma") as g:
                 "updateOneRecord": (record, "update", allow_all),
                 "createUser": (users, "create", allow_all),
                 "findUniqueUser": (users, "findUnique", allow_all),
+                "findMessages": (messages, "findMany", allow_all),
             }
         )
     )
