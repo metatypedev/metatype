@@ -2,6 +2,7 @@ import asyncio
 from pathlib import Path
 from time import sleep
 from time import time
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import FastAPI
@@ -100,3 +101,17 @@ def watch():
         args=(config, current_path),
         watch_filter=watchfiles.PythonFilter(),
     )
+
+
+def serialize(path: str, tg: Optional[str]):
+    p = Path(path)
+    tgs = loaders.import_file(p)
+    serialized_tgs = {tg.name: serialize_typegraph(tg) for tg in tgs}
+    if tg is None:
+        obj_body = ",".join([f'"{n}":{tg}' for n, tg in serialized_tgs.items()])
+        print(f"{{{obj_body}}}")
+    else:
+        if tg in serialized_tgs:
+            print(serialized_tgs[tg])
+        else:
+            print(f'Typegraph "{tg}" not found.')
