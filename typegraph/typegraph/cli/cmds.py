@@ -1,3 +1,5 @@
+from typing import Optional
+
 from typegraph.cli import dev as _dev
 from typegraph.cli import prisma as _prisma
 import typer
@@ -9,6 +11,11 @@ root = typer.Typer()
 @root.command()
 def dev():
     _dev.watch()
+
+
+@root.command()
+def serialize(file: str, typegraph: Optional[str] = None):
+    _dev.serialize(file, typegraph)
 
 
 prisma = typer.Typer()
