@@ -58,6 +58,8 @@ with TypeGraph("prisma") as g:
                 "createUser": (users, "create", allow_all),
                 "findUniqueUser": (users, "findUnique", allow_all),
                 "findMessages": (messages, "findMany", allow_all),
+                "updateUser": (users, "update", allow_all),
+                "deleteMessages": (messages, "deleteMany", allow_all),
             }
         )
     )
