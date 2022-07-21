@@ -44,15 +44,18 @@ const _lib = await prepare(opts, {
     nonblocking: true,
   },
 })
-export type PrismaQueryOut = {
-  res: string
+export type PrismaIntrospectionInp = {
+  datamodel: string
 }
 export type PrismaRegisterEngineInp = {
   datamodel: string
   typegraph: string
 }
-export type PrismaIntrospectionInp = {
-  datamodel: string
+export type PrismaRegisterEngineOut = {
+  engine_id: string
+}
+export type PrismaQueryOut = {
+  res: string
 }
 export type PrismaQueryInp = {
   key: string
@@ -61,9 +64,6 @@ export type PrismaQueryInp = {
 }
 export type PrismaIntrospectionOut = {
   introspection: string
-}
-export type PrismaRegisterEngineOut = {
-  engine_id: string
 }
 export type PrismaUnregisterEngineOut = {
   key: string

@@ -172,35 +172,44 @@ class OneToMany(Relation):
         )
 
 
-def get_inp_type(tpe: t.Type) -> t.Type:
-    if isinstance(tpe, t.func):
-        raise Exception("Invalid type")
+# def get_inp_type(tpe: t.Type) -> t.Type:
+#     if isinstance(tpe, t.func):
+#         raise Exception("Invalid type")
 
-    if not isinstance(tpe, t.struct):
-        return tpe
+#     if not isinstance(tpe, t.struct):
+#         return tpe
 
-    return t.struct(
-        {k: get_inp_type(v) for k, v in tpe.of.items() if not isinstance(v, t.func)}
-    )
-
-
-def get_update_inp_type(tpe: t.Type) -> t.Type:
-    if isinstance(tpe, t.func):
-        raise Exception("Invalid type")
-
-    if not isinstance(tpe, t.struct):
-        return tpe
-
-    return t.struct(
-        {
-            k: get_inp_type(v).s_optional()
-            for k, v in tpe.of.items()
-            if not isinstance(v, t.func)
-        }
-    )
+#     return t.struct(
+#         {k: get_inp_type(v) for k, v in tpe.of.items() if not isinstance(v, t.func)}
+#     )
 
 
-def get_create_input_type(tpe: t.struct, skip_relations=False) -> t.Type:
+# def get_update_inp_type(tpe: t.Type) -> t.Type:
+#     if isinstance(tpe, t.func):
+#         raise Exception("Invalid type")
+
+#     if not isinstance(tpe, t.struct):
+#         return tpe
+
+#     return t.struct(
+#         {
+#             k: get_inp_type(v).s_optional()
+#             for k, v in tpe.of.items()
+#             if not isinstance(v, t.func)
+#         }
+#     )
+
+
+# TODO: tpe.clone()
+def clone(tpe: t.Type) -> t.Type:
+    if isinstance(tpe, t.integer):
+        return t.integer()
+    if isinstance(tpe, t.string):
+        return t.string()
+    return tpe
+
+
+def get_input_type(tpe: t.struct, skip_relations=False, update=False) -> t.Type:
     fields = {}
     for key, field_type in tpe.of.items():
         if PrismaRelation.check(field_type):
@@ -212,7 +221,7 @@ def get_create_input_type(tpe: t.struct, skip_relations=False) -> t.Type:
                 assert isinstance(out, t.list)
                 out = out.of
             entries = {
-                "create": get_create_input_type(out, skip_relations=True)
+                "create": get_input_type(out, skip_relations=True)
                 .named(f"Input{out.node}Create")
                 .s_optional(),
                 "connect": get_where_type(out).named(f"Input{out.node}").s_optional(),
@@ -222,12 +231,15 @@ def get_create_input_type(tpe: t.struct, skip_relations=False) -> t.Type:
                     {"data": t.list(entries["create"].of)}
                 ).s_optional()
 
-            fields[key] = t.struct(entries)
+            fields[key] = t.struct(entries)  # TODO: optional
 
         elif isinstance(field_type, t.list) and not isinstance(field_type, t.string):
             continue
         else:
-            fields[key] = field_type
+            if update:
+                fields[key] = clone(field_type).s_optional()
+            else:  # create
+                fields[key] = clone(field_type)
     return t.struct(fields)
 
 
@@ -260,7 +272,7 @@ def get_where_type(tpe: t.struct, skip_rel=False) -> t.struct:
             v = v.of
         if isinstance(v, t.NodeProxy):
             v = v.get()
-        fields[k] = v.s_optional()
+        fields[k] = clone(v).s_optional()
 
     return t.struct(fields)
 
@@ -320,7 +332,7 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "data": get_create_input_type(tpe).named(f"{tpe.node}CreateInput"),
+                    "data": get_input_type(tpe).named(f"{tpe.node}CreateInput"),
                 }
             ),
             get_out_type(tpe).named(f"{tpe.node}CreateOutput"),
@@ -331,7 +343,9 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "data": get_update_inp_type(tpe).named(f"{tpe.node}UpdateInput"),
+                    "data": get_input_type(tpe, update=True).named(
+                        f"{tpe.node}UpdateInput"
+                    ),
                     "where": get_where_type(tpe).named(f"{tpe.node}UpdateOneWhere"),
                 }
             ),
@@ -346,6 +360,19 @@ class PrismaRuntime(Runtime):
             ),
             get_out_type(tpe).named(f"{tpe.node}DeleteOutput"),
             PrismaOperationMat(self, tpe.node, "deleteOne", serial=True),
+        )
+
+    def gen_delete_many(self, tpe: t.struct) -> t.func:
+        return t.func(
+            t.struct(
+                {
+                    "where": get_where_type(tpe).named(
+                        f"{tpe.node}DeleteManyWhereInput"
+                    ),
+                }
+            ),
+            t.struct({"count": t.integer()}).named(f"{tpe.node}BatchDeletePayload"),
+            PrismaOperationMat(self, tpe.node, "deleteMany", serial=True),
         )
 
     def gen(self, ops: dict[str, tuple[t.Type, str, t.policy]]) -> dict[str, t.func]:
@@ -363,12 +390,15 @@ class PrismaRuntime(Runtime):
                     ret[name] = self.gen_update(tpe).add_policy(policy)
                 case "delete":
                     ret[name] = self.gen_delete(tpe).add_policy(policy)
+                case "deleteMany":
+                    ret[name] = self.gen_delete_many(tpe).add_policy(policy)
                 case "queryRaw":
                     ret[name] = self.queryRaw().add_policy(policy)
                 case "executeRaw":
                     ret[name] = self.executeRaw().add_policy(policy)
                 case _:
                     raise Exception(f'Operation not supported: "{op}"')
+        # raise Exception(f'ret: {ret}')
         return ret
 
     def manage(self, tpe):

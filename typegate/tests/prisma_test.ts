@@ -298,5 +298,37 @@ test("1:n relationships", async (t) => {
         ],
       })
       .on(e);
+
+    await gql`
+      mutation {
+        deleteMessages(where: { sender: { id: 14 } }) {
+          count
+        }
+      }
+    `
+      .expectData({
+        deleteMessages: {
+          count: 2,
+        },
+      })
+      .on(e);
   });
+
+  await gql`
+    mutation {
+      updateUser(where: { id: 14 }, data: { messages: { create: { id: 345, message: "Hi", time: 34567 } } }) {
+        messages {
+          id
+        }
+      }
+    }
+  `
+    .expectData({
+      updateUser: {
+        messages: [
+          { id: 345 },
+        ],
+      },
+    })
+    .on(e);
 });
