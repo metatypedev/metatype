@@ -11,7 +11,7 @@ import hypercorn
 import hypercorn.asyncio
 import orjson
 from typegraph import dist
-from typegraph.materializers.prisma import OneToMany
+from typegraph.materializers.prisma import Relation
 from typegraph.utils import loaders
 from typer import echo
 import watchfiles
@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 def default(obj):
-    if isinstance(obj, OneToMany):
+    if isinstance(obj, Relation):
         return {}
     raise TypeError
 

@@ -68,3 +68,30 @@ class TestPrismaSchema:
                 Path(__file__).parent.joinpath("schemas/one_to_many.schema"), "r"
             ) as f:
                 self.assert_schema([user, post], f.read())
+
+    def test_one_to_one(self):
+        self.maxDiff = None
+
+        with TypeGraph(name="test_one_to_one") as g:
+            db = PrismaRuntime(postgres)
+
+            userProfile = db.one_to_one(g("User"), g("Profile")).named("userProfile")
+
+            user = t.struct(
+                {
+                    "id": t.integer().id,
+                    "profile": userProfile.owned(),
+                }
+            ).named("User")
+
+            profile = t.struct(
+                {
+                    "id": t.integer().id,
+                    "user": userProfile.owner(),
+                }
+            ).named("Profile")
+
+            with open(
+                Path(__file__).parent.joinpath("schemas/one_to_one.schema"), "r"
+            ) as f:
+                self.assert_schema([user, profile], f.read())
