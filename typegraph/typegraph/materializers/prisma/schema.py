@@ -40,11 +40,13 @@ class PrismaModel:
     name: str
     fields: Dict[str, PrismaField]
     entity: t.struct
+    tags: list[str]
 
     def __init__(self, entity: t.struct) -> None:
         self.name = entity.node
         self.entity = entity
         self.fields = {}
+        self.tags = []
         for field_name, field_type in entity.of.items():
             f = PrismaField(field_name, field_type)
             if field_type._id:
@@ -132,6 +134,9 @@ class PrismaSchema:
             for field in model.fields.values():
                 schema += f"  {field.prisma_name} {field.prisma_type} {' '.join(field.tags)}\n"
 
+            for tag in model.tags:
+                schema += f"  {tag}\n"
+
             schema += "}\n\n"
         return schema
 
@@ -166,18 +171,28 @@ def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
     from typegraph.materializers.prisma import PrismaRelation
 
     if PrismaRelation.check(f.tpe):
-        from typegraph.materializers.prisma import OneToMany
+        from typegraph.materializers.prisma import Relation
 
         relation = f.tpe.mat.relation
-        if isinstance(relation, OneToMany):
+        if isinstance(relation, Relation):
             if f.tpe.mat.owner:
                 f.prisma_type = relation.owner_type.node
                 fields = [f"{f.name}{key.title()}" for key in relation.ids]
                 f.tags.append(
                     f'@relation(name: "{relation.relation}", fields: [{", ".join(fields)}], references: [{", ".join(relation.ids)}])'
                 )
+                if relation.cardinality == "one_to_one":
+                    model.tags.append(f'@@unique({", ".join(fields)})')
             else:
-                f.prisma_type = f"{relation.owned_type.node}[]"
+                f.prisma_type = f"{relation.owned_type.node}"
+                if relation.cardinality == "one_to_many":
+                    f.prisma_type += "[]"
+                elif relation.cardinality == "one_to_one":
+                    f.prisma_type += "?"
+                else:
+                    raise Exception(
+                        f'Unsupported relation cardinality "{relation.cardinality}"'
+                    )
                 # TODO: relation.name
                 f.tags.append(f'@relation(name: "{relation.relation}")')
             return
