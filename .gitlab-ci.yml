@@ -48,6 +48,7 @@ kaniko:
 
 terraform:
   needs:
+    - test
     - kaniko
   tags:
     - docker
