@@ -197,7 +197,7 @@ test("1:n relationships", async (t) => {
     await shell(["../typegraph/.venv/bin/meta", "prisma", "apply"]);
   });
 
-  await t.should("insert a simple record", async () => {
+  await t.should("insert a record with nested object", async () => {
     const id = 12;
     await gql`
       mutation q {
@@ -331,4 +331,81 @@ test("1:n relationships", async (t) => {
       },
     })
     .on(e);
+});
+
+test("1:1 relationships", async (t) => {
+  const e = await t.pythonFile("./tests/typegraphs/prisma_1_1.py");
+
+  await t.should("drop schema and recreate", async () => {
+    await gql`
+      mutation a {
+        executeRaw(
+          query: "DROP SCHEMA IF EXISTS test_1_1 CASCADE"
+          parameters: "[]"
+        )
+      }
+    `
+      .expectData({
+        executeRaw: 0,
+      })
+      .on(e);
+    await shell(["../typegraph/.venv/bin/meta", "prisma", "apply"]);
+  });
+
+  await t.should("create a record with a nested object", async () => {
+    await gql`
+      mutation {
+        createUser(
+          data: {
+            id: 12,
+            profile: {
+              create: {
+                id: 15
+              }
+            }
+          }
+        ) {
+          id
+        }
+      }
+    `
+      .expectData({
+        createUser: {
+          id: 12,
+        },
+      })
+      .on(e);
+
+    await gql`
+    query {
+      findUniqueProfile(where: { id: 15 }) {
+        id
+        user { id }
+      }
+    }
+  `
+      .expectData({
+        findUniqueProfile: {
+          id: 15,
+          user: {
+            id: 12,
+          },
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("delete fails with nested object", async () => {
+    await gql`
+      mutation {
+        deleteUser(
+          where: { id: 12 }
+        ) {
+          id
+        }
+      }
+    `
+      .expectErrorContains("Foreign key constraint failed")
+      .on(e);
+  });
 });
