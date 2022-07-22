@@ -9,11 +9,6 @@ include:
     ref: main
     file: "terraform.yml"
 
-stages:
-  - test
-  - build
-  - deploy
-
 variables: &variables
   DENO_VERSION: "1.22.0"
   DENO_BINDGEN_VERSION: "0.5.1"
@@ -52,6 +47,8 @@ kaniko:
       --single-snapshot
 
 terraform:
+  needs:
+    - kaniko
   tags:
     - docker
   only:
