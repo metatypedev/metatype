@@ -13,9 +13,20 @@ with TypeGraph(name="blog") as g:
 
     postAuthor = db.one_to_many(g("User"), g("Post")).named("postAuthor")
 
+    userProfile = db.one_to_one(g("User"), g("Profile")).named("userProfile")
+
     users = t.struct(
-        {"id": t.integer().id, "name": t.string(), "posts": postAuthor.owned()}
+        {
+            "id": t.integer().id,
+            "name": t.string(),
+            "posts": postAuthor.owned(),
+            "profile": userProfile.owned(),
+        }
     ).named("User")
+
+    profiles = t.struct(
+        {"id": t.integer().id, "profilePic": t.string(), "user": userProfile.owner()}
+    ).named("Profile")
 
     posts = t.struct(
         {"id": t.integer().id, "content": t.string(), "author": postAuthor.owner()}
@@ -23,6 +34,7 @@ with TypeGraph(name="blog") as g:
 
     db.manage(users)
     db.manage(posts)
+    db.manage(profiles)
 
     allow_all = policies.allow_all()
 

@@ -131,6 +131,10 @@ class PrismaDeleteMat(Materializer):
     serial: bool = True
 
 
+def unsupported_cardinality(c: str):
+    return Exception(f'Unsupported cardinality "{c}"')
+
+
 class Relation:
     runtime: "PrismaRuntime"
     owner_type: t.Type
@@ -168,6 +172,8 @@ class Relation:
                 target = t.list(self.owned_type)
             case "one_to_one":
                 target = t.optional(self.owned_type)
+            case _:
+                raise unsupported_cardinality(self.cardinality)
         return t.gen(
             target,
             PrismaRelation(self.runtime, relation=self, owner=False),
@@ -230,7 +236,7 @@ def get_input_type(tpe: t.struct, skip_relations=False, update=False) -> t.Type:
                     assert isinstance(out, t.optional)
                     out = out.of
                 else:
-                    raise Exception(f'unsupported cardinality "{cardinality}"')
+                    raise unsupported_cardinality(cardinality)
             if isinstance(out, t.NodeProxy):
                 out = out.get()
             entries = {
@@ -244,7 +250,7 @@ def get_input_type(tpe: t.struct, skip_relations=False, update=False) -> t.Type:
                     {"data": t.list(entries["create"].of)}
                 ).s_optional()
 
-            fields[key] = t.struct(entries)  # TODO: optional
+            fields[key] = t.struct(entries).s_optional()
 
         elif isinstance(field_type, t.list) and not isinstance(field_type, t.string):
             continue
