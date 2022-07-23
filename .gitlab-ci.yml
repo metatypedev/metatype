@@ -15,7 +15,12 @@ variables: &variables
   RUST_VERSION: "1.62.0"
   PNPM_VERSION: "7.5.2"
 
+stages:
+  - test
+  - deploy
+
 test:
+  stage: test
   tags:
     - docker
   services:
@@ -32,6 +37,7 @@ test:
     TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
 
 kaniko:
+  stage: test
   tags:
     - docker
   only:
@@ -47,6 +53,7 @@ kaniko:
       --single-snapshot
 
 terraform:
+  stage: deploy
   needs:
     - test
     - kaniko
