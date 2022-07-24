@@ -1,0 +1,66 @@
+
+example {
+    workdir: example
+    watches: [
+        .
+        ../typegraph
+    ]
+    ignores: [
+        native
+    ]
+    shell: "poetry run meta dev"
+
+    depends_on: [
+        typegraph_native
+        typegate
+    ]
+}
+
+typegraph_native {
+    workdir: typegraph/native
+    watches: .
+    envs {
+        VIRTUAL_ENV="../.venv"
+    }
+    shell: "maturin develop"
+}
+
+typegate {
+    workdir: typegate
+    watches: .
+    ignores: [
+        native/src
+        "*.json"
+        migrations
+        tests
+        target
+        workers
+    ]
+    envs {
+        TG_PORT: "7891"
+    }
+    shell: "./run.sh"
+
+    depends_on: [
+        typegate_native
+    ]
+}
+
+clean_deno_bindgen_cache {
+    shell: "rm -rf ~/Library/Caches/deno/plug/file"
+}
+
+typegate_native {
+    workdir: typegate/native
+    watches: .
+    ignores: [
+        "*.ts"
+        "*.json"
+    ]
+    shell: "deno_bindgen"
+}
+
+website {
+    workdir: website
+    shell: pnpm start --no-open
+}
