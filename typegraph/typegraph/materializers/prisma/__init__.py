@@ -123,6 +123,7 @@ class PrismaRelation(Materializer):
         return isinstance(tpe.out, t.optional)
 
 
+# TODO: remove this
 @dataclass(eq=True, frozen=True)
 class PrismaDeleteMat(Materializer):
     runtime: "PrismaRuntime"
@@ -139,7 +140,7 @@ class Relation:
     runtime: "PrismaRuntime"
     owner_type: t.Type
     owned_type: t.Type
-    relation: str
+    relation: str  # TODO: name
     cardinality: str
     ids: tuple[str, ...]
 
@@ -217,13 +218,18 @@ def clone(tpe: t.Type) -> t.Type:
     return tpe
 
 
-def get_input_type(tpe: t.struct, skip_relations=False, update=False) -> t.Type:
+def get_input_type(
+    tpe: t.struct,
+    skip=set(),  # set of relation names, indicates related models to skip
+    update=False,
+) -> t.Type:
     fields = {}
     if not isinstance(tpe, t.struct):
         raise Exception(f'expected a struct, got: "{type(tpe).__name__}"')
     for key, field_type in tpe.of.items():
         if PrismaRelation.check(field_type):
-            if skip_relations:
+            relname = field_type.mat.relation.relation
+            if relname in skip:
                 continue
             mat = field_type.mat
             out = field_type.out
@@ -240,7 +246,7 @@ def get_input_type(tpe: t.struct, skip_relations=False, update=False) -> t.Type:
             if isinstance(out, t.NodeProxy):
                 out = out.get()
             entries = {
-                "create": get_input_type(out, skip_relations=True)
+                "create": get_input_type(out, skip=skip | {relname})
                 .named(f"Input{out.node}Create")
                 .s_optional(),
                 "connect": get_where_type(out).named(f"Input{out.node}").s_optional(),
@@ -254,6 +260,8 @@ def get_input_type(tpe: t.struct, skip_relations=False, update=False) -> t.Type:
 
         elif isinstance(field_type, t.list) and not isinstance(field_type, t.string):
             continue
+        elif isinstance(field_type, t.func):
+            raise Exception(f'Unsupported function field "{key}"')
         else:
             if update:
                 fields[key] = clone(field_type).s_optional()
