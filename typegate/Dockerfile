@@ -37,13 +37,13 @@ ARG VERSION
 ENV VERSION ${VERSION}
 
 WORKDIR /app
-USER 1000
+USER nonroot
 
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
-COPY --from=builder /deno-dir /deno-dir
-COPY --from=builder /app/native/bindings ./native/bindings
-COPY --from=builder /app/native/target/release/libnative.so ./native/target/release/libnative.so
-COPY --from=builder /app/lock.json .
+COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
+COPY --from=builder --chown=nonroot:nonroot /app/native/bindings ./native/bindings
+COPY --from=builder --chown=nonroot:nonroot /app/native/target/release/libnative.so ./native/target/release/libnative.so
+COPY --from=builder --chown=nonroot:nonroot /app/lock.json .
 COPY import_map.json .
 COPY src ./src
 COPY .env.defaults .
