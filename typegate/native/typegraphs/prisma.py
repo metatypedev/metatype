@@ -1,1 +1,0 @@
-../../tests/typegraphs/prisma.py

@@ -22,8 +22,8 @@ prisma = typer.Typer()
 
 
 @prisma.command()
-def apply():
-    _prisma.apply()
+def apply(file: Optional[str] = typer.Option(None, "-f")):
+    _prisma.apply(file)
 
 
 @prisma.command()

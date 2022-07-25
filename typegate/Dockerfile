@@ -10,12 +10,12 @@ ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
 ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 
-RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v${DENO_VERSION}
-
-RUN deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen@${DENO_BINDGEN_VERSION}/cli.ts
+RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v${DENO_VERSION} \
+    && deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen@${DENO_BINDGEN_VERSION}/cli.ts
 
 WORKDIR /app
 COPY import_map.json .
+COPY .env.defaults .
 COPY src ./src
 COPY native ./native
 
@@ -23,7 +23,8 @@ WORKDIR /app/native
 RUN deno_bindgen --release -- --locked
 
 WORKDIR /app
-RUN deno cache --import-map=import_map.json --lock=lock.json --lock-write --no-check src/main.ts
+RUN mkdir workers \
+    && deno cache --import-map=import_map.json --lock=lock.json --lock-write --no-check src/main.ts
 
 #
 
@@ -37,16 +38,19 @@ ARG VERSION
 ENV VERSION ${VERSION}
 
 WORKDIR /app
-USER 1000
+USER nonroot
 
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
-COPY --from=builder /deno-dir /deno-dir
 COPY --from=builder /app/native/bindings ./native/bindings
 COPY --from=builder /app/native/target/release/libnative.so ./native/target/release/libnative.so
 COPY --from=builder /app/lock.json .
-COPY import_map.json .
-COPY src ./src
-COPY .env.defaults .
+COPY --from=builder /app/import_map.json .
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/.env.defaults .
+
+# writeable
+COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
+COPY --from=builder --chown=nonroot:nonroot /app/workers ./workers
 
 EXPOSE 7890
 
