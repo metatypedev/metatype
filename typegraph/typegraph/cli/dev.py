@@ -11,6 +11,7 @@ import hypercorn
 import hypercorn.asyncio
 import orjson
 from typegraph import dist
+from typegraph.materializers.prisma import Relation
 from typegraph.utils import loaders
 from typer import echo
 import watchfiles
@@ -18,10 +19,16 @@ import watchfiles
 router = APIRouter()
 
 
+def default(obj):
+    if isinstance(obj, Relation):
+        return {}
+    raise TypeError
+
+
 def serialize_typegraph(tg, indent=False):
     g = tg.build()
     opt = dict(option=orjson.OPT_INDENT_2) if indent else {}
-    return orjson.dumps(g, **opt).decode()
+    return orjson.dumps(g, default=default, **opt).decode()
 
 
 def push_typegraph(tg_json, node, backoff=2):

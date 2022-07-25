@@ -128,6 +128,14 @@ pyhocon = ">=0.3.54,<0.4.0"
 python-dateutil = ">=2.8.1,<3.0.0"
 
 [[package]]
+name = "debugpy"
+version = "1.6.1"
+description = "An implementation of the Debug Adapter Protocol for Python"
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "deepmerge"
 version = "1.0.1"
 description = "a toolset to deeply merge python dictionaries."
@@ -825,7 +833,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.10,<3.11"
-content-hash = "80b6628cbcfb8abf5836ab1763973daf3fdff720457a816f3f2867fb665535dc"
+content-hash = "05599db925cb44eec0ce2ed2da7debe4232b984bf6aa9154fe02ddcb2c635015"
 
 [metadata.files]
 anyio = [
@@ -892,6 +900,26 @@ colorama = [
 dataconf = [
     {file = "dataconf-1.5.0-py3-none-any.whl", hash = "sha256:b390b929bd4aa0f23dc0e561fb00924743cea2f45941274d0c6f37d4f75a08a6"},
     {file = "dataconf-1.5.0.tar.gz", hash = "sha256:406f72a36229893d18247753f5cfe4b6ed265ff299810b6831b5995f1f74e639"},
+]
+debugpy = [
+    {file = "debugpy-1.6.1-cp310-cp310-macosx_10_15_universal2.whl", hash = "sha256:dea24307e6899ab884e3b9186f325b9f83cb46ba7d770575abfd4da555b310af"},
+    {file = "debugpy-1.6.1-cp310-cp310-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:f8ab446c75113d43fdeaaa295cce5a2916ae3ddb24afebd18787a6c2d9b5adb9"},
+    {file = "debugpy-1.6.1-cp310-cp310-win32.whl", hash = "sha256:f781f403940c82ac29ccad4705cd3970294c5a3c4eea5e45a9c651564d34b3f3"},
+    {file = "debugpy-1.6.1-cp310-cp310-win_amd64.whl", hash = "sha256:b63d8feaa2215545418a94df768589e35550e5f8daa94daf7cdbe4a9a8123db7"},
+    {file = "debugpy-1.6.1-cp37-cp37m-macosx_10_15_x86_64.whl", hash = "sha256:5b38c0a9930ea7140a968b33f7ce55c3861e47bef26ba6ef36e477853c983b27"},
+    {file = "debugpy-1.6.1-cp37-cp37m-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:43eaed06ead05de1eba321c7189c42ee6811cc4f55bd6d3dbc89285d9edf663c"},
+    {file = "debugpy-1.6.1-cp37-cp37m-win32.whl", hash = "sha256:6ef57c6f8c6299c54689e112782e40af2783958b6b6eb81a627d33913c658259"},
+    {file = "debugpy-1.6.1-cp37-cp37m-win_amd64.whl", hash = "sha256:1bce0aa8960a449e759cd2c6394b95f1271a09a15371116eb0d6383d1bed1d6e"},
+    {file = "debugpy-1.6.1-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:1beee50ec98e967b964ac96716cc02cca2c19ca4b848be79469135e403fb9ed2"},
+    {file = "debugpy-1.6.1-cp38-cp38-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:a1ffad8691686fd3306e44533a02e334c4b9c8fd10ac13829a937d7bb02c9fc3"},
+    {file = "debugpy-1.6.1-cp38-cp38-win32.whl", hash = "sha256:aa886a30ed75ee1b126053e6536b41e5ac7be8fdb2bc67660cfeb6bdbab3da37"},
+    {file = "debugpy-1.6.1-cp38-cp38-win_amd64.whl", hash = "sha256:3917b4ffc34a6768ce9d5b43d971f0714f4604d479255f56c4be061aa7f9731e"},
+    {file = "debugpy-1.6.1-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:7bc92cef6b3cf45c3f3116fdfa8e5710c5daaea046a5b9ae8dab610446fed80a"},
+    {file = "debugpy-1.6.1-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:7765ed172809ec8b82348c0f001982bb507ec6c6c6e556931ed81771c82f2cd7"},
+    {file = "debugpy-1.6.1-cp39-cp39-win32.whl", hash = "sha256:24035f4fea3163bac400237b4a0ecb0fd5dc0070b78c04a1db4716e3bda39f03"},
+    {file = "debugpy-1.6.1-cp39-cp39-win_amd64.whl", hash = "sha256:d3014ba32499f9fe932e8333d71715ed80b2dd23e60f3e3152df9faf254b1ebe"},
+    {file = "debugpy-1.6.1-py2.py3-none-any.whl", hash = "sha256:24af3e63b3124e7c5be7ae4c06e95835a7c3930989825dc4cdf43828e1a1695b"},
+    {file = "debugpy-1.6.1.zip", hash = "sha256:0262625927d81c9ee046df12a7c9429d829e28d5b744341773b6de98c607d58f"},
 ]
 deepmerge = [
     {file = "deepmerge-1.0.1-py3-none-any.whl", hash = "sha256:f851fff957697cb8f4580b465acf5c2d35841695306ff0abb9cb9c273ad76112"},

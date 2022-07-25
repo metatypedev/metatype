@@ -23,6 +23,7 @@ class TypeNode:
     policies: Tuple[int]
     runtime: int
     data: frozendict
+    # ticket: int
 
 
 @dataclass(eq=True, frozen=True)
@@ -122,6 +123,7 @@ def build(tg: typegraph.TypeGraph):
                 data["of"] = build(node.of)
             elif isinstance(node, t.injection):
                 data["of"] = build(node.of)
+            # TODO: optional
 
             pol = [
                 idx(
@@ -142,6 +144,7 @@ def build(tg: typegraph.TypeGraph):
                 policies=tuple(pol),
                 runtime=build(node.runtime),
                 data=frozendict(data),
+                # ticket=ticket
             )
             return idx(types, ret, ticket)
 

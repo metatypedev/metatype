@@ -42,6 +42,7 @@ black = "^22.3.0"
 pytest = "^7.1.2"
 flake8 = "^4.0.1"
 pytest-asyncio = "^0.18.3"
+debugpy = "^1.6.1"
 
 [build-system]
 requires = ["poetry-core"]
