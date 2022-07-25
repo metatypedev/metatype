@@ -123,6 +123,7 @@ class PrismaRelation(Materializer):
         return isinstance(tpe.out, t.optional)
 
 
+# TODO: remove this
 @dataclass(eq=True, frozen=True)
 class PrismaDeleteMat(Materializer):
     runtime: "PrismaRuntime"
@@ -131,30 +132,31 @@ class PrismaDeleteMat(Materializer):
     serial: bool = True
 
 
+def unsupported_cardinality(c: str):
+    return Exception(f'Unsupported cardinality "{c}"')
+
+
 class Relation:
     runtime: "PrismaRuntime"
     owner_type: t.Type
     owned_type: t.Type
-    relation: str
+    relation: str  # TODO: name
     cardinality: str
+    ids: tuple[str, ...]
 
-    def __init__(self, runtime: "PrismaRuntime", owner: t.Type, owned: t.Type):
+    def __init__(
+        self, runtime: "PrismaRuntime", owner: t.Type, owned: t.Type, cardinality: str
+    ):
         self.runtime = runtime
         self.owner_type = owner
         self.owned_type = owned
         self.relation = f"link_{owner.node}_{owned.node}"
+        self.cardinality = cardinality
+        self.ids = ()
 
     def named(self, name: str):
         self.relation = name
         return self
-
-
-class OneToMany(Relation):
-    ids: tuple[str, ...] = ()
-
-    def __init__(self, runtime: "PrismaRuntime", owner: t.Type, owned: t.Type):
-        Relation.__init__(self, runtime, owner, owned)
-        self.cardinality = "one_to_many"
 
     def on(self, *owner_fields: str):
         self.ids = owner_fields
@@ -166,8 +168,15 @@ class OneToMany(Relation):
         )
 
     def owned(self):
+        match self.cardinality:
+            case "one_to_many":
+                target = t.list(self.owned_type)
+            case "one_to_one":
+                target = t.optional(self.owned_type)
+            case _:
+                raise unsupported_cardinality(self.cardinality)
         return t.gen(
-            t.list(self.owned_type),
+            target,
             PrismaRelation(self.runtime, relation=self, owner=False),
         )
 
@@ -209,19 +218,35 @@ def clone(tpe: t.Type) -> t.Type:
     return tpe
 
 
-def get_input_type(tpe: t.struct, skip_relations=False, update=False) -> t.Type:
+def get_input_type(
+    tpe: t.struct,
+    skip=set(),  # set of relation names, indicates related models to skip
+    update=False,
+) -> t.Type:
     fields = {}
+    if not isinstance(tpe, t.struct):
+        raise Exception(f'expected a struct, got: "{type(tpe).__name__}"')
     for key, field_type in tpe.of.items():
         if PrismaRelation.check(field_type):
-            if skip_relations:
+            relname = field_type.mat.relation.relation
+            if relname in skip:
                 continue
             mat = field_type.mat
             out = field_type.out
-            if not mat.owner and mat.relation.cardinality == "one_to_many":
-                assert isinstance(out, t.list)
-                out = out.of
+            if not mat.owner:
+                cardinality = mat.relation.cardinality
+                if cardinality == "one_to_many":
+                    assert isinstance(out, t.list)
+                    out = out.of
+                elif cardinality == "one_to_one":
+                    assert isinstance(out, t.optional)
+                    out = out.of
+                else:
+                    raise unsupported_cardinality(cardinality)
+            if isinstance(out, t.NodeProxy):
+                out = out.get()
             entries = {
-                "create": get_input_type(out, skip_relations=True)
+                "create": get_input_type(out, skip=skip | {relname})
                 .named(f"Input{out.node}Create")
                 .s_optional(),
                 "connect": get_where_type(out).named(f"Input{out.node}").s_optional(),
@@ -231,10 +256,12 @@ def get_input_type(tpe: t.struct, skip_relations=False, update=False) -> t.Type:
                     {"data": t.list(entries["create"].of)}
                 ).s_optional()
 
-            fields[key] = t.struct(entries)  # TODO: optional
+            fields[key] = t.struct(entries).s_optional()
 
         elif isinstance(field_type, t.list) and not isinstance(field_type, t.string):
             continue
+        elif isinstance(field_type, t.func):
+            raise Exception(f'Unsupported function field "{key}"')
         else:
             if update:
                 fields[key] = clone(field_type).s_optional()
@@ -414,9 +441,13 @@ class PrismaRuntime(Runtime):
         return self
 
     def one_to_many(self, owner: t.Type, owned: t.Type):
-        relation = OneToMany(self, owner, owned)
+        relation = Relation(self, owner, owned, "one_to_many")
         # TODO: relation name
         # self.one_to_many_relations[relation.relation] = relation
+        return relation
+
+    def one_to_one(self, owner: t.Type, owned: t.Type):
+        relation = Relation(self, owner, owned, "one_to_one")
         return relation
 
     def datamodel(self):
