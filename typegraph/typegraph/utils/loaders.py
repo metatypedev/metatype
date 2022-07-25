@@ -6,16 +6,24 @@ from typing import List
 from typegraph.graphs.typegraph import TypeGraph
 
 
+def import_file(path: Path) -> List[TypeGraph]:
+    typegraphs = []
+
+    spec = importlib.util.spec_from_file_location(path.name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for tg in find_typegraphs(module):
+        typegraphs.append(tg)
+
+    return typegraphs
+
+
 def import_folder(path) -> List[TypeGraph]:
     typegraphs = []
 
     for p in Path(path).glob("**/*.py"):
         if ".venv" not in str(p):
-            spec = importlib.util.spec_from_file_location(p.name, p)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            for tg in find_typegraphs(module):
-                typegraphs.append(tg)
+            typegraphs += import_file(p)
 
     return typegraphs
 

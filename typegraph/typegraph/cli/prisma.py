@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 import native
 from typegraph.utils import loaders
@@ -22,9 +23,12 @@ def diff():
                 print(res["message"])
 
 
-def apply():
+def apply(file: Optional[str]):
     current_path = Path(".").absolute()
-    tgs = loaders.import_folder(current_path)
+    if file is None:
+        tgs = loaders.import_folder(current_path)
+    else:
+        tgs = loaders.import_file(current_path / file)
 
     for tg in tgs:
         for rt in tg.build().runtimes:

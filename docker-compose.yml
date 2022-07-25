@@ -24,6 +24,12 @@ services:
       POSTGRES_PASSWORD: password
     command: "-c app.test=true -c log_statement=all"
 
+  adminer:
+    image: adminer:latest
+    restart: always
+    ports:
+      - "8080:8080"
+
   edgedb:
     image: edgedb/edgedb:1
     restart: always

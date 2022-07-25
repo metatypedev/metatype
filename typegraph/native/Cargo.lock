@@ -1839,6 +1839,7 @@ dependencies = [
 name = "native"
 version = "0.1.0"
 dependencies = [
+ "datamodel",
  "dict_derive",
  "dprint-plugin-typescript",
  "lazy_static",

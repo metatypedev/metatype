@@ -6,7 +6,8 @@ from typegraph.materializers.prisma import PrismaRuntime
 from typegraph.types import typedefs as t
 
 postgres = environ.get(
-    "TEST_POSTGRES_DB", "postgresql://postgres:password@localhost:5432/db?schema=test"
+    "TEST_POSTGRES_DB",
+    "postgresql://postgres:password@localhost:5432/db?schema=test",
 )
 
 with TypeGraph("prisma") as g:
@@ -22,6 +23,10 @@ with TypeGraph("prisma") as g:
     db.manage(record)
 
     messageSender = db.one_to_many(g("users"), g("messages")).named("messageSender")
+    messageRecipient = db.one_to_many(g("users"), g("messages")).named(
+        "messageRecipient"
+    )
+    # favoriteMessage = db.one_to_one(g("users"), g("messages")).named("favoriteMessage")
 
     messages = t.struct(
         {
@@ -29,6 +34,7 @@ with TypeGraph("prisma") as g:
             "time": t.integer(),
             "message": t.string(),
             "sender": messageSender.owner(),
+            "recipient": messageRecipient.owner(),
         }
     ).named("messages")
 
@@ -39,8 +45,9 @@ with TypeGraph("prisma") as g:
             "id": t.integer().id,
             "email": t.string(),
             "name": t.string(),
-            # "favoriteMessage": db.link(messages),
-            "messages": messageSender.owned(),
+            "sentMessages": messageSender.owned(),
+            "receivedMessages": messageRecipient.owned(),
+            # "favoriteMessage": favoriteMessage.owned(),  ## optional
         }
     ).named("users")
 

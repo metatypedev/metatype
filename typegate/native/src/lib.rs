@@ -11,6 +11,9 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use tokio::runtime::Runtime;
 
+#[cfg(test)]
+mod tests;
+
 lazy_static! {
     static ref RT: Runtime = {
         info!("Runtime created");
@@ -42,7 +45,7 @@ struct PrismaIntrospectionOut {
     introspection: String,
 }
 
-#[deno_bindgen(non_blocking)]
+#[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut {
     let fut = introspection::Introspection::introspect(input.datamodel);
     let introspection = RT.block_on(fut).unwrap();
@@ -62,7 +65,7 @@ struct PrismaRegisterEngineOut {
     engine_id: String,
 }
 
-#[deno_bindgen(non_blocking)]
+#[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngineOut {
     let conf = engine::ConstructorOptions {
         datamodel: input.datamodel,
@@ -92,7 +95,7 @@ struct PrismaUnregisterEngineOut {
     key: String,
 }
 
-#[deno_bindgen(non_blocking)]
+#[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregisterEngineOut {
     let (key, engine) = ENGINES.remove(&input.key.to_string()).unwrap();
     RT.block_on(engine.disconnect()).unwrap();
@@ -113,7 +116,7 @@ struct PrismaQueryOut {
     res: String,
 }
 
-#[deno_bindgen(non_blocking)]
+#[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_query(input: PrismaQueryInp) -> PrismaQueryOut {
     let body: request_handlers::GraphQlBody = serde_json::from_value(input.query).unwrap();
     let engine = ENGINES.get(&input.key.to_string()).unwrap();
