@@ -13,6 +13,11 @@ def dev():
     _dev.watch()
 
 
+@root.command()
+def serialize(file: str, typegraph: Optional[str] = None):
+    _dev.serialize(file, typegraph)
+
+
 prisma = typer.Typer()
 
 
