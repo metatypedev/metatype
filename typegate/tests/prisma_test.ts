@@ -1,7 +1,8 @@
 import { gql, shell, test } from "./utils.ts";
 
 test("prisma", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/prisma.py");
+  const tgPath = "./tests/typegraphs/prisma.py";
+  const e = await t.pythonFile(tgPath);
 
   await t.should("drop schema and recreate", async () => {
     await gql`
@@ -16,7 +17,13 @@ test("prisma", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await shell(["../typegraph/.venv/bin/meta", "prisma", "apply"]);
+    await shell([
+      "../typegraph/.venv/bin/meta",
+      "prisma",
+      "apply",
+      "-f",
+      tgPath,
+    ]);
   });
 
   await t.should("return no data when empty", async () => {
@@ -179,7 +186,8 @@ test("prisma", async (t) => {
 });
 
 test("1:n relationships", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/prisma.py");
+  const tgPath = "./tests/typegraphs/prisma.py";
+  const e = await t.pythonFile(tgPath);
 
   await t.should("drop schema and recreate", async () => {
     await gql`
@@ -194,7 +202,13 @@ test("1:n relationships", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await shell(["../typegraph/.venv/bin/meta", "prisma", "apply"]);
+    await shell([
+      "../typegraph/.venv/bin/meta",
+      "prisma",
+      "apply",
+      "-f",
+      tgPath,
+    ]);
   });
 
   await t.should("insert a record with nested object", async () => {
@@ -334,13 +348,14 @@ test("1:n relationships", async (t) => {
 });
 
 test("1:1 relationships", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/prisma_1_1.py");
+  const tgPath = "./tests/typegraphs/prisma_1_1.py";
+  const e = await t.pythonFile(tgPath);
 
   await t.should("drop schema and recreate", async () => {
     await gql`
       mutation a {
         executeRaw(
-          query: "DROP SCHEMA IF EXISTS test_1_1 CASCADE"
+          query: "DROP SCHEMA IF EXISTS test CASCADE"
           parameters: "[]"
         )
       }
@@ -349,7 +364,13 @@ test("1:1 relationships", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await shell(["../typegraph/.venv/bin/meta", "prisma", "apply"]);
+    await shell([
+      "../typegraph/.venv/bin/meta",
+      "prisma",
+      "apply",
+      "-f",
+      tgPath,
+    ]);
   });
 
   await t.should("create a record with a nested object", async () => {
@@ -411,13 +432,14 @@ test("1:1 relationships", async (t) => {
 });
 
 test("multiple relationships", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/prisma_multi.py");
+  const tgPath = "./tests/typegraphs/prisma_multi.py";
+  const e = await t.pythonFile(tgPath);
 
   await t.should("drop schema and recreate", async () => {
     await gql`
       mutation a {
         executeRaw(
-          query: "DROP SCHEMA IF EXISTS test_multiple_relationships CASCADE"
+          query: "DROP SCHEMA IF EXISTS test CASCADE"
           parameters: "[]"
         )
       }
@@ -426,7 +448,13 @@ test("multiple relationships", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await shell(["../typegraph/.venv/bin/meta", "prisma", "apply"]);
+    await shell([
+      "../typegraph/.venv/bin/meta",
+      "prisma",
+      "apply",
+      "-f",
+      tgPath,
+    ]);
   });
 
   await t.should("insert a simple record", async () => {
