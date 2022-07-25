@@ -7,7 +7,7 @@ from typegraph.types import typedefs as t
 
 postgres = environ.get(
     "TEST_POSTGRES_DB",
-    "postgresql://postgres:password@localhost:5432/db?schema=test_1_1",
+    "postgresql://postgres:password@localhost:5432/db?schema=test",
 )
 
 with TypeGraph("prisma") as g:
