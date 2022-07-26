@@ -9,26 +9,25 @@ from typegraph.types import typedefs as t
 
 with TypeGraph("typegate") as g:
 
-    typenode = t.struct(
+    node = t.struct(
         {
-            "idx": t.integer(),
             "name": t.string(),
             "typedef": t.string(),
-            "data": t.string(),
+            "fields": t.json(),
         }
-    ).named("typenode")
+    ).named("node")
 
     # edge = t.tuple([t.string(), t.string()]).named("edge")
     edge = t.struct(
         {
-            "from": typenode,
-            "to": typenode,
+            "from": node,
+            "to": node,
             "name": t.string(),
         }
     ).named("edge")
 
     types = t.gen(
-        t.struct({"nodes": t.list(typenode), "edges": t.list(edge)}), TypesAsGraph()
+        t.struct({"nodes": t.list(node), "edges": t.list(edge)}), TypesAsGraph()
     )
 
     typegraph = t.struct(
