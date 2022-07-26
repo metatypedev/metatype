@@ -1,20 +1,153 @@
-import {
-  TypeGraphDS,
-  TypeMaterializer,
-  TypeNode as TypeGraphTypeNode,
-} from "../typegraph.ts";
+import { TypeGraphDS, TypeMaterializer, TypeNode } from "../typegraph.ts";
 import { ensure } from "../utils.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
-import { ComputeStage } from "../engine.ts";
+import { ComputeStage, Engine } from "../engine.ts";
 import { register } from "../register.ts";
 import config from "../config.ts";
 import * as path from "std/path/mod.ts";
 
-type TypeNode = Pick<TypeGraphTypeNode, "name" | "typedef">;
-interface Edge<T> {
-  from: T;
-  to: T;
+interface StructField {
   name: string;
+  typedef: string;
+}
+
+interface StructNode {
+  name: string;
+  typedef: "struct";
+  fields: Record<string, StructField>;
+}
+
+interface FuncNode {
+  name: string;
+  typedef: "func" | "gen";
+  fields: {
+    input: StructField;
+    output: StructField;
+  };
+}
+
+type Node = StructNode | FuncNode;
+
+interface Edge {
+  from: Node;
+  to: Node;
+  name: string;
+}
+
+interface Graph {
+  nodes: Node[];
+  edges: Edge[];
+}
+
+interface FieldType {
+  name: string;
+  edges: number[];
+}
+
+interface GetNodeOptions {
+  withEdges: boolean;
+}
+
+interface NodeWithEdges {
+  node: Node;
+  edges: Node[];
+}
+
+class GraphBuilder {
+  private nodes: Node[] = [];
+  private edges: Edge[] = [];
+
+  constructor(private engine: Engine) {}
+
+  private getFieldType(idx: number): FieldType {
+    const type = this.type(idx);
+    switch (type.typedef) {
+      case "optional": {
+        const { name, edges } = this.getFieldType(type.data.of as number);
+        return {
+          name: `${name}?`,
+          edges,
+        };
+      }
+      case "list": {
+        const { name, edges } = this.getFieldType(type.data.of as number);
+        return {
+          name: `${name}[]`,
+          edges,
+        };
+      }
+      case "func": {
+        const input = this.getFieldType(type.data.input as number);
+        const output = this.getFieldType(type.data.output as number);
+        return {
+          name: `(${input.name})->${output.name}`,
+          edges: [...input.edges, ...output.edges],
+        };
+      }
+      case "gen": {
+        const output = this.getFieldType(type.data.output as number);
+        return { name: `()->${output.name}`, edges: [...output.edges] };
+      }
+      case "struct":
+        if (
+          Object.keys(type.data.binds as Record<string, number>).length === 0
+        ) {
+          return { name: "{}", edges: [] };
+        }
+        return { name: type.name, edges: [idx] };
+      default:
+        return { name: type.typedef, edges: [idx] };
+    }
+  }
+
+  private getNode(
+    type: TypeNode,
+    { withEdges }: GetNodeOptions = { withEdges: false },
+  ): NodeWithEdges | null {
+    const { name, typedef, data } = type;
+    if (typedef !== "struct") return null;
+
+    const fields = {} as Record<string, StructField>;
+    const edgeTargets: number[] = [];
+    for (const [k, v] of Object.entries(data.binds as Record<string, number>)) {
+      const fieldType = this.getFieldType(v);
+      fields[k] = { name: this.type(v).name, typedef: fieldType.name };
+      edgeTargets.push(...fieldType.edges);
+    }
+
+    const node: Node = { name, typedef, fields };
+
+    if (!withEdges) return { node, edges: [] };
+
+    const edges = edgeTargets.map((e) => this.getNode(this.type(e))?.node)
+      .filter((node) => node) as Node[];
+    return { node, edges };
+  }
+
+  private type(idx: number): TypeNode {
+    return this.engine.tg.type(idx);
+  }
+
+  build(): Graph {
+    const serialized_types = this.engine.tg.tg.types;
+    for (const type of serialized_types) {
+      const { node, edges } = this.getNode(type, { withEdges: true }) ??
+        { node: null, edges: [] };
+      if (!node) continue;
+      this.nodes.push(node);
+
+      const graphEdges = edges.map((target) => ({
+        from: node,
+        to: target,
+        name: "",
+      } as Edge));
+
+      // TODO: why filter??
+      this.edges.push(...graphEdges);
+    }
+
+    return { nodes: this.nodes, edges: this.edges };
+  }
 }
 
 const localGraphs = ["introspection", "typegate", "test"];
@@ -106,65 +239,8 @@ export class TypeGateRuntime extends Runtime {
       return null;
     }
 
-    const types = {
-      nodes: [] as TypeNode[],
-      edges: [] as Edge<TypeNode>[],
-    };
-
-    const serialized_types = tg.tg.tg.types;
-    for (const type of serialized_types) {
-      const { name, typedef, data } = type;
-      types.nodes.push({ name, typedef });
-      const from = { name, typedef };
-      const getNode = (type: TypeGraphTypeNode): TypeNode => ({
-        name: type.name,
-        typedef: type.typedef,
-      });
-      switch (typedef) {
-        case "struct":
-          for (
-            const [key, val] of Object.entries(
-              data.binds as Record<string, number>,
-            )
-          ) {
-            types.edges.push({
-              from,
-              to: getNode(tg.tg.type(val)),
-              name: key,
-            });
-          }
-          break;
-
-        case "func":
-          types.edges.push({
-            from,
-            to: getNode(tg.tg.type(data.input as number)),
-            name: "input",
-          });
-        /* fall through */
-        case "gen":
-          types.edges.push({
-            from,
-            to: getNode(tg.tg.type(data.output as number)),
-            name: "output",
-          });
-          break;
-
-        case "list":
-        case "optional":
-          types.edges.push({
-            from,
-            to: getNode(tg.tg.type(data.of as number)),
-            name: "item",
-          });
-          break;
-
-        default:
-          // console.log(`typedef: ${typedef}, data: ${JSON.stringify(type)}`);
-      }
-    }
-
-    return types;
+    const graph = new GraphBuilder(tg).build();
+    return graph;
   };
 
   addTypegraph = async ({ fromString }: { fromString: string }) => {
