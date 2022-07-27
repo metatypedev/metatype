@@ -2,10 +2,16 @@ from typing import Optional
 
 from typegraph.cli import dev as _dev
 from typegraph.cli import prisma as _prisma
+from typegraph.cli import test as _test
 import typer
 
 
 root = typer.Typer()
+
+
+@root.command()
+def test():
+    _test.test()
 
 
 @root.command()
