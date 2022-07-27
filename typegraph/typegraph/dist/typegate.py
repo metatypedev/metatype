@@ -13,7 +13,7 @@ with TypeGraph("typegate") as g:
         {
             "name": t.string(),
             "typedef": t.string(),
-            "fields": t.json(),
+            "fields": t.string(),  # TODO: t.json(),
         }
     ).named("node")
 
