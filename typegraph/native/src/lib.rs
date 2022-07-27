@@ -77,6 +77,11 @@ fn format(schema: String) -> PyResult<String> {
     Ok(datamodel::reformat(&schema, 2).unwrap())
 }
 
+#[pyfunction]
+fn echo(noise: String) -> PyResult<String> {
+    Ok(format!("{}!", noise))
+}
+
 //
 
 #[pymodule]
@@ -84,6 +89,7 @@ fn native(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(migrate, m)?)?;
     m.add_function(wrap_pyfunction!(diff, m)?)?;
     m.add_function(wrap_pyfunction!(format, m)?)?;
+    m.add_function(wrap_pyfunction!(echo, m)?)?;
 
     Ok(())
 }
