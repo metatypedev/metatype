@@ -6,8 +6,6 @@ from typing import Optional
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.types import typedefs as t
 
-# from .utils import resolve_entity_quantifier
-
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
 prisma_types = {
@@ -42,11 +40,13 @@ class PrismaModel:
     name: str
     fields: Dict[str, PrismaField]
     entity: t.struct
+    tags: list[str]
 
     def __init__(self, entity: t.struct) -> None:
         self.name = entity.node
         self.entity = entity
         self.fields = {}
+        self.tags = []
         for field_name, field_type in entity.of.items():
             f = PrismaField(field_name, field_type)
             if field_type._id:
@@ -61,7 +61,7 @@ class PrismaModel:
 
             that_entity = field.tpe
 
-            from . import PrismaRelation
+            from typegraph.materializers.prisma import PrismaRelation
 
             if PrismaRelation.check(that_entity):
                 if not PrismaRelation.multi(that_entity):
@@ -106,7 +106,7 @@ class PrismaSchema:
         for model in self.models.values():
             model.link(self)
 
-        from . import PrismaRelation
+        from typegraph.materializers.prisma import PrismaRelation
 
         for model in self.models.values():
             additional_fields = {}
@@ -133,6 +133,9 @@ class PrismaSchema:
 
             for field in model.fields.values():
                 schema += f"  {field.prisma_name} {field.prisma_type} {' '.join(field.tags)}\n"
+
+            for tag in model.tags:
+                schema += f"  {tag}\n"
 
             schema += "}\n\n"
         return schema
@@ -165,21 +168,31 @@ def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
         f.prisma_type = "Json"
         return
 
-    from . import PrismaRelation
+    from typegraph.materializers.prisma import PrismaRelation
 
     if PrismaRelation.check(f.tpe):
-        from typegraph.materializers.prisma import OneToMany
+        from typegraph.materializers.prisma import Relation
 
         relation = f.tpe.mat.relation
-        if isinstance(relation, OneToMany):
+        if isinstance(relation, Relation):
             if f.tpe.mat.owner:
                 f.prisma_type = relation.owner_type.node
                 fields = [f"{f.name}{key.title()}" for key in relation.ids]
                 f.tags.append(
                     f'@relation(name: "{relation.relation}", fields: [{", ".join(fields)}], references: [{", ".join(relation.ids)}])'
                 )
+                if relation.cardinality == "one_to_one":
+                    model.tags.append(f'@@unique({", ".join(fields)})')
             else:
-                f.prisma_type = f"{relation.owned_type.node}[]"
+                f.prisma_type = f"{relation.owned_type.node}"
+                if relation.cardinality == "one_to_many":
+                    f.prisma_type += "[]"
+                elif relation.cardinality == "one_to_one":
+                    f.prisma_type += "?"
+                else:
+                    raise Exception(
+                        f'Unsupported relation cardinality "{relation.cardinality}"'
+                    )
                 # TODO: relation.name
                 f.tags.append(f'@relation(name: "{relation.relation}")')
             return

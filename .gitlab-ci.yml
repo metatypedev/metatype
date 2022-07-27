@@ -9,18 +9,18 @@ include:
     ref: main
     file: "terraform.yml"
 
-stages:
-  - test
-  - build
-  - deploy
-
-variables:
+variables: &variables
   DENO_VERSION: "1.22.0"
   DENO_BINDGEN_VERSION: "0.5.1"
   RUST_VERSION: "1.62.0"
-  PNPM_VERSION: "7.1.9"
+  PNPM_VERSION: "7.5.2"
+
+stages:
+  - test
+  - deploy
 
 test:
+  stage: test
   tags:
     - docker
   services:
@@ -33,9 +33,11 @@ test:
         - --requirepass
         - password
   variables:
+    <<: *variables
     TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
 
 kaniko:
+  stage: test
   tags:
     - docker
   only:
@@ -51,6 +53,10 @@ kaniko:
       --single-snapshot
 
 terraform:
+  stage: deploy
+  needs:
+    - test
+    - kaniko
   tags:
     - docker
   only:
