@@ -133,6 +133,8 @@ fn recreate_db_schema(t: &TestContext) {
     Command::new("../../typegraph/.venv/bin/meta")
         .arg("prisma")
         .arg("apply")
+        .arg("-f")
+        .arg("../tests/typegraphs/prisma.py")
         .output()
         .unwrap();
 }

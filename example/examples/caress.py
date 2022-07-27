@@ -89,7 +89,7 @@ with TypeGraph("caress") as g:
         .within(prisma)
     )
 
-    g.expose(**prisma.generate_crud(product))
+    # g.expose(**prisma.generate_crud(product))
 
     user = t.struct({"id": t.uuid().id, **with_time()}).named("user")
 
