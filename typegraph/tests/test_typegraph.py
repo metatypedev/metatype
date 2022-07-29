@@ -6,8 +6,6 @@ from typegraph.graphs.builders import TypeRuntime
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import deno
 from typegraph.materializers import worker
-from typegraph.materializers.deno import DenoRuntime
-from typegraph.materializers.worker import WorkerRuntime
 from typegraph.types import typedefs as t
 
 
@@ -29,7 +27,7 @@ class TestTypegraph:
 
         assert g.types == [o1]
 
-    def est_build_single_runtime(self, overridable) -> None:
+    def test_build_single_runtime(self, overridable) -> None:
 
         with TypeGraph("single_runtime") as g:
             arg1 = t.integer().named("arg1")
@@ -47,7 +45,10 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"test": 1})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({"test": 1}),
+                            }
                         ),
                     ),
                     TypeNode(
@@ -67,7 +68,10 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"a": 3})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({"a": 3}),
+                            }
                         ),
                     ),
                     TypeNode(
@@ -91,9 +95,7 @@ class TestTypegraph:
                     TypeMaterializer(
                         name="function",
                         runtime=0,
-                        data=frozendict.frozendict(
-                            {"runtime": DenoRuntime(runtime_name="deno"), "name": "x2"}
-                        ),
+                        data=frozendict.frozendict({"serial": False, "name": "x2"}),
                     )
                 ],
                 runtimes=[TypeRuntime(name="deno", data=frozendict.frozendict({}))],
@@ -101,7 +103,7 @@ class TestTypegraph:
             )
         )
 
-    def est_build_two_runtimes(self, overridable) -> None:
+    def test_build_two_runtimes(self, overridable) -> None:
 
         with TypeGraph("two_runtimes") as g:
             out = t.integer().named("out")
@@ -135,7 +137,10 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"test": 1})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({"test": 1}),
+                            }
                         ),
                     ),
                     TypeNode(
@@ -155,7 +160,10 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"a": 3})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({"a": 3}),
+                            }
                         ),
                     ),
                     TypeNode(
@@ -174,9 +182,10 @@ class TestTypegraph:
                         runtime=0,
                         data=frozendict.frozendict(
                             {
+                                "renames": frozendict.frozendict({}),
                                 "binds": frozendict.frozendict(
                                     {"out": 5, "duration": 6, "self": 1, "nested": 9}
-                                )
+                                ),
                             }
                         ),
                     ),
@@ -199,13 +208,16 @@ class TestTypegraph:
                         ),
                     ),
                     TypeNode(
-                        name="struct_4568798960",
+                        name="struct_5",
                         typedef="struct",
                         edges=(),
                         policies=(),
                         runtime=1,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({}),
+                            }
                         ),
                     ),
                     TypeNode(
@@ -223,7 +235,10 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"ok": 5, "self": 1})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({"ok": 5, "self": 1}),
+                            }
                         ),
                     ),
                 ],
@@ -231,21 +246,13 @@ class TestTypegraph:
                     TypeMaterializer(
                         name="function",
                         runtime=0,
-                        data=frozendict.frozendict(
-                            {
-                                "runtime": DenoRuntime(runtime_name="deno"),
-                                "name": "getter",
-                            }
-                        ),
+                        data=frozendict.frozendict({"serial": False, "name": "getter"}),
                     ),
                     TypeMaterializer(
                         name="f",
                         runtime=1,
                         data=frozendict.frozendict(
-                            {
-                                "runtime": WorkerRuntime(runtime_name="worker"),
-                                "code": "() => 1",
-                            }
+                            {"serial": False, "code": "() => 1"}
                         ),
                     ),
                 ],
