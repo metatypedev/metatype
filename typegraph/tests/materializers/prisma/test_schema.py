@@ -25,12 +25,13 @@ class TestPrismaSchema:
         assert native.format(PrismaSchema(models).build()) == native.format(schema)
 
     def test_simple_model(self):
-        model = t.struct(
-            {
-                "id": t.integer().id,
-                "name": t.string(),
-            }
-        ).named("ModelA")
+        with TypeGraph(""):
+            model = t.struct(
+                {
+                    "id": t.integer().id,
+                    "name": t.string(),
+                }
+            ).named("ModelA")
 
         self.assert_schema(
             {model},
