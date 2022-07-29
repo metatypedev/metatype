@@ -80,3 +80,15 @@ class AddTypeGraphMat(Materializer):
 class RemoveTypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = "removeTypegraph"
+
+
+@dataclass(eq=True, frozen=True)
+class TypeNodeMat(Materializer):
+    runtime: Runtime = TypeGateRuntime()
+    materializer_name: str = "typenode"
+
+
+@dataclass(eq=True, frozen=True)
+class TypesAsGraph(Materializer):
+    runtime: Runtime = TypeGateRuntime()
+    materializer_name: str = "typesAsGraph"
