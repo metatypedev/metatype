@@ -153,7 +153,10 @@ export class TypeGraph {
   }
 
   type(idx: number): TypeNode {
-    ensure(typeof idx === "number", `cannot find type with "${idx}" index`);
+    ensure(
+      typeof idx === "number" && idx < this.tg.types.length,
+      `cannot find type with "${idx}" index`,
+    );
     return this.tg.types[idx];
   }
 
