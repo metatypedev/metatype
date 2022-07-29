@@ -10,8 +10,8 @@ include:
     file: "terraform.yml"
 
 variables: &variables
-  DENO_VERSION: "1.22.0"
-  DENO_BINDGEN_VERSION: "0.5.1"
+  DENO_VERSION: "1.24.1"
+  DENO_BINDGEN_VERSION: "0.6.0"
   RUST_VERSION: "1.62.0"
   PNPM_VERSION: "7.5.2"
 
@@ -65,3 +65,15 @@ terraform:
     name: production
   variables:
     TERRAFORM_PATH: "deploy/cloud/app"
+
+package:
+  stage: deploy
+  needs:
+    - test
+    - kaniko
+  tags:
+    - docker
+  only:
+    - main
+  variables:
+    <<: *variables
