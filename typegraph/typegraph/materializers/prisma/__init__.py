@@ -258,8 +258,6 @@ def get_input_type(
 
             fields[key] = t.struct(entries).s_optional()
 
-        elif isinstance(field_type, t.list) and not isinstance(field_type, t.string):
-            continue
         elif isinstance(field_type, t.func):
             raise Exception(f'Unsupported function field "{key}"')
         else:
