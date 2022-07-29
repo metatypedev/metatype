@@ -43,30 +43,30 @@ const _lib = await prepare(opts, {
     result: "pointer",
     nonblocking: true,
   },
-})
+});
 export type PrismaRegisterEngineOut = {
-  engine_id: string
-}
+  engine_id: string;
+};
 export type PrismaIntrospectionInp = {
-  datamodel: string
-}
+  datamodel: string;
+};
 export type PrismaIntrospectionOut = {
-  introspection: string
-}
+  introspection: string;
+};
 export type PrismaQueryInp = {
-  key: string
-  query: any
-  datamodel: string
-}
+  key: string;
+  query: any;
+  datamodel: string;
+};
 export type PrismaUnregisterEngineOut = {
-  key: string
-}
+  key: string;
+};
 export type PrismaQueryOut = {
-  res: string
-}
+  res: string;
+};
 export type PrismaUnregisterEngineInp = {
-  key: string
-}
+  key: string;
+};
 export type PrismaRegisterEngineInp = {
   datamodel: string;
   typegraph: string;
