@@ -47,6 +47,8 @@ class Type:
     apply_value: Optional[any] = None
     apply_sealed: bool = False
 
+    type_id: int
+
     policies: List["policy"]
 
     def __init__(self) -> None:
@@ -55,6 +57,9 @@ class Type:
         self.graph = TypegraphContext.get_active()
         if self.graph:
             self.graph.register(self)
+            self.type_id = self.graph.next_type_id()
+        else:
+            raise Exception("no typegraph context")
 
     def named(self, name: str) -> "Type":
         # TODO : only if same name and different implementation
@@ -79,7 +84,7 @@ class Type:
         if getattr(self, "alias_name", False):
             return self.alias_name
 
-        return f"{self.type_name}_{id(self)}"
+        return f"{self.type_name}_{self.type_id}"
 
     @property
     def edges(self) -> List["Type"]:
