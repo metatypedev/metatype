@@ -14,6 +14,7 @@ class TypeGraph:
     # version should be commit based
     types: List["t.Type"]
     exposed: Dict[str, "t.func"]
+    latest_type_id: int
 
     def __init__(self, name: str) -> None:
         super().__init__()
@@ -21,6 +22,11 @@ class TypeGraph:
         self.types = []
         self.exposed = {}
         self.policies = []
+        self.latest_type_id = 0
+
+    def next_type_id(self):
+        self.latest_type_id += 1
+        return self.latest_type_id
 
     def register(self, type: "t.Type"):
         self.types.append(type)

@@ -9,7 +9,7 @@ from typegraph.utils import loaders
 
 
 class TestTypegraph:
-    def est_introspection(self, overridable) -> None:
+    def test_introspection(self, overridable) -> None:
 
         [g] = loaders.find_typegraphs(introspection)
 
@@ -24,14 +24,15 @@ class TestTypegraph:
                         runtime=2,
                         data=frozendict.frozendict(
                             {
+                                "renames": frozendict.frozendict({}),
                                 "binds": frozendict.frozendict(
                                     {"__type": 1, "__schema": 78}
-                                )
+                                ),
                             }
                         ),
                     ),
                     TypeNode(
-                        name="func_structname_4448616848_optional_type_4448617424_4448616656",
+                        name="func_structname_92_optional_type_93_94",
                         typedef="func",
                         edges=(2, 5),
                         policies=(0,),
@@ -41,17 +42,20 @@ class TestTypegraph:
                         ),
                     ),
                     TypeNode(
-                        name="structname_4448616848",
+                        name="structname_92",
                         typedef="struct",
                         edges=(3,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"name": 3})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({"name": 3}),
+                            }
                         ),
                     ),
                     TypeNode(
-                        name="string_4446954848",
+                        name="string_91",
                         typedef="string",
                         edges=(4,),
                         policies=(),
@@ -59,7 +63,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 4}),
                     ),
                     TypeNode(
-                        name="char_4446954608",
+                        name="char_90",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -67,12 +71,12 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_type_4448617424",
+                        name="optional_type_93",
                         typedef="optional",
                         edges=(6,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 6}),
                     ),
                     TypeNode(
                         name="type",
@@ -82,6 +86,7 @@ class TestTypegraph:
                         runtime=0,
                         data=frozendict.frozendict(
                             {
+                                "renames": frozendict.frozendict({}),
                                 "binds": frozendict.frozendict(
                                     {
                                         "kind": 7,
@@ -95,7 +100,7 @@ class TestTypegraph:
                                         "inputFields": 71,
                                         "ofType": 77,
                                     }
-                                )
+                                ),
                             }
                         ),
                     ),
@@ -108,15 +113,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446020576_4446026048",
+                        name="optional_string_41_42",
                         typedef="optional",
                         edges=(9,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 9}),
                     ),
                     TypeNode(
-                        name="string_4446020576",
+                        name="string_41",
                         typedef="string",
                         edges=(10,),
                         policies=(),
@@ -124,7 +129,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 10}),
                     ),
                     TypeNode(
-                        name="char_4446023024",
+                        name="char_40",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -132,15 +137,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446019136_4446019376",
+                        name="optional_string_44_45",
                         typedef="optional",
                         edges=(12,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 12}),
                     ),
                     TypeNode(
-                        name="string_4446019136",
+                        name="string_44",
                         typedef="string",
                         edges=(13,),
                         policies=(),
@@ -148,7 +153,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 13}),
                     ),
                     TypeNode(
-                        name="char_4446019040",
+                        name="char_43",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -156,15 +161,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446023120_4446017600",
+                        name="optional_string_47_48",
                         typedef="optional",
                         edges=(15,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 15}),
                     ),
                     TypeNode(
-                        name="string_4446023120",
+                        name="string_47",
                         typedef="string",
                         edges=(16,),
                         policies=(),
@@ -172,7 +177,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 16}),
                     ),
                     TypeNode(
-                        name="char_4446023168",
+                        name="char_46",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -180,7 +185,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="func_structincludeDeprecated_4446026960_optional_list_field_4446018464_4446021200_4446020960",
+                        name="func_structincludeDeprecated_51_optional_list_field_52_53_54",
                         typedef="func",
                         edges=(18, 21),
                         policies=(),
@@ -190,25 +195,30 @@ class TestTypegraph:
                         ),
                     ),
                     TypeNode(
-                        name="structincludeDeprecated_4446026960",
+                        name="structincludeDeprecated_51",
                         typedef="struct",
                         edges=(19,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"includeDeprecated": 19})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict(
+                                    {"includeDeprecated": 19}
+                                ),
+                            }
                         ),
                     ),
                     TypeNode(
-                        name="optional_boolean_4446025040_4446018608",
+                        name="optional_boolean_49_50",
                         typedef="optional",
                         edges=(20,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 20}),
                     ),
                     TypeNode(
-                        name="boolean_4446025040",
+                        name="boolean_49",
                         typedef="boolean",
                         edges=(),
                         policies=(),
@@ -216,15 +226,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_list_field_4446018464_4446021200",
+                        name="optional_list_field_52_53",
                         typedef="optional",
                         edges=(22,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 22}),
                     ),
                     TypeNode(
-                        name="list_field_4446018464",
+                        name="list_field_52",
                         typedef="list",
                         edges=(23,),
                         policies=(),
@@ -239,6 +249,7 @@ class TestTypegraph:
                         runtime=0,
                         data=frozendict.frozendict(
                             {
+                                "renames": frozendict.frozendict({}),
                                 "binds": frozendict.frozendict(
                                     {
                                         "name": 24,
@@ -248,12 +259,12 @@ class TestTypegraph:
                                         "isDeprecated": 47,
                                         "deprecationReason": 48,
                                     }
-                                )
+                                ),
                             }
                         ),
                     ),
                     TypeNode(
-                        name="string_4446018800",
+                        name="string_25",
                         typedef="string",
                         edges=(25,),
                         policies=(),
@@ -261,7 +272,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 25}),
                     ),
                     TypeNode(
-                        name="char_4446017504",
+                        name="char_24",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -269,15 +280,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446017360_4446025760",
+                        name="optional_string_27_28",
                         typedef="optional",
                         edges=(27,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 27}),
                     ),
                     TypeNode(
-                        name="string_4446017360",
+                        name="string_27",
                         typedef="string",
                         edges=(28,),
                         policies=(),
@@ -285,7 +296,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 28}),
                     ),
                     TypeNode(
-                        name="char_4446017264",
+                        name="char_26",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -293,7 +304,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="func_structincludeDeprecated_4446026288_list_input_value_4446021104_4446022208",
+                        name="func_structincludeDeprecated_31_list_input_value_32_33",
                         typedef="func",
                         edges=(30, 33),
                         policies=(),
@@ -303,25 +314,30 @@ class TestTypegraph:
                         ),
                     ),
                     TypeNode(
-                        name="structincludeDeprecated_4446026288",
+                        name="structincludeDeprecated_31",
                         typedef="struct",
                         edges=(31,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"includeDeprecated": 31})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict(
+                                    {"includeDeprecated": 31}
+                                ),
+                            }
                         ),
                     ),
                     TypeNode(
-                        name="optional_boolean_4446018320_4446022496",
+                        name="optional_boolean_29_30",
                         typedef="optional",
                         edges=(32,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 32}),
                     ),
                     TypeNode(
-                        name="boolean_4446018320",
+                        name="boolean_29",
                         typedef="boolean",
                         edges=(),
                         policies=(),
@@ -329,7 +345,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="list_input_value_4446021104",
+                        name="list_input_value_32",
                         typedef="list",
                         edges=(34,),
                         policies=(),
@@ -344,6 +360,7 @@ class TestTypegraph:
                         runtime=0,
                         data=frozendict.frozendict(
                             {
+                                "renames": frozendict.frozendict({}),
                                 "binds": frozendict.frozendict(
                                     {
                                         "name": 35,
@@ -353,12 +370,12 @@ class TestTypegraph:
                                         "isDeprecated": 43,
                                         "deprecationReason": 44,
                                     }
-                                )
+                                ),
                             }
                         ),
                     ),
                     TypeNode(
-                        name="string_4446024224",
+                        name="string_12",
                         typedef="string",
                         edges=(36,),
                         policies=(),
@@ -366,7 +383,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 36}),
                     ),
                     TypeNode(
-                        name="char_4446026192",
+                        name="char_11",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -374,15 +391,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446025280_4446019904",
+                        name="optional_string_14_15",
                         typedef="optional",
                         edges=(38,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 38}),
                     ),
                     TypeNode(
-                        name="string_4446025280",
+                        name="string_14",
                         typedef="string",
                         edges=(39,),
                         policies=(),
@@ -390,7 +407,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 39}),
                     ),
                     TypeNode(
-                        name="char_4446023312",
+                        name="char_13",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -398,15 +415,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446016784_4446027248",
+                        name="optional_string_17_18",
                         typedef="optional",
                         edges=(41,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 41}),
                     ),
                     TypeNode(
-                        name="string_4446016784",
+                        name="string_17",
                         typedef="string",
                         edges=(42,),
                         policies=(),
@@ -414,7 +431,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 42}),
                     ),
                     TypeNode(
-                        name="char_4446020048",
+                        name="char_16",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -422,7 +439,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="boolean_4446020096",
+                        name="boolean_19",
                         typedef="boolean",
                         edges=(),
                         policies=(),
@@ -430,15 +447,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446018272_4446022640",
+                        name="optional_string_21_22",
                         typedef="optional",
                         edges=(45,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 45}),
                     ),
                     TypeNode(
-                        name="string_4446018272",
+                        name="string_21",
                         typedef="string",
                         edges=(46,),
                         policies=(),
@@ -446,7 +463,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 46}),
                     ),
                     TypeNode(
-                        name="char_4446016832",
+                        name="char_20",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -454,7 +471,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="boolean_4446018416",
+                        name="boolean_34",
                         typedef="boolean",
                         edges=(),
                         policies=(),
@@ -462,15 +479,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446024176_4446018704",
+                        name="optional_string_36_37",
                         typedef="optional",
                         edges=(49,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 49}),
                     ),
                     TypeNode(
-                        name="string_4446024176",
+                        name="string_36",
                         typedef="string",
                         edges=(50,),
                         policies=(),
@@ -478,7 +495,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 50}),
                     ),
                     TypeNode(
-                        name="char_4446016112",
+                        name="char_35",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -486,15 +503,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_list_type_4446020864_4446024560",
+                        name="optional_list_type_55_56",
                         typedef="optional",
                         edges=(52,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 52}),
                     ),
                     TypeNode(
-                        name="list_type_4446020864",
+                        name="list_type_55",
                         typedef="list",
                         edges=(6,),
                         policies=(),
@@ -502,15 +519,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 6}),
                     ),
                     TypeNode(
-                        name="optional_list_type_4446023552_4446016448",
+                        name="optional_list_type_57_58",
                         typedef="optional",
                         edges=(54,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 54}),
                     ),
                     TypeNode(
-                        name="list_type_4446023552",
+                        name="list_type_57",
                         typedef="list",
                         edges=(6,),
                         policies=(),
@@ -518,7 +535,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 6}),
                     ),
                     TypeNode(
-                        name="func_structincludeDeprecated_4446022688_optional_list_enum_value_4446024272_4446023792_4446016304",
+                        name="func_structincludeDeprecated_61_optional_list_enum_value_62_63_64",
                         typedef="func",
                         edges=(56, 59),
                         policies=(),
@@ -528,25 +545,30 @@ class TestTypegraph:
                         ),
                     ),
                     TypeNode(
-                        name="structincludeDeprecated_4446022688",
+                        name="structincludeDeprecated_61",
                         typedef="struct",
                         edges=(57,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"includeDeprecated": 57})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict(
+                                    {"includeDeprecated": 57}
+                                ),
+                            }
                         ),
                     ),
                     TypeNode(
-                        name="optional_boolean_4446020624_4446022160",
+                        name="optional_boolean_59_60",
                         typedef="optional",
                         edges=(58,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 58}),
                     ),
                     TypeNode(
-                        name="boolean_4446020624",
+                        name="boolean_59",
                         typedef="boolean",
                         edges=(),
                         policies=(),
@@ -554,15 +576,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_list_enum_value_4446024272_4446023792",
+                        name="optional_list_enum_value_62_63",
                         typedef="optional",
                         edges=(60,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 60}),
                     ),
                     TypeNode(
-                        name="list_enum_value_4446024272",
+                        name="list_enum_value_62",
                         typedef="list",
                         edges=(61,),
                         policies=(),
@@ -577,6 +599,7 @@ class TestTypegraph:
                         runtime=0,
                         data=frozendict.frozendict(
                             {
+                                "renames": frozendict.frozendict({}),
                                 "binds": frozendict.frozendict(
                                     {
                                         "name": 62,
@@ -584,12 +607,12 @@ class TestTypegraph:
                                         "isDeprecated": 67,
                                         "deprecationReason": 68,
                                     }
-                                )
+                                ),
                             }
                         ),
                     ),
                     TypeNode(
-                        name="string_4446026768",
+                        name="string_2",
                         typedef="string",
                         edges=(63,),
                         policies=(),
@@ -597,7 +620,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 63}),
                     ),
                     TypeNode(
-                        name="char_4446018896",
+                        name="char_1",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -605,15 +628,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446025376_4446024032",
+                        name="optional_string_4_5",
                         typedef="optional",
                         edges=(65,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 65}),
                     ),
                     TypeNode(
-                        name="string_4446025376",
+                        name="string_4",
                         typedef="string",
                         edges=(66,),
                         policies=(),
@@ -621,7 +644,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 66}),
                     ),
                     TypeNode(
-                        name="char_4446024896",
+                        name="char_3",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -629,7 +652,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="boolean_4446023696",
+                        name="boolean_6",
                         typedef="boolean",
                         edges=(),
                         policies=(),
@@ -637,15 +660,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446016160_4446022448",
+                        name="optional_string_8_9",
                         typedef="optional",
                         edges=(69,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 69}),
                     ),
                     TypeNode(
-                        name="string_4446016160",
+                        name="string_8",
                         typedef="string",
                         edges=(70,),
                         policies=(),
@@ -653,7 +676,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 70}),
                     ),
                     TypeNode(
-                        name="char_4446026096",
+                        name="char_7",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -661,7 +684,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="func_structincludeDeprecated_4446018752_optional_list_input_value_4446025856_4446027008_4446020384",
+                        name="func_structincludeDeprecated_67_optional_list_input_value_68_69_70",
                         typedef="func",
                         edges=(72, 75),
                         policies=(),
@@ -671,25 +694,30 @@ class TestTypegraph:
                         ),
                     ),
                     TypeNode(
-                        name="structincludeDeprecated_4446018752",
+                        name="structincludeDeprecated_67",
                         typedef="struct",
                         edges=(73,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"includeDeprecated": 73})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict(
+                                    {"includeDeprecated": 73}
+                                ),
+                            }
                         ),
                     ),
                     TypeNode(
-                        name="optional_boolean_4446023360_4446018224",
+                        name="optional_boolean_65_66",
                         typedef="optional",
                         edges=(74,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 74}),
                     ),
                     TypeNode(
-                        name="boolean_4446023360",
+                        name="boolean_65",
                         typedef="boolean",
                         edges=(),
                         policies=(),
@@ -697,15 +725,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_list_input_value_4446025856_4446027008",
+                        name="optional_list_input_value_68_69",
                         typedef="optional",
                         edges=(76,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 76}),
                     ),
                     TypeNode(
-                        name="list_input_value_4446025856",
+                        name="list_input_value_68",
                         typedef="list",
                         edges=(34,),
                         policies=(),
@@ -713,15 +741,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 34}),
                     ),
                     TypeNode(
-                        name="optional_type_4446022112",
+                        name="optional_type_105",
                         typedef="optional",
                         edges=(6,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 6}),
                     ),
                     TypeNode(
-                        name="func_struct_4448617904_schema_4448618096",
+                        name="func_struct_103_schema_104",
                         typedef="func",
                         edges=(79, 80),
                         policies=(0,),
@@ -731,13 +759,16 @@ class TestTypegraph:
                         ),
                     ),
                     TypeNode(
-                        name="struct_4448617904",
+                        name="struct_103",
                         typedef="struct",
                         edges=(),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({}),
+                            }
                         ),
                     ),
                     TypeNode(
@@ -748,6 +779,7 @@ class TestTypegraph:
                         runtime=0,
                         data=frozendict.frozendict(
                             {
+                                "renames": frozendict.frozendict({}),
                                 "binds": frozendict.frozendict(
                                     {
                                         "description": 81,
@@ -757,20 +789,20 @@ class TestTypegraph:
                                         "subscriptionType": 86,
                                         "directives": 87,
                                     }
-                                )
+                                ),
                             }
                         ),
                     ),
                     TypeNode(
-                        name="optional_string_4448616704_4448617184",
+                        name="optional_string_96_97",
                         typedef="optional",
                         edges=(82,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 82}),
                     ),
                     TypeNode(
-                        name="string_4448616704",
+                        name="string_96",
                         typedef="string",
                         edges=(83,),
                         policies=(),
@@ -778,7 +810,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 83}),
                     ),
                     TypeNode(
-                        name="char_4448617088",
+                        name="char_95",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -786,7 +818,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="list_type_4448617232",
+                        name="list_type_98",
                         typedef="list",
                         edges=(6,),
                         policies=(),
@@ -794,23 +826,23 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 6}),
                     ),
                     TypeNode(
-                        name="optional_type_4448616992",
+                        name="optional_type_99",
                         typedef="optional",
                         edges=(6,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 6}),
                     ),
                     TypeNode(
-                        name="optional_type_4448617616",
+                        name="optional_type_100",
                         typedef="optional",
                         edges=(6,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 6}),
                     ),
                     TypeNode(
-                        name="list_directive_4448617712",
+                        name="list_directive_101",
                         typedef="list",
                         edges=(88,),
                         policies=(),
@@ -825,6 +857,7 @@ class TestTypegraph:
                         runtime=0,
                         data=frozendict.frozendict(
                             {
+                                "renames": frozendict.frozendict({}),
                                 "binds": frozendict.frozendict(
                                     {
                                         "name": 89,
@@ -833,12 +866,12 @@ class TestTypegraph:
                                         "locations": 95,
                                         "args": 97,
                                     }
-                                )
+                                ),
                             }
                         ),
                     ),
                     TypeNode(
-                        name="string_4446175344",
+                        name="string_74",
                         typedef="string",
                         edges=(90,),
                         policies=(),
@@ -846,7 +879,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 90}),
                     ),
                     TypeNode(
-                        name="char_4446175392",
+                        name="char_73",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -854,15 +887,15 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="optional_string_4446175536_4446175728",
+                        name="optional_string_76_77",
                         typedef="optional",
                         edges=(92,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 92}),
                     ),
                     TypeNode(
-                        name="string_4446175536",
+                        name="string_76",
                         typedef="string",
                         edges=(93,),
                         policies=(),
@@ -870,7 +903,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({"of": 93}),
                     ),
                     TypeNode(
-                        name="char_4446175584",
+                        name="char_75",
                         typedef="char",
                         edges=(),
                         policies=(),
@@ -878,7 +911,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="boolean_4446175824",
+                        name="boolean_78",
                         typedef="boolean",
                         edges=(),
                         policies=(),
@@ -886,7 +919,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="list_directive_location_4446175920",
+                        name="list_directive_location_79",
                         typedef="list",
                         edges=(96,),
                         policies=(),
@@ -902,7 +935,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="func_structincludeDeprecated_4446176208_list_input_value_4446176304_4446176496",
+                        name="func_structincludeDeprecated_82_list_input_value_83_84",
                         typedef="func",
                         edges=(98, 101),
                         policies=(),
@@ -912,25 +945,30 @@ class TestTypegraph:
                         ),
                     ),
                     TypeNode(
-                        name="structincludeDeprecated_4446176208",
+                        name="structincludeDeprecated_82",
                         typedef="struct",
                         edges=(99,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"includeDeprecated": 99})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict(
+                                    {"includeDeprecated": 99}
+                                ),
+                            }
                         ),
                     ),
                     TypeNode(
-                        name="optional_boolean_4446176016_4446176112",
+                        name="optional_boolean_80_81",
                         typedef="optional",
                         edges=(100,),
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict({"of": 100}),
                     ),
                     TypeNode(
-                        name="boolean_4446176016",
+                        name="boolean_80",
                         typedef="boolean",
                         edges=(),
                         policies=(),
@@ -938,7 +976,7 @@ class TestTypegraph:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="list_input_value_4446176304",
+                        name="list_input_value_83",
                         typedef="list",
                         edges=(34,),
                         policies=(),
@@ -948,20 +986,29 @@ class TestTypegraph:
                 ],
                 materializers=[
                     TypeMaterializer(
-                        name="getType", runtime=0, data=frozendict.frozendict({})
+                        name="getType",
+                        runtime=0,
+                        data=frozendict.frozendict({"serial": False}),
                     ),
                     TypeMaterializer(
-                        name="resolver", runtime=0, data=frozendict.frozendict({})
+                        name="resolver",
+                        runtime=0,
+                        data=frozendict.frozendict({"serial": False}),
                     ),
                     TypeMaterializer(
                         name="policy",
                         runtime=1,
                         data=frozendict.frozendict(
-                            {"code": "(args) => {\n    return true;\n}"}
+                            {
+                                "serial": False,
+                                "code": "(args) => {\n    return true;\n}",
+                            }
                         ),
                     ),
                     TypeMaterializer(
-                        name="getSchema", runtime=0, data=frozendict.frozendict({})
+                        name="getSchema",
+                        runtime=0,
+                        data=frozendict.frozendict({"serial": False}),
                     ),
                 ],
                 runtimes=[
@@ -969,6 +1016,6 @@ class TestTypegraph:
                     TypeRuntime(name="worker", data=frozendict.frozendict({})),
                     TypeRuntime(name="deno", data=frozendict.frozendict({})),
                 ],
-                policies=[TypePolicy(name="allow_all", materializer=2)],
+                policies=[TypePolicy(name="__allow_all", materializer=2)],
             )
         )
