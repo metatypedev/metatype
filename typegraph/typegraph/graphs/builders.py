@@ -160,11 +160,12 @@ def build(tg: typegraph.TypeGraph):
         if tpe.runtime is not None:
             tpe.propagate_runtime(tpe.runtime)
 
-    subgraph_wrapper = (
-        t.struct({field: tpe for field, tpe in tg.exposed.items()})
-        .named(tg.name)
-        .within(DenoRuntime())
-    )
+    with tg:
+        subgraph_wrapper = (
+            t.struct({field: tpe for field, tpe in tg.exposed.items()})
+            .named(tg.name)
+            .within(DenoRuntime())
+        )
 
     build(subgraph_wrapper)
 
