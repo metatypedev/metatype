@@ -5,12 +5,11 @@ from typegraph.graphs.builders import TypeNode
 from typegraph.graphs.builders import TypeRuntime
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import deno
-from typegraph.materializers.deno import DenoRuntime
 from typegraph.types import typedefs as t
 
 
 class TestDependency:
-    def est_simple_dep(self, overridable) -> None:
+    def test_simple_dep(self, overridable) -> None:
 
         with TypeGraph("single_runtime") as g:
             a = t.integer().named("a")
@@ -19,7 +18,7 @@ class TestDependency:
                     "b": t.func(
                         t.struct(
                             {
-                                "a1": a.inject,
+                                "a1": t.injection(a),
                                 "a2": g("a"),
                                 "new": t.integer().named("new"),
                             }
@@ -46,7 +45,10 @@ class TestDependency:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"test": 1})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({"test": 1}),
+                            }
                         ),
                     ),
                     TypeNode(
@@ -66,42 +68,57 @@ class TestDependency:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({}),
+                            }
                         ),
                     ),
                     TypeNode(
                         name="res",
                         typedef="struct",
-                        edges=(4, 6),
+                        edges=(4, 7),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"binds": frozendict.frozendict({"b": 4, "a": 6})}
+                            {
+                                "renames": frozendict.frozendict({}),
+                                "binds": frozendict.frozendict({"b": 4, "a": 7}),
+                            }
                         ),
                     ),
                     TypeNode(
                         name="dep_a",
                         typedef="func",
-                        edges=(5, 8),
+                        edges=(5, 9),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 0, "input": 5, "output": 8}
+                            {"materializer": 0, "input": 5, "output": 9}
                         ),
                     ),
                     TypeNode(
                         name="deps",
                         typedef="struct",
-                        edges=(6, 6, 7),
+                        edges=(6, 7, 8),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
                             {
+                                "renames": frozendict.frozendict({}),
                                 "binds": frozendict.frozendict(
-                                    {"a1": 6, "a2": 6, "new": 7}
-                                )
+                                    {"a1": 6, "a2": 7, "new": 8}
+                                ),
                             }
                         ),
+                    ),
+                    TypeNode(
+                        name="injection_a_2",
+                        typedef="injection",
+                        edges=(7,),
+                        policies=(),
+                        runtime=0,
+                        data=frozendict.frozendict({"of": 7}),
                     ),
                     TypeNode(
                         name="a",
@@ -120,7 +137,7 @@ class TestDependency:
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
-                        name="integer_4487460080",
+                        name="integer_5",
                         typedef="integer",
                         edges=(),
                         policies=(),
@@ -132,9 +149,7 @@ class TestDependency:
                     TypeMaterializer(
                         name="function",
                         runtime=0,
-                        data=frozendict.frozendict(
-                            {"runtime": DenoRuntime(runtime_name="deno"), "name": "x2"}
-                        ),
+                        data=frozendict.frozendict({"serial": False, "name": "x2"}),
                     )
                 ],
                 runtimes=[TypeRuntime(name="deno", data=frozendict.frozendict({}))],
