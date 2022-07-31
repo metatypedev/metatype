@@ -11,7 +11,7 @@ include:
 
 variables: &variables
   DENO_VERSION: "1.22.3"
-  DENO_BINDGEN_VERSION: "0.6.0"
+  DENO_BINDGEN_VERSION: "0.5.1"
   RUST_VERSION: "1.62.0"
   PNPM_VERSION: "7.5.2"
 
