@@ -1,0 +1,103 @@
+# Quickstart
+
+:::info Looking for more explanations?
+For concepts, head over to the [overview](/docs/concepts/overview) to dig into the ecosystem.
+:::
+
+## Prerequisites
+
+You need Python 3.10 with Poetry 1.2 or higher. Docker is recommended for development.
+
+## Set up the environment
+
+```bash
+python3.10 -m venv .venv
+cat <<EOF > pyproject.toml
+[tool.poetry]
+name = "example"
+version = "0.1.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+native = {path = "native-0.1.0-cp310-cp310-linux_x86_64.whl"}
+typegraph = {path = "typegraph-0.1.0-py3-none-any.whl"}
+
+[tool.poetry.dev-dependencies]
+black = "^22.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+EOF
+poetry install
+poetry shell  # activate virtual environment
+meta info
+```
+
+## Prepare dependencies
+
+```bash
+cat <<EOF > docker-compose.yml
+services:
+
+  typegate:
+    image: registry.zifeo.com/metatype/metatype:latest
+    ports:
+      - "7890:7890"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      REDIS_URL: redis://:password@redis:6379/0
+
+  redis:
+    image: redis:7
+    command: --requirepass password
+
+  postgres:
+    image: postgres:14
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_PASSWORD: password
+EOF
+docker compose up -d
+docker compose logs -f
+```
+
+## Create your first typegraph
+
+```py
+from typegraph.graphs.typegraph import TypeGraph
+from typegraph.materializers import worker
+from typegraph.materializers.graphql import GraphQLRuntime
+from typegraph.types import typedefs as t
+
+with TypeGraph("mini") as g:
+
+    remote = GraphQLRuntime("https://graphqlzero.almansi.me/api")
+
+    allow_all = t.policy(
+        t.struct(),
+        worker.JavascriptMat(
+            worker.JavascriptMat.lift(lambda args: True),
+            "policy",
+        ),
+    ).named("allow_all_policy")
+
+    post = t.struct(
+        {
+            "id": t.integer(),
+            "title": t.string(),
+            "body": t.string(),
+        }
+    ).named("Post")
+
+    getter = remote.query(t.struct({"id": t.integer()}), t.optional(post)).add_policy(
+        allow_all
+    )
+
+    g.expose(post=getter)
+
+```
