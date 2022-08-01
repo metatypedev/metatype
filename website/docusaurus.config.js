@@ -16,6 +16,12 @@ const config = {
   favicon: "img/favicon.ico",
   organizationName: "metatypedev",
   projectName: "metatype",
+  stylesheets: [
+    {
+      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      type: "text/css",
+    },
+  ],
   plugins: [
     () => ({
       name: "pyLoader",
@@ -62,7 +68,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: "Metatype",
+        title: "METATYPE",
         logo: {
           alt: "Metatype Logo",
           src: "img/logo.svg",
