@@ -2,6 +2,7 @@ from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import worker
 from typegraph.materializers.deno import AddTypeGraphMat
 from typegraph.materializers.deno import RemoveTypeGraphMat
+from typegraph.materializers.deno import SerializedTypegraphMat
 from typegraph.materializers.deno import TypeGraphMat
 from typegraph.materializers.deno import TypeGraphsMat
 from typegraph.materializers.deno import TypesAsGraph
@@ -17,7 +18,6 @@ with TypeGraph("typegate") as g:
         }
     ).named("node")
 
-    # edge = t.tuple([t.string(), t.string()]).named("edge")
     edge = t.struct(
         {
             "from": node,
@@ -30,11 +30,14 @@ with TypeGraph("typegate") as g:
         t.struct({"nodes": t.list(node), "edges": t.list(edge)}), TypesAsGraph()
     )
 
+    serialized = t.gen(t.string(), SerializedTypegraphMat())
+
     typegraph = t.struct(
         {
             "name": t.string(),
             "url": t.uri(),
             "types": types,
+            "serialized": serialized,
         }
     ).named("typegraph")
 

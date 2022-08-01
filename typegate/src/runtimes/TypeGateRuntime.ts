@@ -191,6 +191,9 @@ export class TypeGateRuntime extends Runtime {
       if (name === "typesAsGraph") {
         return this.typesAsGraph;
       }
+      if (name === "serializedTypegraph") {
+        return this.serializedTypegraph;
+      }
 
       return async ({ _: { parent }, ...args }) => {
         const resolver = parent[stage.props.node];
@@ -241,6 +244,17 @@ export class TypeGateRuntime extends Runtime {
 
     const graph = new GraphBuilder(tg).build();
     return graph;
+  };
+
+  serializedTypegraph = (
+    { _: { parent: typegraph } }: { _: { parent: { name: string } } },
+  ) => {
+    const tg = register.get(typegraph.name);
+    if (!tg) {
+      return null;
+    }
+
+    return JSON.stringify(tg.tg.tg);
   };
 
   addTypegraph = async ({ fromString }: { fromString: string }) => {
