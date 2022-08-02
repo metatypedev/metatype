@@ -92,3 +92,9 @@ class TypeNodeMat(Materializer):
 class TypesAsGraph(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = "typesAsGraph"
+
+
+@dataclass(eq=True, frozen=True)
+class SerializedTypegraphMat(Materializer):
+    runtime: Runtime = TypeGateRuntime()
+    materializer_name: str = "serializedTypegraph"
