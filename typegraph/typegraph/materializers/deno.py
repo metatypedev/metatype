@@ -31,6 +31,19 @@ class FunMat(Materializer):
 
 
 @dataclass(eq=True, frozen=True)
+class DenoModuleMat(Materializer):
+    code: str
+    _: KW_ONLY
+    runtime: Runtime = DenoRuntime()
+    materializer_name: str = "deno_module"
+
+    @classmethod
+    def from_file(cls, path: str):
+        with open(path) as f:
+            return DenoModuleMat(f.read())
+
+
+@dataclass(eq=True, frozen=True)
 class TypeGraphRuntime(Runtime):
     runtime_name: str = "typegraph"
 
