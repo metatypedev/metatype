@@ -36,7 +36,7 @@ with TypeGraph("prisma") as g:
 
     users = t.struct(
         {
-            "id": t.integer().id,
+            "id": t.integer().id.auto,
             "email": t.string(),
             "name": t.string(),
             # "favoriteMessage": db.link(messages),
