@@ -264,7 +264,10 @@ def get_input_type(
             if update:
                 fields[key] = clone(field_type).s_optional()
             else:  # create
-                fields[key] = clone(field_type)
+                if hasattr(field_type, "_auto") and field_type._auto:
+                    fields[key] = clone(field_type).s_optional()
+                else:
+                    fields[key] = clone(field_type)
     return t.struct(fields)
 
 
