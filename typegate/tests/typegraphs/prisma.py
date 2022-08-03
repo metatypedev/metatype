@@ -16,7 +16,7 @@ with TypeGraph("prisma") as g:
     allow_all = policies.allow_all()
 
     record = t.struct(
-        {"id": t.uuid().id, "name": t.string(), "age": t.integer().s_optional()}
+        {"id": t.uuid().id.auto, "name": t.string(), "age": t.integer().s_optional()},
     ).named("record")
 
     db.manage(record)
