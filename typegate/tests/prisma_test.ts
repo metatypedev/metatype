@@ -212,12 +212,10 @@ test("1:n relationships", async (t) => {
   });
 
   await t.should("insert a record with nested object", async () => {
-    const id = 12;
     await gql`
       mutation q {
         createUser(
           data: {
-            id: ${id}
             name: "name"
             email: "email@example.com"
             messages: {
@@ -234,13 +232,13 @@ test("1:n relationships", async (t) => {
       }
     `
       .expectData({
-        createUser: { id },
+        createUser: { id: 1 },
       })
       .on(e);
 
     await gql`
       query {
-        findUniqueUser(where: { id: ${id} }) {
+        findUniqueUser(where: { id: 1 }) {
           id
           name
           email
@@ -252,7 +250,7 @@ test("1:n relationships", async (t) => {
     `
       .expectData({
         findUniqueUser: {
-          id,
+          id: 1,
           name: "name",
           email: "email@example.com",
           messages: [{ id: 123 }],
