@@ -1,0 +1,12 @@
+model User {
+  id      Int      @id
+  profile Profile? @relation(name: "userProfile")
+}
+
+model Profile {
+  id     Int  @id
+  user   User @relation(name: "userProfile", fields: [userId], references: [id])
+  userId Int
+
+  @@unique(userId)
+}
