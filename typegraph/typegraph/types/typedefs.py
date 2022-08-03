@@ -378,6 +378,12 @@ class path(string):
 
 class uuid(string):
     type_name = "uuid"
+    _auto: bool = False
+
+    @property
+    def auto(self):
+        self._auto = True
+        return self
 
 
 class ip(string):
