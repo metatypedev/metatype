@@ -51,6 +51,8 @@ class PrismaModel:
             f = PrismaField(field_name, field_type)
             if field_type._id:
                 f.tags.append("@id")
+            if hasattr(field_type, "_auto") and field_type._auto:
+                f.tags.append("@default(autoincrement())")
             self.fields[field_name] = f
 
     def link(self, schema: "PrismaSchema"):

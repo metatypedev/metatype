@@ -28,7 +28,7 @@ class TestPrismaSchema:
         with TypeGraph(""):
             model = t.struct(
                 {
-                    "id": t.integer().id,
+                    "id": t.integer().id.auto,
                     "name": t.string(),
                 }
             ).named("ModelA")
@@ -37,7 +37,7 @@ class TestPrismaSchema:
             {model},
             """
                 model ModelA {
-                    id Int @id
+                    id Int @id @default(autoincrement())
                     name String
                 }
             """,
@@ -66,7 +66,7 @@ class TestPrismaSchema:
             ).named("Post")
 
             with open(
-                Path(__file__).parent.joinpath("schemas/one_to_many.schema"), "r"
+                Path(__file__).parent.joinpath("schemas/one_to_many.prisma"), "r"
             ) as f:
                 self.assert_schema([user, post], f.read())
 
@@ -93,6 +93,6 @@ class TestPrismaSchema:
             ).named("Profile")
 
             with open(
-                Path(__file__).parent.joinpath("schemas/one_to_one.schema"), "r"
+                Path(__file__).parent.joinpath("schemas/one_to_one.prisma"), "r"
             ) as f:
                 self.assert_schema([user, profile], f.read())
