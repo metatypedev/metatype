@@ -53,6 +53,19 @@ export class DenoRuntime extends Runtime {
         return map[stage.props.materializer.data.name as string];
       }
 
+      const mat = stage.props.materializer;
+      if (mat?.name === "deno_module") {
+        const { code } = mat.data as { code: string };
+        return async ({ _: { context }, ...args }) => {
+          const file = await Deno.makeTempFile({ suffix: ".ts" });
+          await Deno.writeTextFile(file, code);
+          const mod = await import(file);
+          const res = await mod.default(args, context);
+          await Deno.remove(file);
+          return res;
+        };
+      }
+
       return ({ _: { parent } }) => {
         const resolver = parent[stage.props.node];
         const ret = typeof resolver === "function" ? resolver() : resolver;
