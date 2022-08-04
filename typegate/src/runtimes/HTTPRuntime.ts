@@ -1,6 +1,11 @@
 import { ComputeStage } from "../engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import {
+  Resolver,
+  Runtime,
+  RuntimeConfig,
+  RuntimeInitParams,
+} from "./Runtime.ts";
 import { associateWith } from "std/collections/mod.ts";
 import { join } from "std/path/mod.ts";
 import { JSONValue } from "../utils.ts";
@@ -51,12 +56,8 @@ export class HTTPRuntime extends Runtime {
     this.endpoint = endpoint;
   }
 
-  static init(
-    typegraph: TypeGraphDS,
-    materializers: TypeMaterializer[],
-    args: Record<string, unknown>,
-    config: RuntimeConfig,
-  ): Runtime {
+  static init(params: RuntimeInitParams): Runtime {
+    const { args } = params;
     return new HTTPRuntime(args.endpoint as string);
   }
 
