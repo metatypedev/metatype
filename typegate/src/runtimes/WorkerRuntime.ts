@@ -1,7 +1,12 @@
 import { Deferred, deferred } from "std/async/deferred.ts";
 import { ComputeStage } from "../engine.ts";
 import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import {
+  Resolver,
+  Runtime,
+  RuntimeConfig,
+  RuntimeInitParams,
+} from "./Runtime.ts";
 import { sha1 } from "../crypto.ts";
 import { getLogger } from "../log.ts";
 import { basename } from "std/path/mod.ts";
@@ -50,12 +55,8 @@ export class WorkerRuntime extends Runtime {
     this.w = new OnDemandWorker(file, lazy);
   }
 
-  static async init(
-    typegraph: TypeGraphDS,
-    materializers: TypeMaterializer[],
-    args: Record<string, unknown>,
-    config: RuntimeConfig,
-  ): Promise<Runtime> {
+  static async init(params: RuntimeInitParams): Promise<Runtime> {
+    const { typegraph, materializers, config } = params;
     const codes = materializers.reduce(
       (agg, mat) => ({ ...agg, [mat.name]: mat.data.code }),
       {},
@@ -166,7 +167,7 @@ class OnDemandWorker {
         type: "module",
         deno: {
           namespace: false,
-          permissions: "none",
+          permissions: "none", // TODO: allow fs
         },
       } as WorkerOptions);
       this.lazyWorker.onmessage = (event) => {
