@@ -1,18 +1,14 @@
 import { ComputeStage } from "../engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { RuntimeInitParams } from "./Runtime.ts";
 
 export class GoogleapisRuntime extends Runtime {
   constructor() {
     super();
   }
 
-  static init(
-    typegraph: TypeGraphDS,
-    materializers: TypeMaterializer[],
-    args: Record<string, unknown>,
-    config: RuntimeConfig,
-  ): Runtime {
+  static init(_params: RuntimeInitParams): Runtime {
     return new GoogleapisRuntime();
   }
 

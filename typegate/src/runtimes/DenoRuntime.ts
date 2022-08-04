@@ -1,6 +1,7 @@
 import { ComputeStage } from "../engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { RuntimeInitParams } from "./Runtime.ts";
 
 const dummy: Resolver = ({ a }: { a: number }) => {
   return {
@@ -25,12 +26,7 @@ export class DenoRuntime extends Runtime {
     super();
   }
 
-  static init(
-    typegraph: TypeGraphDS,
-    materializers: TypeMaterializer[],
-    args: Record<string, unknown>,
-    config: RuntimeConfig,
-  ): Runtime {
+  static init(params: RuntimeInitParams): Runtime {
     if (!DenoRuntime.singleton) {
       DenoRuntime.singleton = new DenoRuntime();
     }
