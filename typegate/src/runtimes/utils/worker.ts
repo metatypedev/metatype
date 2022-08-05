@@ -16,23 +16,19 @@ interface TaskModule {
   default: Exec;
 }
 
-const modules: Record<string, TaskModule> = {};
 const fns: Record<string, Exec> = {};
 
 self.onmessage = async (evt: MessageEvent<Task>) => {
   switch (evt.data.type) {
     case "module": {
       const { id, name, path, data: inData } = evt.data;
-      if (path) {
-        console.log(path);
-        const mod: TaskModule = await import(path);
-        modules[evt.data.name] = mod;
-      }
+      logger.info(`running task ${name} in worker...`);
+      const mod: TaskModule = await import(path);
 
       const decoded: ModuleTaskData = JSON.parse(
         new TextDecoder().decode(inData),
       );
-      const ret = await modules[name].default(decoded.args, decoded.context);
+      const ret = await mod.default(decoded.args, decoded.context);
 
       const outData = new TextEncoder().encode(JSON.stringify(ret)).buffer;
       self.postMessage({ id, data: outData }, [outData]);

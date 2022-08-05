@@ -2,7 +2,7 @@ export interface ModuleTask {
   type: "module";
   name: string;
   id: number;
-  path: undefined | string;
+  path: string;
   data: ArrayBuffer;
 }
 
