@@ -10,60 +10,58 @@ import {
 import { sha1 } from "../crypto.ts";
 import { getLogger } from "../log.ts";
 import { basename } from "std/path/mod.ts";
+import {
+  FuncTask,
+  FuncTaskData,
+  ModuleTask,
+  ModuleTaskData,
+  TaskResult,
+} from "./utils/types.ts";
+import { xxHash32 } from "https://raw.githubusercontent.com/gnlow/deno-xxhash/master/mod.ts";
 
 const logger = getLogger(import.meta);
 
-const writeWorker = async (
-  name: string,
-  codes: Record<string, string>,
-): Promise<string> => {
-  await Deno.mkdir("./workers", { recursive: true, mode: 0o777 });
-  const calls = Object.entries(codes)
-    .map(([call, code]) => `${call}: ${code}`.replace(/^(?!\s*$)/gm, "  "))
-    .join(",\n");
-  const content = `
-import { getLogger } from "../src/log.ts";
+const workerFile = new URL("runtimes/utils/worker.ts", Deno.mainModule).href;
 
-const logger = getLogger("${name}");
-logger.info("start webworker");
+interface Code {
+  type: "module" | "func";
+  hash: string;
+  code: string;
+}
 
-const map = {
-${calls}
-};
-
-self.onmessage = (event) => {
-  const [n, call, buffer] = event.data;
-  const input = JSON.parse(new TextDecoder().decode(buffer));
-  const resolver = map[call];
-  const output = input.map(resolver);
-  const ret = new TextEncoder().encode(JSON.stringify(output)).buffer;
-  self.postMessage([n, ret], [ret]);
-};
-  `;
-  const file = new URL(`../workers/${name}`, Deno.mainModule);
-  logger.info(`flush ${name}`);
-  await Deno.writeTextFile(file, content);
-  const hash = await sha1(content);
-  return `${file.href}#${hash}`;
-};
+function typeFromMatName(name: string): "module" | "func" {
+  switch (name) {
+    case "task_module":
+      return "module";
+    case "task_func":
+    case "policy":
+      return "func";
+    default:
+      throw new Error(`Unsupported materializer "${name}"`);
+  }
+}
 
 export class WorkerRuntime extends Runtime {
   w: OnDemandWorker;
+  codes: Record<string, Code>;
 
-  private constructor(file: string, lazy: boolean) {
+  private constructor(lazy: boolean, codes: Record<string, Code>) {
     super();
-    this.w = new OnDemandWorker(file, lazy);
+    this.w = new OnDemandWorker(lazy);
+    this.codes = codes;
   }
 
-  static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { typegraph, materializers, config } = params;
-    const codes = materializers.reduce(
-      (agg, mat) => ({ ...agg, [mat.name]: mat.data.code }),
-      {},
-    );
-    const name = `${typegraph.types[0].name}.js`;
-    const file = await writeWorker(name, codes);
-    return new WorkerRuntime(file, config.lazy as boolean);
+  static init(params: RuntimeInitParams): Runtime {
+    const { materializers, config } = params;
+
+    const codes = Object.fromEntries(materializers.map((mat) => {
+      const code = mat.data.code as string;
+      const type = typeFromMatName(mat.name);
+      const hash = xxHash32(code, 0).toString(16);
+      return [hash, { code, type, hash } as Code];
+    }));
+
+    return new WorkerRuntime(config.lazy as boolean, codes);
   }
 
   deinit(): Promise<void> {
@@ -81,16 +79,54 @@ export class WorkerRuntime extends Runtime {
     return [
       new ComputeStage({
         ...stage.props,
-        resolver: this.delegate(stage.props.materializer.name),
+        resolver: this.delegate(stage.props.materializer),
       }),
     ];
   }
 
-  delegate(name: string): Resolver {
-    return async (args: any) => {
-      return await this.w.passPayload(name, [args]).then((v) => v[0]);
+  delegate(mat: TypeMaterializer): Resolver {
+    const hash = xxHash32(mat.data.code as string, 0).toString(16);
+    console.log(`delegate: ${hash}`);
+    return async ({ _: context, ...args }) => {
+      console.log({ args, context });
+      const { type, code } = this.codes[hash];
+      switch (type) {
+        case "module":
+          return await this.w.execModuleTask({
+            args,
+            context,
+            code,
+            name: hash,
+          });
+        case "func":
+          return await this.w.execFuncTask({ args, context, code, name: hash });
+        default:
+          throw new Error(`Unsupported task type "${type}"`);
+      }
     };
   }
+}
+
+interface TaskInit {
+  args: Record<string, unknown>;
+  context: Record<string, string>;
+  code: string;
+  name: string;
+}
+
+interface ModuleStatus {
+  path: string;
+  imported: boolean;
+}
+
+interface FuncStatus {
+  loaded: boolean;
+}
+
+interface TaskData {
+  promise: Deferred<unknown>;
+  type: "module" | "func";
+  name: string;
 }
 
 const resetModulus = 1_000_000;
@@ -98,20 +134,18 @@ const inactivityThreshold = 1;
 const inactivityIntervalMs = 15_000;
 
 class OnDemandWorker {
-  name: string;
-  module: string;
-
   lazyWorker?: Worker;
 
-  promises: Map<number, Deferred<ArrayBuffer>> = new Map();
+  tasks: Map<number, TaskData> = new Map();
   counter = 0;
 
   gcState = 0;
   gcInterval?: number;
 
-  constructor(module: string, lazy: boolean) {
-    this.name = basename(new URL(module).pathname);
-    this.module = module;
+  modules: Map<string, ModuleStatus> = new Map();
+  funcs: Map<string, FuncStatus> = new Map();
+
+  constructor(lazy: boolean) {
     if (lazy) {
       this.enableLazyWorker();
     } else {
@@ -120,7 +154,7 @@ class OnDemandWorker {
   }
 
   enableLazyWorker() {
-    logger.info(`enable laziness ${this.name}`);
+    logger.info(`enable laziness`);
     clearInterval(this.gcInterval);
     this.gcInterval = setInterval(
       () => this.checkJobLess(),
@@ -129,7 +163,7 @@ class OnDemandWorker {
   }
 
   disableLazyWorker() {
-    logger.info(`disable laziness ${this.name}`);
+    logger.info(`disable laziness`);
     clearInterval(this.gcInterval);
     this.worker();
   }
@@ -143,8 +177,8 @@ class OnDemandWorker {
       resetModulus;
     this.gcState = this.counter;
 
-    if (activity <= inactivityThreshold && this.promises.size < 1) {
-      logger.info(`lazy close ${this.name}`);
+    if (activity <= inactivityThreshold && this.tasks.size < 1) {
+      logger.info(`lazy close`);
       this.lazyWorker.terminate();
       this.lazyWorker = undefined;
     }
@@ -152,8 +186,8 @@ class OnDemandWorker {
 
   async terminate(): Promise<void> {
     clearInterval(this.gcInterval);
-    await Promise.all(this.promises.values());
-    logger.info(`close ${this.name}`);
+    await Promise.all([...this.tasks.values()].map((t) => t.promise));
+    logger.info(`close`);
     if (this.lazyWorker) {
       this.lazyWorker.terminate();
       this.lazyWorker = undefined;
@@ -162,18 +196,35 @@ class OnDemandWorker {
 
   worker(): Worker {
     if (!this.lazyWorker) {
-      logger.info(`spawn ${this.name}`);
-      this.lazyWorker = new Worker(this.module, {
+      logger.info(`spawn`);
+      this.lazyWorker = new Worker(workerFile, {
         type: "module",
         deno: {
           namespace: false,
-          permissions: "none", // TODO: allow fs
+          permissions: {
+            read: [
+              "/tmp/",
+            ],
+          },
         },
       } as WorkerOptions);
       this.lazyWorker.onmessage = (event) => {
-        const [n, res] = event.data;
-        this.promises.get(n)!.resolve(res);
-        this.promises.delete(n);
+        const { id, data } = event.data as TaskResult;
+        const task = this.tasks.get(id)!;
+        task.promise.resolve(JSON.parse(new TextDecoder().decode(data)));
+        this.tasks.delete(id);
+        switch (task.type) {
+          case "func": {
+            const status = this.funcs.get(task.name)!;
+            status.loaded = true;
+            break;
+          }
+          case "module": {
+            const status = this.modules.get(task.name)!;
+            status.imported = true;
+            break;
+          }
+        }
       };
       this.lazyWorker.onerror = (error) => {
         console.error(error);
@@ -182,21 +233,63 @@ class OnDemandWorker {
     return this.lazyWorker;
   }
 
-  private passBuffer(call: string, buffer: Transferable): Promise<ArrayBuffer> {
+  private nextId(): number {
     const n = this.counter++;
     this.counter %= resetModulus;
+    return n;
+  }
+
+  async execModuleTask(task: TaskInit): Promise<unknown> {
+    const { args, context, name, code } = task;
+
+    let status = this.modules.get(name);
+
+    if (status == null) {
+      const path = await Deno.makeTempFile({ suffix: ".ts" });
+      await Deno.writeTextFile(path, code);
+      status = { path, imported: false };
+      this.modules.set(name, status);
+    }
+
     const promise = deferred<ArrayBuffer>();
-    this.worker().postMessage([n, call, buffer], [buffer]);
-    this.promises.set(n, promise);
+    const id = this.nextId();
+    this.worker().postMessage({
+      type: "module",
+      name,
+      id,
+      path: status.path,
+      data: new TextEncoder().encode(JSON.stringify({ args, context })).buffer,
+    });
+    this.tasks.set(id, {
+      promise,
+      type: "module",
+      name,
+    });
     return promise;
   }
 
-  async passPayload(call: string, payload: any): Promise<any> {
-    const json = JSON.stringify(payload);
-    const encoded = new TextEncoder().encode(json);
-    const res = await this.passBuffer(call, encoded.buffer);
-    const decoded = new TextDecoder().decode(res);
-    //logger.debug(`call ${this.name} ${call} ${json} ${decoded}`);
-    return JSON.parse(decoded);
+  execFuncTask(task: TaskInit): Promise<unknown> {
+    const { args, context, code, name } = task;
+
+    let status = this.funcs.get(name);
+    const wrappedCode = {} as { code?: string };
+    if (status == null) {
+      status = { loaded: false };
+      this.funcs.set(name, status);
+      wrappedCode.code = code;
+    }
+
+    const promise = deferred<unknown>();
+    const id = this.nextId();
+    this.worker().postMessage({
+      type: "func",
+      name,
+      id,
+      data: new TextEncoder().encode(
+        JSON.stringify({ args, context, ...wrappedCode }),
+      ).buffer,
+    });
+    this.tasks.set(id, { promise, type: "func", name });
+    return promise;
   }
 }
