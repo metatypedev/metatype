@@ -13,12 +13,11 @@ with TypeGraph(name="math") as g:
         t.boolean(),
         worker.module(
             """
-        export default function(context: Record<string, string>) {
-            console.log({ context })
-            const url = new URL(context?.["referer"]);
-            return url.pathname === "/math";
-        }
-        """
+            export default function(context: Record<string, string>) {
+                const url = new URL(context?.["referer"]);
+                return url.pathname === "/math";
+            }
+            """
         ),
     )
 

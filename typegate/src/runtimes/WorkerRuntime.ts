@@ -77,7 +77,6 @@ export class WorkerRuntime extends Runtime {
     const hash = h64(mat.data.code as string, 0n).toString(16);
     console.log(`delegate: ${hash}`);
     return async ({ _: context, ...args }) => {
-      console.log({ args, context });
       const { type, code } = this.codes[hash];
       switch (type) {
         case "module":
