@@ -1,23 +1,12 @@
 import { Deferred, deferred } from "std/async/deferred.ts";
 import { ComputeStage } from "../engine.ts";
-import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import {
-  Resolver,
-  Runtime,
-  RuntimeConfig,
-  RuntimeInitParams,
-} from "./Runtime.ts";
-import { sha1 } from "../crypto.ts";
+import type { TypeMaterializer } from "../typegraph.ts";
+import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
-import { basename } from "std/path/mod.ts";
-import {
-  FuncTask,
-  FuncTaskData,
-  ModuleTask,
-  ModuleTaskData,
-  TaskResult,
-} from "./utils/types.ts";
-import { xxHash32 } from "https://raw.githubusercontent.com/gnlow/deno-xxhash/master/mod.ts";
+import { TaskResult } from "./utils/types.ts";
+import xxhash from "https://unpkg.com/xxhash-wasm@1.0.1/esm/xxhash-wasm.js";
+
+const { h64 } = await xxhash();
 
 const logger = getLogger(import.meta);
 
@@ -57,7 +46,7 @@ export class WorkerRuntime extends Runtime {
     const codes = Object.fromEntries(materializers.map((mat) => {
       const code = mat.data.code as string;
       const type = typeFromMatName(mat.name);
-      const hash = xxHash32(code, 0).toString(16);
+      const hash = h64(code, 0n).toString(16);
       return [hash, { code, type, hash } as Code];
     }));
 
@@ -85,7 +74,7 @@ export class WorkerRuntime extends Runtime {
   }
 
   delegate(mat: TypeMaterializer): Resolver {
-    const hash = xxHash32(mat.data.code as string, 0).toString(16);
+    const hash = h64(mat.data.code as string, 0n).toString(16);
     console.log(`delegate: ${hash}`);
     return async ({ _: context, ...args }) => {
       console.log({ args, context });
