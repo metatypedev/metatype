@@ -1,21 +1,48 @@
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import DenoModuleMat
+from typegraph.materializers.worker import WorkerRuntime
 from typegraph.types import typedefs as t
 
 with TypeGraph(name="math") as g:
-    allow_all = policies.allow_all()
+    worker = WorkerRuntime()
 
-    # restrict_referer = t.func(t.struct(), t.boolean(), DenoModuleMat(
-    #     """
-    #     export default function(_: any, context) {
-    #         const url = new URL(context["referer]);
-    #         return url.pathname === "/math";
-    #     }
-    #     """
-    # ))
+    allow_all = policies.allow_all()
+    restrict_referer = t.func(
+        t.struct(),
+        t.boolean(),
+        worker.module(
+            """
+        export default function(context: Record<string, string>) {
+            console.log({ context })
+            const url = new URL(context?.["referer"]);
+            return url.pathname === "/math";
+        }
+        """
+        ),
+    )
 
     g.expose(
+        fib=t.func(
+            t.struct({"size": t.integer()}),
+            t.list(t.float()),
+            worker.module(
+                """
+                const CACHE = [1, 1];
+                const MAX_CACHE_SIZE = 1000;
+                export default function fib({ size }: { size: number }) {
+                    if (size > MAX_CACHE_SIZE) {
+                      throw new Error(`unsupported size ${size} > ${MAX_CACHE_SIZE}`);
+                    }
+                    let i = CACHE.length;
+                    while (i++ < size) {
+                      CACHE.push(CACHE[i-2] + CACHE[i-3]);
+                    }
+                    return CACHE.slice(0, size);
+                }
+                """
+            ),
+        ).add_policy(restrict_referer),
         random=t.func(
             t.struct(),
             t.float(),

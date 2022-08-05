@@ -744,7 +744,7 @@ export class TypeGraph {
           ];
           const rt = this.introspection
             .runtimeReferences[mat.runtime] as WorkerRuntime; // temp
-          return [introPolicy.name, rt.delegate(mat.name)] as [
+          return [introPolicy.name, rt.delegate(mat)] as [
             string,
             Resolver,
           ];
@@ -758,7 +758,7 @@ export class TypeGraph {
 
       const mat = this.tg.materializers[policy.materializer as number];
       const rt = this.runtimeReferences[mat.runtime] as WorkerRuntime; // temp
-      return [policy.name, rt.delegate(mat.name)] as [string, Resolver];
+      return [policy.name, rt.delegate(mat)] as [string, Resolver];
     });
 
     return (claim: Record<string, any>) => {
