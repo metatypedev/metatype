@@ -30,11 +30,10 @@ repos:
       - id: rust-fmt
         name: Rust format
         language: system
-        entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt'
+        entry: bash -c 'cargo fmt --all'
         pass_filenames: false
         types:
           - rust
-        files: ^(typegate|typegraph)/native/
       - id: deno-fmt
         name: Deno format
         language: system

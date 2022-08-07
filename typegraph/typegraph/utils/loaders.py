@@ -3,7 +3,21 @@ from pathlib import Path
 import pkgutil
 from typing import List
 
+import orjson
 from typegraph.graphs.typegraph import TypeGraph
+from typegraph.materializers.prisma import Relation
+
+
+def default(obj):
+    if isinstance(obj, Relation):
+        return {}
+    raise TypeError
+
+
+def serialize_typegraph(tg, indent=False):
+    g = tg.build()
+    opt = dict(option=orjson.OPT_INDENT_2) if indent else {}
+    return orjson.dumps(g, default=default, **opt).decode()
 
 
 def import_file(path: Path) -> List[TypeGraph]:

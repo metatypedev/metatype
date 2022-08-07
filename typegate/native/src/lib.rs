@@ -1,14 +1,11 @@
 use deno_bindgen::deno_bindgen;
+use prisma::introspection::Introspection;
 mod prisma;
 use crate::prisma::engine;
-use crate::prisma::introspection;
 use dashmap::DashMap;
 use lazy_static::lazy_static;
 use log::info;
-use std::collections::BTreeMap;
-use std::panic;
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::{collections::BTreeMap, panic, path::PathBuf, str::FromStr};
 use tokio::runtime::Runtime;
 
 #[cfg(test)]
@@ -47,7 +44,7 @@ struct PrismaIntrospectionOut {
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut {
-    let fut = introspection::Introspection::introspect(input.datamodel);
+    let fut = Introspection::introspect(input.datamodel);
     let introspection = RT.block_on(fut).unwrap();
     PrismaIntrospectionOut { introspection }
 }

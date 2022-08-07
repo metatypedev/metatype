@@ -35,7 +35,6 @@ PyYAML = "^6.0"
 deepmerge = "^1.0.1"
 graphql-core = "^3.2.1"
 gql = {extras = ["requests"], version = "^3.3.0"}
-native = {path = "native", develop = true}
 
 [tool.poetry.dev-dependencies]
 black = "^22.3.0"

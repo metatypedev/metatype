@@ -1,0 +1,156 @@
+use std::collections::HashMap;
+
+use super::{dev::collect_typegraphs, Action};
+use crate::prisma::migration;
+use anyhow::Result;
+use clap::{Parser, Subcommand};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use tokio::runtime::Runtime;
+
+#[derive(Parser, Debug)]
+pub struct Prisma {
+    #[clap(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Adds files to myapp
+    Apply(Apply),
+    /// Adds files to myapp
+    Diff(Diff),
+}
+
+#[derive(Parser, Debug)]
+pub struct Apply {
+    /// Name of the person to greet
+    #[clap(short, long, value_parser)]
+    file: Option<String>,
+}
+
+#[derive(Parser, Debug)]
+pub struct Diff {
+    /// Name of the person to greet
+    #[clap(short, long, value_parser)]
+    file: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Typegraph {
+    types: Vec<TypeNode>,
+    materializers: Vec<Materializer>,
+    runtimes: Vec<TGRuntime>,
+    policies: Vec<Policy>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct TypeNode {
+    name: String,
+    typedef: String,
+    edges: Vec<u32>,
+    policies: Vec<u32>,
+    runtime: u32,
+    data: HashMap<String, Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Materializer {
+    name: String,
+    runtime: u32,
+    data: HashMap<String, Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct TGRuntime {
+    name: String,
+    data: HashMap<String, Value>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Policy {
+    name: String,
+    materializer: u32,
+}
+
+impl Action for Apply {
+    fn run(&self, dir: String) -> Result<()> {
+        let runtime = Runtime::new()?;
+
+        let loader = match &self.file {
+            Some(file) => format!(r#"loaders.import_file("{}")"#, file),
+            None => r#"loaders.import_folder(".")"#.to_string(),
+        };
+        let tgs = collect_typegraphs(dir, Some(loader))?;
+
+        for tg in tgs {
+            let typegraph: Typegraph = serde_json::from_str(&tg.1)?;
+
+            for rt in typegraph.runtimes {
+                if rt.name == "prisma" {
+                    let fut = migration::push(
+                        rt.data
+                            .get("datasource")
+                            .unwrap()
+                            .as_str()
+                            .unwrap()
+                            .to_string(),
+                        rt.data
+                            .get("datamodel")
+                            .unwrap()
+                            .as_str()
+                            .unwrap()
+                            .to_string(),
+                    );
+                    match runtime.block_on(fut) {
+                        Ok(result) => println!("{:?}", result),
+                        Err(error) => println!("error: {}", error),
+                    };
+                }
+            }
+        }
+
+        Ok(())
+    }
+}
+
+impl Action for Diff {
+    fn run(&self, dir: String) -> Result<()> {
+        let runtime = Runtime::new()?;
+
+        let loader = match &self.file {
+            Some(file) => format!(r#"loaders.import_file("{}")"#, file),
+            None => r#"loaders.import_folder(".")"#.to_string(),
+        };
+        let tgs = collect_typegraphs(dir, Some(loader))?;
+
+        for tg in tgs {
+            let typegraph: Typegraph = serde_json::from_str(&tg.1)?;
+
+            for rt in typegraph.runtimes {
+                if rt.name == "prisma" {
+                    let fut = migration::diff(
+                        rt.data
+                            .get("datasource")
+                            .unwrap()
+                            .as_str()
+                            .unwrap()
+                            .to_string(),
+                        rt.data
+                            .get("datamodel")
+                            .unwrap()
+                            .as_str()
+                            .unwrap()
+                            .to_string(),
+                    );
+                    match runtime.block_on(fut) {
+                        Ok(exit_code) => "success".to_string(),
+                        Err(error) => format!("error: {}", error),
+                    };
+                }
+            }
+        }
+
+        Ok(())
+    }
+}

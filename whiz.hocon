@@ -1,28 +1,14 @@
 
-example {
-    workdir: example
+meta {
+    workdir: meta
     watches: [
         .
-        ../typegraph
     ]
-    ignores: [
-        native
-    ]
-    shell: "poetry run meta dev"
+    shell: "cargo run -- -C ../example dev"
 
     depends_on: [
-        typegraph_native
         typegate
     ]
-}
-
-typegraph_native {
-    workdir: typegraph/native
-    watches: .
-    envs {
-        VIRTUAL_ENV="../.venv"
-    }
-    shell: "maturin develop"
 }
 
 typegate {
@@ -57,6 +43,9 @@ typegate_native {
         "*.ts"
         "*.json"
     ]
+    envs {
+        OUT_DIR: "../.."
+    }
     shell: "deno_bindgen"
 }
 
