@@ -27,7 +27,7 @@ pub async fn loss(
         Err(err) => vec![format!("error: {}", err)],
     };
 
-    if loss.len() == 0 {
+    if loss.is_empty() {
         Ok("no data loss".to_string())
     } else {
         Ok(loss.join("\n"))
@@ -45,7 +45,7 @@ pub async fn create(
     let migration = CreateMigrationInput {
         migrations_directory_path: migration_folder.to_string(),
         prisma_schema: schema,
-        migration_name: migration_name,
+        migration_name,
         draft: false,
     };
 
@@ -64,7 +64,7 @@ pub async fn apply(datasource: String, migration_folder: String) -> Result<Strin
             migrations_directory_path: migration_folder.to_string(),
         })
         .await?;
-    if migrations.applied_migration_names.len() > 0 {
+    if !migrations.applied_migration_names.is_empty() {
         fs::remove_dir_all(migration_folder).unwrap();
         Ok("success".to_string())
     } else {
@@ -82,7 +82,7 @@ pub async fn push(datasource: String, datamodel: String) -> Result<String, CoreE
     };
 
     let apply = api.schema_push(push).await?;
-    if apply.unexecutable.len() > 0 || apply.warnings.len() > 0 {
+    if !apply.unexecutable.is_empty() || !apply.warnings.is_empty() {
         Ok(apply.unexecutable.join("\n") + &apply.warnings.join("\n"))
     } else {
         Ok("applied".to_string())
