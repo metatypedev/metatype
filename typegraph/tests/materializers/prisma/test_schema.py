@@ -1,12 +1,9 @@
 from os import environ
 from pathlib import Path
-from typing import Iterable
 
 import debugpy
-import native
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.materializers.prisma.schema import PrismaSchema
 from typegraph.types import typedefs as t
 
 
@@ -21,9 +18,6 @@ postgres = environ.get(
 
 
 class TestPrismaSchema:
-    def assert_schema(self, models: Iterable[t.struct], schema: str):
-        assert native.format(PrismaSchema(models).build()) == native.format(schema)
-
     def test_simple_model(self):
         with TypeGraph(""):
             model = t.struct(

@@ -11,11 +11,11 @@ use tokio::runtime::Runtime;
 #[derive(Parser, Debug)]
 pub struct Prisma {
     #[clap(subcommand)]
-    command: Commands,
+    pub command: Commands,
 }
 
 #[derive(Subcommand, Debug)]
-enum Commands {
+pub enum Commands {
     /// Adds files to myapp
     Apply(Apply),
     /// Adds files to myapp

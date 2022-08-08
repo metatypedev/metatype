@@ -71,6 +71,7 @@ fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngin
         datasource_overrides: BTreeMap::default(),
         env: serde_json::json!({}),
         config_dir: PathBuf::from_str(".").unwrap(),
+
         ignore_env_var_errors: false,
     };
     let engine = engine::QueryEngine::new(conf).expect("cannot connect");
