@@ -4,9 +4,11 @@ use anyhow::{Ok, Result};
 use clap::{Parser, Subcommand};
 use cli::deploy::Deploy;
 use cli::dev::Dev;
+use cli::prisma::Commands as PrismaCommands;
 use cli::prisma::Prisma;
 use cli::serialize::Serialize;
 use cli::Action;
+
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -38,9 +40,20 @@ fn main() -> Result<()> {
         Commands::Dev(dev) => {
             dev.run(args.dir)?;
         }
-        _ => {} //Commands::Serialize(serialize) => {}
-                //Commands::Prisma(prisma) => {}
-                //Commands::Deploy(deploy) => {}
+        Commands::Serialize(serialize) => {
+            serialize.run(args.dir)?;
+        }
+        Commands::Prisma(prisma) => match prisma.command {
+            PrismaCommands::Apply(apply) => {
+                apply.run(args.dir)?;
+            }
+            PrismaCommands::Diff(diff) => {
+                diff.run(args.dir)?;
+            }
+        },
+        Commands::Deploy(deploy) => {
+            deploy.run(args.dir)?;
+        }
     }
 
     Ok(())

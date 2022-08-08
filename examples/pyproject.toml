@@ -6,7 +6,6 @@ authors = []
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
-networkx = "^2.8.4"
 typegraph = { path = "../typegraph", develop = true }
 
 [tool.poetry.dev-dependencies]
