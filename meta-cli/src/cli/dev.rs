@@ -3,6 +3,7 @@ use ignore::Match;
 use notify::event::ModifyKind;
 use notify::{recommended_watcher, Config, Event, EventKind, RecursiveMode, Watcher};
 use std::collections::HashMap;
+use std::env;
 use std::path::Path;
 use std::process::Command;
 use std::thread::sleep;
@@ -108,14 +109,9 @@ pub fn collect_typegraphs(
     custom_loader: Option<String>,
 ) -> Result<HashMap<String, String>> {
     let cwd = Path::new(&path);
-    let venv = cwd.join(Path::new(".venv"));
-    if !venv.exists() {
-        return Err(Error::msg(
-            "No venv found, create one with `python3.10 -m venv .venv`".to_string(),
-        ));
-    }
 
-    let test = Command::new(format!("{}/bin/python", venv.to_string_lossy()))
+    let test = Command::new("python3")
+        .envs(env::vars())
         .arg("-c")
         .arg(formatdoc!(
             r#"
@@ -132,6 +128,8 @@ pub fn collect_typegraphs(
             }
         ))
         .current_dir(cwd)
+        .env("PYTHONUNBUFFERED", "1")
+        .env("PYTHONDONTWRITEBYTECODE", "1")
         .output()?;
 
     if !test.status.success() {
