@@ -44,8 +44,7 @@ with TypeGraph("typegate") as g:
     allow_all = t.policy(
         t.struct(),
         worker.JavascriptMat(
-            worker.JavascriptMat.lift(lambda args: True),
-            "policy",
+            g.fun(worker.JavascriptMat.lift(lambda args: True), name="allow_all")
         ),
     ).named("__allow_all")
 
