@@ -1,8 +1,11 @@
 from dataclasses import dataclass
 from dataclasses import KW_ONLY
+from typing import Optional
 
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
+
+# from typegraph.materializers.worker import WorkerRuntime
 
 
 @dataclass(eq=True, frozen=True)
@@ -11,36 +14,27 @@ class DenoRuntime(Runtime):
 
 
 @dataclass(eq=True, frozen=True)
-class AutoMaterializer(Materializer):
-    runtime: Runtime = DenoRuntime()
-    materializer_name: str = "identity"
-
-
-@dataclass(eq=True, frozen=True)
-class IdentityMat(Materializer):
-    runtime: Runtime = DenoRuntime()
-    materializer_name: str = "identity"
-
-
-@dataclass(eq=True, frozen=True)
 class FunMat(Materializer):
     name: str
     _: KW_ONLY
-    runtime: Runtime = DenoRuntime()
+    import_from: Optional[str] = None  # module name
+    runtime: Runtime = DenoRuntime()  # DenoRuntime or WorkerRuntime
     materializer_name: str = "function"
 
 
 @dataclass(eq=True, frozen=True)
-class DenoModuleMat(Materializer):
-    code: str
-    _: KW_ONLY
-    runtime: Runtime = DenoRuntime()
-    materializer_name: str = "deno_module"
+class IdentityMat(FunMat):
+    name: str = "identity"
 
-    @classmethod
-    def from_file(cls, path: str):
-        with open(path) as f:
-            return DenoModuleMat(f.read())
+
+# ??
+@dataclass(eq=True, frozen=True)
+class AutoMaterializer(Materializer):
+    runtime: Runtime = DenoRuntime()
+    materializer_name: str = "auto"
+
+
+# TypeGraph runtime
 
 
 @dataclass(eq=True, frozen=True)

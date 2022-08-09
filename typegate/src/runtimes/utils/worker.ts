@@ -1,53 +1,35 @@
 import { getLogger } from "../../log.ts";
-import { Task } from "./types.ts";
-import { FuncTaskData, ModuleTaskData } from "./types.ts";
+import { Task, TaskExec } from "./codes.ts";
 
 const logger = getLogger("worker");
 logger.info("start webworker");
 
-interface Exec {
-  (
-    args: Record<string, unknown>,
-    context: Record<string, string>,
-  ): unknown | Promise<unknown>;
-}
+type TaskModule = Record<string, TaskExec>;
 
-interface TaskModule {
-  default: Exec;
-}
-
-const fns: Record<string, Exec> = {};
+const fns: Record<string, TaskExec> = {};
 
 self.onmessage = async (evt: MessageEvent<Task>) => {
   switch (evt.data.type) {
     case "module": {
-      const { id, name, path, data: inData } = evt.data;
+      const { id, name, path, args, context } = evt.data;
       logger.info(`running task ${name} in worker...`);
       const mod: TaskModule = await import(path);
 
-      const decoded: ModuleTaskData = JSON.parse(
-        new TextDecoder().decode(inData),
-      );
-      const ret = await mod.default(decoded.args, decoded.context);
-
-      const outData = new TextEncoder().encode(JSON.stringify(ret)).buffer;
-      self.postMessage({ id, data: outData }, [outData]);
+      logger.info(`[${id}] exec func "${name}" from module ${path}`);
+      const ret = await mod[name](args, context);
+      self.postMessage({ id, data: ret });
       break;
     }
 
     case "func": {
-      const { name, id, data: inData } = evt.data;
-      const decoded: FuncTaskData = JSON.parse(
-        new TextDecoder().decode(inData),
-      );
-      if (decoded.code != undefined) {
-        fns[name] = new Function(`"use strict"; return ${decoded.code}`)();
+      const { name, id, code, args, context } = evt.data;
+      if (code != undefined) {
+        fns[name] = new Function(`"use strict"; return ${code}`)();
       }
 
-      const ret = await fns[name](decoded.args, decoded.context);
-
-      const outData = new TextEncoder().encode(JSON.stringify(ret)).buffer;
-      self.postMessage({ id, data: outData }, [outData]);
+      logger.info(`[${id}] exec func "${name}"`);
+      const ret = await fns[name](args, context);
+      self.postMessage({ id, data: ret });
       break;
     }
 
