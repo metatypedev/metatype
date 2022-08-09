@@ -74,7 +74,7 @@ with TypeGraph("caress") as g:
                 ),
                 "hierarchy": t.string(),
                 **with_time(),
-                "hash": t.func(g("Product"), t.string(), deno.AutoMaterializer()),
+                # "hash": t.func(g("Product"), t.string(), deno.AutoMaterializer()),
                 "slug_prefix": t.func(
                     g("Product", lambda p: p.slug),
                     t.string(),

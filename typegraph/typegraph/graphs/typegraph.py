@@ -1,11 +1,21 @@
+from dataclasses import dataclass
+from dataclasses import field
 from typing import Callable
 from typing import Dict
 from typing import List
+from typing import Literal
 from typing import Optional
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from typegraph.types import typedefs as t
+
+
+@dataclass(eq=True, frozen=True)
+class Code:
+    name: str
+    source: str
+    type: Literal["func", "module"] = field(default="func")
 
 
 class TypeGraph:
@@ -15,6 +25,7 @@ class TypeGraph:
     types: List["t.Type"]
     exposed: Dict[str, "t.func"]
     latest_type_id: int
+    codes: List[Code]
 
     def __init__(self, name: str) -> None:
         super().__init__()
@@ -23,6 +34,7 @@ class TypeGraph:
         self.exposed = {}
         self.policies = []
         self.latest_type_id = 0
+        self.codes = []
 
     def next_type_id(self):
         self.latest_type_id += 1
@@ -42,6 +54,28 @@ class TypeGraph:
         self, node: str, after_apply: Callable[["t.Type"], "t.Type"] = lambda x: x
     ) -> "NodeProxy":
         return NodeProxy(self, node, after_apply)
+
+    def fun(self, source: str, name: Optional[str] = None):
+        if name is None:
+            name = f"fn_{len(self.codes) + 1}_"
+        self.codes.append(Code(name, source))
+        return name
+
+    def module(
+        self,
+        source: Optional[str] = None,
+        load: Optional[str] = None,
+        name: Optional[str] = None,
+    ):
+        if name is None:
+            name = f"module_{len(self.codes) + 1}_"
+        if source is None:
+            if load is None:
+                raise Exception("source or file must be specified")
+            with open(load) as f:
+                source = f.read()
+        self.codes.append(Code(name, source, type="module"))
+        return name
 
     def expose(self, **funcs: Dict[str, "t.func"]):
         from typegraph.types import typedefs as t

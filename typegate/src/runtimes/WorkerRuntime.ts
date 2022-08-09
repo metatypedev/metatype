@@ -3,54 +3,59 @@ import { ComputeStage } from "../engine.ts";
 import type { TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
-import { TaskResult } from "./utils/types.ts";
-import xxhash from "https://unpkg.com/xxhash-wasm@1.0.1/esm/xxhash-wasm.js";
-
-const { h64 } = await xxhash();
+import mapValues from "https://deno.land/x/lodash@4.17.15-es/mapValues.js";
+import {
+  CodeList,
+  Codes,
+  createFuncStatus,
+  createModuleStatus,
+  FuncStatus,
+  FuncTask,
+  FunctionMaterializerData,
+  ModuleStatus,
+  ModuleTask,
+} from "./utils/codes.ts";
+import { ensure } from "../utils.ts";
 
 const logger = getLogger(import.meta);
 
-const workerFile = new URL("runtimes/utils/worker.ts", Deno.mainModule).href;
-
-interface Code {
-  type: "module" | "func";
-  hash: string;
-  code: string;
-}
-
-function typeFromMatName(name: string): "module" | "func" {
-  switch (name) {
-    case "task_module":
-      return "module";
-    case "task_func":
-    case "policy":
-      return "func";
-    default:
-      throw new Error(`Unsupported materializer "${name}"`);
-  }
-}
+const workerFile =
+  new URL("../src/runtimes/utils/worker.ts", Deno.mainModule).href;
 
 export class WorkerRuntime extends Runtime {
   w: OnDemandWorker;
-  codes: Record<string, Code>;
 
-  private constructor(lazy: boolean, codes: Record<string, Code>) {
+  private constructor(private name: string, lazy: boolean, codes: Codes) {
     super();
-    this.w = new OnDemandWorker(lazy);
-    this.codes = codes;
+    this.w = new OnDemandWorker(name, lazy, codes);
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { materializers, config } = params;
+    const { typegraph: tg, materializers, config, args } = params;
 
-    const codes = Object.fromEntries(materializers.map((mat) => {
-      const code = mat.data.code as string;
-      const type = typeFromMatName(mat.name);
-      const hash = h64(code, 0n).toString(16);
-      return [hash, { code, type, hash } as Code];
-    }));
+    for (const { name } of materializers) {
+      ensure(name === "function", `unexpected materializer type "${name}"`);
+    }
 
-    return new WorkerRuntime(config.lazy as boolean, codes);
+    const modules = mapValues(
+      CodeList.from(tg.codes)
+        .filterType("module")
+        .byNamesIn(materializers.map(({ data }) => data.import_from as string)),
+      createModuleStatus,
+    ) as Record<string, ModuleStatus>;
+
+    const funcs = mapValues(
+      CodeList.from(tg.codes)
+        .filterType("func")
+        .byNamesIn(materializers.map(({ data }) => data.name as string)),
+      createFuncStatus,
+    ) as Record<string, FuncStatus>;
+
+    return new WorkerRuntime(
+      args.name as string,
+      config.lazy as boolean,
+      { modules, funcs },
+    );
   }
 
   deinit(): Promise<void> {
@@ -74,23 +79,13 @@ export class WorkerRuntime extends Runtime {
   }
 
   delegate(mat: TypeMaterializer): Resolver {
-    const hash = h64(mat.data.code as string, 0n).toString(16);
-    console.log(`delegate: ${hash}`);
+    ensure(mat.name === "function", `unsupported materializer ${mat.name}`);
     return async ({ _: context, ...args }) => {
-      const { type, code } = this.codes[hash];
-      switch (type) {
-        case "module":
-          return await this.w.execModuleTask({
-            args,
-            context,
-            code,
-            name: hash,
-          });
-        case "func":
-          return await this.w.execFuncTask({ args, context, code, name: hash });
-        default:
-          throw new Error(`Unsupported task type "${type}"`);
-      }
+      return await this.w.execTask({
+        args,
+        context,
+        matArgs: mat.data as unknown as FunctionMaterializerData,
+      });
     };
   }
 }
@@ -98,23 +93,12 @@ export class WorkerRuntime extends Runtime {
 interface TaskInit {
   args: Record<string, unknown>;
   context: Record<string, string>;
-  code: string;
-  name: string;
-}
-
-interface ModuleStatus {
-  path: string;
-  imported: boolean;
-}
-
-interface FuncStatus {
-  loaded: boolean;
+  matArgs: FunctionMaterializerData;
 }
 
 interface TaskData {
   promise: Deferred<unknown>;
-  type: "module" | "func";
-  name: string;
+  hooks: Array<() => void | Promise<void>>;
 }
 
 const resetModulus = 1_000_000;
@@ -123,6 +107,8 @@ const inactivityIntervalMs = 15_000;
 
 class OnDemandWorker {
   lazyWorker?: Worker;
+  name: string;
+  readonly codes: Codes;
 
   tasks: Map<number, TaskData> = new Map();
   counter = 0;
@@ -133,12 +119,14 @@ class OnDemandWorker {
   modules: Map<string, ModuleStatus> = new Map();
   funcs: Map<string, FuncStatus> = new Map();
 
-  constructor(lazy: boolean) {
+  constructor(name: string, lazy: boolean, codes: Codes) {
+    this.name = name;
     if (lazy) {
       this.enableLazyWorker();
     } else {
       this.worker();
     }
+    this.codes = codes;
   }
 
   enableLazyWorker() {
@@ -197,22 +185,11 @@ class OnDemandWorker {
         },
       } as WorkerOptions);
       this.lazyWorker.onmessage = (event) => {
-        const { id, data } = event.data as TaskResult;
+        const { id, data } = event.data as { id: number; data: unknown };
         const task = this.tasks.get(id)!;
-        task.promise.resolve(JSON.parse(new TextDecoder().decode(data)));
+        task.promise.resolve(data);
+        task.hooks.forEach((hook) => hook());
         this.tasks.delete(id);
-        switch (task.type) {
-          case "func": {
-            const status = this.funcs.get(task.name)!;
-            status.loaded = true;
-            break;
-          }
-          case "module": {
-            const status = this.modules.get(task.name)!;
-            status.imported = true;
-            break;
-          }
-        }
       };
       this.lazyWorker.onerror = (error) => {
         console.error(error);
@@ -227,57 +204,55 @@ class OnDemandWorker {
     return n;
   }
 
-  async execModuleTask(task: TaskInit): Promise<unknown> {
-    const { args, context, name, code } = task;
+  async execTask(task: TaskInit): Promise<unknown> {
+    const { args, context, matArgs: { name, import_from } } = task;
 
-    let status = this.modules.get(name);
+    if (import_from == null) { // function
+      const status = this.codes.funcs[name];
+      ensure(status != null, `unknown function "${name}"`);
+      const wrappedCode = {} as { code?: string };
+      if (!status.loaded) {
+        wrappedCode.code = status.code.source;
+        status.loaded = true;
+      }
 
-    if (status == null) {
-      const path = await Deno.makeTempFile({ suffix: ".ts" });
-      await Deno.writeTextFile(path, code);
-      status = { path, imported: false };
-      this.modules.set(name, status);
+      const promise = deferred<unknown>();
+      const id = this.nextId();
+      this.worker().postMessage({
+        type: "func",
+        name,
+        id,
+        args,
+        context,
+        ...wrappedCode,
+      } as FuncTask);
+
+      this.tasks.set(id, { promise, hooks: [] });
+      return promise;
+    } else { // module
+      const status = this.codes.modules[import_from];
+      ensure(status != null, `unknown module "${import_from}"`);
+      const hooks = [] as Array<() => void>;
+      if (status.loadedAt == null) {
+        const path = await Deno.makeTempFile({ suffix: ".js" });
+        await Deno.writeTextFile(path, status.code.source);
+        status.loadedAt = path;
+        hooks.push(() => Deno.remove(path));
+      }
+
+      const promise = deferred<unknown>();
+      const id = this.nextId();
+      this.worker().postMessage({
+        type: "module",
+        name,
+        id,
+        path: status.loadedAt,
+        args,
+        context,
+      } as ModuleTask);
+
+      this.tasks.set(id, { promise, hooks });
+      return promise;
     }
-
-    const promise = deferred<ArrayBuffer>();
-    const id = this.nextId();
-    this.worker().postMessage({
-      type: "module",
-      name,
-      id,
-      path: status.path,
-      data: new TextEncoder().encode(JSON.stringify({ args, context })).buffer,
-    });
-    this.tasks.set(id, {
-      promise,
-      type: "module",
-      name,
-    });
-    return promise;
-  }
-
-  execFuncTask(task: TaskInit): Promise<unknown> {
-    const { args, context, code, name } = task;
-
-    let status = this.funcs.get(name);
-    const wrappedCode = {} as { code?: string };
-    if (status == null) {
-      status = { loaded: false };
-      this.funcs.set(name, status);
-      wrappedCode.code = code;
-    }
-
-    const promise = deferred<unknown>();
-    const id = this.nextId();
-    this.worker().postMessage({
-      type: "func",
-      name,
-      id,
-      data: new TextEncoder().encode(
-        JSON.stringify({ args, context, ...wrappedCode }),
-      ).buffer,
-    });
-    this.tasks.set(id, { promise, type: "func", name });
-    return promise;
   }
 }

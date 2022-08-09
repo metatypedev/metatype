@@ -1,13 +1,5 @@
 import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
-import {
-  GraphQLArgs,
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLString,
-  Kind,
-  parse,
-  TypeKind,
-} from "https://cdn.skypack.dev/graphql@16.2.0?dts";
+import { Kind } from "https://cdn.skypack.dev/graphql@16.2.0?dts";
 import { ComputeStage, PolicyStages, PolicyStagesFactory } from "./engine.ts";
 import * as graphql from "./graphql.ts";
 import { FragmentDefs } from "./graphql.ts";
@@ -20,13 +12,13 @@ import {
   Batcher,
   Resolver,
   Runtime,
-  RuntimeConfig,
   RuntimeInit,
   RuntimesConfig,
 } from "./runtimes/Runtime.ts";
-import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
+import { Code } from "./runtimes/utils/codes.ts";
 import { WorkerRuntime } from "./runtimes/WorkerRuntime.ts";
 import { b, ensure, mapo } from "./utils.ts";
+import { compileCodes } from "./utils/swc.ts";
 
 interface TypePolicy {
   name: string;
@@ -58,6 +50,7 @@ export interface TypeGraphDS {
   materializers: Array<TypeMaterializer>;
   runtimes: Array<TypeRuntime>;
   policies: Array<TypePolicy>;
+  codes: Array<Code>;
 }
 
 export type RuntimeResolver = Record<string, Runtime>;
@@ -137,6 +130,8 @@ export class TypeGraph {
         });
       }),
     );
+
+    compileCodes(typegraph);
 
     return new TypeGraph(typegraph, runtimeReferences, introspection);
   }
@@ -757,7 +752,13 @@ export class TypeGraph {
       }
 
       const mat = this.tg.materializers[policy.materializer as number];
-      const rt = this.runtimeReferences[mat.runtime] as WorkerRuntime; // temp
+      const rt = this.runtimeReferences[mat.runtime] as
+        | DenoRuntime
+        | WorkerRuntime;
+      ensure(
+        rt.constructor === DenoRuntime || rt.constructor === WorkerRuntime,
+        "runtime for policy must be a WorkerRuntime",
+      );
       return [policy.name, rt.delegate(mat)] as [string, Resolver];
     });
 
