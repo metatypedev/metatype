@@ -45,6 +45,7 @@ class Graph:
     materializers: List[TypeMaterializer]
     runtimes: List[TypeRuntime]
     policies: List[TypePolicy]
+    codes: List[typegraph.Code]
 
 
 def build(tg: typegraph.TypeGraph):
@@ -174,4 +175,5 @@ def build(tg: typegraph.TypeGraph):
         materializers=collect(materializers),
         runtimes=collect(runtimes),
         policies=collect(policies),
+        codes=tg.codes,
     )

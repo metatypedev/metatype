@@ -51,6 +51,16 @@ class PrismaModel:
             f = PrismaField(field_name, field_type)
             if field_type._id:
                 f.tags.append("@id")
+            if hasattr(field_type, "_auto") and field_type._auto:
+                match field_type.typedef:
+                    case "integer" | "unsigned_integer":
+                        f.tags.append("@default(autoincrement())")
+                    case "uuid":
+                        f.tags.append("@default(uuid())")
+                    case _:
+                        raise Exception(
+                            f'"auto" tag not supported for type "{field_type.typedef}"'
+                        )
             self.fields[field_name] = f
 
     def link(self, schema: "PrismaSchema"):

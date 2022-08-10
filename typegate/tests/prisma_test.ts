@@ -1,3 +1,5 @@
+import { v4 } from "std/uuid/mod.ts";
+import { assert } from "std/testing/asserts.ts";
 import { gql, shell, test } from "./utils.ts";
 
 test("prisma", async (t) => {
@@ -41,12 +43,10 @@ test("prisma", async (t) => {
   });
 
   await t.should("insert a simple record", async () => {
-    const id = "b7831fd1-799d-4b20-9a84-830588f750a1";
     await gql`
       mutation {
         createOneRecord(
           data: {
-            id: ${id}
             name: "name"
             age: 1
           }
@@ -55,8 +55,8 @@ test("prisma", async (t) => {
         }
       }
     `
-      .expectData({
-        createOneRecord: { id },
+      .withExpect(({ data }) => {
+        assert(v4.validate(data.createOneRecord.id));
       })
       .on(e);
   });
@@ -212,12 +212,10 @@ test("1:n relationships", async (t) => {
   });
 
   await t.should("insert a record with nested object", async () => {
-    const id = 12;
     await gql`
       mutation q {
         createUser(
           data: {
-            id: ${id}
             name: "name"
             email: "email@example.com"
             messages: {
@@ -234,13 +232,13 @@ test("1:n relationships", async (t) => {
       }
     `
       .expectData({
-        createUser: { id },
+        createUser: { id: 1 },
       })
       .on(e);
 
     await gql`
       query {
-        findUniqueUser(where: { id: ${id} }) {
+        findUniqueUser(where: { id: 1 }) {
           id
           name
           email
@@ -252,7 +250,7 @@ test("1:n relationships", async (t) => {
     `
       .expectData({
         findUniqueUser: {
-          id,
+          id: 1,
           name: "name",
           email: "email@example.com",
           messages: [{ id: 123 }],

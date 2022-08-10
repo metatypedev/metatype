@@ -1,13 +1,5 @@
 import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
-import {
-  GraphQLArgs,
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLString,
-  Kind,
-  parse,
-  TypeKind,
-} from "https://cdn.skypack.dev/graphql@16.2.0?dts";
+import { Kind } from "https://cdn.skypack.dev/graphql@16.2.0?dts";
 import { ComputeStage, PolicyStages, PolicyStagesFactory } from "./engine.ts";
 import * as graphql from "./graphql.ts";
 import { FragmentDefs } from "./graphql.ts";
@@ -20,13 +12,13 @@ import {
   Batcher,
   Resolver,
   Runtime,
-  RuntimeConfig,
   RuntimeInit,
   RuntimesConfig,
 } from "./runtimes/Runtime.ts";
-import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
+import { Code } from "./runtimes/utils/codes.ts";
 import { WorkerRuntime } from "./runtimes/WorkerRuntime.ts";
 import { b, ensure, mapo } from "./utils.ts";
+import { compileCodes } from "./utils/swc.ts";
 
 interface TypePolicy {
   name: string;
@@ -58,6 +50,7 @@ export interface TypeGraphDS {
   materializers: Array<TypeMaterializer>;
   runtimes: Array<TypeRuntime>;
   policies: Array<TypePolicy>;
+  codes: Array<Code>;
 }
 
 export type RuntimeResolver = Record<string, Runtime>;
@@ -90,13 +83,13 @@ export class TypeGraph {
   };
 
   tg: TypeGraphDS;
-  runtimeReferences: RuntimeResolver;
+  runtimeReferences: Runtime[];
   root: TypeNode;
   introspection: TypeGraph | null;
 
   private constructor(
     typegraph: TypeGraphDS,
-    runtimeReferences: RuntimeResolver,
+    runtimeReferences: Runtime[],
     introspection: TypeGraph | null,
   ) {
     this.tg = typegraph;
@@ -111,43 +104,45 @@ export class TypeGraph {
     introspection: TypeGraph | null,
     runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
-    const runtimeReferences = { ...staticReference };
+    const runtimeReferences = await Promise.all(
+      typegraph.runtimes.map((runtime, idx) => {
+        if (runtime.name in staticReference) {
+          return staticReference[runtime.name];
+        }
 
-    for await (const [idx, runtime] of typegraph.runtimes.entries()) {
-      if (!(runtime.name in runtimeReferences)) {
         ensure(
           runtime.name in runtimeInit,
           `cannot find runtime "${runtime.name}" in ${
             Object.keys(
-              runtimeReferences,
+              runtimeInit,
             ).join(", ")
           }`,
         );
 
-        const mats = typegraph.materializers.filter(
-          (mat) => mat.runtime === idx,
-        );
-
-        console.log(`init ${runtime.name}`);
-        runtimeReferences[runtime.name] = await runtimeInit[runtime.name](
+        console.log(`init ${runtime.name} (${idx})`);
+        return runtimeInit[runtime.name]({
           typegraph,
-          mats,
-          runtime.data,
-          runtimeConfig[runtime.name] ?? {},
-        );
-      }
-    }
+          materializers: typegraph.materializers.filter((mat) =>
+            mat.runtime === idx
+          ),
+          args: runtime.data,
+          config: runtimeConfig[runtime.name] ?? {},
+        });
+      }),
+    );
+
+    compileCodes(typegraph);
 
     return new TypeGraph(typegraph, runtimeReferences, introspection);
   }
 
   async deinit(): Promise<void> {
     for await (
-      const [name, runtime] of Object.entries(
-        this.runtimeReferences,
+      const [idx, runtime] of this.runtimeReferences.map((rt, i) =>
+        [i, rt] as const
       )
     ) {
-      console.log(`deinit ${name}`);
+      console.log(`deinit runtime ${idx}`);
       await runtime.deinit();
     }
   }
@@ -470,7 +465,13 @@ export class TypeGraph {
             args: {},
             policies,
             outType: stringTypeNode,
-            runtime: this.runtimeReferences["deno"],
+            // singleton
+            runtime: DenoRuntime.init({
+              typegraph: this.tg,
+              materializers: [],
+              args: {},
+              config: {},
+            }),
             batcher: this.nextBatcher(stringTypeNode),
             node: fieldName,
             path: [...queryPath, aliasName ?? fieldName],
@@ -500,7 +501,7 @@ export class TypeGraph {
           );
         }
 
-        const runtime = this.tg.runtimes[fieldType.runtime];
+        const runtime = this.runtimeReferences[fieldType.runtime];
 
         const stage = new ComputeStage({
           dependencies: parentStage ? [parentStage.id()] : [],
@@ -508,7 +509,7 @@ export class TypeGraph {
           args: {},
           policies,
           outType: fieldType,
-          runtime: this.runtimeReferences[runtime.name],
+          runtime,
           batcher: this.nextBatcher(fieldType),
           node: fieldName,
           path: [...queryPath, aliasName ?? fieldName],
@@ -636,7 +637,7 @@ export class TypeGraph {
       );
 
       const mat = this.tg.materializers[fieldType.data.materializer as number];
-      const runtime = this.tg.runtimes[mat.runtime];
+      const runtime = this.runtimeReferences[mat.runtime];
 
       if (!serial && mat.data.serial) {
         throw Error(
@@ -650,7 +651,7 @@ export class TypeGraph {
         args,
         policies,
         outType: outputType,
-        runtime: this.runtimeReferences[runtime.name],
+        runtime,
         materializer: mat,
         batcher: this.nextBatcher(outputType),
         node: fieldName,
@@ -736,11 +737,9 @@ export class TypeGraph {
           const mat = this.introspection.tg.materializers[
             introPolicy.materializer as number
           ];
-          const runtime = this.introspection.tg.runtimes[mat.runtime];
-          const rt = this.introspection.runtimeReferences[
-            runtime.name
-          ] as WorkerRuntime; // temp
-          return [introPolicy.name, rt.delegate(mat.name)] as [
+          const rt = this.introspection
+            .runtimeReferences[mat.runtime] as WorkerRuntime; // temp
+          return [introPolicy.name, rt.delegate(mat)] as [
             string,
             Resolver,
           ];
@@ -753,9 +752,14 @@ export class TypeGraph {
       }
 
       const mat = this.tg.materializers[policy.materializer as number];
-      const runtime = this.tg.runtimes[mat.runtime];
-      const rt = this.runtimeReferences[runtime.name] as WorkerRuntime; // temp
-      return [policy.name, rt.delegate(mat.name)] as [string, Resolver];
+      const rt = this.runtimeReferences[mat.runtime] as
+        | DenoRuntime
+        | WorkerRuntime;
+      ensure(
+        rt.constructor === DenoRuntime || rt.constructor === WorkerRuntime,
+        "runtime for policy must be a WorkerRuntime",
+      );
+      return [policy.name, rt.delegate(mat)] as [string, Resolver];
     });
 
     return (claim: Record<string, any>) => {
