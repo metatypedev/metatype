@@ -1,6 +1,7 @@
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import deno
 from typegraph.materializers import worker
+from typegraph.materializers.deno import FunMat
+from typegraph.materializers.deno import IdentityMat
 from typegraph.materializers.graphql import GraphQLRuntime
 from typegraph.materializers.http import HTTPRuntime
 from typegraph.materializers.prisma import PrismaRuntime
@@ -11,6 +12,7 @@ with TypeGraph("test") as g:
     remote = GraphQLRuntime("http://localhost:5000/graphql")
     db = PrismaRuntime("postgresql://postgres:password@localhost:5432/db")
     ipApi = HTTPRuntime("http://ip-api.com/json")
+    js = worker.WorkerRuntime("js")
 
     messages = t.struct(
         {
@@ -33,8 +35,7 @@ with TypeGraph("test") as g:
     allow_all_policy = t.policy(
         t.struct(),  # t.struct({"claim", g.claim.inject}),
         worker.JavascriptMat(
-            worker.JavascriptMat.lift(lambda args: True),
-            "policy",
+            g.fun(worker.JavascriptMat.lift(lambda args: True), name="allow_all")
         ),
     ).named("allow_all_policy")
 
@@ -74,7 +75,7 @@ with TypeGraph("test") as g:
                             }
                         ),  # "query": arg.apply(5)}),
                         t.integer(),
-                        deno.IdentityMat(),
+                        IdentityMat(),
                     ),
                     "ip": ipApi.get(
                         "24.48.0.1",
@@ -114,10 +115,12 @@ with TypeGraph("test") as g:
                                     t.struct({"integer": g("res_int")}),
                                     t.integer().named("duration_remote"),
                                     worker.JavascriptMat(
-                                        worker.JavascriptMat.lift(
-                                            lambda args: args.parent.integer * 3
-                                        ),
-                                        "js2",
+                                        g.fun(
+                                            worker.JavascriptMat.lift(
+                                                lambda args: args.parent.integer * 3
+                                            ),
+                                            name="js2",
+                                        )
                                     ),
                                 ).named("compute_duration_remote"),
                             }
@@ -126,15 +129,34 @@ with TypeGraph("test") as g:
                     "duration": t.gen(
                         t.integer().named("duration"),
                         worker.JavascriptMat(
-                            worker.JavascriptMat.lift(lambda args: args.parent.out * 2),
-                            "js1",
+                            g.fun(
+                                worker.JavascriptMat.lift(
+                                    lambda args: args.parent.out * 2
+                                ),
+                                name="js1",
+                            )
                         ),
                     ).named("compute_duration"),
                     "self": g("f"),
                     "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),
                 }
             ).named("res"),
-            deno.FunMat("function"),
+            FunMat(
+                g.fun(
+                    """
+                    ({ a }: { a: number; }) => {
+                        return {
+                            out: a * 2,
+                            a: 2,
+                            b: null,
+                            nested: () => ({
+                            ok: 0,
+                            }),
+                        };
+                    }
+                    """
+                ),
+            ),
         )
         .named("f")
         .add_policy(allow_all_policy)

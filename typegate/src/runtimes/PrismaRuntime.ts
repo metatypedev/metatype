@@ -3,6 +3,7 @@ import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import * as native from "../../native/bindings/bindings.ts";
 import { GraphQLRuntime } from "./GraphQLRuntime.ts";
 import { ResolverError } from "../errors.ts";
+import { RuntimeInitParams } from "./Runtime.ts";
 
 const makeDatasource = (uri: string) => {
   const engine = (() => {
@@ -28,12 +29,8 @@ export class PrismaRuntime extends GraphQLRuntime {
     this.key = "";
   }
 
-  static async init(
-    typegraph: TypeGraphDS,
-    materializers: TypeMaterializer[],
-    args: Record<string, unknown>,
-    config: RuntimeConfig,
-  ): Promise<Runtime> {
+  static async init(params: RuntimeInitParams): Promise<Runtime> {
+    const { typegraph, args } = params;
     const schema = `${args.datasource}${args.datamodel}`;
     //console.log(schema);
     const instance = new PrismaRuntime(schema);
@@ -70,6 +67,8 @@ export class PrismaRuntime extends GraphQLRuntime {
   execute(query: string, variables: Record<string, unknown>): Resolver {
     return async (args) => {
       const startTime = performance.now();
+      console.log("datamodel", this.datamodel);
+      console.log("key", this.key);
       const ret = await native.prisma_query({
         key: this.key,
         query: {
