@@ -20,7 +20,8 @@ def serialize_typegraph(tg, indent=False):
     return orjson.dumps(g, default=default, **opt).decode()
 
 
-def import_file(path: Path) -> List[TypeGraph]:
+def import_file(path: str) -> List[TypeGraph]:
+    path = Path(path)
     typegraphs = []
 
     spec = importlib.util.spec_from_file_location(path.name, path)

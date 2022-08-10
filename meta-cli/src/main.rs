@@ -22,7 +22,7 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Commands {
-    /// Adds files to myapp
+    /// Serialize the typegraphs defined in the specified python file(s) into JSON.
     Serialize(Serialize),
     /// Adds files to myapp
     Prisma(Prisma),
