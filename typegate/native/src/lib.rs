@@ -76,7 +76,7 @@ fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngin
     };
     let engine = engine::QueryEngine::new(conf).expect("cannot connect");
     RT.block_on(engine.connect()).unwrap();
-    let engine_id = format!("{}", input.typegraph);
+    let engine_id = format!("{}_{}", input.typegraph, ENGINES.len() + 1);
     ENGINES.insert(engine_id.clone(), engine);
     PrismaRegisterEngineOut { engine_id }
 }

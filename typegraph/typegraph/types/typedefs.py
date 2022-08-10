@@ -227,10 +227,22 @@ class literal(Type):
 
 class integer(Type):
     type_name = "integer"
+    _auto: bool = False
+
+    @property
+    def auto(self):
+        self._auto = True
+        return self
 
 
 class unsigned_integer(Type):
     type_name = "unsigned_integer"
+    _auto: bool = False
+
+    @property
+    def auto(self):
+        self._auto = True
+        return self
 
 
 # unsigned int = int | x > 0 or numeric
@@ -366,6 +378,12 @@ class path(string):
 
 class uuid(string):
     type_name = "uuid"
+    _auto: bool = False
+
+    @property
+    def auto(self):
+        self._auto = True
+        return self
 
 
 class ip(string):
