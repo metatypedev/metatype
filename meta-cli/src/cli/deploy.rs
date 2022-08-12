@@ -24,7 +24,7 @@ impl Action for Deploy {
             Some(file) => format!(r#"loaders.import_file("{}")"#, file),
             None => r#"loaders.import_folder(".")"#.to_string(),
         };
-        let tgs = collect_typegraphs(dir, Some(loader))?;
+        let tgs = collect_typegraphs(dir, Some(loader), false)?;
 
         for tg in tgs {
             println!("Pushing {}", tg.0);
