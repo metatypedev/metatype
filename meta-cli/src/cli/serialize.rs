@@ -30,7 +30,7 @@ impl Action for Serialize {
             Some(file) => format!(r#"loaders.import_file("{}")"#, file),
             None => r#"loaders.import_folder(".")"#.to_string(),
         };
-        let tgs = collect_typegraphs(dir, Some(loader))?;
+        let tgs = collect_typegraphs(dir, Some(loader), false)?;
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.get(tg_name) {

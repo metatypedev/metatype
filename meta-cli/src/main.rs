@@ -1,7 +1,11 @@
 mod cli;
+mod codegen;
 mod prisma;
+
 use anyhow::{Ok, Result};
 use clap::{Parser, Subcommand};
+use cli::codegen::Codegen;
+use cli::codegen::Commands as CodegenCommands;
 use cli::deploy::Deploy;
 use cli::dev::Dev;
 use cli::prisma::Commands as PrismaCommands;
@@ -30,6 +34,8 @@ enum Commands {
     Dev(Dev),
     /// Adds files to myapp
     Deploy(Deploy),
+    /// Codegen
+    Codegen(Codegen),
 }
 
 fn main() -> Result<()> {
@@ -54,6 +60,11 @@ fn main() -> Result<()> {
         Commands::Deploy(deploy) => {
             deploy.run(args.dir)?;
         }
+        Commands::Codegen(codegen) => match codegen.command {
+            CodegenCommands::Deno(deno) => {
+                deno.run(args.dir)?;
+            }
+        },
     }
 
     Ok(())

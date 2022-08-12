@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from dataclasses import field
+import os
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -72,8 +73,11 @@ class TypeGraph:
         if source is None:
             if load is None:
                 raise Exception("source or file must be specified")
-            with open(load) as f:
-                source = f.read()
+            if os.environ["DONT_READ_EXTERNAL_TS_FILES"]:
+                source = f"file:{load}"
+            else:
+                with open(load) as f:
+                    source = f.read()
         self.codes.append(Code(name, source, type="module"))
         return name
 
