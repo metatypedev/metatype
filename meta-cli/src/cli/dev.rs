@@ -24,7 +24,7 @@ pub struct Dev {}
 
 impl Action for Dev {
     fn run(&self, dir: String) -> Result<()> {
-        let tgs = collect_typegraphs(dir.clone(), None)?;
+        let tgs = collect_typegraphs(dir.clone(), None, false)?;
         reload_typegraphs(tgs, "127.0.0.1:7890".to_string())?;
 
         let gi = Gitignore::new(Path::new(".gitignore")).0;
@@ -54,7 +54,7 @@ impl Action for Dev {
                     | EventKind::Modify(ModifyKind::Data(_))
                     | EventKind::Modify(ModifyKind::Name(_)) => {
                         println!("file change {:?}", event);
-                        let tgs = collect_typegraphs(watch_patch.clone(), None).unwrap();
+                        let tgs = collect_typegraphs(watch_patch.clone(), None, false).unwrap();
                         reload_typegraphs(tgs, "127.0.0.1:7890".to_string()).unwrap();
                     }
                     _ => {}
@@ -81,7 +81,7 @@ impl Action for Dev {
             let response = match url.path() {
                 "/dev" => match query.get("node") {
                     Some(node) => {
-                        let tgs = collect_typegraphs(dir.clone(), None)?;
+                        let tgs = collect_typegraphs(dir.clone(), None, false)?;
                         reload_typegraphs(tgs, node.to_owned())?;
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
@@ -107,6 +107,7 @@ impl Action for Dev {
 pub fn collect_typegraphs(
     path: String,
     custom_loader: Option<String>,
+    dont_read_external_ts_files: bool,
 ) -> Result<HashMap<String, String>> {
     let cwd = Path::new(&path);
 
@@ -130,6 +131,10 @@ pub fn collect_typegraphs(
         .current_dir(cwd)
         .env("PYTHONUNBUFFERED", "1")
         .env("PYTHONDONTWRITEBYTECODE", "1")
+        .env(
+            "DONT_READ_EXTERNAL_TS_FILES",
+            if dont_read_external_ts_files { "1" } else { "" },
+        )
         .output()?;
 
     if !test.status.success() {

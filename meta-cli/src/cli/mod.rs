@@ -1,5 +1,6 @@
 use anyhow::Result;
 
+pub mod codegen;
 pub mod deploy;
 pub mod dev;
 pub mod prisma;

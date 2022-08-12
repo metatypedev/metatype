@@ -81,7 +81,7 @@ impl Action for Apply {
             Some(file) => format!(r#"loaders.import_file("{}")"#, file),
             None => r#"loaders.import_folder(".")"#.to_string(),
         };
-        let tgs = collect_typegraphs(dir, Some(loader))?;
+        let tgs = collect_typegraphs(dir, Some(loader), false)?;
 
         for tg in tgs {
             let typegraph: Typegraph = serde_json::from_str(&tg.1)?;
@@ -122,7 +122,7 @@ impl Action for Diff {
             Some(file) => format!(r#"loaders.import_file("{}")"#, file),
             None => r#"loaders.import_folder(".")"#.to_string(),
         };
-        let tgs = collect_typegraphs(dir, Some(loader))?;
+        let tgs = collect_typegraphs(dir, Some(loader), false)?;
 
         for tg in tgs {
             let typegraph: Typegraph = serde_json::from_str(&tg.1)?;
