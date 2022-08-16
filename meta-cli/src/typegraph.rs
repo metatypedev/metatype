@@ -11,7 +11,7 @@ pub struct Typegraph {
     pub codes: Vec<Code>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TypeNode {
     pub name: String,
     pub typedef: String,
