@@ -1,6 +1,8 @@
 mod cli;
 mod codegen;
 mod prisma;
+mod ts;
+mod typegraph;
 
 use anyhow::{Ok, Result};
 use clap::{Parser, Subcommand};
