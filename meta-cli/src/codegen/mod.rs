@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
+use std::fs::File;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -26,8 +28,8 @@ pub fn apply<P>(tg_json: &str, base_dir: P)
 where
     P: AsRef<Path>,
 {
-    let mut cg = Codegen::new(tg_json, base_dir);
-    cg.apply();
+    let cg = Codegen::new(tg_json, base_dir);
+    cg.apply().expect("could not apply codegen");
 }
 
 struct ModuleInfo {
@@ -84,7 +86,7 @@ impl Codegen {
         }
     }
 
-    fn apply(&self) {
+    fn apply(&self) -> Result<()> {
         let mut gen_list = vec![];
 
         for tpe in self.tg.types.iter() {
@@ -107,11 +109,41 @@ impl Codegen {
             }
         }
 
+        // group by modules
         let gen_list = gen_list;
+        let cgs = self.generate(gen_list);
 
-        for (fn_data, mat_data) in gen_list.iter() {
-            self.gen_func(fn_data, mat_data);
+        for (mod_name, codegen) in cgs.into_iter() {
+            let module = self.ts_modules.get(&mod_name).unwrap();
+            let mut file = File::options()
+                .append(true)
+                .open(&module.path)
+                .context(format!("could not open output file: {:?}", module.path))?;
+            write!(file, "\n{codegen}\n")?;
         }
+
+        Ok(())
+    }
+
+    fn generate(&self, gen_list: Vec<(FuncData, FuncMatData)>) -> HashMap<String, String> {
+        let mut map: HashMap<String, Vec<Result<String>>> = HashMap::default();
+        for (fn_data, mat_data) in gen_list.iter() {
+            map.entry(mat_data.import_from.clone().unwrap())
+                .and_modify(|l| l.push(self.gen_func(fn_data, mat_data)))
+                .or_insert_with(|| vec![self.gen_func(fn_data, mat_data)]);
+        }
+
+        let map = map
+            .into_iter()
+            .map(|(k, v)| (k, v.into_iter().collect::<Result<Vec<String>>>()))
+            .collect::<HashMap<_, _>>();
+
+        let mut cgs: HashMap<String, String> = HashMap::default();
+        for (k, v) in map.into_iter() {
+            cgs.insert(k, v.expect("could not generate code").join("\n\n"));
+        }
+
+        cgs
     }
 
     fn exported_functions<P>(mod_path: P) -> HashSet<String>
@@ -201,7 +233,7 @@ impl Codegen {
         }
     }
 
-    fn gen_func(&self, fn_data: &FuncData, mat_data: &FuncMatData) -> Result<()> {
+    fn gen_func(&self, fn_data: &FuncData, mat_data: &FuncMatData) -> Result<String> {
         // input type
         let inp_type_name = {
             let mut name = mat_data.name.clone();
@@ -229,9 +261,8 @@ impl Codegen {
             self.gen_default_value(fn_data.output)?,
         );
 
-        println!("generated code:\n{code}");
-
-        Ok(())
+        // TODO: format code
+        Ok(code)
     }
 
     fn get_typespec(&self, idx: u32) -> Result<String> {
