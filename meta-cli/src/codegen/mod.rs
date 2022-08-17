@@ -152,7 +152,6 @@ impl Codegen {
     }
 
     fn gen_obj_type(&self, tpe: &TypeNode) -> Result<String> {
-        // let tpe = &self.tg.types[idx as usize];
         let fields = tpe.get_struct_fields()?;
         let fields = fields
             .iter()
@@ -164,6 +163,42 @@ impl Codegen {
         }
         typedef.push_str("}");
         Ok(typedef)
+    }
+
+    fn destructure_object(&self, idx: u32) -> Result<String> {
+        let tpe = &self.tg.types[idx as usize];
+        let fields = tpe.get_struct_fields()?;
+        Ok(format!(
+            "{{ {} }}",
+            fields
+                .keys()
+                .map(|k| k.clone())
+                .collect::<Vec<_>>()
+                .join(", "),
+        ))
+    }
+
+    fn gen_default_value(&self, idx: u32) -> Result<String> {
+        let tpe = &self.tg.types[idx as usize];
+        match &tpe.typedef {
+            t if t == "optional" => Ok("null".to_string()),
+            t if t == "list" => Ok("[]".to_string()),
+            t if t == "boolean" => Ok("false".to_string()),
+            t if t == "integer" || t == "unsigned_integer" || t == "float" => Ok("0".to_string()),
+            t if t == "string" => Ok("\"\"".to_string()),
+            t if t == "struct" => {
+                let fields = tpe.get_struct_fields()?;
+                let body = fields
+                    .iter()
+                    .map(|(k, v)| -> Result<String> {
+                        Ok(format!("{k}: {}", self.gen_default_value(*v)?))
+                    })
+                    .collect::<Result<Vec<_>>>()?
+                    .join(", ");
+                Ok(format!("{{ {body} }}"))
+            }
+            _ => Err(anyhow!("unsupported type \"{}\"", tpe.typedef)),
+        }
     }
 
     fn gen_func(&self, fn_data: &FuncData, mat_data: &FuncMatData) -> Result<()> {
@@ -179,7 +214,23 @@ impl Codegen {
         let inp_typedef = self
             .gen_interface(&inp_type_name, fn_data.input)
             .context("failed to generate input type")?;
-        println!("input typedef:\n{inp_typedef}");
+
+        let out_typespec = self
+            .get_typespec(fn_data.output)
+            .context("failed to generate output type")?;
+
+        let code = format!(
+            "{}\nexport function {}({}: {}): {} {{\n  return {};\n}}",
+            inp_typedef,
+            mat_data.name,
+            self.destructure_object(fn_data.input)?,
+            inp_type_name,
+            out_typespec,
+            self.gen_default_value(fn_data.output)?,
+        );
+
+        println!("generated code:\n{code}");
+
         Ok(())
     }
 
@@ -191,7 +242,7 @@ impl Codegen {
                     "invalid type data for optional: field \"of\" is undefined"
                 ))?;
                 let of: u32 = serde_json::from_value(of.clone())?;
-                Ok(format!("undefined | {}", self.get_typespec(of)?))
+                Ok(format!("null | {}", self.get_typespec(of)?))
             }
             t if t == "list" => {
                 let of = tpe.data.get("of").ok_or(anyhow!(
