@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::cell::RefCell;
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -13,7 +14,7 @@ struct FuncData {
     output: u32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 struct FuncMatData {
     serial: bool,
     name: String,
@@ -30,14 +31,14 @@ where
 
 struct ModuleInfo {
     path: PathBuf,
-    exports: Option<Vec<String>>, // names of exported functions
+    exports: RefCell<Option<HashSet<String>>>, // names of exported functions
 }
 
 struct Codegen {
     path: PathBuf,
     base_dir: PathBuf,
+    tg: Typegraph,
     ts_modules: HashMap<String, ModuleInfo>,
-    tg: Option<Typegraph>,
 }
 
 impl Codegen {
@@ -66,7 +67,7 @@ impl Codegen {
                             code.name.clone(),
                             ModuleInfo {
                                 path: PathBuf::from_str(path).unwrap(),
-                                exports: None, // lazy
+                                exports: RefCell::new(None), // lazy
                             },
                         );
                     }
@@ -77,34 +78,39 @@ impl Codegen {
         Codegen {
             path,
             base_dir,
+            tg,
             ts_modules,
-            tg: Some(tg),
         }
     }
 
-    fn apply(&mut self) {
-        let tg = self.tg.take().unwrap();
+    fn apply(&self) {
+        let mut gen_list = vec![];
 
-        for tpe in tg.types {
+        for tpe in self.tg.types.iter() {
             if tpe.typedef != "func" && tpe.typedef != "gen" {
                 continue;
             }
             let func_data: FuncData = serde_json::from_value(tpe.data.clone().into_json())
                 .expect("invalid type data for func");
-            let mat = tg.materializers[func_data.materializer as usize].clone();
+            let mat = self.tg.materializers[func_data.materializer as usize].clone();
             if mat.name == "function" {
                 let mat_data: FuncMatData = serde_json::from_value(mat.data.into_json())
                     .expect("invalid materializer data for function materializer");
-                if let Some(mod_name) = mat_data.import_from.clone() {
-                    self.gen_func(&mod_name, mat_data);
-                    // TODO:
+                if let Some(mod_name) = mat_data.import_from.as_ref() {
+                    if self.ts_modules.contains_key(mod_name) && mat_data.import_from.is_some() {
+                        if self.check_func(&mat_data) {
+                            gen_list.push(mat_data);
+                        }
+                    }
                 }
-                // TODO:
             }
         }
+
+        let gen_list = gen_list;
+        println!("gen list {gen_list:?}");
     }
 
-    fn exported_functions<P>(mod_path: P) -> Vec<String>
+    fn exported_functions<P>(mod_path: P) -> HashSet<String>
     where
         P: AsRef<Path>,
     {
@@ -114,24 +120,25 @@ impl Codegen {
         crate::ts::parser::get_exported_functions(&module.body)
     }
 
-    fn get_exports(&mut self, mod_name: &str) -> Option<Vec<String>> {
-        if let Some(module) = self.ts_modules.get_mut(mod_name) {
-            if let Some(exports) = module.exports.clone() {
-                Some(exports)
+    /// Returns `true` if the function with the given materializer should be generated.
+    fn check_func(&self, mat_data: &FuncMatData) -> bool {
+        if let Some(mod_name) = mat_data.import_from.as_ref() {
+            if let Some(module) = self.ts_modules.get(mod_name) {
+                if module.exports.borrow().is_some() {
+                    let exports = module.exports.borrow();
+                    let exports = exports.as_ref().unwrap();
+                    !exports.contains(&mat_data.name)
+                } else {
+                    let exports = Self::exported_functions(&module.path);
+                    let ret = !exports.contains(&mat_data.name);
+                    *module.exports.borrow_mut() = Some(exports);
+                    ret
+                }
             } else {
-                let exports = Self::exported_functions(&module.path);
-                module.exports = Some(exports.clone());
-                Some(exports)
+                false
             }
         } else {
-            None
-        }
-    }
-
-    fn gen_func(&mut self, mod_name: &str, mat_data: FuncMatData) {
-        if let Some(exports) = self.get_exports(mod_name) {
-            println!("exports {:?}", exports);
-            // TODO: generate missing functions
+            false
         }
     }
 }
