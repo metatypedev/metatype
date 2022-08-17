@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
@@ -5,7 +6,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
-use crate::typegraph::Typegraph;
+use crate::typegraph::{TypeNode, Typegraph};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct FuncData {
@@ -99,7 +100,7 @@ impl Codegen {
                 if let Some(mod_name) = mat_data.import_from.as_ref() {
                     if self.ts_modules.contains_key(mod_name) && mat_data.import_from.is_some() {
                         if self.check_func(&mat_data) {
-                            gen_list.push(mat_data);
+                            gen_list.push((func_data, mat_data));
                         }
                     }
                 }
@@ -107,7 +108,10 @@ impl Codegen {
         }
 
         let gen_list = gen_list;
-        println!("gen list {gen_list:?}");
+
+        for (fn_data, mat_data) in gen_list.iter() {
+            self.gen_func(fn_data, mat_data);
+        }
     }
 
     fn exported_functions<P>(mod_path: P) -> HashSet<String>
@@ -141,9 +145,76 @@ impl Codegen {
             false
         }
     }
+
+    fn gen_interface(&self, name: &str, idx: u32) -> Result<String> {
+        let tpe = &self.tg.types[idx as usize];
+        Ok(format!("interface {name} {}\n", self.gen_obj_type(tpe)?))
+    }
+
+    fn gen_obj_type(&self, tpe: &TypeNode) -> Result<String> {
+        // let tpe = &self.tg.types[idx as usize];
+        let fields = tpe.get_struct_fields()?;
+        let fields = fields
+            .iter()
+            .map(|(k, v)| (k.clone(), self.get_typespec(*v).unwrap()))
+            .collect::<HashMap<_, _>>();
+        let mut typedef = "{\n".to_string();
+        for (k, v) in fields.iter() {
+            typedef.push_str(&format!("  {k}: {v};\n"));
+        }
+        typedef.push_str("}");
+        Ok(typedef)
+    }
+
+    fn gen_func(&self, fn_data: &FuncData, mat_data: &FuncMatData) -> Result<()> {
+        // input type
+        let inp_type_name = {
+            let mut name = mat_data.name.clone();
+            let (lead, _) = name.split_at_mut(1);
+            lead.make_ascii_uppercase();
+            name.push_str("Input");
+            name
+        };
+        // let inp_type = &self.tg.types[fn_data.input as usize];
+        let inp_typedef = self
+            .gen_interface(&inp_type_name, fn_data.input)
+            .context("failed to generate input type")?;
+        println!("input typedef:\n{inp_typedef}");
+        Ok(())
+    }
+
+    fn get_typespec(&self, idx: u32) -> Result<String> {
+        let tpe = &self.tg.types[idx as usize];
+        match &tpe.typedef {
+            t if t == "optional" => {
+                let of = tpe.data.get("of").ok_or(anyhow!(
+                    "invalid type data for optional: field \"of\" is undefined"
+                ))?;
+                let of: u32 = serde_json::from_value(of.clone())?;
+                Ok(format!("undefined | {}", self.get_typespec(of)?))
+            }
+            t if t == "list" => {
+                let of = tpe.data.get("of").ok_or(anyhow!(
+                    "invalid type data for list: field \"of\" is undefined"
+                ))?;
+                let of: u32 = serde_json::from_value(of.clone())?;
+                Ok(format!("Array<{}>", self.get_typespec(of)?))
+            }
+            t if t == "boolean" => Ok("boolean".to_string()),
+            t if t == "integer" || t == "unsigned_integer" || t == "float" => {
+                Ok("number".to_string())
+            }
+            t if t == "string" => Ok("string".to_string()),
+            t if t == "struct" => self.gen_obj_type(tpe),
+            _ => Err(anyhow!("unsupported type {}", tpe.typedef)),
+        }
+    }
 }
 
-/* utils */
+/**
+ * utils
+ **/
+
 trait IntoJson {
     fn into_json(self) -> Value;
 }
