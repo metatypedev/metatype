@@ -1,6 +1,7 @@
 use anyhow::Result;
 use dprint_plugin_typescript::configuration::*;
 use dprint_plugin_typescript::*;
+use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
@@ -258,19 +259,18 @@ where
     Ok(module)
 }
 
-pub fn get_exported_functions(mod_body: &Vec<ModuleItem>) -> Vec<String> {
-    let mut res = vec![];
+pub fn get_exported_functions(mod_body: &Vec<ModuleItem>) -> HashSet<String> {
+    let mut res = HashSet::default();
     for mod_item in mod_body {
         match mod_item {
             ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(decl)) => match &decl.decl {
                 Decl::Fn(fn_decl) => {
-                    // println!("fn decl {:?}", fn_decl);
-                    res.push(fn_decl.ident.sym.to_string());
+                    assert!(res.insert(fn_decl.ident.sym.to_string()));
                 }
                 _ => (),
             },
             ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(decl)) => match &decl.decl {
-                DefaultDecl::Fn(_) => res.push("default".to_string()),
+                DefaultDecl::Fn(_) => assert!(res.insert("default".to_string())),
                 _ => (),
             },
             _ => (),
