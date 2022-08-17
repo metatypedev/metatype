@@ -1,3 +1,4 @@
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -46,4 +47,15 @@ pub struct Code {
     #[serde(rename = "type")]
     pub typ: String,
     pub source: String,
+}
+
+impl TypeNode {
+    pub fn get_struct_fields(&self) -> Result<HashMap<String, u32>> {
+        assert!(&self.typedef == "struct");
+        let binds = self
+            .data
+            .get("binds")
+            .ok_or(anyhow!("field \"binds\" not found in struct data"))?;
+        Ok(serde_json::from_value(binds.clone())?)
+    }
 }
