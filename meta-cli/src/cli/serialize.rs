@@ -19,6 +19,10 @@ pub struct Serialize {
     #[clap(short, long, value_parser)]
     typegraph: Option<String>,
 
+    /// Serialize only one typegraph. Error if more than one are defined.
+    #[clap(short = '1', value_parser, default_value_t = false)]
+    unique: bool,
+
     /// The output file. Default: stdout
     #[clap(short, long, value_parser)]
     out: Option<String>,
@@ -39,12 +43,22 @@ impl Action for Serialize {
                 return Err(anyhow!("typegraph \"{}\" not found", tg_name));
             }
         } else {
-            let entries = tgs
-                .iter()
-                .map(|(tg_name, tg)| format!("\"{tg_name}\": {tg}"))
-                .collect::<Vec<_>>()
-                .join(",\n");
-            self.write(&format!("{{{entries}}}"));
+            if self.unique {
+                if tgs.len() == 1 {
+                    let tg = tgs.into_values().nth(0).unwrap();
+                    self.write(&format!("{}", tg));
+                } else {
+                    eprint!("expected only one typegraph, got {}", tgs.len());
+                    std::process::exit(1);
+                }
+            } else {
+                let entries = tgs
+                    .iter()
+                    .map(|(tg_name, tg)| format!("\"{tg_name}\": {tg}"))
+                    .collect::<Vec<_>>()
+                    .join(",\n");
+                self.write(&format!("{{{entries}}}"));
+            }
         }
 
         Ok(())
