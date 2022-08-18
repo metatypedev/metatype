@@ -9,8 +9,8 @@ dprint-plugin-typescript = "0.71.2"
 swc_common = { version = "0.26.0", features = ["tty-emitter"] }
 swc_ecma_ast = "0.89.1"
 swc_ecmascript = { version = "0.187.0", features = ["visit", "transforms", "typescript-parser", "parser", "codegen"] }
-migration-core = { git = "https://github.com/prisma/prisma-engines" }
-datamodel = { git = "https://github.com/prisma/prisma-engines" }
+migration-core = { git = "https://github.com/prisma/prisma-engines", rev = "4.2.0" }
+datamodel = { git = "https://github.com/prisma/prisma-engines", rev = "4.2.0" }
 lazy_static = "1.4.0"
 tokio = { version = "1.20.1", features = ["full"] }
 log = "0.4.17"
