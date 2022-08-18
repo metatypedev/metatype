@@ -34,7 +34,6 @@ enum Commands {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    println!("Hello {:?}!", args);
 
     match args.command {
         Commands::Dev(dev) => {
