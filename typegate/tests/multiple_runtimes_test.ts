@@ -1,5 +1,6 @@
-import { assert } from "std/testing/asserts.ts";
 import { gql, shell, test } from "./utils.ts";
+
+const META_CLI = "../target/debug/meta";
 
 test("prisma", async (t) => {
   const tgPath = "./tests/typegraphs/multiple_runtimes.py";
@@ -31,7 +32,7 @@ test("prisma", async (t) => {
       })
       .on(e);
     await shell([
-      "../typegraph/.venv/bin/meta",
+      META_CLI,
       "prisma",
       "apply",
       "-f",
