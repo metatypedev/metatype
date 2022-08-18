@@ -12,9 +12,6 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
 ]
 
-[tool.poetry.scripts]
-meta = 'typegraph.cli.cmds:root'
-
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
 dataconf = "^1.5.0"
