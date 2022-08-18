@@ -51,14 +51,14 @@ class MetaTest {
   }
 
   async pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
-    const path = await Deno.makeTempFile();
+    const path = await Deno.makeTempFile({ suffix: ".py" });
     try {
       await Deno.writeTextFile(
         path,
-        `${code}\nfrom typegraph.cli import dev\nprint(dev.serialize_typegraph(g))`,
+        code,
       );
       return await this.parseTypegraph(
-        ["../typegraph/.venv/bin/python", path],
+        ["../target/debug/meta", "serialize", "-f", path, "-1"],
         deepMerge(testRuntimesConfig, config),
       );
     } finally {
