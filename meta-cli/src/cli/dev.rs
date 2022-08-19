@@ -54,7 +54,7 @@ impl Action for Dev {
                     | EventKind::Modify(ModifyKind::Data(_))
                     | EventKind::Modify(ModifyKind::Name(_)) => {
                         println!("file change {:?}", event);
-                        crate::codegen::apply_for(&watch_patch, &paths);
+                        crate::codegen::deno::apply_for(&watch_patch, &paths);
                         let tgs = collect_typegraphs(watch_patch.clone(), None, false).unwrap();
                         reload_typegraphs(tgs, "127.0.0.1:7890".to_string()).unwrap();
                     }
