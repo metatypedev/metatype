@@ -3,3 +3,6 @@ members = [
     "typegate/native",
     "meta-cli",
 ]
+
+[patch.crates-io]
+tiberius = { git = "https://github.com/metatypedev/tiberius", branch = "fix-0.9.5" }
