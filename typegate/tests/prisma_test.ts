@@ -2,6 +2,8 @@ import { v4 } from "std/uuid/mod.ts";
 import { assert } from "std/testing/asserts.ts";
 import { gql, shell, test } from "./utils.ts";
 
+const META_CLI = "../target/debug/meta";
+
 test("prisma", async (t) => {
   const tgPath = "./tests/typegraphs/prisma.py";
   const e = await t.pythonFile(tgPath);
@@ -20,7 +22,7 @@ test("prisma", async (t) => {
       })
       .on(e);
     await shell([
-      "../typegraph/.venv/bin/meta",
+      META_CLI,
       "prisma",
       "apply",
       "-f",
@@ -203,7 +205,7 @@ test("1:n relationships", async (t) => {
       })
       .on(e);
     await shell([
-      "../typegraph/.venv/bin/meta",
+      META_CLI,
       "prisma",
       "apply",
       "-f",
@@ -363,7 +365,7 @@ test("1:1 relationships", async (t) => {
       })
       .on(e);
     await shell([
-      "../typegraph/.venv/bin/meta",
+      META_CLI,
       "prisma",
       "apply",
       "-f",
@@ -447,7 +449,7 @@ test("multiple relationships", async (t) => {
       })
       .on(e);
     await shell([
-      "../typegraph/.venv/bin/meta",
+      META_CLI,
       "prisma",
       "apply",
       "-f",
