@@ -64,9 +64,12 @@ impl Action for Dev {
         .unwrap();
 
         watcher
-            .configure(Config::OngoingEvents(Some(Duration::from_secs(1))))
+            .configure(
+                Config::default()
+                    .with_poll_interval(Duration::from_secs(1))
+                    .with_compare_contents(true),
+            )
             .unwrap();
-        watcher.configure(Config::PreciseEvents(false)).unwrap();
 
         watcher
             .watch(Path::new(&dir), RecursiveMode::Recursive)
