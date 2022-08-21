@@ -1,4 +1,3 @@
-use crate::cli::dev::collect_typegraphs;
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -310,21 +309,4 @@ impl IntoJson for HashMap<String, Value> {
         }
         Value::Object(map)
     }
-}
-
-pub fn apply_for(dir: &str, paths: &Vec<PathBuf>) -> Result<()> {
-    let loader = paths
-        .iter()
-        .map(|p| format!(r#"loaders.import_file("{}")"#, p.to_str().unwrap()))
-        .collect::<Vec<_>>()
-        .join(" + ");
-
-    println!("loader: {loader}");
-
-    let tgs = collect_typegraphs(dir.to_string(), Some(loader), true)?;
-    for tg in tgs.values() {
-        apply(tg, dir);
-    }
-
-    Ok(())
 }
