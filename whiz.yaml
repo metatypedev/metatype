@@ -3,6 +3,8 @@ meta:
     watches: "meta-cli/src/**/*.rs"
     shell: "cargo run -p meta -- -C examples dev"
     envs:
+        VIRTUAL_ENV: $PWD/examples/.venv
+        PATH: $PWD/examples/.venv/bin:$PATH
         RUSTFLAGS: "$RUSTFLAGS -A dead_code -A unused_variables"
 
     depends_on:
