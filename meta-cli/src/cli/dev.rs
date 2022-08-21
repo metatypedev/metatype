@@ -1,3 +1,4 @@
+use crate::codegen;
 use anyhow::{Error, Ok, Result};
 use ignore::Match;
 use notify::event::ModifyKind;
@@ -31,8 +32,17 @@ impl Action for Dev {
 
         let watch_path = dir.clone();
         let _watcher = watch(dir.clone(), move |paths| {
-            crate::codegen::deno::apply_for(&watch_path, &paths).unwrap();
-            let tgs = collect_typegraphs(watch_path.clone(), None, false).unwrap();
+            let loader = paths
+                .iter()
+                .map(|p| format!(r#"loaders.import_file("{}")"#, p.to_str().unwrap()))
+                .collect::<Vec<_>>()
+                .join(" + ");
+            let tgs = collect_typegraphs(watch_path.clone(), Some(loader.clone()), true).unwrap();
+            for tg in tgs.values() {
+                codegen::deno::apply(tg, watch_path.clone());
+            }
+
+            let tgs = collect_typegraphs(watch_path.clone(), Some(loader), false).unwrap();
             reload_typegraphs(tgs, "127.0.0.1:7890".to_string()).unwrap();
         })
         .unwrap();
@@ -130,6 +140,8 @@ pub fn collect_typegraphs(
     dont_read_external_ts_files: bool,
 ) -> Result<HashMap<String, String>> {
     let cwd = Path::new(&path);
+
+    // println!("env vars {:?}", std::env::vars().collect::<Vec<_>>());
 
     let test = Command::new("python3")
         .envs(env::vars())
