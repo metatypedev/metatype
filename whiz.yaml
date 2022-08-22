@@ -3,7 +3,8 @@ meta:
     watches: "meta-cli/src/**/*.rs"
     shell: "cargo run -p meta -- -C examples dev"
     envs:
-        OUT_DIR: "$PWD/typegate/native"
+        VIRTUAL_ENV: $PWD/examples/.venv
+        PATH: $PWD/examples/.venv/bin:$PATH
         RUSTFLAGS: "$RUSTFLAGS -A dead_code -A unused_variables"
 
     depends_on:
@@ -27,10 +28,10 @@ typegate_native:
     workdir: typegate/native
     watches: "src/**/*.rs"
     envs:
-        OUT_DIR: "$PWD"
+        OUT_DIR: "$PWD/typegate/native"
         RUSTFLAGS: "$RUSTFLAGS -A dead_code -A unused_variables"
 
-    shell: "deno_bindgen -- -p native"
+    shell: "deno_bindgen -- -p native --target-dir ./target"
 
 website:
     workdir: website

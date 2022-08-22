@@ -1,6 +1,9 @@
+use anyhow::Result;
 use dprint_plugin_typescript::configuration::*;
 use dprint_plugin_typescript::*;
+use std::collections::HashSet;
 use std::fs;
+use std::path::Path;
 use std::path::PathBuf;
 use swc_common::errors::{ColorConfig, Handler};
 use swc_common::input::SourceFileInput;
@@ -163,7 +166,7 @@ pub fn parse(path: &PathBuf) {
 
     let fm = cm
         .load_file(path.as_path())
-        .expect("failed to load test.js");
+        .expect(&format!("failed to load {:?}", path));
     let lexer = Lexer::new(
         Syntax::Typescript(Default::default()),
         EsVersion::latest(),
@@ -223,4 +226,56 @@ pub fn parse(path: &PathBuf) {
         Ok(text) => fs::write("output.ts", &text.unwrap()).unwrap(),
         Err(e) => println!("Error: {:?}", e),
     }
+}
+
+pub fn parse_module<P>(mod_path: P) -> Result<Module>
+where
+    P: AsRef<Path>,
+{
+    let cm: Lrc<SourceMap> = Default::default();
+    let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
+
+    let fm = cm.load_file(mod_path.as_ref())?;
+    // .expect(&format!("failed to load file: {:?}", mod_path.as_ref()));
+
+    let lexer = Lexer::new(
+        Syntax::Typescript(Default::default()),
+        EsVersion::latest(),
+        SourceFileInput::from(&*fm),
+        None,
+    );
+
+    let mut parser = Parser::new_from(lexer);
+
+    for e in parser.take_errors() {
+        e.into_diagnostic(&handler).emit();
+    }
+
+    let module = parser
+        .parse_module()
+        .map_err(|e| e.into_diagnostic(&handler).emit())
+        .expect("failed to parse module");
+
+    Ok(module)
+}
+
+pub fn get_exported_functions(mod_body: &Vec<ModuleItem>) -> HashSet<String> {
+    let mut res = HashSet::default();
+    for mod_item in mod_body {
+        match mod_item {
+            ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(decl)) => match &decl.decl {
+                Decl::Fn(fn_decl) => {
+                    assert!(res.insert(fn_decl.ident.sym.to_string()));
+                }
+                _ => (),
+            },
+            ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(decl)) => match &decl.decl {
+                DefaultDecl::Fn(_) => assert!(res.insert("default".to_string())),
+                _ => (),
+            },
+            _ => (),
+        }
+    }
+
+    res
 }
