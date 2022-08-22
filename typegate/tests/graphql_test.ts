@@ -1,6 +1,6 @@
 import { gql, test } from "./utils.ts";
 import * as mf from "https://deno.land/x/mock_fetch@0.3.0/mod.ts";
-import { buildSchema, graphql } from "https://cdn.skypack.dev/graphql";
+import { buildSchema, graphql } from "graphql";
 
 const schema = buildSchema(`
   type User {
@@ -54,8 +54,10 @@ test("GraphQL queries", async (t) => {
           email
         }
       }
-    `.expectData({
-      user: generateUser(12),
-    }).on(e);
+    `
+      .expectData({
+        user: generateUser(12),
+      })
+      .on(e);
   });
 });

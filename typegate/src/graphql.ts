@@ -1,13 +1,5 @@
-import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
-import {
-  graphql,
-  GraphQLArgs,
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLString,
-  Kind,
-  parse,
-} from "https://cdn.skypack.dev/graphql@16.2.0?dts";
+import type * as ast from "graphql_ast";
+import { Kind } from "graphql";
 import { Maybe } from "./utils.ts";
 
 export type FragmentDefs = Record<string, ast.FragmentDefinitionNode>;
