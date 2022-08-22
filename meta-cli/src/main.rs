@@ -57,6 +57,9 @@ fn main() -> Result<()> {
             PrismaCommands::Diff(diff) => {
                 diff.run(args.dir)?;
             }
+            PrismaCommands::Format(format) => {
+                format.run(args.dir)?;
+            }
         },
         Commands::Deploy(deploy) => {
             deploy.run(args.dir)?;
