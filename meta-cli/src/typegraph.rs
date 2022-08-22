@@ -55,7 +55,7 @@ impl TypeNode {
         let binds = self
             .data
             .get("binds")
-            .ok_or(anyhow!("field \"binds\" not found in struct data"))?;
+            .ok_or_else(|| anyhow!("field \"binds\" not found in struct data"))?;
         Ok(serde_json::from_value(binds.clone())?)
     }
 }
