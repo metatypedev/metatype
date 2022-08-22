@@ -197,11 +197,13 @@ fn reload_typegraphs(tgs: HashMap<String, String>, node: String) -> Result<()> {
 
 pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
     let client = reqwest::blocking::Client::new();
+    let tg = serde_json::Value::String(tg).to_string();
     let payload = json!({
       "operationName": "insert",
       "variables": {},
-      "query": tg
+      "query": format!("query insert {{ addTypegraph(fromString: {}) {{ name }}}}", tg)
     });
+
     let query = client
         .post(format!("http://{}/typegate", node))
         .timeout(Duration::from_secs(5))
