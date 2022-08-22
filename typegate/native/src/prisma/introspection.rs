@@ -43,7 +43,8 @@ impl Introspection {
             source: config.subject.datasources.into_iter().next().unwrap(),
             composite_type_depth: CompositeTypeDepth::Level(3),
         };
-        let result = match connector.introspect(&datamodel, ctx).await {
+
+        match connector.introspect(&datamodel, ctx).await {
             Ok(introspection_result) => {
                 if introspection_result.data_model.is_empty() {
                     Result::Err(Error::IntrospectionResultEmpty)
@@ -55,8 +56,7 @@ impl Introspection {
                 }
             }
             Err(e) => Result::Err(Error::ConnectorError(e)),
-        };
-        result
+        }
     }
 }
 

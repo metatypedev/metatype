@@ -67,7 +67,7 @@ fn export_function(name: String, inp: String, out: String, body: Option<BlockStm
             }],
             decorators: vec![],
             span: DUMMY_SP,
-            body: body,
+            body,
             is_generator: false,
             is_async: false,
             type_params: None,
@@ -107,7 +107,7 @@ impl Fold for MyVisitor {
         }) {
             if let ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
                 decl: Decl::Fn(f),
-                span,
+                span: _,
             })) = rewrite.swap_remove(idx)
             {
                 let new_exp = export_function(
@@ -144,12 +144,12 @@ impl Fold for MyVisitor {
                     Function {
                         params,
                         decorators: _,
-                        span,
+                        span: _,
                         body: _,
                         is_generator: _,
-                        is_async,
-                        type_params,
-                        return_type,
+                        is_async: _,
+                        type_params: _,
+                        return_type: _,
                     },
             }) if ident.sym.to_string() == "apply" => {
                 println!("TEST {:?}", params);
@@ -166,7 +166,7 @@ pub fn parse(path: &PathBuf) {
 
     let fm = cm
         .load_file(path.as_path())
-        .expect(&format!("failed to load {:?}", path));
+        .unwrap_or_else(|_| panic!("failed to load {:?}", path));
     let lexer = Lexer::new(
         Syntax::Typescript(Default::default()),
         EsVersion::latest(),
@@ -208,7 +208,7 @@ pub fn parse(path: &PathBuf) {
                 },
                 cm: cm.clone(),
                 comments: None,
-                wr: JsWriter::new(cm.clone(), "\n", &mut buf, None),
+                wr: JsWriter::new(cm, "\n", &mut buf, None),
             };
 
             emitter.emit_module(&n).unwrap();
@@ -263,16 +263,16 @@ pub fn get_exported_functions(mod_body: &Vec<ModuleItem>) -> HashSet<String> {
     let mut res = HashSet::default();
     for mod_item in mod_body {
         match mod_item {
-            ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(decl)) => match &decl.decl {
-                Decl::Fn(fn_decl) => {
+            ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(decl)) => {
+                if let Decl::Fn(fn_decl) = &decl.decl {
                     assert!(res.insert(fn_decl.ident.sym.to_string()));
                 }
-                _ => (),
-            },
-            ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(decl)) => match &decl.decl {
-                DefaultDecl::Fn(_) => assert!(res.insert("default".to_string())),
-                _ => (),
-            },
+            }
+            ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(decl)) => {
+                if let DefaultDecl::Fn(_) = &decl.decl {
+                    assert!(res.insert("default".to_string()));
+                }
+            }
             _ => (),
         }
     }

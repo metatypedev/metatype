@@ -1,6 +1,6 @@
 import Dataloader from "https://cdn.skypack.dev/dataloader@2.0.0?dts";
-import { parse } from "https://cdn.skypack.dev/graphql@16.2.0?dts";
-import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
+import { parse } from "graphql";
+import type * as ast from "graphql_ast";
 import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
 import { b, ensure, JSONValue, mapo, Maybe } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";

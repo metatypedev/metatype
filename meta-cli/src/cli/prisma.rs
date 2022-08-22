@@ -104,7 +104,7 @@ impl Action for Diff {
                             .to_string(),
                     );
                     match runtime.block_on(fut) {
-                        Ok(exit_code) => "success".to_string(),
+                        Ok(_exit_code) => "success".to_string(),
                         Err(error) => format!("error: {}", error),
                     };
                 }

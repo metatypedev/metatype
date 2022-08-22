@@ -28,10 +28,10 @@ typegate_native:
     workdir: typegate/native
     watches: "src/**/*.rs"
     envs:
-        OUT_DIR: "$PWD/typegate/native"
+        OUT_DIR: "$PWD"
         RUSTFLAGS: "$RUSTFLAGS -A dead_code -A unused_variables"
 
-    shell: "deno_bindgen -- -p native --target-dir ./target"
+    shell: "deno_bindgen -- -p native"
 
 website:
     workdir: website
