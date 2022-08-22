@@ -208,7 +208,7 @@ pub fn parse(path: &PathBuf) {
                 },
                 cm: cm.clone(),
                 comments: None,
-                wr: JsWriter::new(cm.clone(), "\n", &mut buf, None),
+                wr: JsWriter::new(cm, "\n", &mut buf, None),
             };
 
             emitter.emit_module(&n).unwrap();
@@ -263,16 +263,16 @@ pub fn get_exported_functions(mod_body: &Vec<ModuleItem>) -> HashSet<String> {
     let mut res = HashSet::default();
     for mod_item in mod_body {
         match mod_item {
-            ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(decl)) => match &decl.decl {
-                Decl::Fn(fn_decl) => {
+            ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(decl)) => {
+                if let Decl::Fn(fn_decl) = &decl.decl {
                     assert!(res.insert(fn_decl.ident.sym.to_string()));
                 }
-                _ => (),
-            },
-            ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(decl)) => match &decl.decl {
-                DefaultDecl::Fn(_) => assert!(res.insert("default".to_string())),
-                _ => (),
-            },
+            }
+            ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(decl)) => {
+                if let DefaultDecl::Fn(_) = &decl.decl {
+                    assert!(res.insert("default".to_string()));
+                }
+            }
             _ => (),
         }
     }

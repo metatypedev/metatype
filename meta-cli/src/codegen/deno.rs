@@ -193,7 +193,7 @@ impl Codegen {
         for (k, v) in fields.iter() {
             typedef.push_str(&format!("  {k}: {v};\n"));
         }
-        typedef.push_str("}");
+        typedef.push('}');
         Ok(typedef)
     }
 
@@ -269,16 +269,16 @@ impl Codegen {
         let tpe = &self.tg.types[idx as usize];
         match &tpe.typedef {
             t if t == "optional" => {
-                let of = tpe.data.get("of").ok_or(anyhow!(
-                    "invalid type data for optional: field \"of\" is undefined"
-                ))?;
+                let of = tpe.data.get("of").ok_or_else(|| {
+                    anyhow!("invalid type data for optional: field \"of\" is undefined")
+                })?;
                 let of: u32 = serde_json::from_value(of.clone())?;
                 Ok(format!("null | {}", self.get_typespec(of)?))
             }
             t if t == "list" => {
-                let of = tpe.data.get("of").ok_or(anyhow!(
-                    "invalid type data for list: field \"of\" is undefined"
-                ))?;
+                let of = tpe.data.get("of").ok_or_else(|| {
+                    anyhow!("invalid type data for list: field \"of\" is undefined")
+                })?;
                 let of: u32 = serde_json::from_value(of.clone())?;
                 Ok(format!("Array<{}>", self.get_typespec(of)?))
             }
