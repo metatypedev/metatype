@@ -1,3 +1,5 @@
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
+
 use deno_bindgen::deno_bindgen;
 use prisma::introspection::Introspection;
 mod prisma;
@@ -95,7 +97,7 @@ struct PrismaUnregisterEngineOut {
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregisterEngineOut {
-    let (key, engine) = ENGINES.remove(&input.key.to_string()).unwrap();
+    let (key, engine) = ENGINES.remove(&input.key).unwrap();
     RT.block_on(engine.disconnect()).unwrap();
     PrismaUnregisterEngineOut { key }
 }
@@ -117,7 +119,7 @@ struct PrismaQueryOut {
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_query(input: PrismaQueryInp) -> PrismaQueryOut {
     let body: request_handlers::GraphQlBody = serde_json::from_value(input.query).unwrap();
-    let engine = ENGINES.get(&input.key.to_string()).unwrap();
+    let engine = ENGINES.get(&input.key).unwrap();
     let fut = engine.query(body, None);
     let results = RT.block_on(fut);
     let res = serde_json::to_string(&results.unwrap()).unwrap();

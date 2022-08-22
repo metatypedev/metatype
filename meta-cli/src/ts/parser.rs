@@ -67,7 +67,7 @@ fn export_function(name: String, inp: String, out: String, body: Option<BlockStm
             }],
             decorators: vec![],
             span: DUMMY_SP,
-            body: body,
+            body,
             is_generator: false,
             is_async: false,
             type_params: None,
@@ -107,7 +107,7 @@ impl Fold for MyVisitor {
         }) {
             if let ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
                 decl: Decl::Fn(f),
-                span,
+                span: _,
             })) = rewrite.swap_remove(idx)
             {
                 let new_exp = export_function(
@@ -144,12 +144,12 @@ impl Fold for MyVisitor {
                     Function {
                         params,
                         decorators: _,
-                        span,
+                        span: _,
                         body: _,
                         is_generator: _,
-                        is_async,
-                        type_params,
-                        return_type,
+                        is_async: _,
+                        type_params: _,
+                        return_type: _,
                     },
             }) if ident.sym.to_string() == "apply" => {
                 println!("TEST {:?}", params);
@@ -166,7 +166,7 @@ pub fn parse(path: &PathBuf) {
 
     let fm = cm
         .load_file(path.as_path())
-        .expect(&format!("failed to load {:?}", path));
+        .unwrap_or_else(|_| panic!("failed to load {:?}", path));
     let lexer = Lexer::new(
         Syntax::Typescript(Default::default()),
         EsVersion::latest(),
