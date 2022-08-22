@@ -38,27 +38,25 @@ impl Action for Serialize {
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.get(tg_name) {
-                self.write(&format!("{}", tg));
+                self.write(&tg.to_string());
             } else {
                 return Err(anyhow!("typegraph \"{}\" not found", tg_name));
             }
-        } else {
-            if self.unique {
-                if tgs.len() == 1 {
-                    let tg = tgs.into_values().nth(0).unwrap();
-                    self.write(&format!("{}", tg));
-                } else {
-                    eprint!("expected only one typegraph, got {}", tgs.len());
-                    std::process::exit(1);
-                }
+        } else if self.unique {
+            if tgs.len() == 1 {
+                let tg = tgs.into_values().next().unwrap();
+                self.write(&tg);
             } else {
-                let entries = tgs
-                    .iter()
-                    .map(|(tg_name, tg)| format!("\"{tg_name}\": {tg}"))
-                    .collect::<Vec<_>>()
-                    .join(",\n");
-                self.write(&format!("{{{entries}}}"));
+                eprint!("expected only one typegraph, got {}", tgs.len());
+                std::process::exit(1);
             }
+        } else {
+            let entries = tgs
+                .iter()
+                .map(|(tg_name, tg)| format!("\"{tg_name}\": {tg}"))
+                .collect::<Vec<_>>()
+                .join(",\n");
+            self.write(&format!("{{{entries}}}"));
         }
 
         Ok(())
@@ -70,7 +68,7 @@ impl Serialize {
         if let Some(path) = self.out.as_ref() {
             fs::write(path, contents).unwrap();
         } else {
-            io::stdout().write(contents.as_bytes()).unwrap();
+            io::stdout().write_all(contents.as_bytes()).unwrap();
         }
     }
 }

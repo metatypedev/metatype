@@ -1,5 +1,5 @@
-import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
-import { Kind } from "https://cdn.skypack.dev/graphql@16.2.0?dts";
+import type * as ast from "graphql_ast";
+import { Kind } from "graphql";
 import { ComputeStage, PolicyStages, PolicyStagesFactory } from "./engine.ts";
 import * as graphql from "./graphql.ts";
 import { FragmentDefs } from "./graphql.ts";
@@ -122,8 +122,8 @@ export class TypeGraph {
         console.log(`init ${runtime.name} (${idx})`);
         return runtimeInit[runtime.name]({
           typegraph,
-          materializers: typegraph.materializers.filter((mat) =>
-            mat.runtime === idx
+          materializers: typegraph.materializers.filter(
+            (mat) => mat.runtime === idx,
           ),
           args: runtime.data,
           config: runtimeConfig[runtime.name] ?? {},
@@ -138,8 +138,8 @@ export class TypeGraph {
 
   async deinit(): Promise<void> {
     for await (
-      const [idx, runtime] of this.runtimeReferences.map((rt, i) =>
-        [i, rt] as const
+      const [idx, runtime] of this.runtimeReferences.map(
+        (rt, i) => [i, rt] as const,
       )
     ) {
       console.log(`deinit runtime ${idx}`);
@@ -737,12 +737,10 @@ export class TypeGraph {
           const mat = this.introspection.tg.materializers[
             introPolicy.materializer as number
           ];
-          const rt = this.introspection
-            .runtimeReferences[mat.runtime] as WorkerRuntime; // temp
-          return [introPolicy.name, rt.delegate(mat)] as [
-            string,
-            Resolver,
-          ];
+          const rt = this.introspection.runtimeReferences[
+            mat.runtime
+          ] as WorkerRuntime; // temp
+          return [introPolicy.name, rt.delegate(mat)] as [string, Resolver];
         }
       }
 

@@ -7,7 +7,7 @@ import {
   Kind,
   parse,
   TypeKind,
-} from "https://cdn.skypack.dev/graphql@16.2.0?dts";
+} from "graphql";
 import { ensure } from "../utils.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
