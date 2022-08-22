@@ -1,14 +1,14 @@
+use crate::typegraph::{TypeNode, Typegraph};
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
+use std::fmt::Write as _;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-
-use crate::typegraph::{TypeNode, Typegraph};
 
 #[derive(Serialize, Deserialize, Debug)]
 struct FuncData {
@@ -100,10 +100,11 @@ impl Codegen {
                 let mat_data: FuncMatData = serde_json::from_value(mat.data.into_json())
                     .expect("invalid materializer data for function materializer");
                 if let Some(mod_name) = mat_data.import_from.as_ref() {
-                    if self.ts_modules.contains_key(mod_name) && mat_data.import_from.is_some() {
-                        if self.check_func(&mat_data) {
-                            gen_list.push((func_data, mat_data));
-                        }
+                    if self.ts_modules.contains_key(mod_name)
+                        && mat_data.import_from.is_some()
+                        && self.check_func(&mat_data)
+                    {
+                        gen_list.push((func_data, mat_data));
                     }
                 }
             }
@@ -151,7 +152,7 @@ impl Codegen {
         P: AsRef<Path>,
     {
         let module = crate::ts::parser::parse_module(mod_path.as_ref())
-            .expect(&format!("could not load module: {:?}", mod_path.as_ref()));
+            .unwrap_or_else(|_| panic!("could not load module: {:?}", mod_path.as_ref()));
 
         crate::ts::parser::get_exported_functions(&module.body)
     }
@@ -191,7 +192,7 @@ impl Codegen {
             .collect::<HashMap<_, _>>();
         let mut typedef = "{\n".to_string();
         for (k, v) in fields.iter() {
-            typedef.push_str(&format!("  {k}: {v};\n"));
+            writeln!(typedef, "  {k}: {v};\n")?;
         }
         typedef.push('}');
         Ok(typedef)
@@ -202,11 +203,7 @@ impl Codegen {
         let fields = tpe.get_struct_fields()?;
         Ok(format!(
             "{{ {} }}",
-            fields
-                .keys()
-                .map(|k| k.clone())
-                .collect::<Vec<_>>()
-                .join(", "),
+            fields.keys().cloned().collect::<Vec<_>>().join(", "),
         ))
     }
 

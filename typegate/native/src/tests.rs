@@ -104,7 +104,7 @@ impl TestContext {
         });
 
         Self {
-            datamodel: datamodel,
+            datamodel,
             engine_id: reg.engine_id,
         }
     }
