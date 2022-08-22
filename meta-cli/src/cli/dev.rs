@@ -1,10 +1,13 @@
+use crate::codegen;
 use anyhow::{Error, Ok, Result};
 use ignore::Match;
 use notify::event::ModifyKind;
-use notify::{recommended_watcher, Config, Event, EventKind, RecursiveMode, Watcher};
+use notify::{
+    recommended_watcher, Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
+};
 use std::collections::HashMap;
 use std::env;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
@@ -27,53 +30,22 @@ impl Action for Dev {
         let tgs = collect_typegraphs(dir.clone(), None, false)?;
         reload_typegraphs(tgs, "127.0.0.1:7890".to_string())?;
 
-        let gi = Gitignore::new(Path::new(".gitignore")).0;
-        let gs = Glob::new("*.py").unwrap().compile_matcher();
-
-        let watch_patch = dir.clone();
-        let mut watcher = recommended_watcher(move |res: Result<Event, notify::Error>| {
-            let event = res.unwrap();
-
-            let paths = event
-                .paths
+        let watch_path = dir.clone();
+        let _watcher = watch(dir.clone(), move |paths| {
+            let loader = paths
                 .iter()
-                .filter(|path| {
-                    !matches!(
-                        gi.matched_path_or_any_parents(path, false),
-                        Match::Ignore(_)
-                    )
-                })
-                .filter(|path| gs.is_match(path))
-                .map(|path| path.to_path_buf())
-                .collect::<Vec<_>>();
-
-            if !paths.is_empty() {
-                match event.kind {
-                    EventKind::Create(_)
-                    | EventKind::Remove(_)
-                    | EventKind::Modify(ModifyKind::Data(_))
-                    | EventKind::Modify(ModifyKind::Name(_)) => {
-                        println!("file change {:?}", event);
-                        let tgs = collect_typegraphs(watch_patch.clone(), None, false).unwrap();
-                        reload_typegraphs(tgs, "127.0.0.1:7890".to_string()).unwrap();
-                    }
-                    _ => {}
-                }
+                .map(|p| format!(r#"loaders.import_file("{}")"#, p.to_str().unwrap()))
+                .collect::<Vec<_>>()
+                .join(" + ");
+            let tgs = collect_typegraphs(watch_path.clone(), Some(loader.clone()), true).unwrap();
+            for tg in tgs.values() {
+                codegen::deno::apply(tg, watch_path.clone());
             }
+
+            let tgs = collect_typegraphs(watch_path.clone(), Some(loader), false).unwrap();
+            reload_typegraphs(tgs, "127.0.0.1:7890".to_string()).unwrap();
         })
         .unwrap();
-
-        watcher
-            .configure(
-                Config::default()
-                    .with_poll_interval(Duration::from_secs(1))
-                    .with_compare_contents(true),
-            )
-            .unwrap();
-
-        watcher
-            .watch(Path::new(&dir), RecursiveMode::Recursive)
-            .unwrap();
 
         let server = Server::http("0.0.0.0:8000").unwrap();
 
@@ -107,12 +79,69 @@ impl Action for Dev {
     }
 }
 
+fn watch<H>(dir: String, handler: H) -> Result<RecommendedWatcher>
+where
+    H: Fn(&Vec<PathBuf>) + Send + 'static,
+{
+    let mut watcher = recommended_watcher(move |res: Result<Event, notify::Error>| {
+        let event = res.unwrap();
+        let paths = get_paths(&event);
+
+        if !paths.is_empty() {
+            match event.kind {
+                EventKind::Create(_)
+                | EventKind::Remove(_)
+                | EventKind::Modify(ModifyKind::Data(_))
+                | EventKind::Modify(ModifyKind::Name(_)) => {
+                    println!("file change {:?}", event);
+                    handler(&paths);
+                }
+                _ => {}
+            }
+        }
+    })
+    .unwrap();
+
+    watcher
+        .configure(
+            Config::default()
+                .with_poll_interval(Duration::from_secs(1))
+                .with_compare_contents(true),
+        )
+        .unwrap();
+
+    watcher
+        .watch(Path::new(&dir), RecursiveMode::Recursive)
+        .unwrap();
+    Ok(watcher)
+}
+
+fn get_paths(event: &Event) -> Vec<PathBuf> {
+    let gi = Gitignore::new(Path::new(".gitignore")).0;
+    let gs = Glob::new("*.py").unwrap().compile_matcher();
+
+    event
+        .paths
+        .iter()
+        .filter(|path| {
+            !matches!(
+                gi.matched_path_or_any_parents(path, false),
+                Match::Ignore(_)
+            )
+        })
+        .filter(|path| gs.is_match(path))
+        .map(|path| path.to_path_buf())
+        .collect()
+}
+
 pub fn collect_typegraphs(
     path: String,
     custom_loader: Option<String>,
     dont_read_external_ts_files: bool,
 ) -> Result<HashMap<String, String>> {
     let cwd = Path::new(&path);
+
+    // println!("env vars {:?}", std::env::vars().collect::<Vec<_>>());
 
     let test = Command::new("python3")
         .envs(env::vars())

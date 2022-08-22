@@ -1,11 +1,8 @@
-use std::collections::HashMap;
-
 use super::{dev::collect_typegraphs, Action};
 use crate::prisma::migration;
+use crate::typegraph::Typegraph;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use tokio::runtime::Runtime;
 
 #[derive(Parser, Debug)]
@@ -34,43 +31,6 @@ pub struct Diff {
     /// Name of the person to greet
     #[clap(short, long, value_parser)]
     file: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Typegraph {
-    types: Vec<TypeNode>,
-    materializers: Vec<Materializer>,
-    runtimes: Vec<TGRuntime>,
-    policies: Vec<Policy>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct TypeNode {
-    name: String,
-    typedef: String,
-    edges: Vec<u32>,
-    policies: Vec<u32>,
-    runtime: u32,
-    data: HashMap<String, Value>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Materializer {
-    name: String,
-    runtime: u32,
-    data: HashMap<String, Value>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct TGRuntime {
-    name: String,
-    data: HashMap<String, Value>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Policy {
-    name: String,
-    materializer: u32,
 }
 
 impl Action for Apply {

@@ -1,6 +1,7 @@
 use crate::codegen;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
+use std::path::Path;
 
 use super::{dev::collect_typegraphs, Action};
 
@@ -33,15 +34,17 @@ impl Action for Deno {
             true,
         )?;
 
+        let file = Path::new(&self.file);
+
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.get(tg_name) {
-                codegen::apply(tg);
+                codegen::deno::apply(tg, file);
             } else {
                 panic!("typegraph not found: {tg_name}")
             }
         } else {
             for (_tg_name, tg) in tgs {
-                codegen::apply(&tg);
+                codegen::deno::apply(&tg, file);
             }
         }
 
