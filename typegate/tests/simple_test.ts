@@ -55,7 +55,7 @@ test("Simple graph", async (t) => {
       }
     `
       .withVars({
-        val: { nested: 2 },
+        val: { arg: 2 },
       })
       .expectData({
         rec: 2,
