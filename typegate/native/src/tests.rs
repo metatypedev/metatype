@@ -70,11 +70,39 @@ fn get_workspace_root() -> Result<PathBuf> {
 }
 
 lazy_static! {
-    static ref META_BIN: PathBuf = {
-        let mut path = get_workspace_root().expect("could not find workspace root");
-        path.push("target/debug/meta");
-        path
-    };
+    static ref META_BIN: PathBuf = get_workspace_root().unwrap().join("target/debug/meta");
+}
+
+fn venv() -> HashMap<String, String> {
+    let mut envs = HashMap::new();
+    envs.insert(
+        "VIRTUAL_ENV".to_string(),
+        get_workspace_root()
+            .unwrap()
+            .join("typegraph/.venv")
+            .as_path()
+            .to_str()
+            .unwrap()
+            .to_string(),
+    );
+    envs.insert(
+        "PATH".to_string(),
+        format!(
+            "{}:{}",
+            get_workspace_root()
+                .unwrap()
+                .join("typegraph/.venv/bin")
+                .as_path()
+                .to_str()
+                .unwrap()
+                .to_string(),
+            std::env::vars()
+                .find(|(k, _v)| k.as_str() == "PATH")
+                .unwrap()
+                .1
+        ),
+    );
+    envs
 }
 
 // TODO: cache
@@ -84,6 +112,7 @@ fn load_typegraph<P: AsRef<Path>>(path: P) -> Result<TypeGraph> {
         .arg("-f")
         .arg(path.as_ref().to_str().ok_or(anyhow!("invalid path"))?)
         .arg("-1")
+        .envs(venv())
         .stdout(Stdio::piped())
         .spawn()?;
 
@@ -163,6 +192,7 @@ fn recreate_db_schema(t: &TestContext) -> Result<()> {
         .arg("apply")
         .arg("-f")
         .arg("../tests/typegraphs/prisma.py")
+        .envs(venv())
         .output()?;
     Ok(())
 }
