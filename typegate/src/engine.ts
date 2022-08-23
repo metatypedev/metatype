@@ -187,8 +187,9 @@ export class Engine {
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...mapo(args, (e) => e(parent)),
-            ...variables,
+            // ...mapo(args, (e) => e(parent)),
+            // ...variables,
+            ...mapo(args, (e) => e(variables)),
             _: {
               parent: parent ?? {},
               context,
@@ -313,7 +314,11 @@ export class Engine {
     try {
       const document = parse(query);
 
-      const [operation, fragments] = findOperation(document, operationName);
+      const [operation, fragments] = findOperation(
+        document,
+        operationName,
+        variables,
+      );
       if (!operation) {
         throw Error(`operation ${operationName} not found`);
       }
