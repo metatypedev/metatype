@@ -1,5 +1,5 @@
 import Dataloader from "https://cdn.skypack.dev/dataloader@2.0.0?dts";
-import { parse } from "graphql";
+import { Kind, parse } from "graphql";
 import type * as ast from "graphql_ast";
 import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
 import { b, ensure, JSONValue, mapo, Maybe } from "./utils.ts";
@@ -118,6 +118,15 @@ const authorize = async (
 
   // true = pass
   return true;
+};
+
+// typechecks for scalar types
+const typeChecks: Record<string, (value: unknown) => boolean> = {
+  "Int": (value) => typeof value === "number",
+  "Float": (value) => typeof value === "number",
+  "String": (value) => typeof value === "string",
+  "ID": (value) => typeof value === "string",
+  "Boolean": (value) => typeof value === "boolean",
 };
 
 export class Engine {
@@ -317,11 +326,12 @@ export class Engine {
       const [operation, fragments] = findOperation(
         document,
         operationName,
-        variables,
       );
       if (!operation) {
         throw Error(`operation ${operationName} not found`);
       }
+
+      this.validateVariables(operation?.variableDefinitions ?? [], variables);
 
       const cache = operationName === "IntrospectionQuery";
       const verbose = operationName !== "IntrospectionQuery";
@@ -407,5 +417,62 @@ export class Engine {
         };
       }
     }
+  }
+
+  validateVariables(
+    defs: Readonly<Array<ast.VariableDefinitionNode>>,
+    variables: Record<string, unknown>,
+  ) {
+    for (const varDef of defs) {
+      const varName = varDef.variable.name.value;
+      const value = variables[varName];
+      if (value === undefined) {
+        throw Error(`missing variable "${varName}" value`);
+      }
+      this.validateVariable(varDef.type, value, varName);
+    }
+  }
+
+  validateVariable(
+    type: ast.TypeNode,
+    value: unknown,
+    label: string,
+  ) {
+    if (type.kind === Kind.NON_NULL_TYPE) {
+      if (value == null) {
+        throw new Error(`variable ${label} cannot be null`);
+      }
+      type = type.type;
+    }
+    if (value == null) {
+      return;
+    }
+    switch (type.kind) {
+      case Kind.LIST_TYPE:
+        if (!Array.isArray(value)) {
+          throw new Error(`variable ${label} must be an array`);
+        }
+        value.forEach((item, idx) => {
+          this.validateVariable(
+            (type as ast.ListTypeNode).type,
+            item,
+            `${label}[${idx}]`,
+          );
+        });
+        break;
+      case Kind.NAMED_TYPE:
+        this.validateValueType(type.name.value, value, label);
+    }
+  }
+
+  validateValueType(typeName: string, value: unknown, label: string) {
+    const check = typeChecks[typeName];
+    if (check != null) { // scalar type
+      if (!check(value)) {
+        throw new Error(`variable ${label} must be a ${typeName}`);
+      }
+      return;
+    }
+    this.tg.validateValueType(typeName, value, label);
   }
 }

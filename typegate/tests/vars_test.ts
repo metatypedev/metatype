@@ -46,3 +46,60 @@ test("GraphQL variables", async (t) => {
       .on(e);
   });
 });
+
+test("GraphQL variable types", async (t) => {
+  const e = await t.pythonFile("./tests/typegraphs/vars.py");
+
+  await t.should("reject invalid types", async () => {
+    await gql`
+      query Add($first: Int!, $second: Int!) {
+        add(first: $first, second: $second)
+      }
+    `
+      .withVars({
+        first: 2,
+        second: "3",
+      })
+      .expectErrorContains("variable second")
+      .on(e);
+  });
+
+  await t.should("reject nested invalid types", async () => {
+    await gql`
+      query Sum($numbers: [Int]!) {
+        sum(numbers: $numbers)
+      }
+    `
+      .withVars({
+        numbers: [1, 4, "5"],
+      })
+      .expectErrorContains("variable numbers[2]")
+      .on(e);
+
+    await gql`
+      query Q($val: Level1!) {
+        level2(level1: $val)
+      }
+    `
+      .withVars({
+        val: {
+          level2: 2,
+        },
+      })
+      .expectErrorContains("variable val.level2")
+      .on(e);
+
+    await gql`
+      query Q($val: Level1!) {
+        level2(level1: $val)
+      }
+    `
+      .withVars({
+        val: {
+          level2: ["hello", ["world"]],
+        },
+      })
+      .expectErrorContains("variable val.level2[1]")
+      .on(e);
+  });
+});
