@@ -47,7 +47,13 @@ export const initTypegraph = async (
 interface ComputeStageProps {
   dependencies: string[];
   parent?: ComputeStage;
-  args: Record<string, (deps: any) => unknown>;
+  args: Record<
+    string,
+    (
+      context: Record<string, unknown>,
+      variables: Record<string, unknown>,
+    ) => unknown
+  >;
   policies: Record<string, string[]>;
   resolver?: Resolver;
   outType: TypeNode; // only temp
@@ -199,7 +205,7 @@ export class Engine {
           resolver!({
             // ...mapo(args, (e) => e(parent)),
             // ...variables,
-            ...mapo(args, (e) => e({ ...parent, ...variables })),
+            ...mapo(args, (e) => e(parent, variables)),
             _: {
               parent: parent ?? {},
               context,
