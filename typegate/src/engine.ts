@@ -201,12 +201,9 @@ export class Engine {
       const previousValues = parent ? cache[parent.id()] : ([{}] as any);
       const lens = parent ? lenses[parent.id()] : ([ret] as any);
 
-      // TODO: prevent collision between parent and variables
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            // ...mapo(args, (e) => e(parent)),
-            // ...variables,
             ...mapo(args, (e) => e(parent, variables)),
             _: {
               parent: parent ?? {},
