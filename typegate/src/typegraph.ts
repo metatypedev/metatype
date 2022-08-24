@@ -19,6 +19,7 @@ import { Code } from "./runtimes/utils/codes.ts";
 import { WorkerRuntime } from "./runtimes/WorkerRuntime.ts";
 import { b, ensure, mapo } from "./utils.ts";
 import { compileCodes } from "./utils/swc.ts";
+import { v4 as uuid } from "std/uuid/mod.ts";
 
 interface TypePolicy {
   name: string;
@@ -86,6 +87,7 @@ export class TypeGraph {
   runtimeReferences: Runtime[];
   root: TypeNode;
   introspection: TypeGraph | null;
+  typeByName: Record<string, TypeNode>;
 
   private constructor(
     typegraph: TypeGraphDS,
@@ -96,6 +98,12 @@ export class TypeGraph {
     this.runtimeReferences = runtimeReferences;
     this.root = this.type(0);
     this.introspection = introspection;
+    // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
+    const typeByName: Record<string, TypeNode> = {};
+    typegraph.types.forEach((tpe) => {
+      typeByName[tpe.name] = tpe;
+    });
+    this.typeByName = typeByName;
   }
 
   static async init(
@@ -809,6 +817,92 @@ export class TypeGraph {
     );
     return (x: any) => ensureArray(x);
   };
+
+  typeByNameOrIndex(nameOrIndex: string | number): TypeNode {
+    if (typeof nameOrIndex === "number") {
+      return this.type(nameOrIndex);
+    }
+    const tpe = this.typeByName[nameOrIndex];
+    if (tpe == null) {
+      if (nameOrIndex.endsWith("Inp")) {
+        // Input types are suffixed with "Inp" on the playground docs
+        return this.typeByNameOrIndex(nameOrIndex.slice(0, -3));
+      }
+      throw new Error(`type ${nameOrIndex} not found`);
+    }
+    return tpe;
+  }
+
+  validateValueType(
+    nameOrIndex: string | number,
+    value: unknown,
+    label: string,
+  ) {
+    const tpe = this.typeByNameOrIndex(nameOrIndex);
+
+    if (tpe.typedef === "optional") {
+      if (value == null) return;
+      this.validateValueType(tpe.data.of as number, value, label);
+      return;
+    }
+
+    if (value == null) {
+      throw new Error(`variable ${label} cannot be null`);
+    }
+
+    switch (tpe.typedef) {
+      case "struct":
+        if (typeof value !== "object") {
+          throw new Error(`variable ${label} must be an object`);
+        }
+        Object.entries(tpe.data.binds as Record<string, number>).forEach(
+          ([key, typeIdx]) => {
+            this.validateValueType(
+              typeIdx,
+              (value as Record<string, unknown>)[key],
+              `${label}.${key}`,
+            );
+          },
+        );
+        return;
+      case "list":
+        if (!Array.isArray(value)) {
+          throw new Error(`variable ${label} must be an array`);
+        }
+        value.forEach((item, idx) => {
+          this.validateValueType(
+            tpe.data.of as number,
+            item,
+            `${label}[${idx}]`,
+          );
+        });
+        return;
+      case "integer":
+      case "unsigned_integer":
+      case "float":
+        if (typeof value !== "number") {
+          throw new Error(`variable ${label} must be a number`);
+        }
+        return;
+      case "boolean":
+        if (typeof value !== "boolean") {
+          throw new Error(`variable ${label} must be a boolean`);
+        }
+        return;
+      case "string":
+        if (typeof value !== "string") {
+          throw new Error(`variable ${label} must be a string`);
+        }
+        return;
+      case "uuid":
+        if (!uuid.validate(value as string)) {
+          throw new Error(`variable ${label} must be a valid UUID`);
+        }
+        return;
+      default:
+        throw new Error(`unsupported type ${tpe.typedef}`);
+    }
+  }
 }
 
 const lazyResolver = <T>(
