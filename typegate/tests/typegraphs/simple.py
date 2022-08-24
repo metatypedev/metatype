@@ -7,7 +7,7 @@ from typegraph.types import typedefs as t
 with TypeGraph("testing") as g:
 
     rec = t.func(
-        t.struct({"nested": t.struct({"arg": t.integer()})}),
+        t.struct({"nested": t.struct({"arg": t.integer()}).named("Nested")}),
         t.integer(),
         worker.JavascriptMat(
             g.fun(worker.JavascriptMat.lift(lambda args: args["nested"]["arg"])),

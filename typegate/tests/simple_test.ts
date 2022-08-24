@@ -48,9 +48,9 @@ test("Simple graph", async (t) => {
       .on(e);
   });
 
-  await t.should("accepted variable", async () => {
+  await t.should("accept top-level object variable", async () => {
     await gql`
-      query q($val: Fake) {
+      query q($val: Nested) {
         rec(nested: $val)
       }
     `
@@ -63,9 +63,9 @@ test("Simple graph", async (t) => {
       .on(e);
   });
 
-  await t.should("accepted nested variable", async () => {
+  await t.should("accept nested variable", async () => {
     await gql`
-      query q($val: Integer) {
+      query q($val: Int) {
         rec(nested: { arg: $val })
       }
     `

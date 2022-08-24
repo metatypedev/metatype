@@ -7,7 +7,6 @@ export type FragmentDefs = Record<string, ast.FragmentDefinitionNode>;
 export const findOperation = (
   document: ast.DocumentNode,
   operationName: Maybe<string>,
-  variables: Record<string, unknown>,
 ): [Maybe<ast.OperationDefinitionNode>, FragmentDefs] => {
   let def = null;
   let lastDef = null;
@@ -39,12 +38,7 @@ export const findOperation = (
   if (!operationName && lastDef) {
     def = lastDef;
   }
-  for (const varDef of def?.variableDefinitions ?? []) {
-    const varName = varDef.variable.name.value;
-    if (variables[varName] === undefined) {
-      throw Error(`missing variable ${varName} value`);
-    }
-  }
+
   return [def, fragments];
 };
 
