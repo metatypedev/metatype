@@ -44,16 +44,18 @@ export const initTypegraph = async (
   return engine;
 };
 
+// A function that computes argument from context and variables
+interface ComputeArg {
+  (
+    context: Record<string, unknown>,
+    variables: Record<string, unknown>,
+  ): unknown;
+}
+
 interface ComputeStageProps {
   dependencies: string[];
   parent?: ComputeStage;
-  args: Record<
-    string,
-    (
-      context: Record<string, unknown>,
-      variables: Record<string, unknown>,
-    ) => unknown
-  >;
+  args: Record<string, ComputeArg>;
   policies: Record<string, string[]>;
   resolver?: Resolver;
   outType: TypeNode; // only temp
