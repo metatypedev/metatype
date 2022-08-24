@@ -181,7 +181,14 @@ export class TypeGraph {
     argIdx: number,
     parentContext: Record<string, number>,
     noDefault = false,
-  ): [(deps: any) => unknown, Record<string, string[]>, string[]] | null {
+  ): [
+    (
+      context: Record<string, unknown>,
+      variables: Record<string, unknown>,
+    ) => unknown,
+    Record<string, string[]>,
+    string[],
+  ] | null {
     const arg = this.tg.types[argIdx];
 
     if (!arg) {
@@ -256,7 +263,11 @@ export class TypeGraph {
           throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
         }
 
-        return [(deps: any) => mapo(values, (e) => e(deps)), policies, deps];
+        return [
+          (ctx, vars) => mapo(values, (e) => e(ctx, vars)),
+          policies,
+          deps,
+        ];
       }
 
       throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
@@ -270,12 +281,9 @@ export class TypeGraph {
     const { kind } = argValue;
 
     if (kind === Kind.VARIABLE) {
-      const { kind: nestedKind, value: nestedArg } = argValue.name;
+      const { kind: _, value: nestedArg } = argValue.name;
       return [
-        ({ [nestedArg]: value }) => {
-          // inner check of type (run at runtime)
-          return value;
-        },
+        (_ctx, { [nestedArg]: value }) => value,
         policies,
         [],
       ];
@@ -318,7 +326,7 @@ export class TypeGraph {
         throw Error(`${name} input as field but unknown`);
       }
 
-      return [(deps: any) => mapo(values, (e) => e(deps)), policies, deps];
+      return [(ctx, vars) => mapo(values, (e) => e(ctx, vars)), policies, deps];
     }
 
     if (arg.typedef === "list") {
@@ -348,7 +356,7 @@ export class TypeGraph {
         policies = { ...policies, ...nestedPolicies };
       }
 
-      return [(deps) => values.map((e) => e(deps)), policies, deps];
+      return [(ctx, vars) => values.map((e) => e(ctx, vars)), policies, deps];
     }
 
     if (arg.typedef === "integer") {
@@ -600,7 +608,13 @@ export class TypeGraph {
       if (checks.length > 0) {
         policies[outputType.name] = checks;
       }
-      const args: Record<string, (deps: any) => unknown> = {};
+      const args: Record<
+        string,
+        (
+          context: Record<string, unknown>,
+          variables: Record<string, unknown>,
+        ) => unknown
+      > = {};
 
       const argSchema = this.tg.types[inputIdx].data.binds as Record<
         string,
