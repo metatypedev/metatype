@@ -1,8 +1,8 @@
-use clap::Parser;
-
-use super::{dev::collect_typegraphs, Action};
+use super::Action;
+use crate::typegraph::TypegraphLoader;
 use anyhow::anyhow;
 use anyhow::Result;
+use clap::Parser;
 use std::fs;
 use std::io::{self, Write};
 
@@ -30,11 +30,11 @@ pub struct Serialize {
 
 impl Action for Serialize {
     fn run(&self, dir: String) -> Result<()> {
-        let loader = match &self.file {
-            Some(file) => format!(r#"loaders.import_file("{}")"#, file),
-            None => r#"loaders.import_folder(".")"#.to_string(),
+        let loader = TypegraphLoader::new().serialized();
+        let tgs = match &self.file {
+            Some(file) => loader.load_file(file)?,
+            None => loader.load_folder(&dir)?,
         };
-        let tgs = collect_typegraphs(dir, Some(loader), false)?;
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.get(tg_name) {
