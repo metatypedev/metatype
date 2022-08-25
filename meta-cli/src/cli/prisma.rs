@@ -1,9 +1,9 @@
 use std::fs::File;
 use std::io::{self, Read, Write};
 
-use super::{dev::collect_typegraphs, Action};
+use super::Action;
 use crate::prisma::migration;
-use crate::typegraph::Typegraph;
+use crate::typegraph::TypegraphLoader;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use tokio::runtime::Runtime;
@@ -52,15 +52,13 @@ impl Action for Apply {
     fn run(&self, dir: String) -> Result<()> {
         let runtime = Runtime::new()?;
 
-        let loader = match &self.file {
-            Some(file) => format!(r#"loaders.import_file("{}")"#, file),
-            None => r#"loaders.import_folder(".")"#.to_string(),
+        let loader = TypegraphLoader::new();
+        let tgs = match &self.file {
+            Some(file) => loader.load_file(file)?,
+            None => loader.load_folder(&dir)?,
         };
-        let tgs = collect_typegraphs(dir, Some(loader), false)?;
 
-        for tg in tgs {
-            let typegraph: Typegraph = serde_json::from_str(&tg.1)?;
-
+        for (_name, typegraph) in tgs {
             for rt in typegraph.runtimes {
                 if rt.name == "prisma" {
                     let fut = migration::push(
@@ -93,15 +91,13 @@ impl Action for Diff {
     fn run(&self, dir: String) -> Result<()> {
         let runtime = Runtime::new()?;
 
-        let loader = match &self.file {
-            Some(file) => format!(r#"loaders.import_file("{}")"#, file),
-            None => r#"loaders.import_folder(".")"#.to_string(),
+        let loader = TypegraphLoader::new();
+        let tgs = match &self.file {
+            Some(file) => loader.load_file(file)?,
+            None => loader.load_folder(&dir)?,
         };
-        let tgs = collect_typegraphs(dir, Some(loader), false)?;
 
-        for tg in tgs {
-            let typegraph: Typegraph = serde_json::from_str(&tg.1)?;
-
+        for (_name, typegraph) in tgs {
             for rt in typegraph.runtimes {
                 if rt.name == "prisma" {
                     let fut = migration::diff(

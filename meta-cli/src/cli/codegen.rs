@@ -1,9 +1,9 @@
-use crate::codegen;
+use crate::{codegen, typegraph::TypegraphLoader};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::Path;
 
-use super::{dev::collect_typegraphs, Action};
+use super::Action;
 
 #[derive(Parser, Debug)]
 pub struct Codegen {
@@ -27,12 +27,8 @@ pub struct Deno {
 }
 
 impl Action for Deno {
-    fn run(&self, dir: String) -> Result<()> {
-        let tgs = collect_typegraphs(
-            dir,
-            Some(format!(r#"loaders.import_file("{}")"#, self.file)),
-            true,
-        )?;
+    fn run(&self, _dir: String) -> Result<()> {
+        let tgs = TypegraphLoader::new().serialized().load_file(&self.file)?;
 
         let file = Path::new(&self.file);
 
