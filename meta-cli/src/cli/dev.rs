@@ -1,4 +1,5 @@
 use crate::codegen;
+use crate::typegraph::TypegraphLoader;
 use anyhow::{Error, Ok, Result};
 use ignore::Match;
 use notify::event::ModifyKind;
@@ -6,16 +7,13 @@ use notify::{
     recommended_watcher, Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
 };
 use std::collections::HashMap;
-use std::env;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 use std::thread::sleep;
 use std::time::Duration;
 
 use clap::Parser;
 use globset::Glob;
 use ignore::gitignore::Gitignore;
-use indoc::formatdoc;
 use reqwest::{self, Url};
 use serde_json::{self, json};
 use tiny_http::{Header, Response, Server};
@@ -27,22 +25,24 @@ pub struct Dev {}
 
 impl Action for Dev {
     fn run(&self, dir: String) -> Result<()> {
-        let tgs = collect_typegraphs(dir.clone(), None, false)?;
+        let tgs = TypegraphLoader::new().serialized().load_all()?;
         reload_typegraphs(tgs, "127.0.0.1:7890".to_string())?;
 
         let watch_path = dir.clone();
         let _watcher = watch(dir.clone(), move |paths| {
-            let loader = paths
-                .iter()
-                .map(|p| format!(r#"loaders.import_file("{}")"#, p.to_str().unwrap()))
-                .collect::<Vec<_>>()
-                .join(" + ");
-            let tgs = collect_typegraphs(watch_path.clone(), Some(loader.clone()), true).unwrap();
+            let tgs = TypegraphLoader::new()
+                .skip_deno_modules()
+                .serialized()
+                .load_files(paths)
+                .unwrap();
             for tg in tgs.values() {
                 codegen::deno::apply(tg, watch_path.clone());
             }
 
-            let tgs = collect_typegraphs(watch_path.clone(), Some(loader), false).unwrap();
+            let tgs = TypegraphLoader::new()
+                .serialized()
+                .load_files(paths)
+                .unwrap();
             reload_typegraphs(tgs, "127.0.0.1:7890".to_string()).unwrap();
         })
         .unwrap();
@@ -56,7 +56,10 @@ impl Action for Dev {
             let response = match url.path() {
                 "/dev" => match query.get("node") {
                     Some(node) => {
-                        let tgs = collect_typegraphs(dir.clone(), None, false)?;
+                        let tgs = TypegraphLoader::new()
+                            .working_dir(&dir)
+                            .serialized()
+                            .load_all()?;
                         reload_typegraphs(tgs, node.to_owned())?;
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
@@ -132,58 +135,6 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
         .filter(|path| gs.is_match(path))
         .map(|path| path.to_path_buf())
         .collect()
-}
-
-pub fn collect_typegraphs(
-    path: String,
-    custom_loader: Option<String>,
-    dont_read_external_ts_files: bool,
-) -> Result<HashMap<String, String>> {
-    let cwd = Path::new(&path);
-
-    // println!("env vars {:?}", std::env::vars().collect::<Vec<_>>());
-
-    let test = Command::new("python3")
-        .envs(env::vars())
-        .arg("-c")
-        .arg(formatdoc!(
-            r#"
-        from typegraph.utils import loaders
-        from typegraph import dist
-        import orjson
-        tgs = {dist}
-        serialized_tgs = {{tg.name: loaders.serialize_typegraph(tg) for tg in tgs}}
-        print(orjson.dumps(serialized_tgs).decode())
-        "#,
-            dist = match custom_loader {
-                Some(loader) => loader,
-                None => r#"loaders.import_folder(".") + loaders.import_modules(dist)"#.to_string(),
-            }
-        ))
-        .current_dir(cwd)
-        .env("PYTHONUNBUFFERED", "1")
-        .env("PYTHONDONTWRITEBYTECODE", "1")
-        .env(
-            "DONT_READ_EXTERNAL_TS_FILES",
-            if dont_read_external_ts_files { "1" } else { "" },
-        )
-        .output()?;
-
-    if !test.status.success() {
-        let message = String::from_utf8(test.stderr)?;
-
-        if message.contains("ModuleNotFoundError: No module named 'typegraph'") {
-            return Err(Error::msg(
-                "typegraph module not found in venv, install it with `pip install typegraph`",
-            ));
-        }
-
-        return Err(Error::msg(message));
-    }
-
-    let payload = String::from_utf8(test.stdout)?;
-    let tgs: HashMap<String, String> = serde_json::from_str(&payload)?;
-    Ok(tgs)
 }
 
 fn reload_typegraphs(tgs: HashMap<String, String>, node: String) -> Result<()> {
