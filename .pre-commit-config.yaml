@@ -5,6 +5,7 @@ repos:
       - id: check-added-large-files
       - id: check-ast
       - id: check-json
+        exclude: .vscode/.*\.json
       - id: check-toml
       - id: check-yaml
       - id: end-of-file-fixer

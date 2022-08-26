@@ -1,4 +1,9 @@
-import { assert, assertEquals, assertExists } from "std/testing/asserts.ts";
+import {
+  assert,
+  assertEquals,
+  assertExists,
+  assertStringIncludes,
+} from "std/testing/asserts.ts";
 import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
@@ -228,7 +233,7 @@ export class Q {
     return this.withExpect((res, ctx) => {
       assertExists(Array.isArray(res.errors));
       assert(res.errors.length > 0);
-      assert(res.errors[0].message.includes(partial) >= 0);
+      assertStringIncludes(res.errors[0].message, partial);
     });
   }
 
