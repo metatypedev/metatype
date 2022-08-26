@@ -35,6 +35,7 @@ test:
   variables:
     <<: *variables
     TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
+    TEST_POSTGRES_DB2: "postgresql://postgres:password@postgres:5432/db?schema=test2"
 
 kaniko:
   stage: test
