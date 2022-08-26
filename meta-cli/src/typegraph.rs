@@ -204,3 +204,17 @@ impl SerializedTypegraphLoader {
         Ok(tgs)
     }
 }
+
+pub trait UniqueTypegraph {
+    fn get_unique(self) -> Result<Typegraph>;
+}
+
+impl UniqueTypegraph for HashMap<String, Typegraph> {
+    fn get_unique(self) -> Result<Typegraph> {
+        if self.len() != 1 {
+            Err(anyhow!("requires one and only one typegraph in the map"))
+        } else {
+            Ok(self.into_iter().next().unwrap().1)
+        }
+    }
+}

@@ -25,18 +25,21 @@ pub struct Dev {}
 
 impl Action for Dev {
     fn run(&self, dir: String) -> Result<()> {
-        let tgs = TypegraphLoader::new().serialized().load_all()?;
+        let tgs = TypegraphLoader::new()
+            .working_dir(&dir)
+            .serialized()
+            .load_all()?;
         reload_typegraphs(tgs, "127.0.0.1:7890".to_string())?;
 
         let watch_path = dir.clone();
         let _watcher = watch(dir.clone(), move |paths| {
             let tgs = TypegraphLoader::new()
                 .skip_deno_modules()
-                .serialized()
+                // .serialized()
                 .load_files(paths)
                 .unwrap();
-            for tg in tgs.values() {
-                codegen::deno::apply(tg, watch_path.clone());
+            for tg in tgs.into_values() {
+                codegen::deno::codegen(tg, watch_path.clone()).expect("could not run deno codegen");
             }
 
             let tgs = TypegraphLoader::new()
