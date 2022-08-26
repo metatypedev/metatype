@@ -38,7 +38,7 @@ const rebuildGraphQuery = (
       ret += Object.entries(stage.props.args)
         .map(
           ([argName, argValue]) =>
-            `${argName}: ${stringifyQL(argValue({}) as JSONValue)}`,
+            `${argName}: ${stringifyQL(argValue({}, {}) as JSONValue)}`,
         )
         .join(", ");
       ret += `)`;
