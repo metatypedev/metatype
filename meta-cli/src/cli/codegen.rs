@@ -28,19 +28,18 @@ pub struct Deno {
 
 impl Action for Deno {
     fn run(&self, _dir: String) -> Result<()> {
-        let tgs = TypegraphLoader::new().serialized().load_file(&self.file)?;
-
+        let mut tgs = TypegraphLoader::new().load_file(&self.file)?;
         let file = Path::new(&self.file);
 
         if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.get(tg_name) {
-                codegen::deno::apply(tg, file);
+            if let Some(tg) = tgs.remove(tg_name) {
+                codegen::deno::codegen(tg, file)?;
             } else {
                 panic!("typegraph not found: {tg_name}")
             }
         } else {
             for (_tg_name, tg) in tgs {
-                codegen::deno::apply(&tg, file);
+                codegen::deno::codegen(tg, file)?;
             }
         }
 

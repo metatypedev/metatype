@@ -1,6 +1,8 @@
 mod cli;
 mod codegen;
 mod prisma;
+#[cfg(test)]
+mod tests;
 mod ts;
 mod typegraph;
 

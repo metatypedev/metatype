@@ -4,17 +4,18 @@ from pathlib import Path
 import subprocess
 from typing import Iterable
 
-import debugpy
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
 from typegraph.materializers.prisma import PrismaSchema
 from typegraph.types import typedefs as t
 
+# import debugpy
 
-if environ.get("DEBUG", False):
-    debugpy.listen(5678)
-    print("Waiting for debugger attach...")
-    debugpy.wait_for_client()
+
+# if environ.get("DEBUG", False):
+#     debugpy.listen(5678)
+#     print("Waiting for debugger attach...")
+#     debugpy.wait_for_client()
 
 postgres = environ.get(
     "TEST_POSTGRES_DB", "postgresql://postgres:password@localhost:5432/db?schema=test"
