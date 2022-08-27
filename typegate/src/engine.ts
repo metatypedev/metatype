@@ -7,6 +7,7 @@ import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
 import type { TypeNode } from "./typegraph.ts";
 import * as log from "std/log/mod.ts";
+import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { sha1 } from "./crypto.ts";
 import type {
   Batcher,
@@ -16,8 +17,9 @@ import type {
 } from "./runtimes/Runtime.ts";
 import { ResolverError } from "./errors.ts";
 
+const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
-  "./src/typegraphs/introspection.json",
+  join(localDir, "typegraphs/introspection.json"),
 ).then((d) => JSON.parse(d));
 
 export const initTypegraph = async (
@@ -130,11 +132,11 @@ const authorize = async (
 
 // typechecks for scalar types
 const typeChecks: Record<string, (value: unknown) => boolean> = {
-  "Int": (value) => typeof value === "number",
-  "Float": (value) => typeof value === "number",
-  "String": (value) => typeof value === "string",
-  "ID": (value) => typeof value === "string",
-  "Boolean": (value) => typeof value === "boolean",
+  Int: (value) => typeof value === "number",
+  Float: (value) => typeof value === "number",
+  String: (value) => typeof value === "string",
+  ID: (value) => typeof value === "string",
+  Boolean: (value) => typeof value === "boolean",
 };
 
 export class Engine {
@@ -329,10 +331,7 @@ export class Engine {
     try {
       const document = parse(query);
 
-      const [operation, fragments] = findOperation(
-        document,
-        operationName,
-      );
+      const [operation, fragments] = findOperation(document, operationName);
       if (!operation) {
         throw Error(`operation ${operationName} not found`);
       }
@@ -439,11 +438,7 @@ export class Engine {
     }
   }
 
-  validateVariable(
-    type: ast.TypeNode,
-    value: unknown,
-    label: string,
-  ) {
+  validateVariable(type: ast.TypeNode, value: unknown, label: string) {
     if (type.kind === Kind.NON_NULL_TYPE) {
       if (value == null) {
         throw new Error(`variable ${label} cannot be null`);
@@ -473,7 +468,8 @@ export class Engine {
 
   validateValueType(typeName: string, value: unknown, label: string) {
     const check = typeChecks[typeName];
-    if (check != null) { // scalar type
+    if (check != null) {
+      // scalar type
       if (!check(value)) {
         throw new Error(`variable ${label} must be a ${typeName}`);
       }
