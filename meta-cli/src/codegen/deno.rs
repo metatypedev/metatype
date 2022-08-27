@@ -1,5 +1,7 @@
 use crate::typegraph::{TypeNode, Typegraph};
 use anyhow::{anyhow, Context, Result};
+use dprint_plugin_typescript::{configuration::Configuration, format_text};
+use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
@@ -9,6 +11,19 @@ use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+
+lazy_static! {
+    static ref TS_FORMAT_CONFIG: Configuration = {
+        use dprint_plugin_typescript::configuration::*;
+        ConfigurationBuilder::new()
+            .line_width(80)
+            .prefer_hanging(true)
+            .prefer_single_line(false)
+            .quote_style(QuoteStyle::PreferSingle)
+            .next_control_flow_position(NextControlFlowPosition::SameLine)
+            .build()
+    };
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct FuncData {
@@ -24,12 +39,25 @@ struct FuncMatData {
     import_from: Option<String>,
 }
 
-pub fn apply<P>(tg_json: &str, base_dir: P)
+pub fn codegen<P>(tg: Typegraph, base_dir: P) -> Result<()>
 where
     P: AsRef<Path>,
 {
-    let cg = Codegen::new(tg_json, base_dir);
-    cg.apply().expect("could not apply codegen");
+    let cg = Codegen::new(&tg, base_dir);
+    let codes = cg.codegen()?;
+    for code in codes.into_iter() {
+        let mut file = File::options()
+            .append(true)
+            .open(&code.path)
+            .context(format!("could not open output file: {:?}", code.path))?;
+        write!(file, "\n{code}\n", code = code.code)?;
+    }
+    Ok(())
+}
+
+struct ModuleCode {
+    path: PathBuf,
+    code: String,
 }
 
 struct ModuleInfo {
@@ -37,19 +65,19 @@ struct ModuleInfo {
     exports: RefCell<Option<HashSet<String>>>, // names of exported functions
 }
 
-struct Codegen {
+struct Codegen<'a> {
     path: PathBuf,
     base_dir: PathBuf,
-    tg: Typegraph,
+    tg: &'a Typegraph,
     ts_modules: HashMap<String, ModuleInfo>,
 }
 
-impl Codegen {
-    fn new<P>(tg_json: &str, path: P) -> Self
+impl<'a> Codegen<'a> {
+    // TODO: accept Typegraph instance
+    fn new<P>(tg: &'a Typegraph, path: P) -> Self
     where
         P: AsRef<Path>,
     {
-        let tg: Typegraph = serde_json::from_str(tg_json).expect("invalid typegraph JSON");
         let path = path.as_ref().to_path_buf();
         let base_dir = {
             let mut dir = path.clone();
@@ -86,7 +114,7 @@ impl Codegen {
         }
     }
 
-    fn apply(&self) -> Result<()> {
+    fn codegen(mut self) -> Result<Vec<ModuleCode>> {
         let mut gen_list = vec![];
 
         for tpe in self.tg.types.iter() {
@@ -112,18 +140,17 @@ impl Codegen {
 
         // group by modules
         let gen_list = gen_list;
-        let cgs = self.generate(gen_list);
-
-        for (mod_name, codegen) in cgs.into_iter() {
-            let module = self.ts_modules.get(&mod_name).unwrap();
-            let mut file = File::options()
-                .append(true)
-                .open(&module.path)
-                .context(format!("could not open output file: {:?}", module.path))?;
-            write!(file, "\n{codegen}\n")?;
-        }
-
-        Ok(())
+        let module_codes = self.generate(gen_list);
+        Ok(module_codes
+            .into_iter()
+            .map(|(name, code)| {
+                let path = self.ts_modules.remove(&name).unwrap().path;
+                let code = format_text(&path, &code, &TS_FORMAT_CONFIG)
+                    .expect("could not format code")
+                    .unwrap();
+                ModuleCode { path, code }
+            })
+            .collect())
     }
 
     fn generate(&self, gen_list: Vec<(FuncData, FuncMatData)>) -> HashMap<String, String> {
@@ -151,6 +178,9 @@ impl Codegen {
     where
         P: AsRef<Path>,
     {
+        if !mod_path.as_ref().exists() {
+            return HashSet::new();
+        }
         let module = crate::ts::parser::parse_module(mod_path.as_ref())
             .unwrap_or_else(|_| panic!("could not load module: {:?}", mod_path.as_ref()));
 
@@ -190,9 +220,13 @@ impl Codegen {
             .iter()
             .map(|(k, v)| (k.clone(), self.get_typespec(*v).unwrap()))
             .collect::<HashMap<_, _>>();
+        #[cfg(test)]
+        let fields = fields
+            .into_iter()
+            .collect::<std::collections::BTreeMap<_, _>>();
         let mut typedef = "{\n".to_string();
         for (k, v) in fields.iter() {
-            writeln!(typedef, "  {k}: {v};\n")?;
+            writeln!(typedef, "  {k}: {v};")?;
         }
         typedef.push('}');
         Ok(typedef)
@@ -201,6 +235,10 @@ impl Codegen {
     fn destructure_object(&self, idx: u32) -> Result<String> {
         let tpe = &self.tg.types[idx as usize];
         let fields = tpe.get_struct_fields()?;
+        #[cfg(test)]
+        let fields = fields
+            .into_iter()
+            .collect::<std::collections::BTreeMap<_, _>>();
         Ok(format!(
             "{{ {} }}",
             fields.keys().cloned().collect::<Vec<_>>().join(", "),
@@ -217,6 +255,10 @@ impl Codegen {
             t if t == "string" => Ok("\"\"".to_string()),
             t if t == "struct" => {
                 let fields = tpe.get_struct_fields()?;
+                #[cfg(test)]
+                let fields = fields
+                    .into_iter()
+                    .collect::<std::collections::BTreeMap<_, _>>();
                 let body = fields
                     .iter()
                     .map(|(k, v)| -> Result<String> {
@@ -305,5 +347,40 @@ impl IntoJson for HashMap<String, Value> {
             map.insert(k, v);
         }
         Value::Object(map)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::utils::ensure_venv;
+    use crate::typegraph::{TypegraphLoader, UniqueTypegraph};
+    use std::io::Read;
+
+    #[test]
+    fn codegen() -> Result<()> {
+        ensure_venv()?;
+        let tg = TypegraphLoader::new()
+            .skip_deno_modules()
+            .load_file("./src/tests/typegraphs/codegen.py")?
+            .get_unique()?;
+        let module_codes = Codegen::new(&tg, "./src/tests/typegraphs/codegen.py").codegen()?;
+        assert_eq!(module_codes.len(), 1);
+
+        let expected_output_path = "./src/tests/typegraphs/codegen-expected-output.ts";
+        let expected_output = {
+            let mut t = String::new();
+            std::fs::File::open(expected_output_path)?.read_to_string(&mut t)?;
+            t
+        };
+
+        let formatted_code = format_text(
+            &Path::new(expected_output_path),
+            &expected_output,
+            &TS_FORMAT_CONFIG,
+        )?;
+        let formatted_code = formatted_code.as_ref().unwrap_or(&expected_output);
+        assert_eq!(&module_codes[0].code, formatted_code);
+        Ok(())
     }
 }

@@ -1,9 +1,9 @@
-use crate::codegen;
+use crate::{codegen, typegraph::TypegraphLoader};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use std::path::Path;
 
-use super::{dev::collect_typegraphs, Action};
+use super::Action;
 
 #[derive(Parser, Debug)]
 pub struct Codegen {
@@ -27,24 +27,19 @@ pub struct Deno {
 }
 
 impl Action for Deno {
-    fn run(&self, dir: String) -> Result<()> {
-        let tgs = collect_typegraphs(
-            dir,
-            Some(format!(r#"loaders.import_file("{}")"#, self.file)),
-            true,
-        )?;
-
+    fn run(&self, _dir: String) -> Result<()> {
+        let mut tgs = TypegraphLoader::new().load_file(&self.file)?;
         let file = Path::new(&self.file);
 
         if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.get(tg_name) {
-                codegen::deno::apply(tg, file);
+            if let Some(tg) = tgs.remove(tg_name) {
+                codegen::deno::codegen(tg, file)?;
             } else {
                 panic!("typegraph not found: {tg_name}")
             }
         } else {
             for (_tg_name, tg) in tgs {
-                codegen::deno::apply(&tg, file);
+                codegen::deno::codegen(tg, file)?;
             }
         }
 

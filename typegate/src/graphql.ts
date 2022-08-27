@@ -20,6 +20,12 @@ export const findOperation = (
           (definition.operation == "query" ||
             definition.operation == "mutation")
         ) {
+          if (def !== null) {
+            throw Error(
+              `multiple definition of same operation ${operationName}`,
+            );
+          }
+
           def = definition;
         }
         break;
@@ -32,6 +38,7 @@ export const findOperation = (
   if (!operationName && lastDef) {
     def = lastDef;
   }
+
   return [def, fragments];
 };
 

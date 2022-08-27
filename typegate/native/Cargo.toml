@@ -8,6 +8,7 @@ name = "native"
 crate-type = ["cdylib"]
 
 [dependencies]
+anyhow = "1.0"
 deno_bindgen = "0.6.0"
 serde = { version = "1.0.143", features = ["derive"] }
 query-core = { git = "https://github.com/prisma/prisma-engines" }
