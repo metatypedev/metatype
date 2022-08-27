@@ -1,6 +1,6 @@
-ARG DENO_BINDGEN_VERSION=0.5.1
-ARG RUST_VERSION=1.62.0
-ARG DENO_VERSION=1.22.0
+ARG DENO_BINDGEN_URL=https://raw.githubusercontent.com/denoland/deno_bindgen/main/cli.ts
+ARG RUST_VERSION=1.63.0
+ARG DENO_VERSION=1.24.3
 
 FROM rust:${RUST_VERSION} AS builder
 
@@ -11,7 +11,7 @@ ENV DENO_INSTALL /root/.deno
 ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 
 RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v${DENO_VERSION} \
-    && deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen@${DENO_BINDGEN_VERSION}/cli.ts
+    && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
 
 WORKDIR /app
 COPY import_map.json .

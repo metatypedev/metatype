@@ -1,7 +1,7 @@
 import { gql, test } from "./utils.ts";
 
 test("Policies", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/policies.py");
+  const e = await t.pythonFile("typegraphs/policies.py");
 
   await t.should("have public access", async () => {
     await gql`

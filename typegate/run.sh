@@ -1,6 +1,9 @@
 #!/bin/sh
 
-deno run \
+SCRIPT_PATH=$(dirname $(realpath -s $0))
+
+cd ${SCRIPT_PATH} && \
+    deno run \
     --import-map=import_map.json \
     --unstable \
     --allow-run=hostname \

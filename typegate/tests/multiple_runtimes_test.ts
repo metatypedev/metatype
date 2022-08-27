@@ -1,9 +1,7 @@
-import { gql, shell, test } from "./utils.ts";
-
-const META_CLI = "../target/debug/meta";
+import { gql, meta, test } from "./utils.ts";
 
 test("prisma", async (t) => {
-  const tgPath = "./tests/typegraphs/multiple_runtimes.py";
+  const tgPath = "typegraphs/multiple_runtimes.py";
   const e = await t.pythonFile(tgPath);
 
   await t.should("drop schemas and recreate", async () => {
@@ -31,20 +29,15 @@ test("prisma", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await shell([
-      META_CLI,
-      "prisma",
-      "apply",
-      "-f",
-      tgPath,
-    ]);
+    await meta("prisma", "apply", "-f", tgPath);
   });
 
   await t.should("succeed queries", async () => {
     await gql`
       mutation {
         createUser1(data: { name: "user" }) {
-          id name
+          id
+          name
         }
       }
     `
@@ -59,21 +52,21 @@ test("prisma", async (t) => {
     await gql`
       query {
         findManyUsers1 {
-          id name
+          id
+          name
         }
       }
     `
       .expectData({
-        findManyUsers1: [
-          { id: 1, name: "user" },
-        ],
+        findManyUsers1: [{ id: 1, name: "user" }],
       })
       .on(e);
 
     await gql`
       query {
         findManyUsers2 {
-          id name
+          id
+          name
         }
       }
     `

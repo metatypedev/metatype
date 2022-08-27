@@ -43,7 +43,7 @@ mf.mock("POST@/api/graphql", async (req) => {
 });
 
 test("GraphQL queries", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/graphql.py");
+  const e = await t.pythonFile("typegraphs/graphql.py");
 
   await t.should("work with queries", async () => {
     await gql`
