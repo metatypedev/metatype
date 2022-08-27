@@ -1,7 +1,7 @@
 import { gql, test } from "./utils.ts";
 
 test("Simple graph", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/simple.py");
+  const e = await t.pythonFile("typegraphs/simple.py");
 
   await t.should("work", async () => {
     await gql`

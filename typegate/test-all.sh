@@ -5,5 +5,5 @@
 # https://github.com/denoland/deno_bindgen/issues/79
 
 for test in `find . -name '*_test.ts'`; do
-  ./test.sh --quiet $test
+  ./test.sh "${@}" $test
 done

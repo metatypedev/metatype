@@ -23,15 +23,6 @@ test:
   stage: test
   tags:
     - docker
-  services:
-    - name: postgres:14
-      variables:
-        POSTGRES_DB: db
-        POSTGRES_PASSWORD: password
-    - name: redis:7
-      command:
-        - --requirepass
-        - password
   variables:
     <<: *variables
     TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
