@@ -2427,6 +2427,7 @@ dependencies = [
 name = "native"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "connection-string",
  "dashmap",
  "datamodel",

@@ -10,7 +10,7 @@ test("prisma", async (t) => {
     await gql`
       mutation a {
         executeRaw(
-          query: "DROP SCHEMA IF EXISTS test1 CASCADE"
+          query: "DROP SCHEMA IF EXISTS test CASCADE"
           parameters: "[]"
         )
       }

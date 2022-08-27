@@ -1,6 +1,8 @@
 mod cli;
 mod codegen;
 mod prisma;
+#[cfg(test)]
+mod tests;
 mod ts;
 mod typegraph;
 
@@ -56,6 +58,9 @@ fn main() -> Result<()> {
             }
             PrismaCommands::Diff(diff) => {
                 diff.run(args.dir)?;
+            }
+            PrismaCommands::Format(format) => {
+                format.run(args.dir)?;
             }
         },
         Commands::Deploy(deploy) => {

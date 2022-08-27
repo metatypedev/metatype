@@ -1,5 +1,8 @@
 #!/bin/sh
 
+export VIRTUAL_ENV="$PWD/../typegraph/.venv"
+export PATH="$PWD/../typegraph/.venv/bin:$PATH"
+
 deno test \
     --import-map=import_map.json \
     --unstable \
