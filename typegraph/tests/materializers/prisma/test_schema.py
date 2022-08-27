@@ -1,23 +1,40 @@
 from os import environ
+from os import getcwd
 from pathlib import Path
+import subprocess
+from typing import Iterable
 
-import debugpy
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
+from typegraph.materializers.prisma import PrismaSchema
 from typegraph.types import typedefs as t
 
+# import debugpy
 
-if environ.get("DEBUG", False):
-    debugpy.listen(5678)
-    print("Waiting for debugger attach...")
-    debugpy.wait_for_client()
+
+# if environ.get("DEBUG", False):
+#     debugpy.listen(5678)
+#     print("Waiting for debugger attach...")
+#     debugpy.wait_for_client()
 
 postgres = environ.get(
     "TEST_POSTGRES_DB", "postgresql://postgres:password@localhost:5432/db?schema=test"
 )
 
+META_BIN = str(Path(getcwd()) / "../target/debug/meta")
+
+
+def reformat_schema(schema: str):
+    p = subprocess.run(
+        [META_BIN, "prisma", "format"], input=schema, text=True, capture_output=True
+    )
+    return p.stdout
+
 
 class TestPrismaSchema:
+    def assert_schema(self, models: Iterable[t.struct], schema: str):
+        assert reformat_schema(PrismaSchema(models).build()) == reformat_schema(schema)
+
     def test_simple_model(self):
         with TypeGraph(""):
             model = t.struct(

@@ -2,9 +2,6 @@
 
 set -e
 
-maturin build --release --manifest-path native/Cargo.toml --strip
-ls ./native/target/wheels/*310*.whl
-
 poetry build --format wheel
 ls ./dist
 

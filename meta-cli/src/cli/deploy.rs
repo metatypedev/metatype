@@ -1,11 +1,7 @@
-use clap::Parser;
-
+use super::{dev::push_typegraph, Action};
+use crate::typegraph::TypegraphLoader;
 use anyhow::{Ok, Result};
-
-use super::{
-    dev::{collect_typegraphs, push_typegraph},
-    Action,
-};
+use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct Deploy {
@@ -20,16 +16,16 @@ pub struct Deploy {
 
 impl Action for Deploy {
     fn run(&self, dir: String) -> Result<()> {
-        let loader = match &self.file {
-            Some(file) => format!(r#"loaders.import_file("{}")"#, file),
-            None => r#"loaders.import_folder(".")"#.to_string(),
+        let loader = TypegraphLoader::new().serialized();
+        let tgs = match &self.file {
+            Some(file) => loader.load_file(file)?,
+            None => loader.load_folder(&dir)?,
         };
-        let tgs = collect_typegraphs(dir, Some(loader), false)?;
 
-        for tg in tgs {
-            println!("Pushing {}", tg.0);
-            push_typegraph(tg.1, self.gate.clone(), 3)?;
-            println!("> Added {}", tg.0);
+        for (name, tg) in tgs {
+            println!("Pushing {}", name);
+            push_typegraph(tg, self.gate.clone(), 3)?;
+            println!("> Added {}", name);
         }
 
         Ok(())
