@@ -17,6 +17,7 @@ test("prisma", async (t) => {
         executeRaw: 0,
       })
       .on(e);
+
     await gql`
       mutation a {
         executeRaw(
@@ -29,6 +30,7 @@ test("prisma", async (t) => {
         executeRaw: 0,
       })
       .on(e);
+
     await meta("prisma", "apply", "-f", tgPath);
   });
 

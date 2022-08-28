@@ -24,8 +24,11 @@ struct Args {
     #[clap(short = 'C', long, value_parser, default_value_t = String::from("."))]
     dir: String,
 
+    #[clap(short, long, value_parser)]
+    version: bool,
+
     #[clap(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -45,32 +48,39 @@ enum Commands {
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    match args.command {
-        Commands::Dev(dev) => {
-            dev.run(args.dir)?;
+    if args.version {
+        println!("Meta {}", common::get_version());
+        return Ok(());
+    }
+
+    if let Some(command) = args.command {
+        match command {
+            Commands::Dev(dev) => {
+                dev.run(args.dir)?;
+            }
+            Commands::Serialize(serialize) => {
+                serialize.run(args.dir)?;
+            }
+            Commands::Prisma(prisma) => match prisma.command {
+                PrismaCommands::Apply(apply) => {
+                    apply.run(args.dir)?;
+                }
+                PrismaCommands::Diff(diff) => {
+                    diff.run(args.dir)?;
+                }
+                PrismaCommands::Format(format) => {
+                    format.run(args.dir)?;
+                }
+            },
+            Commands::Deploy(deploy) => {
+                deploy.run(args.dir)?;
+            }
+            Commands::Codegen(codegen) => match codegen.command {
+                CodegenCommands::Deno(deno) => {
+                    deno.run(args.dir)?;
+                }
+            },
         }
-        Commands::Serialize(serialize) => {
-            serialize.run(args.dir)?;
-        }
-        Commands::Prisma(prisma) => match prisma.command {
-            PrismaCommands::Apply(apply) => {
-                apply.run(args.dir)?;
-            }
-            PrismaCommands::Diff(diff) => {
-                diff.run(args.dir)?;
-            }
-            PrismaCommands::Format(format) => {
-                format.run(args.dir)?;
-            }
-        },
-        Commands::Deploy(deploy) => {
-            deploy.run(args.dir)?;
-        }
-        Commands::Codegen(codegen) => match codegen.command {
-            CodegenCommands::Deno(deno) => {
-                deno.run(args.dir)?;
-            }
-        },
     }
 
     Ok(())

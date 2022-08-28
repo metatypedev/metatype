@@ -20,7 +20,7 @@ function readPointer(v: any): Uint8Array {
   return buf
 }
 
-const url = new URL("../../../target/debug", import.meta.url)
+const url = new URL("../target/debug", import.meta.url)
 let uri = url.toString()
 if (!uri.endsWith("/")) uri += "/"
 
