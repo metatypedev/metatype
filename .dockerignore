@@ -1,10 +1,10 @@
 *
+# exceptions does not support wildcard: https://github.com/moby/moby/issues/30018
 !/typegate/import_map.json
 !/typegate/.env.defaults
 !/typegate/src
-!/typegate/native/Cargo.toml
-!/typegate/native/src
-!/Cargo.toml
+!/typegate/native
 !/Cargo.lock
-!/meta-cli/Cargo.toml
-!/meta-cli/src
+!/Cargo.toml
+!/meta-cli
+!/libs

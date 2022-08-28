@@ -446,6 +446,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "common"
+version = "0.0.1"
+dependencies = [
+ "git-version",
+]
+
+[[package]]
 name = "connection-string"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2027,10 +2034,10 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "clap",
+ "common",
  "crossbeam-channel",
  "datamodel",
  "dprint-plugin-typescript",
- "git-version",
  "globset",
  "ignore",
  "indoc",
@@ -2451,12 +2458,12 @@ name = "native"
 version = "0.0.1"
 dependencies = [
  "anyhow",
+ "common",
  "connection-string",
  "dashmap",
  "datamodel",
  "deno_bindgen",
  "env_logger",
- "git-version",
  "introspection-connector",
  "introspection-core",
  "lazy_static",
