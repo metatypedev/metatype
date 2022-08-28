@@ -43,7 +43,7 @@ fn get_version() -> String {
 #[cfg(not(debug_assertions))]
 #[deno_bindgen]
 fn get_version() -> String {
-    env!("CARGO_PKG_VERSION").to_string();
+    env!("CARGO_PKG_VERSION").to_string()
 }
 
 // introspection
