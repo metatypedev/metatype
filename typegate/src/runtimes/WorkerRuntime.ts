@@ -19,8 +19,8 @@ import { ensure } from "../utils.ts";
 
 const logger = getLogger(import.meta);
 
-const workerFile =
-  new URL("../src/runtimes/utils/worker.ts", Deno.mainModule).href;
+const workerFile = new URL("../src/runtimes/utils/worker.ts", Deno.mainModule)
+  .href;
 
 export class WorkerRuntime extends Runtime {
   w: OnDemandWorker;
@@ -51,11 +51,10 @@ export class WorkerRuntime extends Runtime {
       createFuncStatus,
     ) as Record<string, FuncStatus>;
 
-    return new WorkerRuntime(
-      args.name as string,
-      config.lazy as boolean,
-      { modules, funcs },
-    );
+    return new WorkerRuntime(args.name as string, config.lazy as boolean, {
+      modules,
+      funcs,
+    });
   }
 
   deinit(): Promise<void> {
@@ -178,9 +177,7 @@ class OnDemandWorker {
         deno: {
           namespace: false,
           permissions: {
-            read: [
-              "/tmp/",
-            ],
+            read: ["/tmp/"],
           },
         },
       } as WorkerOptions);
@@ -205,9 +202,14 @@ class OnDemandWorker {
   }
 
   async execTask(task: TaskInit): Promise<unknown> {
-    const { args, context, matArgs: { name, import_from } } = task;
+    const {
+      args,
+      context,
+      matArgs: { name, import_from },
+    } = task;
 
-    if (import_from == null) { // function
+    if (import_from == null) {
+      // function
       const status = this.codes.funcs[name];
       ensure(status != null, `unknown function "${name}"`);
       const wrappedCode = {} as { code?: string };
@@ -229,7 +231,8 @@ class OnDemandWorker {
 
       this.tasks.set(id, { promise, hooks: [] });
       return promise;
-    } else { // module
+    } else {
+      // module
       const status = this.codes.modules[import_from];
       ensure(status != null, `unknown module "${import_from}"`);
       const hooks = [] as Array<() => void>;

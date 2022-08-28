@@ -46,6 +46,7 @@ const opts = {
   policy: CachePolicy.NONE,
 }
 const _lib = await prepare(opts, {
+  get_version: { parameters: [], result: "pointer", nonblocking: false },
   init: { parameters: [], result: "void", nonblocking: false },
   prisma_introspection: {
     parameters: ["pointer", "usize"],
@@ -94,6 +95,11 @@ export type PrismaUnregisterEngineInp = {
 }
 export type PrismaUnregisterEngineOut = {
   key: string
+}
+export function get_version() {
+  let rawResult = _lib.symbols.get_version()
+  const result = readPointer(rawResult)
+  return decode(result)
 }
 export function init() {
   let rawResult = _lib.symbols.init()
