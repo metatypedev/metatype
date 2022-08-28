@@ -1,11 +1,10 @@
-ARG DENO_BINDGEN_URL=https://raw.githubusercontent.com/denoland/deno_bindgen/main/cli.ts
-ARG RUST_VERSION=1.63.0
-ARG DENO_VERSION=1.24.3
+ARG RUST_VERSION
+ARG DENO_VERSION
 
 FROM rust:${RUST_VERSION} AS builder
 
 ARG DENO_VERSION
-ARG DENO_BINDGEN_VERSION
+ARG DENO_BINDGEN_URL
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
 ENV PATH "${DENO_INSTALL}/bin:${PATH}"
@@ -33,9 +32,6 @@ FROM debian:stable-slim AS debian
 #
 
 FROM denoland/deno:distroless-${DENO_VERSION} AS runner
-
-ARG VERSION
-ENV VERSION ${VERSION}
 
 WORKDIR /app
 USER nonroot

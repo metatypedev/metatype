@@ -1,22 +1,25 @@
-import { z } from "https://deno.land/x/zod@v3.14.4/mod.ts";
+import { z } from "zod/mod.ts";
 import { getLogger } from "./log.ts";
 import "std/dotenv/load.ts";
 import { deepMerge, mapKeys } from "std/collections/mod.ts";
 import { parse } from "std/flags/mod.ts";
 
 const sources = [
-  { hostname: await getHostname(), version: "dev" },
+  { hostname: await getHostname() },
   parse(Deno.args) as Record<string, unknown>,
   mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
 ];
 
 const schema = z.object({
-  debug: z.preprocess((a) => z.string().parse(a) === "true", z.boolean()),
+  debug: z.preprocess(
+    (a: unknown) => z.string().parse(a) === "true",
+    z.boolean(),
+  ),
   hostname: z.string(),
   redis_url: z
     .string()
     .url()
-    .transform((s) => {
+    .transform((s: string) => {
       const url = new URL(s);
       if (url.password === "") {
         url.password = Deno.env.get("REDIS_PASSWORD") ?? "";
@@ -25,10 +28,9 @@ const schema = z.object({
     }),
   tg_host: z.string(),
   tg_port: z.preprocess(
-    (a) => parseInt(z.string().parse(a), 10),
+    (a: unknown) => parseInt(z.string().parse(a), 10),
     z.number().positive().max(65535),
   ),
-  version: z.string(),
 });
 
 const parsing = schema.safeParse(sources.reduce((a, b) => deepMerge(a, b), {}));

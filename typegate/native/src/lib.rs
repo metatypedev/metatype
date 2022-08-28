@@ -32,6 +32,20 @@ fn init() {
     }));
 }
 
+#[cfg(debug_assertions)]
+#[deno_bindgen]
+fn get_version() -> String {
+    let version = env!("CARGO_PKG_VERSION").to_string();
+    let commit = git_version::git_version!();
+    format!("{version}+{commit}")
+}
+
+#[cfg(not(debug_assertions))]
+#[deno_bindgen]
+fn get_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string();
+}
+
 // introspection
 
 #[deno_bindgen]

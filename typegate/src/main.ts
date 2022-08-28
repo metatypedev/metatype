@@ -1,10 +1,11 @@
 import { serve } from "std/http/server.ts";
 import { renderPlayground } from "./web/playground.ts";
-import { init } from "../native/bindings/bindings.ts";
+import { get_version, init } from "../native/bindings/bindings.ts";
 
 import { register } from "./register.ts";
 import config from "./config.ts";
 import { Engine } from "./engine.ts";
+import { getLogger } from "./log.ts";
 
 /*
 //const wasmCode = await Deno.readFile("../example/wasm/pkg/wasm_bg.wasm");
@@ -33,6 +34,7 @@ console.log(add(2, 3));
 */
 
 init();
+const version = get_version();
 
 const server = serve(
   async (request: Request): Promise<Response> => {
@@ -43,7 +45,7 @@ const server = serve(
         const info = {
           app: "typegate",
           node: `${config.hostname}:${config.tg_port}`,
-          version: config.version,
+          version,
           debug: config.debug,
         };
         return new Response(JSON.stringify(info), {
@@ -127,4 +129,5 @@ if (config.debug) {
   })();
 }
 
+getLogger().info(`Listening on ${config.tg_port}`);
 await server;

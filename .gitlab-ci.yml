@@ -38,9 +38,8 @@ kaniko:
     KANIKO_BUILD_CONTEXT: ./typegate
     KANIKO_EXTRA_ARGS: |
       --build-arg DENO_VERSION
-      --build-arg DENO_BINDGEN_VERSION 
+      --build-arg DENO_BINDGEN_URL 
       --build-arg RUST_VERSION
-      --build-arg VERSION=$TAG
       --use-new-run
       --single-snapshot
 
