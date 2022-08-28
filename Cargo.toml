@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "typegate/native",
+    "libs/common",
     "meta-cli",
 ]
 

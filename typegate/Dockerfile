@@ -13,10 +13,12 @@ RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v${DENO_VERSION} \
     && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
 
 COPY . .
+
+RUN deno_bindgen --release -- --locked --package native
+
 WORKDIR /typegate
 
 RUN mkdir workers \
-    && OUTDIR=./native deno_bindgen --release -- --locked --package native \
     && deno cache --import-map=import_map.json --lock=lock.json --lock-write --no-check src/main.ts
 
 #
@@ -31,7 +33,7 @@ WORKDIR /app
 USER nonroot
 
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
-COPY --from=builder /typegate/native/bindings/bindings.ts ./native/bindings/
+COPY --from=builder /bindings/bindings.ts /bindings/
 COPY --from=builder /target/release/libnative.so ./native/target/release/libnative.so
 COPY --from=builder /typegate/import_map.json /typegate/.env.defaults /typegate/lock.json ./
 COPY --from=builder /typegate/src ./src

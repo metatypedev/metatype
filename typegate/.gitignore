@@ -1,9 +1,0 @@
-
-debug/
-target/
-**/*.rs.bk
-*.pdb
-.DS_Store
-codegen
-workers/
-native/bindings.json
