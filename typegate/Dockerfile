@@ -12,17 +12,11 @@ ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 RUN curl -fsSL https://deno.land/x/install/install.sh | sh -s v${DENO_VERSION} \
     && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
 
-WORKDIR /app
-COPY import_map.json .
-COPY .env.defaults .
-COPY src ./src
-COPY native ./native
+COPY . .
+WORKDIR /typegate
 
-WORKDIR /app/native
-RUN deno_bindgen --release -- --locked
-
-WORKDIR /app
 RUN mkdir workers \
+    && OUTDIR=./native deno_bindgen --release -- --locked --package native \
     && deno cache --import-map=import_map.json --lock=lock.json --lock-write --no-check src/main.ts
 
 #
@@ -37,16 +31,14 @@ WORKDIR /app
 USER nonroot
 
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
-COPY --from=builder /app/native/bindings ./native/bindings
-COPY --from=builder /app/native/target/release/libnative.so ./native/target/release/libnative.so
-COPY --from=builder /app/lock.json .
-COPY --from=builder /app/import_map.json .
-COPY --from=builder /app/src ./src
-COPY --from=builder /app/.env.defaults .
+COPY --from=builder /typegate/native/bindings/bindings.ts ./native/bindings/
+COPY --from=builder /target/release/libnative.so ./native/target/release/libnative.so
+COPY --from=builder /typegate/import_map.json /typegate/.env.defaults /typegate/lock.json ./
+COPY --from=builder /typegate/src ./src
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
-COPY --from=builder --chown=nonroot:nonroot /app/workers ./workers
+COPY --from=builder --chown=nonroot:nonroot /typegate/workers ./workers
 
 EXPOSE 7890
 

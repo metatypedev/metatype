@@ -35,7 +35,7 @@ kaniko:
   only:
     - main
   variables:
-    KANIKO_BUILD_CONTEXT: ./typegate
+    KANIKO_DOCKERFILE: typegate/Dockerfile
     KANIKO_EXTRA_ARGS: |
       --build-arg DENO_VERSION
       --build-arg DENO_BINDGEN_URL 
