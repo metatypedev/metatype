@@ -1,0 +1,38 @@
+meta:
+    workdir: .
+    watches: "meta-cli/src/**/*.rs"
+    shell: "cargo run -p meta -- -C examples dev"
+    envs:
+        VIRTUAL_ENV: $PWD/examples/.venv
+        PATH: $PWD/examples/.venv/bin:$PATH
+        RUSTFLAGS: "$RUSTFLAGS -A dead_code -A unused_variables"
+
+    depends_on:
+        - typegate
+
+typegate:
+    workdir: typegate
+    watches: "src/**/*.ts"
+    envs:
+        TG_PORT: "7891"
+
+    shell: "./run.sh"
+
+    depends_on:
+        - typegate_native
+
+clean_deno_bindgen_cache:
+    shell: rm -rf ~/Library/Caches/deno/plug/file
+
+typegate_native:
+    workdir: typegate/native
+    watches: "src/**/*.rs"
+    envs:
+        OUT_DIR: "$PWD"
+        RUSTFLAGS: "$RUSTFLAGS -A dead_code -A unused_variables"
+
+    shell: "deno_bindgen -- -p native"
+
+website:
+    workdir: website
+    shell: "pnpm start --no-open"

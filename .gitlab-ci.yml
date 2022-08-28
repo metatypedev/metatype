@@ -10,10 +10,10 @@ include:
     file: "terraform.yml"
 
 variables: &variables
-  DENO_VERSION: "1.22.3"
-  DENO_BINDGEN_VERSION: "0.5.1"
-  RUST_VERSION: "1.62.0"
-  PNPM_VERSION: "7.5.2"
+  DENO_VERSION: "1.24.3"
+  DENO_BINDGEN_URL: https://raw.githubusercontent.com/denoland/deno_bindgen/main/cli.ts
+  RUST_VERSION: "1.63.0"
+  PNPM_VERSION: "7.9.3"
 
 stages:
   - test
@@ -23,18 +23,10 @@ test:
   stage: test
   tags:
     - docker
-  services:
-    - name: postgres:14
-      variables:
-        POSTGRES_DB: db
-        POSTGRES_PASSWORD: password
-    - name: redis:7
-      command:
-        - --requirepass
-        - password
   variables:
     <<: *variables
     TEST_POSTGRES_DB: "postgresql://postgres:password@postgres:5432/db?schema=test"
+    TEST_POSTGRES_DB2: "postgresql://postgres:password@postgres:5432/db?schema=test2"
 
 kaniko:
   stage: test
@@ -46,9 +38,8 @@ kaniko:
     KANIKO_BUILD_CONTEXT: ./typegate
     KANIKO_EXTRA_ARGS: |
       --build-arg DENO_VERSION
-      --build-arg DENO_BINDGEN_VERSION 
+      --build-arg DENO_BINDGEN_URL 
       --build-arg RUST_VERSION
-      --build-arg VERSION=$TAG
       --use-new-run
       --single-snapshot
 

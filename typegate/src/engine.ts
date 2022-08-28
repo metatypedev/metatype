@@ -1,12 +1,13 @@
 import Dataloader from "https://cdn.skypack.dev/dataloader@2.0.0?dts";
-import { parse } from "https://cdn.skypack.dev/graphql@16.2.0?dts";
-import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
+import { Kind, parse } from "graphql";
+import type * as ast from "graphql_ast";
 import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
 import { b, ensure, JSONValue, mapo, Maybe } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
 import type { TypeNode } from "./typegraph.ts";
 import * as log from "std/log/mod.ts";
+import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { sha1 } from "./crypto.ts";
 import type {
   Batcher,
@@ -16,8 +17,9 @@ import type {
 } from "./runtimes/Runtime.ts";
 import { ResolverError } from "./errors.ts";
 
+const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
-  "./src/typegraphs/introspection.json",
+  join(localDir, "typegraphs/introspection.json"),
 ).then((d) => JSON.parse(d));
 
 export const initTypegraph = async (
@@ -44,10 +46,18 @@ export const initTypegraph = async (
   return engine;
 };
 
+// A function that computes argument from context and variables
+interface ComputeArg {
+  (
+    context: Record<string, unknown>,
+    variables: Record<string, unknown>,
+  ): unknown;
+}
+
 interface ComputeStageProps {
   dependencies: string[];
   parent?: ComputeStage;
-  args: Record<string, (deps: any) => unknown>;
+  args: Record<string, ComputeArg>;
   policies: Record<string, string[]>;
   resolver?: Resolver;
   outType: TypeNode; // only temp
@@ -120,6 +130,15 @@ const authorize = async (
   return true;
 };
 
+// typechecks for scalar types
+const typeChecks: Record<string, (value: unknown) => boolean> = {
+  Int: (value) => typeof value === "number",
+  Float: (value) => typeof value === "number",
+  String: (value) => typeof value === "string",
+  ID: (value) => typeof value === "string",
+  Boolean: (value) => typeof value === "boolean",
+};
+
 export class Engine {
   tg: TypeGraph;
   name: string;
@@ -187,8 +206,7 @@ export class Engine {
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...mapo(args, (e) => e(parent)),
-            ...variables,
+            ...mapo(args, (e) => e(parent, variables)),
             _: {
               parent: parent ?? {},
               context,
@@ -318,6 +336,8 @@ export class Engine {
         throw Error(`operation ${operationName} not found`);
       }
 
+      this.validateVariables(operation?.variableDefinitions ?? [], variables);
+
       const cache = operationName === "IntrospectionQuery";
       const verbose = operationName !== "IntrospectionQuery";
 
@@ -402,5 +422,59 @@ export class Engine {
         };
       }
     }
+  }
+
+  validateVariables(
+    defs: Readonly<Array<ast.VariableDefinitionNode>>,
+    variables: Record<string, unknown>,
+  ) {
+    for (const varDef of defs) {
+      const varName = varDef.variable.name.value;
+      const value = variables[varName];
+      if (value === undefined) {
+        throw Error(`missing variable "${varName}" value`);
+      }
+      this.validateVariable(varDef.type, value, varName);
+    }
+  }
+
+  validateVariable(type: ast.TypeNode, value: unknown, label: string) {
+    if (type.kind === Kind.NON_NULL_TYPE) {
+      if (value == null) {
+        throw new Error(`variable ${label} cannot be null`);
+      }
+      type = type.type;
+    }
+    if (value == null) {
+      return;
+    }
+    switch (type.kind) {
+      case Kind.LIST_TYPE:
+        if (!Array.isArray(value)) {
+          throw new Error(`variable ${label} must be an array`);
+        }
+        value.forEach((item, idx) => {
+          this.validateVariable(
+            (type as ast.ListTypeNode).type,
+            item,
+            `${label}[${idx}]`,
+          );
+        });
+        break;
+      case Kind.NAMED_TYPE:
+        this.validateValueType(type.name.value, value, label);
+    }
+  }
+
+  validateValueType(typeName: string, value: unknown, label: string) {
+    const check = typeChecks[typeName];
+    if (check != null) {
+      // scalar type
+      if (!check(value)) {
+        throw new Error(`variable ${label} must be a ${typeName}`);
+      }
+      return;
+    }
+    this.tg.validateValueType(typeName, value, label);
   }
 }

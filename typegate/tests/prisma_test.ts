@@ -1,9 +1,9 @@
 import { v4 } from "std/uuid/mod.ts";
 import { assert } from "std/testing/asserts.ts";
-import { gql, shell, test } from "./utils.ts";
+import { gql, meta, test } from "./utils.ts";
 
 test("prisma", async (t) => {
-  const tgPath = "./tests/typegraphs/prisma.py";
+  const tgPath = "typegraphs/prisma.py";
   const e = await t.pythonFile(tgPath);
 
   await t.should("drop schema and recreate", async () => {
@@ -19,13 +19,7 @@ test("prisma", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await shell([
-      "../typegraph/.venv/bin/meta",
-      "prisma",
-      "apply",
-      "-f",
-      tgPath,
-    ]);
+    await meta("prisma", "apply", "-f", tgPath);
   });
 
   await t.should("return no data when empty", async () => {
@@ -45,12 +39,7 @@ test("prisma", async (t) => {
   await t.should("insert a simple record", async () => {
     await gql`
       mutation {
-        createOneRecord(
-          data: {
-            name: "name"
-            age: 1
-          }
-        ) {
+        createOneRecord(data: { name: "name", age: 1 }) {
           id
         }
       }
@@ -186,7 +175,7 @@ test("prisma", async (t) => {
 });
 
 test("1:n relationships", async (t) => {
-  const tgPath = "./tests/typegraphs/prisma.py";
+  const tgPath = "typegraphs/prisma.py";
   const e = await t.pythonFile(tgPath);
 
   await t.should("drop schema and recreate", async () => {
@@ -202,13 +191,7 @@ test("1:n relationships", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await shell([
-      "../typegraph/.venv/bin/meta",
-      "prisma",
-      "apply",
-      "-f",
-      tgPath,
-    ]);
+    await meta("prisma", "apply", "-f", tgPath);
   });
 
   await t.should("insert a record with nested object", async () => {
@@ -219,11 +202,7 @@ test("1:n relationships", async (t) => {
             name: "name"
             email: "email@example.com"
             messages: {
-              create: {
-                id: 123
-                time: 12345
-                message: "Hello, Jack!"
-              }
+              create: { id: 123, time: 12345, message: "Hello, Jack!" }
             }
           }
         ) {
@@ -268,16 +247,8 @@ test("1:n relationships", async (t) => {
             messages: {
               createMany: {
                 data: [
-                  {
-                    id: 234
-                    time: 23456
-                    message: "Hi"
-                  },
-                  {
-                    id: 235
-                    time: 23467
-                    message: "Are you OK?"
-                  }
+                  { id: 234, time: 23456, message: "Hi" }
+                  { id: 235, time: 23467, message: "Are you OK?" }
                 ]
               }
             }
@@ -328,7 +299,10 @@ test("1:n relationships", async (t) => {
 
   await gql`
     mutation {
-      updateUser(where: { id: 14 }, data: { messages: { create: { id: 345, message: "Hi", time: 34567 } } }) {
+      updateUser(
+        where: { id: 14 }
+        data: { messages: { create: { id: 345, message: "Hi", time: 34567 } } }
+      ) {
         messages {
           id
         }
@@ -337,16 +311,14 @@ test("1:n relationships", async (t) => {
   `
     .expectData({
       updateUser: {
-        messages: [
-          { id: 345 },
-        ],
+        messages: [{ id: 345 }],
       },
     })
     .on(e);
 });
 
 test("1:1 relationships", async (t) => {
-  const tgPath = "./tests/typegraphs/prisma_1_1.py";
+  const tgPath = "typegraphs/prisma_1_1.py";
   const e = await t.pythonFile(tgPath);
 
   await t.should("drop schema and recreate", async () => {
@@ -362,28 +334,13 @@ test("1:1 relationships", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await shell([
-      "../typegraph/.venv/bin/meta",
-      "prisma",
-      "apply",
-      "-f",
-      tgPath,
-    ]);
+    await meta("prisma", "apply", "-f", tgPath);
   });
 
   await t.should("create a record with a nested object", async () => {
     await gql`
       mutation {
-        createUser(
-          data: {
-            id: 12,
-            profile: {
-              create: {
-                id: 15
-              }
-            }
-          }
-        ) {
+        createUser(data: { id: 12, profile: { create: { id: 15 } } }) {
           id
         }
       }
@@ -396,13 +353,15 @@ test("1:1 relationships", async (t) => {
       .on(e);
 
     await gql`
-    query {
-      findUniqueProfile(where: { id: 15 }) {
-        id
-        user { id }
+      query {
+        findUniqueProfile(where: { id: 15 }) {
+          id
+          user {
+            id
+          }
+        }
       }
-    }
-  `
+    `
       .expectData({
         findUniqueProfile: {
           id: 15,
@@ -417,9 +376,7 @@ test("1:1 relationships", async (t) => {
   await t.should("delete fails with nested object", async () => {
     await gql`
       mutation {
-        deleteUser(
-          where: { id: 12 }
-        ) {
+        deleteUser(where: { id: 12 }) {
           id
         }
       }
@@ -430,7 +387,7 @@ test("1:1 relationships", async (t) => {
 });
 
 test("multiple relationships", async (t) => {
-  const tgPath = "./tests/typegraphs/prisma_multi.py";
+  const tgPath = "typegraphs/prisma_multi.py";
   const e = await t.pythonFile(tgPath);
 
   await t.should("drop schema and recreate", async () => {
@@ -446,25 +403,13 @@ test("multiple relationships", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await shell([
-      "../typegraph/.venv/bin/meta",
-      "prisma",
-      "apply",
-      "-f",
-      tgPath,
-    ]);
+    await meta("prisma", "apply", "-f", tgPath);
   });
 
   await t.should("insert a simple record", async () => {
     await gql`
       mutation q {
-        createUser(
-          data: {
-            id: 12
-            name: "name"
-            email: "email@example.com"
-          }
-        ) {
+        createUser(data: { id: 12, name: "name", email: "email@example.com" }) {
           id
         }
       }
@@ -514,11 +459,7 @@ test("multiple relationships", async (t) => {
                 id: 234
                 time: 23456
                 message: "Hi"
-                recipient: {
-                  connect: {
-                    id: 12
-                  }
-                }
+                recipient: { connect: { id: 12 } }
               }
               # createMany: {
               #   data: [
@@ -585,18 +526,14 @@ test("multiple relationships", async (t) => {
   await gql`
     mutation {
       updateUser(
-        where: { id: 15 },
+        where: { id: 15 }
         data: {
           sentMessages: {
             create: {
-              id: 345,
-              message: "Hi",
-              time: 34567,
-              recipient: {
-                connect: {
-                  id: 12
-                }
-              }
+              id: 345
+              message: "Hi"
+              time: 34567
+              recipient: { connect: { id: 12 } }
             }
           }
         }
@@ -609,9 +546,7 @@ test("multiple relationships", async (t) => {
   `
     .expectData({
       updateUser: {
-        sentMessages: [
-          { id: 345 },
-        ],
+        sentMessages: [{ id: 345 }],
       },
     })
     .on(e);

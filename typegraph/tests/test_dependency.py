@@ -149,10 +149,13 @@ class TestDependency:
                     TypeMaterializer(
                         name="function",
                         runtime=0,
-                        data=frozendict.frozendict({"serial": False, "name": "x2"}),
+                        data=frozendict.frozendict(
+                            {"serial": False, "name": "x2", "import_from": None}
+                        ),
                     )
                 ],
                 runtimes=[TypeRuntime(name="deno", data=frozendict.frozendict({}))],
                 policies=[],
+                codes=[],
             )
         )

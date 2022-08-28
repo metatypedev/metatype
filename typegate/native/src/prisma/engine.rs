@@ -207,8 +207,8 @@ impl QueryEngine {
     pub fn new(opts: ConstructorOptions) -> Result<Self> {
         let ConstructorOptions {
             datamodel,
-            log_level,
-            log_queries,
+            log_level: _,
+            log_queries: _,
             datasource_overrides,
             env,
             config_dir,
@@ -357,7 +357,12 @@ impl QueryEngine {
             Inner::Connected(ref engine) => {
                 match engine
                     .executor()
-                    .start_tx(engine.query_schema().clone(), input.max_wait, input.timeout)
+                    .start_tx(
+                        engine.query_schema().clone(),
+                        input.max_wait,
+                        input.timeout,
+                        None,
+                    )
                     .await
                 {
                     Ok(tx_id) => Ok(json!({ "id": tx_id.to_string() }).to_string()),

@@ -7,7 +7,7 @@ import {
   Kind,
   parse,
   TypeKind,
-} from "https://cdn.skypack.dev/graphql@16.2.0?dts";
+} from "graphql";
 import { ensure } from "../utils.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
@@ -397,43 +397,42 @@ export class TypeGraphRuntime extends Runtime {
     return ret;
   }
 
-  formatField = (asInput: boolean) =>
-    ([name, typeIdx]: [string, number]) => {
-      const type = this.tg.types[typeIdx];
-      const common = {
-        // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L329
-        name: () => name,
-        description: () => `${name} field${this.policyDescription(type)}`,
-        isDeprecated: () => false,
-        deprecationReason: () => null,
-      };
+  formatField = (asInput: boolean) => ([name, typeIdx]: [string, number]) => {
+    const type = this.tg.types[typeIdx];
+    const common = {
+      // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L329
+      name: () => name,
+      description: () => `${name} field${this.policyDescription(type)}`,
+      isDeprecated: () => false,
+      deprecationReason: () => null,
+    };
 
-      if (type.typedef === "func" || type.typedef === "gen") {
-        return {
-          ...common,
-          args: ({ includeDeprecated }: DeprecatedArg = {}) => {
-            const inp = this.tg.types[type.data.input as number];
-            ensure(
-              inp.typedef === "struct",
-              `${type} cannot be an input field, require struct`,
-            );
-            return Object.entries(inp.data.binds as Record<string, number>)
-              .map(this.formatInputFields)
-              .filter((f) => f !== null);
-          },
-          type: () => {
-            const output = this.tg.types[type.data.output as number];
-            return this.formatType(output, true, false);
-          },
-        };
-      }
-
+    if (type.typedef === "func" || type.typedef === "gen") {
       return {
         ...common,
-        args: () => [],
+        args: ({ includeDeprecated }: DeprecatedArg = {}) => {
+          const inp = this.tg.types[type.data.input as number];
+          ensure(
+            inp.typedef === "struct",
+            `${type} cannot be an input field, require struct`,
+          );
+          return Object.entries(inp.data.binds as Record<string, number>)
+            .map(this.formatInputFields)
+            .filter((f) => f !== null);
+        },
         type: () => {
-          return this.formatType(type, true, asInput);
+          const output = this.tg.types[type.data.output as number];
+          return this.formatType(output, true, false);
         },
       };
+    }
+
+    return {
+      ...common,
+      args: () => [],
+      type: () => {
+        return this.formatType(type, true, asInput);
+      },
     };
+  };
 }
