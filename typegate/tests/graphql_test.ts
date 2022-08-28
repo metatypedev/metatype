@@ -1,6 +1,6 @@
 import { gql, test } from "./utils.ts";
 import * as mf from "https://deno.land/x/mock_fetch@0.3.0/mod.ts";
-import { buildSchema, graphql } from "https://cdn.skypack.dev/graphql";
+import { buildSchema, graphql } from "graphql";
 
 const schema = buildSchema(`
   type User {
@@ -43,7 +43,7 @@ mf.mock("POST@/api/graphql", async (req) => {
 });
 
 test("GraphQL queries", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/graphql.py");
+  const e = await t.pythonFile("typegraphs/graphql.py");
 
   await t.should("work with queries", async () => {
     await gql`
@@ -54,8 +54,10 @@ test("GraphQL queries", async (t) => {
           email
         }
       }
-    `.expectData({
-      user: generateUser(12),
-    }).on(e);
+    `
+      .expectData({
+        user: generateUser(12),
+      })
+      .on(e);
   });
 });

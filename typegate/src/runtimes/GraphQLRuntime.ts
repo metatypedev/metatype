@@ -3,6 +3,7 @@ import { gq } from "../gq.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { JSONValue } from "../utils.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { RuntimeInitParams } from "./Runtime.ts";
 
 const stringifyQL = (obj: JSONValue): string => {
   if (Array.isArray(obj)) {
@@ -37,7 +38,7 @@ const rebuildGraphQuery = (
       ret += Object.entries(stage.props.args)
         .map(
           ([argName, argValue]) =>
-            `${argName}: ${stringifyQL(argValue({}) as JSONValue)}`,
+            `${argName}: ${stringifyQL(argValue({}, {}) as JSONValue)}`,
         )
         .join(", ");
       ret += `)`;
@@ -58,12 +59,8 @@ export class GraphQLRuntime extends Runtime {
     this.endpoint = endpoint;
   }
 
-  static async init(
-    typegraph: TypeGraphDS,
-    materializers: TypeMaterializer[],
-    args: Record<string, unknown>,
-    config: RuntimeConfig,
-  ): Promise<Runtime> {
+  static async init(params: RuntimeInitParams): Promise<Runtime> {
+    const { args } = params;
     return await new GraphQLRuntime(args.endpoint as string);
   }
 

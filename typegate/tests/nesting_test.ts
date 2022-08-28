@@ -22,7 +22,7 @@ function generatePost(id: number) {
 }
 
 test("Rest queries", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/nesting.py");
+  const e = await t.pythonFile("typegraphs/nesting.py");
 
   mf.mock("GET@/api/users/:id", (req, params) => {
     const userId = Number(params.id);
@@ -70,11 +70,13 @@ test("Rest queries", async (t) => {
           }
         }
       }
-    `.expectData({
-      post: {
-        ...generatePost(12),
-        author: generateUser(12 + 10),
-      },
-    }).on(e);
+    `
+      .expectData({
+        post: {
+          ...generatePost(12),
+          author: generateUser(12 + 10),
+        },
+      })
+      .on(e);
   });
 });

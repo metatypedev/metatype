@@ -28,7 +28,7 @@ const getComments = (postId: number) =>
 const NEW_COMMENT_ID = 123;
 
 test("Rest queries", async (t) => {
-  const e = await t.pythonFile("./tests/typegraphs/rest.py");
+  const e = await t.pythonFile("typegraphs/rest.py");
 
   mf.mock("GET@/api/posts", (req, _match) => {
     const tags = new URL(req.url).searchParams.getAll("tags");
@@ -61,9 +61,11 @@ test("Rest queries", async (t) => {
           content
         }
       }
-    `.expectData({
-      posts: ALL_POSTS,
-    }).on(e);
+    `
+      .expectData({
+        posts: ALL_POSTS,
+      })
+      .on(e);
   });
 
   await t.should("work with simple request and filtered fields", async () => {
@@ -75,30 +77,34 @@ test("Rest queries", async (t) => {
           summary
         }
       }
-    `.expectData({
-      posts: ALL_POSTS.map((post) => {
-        const { content, ...postWithoutContent } = post;
-        return postWithoutContent as Omit<Post, "content">;
-        // I don't know why I get a TS error without that cast
-      }),
-    }).on(e);
+    `
+      .expectData({
+        posts: ALL_POSTS.map((post) => {
+          const { content, ...postWithoutContent } = post;
+          return postWithoutContent as Omit<Post, "content">;
+          // I don't know why I get a TS error without that cast
+        }),
+      })
+      .on(e);
   });
 
   await t.should("work with array args", async () => {
     await gql`
       query {
-        postsByTags (tags: ["even", "m3"]) {
+        postsByTags(tags: ["even", "m3"]) {
           id
           title
           summary
           content
         }
       }
-    `.expectData({
-      postsByTags: ALL_POSTS.filter((p) => p.id % 2 === 0).filter((p) =>
-        p.id % 3 === 0
-      ),
-    }).on(e);
+    `
+      .expectData({
+        postsByTags: ALL_POSTS.filter((p) => p.id % 2 === 0).filter(
+          (p) => p.id % 3 === 0,
+        ),
+      })
+      .on(e);
   });
 
   mf.mock("GET@/api/posts/:id", (_req, params) => {
@@ -126,9 +132,11 @@ test("Rest queries", async (t) => {
           content
         }
       }
-    `.expectData({
-      post: generatePost(12),
-    }).on(e);
+    `
+      .expectData({
+        post: generatePost(12),
+      })
+      .on(e);
   });
 
   await t.should("return null on 404", async () => {
@@ -141,9 +149,11 @@ test("Rest queries", async (t) => {
           content
         }
       }
-    `.expectData({
-      post: null,
-    }).on(e);
+    `
+      .expectData({
+        post: null,
+      })
+      .on(e);
   });
 
   const AUTH_TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -173,11 +183,13 @@ test("Rest queries", async (t) => {
           approved
         }
       }
-    `.expectData({
-      approvePost: {
-        approved: true,
-      },
-    }).on(e);
+    `
+      .expectData({
+        approvePost: {
+          approved: true,
+        },
+      })
+      .on(e);
   });
 
   mf.mock("PATCH@/api/posts/:id", async (req, params) => {
@@ -208,9 +220,11 @@ test("Rest queries", async (t) => {
           content
         }
       }
-    `.expectData({
-      updatePost: { ...generatePost(12), content: "New post content" },
-    }).on(e);
+    `
+      .expectData({
+        updatePost: { ...generatePost(12), content: "New post content" },
+      })
+      .on(e);
   });
 
   mf.mock("GET@/api/comments", (req) => {
@@ -236,9 +250,11 @@ test("Rest queries", async (t) => {
           postId
         }
       }
-    `.expectData({
-      comments: getComments(14),
-    }).on(e);
+    `
+      .expectData({
+        comments: getComments(14),
+      })
+      .on(e);
   });
 
   mf.mock("POST@/api/comments", async (req) => {
@@ -275,13 +291,15 @@ test("Rest queries", async (t) => {
           content
         }
       }
-    `.expectData({
-      postComment: {
-        id: NEW_COMMENT_ID,
-        postId: 12,
-        content: "Right!",
-      },
-    }).on(e);
+    `
+      .expectData({
+        postComment: {
+          id: NEW_COMMENT_ID,
+          postId: 12,
+          content: "Right!",
+        },
+      })
+      .on(e);
   });
 
   mf.mock("PUT@/api/comments/:id", async (req, params) => {
@@ -316,12 +334,14 @@ test("Rest queries", async (t) => {
           content
         }
       }
-    `.expectData({
-      replaceComment: {
-        id: 12,
-        content: "Some comment",
-      },
-    }).on(e);
+    `
+      .expectData({
+        replaceComment: {
+          id: 12,
+          content: "Some comment",
+        },
+      })
+      .on(e);
   });
 
   mf.mock("DELETE@/api/comments/:id", (req, params) => {
@@ -342,10 +362,12 @@ test("Rest queries", async (t) => {
   await t.should("work with DELETE method", async () => {
     await gql`
       mutation {
-        deleteComment(id: 12) 
+        deleteComment(id: 12)
       }
-    `.expectData({
-      deleteComment: true,
-    }).on(e);
+    `
+      .expectData({
+        deleteComment: true,
+      })
+      .on(e);
   });
 });

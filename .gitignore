@@ -19,3 +19,5 @@ crash.log
 /build
 *.pem
 tsconfig.tsbuildinfo
+/target
+bindings.json

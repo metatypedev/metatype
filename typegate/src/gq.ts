@@ -1,4 +1,4 @@
-import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
+import type * as ast from "graphql_ast";
 
 export const gq = async (
   url: string,
