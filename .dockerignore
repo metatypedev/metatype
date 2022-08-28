@@ -1,0 +1,10 @@
+*
+!/typegate/import_map.json
+!/typegate/.env.defaults
+!/typegate/src
+!/typegate/native/Cargo.toml
+!/typegate/native/src
+!/Cargo.toml
+!/Cargo.lock
+!/meta-cli/Cargo.toml
+!/meta-cli/src
