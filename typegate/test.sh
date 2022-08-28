@@ -1,5 +1,6 @@
 #!/bin/sh
 
+set -e
 SCRIPT_PATH=$(dirname $(realpath -s $0))
 
 export VIRTUAL_ENV="$SCRIPT_PATH/../typegraph/.venv"
