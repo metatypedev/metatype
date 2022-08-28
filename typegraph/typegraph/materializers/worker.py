@@ -10,6 +10,9 @@ from typegraph.types import typedefs as t
 
 @dataclass(eq=True, frozen=True)
 class WorkerRuntime(Runtime):
+    name: str
+    # permissions = List[str]
+    _: KW_ONLY
     runtime_name: str = "worker"
 
 
@@ -32,10 +35,10 @@ class LambdaCollector(ast.NodeTransformer):
 
 @dataclass(eq=True, frozen=True)
 class JavascriptMat(Materializer):
-    code: str
-    materializer_name: str
+    name: str
     _: KW_ONLY
-    runtime: Runtime = WorkerRuntime()
+    runtime: Runtime = WorkerRuntime("js")
+    materializer_name: str = "function"
 
     @classmethod
     def policy(cls, tpe, f):

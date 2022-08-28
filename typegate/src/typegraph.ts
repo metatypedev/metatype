@@ -1,13 +1,5 @@
-import type * as ast from "https://cdn.skypack.dev/graphql@16.2.0/language/ast?dts";
-import {
-  GraphQLArgs,
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLString,
-  Kind,
-  parse,
-  TypeKind,
-} from "https://cdn.skypack.dev/graphql@16.2.0?dts";
+import type * as ast from "graphql_ast";
+import { Kind } from "graphql";
 import { ComputeStage, PolicyStages, PolicyStagesFactory } from "./engine.ts";
 import * as graphql from "./graphql.ts";
 import { FragmentDefs } from "./graphql.ts";
@@ -20,13 +12,14 @@ import {
   Batcher,
   Resolver,
   Runtime,
-  RuntimeConfig,
   RuntimeInit,
   RuntimesConfig,
 } from "./runtimes/Runtime.ts";
-import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
+import { Code } from "./runtimes/utils/codes.ts";
 import { WorkerRuntime } from "./runtimes/WorkerRuntime.ts";
 import { b, ensure, mapo } from "./utils.ts";
+import { compileCodes } from "./utils/swc.ts";
+import { v4 as uuid } from "std/uuid/mod.ts";
 
 interface TypePolicy {
   name: string;
@@ -58,6 +51,7 @@ export interface TypeGraphDS {
   materializers: Array<TypeMaterializer>;
   runtimes: Array<TypeRuntime>;
   policies: Array<TypePolicy>;
+  codes: Array<Code>;
 }
 
 export type RuntimeResolver = Record<string, Runtime>;
@@ -90,19 +84,26 @@ export class TypeGraph {
   };
 
   tg: TypeGraphDS;
-  runtimeReferences: RuntimeResolver;
+  runtimeReferences: Runtime[];
   root: TypeNode;
   introspection: TypeGraph | null;
+  typeByName: Record<string, TypeNode>;
 
   private constructor(
     typegraph: TypeGraphDS,
-    runtimeReferences: RuntimeResolver,
+    runtimeReferences: Runtime[],
     introspection: TypeGraph | null,
   ) {
     this.tg = typegraph;
     this.runtimeReferences = runtimeReferences;
     this.root = this.type(0);
     this.introspection = introspection;
+    // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
+    const typeByName: Record<string, TypeNode> = {};
+    typegraph.types.forEach((tpe) => {
+      typeByName[tpe.name] = tpe;
+    });
+    this.typeByName = typeByName;
   }
 
   static async init(
@@ -111,43 +112,45 @@ export class TypeGraph {
     introspection: TypeGraph | null,
     runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
-    const runtimeReferences = { ...staticReference };
+    const runtimeReferences = await Promise.all(
+      typegraph.runtimes.map((runtime, idx) => {
+        if (runtime.name in staticReference) {
+          return staticReference[runtime.name];
+        }
 
-    for await (const [idx, runtime] of typegraph.runtimes.entries()) {
-      if (!(runtime.name in runtimeReferences)) {
         ensure(
           runtime.name in runtimeInit,
           `cannot find runtime "${runtime.name}" in ${
             Object.keys(
-              runtimeReferences,
+              runtimeInit,
             ).join(", ")
           }`,
         );
 
-        const mats = typegraph.materializers.filter(
-          (mat) => mat.runtime === idx,
-        );
-
-        console.log(`init ${runtime.name}`);
-        runtimeReferences[runtime.name] = await runtimeInit[runtime.name](
+        console.log(`init ${runtime.name} (${idx})`);
+        return runtimeInit[runtime.name]({
           typegraph,
-          mats,
-          runtime.data,
-          runtimeConfig[runtime.name] ?? {},
-        );
-      }
-    }
+          materializers: typegraph.materializers.filter(
+            (mat) => mat.runtime === idx,
+          ),
+          args: runtime.data,
+          config: runtimeConfig[runtime.name] ?? {},
+        });
+      }),
+    );
+
+    compileCodes(typegraph);
 
     return new TypeGraph(typegraph, runtimeReferences, introspection);
   }
 
   async deinit(): Promise<void> {
     for await (
-      const [name, runtime] of Object.entries(
-        this.runtimeReferences,
+      const [idx, runtime] of this.runtimeReferences.map(
+        (rt, i) => [i, rt] as const,
       )
     ) {
-      console.log(`deinit ${name}`);
+      console.log(`deinit runtime ${idx}`);
       await runtime.deinit();
     }
   }
@@ -178,7 +181,14 @@ export class TypeGraph {
     argIdx: number,
     parentContext: Record<string, number>,
     noDefault = false,
-  ): [(deps: any) => unknown, Record<string, string[]>, string[]] | null {
+  ): [
+    (
+      context: Record<string, unknown>,
+      variables: Record<string, unknown>,
+    ) => unknown,
+    Record<string, string[]>,
+    string[],
+  ] | null {
     const arg = this.tg.types[argIdx];
 
     if (!arg) {
@@ -253,7 +263,11 @@ export class TypeGraph {
           throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
         }
 
-        return [(deps: any) => mapo(values, (e) => e(deps)), policies, deps];
+        return [
+          (ctx, vars) => mapo(values, (e) => e(ctx, vars)),
+          policies,
+          deps,
+        ];
       }
 
       throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
@@ -267,12 +281,9 @@ export class TypeGraph {
     const { kind } = argValue;
 
     if (kind === Kind.VARIABLE) {
-      const { kind: nestedKind, value: nestedArg } = argValue.name;
+      const { kind: _, value: nestedArg } = argValue.name;
       return [
-        ({ [nestedArg]: value }) => {
-          // inner check of type (run at runtime)
-          return value;
-        },
+        (_ctx, { [nestedArg]: value }) => value,
         policies,
         [],
       ];
@@ -315,7 +326,7 @@ export class TypeGraph {
         throw Error(`${name} input as field but unknown`);
       }
 
-      return [(deps: any) => mapo(values, (e) => e(deps)), policies, deps];
+      return [(ctx, vars) => mapo(values, (e) => e(ctx, vars)), policies, deps];
     }
 
     if (arg.typedef === "list") {
@@ -345,7 +356,7 @@ export class TypeGraph {
         policies = { ...policies, ...nestedPolicies };
       }
 
-      return [(deps) => values.map((e) => e(deps)), policies, deps];
+      return [(ctx, vars) => values.map((e) => e(ctx, vars)), policies, deps];
     }
 
     if (arg.typedef === "integer") {
@@ -470,7 +481,13 @@ export class TypeGraph {
             args: {},
             policies,
             outType: stringTypeNode,
-            runtime: this.runtimeReferences["deno"],
+            // singleton
+            runtime: DenoRuntime.init({
+              typegraph: this.tg,
+              materializers: [],
+              args: {},
+              config: {},
+            }),
             batcher: this.nextBatcher(stringTypeNode),
             node: fieldName,
             path: [...queryPath, aliasName ?? fieldName],
@@ -500,7 +517,7 @@ export class TypeGraph {
           );
         }
 
-        const runtime = this.tg.runtimes[fieldType.runtime];
+        const runtime = this.runtimeReferences[fieldType.runtime];
 
         const stage = new ComputeStage({
           dependencies: parentStage ? [parentStage.id()] : [],
@@ -508,7 +525,7 @@ export class TypeGraph {
           args: {},
           policies,
           outType: fieldType,
-          runtime: this.runtimeReferences[runtime.name],
+          runtime,
           batcher: this.nextBatcher(fieldType),
           node: fieldName,
           path: [...queryPath, aliasName ?? fieldName],
@@ -591,7 +608,13 @@ export class TypeGraph {
       if (checks.length > 0) {
         policies[outputType.name] = checks;
       }
-      const args: Record<string, (deps: any) => unknown> = {};
+      const args: Record<
+        string,
+        (
+          context: Record<string, unknown>,
+          variables: Record<string, unknown>,
+        ) => unknown
+      > = {};
 
       const argSchema = this.tg.types[inputIdx].data.binds as Record<
         string,
@@ -636,7 +659,7 @@ export class TypeGraph {
       );
 
       const mat = this.tg.materializers[fieldType.data.materializer as number];
-      const runtime = this.tg.runtimes[mat.runtime];
+      const runtime = this.runtimeReferences[mat.runtime];
 
       if (!serial && mat.data.serial) {
         throw Error(
@@ -650,7 +673,7 @@ export class TypeGraph {
         args,
         policies,
         outType: outputType,
-        runtime: this.runtimeReferences[runtime.name],
+        runtime,
         materializer: mat,
         batcher: this.nextBatcher(outputType),
         node: fieldName,
@@ -736,14 +759,10 @@ export class TypeGraph {
           const mat = this.introspection.tg.materializers[
             introPolicy.materializer as number
           ];
-          const runtime = this.introspection.tg.runtimes[mat.runtime];
           const rt = this.introspection.runtimeReferences[
-            runtime.name
+            mat.runtime
           ] as WorkerRuntime; // temp
-          return [introPolicy.name, rt.delegate(mat.name)] as [
-            string,
-            Resolver,
-          ];
+          return [introPolicy.name, rt.delegate(mat)] as [string, Resolver];
         }
       }
 
@@ -753,9 +772,14 @@ export class TypeGraph {
       }
 
       const mat = this.tg.materializers[policy.materializer as number];
-      const runtime = this.tg.runtimes[mat.runtime];
-      const rt = this.runtimeReferences[runtime.name] as WorkerRuntime; // temp
-      return [policy.name, rt.delegate(mat.name)] as [string, Resolver];
+      const rt = this.runtimeReferences[mat.runtime] as
+        | DenoRuntime
+        | WorkerRuntime;
+      ensure(
+        rt.constructor === DenoRuntime || rt.constructor === WorkerRuntime,
+        "runtime for policy must be a WorkerRuntime",
+      );
+      return [policy.name, rt.delegate(mat)] as [string, Resolver];
     });
 
     return (claim: Record<string, any>) => {
@@ -807,6 +831,92 @@ export class TypeGraph {
     );
     return (x: any) => ensureArray(x);
   };
+
+  typeByNameOrIndex(nameOrIndex: string | number): TypeNode {
+    if (typeof nameOrIndex === "number") {
+      return this.type(nameOrIndex);
+    }
+    const tpe = this.typeByName[nameOrIndex];
+    if (tpe == null) {
+      if (nameOrIndex.endsWith("Inp")) {
+        // Input types are suffixed with "Inp" on the playground docs
+        return this.typeByNameOrIndex(nameOrIndex.slice(0, -3));
+      }
+      throw new Error(`type ${nameOrIndex} not found`);
+    }
+    return tpe;
+  }
+
+  validateValueType(
+    nameOrIndex: string | number,
+    value: unknown,
+    label: string,
+  ) {
+    const tpe = this.typeByNameOrIndex(nameOrIndex);
+
+    if (tpe.typedef === "optional") {
+      if (value == null) return;
+      this.validateValueType(tpe.data.of as number, value, label);
+      return;
+    }
+
+    if (value == null) {
+      throw new Error(`variable ${label} cannot be null`);
+    }
+
+    switch (tpe.typedef) {
+      case "struct":
+        if (typeof value !== "object") {
+          throw new Error(`variable ${label} must be an object`);
+        }
+        Object.entries(tpe.data.binds as Record<string, number>).forEach(
+          ([key, typeIdx]) => {
+            this.validateValueType(
+              typeIdx,
+              (value as Record<string, unknown>)[key],
+              `${label}.${key}`,
+            );
+          },
+        );
+        return;
+      case "list":
+        if (!Array.isArray(value)) {
+          throw new Error(`variable ${label} must be an array`);
+        }
+        value.forEach((item, idx) => {
+          this.validateValueType(
+            tpe.data.of as number,
+            item,
+            `${label}[${idx}]`,
+          );
+        });
+        return;
+      case "integer":
+      case "unsigned_integer":
+      case "float":
+        if (typeof value !== "number") {
+          throw new Error(`variable ${label} must be a number`);
+        }
+        return;
+      case "boolean":
+        if (typeof value !== "boolean") {
+          throw new Error(`variable ${label} must be a boolean`);
+        }
+        return;
+      case "string":
+        if (typeof value !== "string") {
+          throw new Error(`variable ${label} must be a string`);
+        }
+        return;
+      case "uuid":
+        if (!uuid.validate(value as string)) {
+          throw new Error(`variable ${label} must be a valid UUID`);
+        }
+        return;
+      default:
+        throw new Error(`unsupported type ${tpe.typedef}`);
+    }
+  }
 }
 
 const lazyResolver = <T>(

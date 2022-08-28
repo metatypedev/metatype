@@ -5,6 +5,7 @@ repos:
       - id: check-added-large-files
       - id: check-ast
       - id: check-json
+        exclude: .vscode/.*\.json
       - id: check-toml
       - id: check-yaml
       - id: end-of-file-fixer
@@ -21,20 +22,19 @@ repos:
     hooks:
       - id: flake8
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v2.29.2
+    rev: v2.32.1
     hooks:
       - id: commitizen
         stages: [commit-msg]
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+      - id: cargo-check
+      - id: clippy
+        args: ["--", "--deny", "warnings", "--allow", "dead-code"]
   - repo: local
     hooks:
-      - id: rust-fmt
-        name: Rust format
-        language: system
-        entry: bash -c 'cd typegate/native && cargo fmt --all && cd ../.. && cd typegraph/native && cargo fmt'
-        pass_filenames: false
-        types:
-          - rust
-        files: ^(typegate|typegraph)/native/
       - id: deno-fmt
         name: Deno format
         language: system

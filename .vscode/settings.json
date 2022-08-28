@@ -1,8 +1,14 @@
 {
-  "files.exclude": {
-    "typegate/": true,
-    "typegraph/": true,
-    "example/": true,
-    "website/": true
-  }
+    "editor.formatOnSave": true,
+    "files.exclude": {
+        "website/.docusaurus": true,
+        "website/node_modules": true
+    },
+    "python.formatting.provider": "black",
+    "python.linting.flake8Enabled": true,
+    "python.linting.enabled": true,
+    "deno.importMap": "typegate/import_map.json",
+    "deno.enablePaths": [
+        "typegate"
+    ]
 }

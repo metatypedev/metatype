@@ -1,17 +1,31 @@
-import { assert, assertEquals, assertExists } from "std/testing/asserts.ts";
+import {
+  assert,
+  assertEquals,
+  assertExists,
+  assertStringIncludes,
+} from "std/testing/asserts.ts";
 import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { exists } from "std/fs/mod.ts";
 import { RuntimesConfig } from "../src/runtimes/Runtime.ts";
 import { deepMerge } from "std/collections/mod.ts";
+import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
 };
 
+const localDir = dirname(fromFileUrl(import.meta.url));
+const metaCli = "../../target/debug/meta";
+
+export async function meta(...input: string[]): Promise<void> {
+  await shell([metaCli, ...input]);
+}
+
 export async function shell(cmd: string[]): Promise<string> {
   const p = Deno.run({
+    cwd: localDir,
     cmd,
     stdout: "piped",
     stderr: "piped",
@@ -41,7 +55,7 @@ class MetaTest {
 
   async load(name: string, config: RuntimesConfig = {}): Promise<Engine> {
     const engine = await initTypegraph(
-      await Deno.readTextFile(`./src/typegraphs/${name}.json`),
+      await Deno.readTextFile(join(localDir, `../src/typegraphs/${name}.json`)),
       {},
       deepMerge(testRuntimesConfig, config),
       null,
@@ -51,14 +65,17 @@ class MetaTest {
   }
 
   async pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
-    const path = await Deno.makeTempFile();
+    const path = await Deno.makeTempFile({ suffix: ".py" });
     try {
-      await Deno.writeTextFile(
-        path,
-        `${code}\nfrom typegraph.cli import dev\nprint(dev.serialize_typegraph(g))`,
-      );
+      await Deno.writeTextFile(path, code);
       return await this.parseTypegraph(
-        ["../typegraph/.venv/bin/python", path],
+        [
+          join(localDir, "../../target/debug/meta"),
+          "serialize",
+          "-f",
+          path,
+          "-1",
+        ],
         deepMerge(testRuntimesConfig, config),
       );
     } finally {
@@ -67,7 +84,10 @@ class MetaTest {
   }
 
   async pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
-    return this.pythonCode(await Deno.readTextFile(path), config);
+    return this.pythonCode(
+      await Deno.readTextFile(join(localDir, path)),
+      config,
+    );
   }
 
   async parseTypegraph(
@@ -121,7 +141,11 @@ export function testAll(engineName: string) {
   test(`Auto-tests for ${engineName}`, async (t) => {
     const e = await t.load(engineName);
 
-    for await (const f of Deno.readDir(`./tests/queries/${engineName}`)) {
+    for await (
+      const f of Deno.readDir(
+        join(localDir, `queries/${engineName}`),
+      )
+    ) {
       if (f.name.endsWith(".graphql")) {
         await t.should(
           `run case ${f.name.replace(".graphql", "")}`,
@@ -165,16 +189,11 @@ export class Q {
   }
 
   static async fs(path: string, engine: Engine) {
-    const input = `./tests/queries/${path}.graphql`;
-    const output = `./tests/queries/${path}.json`;
+    const input = join(localDir, `queries/${path}.graphql`);
+    const output = join(localDir, `queries/${path}.json`);
     const query = Deno.readTextFile(input);
     if (testConfig.override || !(await exists(output))) {
-      const { status, ...result } = await engine!.execute(
-        await query,
-        null,
-        {},
-        {},
-      );
+      const { ...result } = await engine!.execute(await query, null, {}, {});
       await Deno.writeTextFile(output, JSON.stringify(result, null, 2));
     }
     const result = Deno.readTextFile(output);
@@ -228,7 +247,7 @@ export class Q {
     return this.withExpect((res, ctx) => {
       assertExists(Array.isArray(res.errors));
       assert(res.errors.length > 0);
-      assert(res.errors[0].message.includes(partial) >= 0);
+      assertStringIncludes(res.errors[0].message, partial);
     });
   }
 

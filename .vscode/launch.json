@@ -1,0 +1,30 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "request": "launch",
+      "name": "test:typegate",
+      "type": "pwa-node",
+      // "program": "${workspaceFolder}/typegate/src/main.ts",
+      "env": {
+        "VIRTUAL_ENV": "${workspaceFolder}/typegraph/.venv",
+        "PATH": "${workspaceFolder}/typegraph/.venv/bin:${env:PATH}"
+      },
+      "cwd": "${workspaceFolder}/typegate",
+      "runtimeExecutable": "/home/remote/.cargo/bin/deno",
+      "runtimeArgs": [
+        "test",
+        "--import-map=import_map.json",
+        "--inspect",
+        "--unstable",
+        "--allow-all",
+        // variable part:
+        "${workspaceFolder}/typegate/tests/simple_test.ts"
+      ],
+      "attachSimplePort": 9229
+    }
+  ]
+}

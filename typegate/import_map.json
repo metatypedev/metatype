@@ -2,6 +2,8 @@
   "imports": {
     "std/": "https://deno.land/std@0.137.0/",
     "graphql": "https://cdn.skypack.dev/graphql@16.5.0?dts",
+    "graphql_ast": "https://cdn.skypack.dev/graphql@16.5.0/language/ast?dts",
+    "zod/": "https://deno.land/x/zod@v3.14.4/",
     "monads": "https://deno.land/x/monads@v0.5.10/mod.ts"
   }
 }
