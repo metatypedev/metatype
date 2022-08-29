@@ -16,6 +16,7 @@ crash.log
 
 target
 **/*.rs.bk
+bindings
 bindings.json
 
 typegate/workers

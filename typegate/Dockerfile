@@ -34,7 +34,7 @@ USER nonroot
 
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
 COPY --from=builder /bindings/bindings.ts /bindings/
-COPY --from=builder /target/release/libnative.so ./native/target/release/libnative.so
+COPY --from=builder /target/release/libnative.so /target/release/
 COPY --from=builder /typegate/import_map.json /typegate/.env.defaults /typegate/lock.json ./
 COPY --from=builder /typegate/src ./src
 
