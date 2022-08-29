@@ -29,9 +29,8 @@ clean_deno_bindgen_cache:
         - typegate_native
 
 typegate_native:
-    workdir: typegate/native
     watches:
-        - "src/**/*.rs"
+        - "typegate/native/src/**/*.rs"
     shell: "deno_bindgen -- -p native"
     depends_on:
         - libs
