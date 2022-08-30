@@ -2,6 +2,7 @@ import { ComputeStage } from "../engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
+import * as ast from "graphql_ast";
 
 export class GoogleapisRuntime extends Runtime {
   constructor() {
@@ -48,6 +49,7 @@ export class GoogleapisRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
+    _op: ast.OperationDefinitionNode,
     verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];

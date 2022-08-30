@@ -28,11 +28,12 @@ const rootValue = {
 mf.install();
 
 mf.mock("POST@/api/graphql", async (req) => {
-  const { query } = await req.json();
+  const { query, variables } = await req.json();
   const res = await graphql({
     schema,
     source: query,
     rootValue,
+    variableValues: variables,
   });
   return new Response(JSON.stringify(res), {
     status: 200,
@@ -57,6 +58,29 @@ test("GraphQL queries", async (t) => {
     `
       .expectData({
         user: generateUser(12),
+      })
+      .on(e);
+  });
+});
+
+test("GraphQL variables", async (t) => {
+  const e = await t.pythonFile("typegraphs/graphql.py");
+
+  await t.should("work", async () => {
+    await gql`
+      query GetUser($id: Int!) {
+        user(id: $id) {
+          id
+          name
+          email
+        }
+      }
+    `
+      .withVars({
+        id: 15,
+      })
+      .expectData({
+        user: generateUser(15),
       })
       .on(e);
   });
