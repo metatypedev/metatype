@@ -1,3 +1,5 @@
+import * as ast from "graphql_ast";
+
 // FIXME replace with monads
 export type Maybe<T> = null | undefined | T;
 export type JSONValue =
@@ -32,3 +34,7 @@ export const mapo = <V1, V2>(
     agg[key] = map(value);
     return agg;
   }, {} as Record<string, V2>);
+
+export const unparse = (loc: ast.Location): string => {
+  return loc.source.body.slice(loc.start, loc.end);
+};

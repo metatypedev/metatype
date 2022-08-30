@@ -16,6 +16,7 @@ import {
   ModuleTask,
 } from "./utils/codes.ts";
 import { ensure } from "../utils.ts";
+import * as ast from "graphql_ast";
 
 const logger = getLogger(import.meta);
 
@@ -64,6 +65,7 @@ export class WorkerRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
+    _op: ast.OperationDefinitionNode,
     verbose: boolean,
   ): ComputeStage[] {
     if (!stage.props.materializer) {

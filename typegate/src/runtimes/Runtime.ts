@@ -1,6 +1,7 @@
 import { ComputeStage } from "../engine.ts";
 import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { equal } from "std/testing/asserts.ts";
+import type * as ast from "graphql_ast";
 
 export type Resolver = (args: any) => Promise<any> | any;
 
@@ -27,6 +28,7 @@ export abstract class Runtime {
   abstract materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
+    operation: ast.OperationDefinitionNode,
     verbose: boolean,
   ): ComputeStage[];
 

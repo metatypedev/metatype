@@ -1,28 +1,77 @@
 import { ComputeStage } from "../engine.ts";
 import { gq } from "../gq.ts";
-import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { JSONValue } from "../utils.ts";
-import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { Resolver, Runtime } from "./Runtime.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
+import * as ast from "graphql_ast";
+import { unparse } from "../utils.ts";
 
-const stringifyQL = (obj: JSONValue): string => {
+export interface FromVars<T> {
+  (variables: Record<string, unknown>): T;
+}
+
+function stringifyQL(obj: JSONValue): string | FromVars<string>;
+function stringifyQL(obj: FromVars<JSONValue>): FromVars<string>;
+function stringifyQL(
+  obj: JSONValue | FromVars<JSONValue>,
+): string | FromVars<string> {
+  if (typeof obj === "function") {
+    return (vars) => {
+      let val = stringifyQL(obj(vars));
+      while (typeof val === "function") {
+        val = val(vars);
+      }
+      return val;
+    };
+  }
   if (Array.isArray(obj)) {
-    return `[${obj.map(stringifyQL).join(", ")}]`;
+    const mapped = obj.map((obj) => stringifyQL(obj));
+    if (mapped.some((item) => typeof item === "function")) {
+      return (vars) =>
+        `[${
+          mapped.map((item) => typeof item === "function" ? item(vars) : item)
+            .join(", ")
+        }]`;
+    }
+    return `[${obj.map((obj) => stringifyQL(obj)).join(", ")}]`;
   }
   if (typeof obj === "object" && obj !== null) {
-    const values = Object.entries(obj)
-      .map(([k, v]) => `${k}: ${stringifyQL(v)}`)
+    const mapped = Object.entries(obj).map(([k, v]) => [k, stringifyQL(v)]);
+    if (mapped.some(([_k, v]) => typeof v === "function")) {
+      return (vars) =>
+        `{${
+          mapped.map(([k, v]) =>
+            `${k}: ${typeof v === "function" ? v(vars) : v}`
+          ).join(", ")
+        }}`;
+    }
+    const values = mapped
+      .map(([k, v]) => `${k}: ${v}`)
       .join(", ");
     return `{${values}}`;
   }
   return JSON.stringify(obj);
-};
+}
 
-const rebuildGraphQuery = (
-  stages: ComputeStage[],
-  renames: Record<string, string>,
-): string => {
-  let ret = "";
+interface RebuildQueryParam {
+  stages: ComputeStage[];
+  renames: Record<string, string>;
+  forwardVars: boolean;
+  varDefs: Record<string, ast.VariableDefinitionNode>;
+}
+
+function rebuildGraphQuery(
+  param: RebuildQueryParam & { forwardVars: true },
+): [query: string, forwardedVars: Record<string, string>];
+function rebuildGraphQuery(
+  param: RebuildQueryParam & { forwardVars: false },
+): string | FromVars<string>;
+function rebuildGraphQuery(
+  { stages, renames, forwardVars, varDefs }: RebuildQueryParam,
+): [string, Record<string, string>] | string | FromVars<string> {
+  /** query substrings */
+  const ss: Array<string | FromVars<string>> = [];
+  const forwardedVars: Record<string, string> = {};
   let cursor = 0;
   while (cursor < stages.length) {
     const stage = stages[cursor];
@@ -30,33 +79,84 @@ const rebuildGraphQuery = (
       .slice(cursor + 1)
       .filter((s) => s.id().startsWith(stage.id()));
     const field = stage.props.path[stage.props.path.length - 1];
-    ret += ` ${field !== stage.props.node ? field + ": " : ""}${
-      renames[stage.props.node] ?? stage.props.node
-    }`;
+    ss.push(
+      ` ${field !== stage.props.node ? field + ": " : ""}${
+        renames[stage.props.node] ?? stage.props.node
+      }`,
+    );
     if (Object.keys(stage.props.args).length > 0) {
-      ret += `(`;
-      ret += Object.entries(stage.props.args)
-        .map(
-          ([argName, argValue]) =>
-            `${argName}: ${stringifyQL(argValue({}, {}) as JSONValue)}`,
-        )
-        .join(", ");
-      ret += `)`;
+      ss.push(`(`);
+      Object.entries(stage.props.args).forEach(([argName, argValue], idx) => {
+        if (idx > 0) ss.push(", ");
+        ss.push(`${argName}: `);
+        const val = argValue({}, null);
+        if (typeof val === "function") {
+          // variable reference
+          if (forwardVars) {
+            const name = val(null);
+            ss.push(`$${name}`);
+            if (!Object.prototype.hasOwnProperty.call(forwardedVars, name)) {
+              forwardedVars[name] = unparse(varDefs[name].loc!);
+            }
+          } else {
+            ss.push(stringifyQL(val as FromVars<JSONValue>));
+          }
+        } else {
+          console.log({ val });
+          ss.push(stringifyQL(val as JSONValue));
+        }
+      });
+      ss.push(")");
     }
     if (children.length > 0) {
-      ret += ` {${rebuildGraphQuery(children, renames)} }`;
+      ss.push(" {");
+      if (forwardVars) {
+        const [q, vars] = rebuildGraphQuery({
+          stages: children,
+          renames,
+          forwardVars: true,
+          varDefs,
+        });
+        ss.push(q);
+        Object.assign(forwardedVars, vars);
+      } else {
+        ss.push(rebuildGraphQuery({
+          stages: children,
+          renames,
+          forwardVars: false,
+          varDefs,
+        }));
+      }
+      ss.push(" }");
     }
     cursor += 1 + children.length;
   }
-  return ret;
-};
+  if (forwardVars) {
+    return [(ss as string[]).join(""), forwardedVars];
+  } else {
+    if (ss.every((s) => typeof s === "string")) {
+      return ss.join("");
+    } else {
+      return (vars) =>
+        ss.reduce(
+          (agg: string, s) => agg + (typeof s === "string" ? s : s(vars)),
+          "",
+        );
+    }
+  }
+}
 
 export class GraphQLRuntime extends Runtime {
   endpoint: string;
+  forwardVars = true;
 
   constructor(endpoint: string) {
     super();
     this.endpoint = endpoint;
+  }
+
+  disableVariables() {
+    this.forwardVars = false;
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
@@ -66,9 +166,12 @@ export class GraphQLRuntime extends Runtime {
 
   async deinit(): Promise<void> {}
 
-  execute(query: string, variables: Record<string, unknown>): Resolver {
-    return async (args) => {
-      const ret = await gq(this.endpoint, query, variables);
+  execute(query: string | FromVars<string>): Resolver {
+    return async ({ _: { variables } }) => {
+      const q = typeof query === "function" ? query(variables) : query;
+      console.log(`remote query: ${q}`);
+      // TODO: filter variables - only include forwared variables
+      const ret = await gq(this.endpoint, q, variables);
       return ret.data;
     };
   }
@@ -76,6 +179,7 @@ export class GraphQLRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
+    operation: ast.OperationDefinitionNode,
     verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
@@ -96,19 +200,56 @@ export class GraphQLRuntime extends Runtime {
         renames[node] = operation + table;
       }
     }
-    const query = `${serial ? "mutation" : "query"} q {${
-      rebuildGraphQuery(
-        fields,
-        renames,
-      )
-    } }`;
-    verbose && console.log("remote graphql:", query);
+
+    const query = (() => {
+      const op = serial ? "mutation" : "query";
+      console.log("forwardVars", this.forwardVars);
+      if (this.forwardVars) {
+        const varDefs = (operation?.variableDefinitions ?? []).reduce(
+          (agg, { variable, type }) => ({
+            ...agg,
+            [variable.name.value]: type,
+          }),
+          {},
+        );
+        const [rebuiltQuery, forwardedVars] = rebuildGraphQuery({
+          stages: fields,
+          renames,
+          forwardVars: true,
+          varDefs,
+        });
+        const vars = Object.entries(forwardedVars).map(([name, type]) =>
+          `$${name}: ${type}`
+        ).join(", ");
+        return `${op} Q${
+          vars.length === 0 ? "" : `(${vars})`
+        } {${rebuiltQuery} }`;
+      } else {
+        const query = rebuildGraphQuery({
+          stages: fields,
+          renames,
+          forwardVars: false,
+          varDefs: {},
+        });
+        if (typeof query === "function") {
+          return (vars: Record<string, unknown>) => `${op} {${query(vars)} }`;
+        } else {
+          return `${op} q {${query} }`;
+        }
+      }
+    })();
+
+    verbose &&
+      console.log(
+        "remote graphql:",
+        typeof query === "string" ? query : " with inlined vars",
+      );
 
     const queryStage = new ComputeStage({
       dependencies: [],
       args: {},
       policies: {},
-      resolver: this.execute(query, {}),
+      resolver: this.execute(query),
       outType: {
         // dummy
         name: "string",
@@ -130,7 +271,6 @@ export class GraphQLRuntime extends Runtime {
         const resolver: Resolver = ({
           _: { parent, [queryStage.id()]: queryRes },
         }) => {
-          console.log(queryRes);
           const fieldName = field.props.path[field.props.path.length - 1];
           const resolver = queryRes[0][renames[fieldName] ?? fieldName];
           const ret = typeof resolver === "function" ? resolver() : resolver;

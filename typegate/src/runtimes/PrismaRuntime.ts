@@ -1,7 +1,6 @@
-import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { Resolver, Runtime } from "./Runtime.ts";
 import * as native from "../../../bindings/bindings.ts";
-import { GraphQLRuntime } from "./GraphQLRuntime.ts";
+import { FromVars, GraphQLRuntime } from "./GraphQLRuntime.ts";
 import { ResolverError } from "../errors.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
 
@@ -25,6 +24,7 @@ export class PrismaRuntime extends GraphQLRuntime {
 
   private constructor(datamodel: string) {
     super("");
+    this.disableVariables();
     this.datamodel = datamodel;
     this.key = "";
   }
@@ -64,16 +64,17 @@ export class PrismaRuntime extends GraphQLRuntime {
     this.key = "";
   }
 
-  execute(query: string, variables: Record<string, unknown>): Resolver {
-    return async (args) => {
+  execute(query: string | FromVars<string>): Resolver {
+    return async ({ _: { variables } }) => {
       const startTime = performance.now();
-      console.log("datamodel", this.datamodel);
-      console.log("key", this.key);
+      const q = typeof query === "function" ? query(variables) : query;
+      console.log(`remote graphql: ${q}`);
+
       const ret = await native.prisma_query({
         key: this.key,
         query: {
-          query,
-          variables: {},
+          query: q,
+          variables: {}, // TODO: remove this
         },
         datamodel: this.datamodel,
       });

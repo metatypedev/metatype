@@ -46,11 +46,15 @@ export const initTypegraph = async (
   return engine;
 };
 
-// A function that computes argument from context and variables
-interface ComputeArg {
+/**
+ * A function that computes argument from context and variables
+ * Pass null `variables` to get a FromVars<_> that computes the argument value
+ * from variables or returns the variable name if the `variables` param is null.
+ */
+export interface ComputeArg {
   (
     context: Record<string, unknown>,
-    variables: Record<string, unknown>,
+    variables: Record<string, unknown> | null,
   ): unknown;
 }
 
@@ -210,6 +214,7 @@ export class Engine {
             _: {
               parent: parent ?? {},
               context,
+              variables,
               ...deps,
             },
           })
@@ -260,7 +265,11 @@ export class Engine {
     return [stages, policies];
   }
 
-  materialize(stages: ComputeStage[], verbose: boolean): ComputeStage[] {
+  materialize(
+    stages: ComputeStage[],
+    operation: ast.OperationDefinitionNode,
+    verbose: boolean,
+  ): ComputeStage[] {
     //verbose && console.log(stages);
 
     const stagesMat: ComputeStage[] = [];
@@ -269,7 +278,7 @@ export class Engine {
     while (waitlist.length > 0) {
       const stage = waitlist.shift()!;
       stagesMat.push(
-        ...stage.props.runtime.materialize(stage, waitlist, verbose),
+        ...stage.props.runtime.materialize(stage, waitlist, operation, verbose),
       );
     }
 
@@ -310,7 +319,7 @@ export class Engine {
     */
 
     // how
-    const stagesMat = this.materialize(stages, verbose);
+    const stagesMat = this.materialize(stages, operation, verbose);
 
     // when
     const plan = this.optimize(stagesMat, verbose);
@@ -471,6 +480,9 @@ export class Engine {
     if (check != null) {
       // scalar type
       if (!check(value)) {
+        console.error(
+          `expected type ${typeName}, got value ${JSON.stringify(value)}`,
+        );
         throw new Error(`variable ${label} must be a ${typeName}`);
       }
       return;
