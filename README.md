@@ -3,7 +3,7 @@
 ## Getting started
 
 ```
-poetry add --upgrade git+https://github.com/metatypedev/metatype#subdirectory=typegraph
+pip3 install --upgrade git+https://github.com/metatypedev/metatype#subdirectory=typegraph
 cargo install --force meta --git https://github.com/metatypedev/metatype
 ```
 
