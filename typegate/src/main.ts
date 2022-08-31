@@ -1,6 +1,6 @@
 import { serve } from "std/http/server.ts";
 import { renderPlayground } from "./web/playground.ts";
-import { get_version, init } from "../../bindings/bindings.ts";
+import { get_version, init } from "../native/bindings/bindings.ts";
 
 import { register } from "./register.ts";
 import config from "./config.ts";
