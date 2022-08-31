@@ -1,4 +1,4 @@
-import { JSONValue } from "../../utils.ts";
+import { iterParentStages, JSONValue } from "../../utils.ts";
 import type { FromVars } from "../GraphQLRuntime.ts";
 import { ComputeStage } from "../../engine.ts";
 
@@ -32,18 +32,15 @@ export function rebuildGraphQuery(
   { stages, renames }: RebuildQueryParam,
 ): FromVars<string> {
   const ss: Array<FromVars<string>> = [];
-  let cursor = 0;
-  while (cursor < stages.length) {
-    const stage = stages[cursor];
-    const children = stages.slice(cursor + 1).filter((s) =>
-      s.id().startsWith(stage.id())
-    );
+
+  iterParentStages(stages, (stage, children) => {
     const field = stage.props.path[stage.props.path.length - 1];
     ss.push(() =>
       ` ${field !== stage.props.node ? field + ": " : ""}${
         renames[stage.props.node] ?? stage.props.node
       }`
     );
+
     if (Object.keys(stage.props.args).length > 0) {
       ss.push((vars) =>
         `(${
@@ -57,12 +54,13 @@ export function rebuildGraphQuery(
         })`
       );
     }
+
     if (children.length > 0) {
       ss.push((vars) =>
         ` {${rebuildGraphQuery({ stages: children, renames })(vars)} }`
       );
     }
-    cursor += 1 + children.length;
-  }
+  });
+
   return (vars) => ss.map((s) => s(vars)).join("");
 }
