@@ -1,3 +1,4 @@
+import { ComputeStage } from "./engine.ts";
 import * as ast from "graphql_ast";
 
 // FIXME replace with monads
@@ -38,3 +39,18 @@ export const mapo = <V1, V2>(
 export const unparse = (loc: ast.Location): string => {
   return loc.source.body.slice(loc.start, loc.end);
 };
+
+export function iterParentStages(
+  stages: ComputeStage[],
+  cb: (stage: ComputeStage, children: ComputeStage[]) => void,
+) {
+  let cursor = 0;
+  while (cursor < stages.length) {
+    const stage = stages[cursor];
+    const children = stages.slice(cursor + 1).filter((s) =>
+      s.id().startsWith(stage.id())
+    );
+    cb(stage, children);
+    cursor += 1 + children.length;
+  }
+}

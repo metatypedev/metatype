@@ -3,6 +3,7 @@ import type { FromVars } from "../GraphQLRuntime.ts";
 import { ComputeStage } from "../../engine.ts";
 import * as ast from "graphql_ast";
 import { unparse } from "../../utils.ts";
+import { iterParentStages } from "../../utils.ts";
 
 function unzip<A, B>(arrays: ([A, B])[]): [A[], B[]] {
   const as: A[] = [];
@@ -22,10 +23,12 @@ export function stringifyQL(
     // assert typeof varName === "string"
     return [`$${varName}`, [varName as string]];
   }
+
   if (Array.isArray(obj)) {
     const [qs, vars] = unzip(obj.map(stringifyQL));
     return [`[${qs.join(", ")}]`, vars.flat(1)];
   }
+
   if (typeof obj === "object" && obj != null) {
     const [qs, vars] = unzip(Object.entries(obj)!.map(([k, v]) => {
       const [q, vars] = stringifyQL(v);
@@ -39,6 +42,7 @@ export function stringifyQL(
       vars.flat(1),
     ];
   }
+
   return [JSON.stringify(obj), []];
 }
 
@@ -59,50 +63,40 @@ export function rebuildGraphQuery(
     }
   };
 
-  let cursor = 0;
-  while (cursor < stages.length) {
-    const stage = stages[cursor];
-    const children = stages.slice(cursor + 1).filter((s) =>
-      s.id().startsWith(stage.id())
-    );
-    console.log("path", stage.props.path);
-
+  iterParentStages(stages, (stage, children) => {
     const field = stage.props.path[stage.props.path.length - 1];
-    query += " ";
-    query += field !== stage.props.node ? field + ": " : "";
-    query += renames[stage.props.node] ?? stage.props.node;
+    query += ` ${field !== stage.props.node ? field + ": " : ""}${
+      renames[stage.props.node] ?? stage.props.node
+    }`;
     if (Object.keys(stage.props.args).length > 0) {
-      query += "(";
-      query += Object.entries(stage.props.args).map(
-        ([argName, argValue]) => {
-          console.log({ argName, argValue });
-          const val = argValue({}, null);
-          console.log({ val });
-          if (typeof val === "function") {
-            const varName = val(null);
-            console.log({ varName });
-            forwardVar(varName);
-            return `${argName}: $${varName}`;
-          }
-          const [q, vars] = stringifyQL(val as JSONValue);
-          vars.forEach(forwardVar);
-          return `${argName}: ${q}`;
-        },
-      ).join(", ");
-      query += ")";
+      query += `(${
+        Object.entries(stage.props.args).map(
+          ([argName, argValue]) => {
+            console.log({ argName, argValue });
+            const val = argValue({}, null);
+            console.log({ val });
+            if (typeof val === "function") {
+              const varName = val(null);
+              console.log({ varName });
+              forwardVar(varName);
+              return `${argName}: $${varName}`;
+            }
+            const [q, vars] = stringifyQL(val as JSONValue);
+            vars.forEach(forwardVar);
+            return `${argName}: ${q}`;
+          },
+        ).join(", ")
+      })`;
     }
     if (children.length > 0) {
-      query += " {";
       const [q, vars] = rebuildGraphQuery({
         stages: children,
         renames,
         varDefs,
       });
-      query += q;
-      query += " }";
+      query += ` {${q} }`;
       Object.assign(forwardedVars, vars);
     }
-    cursor += 1 + children.length;
-  }
+  });
   return [query, forwardedVars];
 }
