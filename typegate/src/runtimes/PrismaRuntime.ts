@@ -1,6 +1,6 @@
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
-import * as native from "../../native/bindings/bindings.ts";
+import * as native from "../../../bindings/bindings.ts";
 import { GraphQLRuntime } from "./GraphQLRuntime.ts";
 import { ResolverError } from "../errors.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
