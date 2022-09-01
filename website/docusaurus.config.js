@@ -8,7 +8,7 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Metatype",
-  tagline: "Dinosaurs are cool",
+  tagline: "Types are cool",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -16,6 +16,7 @@ const config = {
   favicon: "img/favicon.ico",
   organizationName: "metatypedev",
   projectName: "metatype",
+  trailingSlash: false,
   stylesheets: [
     {
       href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
@@ -51,10 +52,6 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
-        },
-        blog: {
-          showReadingTime: true,
           editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
         },
         theme: {
@@ -104,7 +101,6 @@ const config = {
             position: "left",
             label: "References",
           },
-          { to: "/blog", label: "Blog", position: "left" },
           {
             href: "https://github.com/metatypedev/metatype",
             label: "GitHub",
@@ -118,10 +114,10 @@ const config = {
           {
             title: "Docs",
             items: [
-              /*{
-                label: "Tutorial",
-                to: "/docs/intro",
-              },*/
+              {
+                label: "Quickstart",
+                to: "/docs/tutorials/quickstart",
+              },
             ],
           },
           {
@@ -144,10 +140,6 @@ const config = {
           {
             title: "More",
             items: [
-              {
-                label: "Blog",
-                to: "/blog",
-              },
               {
                 label: "GitHub",
                 href: "https://github.com/metatypedev/metatype",
