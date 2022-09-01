@@ -1,19 +1,8 @@
-import { JSONValue } from "../../utils.ts";
+import { JSONValue, unparse, unzip } from "../../utils.ts";
 import type { FromVars } from "../GraphQLRuntime.ts";
 import { ComputeStage } from "../../engine.ts";
 import * as ast from "graphql_ast";
-import { unparse } from "../../utils.ts";
 import { iterParentStages } from "../../utils.ts";
-
-function unzip<A, B>(arrays: ([A, B])[]): [A[], B[]] {
-  const as: A[] = [];
-  const bs: B[] = [];
-  arrays.forEach(([a, b]) => {
-    as.push(a);
-    bs.push(b);
-  });
-  return [as, bs];
-}
 
 export function stringifyQL(
   obj: JSONValue | FromVars<JSONValue>,
@@ -72,12 +61,9 @@ export function rebuildGraphQuery(
       query += `(${
         Object.entries(stage.props.args).map(
           ([argName, argValue]) => {
-            console.log({ argName, argValue });
             const val = argValue({}, null);
-            console.log({ val });
             if (typeof val === "function") {
               const varName = val(null);
-              console.log({ varName });
               forwardVar(varName);
               return `${argName}: $${varName}`;
             }

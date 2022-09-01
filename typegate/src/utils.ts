@@ -54,3 +54,13 @@ export function iterParentStages(
     cursor += 1 + children.length;
   }
 }
+
+export function unzip<A, B>(arrays: ([A, B])[]): [A[], B[]] {
+  const as: A[] = [];
+  const bs: B[] = [];
+  arrays.forEach(([a, b]) => {
+    as.push(a);
+    bs.push(b);
+  });
+  return [as, bs];
+}
