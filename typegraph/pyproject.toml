@@ -15,7 +15,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.10,<3.11"
 dataconf = "^1.5.0"
-httpx = {extras = ["http2"], version = "^0.22.0"}
+httpx = {extras = ["http2"], version = "^0.23.0"}
 javascripthon = {git = "https://github.com/metapensiero/metapensiero.pj"}
 orjson = "^3.7.12"
 redbaron = "^0.9.2"
