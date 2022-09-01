@@ -31,13 +31,11 @@ function generateUser(id: number) {
 
 const rootValue = {
   user: ({ id }: { id: number }) => {
-    console.log("user", { id });
     return generateUser(id);
   },
   updateUser: (
     { id, patch }: { id: number; patch: { name?: string; email?: string } },
   ) => {
-    console.log("updateUser resolver", { id, patch });
     return ({ ...generateUser(id), ...patch });
   },
 };
@@ -46,14 +44,12 @@ mf.install();
 
 mf.mock("POST@/api/graphql", async (req) => {
   const { query, variables } = await req.json();
-  console.log("query", { query, variables });
   const res = await graphql({
     schema,
     source: query,
     rootValue,
     variableValues: variables,
   });
-  console.log({ res });
   return new Response(JSON.stringify(res), {
     status: 200,
     headers: {
