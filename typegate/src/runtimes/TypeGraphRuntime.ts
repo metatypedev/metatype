@@ -29,7 +29,6 @@ export class TypeGraphRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    _op: ast.OperationDefinitionNode,
     verbose: boolean,
   ): ComputeStage[] {
     const resolver: Resolver = (() => {

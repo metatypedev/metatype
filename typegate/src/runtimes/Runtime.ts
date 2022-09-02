@@ -28,7 +28,6 @@ export abstract class Runtime {
   abstract materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    operation: ast.OperationDefinitionNode,
     verbose: boolean,
   ): ComputeStage[];
 

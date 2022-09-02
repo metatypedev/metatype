@@ -45,7 +45,6 @@ export class GraphQLRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    operation: ast.OperationDefinitionNode,
     verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
@@ -71,17 +70,9 @@ export class GraphQLRuntime extends Runtime {
       const op = serial ? "mutation" : "query";
       console.log("forwardVars", this.forwardVars);
       if (this.forwardVars) {
-        const varDefs = (operation?.variableDefinitions ?? []).reduce(
-          (agg, { variable, type }) => ({
-            ...agg,
-            [variable.name.value]: type,
-          }),
-          {},
-        );
         const [rebuiltQuery, forwardedVars] = ForwardVars.rebuildGraphQuery({
           stages: fields,
           renames,
-          varDefs,
         });
         const vars = Object.entries(forwardedVars).map(([name, type]) =>
           `$${name}: ${type}`

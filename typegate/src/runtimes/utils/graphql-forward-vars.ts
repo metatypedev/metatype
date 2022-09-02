@@ -38,17 +38,16 @@ export function stringifyQL(
 export interface RebuildQueryParam {
   stages: ComputeStage[];
   renames: Record<string, string>;
-  varDefs: Record<string, ast.VariableDefinitionNode>;
 }
 
 export function rebuildGraphQuery(
-  { stages, renames, varDefs }: RebuildQueryParam,
+  { stages, renames }: RebuildQueryParam,
 ): [query: string, forwaredVars: Record<string, string>] {
   let query = "";
   const forwardedVars: Record<string, string> = {};
   const forwardVar = (name: string) => {
     if (!Object.hasOwnProperty.call(forwardedVars, name)) {
-      forwardedVars[name] = unparse(varDefs[name].loc!);
+      forwardedVars[name] = stages[0].varType(name);
     }
   };
 
@@ -78,7 +77,6 @@ export function rebuildGraphQuery(
       const [q, vars] = rebuildGraphQuery({
         stages: children,
         renames,
-        varDefs,
       });
       query += ` {${q} }`;
       Object.assign(forwardedVars, vars);
