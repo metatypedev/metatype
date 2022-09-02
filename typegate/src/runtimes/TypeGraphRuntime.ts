@@ -1,13 +1,6 @@
 import { TypeGraphDS, TypeMaterializer, TypeNode } from "../typegraph.ts";
-import {
-  GraphQLArgs,
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLString,
-  Kind,
-  parse,
-  TypeKind,
-} from "graphql";
+import { TypeKind } from "graphql";
+import * as ast from "graphql_ast";
 import { ensure } from "../utils.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";

@@ -15,6 +15,9 @@ class GraphQLRuntime(Runtime):
     def query(self, inp, out):
         return t.func(inp, out, QueryMat(self))
 
+    def mutation(self, inp, out):
+        return t.func(inp, out, MutationMat(self, serial=True))
+
 
 @dataclass(eq=True, frozen=True)
 class QueryMat(Materializer):

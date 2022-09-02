@@ -16,6 +16,7 @@ import {
 import { ensure } from "../utils.ts";
 import mapValues from "https://deno.land/x/lodash@4.17.15-es/mapValues.js";
 import { TypeMaterializer } from "../typegraph.ts";
+import * as ast from "graphql_ast";
 
 const logger = getLogger(import.meta);
 

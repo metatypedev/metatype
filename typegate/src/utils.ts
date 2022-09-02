@@ -1,3 +1,6 @@
+import { ComputeStage } from "./engine.ts";
+import * as ast from "graphql_ast";
+
 // FIXME replace with monads
 export type Maybe<T> = null | undefined | T;
 export type JSONValue =
@@ -32,3 +35,32 @@ export const mapo = <V1, V2>(
     agg[key] = map(value);
     return agg;
   }, {} as Record<string, V2>);
+
+export const unparse = (loc: ast.Location): string => {
+  return loc.source.body.slice(loc.start, loc.end);
+};
+
+export function iterParentStages(
+  stages: ComputeStage[],
+  cb: (stage: ComputeStage, children: ComputeStage[]) => void,
+) {
+  let cursor = 0;
+  while (cursor < stages.length) {
+    const stage = stages[cursor];
+    const children = stages.slice(cursor + 1).filter((s) =>
+      s.id().startsWith(stage.id())
+    );
+    cb(stage, children);
+    cursor += 1 + children.length;
+  }
+}
+
+export function unzip<A, B>(arrays: ([A, B])[]): [A[], B[]] {
+  const as: A[] = [];
+  const bs: B[] = [];
+  arrays.forEach(([a, b]) => {
+    as.push(a);
+    bs.push(b);
+  });
+  return [as, bs];
+}

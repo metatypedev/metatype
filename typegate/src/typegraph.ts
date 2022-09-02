@@ -1,6 +1,11 @@
 import type * as ast from "graphql_ast";
 import { Kind } from "graphql";
-import { ComputeStage, PolicyStages, PolicyStagesFactory } from "./engine.ts";
+import {
+  ComputeArg,
+  ComputeStage,
+  PolicyStages,
+  PolicyStagesFactory,
+} from "./engine.ts";
 import * as graphql from "./graphql.ts";
 import { FragmentDefs } from "./graphql.ts";
 import { DenoRuntime } from "./runtimes/DenoRuntime.ts";
@@ -182,10 +187,7 @@ export class TypeGraph {
     parentContext: Record<string, number>,
     noDefault = false,
   ): [
-    (
-      context: Record<string, unknown>,
-      variables: Record<string, unknown>,
-    ) => unknown,
+    ComputeArg,
     Record<string, string[]>,
     string[],
   ] | null {
@@ -281,9 +283,13 @@ export class TypeGraph {
     const { kind } = argValue;
 
     if (kind === Kind.VARIABLE) {
-      const { kind: _, value: nestedArg } = argValue.name;
+      const { kind: _, value: varName } = (argValue as ast.VariableNode).name;
       return [
-        (_ctx, { [nestedArg]: value }) => value,
+        (_ctx, vars) =>
+          vars == null
+            ? (vars: Record<string, unknown> | null) =>
+              vars == null ? varName : vars[varName]
+            : vars[varName],
         policies,
         [],
       ];
@@ -608,13 +614,7 @@ export class TypeGraph {
       if (checks.length > 0) {
         policies[outputType.name] = checks;
       }
-      const args: Record<
-        string,
-        (
-          context: Record<string, unknown>,
-          variables: Record<string, unknown>,
-        ) => unknown
-      > = {};
+      const args: Record<string, ComputeArg> = {};
 
       const argSchema = this.tg.types[inputIdx].data.binds as Record<
         string,
