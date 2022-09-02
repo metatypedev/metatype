@@ -49,7 +49,6 @@ export class GoogleapisRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    _op: ast.OperationDefinitionNode,
     verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];

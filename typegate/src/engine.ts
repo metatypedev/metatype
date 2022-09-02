@@ -2,7 +2,7 @@ import Dataloader from "https://cdn.skypack.dev/dataloader@2.0.0?dts";
 import { Kind, parse } from "graphql";
 import type * as ast from "graphql_ast";
 import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
-import { b, ensure, JSONValue, mapo, Maybe } from "./utils.ts";
+import { b, ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
 import type { TypeNode } from "./typegraph.ts";
@@ -84,6 +84,7 @@ a(b: c) {
 */
 export class ComputeStage {
   props: ComputeStageProps;
+  varTypes: Record<string, string> = {};
 
   constructor(props: ComputeStageProps) {
     this.props = props;
@@ -91,6 +92,14 @@ export class ComputeStage {
 
   id(): string {
     return this.props.path.join(".");
+  }
+
+  varType(varName: string): string {
+    const typ = this.varTypes[varName];
+    if (typ == null) {
+      throw new Error(`variable not found: $${varName}`);
+    }
+    return typ;
   }
 
   toString(): string {
@@ -261,13 +270,25 @@ export class Engine {
       serial,
     );
 
+    const varTypes: Record<string, string> =
+      (operation?.variableDefinitions ?? []).reduce(
+        (agg, { variable, type }) => ({
+          ...agg,
+          [variable.name.value]: unparse(type.loc!),
+        }),
+        {},
+      );
+
+    for (const stage of stages) {
+      stage.varTypes = varTypes;
+    }
+
     const policies = this.tg.preparePolicies(stages);
     return [stages, policies];
   }
 
   materialize(
     stages: ComputeStage[],
-    operation: ast.OperationDefinitionNode,
     verbose: boolean,
   ): ComputeStage[] {
     //verbose && console.log(stages);
@@ -278,7 +299,7 @@ export class Engine {
     while (waitlist.length > 0) {
       const stage = waitlist.shift()!;
       stagesMat.push(
-        ...stage.props.runtime.materialize(stage, waitlist, operation, verbose),
+        ...stage.props.runtime.materialize(stage, waitlist, verbose),
       );
     }
 
@@ -319,7 +340,7 @@ export class Engine {
     */
 
     // how
-    const stagesMat = this.materialize(stages, operation, verbose);
+    const stagesMat = this.materialize(stages, verbose);
 
     // when
     const plan = this.optimize(stagesMat, verbose);
