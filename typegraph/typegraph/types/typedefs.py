@@ -399,7 +399,7 @@ class phone(Type):
     type_name = "phone"
 
 
-class email(Type):
+class email(string):
     type_name = "email"
 
 
