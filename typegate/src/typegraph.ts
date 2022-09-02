@@ -8,6 +8,7 @@ import { GoogleapisRuntime } from "./runtimes/GoogleapisRuntime.ts";
 import { GraphQLRuntime } from "./runtimes/GraphQLRuntime.ts";
 import { HTTPRuntime } from "./runtimes/HTTPRuntime.ts";
 import { PrismaRuntime } from "./runtimes/PrismaRuntime.ts";
+import { RandomRuntime } from "./runtimes/RandomRuntime.ts";
 import {
   Batcher,
   Resolver,
@@ -73,6 +74,7 @@ const runtimeInit: RuntimeInit = {
   http: HTTPRuntime.init,
   deno: DenoRuntime.init,
   googleapis: GoogleapisRuntime.init,
+  random: RandomRuntime.init,
   //typegraph: TypeGraphRuntime.init,
 };
 
@@ -826,7 +828,8 @@ export class TypeGraph {
         type.typedef === "boolean" ||
         type.typedef === "gen" ||
         type.typedef === "uuid" ||
-        type.typedef === "string",
+        type.typedef === "string" ||
+        type.typedef === "email",
       `struct expected but got ${type.typedef}`,
     );
     return (x: any) => ensureArray(x);
