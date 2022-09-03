@@ -24,4 +24,36 @@ test("Random", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("work with custom generation params", async () => {
+    await gql`
+      query {
+        randomUser {
+          id
+          name
+          age
+          address {
+            street
+            city
+            postcode
+            country
+          }
+        }
+      }
+    `
+      .expectData({
+        randomUser: {
+          id: "415013d6-efc5-5781-aa74-056ee27dbb22",
+          name: "Gertrude Robertson",
+          age: 61,
+          address: {
+            street: "579 Dico Turnpike",
+            city: "Igpisi",
+            postcode: "NR1 5GS",
+            country: "Croatia",
+          },
+        },
+      })
+      .on(e);
+  });
 });

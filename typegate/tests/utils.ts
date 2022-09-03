@@ -70,7 +70,7 @@ class MetaTest {
       await Deno.writeTextFile(path, code);
       return await this.parseTypegraph(
         [
-          join(localDir, "../../target/debug/meta"),
+          join(localDir, metaCli),
           "serialize",
           "-f",
           path,

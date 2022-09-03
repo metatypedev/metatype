@@ -2,6 +2,7 @@ import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { TypeNode } from "../typegraph.ts";
 import Chance from "https://cdn.skypack.dev/chance?dts";
+import { ensure } from "../utils.ts";
 
 export class RandomRuntime extends Runtime {
   seed: number | null;
@@ -55,7 +56,19 @@ export class RandomRuntime extends Runtime {
   }
 
   execute(typ: TypeNode): Resolver {
-    return ({ _: { parent } }) => {
+    return () => {
+      if (Object.prototype.hasOwnProperty.call(typ.data, "random")) {
+        const entries = Object.entries(
+          typ.data.random as Record<string, unknown>,
+        );
+        ensure(
+          entries.length === 1,
+          `invalid random generation data ${typ.data.random}`,
+        );
+        const [[fn, arg]] = entries;
+        return this.chance[fn](arg);
+      }
+
       switch (typ.typedef) {
         case "struct":
           return {};
