@@ -18,9 +18,17 @@ with TypeGraph(name="random") as g:
 
     users = t.struct(
         {
-            "id": t.integer(),
-            "name": t.string(),
-            "age": t.integer(),
+            "id": t.uuid(),
+            "name": t.string().random("name"),
+            "age": t.integer().random("age", type="adult"),
+            "address": t.struct(
+                {
+                    "street": t.string().random("address"),
+                    "city": t.string().random("city"),
+                    "postcode": t.string().random("postcode"),
+                    "country": t.string().random("country", full=True),
+                }
+            ),
         }
     ).named("User")
 
