@@ -6,6 +6,7 @@ from frozendict import frozendict
 from typegraph.graphs import typegraph
 from typegraph.materializers import base
 from typegraph.materializers.deno import DenoRuntime
+from typegraph.materializers.deno import ImportFunMat
 from typegraph.types import typedefs as t
 
 
@@ -45,7 +46,6 @@ class Graph:
     materializers: List[TypeMaterializer]
     runtimes: List[TypeRuntime]
     policies: List[TypePolicy]
-    codes: List[typegraph.Code]
 
 
 def build(tg: typegraph.TypeGraph):
@@ -80,6 +80,8 @@ def build(tg: typegraph.TypeGraph):
     def build(node):
         if isinstance(node, base.Materializer):
             data = {**vars(node)}
+            if isinstance(node, ImportFunMat):
+                data["mod"] = build(data["mod"])
             ret = TypeMaterializer(
                 name=data.pop("materializer_name"),
                 runtime=build(data.pop("runtime")),
@@ -178,5 +180,4 @@ def build(tg: typegraph.TypeGraph):
         materializers=collect(materializers),
         runtimes=collect(runtimes),
         policies=collect(policies),
-        codes=tg.codes,
     )
