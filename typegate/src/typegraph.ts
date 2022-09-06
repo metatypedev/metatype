@@ -382,8 +382,18 @@ export class TypeGraph {
         kind === Kind.BOOLEAN,
         `type mismatch, got ${kind} but expected BOOLEAN for ${arg.name}`,
       );
-      const { value } = argValue as ast.IntValueNode;
+      const { value } = argValue as ast.BooleanValueNode;
       const parsed = Boolean(value);
+      return [() => parsed, policies, []];
+    }
+
+    if (arg.typedef === "float") {
+      ensure(
+        kind === Kind.FLOAT || kind === Kind.INT,
+        `type mismatch, got ${kind} but expected FLOAT for ${arg.name}`,
+      );
+      const { value } = argValue as ast.FloatValueNode;
+      const parsed = Number(value);
       return [() => parsed, policies, []];
     }
 
@@ -781,7 +791,7 @@ export class TypeGraph {
         rt.constructor === DenoRuntime || rt.constructor === WorkerRuntime,
         "runtime for policy must be a WorkerRuntime",
       );
-      return [policy.name, rt.delegate(mat)] as [string, Resolver];
+      return [policy.name, rt.delegate(mat, false)] as [string, Resolver];
     });
 
     return (claim: Record<string, any>) => {
@@ -825,6 +835,7 @@ export class TypeGraph {
         type.typedef === "uri" ||
         type.typedef === "float" ||
         type.typedef === "integer" ||
+        type.typedef === "unsigned_integer" ||
         type.typedef === "boolean" ||
         type.typedef === "gen" ||
         type.typedef === "uuid" ||

@@ -6,12 +6,12 @@ logger.info("start webworker");
 
 type TaskModule = Record<string, TaskExec>;
 
-const fns: Record<string, TaskExec> = {};
+const fns: Record<number, TaskExec> = {};
 
 self.onmessage = async (evt: MessageEvent<Task>) => {
   switch (evt.data.type) {
-    case "module": {
-      const { id, name, path, args, context } = evt.data;
+    case "import_func": {
+      const { id, module: path, name, args, context } = evt.data;
       logger.info(`running task ${name} in worker...`);
       const mod: TaskModule = await import(path);
 
@@ -22,13 +22,13 @@ self.onmessage = async (evt: MessageEvent<Task>) => {
     }
 
     case "func": {
-      const { name, id, code, args, context } = evt.data;
+      const { id, fnId, code, args, context } = evt.data;
       if (code != undefined) {
-        fns[name] = new Function(`"use strict"; return ${code}`)();
+        fns[fnId] = new Function(`"use strict"; return ${code}`)();
       }
 
-      logger.info(`[${id}] exec func "${name}"`);
-      const ret = await fns[name](args, context);
+      logger.info(`[${id}] exec func "${fnId}"`);
+      const ret = await fns[fnId](args, context);
       self.postMessage({ id, data: ret });
       break;
     }
