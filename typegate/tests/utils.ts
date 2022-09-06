@@ -68,25 +68,22 @@ class MetaTest {
     const path = await Deno.makeTempFile({ suffix: ".py" });
     try {
       await Deno.writeTextFile(path, code);
-      return await this.parseTypegraph(
-        [
-          join(localDir, metaCli),
-          "serialize",
-          "-f",
-          path,
-          "-1",
-        ],
-        deepMerge(testRuntimesConfig, config),
-      );
+      return this.pythonFile(path);
     } finally {
       await Deno.remove(path);
     }
   }
 
   async pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
-    return this.pythonCode(
-      await Deno.readTextFile(join(localDir, path)),
-      config,
+    return await this.parseTypegraph(
+      [
+        join(localDir, metaCli),
+        "serialize",
+        "-f",
+        path,
+        "-1",
+      ],
+      deepMerge(testRuntimesConfig, config),
     );
   }
 
