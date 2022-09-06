@@ -5,7 +5,7 @@ from typegraph.types import typedefs as t
 
 with TypeGraph("test-vars") as g:
     add = g.fun("({ first, second }) => first + second")
-    sum = g.fun("({ numbers }) => numbers.reduce((a, b) => a+ b, 0)")
+    sum = g.fun("({ numbers }) => numbers.reduce((a, b) => a + b, 0)")
     level2 = g.fun("(arg) => arg.level1.level2[0]")
     g.expose(
         add=t.func(
