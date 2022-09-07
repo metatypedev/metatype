@@ -2,7 +2,11 @@ import { ComputeStage } from "../engine.ts";
 import { Resolver, Runtime } from "./Runtime.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
-import { FunctionMaterializerData, TaskExec } from "./utils/codes.ts";
+import {
+  FunctionMaterializerData,
+  predefinedFuncs,
+  TaskExec,
+} from "./utils/codes.ts";
 import { ensure } from "../utils.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import * as ast from "graphql_ast";
@@ -23,7 +27,10 @@ export class DenoRuntime extends Runtime {
     const { typegraph: tg, materializers } = params;
 
     for (const { name } of materializers) {
-      ensure(name === "function", `unexpected materializer type "${name}"`);
+      ensure(
+        name === "function" || name === "predefined_function",
+        `unexpected materializer type "${name}"`,
+      );
     }
 
     return new DenoRuntime(tg);
@@ -58,9 +65,25 @@ export class DenoRuntime extends Runtime {
   }
 
   delegate(mat: TypeMaterializer, verbose: boolean): Resolver {
-    ensure(mat.name === "function", `unsupported materializer ${mat.name}`);
+    ensure(
+      mat.name === "function" || mat.name === "predefined_function",
+      `unsupported materializer ${mat.name}`,
+    );
 
     switch (mat.name) {
+      case "predefined_function": {
+        const name = mat.data.name as string;
+        if (Object.prototype.hasOwnProperty.call(predefinedFuncs, name)) {
+          const fn = predefinedFuncs[mat.data.name as string];
+          return ({ _: context, ...args }) => {
+            verbose && logger.info(`exec predefined func: ${name}`);
+            return fn(args, context);
+          };
+        } else {
+          throw new Error(`Cannot find predefined function "${name}"}`);
+        }
+      }
+
       case "function": {
         if (!this.inlineFns.has(mat)) {
           const { fn_expr } = mat.data as unknown as FunctionMaterializerData;

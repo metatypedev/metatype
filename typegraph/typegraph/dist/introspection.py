@@ -129,9 +129,7 @@ with TypeGraph("introspection") as g:
 
     allow_all = t.policy(
         t.struct(),
-        worker.JavascriptMat(
-            g.fun(worker.JavascriptMat.lift(lambda args: True), name="allow_all")
-        ),
+        worker.JavascriptMat(worker.JavascriptMat.lift(lambda args: True)),
     ).named("__allow_all")
 
     get_type = t.func(
