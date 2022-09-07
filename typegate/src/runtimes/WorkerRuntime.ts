@@ -216,7 +216,7 @@ class OnDemandWorker {
           this.modules.set(modMat, modPromise);
           hooks.push(async () => {
             const mod = await modPromise;
-            Deno.remove(mod);
+            await Deno.remove(mod);
           });
         }
         const module = await this.modules.get(modMat)!;
