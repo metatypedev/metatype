@@ -1,4 +1,6 @@
 import { serve } from "std/http/server.ts";
+// import * as Sentry from "npm:@sentry/node";
+import * as Sentry from "https://deno.land/x/sentry_deno/main.ts";
 import { renderPlayground } from "./web/playground.ts";
 import { get_version, init } from "../../bindings/bindings.ts";
 
@@ -6,6 +8,13 @@ import { register } from "./register.ts";
 import config from "./config.ts";
 import { Engine } from "./engine.ts";
 import { getLogger } from "./log.ts";
+
+Sentry.init({
+  dsn: Deno.env.get("SENTRY_DSN"),
+
+  // TODO: change the rate in production
+  tracesSampleRate: 1.0,
+});
 
 /*
 //const wasmCode = await Deno.readFile("../example/wasm/pkg/wasm_bg.wasm");
@@ -111,6 +120,7 @@ const server = serve(
         status,
       });
     } catch (e) {
+      Sentry.captureException(e);
       console.error(e);
     }
 
