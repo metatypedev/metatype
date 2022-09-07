@@ -40,7 +40,7 @@ export class RandomRuntime extends Runtime {
       new ComputeStage({
         ...stage.props,
         resolver: this.execute(stage.props.outType),
-        batcher: (x: any) => x, // WHAT?,
+        batcher: (x: any) => x,
       }),
     );
 
