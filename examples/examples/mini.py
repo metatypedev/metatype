@@ -9,9 +9,7 @@ with TypeGraph("mini") as g:
 
     allow_all = t.policy(
         t.struct(),
-        worker.JavascriptMat(
-            g.fun(worker.JavascriptMat.lift(lambda args: True), name="allow_all")
-        ),
+        worker.JavascriptMat(worker.JavascriptMat.lift(lambda args: True)),
     ).named("allow_all_policy")
 
     post = t.struct(

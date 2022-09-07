@@ -1,7 +1,7 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import worker
 from typegraph.materializers.deno import FunMat
-from typegraph.materializers.deno import IdentityMat
+from typegraph.materializers.deno import PredefinedFunMat
 from typegraph.materializers.graphql import GraphQLRuntime
 from typegraph.materializers.http import HTTPRuntime
 from typegraph.materializers.prisma import PrismaRuntime
@@ -34,9 +34,7 @@ with TypeGraph("test") as g:
 
     allow_all_policy = t.policy(
         t.struct(),  # t.struct({"claim", g.claim.inject}),
-        worker.JavascriptMat(
-            g.fun(worker.JavascriptMat.lift(lambda args: True), name="allow_all")
-        ),
+        worker.JavascriptMat(worker.JavascriptMat.lift(lambda args: True)),
     ).named("allow_all_policy")
 
     # def test(a: g("allow_all_policy", lambda x: x.inp))
@@ -75,7 +73,7 @@ with TypeGraph("test") as g:
                             }
                         ),  # "query": arg.apply(5)}),
                         t.integer(),
-                        IdentityMat(),
+                        PredefinedFunMat("identity"),
                     ),
                     "ip": ipApi.get(
                         "24.48.0.1",
@@ -115,12 +113,9 @@ with TypeGraph("test") as g:
                                     t.struct({"integer": g("res_int")}),
                                     t.integer().named("duration_remote"),
                                     worker.JavascriptMat(
-                                        g.fun(
-                                            worker.JavascriptMat.lift(
-                                                lambda args: args.parent.integer * 3
-                                            ),
-                                            name="js2",
-                                        )
+                                        worker.JavascriptMat.lift(
+                                            lambda args: args.parent.integer * 3
+                                        ),
                                     ),
                                 ).named("compute_duration_remote"),
                             }
@@ -129,12 +124,7 @@ with TypeGraph("test") as g:
                     "duration": t.gen(
                         t.integer().named("duration"),
                         worker.JavascriptMat(
-                            g.fun(
-                                worker.JavascriptMat.lift(
-                                    lambda args: args.parent.out * 2
-                                ),
-                                name="js1",
-                            )
+                            worker.JavascriptMat.lift(lambda args: args.parent.out * 2),
                         ),
                     ).named("compute_duration"),
                     "self": g("f"),
@@ -142,20 +132,18 @@ with TypeGraph("test") as g:
                 }
             ).named("res"),
             FunMat(
-                g.fun(
-                    """
-                    ({ a }: { a: number; }) => {
-                        return {
-                            out: a * 2,
-                            a: 2,
-                            b: null,
-                            nested: () => ({
-                            ok: 0,
-                            }),
-                        };
-                    }
-                    """
-                ),
+                """
+                ({ a }: { a: number; }) => {
+                    return {
+                        out: a * 2,
+                        a: 2,
+                        b: null,
+                        nested: () => ({
+                        ok: 0,
+                        }),
+                    };
+                }
+                """
             ),
         )
         .named("f")

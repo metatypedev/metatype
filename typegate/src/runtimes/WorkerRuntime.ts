@@ -51,7 +51,8 @@ export class WorkerRuntime extends Runtime {
 
   delegate(mat: TypeMaterializer): Resolver {
     ensure(
-      mat.name === "function" || mat.name === "import_function",
+      mat.name === "function" || mat.name === "import_function" ||
+        mat.name === "predefined_function",
       `unsupported materializer ${mat.name}`,
     );
     return async ({ _: context, ...args }) => {
@@ -186,7 +187,7 @@ class OnDemandWorker {
         let fnRef: Pick<FuncTask, "fnId" | "code">;
         if (!this.inlineFns.has(mat)) {
           this.inlineFns.set(mat, id);
-          fnRef = { fnId: id, code: mat.data.code as string };
+          fnRef = { fnId: id, code: mat.data.fn_expr as string };
         } else {
           fnRef = { fnId: this.inlineFns.get(mat)! };
         }
