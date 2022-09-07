@@ -1,11 +1,11 @@
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
+from typegraph.materializers.deno import ModuleMat
 from typegraph.types import typedefs as t
 
 with TypeGraph(name="math") as g:
     allow_all = policies.allow_all()
-    mod = g.module(load="/inexisting/path/to/ts/module.ts")
+    mod = ModuleMat(file="/inexisting/path/to/ts/module.ts")
     g.expose(
         div=t.func(
             t.struct(
@@ -20,6 +20,6 @@ with TypeGraph(name="math") as g:
                     "remainder": t.integer(),
                 }
             ).named("Output"),
-            FunMat("div", import_from=mod),
+            mod.imp("div"),
         ).add_policy(allow_all)
     )

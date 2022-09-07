@@ -22,6 +22,14 @@ class FunMat(Materializer):
     materializer_name: str = "function"
 
 
+@dataclass(eq=True, frozen=True)
+class PredefinedFunMat(Materializer):
+    name: str
+    _: KW_ONLY
+    runtime: Runtime = DenoRuntime()
+    materializer_name: str = "predefined_function"
+
+
 # Import function from a module
 @dataclass(eq=True, frozen=True)
 class ImportFunMat(Materializer):
@@ -62,7 +70,7 @@ class ModuleMat(Materializer):
 
 
 @dataclass(eq=True, frozen=True)
-class IdentityMat(FunMat):
+class IdentityMat(PredefinedFunMat):
     name: str = "identity"
 
 

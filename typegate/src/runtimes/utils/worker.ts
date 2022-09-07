@@ -6,7 +6,7 @@ logger.info("start webworker");
 
 type TaskModule = Record<string, TaskExec>;
 
-const fns: Record<number, TaskExec> = {};
+const fns: Map<number, TaskExec> = new Map();
 
 self.onmessage = async (evt: MessageEvent<Task>) => {
   switch (evt.data.type) {
@@ -23,12 +23,16 @@ self.onmessage = async (evt: MessageEvent<Task>) => {
 
     case "func": {
       const { id, fnId, code, args, context } = evt.data;
-      if (code != undefined) {
-        fns[fnId] = new Function(`"use strict"; return ${code}`)();
+      if (!fns.has(fnId)) {
+        if (code == null) {
+          throw new Error("function definition required");
+        }
+        fns.set(fnId, new Function(`"use strict"; return ${code}`)());
       }
 
       logger.info(`[${id}] exec func "${fnId}"`);
-      const ret = await fns[fnId](args, context);
+      console.log({ fnId }, { fns });
+      const ret = await fns.get(fnId)!(args, context);
       self.postMessage({ id, data: ret });
       break;
     }

@@ -5,7 +5,6 @@ from typegraph.graphs.builders import TypeMaterializer
 from typegraph.graphs.builders import TypeNode
 from typegraph.graphs.builders import TypePolicy
 from typegraph.graphs.builders import TypeRuntime
-from typegraph.graphs.typegraph import Code
 from typegraph.utils import loaders
 
 
@@ -1000,7 +999,10 @@ class TestTypegraph:
                         name="function",
                         runtime=1,
                         data=frozendict.frozendict(
-                            {"serial": False, "name": "allow_all"}
+                            {
+                                "serial": False,
+                                "fn_expr": "(args) => {\n    return true;\n}",
+                            }
                         ),
                     ),
                     TypeMaterializer(
@@ -1017,12 +1019,5 @@ class TestTypegraph:
                     TypeRuntime(name="deno", data=frozendict.frozendict({})),
                 ],
                 policies=[TypePolicy(name="__allow_all", materializer=2)],
-                codes=[
-                    Code(
-                        name="allow_all",
-                        source="(args) => {\n    return true;\n}",
-                        type="func",
-                    )
-                ],
             )
         )
