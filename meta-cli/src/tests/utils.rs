@@ -28,16 +28,5 @@ fn get_workspace_root() -> Result<PathBuf> {
 }
 
 pub fn ensure_venv() -> Result<()> {
-    use std::env::{set_var, var};
-    if let Err(_) = var("VIRTUAL_ENV") {
-        let workspace_root = get_workspace_root()?;
-        let venv = workspace_root.join("typegraph/.venv");
-        let venv_bin = venv.join("bin");
-        let venv = venv.to_str().unwrap();
-        let venv_bin = venv_bin.to_str().unwrap();
-        let path = var("PATH")?;
-        set_var("VIRTUAL_ENV", venv);
-        set_var("PATH", &format!("{venv_bin}:{path}"));
-    }
-    Ok(())
+    crate::utils::ensure_venv(get_workspace_root()?.join("typegraph"))
 }

@@ -4,6 +4,7 @@ use std::io::{self, Read, Write};
 use super::Action;
 use crate::prisma::migration;
 use crate::typegraph::TypegraphLoader;
+use crate::utils::ensure_venv;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use tokio::runtime::Runtime;
@@ -50,6 +51,7 @@ pub struct Format {
 
 impl Action for Apply {
     fn run(&self, dir: String) -> Result<()> {
+        ensure_venv(&dir)?;
         let runtime = Runtime::new()?;
 
         let loader = TypegraphLoader::new();
@@ -89,6 +91,7 @@ impl Action for Apply {
 
 impl Action for Diff {
     fn run(&self, dir: String) -> Result<()> {
+        ensure_venv(&dir)?;
         let runtime = Runtime::new()?;
 
         let loader = TypegraphLoader::new();
