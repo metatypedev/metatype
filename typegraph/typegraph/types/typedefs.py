@@ -3,6 +3,7 @@ from textwrap import indent
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Tuple
 
 from frozendict import frozendict
 from typegraph.graphs.typegraph import NodeProxy
@@ -50,6 +51,9 @@ class Type:
     type_id: int
 
     policies: List["policy"]
+
+    # random generation params for chancejs: (function name, arg)
+    rg_params: Optional[Tuple[str, Dict]] = None
 
     def __init__(self) -> None:
         super().__init__()
@@ -179,6 +183,10 @@ class Type:
 
         self.apply_value = value
         self.apply_sealed = seal
+        return self
+
+    def random(self, tpe: str, **kwargs):
+        self.rg_params = (tpe, dict(kwargs))
         return self
 
 
@@ -399,7 +407,7 @@ class phone(Type):
     type_name = "phone"
 
 
-class email(Type):
+class email(string):
     type_name = "email"
 
 

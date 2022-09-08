@@ -124,7 +124,10 @@ def build(tg: typegraph.TypeGraph):
                 data["of"] = build(node.of)
             elif isinstance(node, t.injection):
                 data["of"] = build(node.of)
-            # TODO: optional
+
+            if node.rg_params is not None:
+                (tp, additional_constraints) = node.rg_params
+                data["random"] = frozendict({tp: frozendict(additional_constraints)})
 
             pol = [
                 idx(
