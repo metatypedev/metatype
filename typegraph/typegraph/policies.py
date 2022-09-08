@@ -1,14 +1,13 @@
-from typegraph.graphs.typegraph import TypegraphContext
 from typegraph.materializers import worker
 from typegraph.types import typedefs as t
 
 
 def allow_all(name: str = "__allow_all"):
-    g = TypegraphContext.get_active()
     return t.policy(
         t.struct(),
         worker.JavascriptMat(
-            g.fun(worker.JavascriptMat.lift(lambda args: True)),
+            worker.JavascriptMat.lift(lambda args: True),
+            # runtime=DenoRuntime()
         ),
     ).named(name)
 

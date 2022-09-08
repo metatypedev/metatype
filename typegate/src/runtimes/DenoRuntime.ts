@@ -3,29 +3,22 @@ import { Resolver, Runtime } from "./Runtime.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
 import {
-  CodeList,
-  Codes,
-  createFuncStatus,
-  createModuleStatus,
-  FuncStatus,
   FunctionMaterializerData,
-  ModuleStatus,
   predefinedFuncs,
   TaskExec,
 } from "./utils/codes.ts";
 import { ensure } from "../utils.ts";
-import mapValues from "https://deno.land/x/lodash@4.17.15-es/mapValues.js";
-import { TypeMaterializer } from "../typegraph.ts";
+import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import * as ast from "graphql_ast";
 
 const logger = getLogger(import.meta);
 
 export class DenoRuntime extends Runtime {
-  codes: Codes;
+  modules: Map<TypeMaterializer, Promise<Record<string, TaskExec>>> = new Map();
+  inlineFns: Map<TypeMaterializer, TaskExec> = new Map();
 
-  private constructor(codes: Codes) {
+  private constructor(private tg: TypeGraphDS) {
     super();
-    this.codes = codes;
   }
 
   static init(params: RuntimeInitParams): Runtime {
@@ -34,24 +27,13 @@ export class DenoRuntime extends Runtime {
     const { typegraph: tg, materializers } = params;
 
     for (const { name } of materializers) {
-      ensure(name === "function", `unexpected materializer type "${name}"`);
+      ensure(
+        name === "function" || name === "predefined_function",
+        `unexpected materializer type "${name}"`,
+      );
     }
 
-    const modules = mapValues(
-      CodeList.from(tg.codes)
-        .filterType("module")
-        .byNamesIn(materializers.map(({ data }) => data.import_from as string)),
-      createModuleStatus,
-    ) as Record<string, ModuleStatus>;
-
-    const funcs = mapValues(
-      CodeList.from(tg.codes)
-        .filterType("func")
-        .byNamesIn(materializers.map(({ data }) => data.name as string)),
-      createFuncStatus,
-    ) as Record<string, FuncStatus>;
-
-    return new DenoRuntime({ modules, funcs });
+    return new DenoRuntime(tg);
   }
 
   async deinit(): Promise<void> {}
@@ -71,7 +53,7 @@ export class DenoRuntime extends Runtime {
         return ret;
       };
     } else {
-      resolver = this.delegate(stage.props.materializer);
+      resolver = this.delegate(stage.props.materializer, verbose);
     }
 
     return [
@@ -82,56 +64,69 @@ export class DenoRuntime extends Runtime {
     ];
   }
 
-  delegate(mat: TypeMaterializer): Resolver {
-    ensure(mat.name === "function", `unsupported materializer ${mat.name}`);
+  delegate(mat: TypeMaterializer, verbose: boolean): Resolver {
+    ensure(
+      mat.name === "function" || mat.name === "predefined_function",
+      `unsupported materializer ${mat.name}`,
+    );
 
-    const { name, import_from } = mat
-      .data as unknown as FunctionMaterializerData;
-
-    if (import_from == null) { // function
-      let task: TaskExec;
-      const status = this.codes.funcs[name];
-      if (status == null) {
-        ensure(
-          Object.hasOwnProperty.call(predefinedFuncs, name),
-          `unknown function "${name}"`,
-        );
-        task = predefinedFuncs[name];
-      } else {
-        if (!status.loaded) {
-          status.task = new Function(
-            `"use strict"; return ${status.code.source}`,
-          )();
-          status.loaded = true;
+    switch (mat.name) {
+      case "predefined_function": {
+        const name = mat.data.name as string;
+        if (Object.prototype.hasOwnProperty.call(predefinedFuncs, name)) {
+          const fn = predefinedFuncs[mat.data.name as string];
+          return ({ _: context, ...args }) => {
+            verbose && logger.info(`exec predefined func: ${name}`);
+            return fn(args, context);
+          };
+        } else {
+          throw new Error(`Cannot find predefined function "${name}"}`);
         }
-        task = status.task!;
       }
-      return ({ _: context, ...args }) => {
-        logger.info(`exec func "${name}"`);
-        return task(args, context);
-      };
+
+      case "function": {
+        if (!this.inlineFns.has(mat)) {
+          const { fn_expr } = mat.data as unknown as FunctionMaterializerData;
+          this.inlineFns.set(
+            mat,
+            new Function(
+              `"use strict"; return ${fn_expr}`,
+            )(),
+          );
+        }
+        const fn = this.inlineFns.get(mat)!;
+        return ({ _: context, ...args }) => {
+          verbose && logger.info(`exec func: ${mat.data.fn_expr as string}`);
+          return fn(args, context);
+        };
+      }
+
+      case "import_function": {
+        const modMat = this.tg.materializers[mat.data.mod as number];
+        if (!this.modules.has(modMat)) {
+          this.modules.set(
+            modMat,
+            Promise.resolve((async () => {
+              return await import(
+                `data:application/javascript;charset=utf8,${
+                  encodeURIComponent(mat.data.code as string)
+                }`
+              );
+            })()),
+          );
+        }
+
+        const fnName = mat.data.name as string;
+        const modulePromise = this.modules.get(modMat)!;
+
+        return async ({ _: context, ...args }) => {
+          verbose && logger.info(`exec func "${fnName}" from module`);
+          const m = await modulePromise;
+          m[fnName](args, context);
+        };
+      }
+      default:
+        throw new Error(`Invalid materializer name ${mat.name}`);
     }
-
-    // module
-    const status = this.codes.modules[import_from];
-    ensure(status != null, `unknown module "${name}"`);
-    const mod = Promise.resolve((async () => {
-      if (status.loadedAt == null) {
-        const path = await Deno.makeTempFile({ suffix: ".js" });
-        await Deno.writeTextFile(path, status.code.source);
-        const mod = await import(path);
-        await Deno.remove(path);
-        status.loadedAt = path;
-        return mod;
-      } else {
-        return await import(status.loadedAt);
-      }
-    })());
-
-    return async ({ _: context, ...args }) => {
-      const m = await mod;
-      logger.info(`exec func "${name}" from module "${status.loadedAt}"`);
-      return m[name](args, context);
-    };
   }
 }

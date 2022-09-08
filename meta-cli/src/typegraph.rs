@@ -13,7 +13,6 @@ pub struct Typegraph {
     pub materializers: Vec<Materializer>,
     pub runtimes: Vec<TGRuntime>,
     pub policies: Vec<Policy>,
-    pub codes: Vec<Code>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
