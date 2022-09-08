@@ -7,12 +7,12 @@ from typegraph.types import typedefs as t
 def make_policy(g, name, fn):
     pol = t.policy(
         t.struct(),
-        worker.JavascriptMat(g.fun(worker.JavascriptMat.lift(fn), name=name)),
+        worker.JavascriptMat(worker.JavascriptMat.lift(fn)),
     )
     return t.func(
         t.struct({"a": t.integer()}),
         t.struct({"a": t.integer()}),
-        deno.FunMat("identity"),
+        deno.PredefinedFunMat("identity"),
     ).add_policy(pol)
 
 

@@ -1,11 +1,11 @@
 from dataclasses import dataclass
+from dataclasses import InitVar
 from dataclasses import KW_ONLY
+import os
 from typing import Optional
 
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
-
-# from typegraph.materializers.worker import WorkerRuntime
 
 
 @dataclass(eq=True, frozen=True)
@@ -13,17 +13,64 @@ class DenoRuntime(Runtime):
     runtime_name: str = "deno"
 
 
+# Inlined fuction
 @dataclass(eq=True, frozen=True)
 class FunMat(Materializer):
-    name: str
+    fn_expr: str  # function expression
     _: KW_ONLY
-    import_from: Optional[str] = None  # module name
     runtime: Runtime = DenoRuntime()  # DenoRuntime or WorkerRuntime
     materializer_name: str = "function"
 
 
 @dataclass(eq=True, frozen=True)
-class IdentityMat(FunMat):
+class PredefinedFunMat(Materializer):
+    name: str
+    _: KW_ONLY
+    runtime: Runtime = DenoRuntime()
+    materializer_name: str = "predefined_function"
+
+
+# Import function from a module
+@dataclass(eq=True, frozen=True)
+class ImportFunMat(Materializer):
+    mod: "ModuleMat"
+    name: str = "default"
+    _: KW_ONLY
+    runtime: Runtime = DenoRuntime()  # should be the same runtime as `mod`
+    materializer_name: str = "import_function"
+
+
+@dataclass(eq=True, frozen=True)
+class ModuleMat(Materializer):
+    file: InitVar[str] = None
+    _: KW_ONLY
+    code: Optional[str] = None
+    runtime: Runtime = DenoRuntime()  # DenoRuntime or WorkerRuntime
+    materializer_name: str = "module"
+
+    def __post_init__(self, file: Optional[str]):
+        if file is None:
+            if self.code is None:
+                raise Exception("you must give source code for the module")
+        else:
+            if self.code is not None:
+                raise Exception("you must only give either source file or source code")
+
+            from typegraph.graphs.typegraph import get_absolute_path
+
+            path = get_absolute_path(file)
+            if os.environ["DONT_READ_EXTERNAL_TS_FILES"]:
+                object.__setattr__(self, "code", f"file:{path}")
+            else:
+                with open(path) as f:
+                    object.__setattr__(self, "code", f.read())
+
+    def imp(self, name: str = "default") -> FunMat:
+        return ImportFunMat(self, name, runtime=self.runtime)
+
+
+@dataclass(eq=True, frozen=True)
+class IdentityMat(PredefinedFunMat):
     name: str = "identity"
 
 

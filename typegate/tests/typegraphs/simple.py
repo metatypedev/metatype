@@ -10,7 +10,7 @@ with TypeGraph("testing") as g:
         t.struct({"nested": t.struct({"arg": t.integer()}).named("Nested")}),
         t.integer(),
         worker.JavascriptMat(
-            g.fun(worker.JavascriptMat.lift(lambda args: args["nested"]["arg"])),
+            worker.JavascriptMat.lift(lambda args: args["nested"]["arg"])
         ),
     )
 
@@ -19,7 +19,7 @@ with TypeGraph("testing") as g:
         test=t.func(
             t.struct({"a": t.integer().named("arg1")}).named("inp"),
             t.struct({"a": t.integer().named("deps")}).named("res"),
-            deno.FunMat("identity"),
+            deno.PredefinedFunMat("identity"),
         )
         .named("f")
         .add_policy(policies.allow_all()),

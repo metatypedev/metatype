@@ -1,20 +1,9 @@
 import { Deferred, deferred } from "std/async/deferred.ts";
 import { ComputeStage } from "../engine.ts";
-import type { TypeMaterializer } from "../typegraph.ts";
+import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
-import mapValues from "https://deno.land/x/lodash@4.17.15-es/mapValues.js";
-import {
-  CodeList,
-  Codes,
-  createFuncStatus,
-  createModuleStatus,
-  FuncStatus,
-  FuncTask,
-  FunctionMaterializerData,
-  ModuleStatus,
-  ModuleTask,
-} from "./utils/codes.ts";
+import { FuncTask, ImportFuncTask } from "./utils/codes.ts";
 import { ensure } from "../utils.ts";
 import * as ast from "graphql_ast";
 
@@ -26,36 +15,19 @@ const workerFile = new URL("../src/runtimes/utils/worker.ts", Deno.mainModule)
 export class WorkerRuntime extends Runtime {
   w: OnDemandWorker;
 
-  private constructor(private name: string, lazy: boolean, codes: Codes) {
+  private constructor(name: string, lazy: boolean, tg: TypeGraphDS) {
     super();
-    this.w = new OnDemandWorker(name, lazy, codes);
+    this.w = new OnDemandWorker(name, lazy, tg);
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { typegraph: tg, materializers, config, args } = params;
+    const { typegraph: tg, config, args } = params;
 
-    for (const { name } of materializers) {
-      ensure(name === "function", `unexpected materializer type "${name}"`);
-    }
-
-    const modules = mapValues(
-      CodeList.from(tg.codes)
-        .filterType("module")
-        .byNamesIn(materializers.map(({ data }) => data.import_from as string)),
-      createModuleStatus,
-    ) as Record<string, ModuleStatus>;
-
-    const funcs = mapValues(
-      CodeList.from(tg.codes)
-        .filterType("func")
-        .byNamesIn(materializers.map(({ data }) => data.name as string)),
-      createFuncStatus,
-    ) as Record<string, FuncStatus>;
-
-    return new WorkerRuntime(args.name as string, config.lazy as boolean, {
-      modules,
-      funcs,
-    });
+    return new WorkerRuntime(
+      args.name as string,
+      config.lazy as boolean ?? false,
+      tg,
+    );
   }
 
   deinit(): Promise<void> {
@@ -79,12 +51,16 @@ export class WorkerRuntime extends Runtime {
   }
 
   delegate(mat: TypeMaterializer): Resolver {
-    ensure(mat.name === "function", `unsupported materializer ${mat.name}`);
+    ensure(
+      mat.name === "function" || mat.name === "import_function" ||
+        mat.name === "predefined_function",
+      `unsupported materializer ${mat.name}`,
+    );
     return async ({ _: context, ...args }) => {
       return await this.w.execTask({
         args,
         context,
-        matArgs: mat.data as unknown as FunctionMaterializerData,
+        mat,
       });
     };
   }
@@ -93,7 +69,7 @@ export class WorkerRuntime extends Runtime {
 interface TaskInit {
   args: Record<string, unknown>;
   context: Record<string, string>;
-  matArgs: FunctionMaterializerData;
+  mat: TypeMaterializer;
 }
 
 interface TaskData {
@@ -108,7 +84,6 @@ const inactivityIntervalMs = 15_000;
 class OnDemandWorker {
   lazyWorker?: Worker;
   name: string;
-  readonly codes: Codes;
 
   tasks: Map<number, TaskData> = new Map();
   counter = 0;
@@ -116,17 +91,16 @@ class OnDemandWorker {
   gcState = 0;
   gcInterval?: number;
 
-  modules: Map<string, ModuleStatus> = new Map();
-  funcs: Map<string, FuncStatus> = new Map();
+  modules: Map<TypeMaterializer, Promise<string>> = new Map();
+  inlineFns: Map<TypeMaterializer, number> = new Map();
 
-  constructor(name: string, lazy: boolean, codes: Codes) {
+  constructor(name: string, lazy: boolean, private tg: TypeGraphDS) {
     this.name = name;
     if (lazy) {
       this.enableLazyWorker();
     } else {
       this.worker();
     }
-    this.codes = codes;
   }
 
   enableLazyWorker() {
@@ -182,15 +156,18 @@ class OnDemandWorker {
           },
         },
       } as WorkerOptions);
-      this.lazyWorker.onmessage = (event) => {
+      this.lazyWorker.onmessage = async (event) => {
         const { id, data } = event.data as { id: number; data: unknown };
         const task = this.tasks.get(id)!;
         task.promise.resolve(data);
-        task.hooks.forEach((hook) => hook());
+        for await (const hook of task.hooks) {
+          await hook();
+        }
         this.tasks.delete(id);
       };
       this.lazyWorker.onerror = (error) => {
-        console.error(error);
+        // console.error(error);
+        throw error;
       };
     }
     return this.lazyWorker;
@@ -203,60 +180,61 @@ class OnDemandWorker {
   }
 
   async execTask(task: TaskInit): Promise<unknown> {
-    const {
-      args,
-      context,
-      matArgs: { name, import_from },
-    } = task;
+    const { args, context, mat } = task;
 
-    if (import_from == null) {
-      // function
-      const status = this.codes.funcs[name];
-      ensure(status != null, `unknown function "${name}"`);
-      const wrappedCode = {} as { code?: string };
-      if (!status.loaded) {
-        wrappedCode.code = status.code.source;
-        status.loaded = true;
+    switch (mat.name) {
+      case "function": {
+        const id = this.nextId();
+        let fnRef: Pick<FuncTask, "fnId" | "code">;
+        if (!this.inlineFns.has(mat)) {
+          this.inlineFns.set(mat, id);
+          fnRef = { fnId: id, code: mat.data.fn_expr as string };
+        } else {
+          fnRef = { fnId: this.inlineFns.get(mat)! };
+        }
+        const promise = deferred<unknown>();
+        this.worker().postMessage({
+          type: "func",
+          id,
+          args,
+          context,
+          ...fnRef,
+        } as FuncTask);
+
+        this.tasks.set(id, { promise, hooks: [] });
+        return promise;
       }
 
-      const promise = deferred<unknown>();
-      const id = this.nextId();
-      this.worker().postMessage({
-        type: "func",
-        name,
-        id,
-        args,
-        context,
-        ...wrappedCode,
-      } as FuncTask);
+      case "import_function": {
+        const modMat = this.tg.materializers[mat.data.mod as number];
+        const hooks = [] as Array<() => Promise<void>>;
+        if (!this.modules.has(modMat)) {
+          const modPromise = Promise.resolve((async () => {
+            const path = await Deno.makeTempFile({ suffix: ".js" });
+            await Deno.writeTextFile(path, modMat.data.code as string);
+            return path;
+          })());
+          this.modules.set(modMat, modPromise);
+          hooks.push(async () => {
+            const mod = await modPromise;
+            await Deno.remove(mod);
+          });
+        }
+        const module = await this.modules.get(modMat)!;
+        const promise = deferred<unknown>();
+        const id = this.nextId();
+        this.worker().postMessage({
+          type: "import_func",
+          id,
+          module,
+          args,
+          context,
+          name: mat.data.name as string,
+        } as ImportFuncTask);
 
-      this.tasks.set(id, { promise, hooks: [] });
-      return promise;
-    } else {
-      // module
-      const status = this.codes.modules[import_from];
-      ensure(status != null, `unknown module "${import_from}"`);
-      const hooks = [] as Array<() => void>;
-      if (status.loadedAt == null) {
-        const path = await Deno.makeTempFile({ suffix: ".js" });
-        await Deno.writeTextFile(path, status.code.source);
-        status.loadedAt = path;
-        hooks.push(() => Deno.remove(path));
+        this.tasks.set(id, { promise, hooks });
+        return promise;
       }
-
-      const promise = deferred<unknown>();
-      const id = this.nextId();
-      this.worker().postMessage({
-        type: "module",
-        name,
-        id,
-        path: status.loadedAt,
-        args,
-        context,
-      } as ModuleTask);
-
-      this.tasks.set(id, { promise, hooks });
-      return promise;
     }
   }
 }

@@ -10,7 +10,6 @@ use std::fmt::Write as _;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 
 lazy_static! {
     static ref TS_FORMAT_CONFIG: Configuration = {
@@ -33,10 +32,16 @@ struct FuncData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct FuncMatData {
+struct ImportFuncMatData {
     serial: bool,
     name: String,
-    import_from: Option<String>,
+    #[serde(rename = "mod")]
+    module: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ModuleMatData {
+    code: String,
 }
 
 pub fn codegen<P>(tg: Typegraph, base_dir: P) -> Result<()>
@@ -65,6 +70,12 @@ struct ModuleInfo {
     exports: RefCell<Option<HashSet<String>>>, // names of exported functions
 }
 
+struct GenItem {
+    func_data: FuncData,
+    path: String,
+    name: String,
+}
+
 struct Codegen<'a> {
     path: PathBuf,
     base_dir: PathBuf,
@@ -89,19 +100,30 @@ impl<'a> Codegen<'a> {
 
         let ts_modules = {
             let mut modules = HashMap::new();
-            for code in tg.codes.iter() {
-                if &code.typ == "module" {
-                    if let Some(path) = code.source.strip_prefix("file:") {
-                        let mod_name = &code.name;
-                        println!("module {mod_name}: {path}");
-                        modules.insert(
-                            code.name.clone(),
-                            ModuleInfo {
-                                path: PathBuf::from_str(path).unwrap(),
-                                exports: RefCell::new(None), // lazy
-                            },
-                        );
-                    }
+            for mat in tg.materializers.iter() {
+                let runtime = &tg.runtimes[mat.runtime as usize];
+                if &runtime.name != "deno" && &runtime.name != "worker" {
+                    continue;
+                }
+                if mat.name != "module" {
+                    continue;
+                }
+                let code: String =
+                    serde_json::from_value(mat.data.get("code").unwrap().clone()).unwrap();
+                if let Some(relpath) = code.strip_prefix("file:") {
+                    println!("module: {relpath}");
+                    let path = {
+                        let mut path = base_dir.clone();
+                        path.push(relpath);
+                        path
+                    };
+                    modules.insert(
+                        relpath.to_string(),
+                        ModuleInfo {
+                            path,
+                            exports: RefCell::new(None), // lazy
+                        },
+                    );
                 }
             }
             modules
@@ -124,15 +146,30 @@ impl<'a> Codegen<'a> {
             let func_data: FuncData = serde_json::from_value(tpe.data.clone().into_json())
                 .expect("invalid type data for func");
             let mat = self.tg.materializers[func_data.materializer as usize].clone();
-            if mat.name == "function" {
-                let mat_data: FuncMatData = serde_json::from_value(mat.data.into_json())
+            let runtime = &self.tg.runtimes[mat.runtime as usize];
+            if runtime.name != "deno" && runtime.name != "worker" {
+                continue;
+            }
+            if mat.name == "import_function" {
+                let mat_data: ImportFuncMatData = serde_json::from_value(mat.data.into_json())
                     .expect("invalid materializer data for function materializer");
-                if let Some(mod_name) = mat_data.import_from.as_ref() {
-                    if self.ts_modules.contains_key(mod_name)
-                        && mat_data.import_from.is_some()
-                        && self.check_func(&mat_data)
-                    {
-                        gen_list.push((func_data, mat_data));
+                let module_mat = &self.tg.materializers[mat_data.module as usize];
+                let path: String =
+                    serde_json::from_value(module_mat.data.get("code").unwrap().clone()).unwrap();
+                if let Some(path) = path.strip_prefix("file:") {
+                    if self.ts_modules.contains_key(path) && self.check_func(path, &mat_data.name) {
+                        gen_list.push(GenItem {
+                            func_data,
+                            path: self
+                                .ts_modules
+                                .get(path)
+                                .unwrap()
+                                .path
+                                .to_str()
+                                .unwrap()
+                                .to_string(),
+                            name: mat_data.name.clone(),
+                        });
                     }
                 }
             }
@@ -153,12 +190,17 @@ impl<'a> Codegen<'a> {
             .collect())
     }
 
-    fn generate(&self, gen_list: Vec<(FuncData, FuncMatData)>) -> HashMap<String, String> {
+    fn generate(&self, gen_list: Vec<GenItem>) -> HashMap<String, String> {
         let mut map: HashMap<String, Vec<Result<String>>> = HashMap::default();
-        for (fn_data, mat_data) in gen_list.iter() {
-            map.entry(mat_data.import_from.clone().unwrap())
-                .and_modify(|l| l.push(self.gen_func(fn_data, mat_data)))
-                .or_insert_with(|| vec![self.gen_func(fn_data, mat_data)]);
+        for GenItem {
+            func_data,
+            path,
+            name,
+        } in gen_list.into_iter()
+        {
+            map.entry(path)
+                .and_modify(|l| l.push(self.gen_func(&func_data, &name)))
+                .or_insert_with(|| vec![self.gen_func(&func_data, &name)]);
         }
 
         let map = map
@@ -187,22 +229,18 @@ impl<'a> Codegen<'a> {
         crate::ts::parser::get_exported_functions(&module.body)
     }
 
-    /// Returns `true` if the function with the given materializer should be generated.
-    fn check_func(&self, mat_data: &FuncMatData) -> bool {
-        if let Some(mod_name) = mat_data.import_from.as_ref() {
-            if let Some(module) = self.ts_modules.get(mod_name) {
-                if module.exports.borrow().is_some() {
-                    let exports = module.exports.borrow();
-                    let exports = exports.as_ref().unwrap();
-                    !exports.contains(&mat_data.name)
-                } else {
-                    let exports = Self::exported_functions(&module.path);
-                    let ret = !exports.contains(&mat_data.name);
-                    *module.exports.borrow_mut() = Some(exports);
-                    ret
-                }
+    /// Returns `true` if the function named `name` should be generated in the specified file.
+    fn check_func(&self, path: &str, name: &str) -> bool {
+        if let Some(module) = self.ts_modules.get(path) {
+            if module.exports.borrow().is_some() {
+                let exports = module.exports.borrow();
+                let exports = exports.as_ref().unwrap();
+                !exports.contains(name)
             } else {
-                false
+                let exports = Self::exported_functions(&module.path);
+                let ret = !exports.contains(name);
+                *module.exports.borrow_mut() = Some(exports);
+                ret
             }
         } else {
             false
@@ -272,10 +310,10 @@ impl<'a> Codegen<'a> {
         }
     }
 
-    fn gen_func(&self, fn_data: &FuncData, mat_data: &FuncMatData) -> Result<String> {
+    fn gen_func(&self, fn_data: &FuncData, name: &str) -> Result<String> {
         // input type
         let inp_type_name = {
-            let mut name = mat_data.name.clone();
+            let mut name = name.to_string();
             let (lead, _) = name.split_at_mut(1);
             lead.make_ascii_uppercase();
             name.push_str("Input");
@@ -293,7 +331,7 @@ impl<'a> Codegen<'a> {
         let code = format!(
             "{}\nexport function {}({}: {}): {} {{\n  return {};\n}}",
             inp_typedef,
-            mat_data.name,
+            name,
             self.destructure_object(fn_data.input)?,
             inp_type_name,
             out_typespec,

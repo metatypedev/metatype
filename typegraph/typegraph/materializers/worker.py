@@ -35,7 +35,7 @@ class LambdaCollector(ast.NodeTransformer):
 
 @dataclass(eq=True, frozen=True)
 class JavascriptMat(Materializer):
-    name: str
+    fn_expr: str
     _: KW_ONLY
     runtime: Runtime = WorkerRuntime("js")
     materializer_name: str = "function"

@@ -3,7 +3,6 @@ from typegraph.graphs.builders import Graph
 from typegraph.graphs.builders import TypeMaterializer
 from typegraph.graphs.builders import TypeNode
 from typegraph.graphs.builders import TypeRuntime
-from typegraph.graphs.typegraph import Code
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import deno
 from typegraph.materializers import worker
@@ -96,14 +95,11 @@ class TestTypegraph:
                     TypeMaterializer(
                         name="function",
                         runtime=0,
-                        data=frozendict.frozendict(
-                            {"serial": False, "name": "x2", "import_from": None}
-                        ),
+                        data=frozendict.frozendict({"serial": False, "fn_expr": "x2"}),
                     )
                 ],
                 runtimes=[TypeRuntime(name="deno", data=frozendict.frozendict({}))],
                 policies=[],
-                codes=[],
             )
         )
 
@@ -118,7 +114,7 @@ class TestTypegraph:
                         "out": out,
                         "duration": t.gen(
                             t.integer().named("duration"),
-                            worker.JavascriptMat(g.fun("() => 1", name="f")),
+                            worker.JavascriptMat("() => 1"),
                         ).named("compute_duration"),
                         "self": g("f"),
                         "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),
@@ -251,13 +247,15 @@ class TestTypegraph:
                         name="function",
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"serial": False, "name": "getter", "import_from": None}
+                            {"serial": False, "fn_expr": "getter"}
                         ),
                     ),
                     TypeMaterializer(
                         name="function",
                         runtime=1,
-                        data=frozendict.frozendict({"serial": False, "name": "f"}),
+                        data=frozendict.frozendict(
+                            {"serial": False, "fn_expr": "() => 1"}
+                        ),
                     ),
                 ],
                 runtimes=[
@@ -267,6 +265,5 @@ class TestTypegraph:
                     ),
                 ],
                 policies=[],
-                codes=[Code(name="f", source="() => 1", type="func")],
             )
         )
