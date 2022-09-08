@@ -21,6 +21,17 @@ lazy_static! {
     static ref ENGINES: DashMap<String, engine::QueryEngine> = DashMap::new();
 }
 
+fn sentry_init() -> sentry::ClientInitGuard {
+    let dsn = std::env::var("SENTRY_DSN").unwrap_or_else(|_| "".to_string());
+    sentry::init((
+        dsn,
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            ..Default::default()
+        },
+    ))
+}
+
 #[deno_bindgen]
 fn init() {
     env_logger::init();
@@ -51,6 +62,7 @@ struct PrismaIntrospectionOut {
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut {
+    let _sentry = sentry_init();
     let fut = Introspection::introspect(input.datamodel);
     let introspection = RT.block_on(fut).unwrap();
     PrismaIntrospectionOut { introspection }
@@ -71,6 +83,7 @@ struct PrismaRegisterEngineOut {
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngineOut {
+    let _sentry = sentry_init();
     let conf = engine::ConstructorOptions {
         datamodel: input.datamodel,
         log_level: "info".to_string(),
@@ -102,6 +115,7 @@ struct PrismaUnregisterEngineOut {
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregisterEngineOut {
+    let _sentry = sentry_init();
     let (key, engine) = ENGINES.remove(&input.key).unwrap();
     RT.block_on(engine.disconnect()).unwrap();
     PrismaUnregisterEngineOut { key }
@@ -123,6 +137,7 @@ struct PrismaQueryOut {
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_query(input: PrismaQueryInp) -> PrismaQueryOut {
+    let _sentry = sentry_init();
     let body: request_handlers::GraphQlBody = serde_json::from_value(input.query).unwrap();
     let engine = ENGINES.get(&input.key).unwrap();
     let fut = engine.query(body, None);
