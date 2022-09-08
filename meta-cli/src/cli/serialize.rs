@@ -1,5 +1,6 @@
 use super::Action;
 use crate::typegraph::TypegraphLoader;
+use crate::utils::ensure_venv;
 use anyhow::anyhow;
 use anyhow::Result;
 use clap::Parser;
@@ -30,6 +31,7 @@ pub struct Serialize {
 
 impl Action for Serialize {
     fn run(&self, dir: String) -> Result<()> {
+        ensure_venv(&dir)?;
         let loader = TypegraphLoader::new().serialized();
         let tgs = match &self.file {
             Some(file) => loader.load_file(file)?,
