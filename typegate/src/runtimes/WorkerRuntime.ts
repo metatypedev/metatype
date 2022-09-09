@@ -5,6 +5,7 @@ import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
 import { FuncTask, ImportFuncTask } from "./utils/codes.ts";
 import { ensure } from "../utils.ts";
+import * as ast from "graphql_ast";
 
 const logger = getLogger(import.meta);
 
