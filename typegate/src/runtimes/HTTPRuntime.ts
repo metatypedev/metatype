@@ -1,11 +1,5 @@
 import { ComputeStage } from "../engine.ts";
-import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import {
-  Resolver,
-  Runtime,
-  RuntimeConfig,
-  RuntimeInitParams,
-} from "./Runtime.ts";
+import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { associateWith } from "std/collections/mod.ts";
 import { join } from "std/path/mod.ts";
 import { JSONValue } from "../utils.ts";
@@ -14,6 +8,7 @@ import {
   MatOptions,
   replaceDynamicPathParams,
 } from "./utils/http.ts";
+import * as ast from "graphql_ast";
 
 // FIXME better solution require
 const traverseLift = (obj: JSONValue): any => {

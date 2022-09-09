@@ -551,3 +551,61 @@ test("multiple relationships", async (t) => {
     })
     .on(e);
 });
+
+test("GraphQL variables", async (t) => {
+  const tgPath = "typegraphs/prisma.py";
+  const e = await t.pythonFile(tgPath);
+
+  await t.should("drop schema and recreate", async () => {
+    await gql`
+      mutation a {
+        executeRaw(
+          query: "DROP SCHEMA IF EXISTS test CASCADE"
+          parameters: "[]"
+        )
+      }
+    `
+      .expectData({
+        executeRaw: 0,
+      })
+      .on(e);
+    await meta("prisma", "apply", "-f", tgPath);
+  });
+
+  await t.should("work with top-level variables", async () => {
+    await gql`
+      mutation CreateRecord($data: recordCreateInput!) {
+        createOneRecord(data: $data) {
+          id
+        }
+      }
+    `
+      .withVars({
+        data: {
+          name: "name",
+          age: 25,
+        },
+      })
+      .withExpect(({ data }) => {
+        assert(v4.validate(data.createOneRecord.id));
+      })
+      .on(e);
+  });
+
+  await t.should("work with nested variables", async () => {
+    await gql`
+      mutation CreateRecord($name: String!, $age: Int!) {
+        createOneRecord(data: { name: $name, age: $age }) {
+          id
+        }
+      }
+    `.withVars({
+      name: "name",
+      age: 25,
+    })
+      .withExpect(({ data }) => {
+        assert(v4.validate(data.createOneRecord.id));
+      })
+      .on(e);
+  });
+});

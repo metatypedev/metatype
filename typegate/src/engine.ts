@@ -2,7 +2,7 @@ import Dataloader from "https://cdn.skypack.dev/dataloader@2.0.0?dts";
 import { Kind, parse } from "graphql";
 import type * as ast from "graphql_ast";
 import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
-import { b, ensure, JSONValue, mapo, Maybe } from "./utils.ts";
+import { b, ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
 import type { TypeNode } from "./typegraph.ts";
@@ -46,11 +46,15 @@ export const initTypegraph = async (
   return engine;
 };
 
-// A function that computes argument from context and variables
-interface ComputeArg {
+/**
+ * A function that computes argument from context and variables
+ * Pass null `variables` to get a FromVars<_> that computes the argument value
+ * from variables or returns the variable name if the `variables` param is null.
+ */
+export interface ComputeArg {
   (
     context: Record<string, unknown>,
-    variables: Record<string, unknown>,
+    variables: Record<string, unknown> | null,
   ): unknown;
 }
 
@@ -80,6 +84,7 @@ a(b: c) {
 */
 export class ComputeStage {
   props: ComputeStageProps;
+  varTypes: Record<string, string> = {};
 
   constructor(props: ComputeStageProps) {
     this.props = props;
@@ -87,6 +92,14 @@ export class ComputeStage {
 
   id(): string {
     return this.props.path.join(".");
+  }
+
+  varType(varName: string): string {
+    const typ = this.varTypes[varName];
+    if (typ == null) {
+      throw new Error(`variable not found: $${varName}`);
+    }
+    return typ;
   }
 
   toString(): string {
@@ -210,6 +223,7 @@ export class Engine {
             _: {
               parent: parent ?? {},
               context,
+              variables,
               ...deps,
             },
           })
@@ -256,11 +270,27 @@ export class Engine {
       serial,
     );
 
+    const varTypes: Record<string, string> =
+      (operation?.variableDefinitions ?? []).reduce(
+        (agg, { variable, type }) => ({
+          ...agg,
+          [variable.name.value]: unparse(type.loc!),
+        }),
+        {},
+      );
+
+    for (const stage of stages) {
+      stage.varTypes = varTypes;
+    }
+
     const policies = this.tg.preparePolicies(stages);
     return [stages, policies];
   }
 
-  materialize(stages: ComputeStage[], verbose: boolean): ComputeStage[] {
+  materialize(
+    stages: ComputeStage[],
+    verbose: boolean,
+  ): ComputeStage[] {
     //verbose && console.log(stages);
 
     const stagesMat: ComputeStage[] = [];
@@ -471,6 +501,9 @@ export class Engine {
     if (check != null) {
       // scalar type
       if (!check(value)) {
+        console.error(
+          `expected type ${typeName}, got value ${JSON.stringify(value)}`,
+        );
         throw new Error(`variable ${label} must be a ${typeName}`);
       }
       return;
