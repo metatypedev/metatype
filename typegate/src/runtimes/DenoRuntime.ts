@@ -9,7 +9,6 @@ import {
 } from "./utils/codes.ts";
 import { ensure } from "../utils.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import * as ast from "graphql_ast";
 
 const logger = getLogger(import.meta);
 
