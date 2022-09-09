@@ -7,6 +7,7 @@ use crate::prisma::engine;
 use dashmap::DashMap;
 use lazy_static::lazy_static;
 use log::info;
+use static_init::dynamic;
 use std::{collections::BTreeMap, panic, path::PathBuf, str::FromStr};
 use tokio::runtime::Runtime;
 
@@ -20,6 +21,18 @@ lazy_static! {
     };
     static ref ENGINES: DashMap<String, engine::QueryEngine> = DashMap::new();
 }
+
+#[dynamic]
+static SENTRY: sentry::ClientInitGuard = {
+    let dsn = std::env::var("SENTRY_DSN").unwrap_or_else(|_| "".to_string());
+    sentry::init((
+        dsn,
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            ..Default::default()
+        },
+    ))
+};
 
 #[deno_bindgen]
 fn init() {
