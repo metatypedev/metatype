@@ -20,7 +20,6 @@ class TypePolicy:
 class TypeNode:
     name: str
     typedef: str
-    edges: Tuple[int]
     policies: Tuple[int]
     runtime: int
     data: frozendict
@@ -141,12 +140,10 @@ def build(tg: typegraph.TypeGraph):
                 )
                 for p in node.policies
             ]
-            edges = [build(e) for e in node.edges]
 
             ret = TypeNode(
                 name=node.node,
                 typedef=node.typedef,
-                edges=tuple(edges),
                 policies=tuple(pol),
                 runtime=build(node.runtime),
                 data=frozendict(data),
