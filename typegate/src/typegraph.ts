@@ -26,19 +26,13 @@ import { WorkerRuntime } from "./runtimes/WorkerRuntime.ts";
 import { b, ensure, mapo } from "./utils.ts";
 import { compileCodes } from "./utils/swc.ts";
 import { v4 as uuid } from "std/uuid/mod.ts";
+import { ListNode, StructNode, TypeNode } from "./type-node.ts";
+
+export type { TypeNode };
 
 interface TypePolicy {
   name: string;
   materializer: number;
-}
-
-export interface TypeNode {
-  name: string;
-  typedef: string;
-  edges: Array<number>;
-  policies: Array<number>;
-  runtime: number;
-  data: Record<string, unknown>;
 }
 
 export interface TypeMaterializer {
@@ -66,7 +60,6 @@ const stringTypeNode: TypeNode = {
   // FIXME: remove dummy
   name: "string",
   typedef: "string",
-  edges: [],
   policies: [],
   runtime: -1,
   data: {},
@@ -171,7 +164,7 @@ export class TypeGraph {
   }
 
   materializer(idx: number): TypeMaterializer {
-    return this.tg.types[idx];
+    return this.tg.materializers[idx];
   }
 
   runtime(idx: number): TypeRuntime {
@@ -278,7 +271,7 @@ export class TypeGraph {
     }
 
     if (arg.typedef === "optional") {
-      return this.collectArg(fieldArg, arg.edges[0], parentContext);
+      return this.collectArg(fieldArg, arg.data.of, parentContext);
     }
 
     const { value: argValue } = fieldArg;
@@ -428,7 +421,7 @@ export class TypeGraph {
     parentStage: ComputeStage | undefined = undefined,
     serial = false,
   ): ComputeStage[] {
-    const parentType = this.type(parentIdx);
+    const parentType = this.type(parentIdx) as StructNode;
     const stages: ComputeStage[] = [];
 
     const parentSelection = graphql.resolveSelection(
@@ -565,11 +558,11 @@ export class TypeGraph {
           );
         } else if (
           fieldType.typedef === "optional" &&
-          this.type(fieldType.edges[0]).typedef === "list"
+          this.type(fieldType.data.of).typedef === "list"
         ) {
-          const subTypeIdx = fieldType.edges[0];
-          const subType = this.type(subTypeIdx);
-          const subSubTypeIdx = subType.edges[0];
+          const subTypeIdx = fieldType.data.of;
+          const subType = this.type(subTypeIdx) as ListNode;
+          const subSubTypeIdx = subType.data.of;
           const subSubType = this.type(subSubTypeIdx);
 
           if (subSubType.typedef === "struct") {
@@ -590,7 +583,7 @@ export class TypeGraph {
           fieldType.typedef === "list" ||
           fieldType.typedef === "optional"
         ) {
-          const subTypeIdx = fieldType.edges[0];
+          const subTypeIdx = fieldType.data.of;
           const subType = this.type(subTypeIdx);
 
           if (subType.typedef === "struct") {
@@ -620,7 +613,7 @@ export class TypeGraph {
         dependencies.push(parentStage.id());
       }
 
-      const [inputIdx, outputIdx] = fieldType.edges;
+      const { input: inputIdx, output: outputIdx } = fieldType.data;
       const outputType = this.type(outputIdx);
       const checks = outputType.policies.map((p) => this.policy(p).name);
       if (checks.length > 0) {
@@ -628,10 +621,11 @@ export class TypeGraph {
       }
       const args: Record<string, ComputeArg> = {};
 
-      const argSchema = this.tg.types[inputIdx].data.binds as Record<
-        string,
-        number
-      >;
+      const argSchema = (this.tg.types[inputIdx] as StructNode).data
+        .binds as Record<
+          string,
+          number
+        >;
       const fieldArgsIdx: Record<string, ast.ArgumentNode> = (
         fieldArgs ?? []
       ).reduce(
@@ -708,11 +702,11 @@ export class TypeGraph {
         );
       } else if (
         outputType.typedef === "optional" &&
-        this.type(outputType.edges[0]).typedef === "list"
+        this.type(outputType.data.of).typedef === "list"
       ) {
-        const subTypeIdx = outputType.edges[0];
-        const subType = this.type(subTypeIdx);
-        const subSubTypeIdx = subType.edges[0];
+        const subTypeIdx = outputType.data.of;
+        const subType = this.type(subTypeIdx) as ListNode;
+        const subSubTypeIdx = subType.data.of;
         const subSubType = this.type(subSubTypeIdx);
 
         if (subSubType.typedef === "struct") {
@@ -733,7 +727,7 @@ export class TypeGraph {
         outputType.typedef === "list" ||
         outputType.typedef === "optional"
       ) {
-        const subTypeIdx = outputType.edges[0];
+        const subTypeIdx = outputType.data.of;
         const subType = this.type(subTypeIdx);
         if (subType.typedef === "struct") {
           stages.push(
@@ -811,17 +805,15 @@ export class TypeGraph {
       return x;
     };
 
-    const edgesRes = type.edges.map((n) => this.type(n));
-
     if (type.typedef === "list") {
-      if (edgesRes![0].typedef === "optional") {
+      if (this.type(type.data.of).typedef === "optional") {
         throw Error("D");
         //return (x: any) => x.flat().filter((c: any) => !!c);
       }
       return (x: any) => ensureArray(x).flat();
     }
     if (type.typedef === "optional") {
-      if (edgesRes![0].typedef === "list") {
+      if (this.type(type.data.of).typedef === "list") {
         return (x: any) =>
           ensureArray(x)
             .filter((c: any) => !!c)
