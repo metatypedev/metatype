@@ -3,6 +3,7 @@ import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
 import * as ast from "graphql_ast";
+import { StructNode } from "../type-node.ts";
 
 export class GoogleapisRuntime extends Runtime {
   constructor() {
@@ -56,10 +57,10 @@ export class GoogleapisRuntime extends Runtime {
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
     const { verb, url } = stage.props.materializer?.data ?? {};
 
-    const iteratorReadMask = stage.props.outType.data.binds &&
-      (stage.props.outType.data.binds as Record<string, unknown>)
-        .nextPageToken &&
-      (stage.props.outType.data.binds as Record<string, unknown>).totalSize;
+    const outType = stage.props.outType as StructNode;
+    const iteratorReadMask = outType.data.binds &&
+      outType.data.binds.nextPageToken &&
+      outType.data.binds.totalSize;
 
     const readMask: string[] = [];
     for (const field of sameRuntime) {

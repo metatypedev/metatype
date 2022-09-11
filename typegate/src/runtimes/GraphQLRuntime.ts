@@ -104,7 +104,6 @@ export class GraphQLRuntime extends Runtime {
         // dummy
         name: "string",
         typedef: "string",
-        edges: [],
         policies: [],
         runtime: -1,
         data: {},

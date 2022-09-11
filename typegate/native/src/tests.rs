@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Context, Result};
+use common::typegraph::Typegraph;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -7,37 +8,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 #[derive(Deserialize, Debug)]
-struct TypeNode {
-    name: String,
-    typedef: String,
-    edges: Vec<usize>,
-    policies: Vec<usize>,
-    runtime: usize,
-    data: HashMap<String, serde_json::Value>,
-}
-
-#[derive(Deserialize, Debug)]
-struct TypeMaterializer {
-    name: String,
-    runtime: usize,
-    data: HashMap<String, serde_json::Value>,
-}
-
-#[derive(Deserialize, Debug)]
-struct TypeRuntime {
-    name: String,
-    data: serde_json::Value,
-}
-
-#[derive(Deserialize, Debug)]
-struct TypeGraph {
-    types: Vec<TypeNode>,
-    materializers: Vec<TypeMaterializer>,
-    runtimes: Vec<TypeRuntime>,
-}
-
-#[derive(Deserialize, Debug)]
-struct PrismaRuntime {
+struct PrismaRuntimeData {
     connection_string: String,
     datasource: String,
     datamodel: String,
@@ -106,7 +77,7 @@ fn venv() -> HashMap<String, String> {
 }
 
 // TODO: cache
-fn load_typegraph<P: AsRef<Path>>(path: P) -> Result<TypeGraph> {
+fn load_typegraph<P: AsRef<Path>>(path: P) -> Result<Typegraph> {
     let p = Command::new(META_BIN.as_path())
         .arg("serialize")
         .arg("-f")
@@ -146,7 +117,11 @@ impl TestContext {
             .runtimes
             .into_iter()
             .filter(|r| &r.name == "prisma")
-            .map(|r| serde_json::from_value::<PrismaRuntime>(r.data))
+            .map(|r| {
+                serde_json::from_value::<PrismaRuntimeData>(serde_json::Value::Object(
+                    r.data.into_iter().collect::<serde_json::Map<_, _>>(),
+                ))
+            })
             .collect::<Result<Vec<_>, serde_json::Error>>()?
             .into_iter()
             .next()

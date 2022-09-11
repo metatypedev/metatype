@@ -41,7 +41,6 @@ class TestTypegraph:
                     TypeNode(
                         name="single_runtime",
                         typedef="struct",
-                        edges=(1,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -54,7 +53,6 @@ class TestTypegraph:
                     TypeNode(
                         name="f",
                         typedef="func",
-                        edges=(2, 4),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -64,7 +62,6 @@ class TestTypegraph:
                     TypeNode(
                         name="inp",
                         typedef="struct",
-                        edges=(3,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -77,7 +74,6 @@ class TestTypegraph:
                     TypeNode(
                         name="arg1",
                         typedef="integer",
-                        edges=(),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict({}),
@@ -85,7 +81,6 @@ class TestTypegraph:
                     TypeNode(
                         name="out",
                         typedef="integer",
-                        edges=(),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict({}),
@@ -133,7 +128,6 @@ class TestTypegraph:
                     TypeNode(
                         name="two_runtimes",
                         typedef="struct",
-                        edges=(1,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -146,7 +140,6 @@ class TestTypegraph:
                     TypeNode(
                         name="f",
                         typedef="func",
-                        edges=(2, 4),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -156,7 +149,6 @@ class TestTypegraph:
                     TypeNode(
                         name="inp",
                         typedef="struct",
-                        edges=(3,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -169,7 +161,6 @@ class TestTypegraph:
                     TypeNode(
                         name="arg1",
                         typedef="integer",
-                        edges=(),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict({}),
@@ -177,7 +168,6 @@ class TestTypegraph:
                     TypeNode(
                         name="res",
                         typedef="struct",
-                        edges=(5, 6, 1, 9),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -192,7 +182,6 @@ class TestTypegraph:
                     TypeNode(
                         name="out",
                         typedef="integer",
-                        edges=(),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict({}),
@@ -200,7 +189,6 @@ class TestTypegraph:
                     TypeNode(
                         name="compute_duration",
                         typedef="gen",
-                        edges=(7, 8),
                         policies=(),
                         runtime=1,
                         data=frozendict.frozendict(
@@ -210,7 +198,6 @@ class TestTypegraph:
                     TypeNode(
                         name="struct_5",
                         typedef="struct",
-                        edges=(),
                         policies=(),
                         runtime=1,
                         data=frozendict.frozendict(
@@ -223,7 +210,6 @@ class TestTypegraph:
                     TypeNode(
                         name="duration",
                         typedef="integer",
-                        edges=(),
                         policies=(),
                         runtime=1,
                         data=frozendict.frozendict({}),
@@ -231,7 +217,6 @@ class TestTypegraph:
                     TypeNode(
                         name="nested",
                         typedef="struct",
-                        edges=(5, 1),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
