@@ -1,5 +1,6 @@
 use crate::codegen;
 use crate::typegraph::TypegraphLoader;
+use crate::utils::ensure_venv;
 use anyhow::{Error, Ok, Result};
 use ignore::Match;
 use notify::event::ModifyKind;
@@ -25,6 +26,7 @@ pub struct Dev {}
 
 impl Action for Dev {
     fn run(&self, dir: String) -> Result<()> {
+        ensure_venv(&dir)?;
         let tgs = TypegraphLoader::new()
             .working_dir(&dir)
             .serialized()

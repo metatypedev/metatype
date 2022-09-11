@@ -1,3 +1,4 @@
+use crate::utils::ensure_venv;
 use crate::{codegen, typegraph::TypegraphLoader};
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -27,7 +28,8 @@ pub struct Deno {
 }
 
 impl Action for Deno {
-    fn run(&self, _dir: String) -> Result<()> {
+    fn run(&self, dir: String) -> Result<()> {
+        ensure_venv(&dir)?;
         let mut tgs = TypegraphLoader::new().load_file(&self.file)?;
         let file = Path::new(&self.file);
 
