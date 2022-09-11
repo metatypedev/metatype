@@ -5,6 +5,7 @@ mod prisma;
 mod tests;
 mod ts;
 mod typegraph;
+mod utils;
 
 use anyhow::{Ok, Result};
 use clap::{Parser, Subcommand};
