@@ -4,6 +4,7 @@ import * as ast from "graphql_ast";
 import { ensure } from "../utils.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
+import { FuncNode, StructNode } from "../type-node.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -65,17 +66,17 @@ export class TypeGraphRuntime extends Runtime {
   }
 
   getSchema = () => {
-    const root = this.tg.types[0];
+    const root = this.tg.types[0] as StructNode;
 
     const queriesBind: Record<string, number> = {};
     const mutationsBind: Record<string, number> = {};
 
     for (
       const [exposedName, exposedTypeIdx] of Object.entries(
-        root.data.binds as Record<string, number>,
+        root.data.binds,
       )
     ) {
-      const exposedType = this.tg.types[exposedTypeIdx];
+      const exposedType = this.tg.types[exposedTypeIdx] as FuncNode;
       const matIdx = exposedType.data.materializer;
       const mat = this.tg.materializers[matIdx as number];
       const serial = mat.data.serial;
@@ -133,7 +134,7 @@ export class TypeGraphRuntime extends Runtime {
           }
           if (type.typedef === "optional") {
             return collectInputType(
-              this.tg.types[type.edges[0] as number],
+              this.tg.types[type.data.of],
               history,
             );
           }
@@ -143,7 +144,9 @@ export class TypeGraphRuntime extends Runtime {
         const inputTypes = this.tg.types
           .filter((type) => type.typedef === "func")
           .flatMap((type) =>
-            collectInputType(this.tg.types[type.data.input as number])
+            collectInputType(
+              this.tg.types[(type as FuncNode).data.input as number],
+            )
           );
 
         return this.tg.types
@@ -258,7 +261,7 @@ export class TypeGraphRuntime extends Runtime {
     };
 
     if (type.typedef === "optional") {
-      const subtype = this.tg.types[type.edges[0]];
+      const subtype = this.tg.types[type.data.of];
       return this.formatType(subtype, false, asInput);
     }
 
@@ -284,7 +287,7 @@ export class TypeGraphRuntime extends Runtime {
     }
 
     // fixme provisory
-    if (type.typedef === "Type") {
+    if (type.typedef as string === "Type") {
       return {
         ...common,
         kind: () => TypeKind.SCALAR,
@@ -409,7 +412,7 @@ export class TypeGraphRuntime extends Runtime {
             inp.typedef === "struct",
             `${type} cannot be an input field, require struct`,
           );
-          return Object.entries(inp.data.binds as Record<string, number>)
+          return Object.entries((inp as StructNode).data.binds)
             .map(this.formatInputFields)
             .filter((f) => f !== null);
         },

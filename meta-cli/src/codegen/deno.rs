@@ -1,5 +1,5 @@
-use crate::typegraph::{TypeNode, Typegraph};
 use anyhow::{anyhow, Context, Result};
+use common::typegraph::{TypeNode, Typegraph};
 use dprint_plugin_typescript::{configuration::Configuration, format_text};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};

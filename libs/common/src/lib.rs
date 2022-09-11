@@ -1,3 +1,5 @@
+pub mod typegraph;
+
 pub fn get_version() -> String {
     let version = env!("CARGO_PKG_VERSION").to_string();
     if cfg!(debug_assertions) {

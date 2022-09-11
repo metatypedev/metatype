@@ -41,7 +41,6 @@ class TestDependency:
                     TypeNode(
                         name="single_runtime",
                         typedef="struct",
-                        edges=(1,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -54,7 +53,6 @@ class TestDependency:
                     TypeNode(
                         name="f",
                         typedef="func",
-                        edges=(2, 3),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -64,7 +62,6 @@ class TestDependency:
                     TypeNode(
                         name="no_arg",
                         typedef="struct",
-                        edges=(),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -77,7 +74,6 @@ class TestDependency:
                     TypeNode(
                         name="res",
                         typedef="struct",
-                        edges=(4, 7),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -90,7 +86,6 @@ class TestDependency:
                     TypeNode(
                         name="dep_a",
                         typedef="func",
-                        edges=(5, 9),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -100,7 +95,6 @@ class TestDependency:
                     TypeNode(
                         name="deps",
                         typedef="struct",
-                        edges=(6, 7, 8),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
@@ -115,7 +109,6 @@ class TestDependency:
                     TypeNode(
                         name="injection_a_2",
                         typedef="injection",
-                        edges=(7,),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict({"of": 7}),
@@ -123,7 +116,6 @@ class TestDependency:
                     TypeNode(
                         name="a",
                         typedef="integer",
-                        edges=(),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict({}),
@@ -131,7 +123,6 @@ class TestDependency:
                     TypeNode(
                         name="new",
                         typedef="integer",
-                        edges=(),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict({}),
@@ -139,7 +130,6 @@ class TestDependency:
                     TypeNode(
                         name="integer_5",
                         typedef="integer",
-                        edges=(),
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict({}),

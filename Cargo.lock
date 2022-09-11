@@ -455,7 +455,10 @@ dependencies = [
 name = "common"
 version = "0.0.1"
 dependencies = [
+ "anyhow",
  "git-version",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

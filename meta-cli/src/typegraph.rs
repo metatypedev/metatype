@@ -1,73 +1,10 @@
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{anyhow, Error, Result};
+use common::typegraph::Typegraph;
 use indoc::formatdoc;
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Typegraph {
-    pub types: Vec<TypeNode>,
-    pub materializers: Vec<Materializer>,
-    pub runtimes: Vec<TGRuntime>,
-    pub policies: Vec<Policy>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TypeNode {
-    pub name: String,
-    pub typedef: String,
-    pub edges: Vec<u32>,
-    pub policies: Vec<u32>,
-    pub runtime: u32,
-    pub data: HashMap<String, Value>,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct Materializer {
-    pub name: String,
-    pub runtime: u32,
-    pub data: HashMap<String, Value>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct TGRuntime {
-    pub name: String,
-    pub data: HashMap<String, Value>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Policy {
-    pub name: String,
-    pub materializer: u32,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Code {
-    pub name: String,
-    #[serde(rename = "type")]
-    pub typ: String,
-    pub source: String,
-}
-
-impl Typegraph {
-    fn from_str<S: AsRef<str>>(json: S) -> Result<Self> {
-        serde_json::from_str(json.as_ref()).context("could not load typegraph from JSON")
-    }
-}
-
-impl TypeNode {
-    pub fn get_struct_fields(&self) -> Result<HashMap<String, u32>> {
-        assert!(&self.typedef == "struct");
-        let binds = self
-            .data
-            .get("binds")
-            .ok_or_else(|| anyhow!("field \"binds\" not found in struct data"))?;
-        Ok(serde_json::from_value(binds.clone())?)
-    }
-}
 
 pub struct TypegraphLoader {
     skip_deno_modules: bool,
@@ -110,7 +47,7 @@ impl TypegraphLoader {
 
     fn from_json(tgs: HashMap<String, String>) -> Result<HashMap<String, Typegraph>> {
         tgs.into_iter()
-            .map(|(k, v)| Typegraph::from_str(&v).map(|tg| (k, tg)))
+            .map(|(k, v)| Typegraph::from_json(&v).map(|tg| (k, tg)))
             .collect::<Result<Vec<_>>>()
             .map(|v| v.into_iter().collect())
     }
