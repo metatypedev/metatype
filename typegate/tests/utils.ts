@@ -11,6 +11,9 @@ import { exists } from "std/fs/exists.ts";
 import { RuntimesConfig } from "../src/runtimes/Runtime.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { Register } from "../src/register.ts";
+import { typegate } from "../src/typegate.ts";
+import { signJWT } from "../src/crypto.ts";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
@@ -48,6 +51,32 @@ export async function shell(cmd: string[]): Promise<string> {
   return out;
 }
 
+export class SingleRegister extends Register {
+  constructor(private name: string, private engine: Engine) {
+    super();
+  }
+
+  set(_payload: string): Promise<string> {
+    return Promise.resolve(this.name);
+  }
+
+  remove(_name: string): Promise<void> {
+    return Promise.resolve();
+  }
+
+  list(): Engine[] {
+    return [this.engine];
+  }
+
+  get(name: string): Engine | undefined {
+    return this.has(name) ? this.engine : undefined;
+  }
+
+  has(name: string): boolean {
+    return name === this.name;
+  }
+}
+
 class MetaTest {
   t: Deno.TestContext;
   engines: Engine[];
@@ -72,7 +101,7 @@ class MetaTest {
     const path = await Deno.makeTempFile({ suffix: ".py" });
     try {
       await Deno.writeTextFile(path, code);
-      return this.pythonFile(path);
+      return this.pythonFile(path, config);
     } finally {
       await Deno.remove(path);
     }
@@ -163,29 +192,32 @@ export function gql(query: readonly string[], ...args: any[]) {
   const template = query
     .map((q, i) => `${q}${args[i] ? JSON.stringify(args[i]) : ""}`)
     .join("");
-  return new Q(template, {}, {}, []);
+  return new Q(template, {}, {}, {}, []);
 }
 
-type Context = Record<string, unknown>;
-type Expect = (res: Record<string, any>, ctx: Context) => void;
+type Info = Record<string, unknown>;
+type Expect = (res: Response) => Promise<void> | void;
 type Variables = Record<string, JSONValue>;
-type Headers = Record<string, string>;
+type Context = Record<string, string>;
 
 export class Q {
   query: string;
-  headers: Headers;
+  context: Context;
   variables: Variables;
+  headers: Record<string, string>;
   expects: Expect[];
 
   constructor(
     query: string,
-    headers: Headers,
+    context: Context,
     variables: Variables,
+    headers: Record<string, string>,
     expects: Expect[],
   ) {
     this.query = query;
-    this.headers = headers;
+    this.context = context;
     this.variables = variables;
+    this.headers = headers;
     this.expects = expects;
   }
 
@@ -198,16 +230,17 @@ export class Q {
       await Deno.writeTextFile(output, JSON.stringify(result, null, 2));
     }
     const result = Deno.readTextFile(output);
-    return new Q(await query, {}, {}, [])
+    return new Q(await query, {}, {}, {}, [])
       .expectValue(JSON.parse(await result))
       .on(engine);
   }
 
-  withHeaders(headers: Headers) {
+  withContext(context: Context) {
     return new Q(
       this.query,
-      deepMerge(this.headers, headers),
+      deepMerge(this.context, context),
       this.variables,
+      this.headers,
       this.expects,
     );
   }
@@ -215,28 +248,46 @@ export class Q {
   withVars(variables: Variables) {
     return new Q(
       this.query,
-      this.headers,
+      this.context,
       deepMerge(this.variables, variables),
+      this.headers,
       this.expects,
     );
   }
 
-  withExpect(expect: Expect) {
-    return new Q(this.query, this.headers, this.variables, [
+  withHeaders(headers: Record<string, string>) {
+    return new Q(
+      this.query,
+      this.context,
+      this.variables,
+      deepMerge(this.headers, headers),
+      this.expects,
+    );
+  }
+
+  private withExpect(expect: Expect) {
+    return new Q(this.query, this.context, this.variables, this.headers, [
       ...this.expects,
       expect,
     ]);
   }
 
   expectStatus(status: number) {
-    return this.withExpect((res, ctx) => {
-      assertEquals(ctx.status, status);
+    return this.withExpect((res) => {
+      assertEquals(res.status, status);
     });
   }
 
-  expectValue(result: any) {
-    return this.withExpect((res, ctx) => {
-      assertEquals(res, result);
+  expectBody(expect: (body: any) => Promise<void> | void) {
+    return this.withExpect(async (res) => {
+      const json = await res.json();
+      await expect(json);
+    });
+  }
+
+  expectValue(result: JSONValue) {
+    return this.expectBody((body) => {
+      assertEquals(body, result);
     });
   }
 
@@ -245,29 +296,43 @@ export class Q {
   }
 
   expectErrorContains(partial: string) {
-    return this.withExpect((res, ctx) => {
-      assertExists(Array.isArray(res.errors));
-      assert(res.errors.length > 0);
-      assertStringIncludes(res.errors[0].message, partial);
+    return this.expectBody((body) => {
+      assertExists(Array.isArray(body.errors));
+      assert(body.errors.length > 0);
+      assertStringIncludes(body.errors[0].message, partial);
     });
   }
 
   async on(engine: Engine) {
-    const { status, ...json } = await engine.execute(
-      this.query,
-      null,
-      this.variables,
-      this.headers,
-    );
-    const res = JSON.parse(JSON.stringify(json));
-    if (res.errors) {
-      for (const err of res.errors) {
-        console.error(err.message);
-      }
+    const { query, variables, headers, context, expects } = this;
+
+    const defaults: Record<string, string> = {};
+
+    if (Object.keys(context).length > 0) {
+      const jwt = await signJWT(context, 5);
+      defaults["Authorization"] = `Bearer ${jwt}`;
     }
-    const ctx = { status };
-    for (const expect of this.expects) {
-      expect(res, ctx);
+
+    const request = new Request(`http://typegate.local/${engine.name}`, {
+      method: "POST",
+      body: JSON.stringify(
+        {
+          query,
+          variables,
+          operationName: null,
+        },
+      ),
+      headers: {
+        ...defaults,
+        ...headers,
+        "Content-Type": "application/json",
+      },
+    });
+    const register = new SingleRegister(engine.name, engine);
+    const response = await typegate(register)(request);
+
+    for (const expect of expects) {
+      expect(response);
     }
   }
 }

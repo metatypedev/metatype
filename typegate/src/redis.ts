@@ -7,7 +7,16 @@ import {
 import * as Sentry from "sentry";
 import config from "./config.ts";
 
-export const redisConfig = {
+export type RedisConfig = {
+  hostname: string;
+  port: string;
+  password: string;
+  db: number;
+  maxRetryCount: number;
+  retryInterval: number;
+};
+
+export const redisConfig: RedisConfig = {
   hostname: config.redis_url.hostname,
   port: config.redis_url.port,
   password: config.redis_url.password,

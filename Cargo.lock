@@ -735,9 +735,9 @@ dependencies = [
 
 [[package]]
 name = "deno_bindgen"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f5761c521c43ee2700d4012c6dec99ee2c976236dab5028bed70e76c5c7b020"
+checksum = "a126ac811d92f54043e2b8191fe4790450b67f3aae40cd72d0004686d6b1f805"
 dependencies = [
  "deno_bindgen_macro",
  "serde",
@@ -746,9 +746,9 @@ dependencies = [
 
 [[package]]
 name = "deno_bindgen_macro"
-version = "0.6.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd5232eb25e44638fbd4b6a0be8b2225596eaa823f827a31a20e4f7dce614f8e"
+checksum = "2686d50c9b1d51d26f8ec1714a5257193afae61cffc7cdf9132b9c5f7af48a31"
 dependencies = [
  "Inflector",
  "proc-macro2",

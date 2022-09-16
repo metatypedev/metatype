@@ -1,3 +1,4 @@
+from typegraph.graphs.typegraph import Auth
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import PredefinedFunMat
@@ -17,6 +18,8 @@ def make_policy(g, name, fn):
 
 
 with TypeGraph("policies") as g:
+
+    g.add_auth(Auth.jwk("native"))
 
     g.expose(
         pol_true=make_policy(g, "true", lambda args: True),

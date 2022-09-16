@@ -137,7 +137,7 @@ export class TypeGraph {
     const typegraphName = typegraph.types[0].name;
     const { meta, runtimes } = typegraph;
 
-    const secrets = meta.secrets.reduce(
+    const secrets = meta.secrets.sort().reduce(
       (agg, secretName) => {
         return { ...agg, [secretName]: envOrFail(typegraphName, secretName) };
       },

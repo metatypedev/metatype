@@ -1,6 +1,7 @@
 import { getCookies } from "std/http/cookie.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { Engine } from "../engine.ts";
+import { OAuth2Auth } from "../auth.ts";
 
 export const renderDebugAuth = async (
   engine: Engine,
@@ -15,7 +16,7 @@ export const renderDebugAuth = async (
     : {};
   const provider = engine.tg.auths.get(claims.provider);
   const profile = provider && provider.authDS.protocol === "oauth2"
-    ? await provider.getProfile(claims.accessToken)
+    ? await (provider as OAuth2Auth).getProfile(claims.accessToken)
     : {};
   return `
     <a href="${typegraphApi}/auth/github?redirect_uri=${typegraphApi}/auth">Github</a><br />
