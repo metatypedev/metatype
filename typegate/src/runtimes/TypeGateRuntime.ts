@@ -1,10 +1,9 @@
-import { TypeGraphDS, TypeMaterializer, TypeNode } from "../typegraph.ts";
-import { ensure } from "../utils.ts";
-import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { Resolver, Runtime } from "./Runtime.ts";
 import { ComputeStage, Engine } from "../engine.ts";
-import { register } from "../register.ts";
+import { Register } from "../register.ts";
 import config from "../config.ts";
 import * as path from "std/path/mod.ts";
+import { TypeNode } from "../type-node.ts";
 
 interface StructField {
   name: string;
@@ -156,13 +155,13 @@ const dirName = path.dirname(path.fromFileUrl(import.meta.url));
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
 
-  private constructor() {
+  private constructor(private register: Register) {
     super();
   }
 
-  static init(): Runtime {
+  static init(register: Register): Runtime {
     if (!TypeGateRuntime.singleton) {
-      TypeGateRuntime.singleton = new TypeGateRuntime();
+      TypeGateRuntime.singleton = new TypeGateRuntime(register);
     }
     return TypeGateRuntime.singleton;
   }
@@ -213,8 +212,8 @@ export class TypeGateRuntime extends Runtime {
   }
 
   typegraphs = () => {
-    return register.list().map((e) => {
-      const { name, typedef, edges, data } = e.tg.type(0);
+    return this.register.list().map((e) => {
+      const { name, typedef, data } = e.tg.type(0);
       return {
         name: e.name,
         url: () => `${config.tg_external_url}/${e.name}`,
@@ -222,7 +221,6 @@ export class TypeGateRuntime extends Runtime {
           idx: 0,
           name,
           typedef,
-          edges,
           data: JSON.stringify(data),
         }),
       };
@@ -230,7 +228,7 @@ export class TypeGateRuntime extends Runtime {
   };
 
   typegraph = ({ name }: { name: string }) => {
-    const tg = register.get(name);
+    const tg = this.register.get(name);
     if (!tg) {
       return null;
     }
@@ -243,7 +241,7 @@ export class TypeGateRuntime extends Runtime {
   typesAsGraph = (
     { _: { parent: typegraph } }: { _: { parent: { name: string } } },
   ) => {
-    const tg = register.get(typegraph.name);
+    const tg = this.register.get(typegraph.name);
     if (!tg) {
       return null;
     }
@@ -255,7 +253,7 @@ export class TypeGateRuntime extends Runtime {
   serializedTypegraph = (
     { _: { parent: typegraph } }: { _: { parent: { name: string } } },
   ) => {
-    const tg = register.get(typegraph.name);
+    const tg = this.register.get(typegraph.name);
     if (!tg) {
       return null;
     }
@@ -272,19 +270,19 @@ export class TypeGateRuntime extends Runtime {
         `${fromString}\n`,
       );
     } else {
-      await register.set(fromString);
+      await this.register.set(fromString);
     }
     return { name };
   };
 
   removeTypegraph = ({ name }: { name: string }) => {
-    return register.remove(name);
+    return this.register.remove(name);
   };
 
   typenode = (
     { typegraphName, idx }: { typegraphName: string; idx: number },
   ) => {
-    const engine = register.get(typegraphName);
+    const engine = this.register.get(typegraphName);
     if (!engine) {
       return null;
     }
@@ -293,12 +291,11 @@ export class TypeGateRuntime extends Runtime {
     if (!type) {
       return null;
     }
-    const { name, typedef, edges, data } = type;
+    const { name, typedef, data } = type;
     return {
       idx,
       name,
       typedef,
-      edges,
       data: JSON.stringify(data),
     };
   };

@@ -5,6 +5,7 @@ import { deepMerge } from "std/collections/deep_merge.ts";
 import { mapKeys } from "std/collections/map_keys.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { parse } from "std/flags/mod.ts";
+import { get_version } from "../../bindings/bindings.ts";
 
 const defaults = {
   hostname: await getHostname(),
@@ -12,6 +13,7 @@ const defaults = {
   cookies_min_refresh_sec: 60 * 5,
   sentry_sample_rate: 1,
   sentry_traces_sample_rate: 1,
+  version: await get_version(),
 };
 
 const sources = [
@@ -57,6 +59,7 @@ const schema = z.object({
   sentry_dsn: z.string().optional(),
   sentry_sample_rate: z.number().positive().min(0).max(1),
   sentry_traces_sample_rate: z.number().positive().min(0).max(1),
+  version: z.string(),
 });
 
 const parsing = await schema.safeParse(

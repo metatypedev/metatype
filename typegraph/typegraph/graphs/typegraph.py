@@ -52,8 +52,8 @@ class Auth:
 
     # deno eval 'await crypto.subtle.generateKey({name: "ECDSA", namedCurve: "P-384"}, true, ["sign", "verify"]).then(k => crypto.subtle.exportKey("jwk", k.publicKey)).then(JSON.stringify).then(console.log);'
     @classmethod
-    def jwk(cls, name: str, **kwargs) -> "Auth":
-        return Auth(name, "jwk", kwargs)
+    def jwk(cls, name: str, args={}) -> "Auth":
+        return Auth(name, "jwk", args)
 
 
 github_auth = Auth.oauth2(

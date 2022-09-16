@@ -44,7 +44,7 @@ test("prisma", async (t) => {
         }
       }
     `
-      .withExpect(({ data }) => {
+      .expectBody(({ data }) => {
         assert(v4.validate(data.createOneRecord.id));
       })
       .on(e);
@@ -586,7 +586,7 @@ test("GraphQL variables", async (t) => {
           age: 25,
         },
       })
-      .withExpect(({ data }) => {
+      .expectBody(({ data }) => {
         assert(v4.validate(data.createOneRecord.id));
       })
       .on(e);
@@ -603,7 +603,7 @@ test("GraphQL variables", async (t) => {
       name: "name",
       age: 25,
     })
-      .withExpect(({ data }) => {
+      .expectBody(({ data }) => {
         assert(v4.validate(data.createOneRecord.id));
       })
       .on(e);
