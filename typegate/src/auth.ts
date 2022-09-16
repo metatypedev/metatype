@@ -1,6 +1,6 @@
 import { OAuth2Client, Tokens } from "https://deno.land/x/oauth2_client/mod.ts";
 import config from "./config.ts";
-import { signJWT, verifyJWT } from "./crypto.ts";
+import { signJWT, signKey as nativeSignKey, verifyJWT } from "./crypto.ts";
 import { envOrFail } from "./utils.ts";
 import { deleteCookie, setCookie } from "std/http/cookie.ts";
 import { crypto } from "std/crypto/mod.ts";
@@ -29,7 +29,7 @@ export abstract class Auth {
   static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
     switch (auth.protocol) {
       case "oauth2":
-        return await OAuth2.init(typegraphName, auth);
+        return await OAuth2Auth.init(typegraphName, auth);
       case "jwk":
         return await JWKAuth.init(typegraphName, auth);
       default:
@@ -49,10 +49,13 @@ export abstract class Auth {
   ): Promise<[Record<string, unknown>, Headers]>;
 }
 
-class JWKAuth extends Auth {
+export class JWKAuth extends Auth {
   signKey: CryptoKey;
 
   static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
+    if (auth.name === "native") {
+      return new JWKAuth(typegraphName, auth, nativeSignKey);
+    }
     const jwk = envOrFail(typegraphName, `${auth.name}_JWK`);
     const signKey = await crypto.subtle.importKey(
       "jwk",
@@ -88,7 +91,7 @@ class JWKAuth extends Auth {
   }
 }
 
-class OAuth2 extends Auth {
+export class OAuth2Auth extends Auth {
   client: OAuth2Client;
   profileUrl: string;
 
@@ -110,7 +113,12 @@ class OAuth2 extends Auth {
         scope: scopes as string,
       },
     });
-    return await new OAuth2(typegraphName, auth, client, profile_url as string);
+    return await new OAuth2Auth(
+      typegraphName,
+      auth,
+      client,
+      profile_url as string,
+    );
   }
 
   constructor(

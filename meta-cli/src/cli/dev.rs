@@ -53,9 +53,10 @@ impl Action for Dev {
         })
         .unwrap();
 
-        let server = Server::http("0.0.0.0:8000").unwrap();
+        let server = Server::http("0.0.0.0:5000").unwrap();
 
         for request in server.incoming_requests() {
+            println!("test{:?}", request.url());
             let url = Url::parse(&format!("http://dummy{}", request.url()))?;
             let query: HashMap<String, String> = url.query_pairs().into_owned().collect();
 
@@ -163,7 +164,9 @@ struct ErrorWithTypegraphPush {
 }
 
 pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
-    let client = reqwest::blocking::Client::new();
+    let client = reqwest::blocking::Client::builder()
+        .no_trust_dns()
+        .build()?;
     let tg = serde_json::Value::String(tg).to_string();
     let payload = json!({
       "operationName": "insert",
@@ -178,8 +181,8 @@ pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
         .send();
 
     match query {
-        Err(_) if backoff > 1 => {
-            println!("retry");
+        Err(e) if backoff > 1 => {
+            println!("retry {:?}", e);
             sleep(Duration::from_secs(10));
             push_typegraph(tg, node, backoff - 1)
         }
