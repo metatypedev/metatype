@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
@@ -24,7 +24,7 @@ fn get_workspace_root() -> Result<PathBuf> {
         }
     }
 
-    Err(anyhow!("could not read workspace root from cargo metadata"))
+    bail!("could not read workspace root from cargo metadata")
 }
 
 pub fn ensure_venv() -> Result<()> {

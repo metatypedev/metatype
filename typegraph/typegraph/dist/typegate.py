@@ -1,6 +1,6 @@
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import worker
 from typegraph.materializers.deno import AddTypeGraphMat
+from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import RemoveTypeGraphMat
 from typegraph.materializers.deno import SerializedTypegraphMat
 from typegraph.materializers.deno import TypeGraphMat
@@ -43,7 +43,7 @@ with TypeGraph("typegate") as g:
 
     allow_all = t.policy(
         t.struct(),
-        worker.JavascriptMat(worker.JavascriptMat.lift(lambda args: True)),
+        FunMat.from_lambda(lambda args: True),
     ).named("__allow_all")
 
     g.expose(

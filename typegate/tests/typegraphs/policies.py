@@ -1,18 +1,18 @@
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import deno
-from typegraph.materializers import worker
+from typegraph.materializers.deno import FunMat
+from typegraph.materializers.deno import PredefinedFunMat
 from typegraph.types import typedefs as t
 
 
 def make_policy(g, name, fn):
     pol = t.policy(
         t.struct(),
-        worker.JavascriptMat(worker.JavascriptMat.lift(fn)),
+        FunMat.from_lambda(fn),
     )
     return t.func(
         t.struct({"a": t.integer()}),
         t.struct({"a": t.integer()}),
-        deno.PredefinedFunMat("identity"),
+        PredefinedFunMat("identity"),
     ).add_policy(pol)
 
 

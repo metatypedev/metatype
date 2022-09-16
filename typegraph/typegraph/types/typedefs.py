@@ -4,8 +4,10 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import Union
 
 from frozendict import frozendict
+import orjson
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.graphs.typegraph import TypegraphContext
 from typegraph.materializers.base import Materializer
@@ -45,8 +47,8 @@ class Type:
 
     # input field
     default_value: Optional[any] = None
-    apply_value: Optional[any] = None
-    apply_sealed: bool = False
+    inject: Optional[Union[str, "Type"]] = None
+    injection: Optional[str] = None
 
     type_id: int
 
@@ -129,9 +131,9 @@ class Type:
         ret = {}
         if self.default_value is not None:
             ret["default_value"] = encode(self.default_value)
-        if self.apply_value is not None:
-            ret["apply_value"] = encode(self.apply_value)
-            ret["apply_sealed"] = encode(self.apply_sealed)
+        if self.inject is not None:
+            ret["inject"] = self.inject
+            ret["injection"] = self.injection
         return ret
 
     def __str__(self) -> str:
@@ -139,13 +141,41 @@ class Type:
 
     # sugar
 
-    def s_inject(self):
-        # new type
-        with self.graph:
-            return injection(self)
-
     def s_refine(self, predicat):
         # emit a new type with give condition
+        return self
+
+    def s_raw(self, value):
+        if self.inject is not None:
+            raise Exception(f"{self.node} can only have one injection")
+
+        self.inject = orjson.dumps(value).decode()
+        self.injection = "raw"
+        return self
+
+    def s_secret(self, secret_name):
+        if self.inject is not None:
+            raise Exception(f"{self.node} can only have one injection")
+
+        self.inject = secret_name
+        self.injection = "secret"
+        return self
+
+    def s_parent(self, sibiling: NodeProxy):
+        # TODO: check for same type and value in same context
+        if self.inject is not None:
+            raise Exception(f"{self.node} can only have one injection")
+
+        self.inject = sibiling
+        self.injection = "parent"
+        return self
+
+    def s_context(self, claim: str):
+        if self.inject is not None:
+            raise Exception(f"{self.node} can only have one injection")
+
+        self.inject = claim
+        self.injection = "context"
         return self
 
     # props
@@ -176,14 +206,6 @@ class Type:
 
         tpe.default_value = value
         return tpe
-
-    def apply(self, value, seal=True):
-        if self.apply_sealed:
-            raise Exception("applied value is already closed")
-
-        self.apply_value = value
-        self.apply_sealed = seal
-        return self
 
     def random(self, tpe: str, **kwargs):
         self.rg_params = (tpe, dict(kwargs))

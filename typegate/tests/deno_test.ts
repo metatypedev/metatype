@@ -3,7 +3,7 @@ import { gql, test } from "./utils.ts";
 test("Deno/worker runtimes", async (t) => {
   const e = await t.pythonFile("typegraphs/deno.py");
 
-  await t.should("work on deno runtime", async () => {
+  await t.should("work on the default worker", async () => {
     await gql`
       query {
         add(first: 1.2, second: 2.3)

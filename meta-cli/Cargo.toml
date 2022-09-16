@@ -5,10 +5,10 @@ edition = "2021"
 
 
 [dependencies]
-dprint-plugin-typescript = "0.71.2"
-swc_common = { version = "0.27.12", features = ["tty-emitter"] }
-swc_ecma_ast = "0.90.10"
-swc_ecmascript = { version = "0.195.0", features = ["visit", "transforms", "typescript-parser", "parser", "codegen"] }
+dprint-plugin-typescript = "0.73.0"
+swc_common = { version = "0.28.1", features = ["tty-emitter"] }
+swc_ecma_ast = "0.91.1"
+swc_ecmascript = { version = "0.200.7", features = ["visit", "transforms", "typescript-parser", "parser", "codegen"] }
 migration-core = { git = "https://github.com/prisma/prisma-engines" }
 datamodel = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"

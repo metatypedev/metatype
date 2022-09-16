@@ -7,9 +7,9 @@ import {
 import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
-import { exists } from "std/fs/mod.ts";
+import { exists } from "std/fs/exists.ts";
 import { RuntimesConfig } from "../src/runtimes/Runtime.ts";
-import { deepMerge } from "std/collections/mod.ts";
+import { deepMerge } from "std/collections/deep_merge.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 
 const testRuntimesConfig = {
@@ -20,7 +20,7 @@ const localDir = dirname(fromFileUrl(import.meta.url));
 const metaCli = "../../target/debug/meta";
 
 export async function meta(...input: string[]): Promise<void> {
-  await shell([metaCli, ...input]);
+  console.log(await shell([metaCli, ...input]));
 }
 
 export async function shell(cmd: string[]): Promise<string> {
@@ -31,17 +31,21 @@ export async function shell(cmd: string[]): Promise<string> {
     stderr: "piped",
   });
 
-  const output = await p.output();
-  const stdout = new TextDecoder().decode(output).trim();
-  const error = await p.stderrOutput();
-  const stderr = new TextDecoder().decode(error).trim();
+  const [_status, stdout, stderr] = await Promise.all([
+    p.status(),
+    p.output(),
+    p.stderrOutput(),
+  ]);
   p.close();
 
-  if (stderr.length > 0) {
-    throw new Error(stderr);
+  const out = new TextDecoder().decode(stdout).trim();
+  const err = new TextDecoder().decode(stderr).trim();
+
+  if (err.length > 0) {
+    throw new Error(err);
   }
 
-  return stdout;
+  return out;
 }
 
 class MetaTest {
@@ -230,7 +234,7 @@ export class Q {
     });
   }
 
-  expectValue(result: JSONValue) {
+  expectValue(result: any) {
     return this.withExpect((res, ctx) => {
       assertEquals(res, result);
     });

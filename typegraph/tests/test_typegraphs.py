@@ -2,9 +2,11 @@ import frozendict
 from typegraph.dist import introspection
 from typegraph.graphs.builders import Graph
 from typegraph.graphs.builders import TypeMaterializer
+from typegraph.graphs.builders import TypeMeta
 from typegraph.graphs.builders import TypeNode
 from typegraph.graphs.builders import TypePolicy
 from typegraph.graphs.builders import TypeRuntime
+from typegraph.graphs.typegraph import Cors
 from typegraph.utils import loaders
 
 
@@ -20,7 +22,7 @@ class TestTypegraph:
                         name="introspection",
                         typedef="struct",
                         policies=(),
-                        runtime=2,
+                        runtime=1,
                         data=frozendict.frozendict(
                             {
                                 "renames": frozendict.frozendict({}),
@@ -912,10 +914,20 @@ class TestTypegraph:
                 runtimes=[
                     TypeRuntime(name="typegraph", data=frozendict.frozendict({})),
                     TypeRuntime(
-                        name="worker", data=frozendict.frozendict({"name": "js"})
+                        name="deno", data=frozendict.frozendict({"worker": "default"})
                     ),
-                    TypeRuntime(name="deno", data=frozendict.frozendict({})),
                 ],
                 policies=[TypePolicy(name="__allow_all", materializer=2)],
+                meta=TypeMeta(
+                    secrets=[],
+                    cors=Cors(
+                        allow_origin=[],
+                        allow_headers=[],
+                        expose_headers=[],
+                        allow_credentials=True,
+                        max_age=None,
+                    ),
+                    auths=[],
+                ),
             )
         )

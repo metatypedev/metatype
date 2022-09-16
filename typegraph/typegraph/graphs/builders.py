@@ -40,11 +40,19 @@ class TypeRuntime:
 
 
 @dataclass(eq=True, frozen=True)
+class TypeMeta:
+    secrets: List[str]
+    cors: typegraph.Cors
+    auths: List[typegraph.Auth]
+
+
+@dataclass(eq=True, frozen=True)
 class Graph:
     types: List[TypeNode]
     materializers: List[TypeMaterializer]
     runtimes: List[TypeRuntime]
     policies: List[TypePolicy]
+    meta: TypeMeta
 
 
 def build(tg: typegraph.TypeGraph):
@@ -59,6 +67,8 @@ def build(tg: typegraph.TypeGraph):
     counters = {k: 0 for k in indexes.keys()}
     # anti-recursivity
     ticket_cache = {}
+
+    secrets = set()
 
     def reserve(where):
         ret = counters[where]
@@ -123,8 +133,11 @@ def build(tg: typegraph.TypeGraph):
                 data["binds"] = frozendict({k: build(v) for k, v in node.of.items()})
             elif isinstance(node, t.list) or isinstance(node, t.optional):
                 data["of"] = build(node.of)
-            elif isinstance(node, t.injection):
-                data["of"] = build(node.of)
+
+            if data.get("injection") == "parent":
+                data["inject"] = build(data["inject"])
+            elif data.get("injection") == "secret":
+                secrets.add(data["inject"])
 
             if node.rg_params is not None:
                 (tp, additional_constraints) = node.rg_params
@@ -177,4 +190,9 @@ def build(tg: typegraph.TypeGraph):
         materializers=collect(materializers),
         runtimes=collect(runtimes),
         policies=collect(policies),
+        meta=TypeMeta(
+            secrets=list(secrets),
+            auths=tg.auths,
+            cors=tg.cors,
+        ),
     )
