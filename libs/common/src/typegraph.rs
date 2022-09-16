@@ -11,6 +11,32 @@ pub struct Typegraph {
     pub policies: Vec<Policy>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Cors {
+    pub allow_origin: Vec<String>,
+    pub allow_headers: Vec<String>,
+    pub expose_headers: Vec<String>,
+    pub allow_credentials: bool,
+    pub max_age: Option<u32>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Auth {
+    pub name: String,
+    pub protocol: String,
+    pub authorize_url: String,
+    pub access_url: String,
+    pub scopes: String,
+    pub profile_url: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TypeMeta {
+    pub secrets: Vec<String>,
+    pub cors: Cors,
+    pub auths: Vec<Auth>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TypeNode {
     pub name: String,

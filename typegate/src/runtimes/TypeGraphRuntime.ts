@@ -1,4 +1,5 @@
-import { TypeGraphDS, TypeMaterializer, TypeNode } from "../typegraph.ts";
+import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
+import { TypeNode } from "../type-node.ts";
 import { TypeKind } from "graphql";
 import * as ast from "graphql_ast";
 import { ensure } from "../utils.ts";
@@ -155,16 +156,11 @@ export class TypeGraphRuntime extends Runtime {
           .concat(mutations ? [mutations] : [])
           .filter((type) => {
             // filter non-native GraphQL types
-            const isEnforced = type.typedef === "injection" ||
+            const isEnforced = type.data.injection ||
               (type.typedef === "struct" &&
                 Object.values(type.data.binds as Record<string, number>)
                   .map((bind) => this.tg.types[bind])
-                  .every((nested) => nested.typedef === "injection")) ||
-              !!type.data.apply_value ||
-              (type.typedef === "struct" &&
-                Object.values(type.data.binds as Record<string, number>)
-                  .map((bind) => this.tg.types[bind])
-                  .every((nested) => nested.data.apply_value));
+                  .every((nested) => nested.data.injection));
             const isQuant = type.typedef === "optional" ||
               type.typedef === "list";
             const isInp = this.tg.types.some(
@@ -214,16 +210,11 @@ export class TypeGraphRuntime extends Runtime {
     const type = this.tg.types[typeIdx];
 
     if (
-      type.typedef === "injection" ||
+      type.data.injection ||
       (type.typedef === "struct" &&
         Object.values(type.data.binds as Record<string, number>)
           .map((bind) => this.tg.types[bind])
-          .every((nested) => nested.typedef === "injection")) ||
-      !!type.data.apply_value ||
-      (type.typedef === "struct" &&
-        Object.values(type.data.binds as Record<string, number>)
-          .map((bind) => this.tg.types[bind])
-          .every((nested) => nested.data.apply_value))
+          .every((nested) => nested.data.injection))
     ) {
       return null;
     }
@@ -328,6 +319,7 @@ export class TypeGraphRuntime extends Runtime {
       type.typedef === "uri" ||
       type.typedef === "char" ||
       type.typedef === "json" ||
+      type.typedef === "email" ||
       type.typedef === "uuid"
     ) {
       return {
@@ -380,12 +372,12 @@ export class TypeGraphRuntime extends Runtime {
   };
 
   policyDescription(type: TypeNode): string {
-    const policies = type.policies.map((p) => this.tg.policies[p].name);
+    const policies = type.policies.map((p: number) => this.tg.policies[p].name);
 
     let ret = "\n\nPolicies:\n";
 
     if (policies.length > 0) {
-      ret += policies.map((p) => `- ${p}`).join("\n");
+      ret += policies.map((p: string) => `- ${p}`).join("\n");
     } else {
       ret += "- inherit";
     }

@@ -22,13 +22,13 @@ import {
   RuntimesConfig,
 } from "./runtimes/Runtime.ts";
 import { Code } from "./runtimes/utils/codes.ts";
-import { WorkerRuntime } from "./runtimes/WorkerRuntime.ts";
-import { b, ensure, mapo } from "./utils.ts";
+import { ensure, envOrFail, mapo } from "./utils.ts";
 import { compileCodes } from "./utils/swc.ts";
 import { v4 as uuid } from "std/uuid/mod.ts";
-import { ListNode, StructNode, TypeNode } from "./type-node.ts";
 
-export type { TypeNode };
+import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
+
+import { ListNode, StructNode, TypeNode } from "./type-node.ts";
 
 interface TypePolicy {
   name: string;
@@ -46,17 +46,31 @@ export interface TypeRuntime {
   data: Record<string, unknown>;
 }
 
+export interface TypeMeta {
+  secrets: Array<string>;
+  cors: {
+    allow_origin: Array<string>;
+    allow_methods: Array<string>;
+    allow_headers: Array<string>;
+    expose_headers: Array<string>;
+    allow_credentials: boolean;
+    max_age: number | null;
+  };
+  auths: Array<AuthDS>;
+}
+
 export interface TypeGraphDS {
   types: Array<TypeNode>;
   materializers: Array<TypeMaterializer>;
   runtimes: Array<TypeRuntime>;
   policies: Array<TypePolicy>;
   codes: Array<Code>;
+  meta: TypeMeta;
 }
 
 export type RuntimeResolver = Record<string, Runtime>;
 
-const stringTypeNode: TypeNode = {
+const dummyStringTypeNode: TypeNode = {
   // FIXME: remove dummy
   name: "string",
   typedef: "string",
@@ -67,7 +81,6 @@ const stringTypeNode: TypeNode = {
 
 const runtimeInit: RuntimeInit = {
   graphql: GraphQLRuntime.init,
-  worker: WorkerRuntime.init,
   prisma: PrismaRuntime.init,
   http: HTTPRuntime.init,
   deno: DenoRuntime.init,
@@ -88,15 +101,24 @@ export class TypeGraph {
   root: TypeNode;
   introspection: TypeGraph | null;
   typeByName: Record<string, TypeNode>;
+  secrets: Record<string, string>;
+  auths: Map<string, Auth>;
+  cors: Record<string, string>;
 
   private constructor(
     typegraph: TypeGraphDS,
     runtimeReferences: Runtime[],
+    secrets: Record<string, string>,
+    cors: Record<string, string>,
+    auths: Map<string, Auth>,
     introspection: TypeGraph | null,
   ) {
     this.tg = typegraph;
     this.runtimeReferences = runtimeReferences;
     this.root = this.type(0);
+    this.secrets = secrets;
+    this.cors = cors;
+    this.auths = auths;
     this.introspection = introspection;
     // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
     const typeByName: Record<string, TypeNode> = {};
@@ -112,8 +134,46 @@ export class TypeGraph {
     introspection: TypeGraph | null,
     runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
+    const typegraphName = typegraph.types[0].name;
+    const { meta, runtimes } = typegraph;
+
+    const secrets = meta.secrets.reduce(
+      (agg, secretName) => {
+        return { ...agg, [secretName]: envOrFail(typegraphName, secretName) };
+      },
+      {},
+    );
+
+    const cors = (() => {
+      if (meta.cors.allow_origin.length === 0) {
+        return {};
+      }
+      const ret: Record<string, string> = {
+        "Access-Control-Allow-Origin": meta.cors.allow_origin.join(","),
+        "Access-Control-Allow-Methods": "POST,OPTIONS",
+        "Access-Control-Allow-Headers": [nextAuthorizationHeader].concat(
+          meta.cors.allow_headers,
+        ).join(","),
+        "Access-Control-Expose-Headers": meta.cors.expose_headers.join(","),
+        "Access-Control-Allow-Credentials": meta.cors.allow_credentials
+          .toString(),
+      };
+      if (meta.cors.max_age) {
+        ret["Access-Control-Max-Age"] = meta.cors.max_age.toString();
+      }
+      return ret;
+    })();
+
+    const auths = new Map<string, Auth>();
+    for (const auth of meta.auths) {
+      auths.set(
+        auth.name,
+        await Auth.init(typegraphName, auth),
+      );
+    }
+
     const runtimeReferences = await Promise.all(
-      typegraph.runtimes.map((runtime, idx) => {
+      runtimes.map((runtime, idx) => {
         if (runtime.name in staticReference) {
           return staticReference[runtime.name];
         }
@@ -141,7 +201,14 @@ export class TypeGraph {
 
     compileCodes(typegraph);
 
-    return new TypeGraph(typegraph, runtimeReferences, introspection);
+    return new TypeGraph(
+      typegraph,
+      runtimeReferences,
+      secrets,
+      cors,
+      auths,
+      introspection,
+    );
   }
 
   async deinit(): Promise<void> {
@@ -200,13 +267,49 @@ export class TypeGraph {
 
     const {
       default_value: defaultValue,
-      apply_value: applyValue,
-      apply_sealed: applySealed,
+      inject,
+      injection,
     } = arg.data;
 
-    if (applyValue && applySealed) {
-      ensure(!fieldArg, "cannot set applied arg");
-      return [() => applyValue, policies, []];
+    if (injection) {
+      ensure(!fieldArg, "cannot set injected arg");
+
+      switch (injection) {
+        case "raw": {
+          const value = JSON.parse(inject as string);
+          return [() => value, policies, []];
+        }
+        case "secret": {
+          const name = inject as string;
+          return [() => this.secrets[name], policies, []];
+        }
+        case "context": {
+          const name = inject as string;
+          return [
+            (_parent, _variables, { [name]: value }) => value,
+            policies,
+            [],
+          ];
+        }
+        case "parent": {
+          const ref = inject as number;
+          const name = Object.keys(parentContext).find(
+            (name) => parentContext[name] === ref,
+          );
+          if (!name) {
+            throw Error(
+              `cannot find injection ${
+                JSON.stringify(
+                  arg,
+                )
+              } in context ${JSON.stringify(parentContext)}`,
+            );
+          }
+          return [({ [name]: value }) => value, policies, [name]];
+        }
+        default:
+          ensure(false, "cannot happen");
+      }
     }
 
     if (!fieldArg) {
@@ -214,25 +317,6 @@ export class TypeGraph {
         return !noDefault && defaultValue
           ? [() => defaultValue, policies, []]
           : null;
-      }
-
-      if (arg.typedef === "injection") {
-        const ref = arg.data.of as number;
-        const name = Object.keys(parentContext).find(
-          (name) => parentContext[name] === ref,
-        );
-
-        if (!name) {
-          throw Error(
-            `cannot find injection ${
-              JSON.stringify(
-                arg,
-              )
-            } in context ${parentContext}`,
-          );
-        }
-
-        return [({ [name]: inject }) => inject, policies, [name]];
       }
 
       if (arg.typedef === "struct") {
@@ -393,6 +477,7 @@ export class TypeGraph {
     if (
       arg.typedef === "string" ||
       arg.typedef === "uuid" ||
+      arg.typedef === "email" ||
       arg.typedef === "json"
     ) {
       ensure(
@@ -491,7 +576,7 @@ export class TypeGraph {
             parent: parentStage,
             args: {},
             policies,
-            outType: stringTypeNode,
+            outType: dummyStringTypeNode,
             // singleton
             runtime: DenoRuntime.init({
               typegraph: this.tg,
@@ -499,7 +584,7 @@ export class TypeGraph {
               args: {},
               config: {},
             }),
-            batcher: this.nextBatcher(stringTypeNode),
+            batcher: this.nextBatcher(dummyStringTypeNode),
             node: fieldName,
             path: [...queryPath, aliasName ?? fieldName],
           }),
@@ -765,10 +850,12 @@ export class TypeGraph {
           const mat = this.introspection.tg.materializers[
             introPolicy.materializer as number
           ];
-          const rt = this.introspection.runtimeReferences[
-            mat.runtime
-          ] as WorkerRuntime; // temp
-          return [introPolicy.name, rt.delegate(mat)] as [string, Resolver];
+          const rt = this.introspection
+            .runtimeReferences[mat.runtime] as DenoRuntime; // temp
+          return [introPolicy.name, rt.delegate(mat, false)] as [
+            string,
+            Resolver,
+          ];
         }
       }
 
@@ -778,12 +865,10 @@ export class TypeGraph {
       }
 
       const mat = this.tg.materializers[policy.materializer as number];
-      const rt = this.runtimeReferences[mat.runtime] as
-        | DenoRuntime
-        | WorkerRuntime;
+      const rt = this.runtimeReferences[mat.runtime] as DenoRuntime;
       ensure(
-        rt.constructor === DenoRuntime || rt.constructor === WorkerRuntime,
-        "runtime for policy must be a WorkerRuntime",
+        rt.constructor === DenoRuntime,
+        "runtime for policy must be a DenoRuntime",
       );
       return [policy.name, rt.delegate(mat, false)] as [string, Resolver];
     });

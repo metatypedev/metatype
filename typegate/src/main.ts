@@ -1,49 +1,27 @@
 import { serve } from "std/http/server.ts";
-// import * as Sentry from "npm:@sentry/node";
-import * as Sentry from "https://deno.land/x/sentry_deno/main.ts";
+import * as Sentry from "sentry";
 import { renderPlayground } from "./web/playground.ts";
 import { get_version, init } from "../../bindings/bindings.ts";
 
 import { register } from "./register.ts";
 import config from "./config.ts";
-import { Engine } from "./engine.ts";
 import { getLogger } from "./log.ts";
+import { renderDebugAuth } from "./web/auth-debug.ts";
+import { deleteCookie } from "https://deno.land/std@0.154.0/http/cookie.ts";
 
-Sentry.init({
-  dsn: Deno.env.get("SENTRY_DSN"),
+const version = get_version();
 
-  // TODO: change the rate in production
-  tracesSampleRate: 1.0,
-});
-
-/*
-//const wasmCode = await Deno.readFile("../example/wasm/pkg/wasm_bg.wasm");
-const wasmCode = await Deno.readFile(
-  "../example/wasm/target/wasm32-wasi/release/wasm.wasm"
-);
-const wasmModule = new WebAssembly.Module(wasmCode);
-const externs = WebAssembly.Module.imports(wasmModule);
-console.log(externs);
-
-const exports: Record<string, any> = {};
-
-const imports: any = {
-  wbg: externs.reduce((agg, { name, module, kind }) => {
-    const subname = name.match(/^__wbg_([a-zA-Z0-9_]+)_[a-zA-Z0-9]+$/) ?? [];
-    return {
-      ...agg,
-      [name]: exports[subname[1]],
-    };
-  }, {}),
-};
-
-const wasmInstance = new WebAssembly.Instance(wasmModule);
-const add = wasmInstance.exports.add as CallableFunction;
-console.log(add(2, 3));
-*/
+if (config.sentry_dsn) {
+  Sentry.init({
+    dsn: config.sentry_dsn,
+    release: version,
+    environment: config.debug ? "development" : "production",
+    sampleRate: config.sentry_sample_rate,
+    tracesSampleRate: config.sentry_traces_sample_rate,
+  });
+}
 
 init();
-const version = get_version();
 
 const server = serve(
   async (request: Request): Promise<Response> => {
@@ -62,61 +40,84 @@ const server = serve(
         });
       }
 
-      const lookup = url.pathname.substring(1);
+      const [, lookup, service, providerName] = url.pathname.split("/");
+      const engine = register.get(lookup);
 
-      if (!register.has(lookup)) {
+      if (!engine) {
         return new Response("not found", {
           status: 404,
         });
       }
 
-      const headers = Object.fromEntries(request.headers.entries());
-      const { method } = request;
+      if (service) {
+        if (service !== "auth" || request.method !== "GET") {
+          return new Response("not found", {
+            status: 404,
+          });
+        }
 
-      const origin = headers["origin"];
-      // FIXME change
-      const cors = {
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Max-Age": "60",
-      };
+        if (!providerName) {
+          if (config.debug) {
+            const debugAuth = await renderDebugAuth(engine, request);
+            return new Response(debugAuth, {
+              headers: { "content-type": "text/html" },
+            });
+          }
 
-      // cors
-      if (method === "OPTIONS") {
-        return new Response(null, {
-          headers: cors,
-        });
+          return new Response("not found", {
+            status: 404,
+          });
+        }
+
+        const provider = engine.tg.auths.get(providerName);
+        if (!provider) {
+          return new Response("not found", {
+            status: 404,
+          });
+        }
+
+        return await provider.authMiddleware(request);
       }
 
-      if (method === "GET") {
-        const playground = renderPlayground({
-          endpoint: `${url.origin}/${lookup}`,
-        });
+      if (request.method === "GET") {
+        const playground = renderPlayground(`${url.origin}/${lookup}`);
         return new Response(playground, {
           headers: { "content-type": "text/html" },
         });
       }
 
-      if (method !== "POST") {
+      // cors
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          headers: engine.tg.cors,
+        });
+      }
+
+      if (request.method !== "POST") {
         return new Response("method not allowed", {
           status: 405,
         });
       }
 
+      const [context, headers] = await engine.ensureJWT(request.headers);
+      // may remove this
+      context.headers = Object.fromEntries(request.headers.entries());
+
       const { query, operationName, variables } = await request.json();
-      const engine = register.get(lookup) as Engine;
       const { status, ...res } = await engine.execute(
         query,
         operationName,
         variables,
-        headers,
+        context,
       );
+
+      headers.set("content-type", "application/json");
+      for (const [k, v] of Object.entries(engine.tg.cors)) {
+        headers.set(k, v);
+      }
+
       return new Response(JSON.stringify(res), {
-        headers: {
-          "content-type": "application/json",
-          ...cors, // chrome expects/considers cors headers in reponse as well
-        },
+        headers,
         status,
       });
     } catch (e) {
@@ -132,7 +133,7 @@ const server = serve(
 if (config.debug) {
   (function reload(backoff = 3) {
     fetch(
-      `http://localhost:5000/dev?node=${config.tg_host}:${config.tg_port}`,
+      `http://localhost:5000/dev?node=${encodeURI(config.tg_external_url)}`,
     ).catch((e) => {
       setTimeout(reload, 200, backoff - 1);
     });

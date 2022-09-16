@@ -1,8 +1,10 @@
 import frozendict
 from typegraph.graphs.builders import Graph
 from typegraph.graphs.builders import TypeMaterializer
+from typegraph.graphs.builders import TypeMeta
 from typegraph.graphs.builders import TypeNode
 from typegraph.graphs.builders import TypeRuntime
+from typegraph.graphs.typegraph import Cors
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import deno
 from typegraph.types import typedefs as t
@@ -111,7 +113,7 @@ class TestDependency:
                         typedef="injection",
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({"of": 7}),
+                        data=frozendict.frozendict({}),
                     ),
                     TypeNode(
                         name="a",
@@ -142,7 +144,22 @@ class TestDependency:
                         data=frozendict.frozendict({"serial": False, "fn_expr": "x2"}),
                     )
                 ],
-                runtimes=[TypeRuntime(name="deno", data=frozendict.frozendict({}))],
+                runtimes=[
+                    TypeRuntime(
+                        name="deno", data=frozendict.frozendict({"worker": "default"})
+                    )
+                ],
                 policies=[],
+                meta=TypeMeta(
+                    secrets=[],
+                    cors=Cors(
+                        allow_origin=[],
+                        allow_headers=[],
+                        expose_headers=[],
+                        allow_credentials=True,
+                        max_age=None,
+                    ),
+                    auths=[],
+                ),
             )
         )

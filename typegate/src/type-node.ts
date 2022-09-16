@@ -8,8 +8,8 @@ interface TypeNodeBase {
 
 interface TypeDataBase {
   default_value?: unknown;
-  apply_value?: unknown;
-  apply_sealed?: true;
+  injection?: unknown;
+  inject?: unknown;
   random?: Record<string, Record<string, unknown>>;
 }
 
@@ -53,7 +53,7 @@ export interface InjectionNode extends TypeNodeBase {
 export interface LiteralNode extends TypeNodeBase {
   typedef: "literal";
   data: TypeDataBase & {
-    value: any;
+    value: unknown;
   };
 }
 

@@ -19,10 +19,11 @@ export interface ImportFuncMaterializerData {
 }
 
 interface TaskBase {
-  type: "func" | "import_func";
+  type: "func" | "import_func" | "predefined_func";
   id: number;
   args: Record<string, unknown>;
   context: TaskContext;
+  verbose: boolean;
 }
 
 export interface ImportFuncTask extends TaskBase {
@@ -37,7 +38,12 @@ export interface FuncTask extends TaskBase {
   code?: string;
 }
 
-export type Task = ImportFuncTask | FuncTask;
+export interface PredefinedFuncTask extends TaskBase {
+  type: "predefined_func";
+  name: string;
+}
+
+export type Task = ImportFuncTask | FuncTask | PredefinedFuncTask;
 
 export interface TaskExec {
   (args: Record<string, unknown>, context: TaskContext): unknown;

@@ -1,12 +1,12 @@
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
+from typegraph.materializers.deno import DenoRuntime
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import ModuleMat
-from typegraph.materializers.worker import WorkerRuntime
 from typegraph.types import typedefs as t
 
 with TypeGraph(name="math") as g:
-    worker = WorkerRuntime("worker 1")
+    worker = DenoRuntime(worker="worker 1")
 
     allow_all = policies.allow_all()
 
@@ -14,12 +14,12 @@ with TypeGraph(name="math") as g:
         t.struct(),
         t.boolean(),
         FunMat(
-            '(context) => context["referer"] && new URL(context["referer"]).pathname === "/math"',
+            '(context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
             runtime=worker,
         ),
     ).named("restrict_referer_policy")
 
-    fib = ModuleMat("includes/fib.ts")
+    fib = ModuleMat("includes/fib.ts", runtime=worker)
 
     random_item_fn = "({ items }) => items[Math.floor(Math.random() * items.length)]"
 
@@ -52,7 +52,8 @@ with TypeGraph(name="math") as g:
                         if (extent <= 0) throw new Error("invalid range");
                         return from + Math.floor(Math.random() * extent);
                     }
-                    """
+                    """,
+                runtime=worker,
             ).imp("default"),
         ).add_policy(allow_all),
     )

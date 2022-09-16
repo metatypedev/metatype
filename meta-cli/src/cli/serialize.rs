@@ -1,7 +1,7 @@
 use super::Action;
 use crate::typegraph::TypegraphLoader;
 use crate::utils::ensure_venv;
-use anyhow::anyhow;
+use anyhow::bail;
 use anyhow::Result;
 use clap::Parser;
 use std::fs;
@@ -42,7 +42,7 @@ impl Action for Serialize {
             if let Some(tg) = tgs.get(tg_name) {
                 self.write(&tg.to_string());
             } else {
-                return Err(anyhow!("typegraph \"{}\" not found", tg_name));
+                bail!("typegraph \"{}\" not found", tg_name);
             }
         } else if self.unique {
             if tgs.len() == 1 {

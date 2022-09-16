@@ -8,8 +8,11 @@
   "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
   "deno.importMap": "typegate/import_map.json",
-  "deno.enablePaths": ["typegate"],
+  "deno.enablePaths": [
+    "typegate"
+  ],
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
-  }
+  },
+  "deno.unstable": true
 }

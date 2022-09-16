@@ -1,4 +1,5 @@
-import { intersect, withoutAll } from "std/collections/mod.ts";
+import { withoutAll } from "std/collections/without_all.ts";
+import { intersect } from "std/collections/intersect.ts";
 
 export interface ReplaceDynamicPathParamsResult {
   pathname: string;

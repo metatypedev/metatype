@@ -1,12 +1,13 @@
 use crate::codegen;
 use crate::typegraph::TypegraphLoader;
 use crate::utils::ensure_venv;
-use anyhow::{Error, Ok, Result};
+use anyhow::{bail, Ok, Result};
 use ignore::Match;
 use notify::event::ModifyKind;
 use notify::{
     recommended_watcher, Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
 };
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::thread::sleep;
@@ -151,6 +152,16 @@ fn reload_typegraphs(tgs: HashMap<String, String>, node: String) -> Result<()> {
     Ok(())
 }
 
+#[derive(Deserialize, Debug)]
+struct TypegraphError {
+    message: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct ErrorWithTypegraphPush {
+    errors: Vec<TypegraphError>,
+}
+
 pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
     let client = reqwest::blocking::Client::new();
     let tg = serde_json::Value::String(tg).to_string();
@@ -165,13 +176,28 @@ pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
         .timeout(Duration::from_secs(5))
         .json(&payload)
         .send();
+
     match query {
         Err(_) if backoff > 1 => {
             println!("retry");
             sleep(Duration::from_secs(10));
             push_typegraph(tg, node, backoff - 1)
         }
-        Err(_) => Err(Error::msg(format!("node {} unreachable", node))),
+        Err(_) => bail!("node {} unreachable", node),
+        Result::Ok(res) if !res.status().is_success() => {
+            let content = res.text().expect("cannot deserialize http push");
+            let error = serde_json::from_str::<ErrorWithTypegraphPush>(&content).map_or_else(
+                |_| content,
+                |json| {
+                    json.errors
+                        .into_iter()
+                        .map(|e| e.message)
+                        .collect::<Vec<_>>()
+                        .join("\n")
+                },
+            );
+            bail!("typegraph push error: {}", error)
+        }
         _ => Ok(()),
     }
 }

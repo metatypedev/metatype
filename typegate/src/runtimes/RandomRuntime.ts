@@ -1,12 +1,12 @@
 import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
-import { TypeNode } from "../typegraph.ts";
-import Chance from "https://cdn.skypack.dev/chance?dts";
+import { TypeNode } from "../type-node.ts";
+import Chance from "npm:chance@1.1.8";
 import { ensure } from "../utils.ts";
 
 export class RandomRuntime extends Runtime {
   seed: number | null;
-  chance: Chance;
+  chance: typeof Chance;
 
   constructor(seed: number | null) {
     super();
