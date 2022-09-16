@@ -4,33 +4,22 @@ test("prisma", async (t) => {
   const tgPath = "typegraphs/multiple_runtimes.py";
   const e = await t.pythonFile(tgPath);
 
+  function sql(q: string, res: any = 0) {
+    return gql`
+      mutation a($sql: String) {
+        executeRaw(
+          query: $sql
+          parameters: "[]"
+        )
+      }
+    `
+      .withVars({ sql: q })
+      .expectData({ executeRaw: res });
+  }
+
   await t.should("drop schemas and recreate", async () => {
-    await gql`
-      mutation a {
-        executeRaw(
-          query: "DROP SCHEMA IF EXISTS test CASCADE"
-          parameters: "[]"
-        )
-      }
-    `
-      .expectData({
-        executeRaw: 0,
-      })
-      .on(e);
-
-    await gql`
-      mutation a {
-        executeRaw(
-          query: "DROP SCHEMA IF EXISTS test2 CASCADE"
-          parameters: "[]"
-        )
-      }
-    `
-      .expectData({
-        executeRaw: 0,
-      })
-      .on(e);
-
+    await sql("DROP SCHEMA IF EXISTS test CASCADE").on(e);
+    await sql("DROP SCHEMA IF EXISTS test2 CASCADE").on(e);
     await meta("prisma", "apply", "-f", tgPath);
   });
 

@@ -1,5 +1,5 @@
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import worker
+from typegraph.materializers.deno import FunMat
 from typegraph.materializers.graphql import GraphQLRuntime
 from typegraph.types import typedefs as t
 
@@ -9,7 +9,7 @@ with TypeGraph("mini") as g:
 
     allow_all = t.policy(
         t.struct(),
-        worker.JavascriptMat(worker.JavascriptMat.lift(lambda args: True)),
+        FunMat.from_lambda(lambda args: True),
     ).named("allow_all_policy")
 
     post = t.struct(

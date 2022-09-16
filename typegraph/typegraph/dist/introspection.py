@@ -1,5 +1,5 @@
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import worker
+from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import ResolverMat
 from typegraph.materializers.deno import SchemaMat
 from typegraph.materializers.deno import TypeMat
@@ -127,10 +127,9 @@ with TypeGraph("introspection") as g:
         }
     ).named("directive")
 
-    allow_all = t.policy(
-        t.struct(),
-        worker.JavascriptMat(worker.JavascriptMat.lift(lambda args: True)),
-    ).named("__allow_all")
+    allow_all = t.policy(t.struct(), FunMat.from_lambda(lambda args: True)).named(
+        "__allow_all"
+    )
 
     get_type = t.func(
         t.struct({"name": t.string()}), type.s_optional(), TypeMat()

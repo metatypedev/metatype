@@ -1,6 +1,8 @@
+import ast
 from dataclasses import dataclass
 from dataclasses import InitVar
 from dataclasses import KW_ONLY
+import inspect
 import os
 from typing import Optional
 
@@ -10,7 +12,27 @@ from typegraph.materializers.base import Runtime
 
 @dataclass(eq=True, frozen=True)
 class DenoRuntime(Runtime):
+    _: KW_ONLY
+    worker: str = "default"
+    # permissions ...
     runtime_name: str = "deno"
+
+
+class LambdaCollector(ast.NodeTransformer):
+    @classmethod
+    def collect(cls, function):
+        source = inspect.getsource(function).lstrip()
+        tree = ast.parse(source)
+        ret = cls()
+        ret.visit(tree)
+        return ret.lambdas
+
+    def __init__(self):
+        super().__init__()
+        self.lambdas = []
+
+    def visit_Lambda(self, node):
+        self.lambdas.append(ast.unparse(node).strip())
 
 
 # Inlined fuction
@@ -18,15 +40,24 @@ class DenoRuntime(Runtime):
 class FunMat(Materializer):
     fn_expr: str  # function expression
     _: KW_ONLY
-    runtime: Runtime = DenoRuntime()  # DenoRuntime or WorkerRuntime
+    runtime: DenoRuntime = DenoRuntime()
     materializer_name: str = "function"
+
+    @classmethod
+    def from_lambda(cls, function, runtime=DenoRuntime()):
+        from metapensiero.pj.__main__ import transform_string
+
+        lambdas = LambdaCollector.collect(function)
+        assert len(lambdas) == 1
+        code = transform_string(lambdas[0]).rstrip().rstrip(";")
+        return FunMat(code, runtime=runtime)
 
 
 @dataclass(eq=True, frozen=True)
 class PredefinedFunMat(Materializer):
     name: str
     _: KW_ONLY
-    runtime: Runtime = DenoRuntime()
+    runtime: DenoRuntime = DenoRuntime()
     materializer_name: str = "predefined_function"
 
 
@@ -36,7 +67,7 @@ class ImportFunMat(Materializer):
     mod: "ModuleMat"
     name: str = "default"
     _: KW_ONLY
-    runtime: Runtime = DenoRuntime()  # should be the same runtime as `mod`
+    runtime: DenoRuntime = DenoRuntime()  # should be the same runtime as `mod`'s
     materializer_name: str = "import_function"
 
 
@@ -45,7 +76,7 @@ class ModuleMat(Materializer):
     file: InitVar[str] = None
     _: KW_ONLY
     code: Optional[str] = None
-    runtime: Runtime = DenoRuntime()  # DenoRuntime or WorkerRuntime
+    runtime: Runtime = DenoRuntime()  # DenoRuntime
     materializer_name: str = "module"
 
     def __post_init__(self, file: Optional[str]):
@@ -72,16 +103,6 @@ class ModuleMat(Materializer):
 @dataclass(eq=True, frozen=True)
 class IdentityMat(PredefinedFunMat):
     name: str = "identity"
-
-
-# ??
-@dataclass(eq=True, frozen=True)
-class AutoMaterializer(Materializer):
-    runtime: Runtime = DenoRuntime()
-    materializer_name: str = "auto"
-
-
-# TypeGraph runtime
 
 
 @dataclass(eq=True, frozen=True)

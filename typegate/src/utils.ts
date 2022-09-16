@@ -64,3 +64,13 @@ export function unzip<A, B>(arrays: ([A, B])[]): [A[], B[]] {
   });
   return [as, bs];
 }
+
+export function envOrFail(typegraph: string, name: string): string {
+  const envName = `TG_${typegraph}_${name}`.toUpperCase();
+  const value = Deno.env.get(envName);
+  ensure(
+    !!value,
+    `cannot find env "${envName}"`,
+  );
+  return value as string;
+}

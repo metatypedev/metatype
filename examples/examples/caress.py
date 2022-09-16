@@ -1,5 +1,4 @@
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import deno
 from typegraph.materializers.prisma import PrismaRuntime
 from typegraph.types import typedefs as t
 
@@ -75,11 +74,11 @@ with TypeGraph("caress") as g:
                 "hierarchy": t.string(),
                 **with_time(),
                 # "hash": t.func(g("Product"), t.string(), deno.AutoMaterializer()),
-                "slug_prefix": t.func(
-                    g("Product", lambda p: p.slug),
-                    t.string(),
-                    deno.AutoMaterializer(),
-                ),
+                # "slug_prefix": t.func(
+                #    g("Product", lambda p: p.slug),
+                #    t.string(),
+                #    deno.AutoMaterializer(),
+                # ),
             }
         )
         .named("Product")

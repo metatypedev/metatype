@@ -1,14 +1,13 @@
-import Dataloader from "https://cdn.skypack.dev/dataloader@2.0.0?dts";
+import Dataloader from "npm:dataloader@2.1.0";
 import { Kind, parse } from "graphql";
-import type * as ast from "graphql_ast";
+import type ast from "graphql_ast";
 import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
-import { b, ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
+import { ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
-import type { TypeNode } from "./typegraph.ts";
 import * as log from "std/log/mod.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
-import { sha1 } from "./crypto.ts";
+import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import type {
   Batcher,
   Resolver,
@@ -16,6 +15,8 @@ import type {
   RuntimeConfig,
 } from "./runtimes/Runtime.ts";
 import { ResolverError } from "./errors.ts";
+import { getCookies } from "std/http/cookie.ts";
+import { TypeNode } from "./type-node.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -47,14 +48,15 @@ export const initTypegraph = async (
 };
 
 /**
- * A function that computes argument from context and variables
+ * A function that computes argument from parent, variables and context
  * Pass null `variables` to get a FromVars<_> that computes the argument value
  * from variables or returns the variable name if the `variables` param is null.
  */
 export interface ComputeArg {
   (
-    context: Record<string, unknown>,
+    parent: Record<string, unknown>,
     variables: Record<string, unknown> | null,
+    context: Record<string, unknown>,
   ): unknown;
 }
 
@@ -204,7 +206,7 @@ export class Engine {
         (decisions.some((d) => d === null) || decisions.length < 1)
       ) {
         // root level field inherit false
-        throw Error(`authorization missing in ${stage.id()}`);
+        throw Error(`no authorization policy set in root field ${stage.id()}`);
       }
 
       const deps = dependencies
@@ -219,7 +221,7 @@ export class Engine {
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...mapo(args, (e) => e(parent, variables)),
+            ...mapo(args, (e) => e(parent, variables, context)),
             _: {
               parent: parent ?? {},
               context,
@@ -509,5 +511,31 @@ export class Engine {
       return;
     }
     this.tg.validateValueType(typeName, value, label);
+  }
+
+  async ensureJWT(
+    headers: Headers,
+  ): Promise<[Record<string, unknown>, Headers]> {
+    const name = this.tg.root.name;
+
+    let jwt = headers.get("Authorization");
+    if (jwt) {
+      jwt = jwt.split(" ")[1];
+    } else {
+      jwt = getCookies(headers)[name];
+    }
+
+    if (!jwt) {
+      return [{}, new Headers()];
+    }
+
+    const { provider } = await unsafeExtractJWT(jwt);
+    const auth = this.tg.auths.get(provider as string);
+
+    if (!auth) {
+      return [{}, new Headers()];
+    }
+
+    return await auth.jwtMiddleware(jwt);
   }
 }

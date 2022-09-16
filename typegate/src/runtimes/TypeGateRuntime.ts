@@ -217,8 +217,14 @@ export class TypeGateRuntime extends Runtime {
       const { name, typedef, edges, data } = e.tg.type(0);
       return {
         name: e.name,
-        url: `http://${config.tg_host}:${config.tg_port}/${e.name}`,
-        rootType: { idx: 0, name, typedef, edges, data: JSON.stringify(data) },
+        url: () => `${config.tg_external_url}/${e.name}`,
+        rootType: () => ({
+          idx: 0,
+          name,
+          typedef,
+          edges,
+          data: JSON.stringify(data),
+        }),
       };
     });
   };
@@ -230,7 +236,7 @@ export class TypeGateRuntime extends Runtime {
     }
     return {
       name: tg.name,
-      url: `http://${config.tg_host}:${config.tg_port}/${tg.name}`,
+      url: `${config.tg_external_url}/${tg.name}`,
     };
   };
 

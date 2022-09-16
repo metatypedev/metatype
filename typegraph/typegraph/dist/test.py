@@ -1,5 +1,5 @@
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import worker
+from typegraph.materializers.deno import DenoRuntime
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import PredefinedFunMat
 from typegraph.materializers.graphql import GraphQLRuntime
@@ -12,7 +12,7 @@ with TypeGraph("test") as g:
     remote = GraphQLRuntime("http://localhost:5000/graphql")
     db = PrismaRuntime("postgresql://postgres:password@localhost:5432/db")
     ipApi = HTTPRuntime("http://ip-api.com/json")
-    js = worker.WorkerRuntime("js")
+    js = DenoRuntime(worker="js")
 
     messages = t.struct(
         {
@@ -34,10 +34,8 @@ with TypeGraph("test") as g:
 
     allow_all_policy = t.policy(
         t.struct(),  # t.struct({"claim", g.claim.inject}),
-        worker.JavascriptMat(worker.JavascriptMat.lift(lambda args: True)),
+        FunMat.from_lambda(lambda args: True),
     ).named("allow_all_policy")
-
-    # def test(a: g("allow_all_policy", lambda x: x.inp))
 
     arg = t.struct({"value": t.integer(), "nested": t.struct({"value": t.integer()})})
 
@@ -52,26 +50,26 @@ with TypeGraph("test") as g:
                     "c": t.func(
                         t.struct(
                             {
-                                "injection": t.injection(g("deps")),
+                                "injection": t.integer().s_parent(g("deps")),
                                 "nested_injection": t.struct(
-                                    {"value": t.injection(g("deps"))}
+                                    {"value": t.integer().s_parent(g("deps"))}
                                 ),
                                 "default": t.string().s_optional("ddds"),
-                                "forced": t.string().apply("dddsaaa"),
+                                "forced": t.string().s_raw("dddsaaa"),
                                 "nested_default": t.struct(
                                     {"value": t.string()}
                                 ).s_optional({"value": "a"}),
                                 "nested_inner_default": t.struct(
                                     {"value": t.string().s_optional("b")}
                                 ),
-                                "nested_apply": t.struct({"value": t.string()}).apply(
+                                "nested_apply": t.struct({"value": t.string()}).s_raw(
                                     {"value": "c"}
                                 ),
                                 "nested_inner_apply": t.struct(
-                                    {"value": t.string().apply("d")}
+                                    {"value": t.string().s_raw("d")}
                                 ),
                             }
-                        ),  # "query": arg.apply(5)}),
+                        ),
                         t.integer(),
                         PredefinedFunMat("identity"),
                     ),
@@ -112,10 +110,8 @@ with TypeGraph("test") as g:
                                 "duration": t.func(
                                     t.struct({"integer": g("res_int")}),
                                     t.integer().named("duration_remote"),
-                                    worker.JavascriptMat(
-                                        worker.JavascriptMat.lift(
-                                            lambda args: args.parent.integer * 3
-                                        ),
+                                    FunMat.from_lambda(
+                                        lambda args: args.parent.integer * 3
                                     ),
                                 ).named("compute_duration_remote"),
                             }
@@ -123,9 +119,7 @@ with TypeGraph("test") as g:
                     ),
                     "duration": t.gen(
                         t.integer().named("duration"),
-                        worker.JavascriptMat(
-                            worker.JavascriptMat.lift(lambda args: args.parent.out * 2),
-                        ),
+                        FunMat.from_lambda(lambda args: args.parent.out * 2),
                     ).named("compute_duration"),
                     "self": g("f"),
                     "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),
@@ -138,13 +132,24 @@ with TypeGraph("test") as g:
                         out: a * 2,
                         a: 2,
                         b: null,
-                        nested: () => ({
-                        ok: 0,
-                        }),
                     };
                 }
                 """
             ),
+            # FunMat(
+            #     """
+            #     ({ a }: { a: number; }) => {
+            #         return {
+            #             out: a * 2,
+            #             a: 2,
+            #             b: null,
+            #             nested: () => ({
+            #                 ok: 0,
+            #             }),
+            #         };
+            #     }
+            #     """
+            # ),
         )
         .named("f")
         .add_policy(allow_all_policy)
