@@ -1,13 +1,13 @@
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
+from typegraph.materializers.deno import DenoRuntime
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import ModuleMat
-from typegraph.materializers.worker import WorkerRuntime
 from typegraph.types import typedefs as t
 
 with TypeGraph("test-vars") as g:
     allow_all = policies.allow_all()
-    mod = ModuleMat("ts/deno.ts", runtime=WorkerRuntime("worker 1"))
+    mod = ModuleMat("ts/deno.ts", runtime=DenoRuntime(worker="worker 1"))
 
     g.expose(
         add=t.func(

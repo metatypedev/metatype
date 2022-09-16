@@ -1,7 +1,7 @@
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import deno
-from typegraph.materializers import worker
+from typegraph.materializers.deno import FunMat
+from typegraph.materializers.deno import PredefinedFunMat
 from typegraph.types import typedefs as t
 
 with TypeGraph("testing") as g:
@@ -9,9 +9,7 @@ with TypeGraph("testing") as g:
     rec = t.func(
         t.struct({"nested": t.struct({"arg": t.integer()}).named("Nested")}),
         t.integer(),
-        worker.JavascriptMat(
-            worker.JavascriptMat.lift(lambda args: args["nested"]["arg"])
-        ),
+        FunMat.from_lambda(lambda args: args["nested"]["arg"]),
     )
 
     g.expose(
@@ -19,7 +17,7 @@ with TypeGraph("testing") as g:
         test=t.func(
             t.struct({"a": t.integer().named("arg1")}).named("inp"),
             t.struct({"a": t.integer().named("deps")}).named("res"),
-            deno.PredefinedFunMat("identity"),
+            PredefinedFunMat("identity"),
         )
         .named("f")
         .add_policy(policies.allow_all()),

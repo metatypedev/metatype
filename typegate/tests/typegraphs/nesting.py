@@ -25,7 +25,7 @@ with TypeGraph("nesting") as g:
             "authorId": t.integer().named("Post.authorId"),
             "author": remote.get(
                 "/users/{id}",
-                t.struct({"id": t.injection(g("Post.authorId"))}),
+                t.struct({"id": t.integer().s_parent(g("Post.authorId"))}),
                 t.optional(g("User")),
             ),
             "title": t.string(),

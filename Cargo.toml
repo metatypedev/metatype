@@ -8,4 +8,4 @@ members = [
 [patch.crates-io]
 # https://github.com/prisma/quaint/issues/392
 # tiberius = { path = "../tiberius" }
-tiberius = { git = "https://github.com/metatypedev/tiberius", branch = "fix-0.9.5" }
+tiberius = { git = "https://github.com/metatypedev/tiberius", branch = "fix" }

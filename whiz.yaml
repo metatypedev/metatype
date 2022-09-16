@@ -1,6 +1,9 @@
 meta:
     workdir: .
-    watches: "meta-cli/src/**/*.rs"
+    watches:
+        - "meta-cli/src/**/*.rs"
+        - "examples/**/*.py"
+        - "typegraph/**/*.py"
     shell: "cargo run -p meta -- -C examples dev"
     envs:
         VIRTUAL_ENV: $PWD/examples/.venv
@@ -8,11 +11,6 @@ meta:
     depends_on:
         - libs
         - typegate_native
-
-libs:
-    workdir: libs
-    watches: "**/*.rs"
-    shell: "cargo build -p common"
 
 typegate:
     workdir: typegate
@@ -22,6 +20,11 @@ typegate:
     shell: "./run.sh"
     depends_on:
         - clean_deno_bindgen_cache
+
+libs:
+    workdir: libs
+    watches: "**/*.rs"
+    shell: "cargo build -p common"
 
 clean_deno_bindgen_cache:
     shell: rm -rf $(deno info --json | jq -r .denoDir)/plug/file

@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use common::typegraph::{TypeNode, Typegraph};
 use dprint_plugin_typescript::{configuration::Configuration, format_text};
 use lazy_static::lazy_static;
@@ -306,7 +306,7 @@ impl<'a> Codegen<'a> {
                     .join(", ");
                 Ok(format!("{{ {body} }}"))
             }
-            _ => Err(anyhow!("unsupported type \"{}\"", tpe.typedef)),
+            _ => bail!("unsupported type \"{}\"", tpe.typedef),
         }
     }
 
@@ -365,7 +365,7 @@ impl<'a> Codegen<'a> {
             }
             t if t == "string" => Ok("string".to_string()),
             t if t == "struct" => self.gen_obj_type(tpe),
-            _ => Err(anyhow!("unsupported type {}", tpe.typedef)),
+            _ => bail!("unsupported type {}", tpe.typedef),
         }
     }
 }

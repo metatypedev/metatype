@@ -10,7 +10,7 @@ include:
     file: "terraform.yml"
 
 variables: &variables
-  DENO_VERSION: "1.25.0"
+  DENO_VERSION: "1.25.2"
   DENO_BINDGEN_URL: https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts
   RUST_VERSION: "1.63.0"
   PNPM_VERSION: "7.9.3"

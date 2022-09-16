@@ -2,15 +2,16 @@
 
 use deno_bindgen::deno_bindgen;
 use prisma::introspection::Introspection;
+mod conf;
 mod prisma;
 use crate::prisma::engine;
+use conf::CONFIG;
 use dashmap::DashMap;
 use lazy_static::lazy_static;
 use log::info;
 use static_init::dynamic;
-use std::{collections::BTreeMap, panic, path::PathBuf, str::FromStr};
+use std::{borrow::Cow, collections::BTreeMap, panic, path::PathBuf, str::FromStr};
 use tokio::runtime::Runtime;
-
 #[cfg(test)]
 mod tests;
 
@@ -22,13 +23,21 @@ lazy_static! {
     static ref ENGINES: DashMap<String, engine::QueryEngine> = DashMap::new();
 }
 
+#[cfg(not(test))]
 #[dynamic]
+#[allow(dead_code)]
 static SENTRY: sentry::ClientInitGuard = {
-    let dsn = std::env::var("SENTRY_DSN").unwrap_or_else(|_| "".to_string());
     sentry::init((
-        dsn,
+        CONFIG.sentry_dsn.clone(),
         sentry::ClientOptions {
-            release: sentry::release_name!(),
+            release: Some(Cow::from(common::get_version())),
+            environment: Some(Cow::from(if CONFIG.debug {
+                "development".to_string()
+            } else {
+                "production".to_string()
+            })),
+            sample_rate: CONFIG.sentry_sample_rate,
+            traces_sample_rate: CONFIG.sentry_traces_sample_rate,
             ..Default::default()
         },
     ))

@@ -2,11 +2,9 @@ import {
   connect,
   Redis,
   RedisConnectOptions,
-  XId,
   XIdInput,
 } from "https://deno.land/x/redis@v0.25.5/mod.ts";
-// import * as Sentry from "npm:@sentry/node";
-import * as Sentry from "https://deno.land/x/sentry_deno/main.ts";
+import * as Sentry from "sentry";
 import config from "./config.ts";
 
 export const redisConfig = {

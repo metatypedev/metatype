@@ -1,11 +1,12 @@
 import frozendict
 from typegraph.graphs.builders import Graph
 from typegraph.graphs.builders import TypeMaterializer
+from typegraph.graphs.builders import TypeMeta
 from typegraph.graphs.builders import TypeNode
 from typegraph.graphs.builders import TypeRuntime
+from typegraph.graphs.typegraph import Cors
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import deno
-from typegraph.materializers import worker
+from typegraph.materializers.deno import FunMat
 from typegraph.types import typedefs as t
 
 
@@ -33,7 +34,7 @@ class TestTypegraph:
             arg1 = t.integer().named("arg1")
             inp = t.struct({"a": arg1}).named("inp")
             out = t.integer().named("out")
-            g.expose(test=t.func(inp, out, deno.FunMat("x2")).named("f"))
+            g.expose(test=t.func(inp, out, FunMat("(args) => args.a * 2")).named("f"))
 
         assert g.build() == overridable(
             Graph(
@@ -90,11 +91,28 @@ class TestTypegraph:
                     TypeMaterializer(
                         name="function",
                         runtime=0,
-                        data=frozendict.frozendict({"serial": False, "fn_expr": "x2"}),
+                        data=frozendict.frozendict(
+                            {"serial": False, "fn_expr": "(args) => args.a * 2"}
+                        ),
                     )
                 ],
-                runtimes=[TypeRuntime(name="deno", data=frozendict.frozendict({}))],
+                runtimes=[
+                    TypeRuntime(
+                        name="deno", data=frozendict.frozendict({"worker": "default"})
+                    )
+                ],
                 policies=[],
+                meta=TypeMeta(
+                    secrets=[],
+                    cors=Cors(
+                        allow_origin=[],
+                        allow_headers=[],
+                        expose_headers=[],
+                        allow_credentials=True,
+                        max_age=None,
+                    ),
+                    auths=[],
+                ),
             )
         )
 
@@ -109,19 +127,16 @@ class TestTypegraph:
                         "out": out,
                         "duration": t.gen(
                             t.integer().named("duration"),
-                            worker.JavascriptMat("() => 1"),
+                            FunMat("() => 1"),
                         ).named("compute_duration"),
                         "self": g("f"),
                         "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),
                     }
                 ).named("res"),
-                deno.FunMat("getter"),
+                FunMat("(args) => args.a"),
             ).named("f")
             g.expose(test=getter)
 
-        print()
-        print(g.build())
-        print()
         assert g.build() == overridable(
             Graph(
                 types=[
@@ -190,7 +205,7 @@ class TestTypegraph:
                         name="compute_duration",
                         typedef="gen",
                         policies=(),
-                        runtime=1,
+                        runtime=0,
                         data=frozendict.frozendict(
                             {"materializer": 1, "input": 7, "output": 8}
                         ),
@@ -199,7 +214,7 @@ class TestTypegraph:
                         name="struct_5",
                         typedef="struct",
                         policies=(),
-                        runtime=1,
+                        runtime=0,
                         data=frozendict.frozendict(
                             {
                                 "renames": frozendict.frozendict({}),
@@ -211,7 +226,7 @@ class TestTypegraph:
                         name="duration",
                         typedef="integer",
                         policies=(),
-                        runtime=1,
+                        runtime=0,
                         data=frozendict.frozendict({}),
                     ),
                     TypeNode(
@@ -232,23 +247,33 @@ class TestTypegraph:
                         name="function",
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"serial": False, "fn_expr": "getter"}
+                            {"serial": False, "fn_expr": "(args) => args.a"}
                         ),
                     ),
                     TypeMaterializer(
                         name="function",
-                        runtime=1,
+                        runtime=0,
                         data=frozendict.frozendict(
                             {"serial": False, "fn_expr": "() => 1"}
                         ),
                     ),
                 ],
                 runtimes=[
-                    TypeRuntime(name="deno", data=frozendict.frozendict({})),
                     TypeRuntime(
-                        name="worker", data=frozendict.frozendict({"name": "js"})
-                    ),
+                        name="deno", data=frozendict.frozendict({"worker": "default"})
+                    )
                 ],
                 policies=[],
+                meta=TypeMeta(
+                    secrets=[],
+                    cors=Cors(
+                        allow_origin=[],
+                        allow_headers=[],
+                        expose_headers=[],
+                        allow_credentials=True,
+                        max_age=None,
+                    ),
+                    auths=[],
+                ),
             )
         )

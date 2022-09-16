@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use common::typegraph::Typegraph;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
@@ -37,7 +37,7 @@ fn get_workspace_root() -> Result<PathBuf> {
         }
     }
 
-    Err(anyhow!("could not read workspace root from cargo metadata"))
+    bail!("could not read workspace root from cargo metadata")
 }
 
 lazy_static! {
@@ -199,14 +199,14 @@ fn simple_record() -> Result<()> {
     match res {
         Object(ref res) => match res.get("errors") {
             Some(errors) => match errors {
-                Array(errors) => Err(anyhow!(
+                Array(errors) => bail!(
                     "Errors:\n -- {}",
                     errors
                         .iter()
                         .map(|e| serde_json::to_string_pretty(e))
                         .collect::<Result<Vec<_>, serde_json::Error>>()?
                         .join("\n -- ")
-                )),
+                ),
                 _ => panic!("Error: {errors:?}"),
             },
             _ => Ok(()),

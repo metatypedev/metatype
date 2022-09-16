@@ -19,7 +19,7 @@ RUN deno_bindgen --release -- --locked --package native
 WORKDIR /typegate
 
 RUN mkdir workers \
-    && deno cache --import-map=import_map.json --lock=lock.json --lock-write --no-check src/main.ts
+    && deno cache --unstable --import-map=import_map.json --lock=lock.json --lock-write src/main.ts
 
 #
 

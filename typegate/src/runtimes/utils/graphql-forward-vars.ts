@@ -60,7 +60,7 @@ export function rebuildGraphQuery(
       query += `(${
         Object.entries(stage.props.args).map(
           ([argName, argValue]) => {
-            const val = argValue({}, null);
+            const val = argValue({}, null, {});
             if (typeof val === "function") {
               const varName = val(null);
               forwardVar(varName);

@@ -1,6 +1,6 @@
 import { ComputeStage } from "../engine.ts";
 import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
-import { associateWith } from "std/collections/mod.ts";
+import { associateWith } from "std/collections/associate_with.ts";
 import { join } from "std/path/mod.ts";
 import { JSONValue } from "../utils.ts";
 import {
@@ -138,7 +138,6 @@ export class HTTPRuntime extends Runtime {
 
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
 
-    console.log(stage.props.materializer);
     const { verb, path, ...options } = stage.props.materializer?.data ?? {};
     stagesMat.push(
       new ComputeStage({

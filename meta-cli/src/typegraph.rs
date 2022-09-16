@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, bail, Result};
 use common::typegraph::Typegraph;
 use indoc::formatdoc;
 use std::collections::HashMap;
@@ -122,21 +122,31 @@ impl SerializedTypegraphLoader {
                 },
             )
             .output()?;
+        let stdout = String::from_utf8(test.stdout)?;
 
         if !test.status.success() {
-            let message = String::from_utf8(test.stderr)?;
+            let stderr = String::from_utf8(test.stderr)?;
 
-            if message.contains("ModuleNotFoundError: No module named 'typegraph'") {
-                return Err(Error::msg(
+            if stderr.contains("ModuleNotFoundError: No module named 'typegraph'") {
+                bail!(
                     "typegraph module not found in venv, install it with `pip install typegraph`",
-                ));
+                );
             }
 
-            return Err(Error::msg(message));
+            bail!(
+                "PythonError\n{}\n{}",
+                if stdout.len() > 128 {
+                    &stdout[stdout.len() - 128..]
+                } else {
+                    &stdout
+                },
+                stderr
+            );
         }
 
-        let payload = String::from_utf8(test.stdout)?;
-        let tgs: HashMap<String, String> = serde_json::from_str(&payload)?;
+        let tgs: HashMap<String, String> = serde_json::from_str(&stdout).unwrap_or_else(|_| {
+            panic!("cannot parse typegraph: {} (first 64 chars)", &stdout[..64])
+        });
         Ok(tgs)
     }
 }

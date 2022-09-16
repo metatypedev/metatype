@@ -47,7 +47,7 @@ export function rebuildGraphQuery(
           Object.entries(stage.props.args).map(([argName, argValue]) => {
             return `${argName}: ${
               stringifyQL(
-                argValue({}, null) as JSONValue | FromVars<JSONValue>,
+                argValue({}, null, {}) as JSONValue | FromVars<JSONValue>,
               )(vars)
             }`;
           }).join(", ")

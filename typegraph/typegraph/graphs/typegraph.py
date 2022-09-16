@@ -20,6 +20,60 @@ class Code:
     type: Literal["func", "module"] = field(default="func")
 
 
+@dataclass
+class Auth:
+    name: str
+    protocol: str
+    auth_data: Dict[str, str]
+
+    @classmethod
+    def github(cls) -> "Auth":
+        return
+
+    @classmethod
+    def oauth2(
+        cls,
+        name: str,
+        authorize_url: str,
+        access_url: str,
+        scopes: str,
+        profile_url: Optional[str],
+    ) -> "Auth":
+        return Auth(
+            name,
+            "oauth2",
+            dict(
+                authorize_url=authorize_url,
+                access_url=access_url,
+                scopes=scopes,
+                profile_url=profile_url,
+            ),
+        )
+
+    # deno eval 'await crypto.subtle.generateKey({name: "ECDSA", namedCurve: "P-384"}, true, ["sign", "verify"]).then(k => crypto.subtle.exportKey("jwk", k.publicKey)).then(JSON.stringify).then(console.log);'
+    @classmethod
+    def jwk(cls, name: str, **kwargs) -> "Auth":
+        return Auth(name, "jwk", kwargs)
+
+
+github_auth = Auth.oauth2(
+    "github",
+    "https://github.com/login/oauth/authorize",
+    "https://github.com/login/oauth/access_token",
+    "openid profile email",
+    "https://api.github.com/user",
+)
+
+
+@dataclass
+class Cors:
+    allow_origin: List[str] = field(default_factory=list)
+    allow_headers: List[str] = field(default_factory=list)
+    expose_headers: List[str] = field(default_factory=list)
+    allow_credentials: bool = True
+    max_age: Optional[int] = None
+
+
 class TypeGraph:
     # repesent domain projected to an interface
     name: str
@@ -27,6 +81,8 @@ class TypeGraph:
     types: List["t.Type"]
     exposed: Dict[str, "t.func"]
     latest_type_id: int
+    auths: List[Auth]
+    cors: Cors
     path: str
 
     def __init__(self, name: str) -> None:
@@ -36,7 +92,13 @@ class TypeGraph:
         self.exposed = {}
         self.policies = []
         self.latest_type_id = 0
+        self.auths = []
+        self.cors = Cors()
         self.path = Path(inspect.stack()[1].filename)
+
+    def add_auth(self, auth: Auth) -> "TypeGraph":
+        self.auths.append(auth)
+        return self
 
     def next_type_id(self):
         self.latest_type_id += 1
