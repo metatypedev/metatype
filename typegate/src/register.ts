@@ -1,58 +1,70 @@
 import { Engine, initTypegraph } from "./engine.ts";
-import { redisConfig, RedisReplicatedMap } from "./redis.ts";
-import { TypeGateRuntime } from "./runtimes/TypeGateRuntime.ts";
+import { RedisConfig, RedisReplicatedMap } from "./redis.ts";
 
 console.log("init replicated map");
 
-const replicatedMap = await RedisReplicatedMap.init<Engine>(
-  "typegraph",
-  redisConfig,
-  (engine) => JSON.stringify(engine.tg.tg),
-  (payload) => initTypegraph(payload),
-);
+export abstract class Register {
+  abstract set(payload: string): Promise<string>;
 
-async function set(payload: string) {
-  const engine = await initTypegraph(payload);
+  abstract remove(name: string): Promise<void>;
 
-  if (engine.name !== "typegate") {
-    await replicatedMap.set(engine.name, engine);
+  abstract list(): Engine[];
+
+  abstract get(name: string): Engine | undefined;
+
+  abstract has(name: string): boolean;
+}
+export class ReplicatedRegister extends Register {
+  static async init(redisConfig: RedisConfig): Promise<ReplicatedRegister> {
+    const replicatedMap = await RedisReplicatedMap.init<Engine>(
+      "typegraph",
+      redisConfig,
+      (engine) => JSON.stringify(engine.tg.tg),
+      (payload) => initTypegraph(payload),
+    );
+
+    return new ReplicatedRegister(replicatedMap);
   }
 
-  return engine.name;
-}
-
-async function remove(name: string): Promise<number> {
-  if (name === "typegate" || !has(name)) {
-    return 0;
+  constructor(private replicatedMap: RedisReplicatedMap<Engine>) {
+    super();
   }
-  await get(name)!.terminate();
-  return replicatedMap.delete(name);
+
+  async set(payload: string): Promise<string> {
+    const engine = await initTypegraph(payload);
+
+    if (engine.name !== "typegate") {
+      await this.replicatedMap.set(engine.name, engine);
+    }
+
+    return engine.name;
+  }
+
+  async remove(name: string): Promise<void> {
+    if (name === "typegate" || !this.has(name)) {
+      return;
+    }
+    await this.get(name)!.terminate();
+    await this.replicatedMap.delete(name);
+  }
+
+  list(): Engine[] {
+    return Array.from(this.replicatedMap.memory.values());
+  }
+
+  get(name: string): Engine | undefined {
+    return this.replicatedMap.get(name);
+  }
+
+  has(name: string): boolean {
+    return this.replicatedMap.has(name);
+  }
+
+  startSync(inMemoryEngines: Record<string, Engine>): void {
+    for (const [name, engine] of Object.entries(inMemoryEngines)) {
+      // no need for a sync
+      this.replicatedMap.memory.set(name, engine);
+    }
+    this.replicatedMap.startSync();
+  }
 }
-
-function list(): Engine[] {
-  return Array.from(replicatedMap.memory.values());
-}
-
-function get(name: string): Engine | undefined {
-  return replicatedMap.get(name);
-}
-function has(name: string): boolean {
-  return replicatedMap.has(name);
-}
-
-export const register = {
-  set,
-  remove,
-  list,
-  get,
-  has,
-};
-
-const typegateEngine = await initTypegraph(
-  await Deno.readTextFile("./src/typegraphs/typegate.json"),
-  { typegate: await TypeGateRuntime.init() },
-);
-
-// no need for a sync
-replicatedMap.memory.set("typegate", typegateEngine);
-replicatedMap.startSync();

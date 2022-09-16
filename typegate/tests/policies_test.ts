@@ -39,7 +39,7 @@ test("Policies", async (t) => {
         }
       }
     `
-      .withHeaders({ a: "2" })
+      .withContext({ a: "2" })
       .expectData({
         pol_two: {
           a: 3,

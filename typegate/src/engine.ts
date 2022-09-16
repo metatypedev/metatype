@@ -530,7 +530,10 @@ export class Engine {
     }
 
     const { provider } = await unsafeExtractJWT(jwt);
-    const auth = this.tg.auths.get(provider as string);
+
+    const auth = this.tg.auths.size > 1
+      ? this.tg.auths.get(provider as string)
+      : this.tg.auths.values().next().value;
 
     if (!auth) {
       return [{}, new Headers()];
