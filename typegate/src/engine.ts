@@ -17,6 +17,7 @@ import type {
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { TypeNode } from "./type-node.ts";
+import { Auth } from "./auth.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -516,29 +517,39 @@ export class Engine {
   async ensureJWT(
     headers: Headers,
   ): Promise<[Record<string, unknown>, Headers]> {
-    const name = this.tg.root.name;
-
-    let jwt = headers.get("Authorization");
-    if (jwt) {
-      jwt = jwt.split(" ")[1];
-    } else {
-      jwt = getCookies(headers)[name];
-    }
-
-    if (!jwt) {
+    if (this.tg.auths.size === 0) {
       return [{}, new Headers()];
     }
 
-    const { provider } = await unsafeExtractJWT(jwt);
+    let [kind, token] = (headers.get("Authorization") ?? "").split(" ");
+    if (!token) {
+      const name = this.tg.root.name;
+      token = getCookies(headers)[name];
+    }
 
-    const auth = this.tg.auths.size > 1
-      ? this.tg.auths.get(provider as string)
-      : this.tg.auths.values().next().value;
+    if (!token) {
+      return [{}, new Headers()];
+    }
+
+    let auth = null;
+
+    if (kind === "basic") {
+      auth = this.tg.auths.get("basic");
+    } else if (this.tg.auths.size === 1) {
+      auth = this.tg.auths.values().next().value;
+    } else {
+      try {
+        const { provider } = await unsafeExtractJWT(token);
+        auth = this.tg.auths.get(provider as string);
+      } catch {
+        // malformed jwt
+      }
+    }
 
     if (!auth) {
       return [{}, new Headers()];
     }
 
-    return await auth.jwtMiddleware(jwt);
+    return await auth.tokenMiddleware(token);
   }
 }

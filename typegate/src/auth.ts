@@ -1,6 +1,12 @@
 import { OAuth2Client, Tokens } from "https://deno.land/x/oauth2_client/mod.ts";
 import config from "./config.ts";
-import { signJWT, signKey as nativeSignKey, verifyJWT } from "./crypto.ts";
+import * as base64 from "std/encoding/base64.ts";
+import {
+  sha256,
+  signJWT,
+  signKey as nativeSignKey,
+  verifyJWT,
+} from "./crypto.ts";
 import { envOrFail } from "./utils.ts";
 import { deleteCookie, setCookie } from "std/http/cookie.ts";
 import { crypto } from "std/crypto/mod.ts";
@@ -44,14 +50,54 @@ export abstract class Auth {
 
   abstract authMiddleware(request: Request): Promise<Response>;
 
-  abstract jwtMiddleware(
-    jwt: string,
+  abstract tokenMiddleware(
+    token: string,
   ): Promise<[Record<string, unknown>, Headers]>;
 }
 
-export class JWKAuth extends Auth {
-  signKey: CryptoKey;
+export class BasicAuth extends Auth {
+  static init(typegraphName: string, auth: AuthDS): Promise<Auth> {
+    const tokens = new Map();
+    for (const user of auth.auth_data.users as string[]) {
+      const token = envOrFail(typegraphName, `${auth.name}_{user}`);
+      tokens.set(user, token);
+    }
+    return Promise.resolve(new BasicAuth(typegraphName, auth, tokens));
+  }
 
+  constructor(
+    typegraphName: string,
+    auth: AuthDS,
+    private hashes: Map<string, string>,
+  ) {
+    super(typegraphName, auth);
+  }
+
+  authMiddleware(_request: Request): Promise<Response> {
+    const res = new Response("not found", {
+      status: 404,
+    });
+    return Promise.resolve(res);
+  }
+
+  tokenMiddleware(
+    jwt: string,
+  ): Promise<[Record<string, unknown>, Headers]> {
+    const [user, token] = new TextDecoder().decode(base64.decode(jwt)).split(
+      ":",
+    );
+
+    const claims = this.hashes.get(user) === token
+      ? {
+        user,
+      }
+      : {};
+
+    return Promise.resolve([claims, new Headers()]);
+  }
+}
+
+export class JWKAuth extends Auth {
   static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
     if (auth.name === "native") {
       return new JWKAuth(typegraphName, auth, nativeSignKey);
@@ -71,30 +117,30 @@ export class JWKAuth extends Auth {
     return new JWKAuth(typegraphName, auth, signKey);
   }
 
-  constructor(typegraphName: string, auth: AuthDS, signKey: CryptoKey) {
+  constructor(typegraphName: string, auth: AuthDS, private signKey: CryptoKey) {
     super(typegraphName, auth);
-    this.signKey = signKey;
   }
 
-  // deno-lint-ignore require-await
-  async authMiddleware(_request: Request): Promise<Response> {
-    return new Response("not found", {
+  authMiddleware(_request: Request): Promise<Response> {
+    const res = new Response("not found", {
       status: 404,
     });
+    return Promise.resolve(res);
   }
 
-  async jwtMiddleware(
+  async tokenMiddleware(
     token: string,
   ): Promise<[Record<string, unknown>, Headers]> {
-    const claims = await jwt.verify(token, this.signKey);
-    return [claims, new Headers()];
+    try {
+      const claims = await jwt.verify(token, this.signKey);
+      return [claims, new Headers()];
+    } catch {
+      return [{}, new Headers()];
+    }
   }
 }
 
 export class OAuth2Auth extends Auth {
-  client: OAuth2Client;
-  profileUrl: string;
-
   static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
     const clientId = envOrFail(typegraphName, `${auth.name}_CLIENT_ID`);
     const clientSecret = envOrFail(
@@ -124,12 +170,10 @@ export class OAuth2Auth extends Auth {
   constructor(
     typegraphName: string,
     auth: AuthDS,
-    client: OAuth2Client,
-    profileUrl: string,
+    private client: OAuth2Client,
+    private profileUrl: string,
   ) {
     super(typegraphName, auth);
-    this.profileUrl = profileUrl;
-    this.client = client;
   }
 
   async authMiddleware(request: Request): Promise<Response> {
@@ -169,24 +213,24 @@ export class OAuth2Auth extends Auth {
     });
   }
 
-  async jwtMiddleware(
-    jwt: string,
+  async tokenMiddleware(
+    token: string,
   ): Promise<[Record<string, unknown>, Headers]> {
     const clearCookie = (): Headers => {
       const hs = new Headers();
       hs.set(nextAuthorizationHeader, "");
-      if (jwt) {
+      if (token) {
         deleteCookie(hs, this.typegraphName);
       }
       return hs;
     };
 
-    if (!jwt) {
+    if (!token) {
       return [{}, clearCookie()];
     }
 
     try {
-      const claims = await verifyJWT(jwt) as JWTClaims;
+      const claims = await verifyJWT(token) as JWTClaims;
       if (!claims) {
         return [{}, clearCookie()];
       }
