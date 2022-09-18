@@ -3,11 +3,10 @@ import * as Sentry from "sentry";
 import { init } from "../../bindings/bindings.ts";
 
 import { ReplicatedRegister } from "./register.ts";
-import config from "./config.ts";
+import config, { redisConfig } from "./config.ts";
 import { getLogger } from "./log.ts";
-import { redisConfig } from "./redis.ts";
 import { initTypegraph } from "./engine.ts";
-import { TypeGateRuntime } from "./runtimes/TypeGateRuntime.ts";
+import { TypeGateRuntime } from "./runtimes/typegate.ts";
 import { typegate } from "./typegate.ts";
 
 if (config.sentry_dsn) {

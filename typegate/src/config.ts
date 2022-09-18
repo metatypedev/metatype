@@ -7,6 +7,18 @@ import * as base64 from "std/encoding/base64.ts";
 import { parse } from "std/flags/mod.ts";
 import { get_version } from "../../bindings/bindings.ts";
 
+async function getHostname() {
+  try {
+    const cmd = Deno.run({ cmd: ["hostname"], stdout: "piped" });
+    const stdout = await cmd.output();
+    cmd.close();
+    return new TextDecoder().decode(stdout).trim();
+  } catch (e) {
+    console.debug(`cannot use hostname binary (${e.message}), fallback to env`);
+    return Deno.env.get("HOSTNAME");
+  }
+}
+
 const defaults = {
   hostname: await getHostname(),
   cookies_max_age_sec: 3600 * 24 * 30,
@@ -71,18 +83,24 @@ if (!parsing.success) {
   Deno.exit(1);
 }
 
-const { data } = parsing;
+const { data: config } = parsing;
 
-export default data;
+export default config;
 
-async function getHostname() {
-  try {
-    const cmd = Deno.run({ cmd: ["hostname"], stdout: "piped" });
-    const stdout = await cmd.output();
-    cmd.close();
-    return new TextDecoder().decode(stdout).trim();
-  } catch (e) {
-    console.debug(`cannot use hostname binary (${e.message}), fallback to env`);
-    return Deno.env.get("HOSTNAME");
-  }
-}
+export type RedisConfig = {
+  hostname: string;
+  port: string;
+  password: string;
+  db: number;
+  maxRetryCount: number;
+  retryInterval: number;
+};
+
+export const redisConfig: RedisConfig = {
+  hostname: config.redis_url.hostname,
+  port: config.redis_url.port,
+  password: config.redis_url.password,
+  db: parseInt(config.redis_url.pathname.substring(1), 10),
+  maxRetryCount: 6,
+  retryInterval: 5000,
+};

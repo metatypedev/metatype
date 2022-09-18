@@ -1,24 +1,5 @@
 import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
-import config from "./config.ts";
-
-export type RedisConfig = {
-  hostname: string;
-  port: string;
-  password: string;
-  db: number;
-  maxRetryCount: number;
-  retryInterval: number;
-};
-
-export const redisConfig: RedisConfig = {
-  hostname: config.redis_url.hostname,
-  port: config.redis_url.port,
-  password: config.redis_url.password,
-  db: parseInt(config.redis_url.pathname.substring(1), 10),
-  maxRetryCount: 6,
-  retryInterval: 5000,
-};
 
 type SyncContext = {
   start: (cursor: XIdInput) => AsyncIterableIterator<Record<string, string>>;

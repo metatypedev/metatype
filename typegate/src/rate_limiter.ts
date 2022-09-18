@@ -1,4 +1,10 @@
-import { Bulk, connect, Redis, RedisConnectOptions } from "redis";
+import {
+  Bulk,
+  connect,
+  Redis,
+  RedisConnectOptions,
+  RedisSubscription,
+} from "redis";
 import { Deferred, deferred } from "std/async/deferred.ts";
 
 const nowSec = (): number => Math.ceil(new Date().valueOf() / 1000);
@@ -8,6 +14,7 @@ const countWaiterChannel = "counters";
 
 export class RateLimiter {
   countWaiter: Map<string, Deferred<number>>;
+  sub: RedisSubscription | null;
 
   private constructor(
     private map: TTLMap,
@@ -17,9 +24,10 @@ export class RateLimiter {
     private budget: number,
   ) {
     this.countWaiter = new Map();
+    this.sub = null;
   }
 
-  async init(
+  static async init(
     connection: RedisConnectOptions,
     window: number,
     budget: number,
@@ -27,34 +35,40 @@ export class RateLimiter {
     const map = new TTLMap();
     const redis = await connect(connection);
     const redisPubSub = await connect(connection);
-    const ret = new RateLimiter(map, redis, redisPubSub, window, budget);
-    await ret.listen();
-    return ret;
+    return new RateLimiter(map, redis, redisPubSub, window, budget);
   }
 
-  private async listen() {
-    const sub = await this.redisPubSub.subscribe(countWaiterChannel);
-    (async () => {
-      for await (const { message } of sub.receive()) {
-        const [counter, countRaw] = message.split("=");
-        const waiter = this.countWaiter.get(counter);
-        const count = Number(countRaw);
-
-        if (waiter && count >= 0) {
-          waiter.resolve(count);
-          this.countWaiter.delete(counter);
-        }
-      }
-    })();
-  }
-
-  waitOnCount(counter: string): Deferred<number> {
+  async waitOnCount(counter: string): Promise<Deferred<number>> {
     const waiter = this.countWaiter.get(counter);
     if (waiter) {
       return waiter;
     }
     const newWaiter = deferred<number>();
     this.countWaiter.set(counter, newWaiter);
+
+    if (!this.sub) {
+      this.sub = await this.redisPubSub.subscribe(countWaiterChannel);
+
+      (async () => {
+        for await (const { message } of this.sub!.receive()) {
+          const [counter, countRaw] = message.split("=");
+          const waiter = this.countWaiter.get(counter);
+          const count = Number(countRaw);
+
+          if (waiter && count >= 0) {
+            waiter.resolve(count);
+            this.countWaiter.delete(counter);
+
+            if (this.countWaiter.size === 0) {
+              await this.sub!.unsubscribe();
+              this.sub = null;
+              return;
+            }
+          }
+        }
+      })();
+    }
+
     return newWaiter;
   }
 
@@ -77,8 +91,7 @@ export class RateLimiter {
 
     if (!last) {
       if (count === -1) {
-        // single-owner
-
+        // own the newly added token
         const now = nowSec();
         count = Math.max(
           last
@@ -95,7 +108,8 @@ export class RateLimiter {
         tx.publish(countWaiterChannel, `${tokensKey}=${count}`);
         await tx.flush();
       } else if (count < -1) {
-        count = await this.waitOnCount(tokensKey);
+        const countDef = await this.waitOnCount(tokensKey);
+        count = await countDef;
       } else {
         throw new Error("should never happen");
       }
