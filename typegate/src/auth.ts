@@ -1,12 +1,7 @@
 import { OAuth2Client, Tokens } from "https://deno.land/x/oauth2_client/mod.ts";
 import config from "./config.ts";
 import * as base64 from "std/encoding/base64.ts";
-import {
-  sha256,
-  signJWT,
-  signKey as nativeSignKey,
-  verifyJWT,
-} from "./crypto.ts";
+import { signJWT, signKey as nativeSignKey, verifyJWT } from "./crypto.ts";
 import { envOrFail } from "./utils.ts";
 import { deleteCookie, setCookie } from "std/http/cookie.ts";
 import { crypto } from "std/crypto/mod.ts";
@@ -14,7 +9,7 @@ import * as jwt from "jwt";
 
 export type AuthDS = {
   name: string;
-  protocol: "oauth2" | "jwk";
+  protocol: "oauth2" | "jwk" | "basic";
   auth_data: Record<string, unknown>;
 };
 
@@ -36,6 +31,8 @@ export abstract class Auth {
     switch (auth.protocol) {
       case "oauth2":
         return await OAuth2Auth.init(typegraphName, auth);
+      case "basic":
+        return await BasicAuth.init(typegraphName, auth);
       case "jwk":
         return await JWKAuth.init(typegraphName, auth);
       default:
@@ -43,7 +40,7 @@ export abstract class Auth {
     }
   }
 
-  constructor(typegraphName: string, auth: AuthDS) {
+  protected constructor(typegraphName: string, auth: AuthDS) {
     this.typegraphName = typegraphName;
     this.authDS = auth;
   }
@@ -65,7 +62,7 @@ export class BasicAuth extends Auth {
     return Promise.resolve(new BasicAuth(typegraphName, auth, tokens));
   }
 
-  constructor(
+  private constructor(
     typegraphName: string,
     auth: AuthDS,
     private hashes: Map<string, string>,
@@ -117,7 +114,11 @@ export class JWKAuth extends Auth {
     return new JWKAuth(typegraphName, auth, signKey);
   }
 
-  constructor(typegraphName: string, auth: AuthDS, private signKey: CryptoKey) {
+  private constructor(
+    typegraphName: string,
+    auth: AuthDS,
+    private signKey: CryptoKey,
+  ) {
     super(typegraphName, auth);
   }
 
@@ -167,7 +168,7 @@ export class OAuth2Auth extends Auth {
     );
   }
 
-  constructor(
+  private constructor(
     typegraphName: string,
     auth: AuthDS,
     private client: OAuth2Client,

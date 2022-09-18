@@ -12,11 +12,20 @@ meta:
         - libs
         - typegate_native
 
-typegate:
+typegate1:
     workdir: typegate
     watches: "src/**/*.ts"
     envs:
         TG_PORT: "7891"
+    shell: "./run.sh"
+    depends_on:
+        - clean_deno_bindgen_cache
+
+typegate2:
+    workdir: typegate
+    watches: "src/**/*.ts"
+    envs:
+        TG_PORT: "7892"
     shell: "./run.sh"
     depends_on:
         - clean_deno_bindgen_cache

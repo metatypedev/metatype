@@ -34,7 +34,7 @@ const server = serve(
   { port: config.tg_port },
 );
 
-if (config.debug) {
+if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
   // deno-lint-ignore no-inner-declarations
   function reload(backoff = 1) {
     fetch(
