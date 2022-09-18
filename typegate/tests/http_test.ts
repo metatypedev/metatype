@@ -1,5 +1,8 @@
 import { assertEquals } from "std/testing/asserts.ts";
-import { getFieldLists, replaceDynamicPathParams } from "../http.ts";
+import {
+  getFieldLists,
+  replaceDynamicPathParams,
+} from "../src/runtimes/utils/http.ts";
 
 Deno.test("dynamic path params", async (t) => {
   await t.step("{param} syntax", () => {

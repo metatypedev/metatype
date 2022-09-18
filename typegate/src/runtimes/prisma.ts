@@ -1,6 +1,6 @@
 import { Resolver, Runtime } from "./Runtime.ts";
 import * as native from "../../../bindings/bindings.ts";
-import { FromVars, GraphQLRuntime } from "./GraphQLRuntime.ts";
+import { FromVars, GraphQLRuntime } from "./graphql.ts";
 import { ResolverError } from "../errors.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
 

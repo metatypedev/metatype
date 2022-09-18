@@ -120,7 +120,7 @@ export class RateLimiter {
     tx.eval(
       `
         local c = redis.call('DECRBY', KEYS[1], ARGV[1])
-        if tonumber(c) < 1 then
+        if tonumber(c) < 0 then
             redis.call('SET', KEYS[1], '0')
             return '0'
         end

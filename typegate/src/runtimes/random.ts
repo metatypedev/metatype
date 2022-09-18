@@ -1,6 +1,6 @@
 import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
-import { TypeNode } from "../type-node.ts";
+import { TypeNode } from "../type_node.ts";
 import Chance from "npm:chance@1.1.8";
 import { ensure } from "../utils.ts";
 

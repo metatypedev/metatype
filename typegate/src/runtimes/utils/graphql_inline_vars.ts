@@ -1,5 +1,5 @@
 import { iterParentStages, JSONValue } from "../../utils.ts";
-import type { FromVars } from "../GraphQLRuntime.ts";
+import type { FromVars } from "../graphql.ts";
 import { ComputeStage } from "../../engine.ts";
 
 export function stringifyQL(
