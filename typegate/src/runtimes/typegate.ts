@@ -3,7 +3,7 @@ import { ComputeStage, Engine } from "../engine.ts";
 import { Register } from "../register.ts";
 import config from "../config.ts";
 import * as path from "std/path/mod.ts";
-import { TypeNode } from "../type-node.ts";
+import { TypeNode } from "../type_node.ts";
 
 interface StructField {
   name: string;
