@@ -1,5 +1,5 @@
 import { JSONValue, unparse, unzip } from "../../utils.ts";
-import type { FromVars } from "../GraphQLRuntime.ts";
+import type { FromVars } from "../graphql.ts";
 import { ComputeStage } from "../../engine.ts";
 import * as ast from "graphql_ast";
 import { iterParentStages } from "../../utils.ts";

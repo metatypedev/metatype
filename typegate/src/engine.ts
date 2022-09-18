@@ -4,7 +4,7 @@ import type ast from "graphql_ast";
 import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
 import { ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
-import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
+import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { sha1, unsafeExtractJWT } from "./crypto.ts";
@@ -16,7 +16,7 @@ import type {
 } from "./runtimes/Runtime.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
-import { TypeNode } from "./type-node.ts";
+import { TypeNode } from "./type_node.ts";
 import { Auth } from "./auth.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));

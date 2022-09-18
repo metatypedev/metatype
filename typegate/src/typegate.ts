@@ -1,6 +1,6 @@
 import config from "./config.ts";
 import { Register } from "./register.ts";
-import { renderDebugAuth } from "./web/auth-debug.ts";
+import { renderDebugAuth } from "./web/auth_debug.ts";
 import { renderPlayground } from "./web/playground.ts";
 import * as Sentry from "sentry";
 

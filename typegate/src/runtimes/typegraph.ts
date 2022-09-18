@@ -1,11 +1,10 @@
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import { TypeNode } from "../type-node.ts";
 import { TypeKind } from "graphql";
 import * as ast from "graphql_ast";
 import { ensure } from "../utils.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
-import { FuncNode, StructNode } from "../type-node.ts";
+import { FuncNode, StructNode, TypeNode } from "../type_node.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 

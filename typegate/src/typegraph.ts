@@ -8,12 +8,12 @@ import {
 } from "./engine.ts";
 import * as graphql from "./graphql.ts";
 import { FragmentDefs } from "./graphql.ts";
-import { DenoRuntime } from "./runtimes/DenoRuntime.ts";
-import { GoogleapisRuntime } from "./runtimes/GoogleapisRuntime.ts";
-import { GraphQLRuntime } from "./runtimes/GraphQLRuntime.ts";
-import { HTTPRuntime } from "./runtimes/HTTPRuntime.ts";
-import { PrismaRuntime } from "./runtimes/PrismaRuntime.ts";
-import { RandomRuntime } from "./runtimes/RandomRuntime.ts";
+import { DenoRuntime } from "./runtimes/deno.ts";
+import { GoogleapisRuntime } from "./runtimes/googleapis.ts";
+import { GraphQLRuntime } from "./runtimes/graphql.ts";
+import { HTTPRuntime } from "./runtimes/http.ts";
+import { PrismaRuntime } from "./runtimes/prisma.ts";
+import { RandomRuntime } from "./runtimes/random.ts";
 import {
   Batcher,
   Resolver,
@@ -28,7 +28,7 @@ import { v4 as uuid } from "std/uuid/mod.ts";
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
 
-import { ListNode, StructNode, TypeNode } from "./type-node.ts";
+import { ListNode, StructNode, TypeNode } from "./type_node.ts";
 
 interface TypePolicy {
   name: string;
