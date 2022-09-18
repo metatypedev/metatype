@@ -1,9 +1,4 @@
-import {
-  connect,
-  Redis,
-  RedisConnectOptions,
-  XIdInput,
-} from "https://deno.land/x/redis@v0.25.5/mod.ts";
+import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
 import config from "./config.ts";
 
@@ -173,15 +168,15 @@ export class RedisReplicatedMap<T> {
 
     this.memory.set(name, elem);
 
-    const p = redis.tx();
-    await p.hset(key, name, await serializer(elem));
-    await p.xadd(
+    const tx = redis.tx();
+    tx.hset(key, name, await serializer(elem));
+    tx.xadd(
       ekey,
       "*",
       { name, event: "+", instance: this.instance },
       { approx: true, elements: 10000 },
     );
-    await p.flush();
+    await tx.flush();
   }
 
   get(name: string): T | undefined {
@@ -193,20 +188,20 @@ export class RedisReplicatedMap<T> {
   }
 
   async delete(name: string): Promise<number> {
-    const { key, ekey, redis } = this;
+    const { key, ekey, redis, instance } = this;
 
     this.memory.delete(name);
 
-    const p = redis.tx();
-    const count = await p.hdel(key, name);
-    await p.xadd(
+    const tx = redis.tx();
+    const countP = tx.hdel(key, name);
+    tx.xadd(
       ekey,
       "*",
-      { name, event: "-", instance: this.instance },
+      { name, event: "-", instance },
       { approx: true, elements: 10000 },
     );
-    await p.flush();
-    return count;
+    await tx.flush();
+    return await countP;
   }
 
   async filter(

@@ -128,6 +128,7 @@ const authorize = async (
     // null = inherit
     return null;
   }
+
   const [check, ...nextChecks] = checks;
   const decision = await policiesRegistry[check]();
   verbose && console.log(stageId, decision);
@@ -207,7 +208,9 @@ export class Engine {
         (decisions.some((d) => d === null) || decisions.length < 1)
       ) {
         // root level field inherit false
-        throw Error(`no authorization policy set in root field ${stage.id()}`);
+        throw Error(
+          `no authorization policy took a decision in root field ${stage.id()}`,
+        );
       }
 
       const deps = dependencies

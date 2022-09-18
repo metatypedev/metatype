@@ -22,10 +22,16 @@ def send_in_blue_send(subject, frm, to, api_key):
         ),
         t.struct({"success": t.boolean(), "error": t.string().s_optional()}),
         f.imp("default"),
-    )
+    ).limit()
 
 
-with TypeGraph("biscuicuits") as g:
+with TypeGraph(
+    "biscuicuits",
+    auths=[github_auth],
+    rate_limit=2000,
+    rate_window_sec=60,
+    rate_limit_query=200,
+) as g:
 
     g.add_auth(github_auth)
 
