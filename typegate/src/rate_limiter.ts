@@ -1,20 +1,14 @@
-import {
-  Bulk,
-  connect,
-  Redis,
-  RedisConnectOptions,
-  RedisSubscription,
-} from "redis";
+import { connect, Redis, RedisConnectOptions, RedisSubscription } from "redis";
 import { Deferred, deferred } from "std/async/deferred.ts";
 
 const nowSec = (): number => Math.ceil(new Date().valueOf() / 1000);
-const nullOrNumber = (b: Bulk) => b ? Number(b) : null;
 
 const countWaiterChannel = "counters";
 
 export class RateLimiter {
   countWaiter: Map<string, Deferred<number>>;
   sub: RedisSubscription | null;
+  backgroundWork: Map<number, Deferred<void>>;
 
   private constructor(
     private map: TTLMap,
@@ -25,6 +19,7 @@ export class RateLimiter {
   ) {
     this.countWaiter = new Map();
     this.sub = null;
+    this.backgroundWork = new Map();
   }
 
   static async init(
@@ -36,6 +31,17 @@ export class RateLimiter {
     const redis = await connect(connection);
     const redisPubSub = await connect(connection);
     return new RateLimiter(map, redis, redisPubSub, window, budget);
+  }
+
+  async terminate() {
+    if (this.sub) {
+      await this.sub.unsubscribe(countWaiterChannel);
+      this.sub = null;
+    }
+    await Promise.all(this.backgroundWork.values());
+    this.redis.close();
+    this.redisPubSub.close();
+    this.map.terminate();
   }
 
   async waitOnCount(counter: string): Promise<Deferred<number>> {
@@ -60,7 +66,7 @@ export class RateLimiter {
             this.countWaiter.delete(counter);
 
             if (this.countWaiter.size === 0) {
-              await this.sub!.unsubscribe();
+              await this.sub!.unsubscribe(countWaiterChannel);
               this.sub = null;
               return;
             }
@@ -72,9 +78,18 @@ export class RateLimiter {
     return newWaiter;
   }
 
-  async currentTokens(typegraph: string, identifier: string): Promise<number> {
-    const tokensKey = `${typegraph}:${identifier}:tokens`;
-    const lastKey = `${typegraph}:${identifier}:last`;
+  async reset(id: string): Promise<void> {
+    const tokensKey = `${id}:tokens`;
+    const lastKey = `${id}:last`;
+    const tx = this.redis.tx();
+    tx.del(tokensKey);
+    tx.del(lastKey);
+    await tx.flush();
+  }
+
+  async currentTokens(id: string): Promise<number> {
+    const tokensKey = `${id}:tokens`;
+    const lastKey = `${id}:last`;
 
     const currentTokens = this.map.decrby(tokensKey, 1);
     if (currentTokens && currentTokens > 0) {
@@ -82,12 +97,13 @@ export class RateLimiter {
     }
 
     const tx = this.redis.tx();
-    const countP = tx.decrby(tokensKey, 1);
-    const lastP = tx.get(lastKey);
-    await tx.flush();
+    tx.decrby(tokensKey, 1);
+    tx.get(lastKey);
+    const txRes = await tx.flush();
 
-    let count = await countP;
-    const last = nullOrNumber(await lastP);
+    let [count, last] = txRes.pop() as any;
+
+    console.log(count, last);
 
     if (!last) {
       if (count === -1) {
@@ -120,17 +136,28 @@ export class RateLimiter {
   }
 
   decr(
-    typegraph: string,
-    identifier: string,
+    id: string,
     n: number,
   ): number | null {
-    const tokensKey = `${typegraph}:${identifier}:tokens`;
-    const lastKey = `${typegraph}:${identifier}:last`;
-
+    const tokensKey = `${id}:tokens`;
     const currentTokens = this.map.decrby(tokensKey, n);
+    void this.backgroundDecr(id, n);
+    return currentTokens;
+  }
+
+  async backgroundDecr(id: string, n: number): Promise<void> {
+    const backgroundId = nowSec();
+    if (this.backgroundWork.has(backgroundId)) {
+      return;
+    }
+
+    const tokensKey = `${id}:tokens`;
+    const lastKey = `${id}:last`;
+
+    const def = deferred<void>();
+    this.backgroundWork.set(backgroundId, def);
 
     const tx = this.redis.tx();
-    const currentTokensP = tx.decrby(tokensKey, n);
     tx.eval(
       `
         local c = redis.call('DECRBY', KEYS[1], ARGV[1])
@@ -143,28 +170,26 @@ export class RateLimiter {
       [tokensKey],
       [n],
     );
-    const lastP = tx.get(lastKey);
-    void Promise.all([tx.flush(), currentTokensP, lastP]).then(
-      ([_, currentTokens, last]) => {
-        if (currentTokens && last) {
-          this.map.set(tokensKey, Number(currentTokens), Number(last));
-        }
-      },
-    );
+    tx.get(lastKey);
+    const txRes = await tx.flush();
 
-    return currentTokens;
+    def.resolve();
+    this.backgroundWork.delete(backgroundId);
+
+    const [currentTokens, last] = txRes.pop() as any;
+    if (currentTokens && last) {
+      this.map.set(tokensKey, Number(currentTokens), Number(last));
+    }
   }
 
   async limit(
-    typegraph: string,
-    identifier: string,
+    id: string,
     queryBudget: number,
   ): Promise<RateLimit> {
-    const budget = await this.currentTokens(typegraph, identifier);
+    const budget = await this.currentTokens(id);
     return new RateLimit(
       this,
-      typegraph,
-      identifier,
+      id,
       Math.min(budget, queryBudget - 1),
     );
   }
@@ -175,19 +200,22 @@ class RateLimit {
 
   constructor(
     private limiter: RateLimiter,
-    private typegraph: string,
-    private identifier: string,
-    private budget: number,
+    private id: string,
+    public budget: number,
   ) {
     this.consumed = 1;
   }
 
   consume(n: number) {
     this.consumed += n;
-    this.budget = this.limiter.decr(this.typegraph, this.identifier, n) ??
-      this.budget - n;
+    this.budget -= n;
 
-    if (this.budget <= 0) {
+    const globalBudget = this.limiter.decr(this.id, n);
+    if (globalBudget) {
+      this.budget = Math.min(this.budget, globalBudget);
+    }
+
+    if (this.budget < 0) {
       throw new Error("Rate-limit reached");
     }
   }
@@ -199,6 +227,7 @@ const intervalFinalizer = new FinalizationRegistry((interval: number) => {
 
 class TTLMap {
   map: Map<string, [number, number]>;
+  gc: number;
 
   constructor() {
     const map = new Map();
@@ -211,7 +240,12 @@ class TTLMap {
         }
       }
     }, 100);
+    this.gc = gc;
     intervalFinalizer.register(this, gc);
+  }
+
+  terminate() {
+    clearInterval(this.gc);
   }
 
   set(key: string, value: number, expire: number) {

@@ -1,5 +1,5 @@
 import { Engine, initTypegraph } from "./engine.ts";
-import { RedisReplicatedMap } from "./redis.ts";
+import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConfig } from "./config.ts";
 
 console.log("init replicated map");
