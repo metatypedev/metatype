@@ -168,13 +168,13 @@ export class RedisReplicatedMap<T> {
     return this.memory.has(name);
   }
 
-  async delete(name: string): Promise<number> {
+  async delete(name: string): Promise<void> {
     const { key, ekey, redis, instance } = this;
 
     this.memory.delete(name);
 
     const tx = redis.tx();
-    const countP = tx.hdel(key, name);
+    tx.hdel(key, name);
     tx.xadd(
       ekey,
       "*",
@@ -182,7 +182,6 @@ export class RedisReplicatedMap<T> {
       { approx: true, elements: 10000 },
     );
     await tx.flush();
-    return await countP;
   }
 
   async filter(
