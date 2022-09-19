@@ -57,7 +57,13 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 0, "input": 2, "output": 4}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 0,
+                                "input": 2,
+                                "output": 4,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -112,6 +118,7 @@ class TestTypegraph:
                         max_age=None,
                     ),
                     auths=[],
+                    rate=[],
                 ),
             )
         )
@@ -158,7 +165,13 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 0, "input": 2, "output": 4}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 0,
+                                "input": 2,
+                                "output": 4,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -207,7 +220,13 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 1, "input": 7, "output": 8}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 1,
+                                "input": 7,
+                                "output": 8,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -274,6 +293,7 @@ class TestTypegraph:
                         max_age=None,
                     ),
                     auths=[],
+                    rate=[],
                 ),
             )
         )

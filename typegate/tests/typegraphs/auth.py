@@ -5,9 +5,7 @@ from typegraph.policies import allow_all
 from typegraph.types import typedefs as t
 
 
-with TypeGraph("auth") as g:
-
-    g.add_auth(github_auth)
+with TypeGraph("auth", auths=[github_auth]) as g:
 
     all = allow_all()
 

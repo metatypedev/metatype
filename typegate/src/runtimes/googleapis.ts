@@ -3,7 +3,7 @@ import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
 import * as ast from "graphql_ast";
-import { StructNode } from "../type-node.ts";
+import { StructNode } from "../type_node.ts";
 
 export class GoogleapisRuntime extends Runtime {
   constructor() {

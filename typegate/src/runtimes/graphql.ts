@@ -5,8 +5,8 @@ import { Resolver, Runtime } from "./Runtime.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
 import * as ast from "graphql_ast";
 import { unparse } from "../utils.ts";
-import * as ForwardVars from "./utils/graphql-forward-vars.ts";
-import * as InlineVars from "./utils/graphql-inline-vars.ts";
+import * as ForwardVars from "./utils/graphql_forward_vars.ts";
+import * as InlineVars from "./utils/graphql_inline_vars.ts";
 
 export interface FromVars<T> {
   (variables: Record<string, unknown>): T;
@@ -112,6 +112,8 @@ export class GraphQLRuntime extends Runtime {
       batcher: (x: any) => x,
       node: "",
       path: [...stage.props.path.slice(0, -1), "query"],
+      rateCalls: stage.props.rateCalls,
+      rateWeight: stage.props.rateWeight,
     });
     stagesMat.push(queryStage);
 

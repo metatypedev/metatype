@@ -1,29 +1,5 @@
-import {
-  connect,
-  Redis,
-  RedisConnectOptions,
-  XIdInput,
-} from "https://deno.land/x/redis@v0.25.5/mod.ts";
+import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
-import config from "./config.ts";
-
-export type RedisConfig = {
-  hostname: string;
-  port: string;
-  password: string;
-  db: number;
-  maxRetryCount: number;
-  retryInterval: number;
-};
-
-export const redisConfig: RedisConfig = {
-  hostname: config.redis_url.hostname,
-  port: config.redis_url.port,
-  password: config.redis_url.password,
-  db: parseInt(config.redis_url.pathname.substring(1), 10),
-  maxRetryCount: 6,
-  retryInterval: 5000,
-};
 
 type SyncContext = {
   start: (cursor: XIdInput) => AsyncIterableIterator<Record<string, string>>;
@@ -123,8 +99,6 @@ export class RedisReplicatedMap<T> {
   private subscribe(): SyncContext {
     const { ekey, redisObs } = this;
 
-    // deno-lint-ignore no-this-alias
-    const target = this;
     let loop = true;
     let start: (
       cursor: XIdInput,
@@ -132,10 +106,6 @@ export class RedisReplicatedMap<T> {
 
     const process = new Promise<void>((resolve) => {
       start = async function* (cursor: XIdInput) {
-        const registry = new FinalizationRegistry(() => {
-          loop = false;
-        });
-        registry.register(target, null);
         while (loop) {
           try {
             const [stream] = await redisObs.xread(
@@ -173,15 +143,15 @@ export class RedisReplicatedMap<T> {
 
     this.memory.set(name, elem);
 
-    const p = redis.tx();
-    await p.hset(key, name, await serializer(elem));
-    await p.xadd(
+    const tx = redis.tx();
+    tx.hset(key, name, await serializer(elem));
+    tx.xadd(
       ekey,
       "*",
       { name, event: "+", instance: this.instance },
       { approx: true, elements: 10000 },
     );
-    await p.flush();
+    await tx.flush();
   }
 
   get(name: string): T | undefined {
@@ -192,21 +162,20 @@ export class RedisReplicatedMap<T> {
     return this.memory.has(name);
   }
 
-  async delete(name: string): Promise<number> {
-    const { key, ekey, redis } = this;
+  async delete(name: string): Promise<void> {
+    const { key, ekey, redis, instance } = this;
 
     this.memory.delete(name);
 
-    const p = redis.tx();
-    const count = await p.hdel(key, name);
-    await p.xadd(
+    const tx = redis.tx();
+    tx.hdel(key, name);
+    tx.xadd(
       ekey,
       "*",
-      { name, event: "-", instance: this.instance },
+      { name, event: "-", instance },
       { approx: true, elements: 10000 },
     );
-    await p.flush();
-    return count;
+    await tx.flush();
   }
 
   async filter(
