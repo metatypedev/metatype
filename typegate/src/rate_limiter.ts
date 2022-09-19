@@ -1,24 +1,46 @@
-import { connect, Redis, RedisConnectOptions, RedisSubscription } from "redis";
+import { connect, Redis, RedisConnectOptions } from "redis";
 import { Deferred, deferred } from "std/async/deferred.ts";
-
-const nowSec = (): number => Math.ceil(new Date().valueOf() / 1000);
+import { sleep } from "./utils.ts";
 
 const countWaiterChannel = "counters";
+export const decrPosCmd = `
+local e = redis.call('EXISTS', KEYS[1])
+if e == 0 then
+  return {-1, -1}
+end
+local c = redis.call('DECRBY', KEYS[1], ARGV[1])
+local l = redis.call('GET', KEYS[2])
+if tonumber(c) < 0 then
+    redis.call('SET', KEYS[1], '0')
+    return {0, l}
+end
+return {c, l}
+`;
+
+export const decrCmd = `
+local c = redis.call('DECRBY', KEYS[1], ARGV[1])
+local l = redis.call('GET', KEYS[2])
+return {c, l}
+`;
+
+export const addBugetCmd = `
+redis.call('SET', KEYS[1], ARGV[1])
+redis.call('SET', KEYS[2], ARGV[2])
+redis.call('EXPIRE', KEYS[1], ARGV[3])
+redis.call('EXPIRE', KEYS[2], ARGV[3])
+`;
 
 export class RateLimiter {
   countWaiter: Map<string, Deferred<number>>;
-  sub: RedisSubscription | null;
   backgroundWork: Map<number, Deferred<void>>;
 
   private constructor(
     private map: TTLMap,
     private redis: Redis,
-    private redisPubSub: Redis,
-    private window: number,
+    private windowSec: number,
     private budget: number,
   ) {
     this.countWaiter = new Map();
-    this.sub = null;
     this.backgroundWork = new Map();
   }
 
@@ -29,53 +51,28 @@ export class RateLimiter {
   ): Promise<RateLimiter> {
     const map = new TTLMap();
     const redis = await connect(connection);
-    const redisPubSub = await connect(connection);
-    return new RateLimiter(map, redis, redisPubSub, window, budget);
+    return new RateLimiter(map, redis, window, budget);
   }
 
   async terminate() {
-    if (this.sub) {
-      await this.sub.unsubscribe(countWaiterChannel);
-      this.sub = null;
-    }
-    await Promise.all(this.backgroundWork.values());
+    await this.awaitBackground();
     this.redis.close();
-    this.redisPubSub.close();
     this.map.terminate();
   }
 
-  async waitOnCount(counter: string): Promise<Deferred<number>> {
-    const waiter = this.countWaiter.get(counter);
-    if (waiter) {
-      return waiter;
-    }
-    const newWaiter = deferred<number>();
-    this.countWaiter.set(counter, newWaiter);
+  async awaitBackground() {
+    await Promise.all(this.backgroundWork.values());
+  }
 
-    if (!this.sub) {
-      this.sub = await this.redisPubSub.subscribe(countWaiterChannel);
+  async getGlobal(id: string): Promise<number | null> {
+    const tokensKey = `${id}:tokens`;
+    const count = await this.redis.get(tokensKey);
+    return count ? Number(count) : null;
+  }
 
-      (async () => {
-        for await (const { message } of this.sub!.receive()) {
-          const [counter, countRaw] = message.split("=");
-          const waiter = this.countWaiter.get(counter);
-          const count = Number(countRaw);
-
-          if (waiter && count >= 0) {
-            waiter.resolve(count);
-            this.countWaiter.delete(counter);
-
-            if (this.countWaiter.size === 0) {
-              await this.sub!.unsubscribe(countWaiterChannel);
-              this.sub = null;
-              return;
-            }
-          }
-        }
-      })();
-    }
-
-    return newWaiter;
+  getLocal(id: string): number | null {
+    const tokensKey = `${id}:tokens`;
+    return this.map.get(tokensKey);
   }
 
   async reset(id: string): Promise<void> {
@@ -91,47 +88,50 @@ export class RateLimiter {
     const tokensKey = `${id}:tokens`;
     const lastKey = `${id}:last`;
 
-    const currentTokens = this.map.decrby(tokensKey, 1);
-    if (currentTokens && currentTokens > 0) {
-      return currentTokens;
-    }
+    let count: number, last: number;
 
-    const tx = this.redis.tx();
-    tx.decrby(tokensKey, 1);
-    tx.get(lastKey);
-    const txRes = await tx.flush();
+    do {
+      const currentTokens = this.map.decrby(tokensKey, 1);
+      if (currentTokens !== null && currentTokens > 0) {
+        // do not block for 2nd calls
+        void this.backgroundDecr(id, 1);
+        console.log("DERIVE", currentTokens);
 
-    let [count, last] = txRes.pop() as any;
+        return currentTokens;
+      }
 
-    console.log(count, last);
+      const tx = await this.redis.eval(decrCmd, [tokensKey, lastKey], [1]);
+      [count, last] = tx as any;
 
-    if (!last) {
+      console.log("COUNT", count, last);
+
       if (count === -1) {
         // own the newly added token
-        const now = nowSec();
+        const now = new Date().valueOf();
+        const newBudget = Math.ceil(
+          (now - last) / 1000 / this.windowSec * this.budget,
+        );
         count = Math.max(
-          last
-            ? Math.ceil((now - last) / this.window * this.budget) - 1
-            : this.budget - 1,
+          (last ? newBudget : this.budget) - 1,
           0,
         );
+        if (!last || (last && newBudget > 0)) {
+          last = now;
+        }
+        console.log("OWNER", count);
 
-        const tx = this.redis.tx();
-        tx.set(tokensKey, count);
-        tx.set(lastKey, now);
-        tx.expire(tokensKey, this.window);
-        tx.expire(lastKey, this.window);
-        tx.publish(countWaiterChannel, `${tokensKey}=${count}`);
-        await tx.flush();
+        await this.redis.eval(addBugetCmd, [
+          tokensKey,
+          lastKey,
+        ], [count, last, this.windowSec]);
       } else if (count < -1) {
-        const countDef = await this.waitOnCount(tokensKey);
-        count = await countDef;
-      } else {
-        throw new Error("should never happen");
+        await sleep(10);
       }
-    }
+    } while (count < -1);
 
-    this.map.set(tokensKey, count, this.window);
+    console.log("DERIVE", count);
+
+    this.map.set(tokensKey, count, this.windowSec);
     return count;
   }
 
@@ -146,7 +146,7 @@ export class RateLimiter {
   }
 
   async backgroundDecr(id: string, n: number): Promise<void> {
-    const backgroundId = nowSec();
+    const backgroundId = new Date().valueOf();
     if (this.backgroundWork.has(backgroundId)) {
       return;
     }
@@ -157,29 +157,21 @@ export class RateLimiter {
     const def = deferred<void>();
     this.backgroundWork.set(backgroundId, def);
 
-    const tx = this.redis.tx();
-    tx.eval(
-      `
-        local c = redis.call('DECRBY', KEYS[1], ARGV[1])
-        if tonumber(c) < 0 then
-            redis.call('SET', KEYS[1], '0')
-            return '0'
-        end
-        return c
-      `,
-      [tokensKey],
+    const tx = await this.redis.eval(
+      decrPosCmd,
+      [tokensKey, lastKey],
       [n],
     );
-    tx.get(lastKey);
-    const txRes = await tx.flush();
+
+    const [currentTokens, last] = tx as any;
+
+    // if -1, the global limit is already gone and we know local < global
+    if (currentTokens !== -1 && last !== -1) {
+      this.map.set(tokensKey, Number(currentTokens), Number(last));
+    }
 
     def.resolve();
     this.backgroundWork.delete(backgroundId);
-
-    const [currentTokens, last] = txRes.pop() as any;
-    if (currentTokens && last) {
-      this.map.set(tokensKey, Number(currentTokens), Number(last));
-    }
   }
 
   async limit(
@@ -195,7 +187,7 @@ export class RateLimiter {
   }
 }
 
-class RateLimit {
+export class RateLimit {
   consumed: number;
 
   constructor(
@@ -211,12 +203,12 @@ class RateLimit {
     this.budget -= n;
 
     const globalBudget = this.limiter.decr(this.id, n);
-    if (globalBudget) {
+    if (globalBudget !== null) {
       this.budget = Math.min(this.budget, globalBudget);
     }
 
     if (this.budget < 0) {
-      throw new Error("Rate-limit reached");
+      throw new Error("rate-limited");
     }
   }
 }
@@ -233,7 +225,7 @@ class TTLMap {
     const map = new Map();
     this.map = map;
     const gc = setInterval(() => {
-      const now = nowSec();
+      const now = new Date().valueOf();
       for (const [key, [_value, expiration]] of map.entries()) {
         if (expiration <= now) {
           map.delete(key);
@@ -248,15 +240,15 @@ class TTLMap {
     clearInterval(this.gc);
   }
 
-  set(key: string, value: number, expire: number) {
-    this.map.set(key, [value, nowSec() + expire]);
+  set(key: string, value: number, expireSec: number) {
+    this.map.set(key, [value, new Date().valueOf() + expireSec * 1000]);
   }
 
   get(key: string): number | null {
     const [value, expiration] = this.map.get(key) ?? [];
-    const now = nowSec();
+    const now = new Date().valueOf();
 
-    if (!value || !expiration) {
+    if (value === undefined || expiration === undefined) {
       return null;
     }
 
@@ -270,9 +262,9 @@ class TTLMap {
 
   decrby(key: string, n: number): number | null {
     const [value, expiration] = this.map.get(key) ?? [];
-    const now = nowSec();
+    const now = new Date().valueOf();
 
-    if (!value || !expiration) {
+    if (value === undefined || expiration === undefined) {
       return null;
     }
 

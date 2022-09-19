@@ -99,8 +99,6 @@ export class RedisReplicatedMap<T> {
   private subscribe(): SyncContext {
     const { ekey, redisObs } = this;
 
-    // deno-lint-ignore no-this-alias
-    const target = this;
     let loop = true;
     let start: (
       cursor: XIdInput,
@@ -108,10 +106,6 @@ export class RedisReplicatedMap<T> {
 
     const process = new Promise<void>((resolve) => {
       start = async function* (cursor: XIdInput) {
-        const registry = new FinalizationRegistry(() => {
-          loop = false;
-        });
-        registry.register(target, null);
         while (loop) {
           try {
             const [stream] = await redisObs.xread(
