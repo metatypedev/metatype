@@ -335,6 +335,49 @@ Deno.test("Rate limiter", async (t) => {
       //assertEquals(rl1.getLocal(t1), 3);
       //assertEquals(rl2.getLocal(t1), 4);
 
+      l5.consume(1);
+      await rl2.awaitBackground();
+
+      assertEquals(await rl1.getGlobal(t1), 2);
+      assertEquals(rl1.getLocal(t1), 3);
+      assertEquals(rl2.getLocal(t1), 2);
+
+      l3.consume(1);
+      await rl1.awaitBackground();
+      assertEquals(l3.budget, 2);
+      assertEquals(l3.consumed, 2);
+      assertEquals(l4.budget, 3);
+      assertEquals(l4.consumed, 1);
+
+      assertEquals(await rl1.getGlobal(t1), 1);
+      assertEquals(rl1.getLocal(t1), 1);
+      assertEquals(rl2.getLocal(t1), 2);
+
+      l4.consume(1);
+      await rl1.awaitBackground();
+      assertEquals(l3.budget, 2);
+      assertEquals(l3.consumed, 2);
+      assertEquals(l4.budget, 0);
+      assertEquals(l4.consumed, 2);
+
+      assertEquals(await rl1.getGlobal(t1), 0);
+      assertEquals(rl1.getLocal(t1), 0);
+      assertEquals(rl2.getLocal(t1), 2);
+
+      assertRateLimited(l3, 1);
+      assertRateLimited(l4, 1);
+
+      l5.consume(1);
+      // overconsume
+      await rl2.awaitBackground();
+      assertEquals(l5.budget, 1);
+
+      assertEquals(await rl1.getGlobal(t1), 0);
+      assertEquals(rl1.getLocal(t1), 0);
+      assertEquals(rl2.getLocal(t1), 0);
+
+      assertRateLimited(l5, 1);
+
       await rl1.terminate();
       await rl2.terminate();
     },
