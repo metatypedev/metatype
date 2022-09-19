@@ -1,16 +1,14 @@
 import { connect, Redis, RedisConnectOptions } from "redis";
 import { Deferred, deferred } from "std/async/deferred.ts";
-import { sleep } from "./utils.ts";
 
-const countWaiterChannel = "counters";
 export const decrPosCmd = `
 local e = redis.call('EXISTS', KEYS[1])
 if e == 0 then
   return {-1, -1}
 end
 local c = redis.call('DECRBY', KEYS[1], ARGV[1])
-local l = redis.call('GET', KEYS[2])
-if tonumber(c) < 0 then
+local l = tonumber(redis.call('GET', KEYS[2]))
+if c < 0 then
     redis.call('SET', KEYS[1], '0')
     return {0, l}
 end
@@ -18,16 +16,25 @@ return {c, l}
 `;
 
 export const decrCmd = `
-local c = redis.call('DECRBY', KEYS[1], ARGV[1])
-local l = redis.call('GET', KEYS[2])
+local c = redis.call('DECR', KEYS[1])
+local l = tonumber(redis.call('GET', KEYS[2]))
+if c == -1 then
+  if not l then 
+    c = math.max(0, ARGV[3] - 1)
+    l = tonumber(ARGV[1])
+  else
+    local newbudget = math.ceil((ARGV[1] - l) * ARGV[2])
+    c = math.max(0, newbudget - 1)
+    if newbudget > 0 then
+      l = tonumber(ARGV[1])
+    end
+  end
+  redis.call('SET', KEYS[1], c)
+  redis.call('SET', KEYS[2], l)
+  redis.call('EXPIRE', KEYS[1], ARGV[4])
+  redis.call('EXPIRE', KEYS[2], ARGV[4])
+end
 return {c, l}
-`;
-
-export const addBugetCmd = `
-redis.call('SET', KEYS[1], ARGV[1])
-redis.call('SET', KEYS[2], ARGV[2])
-redis.call('EXPIRE', KEYS[1], ARGV[3])
-redis.call('EXPIRE', KEYS[2], ARGV[3])
 `;
 
 export class RateLimiter {
@@ -88,50 +95,28 @@ export class RateLimiter {
     const tokensKey = `${id}:tokens`;
     const lastKey = `${id}:last`;
 
-    let count: number, last: number;
+    const currentTokens = this.map.decrby(tokensKey, 1);
+    if (currentTokens !== null && currentTokens > 0) {
+      // do not block for 2nd calls
+      void this.backgroundDecr(id, 1);
+      console.log("DERIVE", currentTokens);
 
-    do {
-      const currentTokens = this.map.decrby(tokensKey, 1);
-      if (currentTokens !== null && currentTokens > 0) {
-        // do not block for 2nd calls
-        void this.backgroundDecr(id, 1);
-        console.log("DERIVE", currentTokens);
+      return currentTokens;
+    }
 
-        return currentTokens;
-      }
+    const now = new Date().valueOf();
+    const delta = 1 / 1000 / this.windowSec * this.budget;
+    const tx = await this.redis.eval(decrCmd, [tokensKey, lastKey], [
+      now,
+      delta,
+      this.budget,
+      this.windowSec,
+    ]);
+    const [count, last] = tx as any;
 
-      const tx = await this.redis.eval(decrCmd, [tokensKey, lastKey], [1]);
-      [count, last] = tx as any;
+    console.log("GET", count, last);
 
-      console.log("COUNT", count, last);
-
-      if (count === -1) {
-        // own the newly added token
-        const now = new Date().valueOf();
-        const newBudget = Math.ceil(
-          (now - last) / 1000 / this.windowSec * this.budget,
-        );
-        count = Math.max(
-          (last ? newBudget : this.budget) - 1,
-          0,
-        );
-        if (!last || (last && newBudget > 0)) {
-          last = now;
-        }
-        console.log("OWNER", count);
-
-        await this.redis.eval(addBugetCmd, [
-          tokensKey,
-          lastKey,
-        ], [count, last, this.windowSec]);
-      } else if (count < -1) {
-        await sleep(10);
-      }
-    } while (count < -1);
-
-    console.log("DERIVE", count);
-
-    this.map.set(tokensKey, count, this.windowSec);
+    this.map.set(tokensKey, count, last);
     return count;
   }
 
@@ -167,7 +152,8 @@ export class RateLimiter {
 
     // if -1, the global limit is already gone and we know local < global
     if (currentTokens !== -1 && last !== -1) {
-      this.map.set(tokensKey, Number(currentTokens), Number(last));
+      console.log("update", currentTokens, last);
+      this.map.set(tokensKey, currentTokens, last);
     }
 
     def.resolve();
@@ -240,8 +226,8 @@ class TTLMap {
     clearInterval(this.gc);
   }
 
-  set(key: string, value: number, expireSec: number) {
-    this.map.set(key, [value, new Date().valueOf() + expireSec * 1000]);
+  set(key: string, value: number, expireAtSec: number) {
+    this.map.set(key, [value, expireAtSec * 1000]);
   }
 
   get(key: string): number | null {
