@@ -1,6 +1,8 @@
 import { connect, Redis, RedisConnectOptions } from "redis";
 import { Deferred, deferred } from "std/async/deferred.ts";
 
+// keys: tokens, latest
+// args: n
 export const decrPosCmd = `
 local e = redis.call('EXISTS', KEYS[1])
 if e == 0 then
@@ -15,6 +17,8 @@ end
 return {c, l}
 `;
 
+// keys: tokens, latest
+// args: now, delta, window budget, window sec
 export const getUpdateBudgetCmd = `
 local c = redis.call('DECR', KEYS[1])
 local l = tonumber(redis.call('GET', KEYS[2]))
