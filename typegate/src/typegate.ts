@@ -96,14 +96,15 @@ export const typegate =
 
       // FIX bad serialization of rate (current: array if no object)
       const limit = engine.tg.tg.meta.rate &&
-        !Array.isArray(engine.tg.tg.meta.rate) &&
-        await limiter.limit(
+          !Array.isArray(engine.tg.tg.meta.rate)
+        ? await limiter.limit(
           `${engine.name}:${identifier}`,
           engine.tg.tg.meta.rate.query_limit,
           engine.tg.tg.meta.rate.window_sec,
           engine.tg.tg.meta.rate.window_limit,
           engine.tg.tg.meta.rate.local_excess,
-        );
+        )
+        : null;
 
       const { query, operationName, variables } = await request.json();
       const { status, ...res } = await engine.execute(
