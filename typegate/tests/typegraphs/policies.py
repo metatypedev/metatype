@@ -17,9 +17,7 @@ def make_policy(g, name, fn):
     ).add_policy(pol)
 
 
-with TypeGraph("policies") as g:
-
-    g.add_auth(Auth.jwk("native"))
+with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
 
     g.expose(
         pol_true=make_policy(g, "true", lambda args: True),

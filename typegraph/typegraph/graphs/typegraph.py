@@ -78,6 +78,13 @@ class Cors:
     max_age: Optional[int] = None
 
 
+@dataclass
+class Rate:
+    window_limit: int
+    window_sec: int
+    query_limit: int
+
+
 class TypeGraph:
     # repesent domain projected to an interface
     name: str
@@ -86,23 +93,26 @@ class TypeGraph:
     exposed: Dict[str, "t.func"]
     latest_type_id: int
     auths: List[Auth]
+    rate: Optional[Rate]
     cors: Cors
     path: str
 
-    def __init__(self, name: str) -> None:
+    def __init__(
+        self,
+        name: str,
+        auths=None,
+        rate=None,
+    ) -> None:
         super().__init__()
         self.name = name
         self.types = []
         self.exposed = {}
         self.policies = []
         self.latest_type_id = 0
-        self.auths = []
+        self.auths = [] if auths is None else auths
+        self.rate = [] if rate is None else rate
         self.cors = Cors()
         self.path = Path(inspect.stack()[1].filename)
-
-    def add_auth(self, auth: Auth) -> "TypeGraph":
-        self.auths.append(auth)
-        return self
 
     def next_type_id(self):
         self.latest_type_id += 1
