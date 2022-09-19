@@ -38,7 +38,13 @@ class TestTypegraph:
                         policies=(0,),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 0, "input": 2, "output": 5}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 0,
+                                "input": 2,
+                                "output": 5,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -175,7 +181,13 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 1, "input": 18, "output": 21}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 1,
+                                "input": 18,
+                                "output": 21,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -282,7 +294,13 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 1, "input": 30, "output": 33}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 1,
+                                "input": 30,
+                                "output": 33,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -487,7 +505,13 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 1, "input": 56, "output": 59}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 1,
+                                "input": 56,
+                                "output": 59,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -620,7 +644,13 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 1, "input": 72, "output": 75}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 1,
+                                "input": 72,
+                                "output": 75,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -678,7 +708,13 @@ class TestTypegraph:
                         policies=(0,),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 3, "input": 79, "output": 80}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 3,
+                                "input": 79,
+                                "output": 80,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -845,7 +881,13 @@ class TestTypegraph:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 1, "input": 98, "output": 101}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 1,
+                                "input": 98,
+                                "output": 101,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -928,6 +970,7 @@ class TestTypegraph:
                         max_age=None,
                     ),
                     auths=[],
+                    rate=[],
                 ),
             )
         )

@@ -32,7 +32,7 @@ impl Action for Dev {
             .working_dir(&dir)
             .serialized()
             .load_all()?;
-        reload_typegraphs(tgs, "127.0.0.1:7890".to_string())?;
+        reload_typegraphs(tgs, "http://localhost:7890".to_string())?;
 
         let watch_path = dir.clone();
         let _watcher = watch(dir.clone(), move |paths| {
@@ -49,14 +49,13 @@ impl Action for Dev {
                 .serialized()
                 .load_files(paths)
                 .unwrap();
-            reload_typegraphs(tgs, "127.0.0.1:7890".to_string()).unwrap();
+            reload_typegraphs(tgs, "http://localhost:7890".to_string()).unwrap();
         })
         .unwrap();
 
         let server = Server::http("0.0.0.0:5000").unwrap();
 
         for request in server.incoming_requests() {
-            println!("test{:?}", request.url());
             let url = Url::parse(&format!("http://dummy{}", request.url()))?;
             let query: HashMap<String, String> = url.query_pairs().into_owned().collect();
 
@@ -164,9 +163,7 @@ struct ErrorWithTypegraphPush {
 }
 
 pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
-    let client = reqwest::blocking::Client::builder()
-        .no_trust_dns()
-        .build()?;
+    let client = reqwest::blocking::Client::new();
     let tg = serde_json::Value::String(tg).to_string();
     let payload = json!({
       "operationName": "insert",
@@ -175,7 +172,7 @@ pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
     });
 
     let query = client
-        .post(format!("http://{}/typegate", node))
+        .post(format!("{}/typegate", node))
         .timeout(Duration::from_secs(5))
         .json(&payload)
         .send();
