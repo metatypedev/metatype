@@ -3,9 +3,13 @@ import { Register } from "./register.ts";
 import { renderDebugAuth } from "./web/auth_debug.ts";
 import { renderPlayground } from "./web/playground.ts";
 import * as Sentry from "sentry";
+import { RateLimiter } from "./rate_limiter.ts";
+import { ConnInfo } from "std/http/server.ts";
+import { encryptionKey } from "./crypto.ts";
 
 export const typegate =
-  (register: Register) => async (request: Request): Promise<Response> => {
+  (register: Register, limiter: RateLimiter) =>
+  async (request: Request, connInfo: ConnInfo): Promise<Response> => {
     try {
       const url = new URL(request.url);
 
@@ -84,12 +88,30 @@ export const typegate =
       // may remove this
       context.headers = Object.fromEntries(request.headers.entries());
 
+      const identifier = (
+        config.context_identifier && context[config.context_identifier]
+      ) ??
+        (config.trust_proxy && request.headers.get(config.trust_header_ip)) ??
+        (connInfo.remoteAddr as Deno.NetAddr).hostname;
+
+      // FIX bad serialization of rate (current: array if no object)
+      const limit = engine.tg.tg.meta.rate &&
+        !Array.isArray(engine.tg.tg.meta.rate) &&
+        await limiter.limit(
+          `${engine.name}:${identifier}`,
+          engine.tg.tg.meta.rate.query_limit,
+          engine.tg.tg.meta.rate.window_sec,
+          engine.tg.tg.meta.rate.window_limit,
+          engine.tg.tg.meta.rate.local_excess,
+        );
+
       const { query, operationName, variables } = await request.json();
       const { status, ...res } = await engine.execute(
         query,
         operationName,
         variables,
         context,
+        limit,
       );
 
       headers.set("content-type", "application/json");

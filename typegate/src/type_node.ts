@@ -78,6 +78,8 @@ export interface FuncNode extends TypeNodeBase {
     input: number;
     output: number;
     materializer: number;
+    rate_weight: number;
+    rate_calls: boolean;
   };
 }
 

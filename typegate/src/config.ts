@@ -26,6 +26,8 @@ const defaults = {
   sentry_sample_rate: 1,
   sentry_traces_sample_rate: 1,
   version: await get_version(),
+  trust_proxy: false,
+  trust_header_ip: "X-Forwarded-For",
 };
 
 const sources = [
@@ -72,6 +74,9 @@ const schema = z.object({
   sentry_sample_rate: z.number().positive().min(0).max(1),
   sentry_traces_sample_rate: z.number().positive().min(0).max(1),
   version: z.string(),
+  trust_proxy: z.boolean(),
+  trust_header_ip: z.string(),
+  context_identifier: z.string().optional(),
 });
 
 const parsing = await schema.safeParse(

@@ -18,6 +18,7 @@ import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { TypeNode } from "./type_node.ts";
 import { Auth } from "./auth.ts";
+import { RateLimit, RedisRateLimiter } from "./rate_limiter.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -73,6 +74,8 @@ interface ComputeStageProps {
   batcher: Batcher;
   node: string;
   path: string[];
+  rateCalls: boolean;
+  rateWeight: number;
 }
 
 export type PolicyStage = () => Promise<boolean | null>;
@@ -178,6 +181,7 @@ export class Engine {
     policesFactory: PolicyStagesFactory,
     context: Record<string, unknown>,
     variables: Record<string, unknown>,
+    limit: RateLimit | null,
     verbose: boolean,
   ): Promise<JSONValue> {
     const ret = {};
@@ -195,6 +199,8 @@ export class Engine {
         parent,
         batcher,
         node,
+        rateCalls,
+        rateWeight,
       } = stage.props;
 
       const decisions = await Promise.all(
@@ -222,6 +228,10 @@ export class Engine {
       const previousValues = parent ? cache[parent.id()] : ([{}] as any);
       const lens = parent ? lenses[parent.id()] : ([ret] as any);
 
+      if (limit && rateCalls) {
+        limit.consume(rateWeight);
+      }
+
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
@@ -235,6 +245,10 @@ export class Engine {
           })
         ),
       );
+
+      if (limit && !rateCalls) {
+        limit.consume(res.length && rateWeight);
+      }
 
       // or no cache if no further usage
       cache[stage.id()] = batcher(res);
@@ -363,6 +377,7 @@ export class Engine {
     operationName: Maybe<string>,
     variables: Record<string, unknown>,
     context: Record<string, unknown>,
+    limit: RateLimit | null,
   ): Promise<{ status: number; [key: string]: JSONValue }> {
     try {
       const document = parse(query);
@@ -395,6 +410,7 @@ export class Engine {
         policies,
         context,
         variables,
+        limit,
         verbose,
       );
       const endTime = performance.now();

@@ -14,6 +14,8 @@ import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { Register } from "../src/register.ts";
 import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
+import { ConnInfo } from "std/http/server.ts";
+import { RateLimit, RateLimiter } from "../src/rate_limiter.ts";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
@@ -74,6 +76,23 @@ export class SingleRegister extends Register {
 
   has(name: string): boolean {
     return name === this.name;
+  }
+}
+
+export class NoLimiter extends RateLimiter {
+  constructor() {
+    super();
+  }
+  decr(id: string, n: number): number | null {
+    return 1;
+  }
+  currentTokens(
+    id: string,
+    windowSec: number,
+    windowBudget: number,
+    maxLocalHit: number,
+  ): Promise<number> {
+    return Promise.resolve(1);
   }
 }
 
@@ -226,7 +245,13 @@ export class Q {
     const output = join(localDir, `queries/${path}.json`);
     const query = Deno.readTextFile(input);
     if (testConfig.override || !(await exists(output))) {
-      const { ...result } = await engine!.execute(await query, null, {}, {});
+      const { ...result } = await engine!.execute(
+        await query,
+        null,
+        {},
+        {},
+        null,
+      );
       await Deno.writeTextFile(output, JSON.stringify(result, null, 2));
     }
     const result = Deno.readTextFile(output);
@@ -329,7 +354,11 @@ export class Q {
       },
     });
     const register = new SingleRegister(engine.name, engine);
-    const response = await typegate(register)(request);
+    const limiter = new NoLimiter();
+    const response = await typegate(
+      register,
+      limiter,
+    )(request, { remoteAddr: { hostname: "localhost" } } as ConnInfo);
 
     for (const expect of expects) {
       expect(response);

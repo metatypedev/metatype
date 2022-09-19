@@ -1,4 +1,5 @@
 from typegraph.graphs.typegraph import github_auth
+from typegraph.graphs.typegraph import Rate
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import ModuleMat
 from typegraph.policies import allow_all
@@ -28,9 +29,7 @@ def send_in_blue_send(subject, frm, to, api_key):
 with TypeGraph(
     "biscuicuits",
     auths=[github_auth],
-    rate_window_limit=2000,
-    rate_window_sec=60,
-    rate_query_limit=200,
+    rate=Rate(window_limit=2000, window_sec=60, query_limit=200),
 ) as g:
 
     all = allow_all()
