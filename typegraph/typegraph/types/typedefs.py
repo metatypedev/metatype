@@ -579,6 +579,9 @@ class func(Type):
     # if not safe, output will be typechecked
     safe: bool
 
+    rate_calls: bool = False
+    rate_weight: Optional[int] = None
+
     def __init__(self, inp: Type, out: Type, mat: Materializer, safe=True) -> None:
         super().__init__()
 
@@ -605,6 +608,20 @@ class func(Type):
         assert self.out == other.inp
         # what if other == gen?
         return func(self, other, IdentityMat())
+
+    def rate(self, weight=None, calls=None):
+        self.rate_weight = weight
+        if calls is not None:
+            self.rate_calls = calls
+        return self
+
+    @property
+    def data(self) -> dict:
+        return {
+            **super().data,
+            "rate_weight": self.rate_weight,
+            "rate_calls": self.rate_calls,
+        }
 
     def __mul__(self, other: "func") -> "func":
         return self.compose(other)
