@@ -15,7 +15,7 @@ end
 return {c, l}
 `;
 
-export const decrCmd = `
+export const getUpdateBudgetCmd = `
 local c = redis.call('DECR', KEYS[1])
 local l = tonumber(redis.call('GET', KEYS[2]))
 if c == -1 then
@@ -38,7 +38,7 @@ return {c, l}
 `;
 
 export class RateLimiter {
-  countWaiter: Map<string, Deferred<number>>;
+  localHit: TTLMap;
   backgroundWork: Map<number, Deferred<void>>;
 
   private constructor(
@@ -47,7 +47,7 @@ export class RateLimiter {
     private windowSec: number,
     private budget: number,
   ) {
-    this.countWaiter = new Map();
+    this.localHit = new TTLMap();
     this.backgroundWork = new Map();
   }
 
@@ -65,6 +65,7 @@ export class RateLimiter {
     await this.awaitBackground();
     this.redis.close();
     this.map.terminate();
+    this.localHit.terminate();
   }
 
   async awaitBackground() {
@@ -78,8 +79,7 @@ export class RateLimiter {
   }
 
   getLocal(id: string): number | null {
-    const tokensKey = `${id}:tokens`;
-    return this.map.get(tokensKey);
+    return this.map.get(id);
   }
 
   async reset(id: string): Promise<void> {
@@ -91,22 +91,24 @@ export class RateLimiter {
     await tx.flush();
   }
 
-  async currentTokens(id: string): Promise<number> {
+  async currentTokens(id: string, maxLocalHit: number): Promise<number> {
     const tokensKey = `${id}:tokens`;
     const lastKey = `${id}:last`;
 
-    const currentTokens = this.map.decrby(tokensKey, 1);
-    if (currentTokens !== null && currentTokens > 0) {
-      // do not block for 2nd calls
-      void this.backgroundDecr(id, 1);
-      console.log("DERIVE", currentTokens);
+    const hit = this.localHit.incrby(id, 1);
 
-      return currentTokens;
+    if (hit && maxLocalHit > 0 && hit <= maxLocalHit) {
+      const currentTokens = this.map.decrby(id, 1);
+      if (currentTokens !== null && currentTokens > 0) {
+        // do not block
+        void this.backgroundDecr(id, 1);
+        return currentTokens;
+      }
     }
 
     const now = new Date().valueOf();
     const delta = 1 / 1000 / this.windowSec * this.budget;
-    const tx = await this.redis.eval(decrCmd, [tokensKey, lastKey], [
+    const tx = await this.redis.eval(getUpdateBudgetCmd, [tokensKey, lastKey], [
       now,
       delta,
       this.budget,
@@ -114,9 +116,8 @@ export class RateLimiter {
     ]);
     const [count, last] = tx as any;
 
-    console.log("GET", count, last);
-
-    this.map.set(tokensKey, count, last);
+    this.map.set(id, count, last);
+    this.localHit.set(id, 1, last);
     return count;
   }
 
@@ -124,8 +125,7 @@ export class RateLimiter {
     id: string,
     n: number,
   ): number | null {
-    const tokensKey = `${id}:tokens`;
-    const currentTokens = this.map.decrby(tokensKey, n);
+    const currentTokens = this.map.decrby(id, n);
     void this.backgroundDecr(id, n);
     return currentTokens;
   }
@@ -152,8 +152,7 @@ export class RateLimiter {
 
     // if -1, the global limit is already gone and we know local < global
     if (currentTokens !== -1 && last !== -1) {
-      console.log("update", currentTokens, last);
-      this.map.set(tokensKey, currentTokens, last);
+      this.map.set(id, currentTokens, last);
     }
 
     def.resolve();
@@ -163,8 +162,9 @@ export class RateLimiter {
   async limit(
     id: string,
     queryBudget: number,
+    maxLocalHit = 0,
   ): Promise<RateLimit> {
-    const budget = await this.currentTokens(id);
+    const budget = await this.currentTokens(id, maxLocalHit);
     return new RateLimit(
       this,
       id,
@@ -244,6 +244,10 @@ class TTLMap {
     }
 
     return value;
+  }
+
+  incrby(key: string, n: number): number | null {
+    return this.decrby(key, -n);
   }
 
   decrby(key: string, n: number): number | null {
