@@ -1,4 +1,8 @@
-import { decrPosCmd, RateLimit, RateLimiter } from "../src/rate_limiter.ts";
+import {
+  decrPosCmd,
+  RateLimit,
+  RedisRateLimiter,
+} from "../src/rate_limiter.ts";
 import { redisConfig } from "../src/config.ts";
 import { assertEquals, assertThrows } from "std/testing/asserts.ts";
 import { connect, Raw } from "redis";
@@ -49,10 +53,10 @@ Deno.test("Rate limiter", async (t) => {
   });
 
   await t.step("should enforce simple budget limitation", async () => {
-    const rl = await RateLimiter.init(redisConfig, 60, 5);
+    const rl = await RedisRateLimiter.init(redisConfig);
     await rl.reset(t1);
 
-    const l1 = await rl.limit(t1, 2);
+    const l1 = await rl.limit(t1, 2, 60, 5, 0);
     assertEquals(l1.budget, 1);
     assertEquals(l1.consumed, 1);
 
@@ -66,10 +70,10 @@ Deno.test("Rate limiter", async (t) => {
   });
 
   await t.step("should enforce global budget", async () => {
-    const rl = await RateLimiter.init(redisConfig, 60, 5);
+    const rl = await RedisRateLimiter.init(redisConfig);
     await rl.reset(t1);
 
-    const l1 = await rl.limit(t1, 10);
+    const l1 = await rl.limit(t1, 10, 60, 5, 0);
     assertEquals(l1.budget, 4);
     assertEquals(l1.consumed, 1);
 
@@ -83,10 +87,10 @@ Deno.test("Rate limiter", async (t) => {
   });
 
   await t.step("should reject single over consume", async () => {
-    const rl = await RateLimiter.init(redisConfig, 60, 5);
+    const rl = await RedisRateLimiter.init(redisConfig);
     await rl.reset(t1);
 
-    const l1 = await rl.limit(t1, 3);
+    const l1 = await rl.limit(t1, 3, 60, 5, 0);
     assertEquals(l1.budget, 2);
     assertEquals(l1.consumed, 1);
 
@@ -96,17 +100,17 @@ Deno.test("Rate limiter", async (t) => {
   });
 
   await t.step("should handle concurrent budget", async () => {
-    const rl = await RateLimiter.init(redisConfig, 60, 5);
+    const rl = await RedisRateLimiter.init(redisConfig);
     await rl.reset(t1);
 
-    const l1 = await rl.limit(t1, 5);
+    const l1 = await rl.limit(t1, 5, 60, 5, 0);
     assertEquals(l1.budget, 4);
     assertEquals(l1.consumed, 1);
 
     assertEquals(rl.getLocal(t1), 4);
     assertEquals(await rl.getGlobal(t1), 4);
 
-    const l2 = await rl.limit(t1, 3);
+    const l2 = await rl.limit(t1, 3, 60, 5, 0);
     assertEquals(l1.budget, 4);
     assertEquals(l1.consumed, 1);
     assertEquals(l2.budget, 2);
@@ -144,17 +148,17 @@ Deno.test("Rate limiter", async (t) => {
   await t.step(
     "should handle concurrent budget with third-limiter midway",
     async () => {
-      const rl = await RateLimiter.init(redisConfig, 60, 5);
+      const rl = await RedisRateLimiter.init(redisConfig);
       await rl.reset(t1);
 
-      const l1 = await rl.limit(t1, 5);
+      const l1 = await rl.limit(t1, 5, 60, 5, 0);
       assertEquals(l1.budget, 4);
       assertEquals(l1.consumed, 1);
 
       assertEquals(rl.getLocal(t1), 4);
       assertEquals(await rl.getGlobal(t1), 4);
 
-      const l2 = await rl.limit(t1, 3);
+      const l2 = await rl.limit(t1, 3, 60, 5, 0);
       assertEquals(l1.budget, 4);
       assertEquals(l1.consumed, 1);
       assertEquals(l2.budget, 2);
@@ -173,7 +177,7 @@ Deno.test("Rate limiter", async (t) => {
       assertEquals(rl.getLocal(t1), 2);
       assertEquals(await rl.getGlobal(t1), 2);
 
-      const l3 = await rl.limit(t1, 3);
+      const l3 = await rl.limit(t1, 3, 60, 5, 0);
       assertEquals(l1.budget, 2);
       assertEquals(l1.consumed, 2);
       assertEquals(l2.budget, 2);
@@ -207,11 +211,11 @@ Deno.test("Rate limiter", async (t) => {
   await t.step(
     "should handle concurrent limiter",
     async () => {
-      const rl1 = await RateLimiter.init(redisConfig, 60, 5);
-      const rl2 = await RateLimiter.init(redisConfig, 60, 5);
+      const rl1 = await RedisRateLimiter.init(redisConfig);
+      const rl2 = await RedisRateLimiter.init(redisConfig);
       await rl1.reset(t1);
 
-      const l1 = await rl1.limit(t1, 5);
+      const l1 = await rl1.limit(t1, 5, 60, 5, 0);
       assertEquals(l1.budget, 4);
       assertEquals(l1.consumed, 1);
 
@@ -219,7 +223,7 @@ Deno.test("Rate limiter", async (t) => {
       assertEquals(rl1.getLocal(t1), 4);
       assertEquals(rl2.getLocal(t1), null);
 
-      const l2 = await rl2.limit(t1, 5);
+      const l2 = await rl2.limit(t1, 5, 60, 5, 0);
       assertEquals(l1.budget, 4);
       assertEquals(l1.consumed, 1);
       assertEquals(l2.budget, 3);
@@ -277,11 +281,11 @@ Deno.test("Rate limiter", async (t) => {
   await t.step(
     "should have only one adding budget",
     async () => {
-      const rl1 = await RateLimiter.init(redisConfig, 6, 30);
-      const rl2 = await RateLimiter.init(redisConfig, 6, 30);
+      const rl1 = await RedisRateLimiter.init(redisConfig);
+      const rl2 = await RedisRateLimiter.init(redisConfig);
       await rl1.reset(t1);
 
-      const l1 = await rl1.limit(t1, 16);
+      const l1 = await rl1.limit(t1, 16, 6, 30, 0);
       assertEquals(l1.budget, 15);
       assertEquals(l1.consumed, 1);
 
@@ -301,7 +305,7 @@ Deno.test("Rate limiter", async (t) => {
       assertRateLimited(l1, 1);
       await rl1.awaitBackground();
 
-      const l2 = await rl1.limit(t1, 16);
+      const l2 = await rl1.limit(t1, 16, 6, 30, 0);
       assertEquals(l2.budget, 12);
       assertEquals(l2.consumed, 1);
 
@@ -323,9 +327,9 @@ Deno.test("Rate limiter", async (t) => {
       // add 30 / 6 = 5
       await sleep(1000);
 
-      const l3P = rl1.limit(t1, 16);
-      const l4P = rl1.limit(t1, 16);
-      const l5P = rl2.limit(t1, 16);
+      const l3P = rl1.limit(t1, 16, 6, 30, 0);
+      const l4P = rl1.limit(t1, 16, 6, 30, 0);
+      const l5P = rl2.limit(t1, 16, 6, 30, 0);
 
       const [l3, l4, l5] = await Promise.all([l3P, l4P, l5P]);
       await rl1.awaitBackground();

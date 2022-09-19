@@ -46,6 +46,13 @@ export interface TypeRuntime {
   data: Record<string, unknown>;
 }
 
+export interface Rate {
+  window_limit: number;
+  window_sec: number;
+  query_limit: number;
+  local_excess: number;
+}
+
 export interface TypeMeta {
   secrets: Array<string>;
   cors: {
@@ -57,6 +64,7 @@ export interface TypeMeta {
     max_age: number | null;
   };
   auths: Array<AuthDS>;
+  rate: Rate | null;
 }
 
 export interface TypeGraphDS {
@@ -587,6 +595,8 @@ export class TypeGraph {
             batcher: this.nextBatcher(dummyStringTypeNode),
             node: fieldName,
             path: [...queryPath, aliasName ?? fieldName],
+            rateCalls: true,
+            rateWeight: 0,
           }),
         );
 
@@ -625,6 +635,8 @@ export class TypeGraph {
           batcher: this.nextBatcher(fieldType),
           node: fieldName,
           path: [...queryPath, aliasName ?? fieldName],
+          rateCalls: true,
+          rateWeight: 0,
         });
         stages.push(stage);
 
@@ -698,7 +710,8 @@ export class TypeGraph {
         dependencies.push(parentStage.id());
       }
 
-      const { input: inputIdx, output: outputIdx } = fieldType.data;
+      const { input: inputIdx, output: outputIdx, rate_calls, rate_weight } =
+        fieldType.data;
       const outputType = this.type(outputIdx);
       const checks = outputType.policies.map((p) => this.policy(p).name);
       if (checks.length > 0) {
@@ -769,6 +782,8 @@ export class TypeGraph {
         batcher: this.nextBatcher(outputType),
         node: fieldName,
         path: [...queryPath, aliasName ?? fieldName],
+        rateCalls: rate_calls,
+        rateWeight: rate_weight,
       });
       stages.push(stage);
 

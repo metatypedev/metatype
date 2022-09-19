@@ -8,6 +8,7 @@ import { getLogger } from "./log.ts";
 import { initTypegraph } from "./engine.ts";
 import { TypeGateRuntime } from "./runtimes/typegate.ts";
 import { typegate } from "./typegate.ts";
+import { RedisRateLimiter } from "./rate_limiter.ts";
 
 if (config.sentry_dsn) {
   Sentry.init({
@@ -21,15 +22,17 @@ if (config.sentry_dsn) {
 
 init();
 
-export const defaultRegister = await ReplicatedRegister.init(redisConfig);
+const register = await ReplicatedRegister.init(redisConfig);
 const typegateEngine = await initTypegraph(
   await Deno.readTextFile("./src/typegraphs/typegate.json"),
-  { typegate: await TypeGateRuntime.init(defaultRegister) },
+  { typegate: await TypeGateRuntime.init(register) },
 );
-defaultRegister.startSync({ "typegate": typegateEngine });
+register.startSync({ "typegate": typegateEngine });
+
+const limiter = await RedisRateLimiter.init(redisConfig);
 
 const server = serve(
-  typegate(defaultRegister),
+  typegate(register, limiter),
   { port: config.tg_port },
 );
 
@@ -37,7 +40,7 @@ if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
   // deno-lint-ignore no-inner-declarations
   function reload(backoff = 1) {
     fetch(
-      `http://localhost:5000/dev?node=${encodeURI(config.tg_external_url)}`,
+      `http://localhost:5000/dev?node=${encodeURI("http://127.0.0.1:7890")}`,
     ).catch((e) => {
       getLogger().debug(e.message);
       if (backoff < 3) {

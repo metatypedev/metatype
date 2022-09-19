@@ -112,6 +112,8 @@ export class GraphQLRuntime extends Runtime {
       batcher: (x: any) => x,
       node: "",
       path: [...stage.props.path.slice(0, -1), "query"],
+      rateCalls: stage.props.rateCalls,
+      rateWeight: stage.props.rateWeight,
     });
     stagesMat.push(queryStage);
 

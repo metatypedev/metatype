@@ -37,34 +37,65 @@ end
 return {c, l}
 `;
 
-export class RateLimiter {
+export abstract class RateLimiter {
+  abstract decr(
+    id: string,
+    n: number,
+  ): number | null;
+
+  abstract currentTokens(
+    id: string,
+    windowSec: number,
+    windowBudget: number,
+    maxLocalHit: number,
+  ): Promise<number>;
+
+  async limit(
+    id: string,
+    queryBudget: number,
+    windowSec: number,
+    windowBudget: number,
+    maxLocalHit: number,
+  ): Promise<RateLimit> {
+    const budget = await this.currentTokens(
+      id,
+      windowSec,
+      windowBudget,
+      maxLocalHit,
+    );
+    return new RateLimit(
+      this,
+      id,
+      Math.min(budget, queryBudget - 1),
+    );
+  }
+}
+
+export class RedisRateLimiter extends RateLimiter {
   localHit: TTLMap;
+  local: TTLMap;
   backgroundWork: Map<number, Deferred<void>>;
 
   private constructor(
-    private map: TTLMap,
     private redis: Redis,
-    private windowSec: number,
-    private budget: number,
   ) {
+    super();
     this.localHit = new TTLMap();
+    this.local = new TTLMap();
     this.backgroundWork = new Map();
   }
 
   static async init(
     connection: RedisConnectOptions,
-    window: number,
-    budget: number,
-  ): Promise<RateLimiter> {
-    const map = new TTLMap();
+  ): Promise<RedisRateLimiter> {
     const redis = await connect(connection);
-    return new RateLimiter(map, redis, window, budget);
+    return new RedisRateLimiter(redis);
   }
 
   async terminate() {
     await this.awaitBackground();
     this.redis.close();
-    this.map.terminate();
+    this.local.terminate();
     this.localHit.terminate();
   }
 
@@ -79,7 +110,7 @@ export class RateLimiter {
   }
 
   getLocal(id: string): number | null {
-    return this.map.get(id);
+    return this.local.get(id);
   }
 
   async reset(id: string): Promise<void> {
@@ -91,14 +122,19 @@ export class RateLimiter {
     await tx.flush();
   }
 
-  async currentTokens(id: string, maxLocalHit: number): Promise<number> {
+  async currentTokens(
+    id: string,
+    windowSec: number,
+    windowBudget: number,
+    maxLocalHit: number,
+  ): Promise<number> {
     const tokensKey = `${id}:tokens`;
     const lastKey = `${id}:last`;
 
     const hit = this.localHit.incrby(id, 1);
 
     if (hit && maxLocalHit > 0 && hit <= maxLocalHit) {
-      const currentTokens = this.map.decrby(id, 1);
+      const currentTokens = this.local.decrby(id, 1);
       if (currentTokens !== null && currentTokens > 0) {
         // do not block
         void this.backgroundDecr(id, 1);
@@ -107,16 +143,22 @@ export class RateLimiter {
     }
 
     const now = new Date().valueOf();
-    const delta = 1 / 1000 / this.windowSec * this.budget;
+    const delta = 1 / 1000 / windowSec * windowBudget;
+    console.log([
+      now,
+      delta,
+      windowBudget,
+      windowSec,
+    ]);
     const tx = await this.redis.eval(getUpdateBudgetCmd, [tokensKey, lastKey], [
       now,
       delta,
-      this.budget,
-      this.windowSec,
+      windowBudget,
+      windowSec,
     ]);
     const [count, last] = tx as any;
 
-    this.map.set(id, count, last);
+    this.local.set(id, count, last);
     this.localHit.set(id, 1, last);
     return count;
   }
@@ -125,7 +167,7 @@ export class RateLimiter {
     id: string,
     n: number,
   ): number | null {
-    const currentTokens = this.map.decrby(id, n);
+    const currentTokens = this.local.decrby(id, n);
     void this.backgroundDecr(id, n);
     return currentTokens;
   }
@@ -152,24 +194,11 @@ export class RateLimiter {
 
     // if -1, the global limit is already gone and we know local < global
     if (currentTokens !== -1 && last !== -1) {
-      this.map.set(id, currentTokens, last);
+      this.local.set(id, currentTokens, last);
     }
 
     def.resolve();
     this.backgroundWork.delete(backgroundId);
-  }
-
-  async limit(
-    id: string,
-    queryBudget: number,
-    maxLocalHit = 0,
-  ): Promise<RateLimit> {
-    const budget = await this.currentTokens(id, maxLocalHit);
-    return new RateLimit(
-      this,
-      id,
-      Math.min(budget, queryBudget - 1),
-    );
   }
 }
 

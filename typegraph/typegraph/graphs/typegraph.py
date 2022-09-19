@@ -83,6 +83,7 @@ class Rate:
     window_limit: int
     window_sec: int
     query_limit: int
+    local_excess: int = 0
 
 
 class TypeGraph:
