@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List
+from typing import Optional
 from typing import Tuple
 
 from frozendict import frozendict
@@ -44,6 +45,7 @@ class TypeMeta:
     secrets: List[str]
     cors: typegraph.Cors
     auths: List[typegraph.Auth]
+    rate: Optional[typegraph.Rate]
 
 
 @dataclass(eq=True, frozen=True)
@@ -193,6 +195,7 @@ def build(tg: typegraph.TypeGraph):
         meta=TypeMeta(
             secrets=list(secrets),
             auths=tg.auths,
+            rate=tg.rate,
             cors=tg.cors,
         ),
     )

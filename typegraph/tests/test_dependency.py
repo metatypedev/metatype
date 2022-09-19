@@ -58,7 +58,13 @@ class TestDependency:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 0, "input": 2, "output": 3}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 0,
+                                "input": 2,
+                                "output": 3,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -91,7 +97,13 @@ class TestDependency:
                         policies=(),
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"materializer": 0, "input": 5, "output": 9}
+                            {
+                                "rate_weight": None,
+                                "rate_calls": False,
+                                "materializer": 0,
+                                "input": 5,
+                                "output": 9,
+                            }
                         ),
                     ),
                     TypeNode(
@@ -160,6 +172,7 @@ class TestDependency:
                         max_age=None,
                     ),
                     auths=[],
+                    rate=[],
                 ),
             )
         )

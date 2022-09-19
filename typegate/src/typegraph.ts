@@ -8,12 +8,12 @@ import {
 } from "./engine.ts";
 import * as graphql from "./graphql.ts";
 import { FragmentDefs } from "./graphql.ts";
-import { DenoRuntime } from "./runtimes/DenoRuntime.ts";
-import { GoogleapisRuntime } from "./runtimes/GoogleapisRuntime.ts";
-import { GraphQLRuntime } from "./runtimes/GraphQLRuntime.ts";
-import { HTTPRuntime } from "./runtimes/HTTPRuntime.ts";
-import { PrismaRuntime } from "./runtimes/PrismaRuntime.ts";
-import { RandomRuntime } from "./runtimes/RandomRuntime.ts";
+import { DenoRuntime } from "./runtimes/deno.ts";
+import { GoogleapisRuntime } from "./runtimes/googleapis.ts";
+import { GraphQLRuntime } from "./runtimes/graphql.ts";
+import { HTTPRuntime } from "./runtimes/http.ts";
+import { PrismaRuntime } from "./runtimes/prisma.ts";
+import { RandomRuntime } from "./runtimes/random.ts";
 import {
   Batcher,
   Resolver,
@@ -28,7 +28,7 @@ import { v4 as uuid } from "std/uuid/mod.ts";
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
 
-import { ListNode, StructNode, TypeNode } from "./type-node.ts";
+import { ListNode, StructNode, TypeNode } from "./type_node.ts";
 
 interface TypePolicy {
   name: string;
@@ -46,6 +46,13 @@ export interface TypeRuntime {
   data: Record<string, unknown>;
 }
 
+export interface Rate {
+  window_limit: number;
+  window_sec: number;
+  query_limit: number;
+  local_excess: number;
+}
+
 export interface TypeMeta {
   secrets: Array<string>;
   cors: {
@@ -57,6 +64,7 @@ export interface TypeMeta {
     max_age: number | null;
   };
   auths: Array<AuthDS>;
+  rate: Rate | null;
 }
 
 export interface TypeGraphDS {
@@ -587,6 +595,8 @@ export class TypeGraph {
             batcher: this.nextBatcher(dummyStringTypeNode),
             node: fieldName,
             path: [...queryPath, aliasName ?? fieldName],
+            rateCalls: true,
+            rateWeight: 0,
           }),
         );
 
@@ -625,6 +635,8 @@ export class TypeGraph {
           batcher: this.nextBatcher(fieldType),
           node: fieldName,
           path: [...queryPath, aliasName ?? fieldName],
+          rateCalls: true,
+          rateWeight: 0,
         });
         stages.push(stage);
 
@@ -698,7 +710,8 @@ export class TypeGraph {
         dependencies.push(parentStage.id());
       }
 
-      const { input: inputIdx, output: outputIdx } = fieldType.data;
+      const { input: inputIdx, output: outputIdx, rate_calls, rate_weight } =
+        fieldType.data;
       const outputType = this.type(outputIdx);
       const checks = outputType.policies.map((p) => this.policy(p).name);
       if (checks.length > 0) {
@@ -769,6 +782,8 @@ export class TypeGraph {
         batcher: this.nextBatcher(outputType),
         node: fieldName,
         path: [...queryPath, aliasName ?? fieldName],
+        rateCalls: rate_calls,
+        rateWeight: rate_weight,
       });
       stages.push(stage);
 

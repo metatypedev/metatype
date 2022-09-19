@@ -4,7 +4,7 @@ import type ast from "graphql_ast";
 import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
 import { ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
-import { TypeGraphRuntime } from "./runtimes/TypeGraphRuntime.ts";
+import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { sha1, unsafeExtractJWT } from "./crypto.ts";
@@ -16,7 +16,9 @@ import type {
 } from "./runtimes/Runtime.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
-import { TypeNode } from "./type-node.ts";
+import { TypeNode } from "./type_node.ts";
+import { Auth } from "./auth.ts";
+import { RateLimit, RedisRateLimiter } from "./rate_limiter.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -72,6 +74,8 @@ interface ComputeStageProps {
   batcher: Batcher;
   node: string;
   path: string[];
+  rateCalls: boolean;
+  rateWeight: number;
 }
 
 export type PolicyStage = () => Promise<boolean | null>;
@@ -127,6 +131,7 @@ const authorize = async (
     // null = inherit
     return null;
   }
+
   const [check, ...nextChecks] = checks;
   const decision = await policiesRegistry[check]();
   verbose && console.log(stageId, decision);
@@ -176,6 +181,7 @@ export class Engine {
     policesFactory: PolicyStagesFactory,
     context: Record<string, unknown>,
     variables: Record<string, unknown>,
+    limit: RateLimit | null,
     verbose: boolean,
   ): Promise<JSONValue> {
     const ret = {};
@@ -193,6 +199,8 @@ export class Engine {
         parent,
         batcher,
         node,
+        rateCalls,
+        rateWeight,
       } = stage.props;
 
       const decisions = await Promise.all(
@@ -206,7 +214,9 @@ export class Engine {
         (decisions.some((d) => d === null) || decisions.length < 1)
       ) {
         // root level field inherit false
-        throw Error(`no authorization policy set in root field ${stage.id()}`);
+        throw Error(
+          `no authorization policy took a decision in root field ${stage.id()}`,
+        );
       }
 
       const deps = dependencies
@@ -217,6 +227,10 @@ export class Engine {
       //verbose && console.log("dep", stage.id(), deps);
       const previousValues = parent ? cache[parent.id()] : ([{}] as any);
       const lens = parent ? lenses[parent.id()] : ([ret] as any);
+
+      if (limit && rateCalls) {
+        limit.consume(rateWeight);
+      }
 
       const res = await Promise.all(
         previousValues.map((parent: any) =>
@@ -231,6 +245,10 @@ export class Engine {
           })
         ),
       );
+
+      if (limit && !rateCalls) {
+        limit.consume(res.length && rateWeight);
+      }
 
       // or no cache if no further usage
       cache[stage.id()] = batcher(res);
@@ -359,6 +377,7 @@ export class Engine {
     operationName: Maybe<string>,
     variables: Record<string, unknown>,
     context: Record<string, unknown>,
+    limit: RateLimit | null,
   ): Promise<{ status: number; [key: string]: JSONValue }> {
     try {
       const document = parse(query);
@@ -391,6 +410,7 @@ export class Engine {
         policies,
         context,
         variables,
+        limit,
         verbose,
       );
       const endTime = performance.now();
@@ -516,29 +536,39 @@ export class Engine {
   async ensureJWT(
     headers: Headers,
   ): Promise<[Record<string, unknown>, Headers]> {
-    const name = this.tg.root.name;
-
-    let jwt = headers.get("Authorization");
-    if (jwt) {
-      jwt = jwt.split(" ")[1];
-    } else {
-      jwt = getCookies(headers)[name];
-    }
-
-    if (!jwt) {
+    if (this.tg.auths.size === 0) {
       return [{}, new Headers()];
     }
 
-    const { provider } = await unsafeExtractJWT(jwt);
+    let [kind, token] = (headers.get("Authorization") ?? "").split(" ");
+    if (!token) {
+      const name = this.tg.root.name;
+      token = getCookies(headers)[name];
+    }
 
-    const auth = this.tg.auths.size > 1
-      ? this.tg.auths.get(provider as string)
-      : this.tg.auths.values().next().value;
+    if (!token) {
+      return [{}, new Headers()];
+    }
+
+    let auth = null;
+
+    if (kind === "basic") {
+      auth = this.tg.auths.get("basic");
+    } else if (this.tg.auths.size === 1) {
+      auth = this.tg.auths.values().next().value;
+    } else {
+      try {
+        const { provider } = await unsafeExtractJWT(token);
+        auth = this.tg.auths.get(provider as string);
+      } catch {
+        // malformed jwt
+      }
+    }
 
     if (!auth) {
       return [{}, new Headers()];
     }
 
-    return await auth.jwtMiddleware(jwt);
+    return await auth.tokenMiddleware(token);
   }
 }
