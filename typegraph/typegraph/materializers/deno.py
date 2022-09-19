@@ -1,11 +1,16 @@
 import ast
 from dataclasses import dataclass
+from dataclasses import field
 from dataclasses import InitVar
 from dataclasses import KW_ONLY
 import inspect
 import os
+from typing import Any
+from typing import Dict
 from typing import Optional
+from typing import Tuple
 
+from frozendict import frozendict
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
 
@@ -14,8 +19,20 @@ from typegraph.materializers.base import Runtime
 class DenoRuntime(Runtime):
     _: KW_ONLY
     worker: str = "default"
-    # permissions ...
+    net: InitVar[Tuple[str, ...]] = tuple()
+    permissions: Dict[str, Any] = field(default_factory=frozendict)
     runtime_name: str = "deno"
+
+    def __post_init__(self, net: Optional[Tuple[str, ...]]):
+        permissions = {}
+        if net is not None and len(net) > 0:
+            if "*" in net:
+                permissions["net"] = True
+            else:
+                permissions["net"] = net
+
+        if len(permissions) > 0:
+            object.__setattr__(self, "permissions", frozendict(permissions))
 
 
 class LambdaCollector(ast.NodeTransformer):

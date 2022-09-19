@@ -113,6 +113,10 @@ def build(tg: typegraph.TypeGraph):
                     else:
                         data[k] = tuple(v)
 
+            if isinstance(node, DenoRuntime):
+                if len(data["permissions"]) == 0:
+                    data.pop("permissions")
+
             ret = TypeRuntime(name=data.pop("runtime_name"), data=frozendict(data))
             return idx(runtimes, ret)
 

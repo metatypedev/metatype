@@ -28,7 +28,8 @@ interface TaskBase {
 
 export interface ImportFuncTask extends TaskBase {
   type: "import_func";
-  module: string;
+  moduleId: number;
+  moduleCode?: string;
   name: string;
 }
 
