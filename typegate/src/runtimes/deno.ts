@@ -1,29 +1,47 @@
 import { Deferred, deferred } from "std/async/deferred.ts";
+import * as Sentry from "sentry";
 import { ComputeStage } from "../engine.ts";
 import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
-import { FuncTask, Task } from "./utils/codes.ts";
+import { FuncTask, ImportFuncTask, Task } from "./utils/codes.ts";
 import { ensure } from "../utils.ts";
 
 const logger = getLogger(import.meta);
 
-const workerFile = new URL("../src/runtimes/utils/worker.ts", Deno.mainModule)
-  .href;
+const workerFile =
+  new URL("../src/runtimes/utils/deno-worker.ts", Deno.mainModule)
+    .href;
+
+const defaultPermissions = {
+  env: false,
+  hrtime: false,
+  net: false,
+  ffi: false,
+  read: false,
+  run: false,
+  write: false,
+};
 
 export class DenoRuntime extends Runtime {
   w: OnDemandWorker;
 
-  private constructor(name: string, lazy: boolean, tg: TypeGraphDS) {
+  private constructor(
+    name: string,
+    permissions: Deno.PermissionOptionsObject,
+    lazy: boolean,
+    tg: TypeGraphDS,
+  ) {
     super();
-    this.w = new OnDemandWorker(name, lazy, tg);
+    this.w = new OnDemandWorker(name, permissions, false, tg);
   }
 
   static init(params: RuntimeInitParams): Runtime {
     const { typegraph: tg, config, args } = params;
 
     return new DenoRuntime(
-      args.name as string,
+      args.worker as string,
+      (args.permissions ?? {}) as Deno.PermissionOptionsObject,
       config.lazy as boolean ?? false,
       tg,
     );
@@ -85,6 +103,18 @@ interface TaskData {
   hooks: Array<() => void | Promise<void>>;
 }
 
+interface SuccessMessage {
+  id: number; // task id
+  value: unknown;
+}
+
+interface ErrorMessage {
+  id: number; // task id
+  error: string;
+}
+
+type Message = SuccessMessage | ErrorMessage;
+
 const resetModulus = 1_000_000;
 const inactivityThreshold = 1;
 const inactivityIntervalMs = 15_000;
@@ -99,10 +129,15 @@ class OnDemandWorker {
   gcState = 0;
   gcInterval?: number;
 
-  modules: Map<TypeMaterializer, Promise<string>> = new Map();
+  modules: Map<TypeMaterializer, number> = new Map();
   inlineFns: Map<TypeMaterializer, number> = new Map();
 
-  constructor(name: string, lazy: boolean, private tg: TypeGraphDS) {
+  constructor(
+    name: string,
+    private permissions: Deno.PermissionOptionsObject,
+    lazy: boolean,
+    private tg: TypeGraphDS,
+  ) {
     this.name = name;
     if (lazy) {
       this.enableLazyWorker();
@@ -159,23 +194,37 @@ class OnDemandWorker {
         type: "module",
         deno: {
           namespace: false,
+          // by default a worker will inherit permissions
           permissions: {
-            read: ["/tmp/", "/var/folders"],
+            ...defaultPermissions,
             net: true,
+            // ...this.permissions,
+
+            // On the current version of deno,
+            // permissions on workers do not work as expected.
+            // All workers get the permissions of the first spawned worker.
           },
         },
       } as WorkerOptions);
+      this.lazyWorker.postMessage({
+        name: this.name,
+      });
       this.lazyWorker.onmessage = async (event) => {
-        const { id, data } = event.data as { id: number; data: unknown };
+        const message = event.data as Message;
+        const { id } = message;
         const task = this.tasks.get(id)!;
-        task.promise.resolve(data);
+        if (Object.hasOwnProperty.call(message, "value")) {
+          task.promise.resolve((message as SuccessMessage).value);
+        } else {
+          task.promise.reject(new Error((message as ErrorMessage).error));
+        }
         for await (const hook of task.hooks) {
           await hook();
         }
         this.tasks.delete(id);
       };
       this.lazyWorker.onerror = (error) => {
-        // console.error(error);
+        Sentry.captureException(error);
         throw error;
       };
     }
@@ -188,7 +237,7 @@ class OnDemandWorker {
     return n;
   }
 
-  async execTask(task: TaskInit, verbose: boolean): Promise<unknown> {
+  execTask(task: TaskInit, verbose: boolean): Promise<unknown> {
     const { args, context, mat } = task;
 
     const exec = (
@@ -222,29 +271,23 @@ class OnDemandWorker {
       }
 
       case "import_function": {
+        const id = this.nextId();
         const modMat = this.tg.materializers[mat.data.mod as number];
-        const hooks = [] as Array<() => Promise<void>>;
+        let modRef: Pick<ImportFuncTask, "moduleId" | "moduleCode">;
         if (!this.modules.has(modMat)) {
-          const modPromise = Promise.resolve((async () => {
-            const path = await Deno.makeTempFile({ suffix: ".js" });
-            await Deno.writeTextFile(path, modMat.data.code as string);
-            return path;
-          })());
-          this.modules.set(modMat, modPromise);
-          hooks.push(async () => {
-            const mod = await modPromise;
-            await Deno.remove(mod);
-          });
+          this.modules.set(modMat, id);
+          modRef = { moduleId: id, moduleCode: modMat.data.code as string };
+        } else {
+          modRef = { moduleId: this.modules.get(modMat)! };
         }
-        const module = await this.modules.get(modMat)!;
         return exec({
           type: "import_func",
-          id: this.nextId(),
-          module,
+          id,
           args,
           context,
           name: mat.data.name as string,
           verbose,
+          ...modRef,
         });
       }
 

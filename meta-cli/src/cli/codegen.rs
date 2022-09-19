@@ -30,7 +30,9 @@ pub struct Deno {
 impl Action for Deno {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
-        let mut tgs = TypegraphLoader::new().load_file(&self.file)?;
+        let mut tgs = TypegraphLoader::new()
+            .skip_deno_modules()
+            .load_file(&self.file)?;
         let file = Path::new(&self.file);
 
         if let Some(tg_name) = self.typegraph.as_ref() {

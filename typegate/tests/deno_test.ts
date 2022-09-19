@@ -1,6 +1,6 @@
 import { gql, test } from "./utils.ts";
 
-test("Deno/worker runtimes", async (t) => {
+test("Deno runtime", async (t) => {
   const e = await t.pythonFile("typegraphs/deno.py");
 
   await t.should("work on the default worker", async () => {
@@ -45,6 +45,45 @@ test("Deno/worker runtimes", async (t) => {
     `
       .expectData({
         count: 2,
+      })
+      .on(e);
+  });
+});
+
+test("Deno runtime: permissions", async (t) => {
+  const e = await t.pythonFile("typegraphs/deno.py");
+
+  // await t.should(
+  //   "fail to import module from network with default net permissions (empty)",
+  //   async () => {
+  //     await gql`
+  //       query {
+  //         min0(numbers: [2.5, 1.2, 4, 3])
+  //       }
+  //     `
+  //       .expectErrorContains('Requires net access to "deno.land"')
+  //       .on(e);
+  //   },
+  // );
+
+  await t.should("success for allowed network access", async () => {
+    await gql`
+      query {
+        min1(numbers: [2.5, 1.2, 4, 3])
+      }
+    `.expectData({
+      min1: 1.2,
+    }).on(e);
+  });
+
+  await t.should("work with npm packages", async () => {
+    await gql`
+      query {
+        log(number: 10000, base: 10)
+      }
+    `
+      .expectData({
+        log: 4,
       })
       .on(e);
   });
