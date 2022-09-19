@@ -164,11 +164,10 @@ struct ErrorWithTypegraphPush {
 
 pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
     let client = reqwest::blocking::Client::new();
-    let tg = serde_json::Value::String(tg).to_string();
     let payload = json!({
       "operationName": "insert",
       "variables": {},
-      "query": format!("query insert {{ addTypegraph(fromString: {}) {{ name }}}}", tg)
+      "query": format!("query insert {{ addTypegraph(fromString: {}) {{ name }}}}", serde_json::Value::String(tg.clone()))
     });
 
     let query = client
@@ -178,12 +177,15 @@ pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
         .send();
 
     match query {
-        Err(e) if backoff > 1 => {
-            println!("retry {:?}", e);
-            sleep(Duration::from_secs(10));
-            push_typegraph(tg, node, backoff - 1)
+        Err(e) => {
+            if backoff > 1 {
+                println!("retry {:?}", e);
+                sleep(Duration::from_secs(5));
+                push_typegraph(tg, node, backoff - 1)
+            } else {
+                bail!("node {} unreachable: {}", node, e);
+            }
         }
-        Err(_) => bail!("node {} unreachable", node),
         Result::Ok(res) if !res.status().is_success() => {
             let content = res.text().expect("cannot deserialize http push");
             let error = serde_json::from_str::<ErrorWithTypegraphPush>(&content).map_or_else(
@@ -196,7 +198,13 @@ pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
                         .join("\n")
                 },
             );
-            bail!("typegraph push error: {}", error)
+            if backoff > 1 {
+                println!("retry {:?}", error);
+                sleep(Duration::from_secs(5));
+                push_typegraph(tg, node, backoff - 1)
+            } else {
+                bail!("typegraph push error: {}", error)
+            }
         }
         _ => Ok(()),
     }
