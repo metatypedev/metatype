@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
 use deno_bindgen::deno_bindgen;

@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import * as MathLib from "https://deno.land/x/math@v1.1.0/mod.ts";
 
 interface MinInput {

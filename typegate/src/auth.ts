@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { OAuth2Client, Tokens } from "https://deno.land/x/oauth2_client/mod.ts";
 import config from "./config.ts";
 import * as base64 from "std/encoding/base64.ts";
@@ -6,6 +8,7 @@ import { envOrFail } from "./utils.ts";
 import { deleteCookie, setCookie } from "std/http/cookie.ts";
 import { crypto } from "std/crypto/mod.ts";
 import * as jwt from "jwt";
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.0/mod.ts";
 
 export type AuthDS = {
   name: string;
@@ -53,10 +56,13 @@ export abstract class Auth {
 }
 
 export class BasicAuth extends Auth {
-  static init(typegraphName: string, auth: AuthDS): Promise<Auth> {
+  static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
     const tokens = new Map();
     for (const user of auth.auth_data.users as string[]) {
-      const token = envOrFail(typegraphName, `${auth.name}_{user}`);
+      const password = typegraphName == "typegate"
+        ? envOrFail(user, "password")
+        : envOrFail(typegraphName, `${auth.name}_${user}`);
+      const token = await bcrypt.hash(password);
       tokens.set(user, token);
     }
     return Promise.resolve(new BasicAuth(typegraphName, auth, tokens));
@@ -77,14 +83,15 @@ export class BasicAuth extends Auth {
     return Promise.resolve(res);
   }
 
-  tokenMiddleware(
+  async tokenMiddleware(
     jwt: string,
   ): Promise<[Record<string, unknown>, Headers]> {
     const [user, token] = new TextDecoder().decode(base64.decode(jwt)).split(
       ":",
     );
 
-    const claims = this.hashes.get(user) === token
+    const hash = this.hashes.get(user);
+    const claims = hash && await bcrypt.compare(token, hash)
       ? {
         user,
       }

@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { gql, test } from "./utils.ts";
 import * as mf from "https://deno.land/x/mock_fetch@0.3.0/mod.ts";
 

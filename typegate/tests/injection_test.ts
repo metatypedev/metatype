@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { gql, test } from "./utils.ts";
 import { assertRejects } from "std/testing/asserts.ts";
 

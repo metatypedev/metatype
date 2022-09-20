@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 interface TypeNodeBase {
   name: string;
   typedef: string;

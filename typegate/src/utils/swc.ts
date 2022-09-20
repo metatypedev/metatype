@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { transform } from "https://deno.land/x/swc@0.2.1/mod.ts";
 import type { Config } from "https://esm.sh/@swc/core@1.2.212/types.d.ts";
 import type { TypeGraphDS } from "../typegraph.ts";
