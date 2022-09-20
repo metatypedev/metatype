@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { ComputeStage } from "../engine.ts";
 import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { associateWith } from "std/collections/associate_with.ts";

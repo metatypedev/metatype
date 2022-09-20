@@ -1,3 +1,5 @@
+# Copyright Metatype under the Elastic License 2.0.
+
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.types import typedefs as t
 

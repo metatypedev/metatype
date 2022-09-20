@@ -1,12 +1,12 @@
 {
   "imports": {
-    "std/": "https://deno.land/std@0.154.0/",
+    "std/": "https://deno.land/std@0.156.0/",
     "graphql": "https://cdn.skypack.dev/graphql@16.6.0?dts",
     "sentry": "npm:@sentry/node@7.12.1",
     "graphql_ast": "https://cdn.skypack.dev/graphql@16.6.0/language/ast?dts",
-    "zod/": "https://deno.land/x/zod@v3.18.0/",
+    "zod/": "https://deno.land/x/zod@v3.19.1/",
     "monads": "https://deno.land/x/monads@v0.5.10/mod.ts",
     "jwt": "https://deno.land/x/djwt@v2.7/mod.ts",
-    "redis": "https://deno.land/x/redis@v0.26.0/mod.ts"
+    "redis": "https://deno.land/x/redis@v0.27.0/mod.ts"
   }
 }

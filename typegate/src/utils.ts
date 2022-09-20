@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { ComputeStage } from "./engine.ts";
 import * as ast from "graphql_ast";
 

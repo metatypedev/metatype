@@ -1,3 +1,5 @@
+# Copyright Metatype under the Elastic License 2.0.
+
 from os import environ
 from os import getcwd
 from pathlib import Path

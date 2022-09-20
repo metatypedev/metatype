@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { serve } from "std/http/server.ts";
 import * as Sentry from "sentry";
 import { init } from "../../bindings/bindings.ts";

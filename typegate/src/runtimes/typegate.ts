@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { Resolver, Runtime } from "./Runtime.ts";
 import { ComputeStage, Engine } from "../engine.ts";
 import { Register } from "../register.ts";

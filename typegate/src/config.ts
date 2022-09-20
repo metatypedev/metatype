@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { z } from "zod/mod.ts";
 import { getLogger } from "./log.ts";
 import "std/dotenv/load.ts";
@@ -76,7 +78,6 @@ const schema = z.object({
   version: z.string(),
   trust_proxy: z.boolean(),
   trust_header_ip: z.string(),
-  context_identifier: z.string().optional(),
 });
 
 const parsing = await schema.safeParse(

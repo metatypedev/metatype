@@ -1,8 +1,11 @@
+# Copyright Metatype under the Elastic License 2.0.
+
 import importlib
 from pathlib import Path
 import pkgutil
 from typing import List
 
+from frozendict import frozendict
 import orjson
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import Relation
@@ -11,6 +14,8 @@ from typegraph.materializers.prisma import Relation
 def default(obj):
     if isinstance(obj, Relation):
         return {}
+    if isinstance(obj, frozendict):
+        return dict(obj)
     raise TypeError
 
 

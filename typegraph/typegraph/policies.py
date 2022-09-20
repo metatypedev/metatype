@@ -1,3 +1,5 @@
+# Copyright Metatype under the Elastic License 2.0.
+
 from typegraph.materializers.deno import FunMat
 from typegraph.types import typedefs as t
 

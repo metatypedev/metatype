@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: zimports
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
       - id: black
   - repo: https://gitlab.com/pycqa/flake8
@@ -22,7 +22,7 @@ repos:
     hooks:
       - id: flake8
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v2.32.1
+    rev: v2.34.0
     hooks:
       - id: commitizen
         stages: [commit-msg]
@@ -60,3 +60,25 @@ repos:
           - ts
           - tsx
         files: ^website/
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.3.1
+    hooks:
+      - id: insert-license
+        name: "License header python"
+        args:
+          - --license-filepath=licenses/header.txt
+          - "--comment-style=#"
+          - "--skip-license-insertion-comment=no-auto-license-header"
+        types_or:
+          - python
+        files: ^typegraph/
+      - id: insert-license
+        name: "License header deno/rust"
+        args:
+          - --license-filepath=licenses/header.txt
+          - "--comment-style=//"
+          - "--skip-license-insertion-comment=no-auto-license-header"
+        types_or:
+          - rust
+          - ts
+        files: ^typegate/

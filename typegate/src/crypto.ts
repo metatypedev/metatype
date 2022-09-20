@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { crypto } from "std/crypto/mod.ts";
 import * as base64 from "std/encoding/base64url.ts";
 import config from "./config.ts";

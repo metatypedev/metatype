@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { connect, Redis, RedisConnectOptions } from "redis";
 import { Deferred, deferred } from "std/async/deferred.ts";
 
@@ -148,12 +150,6 @@ export class RedisRateLimiter extends RateLimiter {
 
     const now = new Date().valueOf();
     const delta = 1 / 1000 / windowSec * windowBudget;
-    console.log([
-      now,
-      delta,
-      windowBudget,
-      windowSec,
-    ]);
     const tx = await this.redis.eval(getUpdateBudgetCmd, [tokensKey, lastKey], [
       now,
       delta,

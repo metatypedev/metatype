@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { ComputeStage } from "../engine.ts";
 import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { equal } from "std/testing/asserts.ts";

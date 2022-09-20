@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import Dataloader from "npm:dataloader@2.1.0";
 import { Kind, parse } from "graphql";
 import type ast from "graphql_ast";
@@ -229,7 +231,7 @@ export class Engine {
       const lens = parent ? lenses[parent.id()] : ([ret] as any);
 
       if (limit && rateCalls) {
-        limit.consume(rateWeight);
+        limit.consume(rateWeight ?? 1);
       }
 
       const res = await Promise.all(
@@ -247,7 +249,7 @@ export class Engine {
       );
 
       if (limit && !rateCalls) {
-        limit.consume(res.length && rateWeight);
+        limit.consume(res.length * (rateWeight ?? 1));
       }
 
       // or no cache if no further usage

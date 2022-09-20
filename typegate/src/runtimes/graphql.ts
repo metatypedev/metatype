@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { ComputeStage } from "../engine.ts";
 import { gq } from "../gq.ts";
 import { JSONValue } from "../utils.ts";
