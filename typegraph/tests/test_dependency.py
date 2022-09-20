@@ -1,3 +1,5 @@
+# Copyright Metatype under the Elastic License 2.0.
+
 import frozendict
 from typegraph.graphs.builders import Graph
 from typegraph.graphs.builders import TypeMaterializer
@@ -173,6 +175,7 @@ class TestDependency:
                     ),
                     auths=[],
                     rate=[],
+                    version="0.0.1",
                 ),
             )
         )

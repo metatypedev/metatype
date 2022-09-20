@@ -1,3 +1,5 @@
+# Copyright Metatype under the Elastic License 2.0.
+
 from dataclasses import dataclass
 from dataclasses import field
 import inspect
@@ -8,6 +10,7 @@ from typing import List
 from typing import Literal
 from typing import Optional
 from typing import TYPE_CHECKING
+
 
 if TYPE_CHECKING:
     from typegraph.types import typedefs as t
@@ -56,7 +59,7 @@ class Auth:
         return Auth(name, "jwk", args if args is not None else {})
 
     @classmethod
-    def basic(cls, users) -> "Auth":
+    def basic(cls, users: List[str]) -> "Auth":
         return Auth("basic", "basic", {"users": users})
 
 
@@ -83,6 +86,7 @@ class Rate:
     window_limit: int
     window_sec: int
     query_limit: int
+    context_identifier: Optional[str] = None
     local_excess: int = 0
 
 

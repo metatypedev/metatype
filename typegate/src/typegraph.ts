@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import type * as ast from "graphql_ast";
 import { Kind } from "graphql";
 import {
@@ -27,8 +29,10 @@ import { compileCodes } from "./utils/swc.ts";
 import { v4 as uuid } from "std/uuid/mod.ts";
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
+import * as semver from "std/semver/mod.ts";
 
 import { ListNode, StructNode, TypeNode } from "./type_node.ts";
+import config from "./config.ts";
 
 interface TypePolicy {
   name: string;
@@ -51,6 +55,7 @@ export interface Rate {
   window_sec: number;
   query_limit: number;
   local_excess: number;
+  context_identifier: string;
 }
 
 export interface TypeMeta {
@@ -65,6 +70,7 @@ export interface TypeMeta {
   };
   auths: Array<AuthDS>;
   rate: Rate | null;
+  version: string;
 }
 
 export interface TypeGraphDS {
@@ -95,6 +101,17 @@ const runtimeInit: RuntimeInit = {
   googleapis: GoogleapisRuntime.init,
   random: RandomRuntime.init,
   //typegraph: TypeGraphRuntime.init,
+};
+
+const typegraphVersion = "0.0.1";
+const typegraphChangelog: Record<
+  string,
+  { next: string; transform: (x: TypeGraphDS) => TypeGraphDS }
+> = {
+  "0.0.0": {
+    "next": "0.0.1",
+    "transform": (x) => x,
+  },
 };
 
 export class TypeGraph {
@@ -144,6 +161,18 @@ export class TypeGraph {
   ): Promise<TypeGraph> {
     const typegraphName = typegraph.types[0].name;
     const { meta, runtimes } = typegraph;
+
+    let currentVersion = meta.version;
+    while (semver.neq(typegraphVersion, currentVersion)) {
+      const migration = typegraphChangelog[currentVersion];
+      if (!migration) {
+        throw Error(
+          `typegate ${config.version} supports typegraph ${typegraphVersion} which is incompatible with ${typegraphName} ${meta.version} (max auto upgrade was ${currentVersion})`,
+        );
+      }
+      typegraph = migration.transform(typegraph);
+      currentVersion = migration.next;
+    }
 
     const secrets = meta.secrets.sort().reduce(
       (agg, secretName) => {

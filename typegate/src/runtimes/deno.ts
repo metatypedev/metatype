@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { Deferred, deferred } from "std/async/deferred.ts";
 import * as Sentry from "sentry";
 import { ComputeStage } from "../engine.ts";

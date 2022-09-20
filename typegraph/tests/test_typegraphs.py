@@ -1,3 +1,5 @@
+# Copyright Metatype under the Elastic License 2.0.
+
 import frozendict
 from typegraph.dist import introspection
 from typegraph.graphs.builders import Graph
@@ -971,6 +973,7 @@ class TestTypegraph:
                     ),
                     auths=[],
                     rate=[],
+                    version="0.0.1",
                 ),
             )
         )

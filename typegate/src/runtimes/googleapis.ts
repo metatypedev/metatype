@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { ComputeStage } from "../engine.ts";
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";

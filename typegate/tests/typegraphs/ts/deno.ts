@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 let count = 0;
 
 export function counter(): number {

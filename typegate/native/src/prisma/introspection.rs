@@ -1,8 +1,10 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 // https://github.com/prisma/prisma-engines/blob/main/introspection-engine/introspection-engine-tests/src/test_api.rs
 
-use datamodel::dml::Datamodel;
 use introspection_connector::{CompositeTypeDepth, IntrospectionConnector, IntrospectionContext};
 use introspection_core::Error;
+use prisma_models::{dml::Datamodel, psl};
 use sql_introspection_connector::SqlIntrospectionConnector;
 use std::result::Result;
 
@@ -24,7 +26,7 @@ impl Introspection {
             Err(e) => return Result::Err(Error::DatamodelError(e.to_string())),
         };
 
-        let ds = config.subject.datasources.first().unwrap();
+        let ds = config.datasources.first().unwrap();
 
         let url = ds.load_url(load_env_var).unwrap();
 
@@ -36,22 +38,22 @@ impl Introspection {
             }
         };
 
-        let datamodel = Datamodel::new();
-
         let ctx = IntrospectionContext {
             preview_features: Default::default(),
-            source: config.subject.datasources.into_iter().next().unwrap(),
+            source: config.datasources.into_iter().next().unwrap(),
             composite_type_depth: CompositeTypeDepth::Level(3),
         };
+
+        let datamodel = Datamodel::new();
 
         match connector.introspect(&datamodel, ctx).await {
             Ok(introspection_result) => {
                 if introspection_result.data_model.is_empty() {
                     Result::Err(Error::IntrospectionResultEmpty)
                 } else {
-                    Result::Ok(datamodel::render_datamodel_to_string(
+                    Result::Ok(psl::render_datamodel_to_string(
                         &introspection_result.data_model,
-                        Some(&config2.subject),
+                        Some(&config2),
                     ))
                 }
             }

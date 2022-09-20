@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { handlers, LevelName, Logger } from "std/log/mod.ts";
 import { basename, extname, fromFileUrl } from "std/path/mod.ts";
 

@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import type * as ast from "graphql_ast";
 import { Kind } from "graphql";
 import { Maybe } from "./utils.ts";

@@ -1,8 +1,24 @@
+// no-auto-license-header
+
+// Copyright 2019 Prisma Data, Inc.
+// Modifications copyright 2022 Metatype
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
 // https://github.com/prisma/prisma-engines/blob/main/query-engine/query-engine-node-api/src/engine.rs
 
 use datamodel::diagnostics::Diagnostics;
-use datamodel::{dml::Datamodel, ValidatedConfiguration};
-use prisma_models::InternalDataModelBuilder;
+use prisma_models::psl;
 use query_connector::error::ConnectorError;
 use query_core::CoreError;
 use query_core::{
@@ -23,103 +39,6 @@ use std::{
 use thiserror::Error;
 use tokio::sync::RwLock;
 
-#[derive(Debug, Error)]
-pub enum ApiError {
-    #[error("{:?}", _0)]
-    Conversion(Diagnostics, String),
-
-    #[error("{}", _0)]
-    Configuration(String),
-
-    #[error("{}", _0)]
-    Core(CoreError),
-
-    #[error("{}", _0)]
-    Connector(ConnectorError),
-
-    #[error("Can't modify an already connected engine.")]
-    AlreadyConnected,
-
-    #[error("Engine is not yet connected.")]
-    NotConnected,
-
-    #[error("{}", _0)]
-    JsonDecode(String),
-}
-
-impl From<ApiError> for user_facing_errors::Error {
-    fn from(err: ApiError) -> Self {
-        use std::fmt::Write as _;
-
-        match err {
-            ApiError::Connector(ConnectorError {
-                user_facing_error: Some(err),
-                ..
-            }) => err.into(),
-            ApiError::Conversion(errors, dml_string) => {
-                let mut full_error = errors.to_pretty_string("schema.prisma", &dml_string);
-                write!(
-                    full_error,
-                    "\nValidation Error Count: {}",
-                    errors.errors().len()
-                )
-                .unwrap();
-
-                user_facing_errors::Error::from(user_facing_errors::KnownError::new(
-                    user_facing_errors::common::SchemaParserError { full_error },
-                ))
-            }
-            ApiError::Core(error) => user_facing_errors::Error::from(error),
-            other => {
-                user_facing_errors::Error::new_non_panic_with_current_backtrace(other.to_string())
-            }
-        }
-    }
-}
-
-impl ApiError {
-    pub fn conversion(diagnostics: Diagnostics, dml: impl ToString) -> Self {
-        Self::Conversion(diagnostics, dml.to_string())
-    }
-
-    pub fn configuration(msg: impl ToString) -> Self {
-        Self::Configuration(msg.to_string())
-    }
-}
-
-impl From<CoreError> for ApiError {
-    fn from(e: CoreError) -> Self {
-        match e {
-            CoreError::ConfigurationError(message) => Self::Configuration(message),
-            core_error => Self::Core(core_error),
-        }
-    }
-}
-
-impl From<ConnectorError> for ApiError {
-    fn from(e: ConnectorError) -> Self {
-        Self::Connector(e)
-    }
-}
-
-impl From<url::ParseError> for ApiError {
-    fn from(e: url::ParseError) -> Self {
-        Self::configuration(format!("Error parsing connection string: {}", e))
-    }
-}
-
-impl From<connection_string::Error> for ApiError {
-    fn from(e: connection_string::Error) -> Self {
-        Self::configuration(format!("Error parsing connection string: {}", e))
-    }
-}
-
-impl From<serde_json::Error> for ApiError {
-    fn from(e: serde_json::Error) -> Self {
-        Self::JsonDecode(format!("{}", e))
-    }
-}
-
 /// The main engine, that can be cloned between threads when using JavaScript
 /// promises.
 #[derive(Clone)]
@@ -139,24 +58,34 @@ pub enum Inner {
     Connected(ConnectedEngine),
 }
 
-/// Holding the information to reconnect the engine if needed.
-#[derive(Debug, Clone)]
-struct EngineDatamodel {
-    ast: Datamodel,
-    raw: String,
+impl Inner {
+    /// Returns a builder if the engine is not connected
+    fn as_builder(&self) -> Result<&EngineBuilder> {
+        match self {
+            Inner::Builder(ref builder) => Ok(builder),
+            Inner::Connected(_) => Err(ApiError::AlreadyConnected),
+        }
+    }
+
+    /// Returns the engine if connected
+    fn as_engine(&self) -> Result<&ConnectedEngine> {
+        match self {
+            Inner::Builder(_) => Err(ApiError::NotConnected),
+            Inner::Connected(ref engine) => Ok(engine),
+        }
+    }
 }
 
 /// Everything needed to connect to the database and have the core running.
 pub struct EngineBuilder {
-    datamodel: EngineDatamodel,
-    config: ValidatedConfiguration,
+    schema: Arc<psl::ValidatedSchema>,
     config_dir: PathBuf,
     env: HashMap<String, String>,
 }
 
 /// Internal structure for querying and reconnecting with the engine.
 pub struct ConnectedEngine {
-    datamodel: EngineDatamodel,
+    schema: Arc<psl::ValidatedSchema>,
     query_schema: Arc<QuerySchema>,
     executor: Executor,
     config_dir: PathBuf,
@@ -217,41 +146,28 @@ impl QueryEngine {
 
         let env = stringify_env_values(env)?; // we cannot trust anything JS sends us from process.env
         let overrides: Vec<(_, _)> = datasource_overrides.into_iter().collect();
+        let mut schema = psl::validate(datamodel.into());
+        let config = &mut schema.configuration;
 
-        let config = if ignore_env_var_errors {
-            datamodel::parse_configuration(&datamodel)
-                .map_err(|errors| ApiError::conversion(errors, &datamodel))?
-        } else {
-            datamodel::parse_configuration(&datamodel)
-                .and_then(|mut config| {
-                    config
-                        .subject
-                        .resolve_datasource_urls_from_env(&overrides, |key| {
-                            env.get(key).map(ToString::to_string)
-                        })?;
+        schema
+            .diagnostics
+            .to_result()
+            .map_err(|err| ApiError::conversion(err, schema.db.source()))?;
 
-                    Ok(config)
+        if !ignore_env_var_errors {
+            config
+                .resolve_datasource_urls_from_env(&overrides, |key| {
+                    env.get(key).map(ToString::to_string)
                 })
-                .map_err(|errors| ApiError::conversion(errors, &datamodel))?
-        };
+                .map_err(|err| ApiError::conversion(err, schema.db.source()))?;
+        }
 
         config
-            .subject
             .validate_that_one_datasource_is_provided()
-            .map_err(|errors| ApiError::conversion(errors, &datamodel))?;
-
-        let ast = datamodel::parse_datamodel(&datamodel)
-            .map_err(|errors| ApiError::conversion(errors, &datamodel))?
-            .subject;
-
-        let datamodel = EngineDatamodel {
-            ast,
-            raw: datamodel,
-        };
+            .map_err(|errors| ApiError::conversion(errors, schema.db.source()))?;
 
         let builder = EngineBuilder {
-            datamodel,
-            config,
+            schema: Arc::new(schema),
             config_dir,
             env,
         };
@@ -264,80 +180,73 @@ impl QueryEngine {
     /// Connect to the database, allow queries to be run.
     pub async fn connect(&self) -> Result<()> {
         let mut inner = self.inner.write().await;
+        let builder = inner.as_builder()?;
 
-        match *inner {
-            Inner::Builder(ref builder) => {
-                // We only support one data source & generator at the moment, so take the first one (default not exposed yet).
-                let data_source = builder
-                    .config
-                    .subject
-                    .datasources
-                    .first()
-                    .ok_or_else(|| ApiError::configuration("No valid data source found"))?;
+        let engine = async move {
+            // We only support one data source & generator at the moment, so take the first one (default not exposed yet).
+            let data_source = builder
+                .schema
+                .configuration
+                .datasources
+                .first()
+                .ok_or_else(|| ApiError::configuration("No valid data source found"))?;
 
-                let preview_features: Vec<_> =
-                    builder.config.subject.preview_features().iter().collect();
-                let url = data_source
-                    .load_url_with_config_dir(&builder.config_dir, |key| {
-                        builder.env.get(key).map(ToString::to_string)
-                    })
-                    .map_err(|err| ApiError::Conversion(err, builder.datamodel.raw.clone()))?;
+            let preview_features: Vec<_> = builder
+                .schema
+                .configuration
+                .preview_features()
+                .iter()
+                .collect();
+            let url = data_source
+                .load_url_with_config_dir(&builder.config_dir, |key| {
+                    builder.env.get(key).map(ToString::to_string)
+                })
+                .map_err(|err| ApiError::Conversion(err, builder.schema.db.source().to_owned()))?;
 
-                let (db_name, executor) =
-                    executor::load(data_source, &preview_features, &url).await?;
-                let connector = executor.primary_connector();
-                connector.get_connection().await?;
+            let (db_name, executor) = executor::load(data_source, &preview_features, &url).await?;
+            let connector = executor.primary_connector();
+            connector.get_connection().await?;
 
-                // Build internal data model
-                let internal_data_model =
-                    InternalDataModelBuilder::from(&builder.datamodel.ast).build(db_name);
+            // Build internal data model
+            let internal_data_model = prisma_models::convert(&builder.schema, db_name);
 
-                let query_schema = schema_builder::build(
-                    internal_data_model,
-                    true, // enable raw queries
-                    data_source.capabilities(),
-                    preview_features,
-                    data_source.referential_integrity(),
-                );
+            let query_schema = schema_builder::build(
+                internal_data_model,
+                true, // enable raw queries
+                data_source.active_connector,
+                preview_features,
+                data_source.referential_integrity(),
+            );
 
-                let engine = ConnectedEngine {
-                    datamodel: builder.datamodel.clone(),
-                    query_schema: Arc::new(query_schema),
-                    executor,
-                    config_dir: builder.config_dir.clone(),
-                    env: builder.env.clone(),
-                };
-
-                *inner = Inner::Connected(engine);
-
-                Ok(())
-            }
-            Inner::Connected(_) => Err(ApiError::AlreadyConnected),
+            Result::Ok(ConnectedEngine {
+                schema: builder.schema.clone(),
+                query_schema: Arc::new(query_schema),
+                executor,
+                config_dir: builder.config_dir.clone(),
+                env: builder.env.clone(),
+            })
         }
+        .await?;
+
+        *inner = Inner::Connected(engine);
+
+        Ok(())
     }
 
     /// Disconnect and drop the core. Can be reconnected later with `#connect`.
     pub async fn disconnect(&self) -> Result<()> {
         let mut inner = self.inner.write().await;
+        let engine = inner.as_engine()?;
 
-        match *inner {
-            Inner::Connected(ref engine) => {
-                let config = datamodel::parse_configuration(&engine.datamodel.raw)
-                    .map_err(|errors| ApiError::conversion(errors, &engine.datamodel.raw))?;
+        let builder = EngineBuilder {
+            schema: engine.schema.clone(),
+            config_dir: engine.config_dir.clone(),
+            env: engine.env.clone(),
+        };
 
-                let builder = EngineBuilder {
-                    datamodel: engine.datamodel.clone(),
-                    config,
-                    config_dir: engine.config_dir.clone(),
-                    env: engine.env.clone(),
-                };
+        *inner = Inner::Builder(builder);
 
-                *inner = Inner::Builder(builder);
-
-                Ok(())
-            }
-            Inner::Builder(_) => Err(ApiError::NotConnected),
-        }
+        Ok(())
     }
 
     /// If connected, sends a query to the core and returns the response.
@@ -446,4 +355,101 @@ fn stringify_env_values(origin: serde_json::Value) -> Result<HashMap<String, Str
     };
 
     Err(ApiError::JsonDecode(msg.to_string()))
+}
+
+#[derive(Debug, Error)]
+pub enum ApiError {
+    #[error("{:?}", _0)]
+    Conversion(Diagnostics, String),
+
+    #[error("{}", _0)]
+    Configuration(String),
+
+    #[error("{}", _0)]
+    Core(CoreError),
+
+    #[error("{}", _0)]
+    Connector(ConnectorError),
+
+    #[error("Can't modify an already connected engine.")]
+    AlreadyConnected,
+
+    #[error("Engine is not yet connected.")]
+    NotConnected,
+
+    #[error("{}", _0)]
+    JsonDecode(String),
+}
+
+impl From<ApiError> for user_facing_errors::Error {
+    fn from(err: ApiError) -> Self {
+        use std::fmt::Write as _;
+
+        match err {
+            ApiError::Connector(ConnectorError {
+                user_facing_error: Some(err),
+                ..
+            }) => err.into(),
+            ApiError::Conversion(errors, dml_string) => {
+                let mut full_error = errors.to_pretty_string("schema.prisma", &dml_string);
+                write!(
+                    full_error,
+                    "\nValidation Error Count: {}",
+                    errors.errors().len()
+                )
+                .unwrap();
+
+                user_facing_errors::Error::from(user_facing_errors::KnownError::new(
+                    user_facing_errors::common::SchemaParserError { full_error },
+                ))
+            }
+            ApiError::Core(error) => user_facing_errors::Error::from(error),
+            other => {
+                user_facing_errors::Error::new_non_panic_with_current_backtrace(other.to_string())
+            }
+        }
+    }
+}
+
+impl ApiError {
+    pub fn conversion(diagnostics: Diagnostics, dml: impl ToString) -> Self {
+        Self::Conversion(diagnostics, dml.to_string())
+    }
+
+    pub fn configuration(msg: impl ToString) -> Self {
+        Self::Configuration(msg.to_string())
+    }
+}
+
+impl From<CoreError> for ApiError {
+    fn from(e: CoreError) -> Self {
+        match e {
+            CoreError::ConfigurationError(message) => Self::Configuration(message),
+            core_error => Self::Core(core_error),
+        }
+    }
+}
+
+impl From<ConnectorError> for ApiError {
+    fn from(e: ConnectorError) -> Self {
+        Self::Connector(e)
+    }
+}
+
+impl From<url::ParseError> for ApiError {
+    fn from(e: url::ParseError) -> Self {
+        Self::configuration(format!("Error parsing connection string: {}", e))
+    }
+}
+
+impl From<connection_string::Error> for ApiError {
+    fn from(e: connection_string::Error) -> Self {
+        Self::configuration(format!("Error parsing connection string: {}", e))
+    }
+}
+
+impl From<serde_json::Error> for ApiError {
+    fn from(e: serde_json::Error) -> Self {
+        Self::JsonDecode(format!("{}", e))
+    }
 }
