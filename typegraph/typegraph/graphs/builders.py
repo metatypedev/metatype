@@ -1,3 +1,5 @@
+# Copyright Metatype under the Elastic License 2.0.
+
 from dataclasses import dataclass
 from typing import List
 from typing import Optional
@@ -46,6 +48,7 @@ class TypeMeta:
     cors: typegraph.Cors
     auths: List[typegraph.Auth]
     rate: Optional[typegraph.Rate]
+    version: str
 
 
 @dataclass(eq=True, frozen=True)
@@ -55,6 +58,9 @@ class Graph:
     runtimes: List[TypeRuntime]
     policies: List[TypePolicy]
     meta: TypeMeta
+
+
+typegraph_version = "0.0.1"
 
 
 def build(tg: typegraph.TypeGraph):
@@ -201,5 +207,6 @@ def build(tg: typegraph.TypeGraph):
             auths=tg.auths,
             rate=tg.rate,
             cors=tg.cors,
+            version=typegraph_version,
         ),
     )

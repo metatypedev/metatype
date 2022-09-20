@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { TypeNode } from "../type_node.ts";

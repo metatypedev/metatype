@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { getCookies } from "std/http/cookie.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { Engine } from "../engine.ts";

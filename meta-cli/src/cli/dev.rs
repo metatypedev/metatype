@@ -9,6 +9,7 @@ use notify::{
 };
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::env;
 use std::path::{Path, PathBuf};
 use std::thread::sleep;
 use std::time::Duration;
@@ -32,6 +33,7 @@ impl Action for Dev {
             .working_dir(&dir)
             .serialized()
             .load_all()?;
+
         reload_typegraphs(tgs, "http://localhost:7890".to_string())?;
 
         let watch_path = dir.clone();
@@ -49,6 +51,7 @@ impl Action for Dev {
                 .serialized()
                 .load_files(paths)
                 .unwrap();
+
             reload_typegraphs(tgs, "http://localhost:7890".to_string()).unwrap();
         })
         .unwrap();
@@ -170,8 +173,16 @@ pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
       "query": format!("query insert {{ addTypegraph(fromString: {}) {{ name }}}}", serde_json::Value::String(tg.clone()))
     });
 
+    let password = env::var("TG_ADMIN_PASSWORD").or_else(|_| {
+        if common::is_dev() {
+            return Ok("password".to_string());
+        }
+        bail!("Missing admin password in TG_ADMIN_PASSWORD")
+    })?;
+
     let query = client
         .post(format!("{}/typegate", node))
+        .basic_auth("admin", Some(password))
         .timeout(Duration::from_secs(5))
         .json(&payload)
         .send();

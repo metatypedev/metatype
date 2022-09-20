@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { Engine, initTypegraph } from "./engine.ts";
 import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConfig } from "./config.ts";

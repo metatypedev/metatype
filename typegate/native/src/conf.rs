@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 use lazy_static::lazy_static;
 use serde::Deserialize;
 

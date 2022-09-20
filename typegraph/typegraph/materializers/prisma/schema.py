@@ -1,3 +1,5 @@
+# Copyright Metatype under the Elastic License 2.0.
+
 from typing import Dict
 from typing import Iterable
 from typing import List

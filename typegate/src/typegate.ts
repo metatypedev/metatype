@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import config from "./config.ts";
 import { Register } from "./register.ts";
 import { renderDebugAuth } from "./web/auth_debug.ts";
@@ -89,9 +91,13 @@ export const typegate =
       context.headers = Object.fromEntries(request.headers.entries());
 
       const identifier = (
-        config.context_identifier && context[config.context_identifier]
+        engine.tg.tg.meta.rate?.context_identifier
+          ? context[engine.tg.tg.meta.rate?.context_identifier]
+          : null
       ) ??
-        (config.trust_proxy && request.headers.get(config.trust_header_ip)) ??
+        (config.trust_proxy
+          ? request.headers.get(config.trust_header_ip)
+          : null) ??
         (connInfo.remoteAddr as Deno.NetAddr).hostname;
 
       // FIX bad serialization of rate (current: array if no object)

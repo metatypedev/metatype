@@ -1,3 +1,6 @@
+# Copyright Metatype under the Elastic License 2.0.
+
+
 class Singleton(type):
     _instances = {}
 

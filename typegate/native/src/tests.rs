@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 use anyhow::{anyhow, bail, Context, Result};
 use common::typegraph::Typegraph;
 use lazy_static::lazy_static;

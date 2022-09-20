@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 import { v4 } from "std/uuid/mod.ts";
 import { assert } from "std/testing/asserts.ts";
 import { gql, meta, test } from "./utils.ts";

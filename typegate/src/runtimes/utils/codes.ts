@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 export interface Code {
   name: string;
   source: string;

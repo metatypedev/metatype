@@ -1,3 +1,7 @@
+# Copyright Metatype under the Elastic License 2.0.
+
+from typegraph.graphs.typegraph import Auth
+from typegraph.graphs.typegraph import Rate
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import AddTypeGraphMat
 from typegraph.materializers.deno import FunMat
@@ -8,7 +12,17 @@ from typegraph.materializers.deno import TypeGraphsMat
 from typegraph.materializers.deno import TypesAsGraph
 from typegraph.types import typedefs as t
 
-with TypeGraph("typegate") as g:
+with TypeGraph(
+    "typegate",
+    auths=[Auth.basic(["admin"])],
+    rate=Rate(
+        window_sec=60,
+        window_limit=128,
+        query_limit=8,
+        local_excess=5,
+        context_identifier="user",
+    ),
+) as g:
 
     node = t.struct(
         {
@@ -41,24 +55,30 @@ with TypeGraph("typegate") as g:
         }
     ).named("typegraph")
 
-    allow_all = t.policy(
+    admin_only = t.policy(
         t.struct(),
-        FunMat.from_lambda(lambda args: True),
-    ).named("__allow_all")
+        FunMat.from_lambda(lambda args: args["user"] == "admin"),
+    ).named("admin_only")
 
     g.expose(
-        typegraphs=t.func(t.struct({}), t.list(typegraph), TypeGraphsMat()).add_policy(
-            allow_all
-        ),
+        typegraphs=t.func(t.struct({}), t.list(typegraph), TypeGraphsMat())
+        .rate(calls=True)
+        .add_policy(admin_only),
         typegraph=t.func(
             t.struct({"name": t.string()}), t.optional(typegraph), TypeGraphMat()
-        ).add_policy(allow_all),
+        )
+        .rate(calls=True)
+        .add_policy(admin_only),
         addTypegraph=t.func(
             t.struct({"fromString": t.string()}),
             typegraph.s_optional(),
             AddTypeGraphMat(),
-        ).add_policy(allow_all),
+        )
+        .rate(calls=True)
+        .add_policy(admin_only),
         removeTypegraph=t.func(
             t.struct({"name": t.string()}), t.integer(), RemoveTypeGraphMat()
-        ).add_policy(allow_all),
+        )
+        .rate(calls=True)
+        .add_policy(admin_only),
     )
