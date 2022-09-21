@@ -45,4 +45,4 @@ COPY --from=builder --chown=nonroot:nonroot /typegate/workers ./workers
 EXPOSE 7890
 
 ENTRYPOINT ["/tini", "--"]
-CMD ["deno", "run", "--lock=lock.json", "--cached-only", "--import-map=import_map.json", "--unstable", "--allow-run=hostname", "--allow-env", "--allow-hrtime", "--allow-write", "--allow-ffi", "--allow-read", "--allow-net", "src/main.ts"]
+CMD ["deno", "run", "--lock=lock.json", "--import-map=import_map.json", "--unstable", "--allow-run=hostname", "--allow-env", "--allow-hrtime", "--allow-write", "--allow-ffi", "--allow-read", "--allow-net", "src/main.ts"]
