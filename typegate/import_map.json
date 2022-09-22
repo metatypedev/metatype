@@ -7,6 +7,6 @@
     "zod/": "https://deno.land/x/zod@v3.19.1/",
     "monads": "https://deno.land/x/monads@v0.5.10/mod.ts",
     "jwt": "https://deno.land/x/djwt@v2.7/mod.ts",
-    "redis": "https://deno.land/x/redis@v0.27.0/mod.ts"
+    "redis": "https://raw.githubusercontent.com/metatypedev/redis/xread-fix/mod.ts"
   }
 }
