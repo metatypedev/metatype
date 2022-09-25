@@ -22,7 +22,7 @@ class TestDependency:
                     "b": t.func(
                         t.struct(
                             {
-                                "a1": t.injection(a),
+                                "a1": t.integer().s_parent(g("a")),
                                 "a2": g("a"),
                                 "new": t.integer().named("new"),
                             }

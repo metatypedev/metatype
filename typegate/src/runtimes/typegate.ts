@@ -1,11 +1,12 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import { Resolver, Runtime } from "./Runtime.ts";
+import { Runtime } from "./Runtime.ts";
 import { ComputeStage, Engine } from "../engine.ts";
 import { Register } from "../register.ts";
 import config from "../config.ts";
 import * as path from "std/path/mod.ts";
 import { TypeNode } from "../type_node.ts";
+import { Resolver } from "../types.ts";
 
 interface StructField {
   name: string;
@@ -213,7 +214,7 @@ export class TypeGateRuntime extends Runtime {
     ];
   }
 
-  typegraphs = () => {
+  typegraphs: Resolver = () => {
     return this.register.list().map((e) => {
       const { name, typedef, data } = e.tg.type(0);
       return {
@@ -229,7 +230,7 @@ export class TypeGateRuntime extends Runtime {
     });
   };
 
-  typegraph = ({ name }: { name: string }) => {
+  typegraph: Resolver = ({ name }) => {
     const tg = this.register.get(name);
     if (!tg) {
       return null;
@@ -240,10 +241,10 @@ export class TypeGateRuntime extends Runtime {
     };
   };
 
-  typesAsGraph = (
-    { _: { parent: typegraph } }: { _: { parent: { name: string } } },
+  typesAsGraph: Resolver = (
+    { _: { parent: typegraph } },
   ) => {
-    const tg = this.register.get(typegraph.name);
+    const tg = this.register.get(typegraph.name as string);
     if (!tg) {
       return null;
     }
@@ -252,10 +253,10 @@ export class TypeGateRuntime extends Runtime {
     return graph;
   };
 
-  serializedTypegraph = (
-    { _: { parent: typegraph } }: { _: { parent: { name: string } } },
+  serializedTypegraph: Resolver = (
+    { _: { parent: typegraph } },
   ) => {
-    const tg = this.register.get(typegraph.name);
+    const tg = this.register.get(typegraph.name as string);
     if (!tg) {
       return null;
     }
@@ -263,7 +264,7 @@ export class TypeGateRuntime extends Runtime {
     return JSON.stringify(tg.tg.tg);
   };
 
-  addTypegraph = async ({ fromString }: { fromString: string }) => {
+  addTypegraph: Resolver = async ({ fromString }) => {
     const name = JSON.parse(fromString).types[0].name;
 
     if (localGraphs.includes(name)) {
@@ -277,12 +278,12 @@ export class TypeGateRuntime extends Runtime {
     return { name };
   };
 
-  removeTypegraph = ({ name }: { name: string }) => {
+  removeTypegraph: Resolver = ({ name }) => {
     return this.register.remove(name);
   };
 
-  typenode = (
-    { typegraphName, idx }: { typegraphName: string; idx: number },
+  typenode: Resolver = (
+    { typegraphName, idx },
   ) => {
     const engine = this.register.get(typegraphName);
     if (!engine) {
