@@ -219,7 +219,6 @@ export function gql(query: readonly string[], ...args: any[]) {
   return new Q(template, {}, {}, {}, []);
 }
 
-type Info = Record<string, unknown>;
 type Expect = (res: Response) => Promise<void> | void;
 type Variables = Record<string, JSONValue>;
 type Context = Record<string, string>;
@@ -295,7 +294,7 @@ export class Q {
     );
   }
 
-  private withExpect(expect: Expect) {
+  expect(expect: Expect) {
     return new Q(this.query, this.context, this.variables, this.headers, [
       ...this.expects,
       expect,
@@ -303,13 +302,13 @@ export class Q {
   }
 
   expectStatus(status: number) {
-    return this.withExpect((res) => {
+    return this.expect((res) => {
       assertEquals(res.status, status);
     });
   }
 
   expectBody(expect: (body: any) => Promise<void> | void) {
-    return this.withExpect(async (res) => {
+    return this.expect(async (res) => {
       const json = await res.json();
       await expect(json);
     });
@@ -358,15 +357,29 @@ export class Q {
         "Content-Type": "application/json",
       },
     });
-    const register = new SingleRegister(engine.name, engine);
-    const limiter = new NoLimiter();
-    const response = await typegate(
-      register,
-      limiter,
-    )(request, { remoteAddr: { hostname: "localhost" } } as ConnInfo);
+    const response = await execute(engine, request);
 
     for (const expect of expects) {
       expect(response);
     }
   }
 }
+
+export async function execute(
+  engine: Engine,
+  request: Request,
+): Promise<Response> {
+  const register = new SingleRegister(engine.name, engine);
+  const limiter = new NoLimiter();
+  const server = typegate(
+    register,
+    limiter,
+  );
+  return await server(
+    request,
+    { remoteAddr: { hostname: "localhost" } } as ConnInfo,
+  );
+}
+
+export const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));

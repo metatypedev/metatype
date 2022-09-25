@@ -2,6 +2,7 @@
 
 import { ComputeStage } from "./engine.ts";
 import * as ast from "graphql/ast";
+import * as base64 from "std/encoding/base64.ts";
 
 // FIXME replace with monads
 export type Maybe<T> = null | undefined | T;
@@ -76,3 +77,11 @@ export function envOrFail(typegraph: string, name: string): string {
   );
   return value as string;
 }
+
+export const b64decode = (v: string): string => {
+  return new TextDecoder().decode(base64.decode(v));
+};
+
+export const b64encode = (v: string): string => {
+  return base64.encode(v);
+};
