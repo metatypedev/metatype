@@ -1,7 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import { gql, test } from "./utils.ts";
-import * as mf from "https://deno.land/x/mock_fetch@0.3.0/mod.ts";
+import * as mf from "test/mock_fetch";
 
 mf.install();
 
@@ -32,7 +32,7 @@ const NEW_COMMENT_ID = 123;
 test("Rest queries", async (t) => {
   const e = await t.pythonFile("typegraphs/rest.py");
 
-  mf.mock("GET@/api/posts", (req, _match) => {
+  mf.mock("GET@/api/posts", (req) => {
     const tags = new URL(req.url).searchParams.getAll("tags");
     console.log({ tags });
     const posts = tags.reduce((list, tag) => {
@@ -82,7 +82,7 @@ test("Rest queries", async (t) => {
     `
       .expectData({
         posts: ALL_POSTS.map((post) => {
-          const { content, ...postWithoutContent } = post;
+          const { content: _, ...postWithoutContent } = post;
           return postWithoutContent as Omit<Post, "content">;
           // I don't know why I get a TS error without that cast
         }),
@@ -346,7 +346,7 @@ test("Rest queries", async (t) => {
       .on(e);
   });
 
-  mf.mock("DELETE@/api/comments/:id", (req, params) => {
+  mf.mock("DELETE@/api/comments/:id", (_req, params) => {
     const postId = Number(params.id);
     if (Number.isNaN(postId)) {
       return new Response(JSON.stringify({ error: "bad request" }), {

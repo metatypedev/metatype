@@ -1,14 +1,13 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import { OAuth2Client, Tokens } from "https://deno.land/x/oauth2_client/mod.ts";
+import { OAuth2Client, Tokens } from "oauth2_client";
 import config from "./config.ts";
-import * as base64 from "std/encoding/base64.ts";
 import { signJWT, signKey as nativeSignKey, verifyJWT } from "./crypto.ts";
-import { envOrFail } from "./utils.ts";
+import { b64decode, envOrFail } from "./utils.ts";
 import { deleteCookie, setCookie } from "std/http/cookie.ts";
 import { crypto } from "std/crypto/mod.ts";
 import * as jwt from "jwt";
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.0/mod.ts";
+import * as bcrypt from "bcrypt";
 
 export type AuthDS = {
   name: string;
@@ -16,7 +15,7 @@ export type AuthDS = {
   auth_data: Record<string, unknown>;
 };
 
-type JWTClaims = {
+export type JWTClaims = {
   provider: string;
   accessToken: string;
   refreshToken: string;
@@ -86,7 +85,7 @@ export class BasicAuth extends Auth {
   async tokenMiddleware(
     jwt: string,
   ): Promise<[Record<string, unknown>, Headers]> {
-    const [user, token] = new TextDecoder().decode(base64.decode(jwt)).split(
+    const [user, token] = b64decode(jwt).split(
       ":",
     );
 
@@ -201,7 +200,8 @@ export class OAuth2Auth extends Auth {
           headers,
         });
       } catch (e) {
-        return new Response(`oauth error: ${e}`, {
+        console.info(e);
+        return new Response(`invalid oauth2: ${e}`, {
           status: 400,
         });
       }
@@ -253,7 +253,7 @@ export class OAuth2Auth extends Auth {
 
       return [claims, new Headers()];
     } catch (e) {
-      //console.error(e);
+      console.info(`invalid auth: ${e}`);
       return [{}, clearCookie()];
     }
   }
@@ -294,7 +294,7 @@ export class OAuth2Auth extends Auth {
       provider: this.authDS.name,
       accessToken: token.accessToken,
       refreshToken: token.refreshToken as string,
-      refreshAt: Math.ceil(
+      refreshAt: Math.floor(
         new Date().valueOf() / 1000 +
           (token.expiresIn ?? config.cookies_min_refresh_sec),
       ),

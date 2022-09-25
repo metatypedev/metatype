@@ -172,8 +172,8 @@ export class TypeGateRuntime extends Runtime {
 
   materialize(
     stage: ComputeStage,
-    waitlist: ComputeStage[],
-    verbose: boolean,
+    _waitlist: ComputeStage[],
+    _verbose: boolean,
   ): ComputeStage[] {
     const resolver: Resolver = (() => {
       const name = stage.props.materializer?.name;

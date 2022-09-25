@@ -24,7 +24,7 @@ const mods: Map<number, TaskModule> = new Map();
 
 const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
   import_func: async (task: Task) => {
-    const { id, moduleId, moduleCode, name, args, context, verbose } =
+    const { id, moduleId, moduleCode, name, args, internals, verbose } =
       task as ImportFuncTask;
     if (!mods.has(moduleId)) {
       if (moduleCode == null) {
@@ -41,11 +41,11 @@ const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
     verbose &&
       logger.info(`[${id}] exec func "${name}" from module ${moduleId}`);
     const mod = mods.get(moduleId)!;
-    return await mod[name](args, context);
+    return await mod[name](args, internals);
   },
 
   func: async (task: Task) => {
-    const { id, fnId, code, args, context, verbose } = task as FuncTask;
+    const { id, fnId, code, args, internals, verbose } = task as FuncTask;
     if (!fns.has(fnId)) {
       if (code == null) {
         throw new Error("function definition required");
@@ -54,13 +54,13 @@ const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
     }
 
     verbose && logger.info(`[${id}] exec func "${fnId}"`);
-    return await fns.get(fnId)!(args, context);
+    return await fns.get(fnId)!(args, internals);
   },
 
   predefined_func: (task: Task) => {
-    const { id, name, args, context, verbose } = task as PredefinedFuncTask;
+    const { id, name, args, internals, verbose } = task as PredefinedFuncTask;
     verbose && logger.info(`[${id}] exec predefined func "${name}"`);
-    return Promise.resolve(predefinedFuncs[name](args, context));
+    return Promise.resolve(predefinedFuncs[name](args, internals));
   },
 };
 

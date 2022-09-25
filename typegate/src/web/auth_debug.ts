@@ -1,9 +1,9 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import { getCookies } from "std/http/cookie.ts";
-import * as base64 from "std/encoding/base64.ts";
 import { Engine } from "../engine.ts";
 import { OAuth2Auth } from "../auth.ts";
+import { b64decode } from "../utils.ts";
 
 export const renderDebugAuth = async (
   engine: Engine,
@@ -13,9 +13,7 @@ export const renderDebugAuth = async (
   const typegraphApi = `http://localhost:7890/${name}`;
   const cookies = getCookies(request.headers);
   const jwt = (cookies[name] ?? "").split(".")[1];
-  const claims = jwt
-    ? JSON.parse(new TextDecoder().decode(base64.decode(jwt)))
-    : {};
+  const claims = jwt ? JSON.parse(b64decode(jwt)) : {};
   const provider = engine.tg.auths.get(claims.provider);
   const profile = provider && provider.authDS.protocol === "oauth2"
     ? await (provider as OAuth2Auth).getProfile(claims.accessToken)

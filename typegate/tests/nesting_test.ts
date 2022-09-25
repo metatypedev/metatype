@@ -1,7 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import { gql, test } from "./utils.ts";
-import * as mf from "https://deno.land/x/mock_fetch@0.3.0/mod.ts";
+import * as mf from "test/mock_fetch";
 
 mf.install();
 
@@ -26,7 +26,7 @@ function generatePost(id: number) {
 test("Rest queries", async (t) => {
   const e = await t.pythonFile("typegraphs/nesting.py");
 
-  mf.mock("GET@/api/users/:id", (req, params) => {
+  mf.mock("GET@/api/users/:id", (_req, params) => {
     const userId = Number(params.id);
     if (userId > 1000) {
       return new Response(null, {

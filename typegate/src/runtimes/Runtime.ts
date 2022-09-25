@@ -1,27 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import { ComputeStage } from "../engine.ts";
-import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { equal } from "std/testing/asserts.ts";
-
-export type Resolver = (args: any) => Promise<any> | any;
-
-export type Batcher = (x: any) => any;
-
-export type RuntimeConfig = Record<string, unknown>;
-export type RuntimesConfig = Record<string, RuntimeConfig>;
-
-export interface RuntimeInitParams {
-  typegraph: TypeGraphDS;
-  materializers: TypeMaterializer[];
-  args: Record<string, unknown>;
-  config: RuntimeConfig;
-}
-
-export type RuntimeInit = Record<
-  string,
-  (params: RuntimeInitParams) => Promise<Runtime> | Runtime
->;
 
 export abstract class Runtime {
   abstract deinit(): Promise<void>;

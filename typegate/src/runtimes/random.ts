@@ -1,10 +1,11 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
+import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { TypeNode } from "../type_node.ts";
-import Chance from "npm:chance@1.1.8";
+import Chance from "chance";
 import { ensure } from "../utils.ts";
+import { Resolver, RuntimeInitParams } from "../types.ts";
 
 export class RandomRuntime extends Runtime {
   seed: number | null;
@@ -32,7 +33,7 @@ export class RandomRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean,
+    _verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 

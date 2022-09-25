@@ -1,11 +1,9 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import { ComputeStage } from "../engine.ts";
-import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
-import { RuntimeInitParams } from "./Runtime.ts";
-import * as ast from "graphql_ast";
+import { Runtime } from "./Runtime.ts";
 import { StructNode } from "../type_node.ts";
+import { Resolver, RuntimeInitParams } from "../types.ts";
 
 export class GoogleapisRuntime extends Runtime {
   constructor() {
@@ -34,10 +32,10 @@ export class GoogleapisRuntime extends Runtime {
 
       const query = new URLSearchParams({ read_mask: readMask });
       const input = `${url}?${query}`;
-      const opts = {
+      const opts: RequestInit = {
         method,
         headers: {
-          authorization: context["authorization"],
+          authorization: context["authorization"] as string, // FIXME
         },
       };
 
@@ -52,7 +50,7 @@ export class GoogleapisRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean,
+    _verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 
