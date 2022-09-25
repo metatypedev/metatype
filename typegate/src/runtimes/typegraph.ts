@@ -3,9 +3,10 @@
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { TypeKind } from "graphql";
 import { ensure } from "../utils.ts";
-import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { FuncNode, StructNode, TypeNode } from "../type_node.ts";
+import { Resolver, RuntimeConfig } from "../types.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -41,10 +42,13 @@ export class TypeGraphRuntime extends Runtime {
       if (name === "getType") {
         return this.getType;
       }
+
       if (name === "resolver") {
         return async ({ _: { parent } }) => {
           const resolver = parent[stage.props.node];
-          const ret = await resolver();
+          const ret = typeof resolver === "function"
+            ? await resolver()
+            : resolver;
           return ret;
         };
       }
@@ -66,7 +70,7 @@ export class TypeGraphRuntime extends Runtime {
     ];
   }
 
-  getSchema = () => {
+  getSchema: Resolver = () => {
     const root = this.tg.types[0] as StructNode;
 
     const queriesBind: Record<string, number> = {};
@@ -201,7 +205,7 @@ export class TypeGraphRuntime extends Runtime {
     };
   };
 
-  getType = ({ name }: { name: string }) => {
+  getType: Resolver = ({ name }) => {
     const type = this.tg.types.find((type) => type.name === name);
     return type ? this.formatType(type, false, false) : null;
   };

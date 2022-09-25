@@ -2,8 +2,8 @@
 
 import { ComputeStage } from "../engine.ts";
 import { gq } from "../gq.ts";
-import { Resolver, Runtime } from "./Runtime.ts";
-import { RuntimeInitParams } from "./Runtime.ts";
+import { Resolver, RuntimeInitParams } from "../types.ts";
+import { Runtime } from "./Runtime.ts";
 import * as ForwardVars from "./utils/graphql_forward_vars.ts";
 import * as InlineVars from "./utils/graphql_inline_vars.ts";
 
@@ -122,7 +122,8 @@ export class GraphQLRuntime extends Runtime {
           _: { [queryStage.id()]: queryRes },
         }) => {
           const fieldName = field.props.path[field.props.path.length - 1];
-          const resolver = queryRes[0][renames[fieldName] ?? fieldName];
+          const resolver =
+            (queryRes as any)[0][renames[fieldName] ?? fieldName];
           const ret = typeof resolver === "function" ? resolver() : resolver;
           return ret;
         };

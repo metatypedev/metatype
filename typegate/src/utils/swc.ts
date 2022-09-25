@@ -20,24 +20,33 @@ export function compileCodes(tg: TypeGraphDS) {
     if (runtime.name !== "deno" && runtime.name !== "worker") {
       continue;
     }
-    switch (mat.name) {
-      case "function": {
-        const prefix = "const f = ";
-        const compiled =
-          transform(`${prefix}${mat.data.fn_expr as string};`, swcConfig).code;
-        ensure(
-          compiled.startsWith(prefix),
-          "invalid prefix for compiled function expression",
-        );
+    try {
+      switch (mat.name) {
+        case "function": {
+          const prefix = "const f = ";
+          const compiled =
+            transform(`${prefix}${mat.data.fn_expr as string};`, swcConfig)
+              .code;
 
-        mat.data.fn_expr =
-          transform(compiled.slice(prefix.length), swcConfig).code;
-        break;
+          ensure(
+            compiled.startsWith(prefix),
+            "invalid prefix for compiled function expression",
+          );
+
+          mat.data.fn_expr =
+            transform(compiled.slice(prefix.length), swcConfig).code;
+
+          break;
+        }
+
+        case "module":
+          mat.data.code = transform(mat.data.code as string, swcConfig).code;
+          break;
       }
-
-      case "module":
-        mat.data.code = transform(mat.data.code as string, swcConfig).code;
-        break;
+    } catch (e) {
+      throw new Error(
+        `materializer ${mat.name} in ${runtime.name} failed compilation: ${e}`,
+      );
     }
   }
 }

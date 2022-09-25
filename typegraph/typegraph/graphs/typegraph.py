@@ -30,17 +30,13 @@ class Auth:
     auth_data: Dict[str, str]
 
     @classmethod
-    def github(cls) -> "Auth":
-        return
-
-    @classmethod
     def oauth2(
         cls,
         name: str,
         authorize_url: str,
         access_url: str,
         scopes: str,
-        profile_url: Optional[str],
+        profile_url: Optional[str] = None,
     ) -> "Auth":
         return Auth(
             name,

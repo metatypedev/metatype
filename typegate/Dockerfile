@@ -18,8 +18,7 @@ RUN deno_bindgen --release -- --locked --package native
 
 WORKDIR /typegate
 
-RUN mkdir workers \
-    && deno cache --unstable --import-map=import_map.json --lock=lock.json --lock-write src/main.ts
+RUN deno cache --unstable --import-map=import_map.json --lock=lock.json --lock-write src/main.ts
 
 #
 
@@ -40,7 +39,6 @@ COPY --from=builder /typegate/src ./src
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
-COPY --from=builder --chown=nonroot:nonroot /typegate/workers ./workers
 
 EXPOSE 7890
 

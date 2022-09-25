@@ -2,23 +2,24 @@
 
 import { Kind, parse } from "graphql";
 import * as ast from "graphql/ast";
-import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
+import { RuntimeResolver, TypeGraph } from "./typegraph.ts";
 import { ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { sha1, unsafeExtractJWT } from "./crypto.ts";
-import type {
-  Batcher,
-  Resolver,
-  Runtime,
-  RuntimeConfig,
-} from "./runtimes/Runtime.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
-import { TypeNode } from "./type_node.ts";
 import { RateLimit } from "./rate_limiter.ts";
+import {
+  ComputeStageProps,
+  Context,
+  PolicyStages,
+  PolicyStagesFactory,
+  RuntimeConfig,
+  Variables,
+} from "./types.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -43,44 +44,11 @@ export const initTypegraph = async (
       {},
     )
     : null;
-  const tg = await TypeGraph.init(parsed, customRuntime, introspection, {});
 
-  const engine = new Engine(tg);
-  return engine;
+  const tg = await TypeGraph.init(parsed, customRuntime, introspection, {});
+  return new Engine(tg);
 };
 
-/**
- * A function that computes argument from parent, variables and context
- * Pass null `variables` to get a FromVars<_> that computes the argument value
- * from variables or returns the variable name if the `variables` param is null.
- */
-export interface ComputeArg {
-  (
-    parent: Record<string, unknown>,
-    variables: Record<string, unknown> | null,
-    context: Record<string, unknown>,
-  ): unknown;
-}
-
-interface ComputeStageProps {
-  dependencies: string[];
-  parent?: ComputeStage;
-  args: Record<string, ComputeArg>;
-  policies: Record<string, string[]>;
-  resolver?: Resolver;
-  outType: TypeNode; // only temp
-  runtime: Runtime;
-  materializer?: TypeMaterializer;
-  batcher: Batcher;
-  node: string;
-  path: string[];
-  rateCalls: boolean;
-  rateWeight: number;
-}
-
-export type PolicyStage = () => Promise<boolean | null>;
-export type PolicyStages = Record<string, PolicyStage>;
-export type PolicyStagesFactory = (claim: Record<string, any>) => PolicyStages;
 /*
 ..
 a(b: c) {
@@ -179,7 +147,7 @@ export class Engine {
   async compute(
     plan: ComputeStage[],
     policesFactory: PolicyStagesFactory,
-    context: Record<string, unknown>,
+    context: Context,
     variables: Record<string, unknown>,
     limit: RateLimit | null,
     verbose: boolean,
@@ -375,8 +343,8 @@ export class Engine {
   async execute(
     query: string,
     operationName: Maybe<string>,
-    variables: Record<string, unknown>,
-    context: Record<string, unknown>,
+    variables: Variables,
+    context: Context,
     limit: RateLimit | null,
   ): Promise<{ status: number; [key: string]: JSONValue }> {
     try {
