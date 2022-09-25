@@ -1,6 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import { z } from "zod/mod.ts";
+import { z } from "zod";
 import { getLogger } from "./log.ts";
 import "std/dotenv/load.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
