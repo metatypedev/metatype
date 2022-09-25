@@ -2,11 +2,11 @@
 
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { TypeKind } from "graphql";
-import * as ast from "graphql_ast";
 import { ensure } from "../utils.ts";
-import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { FuncNode, StructNode, TypeNode } from "../type_node.ts";
+import { Resolver, RuntimeConfig } from "../types.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -20,9 +20,9 @@ export class TypeGraphRuntime extends Runtime {
 
   static init(
     typegraph: TypeGraphDS,
-    materializers: TypeMaterializer[],
-    args: Record<string, unknown>,
-    config: RuntimeConfig,
+    _materializers: TypeMaterializer[],
+    _args: Record<string, unknown>,
+    _config: RuntimeConfig,
   ): Runtime {
     return new TypeGraphRuntime(typegraph);
   }
@@ -31,8 +31,8 @@ export class TypeGraphRuntime extends Runtime {
 
   materialize(
     stage: ComputeStage,
-    waitlist: ComputeStage[],
-    verbose: boolean,
+    _waitlist: ComputeStage[],
+    _verbose: boolean,
   ): ComputeStage[] {
     const resolver: Resolver = (() => {
       const name = stage.props.materializer?.name;
@@ -42,10 +42,13 @@ export class TypeGraphRuntime extends Runtime {
       if (name === "getType") {
         return this.getType;
       }
+
       if (name === "resolver") {
         return async ({ _: { parent } }) => {
           const resolver = parent[stage.props.node];
-          const ret = await resolver();
+          const ret = typeof resolver === "function"
+            ? await resolver()
+            : resolver;
           return ret;
         };
       }
@@ -67,7 +70,7 @@ export class TypeGraphRuntime extends Runtime {
     ];
   }
 
-  getSchema = () => {
+  getSchema: Resolver = () => {
     const root = this.tg.types[0] as StructNode;
 
     const queriesBind: Record<string, number> = {};
@@ -202,7 +205,7 @@ export class TypeGraphRuntime extends Runtime {
     };
   };
 
-  getType = ({ name }: { name: string }) => {
+  getType: Resolver = ({ name }) => {
     const type = this.tg.types.find((type) => type.name === name);
     return type ? this.formatType(type, false, false) : null;
   };
@@ -399,7 +402,7 @@ export class TypeGraphRuntime extends Runtime {
     if (type.typedef === "func" || type.typedef === "gen") {
       return {
         ...common,
-        args: ({ includeDeprecated }: DeprecatedArg = {}) => {
+        args: (_: DeprecatedArg = {}) => {
           const inp = this.tg.types[type.data.input as number];
           ensure(
             inp.typedef === "struct",

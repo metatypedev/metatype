@@ -8,6 +8,7 @@ import {
 import { redisConfig } from "../src/config.ts";
 import { assertEquals, assertThrows } from "std/testing/asserts.ts";
 import { connect, Raw } from "redis";
+import { sleep } from "./utils.ts";
 
 const assertRateLimited = (l: RateLimit, n: number) =>
   assertThrows(
@@ -17,8 +18,6 @@ const assertRateLimited = (l: RateLimit, n: number) =>
     Error,
     "rate-limited",
   );
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 Deno.test("Rate limiter", async (t) => {
   const t1 = "test_key_1";

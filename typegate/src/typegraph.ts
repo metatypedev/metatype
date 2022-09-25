@@ -1,13 +1,8 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import type * as ast from "graphql_ast";
+import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import {
-  ComputeArg,
-  ComputeStage,
-  PolicyStages,
-  PolicyStagesFactory,
-} from "./engine.ts";
+import { ComputeStage } from "./engine.ts";
 import * as graphql from "./graphql.ts";
 import { FragmentDefs } from "./graphql.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";
@@ -16,13 +11,7 @@ import { GraphQLRuntime } from "./runtimes/graphql.ts";
 import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
-import {
-  Batcher,
-  Resolver,
-  Runtime,
-  RuntimeInit,
-  RuntimesConfig,
-} from "./runtimes/Runtime.ts";
+import { Runtime } from "./runtimes/Runtime.ts";
 import { Code } from "./runtimes/utils/codes.ts";
 import { ensure, envOrFail, mapo } from "./utils.ts";
 import { compileCodes } from "./utils/swc.ts";
@@ -33,6 +22,15 @@ import * as semver from "std/semver/mod.ts";
 
 import { ListNode, StructNode, TypeNode } from "./type_node.ts";
 import config from "./config.ts";
+import {
+  Batcher,
+  ComputeArg,
+  PolicyStages,
+  PolicyStagesFactory,
+  Resolver,
+  RuntimeInit,
+  RuntimesConfig,
+} from "./types.ts";
 
 interface TypePolicy {
   name: string;
@@ -895,7 +893,7 @@ export class TypeGraph {
             introPolicy.materializer as number
           ];
           const rt = this.introspection
-            .runtimeReferences[mat.runtime] as DenoRuntime; // temp
+            .runtimeReferences[mat.runtime] as DenoRuntime;
           return [introPolicy.name, rt.delegate(mat, false)] as [
             string,
             Resolver,
@@ -917,11 +915,19 @@ export class TypeGraph {
       return [policy.name, rt.delegate(mat, false)] as [string, Resolver];
     });
 
-    return (claim: Record<string, any>) => {
+    return (context: Record<string, any>) => {
       const ret: PolicyStages = {};
       for (const [policyName, resolver] of policies) {
+        // for policies, the context becomes the args
         ret[policyName] = async () =>
-          await lazyResolver<boolean | null>(resolver)(claim);
+          await lazyResolver<boolean | null>(resolver)({
+            ...context,
+            _: {
+              parent: {},
+              context: {},
+              variables: {},
+            },
+          });
       }
       return ret;
     };
@@ -1055,12 +1061,13 @@ export class TypeGraph {
 }
 
 const lazyResolver = <T>(
-  fn: (args: any) => Promise<T>,
-): (args: any) => Promise<T> => {
+  fn: Resolver,
+): Resolver => {
   let memo: Promise<T> | undefined = undefined;
   // deno-lint-ignore require-await
-  return async (args: any) => {
+  return async (args) => {
     if (!memo) {
+      // no need to wait, the resolver executor will
       memo = fn(args);
     }
     return memo;

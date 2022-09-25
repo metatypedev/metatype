@@ -11,7 +11,7 @@ export const sha1 = (text: string | Uint8Array): Promise<string> => {
       "SHA-1",
       typeof text === "string" ? new TextEncoder().encode(text) : text,
     )
-    .then((hash: ArrayBuffer) => base64.encode(new TextDecoder().decode(hash)));
+    .then(base64.encode);
 };
 
 export const sha256 = (text: string | Uint8Array): Promise<string> => {
@@ -20,7 +20,7 @@ export const sha256 = (text: string | Uint8Array): Promise<string> => {
       "SHA-256",
       typeof text === "string" ? new TextEncoder().encode(text) : text,
     )
-    .then((hash: ArrayBuffer) => base64.encode(new TextDecoder().decode(hash)));
+    .then(base64.encode);
 };
 
 export const signKey = await crypto.subtle.importKey(
@@ -84,7 +84,7 @@ export async function signJWT(
     {
       ...payload,
       exp: jwt.getNumericDate(duration),
-      iat: Math.ceil(new Date().valueOf() / 1000),
+      iat: Math.floor(new Date().valueOf() / 1000),
     },
     signKey,
   );

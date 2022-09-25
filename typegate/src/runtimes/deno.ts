@@ -4,10 +4,11 @@ import { Deferred, deferred } from "std/async/deferred.ts";
 import * as Sentry from "sentry";
 import { ComputeStage } from "../engine.ts";
 import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
+import { Runtime } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
-import { FuncTask, ImportFuncTask, Task } from "./utils/codes.ts";
+import { FuncTask, ImportFuncTask, Task, TaskContext } from "./utils/codes.ts";
 import { ensure } from "../utils.ts";
+import { Resolver, RuntimeInitParams } from "../types.ts";
 
 const logger = getLogger(import.meta);
 
@@ -31,7 +32,7 @@ export class DenoRuntime extends Runtime {
   private constructor(
     name: string,
     permissions: Deno.PermissionOptionsObject,
-    lazy: boolean,
+    _lazy: boolean,
     tg: TypeGraphDS,
   ) {
     super();
@@ -55,7 +56,7 @@ export class DenoRuntime extends Runtime {
 
   materialize(
     stage: ComputeStage,
-    waitlist: ComputeStage[],
+    _waitlist: ComputeStage[],
     verbose: boolean,
   ): ComputeStage[] {
     let resolver: Resolver;
@@ -84,10 +85,13 @@ export class DenoRuntime extends Runtime {
         mat.name === "predefined_function",
       `unsupported materializer ${mat.name}`,
     );
-    return async ({ _: context, ...args }) => {
+    return async ({ _: { context, parent }, ...args }) => {
       return await this.w.execTask({
         args,
-        context,
+        internals: {
+          parent,
+          context,
+        },
         mat,
       }, verbose);
     };
@@ -96,7 +100,7 @@ export class DenoRuntime extends Runtime {
 
 interface TaskInit {
   args: Record<string, unknown>;
-  context: Record<string, string>;
+  internals: TaskContext;
   mat: TypeMaterializer;
 }
 
@@ -201,7 +205,6 @@ class OnDemandWorker {
             ...defaultPermissions,
             net: true,
             // ...this.permissions,
-
             // On the current version of deno,
             // permissions on workers do not work as expected.
             // All workers get the permissions of the first spawned worker.
@@ -240,7 +243,7 @@ class OnDemandWorker {
   }
 
   execTask(task: TaskInit, verbose: boolean): Promise<unknown> {
-    const { args, context, mat } = task;
+    const { args, internals, mat } = task;
 
     const exec = (
       task: Task,
@@ -266,7 +269,7 @@ class OnDemandWorker {
           type: "func",
           id,
           args,
-          context,
+          internals,
           verbose,
           ...fnRef,
         });
@@ -286,7 +289,7 @@ class OnDemandWorker {
           type: "import_func",
           id,
           args,
-          context,
+          internals,
           name: mat.data.name as string,
           verbose,
           ...modRef,
@@ -299,7 +302,7 @@ class OnDemandWorker {
           name: mat.data.name as string,
           id: this.nextId(),
           args,
-          context,
+          internals,
           verbose,
         });
       }

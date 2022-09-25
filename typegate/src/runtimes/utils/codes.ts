@@ -1,5 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
+import { Context } from "../../types.ts";
+
 export interface Code {
   name: string;
   source: string;
@@ -8,7 +10,7 @@ export interface Code {
 
 export interface TaskContext {
   parent?: Record<string, unknown>;
-  context?: Record<string, string>;
+  context?: Context;
 }
 
 export interface FunctionMaterializerData {
@@ -24,7 +26,7 @@ interface TaskBase {
   type: "func" | "import_func" | "predefined_func";
   id: number;
   args: Record<string, unknown>;
-  context: TaskContext;
+  internals: TaskContext;
   verbose: boolean;
 }
 

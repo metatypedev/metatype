@@ -1,7 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import { ComputeStage } from "../engine.ts";
-import { Resolver, Runtime, RuntimeInitParams } from "./Runtime.ts";
+import { Runtime } from "./Runtime.ts";
 import { associateWith } from "std/collections/associate_with.ts";
 import { join } from "std/path/mod.ts";
 import { JSONValue } from "../utils.ts";
@@ -10,7 +10,7 @@ import {
   MatOptions,
   replaceDynamicPathParams,
 } from "./utils/http.ts";
-import * as ast from "graphql_ast";
+import { Resolver, RuntimeInitParams } from "../types.ts";
 
 // FIXME better solution require
 const traverseLift = (obj: JSONValue): any => {
@@ -61,8 +61,7 @@ export class HTTPRuntime extends Runtime {
   async deinit(): Promise<void> {}
 
   execute(method: string, pathPattern: string, options: MatOptions): Resolver {
-    return async (resolverArgs) => {
-      const { _, ...input } = resolverArgs;
+    return async ({ _, ...input }) => {
       const { pathname, restArgs: args } = replaceDynamicPathParams(
         pathPattern,
         input,
@@ -134,7 +133,7 @@ export class HTTPRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean,
+    _verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 
@@ -154,7 +153,6 @@ export class HTTPRuntime extends Runtime {
 
     for (const field of sameRuntime) {
       const resolver: Resolver = ({ _: { parent } }) => {
-        // console.log("bb");
         const resolver = parent[field.props.node];
         const ret = typeof resolver === "function" ? resolver() : resolver;
         return ret;

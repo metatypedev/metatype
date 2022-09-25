@@ -3,21 +3,20 @@
 import {
   assert,
   assertEquals,
-  assertExists,
   assertStringIncludes,
 } from "std/testing/asserts.ts";
 import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { exists } from "std/fs/exists.ts";
-import { RuntimesConfig } from "../src/runtimes/Runtime.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { Register } from "../src/register.ts";
 import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
 import { ConnInfo } from "std/http/server.ts";
-import { RateLimit, RateLimiter } from "../src/rate_limiter.ts";
+import { RateLimiter } from "../src/rate_limiter.ts";
+import { RuntimesConfig } from "../src/types.ts";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
@@ -85,14 +84,14 @@ export class NoLimiter extends RateLimiter {
   constructor() {
     super();
   }
-  decr(id: string, n: number): number | null {
-    return 1;
+  decr(_id: string, n: number): number | null {
+    return n;
   }
   currentTokens(
-    id: string,
-    windowSec: number,
-    windowBudget: number,
-    maxLocalHit: number,
+    _id: string,
+    _windowSec: number,
+    _windowBudget: number,
+    _maxLocalHit: number,
   ): Promise<number> {
     return Promise.resolve(1);
   }
@@ -173,12 +172,16 @@ class MetaTest {
   }
 }
 
-export function test(name: string, fn: (t: MetaTest) => void | Promise<void>) {
+export function test(
+  name: string,
+  fn: (t: MetaTest) => void | Promise<void>,
+): void {
   return Deno.test(name, async (t) => {
     const mt = new MetaTest(t);
     try {
       await fn(mt);
     } catch (error) {
+      console.error(error);
       throw error;
     } finally {
       await mt.terminate();
@@ -216,7 +219,6 @@ export function gql(query: readonly string[], ...args: any[]) {
   return new Q(template, {}, {}, {}, []);
 }
 
-type Info = Record<string, unknown>;
 type Expect = (res: Response) => Promise<void> | void;
 type Variables = Record<string, JSONValue>;
 type Context = Record<string, string>;
@@ -292,7 +294,7 @@ export class Q {
     );
   }
 
-  private withExpect(expect: Expect) {
+  expect(expect: Expect) {
     return new Q(this.query, this.context, this.variables, this.headers, [
       ...this.expects,
       expect,
@@ -300,13 +302,13 @@ export class Q {
   }
 
   expectStatus(status: number) {
-    return this.withExpect((res) => {
+    return this.expect((res) => {
       assertEquals(res.status, status);
     });
   }
 
   expectBody(expect: (body: any) => Promise<void> | void) {
-    return this.withExpect(async (res) => {
+    return this.expect(async (res) => {
       const json = await res.json();
       await expect(json);
     });
@@ -324,7 +326,7 @@ export class Q {
 
   expectErrorContains(partial: string) {
     return this.expectBody((body) => {
-      assertExists(Array.isArray(body.errors));
+      assertEquals(Array.isArray(body.errors), true, "no 'errors' field found");
       assert(body.errors.length > 0);
       assertStringIncludes(body.errors[0].message, partial);
     });
@@ -355,15 +357,29 @@ export class Q {
         "Content-Type": "application/json",
       },
     });
-    const register = new SingleRegister(engine.name, engine);
-    const limiter = new NoLimiter();
-    const response = await typegate(
-      register,
-      limiter,
-    )(request, { remoteAddr: { hostname: "localhost" } } as ConnInfo);
+    const response = await execute(engine, request);
 
     for (const expect of expects) {
       expect(response);
     }
   }
 }
+
+export async function execute(
+  engine: Engine,
+  request: Request,
+): Promise<Response> {
+  const register = new SingleRegister(engine.name, engine);
+  const limiter = new NoLimiter();
+  const server = typegate(
+    register,
+    limiter,
+  );
+  return await server(
+    request,
+    { remoteAddr: { hostname: "localhost" } } as ConnInfo,
+  );
+}
+
+export const sleep = (ms: number) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
