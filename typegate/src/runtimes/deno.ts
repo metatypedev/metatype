@@ -31,7 +31,7 @@ export class DenoRuntime extends Runtime {
   private constructor(
     name: string,
     permissions: Deno.PermissionOptionsObject,
-    lazy: boolean,
+    _lazy: boolean,
     tg: TypeGraphDS,
   ) {
     super();
@@ -55,7 +55,7 @@ export class DenoRuntime extends Runtime {
 
   materialize(
     stage: ComputeStage,
-    waitlist: ComputeStage[],
+    _waitlist: ComputeStage[],
     verbose: boolean,
   ): ComputeStage[] {
     let resolver: Resolver;

@@ -7,7 +7,6 @@ import { renderPlayground } from "./web/playground.ts";
 import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
-import { encryptionKey } from "./crypto.ts";
 
 export const typegate =
   (register: Register, limiter: RateLimiter) =>

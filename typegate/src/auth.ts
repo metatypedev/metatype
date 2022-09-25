@@ -1,6 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import { OAuth2Client, Tokens } from "https://deno.land/x/oauth2_client/mod.ts";
+import { OAuth2Client, Tokens } from "oauth2_client";
 import config from "./config.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { signJWT, signKey as nativeSignKey, verifyJWT } from "./crypto.ts";
@@ -8,7 +8,7 @@ import { envOrFail } from "./utils.ts";
 import { deleteCookie, setCookie } from "std/http/cookie.ts";
 import { crypto } from "std/crypto/mod.ts";
 import * as jwt from "jwt";
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.0/mod.ts";
+import * as bcrypt from "bcrypt";
 
 export type AuthDS = {
   name: string;
@@ -253,7 +253,7 @@ export class OAuth2Auth extends Auth {
 
       return [claims, new Headers()];
     } catch (e) {
-      //console.error(e);
+      console.info(`invalid auth: ${e}`);
       return [{}, clearCookie()];
     }
   }

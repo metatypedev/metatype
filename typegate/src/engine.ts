@@ -1,8 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import Dataloader from "npm:dataloader@2.1.0";
 import { Kind, parse } from "graphql";
-import type ast from "graphql_ast";
+import * as ast from "graphql/ast";
 import { RuntimeResolver, TypeGraph, TypeMaterializer } from "./typegraph.ts";
 import { ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
@@ -19,8 +18,7 @@ import type {
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { TypeNode } from "./type_node.ts";
-import { Auth } from "./auth.ts";
-import { RateLimit, RedisRateLimiter } from "./rate_limiter.ts";
+import { RateLimit } from "./rate_limiter.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -328,10 +326,10 @@ export class Engine {
     return stagesMat;
   }
 
-  optimize(stages: ComputeStage[], verbose: boolean): ComputeStage[] {
+  optimize(stages: ComputeStage[], _verbose: boolean): ComputeStage[] {
     //verbose && console.log(stages);
 
-    for (const stage of stages) {
+    for (const _stage of stages) {
       //verbose && console.log("opti", stage.id());
     }
 

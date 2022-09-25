@@ -107,6 +107,7 @@ class TypeGraph:
         name: str,
         auths=None,
         rate=None,
+        cors=None,
     ) -> None:
         super().__init__()
         self.name = name
@@ -116,7 +117,7 @@ class TypeGraph:
         self.latest_type_id = 0
         self.auths = [] if auths is None else auths
         self.rate = [] if rate is None else rate
-        self.cors = Cors()
+        self.cors = Cors() if cors is None else cors
         self.path = Path(inspect.stack()[1].filename)
 
     def next_type_id(self):

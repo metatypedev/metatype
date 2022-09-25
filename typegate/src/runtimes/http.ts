@@ -10,7 +10,6 @@ import {
   MatOptions,
   replaceDynamicPathParams,
 } from "./utils/http.ts";
-import * as ast from "graphql_ast";
 
 // FIXME better solution require
 const traverseLift = (obj: JSONValue): any => {
@@ -134,7 +133,7 @@ export class HTTPRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean,
+    _verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 

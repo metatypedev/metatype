@@ -1,6 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import type * as ast from "graphql_ast";
+import * as ast from "graphql/ast";
 
 export const gq = async (
   url: string,
