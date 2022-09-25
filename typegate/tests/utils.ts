@@ -3,14 +3,12 @@
 import {
   assert,
   assertEquals,
-  assertExists,
   assertStringIncludes,
 } from "std/testing/asserts.ts";
 import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { exists } from "std/fs/exists.ts";
-import { RuntimesConfig } from "../src/runtimes/Runtime.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { Register } from "../src/register.ts";
@@ -18,6 +16,7 @@ import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { RateLimiter } from "../src/rate_limiter.ts";
+import { RuntimesConfig } from "../src/types.ts";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
@@ -173,12 +172,16 @@ class MetaTest {
   }
 }
 
-export function test(name: string, fn: (t: MetaTest) => void | Promise<void>) {
+export function test(
+  name: string,
+  fn: (t: MetaTest) => void | Promise<void>,
+): void {
   return Deno.test(name, async (t) => {
     const mt = new MetaTest(t);
     try {
       await fn(mt);
     } catch (error) {
+      console.error(error);
       throw error;
     } finally {
       await mt.terminate();
@@ -324,7 +327,7 @@ export class Q {
 
   expectErrorContains(partial: string) {
     return this.expectBody((body) => {
-      assertExists(Array.isArray(body.errors));
+      assertEquals(Array.isArray(body.errors), true, "no 'errors' field found");
       assert(body.errors.length > 0);
       assertStringIncludes(body.errors[0].message, partial);
     });

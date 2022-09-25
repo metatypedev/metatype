@@ -32,7 +32,7 @@ const NEW_COMMENT_ID = 123;
 test("Rest queries", async (t) => {
   const e = await t.pythonFile("typegraphs/rest.py");
 
-  mf.mock("GET@/api/posts", (req, _match) => {
+  mf.mock("GET@/api/posts", (req) => {
     const tags = new URL(req.url).searchParams.getAll("tags");
     console.log({ tags });
     const posts = tags.reduce((list, tag) => {

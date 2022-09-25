@@ -1,9 +1,9 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import { ComputeStage } from "../engine.ts";
-import { Resolver, Runtime } from "./Runtime.ts";
-import { RuntimeInitParams } from "./Runtime.ts";
+import { Runtime } from "./Runtime.ts";
 import { StructNode } from "../type_node.ts";
+import { Resolver, RuntimeInitParams } from "../types.ts";
 
 export class GoogleapisRuntime extends Runtime {
   constructor() {
@@ -32,10 +32,10 @@ export class GoogleapisRuntime extends Runtime {
 
       const query = new URLSearchParams({ read_mask: readMask });
       const input = `${url}?${query}`;
-      const opts = {
+      const opts: RequestInit = {
         method,
         headers: {
-          authorization: context["authorization"],
+          authorization: context["authorization"] as string, // FIXME
         },
       };
 
