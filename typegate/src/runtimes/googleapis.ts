@@ -1,10 +1,8 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import { ComputeStage } from "../engine.ts";
-import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
-import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
+import { Resolver, Runtime } from "./Runtime.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
-import * as ast from "graphql_ast";
 import { StructNode } from "../type_node.ts";
 
 export class GoogleapisRuntime extends Runtime {
@@ -52,7 +50,7 @@ export class GoogleapisRuntime extends Runtime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean,
+    _verbose: boolean,
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 

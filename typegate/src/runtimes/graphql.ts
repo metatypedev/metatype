@@ -2,11 +2,8 @@
 
 import { ComputeStage } from "../engine.ts";
 import { gq } from "../gq.ts";
-import { JSONValue } from "../utils.ts";
 import { Resolver, Runtime } from "./Runtime.ts";
 import { RuntimeInitParams } from "./Runtime.ts";
-import * as ast from "graphql_ast";
-import { unparse } from "../utils.ts";
 import * as ForwardVars from "./utils/graphql_forward_vars.ts";
 import * as InlineVars from "./utils/graphql_inline_vars.ts";
 
@@ -122,7 +119,7 @@ export class GraphQLRuntime extends Runtime {
     for (const field of fields) {
       if (field.props.parent?.id() === stage.props.parent?.id()) {
         const resolver: Resolver = ({
-          _: { parent, [queryStage.id()]: queryRes },
+          _: { [queryStage.id()]: queryRes },
         }) => {
           const fieldName = field.props.path[field.props.path.length - 1];
           const resolver = queryRes[0][renames[fieldName] ?? fieldName];

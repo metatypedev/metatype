@@ -17,7 +17,7 @@ import { Register } from "../src/register.ts";
 import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
 import { ConnInfo } from "std/http/server.ts";
-import { RateLimit, RateLimiter } from "../src/rate_limiter.ts";
+import { RateLimiter } from "../src/rate_limiter.ts";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
@@ -85,14 +85,14 @@ export class NoLimiter extends RateLimiter {
   constructor() {
     super();
   }
-  decr(id: string, n: number): number | null {
-    return 1;
+  decr(_id: string, n: number): number | null {
+    return n;
   }
   currentTokens(
-    id: string,
-    windowSec: number,
-    windowBudget: number,
-    maxLocalHit: number,
+    _id: string,
+    _windowSec: number,
+    _windowBudget: number,
+    _maxLocalHit: number,
   ): Promise<number> {
     return Promise.resolve(1);
   }

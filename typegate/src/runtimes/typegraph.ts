@@ -2,7 +2,6 @@
 
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { TypeKind } from "graphql";
-import * as ast from "graphql_ast";
 import { ensure } from "../utils.ts";
 import { Resolver, Runtime, RuntimeConfig } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
@@ -20,9 +19,9 @@ export class TypeGraphRuntime extends Runtime {
 
   static init(
     typegraph: TypeGraphDS,
-    materializers: TypeMaterializer[],
-    args: Record<string, unknown>,
-    config: RuntimeConfig,
+    _materializers: TypeMaterializer[],
+    _args: Record<string, unknown>,
+    _config: RuntimeConfig,
   ): Runtime {
     return new TypeGraphRuntime(typegraph);
   }
@@ -31,8 +30,8 @@ export class TypeGraphRuntime extends Runtime {
 
   materialize(
     stage: ComputeStage,
-    waitlist: ComputeStage[],
-    verbose: boolean,
+    _waitlist: ComputeStage[],
+    _verbose: boolean,
   ): ComputeStage[] {
     const resolver: Resolver = (() => {
       const name = stage.props.materializer?.name;
@@ -399,7 +398,7 @@ export class TypeGraphRuntime extends Runtime {
     if (type.typedef === "func" || type.typedef === "gen") {
       return {
         ...common,
-        args: ({ includeDeprecated }: DeprecatedArg = {}) => {
+        args: (_: DeprecatedArg = {}) => {
           const inp = this.tg.types[type.data.input as number];
           ensure(
             inp.typedef === "struct",

@@ -1,9 +1,8 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import { JSONValue, unparse, unzip } from "../../utils.ts";
+import { JSONValue, unzip } from "../../utils.ts";
 import type { FromVars } from "../graphql.ts";
 import { ComputeStage } from "../../engine.ts";
-import * as ast from "graphql_ast";
 import { iterParentStages } from "../../utils.ts";
 
 export function stringifyQL(
