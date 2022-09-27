@@ -1,6 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 // deno-lint-ignore-file no-unused-vars
+import { Static, Type } from "typebox";
 
 import { z } from "zod";
 
@@ -9,13 +10,13 @@ const system = {
     after: [],
     c: () => z.string(),
   },
-  minString: {
+  min3String: {
     after: ["string", "maxString"],
-    c: (c: z.ZodString, arg: number) => c.min(arg),
+    c: (c: z.ZodString) => c.min(3),
   },
-  maxString: {
+  max10String: {
     after: ["string", "minString"],
-    c: (c: z.ZodString, arg: number) => c.max(arg),
+    c: (c: z.ZodString) => c.max(10),
   },
   optional: {
     after: ["string", "nonEmptyString"], // all
@@ -25,17 +26,14 @@ const system = {
     after: [],
     c: (arg: z.ZodTypeAny) => z.array(arg),
   },
-  minList: {
+  min5List: {
     after: ["list"],
-    c: <T extends z.ZodTypeAny>(c: z.ZodArray<T>, arg: number) => c.min(arg),
+    c: <T extends z.ZodTypeAny>(c: z.ZodArray<T>) => c.min(5),
   },
   intList: {
     after: ["list"],
     c: <T extends z.ZodTypeAny>(c: z.ZodArray<T>) =>
       c.refine((x) => x.map((x) => z.number().int().parse(x))),
-  },
-  multipl3intList: {
-    after: ["intList"],
   },
   struct: {
     after: [],

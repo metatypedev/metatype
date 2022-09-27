@@ -316,12 +316,29 @@ export class TypeGraph {
         }
         case "secret": {
           const name = inject as string;
-          return [() => this.secrets[name], policies, []];
+          return [
+            () => {
+              const value = this.secrets[name];
+              if (!value && arg.typedef !== "optional") {
+                // manage default?
+                throw new Error(`injection ${name} was not found in secrets`);
+              }
+              return value;
+            },
+            policies,
+            [],
+          ];
         }
         case "context": {
           const name = inject as string;
           return [
-            (_parent, _variables, { [name]: value }) => value,
+            (_parent, _variables, { [name]: value }) => {
+              if (!value && arg.typedef !== "optional") {
+                // manage default?
+                throw new Error(`injection ${name} was not found in context`);
+              }
+              return value;
+            },
             policies,
             [],
           ];
@@ -331,13 +348,13 @@ export class TypeGraph {
           const name = Object.keys(parentContext).find(
             (name) => parentContext[name] === ref,
           );
-          if (!name) {
+          if (!name && arg.typedef !== "optional") {
             throw Error(
               `cannot find injection ${
                 JSON.stringify(
                   arg,
                 )
-              } in context ${JSON.stringify(parentContext)}`,
+              } in parent ${JSON.stringify(parentContext)}`,
             );
           }
           return [({ [name]: value }) => value, policies, [name]];
