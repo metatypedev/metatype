@@ -67,9 +67,9 @@ export class HTTPRuntime extends Runtime {
         input,
       );
 
-      const authToken = options.auth_token_field === null
-        ? null
-        : args[options.auth_token_field];
+      const authToken = options.auth_token_field
+        ? args[options.auth_token_field]
+        : null;
       if (authToken) {
         delete args[options.auth_token_field!];
       }
@@ -107,11 +107,11 @@ export class HTTPRuntime extends Runtime {
         body: method === "GET" || method === "DELETE" ? null : body,
       });
 
-      if (res.status > 400) {
+      if (res.status >= 400) {
         // TODO: add error message
         // TODO: only if return type is optional
         // throw new Error(await res.text());
-        return null;
+        return traverseLift(null);
       }
 
       const contentType = res.headers.get("content-type")?.split("; ")[0];
