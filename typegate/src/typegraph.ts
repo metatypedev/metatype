@@ -312,16 +312,40 @@ export class TypeGraph {
       switch (injection) {
         case "raw": {
           const value = JSON.parse(inject as string);
+          // typecheck
           return [() => value, policies, []];
         }
         case "secret": {
           const name = inject as string;
-          return [() => this.secrets[name], policies, []];
+          const value = this.secrets[name];
+          if (
+            value === undefined &&
+            (value === null && arg.typedef !== "optional")
+          ) {
+            // manage default?
+            throw new Error(`injection ${name} was not found in secrets`);
+          }
+          return [
+            () => {
+              return value;
+            },
+            policies,
+            [],
+          ];
         }
         case "context": {
           const name = inject as string;
           return [
-            (_parent, _variables, { [name]: value }) => value,
+            (_parent, _variables, { [name]: value }) => {
+              if (
+                value === undefined &&
+                (value === null && arg.typedef !== "optional")
+              ) {
+                // manage default?
+                throw new Error(`injection ${name} was not found in context`);
+              }
+              return value;
+            },
             policies,
             [],
           ];
@@ -337,10 +361,23 @@ export class TypeGraph {
                 JSON.stringify(
                   arg,
                 )
-              } in context ${JSON.stringify(parentContext)}`,
+              } in parent ${JSON.stringify(parentContext)}`,
             );
           }
-          return [({ [name]: value }) => value, policies, [name]];
+          return [
+            ({ [name]: value }) => {
+              if (
+                value === undefined &&
+                (value === null && arg.typedef !== "optional")
+              ) {
+                // manage default?
+                throw new Error(`injection ${name} was not found in parent`);
+              }
+              return value;
+            },
+            policies,
+            [name],
+          ];
         }
         default:
           ensure(false, "cannot happen");

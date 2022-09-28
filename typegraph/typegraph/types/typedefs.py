@@ -319,23 +319,6 @@ class optional(Type):
         return [self.of]
 
 
-# to replace with g.injection, this is not a type
-class injection(Type):
-    of: Type
-
-    def __init__(self, of) -> None:
-        super().__init__()
-        self.of = of
-
-    @property
-    def type_name(self) -> str:
-        return f"injection_{self.of.node}"
-
-    @property
-    def edges(self) -> List[Type]:
-        return [self.of]
-
-
 # datetime = comparable
 
 
