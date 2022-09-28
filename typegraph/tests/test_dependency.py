@@ -123,11 +123,13 @@ class TestDependency:
                         ),
                     ),
                     TypeNode(
-                        name="injection_a_2",
-                        typedef="injection",
+                        name="integer_2",
+                        typedef="integer",
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict(
+                            {"inject": 7, "injection": "parent"}
+                        ),
                     ),
                     TypeNode(
                         name="a",
