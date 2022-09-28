@@ -312,17 +312,21 @@ export class TypeGraph {
       switch (injection) {
         case "raw": {
           const value = JSON.parse(inject as string);
+          // typecheck
           return [() => value, policies, []];
         }
         case "secret": {
           const name = inject as string;
+          const value = this.secrets[name];
+          if (
+            value === undefined &&
+            (value === null && arg.typedef !== "optional")
+          ) {
+            // manage default?
+            throw new Error(`injection ${name} was not found in secrets`);
+          }
           return [
             () => {
-              const value = this.secrets[name];
-              if (!value && arg.typedef !== "optional") {
-                // manage default?
-                throw new Error(`injection ${name} was not found in secrets`);
-              }
               return value;
             },
             policies,
@@ -333,7 +337,10 @@ export class TypeGraph {
           const name = inject as string;
           return [
             (_parent, _variables, { [name]: value }) => {
-              if (!value && arg.typedef !== "optional") {
+              if (
+                value === undefined &&
+                (value === null && arg.typedef !== "optional")
+              ) {
                 // manage default?
                 throw new Error(`injection ${name} was not found in context`);
               }
@@ -348,7 +355,7 @@ export class TypeGraph {
           const name = Object.keys(parentContext).find(
             (name) => parentContext[name] === ref,
           );
-          if (!name && arg.typedef !== "optional") {
+          if (!name) {
             throw Error(
               `cannot find injection ${
                 JSON.stringify(
@@ -357,7 +364,20 @@ export class TypeGraph {
               } in parent ${JSON.stringify(parentContext)}`,
             );
           }
-          return [({ [name]: value }) => value, policies, [name]];
+          return [
+            ({ [name]: value }) => {
+              if (
+                value === undefined &&
+                (value === null && arg.typedef !== "optional")
+              ) {
+                // manage default?
+                throw new Error(`injection ${name} was not found in parent`);
+              }
+              return value;
+            },
+            policies,
+            [name],
+          ];
         }
         default:
           ensure(false, "cannot happen");
