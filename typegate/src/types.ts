@@ -26,7 +26,7 @@ export type Resolver = (
       context: Context;
       [dep: string]: unknown;
     };
-    [arg: string]: unknown;
+    [arg: string]: any;
   },
 ) => Promise<any> | any;
 

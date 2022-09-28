@@ -22,7 +22,7 @@ class TestDependency:
                     "b": t.func(
                         t.struct(
                             {
-                                "a1": t.injection(a),
+                                "a1": t.integer().s_parent(g("a")),
                                 "a2": g("a"),
                                 "new": t.integer().named("new"),
                             }
@@ -123,11 +123,13 @@ class TestDependency:
                         ),
                     ),
                     TypeNode(
-                        name="injection_a_2",
-                        typedef="injection",
+                        name="integer_2",
+                        typedef="integer",
                         policies=(),
                         runtime=0,
-                        data=frozendict.frozendict({}),
+                        data=frozendict.frozendict(
+                            {"inject": 7, "injection": "parent"}
+                        ),
                     ),
                     TypeNode(
                         name="a",

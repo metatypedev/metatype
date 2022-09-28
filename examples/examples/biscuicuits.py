@@ -2,6 +2,7 @@ from typegraph.graphs.typegraph import github_auth
 from typegraph.graphs.typegraph import Rate
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import ModuleMat
+from typegraph.materializers.http import HTTPRuntime
 from typegraph.policies import allow_all
 from typegraph.types import typedefs as t
 
@@ -33,6 +34,7 @@ with TypeGraph(
 ) as g:
 
     all = allow_all()
+    remote = HTTPRuntime("https://api.github.com")
 
     g.expose(
         contact=send_in_blue_send(
@@ -40,5 +42,16 @@ with TypeGraph(
             "SENDER",
             "TO",
             "SENDINBLUE_API_KEY",
-        ).add_policy(all)
+        ).add_policy(all),
+        user=remote.get(
+            "/user",
+            t.struct({"token": t.string().s_context("accessToken")}),
+            t.struct(
+                {
+                    "id": t.integer(),
+                    "login": t.string(),
+                }
+            ).s_optional(),
+            auth_token_field="token",
+        ).add_policy(all),
     )

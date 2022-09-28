@@ -15,7 +15,7 @@ with TypeGraph("test_auth", auths=[github_auth]) as g:
         t.struct(),
         FunMat.from_lambda(lambda ctx: not not ctx.user1),
     )
-    withToken = t.policy(
+    with_token = t.policy(
         t.struct(),
         FunMat.from_lambda(lambda ctx: not not ctx.accessToken),
     )
@@ -25,7 +25,7 @@ with TypeGraph("test_auth", auths=[github_auth]) as g:
     g.expose(
         public=t.func(x, x, IdentityMat()).add_policy(public),
         private=t.func(x, x, IdentityMat()).add_policy(private),
-        token=t.func(x, x, IdentityMat()).add_policy(withToken),
+        token=t.func(x, x, IdentityMat()).add_policy(with_token),
         user=remote.get(
             "/user",
             t.struct({"token": t.string().s_context("token")}),
