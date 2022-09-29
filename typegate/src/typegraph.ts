@@ -629,7 +629,11 @@ export class TypeGraph {
               selections: [field],
             },
             verbose,
-          ),
+          ).map((stage) => {
+            // disable rate limiting for introspection
+            stage.props.rateWeight = 0;
+            return stage;
+          }),
         );
         continue;
       }
