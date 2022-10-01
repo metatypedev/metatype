@@ -5,7 +5,9 @@ import { Static, Type } from "typebox";
 
 import { z } from "zod";
 
-const system = {
+//const typesystem = /* JSON schema */;
+
+const typesystem = {
   string: {
     after: [],
     c: () => z.string(),
@@ -51,7 +53,7 @@ interface Check {
 
 interface Type {
   name: string; // auto gen if not given
-  checks: Array<Check>; // Array<number>
+  checks: number; // Array<number>
   /*
   policies: Array<number>;
   runtime: number;

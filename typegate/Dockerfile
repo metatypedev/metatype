@@ -18,7 +18,7 @@ RUN deno_bindgen --release -- --locked --package native
 
 WORKDIR /typegate
 
-RUN deno cache --unstable --import-map=import_map.json --lock=lock.json --lock-write src/main.ts
+RUN deno cache --unstable --import-map=import_map.json --lock=lock.json src/main.ts
 
 #
 
@@ -43,5 +43,5 @@ COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
 EXPOSE 7890
 
 ENTRYPOINT ["/tini", "--"]
-# --lock=lock.json
+# "--lock=lock.json", https://github.com/denoland/deno/issues/16120
 CMD ["deno", "run", "--import-map=import_map.json", "--unstable", "--allow-run=hostname", "--allow-env", "--allow-hrtime", "--allow-write", "--allow-ffi", "--allow-read", "--allow-net", "src/main.ts"]
