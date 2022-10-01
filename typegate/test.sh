@@ -8,6 +8,7 @@ export PATH="$SCRIPT_PATH/../typegraph/.venv/bin:$PATH"
 
 cd ${SCRIPT_PATH} && \
     deno test \
+    # --lock=lock.json \ https://github.com/denoland/deno/issues/16120
     --import-map=import_map.json \
     --unstable \
     --allow-run \
