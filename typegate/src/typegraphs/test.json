@@ -1,1 +1,737 @@
-{"types":[{"name":"test","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"test":1}}},{"name":"f","typedef":"func","policies":[0],"runtime":0,"data":{"rate_weight":null,"rate_calls":false,"materializer":0,"input":2,"output":4}},{"name":"inp","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"a":3}}},{"name":"arg1","typedef":"integer","policies":[],"runtime":0,"data":{}},{"name":"res","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"a":5,"b":6,"c":8,"ip":33,"out":62,"ql":63,"remote":70,"duration":77,"self":1,"nested":80}}},{"name":"deps","typedef":"integer","policies":[],"runtime":0,"data":{}},{"name":"deps_opt","typedef":"optional","policies":[],"runtime":0,"data":{"of":7}},{"name":"integer_25","typedef":"integer","policies":[],"runtime":0,"data":{}},{"name":"func_structinjection_nested_injection_default_forced_nested_default_nested_inner_default_nested_apply_nested_inner_apply_49_integer_50_51","typedef":"func","policies":[],"runtime":0,"data":{"rate_weight":null,"rate_calls":false,"materializer":1,"input":9,"output":32}},{"name":"structinjection_nested_injection_default_forced_nested_default_nested_inner_default_nested_apply_nested_inner_apply_49","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"injection":10,"nested_injection":11,"default":13,"forced":16,"nested_default":18,"nested_inner_default":22,"nested_apply":26,"nested_inner_apply":29}}},{"name":"integer_27","typedef":"integer","policies":[],"runtime":0,"data":{"inject":5,"injection":"parent"}},{"name":"structvalue_29","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"value":12}}},{"name":"integer_28","typedef":"integer","policies":[],"runtime":0,"data":{"inject":5,"injection":"parent"}},{"name":"optional_string_31_32","typedef":"optional","policies":[],"runtime":0,"data":{"default_value":"ddds","of":14}},{"name":"string_31","typedef":"string","policies":[],"runtime":0,"data":{"of":15}},{"name":"char_30","typedef":"char","policies":[],"runtime":0,"data":{}},{"name":"string_34","typedef":"string","policies":[],"runtime":0,"data":{"inject":"\"dddsaaa\"","injection":"raw","of":17}},{"name":"char_33","typedef":"char","policies":[],"runtime":0,"data":{}},{"name":"optional_structvalue_37_38","typedef":"optional","policies":[],"runtime":0,"data":{"default_value":{"value":"a"},"of":19}},{"name":"structvalue_37","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"value":20}}},{"name":"string_36","typedef":"string","policies":[],"runtime":0,"data":{"of":21}},{"name":"char_35","typedef":"char","policies":[],"runtime":0,"data":{}},{"name":"structvalue_42","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"value":23}}},{"name":"optional_string_40_41","typedef":"optional","policies":[],"runtime":0,"data":{"default_value":"b","of":24}},{"name":"string_40","typedef":"string","policies":[],"runtime":0,"data":{"of":25}},{"name":"char_39","typedef":"char","policies":[],"runtime":0,"data":{}},{"name":"structvalue_45","typedef":"struct","policies":[],"runtime":0,"data":{"inject":"{\"value\":\"c\"}","injection":"raw","renames":{},"binds":{"value":27}}},{"name":"string_44","typedef":"string","policies":[],"runtime":0,"data":{"of":28}},{"name":"char_43","typedef":"char","policies":[],"runtime":0,"data":{}},{"name":"structvalue_48","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"value":30}}},{"name":"string_47","typedef":"string","policies":[],"runtime":0,"data":{"inject":"\"d\"","injection":"raw","of":31}},{"name":"char_46","typedef":"char","policies":[],"runtime":0,"data":{}},{"name":"integer_50","typedef":"integer","policies":[],"runtime":0,"data":{}},{"name":"func_struct_52_structstatus_country_countryCode_region_regionName_city_zip_lat_lon_timezone_isp_org_as_query_79_80","typedef":"func","policies":[],"runtime":1,"data":{"rate_weight":null,"rate_calls":false,"materializer":2,"input":34,"output":35}},{"name":"struct_52","typedef":"struct","policies":[],"runtime":1,"data":{"renames":{},"binds":{}}},{"name":"structstatus_country_countryCode_region_regionName_city_zip_lat_lon_timezone_isp_org_as_query_79","typedef":"struct","policies":[],"runtime":1,"data":{"renames":{},"binds":{"status":36,"country":38,"countryCode":40,"region":42,"regionName":44,"city":46,"zip":48,"lat":50,"lon":51,"timezone":52,"isp":54,"org":56,"as":58,"query":60}}},{"name":"string_54","typedef":"string","policies":[],"runtime":1,"data":{"of":37}},{"name":"char_53","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_56","typedef":"string","policies":[],"runtime":1,"data":{"of":39}},{"name":"char_55","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_58","typedef":"string","policies":[],"runtime":1,"data":{"of":41}},{"name":"char_57","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_60","typedef":"string","policies":[],"runtime":1,"data":{"of":43}},{"name":"char_59","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_62","typedef":"string","policies":[],"runtime":1,"data":{"of":45}},{"name":"char_61","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_64","typedef":"string","policies":[],"runtime":1,"data":{"of":47}},{"name":"char_63","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_66","typedef":"string","policies":[],"runtime":1,"data":{"of":49}},{"name":"char_65","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"float_67","typedef":"float","policies":[],"runtime":1,"data":{}},{"name":"float_68","typedef":"float","policies":[],"runtime":1,"data":{}},{"name":"string_70","typedef":"string","policies":[],"runtime":1,"data":{"of":53}},{"name":"char_69","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_72","typedef":"string","policies":[],"runtime":1,"data":{"of":55}},{"name":"char_71","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_74","typedef":"string","policies":[],"runtime":1,"data":{"of":57}},{"name":"char_73","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_76","typedef":"string","policies":[],"runtime":1,"data":{"of":59}},{"name":"char_75","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"string_78","typedef":"string","policies":[],"runtime":1,"data":{"of":61}},{"name":"char_77","typedef":"char","policies":[],"runtime":1,"data":{}},{"name":"out","typedef":"integer","policies":[],"runtime":0,"data":{}},{"name":"func_structidentifier_83_optional_string_85_86_87","typedef":"func","policies":[],"runtime":2,"data":{"rate_weight":null,"rate_calls":false,"materializer":3,"input":64,"output":67}},{"name":"structidentifier_83","typedef":"struct","policies":[],"runtime":2,"data":{"renames":{},"binds":{"identifier":65}}},{"name":"string_82","typedef":"string","policies":[],"runtime":2,"data":{"of":66}},{"name":"char_81","typedef":"char","policies":[],"runtime":2,"data":{}},{"name":"optional_string_85_86","typedef":"optional","policies":[],"runtime":2,"data":{"of":68}},{"name":"string_85","typedef":"string","policies":[],"runtime":2,"data":{"of":69}},{"name":"char_84","typedef":"char","policies":[],"runtime":2,"data":{}},{"name":"func_struct_88_remote_94","typedef":"func","policies":[],"runtime":2,"data":{"rate_weight":null,"rate_calls":false,"materializer":3,"input":71,"output":72}},{"name":"struct_88","typedef":"struct","policies":[],"runtime":2,"data":{"renames":{},"binds":{}}},{"name":"remote","typedef":"struct","policies":[],"runtime":2,"data":{"renames":{},"binds":{"integer":73,"nested":72,"duration":74}}},{"name":"res_int","typedef":"integer","policies":[],"runtime":0,"data":{}},{"name":"compute_duration_remote","typedef":"func","policies":[],"runtime":0,"data":{"rate_weight":null,"rate_calls":false,"materializer":4,"input":75,"output":76}},{"name":"structinteger_90","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"integer":73}}},{"name":"duration_remote","typedef":"integer","policies":[],"runtime":0,"data":{}},{"name":"compute_duration","typedef":"gen","policies":[],"runtime":0,"data":{"rate_weight":null,"rate_calls":false,"materializer":5,"input":78,"output":79}},{"name":"struct_96","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{}}},{"name":"duration","typedef":"integer","policies":[],"runtime":0,"data":{}},{"name":"nested","typedef":"struct","policies":[],"runtime":0,"data":{"renames":{},"binds":{"ok":62,"self":1}}}],"materializers":[{"name":"function","runtime":0,"data":{"serial":false,"fn_expr":"\n                ({ a }: { a: number; }) => {\n                    return {\n                        out: a * 2,\n                        a: 2,\n                        b: null,\n                    };\n                }\n                "}},{"name":"predefined_function","runtime":0,"data":{"serial":false,"name":"identity"}},{"name":"rest","runtime":1,"data":{"serial":false,"verb":"GET","path":"24.48.0.1","content_type":"application/json","query_fields":null,"body_fields":null,"auth_token_field":null}},{"name":"query","runtime":2,"data":{"serial":false}},{"name":"function","runtime":0,"data":{"serial":false,"fn_expr":"(args) => {\n    return (args.parent.integer * 3);\n}"}},{"name":"function","runtime":0,"data":{"serial":false,"fn_expr":"(args) => {\n    return (args.parent.out * 2);\n}"}},{"name":"function","runtime":0,"data":{"serial":false,"fn_expr":"(args) => {\n    return true;\n}"}}],"runtimes":[{"name":"deno","data":{"worker":"default"}},{"name":"http","data":{"endpoint":"http://ip-api.com/json"}},{"name":"graphql","data":{"endpoint":"http://localhost:5000/graphql"}}],"policies":[{"name":"allow_all_policy","materializer":6}],"meta":{"secrets":[],"cors":{"allow_origin":[],"allow_headers":[],"expose_headers":[],"allow_credentials":true,"max_age":null},"auths":[],"rate":[],"version":"0.0.1"}}
+{
+  "types": [
+    {
+      "name": "test",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "test": 1 } }
+    },
+    {
+      "name": "f",
+      "typedef": "func",
+      "policies": [0],
+      "runtime": 0,
+      "data": {
+        "rate_weight": null,
+        "rate_calls": false,
+        "materializer": 0,
+        "input": 2,
+        "output": 4
+      }
+    },
+    {
+      "name": "inp",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "a": 3 } }
+    },
+    {
+      "name": "arg1",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "res",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": {
+        "renames": {},
+        "binds": {
+          "a": 5,
+          "b": 6,
+          "c": 8,
+          "ip": 33,
+          "out": 62,
+          "ql": 63,
+          "remote": 70,
+          "duration": 77,
+          "self": 1,
+          "nested": 80
+        }
+      }
+    },
+    {
+      "name": "deps",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "deps_opt",
+      "typedef": "optional",
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 7 }
+    },
+    {
+      "name": "integer_25",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "func_structinjection_nested_injection_default_forced_nested_default_nested_inner_default_nested_apply_nested_inner_apply_49_integer_50_51",
+      "typedef": "func",
+      "policies": [],
+      "runtime": 0,
+      "data": {
+        "rate_weight": null,
+        "rate_calls": false,
+        "materializer": 1,
+        "input": 9,
+        "output": 32
+      }
+    },
+    {
+      "name": "structinjection_nested_injection_default_forced_nested_default_nested_inner_default_nested_apply_nested_inner_apply_49",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": {
+        "renames": {},
+        "binds": {
+          "injection": 10,
+          "nested_injection": 11,
+          "default": 13,
+          "forced": 16,
+          "nested_default": 18,
+          "nested_inner_default": 22,
+          "nested_apply": 26,
+          "nested_inner_apply": 29
+        }
+      }
+    },
+    {
+      "name": "integer_27",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": { "inject": 5, "injection": "parent" }
+    },
+    {
+      "name": "structvalue_29",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "value": 12 } }
+    },
+    {
+      "name": "integer_28",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": { "inject": 5, "injection": "parent" }
+    },
+    {
+      "name": "optional_string_31_32",
+      "typedef": "optional",
+      "policies": [],
+      "runtime": 0,
+      "data": { "default_value": "ddds", "of": 14 }
+    },
+    {
+      "name": "string_31",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 15 }
+    },
+    {
+      "name": "char_30",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "string_34",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 0,
+      "data": { "inject": "\"dddsaaa\"", "injection": "raw", "of": 17 }
+    },
+    {
+      "name": "char_33",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "optional_structvalue_37_38",
+      "typedef": "optional",
+      "policies": [],
+      "runtime": 0,
+      "data": { "default_value": { "value": "a" }, "of": 19 }
+    },
+    {
+      "name": "structvalue_37",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "value": 20 } }
+    },
+    {
+      "name": "string_36",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 21 }
+    },
+    {
+      "name": "char_35",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "structvalue_42",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "value": 23 } }
+    },
+    {
+      "name": "optional_string_40_41",
+      "typedef": "optional",
+      "policies": [],
+      "runtime": 0,
+      "data": { "default_value": "b", "of": 24 }
+    },
+    {
+      "name": "string_40",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 25 }
+    },
+    {
+      "name": "char_39",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "structvalue_45",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": {
+        "inject": "{\"value\":\"c\"}",
+        "injection": "raw",
+        "renames": {},
+        "binds": { "value": 27 }
+      }
+    },
+    {
+      "name": "string_44",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 0,
+      "data": { "of": 28 }
+    },
+    {
+      "name": "char_43",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "structvalue_48",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "value": 30 } }
+    },
+    {
+      "name": "string_47",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 0,
+      "data": { "inject": "\"d\"", "injection": "raw", "of": 31 }
+    },
+    {
+      "name": "char_46",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "integer_50",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "func_struct_52_structstatus_country_countryCode_region_regionName_city_zip_lat_lon_timezone_isp_org_as_query_79_80",
+      "typedef": "func",
+      "policies": [],
+      "runtime": 1,
+      "data": {
+        "rate_weight": null,
+        "rate_calls": false,
+        "materializer": 2,
+        "input": 34,
+        "output": 35
+      }
+    },
+    {
+      "name": "struct_52",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 1,
+      "data": { "renames": {}, "binds": {} }
+    },
+    {
+      "name": "structstatus_country_countryCode_region_regionName_city_zip_lat_lon_timezone_isp_org_as_query_79",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 1,
+      "data": {
+        "renames": {},
+        "binds": {
+          "status": 36,
+          "country": 38,
+          "countryCode": 40,
+          "region": 42,
+          "regionName": 44,
+          "city": 46,
+          "zip": 48,
+          "lat": 50,
+          "lon": 51,
+          "timezone": 52,
+          "isp": 54,
+          "org": 56,
+          "as": 58,
+          "query": 60
+        }
+      }
+    },
+    {
+      "name": "string_54",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 37 }
+    },
+    {
+      "name": "char_53",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_56",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 39 }
+    },
+    {
+      "name": "char_55",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_58",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 41 }
+    },
+    {
+      "name": "char_57",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_60",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 43 }
+    },
+    {
+      "name": "char_59",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_62",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 45 }
+    },
+    {
+      "name": "char_61",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_64",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 47 }
+    },
+    {
+      "name": "char_63",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_66",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 49 }
+    },
+    {
+      "name": "char_65",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "float_67",
+      "typedef": "float",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "float_68",
+      "typedef": "float",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_70",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 53 }
+    },
+    {
+      "name": "char_69",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_72",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 55 }
+    },
+    {
+      "name": "char_71",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_74",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 57 }
+    },
+    {
+      "name": "char_73",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_76",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 59 }
+    },
+    {
+      "name": "char_75",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "string_78",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 1,
+      "data": { "of": 61 }
+    },
+    {
+      "name": "char_77",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 1,
+      "data": {}
+    },
+    {
+      "name": "out",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "func_structidentifier_83_optional_string_85_86_87",
+      "typedef": "func",
+      "policies": [],
+      "runtime": 2,
+      "data": {
+        "rate_weight": null,
+        "rate_calls": false,
+        "materializer": 3,
+        "input": 64,
+        "output": 67
+      }
+    },
+    {
+      "name": "structidentifier_83",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 2,
+      "data": { "renames": {}, "binds": { "identifier": 65 } }
+    },
+    {
+      "name": "string_82",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 2,
+      "data": { "of": 66 }
+    },
+    {
+      "name": "char_81",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 2,
+      "data": {}
+    },
+    {
+      "name": "optional_string_85_86",
+      "typedef": "optional",
+      "policies": [],
+      "runtime": 2,
+      "data": { "of": 68 }
+    },
+    {
+      "name": "string_85",
+      "typedef": "string",
+      "policies": [],
+      "runtime": 2,
+      "data": { "of": 69 }
+    },
+    {
+      "name": "char_84",
+      "typedef": "char",
+      "policies": [],
+      "runtime": 2,
+      "data": {}
+    },
+    {
+      "name": "func_struct_88_remote_94",
+      "typedef": "func",
+      "policies": [],
+      "runtime": 2,
+      "data": {
+        "rate_weight": null,
+        "rate_calls": false,
+        "materializer": 3,
+        "input": 71,
+        "output": 72
+      }
+    },
+    {
+      "name": "struct_88",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 2,
+      "data": { "renames": {}, "binds": {} }
+    },
+    {
+      "name": "remote",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 2,
+      "data": {
+        "renames": {},
+        "binds": { "integer": 73, "nested": 72, "duration": 74 }
+      }
+    },
+    {
+      "name": "res_int",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "compute_duration_remote",
+      "typedef": "func",
+      "policies": [],
+      "runtime": 0,
+      "data": {
+        "rate_weight": null,
+        "rate_calls": false,
+        "materializer": 4,
+        "input": 75,
+        "output": 76
+      }
+    },
+    {
+      "name": "structinteger_90",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "integer": 73 } }
+    },
+    {
+      "name": "duration_remote",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "compute_duration",
+      "typedef": "gen",
+      "policies": [],
+      "runtime": 0,
+      "data": {
+        "rate_weight": null,
+        "rate_calls": false,
+        "materializer": 5,
+        "input": 78,
+        "output": 79
+      }
+    },
+    {
+      "name": "struct_96",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": {} }
+    },
+    {
+      "name": "duration",
+      "typedef": "integer",
+      "policies": [],
+      "runtime": 0,
+      "data": {}
+    },
+    {
+      "name": "nested",
+      "typedef": "struct",
+      "policies": [],
+      "runtime": 0,
+      "data": { "renames": {}, "binds": { "ok": 62, "self": 1 } }
+    }
+  ],
+  "materializers": [
+    {
+      "name": "function",
+      "runtime": 0,
+      "data": {
+        "serial": false,
+        "fn_expr": "\n                ({ a }: { a: number; }) => {\n                    return {\n                        out: a * 2,\n                        a: 2,\n                        b: null,\n                    };\n                }\n                "
+      }
+    },
+    {
+      "name": "predefined_function",
+      "runtime": 0,
+      "data": { "serial": false, "name": "identity" }
+    },
+    {
+      "name": "rest",
+      "runtime": 1,
+      "data": {
+        "serial": false,
+        "verb": "GET",
+        "path": "24.48.0.1",
+        "content_type": "application/json",
+        "query_fields": null,
+        "body_fields": null,
+        "auth_token_field": null
+      }
+    },
+    { "name": "query", "runtime": 2, "data": { "serial": false } },
+    {
+      "name": "function",
+      "runtime": 0,
+      "data": {
+        "serial": false,
+        "fn_expr": "(args) => {\n    return (args.parent.integer * 3);\n}"
+      }
+    },
+    {
+      "name": "function",
+      "runtime": 0,
+      "data": {
+        "serial": false,
+        "fn_expr": "(args) => {\n    return (args.parent.out * 2);\n}"
+      }
+    },
+    {
+      "name": "function",
+      "runtime": 0,
+      "data": { "serial": false, "fn_expr": "(args) => {\n    return true;\n}" }
+    }
+  ],
+  "runtimes": [
+    { "name": "deno", "data": { "worker": "default" } },
+    { "name": "http", "data": { "endpoint": "http://ip-api.com/json" } },
+    {
+      "name": "graphql",
+      "data": { "endpoint": "http://localhost:5000/graphql" }
+    }
+  ],
+  "policies": [{ "name": "allow_all_policy", "materializer": 6 }],
+  "meta": {
+    "secrets": [],
+    "cors": {
+      "allow_origin": [],
+      "allow_headers": [],
+      "expose_headers": [],
+      "allow_credentials": true,
+      "max_age": null
+    },
+    "auths": [],
+    "rate": [],
+    "version": "0.0.1"
+  }
+}
