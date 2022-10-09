@@ -3,9 +3,50 @@
 // deno-lint-ignore-file no-unused-vars
 import { Static, Type } from "typebox";
 
-import { z } from "zod";
+// https://github.com/sinclairzx81/typebox
+// https://github.com/chiefbiiko/json-schm-wasm
+// https://json-schema.org/understanding-json-schema/structuring.html
+// wasi
 
-//const typesystem = /* JSON schema */;
+const js = {
+  "$id": "https://example.com/person.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Person",
+  "description": "A product from Acme's catalog",
+  "type": "object",
+  "properties": {
+    "firstName": {
+      "type": "string",
+      "description": "The person's first name.",
+    },
+    "lastName": {
+      "type": "string",
+      "description": "The person's last name.",
+    },
+    "age": {
+      "description":
+        "Age in years which must be equal to or greater than zero.",
+      "type": "integer",
+      "minimum": 0,
+    },
+  },
+  "$defs": {
+    "address": {
+      "$id": "/schemas/address",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {
+        "street_address": { "type": "string" },
+        "city": { "type": "string" },
+        "state": { "$ref": "#/definitions/state" },
+      },
+      "required": ["street_address", "city", "state"],
+      "definitions": {
+        "state": { "enum": ["CA", "NY", "... etc ..."] },
+      },
+    },
+  },
+};
 
 const typesystem = {
   string: {

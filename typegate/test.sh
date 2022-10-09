@@ -11,7 +11,7 @@ cd ${SCRIPT_PATH} && \
     # --lock=lock.json \ https://github.com/denoland/deno/issues/16120
     --import-map=import_map.json \
     --unstable \
-    --allow-run \
+    --allow-run=hostname \
     --allow-env \
     --allow-hrtime \
     --allow-write \
