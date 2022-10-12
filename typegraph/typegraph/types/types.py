@@ -79,6 +79,10 @@ class typedef:
     def type(self):
         return type(self).__name__
 
+    @property
+    def edges(self) -> List["typedef"]:
+        return []
+
     def named(self, name: str) -> "typedef":
         # TODO: ensure name is not already used in typegraph
         return type(self)(**self, name=name)
@@ -143,9 +147,15 @@ class typedef:
         return self.__init__(**self, policies=self.policies + policies)
 
     def data(self, collector) -> dict:
-        ret = {"name": self.name, "schema": collector.collect("schema", self.schema)}
-        if self.default_value is not None:
-            ret["default_value"] = self.default_value
+        ret = {
+            "type": self.type,
+            "title": self.name,
+            "description": self.description,
+            "runtime": collector.collect(Collector.runtimes, self.runtime),
+            "policies": [
+                collector.collect(Collector.materializers, p) for p in self.policies
+            ],
+        }
         if self.inject is not None:
             ret["inject"] = self.inject
             ret["injection"] = self.injection
@@ -186,9 +196,14 @@ class optional(typedef):
 
         return self.__init__(**self, default_value=value)
 
+    @property
+    def edges(self) -> List["typedef"]:
+        return [self.of]
+
     def data(self, collector) -> dict:
         return {
             **super().data(collector),
+            "item": collector.collect(Collector.types, self.of),
             "default_value": self.default_value,
         }
 
@@ -213,6 +228,10 @@ class policy(typedef):
 
 
 class Collector:
+    types = "types"
+    runtimes = "runtimes"
+    materializers = "materializers"
+
     collects: Dict[str, List[Any]]
 
     def __init__(self) -> "Collector":
@@ -229,10 +248,23 @@ class Collector:
                 return i
 
         collect.append(value)
-        return i + 1
+        return len(collect)
+
+
+def visit(types: List[typedef], collector: Collector) -> List[Any]:
+    for t in types:
+        t.data(collector)
+        collector.collect(Collector.types, t)
+        visit(t.edges, collector)
 
 
 with TypeGraph(
     "new",
 ) as g:
-    print(string().min(3).max(4).optional())
+    t = string().min(3).max(4).optional()
+    print(t)
+
+    collector = Collector()
+    visit([t], collector)
+    for i, t in enumerate(collector.collects[Collector.types]):
+        print(i, t.data(collector))
