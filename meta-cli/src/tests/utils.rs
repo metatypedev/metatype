@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 use anyhow::{anyhow, bail, Context, Result};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};

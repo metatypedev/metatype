@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 use std::fs::File;
 use std::io::{self, Read, Write};
 
