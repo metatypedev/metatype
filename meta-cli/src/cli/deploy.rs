@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 use super::{dev::push_typegraph, Action};
 use crate::typegraph::TypegraphLoader;
 use crate::utils::ensure_venv;

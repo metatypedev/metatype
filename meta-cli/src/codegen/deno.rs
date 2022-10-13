@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 use anyhow::{anyhow, bail, Context, Result};
 use common::typegraph::{TypeNode, Typegraph};
 use dprint_plugin_typescript::{configuration::Configuration, format_text};

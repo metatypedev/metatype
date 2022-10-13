@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 use anyhow::Result;
 use dprint_plugin_typescript::configuration::*;
 use dprint_plugin_typescript::*;

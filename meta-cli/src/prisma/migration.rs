@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/rpc.rs
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/api.rs
 use migration_core;
