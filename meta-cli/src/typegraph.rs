@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 use anyhow::{anyhow, bail, Result};
 use common::typegraph::Typegraph;
 use indoc::formatdoc;

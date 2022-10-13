@@ -12,8 +12,9 @@
     "typebox": "https://esm.sh/@sinclair/typebox@0.24.43",
     "monads": "https://deno.land/x/monads@v0.5.10/mod.ts",
     "jwt": "https://deno.land/x/djwt@v2.7/mod.ts",
-    "redis": "https://raw.githubusercontent.com/metatypedev/redis/xread-fix/mod.ts",
+    "redis": "https://raw.githubusercontent.com/denodrivers/redis/master/mod.ts",
     "bcrypt": "https://deno.land/x/bcrypt@v0.4.0/mod.ts",
+    "_bcrypt": "https://deno.land/x/bcrypt@v0.4.0/src/worker.ts",
     "oauth2_client": "https://deno.land/x/oauth2_client@v0.2.1/mod.ts",
     "test/mock_fetch": "https://deno.land/x/mock_fetch@0.3.0/mod.ts"
   }
