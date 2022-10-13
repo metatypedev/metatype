@@ -73,12 +73,20 @@ repos:
           - python
         files: ^typegraph/
       - id: insert-license
-        name: "License header deno/rust"
+        name: "License header rust"
         args:
           - --license-filepath=licenses/header.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - rust
+        files: ^(typegate|libs|meta-cli)/
+      - id: insert-license
+        name: "License header deno"
+        args:
+          - --license-filepath=licenses/header.txt
+          - "--comment-style=//"
+          - "--skip-license-insertion-comment=no-auto-license-header"
+        types_or:
           - ts
         files: ^typegate/

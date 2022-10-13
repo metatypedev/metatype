@@ -1,3 +1,5 @@
+// Copyright Metatype under the Elastic License 2.0.
+
 use crate::codegen;
 use crate::typegraph::TypegraphLoader;
 use crate::utils::ensure_venv;

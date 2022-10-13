@@ -8,6 +8,7 @@ import { deleteCookie, setCookie } from "std/http/cookie.ts";
 import { crypto } from "std/crypto/mod.ts";
 import * as jwt from "jwt";
 import * as bcrypt from "bcrypt";
+import * as _bcrypt from "_bcrypt"; // https://github.com/JamesBroadberry/deno-bcrypt/issues/31
 
 export type AuthDS = {
   name: string;
