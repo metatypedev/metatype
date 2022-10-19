@@ -1,0 +1,45 @@
+{
+  "schema": {
+    "title": "blog",
+    "type": "object",
+    "properties": {
+      "posts": {
+        "type": "function",
+        "output": {
+          "type": "array",
+          "items": { "$ref": "Post" }
+        },
+        "policy": 0,
+        "runtime": 0
+      }
+    },
+    "$defs": {
+      "Post": {
+        "$id": "Post",
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "author": { "$ref": "User" },
+          "published": { "type": "boolean" }
+        },
+        "required": ["id", "title", "content", "author", "published"]
+      },
+      "User": {
+        "$id": "User",
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "website": { "type": "string", "format": "uri" }
+        },
+        "required": ["id", "name", "email"]
+      }
+    }
+  },
+  "materializers": [],
+  "runtimes": [],
+  "policies": []
+}

@@ -85,3 +85,8 @@ export const b64decode = (v: string): string => {
 export const b64encode = (v: string): string => {
   return base64.encode(v);
 };
+
+export const has = <T extends Record<string, any>, K extends PropertyKey>(
+  o: T,
+  key: K,
+): o is T & Record<K, any> => key in o && Object.hasOwnProperty.call(o, key);
