@@ -44,7 +44,6 @@ Deno.test("test typecheck", () => {
   typecheck.validate({ posts: [post3] });
 
   delete (user as any).email;
-  console.log({ post3 });
   typecheck.validate(post3);
   assertThrows(
     () => typecheck.validate({ posts: [post3] }),

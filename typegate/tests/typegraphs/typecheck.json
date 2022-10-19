@@ -7,7 +7,7 @@
         "type": "function",
         "output": {
           "type": "array",
-          "items": { "$ref": "Post" }
+          "items": { "$ref": "#/$defs/Post" }
         },
         "policy": 0,
         "runtime": 0
@@ -15,19 +15,17 @@
     },
     "$defs": {
       "Post": {
-        "$id": "Post",
         "type": "object",
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "title": { "type": "string" },
           "content": { "type": "string" },
-          "author": { "$ref": "User" },
+          "author": { "$ref": "#/$defs/User" },
           "published": { "type": "boolean" }
         },
         "required": ["id", "title", "content", "author", "published"]
       },
       "User": {
-        "$id": "User",
         "type": "object",
         "properties": {
           "id": { "type": "string", "format": "uuid" },

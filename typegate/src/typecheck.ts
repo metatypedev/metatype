@@ -24,6 +24,14 @@ Format.Set("email", (value) => z.string().email().safeParse(value).success);
 Format.Set("uuid", (value) => z.string().uuid().safeParse(value).success);
 Format.Set("uri", (value) => z.string().url().safeParse(value).success);
 
+function refToPath(ref: string) {
+  return ref.replace(/^.*\#\/?/, "").split("/");
+}
+
+function resolve(obj: any, path: string[]) {
+  return path.reduce((o, key) => o[key], obj);
+}
+
 interface FunctionSchema {
   type: "function";
   input: JSONSchema;
@@ -61,17 +69,8 @@ export class ValidationSchemaBuilder {
       for (const ref of this.refs) {
         res = updateIn(
           res,
-          ["$defs", ref],
-          (s) => {
-            if (s == null) {
-              throw new Error(`schema at $defs/${ref} is undefined`);
-            }
-            return this.intoValidationSchema(s as JSONSchema);
-          },
-        );
-        ensure(
-          (res.$defs?.[ref] as JSONSchema).$id === ref,
-          "$id does not match to key in $defs",
+          refToPath(ref),
+          (s) => this.intoValidationSchema(s as JSONSchema),
         );
         transformed.push(ref);
 
@@ -137,9 +136,6 @@ export class TypeCheck {
   constructor(private schema: Exclude<jst.JSONSchema, boolean>) {
     const tschema = this.get();
     this.typecheck = TypeCompiler.Compile(tschema, this.schemas);
-    console.log("-- code --");
-    console.log(this.typecheck.Code());
-    console.log("-- ---- --");
   }
 
   public check(value: any): boolean {
@@ -160,10 +156,7 @@ export class TypeCheck {
       return cached;
     }
 
-    const schema = this.schema.$defs?.[ref] as JSONSchema | undefined;
-    if (schema == null) {
-      throw new Error(`reference ${ref} not found at .$defs`);
-    }
+    const schema = this.resolve(refToPath(ref));
 
     const tschema = this.tschema(schema);
     this.schemasByRef.set(ref, tschema);
@@ -176,10 +169,9 @@ export class TypeCheck {
     if (has(schema, "$ref")) {
       // TODO handle circular references
       const ref = this.get(schema.$ref);
-      ensure(
-        ref.$id === schema.$ref,
-        `$id on the schema does not match the $ref; ${ref.$id} != ${schema.$ref}`,
-      );
+      if (ref.$id == null) {
+        ref.$id = schema.$ref.replace(/[\/#]/g, "_");
+      }
       return Type.Ref(this.get(schema.$ref));
     }
 
@@ -219,6 +211,14 @@ export class TypeCheck {
       default:
         throw new Error(`Unsupported type: ${schema.type}`);
     }
+  }
+
+  private resolve(path: string[]): JSONSchema {
+    const schema = resolve(this.schema, path);
+    if (schema == null) {
+      throw new Error(`Schema not found at /${path.join("/")}`);
+    }
+    return schema;
   }
 }
 
