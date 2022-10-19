@@ -138,6 +138,8 @@ export class TypeCheck {
     this.typecheck = TypeCompiler.Compile(tschema, this.schemas);
   }
 
+  // We won't be checking any object against the full schema.
+  // We will only be checking agaist the schema corresponding to GraphQL selection fields.
   public check(value: any): boolean {
     return this.typecheck.Check(value);
   }
