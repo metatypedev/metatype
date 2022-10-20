@@ -17,17 +17,20 @@ export interface Context {
   [key: string]: unknown;
 }
 
-export type Resolver = (
-  args: {
-    _: {
-      parent: Parents;
-      // FIXME : variables really needed?
-      variables: Variables;
-      context: Context;
-      [dep: string]: unknown;
-    };
-    [arg: string]: any;
-  },
+interface ResolverArgsBase {
+  _: {
+    parent: Parents;
+    // FIXME : variables really needed?
+    variables: Variables;
+    context: Context;
+    [dep: string]: unknown;
+  };
+}
+
+export type ResolverArgs<T = Record<string, any>> = T & ResolverArgsBase;
+
+export type Resolver<T = Record<string, any>> = (
+  args: ResolverArgs<T>,
 ) => Promise<any> | any;
 
 export type Batcher = (x: any) => any;

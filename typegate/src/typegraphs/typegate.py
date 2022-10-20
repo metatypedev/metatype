@@ -4,13 +4,12 @@ from typegraph.graphs.typegraph import Auth
 from typegraph.graphs.typegraph import Cors
 from typegraph.graphs.typegraph import Rate
 from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import AddTypeGraphMat
 from typegraph.materializers.deno import FunMat
-from typegraph.materializers.deno import RemoveTypeGraphMat
-from typegraph.materializers.deno import SerializedTypegraphMat
-from typegraph.materializers.deno import TypeGraphMat
-from typegraph.materializers.deno import TypeGraphsMat
-from typegraph.materializers.deno import TypesAsGraph
+from typegraph.materializers.typegate import AddTypeGraphMat
+from typegraph.materializers.typegate import RemoveTypeGraphMat
+from typegraph.materializers.typegate import SerializedTypegraphMat
+from typegraph.materializers.typegate import TypeGraphMat
+from typegraph.materializers.typegate import TypeGraphsMat
 from typegraph.types import typedefs as t
 
 with TypeGraph(
@@ -30,33 +29,12 @@ with TypeGraph(
     ),
 ) as g:
 
-    node = t.struct(
-        {
-            "name": t.string(),
-            "typedef": t.string(),
-            "fields": t.string(),  # TODO: t.json(),
-        }
-    ).named("node")
-
-    edge = t.struct(
-        {
-            "from": node,
-            "to": node,
-            "name": t.string(),
-        }
-    ).named("edge")
-
-    types = t.gen(
-        t.struct({"nodes": t.list(node), "edges": t.list(edge)}), TypesAsGraph()
-    )
-
     serialized = t.gen(t.string(), SerializedTypegraphMat())
 
     typegraph = t.struct(
         {
             "name": t.string(),
             "url": t.uri(),
-            "types": types,
             "serialized": serialized,
         }
     ).named("typegraph")

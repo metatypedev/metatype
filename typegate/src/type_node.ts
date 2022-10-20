@@ -95,3 +95,35 @@ export type TypeNode =
   | EnumNode
   | StructNode
   | FuncNode;
+
+//
+// Runtimes
+
+export interface DenoRuntimeData {
+  worker: string;
+}
+
+export interface PrismaRuntimeData {
+  name: string;
+  connection_string: string;
+  managed_types: Array<number>;
+  datasource: string;
+  datamodel: string;
+}
+
+interface TypeRuntimeBase {
+  name: string;
+  data: unknown;
+}
+
+export interface DenoRuntimeDS extends TypeRuntimeBase {
+  name: "deno";
+  data: DenoRuntimeData;
+}
+
+export interface PrismaRuntimeDS extends TypeRuntimeBase {
+  name: "prisma";
+  data: PrismaRuntimeData;
+}
+
+export type TypeRuntime = DenoRuntimeDS | PrismaRuntimeDS;
