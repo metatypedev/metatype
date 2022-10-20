@@ -11,7 +11,7 @@ postgres = environ.get(
 
 with TypeGraph("prisma") as g:
 
-    db = PrismaRuntime(postgres)
+    db = PrismaRuntime("prisma", postgres)
 
     allow_all = policies.allow_all()
 

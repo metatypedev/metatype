@@ -32,11 +32,11 @@ export class DenoRuntime extends Runtime {
   private constructor(
     name: string,
     permissions: Deno.PermissionOptionsObject,
-    _lazy: boolean,
+    lazy: boolean,
     tg: TypeGraphDS,
   ) {
     super();
-    this.w = new OnDemandWorker(name, permissions, false, tg);
+    this.w = new OnDemandWorker(name, permissions, lazy, tg);
   }
 
   static init(params: RuntimeInitParams): Runtime {
@@ -177,7 +177,9 @@ class OnDemandWorker {
     this.gcState = this.counter;
 
     if (activity <= inactivityThreshold && this.tasks.size < 1) {
-      logger.info(`lazy close`);
+      logger.info(
+        `lazy close worker ${this.name} for ${this.tg.types[0].name}`,
+      );
       this.lazyWorker.terminate();
       this.lazyWorker = undefined;
     }
@@ -186,7 +188,7 @@ class OnDemandWorker {
   async terminate(): Promise<void> {
     clearInterval(this.gcInterval);
     await Promise.all([...this.tasks.values()].map((t) => t.promise));
-    logger.info(`close`);
+    logger.info(`close worker ${this.name} for ${this.tg.types[0].name}`);
     if (this.lazyWorker) {
       this.lazyWorker.terminate();
       this.lazyWorker = undefined;
@@ -195,7 +197,7 @@ class OnDemandWorker {
 
   worker(): Worker {
     if (!this.lazyWorker) {
-      logger.info(`spawn`);
+      logger.info(`spawn worker ${this.name} for ${this.tg.types[0].name}`);
       this.lazyWorker = new Worker(workerFile, {
         type: "module",
         deno: {

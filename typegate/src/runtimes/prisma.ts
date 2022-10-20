@@ -1,7 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import { Runtime } from "./Runtime.ts";
-import * as native from "../../../bindings/bindings.ts";
+import * as native from "native";
 import { FromVars, GraphQLRuntime } from "./graphql.ts";
 import { ResolverError } from "../errors.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";

@@ -90,11 +90,6 @@ impl SerializedTypegraphLoader {
         ))
     }
 
-    /// Load  serialized typegraphs from all TDMs in the current working directory and dist
-    pub fn load_all(self) -> Result<HashMap<String, String>> {
-        self.collect_typegraphs(r#"loaders.import_folder(".") + loaders.import_modules(dist)"#)
-    }
-
     fn collect_typegraphs(self, loader: &str) -> Result<HashMap<String, String>> {
         let cwd = env::current_dir()?;
         let working_dir = self.loader.working_dir.as_ref().unwrap_or(&cwd);
@@ -103,12 +98,11 @@ impl SerializedTypegraphLoader {
             .arg("-c")
             .arg(formatdoc!(
                 r#"
-            from typegraph.utils import loaders
-            from typegraph import dist
-            import orjson
-            tgs = {loader}
-            serialized_tgs = {{tg.name: loaders.serialize_typegraph(tg) for tg in tgs}}
-            print(orjson.dumps(serialized_tgs).decode())
+                from typegraph.utils import loaders
+                import orjson
+                tgs = {loader}
+                serialized_tgs = {{tg.name: loaders.serialize_typegraph(tg) for tg in tgs}}
+                print(orjson.dumps(serialized_tgs).decode())
             "#
             ))
             .current_dir(working_dir)

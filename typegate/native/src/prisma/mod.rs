@@ -2,3 +2,4 @@
 
 pub mod engine;
 pub mod introspection;
+pub mod migration;
