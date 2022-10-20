@@ -1,6 +1,7 @@
 # Copyright Metatype under the Elastic License 2.0.
 
 from typegraph.graphs.typegraph import Auth
+from typegraph.graphs.typegraph import Cors
 from typegraph.graphs.typegraph import Rate
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import AddTypeGraphMat
@@ -15,6 +16,11 @@ from typegraph.types import typedefs as t
 with TypeGraph(
     "typegate",
     auths=[Auth.basic(["admin"])],
+    cors=Cors(
+        allow_origin=["*"],
+        allow_headers=["*"],
+        allow_credentials=True,
+    ),
     rate=Rate(
         window_sec=60,
         window_limit=128,
