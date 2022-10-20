@@ -255,6 +255,9 @@ export class TypeGraph {
       console.log(`deinit runtime ${idx}`);
       await runtime.deinit();
     }
+    if (this.introspection) {
+      await this.introspection.deinit();
+    }
   }
 
   type(idx: number): TypeNode {

@@ -13,6 +13,7 @@
     "monads": "https://deno.land/x/monads@v0.5.10/mod.ts",
     "jwt": "https://deno.land/x/djwt@v2.7/mod.ts",
     "redis": "https://raw.githubusercontent.com/denodrivers/redis/master/mod.ts",
+    "native": "../bindings/bindings.ts",
     "bcrypt": "https://deno.land/x/bcrypt@v0.4.0/mod.ts",
     "_bcrypt": "https://deno.land/x/bcrypt@v0.4.0/src/worker.ts",
     "oauth2_client": "https://deno.land/x/oauth2_client@v0.2.1/mod.ts",

@@ -6,7 +6,6 @@ import { assertRejects } from "std/testing/asserts.ts";
 test("Missing env var", async (t) => {
   await assertRejects(
     () => t.pythonFile("typegraphs/injection.py"),
-    () => {},
     "cannot find secret",
   );
 });

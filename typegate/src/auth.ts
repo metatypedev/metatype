@@ -9,6 +9,7 @@ import { crypto } from "std/crypto/mod.ts";
 import * as jwt from "jwt";
 import * as bcrypt from "bcrypt";
 import * as _bcrypt from "_bcrypt"; // https://github.com/JamesBroadberry/deno-bcrypt/issues/31
+import { SystemTypegraph } from "./system_typegraphs.ts";
 
 export type AuthDS = {
   name: string;
@@ -59,7 +60,7 @@ export class BasicAuth extends Auth {
   static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
     const tokens = new Map();
     for (const user of auth.auth_data.users as string[]) {
-      const password = typegraphName == "typegate"
+      const password = SystemTypegraph.check(typegraphName)
         ? envOrFail(user, "password")
         : envOrFail(typegraphName, `${auth.name}_${user}`);
       const token = await bcrypt.hash(password);

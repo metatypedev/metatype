@@ -22,6 +22,8 @@ introspection-connector = { git = "https://github.com/prisma/prisma-engines" }
 introspection-core = { git = "https://github.com/prisma/prisma-engines" }
 sql-introspection-connector = { git = "https://github.com/prisma/prisma-engines" }
 mongodb-introspection-connector = { git = "https://github.com/prisma/prisma-engines" }
+migration-core = { git = "https://github.com/prisma/prisma-engines" }
+migration-connector = { git = "https://github.com/prisma/prisma-engines" }
 connection-string = "0.1.14"
 url = "2.2.2"
 thiserror = "1.0.32"
@@ -34,3 +36,8 @@ dashmap = "5.3.4"
 common = { path = "../../libs/common" }
 sentry = "0.27.0"
 static_init = "1.0.3"
+tempfile = "3.3.0"
+convert_case = "0.6.0"
+flate2 = "1.0.24"
+tar = "0.4.38"
+base64 = "0.13.0"

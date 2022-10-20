@@ -8,7 +8,6 @@ import {
 import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
-import { exists } from "std/fs/exists.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { Register } from "../src/register.ts";
@@ -17,6 +16,9 @@ import { signJWT } from "../src/crypto.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { RateLimiter } from "../src/rate_limiter.ts";
 import { RuntimesConfig } from "../src/types.ts";
+import { PrismaMigration } from "../src/runtimes/prisma_migration.ts";
+import { PrismaRuntimeDS } from "../src/type_node.ts";
+import { SystemTypegraph } from "../src/system_typegraphs.ts";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
@@ -80,6 +82,34 @@ export class SingleRegister extends Register {
   }
 }
 
+export class MemoryRegister extends Register {
+  private map = new Map<string, Engine>();
+
+  async set(payload: string, config?: RuntimesConfig): Promise<string> {
+    const engine = await initTypegraph(
+      payload,
+      SystemTypegraph.getCustomRuntimes(this),
+      config,
+      null, // no need to have introspection for tests
+    );
+    this.map.set(engine.name, engine);
+    return engine.name;
+  }
+  remove(name: string): Promise<void> {
+    this.map.delete(name);
+    return Promise.resolve();
+  }
+  list(): Engine[] {
+    return Array.from(this.map.values());
+  }
+  get(name: string): Engine | undefined {
+    return this.map.get(name);
+  }
+  has(name: string): boolean {
+    return this.map.has(name);
+  }
+}
+
 export class NoLimiter extends RateLimiter {
   constructor() {
     super();
@@ -99,22 +129,20 @@ export class NoLimiter extends RateLimiter {
 
 class MetaTest {
   t: Deno.TestContext;
-  engines: Engine[];
+  register: Register;
 
   constructor(t: Deno.TestContext) {
     this.t = t;
-    this.engines = [];
+    this.register = new MemoryRegister();
   }
 
   async load(name: string, config: RuntimesConfig = {}): Promise<Engine> {
-    const engine = await initTypegraph(
+    // TODO load from python file
+    const engineName = await this.register.set(
       await Deno.readTextFile(join(localDir, `../src/typegraphs/${name}.json`)),
-      {},
       deepMerge(testRuntimesConfig, config),
-      null,
     );
-    this.engines.push(engine);
-    return engine;
+    return this.register.get(engineName)!;
   }
 
   async pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
@@ -145,19 +173,17 @@ class MetaTest {
     config: RuntimesConfig = {},
   ): Promise<Engine> {
     const stdout = await shell(cmd);
-
-    const engine = await initTypegraph(
+    const engineName = await this.register.set(
       stdout,
-      {},
       deepMerge(testRuntimesConfig, config),
-      null,
     );
-    this.engines.push(engine);
-    return engine;
+    return this.register.get(engineName)!;
   }
 
   async terminate() {
-    await Promise.all(this.engines.map((e) => e.terminate()));
+    await Promise.all(
+      this.register.list().map((e) => e.terminate()),
+    );
   }
 
   async should(
@@ -176,16 +202,21 @@ export function test(
   name: string,
   fn: (t: MetaTest) => void | Promise<void>,
 ): void {
-  return Deno.test(name, async (t) => {
-    const mt = new MetaTest(t);
-    try {
-      await fn(mt);
-    } catch (error) {
-      console.error(error);
-      throw error;
-    } finally {
-      await mt.terminate();
-    }
+  return Deno.test({
+    name,
+    async fn(t) {
+      const mt = new MetaTest(t);
+      try {
+        await fn(mt);
+      } catch (error) {
+        console.error(error);
+        throw error;
+      } finally {
+        await mt.terminate();
+      }
+    },
+    sanitizeResources: false,
+    sanitizeOps: false,
   });
 }
 
@@ -193,7 +224,7 @@ const testConfig = parse(Deno.args);
 
 export function testAll(engineName: string) {
   test(`Auto-tests for ${engineName}`, async (t) => {
-    const e = await t.load(engineName);
+    const e = await t.pythonFile(`typegraphs/${engineName}.py`);
 
     for await (
       const f of Deno.readDir(
@@ -217,6 +248,12 @@ export function gql(query: readonly string[], ...args: any[]) {
     .map((q, i) => `${q}${args[i] ? JSON.stringify(args[i]) : ""}`)
     .join("");
   return new Q(template, {}, {}, {}, []);
+}
+
+// std/fs/exists will be removed at v157.0
+async function exists(path: string): Promise<boolean> {
+  const stat = await Deno.stat(path);
+  return stat.isFile || stat.isDirectory || stat.isSymlink;
 }
 
 type Expect = (res: Response) => Promise<void> | void;
@@ -383,3 +420,23 @@ export async function execute(
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
+
+export async function recreateMigrations(engine: Engine) {
+  const runtimeNames = engine.tg.tg.runtimes
+    .filter((rt) => rt.name === "prisma")
+    .map((rt) => (rt as unknown as PrismaRuntimeDS).data.name);
+
+  for await (const runtime of runtimeNames) {
+    const prisma = new PrismaMigration(engine, runtime);
+    prisma.migrationFolderBase = join(localDir, "prisma-migrations");
+    await Deno.remove(prisma.migrationFolder, { recursive: true })
+      .catch(() => {});
+    await prisma.create({ name: "init", apply: true } as any);
+  }
+}
+
+export async function removeMigrations(engine: Engine) {
+  await Deno.remove(join(localDir, "prisma-migrations", engine.name), {
+    recursive: true,
+  }).catch(() => {});
+}

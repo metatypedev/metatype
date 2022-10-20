@@ -7,7 +7,7 @@ import { deepMerge } from "std/collections/deep_merge.ts";
 import { mapKeys } from "std/collections/map_keys.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { parse } from "std/flags/mod.ts";
-import { get_version } from "../../bindings/bindings.ts";
+import { get_version } from "native";
 
 async function getHostname() {
   try {
@@ -41,6 +41,12 @@ const sources = [
 const schema = z.object({
   debug: z.preprocess(
     (a: unknown) => z.string().parse(a) === "true",
+    z.boolean(),
+  ),
+  // To be set to false when running from source.
+  // If false, auto reload system typegraphs on change. Default: to true.
+  packaged: z.preprocess(
+    (a: unknown) => z.string().optional().parse(a) !== "false",
     z.boolean(),
   ),
   hostname: z.string(),
@@ -78,6 +84,7 @@ const schema = z.object({
   version: z.string(),
   trust_proxy: z.boolean(),
   trust_header_ip: z.string(),
+  prisma_migration_folder: z.string().optional(),
 });
 
 const parsing = await schema.safeParse(

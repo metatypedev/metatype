@@ -2,9 +2,9 @@
 
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
-from typegraph.materializers.deno import ResolverMat
-from typegraph.materializers.deno import SchemaMat
-from typegraph.materializers.deno import TypeMat
+from typegraph.materializers.typegate import ResolverMat
+from typegraph.materializers.typegate import SchemaMat
+from typegraph.materializers.typegate import TypeMat
 from typegraph.types import typedefs as t
 
 with TypeGraph("introspection") as g:

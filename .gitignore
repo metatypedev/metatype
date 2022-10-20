@@ -6,6 +6,7 @@
 __pycache__/
 *.py[cod]
 dist/
+!typegraph/typegraph/dist
 .ipynb_checkpoints
 
 **/.terraform/*
@@ -21,7 +22,7 @@ bindings.json
 
 typegate/workers
 typegate/codegen
-migrations/
+typegate/tests/prisma-migrations
 .env
 
 node_modules
