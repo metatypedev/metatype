@@ -8,6 +8,28 @@ import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
 
+interface ParsedPath {
+  lookup: string;
+  service?: string;
+  providerName?: string;
+}
+
+const parsePath = (pathname: string): ParsedPath | null => {
+  const arr = pathname.split("/");
+  if (arr[1] === "typegate") {
+    switch (arr.length) {
+      case 2:
+        return { lookup: "typegate" };
+      case 3:
+        return { lookup: arr.slice(1).join("/") };
+      default:
+        return null;
+    }
+  }
+  const [, lookup, service, providerName] = arr;
+  return { lookup, service, providerName };
+};
+
 export const typegate =
   (register: Register, limiter: RateLimiter) =>
   async (request: Request, connInfo: ConnInfo): Promise<Response> => {
@@ -26,7 +48,13 @@ export const typegate =
         });
       }
 
-      const [, lookup, service, providerName] = url.pathname.split("/");
+      const parsedPath = parsePath(url.pathname);
+      if (parsedPath == null) {
+        return new Response("not found", {
+          status: 404,
+        });
+      }
+      const { lookup, service, providerName } = parsedPath;
       const engine = register.get(lookup);
 
       if (!engine) {

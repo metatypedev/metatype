@@ -1,5 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
+use crate::prisma::migration;
 use anyhow::{anyhow, bail, Context, Result};
 use common::typegraph::Typegraph;
 use lazy_static::lazy_static;
@@ -8,6 +9,7 @@ use std::collections::HashMap;
 use std::convert::AsRef;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use tokio::runtime::Runtime;
 
 #[derive(Deserialize, Debug)]
 struct PrismaRuntimeData {
@@ -108,6 +110,7 @@ fn gql(query: &str) -> Result<serde_json::Value> {
 }
 
 struct TestContext {
+    datasource: String,
     datamodel: String,
     engine_id: String,
 }
@@ -129,26 +132,35 @@ impl TestContext {
             .next()
             .ok_or(anyhow!("no prisma runtime"))?;
 
-        let datamodel = format!("{}{}", runtime.datasource, runtime.datamodel);
-        println!("MODEL: {datamodel}");
-
         let reg = crate::prisma_register_engine(crate::PrismaRegisterEngineInp {
-            datamodel: datamodel.clone(),
+            datamodel: format!("{}{}", runtime.datasource, runtime.datamodel),
             typegraph: tg.types[0].name.clone(),
         });
 
         Ok(Self {
-            datamodel,
+            datasource: runtime.datasource,
+            datamodel: runtime.datamodel,
             engine_id: reg.engine_id,
         })
+    }
+
+    fn datamodel(&self) -> String {
+        format!("{}{}", self.datasource, self.datamodel)
     }
 
     fn query(&self, query: &str) -> Result<crate::PrismaQueryOut> {
         Ok(crate::prisma_query(crate::PrismaQueryInp {
             key: self.engine_id.clone(),
             query: gql(query)?,
-            datamodel: self.datamodel.clone(),
+            datamodel: self.datamodel(),
         }))
+    }
+
+    fn migrate(&self) {
+        let res = Runtime::new().unwrap().block_on(async {
+            migration::push(self.datasource.clone(), self.datamodel.clone()).await
+        });
+        res.unwrap();
     }
 }
 
@@ -164,13 +176,8 @@ fn recreate_db_schema(t: &TestContext) -> Result<()> {
     "#,
     )?;
 
-    Command::new(META_BIN.as_path())
-        .arg("prisma")
-        .arg("apply")
-        .arg("-f")
-        .arg("../tests/typegraphs/prisma.py")
-        .envs(venv())
-        .output()?;
+    t.migrate();
+
     Ok(())
 }
 

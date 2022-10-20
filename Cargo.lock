@@ -489,10 +489,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "console"
+version = "0.15.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c050367d967ced717c04b65d8c619d863ef9292ce0c5760028655a2fb298718c"
+dependencies = [
+ "encode_unicode",
+ "lazy_static",
+ "libc",
+ "terminal_size",
+ "unicode-width",
+ "winapi",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fb4a24b1aaf0fd0ce8b45161144d6f42cd91677fd5940fd431183eb023b3a2b8"
+
+[[package]]
+name = "convert_case"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec182b0ca2f35d8fc196cf3404988fd8b8c739a4d270ff118a398feb0cbec1ca"
+dependencies = [
+ "unicode-segmentation",
+]
 
 [[package]]
 name = "core-foundation"
@@ -789,6 +812,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dialoguer"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a92e7e37ecef6857fdc0c0c5d42fd5b0938e46590c2183cc92dd310a6d078eb1"
+dependencies = [
+ "console",
+ "tempfile",
+ "zeroize",
+]
+
+[[package]]
 name = "digest"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -895,6 +929,12 @@ name = "either"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90e5c1c8368803113bf0c9584fc495a58b86dc8a29edbf8fe877d21d9507e797"
+
+[[package]]
+name = "encode_unicode"
+version = "0.3.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a357d28ed41a50f9c765dbfe56cbc04a64e53e5fc58ba79fbc34c10ef3df831f"
 
 [[package]]
 name = "encoding"
@@ -2103,25 +2143,29 @@ name = "meta"
 version = "0.0.2-alpha.1"
 dependencies = [
  "anyhow",
+ "base64 0.13.0",
  "clap",
+ "colored",
  "common",
  "crossbeam-channel",
  "datamodel",
+ "dialoguer",
  "dprint-plugin-typescript",
+ "flate2",
  "globset",
  "ignore",
  "indoc",
  "lazy_static",
  "log",
- "migration-core",
  "notify",
+ "question",
  "reqwest",
  "serde",
  "serde_json",
  "swc_common 0.28.8",
  "swc_ecma_ast 0.91.8",
  "swc_ecmascript",
- "tempfile",
+ "tar",
  "tiny_http",
  "tokio",
 ]
@@ -2378,7 +2422,7 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines#fb56bfedb3a66723ec5d908bc5cb4a411ec97c47"
 dependencies = [
  "async-trait",
- "convert_case",
+ "convert_case 0.5.0",
  "enumflags2",
  "futures",
  "indoc",
@@ -2530,17 +2574,22 @@ name = "native"
 version = "0.0.2-alpha.1"
 dependencies = [
  "anyhow",
+ "base64 0.13.0",
  "common",
  "config",
  "connection-string",
+ "convert_case 0.6.0",
  "dashmap",
  "datamodel",
  "deno_bindgen",
  "env_logger",
+ "flate2",
  "introspection-connector",
  "introspection-core",
  "lazy_static",
  "log",
+ "migration-connector",
+ "migration-core",
  "mongodb-introspection-connector",
  "prisma-models",
  "query-connector",
@@ -2551,6 +2600,8 @@ dependencies = [
  "serde_json",
  "sql-introspection-connector",
  "static_init",
+ "tar",
+ "tempfile",
  "thiserror",
  "tokio",
  "url",
@@ -3377,6 +3428,12 @@ dependencies = [
  "tracing-futures",
  "tracing-subscriber",
 ]
+
+[[package]]
+name = "question"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "acbb3ede7a8f9a8ab89e714637f2cf40001b58f21340d4242b2f11533e65fa8d"
 
 [[package]]
 name = "quick-error"
@@ -4782,6 +4839,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
+name = "tar"
+version = "0.4.38"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b55807c0344e1e6c04d7c965f5289c39a8d94ae23ed5c0b57aabac549f871c6"
+dependencies = [
+ "filetime",
+ "libc",
+ "xattr",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4802,6 +4870,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bab24d30b911b2376f3a13cc2cd443142f0c81dda04c118693e35b3835757755"
 dependencies = [
  "winapi-util",
+]
+
+[[package]]
+name = "terminal_size"
+version = "0.1.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "633c1a546cee861a1a6d0dc69ebeca693bf4296661ba7852b9d21d159e0506df"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -5674,6 +5752,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "xattr"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d1526bbe5aaeb5eb06885f4d987bcdfa5e23187055de9b83fe00156a821fabc"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "yaml-rust"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5681,3 +5768,9 @@ checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
 ]
+
+[[package]]
+name = "zeroize"
+version = "1.5.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c394b5bd0c6f669e7275d9c20aa90ae064cb22e75a1cad54e1b34088034b149f"
