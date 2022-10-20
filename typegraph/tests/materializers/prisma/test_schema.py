@@ -60,7 +60,7 @@ class TestPrismaSchema:
         self.maxDiff = None
 
         with TypeGraph(name="test_one_to_many") as g:
-            db = PrismaRuntime(postgres)
+            db = PrismaRuntime("test", postgres)
 
             postAuthor = db.one_to_many(g("User"), g("Post")).named("postAuthor")
 
@@ -87,7 +87,7 @@ class TestPrismaSchema:
         self.maxDiff = None
 
         with TypeGraph(name="test_one_to_one") as g:
-            db = PrismaRuntime(postgres)
+            db = PrismaRuntime("test", postgres)
 
             userProfile = db.one_to_one(g("User"), g("Profile")).named("userProfile")
 

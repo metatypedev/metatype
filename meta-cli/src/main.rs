@@ -2,7 +2,6 @@
 
 mod cli;
 mod codegen;
-mod prisma;
 #[cfg(test)]
 mod tests;
 mod ts;
@@ -65,14 +64,17 @@ fn main() -> Result<()> {
                 serialize.run(args.dir)?;
             }
             Commands::Prisma(prisma) => match prisma.command {
-                PrismaCommands::Apply(apply) => {
-                    apply.run(args.dir)?;
-                }
                 PrismaCommands::Diff(diff) => {
                     diff.run(args.dir)?;
                 }
                 PrismaCommands::Format(format) => {
                     format.run(args.dir)?;
+                }
+                PrismaCommands::Dev(dev) => {
+                    dev.run(args.dir)?;
+                }
+                PrismaCommands::Deploy(deploy) => {
+                    deploy.run(args.dir)?;
                 }
             },
             Commands::Deploy(deploy) => {

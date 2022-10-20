@@ -9,12 +9,10 @@ dprint-plugin-typescript = "0.73.0"
 swc_common = { version = "0.28.1", features = ["tty-emitter"] }
 swc_ecma_ast = "0.91.1"
 swc_ecmascript = { version = "0.200.7", features = ["visit", "transforms", "typescript-parser", "parser", "codegen"] }
-migration-core = { git = "https://github.com/prisma/prisma-engines" }
 datamodel = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
 tokio = { version = "1.20.1", features = ["full"] }
 log = "0.4.17"
-tempfile = "3.3.0"
 clap = { version = "3.2.17", features = ["derive"] }
 crossbeam-channel = "0.5.6"
 notify = "5.0.0-pre.16"
@@ -26,4 +24,10 @@ indoc = "1.0.7"
 serde = { version = "1.0.143", features = ["derive"] }
 serde_json = "1.0.83"
 reqwest = { version = "0.11.11", features = ["blocking", "json"] }
+colored = "2.0.0"
+question = "0.2.2"
+dialoguer = "0.10.2"
+flate2 = "1.0.24"
+tar = "0.4.38"
+base64 = "0.13.0"
 common = { path = "../libs/common" }

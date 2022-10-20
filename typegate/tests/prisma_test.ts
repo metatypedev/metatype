@@ -2,7 +2,7 @@
 
 import { v4 } from "std/uuid/mod.ts";
 import { assert } from "std/testing/asserts.ts";
-import { gql, meta, test } from "./utils.ts";
+import { gql, recreateMigrations, test } from "./utils.ts";
 
 test("prisma", async (t) => {
   const tgPath = "typegraphs/prisma.py";
@@ -21,7 +21,7 @@ test("prisma", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await meta("prisma", "apply", "-f", tgPath);
+    await recreateMigrations(e);
   });
 
   await t.should("return no data when empty", async () => {
@@ -193,7 +193,7 @@ test("1:n relationships", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await meta("prisma", "apply", "-f", tgPath);
+    await recreateMigrations(e);
   });
 
   await t.should("insert a record with nested object", async () => {
@@ -336,7 +336,7 @@ test("1:1 relationships", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await meta("prisma", "apply", "-f", tgPath);
+    await recreateMigrations(e);
   });
 
   await t.should("create a record with a nested object", async () => {
@@ -405,7 +405,7 @@ test("multiple relationships", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await meta("prisma", "apply", "-f", tgPath);
+    await recreateMigrations(e);
   });
 
   await t.should("insert a simple record", async () => {
@@ -571,7 +571,7 @@ test("GraphQL variables", async (t) => {
         executeRaw: 0,
       })
       .on(e);
-    await meta("prisma", "apply", "-f", tgPath);
+    await recreateMigrations(e);
   });
 
   await t.should("work with top-level variables", async () => {

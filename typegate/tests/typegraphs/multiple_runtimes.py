@@ -18,8 +18,8 @@ postgres2 = environ.get(
 
 
 with TypeGraph(name="prisma2") as g:
-    db1 = PrismaRuntime(postgres)
-    db2 = PrismaRuntime(postgres2)
+    db1 = PrismaRuntime("db1", postgres)
+    db2 = PrismaRuntime("db2", postgres2)
 
     user1 = t.struct(
         {
