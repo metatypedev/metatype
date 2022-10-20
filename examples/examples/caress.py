@@ -46,7 +46,7 @@ class vat(t.integer):
 # add generation time
 with TypeGraph("caress") as g:
 
-    prisma = PrismaRuntime("postgresql://postgres:password@localhost:5432/db")
+    prisma = PrismaRuntime("caress", "postgresql://postgres:password@localhost:5432/db")
 
     product = (
         t.struct(

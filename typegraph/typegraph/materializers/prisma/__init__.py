@@ -310,6 +310,7 @@ def get_where_type(tpe: t.struct, skip_rel=False) -> t.struct:
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries
 @dataclass(eq=True, frozen=True)
 class PrismaRuntime(Runtime):
+    name: str
     connection_string: str
     _: KW_ONLY
     managed_types: Set[t.struct] = dataclasses.field(default_factory=set)
@@ -482,3 +483,45 @@ class PrismaRuntime(Runtime):
     #         f"insert_{name}": t.func(sql_insert(tpe), tpe, PrismaInsertMat(self)),
     #         f"delete_{name}": t.func(sql_delete(tpe), tpe, PrismaDeleteMat(self)),
     #     }
+
+
+@dataclass(eq=True, frozen=True)
+class PrismaMigrationRuntime(Runtime):
+    runtime_name: str = "prisma_migration"
+
+
+@dataclass(eq=True, frozen=True)
+class PrismaMigrateMat(Materializer):
+    runtime: Runtime = PrismaMigrationRuntime()
+    materializer_name: str = "prismaMigrate"
+    serial: bool = True
+
+
+@dataclass(eq=True, frozen=True)
+class PrismaApplyMat(Materializer):
+    _: KW_ONLY
+    runtime: Runtime = PrismaMigrationRuntime()
+    materializer_name: str = "prismaApply"
+    serial: bool = True
+
+
+@dataclass(eq=True, frozen=True)
+class PrismaDeployMat(Materializer):
+    _: KW_ONLY
+    runtime: Runtime = PrismaMigrationRuntime()
+    materializer_name: str = "prismaDeploy"
+    serial: bool = True
+
+
+@dataclass(eq=True, frozen=True)
+class PrismaCreateMat(Materializer):
+    _: KW_ONLY
+    runtime: Runtime = PrismaMigrationRuntime()
+    materializer_name: str = "prismaCreate"
+    serial: bool = True
+
+
+@dataclass(eq=True, frozen=True)
+class PrismaDiffMat(Materializer):
+    runtime: Runtime = PrismaMigrationRuntime()
+    materializer_name: str = "prismaDiff"

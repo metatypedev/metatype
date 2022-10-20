@@ -2,15 +2,14 @@
 
 import { serve } from "std/http/server.ts";
 import * as Sentry from "sentry";
-import { init } from "../../bindings/bindings.ts";
+import { init } from "native";
 
 import { ReplicatedRegister } from "./register.ts";
 import config, { redisConfig } from "./config.ts";
 import { getLogger } from "./log.ts";
-import { initTypegraph } from "./engine.ts";
-import { TypeGateRuntime } from "./runtimes/typegate.ts";
 import { typegate } from "./typegate.ts";
 import { RedisRateLimiter } from "./rate_limiter.ts";
+import { SystemTypegraph } from "./system_typegraphs.ts";
 
 if (config.sentry_dsn) {
   Sentry.init({
@@ -25,11 +24,8 @@ if (config.sentry_dsn) {
 init();
 
 const register = await ReplicatedRegister.init(redisConfig);
-const typegateEngine = await initTypegraph(
-  await Deno.readTextFile("./src/typegraphs/typegate.json"),
-  { typegate: await TypeGateRuntime.init(register) },
-);
-register.startSync({ "typegate": typegateEngine });
+register.startSync();
+await SystemTypegraph.loadAll(register);
 
 const limiter = await RedisRateLimiter.init(redisConfig);
 

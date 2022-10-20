@@ -2,43 +2,62 @@
 
 use crate::codegen;
 use crate::typegraph::TypegraphLoader;
-use crate::utils::ensure_venv;
+use crate::utils::{ensure_venv, post_with_auth, BasicAuth};
 use anyhow::{bail, Ok, Result};
+use clap::Parser;
+use colored::Colorize;
+use globset::Glob;
+use ignore::gitignore::Gitignore;
 use ignore::Match;
+use indoc::indoc;
 use notify::event::ModifyKind;
 use notify::{
     recommended_watcher, Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
 };
-use serde::Deserialize;
+use reqwest::{self, Url};
+use serde_json::{self, json};
 use std::collections::HashMap;
-use std::env;
 use std::path::{Path, PathBuf};
 use std::thread::sleep;
 use std::time::Duration;
-
-use clap::Parser;
-use globset::Glob;
-use ignore::gitignore::Gitignore;
-use reqwest::{self, Url};
-use serde_json::{self, json};
 use tiny_http::{Header, Response, Server};
 
 use super::Action;
 
 #[derive(Parser, Debug)]
-pub struct Dev {}
+pub struct Dev {
+    /// Address of the typegate
+    #[clap(short, long, value_parser, default_value_t = String::from("http://localhost:7890"))]
+    gate: String,
+
+    #[clap(short, long, value_parser, default_value_t = String::from("admin"))]
+    username: String,
+
+    #[clap(short, long, value_parser)]
+    password: Option<String>,
+}
 
 impl Action for Dev {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
+
+        let auth = if let Some(password) = &self.password {
+            BasicAuth::new(self.username.clone(), password.clone())
+        } else {
+            BasicAuth::as_user(self.username.clone())?
+        };
+
         let tgs = TypegraphLoader::new()
             .working_dir(&dir)
             .serialized()
-            .load_all()?;
+            .load_folder(&dir)?;
 
-        reload_typegraphs(tgs, "http://localhost:7890".to_string())?;
+        reload_typegraphs(tgs, &self.gate, &auth)?;
+
+        let gate = self.gate.clone();
 
         let watch_path = dir.clone();
+        let auth_clone = auth.clone();
         let _watcher = watch(dir.clone(), move |paths| {
             let tgs = TypegraphLoader::new()
                 .skip_deno_modules()
@@ -54,7 +73,7 @@ impl Action for Dev {
                 .load_files(paths)
                 .unwrap();
 
-            reload_typegraphs(tgs, "http://localhost:7890".to_string()).unwrap();
+            reload_typegraphs(tgs, &gate, &auth_clone).unwrap();
         })
         .unwrap();
 
@@ -70,8 +89,8 @@ impl Action for Dev {
                         let tgs = TypegraphLoader::new()
                             .working_dir(&dir)
                             .serialized()
-                            .load_all()?;
-                        reload_typegraphs(tgs, node.to_owned())?;
+                            .load_folder(&dir)?;
+                        reload_typegraphs(tgs, node, &auth)?;
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
                                 "Content-Type: application/json".parse::<Header>().unwrap(),
@@ -148,77 +167,54 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
         .collect()
 }
 
-fn reload_typegraphs(tgs: HashMap<String, String>, node: String) -> Result<()> {
-    for tg in tgs {
-        println!("pushing {}", tg.0);
-        push_typegraph(tg.1, node.clone(), 3)?;
+fn reload_typegraphs(tgs: HashMap<String, String>, node: &str, auth: &BasicAuth) -> Result<()> {
+    for (name, tg) in tgs {
+        println!("pushing {name}");
+        push_typegraph(tg, node, auth, 3)?;
     }
 
     Ok(())
 }
 
-#[derive(Deserialize, Debug)]
-struct TypegraphError {
-    message: String,
-}
+pub fn push_typegraph(tg: String, node: &str, auth: &BasicAuth, backoff: u32) -> Result<()> {
+    use crate::utils::graphql::{Error as GqlError, GraphqlErrorMessages, Query};
+    let gql_endpoint = format!("{node}/typegate");
+    // TODO: as admin
+    let query = post_with_auth(auth, &gql_endpoint)?.gql(
+        indoc! {"
+            query InsertTypegraph {
+                addTypegraph(fromString: $tg) {
+                    name
+                }
+            }"}
+        .to_string(),
+        Some(json!({ "tg": tg })),
+    );
 
-#[derive(Deserialize, Debug)]
-struct ErrorWithTypegraphPush {
-    errors: Vec<TypegraphError>,
-}
-
-pub fn push_typegraph(tg: String, node: String, backoff: u32) -> Result<()> {
-    let client = reqwest::blocking::Client::new();
-    let payload = json!({
-      "operationName": "insert",
-      "variables": {},
-      "query": format!("query insert {{ addTypegraph(fromString: {}) {{ name }}}}", serde_json::Value::String(tg.clone()))
-    });
-
-    let password = env::var("TG_ADMIN_PASSWORD").or_else(|_| {
-        if common::is_dev() {
-            return Ok("password".to_string());
-        }
-        bail!("Missing admin password in TG_ADMIN_PASSWORD")
-    })?;
-
-    let query = client
-        .post(format!("{}/typegate", node))
-        .basic_auth("admin", Some(password))
-        .timeout(Duration::from_secs(5))
-        .json(&payload)
-        .send();
-
-    match query {
-        Err(e) => {
-            if backoff > 1 {
-                println!("retry {:?}", e);
-                sleep(Duration::from_secs(5));
-                push_typegraph(tg, node, backoff - 1)
-            } else {
-                bail!("node {} unreachable: {}", node, e);
+    query.map(|_| ()).or_else(|e| {
+        use GqlError::*;
+        match e {
+            EndpointNotReachable(e) => {
+                if backoff > 1 {
+                    println!("retry: {e:?}");
+                    sleep(Duration::from_secs(5));
+                    push_typegraph(tg, node, auth, backoff - 1)
+                } else {
+                    bail!("node unreachable: {e}")
+                }
+            }
+            FailedQuery(e) => {
+                if backoff > 1 {
+                    println!("retry:\n{}", e.error_messages().dimmed());
+                    sleep(Duration::from_secs(5));
+                    push_typegraph(tg, node, auth, backoff - 1)
+                } else {
+                    bail!("typegraph push error:\n{}", e.error_messages().dimmed())
+                }
+            }
+            InvalidResponse(e) => {
+                bail!("Invalid HTTP response: {e}")
             }
         }
-        Result::Ok(res) if !res.status().is_success() => {
-            let content = res.text().expect("cannot deserialize http push");
-            let error = serde_json::from_str::<ErrorWithTypegraphPush>(&content).map_or_else(
-                |_| content,
-                |json| {
-                    json.errors
-                        .into_iter()
-                        .map(|e| e.message)
-                        .collect::<Vec<_>>()
-                        .join("\n")
-                },
-            );
-            if backoff > 1 {
-                println!("retry {:?}", error);
-                sleep(Duration::from_secs(5));
-                push_typegraph(tg, node, backoff - 1)
-            } else {
-                bail!("typegraph push error: {}", error)
-            }
-        }
-        _ => Ok(()),
-    }
+    })
 }

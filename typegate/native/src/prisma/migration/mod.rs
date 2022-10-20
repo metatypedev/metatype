@@ -1,7 +1,10 @@
 // Copyright Metatype under the Elastic License 2.0.
 
+mod utils;
+
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/rpc.rs
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/api.rs
+use migration_connector::{BoxFuture, ConnectorHost, ConnectorResult};
 use migration_core;
 use migration_core::json_rpc::types::{
     ApplyMigrationsInput, CreateMigrationInput, DiffParams, DiffTarget, EvaluateDataLossInput,
@@ -10,6 +13,7 @@ use migration_core::json_rpc::types::{
 use migration_core::CoreError;
 use std::fs;
 use std::io::Write;
+use std::sync::{Arc, Mutex};
 
 pub async fn loss(
     datasource: String,
@@ -91,9 +95,17 @@ pub async fn push(datasource: String, datamodel: String) -> Result<String, CoreE
     }
 }
 
-pub async fn diff(datasource: String, datamodel: String) -> Result<u32, CoreError> {
+pub async fn diff(
+    datasource: String,
+    datamodel: String,
+    script: bool,
+) -> Result<Option<String>, CoreError> {
     let schema = format!("{datasource}{datamodel}");
-    let api = migration_core::migration_api(Some(datasource.clone()), None)?;
+    let buffer = Arc::new(Mutex::new(Some(String::default())));
+    let api = migration_core::migration_api(
+        Some(datasource.clone()),
+        Some(Arc::new(utils::StringBuffer::new(Arc::clone(&buffer)))),
+    )?;
 
     let mut source_file = tempfile::NamedTempFile::new().unwrap();
     writeln!(source_file, "{datasource}").unwrap();
@@ -106,7 +118,7 @@ pub async fn diff(datasource: String, datamodel: String) -> Result<u32, CoreErro
         from: DiffTarget::SchemaDatasource(SchemaContainer {
             schema: source_file.path().display().to_string(),
         }),
-        script: false,
+        script,
         shadow_database_url: None,
         to: DiffTarget::SchemaDatamodel(SchemaContainer {
             schema: model_file.path().display().to_string(),
@@ -114,5 +126,10 @@ pub async fn diff(datasource: String, datamodel: String) -> Result<u32, CoreErro
     };
 
     let res = api.diff(params).await?;
-    Ok(res.exit_code)
+    assert!(res.exit_code == 0);
+
+    let buffer = buffer.lock().unwrap().take();
+    // FIXME the text might change??
+    let mut diff = buffer.filter(|diff| !diff.contains("No difference detected"));
+    Ok(diff.take())
 }

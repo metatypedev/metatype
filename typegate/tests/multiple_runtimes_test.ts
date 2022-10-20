@@ -1,6 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import { gql, meta, test } from "./utils.ts";
+import { gql, recreateMigrations, test } from "./utils.ts";
 
 test("prisma", async (t) => {
   const tgPath = "typegraphs/multiple_runtimes.py";
@@ -22,7 +22,7 @@ test("prisma", async (t) => {
   await t.should("drop schemas and recreate", async () => {
     await sql("DROP SCHEMA IF EXISTS test CASCADE").on(e);
     await sql("DROP SCHEMA IF EXISTS test2 CASCADE").on(e);
-    await meta("prisma", "apply", "-f", tgPath);
+    await recreateMigrations(e);
   });
 
   await t.should("succeed queries", async () => {

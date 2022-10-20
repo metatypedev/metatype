@@ -3,11 +3,13 @@
 import { Engine, initTypegraph } from "./engine.ts";
 import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConfig } from "./config.ts";
+import { SystemTypegraph } from "./system_typegraphs.ts";
+import { RuntimesConfig } from "./types.ts";
 
 console.log("init replicated map");
 
 export abstract class Register {
-  abstract set(payload: string): Promise<string>;
+  abstract set(payload: string, config?: RuntimesConfig): Promise<string>;
 
   abstract remove(name: string): Promise<void>;
 
@@ -17,6 +19,7 @@ export abstract class Register {
 
   abstract has(name: string): boolean;
 }
+
 export class ReplicatedRegister extends Register {
   static async init(redisConfig: RedisConfig): Promise<ReplicatedRegister> {
     const replicatedMap = await RedisReplicatedMap.init<Engine>(
@@ -33,10 +36,17 @@ export class ReplicatedRegister extends Register {
     super();
   }
 
-  async set(payload: string): Promise<string> {
-    const engine = await initTypegraph(payload);
-
-    if (engine.name !== "typegate") {
+  async set(payload: string, config?: RuntimesConfig): Promise<string> {
+    const engine = await initTypegraph(
+      payload,
+      SystemTypegraph.getCustomRuntimes(this),
+      config,
+    );
+    if (SystemTypegraph.check(engine.name)) {
+      // no need for a sync
+      this.replicatedMap.memory.set(engine.name, engine);
+    } else {
+      console.debug(`registering (replicated): ${engine.name}`);
       await this.replicatedMap.set(engine.name, engine);
     }
 
@@ -63,11 +73,7 @@ export class ReplicatedRegister extends Register {
     return this.replicatedMap.has(name);
   }
 
-  startSync(inMemoryEngines: Record<string, Engine>): void {
-    for (const [name, engine] of Object.entries(inMemoryEngines)) {
-      // no need for a sync
-      this.replicatedMap.memory.set(name, engine);
-    }
+  startSync(): void {
     this.replicatedMap.startSync();
   }
 }

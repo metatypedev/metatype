@@ -4,7 +4,7 @@ meta:
         - "meta-cli/src/**/*.rs"
         - "examples/**/*.py"
         - "typegraph/**/*.py"
-    shell: "cargo run -p meta -- -C examples dev"
+    shell: "cargo run -p meta -- -C examples dev -p password"
     envs:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH
@@ -12,11 +12,19 @@ meta:
         - libs
         - typegate_native
 
+system_graphs:
+    workdir: typegate
+    watches: src/typegraphs/*.py
+    shell: "./serialize-tgs.sh"
+    depends_on:
+        - meta
+
 typegate1:
     workdir: typegate
     watches: "src/**/*.ts"
     envs:
         TG_PORT: "7891"
+        PACKAGED: "false"
     shell: "./run.sh"
     depends_on:
         - clean_deno_bindgen_cache
@@ -26,6 +34,7 @@ typegate2:
     watches: "src/**/*.ts"
     envs:
         TG_PORT: "7892"
+        PACKAGED: "false"
     shell: "./run.sh"
     depends_on:
         - clean_deno_bindgen_cache
