@@ -13,6 +13,7 @@
         "runtime": 0
       }
     },
+    "required": ["posts"],
     "$defs": {
       "Post": {
         "type": "object",
