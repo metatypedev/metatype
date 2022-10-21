@@ -7,7 +7,7 @@ import { TypeCheck as TboxTypeCheck, TypeCompiler } from "typebox/compiler";
 import { Value } from "typebox/value";
 import { z } from "zod";
 import type * as jst from "json_schema_typed";
-import { ensure, has } from "./utils.ts";
+import { ensure } from "./utils.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { updateIn } from "https://deno.land/x/immutable@4.0.0-rc.14-deno/mod.ts";
 import { Kind } from "graphql";
@@ -90,12 +90,12 @@ export class ValidationSchemaBuilder {
   }
 
   private intoValidationSchema(schema: ExtendedJSONSchema): JSONSchema {
-    if (has(schema, "$ref")) {
+    if ("$ref" in schema && schema.$ref) {
       const ref = schema.$ref;
       if (!this.transformedRefs.has(ref)) {
         this.refs.add(ref);
       }
-      return schema;
+      return schema as JSONSchema;
     }
 
     switch (schema.type) {
@@ -191,7 +191,7 @@ class QuerySchemaBuilder {
     base: JSONSchema,
     selectionSet: SelectionSetNode | undefined,
   ): JSONSchema {
-    if (has(base, "$ref")) {
+    if (base.$ref != null) {
       return this.get(path, this.resolve(refToPath(base.$ref)), selectionSet);
     }
 
@@ -207,7 +207,7 @@ class QuerySchemaBuilder {
           switch (node.kind) {
             case Kind.FIELD: {
               const { name, selectionSet } = node;
-              if (has(baseProperties, name.value)) {
+              if (Object.hasOwnProperty.call(baseProperties, name.value)) {
                 properties[name.value] = this.get(
                   `${path}.${name.value}`,
                   baseProperties[name.value],
@@ -243,7 +243,9 @@ class QuerySchemaBuilder {
         const schema = {
           ...base,
           properties,
-          required: (base.required ?? []).filter((key) => has(properties, key)),
+          required: (base.required ?? []).filter((key) =>
+            Object.hasOwnProperty.call(properties, key)
+          ),
         };
         delete schema.$defs;
 
@@ -296,17 +298,17 @@ export class QueryTypeCheck {
   }
 
   private tschema(schema: JSONSchema, objectOptions: ObjectOptions): TSchema {
-    if (has(schema, "$ref")) {
+    if (schema.$ref != null) {
       return this.tschema(this.resolve(refToPath(schema.$ref)), objectOptions);
     }
 
     switch (schema.type) {
       case "string":
-        if (has(schema, "pattern")) {
+        if (schema.pattern != null) {
           return Type.RegEx(new RegExp(schema.pattern!));
         }
         // TODO combine options
-        if (has(schema, "format")) {
+        if (schema.format != null) {
           return Type.String({ format: schema.format! });
         }
         return Type.String();
