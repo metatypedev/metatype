@@ -11,7 +11,7 @@ import { findOperation } from "../src/graphql.ts";
 import { parse } from "graphql";
 
 Deno.test("typecheck", async (t) => {
-  const validationSchema = new ValidationSchemaBuilder(tg.schema).build();
+  const validationSchema = new ValidationSchemaBuilder(tg.types).build();
 
   const typecheck = new TypeCheck(validationSchema);
 
