@@ -12,9 +12,7 @@ import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
-import { Code } from "./runtimes/utils/codes.ts";
 import { ensure, envOrFail, mapo } from "./utils.ts";
-import { compileCodes } from "./utils/swc.ts";
 import { v4 as uuid } from "std/uuid/mod.ts";
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
@@ -76,7 +74,6 @@ export interface TypeGraphDS {
   materializers: Array<TypeMaterializer>;
   runtimes: Array<TypeRuntime>;
   policies: Array<TypePolicy>;
-  codes: Array<Code>;
   meta: TypeMeta;
 }
 
@@ -233,8 +230,6 @@ export class TypeGraph {
         });
       }),
     );
-
-    compileCodes(typegraph);
 
     return new TypeGraph(
       typegraph,

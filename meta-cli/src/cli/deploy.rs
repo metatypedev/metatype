@@ -20,7 +20,7 @@ pub struct Deploy {
 impl Action for Deploy {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
-        let loader = TypegraphLoader::new().serialized();
+        let loader = TypegraphLoader::new();
         let tgs = match &self.file {
             Some(file) => loader.load_file(file)?,
             None => loader.load_folder(&dir)?,

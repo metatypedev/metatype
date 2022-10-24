@@ -50,7 +50,10 @@ const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
       if (code == null) {
         throw new Error("function definition required");
       }
-      fns.set(fnId, new Function(`"use strict"; return ${code}`)());
+      fns.set(
+        fnId,
+        new Function(`"use strict"; ${code}; return _my_lambda;`)(),
+      );
     }
 
     verbose && logger.info(`[${id}] exec func "${fnId}"`);

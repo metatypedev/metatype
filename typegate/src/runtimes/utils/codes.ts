@@ -14,7 +14,7 @@ export interface TaskContext {
 }
 
 export interface FunctionMaterializerData {
-  fn_expr: string;
+  script: string;
 }
 
 export interface ImportFuncMaterializerData {
