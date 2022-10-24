@@ -166,27 +166,20 @@ fn postprocess_all(tgs: HashMap<String, Typegraph>) -> Result<HashMap<String, Ty
         .collect()
 }
 
-type MaterializerPreprocessor = (
-    fn(&Materializer, &Typegraph) -> bool,
-    fn(Materializer, &Typegraph) -> Result<Materializer>,
-);
+type MaterializerPostprocessor = fn(Materializer, &Typegraph) -> Result<Materializer>;
 
-static MATERIALIZER_POSTPROCESSORS: &[MaterializerPreprocessor] = &[
-    (is_function_mat, postprocess_function_mat),
-    (is_module_mat, postprocess_module_mat),
-];
+static MATERIALIZER_POSTPROCESSORS: &[MaterializerPostprocessor] =
+    &[postprocess_function_mat, postprocess_module_mat];
 
+/// Perform some postprocessing on the typegraph we got from Python
 fn postprocess(mut typegraph: Typegraph) -> Result<Typegraph> {
     let materializers = std::mem::take(&mut typegraph.materializers);
     let postprocessed_materializers: Vec<Materializer> = materializers
         .into_iter()
         .map(|mat| -> Result<Materializer> {
-            // TODO Cell
             let mut current_value = mat;
-            for (test, postprocess) in MATERIALIZER_POSTPROCESSORS {
-                if test(&current_value, &typegraph) {
-                    current_value = postprocess(current_value, &typegraph)?;
-                }
+            for postprocess in MATERIALIZER_POSTPROCESSORS {
+                current_value = postprocess(current_value, &typegraph)?;
             }
             Ok(current_value)
         })
@@ -195,28 +188,26 @@ fn postprocess(mut typegraph: Typegraph) -> Result<Typegraph> {
     Ok(typegraph)
 }
 
-fn is_function_mat(mat: &Materializer, typegraph: &Typegraph) -> bool {
-    &mat.name == "function" && typegraph.runtimes[mat.runtime as usize].name == "deno"
-}
-
-fn postprocess_function_mat(mut mat: Materializer, _: &Typegraph) -> Result<Materializer> {
-    let mut mat_data: FunctionMatData = utils::object_from_hashmap(std::mem::take(&mut mat.data))?;
-    // TODO check variable `_my_lambda` exists and is a function expression/lambda
-    mat_data.script = transform_script(mat_data.script)?;
-    mat.data = utils::hashmap_from_object(mat_data)?;
+fn postprocess_function_mat(mut mat: Materializer, typegraph: &Typegraph) -> Result<Materializer> {
+    if &mat.name == "function" && typegraph.runtimes[mat.runtime as usize].name == "deno" {
+        let mut mat_data: FunctionMatData =
+            utils::object_from_hashmap(std::mem::take(&mut mat.data))?;
+        // TODO check variable `_my_lambda` exists and is a function expression/lambda
+        mat_data.script = transform_script(mat_data.script)?;
+        mat.data = utils::hashmap_from_object(mat_data)?;
+    }
     Ok(mat)
 }
 
-fn is_module_mat(mat: &Materializer, typegraph: &Typegraph) -> bool {
-    mat.name == "module" && typegraph.runtimes[mat.runtime as usize].name == "deno"
-}
-
-fn postprocess_module_mat(mut mat: Materializer, _: &Typegraph) -> Result<Materializer> {
-    let mut mat_data: ModuleMatData = utils::object_from_hashmap(std::mem::take(&mut mat.data))?;
-    // TODO check imported functions exist
-    let module = parse_module_source(mat_data.code)?;
-    mat_data.code = transform_module(module)?;
-    mat.data = utils::hashmap_from_object(mat_data)?;
+fn postprocess_module_mat(mut mat: Materializer, typegraph: &Typegraph) -> Result<Materializer> {
+    if mat.name == "module" && typegraph.runtimes[mat.runtime as usize].name == "deno" {
+        let mut mat_data: ModuleMatData =
+            utils::object_from_hashmap(std::mem::take(&mut mat.data))?;
+        // TODO check imported functions exist
+        let module = parse_module_source(mat_data.code)?;
+        mat_data.code = transform_module(module)?;
+        mat.data = utils::hashmap_from_object(mat_data)?;
+    }
     Ok(mat)
 }
 
