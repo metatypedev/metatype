@@ -67,20 +67,22 @@ struct ModuleCode {
     code: String,
 }
 
+#[derive(Debug)]
 struct ModuleInfo {
     path: PathBuf,
     exports: RefCell<Option<HashSet<String>>>, // names of exported functions
 }
 
+#[derive(Debug)]
 struct GenItem {
     func_data: FuncData,
     path: String,
     name: String,
 }
 
-struct Codegen<'a> {
-    path: PathBuf,
-    base_dir: PathBuf,
+pub struct Codegen<'a> {
+    pub path: PathBuf,
+    pub base_dir: PathBuf,
     tg: &'a Typegraph,
     ts_modules: HashMap<String, ModuleInfo>,
 }
