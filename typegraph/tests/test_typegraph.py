@@ -100,7 +100,10 @@ class TestTypegraph:
                         name="function",
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"serial": False, "fn_expr": "(args) => args.a * 2"}
+                            {
+                                "serial": False,
+                                "script": "var _my_lambda = (args) => args.a * 2;",
+                            }
                         ),
                     )
                 ],
@@ -269,14 +272,17 @@ class TestTypegraph:
                         name="function",
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"serial": False, "fn_expr": "(args) => args.a"}
+                            {
+                                "serial": False,
+                                "script": "var _my_lambda = (args) => args.a;",
+                            }
                         ),
                     ),
                     TypeMaterializer(
                         name="function",
                         runtime=0,
                         data=frozendict.frozendict(
-                            {"serial": False, "fn_expr": "() => 1"}
+                            {"serial": False, "script": "var _my_lambda = () => 1;"}
                         ),
                     ),
                 ],
