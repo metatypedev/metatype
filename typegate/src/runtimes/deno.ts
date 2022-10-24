@@ -263,7 +263,7 @@ class OnDemandWorker {
         let fnRef: Pick<FuncTask, "fnId" | "code">;
         if (!this.inlineFns.has(mat)) {
           this.inlineFns.set(mat, id);
-          fnRef = { fnId: id, code: mat.data.fn_expr as string };
+          fnRef = { fnId: id, code: mat.data.script as string };
         } else {
           fnRef = { fnId: this.inlineFns.get(mat)! };
         }
