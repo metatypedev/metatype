@@ -203,9 +203,11 @@ fn postprocess_module_mat(mut mat: Materializer, typegraph: &Typegraph) -> Resul
     if mat.name == "module" && typegraph.runtimes[mat.runtime as usize].name == "deno" {
         let mut mat_data: ModuleMatData =
             utils::object_from_hashmap(std::mem::take(&mut mat.data))?;
-        // TODO check imported functions exist
-        let module = parse_module_source(mat_data.code)?;
-        mat_data.code = transform_module(module)?;
+        if !mat_data.code.starts_with("file:") {
+            // TODO check imported functions exist
+            let module = parse_module_source(mat_data.code)?;
+            mat_data.code = transform_module(module)?;
+        }
         mat.data = utils::hashmap_from_object(mat_data)?;
     }
     Ok(mat)
