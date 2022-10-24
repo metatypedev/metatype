@@ -2,15 +2,10 @@
 
 use anyhow::bail;
 use anyhow::Result;
-use dprint_plugin_typescript::configuration::*;
-use dprint_plugin_typescript::*;
 use std::collections::HashSet;
-use std::fs;
 use std::path::Path;
-use std::path::PathBuf;
 use swc_common::errors::{ColorConfig, Handler};
 use swc_common::hygiene::Mark;
-use swc_common::input::SourceFileInput;
 use swc_common::sync::Lrc;
 use swc_common::FileName;
 use swc_common::Globals;
@@ -24,7 +19,7 @@ use swc_ecmascript::parser::parse_file_as_script;
 use swc_ecmascript::{
     codegen,
     codegen::{text_writer::JsWriter, Emitter},
-    parser::{lexer::Lexer, Parser, Syntax},
+    parser::Syntax,
     visit::{Fold, FoldWith},
 };
 
@@ -90,8 +85,8 @@ fn export_function(name: String, inp: String, out: String, body: Option<BlockStm
     }
 }
 
-struct MyVisitor {
-    source: String,
+pub struct MyVisitor {
+    pub source: String,
     imports: Vec<(String, String)>,
 }
 
@@ -157,74 +152,6 @@ impl Fold for MyVisitor {
             _ => (),
         }
         n
-    }
-}
-
-pub fn parse(path: &PathBuf) {
-    let cm: Lrc<SourceMap> = Default::default();
-    let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
-
-    let fm = cm
-        .load_file(path.as_path())
-        .unwrap_or_else(|_| panic!("failed to load {:?}", path));
-    let lexer = Lexer::new(
-        Syntax::Typescript(Default::default()),
-        EsVersion::latest(),
-        SourceFileInput::from(&*fm),
-        None,
-    );
-
-    let mut parser = Parser::new_from(lexer);
-
-    for e in parser.take_errors() {
-        e.into_diagnostic(&handler).emit();
-    }
-
-    let m = parser
-        .parse_module()
-        .map_err(|e| {
-            // Unrecoverable fatal error occurred
-            e.into_diagnostic(&handler).emit()
-        })
-        .expect("failed to parser module");
-
-    let mut v = MyVisitor {
-        source: "./output.ts".to_string(),
-        imports: vec![
-            ("Input".to_string(), "test".to_string()),
-            ("Output".to_string(), "test2".to_string()),
-        ],
-    };
-
-    let n = m.fold_with(&mut v);
-
-    let code = {
-        let mut buf = vec![];
-
-        {
-            let mut emitter = Emitter {
-                cfg: codegen::Config {
-                    ..Default::default()
-                },
-                cm: cm.clone(),
-                comments: None,
-                wr: JsWriter::new(cm, "\n", &mut buf, None),
-            };
-
-            emitter.emit_module(&n).unwrap();
-        }
-
-        String::from_utf8_lossy(&buf).to_string()
-    };
-
-    let config = ConfigurationBuilder::new().deno().build();
-
-    // TODO : avoid re-parsing by using dprint/deno ast
-    let formatted = format_text(&PathBuf::from("output.ts"), &code, &config);
-    println!("{:?}", formatted);
-    match formatted {
-        Ok(text) => fs::write("output.ts", &text.unwrap()).unwrap(),
-        Err(e) => println!("Error: {:?}", e),
     }
 }
 
