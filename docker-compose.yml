@@ -23,7 +23,7 @@ services:
     environment:
       POSTGRES_DB: db
       POSTGRES_PASSWORD: password
-    command: "-c app.test=true -c log_statement=all"
+    command: "-c app.test=true" # -c log_statement=all
 
   redis:
     image: redis:7
@@ -31,3 +31,12 @@ services:
     ports:
       - "6379:6379"
     command: --requirepass password
+
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
+    ports:
+      - 9200:9200
+    environment:
+      discovery.type: single-node
+      # docker cp metatype-elastic-1:/usr/share/elasticsearch/config/certs/http_ca.crt .
+      ELASTIC_PASSWORD: password
