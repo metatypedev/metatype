@@ -10,6 +10,7 @@ use clap::{Parser, Subcommand};
 use colored::Colorize;
 use flate2::{write::GzEncoder, Compression};
 use indoc::indoc;
+use prisma_models::psl;
 use question::{Answer, Question};
 use serde::Deserialize;
 use serde_json::json;
@@ -239,7 +240,7 @@ impl Action for Format {
             buf
         };
 
-        let output = datamodel::reformat(&input, 2).unwrap();
+        let output = psl::reformat(&input, 2).unwrap();
 
         if let Some(file) = self.output.as_ref() {
             let mut file = File::create(file)
@@ -480,5 +481,5 @@ impl PrismaMigrate {
 #[serde(rename_all = "camelCase")]
 struct PrismaRuntime {
     name: String,
-    connection_string: String,
+    //connection_string: String,
 }

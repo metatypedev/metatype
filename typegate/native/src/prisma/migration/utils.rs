@@ -8,7 +8,7 @@ type StringBufferInner = Arc<Mutex<Option<String>>>;
 
 pub struct MigrationApi {
     api: Box<dyn GenericApi>,
-    buffer: Arc<Mutex<Option<String>>>,
+    pub buffer: Arc<Mutex<Option<String>>>,
 }
 
 impl MigrationApi {

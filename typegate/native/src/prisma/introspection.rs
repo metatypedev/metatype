@@ -4,7 +4,7 @@
 
 use introspection_connector::{CompositeTypeDepth, IntrospectionConnector, IntrospectionContext};
 use introspection_core::Error;
-use prisma_models::{dml::Datamodel, psl};
+use prisma_models::psl::{self, SourceFile};
 use sql_introspection_connector::SqlIntrospectionConnector;
 use std::result::Result;
 
@@ -12,14 +12,7 @@ pub struct Introspection {}
 
 impl Introspection {
     pub async fn introspect(schema: String) -> Result<String, Error> {
-        let config = match datamodel::parse_configuration(&schema).map_err(|diagnostics| {
-            Error::DatamodelError(diagnostics.to_pretty_string("schema.prisma", &schema))
-        }) {
-            Ok(config) => config,
-            Err(e) => return Result::Err(Error::DatamodelError(e.to_string())),
-        };
-
-        let config2 = match datamodel::parse_configuration(&schema).map_err(|diagnostics| {
+        let config = match psl::parse_configuration(&schema).map_err(|diagnostics| {
             Error::DatamodelError(diagnostics.to_pretty_string("schema.prisma", &schema))
         }) {
             Ok(config) => config,
@@ -27,9 +20,7 @@ impl Introspection {
         };
 
         let ds = config.datasources.first().unwrap();
-
         let url = ds.load_url(load_env_var).unwrap();
-
         let connector = match SqlIntrospectionConnector::new(url.as_str(), Default::default()).await
         {
             introspection_connector::ConnectorResult::Ok(connector) => connector,
@@ -38,23 +29,15 @@ impl Introspection {
             }
         };
 
-        let ctx = IntrospectionContext {
-            preview_features: Default::default(),
-            source: config.datasources.into_iter().next().unwrap(),
-            composite_type_depth: CompositeTypeDepth::Level(3),
-        };
+        let previous = psl::validate(SourceFile::new_static(""));
+        let ctx = IntrospectionContext::new_config_only(previous, CompositeTypeDepth::Level(3));
 
-        let datamodel = Datamodel::new();
-
-        match connector.introspect(&datamodel, ctx).await {
+        match connector.introspect(&ctx).await {
             Ok(introspection_result) => {
                 if introspection_result.data_model.is_empty() {
                     Result::Err(Error::IntrospectionResultEmpty)
                 } else {
-                    Result::Ok(psl::render_datamodel_to_string(
-                        &introspection_result.data_model,
-                        Some(&config2),
-                    ))
+                    Result::Ok(introspection_result.data_model)
                 }
             }
             Err(e) => Result::Err(Error::ConnectorError(e)),
