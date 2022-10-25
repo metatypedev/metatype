@@ -17,8 +17,9 @@
 
 // https://github.com/prisma/prisma-engines/blob/main/query-engine/query-engine-node-api/src/engine.rs
 
-use datamodel::diagnostics::Diagnostics;
 use prisma_models::psl;
+use prisma_models::psl::datamodel_connector::RelationMode;
+use psl::diagnostics::Diagnostics;
 use query_connector::error::ConnectorError;
 use query_core::CoreError;
 use query_core::{
@@ -215,7 +216,7 @@ impl QueryEngine {
                 true, // enable raw queries
                 data_source.active_connector,
                 preview_features,
-                data_source.referential_integrity(),
+                RelationMode::ForeignKeys,
             );
 
             Result::Ok(ConnectedEngine {

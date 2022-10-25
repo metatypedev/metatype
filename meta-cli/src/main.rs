@@ -18,10 +18,9 @@ use cli::prisma::Commands as PrismaCommands;
 use cli::prisma::Prisma;
 use cli::serialize::Serialize;
 use cli::Action;
-
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None)]
+#[clap(author, version, about, long_about = None, disable_version_flag = true)]
 struct Args {
     #[clap(short = 'C', long, value_parser, default_value_t = String::from("."))]
     dir: String,
@@ -89,4 +88,10 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[test]
+fn verify_cli() {
+    use clap::CommandFactory;
+    Args::command().debug_assert()
 }

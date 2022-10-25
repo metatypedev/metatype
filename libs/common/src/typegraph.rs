@@ -11,6 +11,7 @@ pub struct Typegraph {
     pub materializers: Vec<Materializer>,
     pub runtimes: Vec<TGRuntime>,
     pub policies: Vec<Policy>,
+    pub meta: TypeMeta,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -26,10 +27,7 @@ pub struct Cors {
 pub struct Auth {
     pub name: String,
     pub protocol: String,
-    pub authorize_url: String,
-    pub access_url: String,
-    pub scopes: String,
-    pub profile_url: Option<String>,
+    pub auth_data: HashMap<String, Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -37,6 +35,8 @@ pub struct TypeMeta {
     pub secrets: Vec<String>,
     pub cors: Cors,
     pub auths: Vec<Auth>,
+    // TODO: rate
+    pub version: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -82,4 +82,16 @@ impl TypeNode {
             .ok_or_else(|| anyhow!("field \"binds\" not found in struct data"))?;
         Ok(serde_json::from_value(binds.clone())?)
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FunctionMatData {
+    pub script: String,
+    serial: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ModuleMatData {
+    pub code: String,
+    serial: bool,
 }
