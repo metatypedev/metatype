@@ -223,6 +223,27 @@ class string(typedef):
         return replace(self, _max=n)
 
 
+class func(typedef):
+    inp: typedef  # struct
+    out: typedef
+
+    def __init__(self, inp: typedef, out: typedef, **kwargs) -> "func":
+        super().__init__(**kwargs)
+        self.inp = inp
+        self.out = out
+
+    @property
+    def edges(self) -> List["typedef"]:
+        return [self.inp, self.out]
+
+    def data(self, collector) -> dict:
+        return {
+            **super().data(collector),
+            "input": collector.collect(Collector.types, self.inp),
+            "output": collector.collect(Collector.types, self.out),
+        }
+
+
 class policy(typedef):
     pass
 
@@ -264,7 +285,9 @@ with TypeGraph(
     t = string().min(3).max(4).optional()
     print(t)
 
+    f = func(string(), t).named("posts")
+
     collector = Collector()
-    visit([t], collector)
+    visit([f], collector)
     for i, t in enumerate(collector.collects[Collector.types]):
         print(i, t.data(collector))
