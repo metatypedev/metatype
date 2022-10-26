@@ -41,3 +41,5 @@ convert_case = "0.6.0"
 flate2 = "1.0.24"
 tar = "0.4.38"
 base64 = "0.13.1"
+rust-s3 = { git = "https://github.com/zifeo/rust-s3", branch = "order" }
+http = "0.2.8"

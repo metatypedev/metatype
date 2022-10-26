@@ -29,6 +29,7 @@ import {
   RuntimeInit,
   RuntimesConfig,
 } from "./types.ts";
+import { S3Runtime } from "./runtimes/s3.ts";
 
 interface TypePolicy {
   name: string;
@@ -89,6 +90,7 @@ const dummyStringTypeNode: TypeNode = {
 };
 
 const runtimeInit: RuntimeInit = {
+  s3: S3Runtime.init,
   graphql: GraphQLRuntime.init,
   prisma: PrismaRuntime.init,
   http: HTTPRuntime.init,
@@ -915,7 +917,9 @@ export class TypeGraph {
     return stages;
   }
 
-  preparePolicies(stages: ComputeStage[]): PolicyStagesFactory {
+  preparePolicies(
+    stages: ComputeStage[],
+  ): PolicyStagesFactory {
     const policies = Array.from(
       new Set(
         stages.flatMap((stage) => Object.values(stage.props.policies).flat()),
@@ -972,7 +976,9 @@ export class TypeGraph {
     };
   }
 
-  nextBatcher = (type: TypeNode): Batcher => {
+  nextBatcher = (
+    type: TypeNode,
+  ): Batcher => {
     // convenience check to be removed
     const ensureArray = (x: []) => {
       ensure(Array.isArray(x), `${JSON.stringify(x)} not an array`);
@@ -980,7 +986,8 @@ export class TypeGraph {
     };
 
     if (type.typedef === "list") {
-      if (this.type(type.data.of).typedef === "optional") {
+      const nestedType = this.type(type.data.of);
+      if (nestedType.typedef === "optional") {
         throw Error("D");
         //return (x: any) => x.flat().filter((c: any) => !!c);
       }

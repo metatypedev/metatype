@@ -44,7 +44,7 @@ libs:
     shell: "cargo build -p common"
 
 clean_deno_bindgen_cache:
-    shell: rm -rf $(deno info --json | jq -r .denoDir)/plug/file
+    shell: rm -rf $(deno info --json | jq -r .denoDir)/plug/file bindings.json
     depends_on:
         - typegate_native
 
