@@ -7,7 +7,7 @@ import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Runtime } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
 import { FuncTask, ImportFuncTask, Task, TaskContext } from "./utils/codes.ts";
-import { ensure } from "../utils.ts";
+import { ensure, envOrFail } from "../utils.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 
 const logger = getLogger(import.meta);
@@ -34,19 +34,29 @@ export class DenoRuntime extends Runtime {
     permissions: Deno.PermissionOptionsObject,
     lazy: boolean,
     tg: TypeGraphDS,
+    private secrets: Record<string, string>,
   ) {
     super();
     this.w = new OnDemandWorker(name, permissions, lazy, tg);
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { typegraph: tg, config, args } = params;
+    const { typegraph: tg, config, args, materializers } = params;
+    const typegraphName = tg.types[0].name;
+
+    const secrets: Record<string, string> = {};
+    for (const m of materializers) {
+      for (const secretName of m.data.secrets as [] ?? []) {
+        secrets[secretName] = envOrFail(typegraphName, secretName);
+      }
+    }
 
     return new DenoRuntime(
       args.worker as string,
       (args.permissions ?? {}) as Deno.PermissionOptionsObject,
       config.lazy as boolean ?? false,
       tg,
+      secrets,
     );
   }
 
@@ -85,12 +95,17 @@ export class DenoRuntime extends Runtime {
         mat.name === "predefined_function",
       `unsupported materializer ${mat.name}`,
     );
+    const secrets = (mat.data.secrets as [] ?? []).reduce(
+      (agg, secretName) => ({ ...agg, [secretName]: this.secrets[secretName] }),
+      {},
+    );
     return async ({ _: { context, parent }, ...args }) => {
       return await this.w.execTask({
         args,
         internals: {
           parent,
           context,
+          secrets,
         },
         mat,
       }, verbose);

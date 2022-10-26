@@ -4,13 +4,14 @@ import { ComputeStage } from "../engine.ts";
 import { Runtime } from "./Runtime.ts";
 import { associateWith } from "std/collections/associate_with.ts";
 import { join } from "std/path/mod.ts";
-import { JSONValue } from "../utils.ts";
+import { envOrFail, JSONValue } from "../utils.ts";
 import {
   getFieldLists,
   MatOptions,
   replaceDynamicPathParams,
 } from "./utils/http.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
+import * as base64 from "std/encoding/base64.ts";
 
 // FIXME better solution require
 const traverseLift = (obj: JSONValue): any => {
@@ -46,16 +47,37 @@ const encodeRequestBody = (
 };
 
 export class HTTPRuntime extends Runtime {
-  endpoint: string;
-
-  constructor(endpoint: string) {
+  constructor(
+    private endpoint: string,
+    private client: Deno.HttpClient,
+    private headers: Headers,
+  ) {
     super();
-    this.endpoint = endpoint;
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { args } = params;
-    return new HTTPRuntime(args.endpoint as string);
+    const { typegraph, args } = params;
+    const typegraphName = typegraph.types[0].name;
+
+    const caCerts = args.cert_secret
+      ? [envOrFail(typegraphName, args.cert_secret as string)]
+      : [];
+
+    const client = Deno.createHttpClient({ caCerts });
+
+    const headers = new Headers();
+    if (args.basic_auth_secret) {
+      headers.set(
+        "authorization",
+        `basic ${
+          base64.encode(
+            envOrFail(typegraphName, args.basic_auth_secret as string),
+          )
+        }`,
+      );
+    }
+
+    return new HTTPRuntime(args.endpoint as string, client, headers);
   }
 
   async deinit(): Promise<void> {}
@@ -67,6 +89,7 @@ export class HTTPRuntime extends Runtime {
         input,
       );
 
+      // TODO remove the need to have a token field to benefinit from injections
       const authToken = options.auth_token_field
         ? args[options.auth_token_field]
         : null;
@@ -95,16 +118,19 @@ export class HTTPRuntime extends Runtime {
       });
       const query = searchParams.toString();
 
+      const headers = new Headers(this.headers);
+      headers.set("accept", "application/json");
+      headers.set("content-type", options.content_type);
+
+      if (authToken) {
+        headers.set("authorization", `Bearer ${authToken}`);
+      }
+
       const res = await fetch(join(this.endpoint, `${pathname}?${query}`), {
         method,
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": options.content_type,
-          ...(authToken === null
-            ? {}
-            : { "Authorization": `Bearer ${authToken}` }),
-        },
+        headers,
         body: method === "GET" || method === "DELETE" ? null : body,
+        client: this.client,
       });
 
       if (res.status >= 400) {
