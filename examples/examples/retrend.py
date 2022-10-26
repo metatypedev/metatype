@@ -1,6 +1,9 @@
 from typegraph.graphs.typegraph import TypeGraph
+from typegraph.materializers.deno import ModuleMat
 from typegraph.materializers.s3 import S3Runtime
 from typegraph.policies import allow_all
+from typegraph.types import typedefs as t
+
 
 with TypeGraph(
     "retrend",
@@ -9,7 +12,20 @@ with TypeGraph(
     all = allow_all()
     s3 = S3Runtime("http://localhost:9000", "local", "access_key", "secret_key")
 
+    f = ModuleMat("image_proxy_resize.ts", secrets=("IMGPROXY_SALT", "IMGPROXY_SECRET"))
+
     g.expose(
         presigned=s3.sign("images", "image/png").add_policy(all),
         list=s3.list("images").add_policy(all),
+        resize=t.func(
+            t.struct(
+                {
+                    "width": t.integer(),
+                    "height": t.integer(),
+                    "path": t.string(),
+                }
+            ),
+            t.string(),
+            f.imp("default"),
+        ).add_policy(all),
     )

@@ -98,7 +98,7 @@ export class S3Runtime extends Runtime {
         };
       }
 
-      if (name === "name") {
+      if (name === "sign") {
         return async ({ length, path }) => {
           const params: S3Presigning = {
             bucket: bucket as string,

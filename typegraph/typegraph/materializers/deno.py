@@ -99,6 +99,7 @@ class ImportFunMat(Materializer):
     mod: "ModuleMat"
     name: str = "default"
     _: KW_ONLY
+    secrets: Tuple[str] = field(default_factory=tuple)
     runtime: DenoRuntime = DenoRuntime()  # should be the same runtime as `mod`'s
     materializer_name: str = "import_function"
 
@@ -107,6 +108,7 @@ class ImportFunMat(Materializer):
 class ModuleMat(Materializer):
     file: InitVar[str] = None
     _: KW_ONLY
+    secrets: Tuple[str] = field(default_factory=tuple)
     code: Optional[str] = None
     runtime: Runtime = DenoRuntime()  # DenoRuntime
     materializer_name: str = "module"
@@ -129,7 +131,7 @@ class ModuleMat(Materializer):
                     object.__setattr__(self, "code", f.read())
 
     def imp(self, name: str = "default") -> FunMat:
-        return ImportFunMat(self, name, runtime=self.runtime)
+        return ImportFunMat(self, name, runtime=self.runtime, secrets=self.secrets)
 
 
 @dataclass(eq=True, frozen=True)
