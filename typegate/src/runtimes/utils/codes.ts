@@ -11,6 +11,7 @@ export interface Code {
 export interface TaskContext {
   parent?: Record<string, unknown>;
   context?: Context;
+  secrets: Record<string, string>;
 }
 
 export interface FunctionMaterializerData {
