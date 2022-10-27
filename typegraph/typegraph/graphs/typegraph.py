@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from typegraph.typegraph.types import types as t
+    from typegraph.types import types as t
 
 
 @dataclass(eq=True, frozen=True)
@@ -109,7 +109,8 @@ class TypeGraph:
         super().__init__()
         self.name = name
         self.types = []
-        self.exposed = {}
+        self.queries = {}
+        self.mutations = {}
         self.policies = []
         self.latest_type_id = 0
         self.auths = [] if auths is None else auths
@@ -136,36 +137,46 @@ class TypeGraph:
     ) -> "NodeProxy":
         return NodeProxy(self, node, after_apply)
 
-    # def expose(self, **funcs: Dict[str, "t.func"]):
-    #     from typegraph.types import typedefs as t
-
-    #     for name, func in funcs.items():
-    #         if not isinstance(func, t.func):
-
-    #     self.exposed.update(funcs)
-    #     return self
-
     def query(self, **queries: Dict[str, "t.typedef"]):
-        from typegraph.typegraph.types import types as t
+        from typegraph.types import types as t
 
         for name, func in queries.items():
             if not isinstance(func, t.func):
                 raise Exception(
                     f"cannot expose type={func.name} under {name}, requires a func"
                 )
-            # TODO check materializer
+            # TODO also check nested functions
+            if func.mat.serial:
+                raise Exception(f"function {func.name} under {name} cannot be a query")
 
         self.queries.update(queries)
 
     def mutation(self, **mutations: Dict[str, "t.typedef"]):
-        from typegraph.typegraph.types import types as t
+        from typegraph.types import types as t
 
         for name, func in mutations.items():
             if not isinstance(func, t.func):
                 raise Exception(
                     f"cannot expose type={func.name} under {name}, requires a func"
                 )
+            # TODO also check nested functions
+            if not func.mat.serial:
+                raise Exception(
+                    f"function {func.name} under {name} cannot be a mutation"
+                )
+
         self.mutations.update(mutations)
+
+    def root(self) -> "t.struct":
+        from typegraph.types import types as t
+
+        with self:
+            return t.struct(
+                {
+                    "query": t.struct(self.queries).optional(),
+                    "mutation": t.struct(self.mutations).optional(),
+                }
+            ).named(self.name)
 
     def build(self):
         from typegraph.graphs import builders

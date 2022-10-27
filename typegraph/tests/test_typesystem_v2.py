@@ -21,7 +21,7 @@ with TypeGraph(
 
     post = t.struct(
         {
-            "id": t.string(),
+            "id": t.string().uuid(),
             "title": t.string().min(10).max(200),
             "content": t.string().min(100),
             "published": t.boolean(),
@@ -32,16 +32,28 @@ with TypeGraph(
     my_policy = t.policy(FunMat(""))
 
     posts = t.func(t.struct(), t.array(post).max(20), FunMat("")).named("posts")
-    find_post = (
-        t.func(t.struct({"id": t.string().uuid()}), post.optional(), FunMat(""))
-        .named("findPost")
-        .add_policy(my_policy)
+    find_post = t.func(
+        t.struct({"id": t.string().uuid()}), post.optional(), FunMat("")
+    ).named("findPost")
+
+    g.query(posts=posts, findPost=find_post.add_policy(my_policy))
+
+    create_post = t.func(
+        t.struct(
+            {
+                "title": t.string().min(10).max(200),
+                "content": t.string().min(100),
+                "authorId": t.string().uuid(),
+            }
+        ),
+        post,
+        FunMat("", serial=True),
     )
 
-    query = t.struct({"posts": posts, "findPost": find_post}).named("query")
+    g.mutation(createPost=create_post)
 
 
-collector = build(query)
+collector = build(g.root())
 
 print("-- TYPES --")
 for i, n in enumerate(collector.collects[Collector.types]):
