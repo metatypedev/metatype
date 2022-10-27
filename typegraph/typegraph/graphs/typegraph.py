@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from typegraph.types import typedefs as t
+    from typegraph.typegraph.types import types as t
 
 
 @dataclass(eq=True, frozen=True)
@@ -91,7 +91,8 @@ class TypeGraph:
     name: str
     # version should be commit based
     types: List["t.Type"]
-    exposed: Dict[str, "t.func"]
+    queries: Dict[str, "t.func"]
+    mutations: Dict[str, "t.func"]
     latest_type_id: int
     auths: List[Auth]
     rate: Optional[Rate]
@@ -135,17 +136,36 @@ class TypeGraph:
     ) -> "NodeProxy":
         return NodeProxy(self, node, after_apply)
 
-    def expose(self, **funcs: Dict[str, "t.func"]):
-        from typegraph.types import typedefs as t
+    # def expose(self, **funcs: Dict[str, "t.func"]):
+    #     from typegraph.types import typedefs as t
 
-        for name, func in funcs.items():
+    #     for name, func in funcs.items():
+    #         if not isinstance(func, t.func):
+
+    #     self.exposed.update(funcs)
+    #     return self
+
+    def query(self, **queries: Dict[str, "t.typedef"]):
+        from typegraph.typegraph.types import types as t
+
+        for name, func in queries.items():
             if not isinstance(func, t.func):
                 raise Exception(
-                    f"cannot expose type={func.node} under {name}, requires a func"
+                    f"cannot expose type={func.name} under {name}, requires a func"
                 )
+            # TODO check materializer
 
-        self.exposed.update(funcs)
-        return self
+        self.queries.update(queries)
+
+    def mutation(self, **mutations: Dict[str, "t.typedef"]):
+        from typegraph.typegraph.types import types as t
+
+        for name, func in mutations.items():
+            if not isinstance(func, t.func):
+                raise Exception(
+                    f"cannot expose type={func.name} under {name}, requires a func"
+                )
+        self.mutations.update(mutations)
 
     def build(self):
         from typegraph.graphs import builders
