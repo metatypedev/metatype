@@ -326,9 +326,17 @@ class struct(typedef):
     def __init__(self, props=None, **kwargs):
         super().__init__(**kwargs)
         self.props = dict()
-        self.required = []
-        if props is not None:
-            for k, v in props.items():
+
+        if "required" in kwargs:  # re constructing from data
+            if props is None:
+                raise Exception("invalid")
+            self.required = kwargs["required"]
+            self.props = props
+
+        else:
+            self.required = []
+
+            for k, v in props.items() if props is not None else []:
                 if isinstance(v, optional):
                     v = v.of
                 else:
