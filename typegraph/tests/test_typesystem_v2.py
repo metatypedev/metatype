@@ -12,16 +12,16 @@ with TypeGraph(
 ) as g:
     user = t.struct(
         {
-            "id": t.string().uuid(),
+            "id": t.uuid(),
             "username": t.string().min(4).max(63),
-            "email": t.string().email(),
-            "website": t.string().uri().optional(),
+            "email": t.email(),
+            "website": t.uri().optional(),
         }
     ).named("User")
 
     post = t.struct(
         {
-            "id": t.string().uuid(),
+            "id": t.uuid(),
             "title": t.string().min(10).max(200),
             "content": t.string().min(100),
             "published": t.boolean(),
@@ -32,9 +32,9 @@ with TypeGraph(
     my_policy = t.policy(FunMat(""))
 
     posts = t.func(t.struct(), t.array(post).max(20), FunMat("")).named("posts")
-    find_post = t.func(
-        t.struct({"id": t.string().uuid()}), post.optional(), FunMat("")
-    ).named("findPost")
+    find_post = t.func(t.struct({"id": t.uuid()}), post.optional(), FunMat("")).named(
+        "findPost"
+    )
 
     g.query(posts=posts, findPost=find_post.add_policy(my_policy))
 
