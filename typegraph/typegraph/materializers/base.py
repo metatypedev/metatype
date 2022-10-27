@@ -2,19 +2,22 @@
 
 from dataclasses import dataclass
 from dataclasses import KW_ONLY
+from typing import List
+
+from typegraph.graphs.node import Node
 
 
 @dataclass(frozen=True, eq=True)
-class Runtime:
+class Runtime(Node):
     runtime_name: str
-
-    @property
-    def data(self):
-        return {}
 
 
 @dataclass(eq=True, frozen=True)
-class Materializer:
+class Materializer(Node):
     runtime: Runtime
     _: KW_ONLY
     serial: bool = False
+
+    @property
+    def edges(self) -> List[Node]:
+        return super().edges + [self.runtime]
