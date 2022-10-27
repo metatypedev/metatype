@@ -326,6 +326,18 @@ class string(typedef):
         }
 
 
+def uuid() -> string:
+    return string().uuid()
+
+
+def email() -> string:
+    return string().email()
+
+
+def uri() -> string:
+    return string().uri()
+
+
 class struct(typedef):
     props: Dict[str, typedef]
     required: List[str]
