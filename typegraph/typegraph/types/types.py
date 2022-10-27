@@ -15,6 +15,7 @@ from typing import Union
 
 from frozendict import frozendict
 import orjson
+from typegraph.graphs.node import Collector
 from typegraph.graphs.node import Node
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.graphs.typegraph import TypeGraph
@@ -68,6 +69,12 @@ class typedef(Node):
         policies: Optional[Tuple["policy", ...]] = None,
         **kwargs,
     ):
+        super().__init__(
+            kwargs["collector_target"]
+            if "collector_target" in kwargs
+            else Collector.types
+        )
+
         for k, v in type(self).__annotations__.items():
             # manage dataclass like behaviour (e.g. field) and block bad instanciation (e.g. [])
             if is_optional(v):
@@ -430,7 +437,7 @@ class policy(typedef):
     mat: FunMat
 
     def __init__(self, mat: FunMat, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(**kwargs, collector_target=Collector.policies)
         self.mat = mat
 
     @property

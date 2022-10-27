@@ -8,6 +8,11 @@ from ordered_set import OrderedSet
 
 
 class Node:
+    collector_target: str
+
+    def __init__(self, collector_target: str):
+        self.collector_target = collector_target
+
     @property
     def edges(self) -> List["Node"]:
         return []
@@ -25,32 +30,15 @@ class Collector:
     collects: Dict[str, OrderedSet]
 
     def __init__(self):
-        self.collects = {
-            Collector.types: OrderedSet(),
-            Collector.runtimes: OrderedSet(),
-            Collector.materializers: OrderedSet(),
-            Collector.policies: OrderedSet(),
-        }
+        self.collects = {}
 
     def collect(self, node: Node) -> int:
-        from typegraph.types import types as t
-        from typegraph.materializers.base import Materializer, Runtime
+        c = node.collector_target
 
-        if isinstance(node, t.typedef):
-            if isinstance(node, t.policy):
-                return self.collects[Collector.policies].add(node)
-            return self.collects[Collector.types].add(node)
+        if c not in self.collects:
+            self.collects[c] = OrderedSet()
 
-        if isinstance(node, Materializer):
-            return self.collects[Collector.materializers].add(node)
-
-        if isinstance(node, Runtime):
-            return self.collects[Collector.runtimes].add(node)
-
-        print(node)
-        print(isinstance(node, t.typedef))
-        print(isinstance(node, t.func))
-        raise Exception(f"Invalid node type {type(node).__name__}")
+        return self.collects[c].add(node)
 
 
 def build(root: Node) -> Collector:
