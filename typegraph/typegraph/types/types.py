@@ -15,7 +15,7 @@ from typing import Union
 
 from frozendict import frozendict
 import orjson
-from typegraph.graphs.node import Collector
+from typegraph.graphs.builder import Collector
 from typegraph.graphs.node import Node
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.graphs.typegraph import TypeGraph
@@ -47,6 +47,17 @@ def remove_none_values(obj):
 def is_optional(tpe: Type):
     # Optional = Union[T, NoneType]
     return get_origin(tpe) is Union and NoneType in get_args(tpe)
+
+
+class Secret(Node):
+    secret: str
+
+    def __init__(self, secret: str):
+        super().__init__("secrets")
+        self.secret = secret
+
+    def data(self, collector: "Collector") -> dict:
+        return self.secret  # this is a string
 
 
 class typedef(Node):
@@ -103,7 +114,12 @@ class typedef(Node):
 
     @property
     def edges(self) -> List[Node]:
-        return super().edges + list(self.policies) + list(filter(None, [self.runtime]))
+        secret = self.inject if self.injection == "secret" else None
+        return (
+            super().edges
+            + list(self.policies)
+            + list(filter(None, [self.runtime, secret]))
+        )
 
     def named(self, name: str) -> "typedef":
         # TODO: ensure name is not already used in typegraph
@@ -135,7 +151,8 @@ class typedef(Node):
             self.runtime = runtime
 
         for e in self.edges:
-            e._propagate_runtime(self.runtime, visited)
+            if isinstance(e, typedef):
+                e._propagate_runtime(self.runtime, visited)
 
     def set(self, value):
         if self.inject is not None:
@@ -147,7 +164,7 @@ class typedef(Node):
         if self.inject is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return replace(self, injection="secret", inject=secret_name)
+        return replace(self, injection="secret", inject=Secret(secret_name))
 
     def from_parent(self, sibiling: "NodeProxy"):
         # TODO: check for same type and value in same context
@@ -169,19 +186,23 @@ class typedef(Node):
         return replace(self, policies=self.policies + policies)
 
     def data(self, collector) -> dict:
+        # TODO propagate runtime
+        runtime = collector.collect(self.runtime) if self.runtime is not None else -1
         ret = {
             "type": self.type,
             "title": self.name,
             "description": self.description,
-            # TODO propagate runtime
-            "runtime": collector.collect(self.runtime)
-            if self.runtime is not None
-            else -1,
+            "runtime": runtime,
             "policies": [collector.collect(p) for p in self.policies],
         }
         if self.inject is not None:
-            ret["inject"] = self.inject
             ret["injection"] = self.injection
+            if self.injection == "parent":
+                ret["inject"] = collector.collect(self.inject)
+            elif self.injection == "secret":
+                ret["inject"] = self.inject.secret
+            else:
+                ret["inject"] = self.inject
         return ret
 
     def optional(self, default_value: Optional[Any] = None):
@@ -236,11 +257,11 @@ class boolean(typedef):
 
 
 class number(typedef):
-    _min: Optional[float]
-    _max: Optional[float]
-    _x_min: Optional[float]
-    _x_max: Optional[float]
-    _multiple_of: Optional[float]
+    _min: Optional[float] = None
+    _max: Optional[float] = None
+    _x_min: Optional[float] = None
+    _x_max: Optional[float] = None
+    _multiple_of: Optional[float] = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -422,11 +443,35 @@ class func(typedef):
     out: typedef
     mat: Materializer
 
-    def __init__(self, inp: struct, out: typedef, mat: Materializer, **kwargs):
+    # if not safe, output will be typechecked
+    safe: bool
+
+    rate_calls: bool
+    rate_weight: Optional[int] = None
+
+    def __init__(
+        self,
+        inp: struct,
+        out: typedef,
+        mat: Materializer,
+        safe=True,
+        rate_calls=False,
+        rate_weight=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.inp = inp
         self.out = out
         self.mat = mat
+        self.safe = safe
+
+        self.runtime = mat.runtime
+
+        self.rate_calls = rate_calls
+        self.rate_weight = rate_weight
+
+    def rate(self, weight=None, calls=None):
+        return replace(self, rate_weight=weight, rate_calls=calls)
 
     @property
     def edges(self) -> List[Node]:
@@ -442,7 +487,17 @@ class func(typedef):
             "input": collector.collect(self.inp),
             "output": collector.collect(self.out),
             "materializer": collector.collect(self.mat),
+            "rate_weight": self.rate_weight,
+            "rate_calls": self.rate_calls,
         }
+
+    # def compose(self, other: "func") -> "func":
+    #     assert self.out == other.inp
+    #     # what if other == gen?
+    #     return func(self, other, IdentityMat())
+
+    # def __mul__(self, other: "func") -> "func":
+    #     return self.compose(other)
 
 
 class policy(typedef):

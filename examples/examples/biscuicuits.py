@@ -1,10 +1,11 @@
+from typegraph.graphs.builder import json_dumps
 from typegraph.graphs.typegraph import github_auth
 from typegraph.graphs.typegraph import Rate
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import ModuleMat
 from typegraph.materializers.http import HTTPRuntime
 from typegraph.policies import allow_all
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 def send_in_blue_send(subject, frm, to, api_key):
@@ -15,14 +16,14 @@ def send_in_blue_send(subject, frm, to, api_key):
             {
                 "name": t.string(),
                 "email": t.email(),
-                "subject": t.string().s_raw(subject),
+                "subject": t.string().set(subject),
                 "message": t.string(),
-                "apiKey": t.string().s_secret(api_key),
-                "from": t.string().s_secret(frm),
-                "to": t.string().s_secret(to),
+                "apiKey": t.string().from_secret(api_key),
+                "from": t.string().from_secret(frm),
+                "to": t.string().from_secret(to),
             }
         ),
-        t.struct({"success": t.boolean(), "error": t.string().s_optional()}),
+        t.struct({"success": t.boolean(), "error": t.string().optional()}),
         f.imp("default"),
     ).rate(weight=2)
 
@@ -36,7 +37,7 @@ with TypeGraph(
     all = allow_all()
     remote = HTTPRuntime("https://api.github.com")
 
-    g.expose(
+    g.query(
         contact=send_in_blue_send(
             "Nouveau message",
             "SENDER",
@@ -45,13 +46,15 @@ with TypeGraph(
         ).add_policy(all),
         user=remote.get(
             "/user",
-            t.struct({"token": t.string().s_context("accessToken")}),
+            t.struct({"token": t.string().from_context("accessToken")}),
             t.struct(
                 {
                     "id": t.integer(),
                     "login": t.string(),
                 }
-            ).s_optional(),
+            ).optional(),
             auth_token_field="token",
         ).add_policy(all),
     )
+
+print(json_dumps(g.build()).decode())

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from dataclasses import field
 import inspect
 from pathlib import Path
+from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -11,9 +12,14 @@ from typing import Literal
 from typing import Optional
 from typing import TYPE_CHECKING
 
+from typegraph.graphs.builder import Collector
+
 
 if TYPE_CHECKING:
     from typegraph.types import types as t
+
+
+typegraph_version = "0.0.1"
 
 
 @dataclass(eq=True, frozen=True)
@@ -179,9 +185,28 @@ class TypeGraph:
             ).named(self.name)
 
     def build(self):
-        from typegraph.graphs import builders
+        def visit(nodes: List[Any], collector: Collector):
+            for node in nodes:
+                collector.collect(node)
+                visit(node.edges, collector)
 
-        return builders.build(self)
+        collector = Collector()
+        visit([self.root()], collector)
+
+        ret = {
+            c: [n.data(collector) for n in collector.collects[c]]
+            for c in collector.collects
+        }
+
+        ret["meta"] = {
+            "secrets": ret.pop("secrets") if "secrets" in ret else [],
+            "auths": self.auths,
+            "rate": self.rate,
+            "cors": self.cors,
+            "version": typegraph_version,
+        }
+
+        return ret
 
 
 class TypegraphContext:

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from dataclasses import KW_ONLY
 from typing import List
 
-from typegraph.graphs.node import Collector
+from typegraph.graphs.builder import Collector
 from typegraph.graphs.node import Node
 
 
@@ -13,6 +13,11 @@ class Runtime(Node):
     runtime_name: str
     _: KW_ONLY
     collector_target: str = Collector.runtimes
+
+    def data(self, collector: Collector) -> dict:
+        data = vars(self)
+        data.pop("collector_target")
+        return {"name": data.pop("runtime_name"), "data": data}
 
 
 @dataclass(eq=True, frozen=True)
@@ -25,3 +30,12 @@ class Materializer(Node):
     @property
     def edges(self) -> List[Node]:
         return super().edges + [self.runtime]
+
+    def data(self, collector: Collector) -> dict:
+        data = vars(self)
+        data.pop("collector_target")
+        return {
+            "name": data.pop("materializer_name"),
+            "runtime": collector.collect(data.pop("runtime")),
+            "data": data,
+        }

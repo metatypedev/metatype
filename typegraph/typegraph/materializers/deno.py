@@ -109,7 +109,7 @@ class ModuleMat(Materializer):
             from typegraph.graphs.typegraph import get_absolute_path
 
             path = get_absolute_path(file)
-            if os.environ["DONT_READ_EXTERNAL_TS_FILES"]:
+            if os.environ.get("DONT_READ_EXTERNAL_TS_FILES"):
                 object.__setattr__(self, "code", f"file:{path}")
             else:
                 with open(path) as f:
