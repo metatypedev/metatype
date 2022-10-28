@@ -1,7 +1,6 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph.graphs.node import build
-from typegraph.graphs.node import Collector
+from typegraph.graphs.builder import json_dumps
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.types import types as t
@@ -53,17 +52,4 @@ with TypeGraph(
     g.mutation(createPost=create_post)
 
 
-collector = build(g.root())
-
-print("-- TYPES --")
-for i, n in enumerate(collector.collects[Collector.types]):
-    print(i, n.data(collector))
-print()
-
-collects = [Collector.materializers, Collector.runtimes, Collector.policies]
-
-for c in collects:
-    print(f"-- {c.upper()} --")
-    for i, n in enumerate(collector.collects[c]):
-        print(i, n)
-    print()
+print(json_dumps(g.build()).decode())

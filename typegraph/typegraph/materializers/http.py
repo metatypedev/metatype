@@ -2,10 +2,11 @@
 
 from dataclasses import dataclass
 from dataclasses import KW_ONLY
+from typing import Optional
 
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 @dataclass(eq=True, frozen=True)
@@ -37,7 +38,7 @@ class RESTMat(Materializer):
     path: str
     _: KW_ONLY
     content_type: str = "application/json"
-    query_fields: tuple[str, ...] | None = None
-    body_fields: tuple[str, ...] | None = None
-    auth_token_field: str | None = None
+    query_fields: Optional[tuple[str, ...]] = None
+    body_fields: Optional[tuple[str, ...]] = None
+    auth_token_field: Optional[str] = None
     materializer_name: str = "rest"

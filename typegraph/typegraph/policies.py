@@ -1,12 +1,34 @@
 # Copyright Metatype under the Elastic License 2.0.
 
+from typing import Optional
+
+from typegraph.graphs.builder import Collector
+from typegraph.graphs.node import Node
+from typegraph.materializers.base import Materializer
 from typegraph.materializers.deno import FunMat
-from typegraph.types import typedefs as t
+
+
+class Policy(Node):
+    mat: Materializer
+    name: Optional[str]
+
+    def __init__(self, mat: Materializer, **kwargs):
+        super().__init__(Collector.policies)
+        self.mat = mat
+
+    def data(self, collector):
+        return {
+            "materializer": collector.collects[Collector.materializers].add(self.mat)
+        }
+
+    def named(self, name: str):
+        pol = Policy(**vars(self))
+        pol.name = name
+        return pol
 
 
 def allow_all(name: str = "__allow_all"):
-    return t.policy(
-        t.struct(),
+    return Policy(
         FunMat.from_lambda(lambda args: True),
     ).named(name)
 
