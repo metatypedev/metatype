@@ -139,6 +139,8 @@ class typedef(Node):
 
         self.runtime = runtime
 
+        return self
+
     def _propagate_runtime(self, runtime: "Runtime", visited: Set["typedef"] = None):
         if visited is None:
             visited = set()
@@ -186,15 +188,14 @@ class typedef(Node):
         return replace(self, policies=self.policies + policies)
 
     def data(self, collector) -> dict:
-        # TODO propagate runtime
-        runtime = collector.collect(self.runtime) if self.runtime is not None else -1
         ret = {
             "type": self.type,
             "title": self.name,
             "description": self.description,
-            "runtime": runtime,
+            "runtime": collector.collect(self.runtime),
             "policies": [collector.collect(p) for p in self.policies],
         }
+
         if self.inject is not None:
             ret["injection"] = self.injection
             if self.injection == "parent":
@@ -203,6 +204,7 @@ class typedef(Node):
                 ret["inject"] = self.inject.secret
             else:
                 ret["inject"] = self.inject
+
         return ret
 
     def optional(self, default_value: Optional[Any] = None):
