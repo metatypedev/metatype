@@ -13,6 +13,7 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 from typegraph.graphs.builder import Collector
+from typegraph.materializers.deno import DenoRuntime
 
 
 if TYPE_CHECKING:
@@ -177,12 +178,16 @@ class TypeGraph:
         from typegraph.types import types as t
 
         with self:
-            return t.struct(
+            root = t.struct(
                 {
                     "query": t.struct(self.queries).optional(),
                     "mutation": t.struct(self.mutations).optional(),
                 }
             ).named(self.name)
+
+        root._propagate_runtime(DenoRuntime())
+
+        return root
 
     def build(self):
         def visit(nodes: List[Any], collector: Collector):
