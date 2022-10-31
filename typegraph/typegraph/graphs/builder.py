@@ -4,9 +4,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 
-from frozendict import frozendict
 from ordered_set import OrderedSet
-import orjson
 from typegraph.graphs.node import Node
 
 
@@ -40,13 +38,3 @@ def build(root: Node) -> Collector:
     visit([root], collector)
 
     return collector
-
-
-def json_dumps(obj: Any):
-    def default(obj):
-        if isinstance(obj, frozendict):
-            return dict(obj)
-
-        raise TypeError
-
-    return orjson.dumps(obj, default=default)
