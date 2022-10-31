@@ -1,28 +1,16 @@
 # Copyright Metatype under the Elastic License 2.0.
 
+from argparse import ArgumentParser
 import importlib
 from pathlib import Path
 import pkgutil
+import re
 from typing import List
 
 from frozendict import frozendict
 import orjson
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import Relation
-
-
-def default(obj):
-    if isinstance(obj, Relation):
-        return {}
-    if isinstance(obj, frozendict):
-        return dict(obj)
-    raise TypeError
-
-
-def serialize_typegraph(tg, indent=False):
-    g = tg.build()
-    opt = dict(option=orjson.OPT_INDENT_2) if indent else {}
-    return orjson.dumps(g, default=default, **opt).decode()
 
 
 def import_file(path: str) -> List[TypeGraph]:
@@ -73,3 +61,31 @@ def find_typegraphs(module) -> List[TypeGraph]:
         if isinstance(obj, TypeGraph):
             ret.append(obj)
     return ret
+
+
+def cmd():
+    parser = ArgumentParser()
+    parser.add_argument("modules", nargs="*")
+    parser.add_argument("--pretty", action="store_true")
+
+    args = parser.parse_args()
+
+    tgs = []
+
+    for m in args.modules:
+        if re.search("\\.py$", m):
+            tgs = tgs + import_file(m)
+        else:
+            tgs = tgs + import_folder(m)
+
+    def default(obj):
+        if isinstance(obj, frozendict):
+            return dict(obj)
+        if isinstance(obj, Relation):
+            return {}
+        raise TypeError
+
+    tgs = [tg.build() for tg in tgs]
+    opt = dict(option=orjson.OPT_INDENT_2) if args.pretty else {}
+    json = orjson.dumps(tgs, default=default, **opt).decode()
+    print(json)

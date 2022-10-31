@@ -1,4 +1,3 @@
-from typegraph.graphs.builder import json_dumps
 from typegraph.graphs.typegraph import github_auth
 from typegraph.graphs.typegraph import Rate
 from typegraph.graphs.typegraph import TypeGraph
@@ -56,5 +55,3 @@ with TypeGraph(
             auth_token_field="token",
         ).add_policy(all),
     )
-
-print(json_dumps(g.build()).decode())
