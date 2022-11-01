@@ -61,7 +61,7 @@ export class DenoRuntime extends Runtime {
   ): ComputeStage[] {
     let resolver: Resolver;
     if (stage.props.node === "__typename") {
-      resolver = () => stage.props.outType.name;
+      resolver = () => stage.props.outType.title;
     } else if (stage.props.materializer == null) {
       resolver = ({ _: { parent } }) => {
         const resolver = parent[stage.props.node];
@@ -178,7 +178,7 @@ class OnDemandWorker {
 
     if (activity <= inactivityThreshold && this.tasks.size < 1) {
       logger.info(
-        `lazy close worker ${this.name} for ${this.tg.types[0].name}`,
+        `lazy close worker ${this.name} for ${this.tg.types[0].title}`,
       );
       this.lazyWorker.terminate();
       this.lazyWorker = undefined;
@@ -188,7 +188,7 @@ class OnDemandWorker {
   async terminate(): Promise<void> {
     clearInterval(this.gcInterval);
     await Promise.all([...this.tasks.values()].map((t) => t.promise));
-    logger.info(`close worker ${this.name} for ${this.tg.types[0].name}`);
+    logger.info(`close worker ${this.name} for ${this.tg.types[0].title}`);
     if (this.lazyWorker) {
       this.lazyWorker.terminate();
       this.lazyWorker = undefined;
@@ -197,7 +197,7 @@ class OnDemandWorker {
 
   worker(): Worker {
     if (!this.lazyWorker) {
-      logger.info(`spawn worker ${this.name} for ${this.tg.types[0].name}`);
+      logger.info(`spawn worker ${this.name} for ${this.tg.types[0].title}`);
       this.lazyWorker = new Worker(workerFile, {
         type: "module",
         deno: {

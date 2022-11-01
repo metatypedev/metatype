@@ -15,12 +15,12 @@ import { Runtime } from "./runtimes/Runtime.ts";
 import { Code } from "./runtimes/utils/codes.ts";
 import { ensure, envOrFail, mapo } from "./utils.ts";
 import { compileCodes } from "./utils/swc.ts";
-import { v4 as uuid } from "std/uuid/mod.ts";
+// import { v4 as uuid } from "std/uuid/mod.ts";
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
 import * as semver from "std/semver/mod.ts";
 
-import { ListNode, StructNode, TypeNode } from "./type_node.ts";
+import { ArrayNode, ObjectNode, TypeNode } from "./type_node.ts";
 import config from "./config.ts";
 import {
   Batcher,
@@ -84,11 +84,10 @@ export type RuntimeResolver = Record<string, Runtime>;
 
 const dummyStringTypeNode: TypeNode = {
   // FIXME: remove dummy
-  name: "string",
-  typedef: "string",
+  title: "string",
+  type: "string",
   policies: [],
   runtime: -1,
-  data: {},
 };
 
 const runtimeInit: RuntimeInit = {
@@ -146,7 +145,7 @@ export class TypeGraph {
     // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
     const typeByName: Record<string, TypeNode> = {};
     typegraph.types.forEach((tpe) => {
-      typeByName[tpe.name] = tpe;
+      typeByName[tpe.title] = tpe;
     });
     this.typeByName = typeByName;
   }
@@ -157,7 +156,7 @@ export class TypeGraph {
     introspection: TypeGraph | null,
     runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
-    const typegraphName = typegraph.types[0].name;
+    const typegraphName = typegraph.types[0].title;
     const { meta, runtimes } = typegraph;
 
     let currentVersion = meta.version;
@@ -299,17 +298,12 @@ export class TypeGraph {
 
     let policies = arg.policies.length > 0
       ? {
-        [arg.name]: arg.policies.map((p) => this.policy(p).name),
+        [arg.title]: arg.policies.map((p) => this.policy(p).name),
       }
       : {};
 
-    const {
-      default_value: defaultValue,
-      inject,
-      injection,
-    } = arg.data;
-
-    if (injection) {
+    if ("injection" in arg) {
+      const { injection, inject } = arg;
       ensure(!fieldArg, "cannot set injected arg");
 
       switch (injection) {
@@ -323,7 +317,7 @@ export class TypeGraph {
           const value = this.secrets[name];
           if (
             value === undefined &&
-            (value === null && arg.typedef !== "optional")
+            (value === null && arg.type !== "optional")
           ) {
             // manage default?
             throw new Error(`injection ${name} was not found in secrets`);
@@ -342,7 +336,7 @@ export class TypeGraph {
             (_parent, _variables, { [name]: value }) => {
               if (
                 value === undefined &&
-                (value === null && arg.typedef !== "optional")
+                (value === null && arg.type !== "optional")
               ) {
                 // manage default?
                 throw new Error(`injection ${name} was not found in context`);
@@ -371,7 +365,7 @@ export class TypeGraph {
             ({ [name]: value }) => {
               if (
                 value === undefined &&
-                (value === null && arg.typedef !== "optional")
+                (value === null && arg.type !== "optional")
               ) {
                 // manage default?
                 throw new Error(`injection ${name} was not found in parent`);
@@ -388,14 +382,15 @@ export class TypeGraph {
     }
 
     if (!fieldArg) {
-      if (arg.typedef === "optional") {
+      if (arg.type === "optional") {
+        const { default_value: defaultValue } = arg;
         return !noDefault && defaultValue
           ? [() => defaultValue, policies, []]
           : null;
       }
 
-      if (arg.typedef === "struct") {
-        const argSchema = arg.data.binds as Record<string, number>;
+      if (arg.type === "object") {
+        const argSchema = arg.properties;
         const values: Record<string, any> = {};
         const deps = [];
 
@@ -429,8 +424,8 @@ export class TypeGraph {
       throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
     }
 
-    if (arg.typedef === "optional") {
-      return this.collectArg(fieldArg, arg.data.of, parentContext);
+    if (arg.type === "optional") {
+      return this.collectArg(fieldArg, arg.item, parentContext);
     }
 
     const { value: argValue } = fieldArg;
@@ -449,13 +444,13 @@ export class TypeGraph {
       ];
     }
 
-    if (arg.typedef === "struct") {
+    if (arg.type === "object") {
       ensure(
         kind === Kind.OBJECT,
-        `type mismatch, got ${kind} but expected OBJECT for ${arg.name}`,
+        `type mismatch, got ${kind} but expected OBJECT for ${arg.title}`,
       );
       const { fields } = argValue as ast.ObjectValueNode;
-      const argSchema = arg.data.binds as Record<string, number>;
+      const argSchema = arg.properties as Record<string, number>;
 
       const fieldArgsIdx: Record<string, ast.ObjectFieldNode> = fields.reduce(
         (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
@@ -476,7 +471,9 @@ export class TypeGraph {
         }
         const [value, nestedPolicies, nestedDeps] = nested;
         deps.push(...nestedDeps);
-        const renames = (arg.data.renames as Record<string, string>) ?? {};
+        // FIXME
+        // const renames = arg.renames ?? {}
+        const renames = {} as Record<string, string>;
         values[renames[fieldName] ?? fieldName] = value;
         delete fieldArgsIdx[fieldName];
         policies = { ...policies, ...nestedPolicies };
@@ -489,13 +486,13 @@ export class TypeGraph {
       return [(ctx, vars) => mapo(values, (e) => e(ctx, vars)), policies, deps];
     }
 
-    if (arg.typedef === "list") {
+    if (arg.type === "array") {
       ensure(
         kind === Kind.LIST,
-        `type mismatch, got ${kind} but expected LIST for ${arg.name}`,
+        `type mismatch, got ${kind} but expected LIST for ${arg.title}`,
       );
       const { values: valueOfs } = argValue as ast.ListValueNode;
-      const valueIdx = arg.data.of as number;
+      const valueIdx = arg.items as number;
 
       const values: any[] = [];
       const deps = [];
@@ -519,45 +516,41 @@ export class TypeGraph {
       return [(ctx, vars) => values.map((e) => e(ctx, vars)), policies, deps];
     }
 
-    if (arg.typedef === "integer") {
+    if (arg.type === "integer") {
       ensure(
         kind === Kind.INT,
-        `type mismatch, got ${kind} but expected INT for ${arg.name}`,
+        `type mismatch, got ${kind} but expected INT for ${arg.title}`,
       );
       const { value } = argValue as ast.IntValueNode;
       const parsed = Number(value);
       return [() => parsed, policies, []];
     }
 
-    if (arg.typedef === "boolean") {
-      ensure(
-        kind === Kind.BOOLEAN,
-        `type mismatch, got ${kind} but expected BOOLEAN for ${arg.name}`,
-      );
-      const { value } = argValue as ast.BooleanValueNode;
-      const parsed = Boolean(value);
-      return [() => parsed, policies, []];
-    }
-
-    if (arg.typedef === "float") {
+    if (arg.type === "number") {
       ensure(
         kind === Kind.FLOAT || kind === Kind.INT,
-        `type mismatch, got ${kind} but expected FLOAT for ${arg.name}`,
+        `type mismatch, got ${kind} but expected FLOAT for ${arg.title}`,
       );
       const { value } = argValue as ast.FloatValueNode;
       const parsed = Number(value);
       return [() => parsed, policies, []];
     }
 
-    if (
-      arg.typedef === "string" ||
-      arg.typedef === "uuid" ||
-      arg.typedef === "email" ||
-      arg.typedef === "json"
-    ) {
+    if (arg.type === "boolean") {
+      ensure(
+        kind === Kind.BOOLEAN,
+        `type mismatch, got ${kind} but expected BOOLEAN for ${arg.title}`,
+      );
+      const { value } = argValue as ast.BooleanValueNode;
+      const parsed = Boolean(value);
+      return [() => parsed, policies, []];
+    }
+
+    // TODO arg.type === "json"
+    if (arg.type === "string") {
       ensure(
         kind === Kind.STRING,
-        `type mismatch, got ${kind} but expected STRING for ${arg.name}`,
+        `type mismatch, got ${kind} but expected STRING for ${arg.title}`,
       );
       const { value } = argValue as ast.StringValueNode;
       const parsed = String(value);
@@ -566,7 +559,7 @@ export class TypeGraph {
 
     throw Error(
       `unknown variable value ${JSON.stringify(arg)} ${JSON.stringify(fieldArg)}
-      (${kind}) for ${arg.name}`,
+      (${kind}) for ${arg.title}`,
     );
   }
 
@@ -581,28 +574,28 @@ export class TypeGraph {
     parentStage: ComputeStage | undefined = undefined,
     serial = false,
   ): ComputeStage[] {
-    const parentType = this.type(parentIdx) as StructNode;
+    const parentType = this.type(parentIdx) as ObjectNode;
     const stages: ComputeStage[] = [];
 
     const parentSelection = graphql.resolveSelection(
       parentSelectionSet,
       fragments,
     );
-    const fieldSchema = (parentType.data.binds ?? {}) as Record<string, number>;
+    const fieldSchema = (parentType.properties ?? {}) as Record<string, number>;
     verbose &&
       console.log(
-        this.root.name,
+        this.root.title,
         parentName,
         parentArgs.map((n) => n.name?.value),
         parentSelection.map((n) => n.name?.value),
-        parentType.typedef,
+        parentType.type,
         Object.entries(fieldSchema).reduce(
-          (agg, [k, v]) => ({ ...agg, [k]: this.type(v).typedef }),
+          (agg, [k, v]) => ({ ...agg, [k]: this.type(v).type }),
           {},
         ),
       );
 
-    if (parentType.typedef === "struct" && parentSelection.length < 1) {
+    if (parentType.type === "object" && parentSelection.length < 1) {
       throw Error(`struct "${parentName}" must a field selection`);
     }
 
@@ -683,11 +676,11 @@ export class TypeGraph {
       const fieldType = this.type(fieldIdx);
       const checksField = fieldType.policies.map((p) => this.policy(p).name);
       if (checksField.length > 0) {
-        policies[fieldType.name] = checksField;
+        policies[fieldType.title] = checksField;
       }
 
       // value case
-      if (fieldType.typedef !== "func" && fieldType.typedef !== "gen") {
+      if (fieldType.type !== "function") {
         if (fieldArgs && fieldArgs.length > 0) {
           throw Error(
             `unexpected args=${JSON.stringify(fieldArgs)} for ${fieldType}`,
@@ -711,7 +704,7 @@ export class TypeGraph {
         });
         stages.push(stage);
 
-        if (fieldType.typedef === "struct") {
+        if (fieldType.type === "object") {
           stages.push(
             ...this.traverse(
               fragments,
@@ -725,15 +718,15 @@ export class TypeGraph {
             ),
           );
         } else if (
-          fieldType.typedef === "optional" &&
-          this.type(fieldType.data.of).typedef === "list"
+          fieldType.type === "optional" &&
+          this.type(fieldType.item).type === "array"
         ) {
-          const subTypeIdx = fieldType.data.of;
-          const subType = this.type(subTypeIdx) as ListNode;
-          const subSubTypeIdx = subType.data.of;
+          const subTypeIdx = fieldType.item;
+          const subType = this.type(subTypeIdx) as ArrayNode;
+          const subSubTypeIdx = subType.items;
           const subSubType = this.type(subSubTypeIdx);
 
-          if (subSubType.typedef === "struct") {
+          if (subSubType.type === "string") {
             stages.push(
               ...this.traverse(
                 fragments,
@@ -748,13 +741,15 @@ export class TypeGraph {
             );
           }
         } else if (
-          fieldType.typedef === "list" ||
-          fieldType.typedef === "optional"
+          fieldType.type === "array" ||
+          fieldType.type === "optional"
         ) {
-          const subTypeIdx = fieldType.data.of;
+          const subTypeIdx = fieldType.type === "array"
+            ? fieldType.items
+            : fieldType.item;
           const subType = this.type(subTypeIdx);
 
-          if (subType.typedef === "struct") {
+          if (subType.type === "object") {
             stages.push(
               ...this.traverse(
                 fragments,
@@ -782,19 +777,15 @@ export class TypeGraph {
       }
 
       const { input: inputIdx, output: outputIdx, rate_calls, rate_weight } =
-        fieldType.data;
+        fieldType;
       const outputType = this.type(outputIdx);
       const checks = outputType.policies.map((p) => this.policy(p).name);
       if (checks.length > 0) {
-        policies[outputType.name] = checks;
+        policies[outputType.title] = checks;
       }
       const args: Record<string, ComputeArg> = {};
 
-      const argSchema = (this.tg.types[inputIdx] as StructNode).data
-        .binds as Record<
-          string,
-          number
-        >;
+      const argSchema = (this.tg.types[inputIdx] as ObjectNode).properties;
       const fieldArgsIdx: Record<string, ast.ArgumentNode> = (
         fieldArgs ?? []
       ).reduce(
@@ -833,12 +824,12 @@ export class TypeGraph {
         ),
       );
 
-      const mat = this.tg.materializers[fieldType.data.materializer as number];
+      const mat = this.tg.materializers[fieldType.materializer];
       const runtime = this.runtimeReferences[mat.runtime];
 
       if (!serial && mat.data.serial) {
         throw Error(
-          `${fieldType.name} via ${mat.name} can only be executed in mutation`,
+          `${fieldType.title} via ${mat.name} can only be executed in mutation`,
         );
       }
 
@@ -854,11 +845,11 @@ export class TypeGraph {
         node: fieldName,
         path: [...queryPath, aliasName ?? fieldName],
         rateCalls: rate_calls,
-        rateWeight: rate_weight,
+        rateWeight: rate_weight as number, // FIXME what is the right type?
       });
       stages.push(stage);
 
-      if (outputType.typedef === "struct") {
+      if (outputType.type === "object") {
         stages.push(
           ...this.traverse(
             fragments,
@@ -872,15 +863,15 @@ export class TypeGraph {
           ),
         );
       } else if (
-        outputType.typedef === "optional" &&
-        this.type(outputType.data.of).typedef === "list"
+        outputType.type === "optional" &&
+        this.type(outputType.item).type === "array"
       ) {
-        const subTypeIdx = outputType.data.of;
-        const subType = this.type(subTypeIdx) as ListNode;
-        const subSubTypeIdx = subType.data.of;
+        const subTypeIdx = outputType.item;
+        const subType = this.type(subTypeIdx) as ArrayNode;
+        const subSubTypeIdx = subType.items;
         const subSubType = this.type(subSubTypeIdx);
 
-        if (subSubType.typedef === "struct") {
+        if (subSubType.type === "object") {
           stages.push(
             ...this.traverse(
               fragments,
@@ -895,12 +886,14 @@ export class TypeGraph {
           );
         }
       } else if (
-        outputType.typedef === "list" ||
-        outputType.typedef === "optional"
+        outputType.type === "array" ||
+        outputType.type === "optional"
       ) {
-        const subTypeIdx = outputType.data.of;
+        const subTypeIdx = outputType.type === "array"
+          ? outputType.items
+          : outputType.item;
         const subType = this.type(subTypeIdx);
-        if (subType.typedef === "struct") {
+        if (subType.type === "object") {
           stages.push(
             ...this.traverse(
               fragments,
@@ -984,15 +977,15 @@ export class TypeGraph {
       return x;
     };
 
-    if (type.typedef === "list") {
-      if (this.type(type.data.of).typedef === "optional") {
+    if (type.type === "array") {
+      if (this.type(type.items).type === "optional") {
         throw Error("D");
         //return (x: any) => x.flat().filter((c: any) => !!c);
       }
       return (x: any) => ensureArray(x).flat();
     }
-    if (type.typedef === "optional") {
-      if (this.type(type.data.of).typedef === "list") {
+    if (type.type === "optional") {
+      if (this.type(type.item).type === "array") {
         return (x: any) =>
           ensureArray(x)
             .filter((c: any) => !!c)
@@ -1001,18 +994,14 @@ export class TypeGraph {
       return (x: any) => ensureArray(x).filter((c: any) => !!c);
     }
     ensure(
-      type.typedef === "struct" ||
-        type.typedef === "enum" ||
-        type.typedef === "uri" ||
-        type.typedef === "float" ||
-        type.typedef === "integer" ||
-        type.typedef === "unsigned_integer" ||
-        type.typedef === "boolean" ||
-        type.typedef === "gen" ||
-        type.typedef === "uuid" ||
-        type.typedef === "string" ||
-        type.typedef === "email",
-      `struct expected but got ${type.typedef}`,
+      type.type === "object" ||
+        // type.type === "enum" ||
+        type.type === "integer" ||
+        type.type === "number" ||
+        type.type === "boolean" ||
+        type.type === "function" ||
+        type.type === "string",
+      `object expected but got ${type.type}`,
     );
     return (x: any) => ensureArray(x);
   };
@@ -1039,9 +1028,9 @@ export class TypeGraph {
   ) {
     const tpe = this.typeByNameOrIndex(nameOrIndex);
 
-    if (tpe.typedef === "optional") {
+    if (tpe.type === "optional") {
       if (value == null) return;
-      this.validateValueType(tpe.data.of as number, value, label);
+      this.validateValueType(tpe.item as number, value, label);
       return;
     }
 
@@ -1049,12 +1038,12 @@ export class TypeGraph {
       throw new Error(`variable ${label} cannot be null`);
     }
 
-    switch (tpe.typedef) {
-      case "struct":
+    switch (tpe.type) {
+      case "object":
         if (typeof value !== "object") {
           throw new Error(`variable ${label} must be an object`);
         }
-        Object.entries(tpe.data.binds as Record<string, number>).forEach(
+        Object.entries(tpe.properties).forEach(
           ([key, typeIdx]) => {
             this.validateValueType(
               typeIdx,
@@ -1064,21 +1053,20 @@ export class TypeGraph {
           },
         );
         return;
-      case "list":
+      case "array":
         if (!Array.isArray(value)) {
           throw new Error(`variable ${label} must be an array`);
         }
         value.forEach((item, idx) => {
           this.validateValueType(
-            tpe.data.of as number,
+            tpe.items,
             item,
             `${label}[${idx}]`,
           );
         });
         return;
       case "integer":
-      case "unsigned_integer":
-      case "float":
+      case "number":
         if (typeof value !== "number") {
           throw new Error(`variable ${label} must be a number`);
         }
@@ -1093,13 +1081,13 @@ export class TypeGraph {
           throw new Error(`variable ${label} must be a string`);
         }
         return;
-      case "uuid":
-        if (!uuid.validate(value as string)) {
-          throw new Error(`variable ${label} must be a valid UUID`);
-        }
-        return;
+      // case "uuid":
+      //   if (!uuid.validate(value as string)) {
+      //     throw new Error(`variable ${label} must be a valid UUID`);
+      //   }
+      //   return;
       default:
-        throw new Error(`unsupported type ${tpe.typedef}`);
+        throw new Error(`unsupported type ${tpe.type}`);
     }
   }
 }

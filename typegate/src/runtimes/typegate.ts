@@ -145,25 +145,4 @@ export class TypeGateRuntime extends Runtime {
 
     return this.register.remove(name);
   };
-
-  typenode: Resolver = (
-    { typegraphName, idx },
-  ) => {
-    const engine = this.register.get(typegraphName);
-    if (!engine) {
-      return null;
-    }
-    const tg = engine.tg;
-    const type = tg.type(idx);
-    if (!type) {
-      return null;
-    }
-    const { name, typedef, data } = type;
-    return {
-      idx,
-      name,
-      typedef,
-      data: JSON.stringify(data),
-    };
-  };
 }
