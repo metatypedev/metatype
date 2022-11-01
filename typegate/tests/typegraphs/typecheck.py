@@ -34,8 +34,6 @@ with TypeGraph(
         "findPost"
     )
 
-    g.query(posts=posts, findPost=find_post.add_policy(my_policy))
-
     create_post = t.func(
         t.struct(
             {
@@ -48,4 +46,8 @@ with TypeGraph(
         FunMat("", serial=True),
     )
 
-    g.mutation(createPost=create_post)
+    g.expose(
+        posts=posts,
+        findPost=find_post.add_policy(my_policy),
+        createPost=create_post,
+    )
