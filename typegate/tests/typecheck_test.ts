@@ -1,88 +1,103 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import tg from "./typegraphs/typecheck.json" assert { type: "json" };
-import { assert, assertEquals, assertThrows } from "std/testing/asserts.ts";
-import {
-  QueryTypeCheck,
-  TypeCheck,
-  ValidationSchemaBuilder,
-} from "../src/typecheck.ts";
+import { assert, assertThrows } from "std/testing/asserts.ts";
+import { TypeCheck, ValidationSchemaBuilder } from "../src/typecheck.ts";
 import { findOperation } from "../src/graphql.ts";
 import { parse } from "graphql";
+import { dirname, fromFileUrl } from "std/path/mod.ts";
+
+// FIXME temp
+async function loadTypegraphs(path: string) {
+  const localDir = dirname(fromFileUrl(import.meta.url));
+  const p = Deno.run({
+    cwd: localDir,
+    cmd: ["py-tg", path],
+    stdout: "piped",
+  });
+
+  const out = new TextDecoder().decode(await p.output()).trim();
+  p.close();
+
+  return JSON.parse(out);
+}
 
 Deno.test("typecheck", async (t) => {
-  const validationSchema = new ValidationSchemaBuilder(tg.types).build();
+  const [tg] = await loadTypegraphs("typegraphs/typecheck.py");
 
-  const typecheck = new TypeCheck(validationSchema);
+  // for syntax highlighting
+  const graphql = String.raw;
 
-  const gql = (strings: readonly string[], ...args: any[]) => {
-    const query = strings
-      .map((q, i) => `${q}${args[i] ? JSON.stringify(args[i]) : ""}`)
-      .join("");
+  const typecheck = (query: string) => {
     const [operation, fragments] = findOperation(parse(query), undefined);
     if (operation == null) {
       throw new Error("No operation found in the query");
     }
-    return typecheck.validateQuery(operation, fragments);
+    const validationSchema = new ValidationSchemaBuilder(
+      tg.types,
+      operation,
+      fragments,
+    ).build();
+
+    return new TypeCheck(validationSchema);
   };
 
   await t.step("invalid queries", () => {
     assertThrows(
       () =>
-        gql`
-        query Q {
-          postis {
-            id
+        typecheck(graphql`
+          query Q {
+            postis {
+              id
+            }
           }
-        }
-      `,
+        `),
       Error,
       "Q.postis is undefined",
     );
 
     assertThrows(
       () =>
-        gql`
-        query Q {
-          posts {
-            id
-            title
-            text
+        typecheck(graphql`
+          query Q {
+            posts {
+              id
+              title
+              text
+            }
           }
-        }
-      `,
+        `),
       Error,
       "Q.posts.text is undefined",
     );
   });
 
-  let query1: QueryTypeCheck;
+  let query1: TypeCheck;
 
   await t.step("valid query", () => {
-    query1 = gql`
+    query1 = typecheck(graphql`
       query GetPosts {
         posts {
           id
           title
           author {
             id
-            name
+            username
           }
         }
       }
-    `;
+    `);
 
-    assert(query1 instanceof QueryTypeCheck);
+    assert(query1 instanceof TypeCheck);
   });
 
   const post1 = {
     id: crypto.randomUUID(),
-    title: "Hello",
+    title: "Hello World of Metatype",
     content: "Hello, World!",
   };
 
   const user1 = { id: crypto.randomUUID() };
-  const user2 = { ...user1, name: "John" };
+  const user2 = { ...user1, username: "John" };
 
   const post2 = { ...post1, author: user1 };
   const post3 = { ...post1, author: user2 };
@@ -91,13 +106,13 @@ Deno.test("typecheck", async (t) => {
     assertThrows(
       () => query1.validate({ posts: [post1] }),
       Error,
-      "Expected object at /posts/0/author",
+      "required property 'author' at /posts/0",
     );
 
     assertThrows(
       () => query1.validate({ posts: [post2] }),
       Error,
-      "Expected string at /posts/0/author/name",
+      "required property 'username' at /posts/0/author",
     );
 
     query1.validate({ posts: [post3] });
@@ -105,23 +120,29 @@ Deno.test("typecheck", async (t) => {
     assertThrows(
       () => query1.validate({ posts: [post3, post2] }),
       Error,
-      "Expected string at /posts/1/author/name",
+      "required property 'username' at /posts/1/author",
     );
 
-    const query2 = gql`
+    const query2 = typecheck(graphql`
       query GetPosts {
         posts {
           id
           title
           author {
             id
-            name
+            username
             email
             website
           }
         }
       }
-    `;
+    `);
+
+    const user = {
+      id: "user-id",
+      username: "John",
+      email: "my email",
+    };
 
     assertThrows(
       () =>
@@ -129,14 +150,12 @@ Deno.test("typecheck", async (t) => {
           posts: [
             {
               ...post1,
-              author: {
-                id: "user-id",
-              },
+              author: user,
             },
           ],
         }),
       Error,
-      "Expected string to match format 'uuid' at /posts/0/author/id",
+      'must match format "uuid" at /posts/0/author/id',
     );
 
     assertThrows(
@@ -144,15 +163,11 @@ Deno.test("typecheck", async (t) => {
         query2.validate({
           posts: [{
             ...post1,
-            author: {
-              id: crypto.randomUUID(),
-              name: "John",
-              email: "my email address",
-            },
+            author: { ...user, id: crypto.randomUUID() },
           }],
         }),
       Error,
-      "Expected string to match format 'email' at /posts/0/author/email",
+      'must match format "email" at /posts/0/author/email',
     );
 
     assertThrows(
@@ -162,14 +177,14 @@ Deno.test("typecheck", async (t) => {
             ...post1,
             author: {
               id: crypto.randomUUID(),
-              name: "John",
+              username: "John",
               email: "user@example.com",
               website: "example.com",
             },
           }],
         }),
       Error,
-      "Expected string to match format 'uri' at /posts/0/author/website",
+      'must match format "uri" at /posts/0/author/website',
     );
 
     query2.validate({
@@ -177,7 +192,7 @@ Deno.test("typecheck", async (t) => {
         ...post1,
         author: {
           id: crypto.randomUUID(),
-          name: "John",
+          username: "John",
           email: "user@example.com",
         },
       }],
@@ -188,37 +203,9 @@ Deno.test("typecheck", async (t) => {
         ...post1,
         author: {
           id: crypto.randomUUID(),
-          name: "John",
+          username: "John",
           email: "user@example.com",
           website: "https://example.com",
-        },
-      }],
-    });
-  });
-
-  await t.step("remove extra props in objects", () => {
-    const postId = crypto.randomUUID();
-    const userId = crypto.randomUUID();
-    const value = query1.validate({
-      posts: [{
-        id: postId,
-        title: "Hello",
-        published: false,
-        author: {
-          id: userId,
-          name: "John",
-          email: "user@example.com",
-        },
-      }],
-    });
-
-    assertEquals(value, {
-      posts: [{
-        id: postId,
-        title: "Hello",
-        author: {
-          id: userId,
-          name: "John",
         },
       }],
     });

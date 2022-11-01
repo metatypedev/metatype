@@ -83,7 +83,7 @@ export class ComputeStage {
           this.props.parent && d === this.props.parent.id() ? `${d} (P)` : d
         )
         .join(", ")
-    }\nid  ${this.id()}\ntype ${this.props.outType.typedef}\narg ${
+    }\nid  ${this.id()}\ntype ${this.props.outType.type}\narg ${
       JSON.stringify(this.props.args)
     }\n--`;
   }
@@ -135,7 +135,7 @@ export class Engine {
 
   constructor(tg: TypeGraph) {
     this.tg = tg;
-    this.name = tg.tg.types[0].name;
+    this.name = tg.tg.types[0].title;
     this.queryCache = {};
     this.logger = log.getLogger("engine");
   }
@@ -510,7 +510,7 @@ export class Engine {
 
     let [kind, token] = (headers.get("Authorization") ?? "").split(" ");
     if (!token) {
-      const name = this.tg.root.name;
+      const name = this.tg.root.title;
       token = getCookies(headers)[name];
     }
 

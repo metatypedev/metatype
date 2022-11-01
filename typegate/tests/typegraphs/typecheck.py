@@ -1,6 +1,5 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph.graphs.builder import json_dumps
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.types import types as t
@@ -50,6 +49,3 @@ with TypeGraph(
     )
 
     g.mutation(createPost=create_post)
-
-
-print(json_dumps(g.build()).decode())

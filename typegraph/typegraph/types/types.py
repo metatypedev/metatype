@@ -191,10 +191,11 @@ class typedef(Node):
         ret = {
             "type": self.type,
             "title": self.name,
-            "description": self.description,
             "runtime": collector.collect(self.runtime),
             "policies": [collector.collect(p) for p in self.policies],
         }
+        if self.description is not None:
+            ret["description"] = self.description
 
         if self.inject is not None:
             ret["injection"] = self.injection
@@ -432,6 +433,7 @@ class array(typedef):
             **super().data(collector),
             **remove_none_values(
                 {
+                    "items": collector.collect(self.of),
                     "minItems": self._min,
                     "maxItems": self._max,
                     "uniqueItems": self._unique_items,
@@ -500,6 +502,10 @@ class func(typedef):
 
     # def __mul__(self, other: "func") -> "func":
     #     return self.compose(other)
+
+
+def gen(out: typedef, mat: Materializer, **kwargs) -> func:
+    return func(struct(), out, mat, **kwargs)
 
 
 class policy(typedef):
