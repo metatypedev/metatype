@@ -10,7 +10,9 @@ from typing import Dict
 from typing import List
 from typing import Literal
 from typing import Optional
+from typing import Tuple
 from typing import TYPE_CHECKING
+from typing import Union
 
 from typegraph.graphs.builder import Collector
 from typegraph.materializers.deno import DenoRuntime
@@ -93,13 +95,15 @@ class Rate:
     local_excess: int = 0
 
 
+OperationTable = Dict[str, Union["t.func", "t.struct"]]
+
+
 class TypeGraph:
     # repesent domain projected to an interface
     name: str
     # version should be commit based
     types: List["t.Type"]
-    queries: Dict[str, "t.func"]
-    mutations: Dict[str, "t.func"]
+    exposed: OperationTable
     latest_type_id: int
     auths: List[Auth]
     rate: Optional[Rate]
@@ -116,8 +120,7 @@ class TypeGraph:
         super().__init__()
         self.name = name
         self.types = []
-        self.queries = {}
-        self.mutations = {}
+        self.exposed = {}
         self.policies = []
         self.latest_type_id = 0
         self.auths = [] if auths is None else auths
@@ -144,44 +147,74 @@ class TypeGraph:
     ) -> "NodeProxy":
         return NodeProxy(self, node, after_apply)
 
-    def query(self, **queries: Dict[str, "t.typedef"]):
+    def expose(self, **ops: Union["t.func", "t.struct"]):
         from typegraph.types import types as t
 
-        for name, func in queries.items():
-            if not isinstance(func, t.func):
+        for name, op in ops.items():
+            if not isinstance(op, t.func):
                 raise Exception(
-                    f"cannot expose type={func.name} under {name}, requires a func"
-                )
-            # TODO also check nested functions
-            if func.mat.serial:
-                raise Exception(f"function {func.name} under {name} cannot be a query")
-
-        self.queries.update(queries)
-
-    def mutation(self, **mutations: Dict[str, "t.typedef"]):
-        from typegraph.types import types as t
-
-        for name, func in mutations.items():
-            if not isinstance(func, t.func):
-                raise Exception(
-                    f"cannot expose type={func.name} under {name}, requires a func"
-                )
-            # TODO also check nested functions
-            if not func.mat.serial:
-                raise Exception(
-                    f"function {func.name} under {name} cannot be a mutation"
+                    f"cannot expose type {op.name} under {name}, requires a function, got a {op.type}"
                 )
 
-        self.mutations.update(mutations)
+        self.exposed.update(ops)
+        return self
 
     def root(self) -> "t.struct":
         from typegraph.types import types as t
 
+        # TODO what if circular references?
+        def assert_serial_materializers(tpe: t.typedef, serial: bool):
+            for e in tpe.edges:
+                if not isinstance(e, t.typedef):
+                    continue
+
+                if isinstance(e, t.func):
+                    if e.mat.serial != serial:
+                        raise Exception(
+                            f"expected materializer to be {'' if serial else 'non-'}serial"
+                        )
+                    assert_serial_materializers(e.out, serial)
+
+                assert_serial_materializers(e, serial)
+
+        # split into queries and mutations
+        def split_operations(
+            namespace: t.struct,
+        ) -> Tuple[OperationTable, OperationTable]:
+            queries: OperationTable = {}
+            mutations: OperationTable = {}
+            for name, op in namespace.props.items():
+                if isinstance(op, t.struct):
+                    q, m = split_operations(op)
+                    q_name = f"{op.name}_q" if len(m) > 0 else op.name
+                    m_name = f"{op.name}_m" if len(q) > 0 else op.name
+
+                    if len(q) > 0:
+                        queries[name] = t.struct(q).named(q_name)
+                    if len(m) > 0:
+                        mutations[name] = t.struct(m).named(m_name)
+
+                elif isinstance(op, t.func):
+                    serial = op.mat.serial
+                    assert_serial_materializers(op.out, serial)
+                    if not serial:
+                        queries[name] = op
+                    else:
+                        mutations[name] = op
+
+                else:
+                    raise Exception(
+                        f"expected operation or operation namespace, got type {op.type()}"
+                    )
+
+            return (queries, mutations)
+
         with self:
+            queries, mutations = split_operations(t.struct(self.exposed))
             root = t.struct(
                 {
-                    "query": t.struct(self.queries).optional(),
-                    "mutation": t.struct(self.mutations).optional(),
+                    "query": t.struct(queries),
+                    "mutation": t.struct(mutations),
                 }
             ).named(self.name)
 
