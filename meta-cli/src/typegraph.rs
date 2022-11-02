@@ -1,8 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use common::typegraph::Typegraph;
-use indoc::formatdoc;
 use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
@@ -32,92 +31,40 @@ impl TypegraphLoader {
     }
 
     pub fn load_file<P: AsRef<Path>>(self, file: P) -> Result<HashMap<String, Typegraph>> {
-        Self::from_json(self.serialized().load_file(file)?)
+        self.collect_typegraphs([file.as_ref().to_owned()])
     }
 
     pub fn load_files(self, files: &[PathBuf]) -> Result<HashMap<String, Typegraph>> {
-        Self::from_json(self.serialized().load_files(files)?)
+        self.collect_typegraphs(files.iter().cloned())
     }
 
     pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> Result<HashMap<String, Typegraph>> {
-        Self::from_json(self.serialized().load_folder(dir)?)
+        self.collect_typegraphs([dir.as_ref().to_owned()])
     }
 
-    pub fn serialized(self) -> SerializedTypegraphLoader {
-        SerializedTypegraphLoader { loader: self }
-    }
-
-    fn from_json(tgs: HashMap<String, String>) -> Result<HashMap<String, Typegraph>> {
-        tgs.into_iter()
-            .map(|(k, v)| Typegraph::from_json(&v).map(|tg| (k, tg)))
-            .collect::<Result<Vec<_>>>()
-            .map(|v| v.into_iter().collect())
-    }
-}
-
-pub struct SerializedTypegraphLoader {
-    loader: TypegraphLoader,
-}
-
-impl SerializedTypegraphLoader {
-    /// Load serialized typegraphs from a TDM
-    pub fn load_file<P: AsRef<Path>>(self, file: P) -> Result<HashMap<String, String>> {
-        self.collect_typegraphs(&format!(
-            r#"loaders.import_file("{}")"#,
-            file.as_ref().to_str().unwrap()
-        ))
-    }
-
-    pub fn load_files(self, files: &[PathBuf]) -> Result<HashMap<String, String>> {
-        let loader = files
-            .iter()
-            .map(|p| {
-                format!(
-                    r#"loaders.import_file("{file}")"#,
-                    file = p.to_str().unwrap()
-                )
-            })
-            .collect::<Vec<_>>()
-            .join(" + ");
-        self.collect_typegraphs(&loader)
-    }
-
-    /// Load serialized typegraphs from TDMs in `dir`
-    pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> Result<HashMap<String, String>> {
-        self.collect_typegraphs(&format!(
-            r#"loaders.import_folder("{}")"#,
-            dir.as_ref().to_str().unwrap()
-        ))
-    }
-
-    fn collect_typegraphs(self, loader: &str) -> Result<HashMap<String, String>> {
+    fn collect_typegraphs<I: IntoIterator<Item = PathBuf>>(
+        self,
+        sources: I,
+    ) -> Result<HashMap<String, Typegraph>> {
         let cwd = env::current_dir()?;
-        let working_dir = self.loader.working_dir.as_ref().unwrap_or(&cwd);
+        let working_dir = self.working_dir.as_ref().unwrap_or(&cwd);
 
-        let test = Command::new("python3")
-            .arg("-c")
-            .arg(formatdoc!(
-                r#"
-                from typegraph.utils import loaders
-                import orjson
-                tgs = {loader}
-                serialized_tgs = {{tg.name: loaders.serialize_typegraph(tg) for tg in tgs}}
-                print(orjson.dumps(serialized_tgs).decode())
-            "#
-            ))
+        let test = Command::new("py-tg")
+            .args(
+                sources
+                    .into_iter()
+                    .map(|p| p.into_os_string().into_string().unwrap()),
+            )
             .current_dir(working_dir)
             .envs(env::vars())
             .env("PYTHONUNBUFFERED", "1")
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .env(
                 "DONT_READ_EXTERNAL_TS_FILES",
-                if self.loader.skip_deno_modules {
-                    "1"
-                } else {
-                    ""
-                },
+                if self.skip_deno_modules { "1" } else { "" },
             )
             .output()?;
+
         let stdout = String::from_utf8(test.stdout)?;
 
         if !test.status.success() {
@@ -140,10 +87,17 @@ impl SerializedTypegraphLoader {
             );
         }
 
-        let tgs: HashMap<String, String> = serde_json::from_str(&stdout).unwrap_or_else(|_| {
-            panic!("cannot parse typegraph: {} (first 64 chars)", &stdout[..64])
-        });
-        Ok(tgs)
+        let tgs: Vec<Typegraph> = serde_json::from_str(&stdout).with_context(|| {
+            if stdout.len() > 64 {
+                format!("cannot parse typegraph: {} (first 64 chars)", &stdout[..64])
+            } else {
+                format!("cannot parse typegraph: {}", stdout)
+            }
+        })?;
+
+        tgs.into_iter()
+            .map(|tg| tg.name().map(|name| (name, tg)))
+            .collect()
     }
 }
 

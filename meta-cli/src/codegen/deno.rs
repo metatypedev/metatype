@@ -1,6 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{bail, Context, Result};
 use common::typegraph::{TypeNode, Typegraph};
 use dprint_plugin_typescript::{configuration::Configuration, format_text};
 use lazy_static::lazy_static;
@@ -24,13 +24,6 @@ lazy_static! {
             .next_control_flow_position(NextControlFlowPosition::SameLine)
             .build()
     };
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct FuncData {
-    materializer: u32,
-    input: u32,
-    output: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -73,7 +66,8 @@ struct ModuleInfo {
 }
 
 struct GenItem {
-    func_data: FuncData,
+    input: u32,
+    output: u32,
     path: String,
     name: String,
 }
@@ -142,36 +136,44 @@ impl<'a> Codegen<'a> {
         let mut gen_list = vec![];
 
         for tpe in self.tg.types.iter() {
-            if tpe.typedef != "func" && tpe.typedef != "gen" {
-                continue;
-            }
-            let func_data: FuncData = serde_json::from_value(tpe.data.clone().into_json())
-                .expect("invalid type data for func");
-            let mat = self.tg.materializers[func_data.materializer as usize].clone();
-            let runtime = &self.tg.runtimes[mat.runtime as usize];
-            if runtime.name != "deno" && runtime.name != "worker" {
-                continue;
-            }
-            if mat.name == "import_function" {
-                let mat_data: ImportFuncMatData = serde_json::from_value(mat.data.into_json())
-                    .expect("invalid materializer data for function materializer");
-                let module_mat = &self.tg.materializers[mat_data.module as usize];
-                let path: String =
-                    serde_json::from_value(module_mat.data.get("code").unwrap().clone()).unwrap();
-                if let Some(path) = path.strip_prefix("file:") {
-                    if self.ts_modules.contains_key(path) && self.check_func(path, &mat_data.name) {
-                        gen_list.push(GenItem {
-                            func_data,
-                            path: self
-                                .ts_modules
-                                .get(path)
-                                .unwrap()
-                                .path
-                                .to_str()
-                                .unwrap()
-                                .to_string(),
-                            name: mat_data.name.clone(),
-                        });
+            if let TypeNode::Function {
+                materializer,
+                input,
+                output,
+                base,
+                ..
+            } = tpe
+            {
+                let mat = self.tg.materializers[*materializer as usize].clone();
+                let runtime = &self.tg.runtimes[base.runtime as usize];
+                if runtime.name != "deno" && runtime.name != "worker" {
+                    continue;
+                }
+                if mat.name == "import_function" {
+                    let mat_data: ImportFuncMatData = serde_json::from_value(mat.data.into_json())
+                        .expect("invalid materializer data for function materializer");
+                    let module_mat = &self.tg.materializers[mat_data.module as usize];
+                    let path: String =
+                        serde_json::from_value(module_mat.data.get("code").unwrap().clone())
+                            .unwrap();
+                    if let Some(path) = path.strip_prefix("file:") {
+                        if self.ts_modules.contains_key(path)
+                            && self.check_func(path, &mat_data.name)
+                        {
+                            gen_list.push(GenItem {
+                                input: *input,
+                                output: *output,
+                                path: self
+                                    .ts_modules
+                                    .get(path)
+                                    .unwrap()
+                                    .path
+                                    .to_str()
+                                    .unwrap()
+                                    .to_string(),
+                                name: mat_data.name.clone(),
+                            });
+                        }
                     }
                 }
             }
@@ -195,14 +197,15 @@ impl<'a> Codegen<'a> {
     fn generate(&self, gen_list: Vec<GenItem>) -> HashMap<String, String> {
         let mut map: HashMap<String, Vec<Result<String>>> = HashMap::default();
         for GenItem {
-            func_data,
+            input,
+            output,
             path,
             name,
         } in gen_list.into_iter()
         {
             map.entry(path)
-                .and_modify(|l| l.push(self.gen_func(&func_data, &name)))
-                .or_insert_with(|| vec![self.gen_func(&func_data, &name)]);
+                .and_modify(|l| l.push(self.gen_func(input, output, &name)))
+                .or_insert_with(|| vec![self.gen_func(input, output, &name)]);
         }
 
         let map = map
@@ -287,19 +290,19 @@ impl<'a> Codegen<'a> {
 
     fn gen_default_value(&self, idx: u32) -> Result<String> {
         let tpe = &self.tg.types[idx as usize];
-        match &tpe.typedef {
-            t if t == "optional" => Ok("null".to_string()),
-            t if t == "list" => Ok("[]".to_string()),
-            t if t == "boolean" => Ok("false".to_string()),
-            t if t == "integer" || t == "unsigned_integer" || t == "float" => Ok("0".to_string()),
-            t if t == "string" => Ok("\"\"".to_string()),
-            t if t == "struct" => {
-                let fields = tpe.get_struct_fields()?;
+        match tpe {
+            TypeNode::Optional { .. } => Ok("null".to_owned()),
+            TypeNode::Array { .. } => Ok("[]".to_owned()),
+            TypeNode::Boolean { .. } => Ok("false".to_owned()),
+            TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("0".to_owned()),
+            TypeNode::String { .. } => Ok("\"\"".to_owned()),
+            TypeNode::Object { properties, .. } => {
+                let props = properties.clone();
                 #[cfg(test)]
-                let fields = fields
+                let props = props
                     .into_iter()
                     .collect::<std::collections::BTreeMap<_, _>>();
-                let body = fields
+                let body = props
                     .iter()
                     .map(|(k, v)| -> Result<String> {
                         Ok(format!("{k}: {}", self.gen_default_value(*v)?))
@@ -308,11 +311,11 @@ impl<'a> Codegen<'a> {
                     .join(", ");
                 Ok(format!("{{ {body} }}"))
             }
-            _ => bail!("unsupported type \"{}\"", tpe.typedef),
+            _ => bail!("unsupported type"),
         }
     }
 
-    fn gen_func(&self, fn_data: &FuncData, name: &str) -> Result<String> {
+    fn gen_func(&self, input: u32, output: u32, name: &str) -> Result<String> {
         // input type
         let inp_type_name = {
             let mut name = name.to_string();
@@ -323,21 +326,21 @@ impl<'a> Codegen<'a> {
         };
         // let inp_type = &self.tg.types[fn_data.input as usize];
         let inp_typedef = self
-            .gen_interface(&inp_type_name, fn_data.input)
+            .gen_interface(&inp_type_name, input)
             .context("failed to generate input type")?;
 
         let out_typespec = self
-            .get_typespec(fn_data.output)
+            .get_typespec(output)
             .context("failed to generate output type")?;
 
         let code = format!(
             "{}\nexport function {}({}: {}): {} {{\n  return {};\n}}",
             inp_typedef,
             name,
-            self.destructure_object(fn_data.input)?,
+            self.destructure_object(input)?,
             inp_type_name,
             out_typespec,
-            self.gen_default_value(fn_data.output)?,
+            self.gen_default_value(output)?,
         );
 
         // TODO: format code
@@ -346,28 +349,15 @@ impl<'a> Codegen<'a> {
 
     fn get_typespec(&self, idx: u32) -> Result<String> {
         let tpe = &self.tg.types[idx as usize];
-        match &tpe.typedef {
-            t if t == "optional" => {
-                let of = tpe.data.get("of").ok_or_else(|| {
-                    anyhow!("invalid type data for optional: field \"of\" is undefined")
-                })?;
-                let of: u32 = serde_json::from_value(of.clone())?;
-                Ok(format!("null | {}", self.get_typespec(of)?))
-            }
-            t if t == "list" => {
-                let of = tpe.data.get("of").ok_or_else(|| {
-                    anyhow!("invalid type data for list: field \"of\" is undefined")
-                })?;
-                let of: u32 = serde_json::from_value(of.clone())?;
-                Ok(format!("Array<{}>", self.get_typespec(of)?))
-            }
-            t if t == "boolean" => Ok("boolean".to_string()),
-            t if t == "integer" || t == "unsigned_integer" || t == "float" => {
-                Ok("number".to_string())
-            }
-            t if t == "string" => Ok("string".to_string()),
-            t if t == "struct" => self.gen_obj_type(tpe),
-            _ => bail!("unsupported type {}", tpe.typedef),
+
+        match tpe {
+            TypeNode::Optional { item, .. } => Ok(format!("null | {}", self.get_typespec(*item)?)),
+            TypeNode::Array { items, .. } => Ok(format!("Array<{}>", self.get_typespec(*items)?)),
+            TypeNode::Boolean { .. } => Ok("boolean".to_owned()),
+            TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
+            TypeNode::String { .. } => Ok("string".to_owned()),
+            TypeNode::Object { .. } => self.gen_obj_type(tpe),
+            _ => bail!("unsupported type"),
         }
     }
 }

@@ -34,7 +34,7 @@ pub struct Serialize {
 impl Action for Serialize {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
-        let loader = TypegraphLoader::new().serialized();
+        let loader = TypegraphLoader::new();
         let tgs = match &self.file {
             Some(file) => loader.load_file(file)?,
             None => loader.load_folder(&dir)?,
@@ -42,25 +42,20 @@ impl Action for Serialize {
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.get(tg_name) {
-                self.write(&tg.to_string());
+                self.write(&serde_json::to_string(tg)?);
             } else {
                 bail!("typegraph \"{}\" not found", tg_name);
             }
         } else if self.unique {
             if tgs.len() == 1 {
-                let tg = tgs.into_values().next().unwrap();
-                self.write(&tg);
+                let (_, tg) = tgs.iter().next().unwrap();
+                self.write(&serde_json::to_string(tg)?);
             } else {
                 eprint!("expected only one typegraph, got {}", tgs.len());
                 std::process::exit(1);
             }
         } else {
-            let entries = tgs
-                .iter()
-                .map(|(tg_name, tg)| format!("\"{tg_name}\": {tg}"))
-                .collect::<Vec<_>>()
-                .join(",\n");
-            self.write(&format!("{{{entries}}}"));
+            self.write(&serde_json::to_string(&tgs)?)
         }
 
         Ok(())

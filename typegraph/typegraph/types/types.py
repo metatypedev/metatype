@@ -22,7 +22,7 @@ from typegraph.graphs.typegraph import TypeGraph
 from typegraph.graphs.typegraph import TypegraphContext
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
-from typegraph.materializers.deno import FunMat
+from typegraph.policies import Policy
 
 
 if os.environ.get("DEBUG"):
@@ -67,7 +67,7 @@ class typedef(Node):
     runtime: Optional["Runtime"]
     inject: Optional[Union[str, "typedef"]]
     injection: Optional[Any]
-    policies: Tuple["policy", ...]
+    policies: Tuple[Policy, ...]
 
     def __init__(
         self,
@@ -77,7 +77,7 @@ class typedef(Node):
         description: Optional[str] = None,
         inject: Optional[Union[str, "typedef"]] = None,
         injection: Optional[Any] = None,
-        policies: Optional[Tuple["policy", ...]] = None,
+        policies: Optional[Tuple[Policy, ...]] = None,
         **kwargs,
     ):
         super().__init__(
@@ -183,7 +183,7 @@ class typedef(Node):
 
     def add_policy(
         self,
-        *policies: List["policy"],
+        *policies: List["Policy"],
     ):
         return replace(self, policies=self.policies + policies)
 
@@ -431,9 +431,9 @@ class array(typedef):
     def data(self, collector) -> dict:
         return {
             **super().data(collector),
+            "items": collector.collect(self.of),
             **remove_none_values(
                 {
-                    "items": collector.collect(self.of),
                     "minItems": self._min,
                     "maxItems": self._max,
                     "uniqueItems": self._unique_items,
@@ -506,15 +506,3 @@ class func(typedef):
 
 def gen(out: typedef, mat: Materializer, **kwargs) -> func:
     return func(struct(), out, mat, **kwargs)
-
-
-class policy(typedef):
-    mat: FunMat
-
-    def __init__(self, mat: FunMat, **kwargs):
-        super().__init__(**kwargs, collector_target=Collector.policies)
-        self.mat = mat
-
-    @property
-    def edges(self) -> List[Node]:
-        return [self.mat]
