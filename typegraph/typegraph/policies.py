@@ -15,10 +15,12 @@ class Policy(Node):
     def __init__(self, mat: Materializer, **kwargs):
         super().__init__(Collector.policies)
         self.mat = mat
+        self.name = None
 
     def data(self, collector):
         return {
-            "materializer": collector.collects[Collector.materializers].add(self.mat)
+            "name": self.name,
+            "materializer": collector.collects[Collector.materializers].add(self.mat),
         }
 
     def named(self, name: str):

@@ -6,6 +6,7 @@ use crate::utils::{ensure_venv, post_with_auth, BasicAuth};
 use anyhow::{bail, Ok, Result};
 use clap::Parser;
 use colored::Colorize;
+use common::typegraph::Typegraph;
 use globset::Glob;
 use ignore::gitignore::Gitignore;
 use ignore::Match;
@@ -47,10 +48,7 @@ impl Action for Dev {
             BasicAuth::as_user(self.username.clone())?
         };
 
-        let tgs = TypegraphLoader::new()
-            .working_dir(&dir)
-            .serialized()
-            .load_folder(&dir)?;
+        let tgs = TypegraphLoader::new().working_dir(&dir).load_folder(&dir)?;
 
         reload_typegraphs(tgs, &self.gate, &auth)?;
 
@@ -68,10 +66,7 @@ impl Action for Dev {
                 codegen::deno::codegen(tg, watch_path.clone()).expect("could not run deno codegen");
             }
 
-            let tgs = TypegraphLoader::new()
-                .serialized()
-                .load_files(paths)
-                .unwrap();
+            let tgs = TypegraphLoader::new().load_files(paths).unwrap();
 
             reload_typegraphs(tgs, &gate, &auth_clone).unwrap();
         })
@@ -86,10 +81,7 @@ impl Action for Dev {
             let response = match url.path() {
                 "/dev" => match query.get("node") {
                     Some(node) => {
-                        let tgs = TypegraphLoader::new()
-                            .working_dir(&dir)
-                            .serialized()
-                            .load_folder(&dir)?;
+                        let tgs = TypegraphLoader::new().working_dir(&dir).load_folder(&dir)?;
                         reload_typegraphs(tgs, node, &auth)?;
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
@@ -167,8 +159,8 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
         .collect()
 }
 
-fn reload_typegraphs(tgs: HashMap<String, String>, node: &str, auth: &BasicAuth) -> Result<()> {
-    for (name, tg) in tgs {
+fn reload_typegraphs(tgs: HashMap<String, Typegraph>, node: &str, auth: &BasicAuth) -> Result<()> {
+    for (name, tg) in tgs.iter() {
         println!("pushing {name}");
         push_typegraph(tg, node, auth, 3)?;
     }
@@ -176,7 +168,7 @@ fn reload_typegraphs(tgs: HashMap<String, String>, node: &str, auth: &BasicAuth)
     Ok(())
 }
 
-pub fn push_typegraph(tg: String, node: &str, auth: &BasicAuth, backoff: u32) -> Result<()> {
+pub fn push_typegraph(tg: &Typegraph, node: &str, auth: &BasicAuth, backoff: u32) -> Result<()> {
     use crate::utils::graphql::{Error as GqlError, GraphqlErrorMessages, Query};
     let gql_endpoint = format!("{node}/typegate");
     // TODO: as admin
@@ -188,7 +180,7 @@ pub fn push_typegraph(tg: String, node: &str, auth: &BasicAuth, backoff: u32) ->
                 }
             }"}
         .to_string(),
-        Some(json!({ "tg": tg })),
+        Some(json!({ "tg": serde_json::to_string(tg)? })),
     );
 
     query.map(|_| ()).or_else(|e| {

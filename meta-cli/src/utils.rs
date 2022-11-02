@@ -108,8 +108,8 @@ pub mod graphql {
 
     #[derive(Deserialize)]
     pub struct ErrorLocation {
-        line: u32,
-        column: u32,
+        pub line: u32,
+        pub column: u32,
     }
 
     pub enum PathSegment {

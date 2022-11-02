@@ -20,13 +20,13 @@ pub struct Deploy {
 impl Action for Deploy {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
-        let loader = TypegraphLoader::new().serialized();
+        let loader = TypegraphLoader::new();
         let tgs = match &self.file {
             Some(file) => loader.load_file(file)?,
             None => loader.load_folder(&dir)?,
         };
 
-        for (name, tg) in tgs {
+        for (name, tg) in tgs.iter() {
             println!("Pushing {}", name);
             push_typegraph(tg, &self.gate, &BasicAuth::prompt()?, 3)?;
             println!("> Added {}", name);

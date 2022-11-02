@@ -2,6 +2,7 @@
 
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
+from typegraph.policies import Policy
 from typegraph.types import types as t
 
 
@@ -27,7 +28,7 @@ with TypeGraph(
         }
     ).named("Post")
 
-    my_policy = t.policy(FunMat(""))
+    my_policy = Policy(FunMat(""))
 
     posts = t.func(t.struct(), t.array(post).max(20), FunMat("")).named("posts")
     find_post = t.func(t.struct({"id": t.uuid()}), post.optional(), FunMat("")).named(
