@@ -4,6 +4,7 @@ from typing import Optional
 
 from typegraph.graphs.builder import Collector
 from typegraph.graphs.node import Node
+from typegraph.graphs.typegraph import TypegraphContext
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.deno import FunMat
 
@@ -15,7 +16,8 @@ class Policy(Node):
     def __init__(self, mat: Materializer, **kwargs):
         super().__init__(Collector.policies)
         self.mat = mat
-        self.name = None
+        tg = TypegraphContext.get_active()
+        self.name = f"policy_{tg.next_type_id()}"
 
     def data(self, collector):
         return {

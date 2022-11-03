@@ -262,7 +262,7 @@ class TypegraphContext:
             return None
 
     @classmethod
-    def get_active(cls) -> Optional[TypeGraph]:
+    def get_active(cls) -> TypeGraph:
         try:
             return cls.typegraphs[-1]
         except IndexError:

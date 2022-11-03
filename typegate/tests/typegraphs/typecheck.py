@@ -7,7 +7,7 @@ from typegraph.types import types as t
 
 
 with TypeGraph(
-    "new",
+    "typecheck",
 ) as g:
     user = t.struct(
         {
@@ -28,11 +28,16 @@ with TypeGraph(
         }
     ).named("Post")
 
-    my_policy = Policy(FunMat(""))
+    my_policy = Policy(FunMat.from_lambda(lambda args: True))
 
-    posts = t.func(t.struct(), t.array(post).max(20), FunMat("")).named("posts")
-    find_post = t.func(t.struct({"id": t.uuid()}), post.optional(), FunMat("")).named(
-        "findPost"
+    posts = t.func(t.struct(), t.array(post).max(20), FunMat("() => []")).named("posts")
+    find_post = t.func(
+        t.struct({"id": t.uuid()}), post.optional(), FunMat.from_lambda(lambda: None)
+    ).named("findPost")
+
+    create_post_mat = FunMat(
+        "() => ({ title: 'Hello Metatype', content: 'Greeting from Metatype', authorId: 123})",
+        serial=True,
     )
 
     create_post = t.func(
@@ -44,7 +49,7 @@ with TypeGraph(
             }
         ),
         post,
-        FunMat("", serial=True),
+        create_post_mat,
     )
 
     g.expose(

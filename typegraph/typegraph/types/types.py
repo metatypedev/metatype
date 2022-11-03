@@ -1,6 +1,5 @@
 # Copyright Metatype under the Elastic License 2.0.
 from copy import deepcopy
-import os
 from types import NoneType
 from typing import Any
 from typing import Dict
@@ -25,12 +24,12 @@ from typegraph.materializers.base import Runtime
 from typegraph.policies import Policy
 
 
-if os.environ.get("DEBUG"):
-    import debugpy
+# if os.environ.get("DEBUG"):
+#     import debugpy
 
-    debugpy.listen(5678)
-    print("Waiting for debugger attach...")
-    debugpy.wait_for_client()
+#     debugpy.listen(5678)
+#     print("Waiting for debugger attach...")
+#     debugpy.wait_for_client()
 
 
 def replace(obj, **kwargs):

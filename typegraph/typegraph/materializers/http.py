@@ -17,10 +17,9 @@ class HTTPRuntime(Runtime):
     _: KW_ONLY
     runtime_name: str = "http"
 
-    @property
-    def data(self):
+    def data(self, collector):
         return {
-            **super().data,
+            **super().data(collector),
             "cert_secret": self.cert_secret,
             "basic_auth_secret": self.basic_auth_secret,
         }

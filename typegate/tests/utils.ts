@@ -9,7 +9,7 @@ import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
-import { dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join, resolve } from "std/path/mod.ts";
 import { Register } from "../src/register.ts";
 import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
@@ -25,7 +25,7 @@ const testRuntimesConfig = {
 };
 
 const localDir = dirname(fromFileUrl(import.meta.url));
-const metaCli = "../../target/debug/meta";
+const metaCli = resolve(localDir, "../../target/debug/meta");
 
 export async function meta(...input: string[]): Promise<void> {
   console.log(await shell([metaCli, ...input]));
@@ -157,22 +157,16 @@ class MetaTest {
 
   async pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
     return await this.parseTypegraph(
-      [
-        join(localDir, metaCli),
-        "serialize",
-        "-f",
-        path,
-        "-1",
-      ],
+      path,
       deepMerge(testRuntimesConfig, config),
     );
   }
 
   async parseTypegraph(
-    cmd: string[],
+    path: string,
     config: RuntimesConfig = {},
   ): Promise<Engine> {
-    const stdout = await shell(cmd);
+    const stdout = await shell([metaCli, "serialize", "-f", path, "-1"]);
     const engineName = await this.register.set(
       stdout,
       deepMerge(testRuntimesConfig, config),
