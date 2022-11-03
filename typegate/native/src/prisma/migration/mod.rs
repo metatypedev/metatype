@@ -89,7 +89,11 @@ pub async fn push(datasource: String, datamodel: String) -> Result<String, CoreE
 
     let apply = api.schema_push(push).await?;
     if !apply.unexecutable.is_empty() || !apply.warnings.is_empty() {
-        Ok(apply.unexecutable.join("\n") + &apply.warnings.join("\n"))
+        Ok(format!(
+            "{}{}",
+            apply.unexecutable.join("\n"),
+            apply.warnings.join("\n")
+        ))
     } else {
         Ok("applied".to_string())
     }

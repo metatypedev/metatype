@@ -1,4 +1,4 @@
-# Contribute
+# How-to contribute
 
 ## Prerequisite
 

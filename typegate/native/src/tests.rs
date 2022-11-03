@@ -13,10 +13,10 @@ use tokio::runtime::Runtime;
 
 #[derive(Deserialize, Debug)]
 struct PrismaRuntimeData {
-    connection_string: String,
+    //connection_string: String,
     datasource: String,
     datamodel: String,
-    managed_types: Vec<usize>,
+    //managed_types: Vec<usize>,
 }
 
 fn get_workspace_root() -> Result<PathBuf> {

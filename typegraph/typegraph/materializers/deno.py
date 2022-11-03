@@ -57,8 +57,10 @@ class LambdaCollector(ast.NodeTransformer):
 # Inlined fuction
 @dataclass(eq=True, frozen=True)
 class FunMat(Materializer):
-    fn_expr: str  # function expression
+    fn_expr: InitVar[str] = None
     _: KW_ONLY
+    # a script that assigns a function expression into the variable _my_lambda
+    script: Optional[str] = None
     runtime: DenoRuntime = DenoRuntime()
     materializer_name: str = "function"
 
@@ -68,8 +70,19 @@ class FunMat(Materializer):
 
         lambdas = LambdaCollector.collect(function)
         assert len(lambdas) == 1
-        code = transform_string(lambdas[0]).rstrip().rstrip(";")
-        return FunMat(code, runtime=runtime)
+        code = transform_string(f"_my_lambda = {lambdas[0]}").rstrip()
+        return FunMat(script=code, runtime=runtime)
+
+    def __post_init__(self, fn_expr: Optional[str]):
+        if fn_expr is None:
+            if self.script is None:
+                raise Exception("you must give the script or a function expression")
+        else:
+            if self.script is not None:
+                raise Exception(
+                    "you must only give either the script or a function expression"
+                )
+            object.__setattr__(self, "script", f"var _my_lambda = {fn_expr};")
 
 
 @dataclass(eq=True, frozen=True)
@@ -86,6 +99,7 @@ class ImportFunMat(Materializer):
     mod: "ModuleMat"
     name: str = "default"
     _: KW_ONLY
+    secrets: Tuple[str] = field(default_factory=tuple)
     runtime: DenoRuntime = DenoRuntime()  # should be the same runtime as `mod`'s
     materializer_name: str = "import_function"
 
@@ -94,6 +108,7 @@ class ImportFunMat(Materializer):
 class ModuleMat(Materializer):
     file: InitVar[str] = None
     _: KW_ONLY
+    secrets: Tuple[str] = field(default_factory=tuple)
     code: Optional[str] = None
     runtime: Runtime = DenoRuntime()  # DenoRuntime
     materializer_name: str = "module"
@@ -116,7 +131,7 @@ class ModuleMat(Materializer):
                     object.__setattr__(self, "code", f.read())
 
     def imp(self, name: str = "default") -> FunMat:
-        return ImportFunMat(self, name, runtime=self.runtime)
+        return ImportFunMat(self, name, runtime=self.runtime, secrets=self.secrets)
 
 
 @dataclass(eq=True, frozen=True)

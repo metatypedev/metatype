@@ -1,22 +1,25 @@
 // Copyright Metatype under the Elastic License 2.0.
 
+use anyhow::bail;
 use anyhow::Result;
-use dprint_plugin_typescript::configuration::*;
-use dprint_plugin_typescript::*;
 use std::collections::HashSet;
-use std::fs;
 use std::path::Path;
-use std::path::PathBuf;
 use swc_common::errors::{ColorConfig, Handler};
-use swc_common::input::SourceFileInput;
+use swc_common::hygiene::Mark;
 use swc_common::sync::Lrc;
+use swc_common::FileName;
+use swc_common::Globals;
 use swc_common::SourceMap;
 use swc_common::DUMMY_SP;
+use swc_common::GLOBALS;
 use swc_ecma_ast::*;
+use swc_ecma_transforms::typescript::strip::strip;
+use swc_ecmascript::parser::parse_file_as_module;
+use swc_ecmascript::parser::parse_file_as_script;
 use swc_ecmascript::{
     codegen,
     codegen::{text_writer::JsWriter, Emitter},
-    parser::{lexer::Lexer, Parser, Syntax},
+    parser::Syntax,
     visit::{Fold, FoldWith},
 };
 
@@ -33,11 +36,11 @@ fn import(specifier: ImportNamedSpecifier, source: &str) -> ImportDecl {
     ImportDecl {
         span: DUMMY_SP,
         specifiers: vec![ImportSpecifier::Named(specifier)],
-        src: Str {
+        src: Box::new(Str {
             span: DUMMY_SP,
             value: source.into(),
             raw: Default::default(),
-        },
+        }),
         type_only: true,
         asserts: None,
     }
@@ -58,13 +61,13 @@ fn export_function(name: String, inp: String, out: String, body: Option<BlockStm
     let f = FnDecl {
         ident: Ident::new(name.into(), DUMMY_SP),
         declare: false,
-        function: Function {
+        function: Box::new(Function {
             params: vec![Param {
                 span: DUMMY_SP,
                 decorators: vec![],
                 pat: Pat::Ident(BindingIdent {
                     id: Ident::new("arg".into(), DUMMY_SP),
-                    type_ann: Some(tpe(inp)),
+                    type_ann: Some(Box::new(tpe(inp))),
                 }),
             }],
             decorators: vec![],
@@ -73,8 +76,8 @@ fn export_function(name: String, inp: String, out: String, body: Option<BlockStm
             is_generator: false,
             is_async: false,
             type_params: None,
-            return_type: Some(tpe(out)),
-        },
+            return_type: Some(Box::new(tpe(out))),
+        }),
     };
     ExportDecl {
         decl: Decl::Fn(f),
@@ -82,8 +85,8 @@ fn export_function(name: String, inp: String, out: String, body: Option<BlockStm
     }
 }
 
-struct MyVisitor {
-    source: String,
+pub struct MyVisitor {
+    pub source: String,
     imports: Vec<(String, String)>,
 }
 
@@ -142,91 +145,13 @@ impl Fold for MyVisitor {
             Decl::Fn(FnDecl {
                 ident,
                 declare: _,
-                function:
-                    Function {
-                        params,
-                        decorators: _,
-                        span: _,
-                        body: _,
-                        is_generator: _,
-                        is_async: _,
-                        type_params: _,
-                        return_type: _,
-                    },
+                function,
             }) if ident.sym.to_string() == "apply" => {
-                println!("TEST {:?}", params);
+                println!("TEST {:?}", function.params);
             }
             _ => (),
         }
         n
-    }
-}
-
-pub fn parse(path: &PathBuf) {
-    let cm: Lrc<SourceMap> = Default::default();
-    let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
-
-    let fm = cm
-        .load_file(path.as_path())
-        .unwrap_or_else(|_| panic!("failed to load {:?}", path));
-    let lexer = Lexer::new(
-        Syntax::Typescript(Default::default()),
-        EsVersion::latest(),
-        SourceFileInput::from(&*fm),
-        None,
-    );
-
-    let mut parser = Parser::new_from(lexer);
-
-    for e in parser.take_errors() {
-        e.into_diagnostic(&handler).emit();
-    }
-
-    let m = parser
-        .parse_module()
-        .map_err(|e| {
-            // Unrecoverable fatal error occurred
-            e.into_diagnostic(&handler).emit()
-        })
-        .expect("failed to parser module");
-
-    let mut v = MyVisitor {
-        source: "./output.ts".to_string(),
-        imports: vec![
-            ("Input".to_string(), "test".to_string()),
-            ("Output".to_string(), "test2".to_string()),
-        ],
-    };
-
-    let n = m.fold_with(&mut v);
-
-    let code = {
-        let mut buf = vec![];
-
-        {
-            let mut emitter = Emitter {
-                cfg: codegen::Config {
-                    ..Default::default()
-                },
-                cm: cm.clone(),
-                comments: None,
-                wr: JsWriter::new(cm, "\n", &mut buf, None),
-            };
-
-            emitter.emit_module(&n).unwrap();
-        }
-
-        String::from_utf8_lossy(&buf).to_string()
-    };
-
-    let config = ConfigurationBuilder::new().deno().build();
-
-    // TODO : avoid re-parsing by using dprint/deno ast
-    let formatted = format_text(&PathBuf::from("output.ts"), &code, &config);
-    println!("{:?}", formatted);
-    match formatted {
-        Ok(text) => fs::write("output.ts", &text.unwrap()).unwrap(),
-        Err(e) => println!("Error: {:?}", e),
     }
 }
 
@@ -240,25 +165,89 @@ where
     let fm = cm.load_file(mod_path.as_ref())?;
     // .expect(&format!("failed to load file: {:?}", mod_path.as_ref()));
 
-    let lexer = Lexer::new(
+    let mut errors = vec![];
+    parse_file_as_module(
+        &fm,
         Syntax::Typescript(Default::default()),
         EsVersion::latest(),
-        SourceFileInput::from(&*fm),
         None,
-    );
+        &mut errors,
+    )
+    .or_else(|e| {
+        e.into_diagnostic(&handler).emit();
+        bail!("could not compile module")
+    })
+}
 
-    let mut parser = Parser::new_from(lexer);
+pub fn parse_module_source(source: String) -> Result<Module> {
+    let cm: Lrc<SourceMap> = Default::default();
+    let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
 
-    for e in parser.take_errors() {
+    let fm = cm.new_source_file(FileName::Anon, source);
+
+    let mut errors = vec![];
+    parse_file_as_module(
+        &fm,
+        Syntax::Typescript(Default::default()),
+        EsVersion::latest(),
+        None,
+        &mut errors,
+    )
+    .or_else(|e| {
+        e.into_diagnostic(&handler).emit();
+        bail!("could not compile module")
+    })
+}
+
+pub fn transform_module(module: Module) -> Result<String> {
+    let globals = Globals::default();
+    let module = GLOBALS.set(&globals, || {
+        let top_level_mark = Mark::new();
+        module.fold_with(&mut strip(top_level_mark))
+    });
+
+    with_emitter(|emitter| {
+        emitter.emit_module(&module).map_or_else(
+            |e| bail!("error while emitting module code: {e}"),
+            |_| Ok(()),
+        )
+    })
+}
+
+pub fn transform_script(source: String) -> Result<String> {
+    let cm: Lrc<SourceMap> = Default::default();
+    let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
+    let fm = cm.new_source_file(FileName::Anon, source);
+
+    let mut errors = vec![];
+    let script = parse_file_as_script(
+        &fm,
+        Syntax::Typescript(Default::default()),
+        EsVersion::latest(),
+        None,
+        &mut errors,
+    )
+    .or_else(|e| {
+        e.into_diagnostic(&handler).emit();
+        bail!("could not compile script")
+    })?;
+
+    for e in errors {
         e.into_diagnostic(&handler).emit();
     }
 
-    let module = parser
-        .parse_module()
-        .map_err(|e| e.into_diagnostic(&handler).emit())
-        .expect("failed to parse module");
+    let globals = Globals::default();
+    let script = GLOBALS.set(&globals, || {
+        let top_level_mark = Mark::new();
+        script.fold_with(&mut strip(top_level_mark))
+    });
 
-    Ok(module)
+    with_emitter(|emitter| {
+        emitter.emit_script(&script).map_or_else(
+            |e| bail!("error while emitting script code: {e}"),
+            |_| Ok(()),
+        )
+    })
 }
 
 pub fn get_exported_functions(mod_body: &Vec<ModuleItem>) -> HashSet<String> {
@@ -280,4 +269,27 @@ pub fn get_exported_functions(mod_body: &Vec<ModuleItem>) -> HashSet<String> {
     }
 
     res
+}
+
+fn with_emitter<'a, C>(emit: C) -> Result<String>
+where
+    C: FnOnce(&mut Emitter<'a, JsWriter<&mut Vec<u8>>, SourceMap>) -> Result<()>,
+{
+    let cm: Lrc<SourceMap> = Default::default();
+    let mut buf = vec![];
+    let mut emitter = Emitter {
+        cfg: codegen::Config {
+            target: EsVersion::latest(),
+            ascii_only: false,
+            minify: true,
+            omit_last_semi: false,
+        },
+        cm: cm.clone(),
+        comments: None,
+        wr: JsWriter::new(cm, "", &mut buf, None),
+    };
+
+    emit(&mut emitter)?;
+
+    Ok(String::from_utf8_lossy(&buf).to_string())
 }

@@ -12,6 +12,7 @@ pub struct Typegraph {
     pub materializers: Vec<Materializer>,
     pub runtimes: Vec<TGRuntime>,
     pub policies: Vec<Policy>,
+    pub meta: TypeMeta,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -27,10 +28,7 @@ pub struct Cors {
 pub struct Auth {
     pub name: String,
     pub protocol: String,
-    pub authorize_url: String,
-    pub access_url: String,
-    pub scopes: String,
-    pub profile_url: Option<String>,
+    pub auth_data: HashMap<String, Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -38,6 +36,8 @@ pub struct TypeMeta {
     pub secrets: Vec<String>,
     pub cors: Cors,
     pub auths: Vec<Auth>,
+    // TODO: rate
+    pub version: String,
 }
 
 #[skip_serializing_none]
@@ -163,4 +163,16 @@ impl TypeNode {
             bail!("node is not an object variant")
         }
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FunctionMatData {
+    pub script: String,
+    serial: bool,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ModuleMatData {
+    pub code: String,
+    serial: bool,
 }

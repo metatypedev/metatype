@@ -8,7 +8,7 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Metatype",
-  tagline: "Types are cool",
+  tagline: "Open platform for API composition",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",

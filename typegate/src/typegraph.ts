@@ -12,10 +12,7 @@ import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
-import { Code } from "./runtimes/utils/codes.ts";
 import { ensure, envOrFail, mapo } from "./utils.ts";
-import { compileCodes } from "./utils/swc.ts";
-// import { v4 as uuid } from "std/uuid/mod.ts";
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
 import * as semver from "std/semver/mod.ts";
@@ -31,6 +28,7 @@ import {
   RuntimeInit,
   RuntimesConfig,
 } from "./types.ts";
+import { S3Runtime } from "./runtimes/s3.ts";
 
 interface TypePolicy {
   name: string;
@@ -76,7 +74,6 @@ export interface TypeGraphDS {
   materializers: Array<TypeMaterializer>;
   runtimes: Array<TypeRuntime>;
   policies: Array<TypePolicy>;
-  codes: Array<Code>;
   meta: TypeMeta;
 }
 
@@ -91,6 +88,7 @@ const dummyStringTypeNode: TypeNode = {
 };
 
 const runtimeInit: RuntimeInit = {
+  s3: S3Runtime.init,
   graphql: GraphQLRuntime.init,
   prisma: PrismaRuntime.init,
   http: HTTPRuntime.init,
@@ -232,8 +230,6 @@ export class TypeGraph {
         });
       }),
     );
-
-    compileCodes(typegraph);
 
     return new TypeGraph(
       typegraph,
@@ -913,7 +909,9 @@ export class TypeGraph {
     return stages;
   }
 
-  preparePolicies(stages: ComputeStage[]): PolicyStagesFactory {
+  preparePolicies(
+    stages: ComputeStage[],
+  ): PolicyStagesFactory {
     const policies = Array.from(
       new Set(
         stages.flatMap((stage) => Object.values(stage.props.policies).flat()),
@@ -970,7 +968,9 @@ export class TypeGraph {
     };
   }
 
-  nextBatcher = (type: TypeNode): Batcher => {
+  nextBatcher = (
+    type: TypeNode,
+  ): Batcher => {
     // convenience check to be removed
     const ensureArray = (x: []) => {
       ensure(Array.isArray(x), `${JSON.stringify(x)} not an array`);

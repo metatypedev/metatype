@@ -28,7 +28,6 @@ export const renderPlayground = (
     ></script>
     <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.min.css" />
   </head>
-
   <body>
     <div id="graphiql">Loading...</div>
     <script

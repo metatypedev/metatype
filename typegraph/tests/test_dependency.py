@@ -157,7 +157,9 @@ class TestDependency:
                     TypeMaterializer(
                         name="function",
                         runtime=0,
-                        data=frozendict.frozendict({"serial": False, "fn_expr": "x2"}),
+                        data=frozendict.frozendict(
+                            {"serial": False, "script": "var _my_lambda = x2;"}
+                        ),
                     )
                 ],
                 runtimes=[
