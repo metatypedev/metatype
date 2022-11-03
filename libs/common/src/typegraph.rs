@@ -32,11 +32,20 @@ pub struct Auth {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Rate {
+    pub window_limit: u32,
+    pub window_sec: u32,
+    pub query_limit: u32,
+    pub context_identifier: Option<String>,
+    pub local_exess: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct TypeMeta {
     pub secrets: Vec<String>,
     pub cors: Cors,
     pub auths: Vec<Auth>,
-    // TODO: rate
+    pub rate: Vec<Rate>,
     pub version: String,
 }
 

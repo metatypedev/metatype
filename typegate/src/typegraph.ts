@@ -109,6 +109,18 @@ const typegraphChangelog: Record<
   },
 };
 
+interface TypegraphTraverseParams {
+  fragments: FragmentDefs;
+  parentName: string;
+  readonly parentArgs: ast.ArgumentNode[];
+  parentSelectionSet: ast.SelectionSetNode;
+  verbose: boolean;
+  queryPath?: string;
+  parentIdx?: number;
+  parentStage?: ComputeStage;
+  serial: boolean;
+}
+
 export class TypeGraph {
   static readonly emptyArgs: ast.ArgumentNode[] = [];
   static emptyFields: ast.SelectionSetNode = {
@@ -146,6 +158,10 @@ export class TypeGraph {
       typeByName[tpe.title] = tpe;
     });
     this.typeByName = typeByName;
+  }
+
+  get name() {
+    return this.root.title;
   }
 
   static async init(

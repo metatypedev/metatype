@@ -1,6 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-use anyhow::{anyhow, Result};
+use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
 use reqwest::{
     blocking::{Client, RequestBuilder},
@@ -26,7 +26,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         set_var("PATH", &format!("{venv_bin}:{path}"));
         Ok(())
     } else {
-        Err(anyhow!("Python venv required"))
+        bail!("Python venv required")
     }
 }
 

@@ -12,6 +12,7 @@ import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { RateLimit } from "./rate_limiter.ts";
+import { ObjectNode } from "./type_node.ts";
 import {
   ComputeStageProps,
   Context,
@@ -246,6 +247,13 @@ export class Engine {
     verbose: boolean,
   ): [ComputeStage[], PolicyStagesFactory] {
     const serial = operation.operation === "mutation";
+    const rootIdx =
+      (this.tg.type(0) as ObjectNode).properties[operation.operation];
+    ensure(
+      rootIdx != null,
+      `operation ${operation.operation} is not available`,
+    );
+
     const stages = this.tg.traverse(
       fragments,
       operation.name?.value ?? "",
@@ -253,7 +261,7 @@ export class Engine {
       operation.selectionSet,
       verbose,
       [],
-      0,
+      rootIdx,
       undefined,
       serial,
     );
