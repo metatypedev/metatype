@@ -12,8 +12,18 @@ from typegraph.types import types as t
 @dataclass(eq=True, frozen=True)
 class HTTPRuntime(Runtime):
     endpoint: str
+    cert_secret: Optional[str] = None
+    basic_auth_secret: Optional[str] = None
     _: KW_ONLY
     runtime_name: str = "http"
+
+    @property
+    def data(self):
+        return {
+            **super().data,
+            "cert_secret": self.cert_secret,
+            "basic_auth_secret": self.basic_auth_secret,
+        }
 
     def get(self, path: str, inp, out, **kwargs):
         return t.func(inp, out, RESTMat(self, "GET", path, **kwargs))

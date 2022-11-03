@@ -7,6 +7,7 @@ use deno_bindgen::deno_bindgen;
 use prisma::introspection::Introspection;
 mod conf;
 mod prisma;
+mod s3;
 use crate::prisma::engine;
 use crate::prisma::migration;
 use conf::CONFIG;

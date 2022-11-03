@@ -5,7 +5,7 @@ from typegraph.types import typedefs as t
 
 with TypeGraph(name="math") as g:
     allow_all = policies.allow_all()
-    mod = ModuleMat(file="/inexisting/path/to/ts/module.ts")
+    mod = ModuleMat("/inexisting/path/to/ts/module.ts")
     g.expose(
         div=t.func(
             t.struct(

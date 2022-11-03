@@ -57,18 +57,25 @@ impl Action for Dev {
         let watch_path = dir.clone();
         let auth_clone = auth.clone();
         let _watcher = watch(dir.clone(), move |paths| {
-            let tgs = TypegraphLoader::new()
+            match TypegraphLoader::new()
                 .skip_deno_modules()
                 // .serialized()
                 .load_files(paths)
-                .unwrap();
-            for tg in tgs.into_values() {
-                codegen::deno::codegen(tg, watch_path.clone()).expect("could not run deno codegen");
+            {
+                Result::Ok(tgs) => {
+                    for tg in tgs.into_values() {
+                        codegen::deno::codegen(tg, watch_path.clone())
+                            .expect("could not run deno codegen");
+                    }
+
+                    let tgs = TypegraphLoader::new().load_files(paths).unwrap();
+
+                    reload_typegraphs(tgs, &gate, &auth_clone).unwrap();
+                }
+                Err(e) => {
+                    println!("Typegraph could not be refresh: {}", e)
+                }
             }
-
-            let tgs = TypegraphLoader::new().load_files(paths).unwrap();
-
-            reload_typegraphs(tgs, &gate, &auth_clone).unwrap();
         })
         .unwrap();
 
@@ -205,7 +212,13 @@ pub fn push_typegraph(tg: &Typegraph, node: &str, auth: &BasicAuth, backoff: u32
                 }
             }
             InvalidResponse(e) => {
-                bail!("Invalid HTTP response: {e}")
+                if backoff > 1 {
+                    println!("retry:\n{}", e);
+                    sleep(Duration::from_secs(5));
+                    push_typegraph(tg, node, auth, backoff - 1)
+                } else {
+                    bail!("Invalid HTTP response: {e}")
+                }
             }
         }
     })
