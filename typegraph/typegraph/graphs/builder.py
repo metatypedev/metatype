@@ -20,6 +20,8 @@ class Collector:
         self.collects = {}
 
     def collect(self, node: Node) -> int:
+        if node is None:
+            raise Exception("expected Node, got None")
         c = node.collector_target
 
         if c not in self.collects:

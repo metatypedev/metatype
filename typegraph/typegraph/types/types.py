@@ -95,7 +95,7 @@ class typedef(Node):
             if active_graph is None:
                 raise Exception("no typegraph context")
             self.graph = active_graph
-            self.graph.register(self)  # FIXME still needed?
+            # self.graph.register(self)
         else:
             self.graph = graph
 
@@ -121,8 +121,12 @@ class typedef(Node):
         )
 
     def named(self, name: str) -> "typedef":
-        # TODO: ensure name is not already used in typegraph
-        return replace(self, name=name)
+        types = self.graph.type_by_names
+        if name in types:
+            raise Exception(f"type name {name} already used")
+        ret = replace(self, name=name)
+        types[name] = ret
+        return ret
 
     def describe(self, description: str) -> "typedef":
         return replace(self, description=description)
@@ -154,6 +158,8 @@ class typedef(Node):
         for e in self.edges:
             if isinstance(e, typedef):
                 e._propagate_runtime(self.runtime, visited)
+            if isinstance(e, NodeProxy):
+                e.get()._propagate_runtime(self.runtime, visited)
 
     def set(self, value):
         if self.inject is not None:
@@ -187,6 +193,9 @@ class typedef(Node):
         return replace(self, policies=self.policies + policies)
 
     def data(self, collector) -> dict:
+        if self.runtime is None:
+            raise Exception("Expected Runtime, got None")
+
         ret = {
             "type": self.type,
             "title": self.name,
@@ -362,28 +371,11 @@ def uri() -> string:
 
 
 class struct(typedef):
-    props: Dict[str, typedef]
-    required: List[str]
+    props: Dict[str, Union[typedef, NodeProxy]]
 
     def __init__(self, props=None, **kwargs):
         super().__init__(**kwargs)
-        self.props = dict()
-
-        if "required" in kwargs:  # re constructing from data
-            if props is None:
-                raise Exception("invalid")
-            self.required = kwargs["required"]
-            self.props = props
-
-        else:
-            self.required = []
-
-            for k, v in props.items() if props is not None else []:
-                if isinstance(v, optional):
-                    v = v.of
-                else:
-                    self.required.append(k)
-                self.props[k] = v
+        self.props = props if props is not None else dict()
 
     @property
     def type(self):
@@ -394,10 +386,14 @@ class struct(typedef):
         return super().edges + list(self.props.values())
 
     def data(self, collector) -> dict:
+        for tpe in self.props.values():
+            if not isinstance(tpe, typedef) and not isinstance(tpe, NodeProxy):
+                raise Exception(
+                    f"expected typedef or NodeProxy, got {type(tpe).__name__}"
+                )
         return {
             **super().data(collector),
             "properties": {k: collector.collect(v) for k, v in self.props.items()},
-            "required": self.required,
         }
 
 

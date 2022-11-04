@@ -5,7 +5,7 @@ from dataclasses import KW_ONLY
 
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 @dataclass(eq=True, frozen=True)

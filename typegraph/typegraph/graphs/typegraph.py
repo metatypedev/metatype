@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from typing import Union
 
 from typegraph.graphs.builder import Collector
+from typegraph.graphs.node import Node
 from typegraph.materializers.deno import DenoRuntime
 
 
@@ -102,7 +103,8 @@ class TypeGraph:
     # repesent domain projected to an interface
     name: str
     # version should be commit based
-    types: List["t.Type"]
+    # types: List["t.typedef"]
+    type_by_names: Dict[str, "t.typedef"]  # for explicit names
     exposed: OperationTable
     latest_type_id: int
     auths: List[Auth]
@@ -119,7 +121,8 @@ class TypeGraph:
     ) -> None:
         super().__init__()
         self.name = name
-        self.types = []
+        # self.types = []
+        self.type_by_names = {}
         self.exposed = {}
         self.policies = []
         self.latest_type_id = 0
@@ -132,8 +135,8 @@ class TypeGraph:
         self.latest_type_id += 1
         return self.latest_type_id
 
-    def register(self, type: "t.Type"):
-        self.types.append(type)
+    # def register(self, type: "t.Type"):
+    #     self.types.append(type)
 
     def __enter__(self):
         TypegraphContext.push(self)
@@ -149,11 +152,18 @@ class TypeGraph:
 
     def expose(self, **ops: Union["t.func", "t.struct"]):
         from typegraph.types import types as t
+        from typegraph.logger import logger
+
+        logger.debug(ops)
 
         for name, op in ops.items():
+            logger.debug(f"name: {name}")
+            logger.debug(f"op: {op}")
             if not isinstance(op, t.func):
+                logger.debug(op)
+                logger.debug(f"op: {op}")
                 raise Exception(
-                    f"cannot expose type {op.name} under {name}, requires a function, got a {op.type}"
+                    f"cannot expose type {op.title} under {name}, requires a function, got a {op.type}"
                 )
 
         self.exposed.update(ops)
@@ -164,6 +174,8 @@ class TypeGraph:
 
         # TODO what if circular references?
         def assert_serial_materializers(tpe: t.typedef, serial: bool):
+            if isinstance(tpe, NodeProxy):
+                tpe = tpe.get()
             for e in tpe.edges:
                 if not isinstance(e, t.typedef):
                     continue
@@ -274,30 +286,27 @@ def get_absolute_path(relative: str) -> Path:
     return tg_path.parent / relative
 
 
-class NodeProxy:
+class NodeProxy(Node):
     def __init__(
         self,
         g: TypeGraph,
         node: str,
         after_apply: Callable[["t.Type"], "t.Type"],
     ):
-        super().__init__()
+        super().__init__(Collector.types)
         self.g = g
         self.node = node
         self.after_apply = after_apply
-        self.tpe = None
 
-    def then(self, then_apply: Callable[["t.Type"], "t.Type"]):
+    def then(self, then_apply: Callable[["t.typedef"], "t.typedef"]):
         return NodeProxy(self.g, self.node, lambda n: then_apply(self.after_apply(n)))
 
-    def get(self):
-        if self.tpe is None:
-            lookup = next((tpe for tpe in self.g.types if tpe.node == self.node), None)
-            if lookup is None:
-                raise Exception(f'unknown proxy type declared "{self.node}"')
+    def get(self) -> "t.typedef":
+        return self.g.type_by_names[self.node]
 
-            self.tpe = self.after_apply(lookup)
-        return self.tpe
+    @property
+    def edges(self) -> List["Node"]:
+        return self.get().edges
 
-    def __getattr__(self, attr):
-        return getattr(self.get(), attr)
+    def data(self, collector: "Collector") -> dict:
+        return self.get().data(collector)
