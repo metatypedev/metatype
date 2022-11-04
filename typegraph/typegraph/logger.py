@@ -7,7 +7,7 @@ import os
 
 class Handler(SocketHandler):
     def makePickle(self, record):
-        message = f"[{record.levelname}:{record.name}] {record.msg}\n"
+        message = f"\33[34m[{record.levelname}:{record.name}] \33[37m{record.msg}\n"
         return message.encode()
 
 

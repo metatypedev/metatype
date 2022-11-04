@@ -9,10 +9,13 @@ import inspect
 import os
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 
 from frozendict import frozendict
+from typegraph.graphs.builder import Collector
+from typegraph.graphs.node import Node
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
 
@@ -102,6 +105,16 @@ class ImportFunMat(Materializer):
     secrets: Tuple[str] = field(default_factory=tuple)
     runtime: DenoRuntime = DenoRuntime()  # should be the same runtime as `mod`'s
     materializer_name: str = "import_function"
+    collector_target = Collector.materializers
+
+    @property
+    def edges(self) -> List[Node]:
+        return super().edges + [self.mod]
+
+    def data(self, collector: Collector) -> dict:
+        data = super().data(collector)
+        data["data"]["mod"] = collector.collect(self.mod)
+        return data
 
 
 @dataclass(eq=True, frozen=True)

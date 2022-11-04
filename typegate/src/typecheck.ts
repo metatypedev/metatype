@@ -61,6 +61,7 @@ export class ValidationSchemaBuilder {
     switch (type.type) {
       case "object": {
         const properties = {} as Record<string, JSONSchema>;
+        const required = [] as string[];
         const baseProperties = type.properties ?? {};
         if (selectionSet == undefined) {
           throw new Error(`Path ${path} must be a field selection`);
@@ -71,9 +72,15 @@ export class ValidationSchemaBuilder {
             case Kind.FIELD: {
               const { name, selectionSet } = node;
               if (Object.hasOwnProperty.call(baseProperties, name.value)) {
+                let prop = this.types[baseProperties[name.value]];
+                if (prop.type !== "optional") {
+                  required.push(name.value);
+                } else {
+                  prop = this.types[prop.item];
+                }
                 properties[name.value] = this.get(
                   `${path}.${name.value}`,
-                  this.types[baseProperties[name.value]],
+                  prop,
                   selectionSet,
                 );
               } else {
@@ -106,9 +113,7 @@ export class ValidationSchemaBuilder {
         return {
           ...trimType(type),
           properties,
-          required: (type.required ?? []).filter((key) =>
-            Object.hasOwnProperty.call(properties, key)
-          ),
+          required,
         };
       }
 

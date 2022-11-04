@@ -797,7 +797,7 @@ export class TypeGraph {
       }
       const args: Record<string, ComputeArg> = {};
 
-      const argSchema = (this.tg.types[inputIdx] as ObjectNode).properties;
+      const argSchema = (this.tg.types[inputIdx] as ObjectNode);
       const fieldArgsIdx: Record<string, ast.ArgumentNode> = (
         fieldArgs ?? []
       ).reduce(
@@ -806,7 +806,9 @@ export class TypeGraph {
       );
 
       const nestedDepsUnion = [];
-      for (const [argName, argIdx] of Object.entries(argSchema ?? {})) {
+      for (
+        const [argName, argIdx] of Object.entries(argSchema.properties ?? {})
+      ) {
         const nested = this.collectArg(
           fieldArgsIdx[argName],
           argIdx,
