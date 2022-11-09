@@ -534,6 +534,10 @@ class struct(Type):
             "renames": frozendict(self.renames),
         }
 
+    def compose(self, of: Dict[str, Type]):
+        self.of.update(of)
+        return self
+
     def __str__(self) -> str:
         nested = "\n".join([f"{k}: {v}" for k, v in self.of.items()])
         return f'{self.typedef} {{\n{indent(nested, "  ")}\n}}'
