@@ -31,21 +31,23 @@ with TypeGraph(
         ).add_policy(all),
         getImage=t.func(
             t.struct(),
-            t.struct({"path": t.string().named("Path")}).compose(
-                {
-                    "image": t.func(
-                        t.struct(
-                            {
-                                "width": t.integer(),
-                                "height": t.integer(),
-                                "path": t.string().s_parent(g("Path")),
-                            }
-                        ),
-                        t.string(),
-                        f.imp("default"),
-                    )
-                }
-            ),
+            t.struct({"path": t.string().named("Path")}),
             FunMat.from_lambda(lambda args: {"path": "test.jpg"}),
-        ).add_policy(all),
+        )
+        .compose(
+            {
+                "image": t.func(
+                    t.struct(
+                        {
+                            "width": t.integer(),
+                            "height": t.integer(),
+                            "path": t.string().s_parent(g("Path")),
+                        }
+                    ),
+                    t.string(),
+                    f.imp("default"),
+                )
+            }
+        )
+        .add_policy(all),
     )
