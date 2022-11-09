@@ -1,4 +1,5 @@
 from typegraph.graphs.typegraph import TypeGraph
+from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import ModuleMat
 from typegraph.materializers.s3 import S3Runtime
 from typegraph.policies import allow_all
@@ -27,5 +28,24 @@ with TypeGraph(
             ),
             t.string(),
             f.imp("default"),
+        ).add_policy(all),
+        getImage=t.func(
+            t.struct(),
+            t.struct({"path": t.string().named("Path")}).compose(
+                {
+                    "image": t.func(
+                        t.struct(
+                            {
+                                "width": t.integer(),
+                                "height": t.integer(),
+                                "path": t.string().s_parent(g("Path")),
+                            }
+                        ),
+                        t.string(),
+                        f.imp("default"),
+                    )
+                }
+            ),
+            FunMat.from_lambda(lambda args: {"path": "test.jpg"}),
         ).add_policy(all),
     )
