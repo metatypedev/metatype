@@ -534,6 +534,10 @@ class struct(Type):
             "renames": frozendict(self.renames),
         }
 
+    def compose(self, of: Dict[str, Type]):
+        self.of.update(of)
+        return self
+
     def __str__(self) -> str:
         nested = "\n".join([f"{k}: {v}" for k, v in self.of.items()])
         return f'{self.typedef} {{\n{indent(nested, "  ")}\n}}'
@@ -589,10 +593,14 @@ class func(Type):
     def edges(self) -> List[Type]:
         return [self.inp, self.out]
 
-    def compose(self, other: "func") -> "func":
+    def apply(self, other: "func") -> "func":
         assert self.out == other.inp
         # what if other == gen?
         return func(self, other, IdentityMat())
+
+    def compose(self, of: Dict[str, Type]):
+        self.out = self.out.compose(of)
+        return self
 
     def rate(self, weight=None, calls=None):
         self.rate_weight = weight
