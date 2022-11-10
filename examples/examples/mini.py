@@ -1,7 +1,7 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.graphql import GraphQLRuntime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 with TypeGraph("mini") as g:
 

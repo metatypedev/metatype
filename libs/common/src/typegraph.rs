@@ -37,7 +37,7 @@ pub struct Rate {
     pub window_sec: u32,
     pub query_limit: u32,
     pub context_identifier: Option<String>,
-    pub local_exess: u32,
+    pub local_excess: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -45,7 +45,7 @@ pub struct TypeMeta {
     pub secrets: Vec<String>,
     pub cors: Cors,
     pub auths: Vec<Auth>,
-    pub rate: Vec<Rate>,
+    pub rate: Option<Rate>,
     pub version: String,
 }
 
@@ -61,6 +61,10 @@ pub struct TypeNodeBase {
     pub injection: Option<String>,
     #[serde(default)]
     pub inject: Option<serde_json::Value>,
+    #[serde(default, rename = "enum")]
+    pub enum_: Option<Vec<serde_json::Value>>,
+    #[serde(default)]
+    pub config: HashMap<String, serde_json::Value>,
 }
 
 #[skip_serializing_none]
@@ -72,7 +76,7 @@ pub enum TypeNode {
         base: TypeNodeBase,
         item: u32,
         #[serialize_always]
-        default_value: Option<String>,
+        default_value: Option<serde_json::Value>,
     },
     Boolean {
         #[serde(flatten)]

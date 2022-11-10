@@ -2,12 +2,12 @@ from typegraph.graphs.typegraph import Auth
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import PredefinedFunMat
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 
 def make_policy(g, name, fn):
-    pol = t.policy(
-        t.struct(),
+    pol = Policy(
         FunMat.from_lambda(fn),
     )
     return t.func(

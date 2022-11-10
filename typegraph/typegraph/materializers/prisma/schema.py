@@ -4,9 +4,12 @@ from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
+from typing import Tuple
+from typing import Union
 
 from typegraph.graphs.typegraph import NodeProxy
-from typegraph.types import typedefs as t
+from typegraph.graphs.typegraph import resolve_proxy
+from typegraph.types import types as t
 
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
@@ -38,6 +41,12 @@ class PrismaField:
         self.tags = []
 
 
+def get_ids(tpe: t.struct) -> Tuple[str, ...]:
+    return [
+        k for k, v in tpe.props.items() if resolve_proxy(v).runtime_config.get("id")
+    ]
+
+
 class PrismaModel:
     name: str
     fields: Dict[str, PrismaField]
@@ -45,24 +54,23 @@ class PrismaModel:
     tags: list[str]
 
     def __init__(self, entity: t.struct) -> None:
-        self.name = entity.node
+        self.name = entity.name
         self.entity = entity
         self.fields = {}
         self.tags = []
-        for field_name, field_type in entity.of.items():
+        for field_name, field_type in entity.props.items():
             f = PrismaField(field_name, field_type)
-            if field_type._id:
+            if field_type.runtime_config.get("id", False):
                 f.tags.append("@id")
-            if hasattr(field_type, "_auto") and field_type._auto:
-                match field_type.typedef:
-                    case "integer" | "unsigned_integer":
-                        f.tags.append("@default(autoincrement())")
-                    case "uuid":
-                        f.tags.append("@default(uuid())")
-                    case _:
-                        raise Exception(
-                            f'"auto" tag not supported for type "{field_type.typedef}"'
-                        )
+            if field_type.runtime_config.get("auto", False):
+                if isinstance(field_type, t.integer):
+                    f.tags.append("@default(autoincrement())")
+                elif isinstance(field_type, t.string) and field_type._format == "uuid":
+                    f.tags.append("@default(uuid())")
+                else:
+                    raise Exception(
+                        f"auto tag is not supported for type {field_type.type}"
+                    )
             self.fields[field_name] = f
 
     def link(self, schema: "PrismaSchema"):
@@ -77,7 +85,7 @@ class PrismaModel:
 
             if PrismaRelation.check(that_entity):
                 if not PrismaRelation.multi(that_entity):
-                    for ref_field, ref_type in that_entity.inp.of.items():
+                    for ref_field, ref_type in that_entity.inp.props.items():
                         ref_field = f"{field_name}{ref_field.title()}"
                         self.fields[ref_field] = PrismaField(ref_field, ref_type)
 
@@ -109,10 +117,10 @@ class PrismaModel:
 class PrismaSchema:
     models: Dict[str, PrismaModel]
 
-    def __init__(self, models: Iterable[t.struct]):
+    def __init__(self, models: Iterable[Union[t.struct, NodeProxy]]):
         self.models = {}
         for model in models:
-            self.models[model.node] = PrismaModel(model)
+            self.models[model.name] = PrismaModel(model)
 
     def build(self):
         for model in self.models.values():
@@ -125,12 +133,13 @@ class PrismaSchema:
             for field in model.fields.values():
                 if PrismaRelation.check(field.tpe):
                     relation = field.tpe.mat.relation
+                    owner_type = resolve_proxy(relation.owner_type)
                     if field.tpe.mat.owner:
                         if len(relation.ids) == 0:
-                            relation.ids = list(relation.owner_type.ids())
+                            relation.ids = get_ids(owner_type)
                         for key in relation.ids:
                             field_name = f"{field.name}{key.title()}"
-                            field_type = relation.owner_type.of[key]
+                            field_type = owner_type.props[key]
                             additional_fields[field_name] = PrismaField(
                                 field_name, field_type
                             )
@@ -232,7 +241,7 @@ def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
         #     )
         return
 
-    if isinstance(f.tpe, t.list):
+    if isinstance(f.tpe, t.array):
         of = f.tpe.of
 
         if isinstance(of, NodeProxy):

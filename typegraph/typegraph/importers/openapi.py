@@ -99,7 +99,7 @@ class Document:
             return "t.boolean()"
 
         if schema.type == "array":
-            return f't.list({self.typify(schema["items"])})'
+            return f't.array({self.typify(schema["items"])})'
 
         if schema.type == "object":
             if prop_of is not None:
@@ -302,7 +302,7 @@ def import_openapi(uri: str, gen: bool):
 
     imports = [
         ["typegraph.materializers.http", "HTTPRuntime"],
-        ["typegraph.types", "typedefs as t"],
+        ["typegraph.types", "types as t"],
         ["typegraph.graphs.typegraph", "TypeGraph"],
         ["typegraph.policies", "allow_all"],
     ]

@@ -111,6 +111,7 @@ class TypeGraph:
     rate: Optional[Rate]
     cors: Cors
     path: str
+    _no_copy: bool = False
 
     def __init__(
         self,
@@ -127,7 +128,7 @@ class TypeGraph:
         self.policies = []
         self.latest_type_id = 0
         self.auths = [] if auths is None else auths
-        self.rate = [] if rate is None else rate
+        self.rate = rate
         self.cors = Cors() if cors is None else cors
         self.path = Path(inspect.stack()[1].filename)
 
@@ -152,16 +153,9 @@ class TypeGraph:
 
     def expose(self, **ops: Union["t.func", "t.struct"]):
         from typegraph.types import types as t
-        from typegraph.logger import logger
-
-        logger.debug(ops)
 
         for name, op in ops.items():
-            logger.debug(f"name: {name}")
-            logger.debug(f"op: {op}")
             if not isinstance(op, t.func):
-                logger.debug(op)
-                logger.debug(f"op: {op}")
                 raise Exception(
                     f"cannot expose type {op.title} under {name}, requires a function, got a {op.type}"
                 )
@@ -237,8 +231,8 @@ class TypeGraph:
     def build(self):
         def visit(nodes: List[Any], collector: Collector):
             for node in nodes:
-                collector.collect(node)
-                visit(node.edges, collector)
+                if collector.collect(node):
+                    visit(node.edges, collector)
 
         collector = Collector()
         visit([self.root()], collector)
@@ -280,6 +274,9 @@ class TypegraphContext:
         except IndexError:
             return None
 
+    def __deepcopy__(self, memo):
+        raise Exception("cannot deepcopy typegraph")
+
 
 def get_absolute_path(relative: str) -> Path:
     tg_path = TypegraphContext.get_active().path
@@ -287,11 +284,15 @@ def get_absolute_path(relative: str) -> Path:
 
 
 class NodeProxy(Node):
+    g: TypeGraph
+    node: str
+    after_apply: Callable[["t.typedef"], "t.typedef"]
+
     def __init__(
         self,
         g: TypeGraph,
         node: str,
-        after_apply: Callable[["t.Type"], "t.Type"],
+        after_apply: Callable[["t.typedef"], "t.typedef"],
     ):
         super().__init__(Collector.types)
         self.g = g
@@ -302,6 +303,9 @@ class NodeProxy(Node):
         return NodeProxy(self.g, self.node, lambda n: then_apply(self.after_apply(n)))
 
     def get(self) -> "t.typedef":
+        tpe = self.g.type_by_names.get(self.node)
+        if tpe is None:
+            raise Exception(f"No registered type named '{self.node}'")
         return self.g.type_by_names[self.node]
 
     @property
@@ -310,3 +314,35 @@ class NodeProxy(Node):
 
     def data(self, collector: "Collector") -> dict:
         return self.get().data(collector)
+
+    @property
+    def name(self) -> str:
+        return self.node
+
+    def __deepcopy__(self, memo):
+        return NodeProxy(self.g, self.node, self.after_apply)
+
+    def optional(self):
+        from typegraph.types import types as t
+
+        return t.optional(self)
+
+
+def find(node: str) -> Optional[NodeProxy]:
+    g = TypegraphContext.get_active()
+    if g is None:
+        raise Exception("No active TypegraphContext")
+    if node in g.type_by_names:
+        return g(node)
+    else:
+        return None
+
+
+def resolve_proxy(tpe: Union[NodeProxy, "t.typedef"]) -> "t.typedef":
+    from typegraph.types import types as t
+
+    if isinstance(tpe, NodeProxy):
+        return tpe.get()
+    else:
+        assert isinstance(tpe, t.typedef)
+        return tpe

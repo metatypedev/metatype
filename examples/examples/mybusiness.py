@@ -2,7 +2,7 @@ from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.importers.google_discovery import import_googleapis
 from typegraph.materializers import googleapis
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 discovery = (
     "https://mybusinessbusinessinformation.googleapis.com/$discovery/rest?version=v1"

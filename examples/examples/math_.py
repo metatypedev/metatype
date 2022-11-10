@@ -3,7 +3,7 @@ from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import DenoRuntime
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import ModuleMat
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 with TypeGraph(name="math") as g:
     worker = DenoRuntime(worker="worker 1")

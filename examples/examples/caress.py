@@ -1,6 +1,6 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 def i18n(internal):
@@ -148,7 +148,7 @@ with TypeGraph("caress") as g:
             "price_vat": vat(),
             "images_uri": product.images_uri,
             "price_public": product.price_public,
-            **sub.of,
+            **sub.props,
         }
     )
 
@@ -158,7 +158,7 @@ with TypeGraph("caress") as g:
             "subs": t.list(sub),
             "price_vat": vat(),
             "price_public": price(),
-            **sub.of,
+            **sub.props,
         }
     )
 

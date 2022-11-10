@@ -1,11 +1,15 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typing import Any
-from typing import Dict
-from typing import List
+from collections import defaultdict
+from typing import DefaultDict
+from typing import TYPE_CHECKING
+from typing import Union
 
 from ordered_set import OrderedSet
 from typegraph.graphs.node import Node
+
+if TYPE_CHECKING:
+    from typegraph.graphs.typegraph import NodeProxy
 
 
 class Collector:
@@ -14,29 +18,41 @@ class Collector:
     materializers = "materializers"
     policies = "policies"
 
-    collects: Dict[str, OrderedSet]
+    collects: DefaultDict[str, OrderedSet]
+    frozen = False
 
     def __init__(self):
-        self.collects = {}
+        self.collects = defaultdict(OrderedSet)
 
-    def collect(self, node: Node) -> int:
-        if node is None:
-            raise Exception("expected Node, got None")
+    def freeze(self):
+        self.frozen = True
+
+    def collect(self, node: Node) -> bool:
+        from typegraph.graphs.typegraph import NodeProxy
+
+        if self.frozen:
+            raise Exception("Frozen collector cannot collect")
+
+        if isinstance(node, NodeProxy):
+            node = node.get()
+
         c = node.collector_target
 
+        idx = self.collects[c].add(node)
+        return idx == len(self.collects[c]) - 1
+
+    # returns the index of the node in its collect
+    def index(self, node: Union[Node, "NodeProxy"]):
+        from typegraph.graphs.typegraph import NodeProxy
+
+        if not isinstance(node, Node):
+            raise Exception(f"expected Node, got {type(node).__name__}")
+
+        if isinstance(node, NodeProxy):
+            node = node.get()
+
+        c = node.collector_target
         if c not in self.collects:
-            self.collects[c] = OrderedSet()
+            raise Exception(f"Collector target '{c}' not found")
 
-        return self.collects[c].add(node)
-
-
-def build(root: Node) -> Collector:
-    def visit(nodes: List[Any], collector: Collector):
-        for node in nodes:
-            collector.collect(node)
-            visit(node.edges, collector)
-
-    collector = Collector()
-    visit([root], collector)
-
-    return collector
+        return self.collects[c].index(node)

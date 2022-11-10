@@ -60,42 +60,30 @@ export class RandomRuntime extends Runtime {
 
   execute(typ: TypeNode): Resolver {
     return () => {
-      // if (Object.prototype.hasOwnProperty.call(typ.data, "random")) {
-      //   const entries = Object.entries(
-      //     typ.data.random as Record<string, unknown>,
-      //   );
-      //   ensure(
-      //     entries.length === 1,
-      //     `invalid random generation data ${typ.data.random}`,
-      //   );
-      //   const [[fn, arg]] = entries;
-      //   return this.chance[fn](arg);
-      // }
+      const config = typ.config ?? {};
+      if (Object.prototype.hasOwnProperty.call(config, "gen")) {
+        const { gen, ...arg } = config;
+        return this.chance[gen](arg);
+      }
 
       switch (typ.type) {
-        // case "struct":
-        //   return {};
-        // case "list":
-        //   return [];
-        // case "integer":
-        //   return this.chance.integer();
-        // case "unsigned_integer": {
-        //   let n = this.chance.integer();
-        //   while (n < 0) {
-        //     n = this.chance.integer();
-        //   }
-        //   return n;
-        // }
-        // case "uuid":
-        //   return this.chance.guid();
-        // case "string":
-        //   return this.chance.string();
-        // case "email":
-        //   return this.chance.email();
-        // case "char":
-        //   return this.chance.character();
-        // case "boolean":
-        //   return this.chance.bool();
+        case "object":
+          return {};
+        case "array":
+          // TODO
+          return [];
+        case "integer":
+          return this.chance.integer();
+        case "string":
+          if (typ.format === "uuid") {
+            return this.chance.guid();
+          }
+          if (typ.format === "email") {
+            return this.chance.email();
+          }
+          return this.chance.string();
+        case "boolean":
+          return this.chance.bool();
         default:
           throw new Error(`type not supported "${typ.type}"`);
       }

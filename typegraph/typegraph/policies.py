@@ -1,5 +1,6 @@
 # Copyright Metatype under the Elastic License 2.0.
 
+from typing import List
 from typing import Optional
 
 from typegraph.graphs.builder import Collector
@@ -19,10 +20,14 @@ class Policy(Node):
         tg = TypegraphContext.get_active()
         self.name = f"policy_{tg.next_type_id()}"
 
+    @property
+    def edges(self) -> List[Node]:
+        return [self.mat]
+
     def data(self, collector):
         return {
             "name": self.name,
-            "materializer": collector.collects[Collector.materializers].add(self.mat),
+            "materializer": collector.index(self.mat),
         }
 
     def named(self, name: str):

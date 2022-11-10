@@ -48,7 +48,7 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
         return f"t.Type()"
 
     if cursor.type == "array":
-        return f't.list({typify(cursor["items"], filter_read_only, suffix)})'
+        return f't.array({typify(cursor["items"], filter_read_only, suffix)})'
 
     if cursor.type == "object":
         ret = "t.struct({"
@@ -135,7 +135,7 @@ def import_googleapis(uri: str, gen: bool) -> None:
 
     imports = [
         ["typegraph.materializers", "googleapis"],
-        ["typegraph.types", "typedefs as t"],
+        ["typegraph.types", "types as t"],
         ["typegraph.graphs.typegraph", "TypeGraph"],
     ]
 

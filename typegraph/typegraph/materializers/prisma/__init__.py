@@ -1,60 +1,69 @@
 # Copyright Metatype under the Elastic License 2.0.
 
+from collections import defaultdict
 import dataclasses
 from dataclasses import dataclass
 from dataclasses import KW_ONLY
 from textwrap import dedent
+from typing import DefaultDict
+from typing import Optional
 from typing import Set
+from typing import Union
 
 from furl import furl
+from typegraph.graphs.builder import Collector
+from typegraph.graphs.typegraph import find
+from typegraph.graphs.typegraph import NodeProxy
+from typegraph.graphs.typegraph import resolve_proxy
 from typegraph.graphs.typegraph import TypegraphContext
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
 from typegraph.materializers.prisma.schema import PrismaSchema
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 
 def comp_exp(tpe):
-    name = f"bool_exp_{tpe.node}"
+    name = f"bool_exp_{tpe.name}"
     return t.struct(
         {
             "_eq": t.proxy(name),
             "_gt": t.proxy(name),
             "_gte": t.proxy(name),
-            "_in": t.list(t.proxy(name)),
+            "_in": t.array(t.proxy(name)),
             "_is_null": t.boolean(),
             "_lt": t.proxy(name),
             "_lte": t.proxy(name),
             "_neq": t.proxy(name),
-            "_nin": t.list(t.proxy(name)),
+            "_nin": t.array(t.proxy(name)),
         }
     ).named(name)
 
 
 def bool_exp(tpe: t.struct):
-    name = f"bool_exp_{tpe.node}"
+    name = f"bool_exp_{tpe.name}"
     g = TypegraphContext.get_active()
     return t.struct(
         {
-            "_and": t.list(g(name)),
+            "_and": t.array(g(name)),
             "_not": g(name),
-            "_or": t.list(g(name)),
+            "_or": t.array(g(name)),
         }
     ).named(name)
 
 
 def sql_select(tpe: t.struct):
-    cols = tpe.of.keys()
+    cols = tpe.props.keys()
 
     return t.struct(
         {
-            "distinct_on": t.list(t.enum(cols)).named(f"sql_distinct_on_{tpe.node}"),
+            "distinct_on": t.array(t.enum(cols)).named(f"sql_distinct_on_{tpe.name}"),
             "limit": t.unsigned_integer(),
             "offset": t.unsigned_integer(),
-            "order_by": t.list(t.tuple([t.enum(cols), t.string()])).named(
-                f"sql_order_by_{tpe.node}"
+            "order_by": t.array(t.tuple([t.enum(cols), t.string()])).named(
+                f"sql_order_by_{tpe.name}"
             ),
-            "where": bool_exp(tpe).s_optional(),
+            "where": bool_exp(tpe).optional(),
         }
     )
 
@@ -62,11 +71,11 @@ def sql_select(tpe: t.struct):
 def sql_insert(tpe: t.struct):
     return t.struct(
         {
-            "objects": t.list(
+            "objects": t.array(
                 t.struct(
                     {
                         field_name: field_type
-                        for field_name, field_type in tpe.of.items()
+                        for field_name, field_type in tpe.props.items()
                     }
                 )
             ),
@@ -78,7 +87,7 @@ def sql_update(tpe: t.struct):
     return t.struct(
         {
             "_set": t.struct(
-                {field_name: field_type for field_name, field_type in tpe.of.items()}
+                {field_name: field_type for field_name, field_type in tpe.props.items()}
             ),
             "where": bool_exp(tpe),
         }
@@ -118,7 +127,7 @@ class PrismaRelation(Materializer):
 
     @classmethod
     def multi(cls, tpe: t.Type):
-        return isinstance(tpe.out, t.list)
+        return isinstance(tpe.out, t.array)
 
     @classmethod
     def optional(cls, tpe: t.Type):
@@ -152,7 +161,7 @@ class Relation:
         self.runtime = runtime
         self.owner_type = owner
         self.owned_type = owned
-        self.relation = f"link_{owner.node}_{owned.node}"
+        self.relation = f"link_{owner.name}_{owned.name}"
         self.cardinality = cardinality
         self.ids = ()
 
@@ -172,7 +181,7 @@ class Relation:
     def owned(self):
         match self.cardinality:
             case "one_to_many":
-                target = t.list(self.owned_type)
+                target = t.array(self.owned_type)
             case "one_to_one":
                 target = t.optional(self.owned_type)
             case _:
@@ -204,31 +213,28 @@ class Relation:
 
 #     return t.struct(
 #         {
-#             k: get_inp_type(v).s_optional()
+#             k: get_inp_type(v).optional()
 #             for k, v in tpe.of.items()
 #             if not isinstance(v, t.func)
 #         }
 #     )
 
 
-# TODO: tpe.clone()
-def clone(tpe: t.Type) -> t.Type:
-    if isinstance(tpe, t.integer):
-        return t.integer()
-    if isinstance(tpe, t.string):
-        return t.string()
-    return tpe
-
-
 def get_input_type(
     tpe: t.struct,
     skip=set(),  # set of relation names, indicates related models to skip
     update=False,
-) -> t.Type:
+    name: Optional[str] = None,
+) -> Union[t.typedef, NodeProxy]:
+    proxy = name and find(name)
+    if proxy is not None:
+        return proxy
+
     fields = {}
     if not isinstance(tpe, t.struct):
         raise Exception(f'expected a struct, got: "{type(tpe).__name__}"')
-    for key, field_type in tpe.of.items():
+    for key, field_type in tpe.props.items():
+        field_type = resolve_proxy(field_type)
         if PrismaRelation.check(field_type):
             relname = field_type.mat.relation.relation
             if relname in skip:
@@ -238,7 +244,7 @@ def get_input_type(
             if not mat.owner:
                 cardinality = mat.relation.cardinality
                 if cardinality == "one_to_many":
-                    assert isinstance(out, t.list)
+                    assert isinstance(out, t.array)
                     out = out.of
                 elif cardinality == "one_to_one":
                     assert isinstance(out, t.optional)
@@ -248,76 +254,119 @@ def get_input_type(
             if isinstance(out, t.NodeProxy):
                 out = out.get()
             entries = {
-                "create": get_input_type(out, skip=skip | {relname})
-                .named(f"Input{out.node}Create")
-                .s_optional(),
-                "connect": get_where_type(out).named(f"Input{out.node}").s_optional(),
+                "create": get_input_type(
+                    out, skip=skip | {relname}, name=f"Input{out.name}Create"
+                ).optional(),
+                "connect": get_where_type(out, name=f"Input{out.name}").optional(),
             }
             if not mat.owner and mat.relation.cardinality == "one_to_many":
                 entries["createMany"] = t.struct(
-                    {"data": t.list(entries["create"].of)}
-                ).s_optional()
+                    {"data": t.array(entries["create"].of)}
+                ).optional()
 
-            fields[key] = t.struct(entries).s_optional()
+            fields[key] = t.struct(entries).optional()
 
         elif isinstance(field_type, t.func):
             raise Exception(f'Unsupported function field "{key}"')
         else:
             if update:
-                fields[key] = clone(field_type).s_optional()
+                fields[key] = field_type.optional()
             else:  # create
-                if hasattr(field_type, "_auto") and field_type._auto:
-                    fields[key] = clone(field_type).s_optional()
+                if field_type.runtime_config.get("auto", False):
+                    fields[key] = field_type.optional()
                 else:
-                    fields[key] = clone(field_type)
-    return t.struct(fields)
+                    fields[key] = field_type.replace()  # TODO clone
+
+    if name is None:
+        return t.struct(fields)
+    else:
+        return t.struct(fields).named(name)
 
 
-def get_out_type(tpe: t.Type) -> t.Type:
+def get_out_type(
+    tpe: t.typedef, name: Optional[str] = None
+) -> Union[t.typedef, NodeProxy]:
+    proxy = name and find(name)
+    if proxy is not None:
+        return proxy
+
     if isinstance(tpe, t.func):
         return get_out_type(tpe.out)
 
     if not isinstance(tpe, t.struct):
         return tpe
+    ret = t.struct({k: get_out_type(v) for k, v in tpe.props.items()})
+    if name is None:
+        return ret
+    else:
+        return ret.named(name)
 
-    return t.struct({k: get_out_type(v) for k, v in tpe.of.items()})
 
+def get_where_type(
+    tpe: t.struct, skip_rel=False, name: Optional[str] = None
+) -> t.struct:
+    proxy = name and find(name)
+    if proxy is not None:
+        return proxy
 
-def get_where_type(tpe: t.struct, skip_rel=False) -> t.struct:
     fields = {}
 
-    for k, v in tpe.of.items():
+    for k, v in tpe.props.items():
         if PrismaRelation.check(v):
             if skip_rel:
                 continue
             v = v.out
-            if isinstance(v, t.list):
+            if isinstance(v, t.array):
                 v = v.of
             if isinstance(v, t.NodeProxy):
                 v = v.get()
             if isinstance(v, t.struct):
-                fields[k] = get_where_type(v, skip_rel=True).s_optional()
+                fields[k] = get_where_type(v, skip_rel=True).optional()
             continue
         if isinstance(v, t.optional):
             v = v.of
         if isinstance(v, t.NodeProxy):
             v = v.get()
-        fields[k] = clone(v).s_optional()
+        fields[k] = v.optional()
 
-    return t.struct(fields)
+    if name is None:
+        return t.struct(fields)
+    else:
+        return t.struct(fields).named(name)
 
 
+# TODO find a better way
+managed_types: DefaultDict["PrismaRuntime", Set[t.struct]] = defaultdict(set)
+
+
+# TODO re-freeze on reimplementation of manage?
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries
 @dataclass(eq=True, frozen=True)
 class PrismaRuntime(Runtime):
     name: str
     connection_string: str
     _: KW_ONLY
-    managed_types: Set[t.struct] = dataclasses.field(default_factory=set)
     runtime_name: str = "prisma"
     # one_to_many_relations: dict[str, OneToMany] = dataclasses.field(default_factory=dict,repr=False, hash=False, metadata={"json_serialize": False})
 
     # auto = {None: {t.uuid(): "auto"}}
+
+    # No need to send this with the typegraph
+    #
+    # def get_type_config(self, tpe: t.typedef) -> dict:
+    #     base = tpe.runtime_config
+    #     config = dict()
+
+    #     # primary key
+    #     if "id" in base and base["id"]:
+    #         config["id"] = True
+
+    #     # auto generate: auto-increment (integer), random (uuid)
+    #     if "auto" in base and base["auto"]:
+    #         if isinstance(tpe, t.integer) or (isinstance(tpe, t.string) and tpe.format == "uuid"):
+    #             config["auto"] = True
+
+    #     return config
 
     def queryRaw(self) -> t.func:
         return t.func(
@@ -327,7 +376,7 @@ class PrismaRuntime(Runtime):
                     "parameters": t.json(),
                 }
             ).named("QueryRawInp"),
-            t.list(t.json()),
+            t.array(t.json()),
             PrismaOperationMat(self, "", "queryRaw"),
         )
 
@@ -345,52 +394,53 @@ class PrismaRuntime(Runtime):
 
     def gen_find_unique(self, tpe: t.struct) -> t.func:
         return t.func(
-            t.struct({"where": get_where_type(tpe).named(f"{tpe.node}WhereUnique")}),
-            get_out_type(tpe).named(f"{tpe.node}UniqueOutput").s_optional(),
-            PrismaOperationMat(self, tpe.node, "findUnique"),
+            t.struct({"where": get_where_type(tpe).named(f"{tpe.name}WhereUnique")}),
+            get_out_type(tpe).named(f"{tpe.name}UniqueOutput").optional(),
+            PrismaOperationMat(self, tpe.name, "findUnique"),
         )
 
     def gen_find_many(self, tpe: t.struct) -> t.func:
         return t.func(
             t.struct(
-                {"where": get_where_type(tpe).named(f"{tpe.node}Where").s_optional()}
+                {"where": get_where_type(tpe).named(f"{tpe.name}Where").optional()}
             ),
-            t.list(get_out_type(tpe).named(f"{tpe.node}Output")),
-            PrismaOperationMat(self, tpe.node, "findMany"),
+            t.array(get_out_type(tpe).named(f"{tpe.name}Output")),
+            PrismaOperationMat(self, tpe.name, "findMany"),
         )
 
     def gen_create(self, tpe: t.struct) -> t.func:
         return t.func(
             t.struct(
                 {
-                    "data": get_input_type(tpe).named(f"{tpe.node}CreateInput"),
+                    "data": get_input_type(tpe).named(f"{tpe.name}CreateInput"),
                 }
             ),
-            get_out_type(tpe).named(f"{tpe.node}CreateOutput"),
-            PrismaOperationMat(self, tpe.node, "createOne", serial=True),
+            get_out_type(tpe).named(f"{tpe.name}CreateOutput"),
+            PrismaOperationMat(self, tpe.name, "createOne", serial=True),
         )
 
     def gen_update(self, tpe: t.struct) -> t.func:
+
         return t.func(
             t.struct(
                 {
                     "data": get_input_type(tpe, update=True).named(
-                        f"{tpe.node}UpdateInput"
+                        f"{tpe.name}UpdateInput"
                     ),
-                    "where": get_where_type(tpe).named(f"{tpe.node}UpdateOneWhere"),
+                    "where": get_where_type(tpe).named(f"{tpe.name}UpdateOneWhere"),
                 }
             ),
-            get_out_type(tpe).named(f"{tpe.node}UpdateOutput"),
-            PrismaOperationMat(self, tpe.node, "updateOne", serial=True),
+            get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
+            PrismaOperationMat(self, tpe.name, "updateOne", serial=True),
         )
 
     def gen_delete(self, tpe: t.struct) -> t.func:
         return t.func(
             t.struct(
-                {"where": get_where_type(tpe).named(f"{tpe.node}DeleteInput")},
+                {"where": get_where_type(tpe).named(f"{tpe.name}DeleteInput")},
             ),
-            get_out_type(tpe).named(f"{tpe.node}DeleteOutput"),
-            PrismaOperationMat(self, tpe.node, "deleteOne", serial=True),
+            get_out_type(tpe).named(f"{tpe.name}DeleteOutput"),
+            PrismaOperationMat(self, tpe.name, "deleteOne", serial=True),
         )
 
     def gen_delete_many(self, tpe: t.struct) -> t.func:
@@ -398,50 +448,65 @@ class PrismaRuntime(Runtime):
             t.struct(
                 {
                     "where": get_where_type(tpe).named(
-                        f"{tpe.node}DeleteManyWhereInput"
+                        f"{tpe.name}DeleteManyWhereInput"
                     ),
                 }
             ),
-            t.struct({"count": t.integer()}).named(f"{tpe.node}BatchDeletePayload"),
-            PrismaOperationMat(self, tpe.node, "deleteMany", serial=True),
+            t.struct({"count": t.integer()}).named(f"{tpe.name}BatchDeletePayload"),
+            PrismaOperationMat(self, tpe.name, "deleteMany", serial=True),
         )
 
-    def gen(self, ops: dict[str, tuple[t.Type, str, t.policy]]) -> dict[str, t.func]:
+    def gen(self, ops: dict[str, tuple[t.Type, str, Policy]]) -> dict[str, t.func]:
         ret = {}
-        for name, op in ops.items():
-            tpe, op, policy = op
-            match op:
-                case "findUnique":
-                    ret[name] = self.gen_find_unique(tpe).add_policy(policy)
-                case "findMany":
-                    ret[name] = self.gen_find_many(tpe).add_policy(policy)
-                case "create":
-                    ret[name] = self.gen_create(tpe).add_policy(policy)
-                case "update":
-                    ret[name] = self.gen_update(tpe).add_policy(policy)
-                case "delete":
-                    ret[name] = self.gen_delete(tpe).add_policy(policy)
-                case "deleteMany":
-                    ret[name] = self.gen_delete_many(tpe).add_policy(policy)
-                case "queryRaw":
-                    ret[name] = self.queryRaw().add_policy(policy)
-                case "executeRaw":
-                    ret[name] = self.executeRaw().add_policy(policy)
-                case _:
-                    raise Exception(f'Operation not supported: "{op}"')
-        # raise Exception(f'ret: {ret}')
-        return ret
+        with t.NoCopy():
+            for name, op in ops.items():
+                tpe, op, policy = op
+                match op:
+                    case "findUnique":
+                        ret[name] = self.gen_find_unique(tpe).add_policy(policy)
+                    case "findMany":
+                        ret[name] = self.gen_find_many(tpe).add_policy(policy)
+                    case "create":
+                        ret[name] = self.gen_create(tpe).add_policy(policy)
+                    case "update":
+                        ret[name] = self.gen_update(tpe).add_policy(policy)
+                    case "delete":
+                        ret[name] = self.gen_delete(tpe).add_policy(policy)
+                    case "deleteMany":
+                        ret[name] = self.gen_delete_many(tpe).add_policy(policy)
+                    case "queryRaw":
+                        ret[name] = self.queryRaw().add_policy(policy)
+                    case "executeRaw":
+                        ret[name] = self.executeRaw().add_policy(policy)
+                    case _:
+                        raise Exception(f'Operation not supported: "{op}"')
+            # raise Exception(f'ret: {ret}')
+            return ret
 
     def manage(self, tpe):
         if not isinstance(tpe, t.struct):
             raise Exception("cannot manage non struct")
 
-        if len(tpe.ids()) == 0:
+        # what about NodeProxy?
+        ids = [
+            k
+            for k, v in tpe.props.items()
+            if isinstance(v, t.typedef)
+            and not isinstance(v, t.optional)
+            and v.runtime_config.get("id", False)
+        ]
+
+        if len(ids) == 0:
+            non_null_fields = [
+                k
+                for k, v in tpe.props.items()
+                if isinstance(v, t.typedef) and not isinstance(v, t.optional)
+            ]
             raise Exception(
-                f'{tpe.node} must have at least an id among {",".join(tpe.of.keys())}'
+                f'{tpe.name} must have at least an id among {",".join(non_null_fields)}'
             )
 
-        self.managed_types.add(tpe.within(self))
+        managed_types[self].add(tpe.within(self))
         return self
 
     def one_to_many(self, owner: t.Type, owned: t.Type):
@@ -455,7 +520,7 @@ class PrismaRuntime(Runtime):
         return relation
 
     def datamodel(self):
-        return PrismaSchema(self.managed_types).build()
+        return PrismaSchema(managed_types[self]).build()
 
     def datasource(self):
         f = furl(self.connection_string)
@@ -467,16 +532,17 @@ class PrismaRuntime(Runtime):
         """
         return dedent(source)
 
-    @property
-    def data(self):
-        return {
+    def data(self, collector: Collector) -> dict:
+        data = super().data(collector)
+        data["data"] |= {
             "datamodel": self.datamodel(),
             "datasource": self.datasource(),
         }
+        return data
 
     # def generate_crud(self, tpe: t.struct) -> Dict[str, t.func]:
     #     tpe.materializer = self
-    #     name = tpe.node.lower()
+    #     name = tpe.name.lower()
     #     return {
     #         f"{name}": t.func(sql_select(tpe), tpe, PrismaSelectMat(self)),
     #         f"update_{name}": t.func(sql_update(tpe), tpe, PrismaUpdateMat(self)),
