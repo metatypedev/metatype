@@ -9,7 +9,7 @@ from typegraph.graphs.builders import TypeRuntime
 from typegraph.graphs.typegraph import Cors
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import deno
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 class TestDependency:

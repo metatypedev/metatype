@@ -2,7 +2,7 @@ from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.random import RandomMat
 from typegraph.materializers.random import RandomRuntime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 with TypeGraph(name="random") as g:
     runtime = RandomRuntime(seed=1)
@@ -19,14 +19,14 @@ with TypeGraph(name="random") as g:
     users = t.struct(
         {
             "id": t.uuid(),
-            "name": t.string().random("name"),
-            "age": t.integer().random("age", type="adult"),
+            "name": t.string().config(gen="name"),
+            "age": t.integer().config(gen="age", type="adult"),
             "address": t.struct(
                 {
-                    "street": t.string().random("address"),
-                    "city": t.string().random("city"),
-                    "postcode": t.string().random("postcode"),
-                    "country": t.string().random("country", full=True),
+                    "street": t.string().config(gen="address"),
+                    "city": t.string().config(gen="city"),
+                    "postcode": t.string().config(gen="postcode"),
+                    "country": t.string().config(gen="country", full=True),
                 }
             ),
         }

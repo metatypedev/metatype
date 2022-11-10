@@ -67,7 +67,7 @@ def typify(tpe: Box, opt: bool = True, name=None, object_as_ref=False):
         return "t.string()"
 
     if tpe.kind == "LIST":
-        return f"t.list({typify(tpe.ofType, False, object_as_ref=True)})"
+        return f"t.array({typify(tpe.ofType, False, object_as_ref=True)})"
 
     if tpe.kind == "UNION":
         return f't.union([{", ".join(map(lambda variant: typify(variant, False, object_as_ref=True), tpe.possibleTypes))}])'
@@ -135,7 +135,7 @@ def import_graphql(uri: str, gen: bool):
 
     imports = [
         ["typegraph.materializers.graphql", "GraphQLRuntime"],
-        ["typegraph.types", "typedefs as t"],
+        ["typegraph.types", "types as t"],
         ["typegraph.graphs.typegraph", "TypeGraph"],
     ]
 

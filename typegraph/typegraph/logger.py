@@ -7,7 +7,15 @@ import os
 
 class Handler(SocketHandler):
     def makePickle(self, record):
-        message = f"\33[34m[{record.levelname}:{record.name}] \33[37m{record.msg}\n"
+        levelname = record.levelname
+        if levelname == "DEBUG":
+            color = "\33[34m"
+            pass
+        elif levelname == "INFO":
+            color = "\33[32m"
+        else:
+            color = "\33[1m"
+        message = f"{color}[{record.levelname}:{record.name}] \33[0m{record.msg}\n"
         return message.encode()
 
 

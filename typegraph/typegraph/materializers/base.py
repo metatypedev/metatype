@@ -2,22 +2,31 @@
 
 from dataclasses import dataclass
 from dataclasses import KW_ONLY
+from typing import Dict
 from typing import List
+from typing import TYPE_CHECKING
 
 from typegraph.graphs.builder import Collector
 from typegraph.graphs.node import Node
 
 
-@dataclass(frozen=True, eq=True)
+if TYPE_CHECKING:
+    from typegraph.types import types as t
+
+
+@dataclass(eq=True, frozen=True)
 class Runtime(Node):
     runtime_name: str
     _: KW_ONLY
     collector_target: str = Collector.runtimes
 
-    def data(self, collector: Collector) -> dict:
+    def data(self, collector: Collector) -> Dict:
         data = vars(self)
         data.pop("collector_target")
         return {"name": data.pop("runtime_name"), "data": data}
+
+    def get_type_config(self, type: "t.typedef") -> Dict:
+        return dict()
 
 
 @dataclass(eq=True, frozen=True)
@@ -36,6 +45,6 @@ class Materializer(Node):
         data.pop("collector_target")
         return {
             "name": data.pop("materializer_name"),
-            "runtime": collector.collect(data.pop("runtime")),
+            "runtime": collector.index(data.pop("runtime")),
             "data": data,
         }

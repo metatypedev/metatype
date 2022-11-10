@@ -113,7 +113,7 @@ class ImportFunMat(Materializer):
 
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
-        data["data"]["mod"] = collector.collect(self.mod)
+        data["data"]["mod"] = collector.index(self.mod)
         return data
 
 

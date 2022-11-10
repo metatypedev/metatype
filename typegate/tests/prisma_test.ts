@@ -77,7 +77,7 @@ test("prisma", async (t) => {
         updateOneRecord(
           where: {
             id: ${id}
-          } 
+          }
           data: {
             name: "name2"
           }
@@ -137,7 +137,7 @@ test("prisma", async (t) => {
         deleteOneRecord(
           where: {
             id: ${id}
-          } 
+          }
         ) {
           id
         }

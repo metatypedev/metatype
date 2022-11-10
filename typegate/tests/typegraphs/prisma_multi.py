@@ -3,7 +3,7 @@ from os import environ
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 postgres = environ.get(
     "TEST_POSTGRES_DB",
@@ -17,7 +17,7 @@ with TypeGraph("prisma") as g:
     allow_all = policies.allow_all()
 
     record = t.struct(
-        {"id": t.uuid().id, "name": t.string(), "age": t.integer().s_optional()}
+        {"id": t.uuid().config("id"), "name": t.string(), "age": t.integer().optional()}
     ).named("record")
 
     db.manage(record)
@@ -30,7 +30,7 @@ with TypeGraph("prisma") as g:
 
     messages = t.struct(
         {
-            "id": t.integer().id,
+            "id": t.integer().config("id"),
             "time": t.integer(),
             "message": t.string(),
             "sender": messageSender.owner(),
@@ -42,7 +42,7 @@ with TypeGraph("prisma") as g:
 
     users = t.struct(
         {
-            "id": t.integer().id,
+            "id": t.integer().config("id"),
             "email": t.string(),
             "name": t.string(),
             "sentMessages": messageSender.owned(),

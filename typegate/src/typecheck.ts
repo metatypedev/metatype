@@ -26,7 +26,7 @@ import { ObjectNode, TypeNode } from "./type_node.ts";
 type JSONSchema = Exclude<jst.JSONSchema, boolean>;
 
 function trimType(node: TypeNode): JSONSchema {
-  const { runtime, policies, ...ret } = node;
+  const { runtime, policies, config, ...ret } = node;
   return ret as unknown as JSONSchema;
 }
 

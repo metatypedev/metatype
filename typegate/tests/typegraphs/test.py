@@ -7,7 +7,8 @@ from typegraph.materializers.deno import PredefinedFunMat
 from typegraph.materializers.graphql import GraphQLRuntime
 from typegraph.materializers.http import HTTPRuntime
 from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 with TypeGraph("test") as g:
 
@@ -30,12 +31,11 @@ with TypeGraph("test") as g:
             "id": t.integer(),
             "email": t.string(),
             "name": t.string(),
-            "messages": t.list(messages),
+            "messages": t.array(messages),
         }
     ).named("users")
 
-    allow_all_policy = t.policy(
-        t.struct(),  # t.struct({"claim", g.claim.inject}),
+    allow_all_policy = Policy(
         FunMat.from_lambda(lambda args: True),
     ).named("allow_all_policy")
 
@@ -48,27 +48,27 @@ with TypeGraph("test") as g:
             t.struct(
                 {
                     "a": t.integer().named("deps"),
-                    "b": t.integer().s_optional().named("deps_opt"),
+                    "b": t.integer().optional().named("depopt"),
                     "c": t.func(
                         t.struct(
                             {
-                                "injection": t.integer().s_parent(g("deps")),
+                                "injection": t.integer().from_parent(g("deps")),
                                 "nested_injection": t.struct(
-                                    {"value": t.integer().s_parent(g("deps"))}
+                                    {"value": t.integer().from_parent(g("deps"))}
                                 ),
-                                "default": t.string().s_optional("ddds"),
-                                "forced": t.string().s_raw("dddsaaa"),
+                                "default": t.string().optional("ddds"),
+                                "forced": t.string().set("dddsaaa"),
                                 "nested_default": t.struct(
                                     {"value": t.string()}
-                                ).s_optional({"value": "a"}),
+                                ).optional({"value": "a"}),
                                 "nested_inner_default": t.struct(
-                                    {"value": t.string().s_optional("b")}
+                                    {"value": t.string().optional("b")}
                                 ),
-                                "nested_apply": t.struct({"value": t.string()}).s_raw(
+                                "nested_apply": t.struct({"value": t.string()}).set(
                                     {"value": "c"}
                                 ),
                                 "nested_inner_apply": t.struct(
-                                    {"value": t.string().s_raw("d")}
+                                    {"value": t.string().set("d")}
                                 ),
                             }
                         ),
@@ -98,19 +98,19 @@ with TypeGraph("test") as g:
                         ),
                     ),
                     "out": out,
-                    # "findManymessages": db.generate_read(t.list(messages)),
+                    # "findManymessages": db.generate_read(t.array(messages)),
                     "ql": remote.query(
                         t.struct({"identifier": t.string()}),
-                        t.string().s_optional(),
+                        t.string().optional(),
                     ),
                     "remote": remote.query(
                         t.struct(),
                         t.struct(
                             {
-                                "integer": t.integer().named("res_int"),
+                                "integer": t.integer().named("reint"),
                                 "nested": g("remote"),
                                 "duration": t.func(
-                                    t.struct({"integer": g("res_int")}),
+                                    t.struct({"integer": g("reint")}),
                                     t.integer().named("duration_remote"),
                                     FunMat.from_lambda(
                                         lambda args: args.parent.integer * 3

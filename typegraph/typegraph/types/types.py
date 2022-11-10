@@ -22,6 +22,7 @@ from typegraph.graphs.typegraph import TypegraphContext
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
 from typegraph.policies import Policy
+from typing_extensions import Self
 
 
 # if os.environ.get("DEBUG"):
@@ -32,11 +33,20 @@ from typegraph.policies import Policy
 #     debugpy.wait_for_client()
 
 
-def replace(obj, **kwargs):
-    # handle errors
-    fields = {k: deepcopy(v) for k, v in vars(obj).items() if k not in kwargs}
-    fields.update(**kwargs)
-    return type(obj)(**fields)
+TypeNode = Union["typedef", NodeProxy]
+
+
+class NoCopy:
+    tg: "TypeGraph"
+
+    def __init__(self):
+        self.tg = TypegraphContext.get_active()
+
+    def __enter__(self):
+        self.tg._no_copy = True
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        self.tg._no_copy = False
 
 
 def remove_none_values(obj):
@@ -64,9 +74,11 @@ class typedef(Node):
     name: str
     description: Optional[str]
     runtime: Optional["Runtime"]
-    inject: Optional[Union[str, "typedef"]]
+    inject: Optional[Union[str, TypeNode]]
     injection: Optional[Any]
     policies: Tuple[Policy, ...]
+    runtime_config: Dict[str, Any]
+    _enum: Optional[List[Any]]
 
     def __init__(
         self,
@@ -74,9 +86,11 @@ class typedef(Node):
         runtime: Optional["Runtime"] = None,
         name: Optional[str] = None,
         description: Optional[str] = None,
-        inject: Optional[Union[str, "typedef"]] = None,
+        inject: Optional[Union[str, TypeNode]] = None,
         injection: Optional[Any] = None,
         policies: Optional[Tuple[Policy, ...]] = None,
+        runtime_config: Optional[dict[str, Any]] = None,  # runtime-specific data
+        _enum: Optional[List[Any]] = None,
         **kwargs,
     ):
         super().__init__(
@@ -106,6 +120,21 @@ class typedef(Node):
         self.inject = inject
         self.injection = None if self.inject is None else injection
         self.policies = tuple() if policies is None else policies
+        self.runtime_config = runtime_config if runtime_config is not None else dict()
+        self._enum = _enum
+
+    def replace(self, **kwargs):
+        if self.graph._no_copy:
+            for k, v in kwargs.items():
+                setattr(self, k, v)
+            return self
+        else:
+            fields = {k: deepcopy(v) for k, v in vars(self).items() if k not in kwargs}
+            fields.update(**kwargs)
+            return type(self)(**fields)
+
+    def __deepcopy__(self, memo):
+        return self
 
     @property
     def type(self):
@@ -122,14 +151,15 @@ class typedef(Node):
 
     def named(self, name: str) -> "typedef":
         types = self.graph.type_by_names
+        # TODO compare types
         if name in types:
             raise Exception(f"type name {name} already used")
-        ret = replace(self, name=name)
-        types[name] = ret
+        ret = self.replace(name=name)
+        self.graph.type_by_names[name] = ret
         return ret
 
     def describe(self, description: str) -> "typedef":
-        return replace(self, description=description)
+        return self.replace(description=description)
 
     def within(self, runtime):
         if runtime is None:
@@ -165,32 +195,39 @@ class typedef(Node):
         if self.inject is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return replace(self, injection="raw", inject=orjson.dumps(value).decode())
+        return self.replace(injection="raw", inject=orjson.dumps(value).decode())
 
     def from_secret(self, secret_name):
         if self.inject is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return replace(self, injection="secret", inject=Secret(secret_name))
+        return self.replace(injection="secret", inject=Secret(secret_name))
 
     def from_parent(self, sibiling: "NodeProxy"):
         # TODO: check for same type and value in same context
         if self.inject is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return replace(self, injection="parent", inject=sibiling)
+        return self.replace(injection="parent", inject=sibiling)
 
     def from_context(self, claim: str):
         if self.inject is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return replace(self, injection="context", inject=claim)
+        return self.replace(injection="context", inject=claim)
 
     def add_policy(
         self,
         *policies: List["Policy"],
     ):
-        return replace(self, policies=self.policies + policies)
+        return self.replace(policies=self.policies + policies)
+
+    def config(self, *flags: str, **kwargs: Any):
+        d = self.runtime_config | kwargs | {f: True for f in flags}
+        return self.replace(runtime_config=d)
+
+    def enum(self, variants: List[Any]) -> Self:
+        return self.replace(_enum=variants)
 
     def data(self, collector) -> dict:
         if self.runtime is None:
@@ -199,8 +236,9 @@ class typedef(Node):
         ret = {
             "type": self.type,
             "title": self.name,
-            "runtime": collector.collect(self.runtime),
-            "policies": [collector.collect(p) for p in self.policies],
+            "runtime": collector.index(self.runtime),
+            "policies": [collector.index(p) for p in self.policies],
+            **remove_none_values(dict(enum=self._enum)),
         }
         if self.description is not None:
             ret["description"] = self.description
@@ -208,15 +246,19 @@ class typedef(Node):
         if self.inject is not None:
             ret["injection"] = self.injection
             if self.injection == "parent":
-                ret["inject"] = collector.collect(self.inject)
+                ret["inject"] = collector.index(self.inject)
             elif self.injection == "secret":
                 ret["inject"] = self.inject.secret
             else:
                 ret["inject"] = self.inject
 
+        config = self.runtime.get_type_config(self)
+        if len(config) > 0:
+            ret["config"] = config
+
         return ret
 
-    def optional(self, default_value: Optional[Any] = None):
+    def optional(self, default_value: Optional[Any] = None) -> "optional":
         if isinstance(self, optional):
             return self
 
@@ -238,10 +280,10 @@ class typedef(Node):
 
 
 class optional(typedef):
-    of: typedef
+    of: TypeNode
     default_value: Optional[Any] = None
 
-    def __init__(self, of: typedef, **kwargs):
+    def __init__(self, of: TypeNode, **kwargs):
         super().__init__(**kwargs)
         self.of = of
 
@@ -249,7 +291,7 @@ class optional(typedef):
         if self.default_value is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return replace(self, default_value=value)
+        return self.replace(default_value=value)
 
     @property
     def edges(self) -> List[Node]:
@@ -258,7 +300,7 @@ class optional(typedef):
     def data(self, collector) -> dict:
         return {
             **super().data(collector),
-            "item": collector.collect(self.of),
+            "item": collector.index(self.of),
             "default_value": self.default_value,
         }
 
@@ -278,19 +320,19 @@ class number(typedef):
         super().__init__(**kwargs)
 
     def min(self, x: float) -> "number":
-        return replace(self, _min=x)
+        return self.replace(_min=x)
 
     def max(self, x: float) -> "number":
-        return replace(self, _max=x)
+        return self.replace(_max=x)
 
     def x_min(self, x: float) -> "number":
-        return replace(self, _x_min=x)
+        return self.replace(_x_min=x)
 
     def x_max(self, x: float) -> "number":
-        return replace(self, _x_max=x)
+        return self.replace(_x_max=x)
 
     def multiple_of(self, x: float) -> "number":
-        return replace(self, _multiple_of=x)
+        return self.replace(_multiple_of=x)
 
     def data(self, collector) -> dict:
         return {
@@ -307,6 +349,10 @@ class number(typedef):
         }
 
 
+def float() -> number:
+    return number()
+
+
 class integer(number):
     pass
 
@@ -321,16 +367,16 @@ class string(typedef):
         super().__init__(**kwargs)
 
     def min(self, n: int) -> "string":
-        return replace(self, _min=n)
+        return self.replace(_min=n)
 
     def max(self, n: int) -> "string":
-        return replace(self, _max=n)
+        return self.replace(_max=n)
 
     def pattern(self, p: str) -> "string":
-        return replace(self, _pattern=p)
+        return self.replace(_pattern=p)
 
     def format(self, f: str) -> "string":
-        return replace(self, _format=f)
+        return self.replace(_format=f)
 
     def uuid(self) -> "string":
         return self.format("uuid")
@@ -340,6 +386,9 @@ class string(typedef):
 
     def uri(self) -> "string":
         return self.format("uri")
+
+    def json(self) -> "string":
+        return self.format("json")
 
     def hostname(self) -> "string":
         return self.format("hostname")
@@ -370,12 +419,37 @@ def uri() -> string:
     return string().uri()
 
 
+def json() -> string:
+    return string().json()
+
+
 class struct(typedef):
-    props: Dict[str, Union[typedef, NodeProxy]]
+    props: Dict[str, TypeNode]
+    additional_props: Optional[Union[bool, TypeNode]] = None
+    _min: Optional[int] = None
+    _max: Optional[int] = None
+    # _dependentRequired
 
     def __init__(self, props=None, **kwargs):
         super().__init__(**kwargs)
         self.props = props if props is not None else dict()
+
+        # validation
+        # TODO only when called directly (excluding reconstruction with `replace`)
+        for tpe in self.props.values():
+            if not isinstance(tpe, typedef) and not isinstance(tpe, NodeProxy):
+                raise Exception(
+                    f"expected typedef or NodeProxy, got {type(tpe).__name__}"
+                )
+
+    def min(self, n: int) -> "struct":
+        return self.replace(_min=n)
+
+    def max(self, n: int) -> "struct":
+        return self.replace(_max=n)
+
+    def additional(self, t: Union[bool, TypeNode]):
+        return self.replace(additional_props=t)
 
     @property
     def type(self):
@@ -386,19 +460,31 @@ class struct(typedef):
         return super().edges + list(self.props.values())
 
     def data(self, collector) -> dict:
-        for tpe in self.props.values():
-            if not isinstance(tpe, typedef) and not isinstance(tpe, NodeProxy):
-                raise Exception(
-                    f"expected typedef or NodeProxy, got {type(tpe).__name__}"
-                )
+        # collect NodeProxy and typedef
+        additional_props = (
+            collector.index(self.additional_props)
+            if isinstance(self.additional_props, Node)
+            else self.additional_props
+        )
         return {
             **super().data(collector),
-            "properties": {k: collector.collect(v) for k, v in self.props.items()},
+            "properties": {k: collector.index(v) for k, v in self.props.items()},
+            **remove_none_values(
+                {
+                    "minProperties": self._min,
+                    "maxProperties": self._max,
+                    "additionalProperties": additional_props,
+                }
+            ),
         }
 
 
+def any_object() -> struct:
+    return struct().additional(True)
+
+
 class array(typedef):
-    of: typedef
+    of: TypeNode
 
     _min: Optional[int] = None
     _max: Optional[int] = None
@@ -406,18 +492,18 @@ class array(typedef):
     # _min_contains: Optional[int] = None
     # _max_contains: Optional[int] = None
 
-    def __init__(self, of: typedef, **kwargs):
+    def __init__(self, of: TypeNode, **kwargs):
         super().__init__(**kwargs)
         self.of = of
 
     def min(self, n: int) -> "array":
-        return replace(self, _min=n)
+        return self.replace(_min=n)
 
     def max(self, n: int) -> "array":
-        return replace(self, _max=n)
+        return self.replace(_max=n)
 
     def unique_items(self, b: bool) -> "array":
-        return replace(self, _unique_items=b)
+        return self.replace(_unique_items=b)
 
     @property
     def edges(self) -> List[Node]:
@@ -426,7 +512,7 @@ class array(typedef):
     def data(self, collector) -> dict:
         return {
             **super().data(collector),
-            "items": collector.collect(self.of),
+            "items": collector.index(self.of),
             **remove_none_values(
                 {
                     "minItems": self._min,
@@ -437,9 +523,13 @@ class array(typedef):
         }
 
 
+class any(typedef):
+    pass
+
+
 class func(typedef):
-    inp: struct
-    out: typedef
+    inp: TypeNode
+    out: TypeNode
     mat: Materializer
 
     # if not safe, output will be typechecked
@@ -450,7 +540,7 @@ class func(typedef):
 
     def __init__(
         self,
-        inp: struct,
+        inp: TypeNode,
         out: typedef,
         mat: Materializer,
         safe=True,
@@ -470,7 +560,7 @@ class func(typedef):
         self.rate_weight = rate_weight
 
     def rate(self, weight=None, calls=None):
-        return replace(self, rate_weight=weight, rate_calls=calls)
+        return self.replace(rate_weight=weight, rate_calls=calls)
 
     @property
     def edges(self) -> List[Node]:
@@ -481,11 +571,14 @@ class func(typedef):
         return "function"
 
     def data(self, collector) -> dict:
+        inp = self.inp.get() if isinstance(self.inp, NodeProxy) else self.inp
+        if not isinstance(inp, struct):
+            raise Exception(f"invalid input type, expected struct got {inp.name}")
         return {
             **super().data(collector),
-            "input": collector.collect(self.inp),
-            "output": collector.collect(self.out),
-            "materializer": collector.collect(self.mat),
+            "input": collector.index(inp),
+            "output": collector.index(self.out),
+            "materializer": collector.index(self.mat),
             "rate_weight": self.rate_weight,
             "rate_calls": self.rate_calls,
         }

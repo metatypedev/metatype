@@ -1,7 +1,7 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.importers.graphql import import_graphql
 from typegraph.materializers.graphql import GraphQLRuntime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 import_graphql("https://hivdb.stanford.edu/graphql", False)
 

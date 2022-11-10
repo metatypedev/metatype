@@ -1,7 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 import type * as ast from "graphql/ast";
-import { Kind } from "graphql";
+import { FieldNode, Kind } from "graphql";
 import { ComputeStage } from "./engine.ts";
 import * as graphql from "./graphql.ts";
 import { FragmentDefs } from "./graphql.ts";
@@ -17,7 +17,7 @@ import { ensure, envOrFail, mapo } from "./utils.ts";
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
 import * as semver from "std/semver/mod.ts";
 
-import { ArrayNode, ObjectNode, TypeNode } from "./type_node.ts";
+import { ArrayNode, FunctionNode, ObjectNode, TypeNode } from "./type_node.ts";
 import config from "./config.ts";
 import {
   Batcher,
@@ -78,6 +78,18 @@ export interface TypeGraphDS {
 }
 
 export type RuntimeResolver = Record<string, Runtime>;
+
+interface TraverseParams {
+  fragments: FragmentDefs;
+  parentName: string;
+  parentArgs: readonly ast.ArgumentNode[];
+  parentSelectionSet: ast.SelectionSetNode;
+  verbose: boolean;
+  queryPath?: string[];
+  parentIdx: number;
+  parentStage?: ComputeStage;
+  serial?: boolean;
+}
 
 const dummyStringTypeNode: TypeNode = {
   // FIXME: remove dummy
@@ -575,6 +587,377 @@ export class TypeGraph {
     );
   }
 
+  // selection field?
+  traverseField(
+    { field, traverseParams: p, parentProps }: {
+      field: FieldNode;
+      traverseParams: TraverseParams;
+      parentProps: Record<string, number>;
+    },
+  ): ComputeStage[] {
+    const {
+      name: { value: name },
+      alias: { value: alias } = {},
+      arguments: args,
+      // selectionSet,
+    } = field;
+
+    const path = p.queryPath ?? [];
+    const policies: Record<string, string[]> = {};
+
+    // introspection case
+    if (
+      path.length < 1 && this.introspection &&
+      (name === "__schema" || name === "__type")
+    ) {
+      return [
+        ...this.introspection.traverse(
+          p.fragments,
+          p.parentName,
+          p.parentArgs,
+          {
+            kind: Kind.SELECTION_SET,
+            selections: [field],
+          },
+          p.verbose,
+        ).map((stage) => {
+          // disable rate limiting for introspection
+          stage.props.rateWeight = 0;
+          return stage;
+        }),
+      ];
+    }
+
+    // typename case
+    if (name === "__typename") {
+      if (args && args.length > 0) {
+        throw Error(`__typename cannot have args ${JSON.stringify(args)}`);
+      }
+
+      return [
+        new ComputeStage({
+          dependencies: [],
+          parent: p.parentStage,
+          args: {},
+          policies,
+          outType: dummyStringTypeNode,
+          // singleton
+          runtime: DenoRuntime.init({
+            typegraph: this.tg,
+            materializers: [],
+            args: {},
+            config: {},
+          }),
+          batcher: this.nextBatcher(dummyStringTypeNode),
+          node: name,
+          path: [...path, alias ?? name],
+          rateCalls: true,
+          rateWeight: 0,
+        }),
+      ];
+    }
+
+    const fieldIdx = parentProps[name];
+    if (fieldIdx == undefined) {
+      throw Error(`${name} not found at ${path.join(".")}`);
+    }
+    const fieldType = this.type(fieldIdx);
+    const checksField = fieldType.policies.map((p) => this.policy(p).name);
+    if (checksField.length > 0) {
+      policies[fieldType.title] = checksField;
+    }
+
+    if (fieldType.type !== "function") {
+      return this.traverseValueField({
+        field,
+        schema: fieldType,
+        idx: fieldIdx,
+        traverseParams: p,
+        policies,
+      });
+    }
+
+    // function case
+    return this.traverseFuncField({
+      field,
+      schema: fieldType,
+      idx: fieldIdx,
+      traverseParams: p,
+      policies,
+      parentProps,
+    });
+  }
+
+  traverseValueField(
+    { field, schema, idx, traverseParams: p, policies }: {
+      field: FieldNode;
+      schema: TypeNode;
+      idx: number;
+      traverseParams: TraverseParams;
+      policies: Record<string, string[]>;
+    },
+  ): ComputeStage[] {
+    const {
+      name: { value: name },
+      alias: { value: alias } = {},
+      arguments: args = TypeGraph.emptyArgs,
+      selectionSet: fields = TypeGraph.emptyFields,
+    } = field;
+    const path = [...(p.queryPath ?? []), alias ?? name];
+    const stages = [];
+
+    if (args.length > 0) {
+      throw Error(
+        `unexpected args ${JSON.stringify(args)} at ${path.join(".")}`,
+      );
+    }
+
+    const runtime = this.runtimeReferences[schema.runtime];
+
+    const stage = new ComputeStage({
+      dependencies: p.parentStage ? [p.parentStage.id()] : [],
+      parent: p.parentStage,
+      args: {},
+      policies,
+      outType: schema,
+      runtime,
+      batcher: this.nextBatcher(schema),
+      node: name,
+      path,
+      rateCalls: true,
+      rateWeight: 0,
+    });
+
+    stages.push(stage);
+
+    if (schema.type === "object") {
+      stages.push(...this.traverse(
+        p.fragments,
+        name,
+        args,
+        fields,
+        p.verbose,
+        path,
+        idx,
+        stage,
+      ));
+      return stages;
+    }
+
+    if (schema.type === "optional") {
+      const itemTypeIdx = schema.item;
+      const itemSchema = this.type(itemTypeIdx);
+      if (itemSchema.type === "array") {
+        const arrayItemTypeIdx = itemSchema.items;
+        const arrayItemSchema = this.type(arrayItemTypeIdx);
+
+        if (arrayItemSchema.type === "string") {
+          stages.push(
+            ...this.traverse(
+              p.fragments,
+              name,
+              args,
+              fields,
+              p.verbose,
+              path,
+              arrayItemTypeIdx,
+              stage,
+            ),
+          );
+        }
+
+        return stages;
+      }
+    }
+
+    if (schema.type === "array" || schema.type === "optional") {
+      const itemTypeIdx = schema.type === "array" ? schema.items : schema.item;
+      const itemSchema = this.type(itemTypeIdx);
+
+      if (itemSchema.type === "object") {
+        stages.push(
+          ...this.traverse(
+            p.fragments,
+            name,
+            args,
+            fields,
+            p.verbose,
+            path,
+            itemTypeIdx,
+            stage,
+          ),
+        );
+      }
+
+      return stages;
+    }
+
+    return stages;
+  }
+
+  traverseFuncField(
+    { field, schema, traverseParams: p, policies, parentProps }: {
+      field: FieldNode;
+      schema: FunctionNode;
+      idx: number;
+      traverseParams: TraverseParams;
+      policies: Record<string, string[]>;
+      parentProps: Record<string, number>;
+    },
+  ): ComputeStage[] {
+    const {
+      name: { value: name },
+      alias: { value: alias } = {},
+      arguments: fieldArgs = TypeGraph.emptyArgs,
+      selectionSet: fields = TypeGraph.emptyFields,
+    } = field;
+    const path = p.queryPath ?? [];
+
+    const stages = [] as ComputeStage[];
+    const deps = [];
+    if (p.parentStage) {
+      deps.push(p.parentStage.id());
+    }
+
+    const { input: inputIdx, output: outputIdx, rate_calls, rate_weight } =
+      schema;
+    const outputType = this.type(outputIdx);
+
+    const checks = outputType.policies.map((p) => this.policy(p).name);
+    if (checks.length > 0) {
+      policies[outputType.title] = checks;
+    }
+    const args: Record<string, ComputeArg> = {};
+
+    const argSchema = this.type(inputIdx) as ObjectNode;
+    const fieldArgsIdx: Record<string, ast.ArgumentNode> = (
+      fieldArgs ?? []
+    ).reduce(
+      (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
+      {},
+    );
+
+    const nestedDepsUnion = [];
+    for (
+      const [argName, argIdx] of Object.entries(argSchema.properties ?? {})
+    ) {
+      const nested = this.collectArg(
+        fieldArgsIdx[argName],
+        argIdx,
+        parentProps,
+      );
+      if (!nested) {
+        continue;
+      }
+      const [value, inputPolicies, nestedDeps] = nested;
+      nestedDepsUnion.push(...nestedDeps);
+      args[argName] = value;
+      policies = { ...policies, ...inputPolicies };
+      // else variable
+    }
+
+    // check that no unnecessary arg is given
+    for (const fieldArg of fieldArgs ?? []) {
+      const name = fieldArg.name.value;
+      if (!(name in args)) {
+        throw Error(`${name} input as field but unknown`);
+      }
+    }
+
+    deps.push(
+      ...Array.from(new Set(nestedDepsUnion)).map((dep) =>
+        [...path, dep].join(".")
+      ),
+    );
+
+    const mat = this.tg.materializers[schema.materializer];
+    const runtime = this.runtimeReferences[mat.runtime];
+
+    if (!p.serial && mat.data.serial) {
+      throw Error(
+        `${schema.title} via ${mat.name} can only be executed in mutation`,
+      );
+    }
+
+    const stage = new ComputeStage({
+      dependencies: deps,
+      parent: p.parentStage,
+      args,
+      policies,
+      outType: outputType,
+      runtime,
+      materializer: mat,
+      batcher: this.nextBatcher(outputType),
+      node: name,
+      path: [...path, alias ?? name],
+      rateCalls: rate_calls,
+      rateWeight: rate_weight as number, // FIXME what is the right type?
+    });
+    stages.push(stage);
+
+    if (outputType.type === "object") {
+      stages.push(
+        ...this.traverse(
+          p.fragments,
+          name,
+          fieldArgs,
+          fields,
+          p.verbose,
+          [...path, name ?? alias],
+          outputIdx,
+          stage,
+        ),
+      );
+    } else if (
+      outputType.type === "optional" &&
+      this.type(outputType.item).type === "array"
+    ) {
+      const subTypeIdx = outputType.item;
+      const subType = this.type(subTypeIdx) as ArrayNode;
+      const subSubTypeIdx = subType.items;
+      const subSubType = this.type(subSubTypeIdx);
+
+      if (subSubType.type === "object") {
+        stages.push(
+          ...this.traverse(
+            p.fragments,
+            name,
+            fieldArgs,
+            fields,
+            p.verbose,
+            [...path, alias ?? name], // FIXME
+            subSubTypeIdx,
+            stage,
+          ),
+        );
+      }
+    } else if (
+      outputType.type === "array" ||
+      outputType.type === "optional"
+    ) {
+      const subTypeIdx = outputType.type === "array"
+        ? outputType.items
+        : outputType.item;
+      const subType = this.type(subTypeIdx);
+      if (subType.type === "object") {
+        stages.push(
+          ...this.traverse(
+            p.fragments,
+            name,
+            fieldArgs,
+            fields,
+            p.verbose,
+            [...path, alias ?? name], // FIXME
+            subTypeIdx,
+            stage,
+          ),
+        );
+      }
+    }
+
+    return stages;
+  }
+
   traverse(
     fragments: FragmentDefs,
     parentName: string,
@@ -593,7 +976,7 @@ export class TypeGraph {
       parentSelectionSet,
       fragments,
     );
-    const fieldSchema = (parentType.properties ?? {}) as Record<string, number>;
+    const parentProps = (parentType.properties ?? {}) as Record<string, number>;
     verbose &&
       console.log(
         this.root.title,
@@ -601,7 +984,7 @@ export class TypeGraph {
         parentArgs.map((n) => n.name?.value),
         parentSelection.map((n) => n.name?.value),
         parentType.type,
-        Object.entries(fieldSchema).reduce(
+        Object.entries(parentProps).reduce(
           (agg, [k, v]) => ({ ...agg, [k]: this.type(v).type }),
           {},
         ),
@@ -612,316 +995,21 @@ export class TypeGraph {
     }
 
     for (const field of parentSelection) {
-      const {
-        name: { value: fieldName },
-        alias,
-        arguments: fieldArgs,
-        selectionSet: fieldFields,
-      } = field;
-      const { value: aliasName } = alias ?? {};
-      let policies: Record<string, string[]> = {};
-
-      // introspection cases
-      if (
-        queryPath.length < 1 &&
-        this.introspection &&
-        (fieldName === "__schema" || fieldName === "__type")
-      ) {
-        stages.push(
-          ...this.introspection.traverse(
-            fragments,
-            parentName,
-            parentArgs,
-            {
-              kind: Kind.SELECTION_SET,
-              selections: [field],
-            },
-            verbose,
-          ).map((stage) => {
-            // disable rate limiting for introspection
-            stage.props.rateWeight = 0;
-            return stage;
-          }),
-        );
-        continue;
-      }
-
-      // typename case
-      if (fieldName == "__typename") {
-        if (fieldArgs && fieldArgs.length > 0) {
-          throw Error(
-            `__typename cannot have args ${JSON.stringify(fieldArgs)}`,
-          );
-        }
-
-        stages.push(
-          new ComputeStage({
-            dependencies: [],
-            parent: parentStage,
-            args: {},
-            policies,
-            outType: dummyStringTypeNode,
-            // singleton
-            runtime: DenoRuntime.init({
-              typegraph: this.tg,
-              materializers: [],
-              args: {},
-              config: {},
-            }),
-            batcher: this.nextBatcher(dummyStringTypeNode),
-            node: fieldName,
-            path: [...queryPath, aliasName ?? fieldName],
-            rateCalls: true,
-            rateWeight: 0,
-          }),
-        );
-
-        continue;
-      }
-
-      const fieldIdx = fieldSchema[fieldName];
-      if (!fieldIdx) {
-        throw Error(
-          `${fieldName} not found in ${JSON.stringify(this.type(parentIdx))}`,
-        );
-      }
-      const fieldType = this.type(fieldIdx);
-      const checksField = fieldType.policies.map((p) => this.policy(p).name);
-      if (checksField.length > 0) {
-        policies[fieldType.title] = checksField;
-      }
-
-      // value case
-      if (fieldType.type !== "function") {
-        if (fieldArgs && fieldArgs.length > 0) {
-          throw Error(
-            `unexpected args=${JSON.stringify(fieldArgs)} for ${fieldType}`,
-          );
-        }
-
-        const runtime = this.runtimeReferences[fieldType.runtime];
-
-        const stage = new ComputeStage({
-          dependencies: parentStage ? [parentStage.id()] : [],
-          parent: parentStage,
-          args: {},
-          policies,
-          outType: fieldType,
-          runtime,
-          batcher: this.nextBatcher(fieldType),
-          node: fieldName,
-          path: [...queryPath, aliasName ?? fieldName],
-          rateCalls: true,
-          rateWeight: 0,
-        });
-        stages.push(stage);
-
-        if (fieldType.type === "object") {
-          stages.push(
-            ...this.traverse(
-              fragments,
-              fieldName,
-              fieldArgs ?? TypeGraph.emptyArgs,
-              fieldFields ?? TypeGraph.emptyFields,
-              verbose,
-              [...queryPath, aliasName ?? fieldName],
-              fieldIdx,
-              stage,
-            ),
-          );
-        } else if (
-          fieldType.type === "optional" &&
-          this.type(fieldType.item).type === "array"
-        ) {
-          const subTypeIdx = fieldType.item;
-          const subType = this.type(subTypeIdx) as ArrayNode;
-          const subSubTypeIdx = subType.items;
-          const subSubType = this.type(subSubTypeIdx);
-
-          if (subSubType.type === "string") {
-            stages.push(
-              ...this.traverse(
-                fragments,
-                fieldName,
-                fieldArgs ?? TypeGraph.emptyArgs,
-                fieldFields ?? TypeGraph.emptyFields,
-                verbose,
-                [...queryPath, aliasName ?? fieldName],
-                subSubTypeIdx,
-                stage,
-              ),
-            );
-          }
-        } else if (
-          fieldType.type === "array" ||
-          fieldType.type === "optional"
-        ) {
-          const subTypeIdx = fieldType.type === "array"
-            ? fieldType.items
-            : fieldType.item;
-          const subType = this.type(subTypeIdx);
-
-          if (subType.type === "object") {
-            stages.push(
-              ...this.traverse(
-                fragments,
-                fieldName,
-                fieldArgs ?? TypeGraph.emptyArgs,
-                fieldFields ?? TypeGraph.emptyFields,
-                verbose,
-                [...queryPath, aliasName ?? fieldName],
-                subTypeIdx,
-                stage,
-              ),
-            );
-          }
-        } else {
-          //verbose && console.log("no stage for", fieldType.typedef);
-        }
-        continue;
-      }
-
-      // func case
-
-      const dependencies = [];
-      if (parentStage) {
-        dependencies.push(parentStage.id());
-      }
-
-      const { input: inputIdx, output: outputIdx, rate_calls, rate_weight } =
-        fieldType;
-      const outputType = this.type(outputIdx);
-      const checks = outputType.policies.map((p) => this.policy(p).name);
-      if (checks.length > 0) {
-        policies[outputType.title] = checks;
-      }
-      const args: Record<string, ComputeArg> = {};
-
-      const argSchema = (this.tg.types[inputIdx] as ObjectNode);
-      const fieldArgsIdx: Record<string, ast.ArgumentNode> = (
-        fieldArgs ?? []
-      ).reduce(
-        (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
-        {},
-      );
-
-      const nestedDepsUnion = [];
-      for (
-        const [argName, argIdx] of Object.entries(argSchema.properties ?? {})
-      ) {
-        const nested = this.collectArg(
-          fieldArgsIdx[argName],
-          argIdx,
-          fieldSchema,
-        );
-        if (!nested) {
-          continue;
-        }
-        const [value, inputPolicies, nestedDeps] = nested;
-        nestedDepsUnion.push(...nestedDeps);
-        args[argName] = value;
-        policies = { ...policies, ...inputPolicies };
-        // else variable
-      }
-
-      // check that no unnecessary arg is given
-      for (const fieldArg of fieldArgs ?? []) {
-        const name = fieldArg.name.value;
-        if (!(name in args)) {
-          throw Error(`${name} input as field but unknown`);
-        }
-      }
-
-      dependencies.push(
-        ...Array.from(new Set(nestedDepsUnion)).map((dep) =>
-          [...queryPath, dep].join(".")
-        ),
-      );
-
-      const mat = this.tg.materializers[fieldType.materializer];
-      const runtime = this.runtimeReferences[mat.runtime];
-
-      if (!serial && mat.data.serial) {
-        throw Error(
-          `${fieldType.title} via ${mat.name} can only be executed in mutation`,
-        );
-      }
-
-      const stage = new ComputeStage({
-        dependencies,
-        parent: parentStage,
-        args,
-        policies,
-        outType: outputType,
-        runtime,
-        materializer: mat,
-        batcher: this.nextBatcher(outputType),
-        node: fieldName,
-        path: [...queryPath, aliasName ?? fieldName],
-        rateCalls: rate_calls,
-        rateWeight: rate_weight as number, // FIXME what is the right type?
-      });
-      stages.push(stage);
-
-      if (outputType.type === "object") {
-        stages.push(
-          ...this.traverse(
-            fragments,
-            fieldName,
-            fieldArgs ?? TypeGraph.emptyArgs,
-            fieldFields ?? TypeGraph.emptyFields,
-            verbose,
-            [...queryPath, fieldName],
-            outputIdx,
-            stage,
-          ),
-        );
-      } else if (
-        outputType.type === "optional" &&
-        this.type(outputType.item).type === "array"
-      ) {
-        const subTypeIdx = outputType.item;
-        const subType = this.type(subTypeIdx) as ArrayNode;
-        const subSubTypeIdx = subType.items;
-        const subSubType = this.type(subSubTypeIdx);
-
-        if (subSubType.type === "object") {
-          stages.push(
-            ...this.traverse(
-              fragments,
-              fieldName,
-              fieldArgs ?? TypeGraph.emptyArgs,
-              fieldFields ?? TypeGraph.emptyFields,
-              verbose,
-              [...queryPath, aliasName ?? fieldName],
-              subSubTypeIdx,
-              stage,
-            ),
-          );
-        }
-      } else if (
-        outputType.type === "array" ||
-        outputType.type === "optional"
-      ) {
-        const subTypeIdx = outputType.type === "array"
-          ? outputType.items
-          : outputType.item;
-        const subType = this.type(subTypeIdx);
-        if (subType.type === "object") {
-          stages.push(
-            ...this.traverse(
-              fragments,
-              fieldName,
-              fieldArgs ?? TypeGraph.emptyArgs,
-              fieldFields ?? TypeGraph.emptyFields,
-              verbose,
-              [...queryPath, aliasName ?? fieldName],
-              subTypeIdx,
-              stage,
-            ),
-          );
-        }
-      }
+      stages.push(...this.traverseField({
+        field,
+        traverseParams: {
+          fragments,
+          parentName,
+          parentArgs,
+          parentSelectionSet,
+          verbose,
+          queryPath,
+          parentIdx,
+          parentStage,
+          serial,
+        },
+        parentProps,
+      }));
     }
 
     return stages;

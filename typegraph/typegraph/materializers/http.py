@@ -28,16 +28,16 @@ class HTTPRuntime(Runtime):
         return t.func(inp, out, RESTMat(self, "GET", path, **kwargs))
 
     def post(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "POST", path, **kwargs))
+        return t.func(inp, out, RESTMat(self, "POST", path, **kwargs, serial=True))
 
     def put(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "PUT", path, **kwargs))
+        return t.func(inp, out, RESTMat(self, "PUT", path, **kwargs, serial=True))
 
     def patch(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "PATCH", path, **kwargs))
+        return t.func(inp, out, RESTMat(self, "PATCH", path, **kwargs, serial=True))
 
     def delete(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "DELETE", path, **kwargs))
+        return t.func(inp, out, RESTMat(self, "DELETE", path, **kwargs, serial=True))
 
 
 @dataclass(eq=True, frozen=True)

@@ -5,7 +5,7 @@ from dataclasses import KW_ONLY
 
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 @dataclass(eq=True, frozen=True)
@@ -17,15 +17,18 @@ class S3Runtime(Runtime):
     _: KW_ONLY
     runtime_name: str = "s3"
 
-    @property
-    def data(self):
-        return {
-            **super().data,
-            "host": self.host,
-            "region": self.region,
-            "access_key_secret": self.access_key_secret,
-            "secret_key_secret": self.secret_key_secret,
-        }
+    # @property
+    # def data(self):
+    #     return {
+    #         **super().data,
+    #         "host": self.host,
+    #         "region": self.region,
+    #         "access_key_secret": self.access_key_secret,
+    #         "secret_key_secret": self.secret_key_secret,
+    #     }
+
+    def data(self, collector):
+        raise Exception("not implemented")
 
     def sign(self, bucket: str, content_type: str):
         return t.func(
@@ -39,8 +42,8 @@ class S3Runtime(Runtime):
             t.struct({"path": t.string()}),
             t.struct(
                 {
-                    "keys": t.list(t.struct({"key": t.string(), "size": t.integer()})),
-                    "prefix": t.list(t.string()),
+                    "keys": t.array(t.struct({"key": t.string(), "size": t.integer()})),
+                    "prefix": t.array(t.string()),
                 }
             ),
             ListMat(self, bucket),

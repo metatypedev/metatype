@@ -9,7 +9,7 @@ from typegraph.graphs.builders import TypeRuntime
 from typegraph.graphs.typegraph import Cors
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 class TestTypegraph:
@@ -20,7 +20,7 @@ class TestTypegraph:
             o1 = t.string()
             o2 = t.struct({"name": o1})
 
-        assert g.types == [o1.of, o1, o2]
+        assert g.types == [o1.props, o1, o2]
 
     def test_register_enum(self) -> None:
 

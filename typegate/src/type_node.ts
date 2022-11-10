@@ -14,6 +14,7 @@ type TypeNodeBase =
     description?: string;
     runtime: number;
     policies: Array<number>;
+    config?: Record<string, any>;
   }
   & Injection;
 
