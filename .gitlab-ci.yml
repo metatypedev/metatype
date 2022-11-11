@@ -59,6 +59,10 @@ deploy:
     - kaniko
   only:
     - main
+  variables:
+    REF_SLUG: $CI_COMMIT_REF_SLUG
+    CREATED_AT: $CI_PIPELINE_CREATED_AT
+    SHORT_SHA: $CI_COMMIT_SHORT_SHA
   trigger:
     project: metatype/cloud
     branch: main
