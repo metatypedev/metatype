@@ -1,9 +1,9 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 use crate::codegen;
-use crate::typegraph::{LoaderResultInner, TypegraphLoader};
+use crate::typegraph::{LoaderResult, TypegraphLoader};
 use crate::utils::{ensure_venv, post_with_auth, BasicAuth};
-use anyhow::{bail, Ok, Result};
+use anyhow::{bail, Context, Error, Result};
 use clap::Parser;
 use colored::Colorize;
 use common::typegraph::Typegraph;
@@ -38,6 +38,10 @@ pub struct Dev {
     password: Option<String>,
 }
 
+fn log_err(err: Error) {
+    println!("{}", format!("{err:?}").red());
+}
+
 impl Action for Dev {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
@@ -48,37 +52,38 @@ impl Action for Dev {
             BasicAuth::as_user(self.username.clone())?
         };
 
-        let loaded = TypegraphLoader::new().working_dir(&dir).load_folder(&dir)?;
-        push_loaded_typegraphs(loaded, &self.gate, &auth)?;
+        let loaded = TypegraphLoader::new()
+            .working_dir(&dir)
+            .load_folder(".")
+            .context("Error while loading typegraphs from folder");
+        match loaded {
+            Ok(loaded) => {
+                push_loaded_typegraphs(loaded, &self.gate, &auth);
+            }
+            Err(err) => log_err(err),
+        }
 
         let gate = self.gate.clone();
 
         let watch_path = dir.clone();
         let auth_clone = auth.clone();
         let _watcher = watch(dir.clone(), move |paths| {
-            match TypegraphLoader::new()
+            let loaded = TypegraphLoader::new()
+                .working_dir(&watch_path)
                 .skip_deno_modules()
-                // .serialized()
-                .load_files(paths)
-            {
-                Result::Ok(loaded) => {
-                    for (_path, res) in loaded.into_iter() {
-                        if let Result::Ok(tgs) = res {
-                            for tg in tgs.into_iter() {
-                                codegen::deno::codegen(tg, watch_path.clone())
-                                    .expect("could not run deno codegen");
-                            }
-                        }
+                .load_files(paths);
+            for (_path, res) in loaded.into_iter() {
+                if let Result::Ok(tgs) = res {
+                    for tg in tgs.into_iter() {
+                        codegen::deno::codegen(tg, watch_path.clone())
+                            .expect("could not run deno codegen");
                     }
-
-                    let loaded = TypegraphLoader::new().load_files(paths).unwrap();
-
-                    push_loaded_typegraphs(loaded, &gate, &auth_clone).unwrap();
-                }
-                Err(e) => {
-                    println!("Typegraph could not be refresh: {}", e)
                 }
             }
+
+            let loaded = TypegraphLoader::new().load_files(paths);
+
+            push_loaded_typegraphs(loaded, &gate, &auth_clone);
         })
         .unwrap();
 
@@ -92,7 +97,7 @@ impl Action for Dev {
                 "/dev" => match query.get("node") {
                     Some(node) => {
                         let tgs = TypegraphLoader::new().working_dir(&dir).load_folder(&dir)?;
-                        push_loaded_typegraphs(tgs, node, &auth)?;
+                        push_loaded_typegraphs(tgs, node, &auth);
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
                                 "Content-Type: application/json".parse::<Header>().unwrap(),
@@ -169,32 +174,30 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
         .collect()
 }
 
-pub fn push_loaded_typegraphs(
-    loaded: LoaderResultInner,
-    node: &str,
-    auth: &BasicAuth,
-) -> Result<()> {
+pub fn push_loaded_typegraphs(loaded: LoaderResult, node: &str, auth: &BasicAuth) {
     // TODO concurrent pushing
-    for (path, res) in loaded.iter() {
-        match res {
+    for (path, res) in loaded.into_iter() {
+        match res.with_context(|| format!("Error while loading typegraphs from {path}")) {
             Result::Ok(tgs) => {
                 println!("Loaded typegraphs from {path}:");
                 for tg in tgs.iter() {
-                    print!("  → Pushing typegraph {name}...", name = tg.name()?);
-                    push_typegraph(tg, node, auth, 3)?;
-                    println!(" {}", "Done.".to_owned().green())
+                    print!("  → Pushing typegraph {name}...", name = tg.name().unwrap());
+                    match push_typegraph(tg, node, auth, 3) {
+                        Ok(_) => {
+                            println!(" {}", "Done.".to_owned().green());
+                        }
+                        Err(e) => {
+                            println!("Could not push typegraph:\n{e:?}");
+                        }
+                    }
                 }
                 println!();
             }
             Result::Err(err) => {
-                println!(
-                    "Error while loading typegraphs from {path}:\n{err}",
-                    err = err.to_string().red()
-                );
+                log_err(err);
             }
         }
     }
-    Ok(())
 }
 
 pub fn push_typegraph(tg: &Typegraph, node: &str, auth: &BasicAuth, backoff: u32) -> Result<()> {

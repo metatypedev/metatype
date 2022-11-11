@@ -36,7 +36,7 @@ impl Action for Serialize {
         let loader = TypegraphLoader::new();
         let files: Vec<_> = self.files.iter().map(|f| Path::new(f).to_owned()).collect();
         let loaded = if !self.files.is_empty() {
-            loader.load_files(&files)?
+            loader.load_files(&files)
         } else {
             loader.load_folder(&dir)?
         };

@@ -37,10 +37,7 @@ impl Action for Deno {
             .load_file(&self.file)?;
         let file = Path::new(&self.file);
 
-        let tgs = loaded
-            .into_values()
-            .next()
-            .ok_or_else(|| anyhow!("unexpected"))??;
+        let tgs = loaded.ok_or_else(|| anyhow!("unexpected"))?;
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
