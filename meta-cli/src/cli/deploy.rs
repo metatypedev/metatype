@@ -3,8 +3,9 @@
 use super::{dev::push_loaded_typegraphs, Action};
 use crate::utils::ensure_venv;
 use crate::{typegraph::TypegraphLoader, utils::BasicAuth};
-use anyhow::{Ok, Result};
+use anyhow::Result;
 use clap::Parser;
+use std::collections::HashMap;
 
 #[derive(Parser, Debug)]
 pub struct Deploy {
@@ -21,12 +22,25 @@ impl Action for Deploy {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
         let loader = TypegraphLoader::new();
-        let loaded = match &self.file {
-            Some(file) => loader.load_file(file)?,
-            None => loader.load_folder(&dir)?,
+
+        let loaded = if let Some(file) = self.file.clone() {
+            let mut ret = HashMap::default();
+            let res = loader.load_file(&file);
+            match res {
+                Ok(Some(tgs)) => {
+                    ret.insert(file, Ok(tgs));
+                }
+                Ok(None) => (),
+                Err(err) => {
+                    ret.insert(file, Err(err));
+                }
+            }
+            ret
+        } else {
+            loader.load_folder(&dir)?
         };
 
-        push_loaded_typegraphs(loaded, &self.gate, &BasicAuth::prompt()?)?;
+        push_loaded_typegraphs(loaded, &self.gate, &BasicAuth::prompt()?);
 
         Ok(())
     }

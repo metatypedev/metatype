@@ -1,41 +1,37 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, bail, Result};
+use colored::Colorize;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use walkdir::{DirEntry, WalkDir};
 
 use crate::ts::parser::{parse_module_source, transform_module, transform_script};
-use crate::utils::MapValues;
 
-#[derive(Serialize, Deserialize)]
-#[serde(untagged)]
-enum Res {
-    Ok { typegraphs: Vec<Typegraph> },
-    Error { message: String },
-}
+pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
 
-pub type LoaderResultInner = HashMap<String, Result<Vec<Typegraph>>>;
-pub type LoaderResult = Result<LoaderResultInner>;
-
+#[derive(Clone)]
 pub struct TypegraphLoader {
+    working_dir: PathBuf,
     skip_deno_modules: bool,
-    working_dir: Option<PathBuf>,
+    ignore_unknown_file_types: bool,
 }
 
 impl TypegraphLoader {
     pub fn new() -> Self {
         Self {
+            working_dir: env::current_dir().unwrap(),
             skip_deno_modules: false,
-            working_dir: None,
+            ignore_unknown_file_types: false,
         }
     }
 
     pub fn working_dir<P: AsRef<Path>>(mut self, dir: P) -> Self {
-        self.working_dir = Some(dir.as_ref().to_path_buf());
+        self.working_dir = self.working_dir.join(dir.as_ref()).canonicalize().unwrap();
         self
     }
 
@@ -44,38 +40,89 @@ impl TypegraphLoader {
         self
     }
 
-    pub fn load_file<P: AsRef<Path>>(self, file: P) -> LoaderResult {
-        Ok(postprocess_all(
-            self.collect_typegraphs([file.as_ref().to_owned()])?,
+    pub fn ignore_unknown_file_types(mut self) -> Self {
+        self.ignore_unknown_file_types = true;
+        self
+    }
+
+    pub fn load_file<P: AsRef<Path>>(self, path: P) -> Result<Option<Vec<Typegraph>>> {
+        // TODO no unwrap
+        let ext = path.as_ref().extension().and_then(|ext| ext.to_str());
+
+        let tgs = match ext {
+            Some(ext) if ext == "py" => self.load_python_module(path)?,
+            _ => {
+                if self.ignore_unknown_file_types {
+                    return Ok(None);
+                } else {
+                    let ext = ext
+                        .map(|ext| format!(".{ext}"))
+                        .unwrap_or_else(|| "".to_owned());
+                    bail!("Unsupported typegraph definition module with extension \".{ext}\": current version only support Python modules.");
+                }
+            }
+        };
+
+        let tgs: Vec<Typegraph> = serde_json::from_str(&tgs)?;
+        Ok(Some(
+            tgs.into_iter()
+                .map(postprocess)
+                .collect::<Result<Vec<_>>>()?,
         ))
     }
 
     pub fn load_files(self, files: &[PathBuf]) -> LoaderResult {
-        Ok(postprocess_all(
-            self.collect_typegraphs(files.iter().cloned())?,
-        ))
-    }
-
-    pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> LoaderResult {
-        Ok(postprocess_all(
-            self.collect_typegraphs([dir.as_ref().to_owned()])?,
-        ))
-    }
-
-    fn collect_typegraphs<I: IntoIterator<Item = PathBuf>>(
-        self,
-        sources: I,
-    ) -> Result<HashMap<String, Res>> {
-        let cwd = env::current_dir()?;
-        let working_dir = self.working_dir.as_ref().unwrap_or(&cwd);
-
-        let test = Command::new("py-tg")
-            .args(
-                sources
-                    .into_iter()
-                    .map(|p| p.into_os_string().into_string().unwrap()),
+        files
+            .iter()
+            .filter_map(
+                |file| match self.clone().load_file(self.working_dir.join(file)) {
+                    Ok(None) => None, // unreachable case
+                    Ok(Some(tgs)) => Some((file.to_str().unwrap().to_owned(), Ok(tgs))),
+                    Err(e) => Some((file.to_str().unwrap().to_owned(), Err(e))),
+                },
             )
-            .current_dir(working_dir)
+            .collect()
+    }
+
+    pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> Result<LoaderResult> {
+        let dir = self.working_dir.join(dir);
+        // self.collect_typegraphs([dir.as_ref().to_owned()])
+        let metadata = fs::metadata(&dir)?;
+        if !metadata.is_dir() {
+            bail!("Expected a directory");
+        }
+
+        let loader = self.ignore_unknown_file_types();
+
+        Ok(WalkDir::new(dir)
+            .into_iter()
+            .filter_entry(|e| !is_hidden(e))
+            .filter_map(|e| {
+                // filter files
+                e.ok().map(|e| e.path().to_owned()).filter(|path| {
+                    fs::metadata(path)
+                        .ok()
+                        .map(|m| m.is_file())
+                        .unwrap_or(false)
+                })
+            })
+            .filter_map(|file| match loader.clone().load_file(&file) {
+                Ok(None) => None,
+                Ok(Some(tgs)) => Some((file.to_str().unwrap().to_owned(), Ok(tgs))),
+                Err(e) => Some((file.to_str().unwrap().to_owned(), Err(e))),
+            })
+            .collect())
+    }
+
+    // Language-specific steps.
+    // Returning typegraphs in raw (before post-processing) JSON.
+
+    pub fn load_python_module<P: AsRef<Path>>(self, path: P) -> Result<String> {
+        // TODO ensure venv
+
+        let p = Command::new("py-tg")
+            .arg(path.as_ref().to_str().unwrap())
+            .current_dir(self.working_dir)
             .envs(env::vars())
             .env("PYTHONUNBUFFERED", "1")
             .env("PYTHONDONTWRITEBYTECODE", "1")
@@ -85,35 +132,12 @@ impl TypegraphLoader {
             )
             .output()?;
 
-        let stdout = String::from_utf8(test.stdout)?;
-
-        if !test.status.success() {
-            let stderr = String::from_utf8(test.stderr)?;
-
-            if stderr.contains("ModuleNotFoundError: No module named 'typegraph'") {
-                bail!(
-                    "typegraph module not found in venv, install it with `pip install typegraph`",
-                );
-            }
-
-            bail!(
-                "PythonError\n{}\n{}",
-                if stdout.len() > 128 {
-                    &stdout[stdout.len() - 128..]
-                } else {
-                    &stdout
-                },
-                stderr
-            );
+        if p.status.success() {
+            Ok(String::from_utf8(p.stdout)?)
+        } else {
+            let stderr = String::from_utf8(p.stderr)?;
+            bail!("Python error:\n{}", stderr.red())
         }
-
-        serde_json::from_str(&stdout).with_context(|| {
-            if stdout.len() > 64 {
-                format!("cannot parse typegraph: {} (first 64 chars)", &stdout[..64])
-            } else {
-                format!("cannot parse typegraph: {}", stdout)
-            }
-        })
     }
 }
 
@@ -129,13 +153,6 @@ impl UniqueTypegraph for HashMap<String, Typegraph> {
             Ok(self.into_iter().next().unwrap().1)
         }
     }
-}
-
-fn postprocess_all(res: HashMap<String, Res>) -> HashMap<String, Result<Vec<Typegraph>>> {
-    res.map_values(|r| match r {
-        Res::Ok { typegraphs: tgs } => tgs.into_iter().map(postprocess).collect(),
-        Res::Error { message: msg } => bail!("{msg}"),
-    })
 }
 
 type MaterializerPostprocessor = fn(Materializer, &Typegraph) -> Result<Materializer>;
@@ -204,4 +221,12 @@ mod utils {
             bail!("value is not an object");
         }
     }
+}
+
+fn is_hidden(entry: &DirEntry) -> bool {
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| s.starts_with('.'))
+        .unwrap_or(false)
 }

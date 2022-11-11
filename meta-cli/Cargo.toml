@@ -34,3 +34,4 @@ flate2 = "1.0.24"
 tar = "0.4.38"
 base64 = "0.13.1"
 common = { path = "../libs/common" }
+walkdir = "2.3.2"
