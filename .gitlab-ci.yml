@@ -5,9 +5,6 @@ include:
   - project: "devops/templates"
     ref: main
     file: "kaniko.yml"
-  - project: "devops/templates"
-    ref: main
-    file: "terraform.yml"
 
 variables: &variables
   DENO_VERSION: "1.27.2"
@@ -43,22 +40,6 @@ kaniko:
       --use-new-run
       --single-snapshot
 
-terraform:
-  stage: deploy
-  needs:
-    - test
-    - kaniko
-  tags:
-    - docker
-  only:
-    - main
-  environment:
-    name: production
-  variables:
-    TERRAFORM_PATH: "deploy/cloud/app"
-    GIT_SUBMODULE_STRATEGY: recursive
-    GIT_SUBMODULE_UPDATE_FLAGS: "--checkout"
-
 package:
   stage: deploy
   needs:
@@ -70,3 +51,15 @@ package:
     - main
   variables:
     <<: *variables
+
+deploy:
+  stage: deploy
+  needs:
+    - test
+    - kaniko
+  only:
+    - main
+  trigger:
+    project: metatype/cloud
+    branch: main
+    strategy: depend
