@@ -36,7 +36,7 @@ with TypeGraph(
     all = allow_all()
     remote = HTTPRuntime("https://api.github.com")
 
-    g.query(
+    g.expose(
         contact=send_in_blue_send(
             "Nouveau message",
             "SENDER",

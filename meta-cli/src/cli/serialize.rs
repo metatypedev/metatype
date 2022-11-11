@@ -8,17 +8,16 @@ use anyhow::Result;
 use clap::Parser;
 use std::fs;
 use std::io::{self, Write};
+use std::path::Path;
 
 #[derive(Parser, Debug)]
 pub struct Serialize {
     /// The python source file that defines the typegraph(s).
     /// Default: All the python files descending from the current directory.
-    #[clap(short, long, value_parser)]
-    file: Option<String>,
+    #[clap(short, long = "file", value_parser)]
+    files: Vec<String>,
 
     /// Name of the typegraph to serialize.
-    /// Default: the resulted JSON contains an object
-    /// that maps the typegraph name to the serialized typegraph.
     #[clap(short, long, value_parser)]
     typegraph: Option<String>,
 
@@ -35,21 +34,29 @@ impl Action for Serialize {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
         let loader = TypegraphLoader::new();
-        let tgs = match &self.file {
-            Some(file) => loader.load_file(file)?,
-            None => loader.load_folder(&dir)?,
+        let files: Vec<_> = self.files.iter().map(|f| Path::new(f).to_owned()).collect();
+        let loaded = if !self.files.is_empty() {
+            loader.load_files(&files)?
+        } else {
+            loader.load_folder(&dir)?
         };
 
+        let tgs: Vec<_> = loaded
+            .into_values()
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
+            .flatten()
+            .collect();
+
         if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.get(tg_name) {
-                self.write(&serde_json::to_string(tg)?);
+            if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
+                self.write(&serde_json::to_string(&tg)?);
             } else {
                 bail!("typegraph \"{}\" not found", tg_name);
             }
         } else if self.unique {
             if tgs.len() == 1 {
-                let (_, tg) = tgs.iter().next().unwrap();
-                self.write(&serde_json::to_string(tg)?);
+                self.write(&serde_json::to_string(&tgs[0])?);
             } else {
                 eprint!("expected only one typegraph, got {}", tgs.len());
                 std::process::exit(1);
@@ -58,6 +65,7 @@ impl Action for Serialize {
             self.write(&serde_json::to_string(&tgs)?)
         }
 
+        self.write("\n");
         Ok(())
     }
 }

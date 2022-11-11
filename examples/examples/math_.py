@@ -26,7 +26,7 @@ with TypeGraph(name="math") as g:
     g.expose(
         fib=t.func(
             t.struct({"size": t.integer()}),
-            t.list(t.float()),
+            t.array(t.float()),
             fib.imp("default"),
         ).add_policy(restrict_referer),
         random=t.func(
@@ -35,7 +35,7 @@ with TypeGraph(name="math") as g:
             FunMat("() => Math.random()"),
         ).add_policy(allow_all),
         randomItem=t.func(
-            t.struct({"items": t.list(t.string())}),
+            t.struct({"items": t.array(t.string())}),
             t.string(),
             FunMat(random_item_fn, runtime=worker),
         ).add_policy(allow_all),

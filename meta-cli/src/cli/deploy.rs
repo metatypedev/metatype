@@ -1,6 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-use super::{dev::push_typegraph, Action};
+use super::{dev::push_loaded_typegraphs, Action};
 use crate::utils::ensure_venv;
 use crate::{typegraph::TypegraphLoader, utils::BasicAuth};
 use anyhow::{Ok, Result};
@@ -21,16 +21,12 @@ impl Action for Deploy {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
         let loader = TypegraphLoader::new();
-        let tgs = match &self.file {
+        let loaded = match &self.file {
             Some(file) => loader.load_file(file)?,
             None => loader.load_folder(&dir)?,
         };
 
-        for (name, tg) in tgs.iter() {
-            println!("Pushing {}", name);
-            push_typegraph(tg, &self.gate, &BasicAuth::prompt()?, 3)?;
-            println!("> Added {}", name);
-        }
+        push_loaded_typegraphs(loaded, &self.gate, &BasicAuth::prompt()?)?;
 
         Ok(())
     }
