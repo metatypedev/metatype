@@ -2,7 +2,7 @@
 
 use crate::utils::ensure_venv;
 use crate::{codegen, typegraph::TypegraphLoader};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
 use std::path::Path;
 
@@ -32,19 +32,24 @@ pub struct Deno {
 impl Action for Deno {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
-        let mut tgs = TypegraphLoader::new()
+        let loaded = TypegraphLoader::new()
             .skip_deno_modules()
             .load_file(&self.file)?;
         let file = Path::new(&self.file);
 
+        let tgs = loaded
+            .into_values()
+            .next()
+            .ok_or_else(|| anyhow!("unexpected"))??;
+
         if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.remove(tg_name) {
+            if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
                 codegen::deno::codegen(tg, file)?;
             } else {
                 panic!("typegraph not found: {tg_name}")
             }
         } else {
-            for (_tg_name, tg) in tgs {
+            for tg in tgs {
                 codegen::deno::codegen(tg, file)?;
             }
         }

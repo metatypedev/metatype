@@ -1,7 +1,7 @@
 // Copyright Metatype under the Elastic License 2.0.
 
 use crate::codegen;
-use crate::typegraph::TypegraphLoader;
+use crate::typegraph::{LoaderResultInner, TypegraphLoader};
 use crate::utils::{ensure_venv, post_with_auth, BasicAuth};
 use anyhow::{bail, Ok, Result};
 use clap::Parser;
@@ -48,9 +48,8 @@ impl Action for Dev {
             BasicAuth::as_user(self.username.clone())?
         };
 
-        let tgs = TypegraphLoader::new().working_dir(&dir).load_folder(&dir)?;
-
-        reload_typegraphs(tgs, &self.gate, &auth)?;
+        let loaded = TypegraphLoader::new().working_dir(&dir).load_folder(&dir)?;
+        push_loaded_typegraphs(loaded, &self.gate, &auth)?;
 
         let gate = self.gate.clone();
 
@@ -62,15 +61,19 @@ impl Action for Dev {
                 // .serialized()
                 .load_files(paths)
             {
-                Result::Ok(tgs) => {
-                    for tg in tgs.into_values() {
-                        codegen::deno::codegen(tg, watch_path.clone())
-                            .expect("could not run deno codegen");
+                Result::Ok(loaded) => {
+                    for (_path, res) in loaded.into_iter() {
+                        if let Result::Ok(tgs) = res {
+                            for tg in tgs.into_iter() {
+                                codegen::deno::codegen(tg, watch_path.clone())
+                                    .expect("could not run deno codegen");
+                            }
+                        }
                     }
 
-                    let tgs = TypegraphLoader::new().load_files(paths).unwrap();
+                    let loaded = TypegraphLoader::new().load_files(paths).unwrap();
 
-                    reload_typegraphs(tgs, &gate, &auth_clone).unwrap();
+                    push_loaded_typegraphs(loaded, &gate, &auth_clone).unwrap();
                 }
                 Err(e) => {
                     println!("Typegraph could not be refresh: {}", e)
@@ -89,7 +92,7 @@ impl Action for Dev {
                 "/dev" => match query.get("node") {
                     Some(node) => {
                         let tgs = TypegraphLoader::new().working_dir(&dir).load_folder(&dir)?;
-                        reload_typegraphs(tgs, node, &auth)?;
+                        push_loaded_typegraphs(tgs, node, &auth)?;
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
                                 "Content-Type: application/json".parse::<Header>().unwrap(),
@@ -166,12 +169,31 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
         .collect()
 }
 
-fn reload_typegraphs(tgs: HashMap<String, Typegraph>, node: &str, auth: &BasicAuth) -> Result<()> {
-    for (name, tg) in tgs.iter() {
-        println!("pushing {name}");
-        push_typegraph(tg, node, auth, 3)?;
+pub fn push_loaded_typegraphs(
+    loaded: LoaderResultInner,
+    node: &str,
+    auth: &BasicAuth,
+) -> Result<()> {
+    // TODO concurrent pushing
+    for (path, res) in loaded.iter() {
+        match res {
+            Result::Ok(tgs) => {
+                println!("Loaded typegraphs from {path}:");
+                for tg in tgs.iter() {
+                    print!("  → Pushing typegraph {name}...", name = tg.name()?);
+                    push_typegraph(tg, node, auth, 3)?;
+                    println!(" {}", "Done.".to_owned().green())
+                }
+                println!();
+            }
+            Result::Err(err) => {
+                println!(
+                    "Error while loading typegraphs from {path}:\n{err}",
+                    err = err.to_string().red()
+                );
+            }
+        }
     }
-
     Ok(())
 }
 

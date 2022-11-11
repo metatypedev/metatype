@@ -2,12 +2,24 @@
 
 use anyhow::{anyhow, bail, Context, Result};
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::ts::parser::{parse_module_source, transform_module, transform_script};
+use crate::utils::MapValues;
+
+#[derive(Serialize, Deserialize)]
+#[serde(untagged)]
+enum Res {
+    Ok { typegraphs: Vec<Typegraph> },
+    Error { message: String },
+}
+
+pub type LoaderResultInner = HashMap<String, Result<Vec<Typegraph>>>;
+pub type LoaderResult = Result<LoaderResultInner>;
 
 pub struct TypegraphLoader {
     skip_deno_modules: bool,
@@ -32,22 +44,28 @@ impl TypegraphLoader {
         self
     }
 
-    pub fn load_file<P: AsRef<Path>>(self, file: P) -> Result<HashMap<String, Typegraph>> {
-        postprocess_all(self.collect_typegraphs([file.as_ref().to_owned()])?)
+    pub fn load_file<P: AsRef<Path>>(self, file: P) -> LoaderResult {
+        Ok(postprocess_all(
+            self.collect_typegraphs([file.as_ref().to_owned()])?,
+        ))
     }
 
-    pub fn load_files(self, files: &[PathBuf]) -> Result<HashMap<String, Typegraph>> {
-        postprocess_all(self.collect_typegraphs(files.iter().cloned())?)
+    pub fn load_files(self, files: &[PathBuf]) -> LoaderResult {
+        Ok(postprocess_all(
+            self.collect_typegraphs(files.iter().cloned())?,
+        ))
     }
 
-    pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> Result<HashMap<String, Typegraph>> {
-        postprocess_all(self.collect_typegraphs([dir.as_ref().to_owned()])?)
+    pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> LoaderResult {
+        Ok(postprocess_all(
+            self.collect_typegraphs([dir.as_ref().to_owned()])?,
+        ))
     }
 
     fn collect_typegraphs<I: IntoIterator<Item = PathBuf>>(
         self,
         sources: I,
-    ) -> Result<HashMap<String, Typegraph>> {
+    ) -> Result<HashMap<String, Res>> {
         let cwd = env::current_dir()?;
         let working_dir = self.working_dir.as_ref().unwrap_or(&cwd);
 
@@ -89,17 +107,13 @@ impl TypegraphLoader {
             );
         }
 
-        let tgs: Vec<Typegraph> = serde_json::from_str(&stdout).with_context(|| {
+        serde_json::from_str(&stdout).with_context(|| {
             if stdout.len() > 64 {
                 format!("cannot parse typegraph: {} (first 64 chars)", &stdout[..64])
             } else {
                 format!("cannot parse typegraph: {}", stdout)
             }
-        })?;
-
-        tgs.into_iter()
-            .map(|tg| tg.name().map(|name| (name, tg)))
-            .collect()
+        })
     }
 }
 
@@ -117,10 +131,11 @@ impl UniqueTypegraph for HashMap<String, Typegraph> {
     }
 }
 
-fn postprocess_all(tgs: HashMap<String, Typegraph>) -> Result<HashMap<String, Typegraph>> {
-    tgs.into_iter()
-        .map(|(name, tg)| postprocess(tg).map(|tg| (name, tg)))
-        .collect()
+fn postprocess_all(res: HashMap<String, Res>) -> HashMap<String, Result<Vec<Typegraph>>> {
+    res.map_values(|r| match r {
+        Res::Ok { typegraphs: tgs } => tgs.into_iter().map(postprocess).collect(),
+        Res::Error { message: msg } => bail!("{msg}"),
+    })
 }
 
 type MaterializerPostprocessor = fn(Materializer, &Typegraph) -> Result<Materializer>;

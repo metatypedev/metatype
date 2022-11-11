@@ -2,6 +2,7 @@
 from copy import deepcopy
 from types import NoneType
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import get_args
 from typing import get_origin
@@ -16,6 +17,7 @@ from frozendict import frozendict
 import orjson
 from typegraph.graphs.builder import Collector
 from typegraph.graphs.node import Node
+from typegraph.graphs.typegraph import find
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.graphs.typegraph import TypegraphContext
@@ -423,6 +425,27 @@ def json() -> string:
     return string().json()
 
 
+def ean() -> string:
+    return string().format("ean")
+
+
+def path() -> string:
+    return string().format("path")
+
+
+def datetime() -> string:
+    return string().format("date-time")
+
+
+def date() -> string:
+    return string().format("date")
+
+
+def phone() -> string:
+    # TODO replace with the phone number pattern when typechecking
+    return string().format("phone")
+
+
 class struct(typedef):
     props: Dict[str, TypeNode]
     additional_props: Optional[Union[bool, TypeNode]] = None
@@ -450,6 +473,17 @@ class struct(typedef):
 
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
+
+    def __getattr__(self, attr):
+        try:
+            return super().__getattr__(attr)
+        except AttributeError:
+            pass
+
+        if attr in self.props:
+            return self.props[attr]
+
+        raise Exception(f'no prop named "{attr}" in type {self}')
 
     @property
     def type(self):
@@ -523,6 +557,36 @@ class array(typedef):
         }
 
 
+class union(typedef):
+    variants: List[TypeNode]
+
+    def __init__(self, variants: List[TypeNode], **kwargs):
+        super().__init__(**kwargs)
+        self.variants = variants
+
+    @property
+    def edges(self) -> List[Node]:
+        return super().edges + self.variants
+
+    def data(self, collector: Collector) -> dict:
+        return {
+            **super().data(collector),
+            "anyOf": [collector.index(v) for v in self.variants],
+        }
+
+
+def ipv4() -> string:
+    return string().format("ipv4")
+
+
+def ipv6() -> string:
+    return string().format("ipv6")
+
+
+def ip() -> union:
+    return union([ipv4(), ipv6()])
+
+
 class any(typedef):
     pass
 
@@ -594,3 +658,12 @@ class func(typedef):
 
 def gen(out: typedef, mat: Materializer, **kwargs) -> func:
     return func(struct(), out, mat, **kwargs)
+
+
+# single instance
+def named(name: str, define: Callable[[], typedef]) -> TypeNode:
+    defined = find(name)
+    if defined is not None:
+        return defined
+    else:
+        return define().named(name)
