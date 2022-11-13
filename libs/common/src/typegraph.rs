@@ -9,8 +9,10 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Typegraph {
     pub types: Vec<TypeNode>,
+    #[serde(default)]
     pub materializers: Vec<Materializer>,
     pub runtimes: Vec<TGRuntime>,
+    #[serde(default)]
     pub policies: Vec<Policy>,
     pub meta: TypeMeta,
 }
@@ -136,6 +138,10 @@ pub enum TypeNode {
         #[serialize_always]
         rate_weight: Option<u32>,
         rate_calls: bool,
+    },
+    Any {
+        #[serde(flatten)]
+        base: TypeNodeBase,
     },
 }
 

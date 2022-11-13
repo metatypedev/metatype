@@ -17,18 +17,15 @@ class S3Runtime(Runtime):
     _: KW_ONLY
     runtime_name: str = "s3"
 
-    # @property
-    # def data(self):
-    #     return {
-    #         **super().data,
-    #         "host": self.host,
-    #         "region": self.region,
-    #         "access_key_secret": self.access_key_secret,
-    #         "secret_key_secret": self.secret_key_secret,
-    #     }
-
     def data(self, collector):
-        raise Exception("not implemented")
+        data = super().data(collector)
+        data["data"] |= dict(
+            host=self.host,
+            region=self.region,
+            access_key_secret=self.access_key_secret,
+            secret_key_secret=self.secret_key_secret,
+        )
+        return data
 
     def sign(self, bucket: str, content_type: str):
         return t.func(

@@ -623,7 +623,7 @@ class func(typedef):
         self.rate_calls = rate_calls
         self.rate_weight = rate_weight
 
-    def rate(self, weight=None, calls=None):
+    def rate(self, weight=None, calls=False):
         return self.replace(rate_weight=weight, rate_calls=calls)
 
     @property

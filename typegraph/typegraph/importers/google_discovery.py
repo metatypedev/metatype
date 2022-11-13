@@ -45,7 +45,7 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
         return f"t.float()"
 
     if cursor.type == "any":
-        return f"t.Type()"
+        return f"t.any()"
 
     if cursor.type == "array":
         return f't.array({typify(cursor["items"], filter_read_only, suffix)})'
@@ -60,7 +60,7 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
 
         if len(fields) == 0:
             # FIXME : accept empty object?
-            fields.append('"_": t.optional(t.Type())')
+            fields.append('"_": t.optional(t.any())')
 
         ret += ",".join(fields)
 

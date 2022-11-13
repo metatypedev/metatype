@@ -10,10 +10,10 @@ interface ISend {
 
 const encode = (s: string) => new TextEncoder().encode(s);
 
-export default async (
+export default async function (
   { width, height, path }: ISend,
   { secrets },
-) => {
+) {
   const resource = base64.encode(`s3://${path}`);
   const uri = `/rt:fill/s:${width}:${height}/${resource}`;
 
@@ -26,4 +26,4 @@ export default async (
     ]),
   );
   return `http://localhost:9002/${base64.encode(digest)}${uri}`;
-};
+}
