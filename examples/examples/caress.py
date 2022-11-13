@@ -73,8 +73,7 @@ with TypeGraph("caress") as g:
                 #    deno.AutoMaterializer(),
                 # ),
             }
-        )
-        .named("Product")
+        ).named("Product")
         # .s_refine(
         #     g("Product", lambda p: p.price_public.amount > p.price_purchase.amount)
         # )

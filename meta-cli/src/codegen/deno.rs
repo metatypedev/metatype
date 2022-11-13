@@ -183,17 +183,16 @@ impl<'a> Codegen<'a> {
 
         // group by modules
         let gen_list = gen_list;
-        let module_codes = self.generate(gen_list);
-        Ok(module_codes
+        self.generate(gen_list)
             .into_iter()
-            .map(|(name, code)| {
+            .map(|(name, code)| -> Result<ModuleCode> {
                 let path = self.ts_modules.remove(&name).unwrap().path;
                 let code = format_text(&path, &code, &TS_FORMAT_CONFIG)
-                    .expect("could not format code")
-                    .unwrap();
-                ModuleCode { path, code }
+                    .context("could not format code")?
+                    .unwrap(); // TODO no unwrap
+                Ok(ModuleCode { path, code })
             })
-            .collect())
+            .collect::<Result<Vec<_>>>()
     }
 
     fn generate(&self, gen_list: Vec<GenItem>) -> HashMap<String, String> {

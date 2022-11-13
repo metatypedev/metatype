@@ -5,11 +5,7 @@ from dataclasses import dataclass
 import importlib
 from pathlib import Path
 import pkgutil
-import re
-import traceback
-from typing import Dict
 from typing import List
-from typing import Union
 
 from frozendict import frozendict
 import orjson
@@ -44,24 +40,24 @@ def import_file(path: str) -> List[TypeGraph]:
     return find_typegraphs(module)
 
 
-def try_import_file(path: str) -> Union[List[TypeGraph], str]:
-    """
-    Returns the defined typegraphs or a error message
-    """
-    try:
-        return import_file(path)
-    except Exception:
-        return traceback.format_exc()
+# def try_import_file(path: str) -> Union[List[TypeGraph], str]:
+#     """
+#     Returns the defined typegraphs or a error message
+#     """
+#     try:
+#         return import_file(path)
+#     except Exception:
+#         return traceback.format_exc()
 
 
-def import_folder(path) -> Dict[str, Union[List[TypeGraph], str]]:
-    ret = {}
+# def import_folder(path) -> Dict[str, Union[List[TypeGraph], str]]:
+#     ret = {}
 
-    for p in Path(path).glob("**/*.py"):
-        if ".venv" not in str(p):
-            ret[str(p)] = try_import_file(p)
+#     for p in Path(path).glob("**/*.py"):
+#         if ".venv" not in str(p):
+#             ret[str(p)] = try_import_file(p)
 
-    return ret
+#     return ret
 
 
 def import_modules(module, recursive=True):
@@ -93,29 +89,13 @@ def find_typegraphs(module) -> List[TypeGraph]:
 
 def cmd():
     parser = ArgumentParser()
-    parser.add_argument("modules", nargs="*")
+    parser.add_argument("module")
     parser.add_argument("--pretty", action="store_true")
-    parser.add_argument("--nofail", action="store_true")
     # TODO option: output file
 
     args = parser.parse_args()
 
-    import_res: Dict[str, Union[List[TypeGraph], str]] = {}
-    for m in args.modules:
-        if re.search("\\.py$", m):
-            import_res[m] = try_import_file(m)
-        else:
-            import_res |= import_folder(m)
-
-    ret: Dict[str, Union[List[dict], str]] = {}
-    for p, res in import_res.items():
-        if isinstance(res, list):
-            try:
-                ret[p] = {"typegraphs": [tg.build() for tg in res]}
-            except Exception:
-                ret[p] = {"message": traceback.format_exc()}
-        else:
-            ret[p] = {"message": res}
+    tgs = import_file(args.module)
 
     def default(obj):
         if isinstance(obj, frozendict):
@@ -125,5 +105,5 @@ def cmd():
         raise TypeError
 
     opt = dict(option=orjson.OPT_INDENT_2) if args.pretty else {}
-    json = orjson.dumps(ret, default=default, **opt).decode()
+    json = orjson.dumps([tg.build() for tg in tgs], default=default, **opt).decode()
     print(json)
