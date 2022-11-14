@@ -446,6 +446,10 @@ def phone() -> string:
     return string().format("phone")
 
 
+def enum(variants: List[str]) -> string:
+    return string().enum(variants)
+
+
 class struct(typedef):
     props: Dict[str, TypeNode]
     additional_props: Optional[Union[bool, TypeNode]] = None
