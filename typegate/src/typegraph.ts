@@ -13,6 +13,7 @@ import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure, envOrFail, mapo } from "./utils.ts";
+import { typegraph_validate } from "native";
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
 import * as semver from "std/semver/mod.ts";
@@ -140,6 +141,8 @@ export class TypeGraph {
     selections: [],
   };
 
+  static list: TypeGraph[] = [];
+
   tg: TypeGraphDS;
   runtimeReferences: Runtime[];
   root: TypeNode;
@@ -177,11 +180,19 @@ export class TypeGraph {
   }
 
   static async init(
-    typegraph: TypeGraphDS,
+    json: string,
     staticReference: RuntimeResolver,
     introspection: TypeGraph | null,
     runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
+    let typegraph = await typegraph_validate({ json }).then((res) => {
+      if ("Valid" in res) {
+        return JSON.parse(res.Valid.json) as TypeGraphDS;
+      } else {
+        return Promise.reject(new Error(res.NotValid.reason));
+      }
+    });
+
     const typegraphName = typegraph.types[0].title;
     const { meta, runtimes } = typegraph;
 
@@ -259,7 +270,7 @@ export class TypeGraph {
       }),
     );
 
-    return new TypeGraph(
+    const tg = new TypeGraph(
       typegraph,
       runtimeReferences,
       secrets,
@@ -267,9 +278,15 @@ export class TypeGraph {
       auths,
       introspection,
     );
+
+    TypeGraph.list.push(tg);
+
+    return tg;
   }
 
   async deinit(): Promise<void> {
+    TypeGraph.list.splice(TypeGraph.list.findIndex((tg) => tg == this), 1);
+
     for await (
       const [idx, runtime] of this.runtimeReferences.map(
         (rt, i) => [i, rt] as const,

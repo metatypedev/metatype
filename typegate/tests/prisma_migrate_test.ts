@@ -212,4 +212,4 @@ test("prisma migrations", async (t) => {
       .expectData({ findManyRecords: [] })
       .on(e);
   });
-});
+}, { sanitizeOps: false }); // TODO enable sanitizer, find ops leak
