@@ -25,6 +25,8 @@ class Policy(Node):
         return [self.mat]
 
     def data(self, collector):
+        if self.name is None:
+            raise Exception("Policy name is required.")
         return {
             "name": self.name,
             "materializer": collector.index(self.mat),
