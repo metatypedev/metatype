@@ -19,6 +19,7 @@ import { RuntimesConfig } from "../src/types.ts";
 import { PrismaMigration } from "../src/runtimes/prisma_migration.ts";
 import { PrismaRuntimeDS } from "../src/type_node.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";
+import { TypeGraph } from "../src/typegraph.ts";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
@@ -90,7 +91,7 @@ export class MemoryRegister extends Register {
       payload,
       SystemTypegraph.getCustomRuntimes(this),
       config,
-      null, // no need to have introspection for tests
+      undefined, // no need to have introspection for tests
     );
     this.map.set(engine.name, engine);
     return engine.name;
@@ -195,6 +196,7 @@ class MetaTest {
 export function test(
   name: string,
   fn: (t: MetaTest) => void | Promise<void>,
+  opts: Omit<Deno.TestDefinition, "name" | "fn"> = {},
 ): void {
   return Deno.test({
     name,
@@ -209,8 +211,7 @@ export function test(
         await mt.terminate();
       }
     },
-    sanitizeResources: false,
-    sanitizeOps: false,
+    ...opts,
   });
 }
 
@@ -433,4 +434,11 @@ export async function removeMigrations(engine: Engine) {
   await Deno.remove(join(localDir, "prisma-migrations", engine.name), {
     recursive: true,
   }).catch(() => {});
+}
+
+export async function cleanUp() {
+  for await (const tg of TypeGraph.list) {
+    console.log(`cleanup: ${tg.name}`);
+    await tg.deinit();
+  }
 }

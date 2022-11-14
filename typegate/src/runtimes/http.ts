@@ -80,7 +80,9 @@ export class HTTPRuntime extends Runtime {
     return new HTTPRuntime(args.endpoint as string, client, headers);
   }
 
-  async deinit(): Promise<void> {}
+  deinit(): Promise<void> {
+    this.client.close();
+  }
 
   execute(method: string, pathPattern: string, options: MatOptions): Resolver {
     return async ({ _, ...input }) => {

@@ -25,28 +25,31 @@ import {
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
   join(localDir, "typegraphs/introspection.json"),
-).then((d) => JSON.parse(d));
+);
 
 export const initTypegraph = async (
   payload: string,
   customRuntime: RuntimeResolver = {},
   config: Record<string, RuntimeConfig> = {},
-  introspectionDef: any = introspectionDefStatic,
+  introspectionDef: string = introspectionDefStatic,
 ) => {
-  const parsed = JSON.parse(payload);
-
   const introspection = introspectionDef
     ? await TypeGraph.init(
       introspectionDef,
       {
-        typegraph: await TypeGraphRuntime.init(parsed, [], {}, config),
+        typegraph: await TypeGraphRuntime.init(
+          JSON.parse(payload),
+          [],
+          {},
+          config,
+        ),
       },
       null,
       {},
     )
     : null;
 
-  const tg = await TypeGraph.init(parsed, customRuntime, introspection, {});
+  const tg = await TypeGraph.init(payload, customRuntime, introspection, {});
   return new Engine(tg);
 };
 

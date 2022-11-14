@@ -8,6 +8,7 @@ use prisma::introspection::Introspection;
 mod conf;
 mod prisma;
 mod s3;
+mod typegraph;
 use crate::prisma::engine;
 use crate::prisma::migration;
 use conf::CONFIG;
