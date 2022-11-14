@@ -474,6 +474,9 @@ class struct(typedef):
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
 
+    def compose(self, props: Dict[str, typedef]):
+        return self.replace(props=self.props | props)
+
     def __getattr__(self, attr):
         try:
             return super().__getattr__(attr)
@@ -646,6 +649,12 @@ class func(typedef):
             "rate_weight": self.rate_weight,
             "rate_calls": self.rate_calls,
         }
+
+    # this is not function composition
+    def compose(self, out: Dict[str, typedef]):
+        if not isinstance(self.out, struct):
+            raise Exception("Output required to be a struct.")
+        return self.replace(out=self.out.compose(out))
 
     # def compose(self, other: "func") -> "func":
     #     assert self.out == other.inp

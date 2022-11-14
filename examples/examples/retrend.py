@@ -41,7 +41,7 @@ with TypeGraph(
                         {
                             "width": t.integer(),
                             "height": t.integer(),
-                            "path": t.string().s_parent(g("Path")),
+                            "path": t.string().from_parent(g("Path")),
                         }
                     ),
                     t.string(),
