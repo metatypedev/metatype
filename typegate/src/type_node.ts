@@ -18,7 +18,7 @@ type TypeNodeBase =
   }
   & Injection;
 
-export type TypeOptional = TypeNodeBase & {
+export type OptionalNode = TypeNodeBase & {
   type: "optional";
   item: number;
   default_value: any;
@@ -67,10 +67,10 @@ export type FunctionNode = TypeNodeBase & {
   rate_calls: boolean;
 };
 
-// datetime, date, ean, path, ip, phone, set, json, tuple, union
+export type QuantifierNode = OptionalNode | ArrayNode;
 
 export type TypeNode =
-  | TypeOptional
+  | OptionalNode
   | BooleanNode
   | NumberNode
   | IntegerNode
@@ -110,3 +110,46 @@ export interface PrismaRuntimeDS extends TypeRuntimeBase {
 }
 
 export type TypeRuntime = DenoRuntimeDS | PrismaRuntimeDS;
+
+//
+// Type utils
+
+export function isBoolean(t: TypeNode): t is BooleanNode {
+  return t.type === "boolean";
+}
+
+export function isNumber(t: TypeNode): t is NumberNode {
+  return t.type === "number";
+}
+
+export function isInteger(t: TypeNode): t is IntegerNode {
+  return t.type === "integer";
+}
+
+export function isString(t: TypeNode): t is StringNode {
+  return t.type === "string";
+}
+
+export function isObject(t: TypeNode): t is ObjectNode {
+  return t.type === "object";
+}
+
+export function isOptional(t: TypeNode): t is OptionalNode {
+  return t.type === "optional";
+}
+
+export function isArray(t: TypeNode): t is ArrayNode {
+  return t.type === "array";
+}
+
+export function isQuantifier(t: TypeNode): t is QuantifierNode {
+  return isOptional(t) || isArray(t);
+}
+
+export function isFunction(t: TypeNode): t is FunctionNode {
+  return t.type === "function";
+}
+
+export function getWrappedType(t: QuantifierNode): number {
+  return isOptional(t) ? t.item : t.items;
+}

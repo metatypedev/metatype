@@ -12,7 +12,7 @@ import {
   SelectionSetNode,
 } from "graphql/ast";
 import { FragmentDefs } from "./graphql.ts";
-import { ObjectNode, TypeNode } from "./type_node.ts";
+import { isOptional, ObjectNode, TypeNode } from "./type_node.ts";
 
 // we will use this jsonschema jit compiler: https://github.com/sinclairzx81/typebox
 // and the types format will become a superset of the jsonschema https://json-schema.org/understanding-json-schema/reference/index.html
@@ -73,7 +73,7 @@ export class ValidationSchemaBuilder {
               const { name, selectionSet } = node;
               if (Object.hasOwnProperty.call(baseProperties, name.value)) {
                 let prop = this.types[baseProperties[name.value]];
-                if (prop.type !== "optional") {
+                if (!isOptional(prop)) {
                   required.push(name.value);
                 } else {
                   prop = this.types[prop.item];

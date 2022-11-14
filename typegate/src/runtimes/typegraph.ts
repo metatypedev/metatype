@@ -5,7 +5,20 @@ import { TypeKind } from "graphql";
 import { ensure } from "../utils.ts";
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
-import { FunctionNode, ObjectNode, TypeNode } from "../type_node.ts";
+import {
+  FunctionNode,
+  isArray,
+  isBoolean,
+  isFunction,
+  isInteger,
+  isNumber,
+  isObject,
+  isOptional,
+  isQuantifier,
+  isString,
+  ObjectNode,
+  TypeNode,
+} from "../type_node.ts";
 import { Resolver, RuntimeConfig } from "../types.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
@@ -106,7 +119,7 @@ export class TypeGraphRuntime extends Runtime {
           if (history.has(type.title)) {
             return [];
           }
-          if (type.type === "object") {
+          if (isObject(type)) {
             history.add(type.title);
             return [
               type.title,
@@ -115,13 +128,13 @@ export class TypeGraphRuntime extends Runtime {
               ),
             ];
           }
-          if (type.type === "array") {
+          if (isArray(type)) {
             return collectInputType(
               this.tg.types[type.items],
               history,
             );
           }
-          if (type.type === "optional") {
+          if (isOptional(type)) {
             return collectInputType(
               this.tg.types[type.item],
               history,
@@ -131,7 +144,7 @@ export class TypeGraphRuntime extends Runtime {
         };
 
         const inputTypes = this.tg.types
-          .filter((type) => type.type === "function")
+          .filter((type) => isFunction(type))
           .flatMap((type) =>
             collectInputType(
               this.tg.types[(type as FunctionNode).input as number],
@@ -145,16 +158,16 @@ export class TypeGraphRuntime extends Runtime {
           .filter((type) => {
             // filter non-native GraphQL types
             const isEnforced = type.injection ||
-              (type.type === "object" &&
+              (isObject(type) &&
                 Object.values(type.properties)
                   .map((prop) => this.tg.types[prop])
                   .every((nested) => nested.injection));
-            const isQuant = type.type === "optional" || type.type === "array";
+            const isQuant = isQuantifier(type);
             const isInp = this.tg.types.some(
-              (t) => (t.type === "function") && this.tg.types[t.input] === type,
+              (t) => (isFunction(t)) && this.tg.types[t.input] === type,
             );
-            const isOutQuant = (type.type === "function") &&
-              ["array", "optional"].includes(this.tg.types[type.output].type);
+            const isOutQuant = (isFunction(type)) &&
+              isQuantifier(this.tg.types[type.output]);
             return !isQuant && !isInp && !isOutQuant && !isEnforced;
           })
           .map((type) => {
@@ -193,7 +206,7 @@ export class TypeGraphRuntime extends Runtime {
 
     if (
       type.injection ||
-      (type.type === "object" &&
+      (isObject(type) &&
         Object.values(type.properties)
           .map((prop) => this.tg.types[prop])
           .every((nested) => nested.injection))
@@ -233,7 +246,7 @@ export class TypeGraphRuntime extends Runtime {
       enumValues: () => null,
     };
 
-    if (type.type === "optional") {
+    if (isOptional(type)) {
       const subtype = this.tg.types[type.item];
       return this.formatType(subtype, false, asInput);
     }
@@ -248,7 +261,7 @@ export class TypeGraphRuntime extends Runtime {
       };
     }
 
-    if (type.type === "array") {
+    if (isArray(type)) {
       return {
         ...common,
         kind: () => TypeKind.LIST,
@@ -259,17 +272,7 @@ export class TypeGraphRuntime extends Runtime {
       };
     }
 
-    // fixme provisory
-    // if (type.type === "Type") {
-    //   return {
-    //     ...common,
-    //     kind: () => TypeKind.SCALAR,
-    //     name: () => "Any",
-    //     description: () => `${type.name} type`,
-    //   };
-    // }
-
-    if (type.type === "boolean") {
+    if (isBoolean(type)) {
       return {
         ...common,
         kind: () => TypeKind.SCALAR,
@@ -278,7 +281,7 @@ export class TypeGraphRuntime extends Runtime {
       };
     }
 
-    if (type.type === "integer") {
+    if (isInteger(type)) {
       return {
         ...common,
         kind: () => TypeKind.SCALAR,
@@ -287,7 +290,7 @@ export class TypeGraphRuntime extends Runtime {
       };
     }
 
-    if (type.type === "number") {
+    if (isNumber(type)) {
       return {
         ...common,
         kind: () => TypeKind.SCALAR,
@@ -296,7 +299,7 @@ export class TypeGraphRuntime extends Runtime {
       };
     }
 
-    if (type.type === "string") {
+    if (isString(type)) {
       return {
         ...common,
         kind: () => TypeKind.SCALAR,
@@ -305,12 +308,12 @@ export class TypeGraphRuntime extends Runtime {
       };
     }
 
-    if (type.type === "function") {
+    if (isFunction(type)) {
       const output = this.tg.types[type.output as number];
       return this.formatType(output, false, false);
     }
 
-    if (type.type === "object") {
+    if (isObject(type)) {
       if (asInput) {
         return {
           ...common,
@@ -366,13 +369,13 @@ export class TypeGraphRuntime extends Runtime {
       deprecationReason: () => null,
     };
 
-    if (type.type === "function") {
+    if (isFunction(type)) {
       return {
         ...common,
         args: (_: DeprecatedArg = {}) => {
           const inp = this.tg.types[type.input as number];
           ensure(
-            inp.type === "object",
+            isObject(inp),
             `${type} cannot be an input field, require struct`,
           );
           return Object.entries((inp as ObjectNode).properties)
