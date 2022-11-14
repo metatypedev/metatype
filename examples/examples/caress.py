@@ -21,7 +21,7 @@ def with_time():
 
 
 def currency():
-    return t.named("currency", lambda: t.string().enum(["CHF"]))
+    return t.named("currency", lambda: t.enum(["CHF"]))
 
 
 def amount():
@@ -55,8 +55,8 @@ with TypeGraph("caress") as g:
                 "disabled_at": t.optional(t.string()),
                 "facets": t.struct(
                     {
-                        "pet_type": t.array(t.string().enum(["cat", "dog"])),
-                        "medication_types": t.string().enum(["A", "B"]),
+                        "pet_type": t.array(t.enum(["cat", "dog"])),
+                        "medication_types": t.enum(["A", "B"]),
                     }
                 ),
                 "eans": t.array(t.ean()),
@@ -84,7 +84,7 @@ with TypeGraph("caress") as g:
 
     user = t.struct({"id": t.uuid().config("id"), **with_time()}).named("user")
 
-    payment_method = t.string().enum(["PFC"]).named("payment_method")
+    payment_method = t.enum(["PFC"]).named("payment_method")
     # gateway = t.literal("datatrans")
     gateway = t.string().set("datatrans")
 
@@ -158,7 +158,7 @@ with TypeGraph("caress") as g:
     order = t.struct(
         {
             "id": t.uuid().config("id"),
-            "status": t.string().enum(["waiting_payment"]),
+            "status": t.enum(["waiting_payment"]),
             "items": t.array(t.union([item_product, item_shipping])),
             "user": user,
             "ip": t.ip(),
@@ -173,8 +173,8 @@ with TypeGraph("caress") as g:
             "entity_type": t.string(),
             "entity_owners": t.array(g("entity_owner")),
             "breed": t.string(),
-            "gender": t.string().enum(["female", "male"]),
-            "reproductive_status": t.string().enum(["sterilized", "non-sterilized"]),
+            "gender": t.enum(["female", "male"]),
+            "reproductive_status": t.enum(["sterilized", "non-sterilized"]),
             "birth": t.date(),
             "diseases": t.string(),
             "allergies": t.string(),
@@ -188,7 +188,7 @@ with TypeGraph("caress") as g:
         {
             "entity": entity,
             "user": user,
-            "role": t.string().enum(["admin", "editor"]),
+            "role": t.enum(["admin", "editor"]),
         }
     ).named("entity_owner")
 
