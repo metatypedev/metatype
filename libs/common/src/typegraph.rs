@@ -160,7 +160,7 @@ pub struct TGRuntime {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Policy {
-    pub name: Option<String>, // FIXME optional??
+    pub name: String,
     pub materializer: u32,
 }
 
