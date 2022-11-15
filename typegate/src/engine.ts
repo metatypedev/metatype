@@ -399,8 +399,6 @@ export class Engine {
 
       this.validateVariables(operation?.variableDefinitions ?? [], variables);
 
-      // FIXME only caches introspection queries??
-      const cache = operationName === "IntrospectionQuery";
       const verbose = operationName !== "IntrospectionQuery";
 
       verbose && this.logger.info("———");
@@ -410,7 +408,7 @@ export class Engine {
       const [plan, cacheHit] = await this.getPlan(
         operation,
         fragments,
-        cache,
+        true,
         verbose,
       );
       const planTime = performance.now();
