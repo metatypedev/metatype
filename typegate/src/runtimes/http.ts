@@ -80,7 +80,8 @@ export class HTTPRuntime extends Runtime {
     return new HTTPRuntime(args.endpoint as string, client, headers);
   }
 
-  deinit(): Promise<void> {
+  // deno-lint-ignore require-await
+  async deinit(): Promise<void> {
     this.client.close();
   }
 

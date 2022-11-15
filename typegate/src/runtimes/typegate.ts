@@ -7,6 +7,7 @@ import config from "../config.ts";
 import * as path from "std/path/mod.ts";
 import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
+import { TypeGraphDS } from "../typegraph.ts";
 
 interface StructField {
   name: string;
@@ -121,7 +122,8 @@ export class TypeGateRuntime extends Runtime {
   };
 
   addTypegraph: Resolver = async ({ fromString }) => {
-    const name = JSON.parse(fromString).types[0].name as string;
+    // FIXME we could perform the validation (through rust) and parsing here
+    const name = (JSON.parse(fromString) as TypeGraphDS).types[0].title;
 
     if (SystemTypegraph.check(name)) {
       throw new Error(`Typegraph name ${name} cannot be used`);
