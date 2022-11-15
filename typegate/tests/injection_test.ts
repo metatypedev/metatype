@@ -38,7 +38,7 @@ test("Injected queries", async (t) => {
           a: 0,
           b: 1,
           c: "2",
-          d: "3",
+          d: 3,
           e: {
             a2: 0,
           },

@@ -369,15 +369,32 @@ export class TypeGraph {
           return [() => value, policies, []];
         }
         case "secret": {
+          // TODO move out
+          const parseValue = (
+            schema: TypeNode,
+            value: string | undefined,
+          ) => {
+            if (value == undefined) {
+              if (isOptional(schema)) {
+                return null;
+              }
+              // manage default?
+              throw new Error(`injection ${name} was not found in secrets`);
+            }
+
+            if (isNumber(schema)) return parseFloat(value);
+            if (isInteger(schema)) return parseInt(value, 10);
+
+            if (isString(schema)) return value;
+
+            throw new Error(
+              `invalid type for secret injection: ${schema.type}`,
+            );
+          };
+
           const name = inject as string;
-          const value = this.secrets[name];
-          if (
-            value === undefined &&
-            (value === null && !isOptional(arg))
-          ) {
-            // manage default?
-            throw new Error(`injection ${name} was not found in secrets`);
-          }
+          const value = parseValue(arg, this.secrets[name]);
+
           return [
             () => {
               return value;

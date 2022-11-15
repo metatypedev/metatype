@@ -26,7 +26,7 @@ import { isOptional, ObjectNode, TypeNode } from "./type_node.ts";
 type JSONSchema = Exclude<jst.JSONSchema, boolean>;
 
 function trimType(node: TypeNode): JSONSchema {
-  const { runtime, policies, config, ...ret } = node;
+  const { runtime, policies, config, injection, inject, ...ret } = node;
   return ret as unknown as JSONSchema;
 }
 
@@ -128,6 +128,14 @@ export class ValidationSchemaBuilder {
         return this.get(path, this.types[type.output], selectionSet);
       }
 
+      case "optional": {
+        const itemSchema = this.get(path, this.types[type.item], selectionSet);
+        const nullableType = Array.isArray(itemSchema.type)
+          ? [...itemSchema.type, "null"]
+          : [itemSchema.type, "null"];
+        return { ...itemSchema, type: nullableType };
+      }
+
       default:
         if (selectionSet != undefined) {
           throw new Error(`Path ${path} cannot be a field selection`);
@@ -148,6 +156,16 @@ export class TypeCheck {
   constructor(schema: JSONSchema) {
     this.validator = ajv.compile(schema);
     // this.serializer = ajv.compileSerializer(schema);
+  }
+
+  public static init(
+    types: Array<TypeNode>,
+    operation: OperationDefinitionNode,
+    fragments: FragmentDefs,
+  ) {
+    const schema = new ValidationSchemaBuilder(types, operation, fragments)
+      .build();
+    return new TypeCheck(schema);
   }
 
   public check(value: any): boolean {
