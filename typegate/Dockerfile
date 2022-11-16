@@ -18,7 +18,7 @@ RUN deno_bindgen --release -- --locked --package native
 
 WORKDIR /typegate
 
-RUN deno cache --unstable --import-map=import_map.json --lock=lock.json src/main.ts
+RUN deno cache --config=deno.json --unstable src/main.ts
 
 #
 
@@ -34,7 +34,7 @@ USER nonroot
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
 COPY --from=builder /bindings/bindings.ts /bindings/
 COPY --from=builder /target/release/libnative.so /target/release/
-COPY --from=builder /typegate/import_map.json /typegate/.env.defaults /typegate/lock.json ./
+COPY --from=builder /typegate/import_map.json /typegate/.env.defaults /typegate/deno.lock /typegate/deno.json ./
 COPY --from=builder /typegate/src ./src
 
 # writeable
@@ -43,5 +43,5 @@ COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
 EXPOSE 7890
 
 ENTRYPOINT ["/tini", "--"]
-# "--lock=lock.json", https://github.com/denoland/deno/issues/16120
-CMD ["deno", "run", "--import-map=import_map.json", "--unstable", "--allow-run=hostname", "--allow-env", "--allow-hrtime", "--allow-write", "--allow-ffi", "--allow-read", "--allow-net", "src/main.ts"]
+
+CMD ["deno", "run", "--config=deno.json", "--unstable", "--allow-run=hostname", "--allow-env", "--allow-hrtime", "--allow-write", "--allow-ffi", "--allow-read", "--allow-net", "src/main.ts"]

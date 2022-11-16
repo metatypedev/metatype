@@ -6,10 +6,9 @@ SCRIPT_PATH=$(dirname $(realpath -s $0))
 
 cd ${SCRIPT_PATH} && \
     exec deno cache \
+    --config=deno.json \
     --unstable \
-    --import-map=import_map.json \
-    --lock=lock.json \
+    --reload \
     --lock-write \
-    src/main.ts \
-    $(find tests -path '*.ts') \
-    "${@}"
+    $(find . -path '*.ts') && \
+    ./test.sh --quiet

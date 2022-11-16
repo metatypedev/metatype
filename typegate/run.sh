@@ -4,10 +4,9 @@ set -e
 
 SCRIPT_PATH=$(dirname $(realpath -s $0))
 
-# --lock=lock.json \ https://github.com/denoland/deno/issues/16120
 cd ${SCRIPT_PATH} && \
     exec deno run \
-    --import-map=import_map.json \
+    --config=deno.json \
     --unstable \
     --allow-run=hostname \
     --allow-env \

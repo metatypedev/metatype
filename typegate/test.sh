@@ -6,10 +6,9 @@ SCRIPT_PATH=$(dirname $(realpath -s $0))
 export VIRTUAL_ENV="$SCRIPT_PATH/../typegraph/.venv"
 export PATH="$SCRIPT_PATH/../typegraph/.venv/bin:$PATH"
 
-# --lock=lock.json \ https://github.com/denoland/deno/issues/16120
 cd ${SCRIPT_PATH} && \
     deno test \
-    --import-map=import_map.json \
+    --config=deno.json \
     --unstable \
     --allow-run \
     --allow-env \
