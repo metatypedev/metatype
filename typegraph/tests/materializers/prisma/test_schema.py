@@ -93,14 +93,14 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.integer().id,
+                    "id": t.integer().config("id"),
                     "profile": userProfile.owned(),
                 }
             ).named("User")
 
             profile = t.struct(
                 {
-                    "id": t.uuid().id.auto,
+                    "id": t.uuid().config("id", "auto"),
                     "user": userProfile.owner(),
                 }
             ).named("Profile")

@@ -235,7 +235,7 @@ class TypeGraph:
 
         return root
 
-    def build(self):
+    def collect_nodes(self) -> Collector:
         def visit(nodes: List[Node], collector: Collector):
             for node in nodes:
                 if collector.collect(node):
@@ -243,6 +243,11 @@ class TypeGraph:
 
         collector = Collector()
         visit([self.root()], collector)
+
+        return collector
+
+    def build(self):
+        collector = self.collect_nodes()
 
         ret = {
             c: [n.data(collector) for n in collector.collects[c]]

@@ -18,7 +18,7 @@ prisma_types = {
     "boolean": "Boolean",
     "integer": "Int",
     # 'BigInt'
-    "float": "Float",
+    "number": "Float",
     # 'Decimal',
     "datetime": "DateTime",
     # 'Json',
@@ -174,15 +174,18 @@ def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
         f.prisma_type = f"{nested.prisma_type}?"
         return
 
-    typedef = type(f.tpe).__name__
+    print(f"tpe: {f.tpe}")
+    type_name = f.tpe.type
 
-    if typedef == "uuid":
+    if isinstance(f.tpe, t.string) and f.tpe._format == "uuid":
         f.tags.append("@db.Uuid")
         f.prisma_type = "String"
         return
 
-    if typedef in prisma_types:
-        f.prisma_type = prisma_types[typedef]
+    print(f"type_name: {type_name}")
+
+    if type_name in prisma_types:
+        f.prisma_type = prisma_types[type_name]
         return
 
     if isinstance(f.tpe, t.struct):
