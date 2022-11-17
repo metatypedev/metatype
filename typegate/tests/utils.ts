@@ -5,6 +5,7 @@ import {
   assertEquals,
   assertStringIncludes,
 } from "std/testing/asserts.ts";
+import { assertSnapshot } from "std/testing/snapshot.ts";
 import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
@@ -128,6 +129,9 @@ export class NoLimiter extends RateLimiter {
   }
 }
 
+type AssertSnapshotParams<T> = typeof assertSnapshot extends
+  (ctx: Deno.TestContext, ...rest: infer R) => Promise<void> ? R : never;
+
 class MetaTest {
   t: Deno.TestContext;
   register: Register;
@@ -190,6 +194,10 @@ class MetaTest {
       fn,
       //sanitizeOps: false,
     });
+  }
+
+  assertSnapshot<T>(...params: AssertSnapshotParams<T>): Promise<void> {
+    return assertSnapshot(this.t, ...params);
   }
 }
 

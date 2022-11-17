@@ -1,5 +1,9 @@
 // Copyright Metatype under the Elastic License 2.0.
 
+import {
+  assertArrayIncludes,
+  assertEquals,
+} from "https://deno.land/std@0.156.0/testing/asserts.ts";
 import { gql, test } from "./utils.ts";
 
 // https://github.com/graphql/graphql-js/blob/main/src/__tests__/starWarsIntrospection-test.ts
@@ -207,49 +211,91 @@ test("Basic introspection", async (t) => {
           }
         }
       }
-    `.expectData({
-      // FIXME non-deterministic order of the fields
-      __schema: {
-        queryType: {
-          fields: [
-            {
-              args: [
-                {
-                  defaultValue: null,
-                  description: "nested input field",
-                  type: {
-                    kind: "NON_NULL",
-                    name: null,
-                    ofType: {
-                      kind: "INPUT_OBJECT",
-                      name: "NestedInp",
-                    },
+    `
+      // .expectData({
+      //   // FIXME non-deterministic order of the fields
+      //   __schema: {
+      //     queryType: {
+      //       fields: [
+      //         {
+      //           args: [
+      //             {
+      //               defaultValue: null,
+      //               description: "nested input field",
+      //               type: {
+      //                 kind: "NON_NULL",
+      //                 name: null,
+      //                 ofType: {
+      //                   kind: "INPUT_OBJECT",
+      //                   name: "NestedInp",
+      //                 },
+      //               },
+      //             },
+      //           ],
+      //           name: "rec",
+      //         },
+      //         {
+      //           args: [
+      //             {
+      //               defaultValue: null,
+      //               description: "a input field",
+      //               type: {
+      //                 kind: "NON_NULL",
+      //                 name: null,
+      //                 ofType: {
+      //                   kind: "SCALAR",
+      //                   name: "Int",
+      //                 },
+      //               },
+      //             },
+      //           ],
+      //           name: "test",
+      //         },
+      //       ],
+      //     },
+      //   },
+      // })
+      .expectBody((body) => {
+        const { fields } = body.data.__schema.queryType;
+        assertEquals(fields.length, 2);
+        assertArrayIncludes(fields, [
+          {
+            args: [
+              {
+                defaultValue: null,
+                description: "nested input field",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    kind: "INPUT_OBJECT",
+                    name: "NestedInp",
                   },
                 },
-              ],
-              name: "rec",
-            },
-            {
-              args: [
-                {
-                  defaultValue: null,
-                  description: "a input field",
-                  type: {
-                    kind: "NON_NULL",
-                    name: null,
-                    ofType: {
-                      kind: "SCALAR",
-                      name: "Int",
-                    },
+              },
+            ],
+            name: "rec",
+          },
+          {
+            args: [
+              {
+                defaultValue: null,
+                description: "a input field",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    kind: "SCALAR",
+                    name: "Int",
                   },
                 },
-              ],
-              name: "test",
-            },
-          ],
-        },
-      },
-    }).on(e);
+              },
+            ],
+            name: "test",
+          },
+        ]);
+      })
+      .on(e);
   });
 });
 
@@ -356,7 +402,7 @@ test("Full introspection", async (t) => {
       }
     `
       .expectBody((body) => {
-        // TODO snapshot matching
+        t.assertSnapshot(body.data);
         console.log("schema", body.data.__schema);
       })
       .on(e);
