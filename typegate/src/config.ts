@@ -85,6 +85,7 @@ const schema = z.object({
   trust_proxy: z.boolean(),
   trust_header_ip: z.string(),
   prisma_migration_folder: z.string().optional(),
+  request_log: z.string().optional(),
 });
 
 const parsing = await schema.safeParse(

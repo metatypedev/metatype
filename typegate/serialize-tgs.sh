@@ -11,8 +11,7 @@ for tg_file in $SCRIPT_PATH/src/typegraphs/*.py; do
   name="${tg_file##*/}"
   name="${name%.py}"
   target=$SCRIPT_PATH/src/typegraphs/$name.json
-  echo -n "Serializing typegraph $name ..."
-  $SCRIPT_PATH/../meta.sh serialize -f $tg_file -1 -o $target 2>/dev/null
-  echo >> $target
-  echo " Done"
+  echo "Serializing typegraph $name ..."
+  cargo run -p meta -q --color always -- serialize -f $tg_file -1 -o $target
+  echo "  Done"
 done

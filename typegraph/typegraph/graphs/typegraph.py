@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from dataclasses import field
 import inspect
 from pathlib import Path
-from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -147,7 +146,7 @@ class TypeGraph:
         TypegraphContext.pop()
 
     def __call__(
-        self, node: str, after_apply: Callable[["t.Type"], "t.Type"] = lambda x: x
+        self, node: str, after_apply: Callable[["t.typedef"], "t.typdef"] = lambda x: x
     ) -> "NodeProxy":
         return NodeProxy(self, node, after_apply)
 
@@ -177,7 +176,7 @@ class TypeGraph:
                 if isinstance(e, t.func):
                     if e.mat.serial != serial:
                         raise Exception(
-                            f"expected materializer to be {'' if serial else 'non-'}serial"
+                            f"expected materializer to be {'' if serial else 'non-'}serial ({e.mat})"
                         )
                     assert_serial_materializers(e.out, serial)
 
@@ -229,7 +228,7 @@ class TypeGraph:
         return root
 
     def build(self):
-        def visit(nodes: List[Any], collector: Collector):
+        def visit(nodes: List[Node], collector: Collector):
             for node in nodes:
                 if collector.collect(node):
                     visit(node.edges, collector)
@@ -286,15 +285,15 @@ def get_absolute_path(relative: str) -> Path:
 class NodeProxy(Node):
     g: TypeGraph
     node: str
-    after_apply: Callable[["t.typedef"], "t.typedef"]
+    after_apply: Optional[Callable[["t.typedef"], "t.typedef"]]
 
     def __init__(
         self,
         g: TypeGraph,
         node: str,
-        after_apply: Callable[["t.typedef"], "t.typedef"],
+        after_apply: Optional[Callable[["t.typedef"], "t.typedef"]] = None,
     ):
-        super().__init__(Collector.types)
+        super().__init__()
         self.g = g
         self.node = node
         self.after_apply = after_apply
@@ -306,7 +305,12 @@ class NodeProxy(Node):
         tpe = self.g.type_by_names.get(self.node)
         if tpe is None:
             raise Exception(f"No registered type named '{self.node}'")
-        return self.g.type_by_names[self.node]
+        if self.after_apply is None:
+            return tpe
+        tpe = self.after_apply(tpe)
+        self.g.type_by_names[tpe.name] = tpe
+        self.node, self.after_apply = tpe.name, None
+        return tpe
 
     @property
     def edges(self) -> List["Node"]:
@@ -321,11 +325,6 @@ class NodeProxy(Node):
 
     def __deepcopy__(self, memo):
         return NodeProxy(self.g, self.node, self.after_apply)
-
-    def optional(self):
-        from typegraph.types import types as t
-
-        return t.optional(self)
 
 
 def find(node: str) -> Optional[NodeProxy]:

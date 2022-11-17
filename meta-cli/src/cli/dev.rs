@@ -206,7 +206,7 @@ pub fn push_typegraph(tg: &Typegraph, node: &str, auth: &BasicAuth, backoff: u32
     // TODO: as admin
     let query = post_with_auth(auth, &gql_endpoint)?.gql(
         indoc! {"
-            query InsertTypegraph {
+            mutation InsertTypegraph {
                 addTypegraph(fromString: $tg) {
                     name
                 }

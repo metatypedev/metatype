@@ -37,6 +37,8 @@ class Collector:
             node = node.get()
 
         c = node.collector_target
+        if c is None:
+            raise Exception("Attempting to collect non collectible node")
 
         idx = self.collects[c].add(node)
         return idx == len(self.collects[c]) - 1

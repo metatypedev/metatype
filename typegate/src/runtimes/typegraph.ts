@@ -90,7 +90,7 @@ export class TypeGraphRuntime extends Runtime {
     // const mutationsBind: Record<string, number> = {};
 
     const queries = this.tg.types[root.properties["query"]];
-    const mutations = this.tg.types[root.properties[""]];
+    const mutations = this.tg.types[root.properties["mutation"]];
 
     // const queries = Object.keys(queriesBind).length > 0
     //   ? {
