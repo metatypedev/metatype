@@ -23,7 +23,7 @@ test("Basic introspection", async (t) => {
         __schema: {
           types: [
             {
-              "name": "object_16",
+              "name": "QueryType",
             },
             {
               "name": "Int",
@@ -50,7 +50,7 @@ test("Basic introspection", async (t) => {
               "name": "Int",
             },
             {
-              "name": "object_16",
+              "name": "QueryType",
             },
           ],
         },
@@ -72,7 +72,7 @@ test("Basic introspection", async (t) => {
       .expectData({
         __schema: {
           queryType: {
-            name: "object_16",
+            name: "QueryType",
           },
         },
       })
@@ -208,26 +208,10 @@ test("Basic introspection", async (t) => {
         }
       }
     `.expectData({
+      // FIXME non-deterministic order of the fields
       __schema: {
         queryType: {
           fields: [
-            {
-              args: [
-                {
-                  defaultValue: null,
-                  description: "a input field",
-                  type: {
-                    kind: "NON_NULL",
-                    name: null,
-                    ofType: {
-                      kind: "SCALAR",
-                      name: "Int",
-                    },
-                  },
-                },
-              ],
-              name: "test",
-            },
             {
               args: [
                 {
@@ -244,6 +228,23 @@ test("Basic introspection", async (t) => {
                 },
               ],
               name: "rec",
+            },
+            {
+              args: [
+                {
+                  defaultValue: null,
+                  description: "a input field",
+                  type: {
+                    kind: "NON_NULL",
+                    name: null,
+                    ofType: {
+                      kind: "SCALAR",
+                      name: "Int",
+                    },
+                  },
+                },
+              ],
+              name: "test",
             },
           ],
         },
