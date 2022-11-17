@@ -9,6 +9,7 @@ from typing import Dict
 from typing import List
 from typing import Literal
 from typing import Optional
+from typing import Set
 from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
@@ -165,22 +166,28 @@ class TypeGraph:
     def root(self) -> "t.struct":
         from typegraph.types import types as t
 
-        # TODO what if circular references?
-        def assert_serial_materializers(tpe: t.typedef, serial: bool):
+        def assert_non_serial_materializers(
+            tpe: Union[t.typedef, NodeProxy], history: Set[t.typedef] = set()
+        ):
             if isinstance(tpe, NodeProxy):
                 tpe = tpe.get()
+
+            if tpe in history:
+                return
+
             for e in tpe.edges:
                 if not isinstance(e, t.typedef):
                     continue
 
                 if isinstance(e, t.func):
-                    if e.mat.serial != serial:
+                    if e.mat.serial:
                         raise Exception(
-                            f"expected materializer to be {'' if serial else 'non-'}serial ({e.mat})"
+                            f"expected materializer to be non-serial ({e.mat})"
                         )
-                    assert_serial_materializers(e.out, serial)
+                    assert_non_serial_materializers(e.out)
 
-                assert_serial_materializers(e, serial)
+                else:
+                    assert_non_serial_materializers(e)
 
         # split into queries and mutations
         def split_operations(
@@ -188,6 +195,7 @@ class TypeGraph:
         ) -> Tuple[OperationTable, OperationTable]:
             queries: OperationTable = {}
             mutations: OperationTable = {}
+
             for name, op in namespace.props.items():
                 if isinstance(op, t.struct):
                     q, m = split_operations(op)
@@ -201,8 +209,8 @@ class TypeGraph:
 
                 elif isinstance(op, t.func):
                     serial = op.mat.serial
-                    assert_serial_materializers(op.out, serial)
                     if not serial:
+                        assert_non_serial_materializers(op.out)
                         queries[name] = op
                     else:
                         mutations[name] = op
@@ -218,8 +226,8 @@ class TypeGraph:
             queries, mutations = split_operations(t.struct(self.exposed))
             root = t.struct(
                 {
-                    "query": t.struct(queries),
-                    "mutation": t.struct(mutations),
+                    "query": t.struct(queries).named("QueryType"),
+                    "mutation": t.struct(mutations).named("MutationType"),
                 }
             ).named(self.name)
 
@@ -325,6 +333,11 @@ class NodeProxy(Node):
 
     def __deepcopy__(self, memo):
         return NodeProxy(self.g, self.node, self.after_apply)
+
+    def optional(self):
+        from typegraph.types import types as t
+
+        return t.optional(self)
 
 
 def find(node: str) -> Optional[NodeProxy]:
