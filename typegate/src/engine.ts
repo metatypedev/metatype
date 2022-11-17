@@ -132,6 +132,13 @@ const typeChecks: Record<string, (value: unknown) => boolean> = {
   Boolean: (value) => typeof value === "boolean",
 };
 
+function isIntrospectionQuery(
+  operation: ast.OperationDefinitionNode,
+  _fragments: FragmentDefs,
+) {
+  return operation.name?.value === "IntrospectionQuery";
+}
+
 interface Plan {
   stages: ComputeStage[];
   policies: PolicyStagesFactory;
@@ -369,10 +376,14 @@ export class Engine {
     // when
     const optimizedStages = this.optimize(stagesMat, verbose);
 
+    const validator = isIntrospectionQuery(operation, fragments)
+      ? TypeCheck.init(this.tg.introspection!.tg.types, operation, fragments)
+      : TypeCheck.init(this.tg.tg.types, operation, fragments);
+
     const plan: Plan = {
       stages: optimizedStages,
       policies,
-      validator: TypeCheck.init(this.tg.tg.types, operation, fragments),
+      validator,
     };
 
     if (cache) {
@@ -399,7 +410,9 @@ export class Engine {
 
       this.validateVariables(operation?.variableDefinitions ?? [], variables);
 
-      const verbose = operationName !== "IntrospectionQuery";
+      const isIntrospection = isIntrospectionQuery(operation, fragments);
+
+      const verbose = !isIntrospection;
 
       verbose && this.logger.info("———");
       verbose && this.logger.info("op:", operationName);

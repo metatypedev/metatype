@@ -72,11 +72,9 @@ export class ValidationSchemaBuilder {
             case Kind.FIELD: {
               const { name, selectionSet } = node;
               if (Object.hasOwnProperty.call(baseProperties, name.value)) {
-                let prop = this.types[baseProperties[name.value]];
+                const prop = this.types[baseProperties[name.value]];
                 if (!isOptional(prop)) {
                   required.push(name.value);
-                } else {
-                  prop = this.types[prop.item];
                 }
                 properties[name.value] = this.get(
                   `${path}.${name.value}`,
@@ -153,7 +151,7 @@ export class TypeCheck {
   validator: ValidateFunction;
   // serializer: any;
 
-  constructor(schema: JSONSchema) {
+  constructor(private readonly schema: JSONSchema) {
     this.validator = ajv.compile(schema);
     // this.serializer = ajv.compileSerializer(schema);
   }
@@ -174,9 +172,14 @@ export class TypeCheck {
 
   public validate(value: any) {
     if (!this.check(value)) {
+      console.error({ errors: this.validator.errors });
       const errors = this.validator.errors!
         .map((err) => `${err.message} at ${err.instancePath}`);
-      throw new Error(`errors: ${errors.join(", ")}`);
+      throw new Error(
+        `errors: ${errors.join(", ")};\nvalue: ${
+          JSON.stringify(value)
+        }\nschema: ${JSON.stringify(this.schema)}`,
+      );
     }
   }
 }

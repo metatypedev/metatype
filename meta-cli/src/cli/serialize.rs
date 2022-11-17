@@ -4,11 +4,31 @@ use super::Action;
 use crate::typegraph::TypegraphLoader;
 use crate::utils::ensure_venv;
 use anyhow::bail;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
-use std::fs;
+use core::fmt::Debug;
+use std::cell::Cell;
+use std::fs::File;
 use std::io::{self, Write};
+use std::ops::Deref;
 use std::path::Path;
+
+#[derive(Default)]
+struct Writer(Cell<Option<Box<dyn Write>>>);
+
+impl Debug for Writer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Writer")
+    }
+}
+
+impl Deref for Writer {
+    type Target = Cell<Option<Box<dyn Write>>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 #[derive(Parser, Debug)]
 pub struct Serialize {
@@ -28,6 +48,9 @@ pub struct Serialize {
     /// The output file. Default: stdout
     #[clap(short, long, value_parser)]
     out: Option<String>,
+
+    #[clap(skip)]
+    writer: Writer,
 }
 
 impl Action for Serialize {
@@ -50,32 +73,44 @@ impl Action for Serialize {
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
-                self.write(&serde_json::to_string(&tg)?);
+                self.write(&serde_json::to_string(&tg)?)?;
             } else {
                 bail!("typegraph \"{}\" not found", tg_name);
             }
         } else if self.unique {
             if tgs.len() == 1 {
-                self.write(&serde_json::to_string(&tgs[0])?);
+                self.write(&serde_json::to_string(&tgs[0])?)?;
             } else {
                 eprint!("expected only one typegraph, got {}", tgs.len());
                 std::process::exit(1);
             }
         } else {
-            self.write(&serde_json::to_string(&tgs)?)
+            self.write(&serde_json::to_string(&tgs)?)?;
         }
 
-        self.write("\n");
+        self.write("\n")?;
         Ok(())
     }
 }
 
 impl Serialize {
-    fn write(&self, contents: &str) {
-        if let Some(path) = self.out.as_ref() {
-            fs::write(path, contents).unwrap();
+    fn write(&self, contents: &str) -> Result<()> {
+        if let Some(mut writer) = self.writer.take() {
+            writer.write_all(contents.as_bytes())?;
+            self.writer.set(Some(writer));
+            Ok(())
         } else {
-            io::stdout().write_all(contents.as_bytes()).unwrap();
+            if let Some(path) = self.out.as_ref() {
+                let file = File::options()
+                    .truncate(true)
+                    .write(true)
+                    .open(path)
+                    .context("Could not open file")?;
+                self.writer.set(Some(Box::new(file)));
+            } else {
+                self.writer.set(Some(Box::new(io::stdout())));
+            }
+            self.write(contents)
         }
     }
 }

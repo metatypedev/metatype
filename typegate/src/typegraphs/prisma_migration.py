@@ -39,7 +39,7 @@ with TypeGraph(
                     "runtime": t.struct(
                         {"name": t.string(), "connectionString": t.string()}
                     ),
-                    "diff": t.string(),
+                    "diff": t.string().optional(),
                 }
             ),
             PrismaDiffMat(),

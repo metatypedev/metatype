@@ -137,6 +137,10 @@ const typegraphChangelog: Record<
   },
 };
 
+function formatPath(path: string[]) {
+  return ["<root>", ...path].join(".");
+}
+
 interface TypegraphTraverseParams {
   fragments: FragmentDefs;
   parentName: string;
@@ -652,13 +656,17 @@ export class TypeGraph {
 
     const path = p.queryPath ?? [];
     const policies: Record<string, string[]> = {};
+    // console.log("typegraph name", this.name);
+    // console.log("introspection is not null", this.introspection != null);
+    // console.log({ name });
 
     // introspection case
     if (
       path.length < 1 && this.introspection &&
       (name === "__schema" || name === "__type")
     ) {
-      return [
+      const root = this.introspection.type(0) as ObjectNode;
+      const stages = [
         ...this.introspection.traverse(
           p.fragments,
           p.parentName,
@@ -668,12 +676,18 @@ export class TypeGraph {
             selections: [field],
           },
           p.verbose,
+          [],
+          root.properties["query"],
         ).map((stage) => {
           // disable rate limiting for introspection
           stage.props.rateWeight = 0;
           return stage;
         }),
       ];
+      // console.log({
+      //   stages: stages.map((s) => s.props.path.join("/")).join(", "),
+      // });
+      return stages;
     }
 
     // typename case
@@ -707,7 +721,11 @@ export class TypeGraph {
 
     const fieldIdx = parentProps[name];
     if (fieldIdx == undefined) {
-      throw Error(`${name} not found at ${path.join(".")}`);
+      throw Error(
+        `${name} not found at ${formatPath(path)}, available names are: ${
+          Object.keys(parentProps).join(", ")
+        }`,
+      );
     }
     const fieldType = this.type(fieldIdx);
     const checksField = fieldType.policies.map((p) => this.policy(p).name);
@@ -1009,8 +1027,8 @@ export class TypeGraph {
     parentArgs: readonly ast.ArgumentNode[],
     parentSelectionSet: ast.SelectionSetNode,
     verbose: boolean,
-    queryPath: string[] = [],
-    parentIdx = 0,
+    queryPath: string[],
+    parentIdx: number,
     parentStage: ComputeStage | undefined = undefined,
     serial = false,
   ): ComputeStage[] {

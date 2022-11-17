@@ -36,7 +36,6 @@ with TypeGraph(
         {
             "name": t.string(),
             "url": t.uri(),
-            "serialized": serialized,
         }
     ).named("typegraph")
 
@@ -49,7 +48,9 @@ with TypeGraph(
         .rate(calls=True)
         .add_policy(admin_only),
         typegraph=t.func(
-            t.struct({"name": t.string()}), t.optional(typegraph), TypeGraphMat()
+            t.struct({"name": t.string()}),
+            t.optional(typegraph.compose({"serialized": serialized})),
+            TypeGraphMat(),
         )
         .rate(calls=True)
         .add_policy(admin_only),
