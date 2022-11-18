@@ -21,7 +21,7 @@
         "PATH": "${workspaceFolder}/typegraph/.venv/bin:${env:PATH}"
       },
       "cwd": "${workspaceFolder}/typegate",
-      "runtimeExecutable": "/home/remote/.cargo/bin/deno",
+      "runtimeExecutable": "deno",
       "runtimeArgs": [
         "test",
         "--import-map=import_map.json",
@@ -29,7 +29,7 @@
         "--unstable",
         "--allow-all",
         // variable part:
-        "${workspaceFolder}/typegate/tests/simple_test.ts"
+        "${workspaceFolder}/typegate/tests/prisma_test.ts"
       ],
       "attachSimplePort": 9229
     }

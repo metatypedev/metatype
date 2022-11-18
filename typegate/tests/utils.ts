@@ -201,11 +201,20 @@ class MetaTest {
   }
 }
 
-export function test(
-  name: string,
-  fn: (t: MetaTest) => void | Promise<void>,
-  opts: Omit<Deno.TestDefinition, "name" | "fn"> = {},
-): void {
+interface Test {
+  (
+    name: string,
+    fn: (t: MetaTest) => void | Promise<void>,
+    opts?: Omit<Deno.TestDefinition, "name" | "fn">,
+  ): void;
+}
+
+interface TestExt extends Test {
+  only: Test;
+  ignore: Test;
+}
+
+export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
@@ -221,7 +230,12 @@ export function test(
     },
     ...opts,
   });
-}
+}) as TestExt;
+
+test.only = (name, fn, opts = {}) => test(name, fn, { ...opts, only: true });
+
+test.ignore = (name, fn, opts = {}) =>
+  test(name, fn, { ...opts, ignore: true });
 
 const testConfig = parse(Deno.args);
 
