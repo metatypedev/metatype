@@ -385,16 +385,18 @@ impl IntoJson for HashMap<String, Value> {
 mod tests {
     use super::*;
     use crate::tests::utils::ensure_venv;
-    use crate::typegraph::{TypegraphLoader, UniqueTypegraph};
+    use crate::typegraph::TypegraphLoader;
     use std::io::Read;
 
     #[test]
     fn codegen() -> Result<()> {
         ensure_venv()?;
-        let tg = TypegraphLoader::new()
+        let tgs = TypegraphLoader::new()
             .skip_deno_modules()
             .load_file("./src/tests/typegraphs/codegen.py")?
-            .get_unique()?;
+            .unwrap_or_else(|| vec![]);
+        assert_eq!(tgs.len(), 1);
+        let tg = tgs.into_iter().next().unwrap();
         let module_codes = Codegen::new(&tg, "./src/tests/typegraphs/codegen.py").codegen()?;
         assert_eq!(module_codes.len(), 1);
 

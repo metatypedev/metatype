@@ -145,6 +145,23 @@ pub enum TypeNode {
     },
 }
 
+impl TypeNode {
+    pub fn base(&self) -> &TypeNodeBase {
+        use TypeNode::*;
+        match self {
+            Optional { base, .. }
+            | Boolean { base, .. }
+            | Number { base, .. }
+            | Integer { base, .. }
+            | String { base, .. }
+            | Object { base, .. }
+            | Array { base, .. }
+            | Function { base, .. }
+            | Any { base, .. } => base,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Materializer {
     pub name: String,
