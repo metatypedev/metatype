@@ -174,15 +174,12 @@ def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
         f.prisma_type = f"{nested.prisma_type}?"
         return
 
-    print(f"tpe: {f.tpe}")
     type_name = f.tpe.type
 
     if isinstance(f.tpe, t.string) and f.tpe._format == "uuid":
         f.tags.append("@db.Uuid")
         f.prisma_type = "String"
         return
-
-    print(f"type_name: {type_name}")
 
     if type_name in prisma_types:
         f.prisma_type = prisma_types[type_name]
