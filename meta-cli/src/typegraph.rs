@@ -1,6 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use colored::Colorize;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
 use std::collections::HashMap;
@@ -137,20 +137,6 @@ impl TypegraphLoader {
         } else {
             let stderr = String::from_utf8(p.stderr)?;
             bail!("Python error:\n{}", stderr.red())
-        }
-    }
-}
-
-pub trait UniqueTypegraph {
-    fn get_unique(self) -> Result<Typegraph>;
-}
-
-impl UniqueTypegraph for HashMap<String, Typegraph> {
-    fn get_unique(self) -> Result<Typegraph> {
-        if self.len() != 1 {
-            Err(anyhow!("requires one and only one typegraph in the map"))
-        } else {
-            Ok(self.into_iter().next().unwrap().1)
         }
     }
 }
