@@ -92,21 +92,6 @@ export class TypeGraphRuntime extends Runtime {
     const queries = this.tg.types[root.properties["query"]];
     const mutations = this.tg.types[root.properties["mutation"]];
 
-    // const queries = Object.keys(queriesBind).length > 0
-    //   ? {
-    //     ...root,
-    //     data: { ...root.data, binds: queriesBind },
-    //     name: "Query",
-    //   }
-    //   : null;
-    // const mutations = Object.keys(mutationsBind).length > 0
-    //   ? {
-    //     ...root,
-    //     data: { ...root.data, binds: mutationsBind },
-    //     name: "Mutation",
-    //   }
-    //   : null;
-
     return {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L36
       description: () => `${root.type} typegraph`,
@@ -332,7 +317,11 @@ export class TypeGraphRuntime extends Runtime {
           name: () => type.title,
           description: () => `${type.title} type`,
           fields: () => {
-            return Object.entries(type.properties).map(this.formatField(false));
+            let entries = Object.entries(type.properties);
+            if (Deno.env.get("TEST_ENV")) {
+              entries = entries.sort((a, b) => b[1] - a[1]);
+            }
+            return entries.map(this.formatField(false));
           },
           interfaces: () => [],
         };
@@ -378,7 +367,11 @@ export class TypeGraphRuntime extends Runtime {
             isObject(inp),
             `${type} cannot be an input field, require struct`,
           );
-          return Object.entries((inp as ObjectNode).properties)
+          let entries = Object.entries((inp as ObjectNode).properties);
+          if (Deno.env.get("TEST_ENV")) {
+            entries = entries.sort((a, b) => b[1] - a[1]);
+          }
+          return entries
             .map(this.formatInputFields)
             .filter((f) => f !== null);
         },
