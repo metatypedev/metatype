@@ -13,7 +13,6 @@ import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure, envOrFail, mapo } from "./utils.ts";
-import { typegraph_validate } from "native";
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
 import * as semver from "std/semver/mod.ts";
@@ -204,13 +203,7 @@ export class TypeGraph {
     introspection: TypeGraph | null,
     runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
-    let typegraph = await typegraph_validate({ json }).then((res) => {
-      if ("Valid" in res) {
-        return JSON.parse(res.Valid.json) as TypeGraphDS;
-      } else {
-        return Promise.reject(new Error(res.NotValid.reason));
-      }
-    });
+    let typegraph = JSON.parse(json);
 
     const typegraphName = typegraph.types[0].title;
     const { meta, runtimes } = typegraph;
