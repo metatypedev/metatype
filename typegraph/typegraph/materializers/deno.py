@@ -97,8 +97,8 @@ class PredefinedFunMat(Materializer):
 # Import function from a module
 @frozen
 class ImportFunMat(Materializer):
-    mod: "ModuleMat"
-    name: str = "default"
+    mod: "ModuleMat" = field()
+    name: str = field(default="default")
     secrets: Tuple[str] = field(kw_only=True, factory=tuple)
     runtime: DenoRuntime = field(
         kw_only=True, factory=DenoRuntime
@@ -140,7 +140,6 @@ class ModuleMat(Materializer):
             else:
                 with open(path) as f:
                     object.__setattr__(self, "code", f.read())
-        object.__delattr__(self, "file")
 
     def imp(self, name: str = "default") -> FunMat:
         return ImportFunMat(self, name, runtime=self.runtime, secrets=self.secrets)

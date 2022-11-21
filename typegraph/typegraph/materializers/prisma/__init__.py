@@ -107,7 +107,7 @@ class PrismaOperationMat(Materializer):
     table: str
     operation: str
     materializer_name: str = always("prisma_operation")
-    # serial: bool = False
+    serial: bool = field(kw_only=True)
 
 
 @frozen
@@ -373,7 +373,7 @@ class PrismaRuntime(Runtime):
                 }
             ).named("QueryRawInp"),
             t.array(t.json()),
-            PrismaOperationMat(self, "", "queryRaw"),
+            PrismaOperationMat(self, "", "queryRaw", serial=False),
         )
 
     def executeRaw(self) -> t.func:
@@ -392,7 +392,7 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct({"where": get_where_type(tpe).named(f"{tpe.name}WhereUnique")}),
             get_out_type(tpe).named(f"{tpe.name}UniqueOutput").optional(),
-            PrismaOperationMat(self, tpe.name, "findUnique"),
+            PrismaOperationMat(self, tpe.name, "findUnique", serial=False),
         )
 
     def gen_find_many(self, tpe: t.struct) -> t.func:
@@ -401,7 +401,7 @@ class PrismaRuntime(Runtime):
                 {"where": get_where_type(tpe).named(f"{tpe.name}Where").optional()}
             ),
             t.array(get_out_type(tpe).named(f"{tpe.name}Output")),
-            PrismaOperationMat(self, tpe.name, "findMany"),
+            PrismaOperationMat(self, tpe.name, "findMany", serial=False),
         )
 
     def gen_create(self, tpe: t.struct) -> t.func:
