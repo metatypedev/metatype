@@ -25,7 +25,7 @@ class HTTPRuntime(Runtime):
         }
 
     def get(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "GET", path, **kwargs))
+        return t.func(inp, out, RESTMat(self, "GET", path, **kwargs, serial=False))
 
     def post(self, path: str, inp, out, **kwargs):
         return t.func(inp, out, RESTMat(self, "POST", path, **kwargs, serial=True))
@@ -51,3 +51,4 @@ class RESTMat(Materializer):
     body_fields: Optional[tuple[str, ...]] = field(kw_only=True, default=None)
     auth_token_field: Optional[str] = field(kw_only=True, default=None)
     materializer_name: str = always("rest")
+    serial: bool = field(kw_only=True)
