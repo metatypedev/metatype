@@ -1,6 +1,6 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
 use std::collections::HashMap;
@@ -50,7 +50,9 @@ impl TypegraphLoader {
         let ext = path.as_ref().extension().and_then(|ext| ext.to_str());
 
         let tgs = match ext {
-            Some(ext) if ext == "py" => self.load_python_module(path)?,
+            Some(ext) if ext == "py" => self
+                .load_python_module(path.as_ref())
+                .with_context(|| format!("Loading python module {:?}", path.as_ref()))?,
             _ => {
                 if self.ignore_unknown_file_types {
                     return Ok(None);
@@ -87,7 +89,8 @@ impl TypegraphLoader {
     pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> Result<LoaderResult> {
         let dir = self.working_dir.join(dir);
         // self.collect_typegraphs([dir.as_ref().to_owned()])
-        let metadata = fs::metadata(&dir)?;
+        let metadata =
+            fs::metadata(&dir).with_context(|| format!("Reading the metadata of {:?}", dir))?;
         if !metadata.is_dir() {
             bail!("Expected a directory");
         }
@@ -130,7 +133,8 @@ impl TypegraphLoader {
                 "DONT_READ_EXTERNAL_TS_FILES",
                 if self.skip_deno_modules { "1" } else { "" },
             )
-            .output()?;
+            .output()
+            .with_context(|| format!("Running the command 'py-tg {:?}'", path.as_ref()))?;
 
         if p.status.success() {
             Ok(String::from_utf8(p.stdout)?)
