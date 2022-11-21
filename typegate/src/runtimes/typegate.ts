@@ -8,6 +8,7 @@ import * as path from "std/path/mod.ts";
 import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphDS } from "../typegraph.ts";
+import { typegraph_validate } from "native";
 
 interface StructField {
   name: string;
@@ -122,8 +123,16 @@ export class TypeGateRuntime extends Runtime {
   };
 
   addTypegraph: Resolver = async ({ fromString }) => {
-    // FIXME we could perform the validation (through rust) and parsing here
-    const name = (JSON.parse(fromString) as TypeGraphDS).types[0].title;
+    const json = await typegraph_validate({ json: fromString }).then((res) => {
+      if ("Valid" in res) {
+        return res.Valid.json;
+      } else {
+        return Promise.reject(
+          new Error(`Invalid typegraph definition: ${res.NotValid.reason}`),
+        );
+      }
+    });
+    const name = (JSON.parse(json) as TypeGraphDS).types[0].title;
 
     if (SystemTypegraph.check(name)) {
       throw new Error(`Typegraph name ${name} cannot be used`);
@@ -132,10 +141,10 @@ export class TypeGateRuntime extends Runtime {
     if (localGraphs.includes(name)) {
       await Deno.writeTextFile(
         path.join(dirName, "../typegraphs", `${name}.json`),
-        `${fromString}\n`,
+        `${json}\n`,
       );
     } else {
-      await this.register.set(fromString);
+      await this.register.set(json);
     }
     return { name };
   };

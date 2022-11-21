@@ -82,7 +82,6 @@ pub struct Codegen<'a> {
 }
 
 impl<'a> Codegen<'a> {
-    // TODO: accept Typegraph instance
     fn new<P>(tg: &'a Typegraph, path: P) -> Self
     where
         P: AsRef<Path>,
