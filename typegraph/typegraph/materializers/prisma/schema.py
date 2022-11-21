@@ -51,7 +51,7 @@ class PrismaModel:
     name: str
     fields: Dict[str, PrismaField]
     entity: t.struct
-    tags: list[str]
+    tags: List[str]
 
     def __init__(self, entity: t.struct) -> None:
         self.name = entity.name
@@ -143,7 +143,7 @@ class PrismaSchema:
                             additional_fields[field_name] = PrismaField(
                                 field_name, field_type
                             )
-            model.fields |= additional_fields
+            model.fields.update(additional_fields)
 
             for field in model.fields.values():
                 resolve(self, model, field)
