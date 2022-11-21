@@ -1,6 +1,5 @@
 # Copyright Metatype under the Elastic License 2.0.
 from copy import deepcopy
-from types import NoneType
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -57,7 +56,7 @@ def remove_none_values(obj):
 
 def is_optional(tpe: Type):
     # Optional = Union[T, NoneType]
-    return get_origin(tpe) is Union and NoneType in get_args(tpe)
+    return get_origin(tpe) is Union and type(None) in get_args(tpe)
 
 
 class Secret(Node):
@@ -91,7 +90,7 @@ class typedef(Node):
         inject: Optional[Union[str, TypeNode]] = None,
         injection: Optional[Any] = None,
         policies: Optional[Tuple[Policy, ...]] = None,
-        runtime_config: Optional[dict[str, Any]] = None,  # runtime-specific data
+        runtime_config: Optional[Dict[str, Any]] = None,  # runtime-specific data
         _enum: Optional[List[Any]] = None,
         **kwargs,
     ):
@@ -225,7 +224,10 @@ class typedef(Node):
         return self.replace(policies=self.policies + policies)
 
     def config(self, *flags: str, **kwargs: Any):
-        d = self.runtime_config | kwargs | {f: True for f in flags}
+        d = dict()
+        d.update(self.runtime_config)
+        d.update(kwargs)
+        d.update({f: True for f in flags})
         return self.replace(runtime_config=d)
 
     def enum(self, variants: List[Any]) -> Self:

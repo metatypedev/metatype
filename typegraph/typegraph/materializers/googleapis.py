@@ -1,21 +1,20 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from dataclasses import dataclass
-from dataclasses import KW_ONLY
-
+from attrs import field
+from attrs import frozen
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
+from typegraph.utils.attrs import always
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class GoogleapisRuntime(Runtime):
-    runtime_name: str = "googleapis"
+    runtime_name: str = always("googleapis")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class RestMat(Materializer):
     verb: str
     url: str
-    _: KW_ONLY
-    runtime: Runtime = GoogleapisRuntime()
-    materializer_name: str = "restmat"
+    runtime: Runtime = field(kw_only=True, factory=GoogleapisRuntime)
+    materializer_name: str = always("restmat")

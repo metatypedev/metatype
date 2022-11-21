@@ -1,21 +1,19 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from dataclasses import dataclass
-from dataclasses import KW_ONLY
-
+from attrs import frozen
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
 from typegraph.types import types as t
+from typegraph.utils.attrs import always
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class S3Runtime(Runtime):
     host: str
     region: str
     access_key_secret: str
     secret_key_secret: str
-    _: KW_ONLY
-    runtime_name: str = "s3"
+    runtime_name: str = always("s3")
 
     def data(self, collector):
         data = super().data(collector)
@@ -47,18 +45,16 @@ class S3Runtime(Runtime):
         )
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class SignMat(Materializer):
     runtime: Runtime
     bucket: str
     content_type: str
-    _: KW_ONLY
-    materializer_name: str = "sign"
+    materializer_name: str = always("sign")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class ListMat(Materializer):
     runtime: Runtime
     bucket: str
-    _: KW_ONLY
-    materializer_name: str = "list"
+    materializer_name: str = always("list")

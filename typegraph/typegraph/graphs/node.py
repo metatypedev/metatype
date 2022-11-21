@@ -1,5 +1,6 @@
 # Copyright Metatype under the Elastic License 2.0.
 
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
@@ -19,5 +20,5 @@ class Node:
     def edges(self) -> List["Node"]:
         return []
 
-    def data(self, collector: "Collector") -> dict:
+    def data(self, collector: "Collector") -> Dict:
         return {}

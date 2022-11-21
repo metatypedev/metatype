@@ -1,16 +1,17 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from dataclasses import dataclass
-from dataclasses import KW_ONLY
 from typing import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
 
+from attrs import field
+from attrs import frozen
 from typegraph import utils
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
+from typegraph.utils.attrs import always
 
 if TYPE_CHECKING:
     from typegraph.types import types as t
@@ -20,12 +21,11 @@ def pick(d: Dict, *largs) -> Dict:
     return utils.drop_nones(utils.pick(d, *largs))
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class RandomRuntime(Runtime):
-    _: KW_ONLY
-    runtime_name: str = "random"
-    seed: Optional[int] = None
-    reset: str = ""
+    runtime_name: str = always("random")
+    seed: Optional[int] = field(kw_only=True, default=None)
+    reset: str = field(kw_only=True, default="")
 
     def get_type_config(self, tpe: "t.typedef") -> Dict:
         base = tpe.runtime_config
@@ -85,8 +85,7 @@ class RandomRuntime(Runtime):
         return dict()
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class RandomMat(Materializer):
-    _: KW_ONLY
-    runtime: Runtime = RandomRuntime()
-    materializer_name: str = "random"
+    runtime: Runtime = field(factory=RandomRuntime)
+    materializer_name: str = always("random")
