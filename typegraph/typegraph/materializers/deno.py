@@ -9,6 +9,7 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
+from astunparse import unparse
 from attrs import field
 from attrs import frozen
 from frozendict import frozendict
@@ -53,7 +54,7 @@ class LambdaCollector(ast.NodeTransformer):
         self.lambdas = []
 
     def visit_Lambda(self, node):
-        self.lambdas.append(ast.unparse(node).strip())
+        self.lambdas.append(unparse(node).strip())
 
 
 # Inlined fuction
@@ -65,6 +66,7 @@ class FunMat(Materializer):
     script: Optional[str] = field(kw_only=True, default=None)
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = field(default="function", init=False)
+    serial = field(kw_only=True, default=False)
 
     @classmethod
     def from_lambda(cls, function, runtime=DenoRuntime()):

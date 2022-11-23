@@ -1,6 +1,7 @@
 # Copyright Metatype under the Elastic License 2.0.
 
 from typing import Optional
+from typing import Tuple
 
 from attrs import field
 from attrs import frozen
@@ -47,8 +48,8 @@ class RESTMat(Materializer):
     path: str
 
     content_type: str = field(kw_only=True, default="application/json")
-    query_fields: Optional[tuple[str, ...]] = field(kw_only=True, default=None)
-    body_fields: Optional[tuple[str, ...]] = field(kw_only=True, default=None)
+    query_fields: Optional[Tuple[str, ...]] = field(kw_only=True, default=None)
+    body_fields: Optional[Tuple[str, ...]] = field(kw_only=True, default=None)
     auth_token_field: Optional[str] = field(kw_only=True, default=None)
     materializer_name: str = always("rest")
     serial: bool = field(kw_only=True)

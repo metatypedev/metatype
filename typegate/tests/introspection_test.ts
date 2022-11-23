@@ -23,7 +23,7 @@ test("Basic introspection", async (t) => {
         __schema: {
           types: [
             {
-              "name": "QueryType",
+              "name": "Query",
             },
             {
               "name": "Int",
@@ -50,7 +50,7 @@ test("Basic introspection", async (t) => {
               "name": "Int",
             },
             {
-              "name": "QueryType",
+              "name": "Query",
             },
           ],
         },
@@ -59,7 +59,6 @@ test("Basic introspection", async (t) => {
   });
 
   await t.should("allow querying the schema for query type", async () => {
-    // TODO always set query type name to `QueryType`
     await gql`
       query IntrospectionQuery {
         __schema {
@@ -72,7 +71,7 @@ test("Basic introspection", async (t) => {
       .expectData({
         __schema: {
           queryType: {
-            name: "QueryType",
+            name: "Query",
           },
         },
       })

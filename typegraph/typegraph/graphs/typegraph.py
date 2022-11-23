@@ -226,8 +226,8 @@ class TypeGraph:
             queries, mutations = split_operations(t.struct(self.exposed))
             root = t.struct(
                 {
-                    "query": t.struct(queries).named("QueryType"),
-                    "mutation": t.struct(mutations).named("MutationType"),
+                    "query": t.struct(queries).named("Query"),
+                    "mutation": t.struct(mutations).named("Mutation"),
                 }
             ).named(self.name)
 

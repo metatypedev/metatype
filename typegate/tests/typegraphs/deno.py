@@ -12,7 +12,7 @@ with TypeGraph("test-vars") as g:
     math0 = ModuleMat("ts/math.ts")
 
     worker1 = DenoRuntime(
-        worker="worker 1", net=("deno.land", "cdn.pika.dev", "cdn.skypack.dev")
+        worker="worker 1", allow_net=("deno.land", "cdn.pika.dev", "cdn.skypack.dev")
     )
     math1 = ModuleMat("ts/math.ts", runtime=worker1)
 
