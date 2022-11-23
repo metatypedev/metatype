@@ -16,7 +16,7 @@ class GraphQLRuntime(Runtime):
         return t.func(inp, out, QueryMat(self))
 
     def mutation(self, inp, out):
-        return t.func(inp, out, MutationMat(self, serial=True))
+        return t.func(inp, out, MutationMat(self))
 
 
 @frozen
@@ -29,3 +29,4 @@ class QueryMat(Materializer):
 class MutationMat(Materializer):
     runtime: Runtime
     materializer_name: str = always("mutation")
+    serial: bool = always(True)

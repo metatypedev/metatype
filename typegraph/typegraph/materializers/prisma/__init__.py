@@ -530,10 +530,10 @@ class PrismaRuntime(Runtime):
 
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
-        data["data"] |= {
-            "datamodel": self.datamodel(),
-            "datasource": self.datasource(),
-        }
+        data["data"].update(
+            datamodel=self.datamodel(),
+            datasource=self.datasource(),
+        )
         return data
 
     # def generate_crud(self, tpe: t.struct) -> Dict[str, t.func]:

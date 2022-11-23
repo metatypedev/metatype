@@ -6,15 +6,15 @@ snapshot[`Full introspection 1`] = `
     directives: [
     ],
     mutationType: {
-      name: "MutationType",
+      name: "Mutation",
     },
     queryType: {
-      name: "QueryType",
+      name: "Query",
     },
     subscriptionType: null,
     types: [
       {
-        description: "QueryType type",
+        description: "Query type",
         enumValues: null,
         fields: [
           {
@@ -90,7 +90,7 @@ Policies:
         interfaces: [
         ],
         kind: "OBJECT",
-        name: "QueryType",
+        name: "Query",
         possibleTypes: null,
       },
       {
@@ -236,7 +236,7 @@ Policies:
         possibleTypes: null,
       },
       {
-        description: "QueryType type",
+        description: "Query type",
         enumValues: null,
         fields: [
           {
@@ -312,7 +312,7 @@ Policies:
         interfaces: [
         ],
         kind: "OBJECT",
-        name: "QueryType",
+        name: "Query",
         possibleTypes: null,
       },
     ],
