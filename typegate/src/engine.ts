@@ -376,9 +376,13 @@ export class Engine {
     // when
     const optimizedStages = this.optimize(stagesMat, verbose);
 
-    const validator = isIntrospectionQuery(operation, fragments)
-      ? TypeCheck.init(this.tg.introspection!.tg.types, operation, fragments)
-      : TypeCheck.init(this.tg.tg.types, operation, fragments);
+    const validator = TypeCheck.init(
+      isIntrospectionQuery(operation, fragments)
+        ? this.tg.introspection!.tg.types
+        : this.tg.tg.types,
+      operation,
+      fragments,
+    );
 
     const plan: Plan = {
       stages: optimizedStages,
