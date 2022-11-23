@@ -285,9 +285,6 @@ class TypegraphContext:
         except IndexError:
             return None
 
-    def __deepcopy__(self, memo):
-        raise Exception("cannot deepcopy typegraph")
-
 
 def get_absolute_path(relative: str) -> Path:
     tg_path = TypegraphContext.get_active().path
@@ -334,9 +331,6 @@ class NodeProxy(Node):
     @property
     def name(self) -> str:
         return self.node
-
-    def __deepcopy__(self, memo):
-        return NodeProxy(self.g, self.node, self.after_apply)
 
     def optional(self):
         from typegraph.types import types as t
