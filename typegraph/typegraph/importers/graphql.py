@@ -33,6 +33,16 @@ def gen_functions(queries, mutations) -> dict[str, str]:
     return fns
 
 
+SCALAR_TYPE_MAP = {
+    "Int": "t.integer()",
+    "Long": "t.integer()",
+    "Float": "t.number()",
+    "String": "t.string()",
+    "Boolean": "t.boolean()",
+    "ID": "t.string()",
+}
+
+
 def typify(tpe: Box, opt: bool = True, name=None, object_as_ref=False):
     # A type is nullable by default, unless it is wrapped in a "NON_NULL".
 
@@ -49,19 +59,9 @@ def typify(tpe: Box, opt: bool = True, name=None, object_as_ref=False):
         return f'{typify(tpe, opt)}.named("{name}")'
 
     if tpe.kind == "SCALAR":
-        match tpe.name:
-            case "Int" | "Long":
-                return "t.integer()"
-            case "Float":
-                return "t.float()"
-            case "String":
-                return "t.string()"
-            case "Boolean":
-                return "t.boolean()"
-            case "ID":
-                return "t.string()"
-            case _:
-                raise Exception(f"Unsupported scalar type {tpe.name}")
+        if tpe.name in SCALAR_TYPE_MAP:
+            return SCALAR_TYPE_MAP[tpe.name]
+        raise Exception(f"Unsupported scalar type {tpe.name}")
 
     if tpe.kind == "ENUM":
         return "t.string()"
