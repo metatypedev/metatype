@@ -42,19 +42,6 @@ from typing_extensions import Self
 TypeNode = Union["typedef", NodeProxy]
 
 
-class NoCopy:
-    tg: "TypeGraph"
-
-    def __init__(self):
-        self.tg = TypegraphContext.get_active()
-
-    def __enter__(self):
-        self.tg._no_copy = True
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        self.tg._no_copy = False
-
-
 def remove_none_values(obj):
     return {k: v for k, v in obj.items() if v is not None}
 

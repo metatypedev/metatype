@@ -203,7 +203,7 @@ export class TypeGraph {
     introspection: TypeGraph | null,
     runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
-    let typegraph = JSON.parse(json);
+    let typegraph: TypeGraphDS = JSON.parse(json);
 
     const typegraphName = typegraph.types[0].title;
     const { meta, runtimes } = typegraph;
@@ -220,7 +220,7 @@ export class TypeGraph {
       currentVersion = migration.next;
     }
 
-    const secrets = meta.secrets.sort().reduce(
+    const secrets: Record<string, string> = meta.secrets.sort().reduce(
       (agg, secretName) => {
         return { ...agg, [secretName]: envOrFail(typegraphName, secretName) };
       },

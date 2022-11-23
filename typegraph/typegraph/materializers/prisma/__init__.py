@@ -454,30 +454,29 @@ class PrismaRuntime(Runtime):
 
     def gen(self, ops: Dict[str, Tuple[t.Type, str, Policy]]) -> Dict[str, t.func]:
         ret = {}
-        with t.NoCopy():
-            for name, op in ops.items():
-                tpe, op, policy = op
+        for name, op in ops.items():
+            tpe, op, policy = op
 
-                if op == "findUnique":
-                    ret[name] = self.gen_find_unique(tpe).add_policy(policy)
-                elif op == "findMany":
-                    ret[name] = self.gen_find_many(tpe).add_policy(policy)
-                elif op == "create":
-                    ret[name] = self.gen_create(tpe).add_policy(policy)
-                elif op == "update":
-                    ret[name] = self.gen_update(tpe).add_policy(policy)
-                elif op == "delete":
-                    ret[name] = self.gen_delete(tpe).add_policy(policy)
-                elif op == "deleteMany":
-                    ret[name] = self.gen_delete_many(tpe).add_policy(policy)
-                elif op == "queryRaw":
-                    ret[name] = self.queryRaw().add_policy(policy)
-                elif op == "executeRaw":
-                    ret[name] = self.executeRaw().add_policy(policy)
-                else:
-                    raise Exception(f'Operation not supported: "{op}"')
-            # raise Exception(f'ret: {ret}')
-            return ret
+            if op == "findUnique":
+                ret[name] = self.gen_find_unique(tpe).add_policy(policy)
+            elif op == "findMany":
+                ret[name] = self.gen_find_many(tpe).add_policy(policy)
+            elif op == "create":
+                ret[name] = self.gen_create(tpe).add_policy(policy)
+            elif op == "update":
+                ret[name] = self.gen_update(tpe).add_policy(policy)
+            elif op == "delete":
+                ret[name] = self.gen_delete(tpe).add_policy(policy)
+            elif op == "deleteMany":
+                ret[name] = self.gen_delete_many(tpe).add_policy(policy)
+            elif op == "queryRaw":
+                ret[name] = self.queryRaw().add_policy(policy)
+            elif op == "executeRaw":
+                ret[name] = self.executeRaw().add_policy(policy)
+            else:
+                raise Exception(f'Operation not supported: "{op}"')
+        # raise Exception(f'ret: {ret}')
+        return ret
 
     def manage(self, tpe):
         if not isinstance(tpe, t.struct):

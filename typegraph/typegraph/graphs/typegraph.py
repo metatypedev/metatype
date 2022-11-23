@@ -111,7 +111,6 @@ class TypeGraph:
     rate: Optional[Rate]
     cors: Cors
     path: str
-    _no_copy: bool = False
 
     def __init__(
         self,
