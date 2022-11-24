@@ -1,29 +1,29 @@
 # Copyright Metatype under the Elastic License 2.0.
 
 from typegraph.graphs.typegraph import NodeProxy
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
-def resolve_entity_quantifier(tpe: t.Type):
-    if isinstance(tpe, t.list):
+def resolve_entity_quantifier(tpe: t.typedef):
+    if isinstance(tpe, t.array):
         return tpe.of
     if isinstance(tpe, t.optional):
         return tpe.of
     return tpe
 
 
-def clean_virtual_link(tpe: t.Type):
+def clean_virtual_link(tpe: t.typedef):
 
     if isinstance(tpe, t.struct):
         ret = {}
         # renames = {}
-        for k, v in tpe.of.items():
+        for k, v in tpe.props.items():
 
             if isinstance(v, NodeProxy):
                 v = v.get()
 
             if isinstance(v, t.func):
-                if isinstance(v.out, t.list) and isinstance(v.out.of, t.struct):
+                if isinstance(v.out, t.array) and isinstance(v.out.of, t.struct):
                     continue
 
                 # ids = v.inp.of.keys()
@@ -35,17 +35,17 @@ def clean_virtual_link(tpe: t.Type):
                 out = clean_virtual_link(v.out)
                 ret[k] = t.struct(
                     {
-                        "create": out.s_optional(),
-                        "createMany": t.struct({"data": t.list(out)}).s_optional(),
-                        "connect": out.s_optional(),
+                        "create": out.optional(),
+                        "createMany": t.struct({"data": t.array(out)}).optional(),
+                        "connect": out.optional(),
                         "connectOrCreate": t.struct(
                             {
                                 # "where":
                                 "create": out,
                             }
-                        ).s_optional(),
+                        ).optional(),
                     }
-                ).s_optional()
+                ).optional()
             else:
                 ret[k] = clean_virtual_link(v)
 
@@ -63,4 +63,4 @@ def only_unique(tpe: t.Type):
 
 
 def optional_root(tpe: t.struct):
-    return t.struct({k: v.s_optional() for k, v in tpe.of.items()})
+    return t.struct({k: v.optional() for k, v in tpe.of.items()})

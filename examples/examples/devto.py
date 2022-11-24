@@ -2,7 +2,7 @@ from typegraph.graphs.typegraph import TypeGraph
 from typegraph.importers.openapi import import_openapi
 from typegraph.materializers.http import HTTPRuntime
 from typegraph.policies import allow_all
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 import_openapi(
     "https://raw.githubusercontent.com/APIs-guru/openapi-directory/main/APIs/dev.to/0.9.7/openapi.yaml",
@@ -31,7 +31,7 @@ with TypeGraph(name="devto") as g:
             "organization_id": t.optional(t.integer()),
             "published": t.optional(t.boolean()),
             "series": t.optional(t.string()),
-            "tags": t.optional(t.list(t.string())),
+            "tags": t.optional(t.array(t.string())),
             "title": t.optional(t.string()),
         }
     ).named("ArticleCreate__article")
@@ -64,7 +64,7 @@ with TypeGraph(name="devto") as g:
             "reading_time_minutes": t.integer(),
             "slug": t.string(),
             "social_image": t.string(),
-            "tag_list": t.list(t.string()),
+            "tag_list": t.array(t.string()),
             "tags": t.string(),
             "title": t.string(),
             "type_of": t.string(),
@@ -91,7 +91,7 @@ with TypeGraph(name="devto") as g:
             "published_timestamp": t.string(),
             "reading_time_minutes": t.integer(),
             "slug": t.string(),
-            "tag_list": t.list(t.string()),
+            "tag_list": t.array(t.string()),
             "title": t.string(),
             "type_of": t.string(),
             "url": t.string(),
@@ -123,7 +123,7 @@ with TypeGraph(name="devto") as g:
             "slug": t.string(),
             "social_image": t.string(),
             "tag_list": t.string(),
-            "tags": t.list(t.string()),
+            "tags": t.array(t.string()),
             "title": t.string(),
             "type_of": t.string(),
             "url": t.string(),
@@ -144,7 +144,7 @@ with TypeGraph(name="devto") as g:
             "organization_id": t.optional(t.integer()),
             "published": t.optional(t.boolean()),
             "series": t.optional(t.string()),
-            "tags": t.optional(t.list(t.string())),
+            "tags": t.optional(t.array(t.string())),
             "title": t.optional(t.string()),
         }
     ).named("ArticleUpdate__article")
@@ -169,7 +169,7 @@ with TypeGraph(name="devto") as g:
     t.struct(
         {
             "body_html": t.string(),
-            "children": t.list(g("Comment")),
+            "children": t.array(g("Comment")),
             "created_at": t.string(),
             "id_code": t.string(),
             "type_of": t.string(),
@@ -204,7 +204,7 @@ with TypeGraph(name="devto") as g:
             "published": t.boolean(),
             "slug": t.string(),
             "tag_list": t.string(),
-            "tags": t.list(t.string()),
+            "tags": t.array(t.string()),
             "title": t.string(),
             "type_of": t.string(),
             "user": g("SharedUser"),
@@ -226,7 +226,7 @@ with TypeGraph(name="devto") as g:
             "location": t.optional(t.string()),
             "organization_id": t.optional(t.integer()),
             "tag_list": t.optional(t.string()),
-            "tags": t.optional(t.list(t.string())),
+            "tags": t.optional(t.array(t.string())),
             "title": t.string(),
         }
     ).named("ListingCreate__listing")
@@ -244,7 +244,7 @@ with TypeGraph(name="devto") as g:
             "expires_at": t.optional(t.string()),
             "location": t.optional(t.string()),
             "tag_list": t.optional(t.string()),
-            "tags": t.optional(t.list(t.string())),
+            "tags": t.optional(t.array(t.string())),
             "title": t.optional(t.string()),
         }
     ).named("ListingUpdate__listing")
@@ -349,7 +349,7 @@ with TypeGraph(name="devto") as g:
     ).named("WebhookCreate")
     t.struct(
         {
-            "events": t.list(t.string()),
+            "events": t.array(t.string()),
             "source": t.string(),
             "target_url": t.string(),
         }
@@ -357,7 +357,7 @@ with TypeGraph(name="devto") as g:
     t.struct(
         {
             "created_at": t.optional(t.string()),
-            "events": t.optional(t.list(t.string())),
+            "events": t.optional(t.array(t.string())),
             "id": t.optional(t.integer()),
             "source": t.optional(t.string()),
             "target_url": t.optional(t.string()),
@@ -367,7 +367,7 @@ with TypeGraph(name="devto") as g:
     t.struct(
         {
             "created_at": t.optional(t.string()),
-            "events": t.optional(t.list(t.string())),
+            "events": t.optional(t.array(t.string())),
             "id": t.optional(t.integer()),
             "source": t.optional(t.string()),
             "target_url": t.optional(t.string()),
@@ -391,7 +391,7 @@ with TypeGraph(name="devto") as g:
                     "collection_id": t.optional(t.integer()),
                 }
             ),
-            t.list(g("ArticleIndex")),
+            t.array(g("ArticleIndex")),
         ).add_policy(allow_all()),
         createArticle=remote.post(
             "/articles",
@@ -412,7 +412,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.list(g("ArticleIndex")),
+            t.array(g("ArticleIndex")),
         ).add_policy(allow_all()),
         getUserArticles=remote.get(
             "/articles/me",
@@ -422,7 +422,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.list(g("ArticleMe")),
+            t.array(g("ArticleMe")),
         ).add_policy(allow_all()),
         getUserAllArticles=remote.get(
             "/articles/me/all",
@@ -432,7 +432,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.list(g("ArticleMe")),
+            t.array(g("ArticleMe")),
         ).add_policy(allow_all()),
         getUserPublishedArticles=remote.get(
             "/articles/me/published",
@@ -442,7 +442,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.list(g("ArticleMe")),
+            t.array(g("ArticleMe")),
         ).add_policy(allow_all()),
         getUserUnpublishedArticles=remote.get(
             "/articles/me/unpublished",
@@ -452,7 +452,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.list(g("ArticleMe")),
+            t.array(g("ArticleMe")),
         ).add_policy(allow_all()),
         getArticleById=remote.get(
             "/articles/{id}",
@@ -493,7 +493,7 @@ with TypeGraph(name="devto") as g:
                     "p_id": t.optional(t.integer()),
                 }
             ),
-            t.optional(t.list(g("Comment"))),
+            t.optional(t.array(g("Comment"))),
         ).add_policy(allow_all()),
         getCommentById=remote.get(
             "/comments/{id}",
@@ -513,12 +513,12 @@ with TypeGraph(name="devto") as g:
                     "sort": t.optional(t.string()),
                 }
             ),
-            t.list(g("Follower")),
+            t.array(g("Follower")),
         ).add_policy(allow_all()),
         getFollowedTags=remote.get(
             "/follows/tags",
             t.struct({}),
-            t.list(g("FollowedTag")),
+            t.array(g("FollowedTag")),
         ).add_policy(allow_all()),
         getListings=remote.get(
             "/listings",
@@ -529,7 +529,7 @@ with TypeGraph(name="devto") as g:
                     "category": t.optional(t.string()),
                 }
             ),
-            t.list(g("Listing")),
+            t.array(g("Listing")),
         ).add_policy(allow_all()),
         createListing=remote.post(
             "/listings",
@@ -551,7 +551,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.list(g("Listing")),
+            t.array(g("Listing")),
         ).add_policy(allow_all()),
         getListingById=remote.get(
             "/listings/{id}",
@@ -592,7 +592,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.optional(t.list(g("ArticleIndex"))),
+            t.optional(t.array(g("ArticleIndex"))),
         ).add_policy(allow_all()),
         getOrgListings=remote.get(
             "/organizations/{username}/listings",
@@ -605,7 +605,7 @@ with TypeGraph(name="devto") as g:
                 }
             ),
             t.optional(
-                t.list(
+                t.array(
                     t.struct(
                         {
                             "body_markdown": t.string(),
@@ -616,7 +616,7 @@ with TypeGraph(name="devto") as g:
                             "published": t.boolean(),
                             "slug": t.string(),
                             "tag_list": t.string(),
-                            "tags": t.list(t.string()),
+                            "tags": t.array(t.string()),
                             "title": t.string(),
                             "type_of": t.string(),
                             "user": g("SharedUser"),
@@ -634,7 +634,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.optional(t.list(g("User"))),
+            t.optional(t.array(g("User"))),
         ).add_policy(allow_all()),
         getPodcastEpisodes=remote.get(
             "/podcast_episodes",
@@ -645,7 +645,7 @@ with TypeGraph(name="devto") as g:
                     "username": t.optional(t.string()),
                 }
             ),
-            t.optional(t.list(g("PodcastEpisode"))),
+            t.optional(t.array(g("PodcastEpisode"))),
         ).add_policy(allow_all()),
         getProfileImage=remote.get(
             "/profile_images/{username}",
@@ -664,7 +664,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.list(g("ReadingList")),
+            t.array(g("ReadingList")),
         ).add_policy(allow_all()),
         getTags=remote.get(
             "/tags",
@@ -674,7 +674,7 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.list(g("Tag")),
+            t.array(g("Tag")),
         ).add_policy(allow_all()),
         getUserMe=remote.get(
             "/users/me",
@@ -699,12 +699,12 @@ with TypeGraph(name="devto") as g:
                     "per_page": t.optional(t.integer()),
                 }
             ),
-            t.list(g("ArticleVideo")),
+            t.array(g("ArticleVideo")),
         ).add_policy(allow_all()),
         getWebhooks=remote.get(
             "/webhooks",
             t.struct({}),
-            t.list(g("WebhookIndex")),
+            t.array(g("WebhookIndex")),
         ).add_policy(allow_all()),
         createWebhook=remote.post(
             "/webhooks",

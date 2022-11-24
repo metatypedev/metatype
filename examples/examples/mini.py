@@ -1,14 +1,14 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.graphql import GraphQLRuntime
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 with TypeGraph("mini") as g:
 
     remote = GraphQLRuntime("https://graphqlzero.almansi.me/api")
 
-    allow_all = t.policy(
-        t.struct(),
+    allow_all = Policy(
         FunMat.from_lambda(lambda args: True),
     ).named("allow_all_policy")
 

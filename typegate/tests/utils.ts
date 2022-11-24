@@ -5,11 +5,12 @@ import {
   assertEquals,
   assertStringIncludes,
 } from "std/testing/asserts.ts";
+import { assertSnapshot } from "std/testing/snapshot.ts";
 import { Engine, initTypegraph } from "../src/engine.ts";
 import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
-import { dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join, resolve } from "std/path/mod.ts";
 import { Register } from "../src/register.ts";
 import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
@@ -19,13 +20,14 @@ import { RuntimesConfig } from "../src/types.ts";
 import { PrismaMigration } from "../src/runtimes/prisma_migration.ts";
 import { PrismaRuntimeDS } from "../src/type_node.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";
+import { TypeGraph } from "../src/typegraph.ts";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
 };
 
 const localDir = dirname(fromFileUrl(import.meta.url));
-const metaCli = "../../target/debug/meta";
+const metaCli = resolve(localDir, "../../target/debug/meta");
 
 export async function meta(...input: string[]): Promise<void> {
   console.log(await shell([metaCli, ...input]));
@@ -90,7 +92,7 @@ export class MemoryRegister extends Register {
       payload,
       SystemTypegraph.getCustomRuntimes(this),
       config,
-      null, // no need to have introspection for tests
+      undefined, // no need to have introspection for tests
     );
     this.map.set(engine.name, engine);
     return engine.name;
@@ -127,6 +129,9 @@ export class NoLimiter extends RateLimiter {
   }
 }
 
+type AssertSnapshotParams<T> = typeof assertSnapshot extends
+  (ctx: Deno.TestContext, ...rest: infer R) => Promise<void> ? R : never;
+
 class MetaTest {
   t: Deno.TestContext;
   register: Register;
@@ -157,22 +162,16 @@ class MetaTest {
 
   async pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
     return await this.parseTypegraph(
-      [
-        join(localDir, metaCli),
-        "serialize",
-        "-f",
-        path,
-        "-1",
-      ],
+      path,
       deepMerge(testRuntimesConfig, config),
     );
   }
 
   async parseTypegraph(
-    cmd: string[],
+    path: string,
     config: RuntimesConfig = {},
   ): Promise<Engine> {
-    const stdout = await shell(cmd);
+    const stdout = await shell([metaCli, "serialize", "-f", path, "-1"]);
     const engineName = await this.register.set(
       stdout,
       deepMerge(testRuntimesConfig, config),
@@ -196,12 +195,26 @@ class MetaTest {
       //sanitizeOps: false,
     });
   }
+
+  assertSnapshot<T>(...params: AssertSnapshotParams<T>): Promise<void> {
+    return assertSnapshot(this.t, ...params);
+  }
 }
 
-export function test(
-  name: string,
-  fn: (t: MetaTest) => void | Promise<void>,
-): void {
+interface Test {
+  (
+    name: string,
+    fn: (t: MetaTest) => void | Promise<void>,
+    opts?: Omit<Deno.TestDefinition, "name" | "fn">,
+  ): void;
+}
+
+interface TestExt extends Test {
+  only: Test;
+  ignore: Test;
+}
+
+export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
@@ -215,10 +228,14 @@ export function test(
         await mt.terminate();
       }
     },
-    sanitizeResources: false,
-    sanitizeOps: false,
+    ...opts,
   });
-}
+}) as TestExt;
+
+test.only = (name, fn, opts = {}) => test(name, fn, { ...opts, only: true });
+
+test.ignore = (name, fn, opts = {}) =>
+  test(name, fn, { ...opts, ignore: true });
 
 const testConfig = parse(Deno.args);
 
@@ -439,4 +456,11 @@ export async function removeMigrations(engine: Engine) {
   await Deno.remove(join(localDir, "prisma-migrations", engine.name), {
     recursive: true,
   }).catch(() => {});
+}
+
+export async function cleanUp() {
+  for await (const tg of TypeGraph.list) {
+    console.log(`cleanup: ${tg.name}`);
+    await tg.deinit();
+  }
 }

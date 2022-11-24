@@ -1,14 +1,14 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.http import HTTPRuntime
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 with TypeGraph("swagger-petstore") as g:
 
     remote = HTTPRuntime("https://petstore.swagger.io/v2")
 
-    allow_all = t.policy(
-        t.struct(),
+    allow_all = Policy(
         FunMat.from_lambda(lambda args: True),
     ).named("allow_all_policy")
 
@@ -28,8 +28,8 @@ with TypeGraph("swagger-petstore") as g:
             "id": t.optional(t.integer()),
             "category": t.optional(g("Category")),
             "name": t.string(),
-            "photoUrls": t.list(t.string()),
-            "tags": t.optional(t.list(g("Tag"))),
+            "photoUrls": t.array(t.string()),
+            "tags": t.optional(t.array(g("Tag"))),
             "status": t.optional(status),
         }
     ).named("Pet")
@@ -41,11 +41,11 @@ with TypeGraph("swagger-petstore") as g:
     ).add_policy(allow_all)
 
     find_pets_by_status = remote.get(
-        "/pet/findByStatus", t.struct({"status": status}), t.list(g("Pet"))
+        "/pet/findByStatus", t.struct({"status": status}), t.array(g("Pet"))
     ).add_policy(allow_all)
 
     find_pets_by_tags = remote.get(
-        "/pet/findByTags", t.struct({"tags": t.list(t.string())}), t.list(g("Pet"))
+        "/pet/findByTags", t.struct({"tags": t.array(t.string())}), t.array(g("Pet"))
     ).add_policy(allow_all)
 
     add_pet = remote.post("/pet", g("Pet"), g("Pet")).add_policy(allow_all)

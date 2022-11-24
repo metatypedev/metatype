@@ -7,7 +7,8 @@ from typegraph.materializers.prisma import PrismaCreateMat
 from typegraph.materializers.prisma import PrismaDeployMat
 from typegraph.materializers.prisma import PrismaDiffMat
 from typegraph.materializers.prisma import PrismaMigrateMat
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 with TypeGraph(
     "typegate/prisma_migration",
@@ -20,8 +21,7 @@ with TypeGraph(
         context_identifier="user",
     ),
 ) as g:
-    admin_only = t.policy(
-        t.struct(),
+    admin_only = Policy(
         FunMat.from_lambda(lambda args: args["user"] == "admin"),
     ).named("admin_only")
 
@@ -30,7 +30,7 @@ with TypeGraph(
             t.struct(
                 {
                     "typegraph": t.string(),
-                    "runtime": t.string().s_optional(),
+                    "runtime": t.string().optional(),
                     "script": t.boolean(),
                 }
             ),
@@ -39,7 +39,7 @@ with TypeGraph(
                     "runtime": t.struct(
                         {"name": t.string(), "connectionString": t.string()}
                     ),
-                    "diff": t.string(),
+                    "diff": t.string().optional(),
                 }
             ),
             PrismaDiffMat(),
@@ -50,7 +50,7 @@ with TypeGraph(
             t.struct(
                 {
                     "typegraph": t.string(),
-                    "runtime": t.string().s_optional(),
+                    "runtime": t.string().optional(),
                     "name": t.string(),
                 }
             ),
@@ -63,14 +63,14 @@ with TypeGraph(
             t.struct(
                 {
                     "typegraph": t.string(),
-                    "runtime": t.string().s_optional(),
+                    "runtime": t.string().optional(),
                     "resetDatabase": t.boolean(),
                 },
             ),
             t.struct(
                 {
                     "databaseReset": t.boolean(),
-                    "appliedMigrations": t.list(t.string()),
+                    "appliedMigrations": t.array(t.string()),
                 }
             ),
             PrismaApplyMat(),
@@ -81,14 +81,14 @@ with TypeGraph(
             t.struct(
                 {
                     "typegraph": t.string(),
-                    "runtime": t.string().s_optional(),
+                    "runtime": t.string().optional(),
                     "migrations": t.string(),  # tar.gz
                 }
             ),
             t.struct(
                 {
                     "migrationCount": t.integer(),
-                    "appliedMigrations": t.list(t.string()),
+                    "appliedMigrations": t.array(t.string()),
                 }
             ),
             PrismaDeployMat(),
@@ -99,7 +99,7 @@ with TypeGraph(
             t.struct(
                 {
                     "typegraph": t.string(),
-                    "runtime": t.string().s_optional(),
+                    "runtime": t.string().optional(),
                     "name": t.string(),
                     "apply": t.boolean(),
                 }
@@ -107,7 +107,7 @@ with TypeGraph(
             t.struct(
                 {
                     "createdMigrationName": t.string(),
-                    "appliedMigrations": t.list(t.string()),
+                    "appliedMigrations": t.array(t.string()),
                 }
             ),
             PrismaCreateMat(),

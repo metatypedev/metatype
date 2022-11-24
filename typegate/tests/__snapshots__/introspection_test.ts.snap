@@ -1,0 +1,321 @@
+export const snapshot = {};
+
+snapshot[`Full introspection 1`] = `
+{
+  __schema: {
+    directives: [
+    ],
+    mutationType: {
+      name: "Mutation",
+    },
+    queryType: {
+      name: "Query",
+    },
+    subscriptionType: null,
+    types: [
+      {
+        description: "Query type",
+        enumValues: null,
+        fields: [
+          {
+            args: [
+              {
+                defaultValue: null,
+                description: "a input field",
+                name: "a",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    kind: "SCALAR",
+                    name: "Int",
+                    ofType: null,
+                  },
+                },
+              },
+            ],
+            deprecationReason: null,
+            description: "test field
+
+Policies:
+- __allow_all",
+            isDeprecated: false,
+            name: "test",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                kind: "OBJECT",
+                name: "res",
+                ofType: null,
+              },
+            },
+          },
+          {
+            args: [
+              {
+                defaultValue: null,
+                description: "nested input field",
+                name: "nested",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    kind: "INPUT_OBJECT",
+                    name: "NestedInp",
+                    ofType: null,
+                  },
+                },
+              },
+            ],
+            deprecationReason: null,
+            description: "rec field
+
+Policies:
+- __allow_all",
+            isDeprecated: false,
+            name: "rec",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                kind: "SCALAR",
+                name: "Int",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        inputFields: null,
+        interfaces: [
+        ],
+        kind: "OBJECT",
+        name: "Query",
+        possibleTypes: null,
+      },
+      {
+        description: "integer_4 type",
+        enumValues: null,
+        fields: null,
+        inputFields: null,
+        interfaces: null,
+        kind: "SCALAR",
+        name: "Int",
+        possibleTypes: null,
+      },
+      {
+        description: "Nested input type",
+        enumValues: null,
+        fields: null,
+        inputFields: [
+          {
+            description: "arg field
+
+Policies:
+- inherit",
+            name: "arg",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                kind: "SCALAR",
+                name: "Int",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        interfaces: [
+        ],
+        kind: "INPUT_OBJECT",
+        name: "NestedInp",
+        possibleTypes: null,
+      },
+      {
+        description: "integer_1 type",
+        enumValues: null,
+        fields: null,
+        inputFields: null,
+        interfaces: null,
+        kind: "SCALAR",
+        name: "Int",
+        possibleTypes: null,
+      },
+      {
+        description: "integer_4 type",
+        enumValues: null,
+        fields: null,
+        inputFields: null,
+        interfaces: null,
+        kind: "SCALAR",
+        name: "Int",
+        possibleTypes: null,
+      },
+      {
+        description: "res type",
+        enumValues: null,
+        fields: [
+          {
+            args: [
+            ],
+            deprecationReason: null,
+            description: "a field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "a",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                kind: "SCALAR",
+                name: "Int",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        inputFields: null,
+        interfaces: [
+        ],
+        kind: "OBJECT",
+        name: "res",
+        possibleTypes: null,
+      },
+      {
+        description: "arg1 type",
+        enumValues: null,
+        fields: null,
+        inputFields: null,
+        interfaces: null,
+        kind: "SCALAR",
+        name: "Int",
+        possibleTypes: null,
+      },
+      {
+        description: "res type",
+        enumValues: null,
+        fields: [
+          {
+            args: [
+            ],
+            deprecationReason: null,
+            description: "a field
+
+Policies:
+- inherit",
+            isDeprecated: false,
+            name: "a",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                kind: "SCALAR",
+                name: "Int",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        inputFields: null,
+        interfaces: [
+        ],
+        kind: "OBJECT",
+        name: "res",
+        possibleTypes: null,
+      },
+      {
+        description: "deps type",
+        enumValues: null,
+        fields: null,
+        inputFields: null,
+        interfaces: null,
+        kind: "SCALAR",
+        name: "Int",
+        possibleTypes: null,
+      },
+      {
+        description: "Query type",
+        enumValues: null,
+        fields: [
+          {
+            args: [
+              {
+                defaultValue: null,
+                description: "a input field",
+                name: "a",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    kind: "SCALAR",
+                    name: "Int",
+                    ofType: null,
+                  },
+                },
+              },
+            ],
+            deprecationReason: null,
+            description: "test field
+
+Policies:
+- __allow_all",
+            isDeprecated: false,
+            name: "test",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                kind: "OBJECT",
+                name: "res",
+                ofType: null,
+              },
+            },
+          },
+          {
+            args: [
+              {
+                defaultValue: null,
+                description: "nested input field",
+                name: "nested",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    kind: "INPUT_OBJECT",
+                    name: "NestedInp",
+                    ofType: null,
+                  },
+                },
+              },
+            ],
+            deprecationReason: null,
+            description: "rec field
+
+Policies:
+- __allow_all",
+            isDeprecated: false,
+            name: "rec",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                kind: "SCALAR",
+                name: "Int",
+                ofType: null,
+              },
+            },
+          },
+        ],
+        inputFields: null,
+        interfaces: [
+        ],
+        kind: "OBJECT",
+        name: "Query",
+        possibleTypes: null,
+      },
+    ],
+  },
+}
+`;

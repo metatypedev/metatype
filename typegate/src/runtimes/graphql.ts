@@ -101,11 +101,10 @@ export class GraphQLRuntime extends Runtime {
       resolver: this.execute(query),
       outType: {
         // dummy
-        name: "string",
-        typedef: "string",
+        title: "string",
+        type: "string",
         policies: [],
         runtime: -1,
-        data: {},
       },
       runtime: stage.props.runtime,
       batcher: (x: any) => x,

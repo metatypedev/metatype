@@ -55,7 +55,7 @@ export class S3Runtime extends Runtime {
 
   static init(params: RuntimeInitParams): Runtime {
     const { args, typegraph } = params;
-    const typegraphName = typegraph.types[0].name;
+    const typegraphName = typegraph.types[0].title;
 
     const { host, region } = args;
     const client: S3Client = {

@@ -4,19 +4,18 @@ from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import IdentityMat
 from typegraph.materializers.http import HTTPRuntime
 from typegraph.policies import allow_all
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 
 with TypeGraph("test_auth", auths=[github_auth]) as g:
     remote = HTTPRuntime("https://api.github.com")
 
     public = allow_all()
-    private = t.policy(
-        t.struct(),
+    private = Policy(
         FunMat.from_lambda(lambda ctx: "user1" in ctx),
     )
-    with_token = t.policy(
-        t.struct(),
+    with_token = Policy(
         FunMat.from_lambda(lambda ctx: "accessToken" in ctx),
     )
 
@@ -28,7 +27,7 @@ with TypeGraph("test_auth", auths=[github_auth]) as g:
         token=t.func(x, x, IdentityMat()).add_policy(with_token),
         user=remote.get(
             "/user",
-            t.struct({"token": t.string().s_context("token")}),
+            t.struct({"token": t.string().from_context("token")}),
             t.struct(
                 {
                     "id": t.integer(),

@@ -4,7 +4,7 @@ import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { TypeNode } from "../type_node.ts";
 import Chance from "chance";
-import { ensure } from "../utils.ts";
+// import { ensure } from "../utils.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 
 export class RandomRuntime extends Runtime {
@@ -60,44 +60,32 @@ export class RandomRuntime extends Runtime {
 
   execute(typ: TypeNode): Resolver {
     return () => {
-      if (Object.prototype.hasOwnProperty.call(typ.data, "random")) {
-        const entries = Object.entries(
-          typ.data.random as Record<string, unknown>,
-        );
-        ensure(
-          entries.length === 1,
-          `invalid random generation data ${typ.data.random}`,
-        );
-        const [[fn, arg]] = entries;
-        return this.chance[fn](arg);
+      const config = typ.config ?? {};
+      if (Object.prototype.hasOwnProperty.call(config, "gen")) {
+        const { gen, ...arg } = config;
+        return this.chance[gen](arg);
       }
 
-      switch (typ.typedef) {
-        case "struct":
+      switch (typ.type) {
+        case "object":
           return {};
-        case "list":
+        case "array":
+          // TODO
           return [];
         case "integer":
           return this.chance.integer();
-        case "unsigned_integer": {
-          let n = this.chance.integer();
-          while (n < 0) {
-            n = this.chance.integer();
-          }
-          return n;
-        }
-        case "uuid":
-          return this.chance.guid();
         case "string":
+          if (typ.format === "uuid") {
+            return this.chance.guid();
+          }
+          if (typ.format === "email") {
+            return this.chance.email();
+          }
           return this.chance.string();
-        case "email":
-          return this.chance.email();
-        case "char":
-          return this.chance.character();
         case "boolean":
           return this.chance.bool();
         default:
-          throw new Error(`type not supported "${typ.typedef}"`);
+          throw new Error(`type not supported "${typ.type}"`);
       }
     };
   }

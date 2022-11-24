@@ -12,6 +12,7 @@ import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { RateLimit } from "./rate_limiter.ts";
+import { ObjectNode } from "./type_node.ts";
 import {
   ComputeStageProps,
   Context,
@@ -20,32 +21,36 @@ import {
   RuntimeConfig,
   Variables,
 } from "./types.ts";
+import { TypeCheck } from "./typecheck.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
   join(localDir, "typegraphs/introspection.json"),
-).then((d) => JSON.parse(d));
+);
 
 export const initTypegraph = async (
   payload: string,
   customRuntime: RuntimeResolver = {},
   config: Record<string, RuntimeConfig> = {},
-  introspectionDef: any = introspectionDefStatic,
+  introspectionDef: string = introspectionDefStatic,
 ) => {
-  const parsed = JSON.parse(payload);
-
   const introspection = introspectionDef
     ? await TypeGraph.init(
       introspectionDef,
       {
-        typegraph: await TypeGraphRuntime.init(parsed, [], {}, config),
+        typegraph: await TypeGraphRuntime.init(
+          JSON.parse(payload),
+          [],
+          {},
+          config,
+        ),
       },
       null,
       {},
     )
     : null;
 
-  const tg = await TypeGraph.init(parsed, customRuntime, introspection, {});
+  const tg = await TypeGraph.init(payload, customRuntime, introspection, {});
   return new Engine(tg);
 };
 
@@ -83,7 +88,7 @@ export class ComputeStage {
           this.props.parent && d === this.props.parent.id() ? `${d} (P)` : d
         )
         .join(", ")
-    }\nid  ${this.id()}\ntype ${this.props.outType.typedef}\narg ${
+    }\nid  ${this.id()}\ntype ${this.props.outType.type}\narg ${
       JSON.stringify(this.props.args)
     }\n--`;
   }
@@ -127,16 +132,48 @@ const typeChecks: Record<string, (value: unknown) => boolean> = {
   Boolean: (value) => typeof value === "boolean",
 };
 
+function isIntrospectionQuery(
+  operation: ast.OperationDefinitionNode,
+  _fragments: FragmentDefs,
+) {
+  return operation.name?.value === "IntrospectionQuery";
+}
+
+interface Plan {
+  stages: ComputeStage[];
+  policies: PolicyStagesFactory;
+  validator: TypeCheck;
+}
+
+class QueryCache {
+  private map: Map<string, Plan> = new Map();
+
+  static async getKey(
+    operation: ast.OperationDefinitionNode,
+    fragments: FragmentDefs,
+  ) {
+    return await sha1(JSON.stringify(operation) + JSON.stringify(fragments));
+  }
+
+  get(key: string) {
+    return this.map.get(key);
+  }
+
+  put(key: string, plan: Plan) {
+    this.map.set(key, plan);
+  }
+}
+
 export class Engine {
   tg: TypeGraph;
   name: string;
-  queryCache: Record<string, [ComputeStage[], PolicyStagesFactory]>;
+  queryCache: QueryCache;
   logger: log.Logger;
 
   constructor(tg: TypeGraph) {
     this.tg = tg;
-    this.name = tg.tg.types[0].name;
-    this.queryCache = {};
+    this.name = tg.name;
+    this.queryCache = new QueryCache();
     this.logger = log.getLogger("engine");
   }
 
@@ -246,6 +283,13 @@ export class Engine {
     verbose: boolean,
   ): [ComputeStage[], PolicyStagesFactory] {
     const serial = operation.operation === "mutation";
+    const rootIdx =
+      (this.tg.type(0) as ObjectNode).properties[operation.operation];
+    ensure(
+      rootIdx != null,
+      `operation ${operation.operation} is not available`,
+    );
+
     const stages = this.tg.traverse(
       fragments,
       operation.name?.value ?? "",
@@ -253,7 +297,7 @@ export class Engine {
       operation.selectionSet,
       verbose,
       [],
-      0,
+      rootIdx,
       undefined,
       serial,
     );
@@ -309,13 +353,12 @@ export class Engine {
     fragments: FragmentDefs,
     cache: boolean,
     verbose: boolean,
-  ): Promise<[ComputeStage[], PolicyStagesFactory, boolean]> {
-    const id = await sha1(
-      JSON.stringify(operation) + JSON.stringify(fragments),
-    );
+  ): Promise<[Plan, boolean]> {
+    const cacheKey = await QueryCache.getKey(operation, fragments);
 
-    if (cache && id in this.queryCache) {
-      return [...this.queryCache[id], true];
+    if (cache) {
+      const cached = this.queryCache.get(cacheKey);
+      if (cached != null) return [cached, true];
     }
 
     // what
@@ -331,13 +374,27 @@ export class Engine {
     const stagesMat = this.materialize(stages, verbose);
 
     // when
-    const plan = this.optimize(stagesMat, verbose);
+    const optimizedStages = this.optimize(stagesMat, verbose);
+
+    const validator = TypeCheck.init(
+      isIntrospectionQuery(operation, fragments)
+        ? this.tg.introspection!.tg.types
+        : this.tg.tg.types,
+      operation,
+      fragments,
+    );
+
+    const plan: Plan = {
+      stages: optimizedStages,
+      policies,
+      validator,
+    };
 
     if (cache) {
-      this.queryCache[id] = [plan, policies];
+      this.queryCache.put(cacheKey, plan);
     }
 
-    return [plan, policies, false];
+    return [plan, false];
   }
 
   async execute(
@@ -357,30 +414,36 @@ export class Engine {
 
       this.validateVariables(operation?.variableDefinitions ?? [], variables);
 
-      const cache = operationName === "IntrospectionQuery";
-      const verbose = operationName !== "IntrospectionQuery";
+      const isIntrospection = isIntrospectionQuery(operation, fragments);
+
+      const verbose = !isIntrospection;
 
       verbose && this.logger.info("———");
       verbose && this.logger.info("op:", operationName);
 
       const startTime = performance.now();
-      const [plan, policies, cacheHit] = await this.getPlan(
+      const [plan, cacheHit] = await this.getPlan(
         operation,
         fragments,
-        cache,
+        true,
         verbose,
       );
       const planTime = performance.now();
 
+      const { stages, policies, validator } = plan;
+
       //logger.info("dag:", stages);
       const res = await this.compute(
-        plan,
+        stages,
         policies,
         context,
         variables,
         limit,
         verbose,
       );
+      const computeTime = performance.now();
+
+      validator.validate(res);
       const endTime = performance.now();
 
       verbose &&
@@ -392,8 +455,14 @@ export class Engine {
           }ms`,
         );
       verbose &&
-        this.logger.info(`computed in ${(endTime - planTime).toFixed(2)}ms`);
-      //logger.info("res:", res);
+        this.logger.info(
+          `computed in ${(computeTime - planTime).toFixed(2)}ms`,
+        );
+
+      verbose &&
+        this.logger.info(
+          `validated in ${(endTime - computeTime).toFixed(2)}ms`,
+        );
 
       return { status: 200, data: res };
     } catch (e) {
@@ -510,7 +579,7 @@ export class Engine {
 
     let [kind, token] = (headers.get("Authorization") ?? "").split(" ");
     if (!token) {
-      const name = this.tg.root.name;
+      const name = this.tg.root.title;
       token = getCookies(headers)[name];
     }
 

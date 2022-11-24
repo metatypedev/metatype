@@ -28,3 +28,18 @@ export function getLogger(
   }
   return logger;
 }
+
+export function getRequestLogger(name: string): Logger {
+  const handler = new handlers.FileHandler("INFO", {
+    filename: "logs/requests.log",
+    formatter: "[{loggerName}] {msg}",
+  });
+  handler.setup();
+  return new Logger(
+    `req:${name}`,
+    "NOTSET",
+    {
+      handlers: [handler],
+    },
+  );
+}

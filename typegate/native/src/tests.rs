@@ -134,7 +134,7 @@ impl TestContext {
 
         let reg = crate::prisma_register_engine(crate::PrismaRegisterEngineInp {
             datamodel: format!("{}{}", runtime.datasource, runtime.datamodel),
-            typegraph: tg.types[0].name.clone(),
+            typegraph: tg.types[0].base().title.clone(),
         });
 
         Ok(Self {

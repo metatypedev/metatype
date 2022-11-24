@@ -50,12 +50,14 @@ class TypeGraphMat(Materializer):
 class AddTypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = "addTypegraph"
+    serial: bool = True
 
 
 @dataclass(eq=True, frozen=True)
 class RemoveTypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = "removeTypegraph"
+    serial: bool = True
 
 
 @dataclass(eq=True, frozen=True)

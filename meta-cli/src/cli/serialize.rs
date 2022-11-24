@@ -4,21 +4,40 @@ use super::Action;
 use crate::typegraph::TypegraphLoader;
 use crate::utils::ensure_venv;
 use anyhow::bail;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
-use std::fs;
+use core::fmt::Debug;
+use std::cell::Cell;
+use std::fs::File;
 use std::io::{self, Write};
+use std::ops::Deref;
+use std::path::Path;
+
+#[derive(Default)]
+struct Writer(Cell<Option<Box<dyn Write>>>);
+
+impl Debug for Writer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Writer")
+    }
+}
+
+impl Deref for Writer {
+    type Target = Cell<Option<Box<dyn Write>>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 #[derive(Parser, Debug)]
 pub struct Serialize {
     /// The python source file that defines the typegraph(s).
     /// Default: All the python files descending from the current directory.
-    #[clap(short, long, value_parser)]
-    file: Option<String>,
+    #[clap(short, long = "file", value_parser)]
+    files: Vec<String>,
 
     /// Name of the typegraph to serialize.
-    /// Default: the resulted JSON contains an object
-    /// that maps the typegraph name to the serialized typegraph.
     #[clap(short, long, value_parser)]
     typegraph: Option<String>,
 
@@ -29,52 +48,69 @@ pub struct Serialize {
     /// The output file. Default: stdout
     #[clap(short, long, value_parser)]
     out: Option<String>,
+
+    #[clap(skip)]
+    writer: Writer,
 }
 
 impl Action for Serialize {
     fn run(&self, dir: String) -> Result<()> {
         ensure_venv(&dir)?;
         let loader = TypegraphLoader::new();
-        let tgs = match &self.file {
-            Some(file) => loader.load_file(file)?,
-            None => loader.load_folder(&dir)?,
+        let files: Vec<_> = self.files.iter().map(|f| Path::new(f).to_owned()).collect();
+        let loaded = if !self.files.is_empty() {
+            loader.load_files(&files)
+        } else {
+            loader.load_folder(&dir)?
         };
 
+        let tgs: Vec<_> = loaded
+            .into_values()
+            .collect::<Result<Vec<_>>>()?
+            .into_iter()
+            .flatten()
+            .collect();
+
         if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.get(tg_name) {
-                self.write(&serde_json::to_string(&tg)?);
+            if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
+                self.write(&serde_json::to_string(&tg)?)?;
             } else {
                 bail!("typegraph \"{}\" not found", tg_name);
             }
         } else if self.unique {
             if tgs.len() == 1 {
-                let tg = tgs.into_values().next().unwrap();
-                self.write(&serde_json::to_string(&tg)?);
+                self.write(&serde_json::to_string(&tgs[0])?)?;
             } else {
                 eprint!("expected only one typegraph, got {}", tgs.len());
                 std::process::exit(1);
             }
         } else {
-            let entries = tgs
-                .iter()
-                .map(|(tg_name, tg)| -> Result<_> {
-                    Ok(format!("\"{tg_name}\": {}", serde_json::to_string(&tg)?))
-                })
-                .collect::<Result<Vec<_>>>()?
-                .join(",\n");
-            self.write(&format!("{{{entries}}}"));
+            self.write(&serde_json::to_string(&tgs)?)?;
         }
 
+        self.write("\n")?;
         Ok(())
     }
 }
 
 impl Serialize {
-    fn write(&self, contents: &str) {
-        if let Some(path) = self.out.as_ref() {
-            fs::write(path, contents).unwrap();
+    fn write(&self, contents: &str) -> Result<()> {
+        if let Some(mut writer) = self.writer.take() {
+            writer.write_all(contents.as_bytes())?;
+            self.writer.set(Some(writer));
+            Ok(())
         } else {
-            io::stdout().write_all(contents.as_bytes()).unwrap();
+            if let Some(path) = self.out.as_ref() {
+                let file = File::options()
+                    .truncate(true)
+                    .write(true)
+                    .open(path)
+                    .context("Could not open file")?;
+                self.writer.set(Some(Box::new(file)));
+            } else {
+                self.writer.set(Some(Box::new(io::stdout())));
+            }
+            self.write(contents)
         }
     }
 }

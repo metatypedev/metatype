@@ -8,6 +8,7 @@ use prisma::introspection::Introspection;
 mod conf;
 mod prisma;
 mod s3;
+mod typegraph;
 use crate::prisma::engine;
 use crate::prisma::migration;
 use conf::CONFIG;
@@ -227,7 +228,7 @@ fn prisma_apply(input: PrismaApplyInp) -> PrismaApplyOut {
 
         let reset_reason: Option<String> = if let DevAction::Reset(reset) = res.action {
             if input.reset_database {
-                api.reset().await.unwrap();
+                api.reset(None).await.unwrap();
                 Some(reset.reason)
             } else {
                 return PrismaApplyOut::ResetRequired {

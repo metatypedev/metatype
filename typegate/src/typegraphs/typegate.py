@@ -10,7 +10,8 @@ from typegraph.materializers.typegate import RemoveTypeGraphMat
 from typegraph.materializers.typegate import SerializedTypegraphMat
 from typegraph.materializers.typegate import TypeGraphMat
 from typegraph.materializers.typegate import TypeGraphsMat
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 with TypeGraph(
     "typegate",
@@ -35,27 +36,27 @@ with TypeGraph(
         {
             "name": t.string(),
             "url": t.uri(),
-            "serialized": serialized,
         }
     ).named("typegraph")
 
-    admin_only = t.policy(
-        t.struct(),
+    admin_only = Policy(
         FunMat.from_lambda(lambda args: args["user"] == "admin"),
     ).named("admin_only")
 
     g.expose(
-        typegraphs=t.func(t.struct({}), t.list(typegraph), TypeGraphsMat())
+        typegraphs=t.func(t.struct({}), t.array(typegraph), TypeGraphsMat())
         .rate(calls=True)
         .add_policy(admin_only),
         typegraph=t.func(
-            t.struct({"name": t.string()}), t.optional(typegraph), TypeGraphMat()
+            t.struct({"name": t.string()}),
+            t.optional(typegraph.compose({"serialized": serialized})),
+            TypeGraphMat(),
         )
         .rate(calls=True)
         .add_policy(admin_only),
         addTypegraph=t.func(
             t.struct({"fromString": t.string()}),
-            typegraph.s_optional(),
+            typegraph.optional(),
             AddTypeGraphMat(),
         )
         .rate(calls=True)

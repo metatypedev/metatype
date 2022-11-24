@@ -45,10 +45,10 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
         return f"t.float()"
 
     if cursor.type == "any":
-        return f"t.Type()"
+        return f"t.any()"
 
     if cursor.type == "array":
-        return f't.list({typify(cursor["items"], filter_read_only, suffix)})'
+        return f't.array({typify(cursor["items"], filter_read_only, suffix)})'
 
     if cursor.type == "object":
         ret = "t.struct({"
@@ -60,7 +60,7 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
 
         if len(fields) == 0:
             # FIXME : accept empty object?
-            fields.append('"_": t.optional(t.Type())')
+            fields.append('"_": t.optional(t.any())')
 
         ret += ",".join(fields)
 
@@ -135,7 +135,7 @@ def import_googleapis(uri: str, gen: bool) -> None:
 
     imports = [
         ["typegraph.materializers", "googleapis"],
-        ["typegraph.types", "typedefs as t"],
+        ["typegraph.types", "types as t"],
         ["typegraph.graphs.typegraph", "TypeGraph"],
     ]
 

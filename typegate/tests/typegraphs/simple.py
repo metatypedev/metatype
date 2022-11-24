@@ -2,7 +2,7 @@ from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import PredefinedFunMat
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 with TypeGraph("testing") as g:
 

@@ -10,7 +10,7 @@ from typegraph.graphs import typegraph
 from typegraph.materializers import base
 from typegraph.materializers.deno import DenoRuntime
 from typegraph.materializers.deno import ImportFunMat
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 @dataclass(eq=True, frozen=True)
@@ -143,7 +143,7 @@ def build(tg: typegraph.TypeGraph):
                 assert [node.inp, node.out] == node.edges
             elif isinstance(node, t.struct):
                 data["binds"] = frozendict({k: build(v) for k, v in node.of.items()})
-            elif isinstance(node, t.list) or isinstance(node, t.optional):
+            elif isinstance(node, t.array) or isinstance(node, t.optional):
                 data["of"] = build(node.of)
 
             if data.get("injection") == "parent":

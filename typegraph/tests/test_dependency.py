@@ -1,15 +1,10 @@
 # Copyright Metatype under the Elastic License 2.0.
 
 import frozendict
-from typegraph.graphs.builders import Graph
-from typegraph.graphs.builders import TypeMaterializer
-from typegraph.graphs.builders import TypeMeta
-from typegraph.graphs.builders import TypeNode
-from typegraph.graphs.builders import TypeRuntime
 from typegraph.graphs.typegraph import Cors
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers import deno
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 class TestDependency:
@@ -22,7 +17,7 @@ class TestDependency:
                     "b": t.func(
                         t.struct(
                             {
-                                "a1": t.integer().s_parent(g("a")),
+                                "a1": t.integer().from_parent(g("a")),
                                 "a2": g("a"),
                                 "new": t.integer().named("new"),
                             }
@@ -40,146 +35,117 @@ class TestDependency:
             )
 
         assert g.build() == overridable(
-            Graph(
-                types=[
-                    TypeNode(
-                        name="single_runtime",
-                        typedef="struct",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict(
-                            {
-                                "renames": frozendict.frozendict({}),
-                                "binds": frozendict.frozendict({"test": 1}),
-                            }
-                        ),
-                    ),
-                    TypeNode(
-                        name="f",
-                        typedef="func",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict(
-                            {
-                                "rate_weight": None,
-                                "rate_calls": False,
-                                "materializer": 0,
-                                "input": 2,
-                                "output": 3,
-                            }
-                        ),
-                    ),
-                    TypeNode(
-                        name="no_arg",
-                        typedef="struct",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict(
-                            {
-                                "renames": frozendict.frozendict({}),
-                                "binds": frozendict.frozendict({}),
-                            }
-                        ),
-                    ),
-                    TypeNode(
-                        name="res",
-                        typedef="struct",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict(
-                            {
-                                "renames": frozendict.frozendict({}),
-                                "binds": frozendict.frozendict({"b": 4, "a": 7}),
-                            }
-                        ),
-                    ),
-                    TypeNode(
-                        name="dep_a",
-                        typedef="func",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict(
-                            {
-                                "rate_weight": None,
-                                "rate_calls": False,
-                                "materializer": 0,
-                                "input": 5,
-                                "output": 9,
-                            }
-                        ),
-                    ),
-                    TypeNode(
-                        name="deps",
-                        typedef="struct",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict(
-                            {
-                                "renames": frozendict.frozendict({}),
-                                "binds": frozendict.frozendict(
-                                    {"a1": 6, "a2": 7, "new": 8}
-                                ),
-                            }
-                        ),
-                    ),
-                    TypeNode(
-                        name="integer_2",
-                        typedef="integer",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict(
-                            {"inject": 7, "injection": "parent"}
-                        ),
-                    ),
-                    TypeNode(
-                        name="a",
-                        typedef="integer",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict({}),
-                    ),
-                    TypeNode(
-                        name="new",
-                        typedef="integer",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict({}),
-                    ),
-                    TypeNode(
-                        name="integer_5",
-                        typedef="integer",
-                        policies=(),
-                        runtime=0,
-                        data=frozendict.frozendict({}),
-                    ),
+            {
+                "types": [
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "object",
+                        "title": "single_runtime",
+                        "properties": {"query": 1, "mutation": 11},
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "object",
+                        "title": "Query",
+                        "properties": {"test": 2},
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "safe": True,
+                        "rate_calls": False,
+                        "type": "function",
+                        "title": "f",
+                        "input": 3,
+                        "output": 4,
+                        "materializer": 0,
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "object",
+                        "title": "no_arg",
+                        "properties": {},
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "object",
+                        "title": "res",
+                        "properties": {"b": 5, "a": 8},
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "safe": True,
+                        "rate_calls": False,
+                        "type": "function",
+                        "title": "dep_a",
+                        "input": 6,
+                        "output": 10,
+                        "materializer": 0,
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "object",
+                        "title": "deps",
+                        "properties": {"a1": 7, "a2": 8, "new": 9},
+                    },
+                    {
+                        "runtime": 0,
+                        "inject": 8,
+                        "injection": "parent",
+                        "policies": [],
+                        "type": "integer",
+                        "title": "integer_2",
+                    },
+                    {"runtime": 0, "policies": [], "type": "integer", "title": "a"},
+                    {"runtime": 0, "policies": [], "type": "integer", "title": "new"},
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "integer",
+                        "title": "integer_5",
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "object",
+                        "title": "Mutation",
+                        "properties": {},
+                    },
                 ],
-                materializers=[
-                    TypeMaterializer(
-                        name="function",
-                        runtime=0,
-                        data=frozendict.frozendict(
-                            {"serial": False, "script": "var _my_lambda = x2;"}
-                        ),
-                    )
+                "runtimes": [
+                    {
+                        "name": "deno",
+                        "data": {
+                            "worker": "default",
+                            "permissions": frozendict.frozendict({}),
+                        },
+                    }
                 ],
-                runtimes=[
-                    TypeRuntime(
-                        name="deno", data=frozendict.frozendict({"worker": "default"})
-                    )
+                "materializers": [
+                    {
+                        "name": "function",
+                        "runtime": 0,
+                        "data": {"serial": False, "script": "var _my_lambda = x2;"},
+                    }
                 ],
-                policies=[],
-                meta=TypeMeta(
-                    secrets=[],
-                    cors=Cors(
+                "meta": {
+                    "secrets": [],
+                    "auths": [],
+                    "rate": None,
+                    "cors": Cors(
                         allow_origin=[],
                         allow_headers=[],
                         expose_headers=[],
                         allow_credentials=True,
                         max_age=None,
                     ),
-                    auths=[],
-                    rate=[],
-                    version="0.0.1",
-                ),
-            )
+                    "version": "0.0.1",
+                },
+            }
         )

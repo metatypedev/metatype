@@ -1,5 +1,7 @@
 # Copyright Metatype under the Elastic License 2.0.
 
+from argparse import ArgumentParser
+from dataclasses import dataclass
 import importlib
 from pathlib import Path
 import pkgutil
@@ -11,41 +13,51 @@ from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import Relation
 
 
-def default(obj):
-    if isinstance(obj, Relation):
-        return {}
-    if isinstance(obj, frozendict):
-        return dict(obj)
-    raise TypeError
+# TDM is: typegraph definition module, defining one or more typegraphs
+@dataclass
+class LoadedTdm:
+    path: str
+    typegraphs: List[dict]
 
 
-def serialize_typegraph(tg, indent=False):
-    g = tg.build()
-    opt = dict(option=orjson.OPT_INDENT_2) if indent else {}
-    return orjson.dumps(g, default=default, **opt).decode()
+@dataclass
+class TypegraphError:
+    path: str
+    message: str
 
 
 def import_file(path: str) -> List[TypeGraph]:
+    """
+    Import typegraphs from a TDM.
+    """
+
     path = Path(path)
-    typegraphs = []
 
     spec = importlib.util.spec_from_file_location(path.name, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    for tg in find_typegraphs(module):
-        typegraphs.append(tg)
 
-    return typegraphs
+    return find_typegraphs(module)
 
 
-def import_folder(path) -> List[TypeGraph]:
-    typegraphs = []
+# def try_import_file(path: str) -> Union[List[TypeGraph], str]:
+#     """
+#     Returns the defined typegraphs or a error message
+#     """
+#     try:
+#         return import_file(path)
+#     except Exception:
+#         return traceback.format_exc()
 
-    for p in Path(path).glob("**/*.py"):
-        if ".venv" not in str(p):
-            typegraphs += import_file(p)
 
-    return typegraphs
+# def import_folder(path) -> Dict[str, Union[List[TypeGraph], str]]:
+#     ret = {}
+
+#     for p in Path(path).glob("**/*.py"):
+#         if ".venv" not in str(p):
+#             ret[str(p)] = try_import_file(p)
+
+#     return ret
 
 
 def import_modules(module, recursive=True):
@@ -73,3 +85,25 @@ def find_typegraphs(module) -> List[TypeGraph]:
         if isinstance(obj, TypeGraph):
             ret.append(obj)
     return ret
+
+
+def cmd():
+    parser = ArgumentParser()
+    parser.add_argument("module")
+    parser.add_argument("--pretty", action="store_true")
+    # TODO option: output file
+
+    args = parser.parse_args()
+
+    tgs = import_file(args.module)
+
+    def default(obj):
+        if isinstance(obj, frozendict):
+            return dict(obj)
+        if isinstance(obj, Relation):
+            return {}
+        raise TypeError
+
+    opt = dict(option=orjson.OPT_INDENT_2) if args.pretty else {}
+    json = orjson.dumps([tg.build() for tg in tgs], default=default, **opt).decode()
+    print(json)

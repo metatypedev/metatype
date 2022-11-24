@@ -1,8 +1,6 @@
 # Copyright Metatype under the Elastic License 2.0.
-
-from copy import deepcopy
-from types import NoneType
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import get_args
 from typing import get_origin
@@ -13,93 +11,130 @@ from typing import Tuple
 from typing import Type
 from typing import Union
 
+from attrs import evolve
+from attrs import field
+from attrs import frozen
 from frozendict import frozendict
 import orjson
+from typegraph.graphs.builder import Collector
+from typegraph.graphs.node import Node
+from typegraph.graphs.typegraph import find
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.graphs.typegraph import TypegraphContext
+from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
+from typegraph.policies import Policy
+from typegraph.utils.attrs import always
+from typegraph.utils.attrs import asdict
+from typegraph.utils.attrs import SKIP
+from typing_extensions import Self
 
 
-def replace(obj, **kwargs):
-    # handle errors
-    fields = {k: deepcopy(v) for k, v in vars(obj).items() if k not in kwargs}
-    fields.update(**kwargs)
-    return type(obj)(**fields)
+# if os.environ.get("DEBUG"):
+#     import debugpy
+
+#     debugpy.listen(5678)
+#     print("Waiting for debugger attach...")
+#     debugpy.wait_for_client()
+
+
+TypeNode = Union["typedef", NodeProxy]
+
+
+def remove_none_values(obj):
+    return {k: v for k, v in obj.items() if v is not None}
 
 
 def is_optional(tpe: Type):
     # Optional = Union[T, NoneType]
-    return get_origin(tpe) is Union and NoneType in get_args(tpe)
+    return get_origin(tpe) is Union and type(None) in get_args(tpe)
 
 
-class typedef:
-    graph: TypeGraph
-    name: str
-    description: Optional[str]
-    runtime: Optional["Runtime"]
-    inject: Optional[Union[str, "typedef"]]
-    injection: Optional[Any]
-    policies: Tuple["policy"]
+class Secret(Node):
+    secret: str
 
-    def __init__(
-        self,
-        graph: Optional[TypeGraph] = None,
-        runtime: Optional["Runtime"] = None,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        inject: Optional[Union[str, "typedef"]] = None,
-        injection: Optional[Any] = None,
-        policies: Optional[Tuple["policy"]] = None,
-        **kwargs,
-    ) -> "typedef":
+    def __init__(self, secret: str):
+        super().__init__("secrets")
+        self.secret = secret
 
-        for k, v in type(self).__annotations__.items():
-            # manage dataclass like behaviour (e.g. field) and block bad instanciation (e.g. [])
-            if is_optional(v):
-                setattr(self, k, kwargs.pop(k, getattr(self, k)))
+    def data(self, collector: "Collector") -> dict:
+        return self.secret  # this is a string
 
-        if graph is None:
-            self.graph = TypegraphContext.get_active()
-            if self.graph is None:
-                raise Exception("no typegraph context")
-            self.graph.register(self)
-        else:
-            self.graph = graph
 
-        # TODO ensure subclass type
-        self.name = f"{self.type}{self.graph.next_type_id()}" if name is None else name
-        self.description = description
-        self.runtime = runtime
-        self.inject = inject
-        self.injection = None if self.inject is None else injection
-        self.policies = tuple() if policies is None else policies
+def optional_field():
+    """Optional keyword-only field"""
+    return field(kw_only=True, default=None)
+
+
+@frozen
+class typedef(Node):
+    graph: TypeGraph = field(
+        kw_only=True,
+        factory=TypegraphContext.get_active,
+        init=False,
+        metadata={SKIP: True},
+    )
+    name: str = field(kw_only=True, default="")
+    description: Optional[str] = optional_field()
+    runtime: Optional["Runtime"] = optional_field()
+    inject: Optional[Union[str, TypeNode]] = optional_field()
+    injection: Optional[Any] = optional_field()
+    policies: Tuple[Policy, ...] = field(kw_only=True, factory=tuple)
+    runtime_config: Dict[str, Any] = field(
+        kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
+    )
+    _enum: Optional[List[Any]] = optional_field()
+
+    collector_target: Optional[str] = always(Collector.types)
+
+    def __attrs_post_init__(self):
+        if self.graph is None:
+            raise Exception("No typegraph context")
+        if self.name == "":
+            object.__setattr__(self, "name", f"{self.type}_{self.graph.next_type_id()}")
+        if self.inject is None:
+            object.__setattr__(self, "injection", None)
+
+    def replace(self, **changes):
+        return evolve(self, **changes)
 
     @property
     def type(self):
         return type(self).__name__
 
     @property
-    def edges(self) -> List["typedef"]:
-        return []
+    def edges(self) -> List[Node]:
+        secret = self.inject if self.injection == "secret" else None
+        return (
+            super().edges
+            + list(self.policies)
+            + list(filter(None, [self.runtime, secret]))
+        )
 
     def named(self, name: str) -> "typedef":
-        # TODO: ensure name is not already used in typegraph
-        return type(self)(**self, name=name)
+        types = self.graph.type_by_names
+        # TODO compare types
+        if name in types:
+            raise Exception(f"type name {name} already used")
+        ret = self.replace(name=name)
+        types[name] = ret
+        return ret
 
     def describe(self, description: str) -> "typedef":
-        return type(self)(**self, description=description)
+        return self.replace(description=description)
 
     def within(self, runtime):
         if runtime is None:
             raise Exception(f"cannot set runtime to None")
 
-        if self.runtime is not None and self._runtime != runtime:
+        if self.runtime is not None and self.runtime != runtime:
             raise Exception(
                 f"trying to set a different runtime {runtime}, already is {self.runtime}"
             )
 
-        self.runtime = runtime
+        object.__setattr__(self, "runtime", runtime)
+        return self
 
     def _propagate_runtime(self, runtime: "Runtime", visited: Set["typedef"] = None):
         if visited is None:
@@ -110,58 +145,81 @@ class typedef:
             visited.add(self)
 
         if self.runtime is None:
-            self.runtime = runtime
+            object.__setattr__(self, "runtime", runtime)
 
         for e in self.edges:
-            e._propagate_runtime(self.runtime, visited)
+            if isinstance(e, typedef):
+                e._propagate_runtime(self.runtime, visited)
+            if isinstance(e, NodeProxy):
+                e.get()._propagate_runtime(self.runtime, visited)
 
     def set(self, value):
         if self.inject is not None:
-            raise Exception(f"{self.node} can only have one injection")
+            raise Exception(f"{self.name} can only have one injection")
 
-        return type(self)(**self, injection="raw", inject=orjson.dumps(value).decode())
+        return self.replace(injection="raw", inject=orjson.dumps(value).decode())
 
     def from_secret(self, secret_name):
         if self.inject is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return type(self)(**self, injection="secret", inject=secret_name)
+        return self.replace(injection="secret", inject=Secret(secret_name))
 
     def from_parent(self, sibiling: "NodeProxy"):
         # TODO: check for same type and value in same context
         if self.inject is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return type(self)(**self, injection="parent", inject=sibiling)
+        return self.replace(injection="parent", inject=sibiling)
 
     def from_context(self, claim: str):
         if self.inject is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return type(self)(**self, injection="context", inject=claim)
+        return self.replace(injection="context", inject=claim)
 
     def add_policy(
         self,
-        *policies: List["policy"],
+        *policies: List["Policy"],
     ):
-        return self.__init__(**self, policies=self.policies + policies)
+        return self.replace(policies=self.policies + policies)
+
+    def config(self, *flags: str, **kwargs: Any):
+        d = dict()
+        d.update(self.runtime_config)
+        d.update(kwargs)
+        d.update({f: True for f in flags})
+        return self.replace(runtime_config=d)
+
+    def enum(self, variants: List[Any]) -> Self:
+        return self.replace(_enum=variants)
 
     def data(self, collector) -> dict:
-        ret = {
-            "type": self.type,
-            "title": self.name,
-            "description": self.description,
-            "runtime": collector.collect(Collector.runtimes, self.runtime),
-            "policies": [
-                collector.collect(Collector.materializers, p) for p in self.policies
-            ],
-        }
-        if self.inject is not None:
-            ret["inject"] = self.inject
-            ret["injection"] = self.injection
+        if self.runtime is None:
+            raise Exception("Expected Runtime, got None")
+
+        ret = remove_none_values(asdict(self))
+        ret["type"] = self.type
+        ret["title"] = ret.pop("name")
+        ret["runtime"] = collector.index(self.runtime)
+        ret["policies"] = [collector.index(p) for p in self.policies]
+        if self.injection == "parent":
+            ret["inject"] = collector.index(self.inject)
+        elif self.injection == "secret":
+            ret["inject"] = self.inject.secret
+
+        config = self.runtime.get_type_config(self)
+        if len(config) > 0:
+            ret["config"] = config
+
+        if hasattr(type(self), "constraint_data"):
+            ret.update(self.constraint_data())
+
+        ret.pop("collector_target")
+
         return ret
 
-    def optional(self, default_value: Optional[Any] = None):
+    def optional(self, default_value: Optional[Any] = None) -> "optional":
         if isinstance(self, optional):
             return self
 
@@ -182,89 +240,348 @@ class typedef:
         return f"{self.type}({attrs})"
 
 
-class optional(typedef):
-    of: typedef
-    default_value: Optional[Any] = None
+#
+# Type constraints
 
-    def __init__(self, of: typedef, **kwargs) -> "optional":
-        super().__init__(**kwargs)
-        self.of = of
+TYPE_CONSTRAINT = "__type_constraint_name"
+
+
+def constraint(name: Optional[str] = None):
+    """Additional constraint on type: Validation keyword.
+    Field to be manually set on the serialization.
+    """
+    return field(
+        kw_only=True, default=None, metadata={SKIP: True, TYPE_CONSTRAINT: name or True}
+    )
+
+
+def with_constraints(cls):
+    if not hasattr(cls, "__attrs_attrs__"):
+        raise Exception(
+            "@with_constraints decorator requires class to have attribute '__attrs_attrs__'"
+        )
+    if not issubclass(cls, typedef):
+        raise Exception("@with_constraints decorator requires a subclass of 'typedef'")
+
+    constraints = {}
+
+    def get_setter(name: str):
+        def setter(self, value):
+            return self.replace(**{name: value})
+
+        return setter
+
+    for f in cls.__attrs_attrs__:
+        if f.metadata is not None and TYPE_CONSTRAINT in f.metadata:
+            if not f.name.startswith("_"):
+                raise Exception(
+                    f"constraint field name '{f.name}' expected to start with an underscore"
+                )
+            name = f.name[1:]
+            key = f.metadata.get(TYPE_CONSTRAINT)
+            if isinstance(key, bool) and key:
+                key = name
+            constraints[key] = f.name
+
+            setattr(cls, name, get_setter(name))
+
+    if len(constraints) > 0:
+
+        def constraint_data(self):
+            return remove_none_values(
+                {key: getattr(self, name) for key, name in constraints.items()}
+            )
+
+        setattr(cls, "constraint_data", constraint_data)
+
+    return cls
+
+
+# end - Type constraints
+
+
+@frozen
+class optional(typedef):
+    of: TypeNode
+    default_value: Optional[str] = field(hash=False, default=None)
 
     def default(self, value):
         if self.default_value is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return self.__init__(**self, default_value=value)
+        return self.replace(default_value=value)
 
     @property
-    def edges(self) -> List["typedef"]:
-        return [self.of]
+    def edges(self) -> List[Node]:
+        return super().edges + [self.of]
 
     def data(self, collector) -> dict:
-        return {
-            **super().data(collector),
-            "item": collector.collect(Collector.types, self.of),
-            "default_value": self.default_value,
-        }
+        ret = super().data(collector)
+        ret["item"] = collector.index(ret.pop("of"))
+        return ret
 
 
-class string(typedef):
-    _min: Optional[int] = None
-    _max: Optional[int] = None
-
-    def __init__(self, **kwargs) -> "string":
-        self._min = min
-        super().__init__(**kwargs)
-
-    def min(self, n: int) -> "string":
-        return replace(self, _min=n)
-
-    def max(self, n: int) -> "string":
-        return replace(self, _max=n)
-
-
-class policy(typedef):
+@frozen
+class boolean(typedef):
     pass
 
 
-class Collector:
-    types = "types"
-    runtimes = "runtimes"
-    materializers = "materializers"
-
-    collects: Dict[str, List[Any]]
-
-    def __init__(self) -> "Collector":
-        self.collects = dict()
-
-    def collect(self, name: str, value: Any) -> int:
-        if name not in self.collects:
-            self.collects[name] = list()
-
-        collect = self.collects[name]
-
-        for i in range(len(collect)):
-            if collect[i] == value:
-                return i
-
-        collect.append(value)
-        return len(collect)
+@with_constraints
+@frozen
+class number(typedef):
+    _min: Optional[float] = constraint("minimum")
+    _max: Optional[float] = constraint("maximum")
+    _x_min: Optional[float] = constraint("exculiveMinimum")
+    _x_max: Optional[float] = constraint("exclusiveMaximum")
+    _multiple_of: Optional[float] = constraint("multipleOf")
 
 
-def visit(types: List[typedef], collector: Collector) -> List[Any]:
-    for t in types:
-        t.data(collector)
-        collector.collect(Collector.types, t)
-        visit(t.edges, collector)
+def float() -> number:
+    return number()
 
 
-with TypeGraph(
-    "new",
-) as g:
-    t = string().min(3).max(4).optional()
-    print(t)
+@frozen
+class integer(number):
+    pass
 
-    collector = Collector()
-    visit([t], collector)
-    for i, t in enumerate(collector.collects[Collector.types]):
-        print(i, t.data(collector))
+
+@with_constraints
+@frozen
+class string(typedef):
+    _min: Optional[int] = constraint("minLength")
+    _max: Optional[int] = constraint("maxLength")
+    _pattern: Optional[str] = constraint()
+    _format: Optional[str] = constraint()
+
+    def uuid(self) -> "string":
+        return self.format("uuid")
+
+    def email(self) -> "string":
+        return self.format("email")
+
+    def uri(self) -> "string":
+        return self.format("uri")
+
+    def json(self) -> "string":
+        return self.format("json")
+
+    def hostname(self) -> "string":
+        return self.format("hostname")
+
+
+def uuid() -> string:
+    return string().uuid()
+
+
+def email() -> string:
+    return string().email()
+
+
+def uri() -> string:
+    return string().uri()
+
+
+def json() -> string:
+    return string().json()
+
+
+def ean() -> string:
+    return string().format("ean")
+
+
+def path() -> string:
+    return string().format("path")
+
+
+def datetime() -> string:
+    return string().format("date-time")
+
+
+def date() -> string:
+    return string().format("date")
+
+
+def phone() -> string:
+    # TODO replace with the phone number pattern when typechecking
+    return string().format("phone")
+
+
+def enum(variants: List[str]) -> string:
+    return string().enum(variants)
+
+
+def validate_struct_props(instance, attribute, props):
+    for tpe in props.values():
+        if not isinstance(tpe, typedef) and not isinstance(tpe, NodeProxy):
+            raise Exception(f"expected typedef or NodeProxy, got {type(tpe).__name__}")
+
+
+@with_constraints
+@frozen
+class struct(typedef):
+    props: Dict[str, TypeNode] = field(
+        validator=[validate_struct_props], factory=frozendict, converter=frozendict
+    )
+    additional_props: Optional[Union[bool, TypeNode]] = None
+    _min: Optional[int] = constraint("minProperties")
+    _max: Optional[int] = constraint("maxProperties")
+    # _dependentRequired
+
+    def additional(self, t: Union[bool, TypeNode]):
+        return self.replace(additional_props=t)
+
+    def compose(self, props: Dict[str, typedef]):
+        new_props = dict(self.props)
+        new_props.update(props)
+        return self.replace(props=new_props)
+
+    def __getattr__(self, attr):
+        try:
+            return super().__getattr__(attr)
+        except AttributeError:
+            pass
+
+        if attr in self.props:
+            return self.props[attr]
+
+        raise Exception(f'no prop named "{attr}" in type {self}')
+
+    @property
+    def type(self):
+        return "object"
+
+    @property
+    def edges(self) -> List[Node]:
+        return super().edges + list(self.props.values())
+
+    def data(self, collector) -> dict:
+        ret = super().data(collector)
+        if self.additional_props is not None:
+            ret["additional_props"] = (
+                collector.index(self.additional_props)
+                if isinstance(self.additional_props, Node)
+                else self.additional_props
+            )
+        ret["properties"] = {k: collector.index(v) for k, v in ret.pop("props").items()}
+        return ret
+
+
+def any_object() -> struct:
+    return struct().additional(True)
+
+
+@with_constraints
+@frozen
+class array(typedef):
+    of: TypeNode
+
+    _min: Optional[int] = constraint("minItems")
+    _max: Optional[int] = constraint("maxItems")
+    _unique_items: Optional[bool] = constraint("uniqueItems")
+    # _min_contains: Optional[int] = None
+    # _max_contains: Optional[int] = None
+
+    @property
+    def edges(self) -> List[Node]:
+        return super().edges + [self.of]
+
+    def data(self, collector) -> dict:
+        ret = super().data(collector)
+        ret["items"] = collector.index(ret.pop("of"))
+        return ret
+
+
+@frozen
+class union(typedef):
+    variants: List[TypeNode]
+
+    @property
+    def edges(self) -> List[Node]:
+        return super().edges + self.variants
+
+    def data(self, collector: Collector) -> dict:
+        ret = super().data(collector)
+        ret["anyOf"] = [collector.index(v) for v in ret.pop("variants")]
+
+
+def ipv4() -> string:
+    return string().format("ipv4")
+
+
+def ipv6() -> string:
+    return string().format("ipv6")
+
+
+def ip() -> union:
+    return union([ipv4(), ipv6()])
+
+
+@frozen
+class any(typedef):
+    pass
+
+
+@frozen
+class func(typedef):
+    inp: TypeNode
+    out: TypeNode
+    mat: Materializer
+
+    # if not safe, output will be typechecked
+    safe: bool = field(kw_only=True, default=True)
+
+    rate_calls: bool = field(kw_only=True, default=False)
+    rate_weight: Optional[int] = field(kw_only=True, default=None)
+
+    def __attrs_post_init__(self):
+        object.__setattr__(self, "runtime", self.mat.runtime)
+
+    def rate(self, weight=None, calls=False):
+        return self.replace(rate_weight=weight, rate_calls=calls)
+
+    @property
+    def edges(self) -> List[Node]:
+        return super().edges + [self.inp, self.out, self.mat]
+
+    @property
+    def type(self) -> str:
+        return "function"
+
+    def data(self, collector) -> dict:
+        ret = super().data(collector)
+        inp = ret.pop("inp")
+        if isinstance(inp, NodeProxy):
+            inp = inp.get()
+        if not isinstance(inp, struct):
+            raise Exception(f"invalid input type, expected struct got {inp.name}")
+        ret["input"] = collector.index(inp)
+        ret["output"] = collector.index(ret.pop("out"))
+        ret["materializer"] = collector.index(ret.pop("mat"))
+        return ret
+
+    # this is not function composition
+    def compose(self, out: Dict[str, typedef]):
+        if not isinstance(self.out, struct):
+            raise Exception("Output required to be a struct.")
+        return self.replace(out=self.out.compose(out))
+
+    # def compose(self, other: "func") -> "func":
+    #     assert self.out == other.inp
+    #     # what if other == gen?
+    #     return func(self, other, IdentityMat())
+
+    # def __mul__(self, other: "func") -> "func":
+    #     return self.compose(other)
+
+
+def gen(out: typedef, mat: Materializer, **kwargs) -> func:
+    return func(struct(), out, mat, **kwargs)
+
+
+# single instance
+def named(name: str, define: Callable[[], typedef]) -> TypeNode:
+    defined = find(name)
+    if defined is not None:
+        return defined
+    else:
+        return define().named(name)

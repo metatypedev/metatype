@@ -1,100 +1,83 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-interface TypeNodeBase {
-  name: string;
-  typedef: string;
-  policies: Array<number>;
-  runtime: number;
-  data: TypeDataBase;
-}
+type Injection =
+  | { injection?: undefined; inject?: undefined }
+  | { injection: "parent"; inject: number }
+  | { injection: "secret"; inject: string }
+  | { injection: "context"; inject: string }
+  | { injection: "raw"; inject: string /* json */ };
 
-interface TypeDataBase {
-  default_value?: unknown;
-  injection?: unknown;
-  inject?: unknown;
-  random?: Record<string, Record<string, unknown>>;
-}
+type TypeNodeBase =
+  & {
+    // type: string;
+    title: string;
+    description?: string;
+    runtime: number;
+    policies: Array<number>;
+    config?: Record<string, any>;
+  }
+  & Injection;
 
-// string is not scalar, it is a list of chars
-export interface ScalarNode extends TypeNodeBase {
-  typedef:
-    | "integer"
-    | "unsigned_integer"
-    | "float"
-    | "char"
-    | "boolean"
-    | "string"
-    | "uuid"
-    | "json"
-    | "email"
-    | "uri";
-}
+export type OptionalNode = TypeNodeBase & {
+  type: "optional";
+  item: number;
+  default_value: any;
+};
 
-export interface QuantifierNode extends TypeNodeBase {
-  typedef: "optional" | "list";
-  data: TypeDataBase & {
-    of: number;
-  };
-}
+export type BooleanNode = TypeNodeBase & { type: "boolean" };
 
-export interface OptionalNode extends QuantifierNode {
-  typedef: "optional";
-}
+export type NumberNode = TypeNodeBase & {
+  type: "number";
+  minimum?: number;
+  exclusiveMinimum?: number;
+  exclusiveMaximum?: number;
+  multipleOf?: number;
+};
 
-export interface ListNode extends QuantifierNode {
-  typedef: "list";
-}
+export type IntegerNode = { type: "integer" } & Omit<NumberNode, "type">;
 
-export interface InjectionNode extends TypeNodeBase {
-  typedef: "injection";
-  data: TypeDataBase & {
-    of: number;
-  };
-}
+export type StringNode = TypeNodeBase & {
+  type: "string";
+  format?: string;
+  pattern?: string;
+  minLength?: number;
+  maxLength?: number;
+};
 
-export interface LiteralNode extends TypeNodeBase {
-  typedef: "literal";
-  data: TypeDataBase & {
-    value: unknown;
-  };
-}
+export type ObjectNode = TypeNodeBase & {
+  type: "object";
+  properties: Record<string, number>;
+  required?: string[];
+};
 
-export interface EnumNode extends TypeNodeBase {
-  typedef: "enum";
-  data: TypeDataBase & {
-    one_of: Array<number>;
-  };
-}
+export type ArrayNode = TypeNodeBase & {
+  type: "array";
+  items: number;
+  minItems?: number;
+  maxItems?: number;
+  uniqueItems?: boolean;
+};
 
-export interface StructNode extends TypeNodeBase {
-  typedef: "struct";
-  data: TypeDataBase & {
-    binds: Record<string, number>;
-    renames: Record<string, string>;
-  };
-}
+export type FunctionNode = TypeNodeBase & {
+  type: "function";
+  input: number;
+  output: number;
+  materializer: number;
+  rate_weight: number | null;
+  rate_calls: boolean;
+};
 
-export interface FuncNode extends TypeNodeBase {
-  typedef: "func" | "gen";
-  data: TypeDataBase & {
-    input: number;
-    output: number;
-    materializer: number;
-    rate_weight: number;
-    rate_calls: boolean;
-  };
-}
-
-// datetime, date, ean, path, ip, phone, set, json, tuple, union
+export type QuantifierNode = OptionalNode | ArrayNode;
 
 export type TypeNode =
-  | ScalarNode
-  | QuantifierNode
-  | InjectionNode
-  | LiteralNode
-  | EnumNode
-  | StructNode
-  | FuncNode;
+  | OptionalNode
+  | BooleanNode
+  | NumberNode
+  | IntegerNode
+  | StringNode
+  | ObjectNode
+  | ArrayNode
+  | FunctionNode;
 
 //
 // Runtimes
@@ -127,3 +110,46 @@ export interface PrismaRuntimeDS extends TypeRuntimeBase {
 }
 
 export type TypeRuntime = DenoRuntimeDS | PrismaRuntimeDS;
+
+//
+// Type utils
+
+export function isBoolean(t: TypeNode): t is BooleanNode {
+  return t.type === "boolean";
+}
+
+export function isNumber(t: TypeNode): t is NumberNode {
+  return t.type === "number";
+}
+
+export function isInteger(t: TypeNode): t is IntegerNode {
+  return t.type === "integer";
+}
+
+export function isString(t: TypeNode): t is StringNode {
+  return t.type === "string";
+}
+
+export function isObject(t: TypeNode): t is ObjectNode {
+  return t.type === "object";
+}
+
+export function isOptional(t: TypeNode): t is OptionalNode {
+  return t.type === "optional";
+}
+
+export function isArray(t: TypeNode): t is ArrayNode {
+  return t.type === "array";
+}
+
+export function isQuantifier(t: TypeNode): t is QuantifierNode {
+  return isOptional(t) || isArray(t);
+}
+
+export function isFunction(t: TypeNode): t is FunctionNode {
+  return t.type === "function";
+}
+
+export function getWrappedType(t: QuantifierNode): number {
+  return isOptional(t) ? t.item : t.items;
+}
