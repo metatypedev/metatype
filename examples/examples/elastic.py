@@ -1,7 +1,7 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.http import HTTPRuntime
 from typegraph.policies import allow_all
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 with TypeGraph(
     "elastic",
@@ -23,7 +23,7 @@ with TypeGraph(
                     "id": t.integer(),
                     "login": t.string(),
                 }
-            ).s_optional(),
+            ).optional(),
             auth_token_field="token",
         ).add_policy(all),
         add=remote.post(
@@ -39,7 +39,7 @@ with TypeGraph(
         ).add_policy(all),
         search=remote.get(
             "/test/_search",
-            t.struct({}).s_raw({"match": {"match_all": {}}}),
+            t.struct({}).set({"match": {"match_all": {}}}),
             t.struct(
                 {
                     "took": t.integer(),
@@ -47,7 +47,7 @@ with TypeGraph(
                         {
                             "total": t.struct({"value": t.integer()}),
                             "max_score": t.float(),
-                            "hits": t.list(
+                            "hits": t.array(
                                 t.struct(
                                     {
                                         "_index": t.string(),

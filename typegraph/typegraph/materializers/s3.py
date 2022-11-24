@@ -1,31 +1,29 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from dataclasses import dataclass
-from dataclasses import KW_ONLY
-
+from attrs import frozen
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
+from typegraph.utils.attrs import always
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class S3Runtime(Runtime):
     host: str
     region: str
     access_key_secret: str
     secret_key_secret: str
-    _: KW_ONLY
-    runtime_name: str = "s3"
+    runtime_name: str = always("s3")
 
-    @property
-    def data(self):
-        return {
-            **super().data,
-            "host": self.host,
-            "region": self.region,
-            "access_key_secret": self.access_key_secret,
-            "secret_key_secret": self.secret_key_secret,
-        }
+    def data(self, collector):
+        data = super().data(collector)
+        data["data"] |= dict(
+            host=self.host,
+            region=self.region,
+            access_key_secret=self.access_key_secret,
+            secret_key_secret=self.secret_key_secret,
+        )
+        return data
 
     def sign(self, bucket: str, content_type: str):
         return t.func(
@@ -39,26 +37,24 @@ class S3Runtime(Runtime):
             t.struct({"path": t.string()}),
             t.struct(
                 {
-                    "keys": t.list(t.struct({"key": t.string(), "size": t.integer()})),
-                    "prefix": t.list(t.string()),
+                    "keys": t.array(t.struct({"key": t.string(), "size": t.integer()})),
+                    "prefix": t.array(t.string()),
                 }
             ),
             ListMat(self, bucket),
         )
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class SignMat(Materializer):
     runtime: Runtime
     bucket: str
     content_type: str
-    _: KW_ONLY
-    materializer_name: str = "sign"
+    materializer_name: str = always("sign")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class ListMat(Materializer):
     runtime: Runtime
     bucket: str
-    _: KW_ONLY
-    materializer_name: str = "list"
+    materializer_name: str = always("list")

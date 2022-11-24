@@ -9,7 +9,7 @@ from typing import Iterable
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
 from typegraph.materializers.prisma import PrismaSchema
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 # import debugpy
 
@@ -41,7 +41,7 @@ class TestPrismaSchema:
         with TypeGraph(""):
             model = t.struct(
                 {
-                    "id": t.integer().id.auto,
+                    "id": t.integer().config("id", "auto"),
                     "name": t.string(),
                 }
             ).named("ModelA")
@@ -66,14 +66,14 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.integer().id,
+                    "id": t.integer().config("id"),
                     "posts": postAuthor.owned(),
                 }
             ).named("User")
 
             post = t.struct(
                 {
-                    "id": t.integer().id,
+                    "id": t.integer().config("id"),
                     "author": postAuthor.owner(),
                 }
             ).named("Post")
@@ -93,14 +93,14 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.integer().id,
+                    "id": t.integer().config("id"),
                     "profile": userProfile.owned(),
                 }
             ).named("User")
 
             profile = t.struct(
                 {
-                    "id": t.uuid().id.auto,
+                    "id": t.uuid().config("id", "auto"),
                     "user": userProfile.owner(),
                 }
             ).named("Profile")

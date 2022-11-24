@@ -5,147 +5,154 @@ from typegraph.materializers.deno import FunMat
 from typegraph.materializers.typegate import ResolverMat
 from typegraph.materializers.typegate import SchemaMat
 from typegraph.materializers.typegate import TypeMat
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 with TypeGraph("introspection") as g:
 
     enum_value = t.struct(
         {
             "name": t.string(),
-            "description": t.string().s_optional(),
+            "description": t.string().optional(),
             "isDeprecated": t.boolean(),
-            "deprecationReason": t.string().s_optional(),
+            "deprecationReason": t.string().optional(),
         }
     ).named("enum_value")
 
     input_value = t.struct(
         {
             "name": t.string(),
-            "description": t.string().s_optional(),
+            "description": t.string().optional(),
             "type": g("type"),
-            "defaultValue": t.string().s_optional(),
+            "defaultValue": t.string().optional(),
             "isDeprecated": t.boolean(),
-            "deprecationReason": t.string().s_optional(),
+            "deprecationReason": t.string().optional(),
         }
     ).named("input_value")
 
     field = t.struct(
         {
             "name": t.string(),
-            "description": t.string().s_optional(),
+            "description": t.string().optional(),
             "args": t.func(
                 t.struct(
                     {
-                        "includeDeprecated": t.boolean().s_optional(),
+                        "includeDeprecated": t.boolean().optional(),
                         # injection test
                         # "fieldName": g.proxy("field", lambda x: x.name),
                         # "parent": g.proxy("type", lambda x: x.name),
                     }
                 ),
-                t.list(input_value),
+                t.array(input_value),
                 ResolverMat(),
             ),
             "type": g("type"),
             "isDeprecated": t.boolean(),
-            "deprecationReason": t.string().s_optional(),
+            "deprecationReason": t.string().optional(),
         }
     ).named("field")
 
-    kind = t.enum(
-        [
-            "SCALAR",
-            "OBJECT",
-            "INTERFACE",
-            "UNION",
-            "ENUM",
-            "INPUT_OBJECT",
-            "LIST",
-            "NON_NULL",
-        ]
-    ).named("type_kind")
+    kind = (
+        t.string()
+        .enum(
+            [
+                "SCALAR",
+                "OBJECT",
+                "INTERFACE",
+                "UNION",
+                "ENUM",
+                "INPUT_OBJECT",
+                "LIST",
+                "NON_NULL",
+            ]
+        )
+        .named("type_kind")
+    )
 
     type = t.struct(
         {
             "kind": kind,
-            "name": t.string().s_optional(),
-            "description": t.string().s_optional(),
-            "specifiedByURL": t.string().s_optional(),
+            "name": t.string().optional(),
+            "description": t.string().optional(),
+            "specifiedByURL": t.string().optional(),
             "fields": t.func(
-                t.struct({"includeDeprecated": t.boolean().s_optional()}),
-                t.list(field).s_optional(),
+                t.struct({"includeDeprecated": t.boolean().optional()}),
+                t.array(field).optional(),
                 ResolverMat(),
             ),
-            "interfaces": t.list(g("type")).s_optional(),
-            "possibleTypes": t.list(g("type")).s_optional(),
+            "interfaces": t.array(g("type")).optional(),
+            "possibleTypes": t.array(g("type")).optional(),
             "enumValues": t.func(
-                t.struct({"includeDeprecated": t.boolean().s_optional()}),
-                t.list(enum_value).s_optional(),
+                t.struct({"includeDeprecated": t.boolean().optional()}),
+                t.array(enum_value).optional(),
                 ResolverMat(),
             ),
             "inputFields": t.func(
-                t.struct({"includeDeprecated": t.boolean().s_optional()}),
-                t.list(input_value).s_optional(),
+                t.struct({"includeDeprecated": t.boolean().optional()}),
+                t.array(input_value).optional(),
                 ResolverMat(),
             ),
-            "ofType": g("type", lambda x: x.s_optional()),
+            "ofType": g("type", lambda x: x.optional()),
         }
     ).named("type")
 
-    directive_location = t.enum(
-        [
-            "QUERY",
-            "MUTATION",
-            "SUBSCRIPTION",
-            "FIELD",
-            "FRAGMENT_DEFINITION",
-            "FRAGMENT_SPREAD",
-            "INLINE_FRAGMENT",
-            "VARIABLE_DEFINITION",
-            "SCHEMA",
-            "SCALAR",
-            "OBJECT",
-            "FIELD_DEFINITION",
-            "ARGUMENT_DEFINITION",
-            "INTERFACE",
-            "UNION",
-            "ENUM",
-            "ENUM_VALUE",
-            "INPUT_OBJECT",
-            "INPUT_FIELD_DEFINITION",
-        ]
-    ).named("directive_location")
+    directive_location = (
+        t.string()
+        .enum(
+            [
+                "QUERY",
+                "MUTATION",
+                "SUBSCRIPTION",
+                "FIELD",
+                "FRAGMENT_DEFINITION",
+                "FRAGMENT_SPREAD",
+                "INLINE_FRAGMENT",
+                "VARIABLE_DEFINITION",
+                "SCHEMA",
+                "SCALAR",
+                "OBJECT",
+                "FIELD_DEFINITION",
+                "ARGUMENT_DEFINITION",
+                "INTERFACE",
+                "UNION",
+                "ENUM",
+                "ENUM_VALUE",
+                "INPUT_OBJECT",
+                "INPUT_FIELD_DEFINITION",
+            ]
+        )
+        .named("directive_location")
+    )
 
     directive = t.struct(
         {
             "name": t.string(),
-            "description": t.string().s_optional(),
+            "description": t.string().optional(),
             "isRepeatable": t.boolean(),
-            "locations": t.list(directive_location),
+            "locations": t.array(directive_location),
             "args": t.func(
-                t.struct({"includeDeprecated": t.boolean().s_optional()}),
-                t.list(input_value),
+                t.struct({"includeDeprecated": t.boolean().optional()}),
+                t.array(input_value),
                 ResolverMat(),
             ),
         }
     ).named("directive")
 
-    allow_all = t.policy(t.struct(), FunMat.from_lambda(lambda args: True)).named(
-        "__allow_all"
-    )
+    allow_all = Policy(FunMat.from_lambda(lambda args: True)).named("__allow_all")
 
     get_type = t.func(
-        t.struct({"name": t.string()}), type.s_optional(), TypeMat()
+        t.struct({"name": t.string()}), type.optional(), TypeMat()
     ).add_policy(allow_all)
     g.expose(__type=get_type)
 
     schema = t.struct(
         {
-            "description": t.string().s_optional(),
-            "types": t.list(type),
+            "description": t.string().optional(),
+            "types": t.array(type),
             "queryType": type,
-            "mutationType": type.s_optional(),
-            "subscriptionType": type.s_optional(),
-            "directives": t.list(directive),
+            "mutationType": type.optional(),
+            "subscriptionType": type.optional(),
+            "directives": t.array(directive),
         }
     ).named("schema")
 

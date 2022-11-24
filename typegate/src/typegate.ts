@@ -7,12 +7,17 @@ import { renderPlayground } from "./web/playground.ts";
 import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
+import { getRequestLogger } from "./log.ts";
 
 interface ParsedPath {
   lookup: string;
   service?: string;
   providerName?: string;
 }
+
+const requestLogger = config.request_log != undefined
+  ? getRequestLogger(config.request_log)
+  : null;
 
 const parsePath = (pathname: string): ParsedPath | null => {
   const arr = pathname.split("/");
@@ -147,6 +152,11 @@ export const typegate =
         context,
         limit,
       );
+
+      if (requestLogger != null) {
+        requestLogger.info({ req: { query, operationName, variables } });
+        requestLogger.info({ res });
+      }
 
       headers.set("content-type", "application/json");
       for (const [k, v] of Object.entries(engine.tg.cors)) {

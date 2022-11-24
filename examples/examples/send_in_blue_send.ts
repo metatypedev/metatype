@@ -8,9 +8,9 @@ interface ISend {
   to: string;
 }
 
-export default async (
+export default async function (
   { name, email, subject, message, apiKey, from, to }: ISend,
-) => {
+) {
   try {
     const req = await fetch(
       "https://api.sendinblue.com/v3/smtp/email",
@@ -40,4 +40,4 @@ export default async (
   } catch (err) {
     return { success: false, error: err.message };
   }
-};
+}

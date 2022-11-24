@@ -3,7 +3,7 @@ from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import ModuleMat
 from typegraph.materializers.s3 import S3Runtime
 from typegraph.policies import allow_all
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 with TypeGraph(
@@ -41,7 +41,7 @@ with TypeGraph(
                         {
                             "width": t.integer(),
                             "height": t.integer(),
-                            "path": t.string().s_parent(g("Path")),
+                            "path": t.string().from_parent(g("Path")),
                         }
                     ),
                     t.string(),

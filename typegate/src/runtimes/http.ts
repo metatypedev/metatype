@@ -57,7 +57,7 @@ export class HTTPRuntime extends Runtime {
 
   static init(params: RuntimeInitParams): Runtime {
     const { typegraph, args } = params;
-    const typegraphName = typegraph.types[0].name;
+    const typegraphName = typegraph.types[0].title;
 
     const caCerts = args.cert_secret
       ? [envOrFail(typegraphName, args.cert_secret as string)]
@@ -80,7 +80,10 @@ export class HTTPRuntime extends Runtime {
     return new HTTPRuntime(args.endpoint as string, client, headers);
   }
 
-  async deinit(): Promise<void> {}
+  // deno-lint-ignore require-await
+  async deinit(): Promise<void> {
+    this.client.close();
+  }
 
   execute(method: string, pathPattern: string, options: MatOptions): Resolver {
     return async ({ _, ...input }) => {

@@ -2,7 +2,7 @@ from typegraph.graphs.typegraph import TypeGraph
 from typegraph.importers.openapi import import_openapi
 from typegraph.materializers.http import HTTPRuntime
 from typegraph.policies import allow_all
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 import_openapi("https://petstore3.swagger.io/api/v3/openapi.json", False)
 
@@ -22,7 +22,7 @@ with TypeGraph(name="petstore-v3") as g:
         {
             "id": t.optional(t.integer()),
             "username": t.optional(t.string()),
-            "address": t.optional(t.list(g("Address"))),
+            "address": t.optional(t.array(g("Address"))),
         }
     ).named("Customer")
     t.struct(
@@ -62,8 +62,8 @@ with TypeGraph(name="petstore-v3") as g:
             "id": t.optional(t.integer()),
             "name": t.string(),
             "category": t.optional(g("Category")),
-            "photoUrls": t.list(t.string()),
-            "tags": t.optional(t.list(g("Tag"))),
+            "photoUrls": t.array(t.string()),
+            "tags": t.optional(t.array(g("Tag"))),
             "status": t.optional(t.string()),
         }
     ).named("Pet")
@@ -86,16 +86,16 @@ with TypeGraph(name="petstore-v3") as g:
                     "status": t.optional(t.string()),
                 }
             ),
-            t.list(g("Pet")),
+            t.array(g("Pet")),
         ).add_policy(allow_all()),
         findPetsByTags=remote.get(
             "/pet/findByTags",
             t.struct(
                 {
-                    "tags": t.optional(t.list(t.string())),
+                    "tags": t.optional(t.array(t.string())),
                 }
             ),
-            t.list(g("Pet")),
+            t.array(g("Pet")),
         ).add_policy(allow_all()),
         getPetById=remote.get(
             "/pet/{petId}",

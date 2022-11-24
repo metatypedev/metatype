@@ -36,7 +36,7 @@ export class PrismaRuntime extends GraphQLRuntime {
     const schema = `${args.datasource}${args.datamodel}`;
     //console.log(schema);
     const instance = new PrismaRuntime(schema);
-    await instance.registerEngine(typegraph.types[0].name);
+    await instance.registerEngine(typegraph.types[0].title);
     return instance;
   }
 

@@ -9,7 +9,6 @@ meta:
         PATH: $PWD/examples/.venv/bin:$PATH
     depends_on:
         - libs
-        - typegate_native
 
 system_graphs:
     workdir: typegate
@@ -24,9 +23,11 @@ typegate1:
     envs:
         TG_PORT: "7891"
         PACKAGED: "false"
+        REQUEST_LOG: "tg1"
     shell: "./run.sh"
     depends_on:
         - clean_deno_bindgen_cache
+        - typegate_native
 
 typegate2:
     workdir: typegate
@@ -34,9 +35,11 @@ typegate2:
     envs:
         TG_PORT: "7892"
         PACKAGED: "false"
+        REQUEST_LOG: "tg2"
     shell: "./run.sh"
     depends_on:
         - clean_deno_bindgen_cache
+        - typegate_native
 
 libs:
     workdir: libs

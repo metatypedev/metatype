@@ -1,7 +1,7 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.graphql import GraphQLRuntime
 from typegraph.policies import allow_all
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 with TypeGraph("graphql") as g:
     gql = GraphQLRuntime("https://example.com/api/graphql")
@@ -23,10 +23,10 @@ with TypeGraph("graphql") as g:
                 "id": t.integer(),
                 "patch": t.struct(
                     {
-                        "name": t.string().s_optional(),
-                        "email": t.string().s_optional(),
+                        "name": t.string().optional(),
+                        "email": t.string().optional(),
                     }
-                ),
+                ),  # TODO min_props: 1
             }
         ),
         g("User"),

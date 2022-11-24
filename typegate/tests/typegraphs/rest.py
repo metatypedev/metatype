@@ -1,14 +1,14 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.http import HTTPRuntime
-from typegraph.types import typedefs as t
+from typegraph.policies import Policy
+from typegraph.types import types as t
 
 with TypeGraph("blog") as g:
 
     remote = HTTPRuntime("https://blog.example.com/api")
 
-    allow_all = t.policy(
-        t.struct(),
+    allow_all = Policy(
         FunMat.from_lambda(lambda args: True),
     ).named("allow_all_policy")
 
@@ -45,12 +45,12 @@ with TypeGraph("blog") as g:
         auth_token_field="authToken",
     ).add_policy(allow_all)
 
-    get_posts = remote.get("/posts", t.struct({}), t.list(g("Post"))).add_policy(
+    get_posts = remote.get("/posts", t.struct({}), t.array(g("Post"))).add_policy(
         allow_all
     )
 
     get_posts_by_tags = remote.get(
-        "/posts", t.struct({"tags": t.list(t.string())}), t.list(g("Post"))
+        "/posts", t.struct({"tags": t.array(t.string())}), t.array(g("Post"))
     ).add_policy(allow_all)
 
     delete_post = remote.delete(
@@ -60,7 +60,7 @@ with TypeGraph("blog") as g:
     ).add_policy(allow_all)
 
     get_comments = remote.get(
-        "/comments", t.struct({"postId": t.integer()}), t.list(g("Comment"))
+        "/comments", t.struct({"postId": t.integer()}), t.array(g("Comment"))
     ).add_policy(allow_all)
 
     post_comment = remote.post(

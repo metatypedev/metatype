@@ -1,6 +1,5 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-import argparse
 import inspect
 
 import black
@@ -9,7 +8,8 @@ from redbaron import RedBaron
 
 
 def pytest_addoption(parser):
-    parser.addoption("--override", default=False, action=argparse.BooleanOptionalAction)
+    parser.addoption("--override", default=False, action="store_true")
+    parser.addoption("--no-override", dest="override", action="store_false")
 
 
 class OverrideWrapper:

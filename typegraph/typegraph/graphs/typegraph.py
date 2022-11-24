@@ -9,11 +9,21 @@ from typing import Dict
 from typing import List
 from typing import Literal
 from typing import Optional
+from typing import Set
+from typing import Tuple
 from typing import TYPE_CHECKING
+from typing import Union
+
+from typegraph.graphs.builder import Collector
+from typegraph.graphs.node import Node
+from typegraph.materializers.deno import DenoRuntime
 
 
 if TYPE_CHECKING:
-    from typegraph.types import typedefs as t
+    from typegraph.types import types as t
+
+
+typegraph_version = "0.0.1"
 
 
 @dataclass(eq=True, frozen=True)
@@ -86,12 +96,16 @@ class Rate:
     local_excess: int = 0
 
 
+OperationTable = Dict[str, Union["t.func", "t.struct"]]
+
+
 class TypeGraph:
     # repesent domain projected to an interface
     name: str
     # version should be commit based
-    types: List["t.Type"]
-    exposed: Dict[str, "t.func"]
+    # types: List["t.typedef"]
+    type_by_names: Dict[str, "t.typedef"]  # for explicit names
+    exposed: OperationTable
     latest_type_id: int
     auths: List[Auth]
     rate: Optional[Rate]
@@ -107,12 +121,13 @@ class TypeGraph:
     ) -> None:
         super().__init__()
         self.name = name
-        self.types = []
+        # self.types = []
+        self.type_by_names = {}
         self.exposed = {}
         self.policies = []
         self.latest_type_id = 0
         self.auths = [] if auths is None else auths
-        self.rate = [] if rate is None else rate
+        self.rate = rate
         self.cors = Cors() if cors is None else cors
         self.path = Path(inspect.stack()[1].filename)
 
@@ -120,8 +135,8 @@ class TypeGraph:
         self.latest_type_id += 1
         return self.latest_type_id
 
-    def register(self, type: "t.Type"):
-        self.types.append(type)
+    # def register(self, type: "t.Type"):
+    #     self.types.append(type)
 
     def __enter__(self):
         TypegraphContext.push(self)
@@ -131,26 +146,122 @@ class TypeGraph:
         TypegraphContext.pop()
 
     def __call__(
-        self, node: str, after_apply: Callable[["t.Type"], "t.Type"] = lambda x: x
+        self, node: str, after_apply: Callable[["t.typedef"], "t.typdef"] = lambda x: x
     ) -> "NodeProxy":
         return NodeProxy(self, node, after_apply)
 
-    def expose(self, **funcs: Dict[str, "t.func"]):
-        from typegraph.types import typedefs as t
+    def expose(self, **ops: Union["t.func", "t.struct"]):
+        from typegraph.types import types as t
 
-        for name, func in funcs.items():
-            if not isinstance(func, t.func):
+        for name, op in ops.items():
+            if not isinstance(op, t.func):
                 raise Exception(
-                    f"cannot expose type={func.node} under {name}, requires a func"
+                    f"cannot expose type {op.title} under {name}, requires a function, got a {op.type}"
                 )
 
-        self.exposed.update(funcs)
+        self.exposed.update(ops)
         return self
 
-    def build(self):
-        from typegraph.graphs import builders
+    def root(self) -> "t.struct":
+        from typegraph.types import types as t
 
-        return builders.build(self)
+        def assert_non_serial_materializers(
+            tpe: Union[t.typedef, NodeProxy], history: Set[t.typedef] = set()
+        ):
+            if isinstance(tpe, NodeProxy):
+                tpe = tpe.get()
+
+            if tpe in history:
+                return
+
+            for e in tpe.edges:
+                if not isinstance(e, t.typedef):
+                    continue
+
+                if isinstance(e, t.func):
+                    if e.mat.serial:
+                        raise Exception(
+                            f"expected materializer to be non-serial ({e.mat})"
+                        )
+                    assert_non_serial_materializers(e.out)
+
+                else:
+                    assert_non_serial_materializers(e)
+
+        # split into queries and mutations
+        def split_operations(
+            namespace: t.struct,
+        ) -> Tuple[OperationTable, OperationTable]:
+            queries: OperationTable = {}
+            mutations: OperationTable = {}
+
+            for name, op in namespace.props.items():
+                if isinstance(op, t.struct):
+                    q, m = split_operations(op)
+                    q_name = f"{op.name}_q" if len(m) > 0 else op.name
+                    m_name = f"{op.name}_m" if len(q) > 0 else op.name
+
+                    if len(q) > 0:
+                        queries[name] = t.struct(q).named(q_name)
+                    if len(m) > 0:
+                        mutations[name] = t.struct(m).named(m_name)
+
+                elif isinstance(op, t.func):
+                    serial = op.mat.serial
+                    if not serial:
+                        assert_non_serial_materializers(op.out)
+                        queries[name] = op
+                    else:
+                        mutations[name] = op
+
+                else:
+                    raise Exception(
+                        f"expected operation or operation namespace, got type {op.type()}"
+                    )
+
+            return (queries, mutations)
+
+        with self:
+            queries, mutations = split_operations(t.struct(self.exposed))
+            root = t.struct(
+                {
+                    "query": t.struct(queries).named("Query"),
+                    "mutation": t.struct(mutations).named("Mutation"),
+                }
+            ).named(self.name)
+
+        root._propagate_runtime(DenoRuntime())
+
+        return root
+
+    def collect_nodes(self) -> Collector:
+        def visit(nodes: List[Node], collector: Collector):
+            for node in nodes:
+                if collector.collect(node):
+                    visit(node.edges, collector)
+
+        collector = Collector()
+        visit([self.root()], collector)
+
+        return collector
+
+    def build(self):
+        collector = self.collect_nodes()
+
+        ret = {
+            c: [n.data(collector) for n in collector.collects[c]]
+            for c in collector.collects
+        }
+
+        ret["meta"] = {
+            "secrets": ret.pop("secrets") if "secrets" in ret else [],
+            "auths": self.auths,
+            "rate": self.rate,
+            "cors": self.cors,
+            "version": typegraph_version,
+        }
+
+        return ret
 
 
 class TypegraphContext:
@@ -168,7 +279,7 @@ class TypegraphContext:
             return None
 
     @classmethod
-    def get_active(cls) -> Optional[TypeGraph]:
+    def get_active(cls) -> TypeGraph:
         try:
             return cls.typegraphs[-1]
         except IndexError:
@@ -180,30 +291,68 @@ def get_absolute_path(relative: str) -> Path:
     return tg_path.parent / relative
 
 
-class NodeProxy:
+class NodeProxy(Node):
+    g: TypeGraph
+    node: str
+    after_apply: Optional[Callable[["t.typedef"], "t.typedef"]]
+
     def __init__(
         self,
         g: TypeGraph,
         node: str,
-        after_apply: Callable[["t.Type"], "t.Type"],
+        after_apply: Optional[Callable[["t.typedef"], "t.typedef"]] = None,
     ):
         super().__init__()
         self.g = g
         self.node = node
         self.after_apply = after_apply
-        self.tpe = None
 
-    def then(self, then_apply: Callable[["t.Type"], "t.Type"]):
+    def then(self, then_apply: Callable[["t.typedef"], "t.typedef"]):
         return NodeProxy(self.g, self.node, lambda n: then_apply(self.after_apply(n)))
 
-    def get(self):
-        if self.tpe is None:
-            lookup = next((tpe for tpe in self.g.types if tpe.node == self.node), None)
-            if lookup is None:
-                raise Exception(f'unknown proxy type declared "{self.node}"')
+    def get(self) -> "t.typedef":
+        tpe = self.g.type_by_names.get(self.node)
+        if tpe is None:
+            raise Exception(f"No registered type named '{self.node}'")
+        if self.after_apply is None:
+            return tpe
+        tpe = self.after_apply(tpe)
+        self.g.type_by_names[tpe.name] = tpe
+        self.node, self.after_apply = tpe.name, None
+        return tpe
 
-            self.tpe = self.after_apply(lookup)
-        return self.tpe
+    @property
+    def edges(self) -> List["Node"]:
+        return self.get().edges
 
-    def __getattr__(self, attr):
-        return getattr(self.get(), attr)
+    def data(self, collector: "Collector") -> dict:
+        return self.get().data(collector)
+
+    @property
+    def name(self) -> str:
+        return self.node
+
+    def optional(self):
+        from typegraph.types import types as t
+
+        return t.optional(self)
+
+
+def find(node: str) -> Optional[NodeProxy]:
+    g = TypegraphContext.get_active()
+    if g is None:
+        raise Exception("No active TypegraphContext")
+    if node in g.type_by_names:
+        return g(node)
+    else:
+        return None
+
+
+def resolve_proxy(tpe: Union[NodeProxy, "t.typedef"]) -> "t.typedef":
+    from typegraph.types import types as t
+
+    if isinstance(tpe, NodeProxy):
+        return tpe.get()
+    else:
+        assert isinstance(tpe, t.typedef)
+        return tpe

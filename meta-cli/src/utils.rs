@@ -1,11 +1,13 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-use anyhow::{anyhow, Result};
+use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
 use reqwest::{
     blocking::{Client, RequestBuilder},
     IntoUrl,
 };
+use std::collections::HashMap;
+use std::hash::Hash;
 use std::path::Path;
 use std::time::Duration;
 
@@ -26,7 +28,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         set_var("PATH", &format!("{venv_bin}:{path}"));
         Ok(())
     } else {
-        Err(anyhow!("Python venv required"))
+        bail!("Python venv required")
     }
 }
 
@@ -218,5 +220,27 @@ pub mod graphql {
                 }
             }
         }
+    }
+}
+
+pub trait MapValues<K, V, W, O>: IntoIterator<Item = (K, V)>
+where
+    // K: Eq,
+    O: FromIterator<(K, W)>,
+{
+    fn map_values<M>(self, f: M) -> O
+    where
+        M: Fn(V) -> W;
+}
+
+impl<K, V, W> MapValues<K, V, W, HashMap<K, W>> for HashMap<K, V>
+where
+    K: Eq + Hash,
+{
+    fn map_values<M>(self, f: M) -> HashMap<K, W>
+    where
+        M: Fn(V) -> W,
+    {
+        self.into_iter().map(|(k, v)| (k, f(v))).collect()
     }
 }

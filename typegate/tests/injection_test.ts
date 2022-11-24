@@ -1,13 +1,14 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-import { gql, test } from "./utils.ts";
+import { cleanUp, gql, test } from "./utils.ts";
 import { assertRejects } from "std/testing/asserts.ts";
 
 test("Missing env var", async (t) => {
   await assertRejects(
     () => t.pythonFile("typegraphs/injection.py"),
-    "cannot find secret",
+    "cannot find env",
   );
+  await cleanUp();
 });
 
 test("Injected queries", async (t) => {
@@ -20,9 +21,9 @@ test("Injected queries", async (t) => {
       query {
         test(a: 0) {
           a
-          b 
+          b
           c
-          d 
+          d
           e {
             a2
           }
@@ -37,7 +38,7 @@ test("Injected queries", async (t) => {
           a: 0,
           b: 1,
           c: "2",
-          d: "3",
+          d: 3,
           e: {
             a2: 0,
           },

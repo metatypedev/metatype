@@ -214,7 +214,7 @@ test("Rest queries", async (t) => {
 
   await t.should("work with PATCH", async () => {
     await gql`
-      query {
+      mutation {
         updatePost(id: 12, content: "New post content") {
           id
           title
@@ -330,7 +330,7 @@ test("Rest queries", async (t) => {
 
   await t.should("work with PUT", async () => {
     await gql`
-      query {
+      mutation {
         replaceComment(id: 12, postId: 123, content: "Some comment") {
           id
           content

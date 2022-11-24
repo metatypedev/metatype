@@ -1,30 +1,37 @@
 // Copyright Metatype under the Elastic License 2.0.
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Context, Result};
+use colored::Colorize;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
-use indoc::formatdoc;
 use std::collections::HashMap;
 use std::env;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use walkdir::{DirEntry, WalkDir};
 
 use crate::ts::parser::{parse_module_source, transform_module, transform_script};
 
+pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
+
+#[derive(Clone)]
 pub struct TypegraphLoader {
+    working_dir: PathBuf,
     skip_deno_modules: bool,
-    working_dir: Option<PathBuf>,
+    ignore_unknown_file_types: bool,
 }
 
 impl TypegraphLoader {
     pub fn new() -> Self {
         Self {
+            working_dir: env::current_dir().unwrap(),
             skip_deno_modules: false,
-            working_dir: None,
+            ignore_unknown_file_types: false,
         }
     }
 
     pub fn working_dir<P: AsRef<Path>>(mut self, dir: P) -> Self {
-        self.working_dir = Some(dir.as_ref().to_path_buf());
+        self.working_dir = self.working_dir.join(dir.as_ref()).canonicalize().unwrap();
         self
     }
 
@@ -33,137 +40,109 @@ impl TypegraphLoader {
         self
     }
 
-    pub fn load_file<P: AsRef<Path>>(self, file: P) -> Result<HashMap<String, Typegraph>> {
-        postprocess_all(self.python().load_file(file)?)
+    pub fn ignore_unknown_file_types(mut self) -> Self {
+        self.ignore_unknown_file_types = true;
+        self
     }
 
-    pub fn load_files(self, files: &[PathBuf]) -> Result<HashMap<String, Typegraph>> {
-        postprocess_all(self.python().load_files(files)?)
-    }
+    pub fn load_file<P: AsRef<Path>>(self, path: P) -> Result<Option<Vec<Typegraph>>> {
+        // TODO no unwrap
+        let ext = path.as_ref().extension().and_then(|ext| ext.to_str());
 
-    pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> Result<HashMap<String, Typegraph>> {
-        postprocess_all(self.python().load_folder(dir)?)
-    }
+        let tgs = match ext {
+            Some(ext) if ext == "py" => self
+                .load_python_module(path.as_ref())
+                .with_context(|| format!("Loading python module {:?}", path.as_ref()))?,
+            _ => {
+                if self.ignore_unknown_file_types {
+                    return Ok(None);
+                } else {
+                    let ext = ext
+                        .map(|ext| format!(".{ext}"))
+                        .unwrap_or_else(|| "".to_owned());
+                    bail!("Unsupported typegraph definition module with extension \".{ext}\": current version only support Python modules.");
+                }
+            }
+        };
 
-    fn python(self) -> PythonTdmLoader {
-        PythonTdmLoader { loader: self }
-    }
-}
-
-// Python typegraph definition module loader
-struct PythonTdmLoader {
-    loader: TypegraphLoader,
-}
-
-impl PythonTdmLoader {
-    /// Load serialized typegraphs from a TDM
-    fn load_file<P: AsRef<Path>>(self, file: P) -> Result<HashMap<String, Typegraph>> {
-        self.collect_typegraphs(&format!(
-            r#"loaders.import_file("{}")"#,
-            file.as_ref().to_str().unwrap()
+        let tgs: Vec<Typegraph> = serde_json::from_str(&tgs)?;
+        Ok(Some(
+            tgs.into_iter()
+                .map(postprocess)
+                .collect::<Result<Vec<_>>>()?,
         ))
     }
 
-    fn load_files(self, files: &[PathBuf]) -> Result<HashMap<String, Typegraph>> {
-        let loader = files
+    pub fn load_files(self, files: &[PathBuf]) -> LoaderResult {
+        files
             .iter()
-            .map(|p| {
-                format!(
-                    r#"loaders.import_file("{file}")"#,
-                    file = p.to_str().unwrap()
-                )
+            .filter_map(
+                |file| match self.clone().load_file(self.working_dir.join(file)) {
+                    Ok(None) => None, // unreachable case
+                    Ok(Some(tgs)) => Some((file.to_str().unwrap().to_owned(), Ok(tgs))),
+                    Err(e) => Some((file.to_str().unwrap().to_owned(), Err(e))),
+                },
+            )
+            .collect()
+    }
+
+    pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> Result<LoaderResult> {
+        let dir = self.working_dir.join(dir);
+        // self.collect_typegraphs([dir.as_ref().to_owned()])
+        let metadata =
+            fs::metadata(&dir).with_context(|| format!("Reading the metadata of {:?}", dir))?;
+        if !metadata.is_dir() {
+            bail!("Expected a directory");
+        }
+
+        let loader = self.ignore_unknown_file_types();
+
+        Ok(WalkDir::new(dir)
+            .into_iter()
+            .filter_entry(|e| !is_hidden(e))
+            .filter_map(|e| {
+                // filter files
+                e.ok().map(|e| e.path().to_owned()).filter(|path| {
+                    fs::metadata(path)
+                        .ok()
+                        .map(|m| m.is_file())
+                        .unwrap_or(false)
+                })
             })
-            .collect::<Vec<_>>()
-            .join(" + ");
-        self.collect_typegraphs(&loader)
+            .filter_map(|file| match loader.clone().load_file(&file) {
+                Ok(None) => None,
+                Ok(Some(tgs)) => Some((file.to_str().unwrap().to_owned(), Ok(tgs))),
+                Err(e) => Some((file.to_str().unwrap().to_owned(), Err(e))),
+            })
+            .collect())
     }
 
-    /// Load serialized typegraphs from TDMs in `dir`
-    fn load_folder<P: AsRef<Path>>(self, dir: P) -> Result<HashMap<String, Typegraph>> {
-        self.collect_typegraphs(&format!(
-            r#"loaders.import_folder("{}")"#,
-            dir.as_ref().to_str().unwrap()
-        ))
-    }
+    // Language-specific steps.
+    // Returning typegraphs in raw (before post-processing) JSON.
 
-    fn collect_typegraphs(self, loader: &str) -> Result<HashMap<String, Typegraph>> {
-        let cwd = env::current_dir()?;
-        let working_dir = self.loader.working_dir.as_ref().unwrap_or(&cwd);
+    pub fn load_python_module<P: AsRef<Path>>(self, path: P) -> Result<String> {
+        // TODO ensure venv
 
-        let test = Command::new("python3")
-            .arg("-c")
-            .arg(formatdoc!(
-                r#"
-                from typegraph.utils import loaders
-                import orjson
-                tgs = {loader}
-                serialized_tgs = {{tg.name: loaders.serialize_typegraph(tg) for tg in tgs}}
-                print(orjson.dumps(serialized_tgs).decode())
-            "#
-            ))
-            .current_dir(working_dir)
+        let p = Command::new("py-tg")
+            .arg(path.as_ref().to_str().unwrap())
+            .current_dir(self.working_dir)
             .envs(env::vars())
             .env("PYTHONUNBUFFERED", "1")
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .env(
                 "DONT_READ_EXTERNAL_TS_FILES",
-                if self.loader.skip_deno_modules {
-                    "1"
-                } else {
-                    ""
-                },
+                if self.skip_deno_modules { "1" } else { "" },
             )
-            .output()?;
-        let stdout = String::from_utf8(test.stdout)?;
+            .output()
+            .with_context(|| format!("Running the command 'py-tg {:?}'", path.as_ref()))?;
 
-        if !test.status.success() {
-            let stderr = String::from_utf8(test.stderr)?;
-
-            if stderr.contains("ModuleNotFoundError: No module named 'typegraph'") {
-                bail!(
-                    "typegraph module not found in venv, install it with `pip install typegraph`",
-                );
-            }
-
-            bail!(
-                "PythonError\n{}\n{}",
-                if stdout.len() > 128 {
-                    &stdout[stdout.len() - 128..]
-                } else {
-                    &stdout
-                },
-                stderr
-            );
-        }
-
-        let tgs: HashMap<String, String> = serde_json::from_str(&stdout).unwrap_or_else(|_| {
-            panic!("cannot parse typegraph: {} (first 64 chars)", &stdout[..64])
-        });
-
-        tgs.into_iter()
-            .map(|(k, v)| Typegraph::from_json(&v).map(|tg| (k, tg)))
-            .collect()
-    }
-}
-
-pub trait UniqueTypegraph {
-    fn get_unique(self) -> Result<Typegraph>;
-}
-
-impl UniqueTypegraph for HashMap<String, Typegraph> {
-    fn get_unique(self) -> Result<Typegraph> {
-        if self.len() != 1 {
-            Err(anyhow!("requires one and only one typegraph in the map"))
+        if p.status.success() {
+            Ok(String::from_utf8(p.stdout)?)
         } else {
-            Ok(self.into_iter().next().unwrap().1)
+            let stderr = String::from_utf8(p.stderr)?;
+            bail!("Python error:\n{}", stderr.red())
         }
     }
-}
-
-fn postprocess_all(tgs: HashMap<String, Typegraph>) -> Result<HashMap<String, Typegraph>> {
-    tgs.into_iter()
-        .map(|(name, tg)| postprocess(tg).map(|tg| (name, tg)))
-        .collect()
 }
 
 type MaterializerPostprocessor = fn(Materializer, &Typegraph) -> Result<Materializer>;
@@ -232,4 +211,12 @@ mod utils {
             bail!("value is not an object");
         }
     }
+}
+
+fn is_hidden(entry: &DirEntry) -> bool {
+    entry
+        .file_name()
+        .to_str()
+        .map(|s| s.starts_with('.'))
+        .unwrap_or(false)
 }

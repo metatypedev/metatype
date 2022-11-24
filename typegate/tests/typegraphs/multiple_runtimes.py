@@ -3,7 +3,7 @@ from os import environ
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 postgres = environ.get(
@@ -23,14 +23,14 @@ with TypeGraph(name="prisma2") as g:
 
     user1 = t.struct(
         {
-            "id": t.integer().id.auto,
+            "id": t.integer().config("id", "auto"),
             "name": t.string(),
         }
     ).named("test1_User")
 
     user2 = t.struct(
         {
-            "id": t.integer().id.auto,
+            "id": t.integer().config("id", "auto"),
             "name": t.string(),
         }
     ).named("test2_User")

@@ -9,7 +9,7 @@ export const renderDebugAuth = async (
   engine: Engine,
   request: Request,
 ): Promise<string> => {
-  const name = engine.tg.root.name;
+  const name = engine.tg.name;
   const typegraphApi = `http://localhost:7890/${name}`;
   const cookies = getCookies(request.headers);
   const jwt = (cookies[name] ?? "").split(".")[1];

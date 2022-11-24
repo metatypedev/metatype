@@ -1,7 +1,7 @@
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 # import debugpy
 
@@ -19,7 +19,7 @@ with TypeGraph(name="blog") as g:
 
     users = t.struct(
         {
-            "id": t.integer().id,
+            "id": t.integer().config("id"),
             "name": t.string(),
             "posts": postAuthor.owned(),
             "profile": userProfile.owned(),
@@ -27,11 +27,19 @@ with TypeGraph(name="blog") as g:
     ).named("User")
 
     profiles = t.struct(
-        {"id": t.integer().id, "profilePic": t.string(), "user": userProfile.owner()}
+        {
+            "id": t.integer().config("id"),
+            "profilePic": t.string(),
+            "user": userProfile.owner(),
+        }
     ).named("Profile")
 
     posts = t.struct(
-        {"id": t.integer().id, "content": t.string(), "author": postAuthor.owner()}
+        {
+            "id": t.integer().config("id"),
+            "content": t.string(),
+            "author": postAuthor.owner(),
+        }
     ).named("Post")
 
     db.manage(users)

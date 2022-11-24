@@ -2,7 +2,7 @@
 
 import { ComputeStage } from "../engine.ts";
 import { Runtime } from "./Runtime.ts";
-import { StructNode } from "../type_node.ts";
+import { ObjectNode } from "../type_node.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 
 export class GoogleapisRuntime extends Runtime {
@@ -57,10 +57,10 @@ export class GoogleapisRuntime extends Runtime {
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
     const { verb, url } = stage.props.materializer?.data ?? {};
 
-    const outType = stage.props.outType as StructNode;
-    const iteratorReadMask = outType.data.binds &&
-      outType.data.binds.nextPageToken &&
-      outType.data.binds.totalSize;
+    const outType = stage.props.outType as ObjectNode;
+    const iteratorReadMask = outType.properties &&
+      outType.properties.nextPageToken &&
+      outType.properties.totalSize;
 
     const readMask: string[] = [];
     for (const field of sameRuntime) {

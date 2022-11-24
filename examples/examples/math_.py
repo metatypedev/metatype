@@ -3,7 +3,7 @@ from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import DenoRuntime
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import ModuleMat
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 with TypeGraph(name="math") as g:
     worker = DenoRuntime(worker="worker 1")
@@ -26,7 +26,7 @@ with TypeGraph(name="math") as g:
     g.expose(
         fib=t.func(
             t.struct({"size": t.integer()}),
-            t.list(t.float()),
+            t.array(t.float()),
             fib.imp("default"),
         ).add_policy(restrict_referer),
         random=t.func(
@@ -35,7 +35,7 @@ with TypeGraph(name="math") as g:
             FunMat("() => Math.random()"),
         ).add_policy(allow_all),
         randomItem=t.func(
-            t.struct({"items": t.list(t.string())}),
+            t.struct({"items": t.array(t.string())}),
             t.string(),
             FunMat(random_item_fn, runtime=worker),
         ).add_policy(allow_all),

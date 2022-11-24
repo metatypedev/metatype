@@ -1,7 +1,7 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.http import HTTPRuntime
 from typegraph.policies import allow_all
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 with TypeGraph("nesting") as g:
 
@@ -25,7 +25,7 @@ with TypeGraph("nesting") as g:
             "authorId": t.integer().named("Post.authorId"),
             "author": remote.get(
                 "/users/{id}",
-                t.struct({"id": t.integer().s_parent(g("Post.authorId"))}),
+                t.struct({"id": t.integer().from_parent(g("Post.authorId"))}),
                 t.optional(g("User")),
             ),
             "title": t.string(),

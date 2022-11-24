@@ -1,6 +1,6 @@
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.types import typedefs as t
+from typegraph.types import types as t
 
 
 def i18n(internal):
@@ -20,27 +20,20 @@ def with_time():
     }
 
 
-class currency(t.enum):
-    def __init__(self) -> None:
-        super().__init__(["CHF"])
-        self.alias_name = "currency"
+def currency():
+    return t.named("currency", lambda: t.enum(["CHF"]))
 
 
-class amount(t.unsigned_integer):
-    def __init__(self) -> None:
-        super().__init__()
-        self.alias_name = "amount"
+def amount():
+    return t.named("amount", lambda: t.integer().min(0))
 
 
-class price(t.struct):
-    def __init__(self) -> None:
-        super().__init__({"cents": amount(), "currency": currency()})
+def price():
+    return t.struct({"cents": amount(), "currency": currency()})
 
 
-class vat(t.integer):
-    def __init__(self) -> None:
-        super().__init__()
-        self.alias_name = "vat"
+def vat():
+    return t.named("vat", lambda: t.integer())
 
 
 # add generation time
@@ -51,7 +44,7 @@ with TypeGraph("caress") as g:
     product = (
         t.struct(
             {
-                "id": t.uuid().id,  # .s_optional(t.gen(t.uuid(), deno.AutoMaterializer())),
+                "id": t.uuid().config("id", "auto"),
                 "slug": t.string(),
                 "description": i18n(t.string),
                 "name": i18n(t.string),
@@ -62,12 +55,12 @@ with TypeGraph("caress") as g:
                 "disabled_at": t.optional(t.string()),
                 "facets": t.struct(
                     {
-                        "pet_type": t.list(t.enum(["cat", "dog"])),
+                        "pet_type": t.array(t.enum(["cat", "dog"])),
                         "medication_types": t.enum(["A", "B"]),
                     }
                 ),
-                "eans": t.list(t.ean()),
-                "images_uri": t.list(t.path()),
+                "eans": t.array(t.ean()),
+                "images_uri": t.array(t.path()),
                 "texts": i18n(
                     lambda: t.struct({"qa": t.string(), "usage": t.string()})
                 ),
@@ -80,24 +73,24 @@ with TypeGraph("caress") as g:
                 #    deno.AutoMaterializer(),
                 # ),
             }
-        )
-        .named("Product")
-        .s_refine(
-            g("Product", lambda p: p.price_public.amount > p.price_purchase.amount)
-        )
+        ).named("Product")
+        # .s_refine(
+        #     g("Product", lambda p: p.price_public.amount > p.price_purchase.amount)
+        # )
         .within(prisma)
     )
 
     # g.expose(**prisma.generate_crud(product))
 
-    user = t.struct({"id": t.uuid().id, **with_time()}).named("user")
+    user = t.struct({"id": t.uuid().config("id"), **with_time()}).named("user")
 
     payment_method = t.enum(["PFC"]).named("payment_method")
-    gateway = t.literal("datatrans")
+    # gateway = t.literal("datatrans")
+    gateway = t.string().set("datatrans")
 
     payment = t.struct(
         {
-            "id": t.uuid().id,
+            "id": t.uuid().config("id"),
             "status": t.string(),
             "gateway": gateway,
             "gateway_tx": t.string(),
@@ -106,9 +99,9 @@ with TypeGraph("caress") as g:
             "order": g("order"),
             "currency": currency(),
             "amount_authorized": amount(),
-            "amount_captured": amount().s_optional(),
+            "amount_captured": amount().optional(),
             "authorized_at": t.datetime(),
-            "captured_at": t.datetime().s_optional(),
+            "captured_at": t.datetime().optional(),
             "gateway_data": t.json(),
             "user": user,
             "payment_token": g("payment_token"),
@@ -118,11 +111,11 @@ with TypeGraph("caress") as g:
 
     payment_token = t.struct(
         {
-            "id": t.uuid().id,
+            "id": t.uuid().config("id"),
             "user": user,
             "gateway": gateway,
             "gateway_token": t.string(),
-            "expired_at": t.datetime().s_optional(),
+            "expired_at": t.datetime().optional(),
             "method": payment_method,
             "name": t.string(),
             **with_time(),
@@ -140,33 +133,33 @@ with TypeGraph("caress") as g:
     item_product = t.struct(
         {
             "product": product,
-            "kind": t.literal("product"),
+            "kind": t.string().set("product"),
             "name": product.name,
             "slug": product.slug,
-            "subs": t.list(sub),
+            "subs": t.array(sub),
             "images": product.images_uri,
             "price_vat": vat(),
             "images_uri": product.images_uri,
             "price_public": product.price_public,
-            **sub.of,
+            **sub.props,
         }
     )
 
     item_shipping = t.struct(
         {
-            "kind": t.literal("shippiing"),
-            "subs": t.list(sub),
+            "kind": t.string().set("shippiing"),
+            "subs": t.array(sub),
             "price_vat": vat(),
             "price_public": price(),
-            **sub.of,
+            **sub.props,
         }
     )
 
     order = t.struct(
         {
-            "id": t.uuid().id,
+            "id": t.uuid().config("id"),
             "status": t.enum(["waiting_payment"]),
-            "items": t.list(t.union([item_product, item_shipping])),
+            "items": t.array(t.union([item_product, item_shipping])),
             "user": user,
             "ip": t.ip(),
             **with_time(),
@@ -175,10 +168,10 @@ with TypeGraph("caress") as g:
 
     entity = t.struct(
         {
-            "id": t.uuid().id,
+            "id": t.uuid().config("id"),
             "name": t.string(),
             "entity_type": t.string(),
-            "entity_owners": t.list(g("entity_owner")),
+            "entity_owners": t.array(g("entity_owner")),
             "breed": t.string(),
             "gender": t.enum(["female", "male"]),
             "reproductive_status": t.enum(["sterilized", "non-sterilized"]),
@@ -201,7 +194,7 @@ with TypeGraph("caress") as g:
 
     user_address = t.struct(
         {
-            "id": t.uuid().id,
+            "id": t.uuid().config("id"),
             "user": user,
             "street": t.string(),
             "street_number": t.string(),
@@ -219,7 +212,7 @@ with TypeGraph("caress") as g:
 
     upload = t.struct(
         {
-            "id": t.uuid().id,
+            "id": t.uuid().config("id"),
             "user": user,
             "user_path": t.string(),
             "size": t.integer(),
@@ -234,7 +227,7 @@ with TypeGraph("caress") as g:
 
     address = t.struct(
         {
-            "id": t.uuid().id,
+            "id": t.uuid().config("id"),
             "street": t.string(),
             "street_number": t.string(),
             "postal_code": t.string(),
@@ -248,14 +241,14 @@ with TypeGraph("caress") as g:
 
     biz = t.struct(
         {
-            "id": t.uuid().id,
+            "id": t.uuid().config("id"),
             "name": t.string(),
             "address": address,
             "slug": t.string(),
-            "disabled_at": t.datetime().s_optional(),
-            "web": t.uri().s_optional(),
-            "phones": t.list(t.phone()),
-            "emails": t.list(t.email()),
+            "disabled_at": t.datetime().optional(),
+            "web": t.uri().optional(),
+            "phones": t.array(t.phone()),
+            "emails": t.array(t.email()),
             "sources": t.json(),
             **with_time(),
         }
