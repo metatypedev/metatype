@@ -1,6 +1,6 @@
-// Copyright Metatype under the Elastic License 2.0.
-
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
+
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use convert_case::{Case, Casing};
 use deno_bindgen::deno_bindgen;

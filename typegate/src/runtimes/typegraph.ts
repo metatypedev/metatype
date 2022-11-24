@@ -1,4 +1,4 @@
-// Copyright Metatype under the Elastic License 2.0.
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { TypeKind } from "graphql";
