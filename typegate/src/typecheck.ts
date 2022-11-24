@@ -1,4 +1,4 @@
-// Copyright Metatype under the Elastic License 2.0.
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 // deno-lint-ignore-file no-unused-vars
 import type * as jst from "json_schema_typed";

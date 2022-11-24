@@ -1,4 +1,4 @@
-// Copyright Metatype under the Elastic License 2.0.
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 // https://github.com/prisma/prisma-engines/blob/main/introspection-engine/introspection-engine-tests/src/test_api.rs
 

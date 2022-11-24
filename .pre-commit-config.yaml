@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.4.0
     hooks:
       - id: check-added-large-files
       - id: check-ast
@@ -18,7 +18,7 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
-    rev: 5.0.4
+    rev: 6.0.0
     hooks:
       - id: flake8
   - repo: https://github.com/commitizen-tools/commitizen
@@ -66,7 +66,8 @@ repos:
       - id: insert-license
         name: "License header python"
         args:
-          - --license-filepath=licenses/header.txt
+          #- --remove-header
+          - --license-filepath=license-header.txt
           - "--comment-style=#"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
@@ -75,7 +76,8 @@ repos:
       - id: insert-license
         name: "License header rust"
         args:
-          - --license-filepath=licenses/header.txt
+          #- --remove-header
+          - --license-filepath=license-header.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
@@ -84,7 +86,8 @@ repos:
       - id: insert-license
         name: "License header deno"
         args:
-          - --license-filepath=licenses/header.txt
+          #- --remove-header
+          - --license-filepath=license-header.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
