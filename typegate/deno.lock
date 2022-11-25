@@ -433,5 +433,89 @@
     "https://raw.githubusercontent.com/denodrivers/redis/master/vendor/https/deno.land/std/async/deferred.ts": "34768f0a7c7873f2c5f205bdd7b94bc5b95153a30ec2901c9237d29cf8d2ffc4",
     "https://raw.githubusercontent.com/denodrivers/redis/master/vendor/https/deno.land/std/async/delay.ts": "4837c1cdc23448ff2e93f4d67eb2ad6dbc4a03af6b932eefb0efb1e17b08f07d",
     "https://raw.githubusercontent.com/denodrivers/redis/master/vendor/https/deno.land/std/io/buffer.ts": "56cc88fb8625276817bb33cd6bc2faf450e778e31fc26e2e2385e1a344481d5b"
+  },
+  "npm": {
+    "specifiers": {
+      "@sentry/node@7.12.1": "@sentry/node@7.12.1",
+      "chance@1.1.8": "chance@1.1.8"
+    },
+    "packages": {
+      "@sentry/core@7.12.1": {
+        "integrity": "sha512-DFHbzHFjukhlkRZ5xzfebx0IBzblW43kmfnalBBq7xEMscUvnhsYnlvL9Y20tuPZ/PrTcq4JAHbFluAvw6M0QQ==",
+        "dependencies": {
+          "@sentry/hub": "@sentry/hub@7.12.1",
+          "@sentry/types": "@sentry/types@7.12.1",
+          "@sentry/utils": "@sentry/utils@7.12.1",
+          "tslib": "tslib@1.14.1"
+        }
+      },
+      "@sentry/hub@7.12.1": {
+        "integrity": "sha512-KLVnVqXf+CRmXNy9/T8K2/js7QvOQ94xtgP5KnWJbu2rl+JhxnIGiBRF51lPXFIatt7zWwB9qNdMS8lVsvLMGQ==",
+        "dependencies": {
+          "@sentry/types": "@sentry/types@7.12.1",
+          "@sentry/utils": "@sentry/utils@7.12.1",
+          "tslib": "tslib@1.14.1"
+        }
+      },
+      "@sentry/node@7.12.1": {
+        "integrity": "sha512-ZVT2+lLd3gbhOuCOczlFLHH2KnD4EXrq6jRp5Sb2vsSZGVHnVsbD5j7i54zbSBqcydlFqzVMqWSysGTKoYiimw==",
+        "dependencies": {
+          "@sentry/core": "@sentry/core@7.12.1",
+          "@sentry/hub": "@sentry/hub@7.12.1",
+          "@sentry/types": "@sentry/types@7.12.1",
+          "@sentry/utils": "@sentry/utils@7.12.1",
+          "cookie": "cookie@0.4.2",
+          "https-proxy-agent": "https-proxy-agent@5.0.1",
+          "lru_map": "lru_map@0.3.3",
+          "tslib": "tslib@1.14.1"
+        }
+      },
+      "@sentry/types@7.12.1": {
+        "integrity": "sha512-VGZs39SZgMcCGv7H0VyFy1LEFGsnFZH590JUopmz6nG63EpeYQ2xzhIoPNAiLKbyUvBEwukn+faCg3u3MGqhgQ==",
+        "dependencies": {}
+      },
+      "@sentry/utils@7.12.1": {
+        "integrity": "sha512-Dh8B13pC0u8uLM/zf+oZngyg808c6BDEO94F7H+h3IciCVVd92A0cOQwLGAEdf8srnJgpZJNAlSC8lFDhbFHzQ==",
+        "dependencies": {
+          "@sentry/types": "@sentry/types@7.12.1",
+          "tslib": "tslib@1.14.1"
+        }
+      },
+      "agent-base@6.0.2": {
+        "integrity": "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==",
+        "dependencies": { "debug": "debug@4.3.4" }
+      },
+      "chance@1.1.8": {
+        "integrity": "sha512-v7fi5Hj2VbR6dJEGRWLmJBA83LJMS47pkAbmROFxHWd9qmE1esHRZW8Clf1Fhzr3rjxnNZVCjOEv/ivFxeIMtg==",
+        "dependencies": {}
+      },
+      "cookie@0.4.2": {
+        "integrity": "sha512-aSWTXFzaKWkvHO1Ny/s+ePFpvKsPnjc551iI41v3ny/ow6tBG5Vd+FuqGNhh1LxOmVzOlGUriIlOaokOvhaStA==",
+        "dependencies": {}
+      },
+      "debug@4.3.4": {
+        "integrity": "sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==",
+        "dependencies": { "ms": "ms@2.1.2" }
+      },
+      "https-proxy-agent@5.0.1": {
+        "integrity": "sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==",
+        "dependencies": {
+          "agent-base": "agent-base@6.0.2",
+          "debug": "debug@4.3.4"
+        }
+      },
+      "lru_map@0.3.3": {
+        "integrity": "sha512-Pn9cox5CsMYngeDbmChANltQl+5pi6XmTrraMSzhPmMBbmgcxmqWry0U3PGapCU1yB4/LqCcom7qhHZiF/jGfQ==",
+        "dependencies": {}
+      },
+      "ms@2.1.2": {
+        "integrity": "sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==",
+        "dependencies": {}
+      },
+      "tslib@1.14.1": {
+        "integrity": "sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==",
+        "dependencies": {}
+      }
+    }
   }
 }
