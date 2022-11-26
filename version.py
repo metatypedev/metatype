@@ -4,6 +4,10 @@ import json
 import subprocess
 import sys
 
+# Usage:
+# ./version.py                                      output current version
+# ./version.py [major|minor|patch|rc|beta|alpha]    bump version with specified increment
+
 
 def shell(cmd: str, cwd=None):
     return subprocess.check_output(cmd, shell=True, cwd=cwd)

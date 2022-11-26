@@ -27,18 +27,18 @@ migration-connector = { git = "https://github.com/prisma/prisma-engines" }
 connection-string = "0.1.14"
 url = "2.3.1"
 thiserror = "1.0.37"
-tokio = { version = "1.21.2", features = ["full"] }
+tokio = { version = "1.22.0", features = ["full"] }
 lazy_static = "1.4.0"
 log = "0.4.17"
-env_logger = "0.9.1"
-serde_json = "1.0.87"
+env_logger = "0.10.0"
+serde_json = "1.0.89"
 dashmap = "5.4.0"
 common = { path = "../../libs/common" }
-sentry = "0.27.0"
+sentry = "0.29.0"
 static_init = "1.0.3"
 tempfile = "3.3.0"
 convert_case = "0.6.0"
-flate2 = "1.0.24"
+flate2 = "1.0.25"
 tar = "0.4.38"
 base64 = "0.13.1"
 rust-s3 = { git = "https://github.com/zifeo/rust-s3", branch = "order" }
