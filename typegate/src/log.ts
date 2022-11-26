@@ -30,6 +30,7 @@ export function getLogger(
 }
 
 export function getRequestLogger(name: string): Logger {
+  Deno.mkdirSync("logs", { recursive: true });
   const handler = new handlers.FileHandler("INFO", {
     filename: "logs/requests.log",
     formatter: "[{loggerName}] {msg}",
