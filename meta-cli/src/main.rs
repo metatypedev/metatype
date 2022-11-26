@@ -18,6 +18,8 @@ use cli::prisma::Commands as PrismaCommands;
 use cli::prisma::Prisma;
 use cli::serialize::Serialize;
 use cli::Action;
+use common::get_version;
+
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None, disable_version_flag = true)]
@@ -44,6 +46,8 @@ enum Commands {
     Deploy(Deploy),
     /// Codegen
     Codegen(Codegen),
+    /// Upgrade
+    Upgrade,
 }
 
 fn main() -> Result<()> {
@@ -84,6 +88,17 @@ fn main() -> Result<()> {
                     deno.run(args.dir)?;
                 }
             },
+            Commands::Upgrade => {
+                let status = self_update::backends::github::Update::configure()
+                    .repo_owner("metatypedev")
+                    .repo_name("metatype")
+                    .bin_name("meta")
+                    .show_download_progress(true)
+                    .current_version(&get_version())
+                    .build()?
+                    .update()?;
+                println!("Update status: `{}`!", status.version());
+            }
         }
     }
 
