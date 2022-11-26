@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
+const fs = require("fs/promises");
 
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
@@ -8,7 +9,8 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Metatype",
-  tagline: "Open platform for API composition",
+  tagline:
+    "Free and open platform for API composition. Deploy and connect your systems (REST, GraphQL, SQL, S3, custom scripts, etc.) in a breeze.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -37,6 +39,33 @@ const config = {
             ],
           },
         };
+      },
+    }),
+    () => ({
+      name: "releases",
+      async loadContent() {
+        const file = "docs/references/changelog.mdx";
+        const { ctime } = await fs.stat(file);
+        if (new Date() - ctime < 10 * 1000) {
+          console.log("cached releases");
+          return await fs.readFile(file, "utf8");
+        }
+
+        console.log("freshly loaded release");
+        const res = await fetch(
+          "https://api.github.com/repos/zifeo/dataconf/releases?per_page=100&page=1"
+        ).then((r) => r.json());
+
+        const changelog = res
+          .filter((r) => !r.draft)
+          .map(
+            ({ html_url, name, body, prerelease, created_at }) =>
+              `## [${name}](${html_url}) (${
+                prerelease ? "Prerelease, " : ""
+              }${new Date(created_at).toLocaleDateString("en-US")})\n\n${body}`
+          )
+          .join("\n\n");
+        await fs.writeFile(file, `# Changelog\n\n${changelog}`);
       },
     }),
     require.resolve("docusaurus-lunr-search"),
