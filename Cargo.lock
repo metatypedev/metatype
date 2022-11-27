@@ -466,6 +466,27 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfb24e866b15a1af2a1b663f10c6b6b8f397a84aadb828f12e5b289ec23a3a3c"
 
 [[package]]
+name = "bzip2"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6afcd980b5f3a45017c57e57a2fcccbb351cc43a356ce117ef760ef8052b89b0"
+dependencies = [
+ "bzip2-sys",
+ "libc",
+]
+
+[[package]]
+name = "bzip2-sys"
+version = "0.1.11+1.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "736a955f3fa7875102d57c82b8cac37ec45224a07fd32d58f9f7a186b6cd4cdc"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -607,7 +628,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.2-alpha.5"
+version = "0.0.2-alpha.6"
 dependencies = [
  "anyhow",
  "serde",
@@ -2468,7 +2489,7 @@ dependencies = [
 
 [[package]]
 name = "meta"
-version = "0.0.2-alpha.5"
+version = "0.0.2-alpha.6"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -2940,7 +2961,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.0.2-alpha.5"
+version = "0.0.2-alpha.6"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -4549,6 +4570,8 @@ version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7e08f3ce73aed26096783c26570ba416ff8f4524c89a14bcdf068967dc80daef"
 dependencies = [
+ "either",
+ "flate2",
  "hyper",
  "indicatif",
  "log",
@@ -4559,6 +4582,7 @@ dependencies = [
  "serde_json",
  "tar",
  "tempfile",
+ "zip",
 ]
 
 [[package]]
@@ -6972,3 +6996,17 @@ name = "zeroize"
 version = "1.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c394b5bd0c6f669e7275d9c20aa90ae064cb22e75a1cad54e1b34088034b149f"
+
+[[package]]
+name = "zip"
+version = "0.6.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "537ce7411d25e54e8ae21a7ce0b15840e7bfcff15b51d697ec3266cc76bdf080"
+dependencies = [
+ "byteorder",
+ "bzip2",
+ "crc32fast",
+ "crossbeam-utils",
+ "flate2",
+ "time 0.3.17",
+]
