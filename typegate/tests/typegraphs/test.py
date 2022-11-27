@@ -35,9 +35,7 @@ with TypeGraph("test") as g:
         }
     ).named("users")
 
-    allow_all_policy = Policy(
-        FunMat.from_lambda(lambda args: True),
-    ).named("allow_all_policy")
+    allow_all_policy = Policy(FunMat("() => true")).named("allow_all_policy")
 
     arg = t.struct({"value": t.integer(), "nested": t.struct({"value": t.integer()})})
 
@@ -112,16 +110,14 @@ with TypeGraph("test") as g:
                                 "duration": t.func(
                                     t.struct({"integer": g("reint")}),
                                     t.integer().named("duration_remote"),
-                                    FunMat.from_lambda(
-                                        lambda args: args.parent.integer * 3
-                                    ),
+                                    FunMat("(args) => args.parent.integer * 3"),
                                 ).named("compute_duration_remote"),
                             }
                         ).named("remote"),
                     ),
                     "duration": t.gen(
                         t.integer().named("duration"),
-                        FunMat.from_lambda(lambda args: args.parent.out * 2),
+                        FunMat("(args) => args.parent.out * 2"),
                     ).named("compute_duration"),
                     "self": g("f"),
                     "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),

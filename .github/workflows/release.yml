@@ -1,4 +1,7 @@
 on:
+  push:
+    tags:
+      - v*
   release:
     types:
       - published
@@ -29,7 +32,7 @@ jobs:
       - name: Check and bump version
         run: |
           if [[ "${{ github.ref_name }}" != "v$(./version.py)" ]]; then
-            echo "Tag does not match code version"
+            echo "Tag does not match code version, stopping."
             exit -1
           fi
 
@@ -142,7 +145,7 @@ jobs:
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ghcr.io/${{ github.repository }}:${{ github.ref }},ghcr.io/${{ github.repository }}:latest
+          tags: ghcr.io/${{ github.repository }}:${{ github.ref_name }},ghcr.io/${{ github.repository }}:latest
           build-args: |
             RUST_VERSION=${{ env.RUST_VERSION }}
             DENO_VERSION=${{ env.DENO_VERSION }}

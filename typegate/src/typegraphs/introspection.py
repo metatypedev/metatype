@@ -138,7 +138,7 @@ with TypeGraph("introspection") as g:
         }
     ).named("directive")
 
-    allow_all = Policy(FunMat.from_lambda(lambda args: True)).named("__allow_all")
+    allow_all = Policy(FunMat("() => true")).named("__allow_all")
 
     get_type = t.func(
         t.struct({"name": t.string()}), type.optional(), TypeMat()

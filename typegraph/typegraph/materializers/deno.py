@@ -70,12 +70,9 @@ class FunMat(Materializer):
 
     @classmethod
     def from_lambda(cls, function, runtime=DenoRuntime()):
-        from metapensiero.pj.__main__ import transform_string
-
         lambdas = LambdaCollector.collect(function)
         assert len(lambdas) == 1
-        code = transform_string(f"_my_lambda = {lambdas[0]}").rstrip()
-        return FunMat(script=code, runtime=runtime)
+        raise NotImplementedError
 
     def __attrs_post_init__(self):
         if self.fn_expr is None:

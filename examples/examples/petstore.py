@@ -8,9 +8,7 @@ with TypeGraph("swagger-petstore") as g:
 
     remote = HTTPRuntime("https://petstore.swagger.io/v2")
 
-    allow_all = Policy(
-        FunMat.from_lambda(lambda args: True),
-    ).named("allow_all_policy")
+    allow_all = Policy(FunMat("() => true")).named("allow_all_policy")
 
     category = t.struct(
         {

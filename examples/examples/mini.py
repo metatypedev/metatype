@@ -8,9 +8,7 @@ with TypeGraph("mini") as g:
 
     remote = GraphQLRuntime("https://graphqlzero.almansi.me/api")
 
-    allow_all = Policy(
-        FunMat.from_lambda(lambda args: True),
-    ).named("allow_all_policy")
+    allow_all = Policy(FunMat("() => true")).named("allow_all_policy")
 
     post = t.struct(
         {

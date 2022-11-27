@@ -21,9 +21,7 @@ with TypeGraph(
         context_identifier="user",
     ),
 ) as g:
-    admin_only = Policy(
-        FunMat.from_lambda(lambda args: args["user"] == "admin"),
-    ).named("admin_only")
+    admin_only = Policy(FunMat("(args) => args.user === 'admin'")).named("admin_only")
 
     g.expose(
         prismaDiff=t.func(
