@@ -607,7 +607,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.2-alpha.2"
+version = "0.0.2-alpha.3"
 dependencies = [
  "anyhow",
  "git-version",
@@ -2491,7 +2491,7 @@ dependencies = [
 
 [[package]]
 name = "meta"
-version = "0.0.2-alpha.2"
+version = "0.0.2-alpha.3"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -2963,7 +2963,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.0.2-alpha.2"
+version = "0.0.2-alpha.3"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
