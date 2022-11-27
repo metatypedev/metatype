@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph"
-version = "0.0.2-alpha.6"
+version = "0.0.2-alpha.7"
 description = "Free and open platform for API composition. Deploy and connect your systems (REST, GraphQL, SQL, S3, WASM, custom scripts, etc.) in a breeze."
 authors = [
     "Metatype Contributors <support@metatype.dev>",
