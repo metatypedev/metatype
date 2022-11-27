@@ -28,7 +28,7 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
       - name: Check and bump version
         run: |
-          if [[ "${{ github.ref_name }}"* != "$(./version.py)" ]]; then
+          if [[ "${{ github.ref_name }}" != "v$(./version.py)" ]]; then
             echo "Tag does not match code version"
             exit -1
           fi
