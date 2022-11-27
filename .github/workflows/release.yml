@@ -14,7 +14,7 @@ env:
   DENO_VERSION: "1.28.2"
 
 jobs:
-  check:
+  check-bump:
     runs-on: ubuntu-latest
     if: github.ref_type == 'tag'
 
@@ -29,16 +29,24 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
       - name: Check and bump version
         run: |
           if [[ "${{ github.ref_name }}" != "v$(./version.py)" ]]; then
             echo "Tag does not match code version, stopping."
             exit -1
           fi
+          ./version.py alpha
 
   meta-cli:
     needs:
-      - check
+      - check-bump
 
     runs-on: "${{ matrix.os }}"
 
@@ -60,16 +68,13 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
-
-      - name: Cache
-        uses: actions/cache@v3
+      - uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
           key: "${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
-
       - name: Build
         uses: actions-rs/cargo@v1
         env:
@@ -79,12 +84,10 @@ jobs:
           use-cross: false
           command: build
           args: "--locked --release --package meta --target ${{ matrix.target }}"
-
       - name: Compress
         run: |
           cd target/${{ matrix.target }}/release          
           tar czvf ../../../meta-${{ github.ref_name }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
-
       - name: Upload
         uses: svenstaro/upload-release-action@v2
         with:
@@ -95,7 +98,7 @@ jobs:
 
   typegraph:
     needs:
-      - check
+      - check-bump
 
     runs-on: ubuntu-latest
 
@@ -125,7 +128,7 @@ jobs:
 
   typegate:
     needs:
-      - check
+      - check-bump
 
     runs-on: ubuntu-latest
 
@@ -140,7 +143,7 @@ jobs:
       - name: Build & publish
         uses: docker/build-push-action@v3
         with:
-          context: typegate
+          file: typegate/Dockerfile
           platforms: linux/amd64
           push: true
           cache-from: type=gha
