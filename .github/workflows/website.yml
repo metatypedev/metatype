@@ -3,6 +3,9 @@ on:
     branches:
       - main
 
+env:
+  PNPM_VERSION: "7.9.3"
+
 jobs:
   deploy:
     name: Deploy to GitHub Pages
@@ -14,7 +17,7 @@ jobs:
           node-version: 18
       - uses: pnpm/action-setup@v2.2.2
         with:
-          version: 7
+          version: ${{ env.PNPM_VERSION }}
           run_install: false
       - name: Install dependencies
         working-directory: website

@@ -6,6 +6,9 @@ const fs = require("fs/promises");
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 
+const organizationName = "metatypedev";
+const projectName = "metatype";
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Metatype",
@@ -16,8 +19,8 @@ const config = {
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
-  organizationName: "metatypedev",
-  projectName: "metatype",
+  organizationName,
+  projectName,
   trailingSlash: false,
   stylesheets: [
     {
@@ -46,14 +49,13 @@ const config = {
       async loadContent() {
         const file = "docs/references/changelog.mdx";
         const { ctime } = await fs.stat(file);
-        if (new Date() - ctime < 10 * 1000) {
+        if (new Date() - ctime < 24 * 60 * 60 * 1000) {
           console.log("cached releases");
           return await fs.readFile(file, "utf8");
         }
 
-        console.log("freshly loaded release");
         const res = await fetch(
-          "https://api.github.com/repos/zifeo/dataconf/releases?per_page=100&page=1"
+          `https://api.github.com/repos/${organizationName}/${projectName}/releases?per_page=100&page=1`
         ).then((r) => r.json());
 
         const changelog = res
@@ -65,7 +67,8 @@ const config = {
               }${new Date(created_at).toLocaleDateString("en-US")})\n\n${body}`
           )
           .join("\n\n");
-        await fs.writeFile(file, `# Changelog\n\n${changelog}`);
+        await fs.writeFile(file, `# Changelog\n\n${changelog}\n`);
+        console.log("freshly loaded release");
       },
     }),
     require.resolve("docusaurus-lunr-search"),
