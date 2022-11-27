@@ -35,4 +35,4 @@ tar = "0.4.38"
 base64 = "0.13.1"
 common = { path = "../libs/common" }
 walkdir = "2.3.2"
-self_update = "0.32.0"
+self_update = { version = "0.32.0", features = ["archive-tar"] }

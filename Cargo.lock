@@ -4580,6 +4580,7 @@ dependencies = [
  "reqwest",
  "semver 1.0.14",
  "serde_json",
+ "tar",
  "tempfile",
 ]
 

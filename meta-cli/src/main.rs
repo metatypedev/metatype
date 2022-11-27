@@ -94,7 +94,7 @@ fn main() -> Result<()> {
                     .repo_name("metatype")
                     .bin_name("meta")
                     .show_download_progress(true)
-                    .current_version(&get_version())
+                    .current_version(&format!("v{}", get_version()))
                     .build()?
                     .update()?;
                 println!("Update status: `{}`!", status.version());
