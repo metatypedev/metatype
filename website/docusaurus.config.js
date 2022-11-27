@@ -13,7 +13,7 @@ const projectName = "metatype";
 const config = {
   title: "Metatype",
   tagline:
-    "Free and open platform for API composition. Deploy and connect your systems (REST, GraphQL, SQL, S3, custom scripts, etc.) in a breeze.",
+    "Free and open platform for API composition. Deploy and connect your systems (REST, GraphQL, SQL, S3, WASM, custom scripts, etc.) in a breeze.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
