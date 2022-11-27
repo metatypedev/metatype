@@ -39,13 +39,4 @@ class Policy(Node):
 
 
 def allow_all(name: str = "__allow_all"):
-    return Policy(
-        FunMat.from_lambda(lambda args: True),
-    ).named(name)
-
-
-# def header(name: str = "__allow_all"):
-#     return t.policy(
-#         t.struct(),
-#         FunMat.from_lambda(lambda args: True),
-#     ).named(name)
+    return Policy(FunMat("() => true")).named(name)

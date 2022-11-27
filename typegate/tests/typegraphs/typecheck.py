@@ -28,11 +28,11 @@ with TypeGraph(
         }
     ).named("Post")
 
-    my_policy = Policy(FunMat.from_lambda(lambda args: True))
+    my_policy = Policy(FunMat("() => true"))
 
     posts = t.func(t.struct(), t.array(post).max(20), FunMat("() => []")).named("posts")
     find_post = t.func(
-        t.struct({"id": t.uuid()}), post.optional(), FunMat.from_lambda(lambda: None)
+        t.struct({"id": t.uuid()}), post.optional(), FunMat("() => null")
     ).named("findPost")
 
     create_post_mat = FunMat(

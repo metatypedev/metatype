@@ -8,7 +8,7 @@ from typegraph.types import types as t
 
 def make_policy(g, name, fn):
     pol = Policy(
-        FunMat.from_lambda(fn),
+        FunMat(fn),
     )
     return t.func(
         t.struct({"a": t.integer()}),
@@ -20,7 +20,7 @@ def make_policy(g, name, fn):
 with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
 
     g.expose(
-        pol_true=make_policy(g, "true", lambda args: True),
-        pol_false=make_policy(g, "false", lambda args: False),
-        pol_two=make_policy(g, "eq_two", lambda args: int(args["a"]) == 2),
+        pol_true=make_policy(g, "true", "() => true"),
+        pol_false=make_policy(g, "false", "() => false"),
+        pol_two=make_policy(g, "eq_two", "(args) => Number(args.a) === 2"),
     )

@@ -32,7 +32,7 @@ with TypeGraph(
         getImage=t.func(
             t.struct(),
             t.struct({"path": t.string().named("Path")}),
-            FunMat.from_lambda(lambda args: {"path": "test.jpg"}),
+            FunMat('() => ({"path": "test.jpg"})'),
         )
         .compose(
             {

@@ -9,6 +9,7 @@ meta:
         PATH: $PWD/examples/.venv/bin:$PATH
     depends_on:
         - libs
+        - typegate_native
 
 system_graphs:
     workdir: typegate
