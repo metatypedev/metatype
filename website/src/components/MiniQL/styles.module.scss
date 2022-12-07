@@ -1,0 +1,30 @@
+.container {
+    background-color: hsla(var(--color-neutral), var(--alpha-background-light));
+    border-radius: calc(var(--border-radius-12) + var(--px-8));
+    display: flex;
+    margin: 0;
+    margin-bottom: 1rem;
+    flex-flow: row wrap;
+}
+
+.session {
+    min-width: 320px !important;
+    padding: var(--px-8) !important;
+}
+
+.response {
+    min-width: 320px !important;
+    padding: var(--px-8) !important;
+
+    & > section {
+        overflow: auto;
+    }
+}
+
+.tool {
+    padding-top: 0 !important;
+}
+
+.notool {
+    padding: 0 !important;
+}

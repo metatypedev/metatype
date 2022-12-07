@@ -1,7 +1,7 @@
 // no-auto-license-header
 
 // Copyright 2019 Prisma Data, Inc.
-// Modifications copyright 2022 Metatype
+// Modifications copyright Metatype OÜ
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

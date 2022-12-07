@@ -9,12 +9,6 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  adminer:
-    image: adminer:latest
-    restart: always
-    ports:
-      - "8080:8080"
-
   postgres:
     image: postgres:14
     restart: always
@@ -51,7 +45,7 @@ services:
       MINIO_REGION_NAME: local
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: password
-      MINIO_DEFAULT_BUCKETS: 'images:none'
+      MINIO_DEFAULT_BUCKETS: 'bucket:none'
 
   imgproxy:
     image: darthsim/imgproxy:v3.9
@@ -68,7 +62,7 @@ services:
       IMGPROXY_ENABLE_CLIENT_HINTS: "true"
       IMGPROXY_USE_S3: "true"
       IMGPROXY_S3_ENDPOINT: http://minio:9000
-      IMGPROXY_ALLOWED_SOURCES: "s3://images/"
+      IMGPROXY_ALLOWED_SOURCES: "s3://bucket/"
       IMGPROXY_ALLOW_ORIGIN: "http://localhost:3000"
       AWS_ACCESS_KEY_ID: minio
       AWS_SECRET_ACCESS_KEY: password

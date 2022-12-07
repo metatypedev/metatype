@@ -36,6 +36,9 @@ pub struct Dev {
 
     #[clap(short, long, value_parser)]
     password: Option<String>,
+
+    #[clap(long, value_parser, default_value_t = 5000)]
+    port: u32,
 }
 
 fn log_err(err: Error) {
@@ -87,7 +90,7 @@ impl Action for Dev {
         })
         .unwrap();
 
-        let server = Server::http("0.0.0.0:5000").unwrap();
+        let server = Server::http(format!("0.0.0.0:{}", self.port)).unwrap();
 
         for request in server.incoming_requests() {
             let url = Url::parse(&format!("http://dummy{}", request.url()))?;

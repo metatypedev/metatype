@@ -1,10 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { assertEquals } from "std/testing/asserts.ts";
-import {
-  getFieldLists,
-  replaceDynamicPathParams,
-} from "../src/runtimes/utils/http.ts";
+import { replaceDynamicPathParams } from "../src/runtimes/utils/http.ts";
 
 Deno.test("dynamic path params", async (t) => {
   await t.step("{param} syntax", () => {
@@ -48,121 +45,5 @@ Deno.test("dynamic path params", async (t) => {
       }),
       { pathname: "/posts/12/comments/:commentNo", restArgs: {} },
     );
-  });
-});
-
-const args = { a: "a", b: "b", c: "c", d: "d" };
-
-Deno.test("field list", async (t) => {
-  await t.step("GET/DELETE", () => {
-    assertEquals(
-      getFieldLists("GET", args, {
-        content_type: "application/json",
-        query_fields: null,
-        body_fields: null,
-        auth_token_field: null,
-      }),
-      { query: ["a", "b", "c", "d"], body: [] },
-    );
-
-    assertEquals(
-      getFieldLists(
-        "GET",
-        args,
-        {
-          content_type: "application/json",
-          query_fields: null,
-          body_fields: ["c", "d"],
-          auth_token_field: null,
-        },
-      ),
-      { query: ["a", "b"], body: ["c", "d"] },
-    );
-
-    assertEquals(
-      getFieldLists(
-        "GET",
-        args,
-        {
-          content_type: "application/json",
-          query_fields: ["a", "b"],
-          body_fields: null,
-          auth_token_field: null,
-        },
-      ),
-      { query: ["a", "b"], body: [] },
-    );
-
-    assertEquals(
-      getFieldLists(
-        "GET",
-        args,
-        {
-          content_type: "application/json",
-          query_fields: ["a", "b", "e"],
-          body_fields: ["c", "f"],
-          auth_token_field: null,
-        },
-      ),
-      { query: ["a", "b"], body: ["c"] },
-    );
-
-    // TODO: name clash case
-  });
-
-  await t.step("POST/PUT/PATCH", () => {
-    assertEquals(
-      getFieldLists("POST", args, {
-        content_type: "application/json",
-        query_fields: null,
-        body_fields: null,
-        auth_token_field: null,
-      }),
-      { query: [], body: ["a", "b", "c", "d"] },
-    );
-
-    assertEquals(
-      getFieldLists(
-        "POST",
-        args,
-        {
-          content_type: "application/json",
-          query_fields: null,
-          body_fields: ["c", "d"],
-          auth_token_field: null,
-        },
-      ),
-      { query: ["a", "b"], body: ["c", "d"] },
-    );
-
-    assertEquals(
-      getFieldLists(
-        "POST",
-        args,
-        {
-          content_type: "application/json",
-          query_fields: ["a", "b"],
-          body_fields: null,
-          auth_token_field: null,
-        },
-      ),
-      { query: ["a", "b"], body: ["c", "d"] },
-    );
-
-    assertEquals(
-      getFieldLists(
-        "POST",
-        args,
-        {
-          content_type: "application/json",
-          query_fields: ["a", "b", "e"],
-          body_fields: ["c", "f"],
-          auth_token_field: null,
-        },
-      ),
-      { query: ["a", "b"], body: ["c"] },
-    );
-
-    // TODO: name clash case
   });
 });
