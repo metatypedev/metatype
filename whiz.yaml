@@ -62,3 +62,16 @@ typegate_native:
 website:
     workdir: website
     shell: "pnpm start --no-open"
+
+website_meta:
+    workdir: .
+    watches:
+        - "meta-cli/src/**/*.rs"
+        - "website/**/*.py"
+    shell: "cargo run -p meta -- -C website dev -p password --port 5001"
+    envs:
+        VIRTUAL_ENV: $PWD/examples/.venv
+        PATH: $PWD/examples/.venv/bin:$PATH
+    depends_on:
+        - libs
+        - typegate_native

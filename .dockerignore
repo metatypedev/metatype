@@ -6,6 +6,7 @@
 !/typegate/.env.defaults
 !/typegate/src
 !/typegate/native
+!/typegate/LICENSE.md
 !/Cargo.lock
 !/Cargo.toml
 !/meta-cli

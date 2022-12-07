@@ -94,3 +94,14 @@ repos:
         types_or:
           - ts
         files: ^typegate/
+      - id: insert-license
+        name: "License header typescript"
+        args:
+          #- --remove-header
+          - --license-filepath=license-header.txt
+          - "--comment-style=//"
+          - "--skip-license-insertion-comment=no-auto-license-header"
+        types_or:
+          - ts
+          - tsx
+        files: ^website/

@@ -30,3 +30,6 @@ build
 .docusaurus
 .cache-loader
 website/vale/Google
+
+typegate/LICENSE.md
+typegraph/LICENSE.md

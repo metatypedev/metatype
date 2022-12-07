@@ -2,16 +2,13 @@
 
 import { ComputeStage } from "../engine.ts";
 import { Runtime } from "./Runtime.ts";
-import { associateWith } from "std/collections/associate_with.ts";
-import { join } from "std/path/mod.ts";
 import { envOrFail, JSONValue } from "../utils.ts";
-import {
-  getFieldLists,
-  MatOptions,
-  replaceDynamicPathParams,
-} from "./utils/http.ts";
+import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import * as base64 from "std/encoding/base64.ts";
+import { getLogger } from "../log.ts";
+import { Logger } from "std/log/logger.ts";
+import { urlJoin } from "url_join";
 
 // FIXME better solution require
 const traverseLift = (obj: JSONValue): any => {
@@ -47,12 +44,15 @@ const encodeRequestBody = (
 };
 
 export class HTTPRuntime extends Runtime {
+  private logger: Logger;
+
   constructor(
     private endpoint: string,
     private client: Deno.HttpClient,
     private headers: Headers,
   ) {
     super();
+    this.logger = getLogger(`http:${new URL(endpoint).hostname}`);
   }
 
   static init(params: RuntimeInitParams): Runtime {
@@ -100,27 +100,6 @@ export class HTTPRuntime extends Runtime {
         delete args[options.auth_token_field!];
       }
 
-      const { body: bodyFields, query: queryFields } = getFieldLists(
-        method,
-        args,
-        options,
-      );
-      const body = encodeRequestBody(
-        associateWith(bodyFields, (key) => args[key]),
-        options.content_type,
-      );
-
-      const searchParams = new URLSearchParams();
-      queryFields.forEach((key) => {
-        const value = args[key];
-        if (Array.isArray(value)) {
-          value.forEach((v) => searchParams.append(key, v));
-        } else {
-          searchParams.append(key, value);
-        }
-      });
-      const query = searchParams.toString();
-
       const headers = new Headers(this.headers);
       headers.set("accept", "application/json");
       headers.set("content-type", options.content_type);
@@ -129,14 +108,48 @@ export class HTTPRuntime extends Runtime {
         headers.set("authorization", `Bearer ${authToken}`);
       }
 
-      const res = await fetch(join(this.endpoint, `${pathname}?${query}`), {
-        method,
-        headers,
-        body: method === "GET" || method === "DELETE" ? null : body,
-        client: this.client,
-      });
+      const bodyFields: Record<string, unknown> = {};
+      const searchParams = new URLSearchParams();
+      const hasBody = method !== "GET" && method !== "DELETE";
+
+      for (const [key, value] of Object.entries(args)) {
+        if (options.header_prefix && key.startsWith(options.header_prefix)) {
+          headers.set(key.slice(options.header_prefix.length), value);
+        } else {
+          if (
+            options.query_fields?.includes(key) || !hasBody
+          ) {
+            if (Array.isArray(value)) {
+              value.forEach((v) => searchParams.append(key, v));
+            } else {
+              searchParams.append(key, value as string);
+            }
+          } else {
+            bodyFields[key] = value;
+          }
+        }
+      }
+      const query = searchParams.toString();
+
+      const body = encodeRequestBody(
+        bodyFields,
+        options.content_type,
+      );
+
+      // TODO : rewrite a fast url join, and removing trailling "?""
+      const res = await fetch(
+        urlJoin(this.endpoint, pathname, `?${query}`),
+        {
+          method,
+          headers,
+          body: hasBody ? body : null,
+          client: this.client,
+        },
+      );
 
       if (res.status >= 400) {
+        const body = await res.text();
+        this.logger.warning(`${pathname} → ${body}`);
         // TODO: add error message
         // TODO: only if return type is optional
         // throw new Error(await res.text());
