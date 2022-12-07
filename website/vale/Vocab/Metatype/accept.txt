@@ -4,3 +4,6 @@ Metatype
 serverless
 materializer
 runtime
+will
+CLI
+Cloud

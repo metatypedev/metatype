@@ -112,6 +112,7 @@ jobs:
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
         run: |
+          cp ../LICENSE.md .
           poetry install
           poetry build
           poetry publish
@@ -137,6 +138,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prepare
+        working-directory: typegate
+        run: |
+          cp ../LICENSE.md .
       - name: Build & publish
         uses: docker/build-push-action@v3
         with:

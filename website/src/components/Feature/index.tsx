@@ -1,6 +1,8 @@
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
 import React from "react";
 import clsx from "clsx";
-import styles from "./styles.module.css";
+import styles from "./styles.module.scss";
 
 export type FeatureItem = {
   title: string;

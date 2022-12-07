@@ -1,6 +1,6 @@
 # License
 
-Copyright Metatype OÜ.
+Copyright © Metatype OÜ.
 
 Portions of this software are licensed as follows:
 

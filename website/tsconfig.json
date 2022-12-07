@@ -2,6 +2,11 @@
   "//": "This file is not used in compilation. It is here just for a nice editor experience.",
   "extends": "@tsconfig/docusaurus/tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "."
+    "strict": true,
+    "allowJs": false,
+    "baseUrl": ".",
+    "types": [
+      "docusaurus-theme-frontmatter"
+    ]
   }
 }

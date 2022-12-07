@@ -1,3 +1,5 @@
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 import React from "react";
@@ -7,7 +9,7 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import Feature, { FeatureItem } from "../components/Feature";
 
-import styles from "./index.module.css";
+import styles from "./index.module.scss";
 
 function HomepageHeader() {
   const { siteConfig } = useDocusaurusContext();
@@ -19,7 +21,7 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/tutorials/quickstart"
+            to="/docs/tutorials/getting-started"
           >
             Getting started
           </Link>

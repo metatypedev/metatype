@@ -1,3 +1,7 @@
+// @tailwind base; // no pre-flight as incompatible with Docusaurus
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --ifm-color-primary: #2e8555;
   --ifm-color-primary-dark: #29784c;
@@ -11,7 +15,7 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
-[data-theme='dark'] {
+[data-theme="dark"] {
   --ifm-color-primary: #25c2a0;
   --ifm-color-primary-dark: #21af90;
   --ifm-color-primary-darker: #1fa588;
@@ -35,10 +39,18 @@ p {
 }
 
 .hero {
-  background: rgb(149,31,94);
-  background: linear-gradient(135deg, rgba(149,31,94,1) 0%, rgba(10,27,81,1) 100%);
+  background: rgb(149, 31, 94);
+  background: linear-gradient(
+    135deg,
+    rgba(149, 31, 94, 1) 0%,
+    rgba(10, 27, 81, 1) 100%
+  );
 }
 
 .footer {
-  background: rgb(10,27,81);
+  background: rgb(10, 27, 81);
+}
+
+.CodeMirror {
+  height: auto !important;
 }

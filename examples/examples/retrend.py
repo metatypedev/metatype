@@ -16,8 +16,8 @@ with TypeGraph(
     f = ModuleMat("image_proxy_resize.ts", secrets=("IMGPROXY_SALT", "IMGPROXY_SECRET"))
 
     g.expose(
-        presigned=s3.sign("images", "image/png").add_policy(all),
-        list=s3.list("images").add_policy(all),
+        presigned=s3.sign("bucket", "image/png").add_policy(all),
+        list=s3.list("bucket").add_policy(all),
         resize=t.func(
             t.struct(
                 {

@@ -11,7 +11,7 @@ Install [Rust](https://www.rust-lang.org/tools/install),
 
 ### Toolset
 
-```
+```bash
 cargo install cargo-watch
 cargo install cargo-edit
 cargo install --force --git https://github.com/zifeo/whiz

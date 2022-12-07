@@ -234,7 +234,12 @@ export class TypeGraph {
       const ret: Record<string, string> = {
         "Access-Control-Allow-Origin": meta.cors.allow_origin.join(","),
         "Access-Control-Allow-Methods": "POST,OPTIONS",
-        "Access-Control-Allow-Headers": [nextAuthorizationHeader].concat(
+        "Access-Control-Allow-Headers": [
+          nextAuthorizationHeader,
+          "Cache-Control",
+          "Content-Language",
+          "Content-Type",
+        ].concat(
           meta.cors.allow_headers,
         ).join(","),
         "Access-Control-Expose-Headers": meta.cors.expose_headers.join(","),
