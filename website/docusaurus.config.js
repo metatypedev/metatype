@@ -12,8 +12,7 @@ const projectName = "metatype";
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Metatype",
-  tagline:
-    "Free and open platform for API composition. Deploy and connect your systems (REST, GraphQL, SQL, S3, WASM, custom scripts, etc.) in a breeze.",
+  tagline: "Free and open ecosystem for API composition.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -22,6 +21,9 @@ const config = {
   organizationName,
   projectName,
   trailingSlash: false,
+  customFields: {
+    tgUrl: process.env.TG_URL,
+  },
   stylesheets: [
     {
       href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
@@ -29,6 +31,8 @@ const config = {
     },
   ],
   plugins: [
+    "docusaurus-plugin-sass",
+    "docusaurus-tailwindcss",
     () => ({
       name: "pyLoader",
       configureWebpack() {
@@ -47,11 +51,12 @@ const config = {
     () => ({
       name: "releases",
       async loadContent() {
-        const file = "docs/references/changelog.mdx";
+        const file = "docs/reference/changelog.mdx";
+        const content = await fs.readFile(file, "utf8");
         const { ctime } = await fs.stat(file);
         if (new Date() - ctime < 24 * 60 * 60 * 1000) {
           console.log("cached releases");
-          return await fs.readFile(file, "utf8");
+          return content;
         }
 
         const res = await fetch(
@@ -61,17 +66,28 @@ const config = {
         const changelog = res
           .filter((r) => !r.draft)
           .map(
-            ({ html_url, name, body, prerelease, created_at }) =>
-              `## [${name}](${html_url}) (${
+            ({ html_url, name, tag_name, body, prerelease, created_at }) =>
+              `## [${name !== "" ? name : tag_name}](${html_url}) (${
                 prerelease ? "Prerelease, " : ""
               }${new Date(created_at).toLocaleDateString("en-US")})\n\n${body}`
           )
           .join("\n\n");
-        await fs.writeFile(file, `# Changelog\n\n${changelog}\n`);
+
+        const header = content.split("# Changelog")[0];
+        await fs.writeFile(file, `${header}\n\n# Changelog\n\n${changelog}`);
         console.log("freshly loaded release");
       },
     }),
-    require.resolve("docusaurus-lunr-search"),
+    [
+      "posthog-docusaurus",
+      {
+        apiKey: "phc_xeoqjAATkOtdpBmixBDIbLp6wCDSo87kAjdKCILQc8U",
+        appUrl: "https://eu.posthog.com",
+        enableInDevelopment: false,
+        persistence: "memory",
+      },
+    ],
+    "docusaurus-lunr-search",
   ],
   i18n: {
     defaultLocale: "en",
@@ -79,7 +95,7 @@ const config = {
   },
   presets: [
     [
-      "classic",
+      "@docusaurus/preset-classic",
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
@@ -87,12 +103,16 @@ const config = {
           editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
         },
         theme: {
-          customCss: require.resolve("./src/css/custom.css"),
+          customCss: require.resolve("./src/css/custom.scss"),
+        },
+        sitemap: {
+          changefreq: "weekly",
+          filename: "sitemap.xml",
         },
       }),
     ],
   ],
-
+  themes: ["docusaurus-theme-frontmatter"],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -117,21 +137,21 @@ const config = {
           },
           {
             type: "docSidebar",
-            sidebarId: "howToGuides",
+            sidebarId: "guides",
             position: "left",
             label: "Guides",
+          },
+          {
+            type: "docSidebar",
+            sidebarId: "reference",
+            position: "left",
+            label: "Reference",
           },
           {
             type: "docSidebar",
             sidebarId: "concepts",
             position: "left",
             label: "Concepts",
-          },
-          {
-            type: "docSidebar",
-            sidebarId: "references",
-            position: "left",
-            label: "References",
           },
           {
             href: "https://github.com/metatypedev/metatype",
@@ -148,7 +168,7 @@ const config = {
             items: [
               {
                 label: "Quickstart",
-                to: "/docs/tutorials/quickstart",
+                to: "/docs/tutorials/getting-started",
               },
             ],
           },
@@ -156,30 +176,38 @@ const config = {
             title: "Community",
             items: [
               {
-                label: "Stack Overflow",
-                href: "https://stackoverflow.com/questions/tagged/metatype",
+                label: "GitHub",
+                href: "https://github.com/metatypedev/metatype/discussions",
               },
               {
-                label: "Discord",
-                href: "https://discord.gg/PSyYcEHyw5",
+                label: "Stack Overflow",
+                href: "https://stackoverflow.com/questions/tagged/metatype",
               },
               {
                 label: "Twitter",
                 href: "https://twitter.com/metatypedev",
               },
+              {
+                label: "LinkedIn",
+                href: "https://www.linkedin.com/company/91505656/admin/",
+              },
             ],
           },
           {
-            title: "More",
+            title: "Company",
             items: [
               {
-                label: "GitHub",
-                href: "https://github.com/metatypedev/metatype",
+                label: "Privacy policy",
+                href: "/legal/privacy-policy",
+              },
+              {
+                label: "Terms & conditions",
+                href: "/legal/terms",
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Metatype.`,
+        copyright: `Copyright © Metatype OÜ.`,
       },
       prism: {
         theme: lightCodeTheme,

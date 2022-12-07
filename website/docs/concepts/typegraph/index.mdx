@@ -1,14 +1,19 @@
 ---
 sidebar_position: 2
+comments: false
 ---
 
 import CodeBlock from "@theme/CodeBlock";
+import MiniQL from "@site/src/components/MiniQL";
+import gql from "graphql-tag";
 
 # Typegraph
 
 Typegraph is [Python package](https://pypi.org/project/typegraph/) for building graphs of types and manage metadata.
 
-<CodeBlock language="py">{require("./mini.py").default}</CodeBlock>
+<CodeBlock language="py" title="test">
+  {require("./mini.py").default}
+</CodeBlock>
 
 ## Types
 
@@ -17,3 +22,18 @@ Typegraph is [Python package](https://pypi.org/project/typegraph/) for building 
 ## Materializers
 
 ## Policies
+
+<MiniQL
+  typegraph="typegate"
+  variables={{ a: "1" }}
+  headers={{
+    Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",
+  }}
+  query={gql`
+    {
+      typegraphs {
+        name
+      }
+    }
+  `}
+/>

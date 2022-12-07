@@ -20,7 +20,7 @@ with TypeGraph(
     s3 = S3Runtime("http://localhost:9000", "local", "access_key", "secret_key")
 
     g.expose(
-        presigned=s3.sign("images", "image/png").add_policy(all),
+        presigned=s3.sign("bucket", "image/png").add_policy(all),
     )
 ```
 
