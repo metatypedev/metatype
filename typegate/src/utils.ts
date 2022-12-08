@@ -85,3 +85,12 @@ export const b64decode = (v: string): string => {
 export const b64encode = (v: string): string => {
   return base64.encode(v);
 };
+
+export type NativeResult<R> = { Ok: R } | { Err: { message: string } };
+
+export function nativeResult<R>(res: NativeResult<R>): R {
+  if ("Err" in res) {
+    throw new Error(res.Err.message);
+  }
+  return res.Ok;
+}

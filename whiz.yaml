@@ -2,13 +2,18 @@ meta:
     workdir: .
     watches:
         - "meta-cli/src/**/*.rs"
-        - "typegraph/**/*.py"
+    shell: "cargo run -p meta -- --help"
+    depends_on:
+        - libs
+
+examples:
+    workdir: .
     shell: "cargo run -p meta -- -C examples dev -p password"
     envs:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH
     depends_on:
-        - libs
+        - meta
         - typegate_native
 
 system_graphs:

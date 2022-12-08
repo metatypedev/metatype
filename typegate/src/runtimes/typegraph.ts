@@ -89,8 +89,8 @@ export class TypeGraphRuntime extends Runtime {
     // const queriesBind: Record<string, number> = {};
     // const mutationsBind: Record<string, number> = {};
 
-    const queries = this.tg.types[root.properties["query"]];
-    const mutations = this.tg.types[root.properties["mutation"]];
+    const queries = this.tg.types[root.properties["query"]] as ObjectNode;
+    const mutations = this.tg.types[root.properties["mutation"]] as ObjectNode;
 
     return {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L36
@@ -138,8 +138,6 @@ export class TypeGraphRuntime extends Runtime {
 
         return this.tg.types
           .slice(1) // pop root into query & mutation
-          .concat(queries ? [queries] : [])
-          .concat(mutations ? [mutations] : [])
           .filter((type) => {
             // filter non-native GraphQL types
             const isEnforced = type.injection ||
@@ -165,13 +163,13 @@ export class TypeGraphRuntime extends Runtime {
           });
       },
       queryType: () => {
-        if (!queries) {
+        if (!queries || Object.values(queries.properties).length === 0) {
           return null;
         }
         return this.formatType(queries, false, false);
       },
       mutationType: () => {
-        if (!mutations) {
+        if (!mutations || Object.values(mutations.properties).length === 0) {
           return null;
         }
         return this.formatType(mutations, false, false);

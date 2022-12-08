@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
 use reqwest::{
     blocking::{Client, RequestBuilder},
-    IntoUrl,
+    IntoUrl, Url,
 };
 use std::collections::HashMap;
 use std::hash::Hash;
@@ -57,11 +57,26 @@ impl BasicAuth {
     }
 }
 
-pub fn post_with_auth<U: IntoUrl>(auth: &BasicAuth, url: U) -> Result<RequestBuilder> {
-    Ok(Client::new()
-        .post(url)
-        .basic_auth(&auth.username, Some(&auth.password))
-        .timeout(Duration::from_secs(5)))
+pub struct Node {
+    base_url: Url,
+    auth: Option<BasicAuth>,
+}
+
+impl Node {
+    pub fn new<U: IntoUrl>(url: U, auth: Option<BasicAuth>) -> Result<Self> {
+        Ok(Self {
+            base_url: url.into_url()?,
+            auth,
+        })
+    }
+
+    pub fn post(&self, path: &str) -> Result<RequestBuilder> {
+        let mut b = Client::new().post(self.base_url.join(path)?);
+        if let Some(auth) = &self.auth {
+            b = b.basic_auth(&auth.username, Some(&auth.password));
+        }
+        Ok(b.timeout(Duration::from_secs(5)))
+    }
 }
 
 pub mod graphql {

@@ -84,7 +84,6 @@ const schema = z.object({
   version: z.string(),
   trust_proxy: z.boolean(),
   trust_header_ip: z.string(),
-  prisma_migration_folder: z.string().optional(),
   request_log: z.string().optional(),
 });
 
