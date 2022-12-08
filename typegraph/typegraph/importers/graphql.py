@@ -2,6 +2,7 @@
 
 import inspect
 import itertools
+from typing import Dict
 
 import black
 from box import Box
@@ -16,7 +17,7 @@ def struct_field(name, type):
     return f'"{name}": {typify(type, True, object_as_ref=True)},'
 
 
-def gen_functions(queries, mutations) -> dict[str, str]:
+def gen_functions(queries, mutations) -> Dict[str, str]:
     fns = {}
 
     for field in itertools.chain(
@@ -117,7 +118,7 @@ def codegen(intros: Box):
     return cg
 
 
-def as_kwargs(kwargs: dict[str, str]):
+def as_kwargs(kwargs: Dict[str, str]):
     cg = ""
     for key, val in kwargs.items():
         cg += f"{key}={val},"

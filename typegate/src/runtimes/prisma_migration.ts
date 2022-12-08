@@ -5,104 +5,67 @@ import { Resolver, ResolverArgs } from "../types.ts";
 import { ComputeStage, Engine } from "../engine.ts";
 import { Register } from "../register.ts";
 import { PrismaRuntimeDS } from "../type_node.ts";
-import { join } from "std/path/mod.ts";
-import config from "../config.ts";
 import * as native from "native";
-import { ensure } from "../utils.ts";
+import { nativeResult } from "../utils.ts";
 
-export class PrismaMigration {
-  private runtime: PrismaRuntimeDS;
-  private _migrationFolderBase?: string;
+interface SerializedMigrationSession {
+  typegraph: string;
+  runtime: string;
+  id: string;
+  migrationFolder: string;
+}
 
+function findPrismaRuntime(engine: Engine, name: string | null) {
+  const prismaRuntimes = engine.tg.tg.runtimes.filter(
+    (rt) => rt.name == "prisma",
+  ) as unknown as Array<PrismaRuntimeDS>;
+
+  if (prismaRuntimes.length == 0) {
+    throw new Error("no prisma runtime found in the selected typegraph");
+  }
+
+  if (name == null) {
+    if (prismaRuntimes.length != 1) {
+      throw new Error(
+        "runtime selection required: more than one prisma runtimes are defined in typegraph",
+      );
+    }
+    return prismaRuntimes[0];
+  } else {
+    const runtimes = prismaRuntimes.filter((rt) => rt.data.name === name);
+    if (runtimes.length == 0) {
+      throw new Error(
+        `prisma runtime "${name}" not found in the typegraph`,
+      );
+    }
+    if (runtimes.length > 1) {
+      throw new Error(
+        `unexpected: more than one prisma runtimes are named "${name}`,
+      );
+    }
+    return runtimes[0];
+  }
+}
+
+export class PrismaMigrate {
   constructor(
     private engine: Engine,
-    runtime: string | null = null,
-  ) {
-    const prismaRuntimes = this.engine.tg.tg.runtimes.filter(
-      (rt) => rt.name == "prisma",
-    ) as unknown as Array<PrismaRuntimeDS>;
-
-    if (prismaRuntimes.length == 0) {
-      throw new Error("no prisma runtime found in the selected typegraph");
-    }
-
-    if (runtime == null) {
-      if (prismaRuntimes.length != 1) {
-        throw new Error(
-          "runtime selection required: more than one prisma runtimes are defined in typegraph",
-        );
-      }
-      this.runtime = prismaRuntimes[0];
-    } else {
-      const runtimes = prismaRuntimes.filter((rt) => rt.data.name === runtime);
-      if (runtimes.length == 0) {
-        throw new Error(
-          `prisma runtime "${runtime}" not found in the typegraph`,
-        );
-      }
-      if (runtimes.length > 1) {
-        throw new Error(
-          `unexpected: more than one prisma runtimes are named "${runtime}`,
-        );
-      }
-      this.runtime = runtimes[0];
-    }
-  }
-
-  static OPS = {
-    prismaDeploy: "deploy",
-    prismaDiff: "diff",
-    prismaCreate: "create",
-    prismaApply: "apply",
-  } as const;
-
-  get migrationFolderBase() {
-    if (this._migrationFolderBase != undefined) {
-      return this._migrationFolderBase;
-    }
-    const base = config.prisma_migration_folder;
-
-    if (!config.debug) {
-      throw new Error("unpermitted operation for non-debug environment");
-    }
-    if (base == null) {
-      throw new Error("PRISMA_MIGRATION_FOLDER env is required");
-    }
-    return base;
-  }
-
-  set migrationFolderBase(path: string) {
-    this._migrationFolderBase = path;
-  }
-
-  get migrationFolder() {
-    return join(
-      this.migrationFolderBase,
-      this.engine.name,
-      this.runtime.data.name,
-    );
-  }
-
-  diff: Resolver<{ script?: boolean }> = async ({ script = false }) => {
-    const { datasource, datamodel, connection_string, name } =
-      this.runtime.data;
-    return {
-      runtime: {
-        name,
-        connectionString: connection_string,
-      },
-      diff: (await native.prisma_diff({ datasource, datamodel, script })).diff,
-    };
-  };
+    private runtime: PrismaRuntimeDS,
+    private migrations: string | null,
+  ) {}
 
   apply: Resolver<{ resetDatabase: boolean }> = async ({ resetDatabase }) => {
     const { datasource, datamodel } = this.runtime.data;
     const res = await native.prisma_apply({
       datasource,
       datamodel,
-      migration_folder: this.migrationFolder,
+      migrations: this.migrations,
       reset_database: resetDatabase,
     });
+
+    if ("Err" in res) {
+      throw new Error(res.Err.message);
+    }
 
     if ("ResetRequired" in res) {
       throw new Error(
@@ -118,39 +81,42 @@ export class PrismaMigration {
     };
   };
 
-  deploy: Resolver<{ migrations: string }> = async ({ migrations }) => {
-    const { datasource, datamodel } = this.runtime.data;
-    const res = await native.prisma_deploy({
-      datasource,
-      datamodel,
-      migrations,
-    });
-    return {
-      migrationCount: res.migration_count,
-      appliedMigrations: res.applied_migrations,
-    };
-  };
-
   create: Resolver<{ name: string; apply?: boolean }> = async (
     { name: migrationName, apply = true },
   ) => {
-    const { datasource, datamodel } = this.runtime.data;
-    const res = await native.prisma_create({
-      datasource,
-      datamodel,
-      migration_folder: this.migrationFolder,
-      migration_name: migrationName,
-      apply,
-    });
+    const { datasource, datamodel, name } = this.runtime.data;
+    const res = nativeResult(
+      await native.prisma_create({
+        datasource,
+        datamodel,
+        migrations: this.migrations,
+        migration_name: migrationName,
+        apply,
+      }),
+    );
+
     return {
       createdMigrationName: res.created_migration_name,
       appliedMigrations: res.applied_migrations,
+      migrations: res.migrations,
+      runtimeName: name,
     };
   };
 }
 
+interface CommonArgs {
+  typegraph: string;
+  runtime: string | null;
+  migrations: string | null;
+}
+
+type ResolverArgsEx<T = Record<string, any>> = ResolverArgs<CommonArgs & T>;
+
 export class PrismaMigrationRuntime extends Runtime {
-  private constructor(private register: Register) {
+  // this instance is unique per register
+  private constructor(
+    private register: Register,
+  ) {
     super();
   }
 
@@ -160,6 +126,15 @@ export class PrismaMigrationRuntime extends Runtime {
 
   async deinit(): Promise<void> {}
 
+  getMigrationTarget(tg: string, rt: string | null): [Engine, PrismaRuntimeDS] {
+    const engine = this.register.get(tg);
+    if (engine == null) {
+      throw new Error(`could not find typegraph ${tg}`);
+    }
+    const runtime = findPrismaRuntime(engine, rt);
+    return [engine, runtime];
+  }
+
   materialize(
     stage: ComputeStage,
     _waitlist: ComputeStage[],
@@ -167,26 +142,81 @@ export class PrismaMigrationRuntime extends Runtime {
   ): ComputeStage[] {
     let resolver: Resolver;
     const name = stage.props.materializer?.name;
-    if (name && Object.keys(PrismaMigration.OPS).includes(name)) {
-      resolver = (args) => {
-        const { typegraph: tgName, runtime } = args as ResolverArgs<
-          { typegraph: string; runtime: string }
-        >;
-        const engine = this.register.get(tgName);
-        ensure(engine != null, `could not find typegraph ${tgName}`);
-        const opName =
-          PrismaMigration.OPS[name as keyof typeof PrismaMigration.OPS];
-        const migration = new PrismaMigration(engine!, runtime);
-        return (migration[opName] as Resolver<unknown>)(args);
-      };
-    } else {
-      resolver = async ({ _: { parent }, ...args }) => {
-        const resolver = parent[stage.props.node];
-        const ret = typeof resolver === "function"
-          ? await resolver(args)
-          : resolver;
-        return ret;
-      };
+
+    switch (name) {
+      case "apply":
+      case "create":
+        resolver = (async (
+          args: ResolverArgsEx,
+        ) => {
+          const {
+            typegraph: tg,
+            runtime: rt,
+            migrations,
+            ...restArgs
+          } = args;
+
+          const [engine, runtime] = this.getMigrationTarget(tg, rt);
+
+          const migrate = new PrismaMigrate(engine, runtime, migrations);
+
+          return await migrate[name](restArgs as any);
+        }) as Resolver;
+        break;
+
+      case "diff":
+        resolver = (async (
+          args: ResolverArgsEx<{ migrations: never; script: boolean }>,
+        ) => {
+          const { typegraph: tg, runtime: rt, script } = args;
+          const [_, runtime] = this.getMigrationTarget(tg, rt);
+          const { datasource, datamodel, name } = runtime.data;
+
+          return {
+            runtimeName: name,
+            diff: (await native.prisma_diff({ datasource, datamodel, script }))
+              .diff,
+          };
+        }) as Resolver;
+        break;
+
+      case "deploy":
+        resolver = (async (args: ResolverArgsEx<{ migrations: string }>) => {
+          const { typegraph: tgName, runtime: rtName, migrations } = args;
+          const engine = this.register.get(tgName);
+          if (engine == null) {
+            throw new Error(`could not find typegraph ${tgName}`);
+          }
+          const runtime = findPrismaRuntime(engine, rtName ?? null);
+          const { datasource, datamodel } = runtime.data;
+
+          const res = nativeResult(
+            await native.prisma_deploy({
+              datasource,
+              datamodel,
+              migrations,
+            }),
+          );
+
+          return {
+            migrationCount: res.migration_count,
+            appliedMigrations: res.applied_migrations,
+          };
+        }) as Resolver;
+        break;
+
+      default:
+        if (name != undefined) {
+          throw new Error(`unhandled materializer "${name}"`);
+        }
+
+        resolver = async ({ _: { parent }, ...args }) => {
+          const resolver = parent[stage.props.node];
+          const ret = typeof resolver === "function"
+            ? await resolver(args)
+            : resolver;
+          return ret;
+        };
     }
 
     return [

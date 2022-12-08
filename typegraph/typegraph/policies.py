@@ -14,7 +14,7 @@ class Policy(Node):
     mat: Materializer
     name: Optional[str]
 
-    def __init__(self, mat: Materializer, **kwargs):
+    def __init__(self, mat: Materializer):
         super().__init__(Collector.policies)
         self.mat = mat
         tg = TypegraphContext.get_active()
@@ -33,7 +33,7 @@ class Policy(Node):
         }
 
     def named(self, name: str):
-        pol = Policy(**vars(self))
+        pol = Policy(self.mat)
         pol.name = name
         return pol
 

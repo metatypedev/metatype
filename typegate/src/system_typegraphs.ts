@@ -62,9 +62,16 @@ export class SystemTypegraph {
   }
 
   static getCustomRuntimes(register: Register) {
-    return SystemTypegraph.customRuntimesByRegister.get(register) ?? {
+    const resolver = SystemTypegraph.customRuntimesByRegister.get(register);
+    if (resolver != null) {
+      return resolver;
+    }
+
+    SystemTypegraph.customRuntimesByRegister.set(register, {
       typegate: TypeGateRuntime.init(register),
       prisma_migration: PrismaMigrationRuntime.init(register),
-    };
+    });
+
+    return SystemTypegraph.customRuntimesByRegister.get(register);
   }
 }

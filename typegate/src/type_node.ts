@@ -94,7 +94,7 @@ export interface PrismaRuntimeData {
   datamodel: string;
 }
 
-interface TypeRuntimeBase {
+export interface TypeRuntimeBase {
   name: string;
   data: unknown;
 }

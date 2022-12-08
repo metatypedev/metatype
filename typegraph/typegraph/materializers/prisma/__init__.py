@@ -551,36 +551,50 @@ class PrismaMigrationRuntime(Runtime):
     runtime_name: str = always("prisma_migration")
 
 
-@frozen
-class PrismaMigrateMat(Materializer):
-    runtime: Runtime = PrismaMigrationRuntime()
-    materializer_name: str = always("prismaMigrate")
-    serial: bool = always(True)
+# @frozen
+# class PrismaMigrateMat(Materializer):
+#     runtime: Runtime = PrismaMigrationRuntime()
+#     materializer_name: str = always("migrate")
+#     serial: bool = always(True)
 
 
 @frozen
 class PrismaApplyMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
-    materializer_name: str = always("prismaApply")
+    materializer_name: str = always("apply")
     serial: bool = always(True)
 
 
 @frozen
 class PrismaDeployMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
-    materializer_name: str = always("prismaDeploy")
+    materializer_name: str = always("deploy")
     serial: bool = always(True)
 
 
 @frozen
 class PrismaCreateMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
-    materializer_name: str = always("prismaCreate")
+    materializer_name: str = always("create")
     serial: bool = always(True)
 
 
 @frozen
 class PrismaDiffMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
-    materializer_name: str = always("prismaDiff")
+    materializer_name: str = always("diff")
     # serial = False
+
+
+@frozen
+class PrismaStartSessionMat(Materializer):
+    runtime: Runtime = PrismaMigrationRuntime()
+    materializer_name: str = always("startSession")
+    serial: bool = always(True)
+
+
+@frozen
+class PrismaEndSessionMat(Materializer):
+    runtime: Runtime = PrismaMigrationRuntime()
+    materializer_name: str = always("endSession")
+    serial: bool = always(True)

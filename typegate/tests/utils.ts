@@ -17,10 +17,11 @@ import { signJWT } from "../src/crypto.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { RateLimiter } from "../src/rate_limiter.ts";
 import { RuntimesConfig } from "../src/types.ts";
-import { PrismaMigration } from "../src/runtimes/prisma_migration.ts";
-import { PrismaRuntimeDS } from "../src/type_node.ts";
+import { PrismaRuntimeDS, TypeRuntimeBase } from "../src/type_node.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";
 import { TypeGraph } from "../src/typegraph.ts";
+import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
+import * as native from "native";
 
 const testRuntimesConfig = {
   worker: { lazy: false },
@@ -439,16 +440,22 @@ export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function recreateMigrations(engine: Engine) {
-  const runtimeNames = engine.tg.tg.runtimes
-    .filter((rt) => rt.name === "prisma")
-    .map((rt) => (rt as unknown as PrismaRuntimeDS).data.name);
+  const runtimes = (engine.tg.tg.runtimes as TypeRuntimeBase[]).filter((rt) =>
+    rt.name === "prisma"
+  ) as PrismaRuntimeDS[];
 
-  for await (const runtime of runtimeNames) {
-    const prisma = new PrismaMigration(engine, runtime);
-    prisma.migrationFolderBase = join(localDir, "prisma-migrations");
-    await Deno.remove(prisma.migrationFolder, { recursive: true })
-      .catch(() => {});
-    await prisma.create({ name: "init", apply: true } as any);
+  const migrationsBaseDir = join(localDir, "prisma-migrations");
+
+  for await (const runtime of runtimes) {
+    const prisma = new PrismaMigrate(engine, runtime, null);
+    const { migrations } = await prisma.create(
+      { name: "init", apply: true } as any,
+    );
+    const dest = join(migrationsBaseDir, engine.tg.name, runtime.data.name);
+    const res = await native.unpack({ dest, migrations });
+    if (res !== "Ok") {
+      throw new Error(res.Err.message);
+    }
   }
 }
 

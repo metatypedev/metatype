@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use super::{dev::push_loaded_typegraphs, Action};
-use crate::utils::ensure_venv;
+use crate::utils::{ensure_venv, Node};
 use crate::{typegraph::TypegraphLoader, utils::BasicAuth};
 use anyhow::Result;
 use clap::Parser;
@@ -40,7 +40,9 @@ impl Action for Deploy {
             loader.load_folder(&dir)?
         };
 
-        push_loaded_typegraphs(loaded, &self.gate, &BasicAuth::prompt()?);
+        let node = Node::new(&self.gate, Some(BasicAuth::prompt()?))?;
+
+        push_loaded_typegraphs(loaded, &node);
 
         Ok(())
     }

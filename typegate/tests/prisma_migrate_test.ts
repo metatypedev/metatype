@@ -7,10 +7,10 @@ import {
   assertEquals,
 } from "std/testing/asserts.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
-import config from "../src/config.ts";
+import * as native from "native";
+import { nativeResult } from "../src/utils.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
-config.prisma_migration_folder = join(localDir, "prisma-migrations");
 
 test("prisma migrations", async (t) => {
   const tgPath = "typegraphs/prisma.py";
@@ -54,9 +54,11 @@ test("prisma migrations", async (t) => {
   await t.should("create and apply migrations", async () => {
     await gql`
       mutation PrismaCreate {
-        prismaCreate(typegraph: "prisma", name: "initial migration", apply: true) {
+        create(typegraph: "prisma", name: "initial migration", apply: true) {
           createdMigrationName
           appliedMigrations
+          migrations
+          runtimeName
         }
       }
     `
@@ -64,9 +66,18 @@ test("prisma migrations", async (t) => {
         "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
       })
       .expectBody(async (body) => {
-        const { createdMigrationName, appliedMigrations } =
-          body.data.prismaCreate;
+        const {
+          createdMigrationName,
+          appliedMigrations,
+          migrations,
+          runtimeName,
+        } = body.data.create;
         createdMigrations.push(createdMigrationName);
+
+        assertEquals(runtimeName, "prisma");
+
+        const ret = await native.unpack({ dest: migrationDir, migrations });
+        assertEquals(ret, "Ok");
 
         const stat1 = await Deno.stat(
           join(migrationDir, "migration_lock.toml"),
@@ -114,16 +125,22 @@ test("prisma migrations", async (t) => {
       .on(e);
   });
 
+  let mig: string;
+
   await t.should("require database reset on drift", async () => {
     const path = join(migrationDir, createdMigrations[0]);
     await Deno.rename(path, `${path}_renamed`);
+    mig = nativeResult(
+      await native.archive({ path: migrationDir }),
+    ).base64;
     await gql`
-      mutation PrismaApply {
-        prismaApply(typegraph: "prisma", resetDatabase: false) {
+      mutation PrismaApply($mig: String!) {
+        apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
           appliedMigrations
         }
       }
     `
+      .withVars({ mig })
       .withHeaders({
         "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
       })
@@ -131,18 +148,20 @@ test("prisma migrations", async (t) => {
       .on(migrations);
 
     await gql`
-      mutation PrismaApply {
-        prismaApply(typegraph: "prisma", resetDatabase: true) {
+      mutation PrismaApply($mig: String!) {
+        apply(migrations: $mig, typegraph: "prisma", resetDatabase: true) {
           databaseReset
           appliedMigrations
         }
       }
     `
+      .withVars({ mig })
       .withHeaders({
         "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
       })
       .expectBody((body) => {
-        const { appliedMigrations, databaseReset } = body.data.prismaApply;
+        const { appliedMigrations, databaseReset } = body.data.apply;
+        console.log({ appliedMigrations, databaseReset });
         assert(databaseReset);
         assertArrayIncludes(
           appliedMigrations,
@@ -166,7 +185,7 @@ test("prisma migrations", async (t) => {
 
   await t.should("apply pending migrations", async () => {
     // reset database
-    // TODO use prismaReset mutation on prisma_migrations
+    // TODO use reset mutation on prisma_migrations
     await gql`
       mutation a {
         executeRaw(
@@ -181,18 +200,19 @@ test("prisma migrations", async (t) => {
       .on(e);
 
     await gql`
-      mutation PrismaApply {
-        prismaApply(typegraph: "prisma", resetDatabase: false) {
+      mutation PrismaApply($mig: String!) {
+        apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
           databaseReset
           appliedMigrations
         }
       }
     `
+      .withVars({ mig })
       .withHeaders({
         "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
       })
       .expectBody((body) => {
-        const { appliedMigrations, databaseReset } = body.data.prismaApply;
+        const { appliedMigrations, databaseReset } = body.data.apply;
         assert(!databaseReset);
         assertArrayIncludes(
           appliedMigrations,
