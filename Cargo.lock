@@ -628,12 +628,15 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.2-alpha.7"
+version = "0.0.2-alpha.8"
 dependencies = [
  "anyhow",
+ "base64 0.13.1",
+ "flate2",
  "serde",
  "serde_json",
  "serde_with 2.1.0",
+ "tar",
 ]
 
 [[package]]
@@ -2489,7 +2492,7 @@ dependencies = [
 
 [[package]]
 name = "meta"
-version = "0.0.2-alpha.7"
+version = "0.0.2-alpha.8"
 dependencies = [
  "anyhow",
  "base64 0.13.1",
@@ -2961,10 +2964,9 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.0.2-alpha.7"
+version = "0.0.2-alpha.8"
 dependencies = [
  "anyhow",
- "base64 0.13.1",
  "common",
  "config",
  "connection-string",
@@ -2973,7 +2975,6 @@ dependencies = [
  "datamodel-renderer",
  "deno_bindgen",
  "env_logger",
- "flate2",
  "http",
  "introspection-connector",
  "introspection-core",
@@ -2992,12 +2993,12 @@ dependencies = [
  "serde_json",
  "sql-introspection-connector",
  "static_init",
- "tar",
  "tempfile",
  "thiserror",
  "tokio",
  "url",
  "user-facing-errors",
+ "uuid 1.2.2",
 ]
 
 [[package]]

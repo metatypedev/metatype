@@ -1,5 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import sys
 from typing import Dict
 
 
@@ -16,3 +17,7 @@ def drop_nones(d: Dict, **kwargs) -> Dict:
 
 def pick(d: Dict, *largs):
     return {k: d.get(k) for k in largs}
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)

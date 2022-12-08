@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph"
-version = "0.0.2-alpha.7"
+version = "0.0.2-alpha.8"
 description = "Free and open ecosystem for API composition."
 authors = [
     "Metatype Contributors <support@metatype.dev>",

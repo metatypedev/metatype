@@ -85,7 +85,7 @@ class typedef(Node):
     runtime_config: Dict[str, Any] = field(
         kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
     )
-    _enum: Optional[List[Any]] = optional_field()
+    _enum: Optional[Tuple[Any]] = optional_field()
 
     collector_target: Optional[str] = always(Collector.types)
 
@@ -183,6 +183,9 @@ class typedef(Node):
         self,
         *policies: List["Policy"],
     ):
+        for policy in policies:
+            if not isinstance(policy, Policy):
+                raise Exception("invalid policy")
         return self.replace(policies=self.policies + policies)
 
     def config(self, *flags: str, **kwargs: Any):
@@ -193,7 +196,7 @@ class typedef(Node):
         return self.replace(runtime_config=d)
 
     def enum(self, variants: List[Any]) -> Self:
-        return self.replace(_enum=variants)
+        return self.replace(enum=tuple(variants))
 
     def data(self, collector) -> dict:
         if self.runtime is None:
@@ -535,6 +538,7 @@ class func(typedef):
     rate_weight: Optional[int] = field(kw_only=True, default=None)
 
     def __attrs_post_init__(self):
+        super().__attrs_post_init__()
         object.__setattr__(self, "runtime", self.mat.runtime)
 
     def rate(self, weight=None, calls=False):

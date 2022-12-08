@@ -1,72 +1,72 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from dataclasses import dataclass
-
+from attrs import frozen
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
+from typegraph.utils.attrs import always
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class TypeGraphRuntime(Runtime):
-    runtime_name: str = "typegraph"
+    runtime_name: str = always("typegraph")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class TypeMat(Materializer):
     runtime: Runtime = TypeGraphRuntime()
-    materializer_name: str = "getType"
+    materializer_name: str = always("getType")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class SchemaMat(Materializer):
     runtime: Runtime = TypeGraphRuntime()
-    materializer_name: str = "getSchema"
+    materializer_name: str = always("getSchema")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class ResolverMat(Materializer):
     runtime: Runtime = TypeGraphRuntime()
-    materializer_name: str = "resolver"
+    materializer_name: str = always("resolver")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class TypeGateRuntime(Runtime):
-    runtime_name: str = "typegate"
+    runtime_name: str = always("typegate")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class TypeGraphsMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
-    materializer_name: str = "typegraphs"
+    materializer_name: str = always("typegraphs")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class TypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
-    materializer_name: str = "typegraph"
+    materializer_name: str = always("typegraph")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class AddTypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
-    materializer_name: str = "addTypegraph"
-    serial: bool = True
+    materializer_name: str = always("addTypegraph")
+    serial: bool = always(True)
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class RemoveTypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
-    materializer_name: str = "removeTypegraph"
-    serial: bool = True
+    materializer_name: str = always("removeTypegraph")
+    serial: bool = always(True)
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class TypeNodeMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
-    materializer_name: str = "typenode"
+    materializer_name: str = always("typenode")
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class SerializedTypegraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
-    materializer_name: str = "serializedTypegraph"
+    materializer_name: str = always("serializedTypegraph")

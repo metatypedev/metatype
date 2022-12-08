@@ -6,9 +6,10 @@ from typegraph.materializers.prisma import PrismaApplyMat
 from typegraph.materializers.prisma import PrismaCreateMat
 from typegraph.materializers.prisma import PrismaDeployMat
 from typegraph.materializers.prisma import PrismaDiffMat
-from typegraph.materializers.prisma import PrismaMigrateMat
 from typegraph.policies import Policy
 from typegraph.types import types as t
+
+# from typegraph.materializers.prisma import PrismaMigrateMat
 
 with TypeGraph(
     "typegate/prisma_migration",
@@ -23,8 +24,17 @@ with TypeGraph(
 ) as g:
     admin_only = Policy(FunMat("(args) => args.user === 'admin'")).named("admin_only")
 
+    base = t.struct(
+        {
+            "typegraph": t.string(),
+            "runtime": t.string().optional(),
+            # base64-encoded gzipped tar migrations folder
+            "migrations": t.string().optional(),
+        }
+    )
+
     g.expose(
-        prismaDiff=t.func(
+        diff=t.func(
             t.struct(
                 {
                     "typegraph": t.string(),
@@ -34,37 +44,17 @@ with TypeGraph(
             ),
             t.struct(
                 {
-                    "runtime": t.struct(
-                        {"name": t.string(), "connectionString": t.string()}
-                    ),
                     "diff": t.string().optional(),
+                    "runtimeName": t.string(),
                 }
             ),
             PrismaDiffMat(),
         )
         .rate(calls=True)
         .add_policy(admin_only),
-        prismaMigrate=t.func(
-            t.struct(
-                {
-                    "typegraph": t.string(),
-                    "runtime": t.string().optional(),
-                    "name": t.string(),
-                }
-            ),
-            t.string(),
-            PrismaMigrateMat(),
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
-        prismaApply=t.func(
-            t.struct(
-                {
-                    "typegraph": t.string(),
-                    "runtime": t.string().optional(),
-                    "resetDatabase": t.boolean(),
-                },
-            ),
+        # apply pending migrations
+        apply=t.func(
+            base.compose({"resetDatabase": t.boolean()}),
             t.struct(
                 {
                     "databaseReset": t.boolean(),
@@ -75,14 +65,24 @@ with TypeGraph(
         )
         .rate(calls=True)
         .add_policy(admin_only),
-        prismaDeploy=t.func(
+        # create migration
+        create=t.func(
+            base.compose({"name": t.string(), "apply": t.boolean()}),
             t.struct(
                 {
-                    "typegraph": t.string(),
-                    "runtime": t.string().optional(),
-                    "migrations": t.string(),  # tar.gz
+                    "createdMigrationName": t.string(),
+                    "appliedMigrations": t.array(t.string()),
+                    "migrations": t.string(),
+                    "runtimeName": t.string(),
                 }
             ),
+            PrismaCreateMat(),
+        )
+        .rate(calls=True)
+        .add_policy(admin_only),
+        # apply migrations -- prod
+        deploy=t.func(
+            base.compose({"migrations": t.string()}),
             t.struct(
                 {
                     "migrationCount": t.integer(),
@@ -90,25 +90,6 @@ with TypeGraph(
                 }
             ),
             PrismaDeployMat(),
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
-        prismaCreate=t.func(
-            t.struct(
-                {
-                    "typegraph": t.string(),
-                    "runtime": t.string().optional(),
-                    "name": t.string(),
-                    "apply": t.boolean(),
-                }
-            ),
-            t.struct(
-                {
-                    "createdMigrationName": t.string(),
-                    "appliedMigrations": t.array(t.string()),
-                }
-            ),
-            PrismaCreateMat(),
         )
         .rate(calls=True)
         .add_policy(admin_only),
