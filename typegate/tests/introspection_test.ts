@@ -49,9 +49,6 @@ test("Basic introspection", async (t) => {
             {
               "name": "Int",
             },
-            {
-              "name": "Query",
-            },
           ],
         },
       })

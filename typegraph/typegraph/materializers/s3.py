@@ -17,7 +17,7 @@ class S3Runtime(Runtime):
 
     def data(self, collector):
         data = super().data(collector)
-        data["data"] |= dict(
+        data["data"].update(
             host=self.host,
             region=self.region,
             access_key_secret=self.access_key_secret,

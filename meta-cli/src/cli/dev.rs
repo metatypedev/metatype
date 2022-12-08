@@ -2,7 +2,7 @@
 
 use crate::codegen;
 use crate::typegraph::{LoaderResult, TypegraphLoader};
-use crate::utils::{ensure_venv, post_with_auth, BasicAuth};
+use crate::utils::{ensure_venv, BasicAuth, Node};
 use anyhow::{bail, Context, Error, Result};
 use clap::Parser;
 use colored::Colorize;
@@ -15,7 +15,7 @@ use notify::event::ModifyKind;
 use notify::{
     recommended_watcher, Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
 };
-use reqwest::{self, Url};
+use reqwest::Url;
 use serde_json::{self, json};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -55,21 +55,20 @@ impl Action for Dev {
             BasicAuth::as_user(self.username.clone())?
         };
 
+        let node = Node::new(&self.gate, Some(auth.clone()))?;
+
         let loaded = TypegraphLoader::new()
             .working_dir(&dir)
             .load_folder(".")
             .context("Error while loading typegraphs from folder");
         match loaded {
             Ok(loaded) => {
-                push_loaded_typegraphs(loaded, &self.gate, &auth);
+                push_loaded_typegraphs(loaded, &node);
             }
             Err(err) => log_err(err),
         }
 
-        let gate = self.gate.clone();
-
         let watch_path = dir.clone();
-        let auth_clone = auth.clone();
         let _watcher = watch(dir.clone(), move |paths| {
             let loaded = TypegraphLoader::new()
                 .working_dir(&watch_path)
@@ -86,7 +85,7 @@ impl Action for Dev {
 
             let loaded = TypegraphLoader::new().load_files(paths);
 
-            push_loaded_typegraphs(loaded, &gate, &auth_clone);
+            push_loaded_typegraphs(loaded, &node);
         })
         .unwrap();
 
@@ -100,7 +99,8 @@ impl Action for Dev {
                 "/dev" => match query.get("node") {
                     Some(node) => {
                         let tgs = TypegraphLoader::new().working_dir(&dir).load_folder(&dir)?;
-                        push_loaded_typegraphs(tgs, node, &auth);
+                        let node = Node::new(node, Some(auth.clone()))?;
+                        push_loaded_typegraphs(tgs, &node);
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
                                 "Content-Type: application/json".parse::<Header>().unwrap(),
@@ -177,7 +177,7 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
         .collect()
 }
 
-pub fn push_loaded_typegraphs(loaded: LoaderResult, node: &str, auth: &BasicAuth) {
+pub fn push_loaded_typegraphs(loaded: LoaderResult, node: &Node) {
     // TODO concurrent pushing
     for (path, res) in loaded.into_iter() {
         match res.with_context(|| format!("Error while loading typegraphs from {path}")) {
@@ -185,7 +185,7 @@ pub fn push_loaded_typegraphs(loaded: LoaderResult, node: &str, auth: &BasicAuth
                 println!("Loaded typegraphs from {path}:");
                 for tg in tgs.iter() {
                     print!("  → Pushing typegraph {name}...", name = tg.name().unwrap());
-                    match push_typegraph(tg, node, auth, 3) {
+                    match push_typegraph(tg, node, 3) {
                         Ok(_) => {
                             println!(" {}", "Done.".to_owned().green());
                         }
@@ -203,11 +203,9 @@ pub fn push_loaded_typegraphs(loaded: LoaderResult, node: &str, auth: &BasicAuth
     }
 }
 
-pub fn push_typegraph(tg: &Typegraph, node: &str, auth: &BasicAuth, backoff: u32) -> Result<()> {
+pub fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<()> {
     use crate::utils::graphql::{Error as GqlError, GraphqlErrorMessages, Query};
-    let gql_endpoint = format!("{node}/typegate");
-    // TODO: as admin
-    let query = post_with_auth(auth, &gql_endpoint)?.gql(
+    let query = node.post("/typegate")?.gql(
         indoc! {"
             mutation InsertTypegraph {
                 addTypegraph(fromString: $tg) {
@@ -225,7 +223,7 @@ pub fn push_typegraph(tg: &Typegraph, node: &str, auth: &BasicAuth, backoff: u32
                 if backoff > 1 {
                     println!("retry: {e:?}");
                     sleep(Duration::from_secs(5));
-                    push_typegraph(tg, node, auth, backoff - 1)
+                    push_typegraph(tg, node, backoff - 1)
                 } else {
                     bail!("node unreachable: {e}")
                 }
@@ -234,7 +232,7 @@ pub fn push_typegraph(tg: &Typegraph, node: &str, auth: &BasicAuth, backoff: u32
                 if backoff > 1 {
                     println!("retry:\n{}", e.error_messages().dimmed());
                     sleep(Duration::from_secs(5));
-                    push_typegraph(tg, node, auth, backoff - 1)
+                    push_typegraph(tg, node, backoff - 1)
                 } else {
                     bail!("typegraph push error:\n{}", e.error_messages().dimmed())
                 }
@@ -243,7 +241,7 @@ pub fn push_typegraph(tg: &Typegraph, node: &str, auth: &BasicAuth, backoff: u32
                 if backoff > 1 {
                     println!("retry:\n{}", e);
                     sleep(Duration::from_secs(5));
-                    push_typegraph(tg, node, auth, backoff - 1)
+                    push_typegraph(tg, node, backoff - 1)
                 } else {
                     bail!("Invalid HTTP response: {e}")
                 }

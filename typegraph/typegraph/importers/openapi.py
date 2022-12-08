@@ -1,10 +1,14 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from dataclasses import dataclass
 import inspect
 import re
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 from urllib.parse import urljoin
 
+from attrs import define
 import black
 from box import Box
 from deepmerge import always_merger
@@ -23,7 +27,7 @@ MIME_TYPES = Box(
 )
 
 
-def merge_all(items: list[dict]):
+def merge_all(items: List[dict]):
     ret = {}
     for item in items:
         print(f"MERGE: {item} into {ret}")
@@ -32,7 +36,7 @@ def merge_all(items: list[dict]):
     return ret
 
 
-@dataclass
+@define
 class Input:
     type: str
     kwargs: dict
@@ -53,16 +57,16 @@ class Document:
         # suppose it is JSON
         return Box(res.json())
 
-    def merge_schemas(self, schemas: list[Box]):
+    def merge_schemas(self, schemas: List[Box]):
         return Box(merge_all([self.resolve_ref(s) for s in schemas]))
 
     def typify(
         self,
         schema: Box,
-        name: str | None = None,
+        name: Optional[str] = None,
         write_name: bool = False,
         opt: bool = False,
-        prop_of: tuple[str, str] | None = None,
+        prop_of: Optional[Tuple[str, str]] = None,
     ):
         if opt:
             return f"t.optional({self.typify(schema, name, prop_of = prop_of)})"
@@ -252,7 +256,7 @@ class Path:
             return "default"
         raise Exception(f"No success response found in {responses}")
 
-    def gen_function(self, method: str) -> tuple[str, str]:
+    def gen_function(self, method: str) -> Tuple[str, str]:
         op_obj = self.path_obj[method]
         inp = self.input_type(method)
         success_code = Path.success_code(op_obj.responses)
@@ -284,7 +288,7 @@ class Path:
         ]
 
 
-def as_kwargs(kwargs: dict[str, str]):
+def as_kwargs(kwargs: Dict[str, str]):
     cg = ""
     for key, val in kwargs.items():
         cg += f"{key}={val},"

@@ -3,6 +3,7 @@ from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import DenoRuntime
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.deno import ModuleMat
+from typegraph.policies import Policy
 from typegraph.types import types as t
 
 with TypeGraph(name="math") as g:
@@ -10,9 +11,7 @@ with TypeGraph(name="math") as g:
 
     allow_all = policies.allow_all()
 
-    restrict_referer = t.func(
-        t.struct(),
-        t.boolean(),
+    restrict_referer = Policy(
         FunMat(
             '(context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
             runtime=worker,

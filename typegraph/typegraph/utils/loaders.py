@@ -1,26 +1,28 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from argparse import ArgumentParser
-from dataclasses import dataclass
 import importlib
 from pathlib import Path
 import pkgutil
 from typing import List
 
+import attrs
+from attrs import define
 from frozendict import frozendict
 import orjson
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import Relation
+from typegraph.utils.attrs import asdict
 
 
 # TDM is: typegraph definition module, defining one or more typegraphs
-@dataclass
+@define
 class LoadedTdm:
     path: str
     typegraphs: List[dict]
 
 
-@dataclass
+@define
 class TypegraphError:
     path: str
     message: str
@@ -102,6 +104,8 @@ def cmd():
             return dict(obj)
         if isinstance(obj, Relation):
             return {}
+        if attrs.has(obj.__class__):
+            return asdict(obj)
         raise TypeError
 
     opt = dict(option=orjson.OPT_INDENT_2) if args.pretty else {}

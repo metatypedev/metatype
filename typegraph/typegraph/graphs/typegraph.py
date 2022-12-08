@@ -1,7 +1,5 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from dataclasses import dataclass
-from dataclasses import field
 import inspect
 from pathlib import Path
 from typing import Callable
@@ -14,6 +12,9 @@ from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
+from attrs import define
+from attrs import field
+from attrs import frozen
 from typegraph.graphs.builder import Collector
 from typegraph.graphs.node import Node
 from typegraph.materializers.deno import DenoRuntime
@@ -26,14 +27,14 @@ if TYPE_CHECKING:
 typegraph_version = "0.0.1"
 
 
-@dataclass(eq=True, frozen=True)
+@frozen
 class Code:
     name: str
     source: str
     type: Literal["func", "module"] = field(default="func")
 
 
-@dataclass
+@define
 class Auth:
     name: str
     protocol: str
@@ -78,16 +79,16 @@ github_auth = Auth.oauth2(
 )
 
 
-@dataclass
+@define
 class Cors:
-    allow_origin: List[str] = field(default_factory=list)
-    allow_headers: List[str] = field(default_factory=list)
-    expose_headers: List[str] = field(default_factory=list)
+    allow_origin: List[str] = field(factory=list)
+    allow_headers: List[str] = field(factory=list)
+    expose_headers: List[str] = field(factory=list)
     allow_credentials: bool = True
     max_age: Optional[int] = None
 
 
-@dataclass
+@define
 class Rate:
     window_limit: int
     window_sec: int

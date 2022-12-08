@@ -3,7 +3,7 @@
 use super::Action;
 use crate::utils::{
     graphql::{self, Query},
-    post_with_auth, BasicAuth,
+    BasicAuth, Node,
 };
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
@@ -14,10 +14,15 @@ use prisma_models::psl;
 use question::{Answer, Question};
 use serde::Deserialize;
 use serde_json::json;
-use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
 use std::time::Duration;
+use std::{
+    fs::{self, File},
+    path::Path,
+};
+
+static MIGRATION_ENDPOINT: &str = "/typegate/prisma_migration";
 
 #[derive(Parser, Debug)]
 pub struct Prisma {
@@ -34,7 +39,7 @@ pub enum Commands {
     /// Apply all pending migrations.
     /// See: https://www.prisma.io/docs/reference/api-reference/command-reference#migrate-deploy
     Deploy(Deploy),
-    /// Show prisma diff
+    /// Show prisma diff: current schema on the typegate vs the database
     Diff(Diff),
     /// Reformat a prisma schema
     Format(Format),
@@ -61,18 +66,25 @@ pub struct Dev {
 }
 
 impl Action for Dev {
-    fn run(&self, _dir: String) -> Result<()> {
-        let migrate = PrismaMigrate::new(
+    fn run(&self, dir: String) -> Result<()> {
+        let mut migrate = PrismaMigrate::new(
             self.typegraph.clone(),
             self.runtime.clone(),
-            format!("{}/typegate/prisma_migration", self.gate),
-            BasicAuth::prompt()?,
-        );
+            Node::new(&self.gate, Some(BasicAuth::prompt()?))?,
+            Path::new(&dir).join("prisma/migrations"),
+        )?;
 
         migrate.apply(false)?;
         println!();
 
-        let changes = migrate.diff(false)?;
+        let (rt_name, changes) = PrismaMigrate::diff(
+            false,
+            &migrate.node,
+            &migrate.typegraph,
+            migrate.runtime_name.as_deref(),
+        )?;
+
+        migrate.runtime_name.replace(rt_name);
 
         if changes {
             println!("A migration will be created and applied for the changes.");
@@ -82,6 +94,7 @@ impl Action for Dev {
             if let Answer::RESPONSE(name) = ans {
                 if !name.is_empty() {
                     migrate.create(name, !self.create_only)?;
+                    migrate.end()?;
                 }
             }
         }
@@ -128,7 +141,7 @@ impl Action for Deploy {
             .gql(
                 indoc! {"
                     mutation PrismaDeploy($tg: String!, $runtime: String!, $mig: String!) {
-                        prismaDeploy(typegraph: $tg, runtime: $runtime, migrations: $mig) {
+                        deploy(typegraph: $tg, runtime: $runtime, migrations: $mig) {
                             migrationCount
                             appliedMigrations
                         }
@@ -149,7 +162,7 @@ impl Action for Deploy {
             migration_count: usize,
             applied_migrations: Vec<String>,
         }
-        let result: PrismaDeployResult = res.data("prismaDeploy")?;
+        let result: PrismaDeployResult = res.data("deploy")?;
 
         if result.migration_count == 0 {
             println!("No migration found.")
@@ -212,13 +225,8 @@ pub struct Format {
 impl Action for Diff {
     fn run(&self, _dir: String) -> Result<()> {
         // TODO runtime selection
-        let migrate = PrismaMigrate::new(
-            self.typegraph.clone(),
-            self.runtime.clone(),
-            format!("{}/typegate/prisma_migration", self.gate),
-            BasicAuth::prompt()?,
-        );
-        migrate.diff(self.script)?;
+        let node = Node::new(&self.gate, Some(BasicAuth::prompt()?))?;
+        PrismaMigrate::diff(self.script, &node, &self.typegraph, self.runtime.as_deref())?;
         Ok(())
     }
 }
@@ -261,24 +269,82 @@ impl Action for Format {
 
 struct PrismaMigrate {
     typegraph: String,
-    runtime: Option<String>,
-    gql_endpoint: String,
-    auth: BasicAuth,
+    runtime_name: Option<String>,
+    migrations: Option<String>,
+    base_migration_path: PathBuf,
+    node: Node,
 }
 
 impl PrismaMigrate {
-    fn new(
+    fn get_migrations_path<P: AsRef<Path>>(
+        base_path: P,
+        typegraph: &str,
+        runtime: Option<&str>,
+    ) -> Result<Option<PathBuf>> {
+        let tg_migrations_path = base_path.as_ref().join(typegraph);
+        let Ok(true) = tg_migrations_path.try_exists() else {
+                fs::create_dir_all(tg_migrations_path)?;
+                return Ok(None);
+        };
+        if let Some(runtime_name) = runtime {
+            let path = tg_migrations_path.join(runtime_name);
+            if let Ok(true) = path.try_exists() {
+                return Ok(Some(path));
+            }
+            return Ok(None);
+        }
+        let subdirs = fs::read_dir(tg_migrations_path)?
+            .filter_map(|entry| -> Option<PathBuf> {
+                entry.ok().map(|e| e.path()).filter(|p| p.is_dir())
+            })
+            .collect::<Vec<PathBuf>>();
+        match subdirs.len() {
+            0 => Ok(None),
+            1 => Ok(subdirs.into_iter().next()),
+            _ => bail!("Runtime name required: more than one runtimes are defined in the migrations directory"),
+        }
+    }
+
+    fn new<P: AsRef<Path>>(
         typegraph: String,
         runtime: Option<String>,
-        gql_endpoint: String,
-        auth: BasicAuth,
-    ) -> Self {
-        Self {
+        node: Node,
+        base_migration_path: P, // TODO read from metatype.yaml
+    ) -> Result<Self> {
+        // get migration folder
+        let migrations_path = Self::get_migrations_path(
+            base_migration_path.as_ref(),
+            &typegraph,
+            runtime.as_deref(),
+        )?;
+        let migrations = if let Some(path) = migrations_path {
+            Some(common::migrations::archive(path)?)
+        } else {
+            None
+        };
+
+        Ok(Self {
             typegraph,
-            runtime,
-            gql_endpoint,
-            auth,
-        }
+            runtime_name: runtime,
+            node,
+            migrations,
+            base_migration_path: base_migration_path.as_ref().to_owned(),
+        })
+    }
+
+    fn end(self) -> Result<()> {
+        let migrations_path = self.base_migration_path.join(&self.typegraph).join(
+            &self
+                .runtime_name
+                .expect("runtime name should have been set"), // runtime_name should have been set
+        );
+
+        self.migrations
+            .as_ref()
+            .expect("migrations should have been updated"); // migrations should have been set
+
+        common::migrations::unpack(migrations_path, self.migrations)?;
+        Ok(())
     }
 
     /// Apply pending migrations
@@ -288,11 +354,13 @@ impl PrismaMigrate {
             ResetRequired(String),
         }
 
-        let res = post_with_auth(&self.auth, &self.gql_endpoint)?
+        let res = self
+            .node
+            .post(MIGRATION_ENDPOINT)?
             .gql(
                 indoc! {"
-                mutation PrismaApply($tg: String!, $rt: String, $reset: Boolean!) {
-                    prismaApply(typegraph: $tg, runtime: $rt, resetDatabase: $reset) {
+                mutation PrismaApply($tg: String!, $rt: String, $mig: String, $reset: Boolean!) {
+                    apply(typegraph: $tg, runtime: $rt, migrations: $mig, resetDatabase: $reset) {
                         databaseReset
                         appliedMigrations
                     }
@@ -301,7 +369,8 @@ impl PrismaMigrate {
                 .to_string(),
                 Some(json!({
                     "tg": self.typegraph,
-                    "rt": self.runtime,
+                    "rt": self.runtime_name,
+                    "mig": self.migrations,
                     "reset": reset_database,
                 })),
             )
@@ -344,7 +413,7 @@ impl PrismaMigrate {
                     applied_migrations: Vec<String>,
                 }
 
-                let res: Res = res.data("prismaApply")?;
+                let res: Res = res.data("apply")?;
                 if res.database_reset {
                     println!("Database has been reset.");
                 }
@@ -369,25 +438,27 @@ impl PrismaMigrate {
     }
 
     /// Create and eventually apply a new migration
-    fn create(&self, name: String, apply: bool) -> Result<()> {
-        let res = post_with_auth(&self.auth, &self.gql_endpoint)?
-            .gql(
-                indoc! {"
-                    mutation PrismaCreate($tg: String!, $rt: String, $name: String!, $apply: Boolean) {
-                        prismaCreate(typegraph: $tg, runtime: $rt, name: $name, apply: $apply) {
+    fn create(&mut self, name: String, apply: bool) -> Result<()> {
+        let res = self.node.post(MIGRATION_ENDPOINT)?.gql(
+            indoc! {"
+                    mutation PrismaCreate($tg: String!, $rt: String, $mig: String, $name: String!, $apply: Boolean!) {
+                        create(typegraph: $tg, runtime: $rt, migrations: $mig, name: $name, apply: $apply) {
                             createdMigrationName
                             appliedMigrations
+                            migrations
+                            runtimeName
                         }
                     }
                 "}
-                .to_string(),
-                Some(json!({
-                    "tg": self.typegraph,
-                    "rt": self.runtime,
-                    "name": name,
-                    "apply": apply
-                }))
-            )?;
+            .to_string(),
+            Some(json!({
+                "tg": self.typegraph,
+                "rt": self.runtime_name,
+                "mig": self.migrations,
+                "name": name,
+                "apply": apply
+            })),
+        )?;
 
         res.display_errors();
 
@@ -396,8 +467,10 @@ impl PrismaMigrate {
         struct Res {
             created_migration_name: String,
             applied_migrations: Vec<String>,
+            migrations: String,
+            runtime_name: String,
         }
-        let res: Res = res.data("prismaCreate")?;
+        let res: Res = res.data("create")?;
 
         let applied = if let Some((last, others)) = res.applied_migrations.split_last() {
             if last != &res.created_migration_name {
@@ -430,27 +503,32 @@ impl PrismaMigrate {
             format!(" - {mig}", mig = res.created_migration_name).green()
         );
 
+        self.runtime_name.replace(res.runtime_name);
+        self.migrations.replace(res.migrations);
+
         Ok(())
     }
 
-    pub fn diff(&self, script: bool) -> Result<bool> {
-        let res = post_with_auth(&self.auth, &self.gql_endpoint)?.gql(
+    pub fn diff(
+        script: bool,
+        node: &Node,
+        tg: &String,
+        rt: Option<&str>,
+    ) -> Result<(String, bool)> {
+        let res = node.post(MIGRATION_ENDPOINT)?.gql(
             indoc! {"
                     query PrismaDiff($tg: String!, $rt: String, $script: Boolean) {
-                        prismaDiff(typegraph: $tg, runtime: $rt, script: $script) {
-                            runtime {
-                                name
-                                connectionString
-                            }
+                        diff(typegraph: $tg, runtime: $rt, script: $script) {
                             diff
+                            runtimeName
                         }
                     }
                 "}
             .to_string(),
             Some(json!({
-                "tg": self.typegraph,
+                "tg": tg,
+                "rt": rt,
                 "script": script,
-                "rt": self.runtime,
             })),
         )?;
 
@@ -459,27 +537,20 @@ impl PrismaMigrate {
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase")]
         struct Res {
-            runtime: PrismaRuntime,
             diff: Option<String>,
+            runtime_name: String,
         }
 
-        let res: Res = res.data("prismaDiff")?;
+        let res: Res = res.data("diff")?;
 
-        println!("Diff for {}", res.runtime.name);
+        println!("Diff for runtime '{}'", res.runtime_name);
 
         if let Some(diff) = res.diff.as_ref() {
             println!("{}", diff.blue());
-            Ok(true)
+            Ok((res.runtime_name, true))
         } else {
             println!("{}", "No changes.".dimmed());
-            Ok(false)
+            Ok((res.runtime_name, false))
         }
     }
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct PrismaRuntime {
-    name: String,
-    //connection_string: String,
 }
