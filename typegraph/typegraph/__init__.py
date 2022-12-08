@@ -8,4 +8,4 @@ from dotenv import load_dotenv
 
 load_dotenv(find_dotenv())
 
-version = "0.0.2-alpha.8"
+version = "0.0.2-alpha.9"
