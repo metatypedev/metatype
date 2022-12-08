@@ -1,7 +1,10 @@
 on:
+  push:
+    tags:
+      - v*
   release:
     types:
-      - created
+      - published
 
 env:
   PYTHON_VERSION: "3.10"
