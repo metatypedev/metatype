@@ -634,7 +634,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "typegraph"
-version = "0.0.2-alpha.8"
+version = "0.0.2-alpha.10"
 description = "Free and open ecosystem for API composition."
 category = "main"
 optional = false
