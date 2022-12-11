@@ -64,9 +64,16 @@ typegate_native:
     depends_on:
         - libs
 
+website_deps:
+    workdir: website
+    watches: "package.json"
+    shell: "pnpm install"
+
 website:
     workdir: website
     shell: "pnpm start --no-open"
+    depends_on:
+        - website_deps
 
 website_meta:
     workdir: .
