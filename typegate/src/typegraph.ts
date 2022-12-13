@@ -37,6 +37,7 @@ import config from "./config.ts";
 import {
   Batcher,
   ComputeArg,
+  Operation,
   PolicyStages,
   PolicyStagesFactory,
   Resolver,
@@ -95,6 +96,7 @@ export interface TypeGraphDS {
 export type RuntimeResolver = Record<string, Runtime>;
 
 interface TraverseParams {
+  operation: Operation;
   fragments: FragmentDefs;
   parentName: string;
   parentArgs: readonly ast.ArgumentNode[];
@@ -105,14 +107,6 @@ interface TraverseParams {
   parentStage?: ComputeStage;
   serial?: boolean;
 }
-
-const dummyStringTypeNode: TypeNode = {
-  // FIXME: remove dummy
-  title: "string",
-  type: "string",
-  policies: [],
-  runtime: -1,
-};
 
 const runtimeInit: RuntimeInit = {
   s3: S3Runtime.init,
@@ -160,6 +154,13 @@ export class TypeGraph {
   };
 
   static list: TypeGraph[] = [];
+
+  static typenameType: TypeNode = {
+    title: "string",
+    type: "string",
+    policies: [],
+    runtime: -1,
+  };
 
   tg: TypeGraphDS;
   runtimeReferences: Runtime[];
@@ -314,6 +315,12 @@ export class TypeGraph {
     }
     if (this.introspection) {
       await this.introspection.deinit();
+    }
+
+    for await (
+      const runtime of Object.values(DenoRuntime.getInstancesIn(this.name))
+    ) {
+      await runtime.deinit();
     }
   }
 
@@ -687,21 +694,18 @@ export class TypeGraph {
         throw Error(`__typename cannot have args ${JSON.stringify(args)}`);
       }
 
+      const outputType = this.type(p.parentIdx);
+
       return [
         new ComputeStage({
+          operation: p.operation,
           dependencies: [],
           parent: p.parentStage,
           args: {},
           policies,
-          outType: dummyStringTypeNode,
-          // singleton
-          runtime: DenoRuntime.init({
-            typegraph: this.tg,
-            materializers: [],
-            args: {},
-            config: {},
-          }),
-          batcher: this.nextBatcher(dummyStringTypeNode),
+          outType: TypeGraph.typenameType,
+          runtime: DenoRuntime.getDefaultRuntime(this.name),
+          batcher: this.nextBatcher(outputType),
           node: name,
           path: [...path, alias ?? name],
           rateCalls: true,
@@ -772,6 +776,7 @@ export class TypeGraph {
     const runtime = this.runtimeReferences[schema.runtime];
 
     const stage = new ComputeStage({
+      operation: p.operation,
       dependencies: p.parentStage ? [p.parentStage.id()] : [],
       parent: p.parentStage,
       args: {},
@@ -937,6 +942,7 @@ export class TypeGraph {
     }
 
     const stage = new ComputeStage({
+      operation: p.operation,
       dependencies: deps,
       parent: p.parentStage,
       args,
@@ -1052,6 +1058,10 @@ export class TypeGraph {
       stages.push(...this.traverseField({
         field,
         traverseParams: {
+          operation: {
+            type: serial ? "Mutation" : "Query",
+            name: serial ? "M" : "Q", // TODO
+          },
           fragments,
           parentName,
           parentArgs,

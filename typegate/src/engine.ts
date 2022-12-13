@@ -214,6 +214,7 @@ export class Engine {
         ),
       );
       if (
+        node !== "__typename" &&
         node !== "" &&
         !parent &&
         (decisions.some((d) => d === null) || decisions.length < 1)

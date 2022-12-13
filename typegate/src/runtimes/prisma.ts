@@ -60,9 +60,15 @@ export class PrismaRuntime extends GraphQLRuntime {
   }
 
   async unregisterEngine(): Promise<void> {
-    await native.prisma_unregister_engine({
+    if (this.key === "") {
+      throw new Error("unregistering unregistered engine");
+    }
+    const ret = await native.prisma_unregister_engine({
       key: this.key,
     });
+    if ("Err" in ret) {
+      throw new Error(ret.Err.message);
+    }
     this.key = "";
   }
 
