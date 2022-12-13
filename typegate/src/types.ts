@@ -61,7 +61,14 @@ export interface ComputeArg {
   ): unknown;
 }
 
+export type OperationType = "Query" | "Mutation";
+
+export interface Operation {
+  name: string;
+  type: OperationType;
+}
 export interface ComputeStageProps {
+  operation: Operation;
   dependencies: string[];
   parent?: ComputeStage;
   args: Record<string, ComputeArg>;

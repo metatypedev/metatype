@@ -95,6 +95,7 @@ export class GraphQLRuntime extends Runtime {
       );
 
     const queryStage = new ComputeStage({
+      operation: stage.props.operation,
       dependencies: [],
       args: {},
       policies: {},
