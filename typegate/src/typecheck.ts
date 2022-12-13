@@ -71,6 +71,12 @@ export class ValidationSchemaBuilder {
           switch (node.kind) {
             case Kind.FIELD: {
               const { name, selectionSet } = node;
+
+              if (name.value === "__typename") {
+                properties[name.value] = { type: "string" };
+                return;
+              }
+
               if (Object.hasOwnProperty.call(baseProperties, name.value)) {
                 const prop = this.types[baseProperties[name.value]];
                 if (!isOptional(prop)) {
@@ -112,6 +118,7 @@ export class ValidationSchemaBuilder {
           ...trimType(type),
           properties,
           required,
+          additionalProperties: false,
         };
       }
 
@@ -143,7 +150,7 @@ export class ValidationSchemaBuilder {
   }
 }
 
-const ajv = new Ajv();
+const ajv = new Ajv({ removeAdditional: true });
 addFormats(ajv);
 
 // Validator of query response
