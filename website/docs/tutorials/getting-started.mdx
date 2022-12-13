@@ -24,7 +24,7 @@ For concepts, head over to the [overview](/docs/concepts/overview) to understand
 Running the ecosystem requires Python >= 3.8 which should be available on most the recent OS by default.
 
 <Tabs>
-  <TabItem value="linux" label="Linux" default>
+  <TabItem value="linux" label="Debian-based Linux" default>
 
 ```bash
 sudo apt-get update
@@ -72,7 +72,7 @@ meta upgrade
 
 ```bash
 python3 -m venv .venv
-.venv/bin/activate
+source .venv/bin/activate
 pip3 install typegraph --upgrade
 
 python3 -c 'import typegraph; print(typegraph.version)'
