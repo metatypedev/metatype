@@ -124,15 +124,22 @@ struct PrismaUnregisterEngineInp {
 }
 
 #[deno_bindgen]
-struct PrismaUnregisterEngineOut {
-    key: String,
+enum PrismaUnregisterEngineOut {
+    Ok { key: String },
+    Err { message: String },
 }
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregisterEngineOut {
-    let (key, engine) = ENGINES.remove(&input.key).unwrap();
-    RT.block_on(engine.disconnect()).unwrap();
-    PrismaUnregisterEngineOut { key }
+    let Some((key, engine)) = ENGINES.remove(&input.key) else {
+        return PrismaUnregisterEngineOut::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.key})};
+    };
+    match RT.block_on(engine.disconnect()) {
+        Ok(_) => PrismaUnregisterEngineOut::Ok { key },
+        Err(e) => PrismaUnregisterEngineOut::Err {
+            message: format!("{:?}", e),
+        },
+    }
 }
 
 // query

@@ -3,12 +3,13 @@
 import { Deferred, deferred } from "std/async/deferred.ts";
 import * as Sentry from "sentry";
 import { ComputeStage } from "../engine.ts";
-import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
+import type { TypeGraph, TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Runtime } from "./Runtime.ts";
 import { getLogger } from "../log.ts";
 import { FuncTask, ImportFuncTask, Task, TaskContext } from "./utils/codes.ts";
 import { ensure, envOrFail } from "../utils.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
+import { DenoRuntimeData } from "../type_node.ts";
 
 const logger = getLogger(import.meta);
 
@@ -28,21 +29,55 @@ const defaultPermissions = {
 
 export class DenoRuntime extends Runtime {
   w: OnDemandWorker;
+  static defaultRuntimes: Map<TypeGraph, DenoRuntime> = new Map();
+  static runtimes: Map<string, Record<string, DenoRuntime>> = new Map();
 
   private constructor(
-    name: string,
+    private name: string,
     permissions: Deno.PermissionOptionsObject,
     lazy: boolean,
-    tg: TypeGraphDS,
+    private tg: TypeGraphDS,
     private secrets: Record<string, string>,
   ) {
     super();
     this.w = new OnDemandWorker(name, permissions, lazy, tg);
   }
 
+  static getDefaultRuntime(tgName: string): Runtime {
+    const rt = this.getInstancesIn(tgName)["default"];
+    if (rt == null) {
+      throw new Error(`could not find default runtime in ${tgName}`); // TODO: create
+    }
+    return rt;
+  }
+
+  static getInstancesIn(tgName: string) {
+    const instances = DenoRuntime.runtimes.get(tgName);
+    if (instances != null) {
+      return instances;
+    }
+    const ret = {};
+    DenoRuntime.runtimes.set(tgName, ret);
+    return ret;
+  }
+
   static init(params: RuntimeInitParams): Runtime {
     const { typegraph: tg, config, args, materializers } = params;
     const typegraphName = tg.types[0].title;
+
+    const { worker: name } = args as unknown as DenoRuntimeData;
+    if (name == null) {
+      throw new Error(
+        `Cannot create deno runtime: worker name required, got ${name}`,
+      );
+    }
+
+    const tgName = tg.types[0].title;
+    const tgRuntimes = DenoRuntime.getInstancesIn(tgName);
+    const runtime = tgRuntimes[name];
+    if (runtime != null) {
+      return runtime;
+    }
 
     const secrets: Record<string, string> = {};
     for (const m of materializers) {
@@ -51,17 +86,21 @@ export class DenoRuntime extends Runtime {
       }
     }
 
-    return new DenoRuntime(
-      args.worker as string,
+    const rt = new DenoRuntime(
+      name,
       (args.permissions ?? {}) as Deno.PermissionOptionsObject,
       config.lazy as boolean ?? false,
       tg,
       secrets,
     );
+    tgRuntimes[name] = rt;
+    return rt;
   }
 
-  deinit(): Promise<void> {
-    return this.w.terminate();
+  async deinit(): Promise<void> {
+    await this.w.terminate();
+    const tgName = this.tg.types[0].title;
+    delete DenoRuntime.getInstancesIn(tgName)[this.name];
   }
 
   materialize(
@@ -71,7 +110,12 @@ export class DenoRuntime extends Runtime {
   ): ComputeStage[] {
     let resolver: Resolver;
     if (stage.props.node === "__typename") {
-      resolver = () => stage.props.outType.title;
+      resolver = () => {
+        const { parent: parentStage } = stage.props;
+        return parentStage != null
+          ? parentStage.props.outType.title
+          : stage.props.operation.type;
+      };
     } else if (stage.props.materializer == null) {
       resolver = ({ _: { parent } }) => {
         const resolver = parent[stage.props.node];
