@@ -8,7 +8,6 @@ from typing import List
 from typing import Literal
 from typing import Optional
 from typing import Set
-from typing import Tuple
 from typing import TYPE_CHECKING
 from typing import Union
 
@@ -186,47 +185,8 @@ class TypeGraph:
                 else:
                     assert_non_serial_materializers(e)
 
-        # split into queries and mutations
-        def split_operations(
-            namespace: t.struct,
-        ) -> Tuple[OperationTable, OperationTable]:
-            queries: OperationTable = {}
-            mutations: OperationTable = {}
-
-            for name, op in namespace.props.items():
-                if isinstance(op, t.struct):
-                    q, m = split_operations(op)
-                    q_name = f"{op.name}_q" if len(m) > 0 else op.name
-                    m_name = f"{op.name}_m" if len(q) > 0 else op.name
-
-                    if len(q) > 0:
-                        queries[name] = t.struct(q).named(q_name)
-                    if len(m) > 0:
-                        mutations[name] = t.struct(m).named(m_name)
-
-                elif isinstance(op, t.func):
-                    serial = op.mat.serial
-                    if not serial:
-                        assert_non_serial_materializers(op.out)
-                        queries[name] = op
-                    else:
-                        mutations[name] = op
-
-                else:
-                    raise Exception(
-                        f"expected operation or operation namespace, got type {op.type()}"
-                    )
-
-            return (queries, mutations)
-
         with self:
-            queries, mutations = split_operations(t.struct(self.exposed))
-            root = t.struct(
-                {
-                    "query": t.struct(queries).named("Query"),
-                    "mutation": t.struct(mutations).named("Mutation"),
-                }
-            ).named(self.name)
+            root = t.struct(self.exposed).named(self.name)
 
         root._propagate_runtime(DenoRuntime())
 

@@ -1,0 +1,200 @@
+export const snapshot = {};
+
+snapshot[`GraphQL parser 1`] = `
+[
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      mutation: 17,
+      query: 16,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "graphql",
+    type: "object",
+  },
+  {
+    config: {},
+    input: 2,
+    materializer: 1,
+    output: 4,
+    policies: [
+      0,
+    ],
+    rate_calls: false,
+    rate_weight: null,
+    runtime: 1,
+    title: "function_7",
+    type: "function",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      id: 3,
+    },
+    required: [
+    ],
+    runtime: 1,
+    title: "object_6",
+    type: "object",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    runtime: 1,
+    title: "integer_5",
+    type: "integer",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      email: 6,
+      id: 5,
+      name: 7,
+    },
+    required: [
+    ],
+    runtime: 1,
+    title: "User",
+    type: "object",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    runtime: 1,
+    title: "integer_1",
+    type: "integer",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    runtime: 1,
+    title: "string_2",
+    type: "string",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    runtime: 1,
+    title: "string_3",
+    type: "string",
+  },
+  {
+    config: {},
+    input: 9,
+    materializer: 2,
+    output: 4,
+    policies: [
+      1,
+    ],
+    rate_calls: false,
+    rate_weight: null,
+    runtime: 1,
+    title: "function_17",
+    type: "function",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      id: 10,
+      patch: 11,
+    },
+    required: [
+    ],
+    runtime: 1,
+    title: "object_16",
+    type: "object",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    runtime: 1,
+    title: "integer_10",
+    type: "integer",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      email: 14,
+      name: 12,
+    },
+    required: [
+    ],
+    runtime: 1,
+    title: "object_15",
+    type: "object",
+  },
+  {
+    config: {},
+    default_value: null,
+    item: 13,
+    policies: [
+    ],
+    runtime: 1,
+    title: "optional_12",
+    type: "optional",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    runtime: 1,
+    title: "string_11",
+    type: "string",
+  },
+  {
+    config: {},
+    default_value: null,
+    item: 15,
+    policies: [
+    ],
+    runtime: 1,
+    title: "optional_14",
+    type: "optional",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    runtime: 1,
+    title: "string_13",
+    type: "string",
+  },
+  {
+    policies: [
+    ],
+    properties: {
+      user: 1,
+    },
+    runtime: -1,
+    title: "Query",
+    type: "object",
+  },
+  {
+    policies: [
+    ],
+    properties: {
+      updateUser: 8,
+    },
+    runtime: -1,
+    title: "Mutation",
+    type: "object",
+  },
+]
+`;
