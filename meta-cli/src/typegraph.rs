@@ -3,6 +3,7 @@
 use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
+use pathdiff::diff_paths;
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -10,29 +11,34 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use walkdir::{DirEntry, WalkDir};
 
+use crate::config::Config;
 use crate::ts::parser::{parse_module_source, transform_module, transform_script};
+use crate::utils::ensure_venv;
 
 pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
 
 #[derive(Clone)]
-pub struct TypegraphLoader {
-    working_dir: PathBuf,
+pub struct TypegraphLoader<'a> {
     skip_deno_modules: bool,
     ignore_unknown_file_types: bool,
+    config: &'a Config,
 }
 
-impl TypegraphLoader {
-    pub fn new() -> Self {
+impl<'a> TypegraphLoader<'a> {
+    // pub fn new() -> Self {
+    //     Self {
+    //         skip_deno_modules: false,
+    //         ignore_unknown_file_types: false,
+    //         config: None,
+    //     }
+    // }
+
+    pub fn with_config(config: &'a Config) -> Self {
         Self {
-            working_dir: env::current_dir().unwrap(),
             skip_deno_modules: false,
             ignore_unknown_file_types: false,
+            config,
         }
-    }
-
-    pub fn working_dir<P: AsRef<Path>>(mut self, dir: P) -> Self {
-        self.working_dir = self.working_dir.join(dir.as_ref()).canonicalize().unwrap();
-        self
     }
 
     pub fn skip_deno_modules(mut self) -> Self {
@@ -40,19 +46,22 @@ impl TypegraphLoader {
         self
     }
 
+    // Loading a file shall fail if the file type is unsupported.
+    // This is used when walking through directories, where unknown file types
+    // should be skipped.
     pub fn ignore_unknown_file_types(mut self) -> Self {
         self.ignore_unknown_file_types = true;
         self
     }
 
     pub fn load_file<P: AsRef<Path>>(self, path: P) -> Result<Option<Vec<Typegraph>>> {
-        // TODO no unwrap
-        let ext = path.as_ref().extension().and_then(|ext| ext.to_str());
+        let path = path.as_ref().canonicalize()?;
+        let ext = path.extension().and_then(|ext| ext.to_str());
 
         let tgs = match ext {
             Some(ext) if ext == "py" => self
-                .load_python_module(path.as_ref())
-                .with_context(|| format!("Loading python module {:?}", path.as_ref()))?,
+                .load_python_module(&path)
+                .with_context(|| format!("Loading python module {:?}", path))?,
             _ => {
                 if self.ignore_unknown_file_types {
                     return Ok(None);
@@ -76,19 +85,29 @@ impl TypegraphLoader {
     pub fn load_files(self, files: &[PathBuf]) -> LoaderResult {
         files
             .iter()
-            .filter_map(
-                |file| match self.clone().load_file(self.working_dir.join(file)) {
+            .filter_map(|file| {
+                let path = match file.canonicalize() {
+                    Ok(path) => path,
+                    Err(e) => {
+                        return Some((
+                            file.to_str().unwrap().to_owned(),
+                            Err(e).with_context(|| {
+                                format!("could not canonicalize path: {:?}", file)
+                            }),
+                        ))
+                    }
+                };
+                match self.clone().load_file(path) {
                     Ok(None) => None, // unreachable case
                     Ok(Some(tgs)) => Some((file.to_str().unwrap().to_owned(), Ok(tgs))),
                     Err(e) => Some((file.to_str().unwrap().to_owned(), Err(e))),
-                },
-            )
+                }
+            })
             .collect()
     }
 
     pub fn load_folder<P: AsRef<Path>>(self, dir: P) -> Result<LoaderResult> {
-        let dir = self.working_dir.join(dir);
-        // self.collect_typegraphs([dir.as_ref().to_owned()])
+        let dir = dir.as_ref().canonicalize()?;
         let metadata =
             fs::metadata(&dir).with_context(|| format!("Reading the metadata of {:?}", dir))?;
         if !metadata.is_dir() {
@@ -96,6 +115,10 @@ impl TypegraphLoader {
         }
 
         let loader = self.ignore_unknown_file_types();
+
+        let py_loader = loader.config.loader("python").unwrap(); // cannot be none
+        let include_set = py_loader.get_include_set()?;
+        let exclude_set = py_loader.get_exclude_set()?;
 
         Ok(WalkDir::new(dir)
             .into_iter()
@@ -109,6 +132,21 @@ impl TypegraphLoader {
                         .unwrap_or(false)
                 })
             })
+            .filter_map(|path| {
+                // inclusion/exclusion
+                let relative = diff_paths(&path, &loader.config.base_dir).unwrap();
+                let included = include_set.is_empty() || include_set.is_match(&relative);
+                let excluded = !exclude_set.is_empty() && exclude_set.is_match(&relative);
+                if included && !excluded {
+                    println!(
+                        "{}",
+                        format!("Found typegraph definition module at {path:?}").dimmed()
+                    );
+                    Some(path)
+                } else {
+                    None
+                }
+            })
             .filter_map(|file| match loader.clone().load_file(&file) {
                 Ok(None) => None,
                 Ok(Some(tgs)) => Some((file.to_str().unwrap().to_owned(), Ok(tgs))),
@@ -121,11 +159,11 @@ impl TypegraphLoader {
     // Returning typegraphs in raw (before post-processing) JSON.
 
     pub fn load_python_module<P: AsRef<Path>>(self, path: P) -> Result<String> {
-        // TODO ensure venv
+        ensure_venv(&self.config.base_dir)?;
 
         let p = Command::new("py-tg")
             .arg(path.as_ref().to_str().unwrap())
-            .current_dir(self.working_dir)
+            .current_dir(&self.config.base_dir)
             .envs(env::vars())
             .env("PYTHONUNBUFFERED", "1")
             .env("PYTHONDONTWRITEBYTECODE", "1")

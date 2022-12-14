@@ -1,0 +1,6 @@
+typegraphs:
+  python:
+    include: "typegraphs/*.py"
+  materializers:
+    prisma:
+      migrations_path: "prisma/migrations"
