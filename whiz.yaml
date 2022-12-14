@@ -73,6 +73,8 @@ website_deps:
 website:
     workdir: website
     shell: "pnpm start --no-open"
+    envs:
+        TG_URL: http://localhost:7890
     depends_on:
         - website_deps
 
