@@ -1,0 +1,12 @@
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+
+typegraphs:
+  python:
+    include: "examples/*.py"
+  materializers:
+    prisma:
+      migrations_path: "prisma/migrations"

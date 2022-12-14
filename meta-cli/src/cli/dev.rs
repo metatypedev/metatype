@@ -2,7 +2,8 @@
 
 use crate::codegen;
 use crate::typegraph::{LoaderResult, TypegraphLoader};
-use crate::utils::{ensure_venv, BasicAuth, Node};
+use crate::utils::clap::UrlValueParser;
+use crate::utils::{ensure_venv, Node};
 use anyhow::{bail, Context, Error, Result};
 use clap::Parser;
 use colored::Colorize;
@@ -19,6 +20,7 @@ use reqwest::Url;
 use serde_json::{self, json};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 use tiny_http::{Header, Response, Server};
@@ -28,16 +30,18 @@ use super::Action;
 #[derive(Parser, Debug)]
 pub struct Dev {
     /// Address of the typegate
-    #[clap(short, long, value_parser, default_value_t = String::from("http://localhost:7890"))]
-    gate: String,
+    #[clap(short, long, value_parser = UrlValueParser::new().http())]
+    gate: Option<Url>,
 
-    #[clap(short, long, value_parser, default_value_t = String::from("admin"))]
-    username: String,
+    /// Username, to override the one defined in metatype.yaml; default is "admin"
+    #[clap(short, long)]
+    username: Option<String>,
 
-    #[clap(short, long, value_parser)]
+    /// Password, overriding the one defined in metatype.yaml; prompted if missing
+    #[clap(short, long)]
     password: Option<String>,
 
-    #[clap(long, value_parser, default_value_t = 5000)]
+    #[clap(long, default_value_t = 5000)]
     port: u32,
 }
 
@@ -46,32 +50,43 @@ fn log_err(err: Error) {
 }
 
 impl Action for Dev {
-    fn run(&self, dir: String) -> Result<()> {
+    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
+        let config = crate::config::Config::load_or_find(config_path, &dir)?;
 
-        let auth = if let Some(password) = &self.password {
-            BasicAuth::new(self.username.clone(), password.clone())
-        } else {
-            BasicAuth::as_user(self.username.clone())?
-        };
+        let node_config = config.node("dev");
 
-        let node = Node::new(&self.gate, Some(auth.clone()))?;
+        // TODO do not use node config from the config file when --gate is set
+        let node_url = node_config.url(self.gate.clone());
 
-        let loaded = TypegraphLoader::new()
-            .working_dir(&dir)
-            .load_folder(".")
+        let auth = node_config.basic_auth(self.username.clone(), self.password.clone())?;
+
+        let node = Node::new(node_url, Some(auth.clone()))?;
+
+        let loaded = TypegraphLoader::with_config(&config)
+            .load_folder(&dir)
             .context("Error while loading typegraphs from folder");
+
+        // TODO start watching here...
+
         match loaded {
             Ok(loaded) => {
-                push_loaded_typegraphs(loaded, &node);
+                if loaded.is_empty() {
+                    println!("No typegraph found. Watching the directory for changes...");
+                } else {
+                    println!();
+                    push_loaded_typegraphs(loaded, &node);
+                }
             }
             Err(err) => log_err(err),
         }
 
+        let config = Arc::new(config);
+        let config_clone = config.clone();
         let watch_path = dir.clone();
+
         let _watcher = watch(dir.clone(), move |paths| {
-            let loaded = TypegraphLoader::new()
-                .working_dir(&watch_path)
+            let loaded = TypegraphLoader::with_config(&config)
                 .skip_deno_modules()
                 .load_files(paths);
             for (_path, res) in loaded.into_iter() {
@@ -83,11 +98,13 @@ impl Action for Dev {
                 }
             }
 
-            let loaded = TypegraphLoader::new().load_files(paths);
+            let loaded = TypegraphLoader::with_config(&config).load_files(paths);
 
             push_loaded_typegraphs(loaded, &node);
         })
         .unwrap();
+
+        let config = config_clone;
 
         let server = Server::http(format!("0.0.0.0:{}", self.port)).unwrap();
 
@@ -98,7 +115,7 @@ impl Action for Dev {
             let response = match url.path() {
                 "/dev" => match query.get("node") {
                     Some(node) => {
-                        let tgs = TypegraphLoader::new().working_dir(&dir).load_folder(&dir)?;
+                        let tgs = TypegraphLoader::with_config(&config).load_folder(&dir)?;
                         let node = Node::new(node, Some(auth.clone()))?;
                         push_loaded_typegraphs(tgs, &node);
                         Response::from_string(json!({"message": "reloaded"}).to_string())
@@ -182,25 +199,32 @@ pub fn push_loaded_typegraphs(loaded: LoaderResult, node: &Node) {
     for (path, res) in loaded.into_iter() {
         match res.with_context(|| format!("Error while loading typegraphs from {path}")) {
             Result::Ok(tgs) => {
-                println!("Loaded typegraphs from {path}:");
+                println!(
+                    "Loaded {count} typegraph{s} from {path}:",
+                    count = tgs.len(),
+                    s = if tgs.len() == 1 { "" } else { "s" }
+                );
                 for tg in tgs.iter() {
-                    print!("  → Pushing typegraph {name}...", name = tg.name().unwrap());
+                    println!(
+                        "  → Pushing typegraph {name}...",
+                        name = tg.name().unwrap().blue()
+                    );
                     match push_typegraph(tg, node, 3) {
                         Ok(_) => {
-                            println!(" {}", "Done.".to_owned().green());
+                            println!("  {}", "✓ Success!".to_owned().green());
                         }
                         Err(e) => {
                             println!("Could not push typegraph:\n{e:?}");
                         }
                     }
                 }
-                println!();
             }
             Result::Err(err) => {
                 log_err(err);
             }
         }
     }
+    println!();
 }
 
 pub fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<()> {

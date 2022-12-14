@@ -82,11 +82,14 @@ fn venv() -> HashMap<String, String> {
 
 // TODO: cache
 fn load_typegraph<P: AsRef<Path>>(path: P) -> Result<Typegraph> {
+    let parent = path.as_ref().parent().unwrap();
+    let file = path.as_ref().file_name().unwrap().to_str().unwrap();
     let p = Command::new(META_BIN.as_path())
         .arg("serialize")
         .arg("-f")
-        .arg(path.as_ref().to_str().ok_or(anyhow!("invalid path"))?)
+        .arg(file)
         .arg("-1")
+        .current_dir(parent)
         .envs(venv())
         .stdout(Stdio::piped())
         .spawn()?;

@@ -8,13 +8,14 @@ meta:
 
 examples:
     workdir: .
-    shell: "cargo run -p meta -- -C examples dev -p password"
+    watches:
+        - "examples/metatype.yaml"
+    shell: "cargo run -p meta -- -C examples dev"
     envs:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH
     depends_on:
         - meta
-        - typegate_native
 
 system_graphs:
     workdir: typegate

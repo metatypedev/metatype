@@ -1,0 +1,3 @@
+graphs:
+  python:
+    include: "graphs/**/*.py"

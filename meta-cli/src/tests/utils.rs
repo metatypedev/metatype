@@ -32,3 +32,15 @@ fn get_workspace_root() -> Result<PathBuf> {
 pub fn ensure_venv() -> Result<()> {
     crate::utils::ensure_venv(get_workspace_root()?.join("typegraph"))
 }
+
+/// assert that the `res` is an Error variant where the message contains `pat`
+pub fn assert_err_contains<T>(res: Result<T>, pat: &str) {
+    if let Err(e) = res {
+        let error_message = e.to_string();
+        if !error_message.contains(pat) {
+            panic!("Assertion failure: error expected to contain {pat:?}, got: {error_message:?}");
+        }
+    } else {
+        panic!("Assertion error: expected an Error variant, got an Ok variant.");
+    }
+}

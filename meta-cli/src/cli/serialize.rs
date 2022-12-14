@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use super::Action;
+use crate::config::Config;
 use crate::typegraph::TypegraphLoader;
 use crate::utils::ensure_venv;
 use anyhow::bail;
@@ -11,7 +12,7 @@ use std::cell::Cell;
 use std::fs::File;
 use std::io::{self, Write};
 use std::ops::Deref;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Default)]
 struct Writer(Cell<Option<Box<dyn Write>>>);
@@ -54,9 +55,10 @@ pub struct Serialize {
 }
 
 impl Action for Serialize {
-    fn run(&self, dir: String) -> Result<()> {
+    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
-        let loader = TypegraphLoader::new();
+        let config = Config::load_or_find(config_path, &dir)?;
+        let loader = TypegraphLoader::with_config(&config);
         let files: Vec<_> = self.files.iter().map(|f| Path::new(f).to_owned()).collect();
         let loaded = if !self.files.is_empty() {
             loader.load_files(&files)
