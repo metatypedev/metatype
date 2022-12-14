@@ -28,6 +28,12 @@ class Collector:
         self.frozen = True
 
     def collect(self, node: Node) -> bool:
+        """Add `node` to its target collect
+
+        Returns:
+            bool: `True` if the node was added to the collect,
+                  `False` if it had already been added from previous operations
+        """
         from typegraph.graphs.typegraph import NodeProxy
 
         if self.frozen:
@@ -40,8 +46,10 @@ class Collector:
         if c is None:
             raise Exception("Attempting to collect non collectible node")
 
-        idx = self.collects[c].add(node)
-        return idx == len(self.collects[c]) - 1
+        collect = self.collects[c]
+        prev_size = len(collect)
+        collect.add(node)
+        return len(collect) > prev_size
 
     # returns the index of the node in its collect
     def index(self, node: Union[Node, "NodeProxy"]):

@@ -4,6 +4,7 @@ from collections import defaultdict
 from textwrap import dedent
 from typing import DefaultDict
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Set
 from typing import Tuple
@@ -13,6 +14,7 @@ from attrs import field
 from attrs import frozen
 from furl import furl
 from typegraph.graphs.builder import Collector
+from typegraph.graphs.node import Node
 from typegraph.graphs.typegraph import find
 from typegraph.graphs.typegraph import NodeProxy
 from typegraph.graphs.typegraph import resolve_proxy
@@ -532,8 +534,13 @@ class PrismaRuntime(Runtime):
         data["data"].update(
             datamodel=self.datamodel(),
             datasource=self.datasource(),
+            models=[collector.index(tp) for tp in managed_types[self]],
         )
         return data
+
+    @property
+    def edges(self) -> List[Node]:
+        return super().edges + list(managed_types[self])
 
     # def generate_crud(self, tpe: t.struct) -> Dict[str, t.func]:
     #     tpe.materializer = self
