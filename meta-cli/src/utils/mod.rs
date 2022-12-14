@@ -1,5 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+pub mod clap;
+
 use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
 use reqwest::{
@@ -14,11 +16,11 @@ use std::path::Path;
 use std::time::Duration;
 
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
-    let dir = fs::canonicalize(dir)?;
     if var("VIRTUAL_ENV").is_ok() {
         return Ok(());
     }
 
+    let dir = fs::canonicalize(dir)?;
     let venv_dir = dir.join(".venv");
 
     if venv_dir.is_dir() {
