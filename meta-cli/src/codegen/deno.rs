@@ -383,6 +383,7 @@ impl IntoJson for HashMap<String, Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Config;
     use crate::tests::utils::ensure_venv;
     use crate::typegraph::TypegraphLoader;
     use std::io::Read;
@@ -390,7 +391,8 @@ mod tests {
     #[test]
     fn codegen() -> Result<()> {
         ensure_venv()?;
-        let tgs = TypegraphLoader::new()
+        let config = Config::default_in("./src/tests/typegraphs");
+        let tgs = TypegraphLoader::with_config(&config)
             .skip_deno_modules()
             .load_file("./src/tests/typegraphs/codegen.py")?
             .unwrap_or_else(|| vec![]);

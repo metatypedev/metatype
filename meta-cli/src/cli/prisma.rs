@@ -1,9 +1,13 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use super::Action;
-use crate::utils::{
-    graphql::{self, Query},
-    BasicAuth, Node,
+use crate::{
+    config::Config,
+    utils::{
+        clap::UrlValueParser,
+        graphql::{self, Query},
+        BasicAuth, Node,
+    },
 };
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
@@ -12,11 +16,11 @@ use flate2::{write::GzEncoder, Compression};
 use indoc::indoc;
 use prisma_models::psl;
 use question::{Answer, Question};
+use reqwest::Url;
 use serde::Deserialize;
 use serde_json::json;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
-use std::time::Duration;
 use std::{
     fs::{self, File},
     path::Path,
@@ -53,25 +57,36 @@ pub struct Dev {
 
     /// Name of the prisma runtime.
     /// Default: the unique prisma runtime of the typegraph.
-    #[clap(long, value_parser)]
+    #[clap(long)]
     runtime: Option<String>,
 
     /// Creates a migration based on the changes but does not apply that migration.
-    #[clap(long, value_parser)]
+    #[clap(long)]
     create_only: bool,
 
     /// Address of the typegate.
-    #[clap(short, long, value_parser, default_value_t = String::from("http://localhost:7890"))]
-    gate: String,
+    #[clap(short, long, value_parser = UrlValueParser::new().http())]
+    gate: Option<Url>,
+
+    #[clap(short = 'U', long, value_parser)]
+    username: Option<String>,
 }
 
 impl Action for Dev {
-    fn run(&self, dir: String) -> Result<()> {
+    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+        let config = Config::load_or_find(config_path, &dir)?;
+
+        let node_config = config.node("dev");
+        let node_url = node_config.url(self.gate.clone());
+        let auth = node_config.basic_auth(self.username.clone(), None)?;
+
+        let prisma_config = &config.typegraphs.materializers.prisma;
+
         let mut migrate = PrismaMigrate::new(
             self.typegraph.clone(),
             self.runtime.clone(),
-            Node::new(&self.gate, Some(BasicAuth::prompt()?))?,
-            Path::new(&dir).join("prisma/migrations"),
+            Node::new(node_url, Some(auth))?,
+            prisma_config.migrations_path(),
         )?;
 
         migrate.apply(false)?;
@@ -110,23 +125,36 @@ pub struct Deploy {
     typegraph: String,
 
     /// Name of the prisma runtime.
-    #[clap(long, value_parser)]
+    #[clap(long)]
     runtime: String,
 
     /// Migration folder base.
-    #[clap(long, value_parser)]
-    migrations: String,
+    #[clap(long)]
+    migrations: Option<String>,
 
     /// Address of the typegate.
-    #[clap(short, long, value_parser, default_value_t = String::from("http://localhost:7890"))]
-    gate: String,
+    #[clap(short, long, value_parser = UrlValueParser::new().http())]
+    gate: Option<Url>,
+
+    #[clap(short = 'U', long)]
+    username: Option<String>,
 }
 
 impl Action for Deploy {
-    fn run(&self, dir: String) -> Result<()> {
-        let migrations_path: PathBuf = [&dir, &self.migrations, &self.typegraph, &self.runtime]
-            .iter()
-            .collect();
+    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+        let config = Config::load_or_find(config_path, &dir)?;
+        let prisma_config = &config.typegraphs.materializers.prisma;
+        let migrations = self
+            .migrations
+            .as_ref()
+            .map(|m| Path::new(m).to_owned())
+            .unwrap_or_else(|| prisma_config.migrations_path());
+        let migrations_path = config
+            .base_dir
+            .join(&migrations)
+            .join(&self.typegraph)
+            .join(&self.runtime);
+
         let enc = GzEncoder::new(Vec::new(), Compression::default());
         let mut tar = tar::Builder::new(enc);
         tar.append_dir_all("migrations", migrations_path.as_path())?;
@@ -134,12 +162,13 @@ impl Action for Deploy {
         let migrations = enc.finish()?;
         let migrations = base64::encode(migrations);
 
-        let res = reqwest::blocking::Client::new()
-            .post(format!("{}/typegate/prisma_migration", self.gate))
-            // .basic_auth("admin", Some(crate::config::admin_password()?))
-            .timeout(Duration::from_secs(5))
-            .gql(
-                indoc! {"
+        let node_config = config.node("deploy");
+        let node_url = node_config.url(self.gate.clone());
+        let auth = node_config.basic_auth(self.username.clone(), None)?;
+        let node = Node::new(node_url, Some(auth))?;
+
+        let res = node.post(MIGRATION_ENDPOINT)?.gql(
+            indoc! {"
                     mutation PrismaDeploy($tg: String!, $runtime: String!, $mig: String!) {
                         deploy(typegraph: $tg, runtime: $runtime, migrations: $mig) {
                             migrationCount
@@ -147,13 +176,13 @@ impl Action for Deploy {
                         }
                     }
                 "}
-                .to_string(),
-                Some(json!({
-                    "tg": &self.typegraph,
-                    "runtime": self.runtime,
-                    "mig": migrations,
-                })),
-            )?;
+            .to_string(),
+            Some(json!({
+                "tg": &self.typegraph,
+                "runtime": self.runtime,
+                "mig": migrations,
+            })),
+        )?;
 
         #[derive(serde::Deserialize)]
         #[serde(rename_all = "camelCase")]
@@ -199,16 +228,16 @@ pub struct Diff {
     typegraph: String,
 
     /// Output a SQL script instead of the default human-readable summary
-    #[clap(value_parser, long)]
+    #[clap(long)]
     script: bool,
 
     /// Address of the typegate
-    #[clap(short, long, value_parser, default_value_t = String::from("http://localhost:7890"))]
-    gate: String,
+    #[clap(short, long, value_parser = UrlValueParser::new().http())]
+    gate: Option<Url>,
 
     /// Name of the prisma runtime.
     /// Default: the unique prisma runtime of the typegraph.
-    #[clap(long, value_parser)]
+    #[clap(long)]
     runtime: Option<String>,
 }
 
@@ -223,16 +252,19 @@ pub struct Format {
 }
 
 impl Action for Diff {
-    fn run(&self, _dir: String) -> Result<()> {
+    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         // TODO runtime selection
-        let node = Node::new(&self.gate, Some(BasicAuth::prompt()?))?;
+        let config = Config::load_or_find(config_path, dir)?;
+        let node_config = config.node("dev");
+        let gate = node_config.url(self.gate.clone());
+        let node = Node::new(gate, Some(BasicAuth::prompt()?))?;
         PrismaMigrate::diff(self.script, &node, &self.typegraph, self.runtime.as_deref())?;
         Ok(())
     }
 }
 
 impl Action for Format {
-    fn run(&self, _dir: String) -> Result<()> {
+    fn run(&self, _dir: String, _config_path: Option<PathBuf>) -> Result<()> {
         let input = if let Some(file) = self.input.as_ref() {
             let mut file =
                 File::open(file).with_context(|| format!("could not open file \"{file}\""))?;

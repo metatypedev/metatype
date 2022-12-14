@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+use crate::config::Config;
 use crate::utils::ensure_venv;
 use crate::{codegen, typegraph::TypegraphLoader};
 use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use super::Action;
 
@@ -30,9 +31,10 @@ pub struct Deno {
 }
 
 impl Action for Deno {
-    fn run(&self, dir: String) -> Result<()> {
+    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
-        let loaded = TypegraphLoader::new()
+        let config = Config::load_or_find(config_path, dir)?;
+        let loaded = TypegraphLoader::with_config(&config)
             .skip_deno_modules()
             .load_file(&self.file)?;
         let file = Path::new(&self.file);
