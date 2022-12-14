@@ -312,7 +312,7 @@ export class OAuth2Auth extends Auth {
       value: jwt,
       maxAge,
       domain: new URL(config.tg_external_url).hostname,
-      // path: `/${name}`,
+      path: `/${name}`,
       secure: !config.debug,
       sameSite: "Lax",
     });
