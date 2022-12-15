@@ -136,9 +136,6 @@ class TypeGraph:
         self.latest_type_id += 1
         return self.latest_type_id
 
-    # def register(self, type: "t.Type"):
-    #     self.types.append(type)
-
     def __enter__(self):
         TypegraphContext.push(self)
         return self
