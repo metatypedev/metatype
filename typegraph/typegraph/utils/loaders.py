@@ -42,26 +42,6 @@ def import_file(path: str) -> List[TypeGraph]:
     return find_typegraphs(module)
 
 
-# def try_import_file(path: str) -> Union[List[TypeGraph], str]:
-#     """
-#     Returns the defined typegraphs or a error message
-#     """
-#     try:
-#         return import_file(path)
-#     except Exception:
-#         return traceback.format_exc()
-
-
-# def import_folder(path) -> Dict[str, Union[List[TypeGraph], str]]:
-#     ret = {}
-
-#     for p in Path(path).glob("**/*.py"):
-#         if ".venv" not in str(p):
-#             ret[str(p)] = try_import_file(p)
-
-#     return ret
-
-
 def import_modules(module, recursive=True):
     modules = {}
 
