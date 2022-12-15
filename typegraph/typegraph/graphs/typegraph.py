@@ -150,11 +150,14 @@ class TypeGraph:
     def expose(self, **ops: Union["t.func", "t.struct"]):
         from typegraph.types import types as t
 
+        # allow to expose only functions or structures (namespaces)
         for name, op in ops.items():
-            if not isinstance(op, t.func):
-                raise Exception(
-                    f"cannot expose type {op.title} under {name}, requires a function, got a {op.type}"
-                )
+            if isinstance(op, t.func) or isinstance(op, t.struct):
+                continue
+
+            raise Exception(
+                f"cannot expose type {op.title} under {name}, requires a function or structure (namespace), got a {op.type}"
+            )
 
         self.exposed.update(ops)
         return self
