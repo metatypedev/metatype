@@ -22,6 +22,7 @@ import {
   Variables,
 } from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
+import { parseGraphQLTypeGraph } from "./query_parsers/graphql.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -34,12 +35,18 @@ export const initTypegraph = async (
   config: Record<string, RuntimeConfig> = {},
   introspectionDef: string | null = introspectionDefStatic,
 ) => {
+  const typegraphDS = JSON.parse(payload);
+  parseGraphQLTypeGraph(typegraphDS);
+
+  const introspectionDef = JSON.parse(introspectionDefPayload);
+  parseGraphQLTypeGraph(introspectionDef);
+
   const introspection = introspectionDef
     ? await TypeGraph.init(
       introspectionDef,
       {
         typegraph: await TypeGraphRuntime.init(
-          JSON.parse(payload),
+          typegraphDS,
           [],
           {},
           config,
@@ -50,7 +57,12 @@ export const initTypegraph = async (
     )
     : null;
 
-  const tg = await TypeGraph.init(payload, customRuntime, introspection, {});
+  const tg = await TypeGraph.init(
+    typegraphDS,
+    customRuntime,
+    introspection,
+    {},
+  );
   return new Engine(tg);
 };
 

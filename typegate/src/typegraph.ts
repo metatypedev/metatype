@@ -45,7 +45,6 @@ import {
   RuntimesConfig,
 } from "./types.ts";
 import { S3Runtime } from "./runtimes/s3.ts";
-import { parseGraphQLTypeGraph } from "./query_parsers/graphql.ts";
 
 interface TypePolicy {
   name: string;
@@ -200,15 +199,11 @@ export class TypeGraph {
   }
 
   static async init(
-    json: string,
+    typegraph: TypeGraphDS,
     staticReference: RuntimeResolver,
     introspection: TypeGraph | null,
     runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
-    let typegraph: TypeGraphDS = JSON.parse(json);
-
-    parseGraphQLTypeGraph(typegraph);
-
     const typegraphName = typegraph.types[0].title;
     const { meta, runtimes } = typegraph;
 
