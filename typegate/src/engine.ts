@@ -45,7 +45,7 @@ export const initTypegraph = async (
     ? await TypeGraph.init(
       introspectionDef,
       {
-        typegraph: await TypeGraphRuntime.init(
+        typegraph: TypeGraphRuntime.init(
           typegraphDS,
           [],
           {},
