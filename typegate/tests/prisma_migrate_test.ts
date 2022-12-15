@@ -66,6 +66,7 @@ test("prisma migrations", async (t) => {
         "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
       })
       .expectBody(async (body) => {
+        console.log({ body });
         const {
           createdMigrationName,
           appliedMigrations,

@@ -134,15 +134,6 @@ class PrismaRelation(Materializer):
         return isinstance(tpe.out, t.optional)
 
 
-# TODO: remove this
-# @dataclass(eq=True, frozen=True)
-# class PrismaDeleteMat(Materializer):
-#     runtime: "PrismaRuntime"
-
-#     materializer_name: str = "prisma_delete"
-#     serial: bool = True
-
-
 def unsupported_cardinality(c: str):
     return Exception(f'Unsupported cardinality "{c}"')
 
