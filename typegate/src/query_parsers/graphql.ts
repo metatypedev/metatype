@@ -78,12 +78,6 @@ export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
   // its type is `object`
   const rootNode = typegraph.types[0] as ObjectNode;
 
-  // skip split for introspection queries,
-  // they are already splitted into `queries` and `mutations`
-  if (rootNode.title === "introspection") {
-    return;
-  }
-
   const [queryProperties, mutationProperties] = splitGraphQLOperations(
     typegraph,
     rootNode,
