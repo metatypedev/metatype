@@ -91,12 +91,17 @@ export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
   mutationType.title = "Mutation";
   mutationType.properties = mutationProperties;
 
-  // add new types to the typegraph and save their type indexes
-  const queryIndex = typegraph.types.push(queryType) - 1;
-  const mutationIndex = typegraph.types.push(mutationType) - 1;
+  // clear previous properties
+  rootNode.properties = {};
 
-  rootNode.properties = {
-    query: queryIndex,
-    mutation: mutationIndex,
-  };
+  // don't append `query` or `mutation` if they don't have
+  // at least one property
+  if (Object.keys(queryProperties).length > 0) {
+    const queryIndex = typegraph.types.push(queryType) - 1;
+    rootNode.properties.query = queryIndex;
+  }
+  if (Object.keys(mutationProperties).length > 0) {
+    const mutationIndex = typegraph.types.push(mutationType) - 1;
+    rootNode.properties.mutation = mutationIndex;
+  }
 }
