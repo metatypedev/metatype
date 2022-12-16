@@ -171,6 +171,8 @@ export class TypeGraphRuntime extends Runtime {
               visitedTypes.add(typeName);
               return true;
             }
+
+            return false;
           });
       },
       queryType: () => {
