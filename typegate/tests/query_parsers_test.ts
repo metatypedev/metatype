@@ -3,7 +3,7 @@
 import { test } from "./utils.ts";
 
 test("GraphQL parser", async (t) => {
-  const e = await t.pythonFile("typegraphs/graphql.py");
+  const e = await t.pythonFile("typegraphs/graphql_namespaces.py");
   /**
    * Types from the parsed TypeGraph
    */
