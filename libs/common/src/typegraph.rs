@@ -1,11 +1,14 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use anyhow::{bail, Result};
+#[cfg(feature = "codegen")]
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::skip_serializing_none;
 use std::collections::HashMap;
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Typegraph {
     pub types: Vec<TypeNode>,
@@ -17,6 +20,7 @@ pub struct Typegraph {
     pub meta: TypeMeta,
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Cors {
     pub allow_origin: Vec<String>,
@@ -26,6 +30,7 @@ pub struct Cors {
     pub max_age: Option<u32>,
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Auth {
     pub name: String,
@@ -33,6 +38,7 @@ pub struct Auth {
     pub auth_data: HashMap<String, Value>,
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Rate {
     pub window_limit: u32,
@@ -42,6 +48,7 @@ pub struct Rate {
     pub local_excess: u32,
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TypeMeta {
     pub secrets: Vec<String>,
@@ -51,6 +58,7 @@ pub struct TypeMeta {
     pub version: String,
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TypeNodeBase {
@@ -69,6 +77,7 @@ pub struct TypeNodeBase {
     pub config: HashMap<String, serde_json::Value>,
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
@@ -162,6 +171,7 @@ impl TypeNode {
     }
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Materializer {
     pub name: String,
@@ -169,12 +179,14 @@ pub struct Materializer {
     pub data: HashMap<String, Value>,
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TGRuntime {
     pub name: String,
     pub data: HashMap<String, Value>,
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Policy {
     pub name: String,
@@ -201,12 +213,14 @@ impl TypeNode {
     }
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize)]
 pub struct FunctionMatData {
     pub script: String,
     serial: bool,
 }
 
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize)]
 pub struct ModuleMatData {
     pub code: String,
