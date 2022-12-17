@@ -50,8 +50,17 @@ typegate2:
 
 libs:
     workdir: libs
-    watches: "**/*.rs"
+    watches:
+        - common/**/*.rs
     shell: "cargo build -p common"
+
+codegen:
+    depends_on:
+        - libs
+    workdir: .
+    watches:
+        - "libs/xtask/src/**/*.rs"
+    shell: "bash -c 'env $(cat codegen.env | xargs) cargo xtask codegen'"
 
 clean_deno_bindgen_cache:
     shell: rm -rf $(deno info --json | jq -r .denoDir)/plug/file bindings.json

@@ -1,9 +1,5 @@
 [workspace]
-members = [
-    "typegate/native",
-    "libs/common",
-    "meta-cli",
-]
+members = ["typegate/native", "meta-cli", "libs/common", "libs/xtask"]
 
 [patch.crates-io]
 # https://github.com/prisma/quaint/issues/392
