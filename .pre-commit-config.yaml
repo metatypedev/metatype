@@ -61,6 +61,14 @@ repos:
           - ts
           - tsx
         files: ^website/
+      - id: codegen
+        name: "Codegen from Rust"
+        language: system
+        entry: bash -c 'env $(cat codegen.env | xargs) cargo xtask codegen'
+        files: ^(libs/common|libs/xtask)/
+        pass_filenames: false
+        types_or:
+          - rust
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.3.1
     hooks:

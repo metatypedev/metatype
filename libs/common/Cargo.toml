@@ -7,7 +7,11 @@ edition = "2021"
 anyhow = "1.0.66"
 base64 = "0.13.1"
 flate2 = "1.0.25"
+schemars = { version = "0.8.11", optional = true }
 serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.89"
 serde_with = "2.1.0"
 tar = "0.4.38"
+
+[features]
+codegen = ["dep:schemars"]
