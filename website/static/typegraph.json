@@ -1,0 +1,982 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Typegraph",
+  "type": "object",
+  "required": [
+    "meta",
+    "runtimes",
+    "types"
+  ],
+  "properties": {
+    "materializers": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Materializer"
+      }
+    },
+    "meta": {
+      "$ref": "#/definitions/TypeMeta"
+    },
+    "policies": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Policy"
+      }
+    },
+    "runtimes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TGRuntime"
+      }
+    },
+    "types": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/TypeNode"
+      }
+    }
+  },
+  "definitions": {
+    "Auth": {
+      "type": "object",
+      "required": [
+        "auth_data",
+        "name",
+        "protocol"
+      ],
+      "properties": {
+        "auth_data": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "protocol": {
+          "type": "string"
+        }
+      }
+    },
+    "Cors": {
+      "type": "object",
+      "required": [
+        "allow_credentials",
+        "allow_headers",
+        "allow_origin",
+        "expose_headers"
+      ],
+      "properties": {
+        "allow_credentials": {
+          "type": "boolean"
+        },
+        "allow_headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_origin": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "expose_headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "max_age": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Materializer": {
+      "type": "object",
+      "required": [
+        "data",
+        "name",
+        "runtime"
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "name": {
+          "type": "string"
+        },
+        "runtime": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "Policy": {
+      "type": "object",
+      "required": [
+        "materializer",
+        "name"
+      ],
+      "properties": {
+        "materializer": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "Rate": {
+      "type": "object",
+      "required": [
+        "local_excess",
+        "query_limit",
+        "window_limit",
+        "window_sec"
+      ],
+      "properties": {
+        "context_identifier": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "local_excess": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "query_limit": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "window_limit": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "window_sec": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "TGRuntime": {
+      "type": "object",
+      "required": [
+        "data",
+        "name"
+      ],
+      "properties": {
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "TypeMeta": {
+      "type": "object",
+      "required": [
+        "auths",
+        "cors",
+        "secrets",
+        "version"
+      ],
+      "properties": {
+        "auths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Auth"
+          }
+        },
+        "cors": {
+          "$ref": "#/definitions/Cors"
+        },
+        "rate": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Rate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "secrets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "TypeNode": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "item",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "default_value": true,
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "inject": {
+              "default": null
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "item": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "optional"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "inject": {
+              "default": null
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "boolean"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "exclusiveMaximum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "exclusiveMinimum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "inject": {
+              "default": null
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "maximum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "minimum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "multipleOf": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "number"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "exclusiveMaximum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            },
+            "exclusiveMinimum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            },
+            "inject": {
+              "default": null
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "maximum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            },
+            "minimum": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            },
+            "multipleOf": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "integer"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "format": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "inject": {
+              "default": null
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "maxLength": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            },
+            "minLength": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int64"
+            },
+            "pattern": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "string"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "policies",
+            "properties",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "inject": {
+              "default": null
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "properties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "required": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "object"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "items",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "inject": {
+              "default": null
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "items": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "maxItems": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "minItems": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "array"
+              ]
+            },
+            "uniqueItems": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "input",
+            "materializer",
+            "output",
+            "policies",
+            "rate_calls",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "inject": {
+              "default": null
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "input": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "materializer": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "output": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "rate_calls": {
+              "type": "boolean"
+            },
+            "rate_weight": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "function"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "inject": {
+              "default": null
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "title": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "any"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
