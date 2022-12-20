@@ -19,57 +19,45 @@ const schema = buildSchema(`
 		setPicture(id: ID!, url: String!): Picture!
 	}
 
-	type UserMutation {
+	type Mutation {
 		update(id: ID!, name: String!): User!
 		profile: ProfileMutation!
-	}
-
-	type Mutation {
-		user: UserMutation!
 	}
 
 	type ProfileQuery {
 		picture(id: ID!): Picture!
 	}
 
-	type UserQuery {
+	type Query {
 		find(id: ID!): User!
 		profile: ProfileQuery!
-	}
-
-	type Query {
-		user: UserQuery!
 	}
 `);
 
 const rootValue = {
-  user: {
-    find: ({ id }: { id: string }) => {
-      return {
-        id,
-        name: `User ${id}`,
-      };
-    },
-    update: ({ id, name }: { id: string; name: string }) => {
-      return {
-        id,
-        name,
-      };
-    },
-    profile: {
-      picture: ({ id }: { id: string }) => {
-        return {
-          id,
-          url: `image/${id}`,
-        };
-      },
-      setPicture: ({ id, url }: { id: string; url: string }) => {
-        return {
-          id,
-          url,
-        };
-      },
-    },
+  findUser: ({ id }: { id: string }) => {
+    return {
+      id,
+      name: `User ${id}`,
+    };
+  },
+  updateUser: ({ id, name }: { id: string; name: string }) => {
+    return {
+      id,
+      name,
+    };
+  },
+  getProfilePicture: ({ id }: { id: string }) => {
+    return {
+      id,
+      url: `image/${id}`,
+    };
+  },
+  setProfilePicture: ({ id, url }: { id: string; url: string }) => {
+    return {
+      id,
+      url,
+    };
   },
 };
 
@@ -102,43 +90,49 @@ test("GraphQL parser", async (t) => {
     t.assertSnapshot(types);
   });
 
+  const id = globalThis.crypto.randomUUID();
+
   await t.should("allow queries in namespaces", async () => {
     await gql`
-			query {
+			query FindUser($id: ID!) {
 				user {
-					find(id: "1") {
+					find(id: $id) {
 						id
 						name
 					}
 				}
 			}
 		`
+      .withVars({ id })
       .expectData({
         user: {
           find: {
-            id: "1",
-            name: "User 1",
+            id,
+            name: `User ${id}`,
           },
         },
       })
       .on(e);
   });
 
+  const id2 = globalThis.crypto.randomUUID();
+
   await t.should("allow mutations in namespaces", async () => {
     await gql`
-			mutation {
+			mutation UpdateUser($id: ID!, $name: String!) {
 				user {
-					update(id: "2", name: "User 2") {
+					update(id: $id, name: $name) {
 						id
 						name
 					}
 				}
 			}
 		`
+      .withVars({ id: id2, name: "User 2" })
       .expectData({
         user: {
           update: {
-            id: "2",
+            id: id2,
             name: "User 2",
           },
         },
@@ -148,10 +142,10 @@ test("GraphQL parser", async (t) => {
 
   await t.should("allow queries in nested namespaces", async () => {
     await gql`
-			query {
+			query GetUserProfilePic($id: String!) {
 				user {
 					profile {
-						picture(id: "1") {
+						picture(id: $id) {
 							id
 							url
 						}
@@ -159,11 +153,12 @@ test("GraphQL parser", async (t) => {
 				}
 			}
 		`
+      .withVars({ id })
       .expectData({
         user: {
           profile: {
             picture: {
-              id: "1",
+              id,
               url: "image/1",
             },
           },
@@ -174,10 +169,10 @@ test("GraphQL parser", async (t) => {
 
   await t.should("allow mutations in nested namespaces", async () => {
     await gql`
-			mutation {
+			mutation SetProfilePic($id: ID!, $url: String!) {
 				user {
 					profile {
-						setPicture(id: "2", url: "image/2") {
+						setPicture(id: $id, url: $url) {
 							id
 							url
 						}
@@ -185,6 +180,7 @@ test("GraphQL parser", async (t) => {
 				}
 			}
 		`
+      .withVars({ id, url: "image/2" })
       .expectData({
         user: {
           profile: {

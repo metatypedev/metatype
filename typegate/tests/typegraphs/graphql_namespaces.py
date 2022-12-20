@@ -11,23 +11,24 @@ with TypeGraph("graphql_namespaces") as g:
 
     picture_model = t.struct({"id": user_id, "url": t.uri()}).named("picture_model")
 
+    public = policies.allow_all()
     user = (
         t.struct(
             {
                 # operations under `user` namespace
-                "find": gql.query(t.struct({"id": user_id}), user_model),
-                "update": gql.mutation(user_model, user_model),
+                "find": gql.query(t.struct({"id": user_id}), user_model).add_policy(public),
+                "update": gql.mutation(user_model, user_model).add_policy(public),
                 # operations in nested namespace `user.profile`
                 "profile": t.struct(
                     {
-                        "picture": gql.query(t.struct({"id": user_id}), picture_model),
-                        "setPicture": gql.mutation(picture_model, picture_model),
+                        "picture": gql.query(t.struct({"id": user_id}), picture_model).add_policy(public),
+                        "setPicture": gql.mutation(picture_model, picture_model).add_policy(public),
                     }
                 ).named("profile_namespace"),
             }
         )
         .named("user_namespace")
-        .add_policy(policies.allow_all())
-    )
+        .add_policy(public)
+    ).add_policy(public)
 
     g.expose(user=user)

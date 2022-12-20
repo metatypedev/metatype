@@ -6,27 +6,35 @@ from typegraph.materializers.base import Runtime
 from typegraph.types import types as t
 from typegraph.utils.attrs import always
 
+from typing import Optional, List
+
 
 @frozen
 class GraphQLRuntime(Runtime):
     endpoint: str
     runtime_name: str = always("graphql")
 
-    def query(self, inp, out):
-        return t.func(inp, out, QueryMat(self))
+    def query(self, inp: t.struct, out: t.typedef, *, path: Optional[List[str]] = None):
+        if path is not None and len(path) == 0:
+            raise Exception("Unexpected empty path")
+        return t.func(inp, out, QueryMat(self, path))
 
-    def mutation(self, inp, out):
-        return t.func(inp, out, MutationMat(self))
+    def mutation(self, inp: t.struct, out: t.typedef, path: Optional[List[str]] = None):
+        if path is not None and len(path) == 0:
+            raise Exception("Unexpected empty path")
+        return t.func(inp, out, MutationMat(self, path))
 
 
 @frozen
 class QueryMat(Materializer):
     runtime: Runtime
+    path: Optional[List[str]]
     materializer_name: str = always("query")
 
 
 @frozen
 class MutationMat(Materializer):
     runtime: Runtime
+    path: Optional[List[str]]
     materializer_name: str = always("mutation")
     serial: bool = always(True)
