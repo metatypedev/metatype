@@ -3,7 +3,8 @@
 import { ComputeStage } from "./engine.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import type { TypeGraphDS, TypeMaterializer } from "./typegraph.ts";
-import { TypeNode } from "./type_node.ts";
+import { ObjectNode, TypeNode } from "./type_node.ts";
+import * as ast from "graphql/ast";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;
@@ -74,6 +75,9 @@ export interface ComputeStageProps {
   args: Record<string, ComputeArg>;
   policies: Record<string, string[]>;
   resolver?: Resolver;
+  // fieldNode: ast.FieldNode;
+  argumentNodes?: ReadonlyArray<ast.ArgumentNode>;
+  inpType?: ObjectNode;
   outType: TypeNode; // only temp
   runtime: Runtime;
   materializer?: TypeMaterializer;

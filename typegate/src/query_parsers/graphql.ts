@@ -5,6 +5,12 @@ import { ObjectNode } from "../type_node.ts";
 
 type PropertiesTable = Record<string, number>;
 
+function addNewObjectNode(typegraph: TypeGraphDS, node: ObjectNode): number {
+  const { types } = typegraph;
+  types.push(node);
+  return types.length - 1;
+}
+
 /**
  * Splits a TypeGraph into GraphQL `queries` and `mutations`
  */
@@ -24,18 +30,43 @@ function splitGraphQLOperations(
     // otherwise as a `query`
     switch (childNode.type) {
       case "object": {
-        const [childQueryProperties, _childMutationProperties] =
+        const [childQueryProperties, childMutationProperties] =
           splitGraphQLOperations(
             typegraph,
             childNode,
           );
 
-        // check if child node is a `query` or `mutation` property
-        if (Object.keys(childQueryProperties).length > 0) {
+        if (Object.keys(childQueryProperties).length === 0) {
           queryProperties[propertyName] = typeIndex;
-        } else {
+          childNode.config = Object.assign(childNode.config ?? {}, {
+            __namespace: true,
+          });
+        } else if (Object.keys(childMutationProperties).length === 0) {
           mutationProperties[propertyName] = typeIndex;
+          childNode.config = Object.assign(childNode ?? {}, {
+            __namespace: true,
+          });
+        } else {
+          queryProperties[propertyName] = addNewObjectNode(typegraph, {
+            ...node,
+            title: `${node.title}_q`,
+            properties: childQueryProperties,
+            config: { ...(node.config ?? {}), __namespace: true },
+          });
+          mutationProperties[propertyName] = addNewObjectNode(typegraph, {
+            ...node,
+            title: `${node.title}_m`,
+            properties: childMutationProperties,
+            config: { ...(node.config ?? {}), __namespace: true },
+          });
         }
+
+        // check if child node is a `query` or `mutation` property
+        // if (Object.keys(childQueryProperties).length > 0) {
+        //   queryProperties[propertyName] = typeIndex;
+        // } else {
+        //   mutationProperties[propertyName] = typeIndex;
+        // }
 
         break;
       }
@@ -46,8 +77,10 @@ function splitGraphQLOperations(
 
         if (!childMaterializer.data.serial) {
           queryProperties[propertyName] = typeIndex;
+          // TODO additional checks
         } else {
           mutationProperties[propertyName] = typeIndex;
+          // TODO additional checks
         }
 
         break;
@@ -56,21 +89,6 @@ function splitGraphQLOperations(
   }
 
   return [queryProperties, mutationProperties];
-}
-
-function newObjectNodeBase() {
-  const objectNodeBase = {
-    type: "object",
-    title: "",
-    properties: {},
-    // use any runtime, `ObjectNode`s
-    // don't have data to compute,
-    // therefore the runtime is never used
-    runtime: -1,
-    policies: [],
-  } as ObjectNode;
-
-  return objectNodeBase;
 }
 
 export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
@@ -83,25 +101,27 @@ export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
     rootNode,
   );
 
-  const queryType = newObjectNodeBase();
-  queryType.title = "Query";
-  queryType.properties = queryProperties;
-
-  const mutationType = newObjectNodeBase();
-  mutationType.title = "Mutation";
-  mutationType.properties = mutationProperties;
-
   // clear previous properties
   rootNode.properties = {};
 
   // don't append `query` or `mutation` if they don't have
   // at least one property
   if (Object.keys(queryProperties).length > 0) {
-    const queryIndex = typegraph.types.push(queryType) - 1;
+    const queryIndex = addNewObjectNode(typegraph, {
+      ...rootNode,
+      title: "Query",
+      properties: queryProperties,
+    });
     rootNode.properties.query = queryIndex;
   }
   if (Object.keys(mutationProperties).length > 0) {
-    const mutationIndex = typegraph.types.push(mutationType) - 1;
+    const mutationIndex = addNewObjectNode(typegraph, {
+      ...rootNode,
+      title: "Mutation",
+      properties: mutationProperties,
+      config: { ...(rootNode.config ?? {}), __namespace: true },
+    });
     rootNode.properties.mutation = mutationIndex;
   }
+  console.log({ rootNode });
 }

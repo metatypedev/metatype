@@ -118,7 +118,13 @@ export class DenoRuntime extends Runtime {
       };
     } else if (stage.props.materializer == null) {
       resolver = ({ _: { parent } }) => {
+        if (stage.props.parent == null) { // namespace
+          return {};
+        }
+        console.log("path", stage.props.path);
+        console.log("parent stage", stage.props.parent?.props);
         const resolver = parent[stage.props.node];
+        console.log("parent resolver", typeof resolver, resolver);
         const ret = typeof resolver === "function" ? resolver() : resolver;
         return ret;
       };
