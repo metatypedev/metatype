@@ -12,7 +12,7 @@ pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<String>) -> Result<()>
     let Some(migrations) = migrations else {
         return Ok(())
     };
-    let bytes = base64::decode(&migrations)?;
+    let bytes = base64::decode(migrations)?;
     let decoder = GzDecoder::new(bytes.as_slice());
     let mut archive = Archive::new(decoder);
     archive.unpack(dest)?;
@@ -25,5 +25,5 @@ pub fn archive<P: AsRef<Path>>(folder: P) -> Result<String> {
     tar.append_dir_all(".", &folder)?;
     let bytes = tar.into_inner()?.finish()?;
 
-    Ok(base64::encode(&bytes))
+    Ok(base64::encode(bytes))
 }

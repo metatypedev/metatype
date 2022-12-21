@@ -74,7 +74,7 @@ pub struct Dev {
 
 impl Action for Dev {
     fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
-        let config = Config::load_or_find(config_path, &dir)?;
+        let config = Config::load_or_find(config_path, dir)?;
 
         let node_config = config.node("dev");
         let node_url = node_config.url(self.gate.clone());
@@ -142,7 +142,7 @@ pub struct Deploy {
 
 impl Action for Deploy {
     fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
-        let config = Config::load_or_find(config_path, &dir)?;
+        let config = Config::load_or_find(config_path, dir)?;
         let prisma_config = &config.typegraphs.materializers.prisma;
         let migrations = self
             .migrations
@@ -151,7 +151,7 @@ impl Action for Deploy {
             .unwrap_or_else(|| prisma_config.migrations_path());
         let migrations_path = config
             .base_dir
-            .join(&migrations)
+            .join(migrations)
             .join(&self.typegraph)
             .join(&self.runtime);
 
@@ -366,8 +366,7 @@ impl PrismaMigrate {
 
     fn end(self) -> Result<()> {
         let migrations_path = self.base_migration_path.join(&self.typegraph).join(
-            &self
-                .runtime_name
+            self.runtime_name
                 .expect("runtime name should have been set"), // runtime_name should have been set
         );
 
