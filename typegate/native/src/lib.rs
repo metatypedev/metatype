@@ -327,7 +327,7 @@ enum ArchiveResult {
 
 #[deno_bindgen(non_blocking)]
 fn archive(input: ArchiveInp) -> ArchiveResult {
-    match common::migrations::archive(&input.path) {
+    match common::migrations::archive(input.path) {
         Ok(b) => ArchiveResult::Ok { base64: b },
         Err(e) => ArchiveResult::Err {
             message: e.to_string(),
