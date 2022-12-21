@@ -211,7 +211,7 @@ impl Config {
             }
         };
 
-        Ok(Some(Self::from_file(&path)?))
+        Ok(Some(Self::from_file(path)?))
     }
 
     /// Load config file:

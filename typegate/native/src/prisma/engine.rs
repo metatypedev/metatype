@@ -18,7 +18,6 @@
 // https://github.com/prisma/prisma-engines/blob/main/query-engine/query-engine-node-api/src/engine.rs
 
 use prisma_models::psl;
-use prisma_models::psl::datamodel_connector::RelationMode;
 use psl::diagnostics::Diagnostics;
 use query_connector::error::ConnectorError;
 use query_core::CoreError;
@@ -192,32 +191,21 @@ impl QueryEngine {
                 .first()
                 .ok_or_else(|| ApiError::configuration("No valid data source found"))?;
 
-            let preview_features: Vec<_> = builder
-                .schema
-                .configuration
-                .preview_features()
-                .iter()
-                .collect();
+            let preview_features = builder.schema.configuration.preview_features();
             let url = data_source
                 .load_url_with_config_dir(&builder.config_dir, |key| {
                     builder.env.get(key).map(ToString::to_string)
                 })
                 .map_err(|err| ApiError::Conversion(err, builder.schema.db.source().to_owned()))?;
 
-            let (db_name, executor) = executor::load(data_source, &preview_features, &url).await?;
+            let (db_name, executor) = executor::load(data_source, preview_features, &url).await?;
             let connector = executor.primary_connector();
             connector.get_connection().await?;
 
             // Build internal data model
-            let internal_data_model = prisma_models::convert(&builder.schema, db_name);
+            let internal_data_model = prisma_models::convert(Arc::clone(&builder.schema), db_name);
 
-            let query_schema = schema_builder::build(
-                internal_data_model,
-                true, // enable raw queries
-                data_source.active_connector,
-                preview_features,
-                RelationMode::ForeignKeys,
-            );
+            let query_schema = schema_builder::build(internal_data_model, true);
 
             Result::Ok(ConnectedEngine {
                 schema: builder.schema.clone(),

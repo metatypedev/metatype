@@ -29,7 +29,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         let venv_bin = venv_bin.to_str().unwrap();
         let path = var("PATH")?;
         set_var("VIRTUAL_ENV", venv);
-        set_var("PATH", &format!("{venv_bin}:{path}"));
+        set_var("PATH", format!("{venv_bin}:{path}"));
         Ok(())
     } else if let Some(dir) = dir.parent() {
         ensure_venv(dir)

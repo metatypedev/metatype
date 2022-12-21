@@ -7,9 +7,9 @@ include:
     file: "kaniko.yml"
 
 variables: &variables
-  DENO_VERSION: "1.28.3"
+  DENO_VERSION: "1.29.1"
   DENO_BINDGEN_URL: https://github.com/denoland/deno_bindgen/raw/main/cli.ts
-  RUST_VERSION: "1.65.0"
+  RUST_VERSION: "1.66.0"
   PNPM_VERSION: "7.9.3"
 
 stages:
