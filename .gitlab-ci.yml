@@ -1,8 +1,8 @@
 include:
-  - project: "metatype/templates"
+  - project: "metatypedev/cloud"
     ref: main
-    file: "metatype.yml"
-  - project: "devops/templates"
+    file: "ci.yml"
+  - project: "devops/gitlab-ci-templates"
     ref: main
     file: "kaniko.yml"
 
