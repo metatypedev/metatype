@@ -59,7 +59,7 @@ pub(crate) async fn apply(inp: crate::PrismaApplyInp) -> Result<crate::PrismaApp
 
     let reset_reason: Option<String> = if let DevAction::Reset(reset) = res.action {
         if inp.reset_database {
-            api.reset(None).await.unwrap();
+            api.reset().await.unwrap();
             Some(reset.reason)
         } else {
             return Ok(crate::PrismaApplyOut::ResetRequired {
