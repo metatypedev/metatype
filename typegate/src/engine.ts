@@ -2,7 +2,7 @@
 
 import { Kind, parse } from "graphql";
 import * as ast from "graphql/ast";
-import { RuntimeResolver, TypeGraph } from "./typegraph.ts";
+import { RuntimeResolver, TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
@@ -34,13 +34,17 @@ export const initTypegraph = async (
   payload: string,
   customRuntime: RuntimeResolver = {},
   config: Record<string, RuntimeConfig> = {},
-  introspectionDef: string | null = introspectionDefStatic,
+  introspectionDefPayload: string | null = introspectionDefStatic,
 ) => {
   const typegraphDS = JSON.parse(payload);
   parseGraphQLTypeGraph(typegraphDS);
 
-  const introspectionDef = JSON.parse(introspectionDefPayload);
-  parseGraphQLTypeGraph(introspectionDef);
+  const introspectionDef = introspectionDefPayload == null
+    ? null
+    : JSON.parse(introspectionDefPayload) as TypeGraphDS;
+  if (introspectionDef) {
+    parseGraphQLTypeGraph(introspectionDef);
+  }
 
   const introspection = introspectionDef
     ? await TypeGraph.init(
