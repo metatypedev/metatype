@@ -88,12 +88,16 @@ export class SingleRegister extends Register {
 export class MemoryRegister extends Register {
   private map = new Map<string, Engine>();
 
+  constructor(private introspection: boolean = false) {
+    super();
+  }
+
   async set(payload: string, config?: RuntimesConfig): Promise<string> {
     const engine = await initTypegraph(
       payload,
       SystemTypegraph.getCustomRuntimes(this),
       config,
-      undefined, // no need to have introspection for tests
+      this.introspection ? undefined : null, // no need to have introspection for tests
     );
     this.map.set(engine.name, engine);
     return engine.name;
@@ -134,21 +138,11 @@ type AssertSnapshotParams<T> = typeof assertSnapshot extends
   (ctx: Deno.TestContext, ...rest: infer R) => Promise<void> ? R : never;
 
 class MetaTest {
-  t: Deno.TestContext;
-  register: Register;
-
-  constructor(t: Deno.TestContext) {
-    this.t = t;
-    this.register = new MemoryRegister();
+  constructor(public t: Deno.TestContext, public register: Register) {
   }
 
-  async load(name: string, config: RuntimesConfig = {}): Promise<Engine> {
-    // TODO load from python file
-    const engineName = await this.register.set(
-      await Deno.readTextFile(join(localDir, `../src/typegraphs/${name}.json`)),
-      deepMerge(testRuntimesConfig, config),
-    );
-    return this.register.get(engineName)!;
+  getTypegraph(name: string): Engine | undefined {
+    return this.register.get(name);
   }
 
   async pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
@@ -202,11 +196,16 @@ class MetaTest {
   }
 }
 
+interface TestConfig {
+  systemTypegraphs?: boolean;
+  introspection?: boolean;
+}
+
 interface Test {
   (
     name: string,
     fn: (t: MetaTest) => void | Promise<void>,
-    opts?: Omit<Deno.TestDefinition, "name" | "fn">,
+    opts?: Omit<Deno.TestDefinition, "name" | "fn"> & TestConfig,
   ): void;
 }
 
@@ -219,7 +218,13 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      const mt = new MetaTest(t);
+      // const reg = opts.customRegister ?? new MemoryRegister();
+      const reg = new MemoryRegister(opts.introspection);
+      const { systemTypegraphs = false } = opts;
+      if (systemTypegraphs) {
+        await SystemTypegraph.loadAll(reg);
+      }
+      const mt = new MetaTest(t, reg);
       try {
         await fn(mt);
       } catch (error) {
@@ -469,5 +474,18 @@ export async function cleanUp() {
   for await (const tg of TypeGraph.list) {
     console.log(`cleanup: ${tg.name}`);
     await tg.deinit();
+  }
+}
+
+export function displayMetrics(msg?: string) {
+  console.log("METRICS", msg ? `-- ${msg}` : "");
+  const { ops, ...metrics } = Deno.metrics();
+  console.table(metrics);
+  // console.log(Object.keys(ops));
+  for (const [key, val] of Object.entries(ops)) {
+    if (val.opsDispatched != val.opsCompleted) {
+      console.log(key);
+      console.table(val);
+    }
   }
 }

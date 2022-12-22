@@ -5,6 +5,7 @@ import * as native from "native";
 import { FromVars, GraphQLRuntime } from "./graphql.ts";
 import { ResolverError } from "../errors.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
+import { nativeResult } from "../utils.ts";
 
 const makeDatasource = (uri: string) => {
   const engine = (() => {
@@ -52,10 +53,12 @@ export class PrismaRuntime extends GraphQLRuntime {
   }
 
   async registerEngine(typegraphName: string): Promise<void> {
-    const conn = await native.prisma_register_engine({
-      datamodel: this.datamodel,
-      typegraph: typegraphName,
-    });
+    const conn = nativeResult(
+      await native.prisma_register_engine({
+        datamodel: this.datamodel,
+        typegraph: typegraphName,
+      }),
+    );
     this.key = conn.engine_id;
   }
 
@@ -78,14 +81,16 @@ export class PrismaRuntime extends GraphQLRuntime {
       const q = typeof query === "function" ? query(variables) : query;
       console.log(`remote graphql: ${q}`);
 
-      const ret = await native.prisma_query({
-        key: this.key,
-        query: {
-          query: q,
-          variables: {}, // TODO: remove this
-        },
-        datamodel: this.datamodel,
-      });
+      const ret = nativeResult(
+        await native.prisma_query({
+          key: this.key,
+          query: {
+            query: q,
+            variables: {}, // TODO: remove this
+          },
+          datamodel: this.datamodel,
+        }),
+      );
       const endTime = performance.now();
       console.log(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
       const res = JSON.parse(ret.res);
