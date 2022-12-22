@@ -7,7 +7,8 @@ snapshot[`GraphQL parser 1`] = `
     policies: [
     ],
     properties: {
-      query: 14,
+      mutation: 19,
+      query: 18,
     },
     required: [
     ],
@@ -18,6 +19,7 @@ snapshot[`GraphQL parser 1`] = `
   {
     config: {},
     policies: [
+      0,
       0,
     ],
     properties: {
@@ -37,11 +39,12 @@ snapshot[`GraphQL parser 1`] = `
     materializer: 1,
     output: 5,
     policies: [
+      0,
     ],
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "function_7",
+    title: "function_9",
     type: "function",
   },
   {
@@ -54,7 +57,7 @@ snapshot[`GraphQL parser 1`] = `
     required: [
     ],
     runtime: 1,
-    title: "object_6",
+    title: "object_8",
     type: "object",
   },
   {
@@ -94,11 +97,12 @@ snapshot[`GraphQL parser 1`] = `
     materializer: 2,
     output: 5,
     policies: [
+      0,
     ],
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "function_8",
+    title: "function_10",
     type: "function",
   },
   {
@@ -118,14 +122,15 @@ snapshot[`GraphQL parser 1`] = `
   {
     config: {},
     input: 10,
-    materializer: 1,
+    materializer: 3,
     output: 11,
     policies: [
+      0,
     ],
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "function_10",
+    title: "function_12",
     type: "function",
   },
   {
@@ -138,7 +143,7 @@ snapshot[`GraphQL parser 1`] = `
     required: [
     ],
     runtime: 1,
-    title: "object_9",
+    title: "object_11",
     type: "object",
   },
   {
@@ -167,24 +172,109 @@ snapshot[`GraphQL parser 1`] = `
   {
     config: {},
     input: 11,
-    materializer: 2,
+    materializer: 4,
     output: 11,
     policies: [
+      0,
     ],
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "function_11",
+    title: "function_13",
     type: "function",
   },
   {
+    config: {
+      __namespace: true,
+    },
+    policies: [
+      0,
+      0,
+    ],
+    properties: {
+      picture: 9,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "user_namespace_q",
+    type: "object",
+  },
+  {
+    config: {
+      __namespace: true,
+    },
+    policies: [
+      0,
+      0,
+    ],
+    properties: {
+      setPicture: 13,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "user_namespace_m",
+    type: "object",
+  },
+  {
+    config: {
+      __namespace: true,
+    },
     policies: [
     ],
     properties: {
-      user: 1,
+      find: 2,
+      profile: 14,
     },
-    runtime: -1,
+    required: [
+    ],
+    runtime: 0,
+    title: "graphql_namespaces_q",
+    type: "object",
+  },
+  {
+    config: {
+      __namespace: true,
+    },
+    policies: [
+    ],
+    properties: {
+      profile: 15,
+      update: 7,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "graphql_namespaces_m",
+    type: "object",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      user: 16,
+    },
+    required: [
+    ],
+    runtime: 0,
     title: "Query",
+    type: "object",
+  },
+  {
+    config: {
+      __namespace: true,
+    },
+    policies: [
+    ],
+    properties: {
+      user: 17,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "Mutation",
     type: "object",
   },
 ]

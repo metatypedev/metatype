@@ -18,6 +18,7 @@ import {
   Context,
   PolicyStages,
   PolicyStagesFactory,
+  Resolver,
   RuntimeConfig,
   Variables,
 } from "./types.ts";
@@ -107,6 +108,13 @@ export class ComputeStage {
     }\nid  ${this.id()}\ntype ${this.props.outType.type}\narg ${
       JSON.stringify(this.props.args)
     }\n--`;
+  }
+
+  withResolver(resolver: Resolver): ComputeStage {
+    return new ComputeStage({
+      ...this.props,
+      resolver,
+    });
   }
 }
 

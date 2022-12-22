@@ -108,16 +108,19 @@ export class DenoRuntime extends Runtime {
     _waitlist: ComputeStage[],
     verbose: boolean,
   ): ComputeStage[] {
-    let resolver: Resolver;
     if (stage.props.node === "__typename") {
-      resolver = () => {
+      return [stage.withResolver(() => {
         const { parent: parentStage } = stage.props;
         return parentStage != null
           ? parentStage.props.outType.title
           : stage.props.operation.type;
-      };
+      })];
     } else if (stage.props.materializer == null) {
-      resolver = ({ _: { parent } }) => {
+      if (stage.props.outType.config?.__namespace) {
+        return [stage.withResolver(() => ({}))];
+      }
+
+      return [stage.withResolver(({ _: { parent } }) => {
         if (stage.props.parent == null) { // namespace
           return {};
         }
@@ -127,16 +130,12 @@ export class DenoRuntime extends Runtime {
         console.log("parent resolver", typeof resolver, resolver);
         const ret = typeof resolver === "function" ? resolver() : resolver;
         return ret;
-      };
+      })];
     } else {
-      resolver = this.delegate(stage.props.materializer, verbose);
+      return [
+        stage.withResolver(this.delegate(stage.props.materializer, verbose)),
+      ];
     }
-    return [
-      new ComputeStage({
-        ...stage.props,
-        resolver,
-      }),
-    ];
   }
 
   delegate(mat: TypeMaterializer, verbose: boolean): Resolver {

@@ -103,11 +103,12 @@ const findOrCreateField = (
 };
 
 const createTargetField = (
-  path: string[],
+  origPath: readonly string[],
   rootSelections: ReadonlyArray<FieldNode>,
   selectionSet: boolean,
   args: ReadonlyArray<ArgumentNode>,
 ) => {
+  const path = [...origPath];
   const last = path.pop()!;
   if (path.length > 0) {
     const first = path.shift()!;
@@ -115,14 +116,14 @@ const createTargetField = (
       rootSelections as Array<FieldNode>,
       first,
       true,
-      args,
+      [],
     );
     for (const p of path) {
       field = findOrCreateField(
         field.selectionSet!.selections as Array<FieldNode>,
         p,
         true,
-        args,
+        [],
       );
     }
     return findOrCreateField(
@@ -183,12 +184,12 @@ export function rebuildGraphQuery(
   // if (stages.length <= 3) throw new Error("End of life");
   iterParentStages(stages, (stage, children) => {
     const field = stage.props.path[stage.props.path.length - 1];
-    console.log("stages", stages.map((s) => s.props.path));
-    console.log("stage", stage.props);
-    console.log("children", children.map((c) => c.props.path));
+    // console.log("stages", stages.map((s) => s.props.path));
+    // console.log("stage", stage.props);
+    // console.log("children", children.map((c) => c.props.path));
     const path = stage.props.materializer?.data["path"] as string[] ?? [field];
     ensure(path.length > 0, "unexpeced empty path");
-    console.log("input type", stage.props.inpType, stage.props.argumentNodes);
+    // console.log("input type", stage.props.inpType, stage.props.argumentNodes);
     // const args = Object.entries(stage.props.args).map(
     //   ([argName, argValue]) => {
     //     const val = argValue({}, null, {}); // as FromVars<_>

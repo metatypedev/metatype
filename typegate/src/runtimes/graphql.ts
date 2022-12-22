@@ -35,6 +35,10 @@ export class GraphQLRuntime extends Runtime {
   async deinit(): Promise<void> {}
 
   execute(query: string | FromVars<string>, path: string[]): Resolver {
+    if (path.length == 0) {
+      throw new Error("Path cannot be empty");
+    }
+    console.log("EXECUTE: path=", path);
     return async ({ _: { variables } }) => {
       console.log({ query });
       const q = typeof query === "function" ? query(variables) : query;
@@ -46,7 +50,9 @@ export class GraphQLRuntime extends Runtime {
         console.error(ret.errors);
         throw new Error(`From remote graphql: ${ret.errors[0].message}`);
       }
-      return path.reduce((r, field) => r[field], ret.data);
+      const res = path.reduce((r, field) => r[field], ret.data);
+      console.log({ res, path });
+      return res;
     };
   }
 
@@ -136,7 +142,11 @@ export class GraphQLRuntime extends Runtime {
     console.log("props", stage.props);
     const queryStage = new ComputeStage({
       ...stage.props,
-      resolver: this.execute(query, [node]),
+      resolver: this.execute(
+        query,
+        stage.props.materializer?.data.path as string[] ??
+          [renames[node] ?? node],
+      ),
     });
     // const queryStage = new ComputeStage({
     //   operation: stage.props.operation,
