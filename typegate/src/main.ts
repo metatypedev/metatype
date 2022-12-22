@@ -25,7 +25,7 @@ init();
 
 const register = await ReplicatedRegister.init(redisConfig);
 register.startSync();
-await SystemTypegraph.loadAll(register);
+await SystemTypegraph.loadAll(register, !config.packaged);
 
 const limiter = await RedisRateLimiter.init(redisConfig);
 

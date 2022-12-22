@@ -15,7 +15,7 @@ use dashmap::DashMap;
 use lazy_static::lazy_static;
 use log::info;
 use static_init::dynamic;
-use std::{borrow::Cow, collections::BTreeMap, panic, path::PathBuf, str::FromStr};
+use std::{borrow::Cow, panic};
 use tokio::runtime::Runtime;
 
 #[cfg(test)]
@@ -93,27 +93,22 @@ struct PrismaRegisterEngineInp {
 }
 
 #[deno_bindgen]
-struct PrismaRegisterEngineOut {
-    engine_id: String,
+enum PrismaRegisterEngineOut {
+    Ok { engine_id: String },
+    Err { message: String },
 }
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngineOut {
-    let conf = engine::ConstructorOptions {
-        datamodel: input.datamodel,
-        log_level: "info".to_string(),
-        log_queries: true,
-        datasource_overrides: BTreeMap::default(),
-        env: serde_json::json!({}),
-        config_dir: PathBuf::from_str(".").unwrap(),
-
-        ignore_env_var_errors: false,
-    };
-    let engine = engine::QueryEngine::new(conf).expect("cannot connect");
-    RT.block_on(engine.connect()).unwrap();
-    let engine_id = format!("{}_{}", input.typegraph, ENGINES.len() + 1);
-    ENGINES.insert(engine_id.clone(), engine);
-    PrismaRegisterEngineOut { engine_id }
+    match RT.block_on(crate::prisma::register_engine(
+        input.datamodel,
+        input.typegraph,
+    )) {
+        Ok(engine_id) => PrismaRegisterEngineOut::Ok { engine_id },
+        Err(e) => PrismaRegisterEngineOut::Err {
+            message: e.to_string(),
+        },
+    }
 }
 
 // unregister engine
@@ -152,18 +147,20 @@ struct PrismaQueryInp {
 }
 
 #[deno_bindgen]
-struct PrismaQueryOut {
-    res: String,
+enum PrismaQueryOut {
+    Ok { res: String },
+    Err { message: String },
 }
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_query(input: PrismaQueryInp) -> PrismaQueryOut {
-    let body: request_handlers::GraphQlBody = serde_json::from_value(input.query).unwrap();
-    let engine = ENGINES.get(&input.key).unwrap();
-    let fut = engine.query(body, None);
-    let results = RT.block_on(fut);
-    let res = serde_json::to_string(&results.unwrap()).unwrap();
-    PrismaQueryOut { res }
+    let fut = RT.block_on(crate::prisma::query(input.key, input.query));
+    match fut {
+        Ok(res) => PrismaQueryOut::Ok { res },
+        Err(err) => PrismaQueryOut::Err {
+            message: err.to_string(),
+        },
+    }
 }
 
 #[deno_bindgen]

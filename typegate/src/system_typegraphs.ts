@@ -2,7 +2,6 @@
 
 import { basename, dirname, fromFileUrl, join } from "std/path/mod.ts";
 
-import config from "./config.ts";
 import { Register } from "./register.ts";
 import { PrismaMigrationRuntime } from "./runtimes/prisma_migration.ts";
 import { RuntimeResolver } from "./typegraph.ts";
@@ -38,18 +37,18 @@ export class SystemTypegraph {
       null;
   }
 
-  static async loadAll(register: Register) {
+  static async loadAll(register: Register, watch = false) {
     const reload = async (paths: string[]) => {
       for await (const path of paths) {
         logger.info(`Reloading system graph ${basename(path)}`);
-        register.set(await Deno.readTextFile(path));
+        await register.set(await Deno.readTextFile(path));
       }
     };
 
     const paths = SystemTypegraph.all.map((stg) => stg.getPath());
     await reload(paths);
 
-    if (!config.packaged) {
+    if (watch) {
       (async () => {
         const watcher = Deno.watchFs(paths);
         for await (const event of watcher) {
