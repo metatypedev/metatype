@@ -76,7 +76,6 @@ export class PrismaRuntime extends GraphQLRuntime {
   }
 
   execute(query: string | FromVars<string>, path: string[]): Resolver {
-    // throw new Error(`path is ${path}`);
     return async ({ _: { variables } }) => {
       const startTime = performance.now();
       const q = typeof query === "function" ? query(variables) : query;
@@ -102,10 +101,7 @@ export class PrismaRuntime extends GraphQLRuntime {
             .join("\n"),
         );
       }
-      console.log("EXECUTE: path=", path);
-      console.log({ res });
       return path.reduce((r, field) => r[field], res.data);
-      // return res.data;
     };
   }
 }

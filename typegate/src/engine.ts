@@ -83,11 +83,7 @@ export class ComputeStage {
   }
 
   id(): string {
-    const path = [...this.props.path];
-    if (path[path.length - 1] === "@@query") {
-      path.splice(path.length - 1, 1);
-    }
-    return path.join(".");
+    return this.props.path.join(".");
   }
 
   varType(varName: string): string {
@@ -239,18 +235,14 @@ export class Engine {
         ),
       );
 
-      console.log({ node, path });
-      console.log({ decisions, policies });
       if (
         node !== "__typename" &&
         !(outType.type === "object" &&
           outType.config?.["__namespace"] === true) &&
-        path[path.length - 1] !== "@@query" &&
         !parent &&
         (decisions.some((d) => d === null) || decisions.length < 1)
       ) {
-        // root level field inherit false\
-        console.log({ node, path });
+        // root level field inherit false
         throw Error(
           `no authorization policy took a decision in root field ${stage.id()}`,
         );
@@ -264,9 +256,6 @@ export class Engine {
       //verbose && console.log("dep", stage.id(), deps);
       const previousValues = parent ? cache[parent.id()] : ([{}] as any);
       const lens = parent ? lenses[parent.id()] : ([ret] as any);
-
-      console.log({ lenses, parent_id: parent?.id(), lens });
-      console.log({ stage_id: stage.id });
 
       if (limit && rateCalls) {
         limit.consume(rateWeight ?? 1);
@@ -298,16 +287,9 @@ export class Engine {
         `cannot align array results ${lens.length} != ${res.length}`,
       );
       const field = path[path.length - 1] as any;
-      console.log({ path, res, field, node });
       if (node !== "") {
         lens.forEach((l: any, i: number) => {
-          if (field === "@@query") {
-            console.log("BEFORE", l);
-            Object.assign(l, res[i]);
-            console.log("AFTER", l);
-          } else {
-            l[field] = res[i];
-          }
+          l[field] = res[i];
         });
 
         lenses[stage.id()] = batcher(lens).flatMap((l: any) => {
@@ -315,8 +297,6 @@ export class Engine {
         });
       }
     }
-
-    console.log({ ret });
 
     return ret;
   }
@@ -327,14 +307,13 @@ export class Engine {
     verbose: boolean,
   ): [ComputeStage[], PolicyStagesFactory] {
     const serial = operation.operation === "mutation";
-    console.log({ root: this.tg.type(0) });
     const rootIdx =
       (this.tg.type(0) as ObjectNode).properties[operation.operation];
     ensure(
       rootIdx != null,
       `operation ${operation.operation} is not available`,
     );
-    console.log({ serial });
+
     const stages = this.tg.traverse(
       fragments,
       operation.name?.value ?? "",
@@ -375,13 +354,10 @@ export class Engine {
 
     while (waitlist.length > 0) {
       const stage = waitlist.shift()!;
-      console.log("MATERIALIZE", stage.props.path);
       stagesMat.push(
         ...stage.props.runtime.materialize(stage, waitlist, verbose),
       );
-      console.log({ waitlist });
     }
-    console.log("done materialize");
 
     return stagesMat;
   }
@@ -418,35 +394,11 @@ export class Engine {
     );
     */
 
-    console.log({
-      stages: stages.map((s) => ({
-        p: s.props.path,
-        n: s.props.node,
-        policies: JSON.stringify(s.props.policies),
-      })),
-    });
-
     // how
     const stagesMat = this.materialize(stages, verbose);
 
-    console.log({
-      materialized: stagesMat.map((s) => ({
-        p: s.props.path,
-        n: s.props.node,
-        policies: s.props.policies,
-      })),
-    });
-
     // when
     const optimizedStages = this.optimize(stagesMat, verbose);
-
-    console.log({
-      optimized: optimizedStages.map((s) => ({
-        p: s.props.path,
-        n: s.props.node,
-        policies: s.props.policies,
-      })),
-    });
 
     const validator = TypeCheck.init(
       isIntrospectionQuery(operation, fragments)
@@ -503,7 +455,7 @@ export class Engine {
       const planTime = performance.now();
 
       const { stages, policies, validator } = plan;
-      console.log(policies);
+
       //logger.info("dag:", stages);
       const res = await this.compute(
         stages,

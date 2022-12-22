@@ -86,8 +86,6 @@ mf.mock("POST@/api/graphql", async (req) => {
 test("GraphQL parser", async (t) => {
   const e = await t.pythonFile("typegraphs/graphql_namespaces.py");
 
-  console.log("materializers", e.tg.tg.materializers);
-
   await t.should("split typgraph into queries and mutations", () => {
     /**
      * Types from the parsed TypeGraph
