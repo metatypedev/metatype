@@ -32,7 +32,7 @@ export const initTypegraph = async (
   payload: string,
   customRuntime: RuntimeResolver = {},
   config: Record<string, RuntimeConfig> = {},
-  introspectionDef: string = introspectionDefStatic,
+  introspectionDef: string | null = introspectionDefStatic,
 ) => {
   const introspection = introspectionDef
     ? await TypeGraph.init(

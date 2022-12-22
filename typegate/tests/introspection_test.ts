@@ -249,7 +249,7 @@ test("Basic introspection", async (t) => {
       })
       .on(e);
   });
-});
+}, { introspection: true });
 
 test("Full introspection", async (t) => {
   const e = await t.pythonFile("typegraphs/simple.py");
@@ -359,4 +359,4 @@ test("Full introspection", async (t) => {
       })
       .on(e);
   });
-});
+}, { introspection: true });
