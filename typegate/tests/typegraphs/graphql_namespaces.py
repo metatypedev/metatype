@@ -16,13 +16,23 @@ with TypeGraph("graphql_namespaces") as g:
         t.struct(
             {
                 # operations under `user` namespace
-                "find": gql.query(t.struct({"id": user_id}), user_model).add_policy(public),
-                "update": gql.mutation(user_model, user_model).add_policy(public),
+                "find": gql.query(
+                    t.struct({"id": user_id}), user_model, path=("findUser",)
+                ).add_policy(public),
+                "update": gql.mutation(
+                    user_model, user_model, path=("updateUser",)
+                ).add_policy(public),
                 # operations in nested namespace `user.profile`
                 "profile": t.struct(
                     {
-                        "picture": gql.query(t.struct({"id": user_id}), picture_model).add_policy(public),
-                        "setPicture": gql.mutation(picture_model, picture_model).add_policy(public),
+                        "picture": gql.query(
+                            t.struct({"id": user_id}),
+                            picture_model,
+                            path=("profile", "picture"),
+                        ).add_policy(public),
+                        "setPicture": gql.mutation(
+                            picture_model, picture_model, path=("profile", "setPicture")
+                        ).add_policy(public),
                     }
                 ).named("profile_namespace"),
             }

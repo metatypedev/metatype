@@ -20,7 +20,7 @@ const schema = buildSchema(`
 	}
 
 	type Mutation {
-		update(id: ID!, name: String!): User!
+		updateUser(id: ID!, name: String!): User!
 		profile: ProfileMutation!
 	}
 
@@ -29,10 +29,12 @@ const schema = buildSchema(`
 	}
 
 	type Query {
-		find(id: ID!): User!
+		findUser(id: ID!): User!
 		profile: ProfileQuery!
 	}
 `);
+
+const getPictureUrl = (id: string) => `https://example.com/image/${id}`;
 
 const rootValue = {
   findUser: ({ id }: { id: string }) => {
@@ -47,17 +49,19 @@ const rootValue = {
       name,
     };
   },
-  getProfilePicture: ({ id }: { id: string }) => {
-    return {
-      id,
-      url: `image/${id}`,
-    };
-  },
-  setProfilePicture: ({ id, url }: { id: string; url: string }) => {
-    return {
-      id,
-      url,
-    };
+  profile: {
+    picture: ({ id }: { id: string }) => {
+      return {
+        id,
+        url: getPictureUrl(id),
+      };
+    },
+    setPicture: ({ id, url }: { id: string; url: string }) => {
+      return {
+        id,
+        url,
+      };
+    },
   },
 };
 
@@ -81,6 +85,8 @@ mf.mock("POST@/api/graphql", async (req) => {
 
 test("GraphQL parser", async (t) => {
   const e = await t.pythonFile("typegraphs/graphql_namespaces.py");
+
+  console.log("materializers", e.tg.tg.materializers);
 
   await t.should("split typgraph into queries and mutations", () => {
     /**
@@ -142,7 +148,7 @@ test("GraphQL parser", async (t) => {
 
   await t.should("allow queries in nested namespaces", async () => {
     await gql`
-			query GetUserProfilePic($id: String!) {
+			query GetUserProfilePic($id: ID!) {
 				user {
 					profile {
 						picture(id: $id) {
@@ -159,7 +165,7 @@ test("GraphQL parser", async (t) => {
           profile: {
             picture: {
               id,
-              url: "image/1",
+              url: getPictureUrl(id),
             },
           },
         },
@@ -180,13 +186,13 @@ test("GraphQL parser", async (t) => {
 				}
 			}
 		`
-      .withVars({ id, url: "image/2" })
+      .withVars({ id, url: getPictureUrl("2") })
       .expectData({
         user: {
           profile: {
             setPicture: {
-              id: "2",
-              name: "image/2",
+              id,
+              url: getPictureUrl("2"),
             },
           },
         },
