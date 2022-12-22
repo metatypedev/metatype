@@ -5,6 +5,7 @@ import {
   assert,
   assertArrayIncludes,
   assertEquals,
+  assertExists,
 } from "std/testing/asserts.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import * as native from "native";
@@ -15,7 +16,8 @@ const localDir = dirname(fromFileUrl(import.meta.url));
 test("prisma migrations", async (t) => {
   const tgPath = "typegraphs/prisma.py";
   const e = await t.pythonFile(tgPath);
-  const migrations = await t.load("prisma_migration");
+  const migrations = t.getTypegraph("typegate/prisma_migration")!;
+  assertExists(migrations);
 
   const migrationDir = join(localDir, "prisma-migrations/prisma/prisma");
   const createdMigrations: string[] = [];
@@ -233,4 +235,4 @@ test("prisma migrations", async (t) => {
       .expectData({ findManyRecords: [] })
       .on(e);
   });
-}, { sanitizeOps: false }); // TODO enable sanitizer, find ops leak
+}, { systemTypegraphs: true });

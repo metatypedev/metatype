@@ -9,7 +9,6 @@ use std::collections::HashMap;
 use std::convert::AsRef;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use tokio::runtime::Runtime;
 
 #[derive(Deserialize, Debug)]
 struct PrismaRuntimeData {
@@ -119,7 +118,7 @@ struct TestContext {
 }
 
 impl TestContext {
-    fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
+    async fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let tg = load_typegraph(path).context("could not load typegraph")?;
         let runtime = tg
             .runtimes
@@ -135,15 +134,16 @@ impl TestContext {
             .next()
             .ok_or(anyhow!("no prisma runtime"))?;
 
-        let reg = crate::prisma_register_engine(crate::PrismaRegisterEngineInp {
-            datamodel: format!("{}{}", runtime.datasource, runtime.datamodel),
-            typegraph: tg.types[0].base().title.clone(),
-        });
+        let engine_id = crate::prisma::register_engine(
+            format!("{}{}", runtime.datasource, runtime.datamodel),
+            tg.types[0].base().title.clone(),
+        )
+        .await?;
 
         Ok(Self {
             datasource: runtime.datasource,
             datamodel: runtime.datamodel,
-            engine_id: reg.engine_id,
+            engine_id: engine_id,
         })
     }
 
@@ -151,23 +151,17 @@ impl TestContext {
         format!("{}{}", self.datasource, self.datamodel)
     }
 
-    fn query(&self, query: &str) -> Result<crate::PrismaQueryOut> {
-        Ok(crate::prisma_query(crate::PrismaQueryInp {
-            key: self.engine_id.clone(),
-            query: gql(query)?,
-            datamodel: self.datamodel(),
-        }))
+    async fn query(&self, query: &str) -> Result<String> {
+        crate::prisma::query(self.engine_id.clone(), gql(query)?).await
     }
 
-    fn migrate(&self) {
-        let res = Runtime::new().unwrap().block_on(async {
-            migration::push(self.datasource.clone(), self.datamodel.clone()).await
-        });
-        res.unwrap();
+    async fn migrate(&self) -> Result<()> {
+        let _res = migration::push(self.datasource.clone(), self.datamodel.clone()).await?;
+        Ok(())
     }
 }
 
-fn recreate_db_schema(t: &TestContext) -> Result<()> {
+async fn recreate_db_schema(t: &TestContext) -> Result<()> {
     t.query(
         r#"
         mutation a {
@@ -177,20 +171,22 @@ fn recreate_db_schema(t: &TestContext) -> Result<()> {
             )
         }
     "#,
-    )?;
+    )
+    .await?;
 
-    t.migrate();
+    t.migrate().await?;
 
     Ok(())
 }
 
-#[test]
-fn simple_record() -> Result<()> {
-    let t = TestContext::new("../tests/typegraphs/prisma.py")?;
-    recreate_db_schema(&t)?;
+#[tokio::test]
+async fn simple_record() -> Result<()> {
+    let t = TestContext::new("../tests/typegraphs/prisma.py").await?;
+    recreate_db_schema(&t).await?;
 
-    let ret = t.query(
-        r#"
+    let ret = t
+        .query(
+            r#"
             mutation {
                 createOneusers(
                     data: {
@@ -203,9 +199,10 @@ fn simple_record() -> Result<()> {
                 }
             }
         "#,
-    )?;
+        )
+        .await?;
 
-    let res = serde_json::from_str::<serde_json::Value>(&ret.res)?;
+    let res = serde_json::from_str::<serde_json::Value>(&ret)?;
 
     use serde_json::Value::*;
     match res {
