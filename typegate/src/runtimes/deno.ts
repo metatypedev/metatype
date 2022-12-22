@@ -115,27 +115,25 @@ export class DenoRuntime extends Runtime {
           ? parentStage.props.outType.title
           : stage.props.operation.type;
       })];
-    } else if (stage.props.materializer == null) {
-      if (stage.props.outType.config?.__namespace) {
-        return [stage.withResolver(() => ({}))];
-      }
+    }
 
-      return [stage.withResolver(({ _: { parent } }) => {
-        if (stage.props.parent == null) { // namespace
-          return {};
-        }
-        console.log("path", stage.props.path);
-        console.log("parent stage", stage.props.parent?.props);
-        const resolver = parent[stage.props.node];
-        console.log("parent resolver", typeof resolver, resolver);
-        const ret = typeof resolver === "function" ? resolver() : resolver;
-        return ret;
-      })];
-    } else {
+    if (stage.props.materializer != null) {
       return [
         stage.withResolver(this.delegate(stage.props.materializer, verbose)),
       ];
     }
+
+    if (stage.props.outType.config?.__namespace) {
+      return [stage.withResolver(() => ({}))];
+    }
+
+    return [stage.withResolver(({ _: { parent } }) => {
+      if (stage.props.parent == null) { // namespace
+        return {};
+      }
+      const resolver = parent[stage.props.node];
+      return typeof resolver === "function" ? resolver() : resolver;
+    })];
   }
 
   delegate(mat: TypeMaterializer, verbose: boolean): Resolver {

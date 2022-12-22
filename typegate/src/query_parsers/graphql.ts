@@ -60,14 +60,6 @@ function splitGraphQLOperations(
             config: { ...(node.config ?? {}), __namespace: true },
           });
         }
-
-        // check if child node is a `query` or `mutation` property
-        // if (Object.keys(childQueryProperties).length > 0) {
-        //   queryProperties[propertyName] = typeIndex;
-        // } else {
-        //   mutationProperties[propertyName] = typeIndex;
-        // }
-
         break;
       }
 
@@ -123,5 +115,4 @@ export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
     });
     rootNode.properties.mutation = mutationIndex;
   }
-  console.log({ rootNode });
 }

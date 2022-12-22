@@ -75,7 +75,6 @@ export interface ComputeStageProps {
   args: Record<string, ComputeArg>;
   policies: Record<string, string[]>;
   resolver?: Resolver;
-  // fieldNode: ast.FieldNode;
   argumentNodes?: ReadonlyArray<ast.ArgumentNode>;
   inpType?: ObjectNode;
   outType: TypeNode; // only temp

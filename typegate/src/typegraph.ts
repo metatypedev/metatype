@@ -910,7 +910,6 @@ export class TypeGraph {
       if (!nested) {
         continue;
       }
-      console.log({ nested });
       const [value, inputPolicies, nestedDeps] = nested;
       nestedDepsUnion.push(...nestedDeps);
       args[argName] = value;
@@ -920,7 +919,6 @@ export class TypeGraph {
 
     // check that no unwanted arg is given
     for (const fieldArg of fieldArgs ?? []) {
-      console.log({ fieldArg });
       const name = fieldArg.name.value;
       if (!(name in args)) {
         throw Error(`${name} input as field but unknown`);
@@ -935,7 +933,6 @@ export class TypeGraph {
 
     const mat = this.tg.materializers[schema.materializer];
     const runtime = this.runtimeReferences[mat.runtime];
-    console.log({ p });
     if (!p.serial && mat.data.serial) {
       throw Error(
         `${schema.title} via ${mat.name} can only be executed in mutation`,
@@ -1056,7 +1053,7 @@ export class TypeGraph {
     if (isObject(parentType) && parentSelection.length < 1) {
       throw Error(`struct "${parentName}" must a field selection`);
     }
-    console.trace({ serial });
+
     for (const field of parentSelection) {
       stages.push(...this.traverseField({
         field,
