@@ -12,7 +12,7 @@ use std::process::Command;
 use walkdir::{DirEntry, WalkDir};
 
 use crate::config::Config;
-use crate::ts::parser::{parse_module_source, transform_module, transform_script};
+use crate::ts::parser::{transform_module, transform_script};
 use crate::utils::ensure_venv;
 
 pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
@@ -222,8 +222,7 @@ fn postprocess_module_mat(mut mat: Materializer, typegraph: &Typegraph) -> Resul
             utils::object_from_hashmap(std::mem::take(&mut mat.data))?;
         if !mat_data.code.starts_with("file:") {
             // TODO check imported functions exist
-            let module = parse_module_source(mat_data.code)?;
-            mat_data.code = transform_module(module)?;
+            mat_data.code = transform_module(mat_data.code)?;
         }
         mat.data = utils::hashmap_from_object(mat_data)?;
     }
