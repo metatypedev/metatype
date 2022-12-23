@@ -1,6 +1,6 @@
-import * as hmac from "https://deno.land/x/hmac@v2.0.1/mod.ts";
+import { hmac } from "https://deno.land/x/hmac@v2.0.1/mod.ts";
 import * as base64 from "https://deno.land/std/encoding/base64url.ts";
-import * as hex from "https://deno.land/std/encoding/hex.ts";
+import { decode } from "https://deno.land/std/encoding/hex.ts";
 
 interface ISend {
   width: number;
@@ -17,11 +17,11 @@ export default async function (
   const resource = base64.encode(`s3://${path}`);
   const uri = `/rt:fill/s:${width}:${height}/${resource}`;
 
-  const digest = hmac.hmac(
+  const digest = hmac(
     "sha256",
-    hex.decode(encode(secrets.IMGPROXY_SECRET)),
+    decode(encode(secrets.IMGPROXY_SECRET)),
     new Uint8Array([
-      ...hex.decode(encode(secrets.IMGPROXY_SALT)),
+      ...decode(encode(secrets.IMGPROXY_SALT)),
       ...encode(uri),
     ]),
   );
