@@ -23,15 +23,27 @@ use swc_ecmascript::{
     visit::{Fold, FoldWith},
 };
 
-fn named_import(tpe: String, alias: String) -> ImportNamedSpecifier {
+/// Creates a named import from the following elements:
+///
+/// - `local_name` as the name in which the
+/// imported value will be available
+///
+/// - `import_name` as the original name of
+/// the import if an alias is used
+fn named_import(local_name: String, import_name: String) -> ImportNamedSpecifier {
     ImportNamedSpecifier {
-        local: Ident::new(tpe.into(), DUMMY_SP),
+        local: Ident::new(local_name.into(), DUMMY_SP),
         span: DUMMY_SP,
-        imported: Some(ModuleExportName::Ident(Ident::new(alias.into(), DUMMY_SP))),
+        imported: Some(ModuleExportName::Ident(Ident::new(
+            import_name.into(),
+            DUMMY_SP,
+        ))),
         is_type_only: false,
     }
 }
 
+/// Creates an import declaration from an
+/// import with named specifier and its source code.
 fn import(specifier: ImportNamedSpecifier, source: &str) -> ImportDecl {
     ImportDecl {
         span: DUMMY_SP,
@@ -46,6 +58,7 @@ fn import(specifier: ImportNamedSpecifier, source: &str) -> ImportDecl {
     }
 }
 
+/// Generates a TypeScript type annotation with a given name.
 fn tpe(name: String) -> TsTypeAnn {
     TsTypeAnn {
         span: DUMMY_SP,
@@ -57,6 +70,12 @@ fn tpe(name: String) -> TsTypeAnn {
     }
 }
 
+/// Creates a exported function from the following elements:
+///
+/// - `name` as the function name
+/// - `input` as the parameters of the function
+/// - `out` as the returned values of the function
+/// - `body` as the function implementation
 fn export_function(name: String, inp: String, out: String, body: Option<BlockStmt>) -> ExportDecl {
     let f = FnDecl {
         ident: Ident::new(name.into(), DUMMY_SP),
@@ -85,12 +104,34 @@ fn export_function(name: String, inp: String, out: String, body: Option<BlockStm
     }
 }
 
+/// A visitor with `source` and module `imports`.
 pub struct MyVisitor {
     pub source: String,
+
+    /// An array of tuples (`LocalName`, `ImportName`).
+    ///
+    /// Where:
+    ///
+    /// - `LocalName` is the name in which the module is imported
+    ///
+    /// - `ImportName` is the original name of the import
+    /// if an alias is used
+    ///
+    /// More information at [`ImportNamedSpecifier`].
     imports: Vec<(String, String)>,
 }
 
 impl Fold for MyVisitor {
+    /// Takes a module and returns a new module
+    /// where its module items are from `output.ts`.
+    ///
+    /// In each module the function named `apply`
+    /// will be rewritten as a function named `testaaa`
+    /// which its parameter will be `Input` type and
+    /// its returned value will be `Ouput` type.
+    ///
+    /// The other functions will be used to generate
+    /// the TypeScript signature of the function `testaaa`.
     fn fold_module(&mut self, n: Module) -> Module {
         let mut rewrite = n
             .body
@@ -140,6 +181,8 @@ impl Fold for MyVisitor {
         rewrite.rotate_right(self.imports.len());
         Module { body: rewrite, ..n }
     }
+
+    /// Takes an export declaration and returns it.
     fn fold_export_decl(&mut self, n: ExportDecl) -> ExportDecl {
         match &n.decl {
             Decl::Fn(FnDecl {
@@ -155,6 +198,8 @@ impl Fold for MyVisitor {
     }
 }
 
+/// Parses a file as a TypeScript module and generates
+/// its [`Module`].
 pub fn parse_module<P>(mod_path: P) -> Result<Module>
 where
     P: AsRef<Path>,
@@ -179,14 +224,16 @@ where
     })
 }
 
-pub fn parse_module_source(source: String) -> Result<Module> {
+/// Parses a string as a TypeScript module and
+/// generates its [`Module`] and [`SourceMap`].
+fn parse_module_source(source: String) -> Result<(Module, Lrc<SourceMap>)> {
     let cm: Lrc<SourceMap> = Default::default();
     let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
 
     let fm = cm.new_source_file(FileName::Anon, source);
 
     let mut errors = vec![];
-    parse_file_as_module(
+    let module = parse_file_as_module(
         &fm,
         Syntax::Typescript(Default::default()),
         EsVersion::latest(),
@@ -196,17 +243,21 @@ pub fn parse_module_source(source: String) -> Result<Module> {
     .or_else(|e| {
         e.into_diagnostic(&handler).emit();
         bail!("could not compile module")
-    })
+    })?;
+
+    Ok((module, cm))
 }
 
-pub fn transform_module(module: Module) -> Result<String> {
+/// Transforms TypeScript module to ESNext (JavaScript).
+pub fn transform_module(source: String) -> Result<String> {
+    let (module, cm) = parse_module_source(source)?;
     let globals = Globals::default();
     let module = GLOBALS.set(&globals, || {
         let top_level_mark = Mark::new();
         module.fold_with(&mut strip(top_level_mark))
     });
 
-    with_emitter(|emitter| {
+    with_emitter(cm, |emitter| {
         emitter.emit_module(&module).map_or_else(
             |e| bail!("error while emitting module code: {e}"),
             |_| Ok(()),
@@ -214,6 +265,7 @@ pub fn transform_module(module: Module) -> Result<String> {
     })
 }
 
+/// Transforms TypeScript script to ESNext (JavaScript).
 pub fn transform_script(source: String) -> Result<String> {
     let cm: Lrc<SourceMap> = Default::default();
     let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
@@ -242,7 +294,7 @@ pub fn transform_script(source: String) -> Result<String> {
         script.fold_with(&mut strip(top_level_mark))
     });
 
-    with_emitter(|emitter| {
+    with_emitter(cm, |emitter| {
         emitter.emit_script(&script).map_or_else(
             |e| bail!("error while emitting script code: {e}"),
             |_| Ok(()),
@@ -250,6 +302,7 @@ pub fn transform_script(source: String) -> Result<String> {
     })
 }
 
+/// Gets exported functions from a module.
 pub fn get_exported_functions(mod_body: &Vec<ModuleItem>) -> HashSet<String> {
     let mut res = HashSet::default();
     for mod_item in mod_body {
@@ -271,11 +324,18 @@ pub fn get_exported_functions(mod_body: &Vec<ModuleItem>) -> HashSet<String> {
     res
 }
 
-fn with_emitter<'a, C>(emit: C) -> Result<String>
+/// Generates JavaScript code from TypeScript [`SourceMap`].
+///
+/// # Note
+///
+/// The `SourceMap` used to parse the code must be shared with this
+/// emitter.
+///
+/// More information at https://github.com/swc-project/swc/discussions/2300
+fn with_emitter<'a, C>(cm: Lrc<SourceMap>, emit: C) -> Result<String>
 where
     C: FnOnce(&mut Emitter<'a, JsWriter<&mut Vec<u8>>, SourceMap>) -> Result<()>,
 {
-    let cm: Lrc<SourceMap> = Default::default();
     let mut buf = vec![];
     let mut emitter = Emitter {
         cfg: codegen::Config {
@@ -292,4 +352,23 @@ where
     emit(&mut emitter)?;
 
     Ok(String::from_utf8_lossy(&buf).to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod transform_module {
+        use super::*;
+
+        #[test]
+        fn works_with_import_destructuring() {
+            let code = r#"
+				import { sqrt } from "https://deno.land/x/math/mod.ts";
+				sqrt(7);
+			"#;
+            let code = code.to_string();
+            let transformed_code = transform_module(code).unwrap();
+        }
+    }
 }
