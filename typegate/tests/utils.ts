@@ -19,7 +19,6 @@ import { RateLimiter } from "../src/rate_limiter.ts";
 import { RuntimesConfig } from "../src/types.ts";
 import { PrismaRuntimeDS, TypeRuntimeBase } from "../src/type_node.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";
-import { TypeGraph } from "../src/typegraph.ts";
 import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
 import * as native from "native";
 
@@ -468,13 +467,6 @@ export async function removeMigrations(engine: Engine) {
   await Deno.remove(join(localDir, "prisma-migrations", engine.name), {
     recursive: true,
   }).catch(() => {});
-}
-
-export async function cleanUp() {
-  for await (const tg of TypeGraph.list) {
-    console.log(`cleanup: ${tg.name}`);
-    await tg.deinit();
-  }
 }
 
 export function displayMetrics(msg?: string) {
