@@ -153,8 +153,6 @@ export class TypeGraph {
     selections: [],
   };
 
-  static list: TypeGraph[] = [];
-
   static typenameType: TypeNode = {
     title: "string",
     type: "string",
@@ -297,14 +295,10 @@ export class TypeGraph {
       introspection,
     );
 
-    TypeGraph.list.push(tg);
-
     return tg;
   }
 
   async deinit(): Promise<void> {
-    TypeGraph.list.splice(TypeGraph.list.findIndex((tg) => tg == this), 1);
-
     for await (
       const [idx, runtime] of this.runtimeReferences.map(
         (rt, i) => [i, rt] as const,
