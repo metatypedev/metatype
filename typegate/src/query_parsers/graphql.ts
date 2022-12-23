@@ -5,6 +5,9 @@ import { ObjectNode } from "../type_node.ts";
 
 type PropertiesTable = Record<string, number>;
 
+/**
+ * Appends a new node to the end of the TypeGraph, and returns its index.
+ */
 function addNewObjectNode(typegraph: TypeGraphDS, node: ObjectNode): number {
   const { types } = typegraph;
   types.push(node);
