@@ -42,14 +42,7 @@ class TestDependency:
                         "policies": [],
                         "type": "object",
                         "title": "single_runtime",
-                        "properties": {"query": 1, "mutation": 11},
-                    },
-                    {
-                        "runtime": 0,
-                        "policies": [],
-                        "type": "object",
-                        "title": "Query",
-                        "properties": {"test": 2},
+                        "properties": {"test": 1},
                     },
                     {
                         "runtime": 0,
@@ -58,8 +51,8 @@ class TestDependency:
                         "rate_calls": False,
                         "type": "function",
                         "title": "f",
-                        "input": 3,
-                        "output": 4,
+                        "input": 2,
+                        "output": 3,
                         "materializer": 0,
                     },
                     {
@@ -74,7 +67,7 @@ class TestDependency:
                         "policies": [],
                         "type": "object",
                         "title": "res",
-                        "properties": {"b": 5, "a": 8},
+                        "properties": {"b": 4, "a": 7},
                     },
                     {
                         "runtime": 0,
@@ -83,8 +76,8 @@ class TestDependency:
                         "rate_calls": False,
                         "type": "function",
                         "title": "dep_a",
-                        "input": 6,
-                        "output": 10,
+                        "input": 5,
+                        "output": 9,
                         "materializer": 0,
                     },
                     {
@@ -92,11 +85,11 @@ class TestDependency:
                         "policies": [],
                         "type": "object",
                         "title": "deps",
-                        "properties": {"a1": 7, "a2": 8, "new": 9},
+                        "properties": {"a1": 6, "a2": 7, "new": 8},
                     },
                     {
                         "runtime": 0,
-                        "inject": 8,
+                        "inject": 7,
                         "injection": "parent",
                         "policies": [],
                         "type": "integer",
@@ -109,13 +102,6 @@ class TestDependency:
                         "policies": [],
                         "type": "integer",
                         "title": "integer_5",
-                    },
-                    {
-                        "runtime": 0,
-                        "policies": [],
-                        "type": "object",
-                        "title": "Mutation",
-                        "properties": {},
                     },
                 ],
                 "runtimes": [
@@ -131,7 +117,7 @@ class TestDependency:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "data": {"serial": False, "script": "var _my_lambda = x2;"},
+                        "data": {"script": "var _my_lambda = x2;", "serial": False},
                     }
                 ],
                 "meta": {

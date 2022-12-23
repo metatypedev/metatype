@@ -197,13 +197,11 @@ export class TypeGraph {
   }
 
   static async init(
-    json: string,
+    typegraph: TypeGraphDS,
     staticReference: RuntimeResolver,
     introspection: TypeGraph | null,
     runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
-    let typegraph: TypeGraphDS = JSON.parse(json);
-
     const typegraphName = typegraph.types[0].title;
     const { meta, runtimes } = typegraph;
 
@@ -367,9 +365,9 @@ export class TypeGraph {
     parentContext: Record<string, number>,
     noDefault = false,
   ): [
-    ComputeArg,
-    Record<string, string[]>,
-    string[],
+    compute: ComputeArg,
+    policies: Record<string, string[]>,
+    deps: string[],
   ] | null {
     const arg = this.tg.types[argIdx];
 
@@ -796,6 +794,7 @@ export class TypeGraph {
         path,
         idx,
         stage,
+        p.serial,
       ));
       return stages;
     }
@@ -912,7 +911,7 @@ export class TypeGraph {
       // else variable
     }
 
-    // check that no unnecessary arg is given
+    // check that no unwanted arg is given
     for (const fieldArg of fieldArgs ?? []) {
       const name = fieldArg.name.value;
       if (!(name in args)) {
@@ -928,7 +927,6 @@ export class TypeGraph {
 
     const mat = this.tg.materializers[schema.materializer];
     const runtime = this.runtimeReferences[mat.runtime];
-
     if (!p.serial && mat.data.serial) {
       throw Error(
         `${schema.title} via ${mat.name} can only be executed in mutation`,
@@ -941,6 +939,8 @@ export class TypeGraph {
       parent: p.parentStage,
       args,
       policies,
+      argumentNodes: fieldArgs,
+      inpType: argSchema,
       outType: outputType,
       runtime,
       materializer: mat,

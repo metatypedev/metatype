@@ -4,6 +4,9 @@ import { ComputeStage } from "../engine.ts";
 import { gq } from "../gq.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { Runtime } from "./Runtime.ts";
+import * as GraphQL from "graphql";
+import { Kind } from "graphql";
+import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
 import * as ForwardVars from "./utils/graphql_forward_vars.ts";
 import * as InlineVars from "./utils/graphql_inline_vars.ts";
 
@@ -31,13 +34,19 @@ export class GraphQLRuntime extends Runtime {
 
   async deinit(): Promise<void> {}
 
-  execute(query: string | FromVars<string>): Resolver {
+  execute(query: string | FromVars<string>, path: string[]): Resolver {
+    if (path.length == 0) {
+      throw new Error("Path cannot be empty");
+    }
     return async ({ _: { variables } }) => {
       const q = typeof query === "function" ? query(variables) : query;
-      console.log(`remote query: ${q}`);
       // TODO: filter variables - only include forwared variables
       const ret = await gq(this.endpoint, q, variables);
-      return ret.data;
+      if (ret.errors) {
+        console.error(ret.errors);
+        throw new Error(`From remote graphql: ${ret.errors[0].message}`);
+      }
+      return path.reduce((r, field) => r[field], ret.data);
     };
   }
 
@@ -66,25 +75,37 @@ export class GraphQLRuntime extends Runtime {
     }
 
     const query = (() => {
-      const op = serial ? "mutation" : "query";
-      console.log("forwardVars", this.forwardVars);
+      const operationType = serial
+        ? OperationTypeNode.MUTATION
+        : OperationTypeNode.QUERY;
       if (this.forwardVars) {
-        const [rebuiltQuery, forwardedVars] = ForwardVars.rebuildGraphQuery({
-          stages: fields,
-          renames,
-        });
-        const vars = Object.entries(forwardedVars).map(([name, type]) =>
-          `$${name}: ${type}`
-        ).join(", ");
-        return `${op} Q${
-          vars.length === 0 ? "" : `(${vars})`
-        } {${rebuiltQuery} }`;
+        const { selections, vars: forwaredVars } = ForwardVars
+          .rebuildGraphQuery({
+            stages: fields,
+            renames,
+          });
+        const op: OperationDefinitionNode = {
+          kind: Kind.OPERATION_DEFINITION,
+          operation: operationType,
+          name: {
+            kind: Kind.NAME,
+            value: operationType.slice(0, 1).toUpperCase(),
+          },
+          variableDefinitions: forwaredVars,
+          selectionSet: {
+            kind: Kind.SELECTION_SET,
+            selections,
+          },
+        };
+        const ret = GraphQL.print(op);
+        return ret;
       } else {
         const query = InlineVars.rebuildGraphQuery({
           stages: fields,
           renames,
         });
-        return (vars: Record<string, unknown>) => `${op} {${query(vars)} }`;
+        return (vars: Record<string, unknown>) =>
+          `${operationType} {${query(vars)} }`;
       }
     })();
 
@@ -94,33 +115,30 @@ export class GraphQLRuntime extends Runtime {
         typeof query === "string" ? query : " with inlined vars",
       );
 
-    const queryStage = new ComputeStage({
-      operation: stage.props.operation,
-      dependencies: [],
-      args: {},
-      policies: {},
-      resolver: this.execute(query),
-      outType: {
-        // dummy
-        title: "string",
-        type: "string",
-        policies: [],
-        runtime: -1,
-      },
-      runtime: stage.props.runtime,
-      batcher: (x: any) => x,
-      node: "",
-      path: [...stage.props.path.slice(0, -1), "query"],
-      rateCalls: stage.props.rateCalls,
-      rateWeight: stage.props.rateWeight,
-    });
+    const path = stage.props.path;
+
+    const node = path[path.length - 1];
+    if (node == null) {
+      throw new Error("GraphQL cannot be used at the root of the typegraph");
+    }
+    const queryStage = stage.withResolver(
+      this.execute(
+        query,
+        stage.props.materializer?.data.path as string[] ??
+          [renames[node] ?? node],
+      ),
+    );
+
     stagesMat.push(queryStage);
+
+    fields.shift();
 
     for (const field of fields) {
       if (field.props.parent?.id() === stage.props.parent?.id()) {
         const resolver: Resolver = ({
-          _: { [queryStage.id()]: queryRes },
+          _: ctx,
         }) => {
+          const { [queryStage.id()]: queryRes } = ctx;
           const fieldName = field.props.path[field.props.path.length - 1];
           const resolver =
             (queryRes as any)[0][renames[fieldName] ?? fieldName];
