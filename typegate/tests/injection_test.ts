@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { cleanUp, gql, test } from "./utils.ts";
+import { gql, test } from "./utils.ts";
 import { assertRejects } from "std/testing/asserts.ts";
 
 test("Missing env var", async (t) => {
@@ -8,7 +8,6 @@ test("Missing env var", async (t) => {
     () => t.pythonFile("typegraphs/injection.py"),
     "cannot find env",
   );
-  await cleanUp();
 });
 
 test("Injected queries", async (t) => {
