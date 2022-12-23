@@ -40,6 +40,8 @@ COPY --from=builder /target/release/libnative.so /target/release/
 COPY --from=builder /typegate/import_map.json /typegate/.env.defaults /typegate/deno.json ./
 COPY --from=builder /typegate/src ./src
 
+RUN useradd nonroot
+
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
 COPY --from=builder --chown=nonroot:nonroot /typegate/deno.lock ./
