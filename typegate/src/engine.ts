@@ -2,7 +2,7 @@
 
 import { Kind, parse } from "graphql";
 import * as ast from "graphql/ast";
-import { RuntimeResolver, TypeGraph } from "./typegraph.ts";
+import { RuntimeResolver, TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
@@ -18,10 +18,12 @@ import {
   Context,
   PolicyStages,
   PolicyStagesFactory,
+  Resolver,
   RuntimeConfig,
   Variables,
 } from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
+import { parseGraphQLTypeGraph } from "./query_parsers/graphql.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -32,14 +34,24 @@ export const initTypegraph = async (
   payload: string,
   customRuntime: RuntimeResolver = {},
   config: Record<string, RuntimeConfig> = {},
-  introspectionDef: string | null = introspectionDefStatic,
+  introspectionDefPayload: string | null = introspectionDefStatic,
 ) => {
+  const typegraphDS = JSON.parse(payload);
+  parseGraphQLTypeGraph(typegraphDS);
+
+  const introspectionDef = introspectionDefPayload == null
+    ? null
+    : JSON.parse(introspectionDefPayload) as TypeGraphDS;
+  if (introspectionDef) {
+    parseGraphQLTypeGraph(introspectionDef);
+  }
+
   const introspection = introspectionDef
     ? await TypeGraph.init(
       introspectionDef,
       {
-        typegraph: await TypeGraphRuntime.init(
-          JSON.parse(payload),
+        typegraph: TypeGraphRuntime.init(
+          typegraphDS,
           [],
           {},
           config,
@@ -50,7 +62,12 @@ export const initTypegraph = async (
     )
     : null;
 
-  const tg = await TypeGraph.init(payload, customRuntime, introspection, {});
+  const tg = await TypeGraph.init(
+    typegraphDS,
+    customRuntime,
+    introspection,
+    {},
+  );
   return new Engine(tg);
 };
 
@@ -91,6 +108,13 @@ export class ComputeStage {
     }\nid  ${this.id()}\ntype ${this.props.outType.type}\narg ${
       JSON.stringify(this.props.args)
     }\n--`;
+  }
+
+  withResolver(resolver: Resolver): ComputeStage {
+    return new ComputeStage({
+      ...this.props,
+      resolver,
+    });
   }
 }
 
@@ -206,6 +230,7 @@ export class Engine {
         node,
         rateCalls,
         rateWeight,
+        outType,
       } = stage.props;
 
       const decisions = await Promise.all(
@@ -213,9 +238,11 @@ export class Engine {
           authorize(stage.id(), checks, policiesRegistry, verbose)
         ),
       );
+
       if (
         node !== "__typename" &&
-        node !== "" &&
+        !(outType.type === "object" &&
+          outType.config?.["__namespace"] === true) &&
         !parent &&
         (decisions.some((d) => d === null) || decisions.length < 1)
       ) {

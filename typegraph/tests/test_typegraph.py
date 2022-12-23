@@ -42,14 +42,7 @@ class TestTypegraph:
                         "policies": [],
                         "type": "object",
                         "title": "single_runtime",
-                        "properties": {"query": 1, "mutation": 6},
-                    },
-                    {
-                        "runtime": 0,
-                        "policies": [],
-                        "type": "object",
-                        "title": "Query",
-                        "properties": {"test": 2},
+                        "properties": {"test": 1},
                     },
                     {
                         "runtime": 0,
@@ -58,8 +51,8 @@ class TestTypegraph:
                         "rate_calls": False,
                         "type": "function",
                         "title": "f",
-                        "input": 3,
-                        "output": 5,
+                        "input": 2,
+                        "output": 4,
                         "materializer": 0,
                     },
                     {
@@ -67,17 +60,10 @@ class TestTypegraph:
                         "policies": [],
                         "type": "object",
                         "title": "inp",
-                        "properties": {"a": 4},
+                        "properties": {"a": 3},
                     },
                     {"runtime": 0, "policies": [], "type": "integer", "title": "arg1"},
                     {"runtime": 0, "policies": [], "type": "integer", "title": "out"},
-                    {
-                        "runtime": 0,
-                        "policies": [],
-                        "type": "object",
-                        "title": "Mutation",
-                        "properties": {},
-                    },
                 ],
                 "runtimes": [
                     {
@@ -93,8 +79,8 @@ class TestTypegraph:
                         "name": "function",
                         "runtime": 0,
                         "data": {
-                            "serial": False,
                             "script": "var _my_lambda = (args) => args.a * 2;",
+                            "serial": False,
                         },
                     }
                 ],
@@ -143,14 +129,7 @@ class TestTypegraph:
                         "policies": [],
                         "type": "object",
                         "title": "two_runtimes",
-                        "properties": {"query": 1, "mutation": 11},
-                    },
-                    {
-                        "runtime": 0,
-                        "policies": [],
-                        "type": "object",
-                        "title": "Query",
-                        "properties": {"test": 2},
+                        "properties": {"test": 1},
                     },
                     {
                         "runtime": 0,
@@ -159,8 +138,8 @@ class TestTypegraph:
                         "rate_calls": False,
                         "type": "function",
                         "title": "f",
-                        "input": 3,
-                        "output": 5,
+                        "input": 2,
+                        "output": 4,
                         "materializer": 1,
                     },
                     {
@@ -168,7 +147,7 @@ class TestTypegraph:
                         "policies": [],
                         "type": "object",
                         "title": "inp",
-                        "properties": {"a": 4},
+                        "properties": {"a": 3},
                     },
                     {"runtime": 0, "policies": [], "type": "integer", "title": "arg1"},
                     {
@@ -176,12 +155,7 @@ class TestTypegraph:
                         "policies": [],
                         "type": "object",
                         "title": "res",
-                        "properties": {
-                            "out": 6,
-                            "duration": 7,
-                            "self": 2,
-                            "nested": 10,
-                        },
+                        "properties": {"out": 5, "duration": 6, "self": 1, "nested": 9},
                     },
                     {"runtime": 0, "policies": [], "type": "integer", "title": "out"},
                     {
@@ -191,8 +165,8 @@ class TestTypegraph:
                         "rate_calls": False,
                         "type": "function",
                         "title": "compute_duration",
-                        "input": 8,
-                        "output": 9,
+                        "input": 7,
+                        "output": 8,
                         "materializer": 0,
                     },
                     {
@@ -213,14 +187,7 @@ class TestTypegraph:
                         "policies": [],
                         "type": "object",
                         "title": "nested",
-                        "properties": {"ok": 6, "self": 2},
-                    },
-                    {
-                        "runtime": 0,
-                        "policies": [],
-                        "type": "object",
-                        "title": "Mutation",
-                        "properties": {},
+                        "properties": {"ok": 5, "self": 1},
                     },
                 ],
                 "runtimes": [
@@ -237,16 +204,16 @@ class TestTypegraph:
                         "name": "function",
                         "runtime": 0,
                         "data": {
-                            "serial": False,
                             "script": "var _my_lambda = () => 1;",
+                            "serial": False,
                         },
                     },
                     {
                         "name": "function",
                         "runtime": 0,
                         "data": {
-                            "serial": False,
                             "script": "var _my_lambda = (args) => args.a;",
+                            "serial": False,
                         },
                     },
                 ],

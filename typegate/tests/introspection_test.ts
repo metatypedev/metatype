@@ -8,8 +8,6 @@ test("Basic introspection", async (t) => {
   const e = await t.pythonFile("typegraphs/simple.py");
 
   await t.should("allow querying the schema for types", async () => {
-    // TODO remove duplicate entries
-
     await gql`
       query IntrospectionQuery {
         __schema {
@@ -23,31 +21,16 @@ test("Basic introspection", async (t) => {
         __schema: {
           types: [
             {
-              "name": "Query",
-            },
-            {
               "name": "Int",
             },
             {
               "name": "NestedInp",
             },
             {
-              "name": "Int",
-            },
-            {
-              "name": "Int",
-            },
-            {
               "name": "res",
             },
             {
-              "name": "Int",
-            },
-            {
-              "name": "res",
-            },
-            {
-              "name": "Int",
+              "name": "Query",
             },
           ],
         },

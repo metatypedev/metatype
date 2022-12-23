@@ -1,0 +1,281 @@
+export const snapshot = {};
+
+snapshot[`GraphQL parser 1`] = `
+[
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      mutation: 19,
+      query: 18,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "graphql_namespaces",
+    type: "object",
+  },
+  {
+    config: {},
+    policies: [
+      0,
+      0,
+    ],
+    properties: {
+      find: 2,
+      profile: 8,
+      update: 7,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "user_namespace",
+    type: "object",
+  },
+  {
+    config: {},
+    input: 3,
+    materializer: 1,
+    output: 5,
+    policies: [
+      0,
+    ],
+    rate_calls: false,
+    rate_weight: null,
+    runtime: 1,
+    title: "function_9",
+    type: "function",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      id: 4,
+    },
+    required: [
+    ],
+    runtime: 1,
+    title: "object_8",
+    type: "object",
+  },
+  {
+    config: {},
+    format: "uuid",
+    policies: [
+    ],
+    runtime: 1,
+    title: "user_id",
+    type: "string",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      id: 4,
+      name: 6,
+    },
+    required: [
+    ],
+    runtime: 1,
+    title: "user_model",
+    type: "object",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    runtime: 1,
+    title: "string_2",
+    type: "string",
+  },
+  {
+    config: {},
+    input: 5,
+    materializer: 2,
+    output: 5,
+    policies: [
+      0,
+    ],
+    rate_calls: false,
+    rate_weight: null,
+    runtime: 1,
+    title: "function_10",
+    type: "function",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      picture: 9,
+      setPicture: 13,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "profile_namespace",
+    type: "object",
+  },
+  {
+    config: {},
+    input: 10,
+    materializer: 3,
+    output: 11,
+    policies: [
+      0,
+    ],
+    rate_calls: false,
+    rate_weight: null,
+    runtime: 1,
+    title: "function_12",
+    type: "function",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      id: 4,
+    },
+    required: [
+    ],
+    runtime: 1,
+    title: "object_11",
+    type: "object",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      id: 4,
+      url: 12,
+    },
+    required: [
+    ],
+    runtime: 1,
+    title: "picture_model",
+    type: "object",
+  },
+  {
+    config: {},
+    format: "uri",
+    policies: [
+    ],
+    runtime: 1,
+    title: "string_4",
+    type: "string",
+  },
+  {
+    config: {},
+    input: 11,
+    materializer: 4,
+    output: 11,
+    policies: [
+      0,
+    ],
+    rate_calls: false,
+    rate_weight: null,
+    runtime: 1,
+    title: "function_13",
+    type: "function",
+  },
+  {
+    config: {
+      __namespace: true,
+    },
+    policies: [
+      0,
+      0,
+    ],
+    properties: {
+      picture: 9,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "user_namespace_q",
+    type: "object",
+  },
+  {
+    config: {
+      __namespace: true,
+    },
+    policies: [
+      0,
+      0,
+    ],
+    properties: {
+      setPicture: 13,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "user_namespace_m",
+    type: "object",
+  },
+  {
+    config: {
+      __namespace: true,
+    },
+    policies: [
+    ],
+    properties: {
+      find: 2,
+      profile: 14,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "graphql_namespaces_q",
+    type: "object",
+  },
+  {
+    config: {
+      __namespace: true,
+    },
+    policies: [
+    ],
+    properties: {
+      profile: 15,
+      update: 7,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "graphql_namespaces_m",
+    type: "object",
+  },
+  {
+    config: {},
+    policies: [
+    ],
+    properties: {
+      user: 16,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "Query",
+    type: "object",
+  },
+  {
+    config: {
+      __namespace: true,
+    },
+    policies: [
+    ],
+    properties: {
+      user: 17,
+    },
+    required: [
+    ],
+    runtime: 0,
+    title: "Mutation",
+    type: "object",
+  },
+]
+`;

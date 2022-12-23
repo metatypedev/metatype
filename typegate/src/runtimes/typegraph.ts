@@ -136,6 +136,8 @@ export class TypeGraphRuntime extends Runtime {
             )
           );
 
+        const visitedTypes = new Set();
+
         return this.tg.types
           .slice(1) // pop root into query & mutation
           .filter((type) => {
@@ -160,6 +162,17 @@ export class TypeGraphRuntime extends Runtime {
               inputTypes.includes(type.title),
             );
             return res;
+          })
+          // deduplicate types by their type name
+          .filter((formattedType) => {
+            const typeName = formattedType.name();
+
+            if (!visitedTypes.has(typeName)) {
+              visitedTypes.add(typeName);
+              return true;
+            }
+
+            return false;
           });
       },
       queryType: () => {
