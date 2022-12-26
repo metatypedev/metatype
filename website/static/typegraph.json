@@ -122,21 +122,42 @@
       }
     },
     "Policy": {
-      "type": "object",
-      "required": [
-        "materializer",
-        "name"
-      ],
-      "properties": {
-        "materializer": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0.0
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "materializer",
+            "name"
+          ],
+          "properties": {
+            "materializer": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "name": {
+              "type": "string"
+            }
+          }
         },
-        "name": {
-          "type": "string"
+        {
+          "type": "object",
+          "required": [
+            "function",
+            "name"
+          ],
+          "properties": {
+            "function": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "name": {
+              "type": "string"
+            }
+          }
         }
-      }
+      ]
     },
     "Rate": {
       "type": "object",

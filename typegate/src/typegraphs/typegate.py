@@ -39,7 +39,9 @@ with TypeGraph(
         }
     ).named("typegraph")
 
-    admin_only = Policy(FunMat("(args) => args.user === 'admin'")).named("admin_only")
+    admin_only = Policy(
+        FunMat("(_args, { context }) => context.user === 'admin'")
+    ).named("admin_only")
 
     g.expose(
         typegraphs=t.func(t.struct({}), t.array(typegraph), TypeGraphsMat())

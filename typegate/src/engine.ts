@@ -123,6 +123,7 @@ const authorize = async (
   checks: string[],
   policiesRegistry: PolicyStages,
   verbose: boolean,
+  args: Record<string, unknown>,
 ): Promise<true | null> => {
   if (Object.values(checks).length < 1) {
     // null = inherit
@@ -130,12 +131,12 @@ const authorize = async (
   }
 
   const [check, ...nextChecks] = checks;
-  const decision = await policiesRegistry[check]();
+  const decision = await policiesRegistry[check](args);
   verbose && console.log(stageId, decision);
 
   if (decision === null) {
     // next policy
-    return authorize(stageId, nextChecks, policiesRegistry, verbose);
+    return authorize(stageId, nextChecks, policiesRegistry, verbose, args);
   }
 
   if (!decision) {
@@ -235,7 +236,14 @@ export class Engine {
 
       const decisions = await Promise.all(
         Object.values(policies).map((checks) =>
-          authorize(stage.id(), checks, policiesRegistry, verbose)
+          authorize(
+            stage.id(),
+            checks,
+            policiesRegistry,
+            verbose,
+            // TODO what if argument computation requires parent to be set?
+            mapo(args, (e) => e({}, variables, context)),
+          )
         ),
       );
 

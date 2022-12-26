@@ -87,7 +87,9 @@ export interface ComputeStageProps {
   rateWeight: number;
 }
 
-export type PolicyStage = () => Promise<boolean | null>;
+export type PolicyStage = (
+  args: Record<string, unknown>,
+) => Promise<boolean | null>;
 export type PolicyStages = Record<string, PolicyStage>;
 export type PolicyStagesFactory = (
   context: Context,

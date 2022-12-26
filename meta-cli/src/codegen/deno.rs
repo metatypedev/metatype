@@ -47,6 +47,7 @@ where
     let codes = cg.codegen()?;
     for code in codes.into_iter() {
         let mut file = File::options()
+            .create(true)
             .append(true)
             .open(&code.path)
             .context(format!("could not open output file: {:?}", code.path))?;
@@ -334,7 +335,7 @@ impl<'a> Codegen<'a> {
             .context("failed to generate output type")?;
 
         let code = format!(
-            "{}\nexport function {}({}: {}): {} {{\n  return {};\n}}",
+            "{}\nexport function {}({}: {}, {{ context }}: {{ context: Record<string, unknown> }}): {} {{\n  return {};\n}}",
             inp_typedef,
             name,
             self.destructure_object(input)?,

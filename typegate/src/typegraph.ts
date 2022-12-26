@@ -37,6 +37,7 @@ import config from "./config.ts";
 import {
   Batcher,
   ComputeArg,
+  Context,
   Operation,
   PolicyStages,
   PolicyStagesFactory,
@@ -46,10 +47,17 @@ import {
 } from "./types.ts";
 import { S3Runtime } from "./runtimes/s3.ts";
 
-interface TypePolicy {
+interface Policy {
   name: string;
   materializer: number;
 }
+
+interface SpecialPolicy {
+  name: string;
+  function: number;
+}
+
+export type TypePolicy = Policy | SpecialPolicy;
 
 export interface TypeMaterializer {
   name: string;
@@ -316,16 +324,38 @@ export class TypeGraph {
     }
   }
 
-  type(idx: number): TypeNode {
+  type(idx: number): TypeNode;
+  type<T extends TypeNode["type"]>(
+    idx: number,
+    asType: T,
+  ): TypeNode & { type: T };
+  type<T extends TypeNode["type"]>(
+    idx: number,
+    asType?: T,
+  ): TypeNode {
     ensure(
       typeof idx === "number" && idx < this.tg.types.length,
       `cannot find type with "${idx}" index`,
     );
-    return this.tg.types[idx];
+    const ret = this.tg.types[idx];
+    if (asType != undefined) {
+      if (ret.type !== asType) {
+        throw new Error(`Expected type '${asType}', got '${ret.type}'`);
+      }
+    }
+
+    return ret;
   }
 
   materializer(idx: number): TypeMaterializer {
     return this.tg.materializers[idx];
+  }
+
+  policyMaterializer(policy: TypePolicy): TypeMaterializer {
+    const matIdx = "materializer" in policy
+      ? policy.materializer
+      : this.type(policy.function, "function").materializer;
+    return this.materializer(matIdx);
   }
 
   runtime(idx: number): TypeRuntime {
@@ -1088,9 +1118,9 @@ export class TypeGraph {
         );
 
         if (introPolicy) {
-          const mat = this.introspection.tg.materializers[
-            introPolicy.materializer as number
-          ];
+          const mat = this.introspection.policyMaterializer(
+            introPolicy,
+          );
           const rt = this.introspection
             .runtimeReferences[mat.runtime] as DenoRuntime;
           return [introPolicy.name, rt.delegate(mat, false)] as [
@@ -1105,7 +1135,7 @@ export class TypeGraph {
         throw Error(`cannot find policy ${policyName}`);
       }
 
-      const mat = this.tg.materializers[policy.materializer as number];
+      const mat = this.policyMaterializer(policy);
       const rt = this.runtimeReferences[mat.runtime] as DenoRuntime;
       ensure(
         rt.constructor === DenoRuntime,
@@ -1114,16 +1144,16 @@ export class TypeGraph {
       return [policy.name, rt.delegate(mat, false)] as [string, Resolver];
     });
 
-    return (context: Record<string, any>) => {
+    return (context: Context) => {
       const ret: PolicyStages = {};
       for (const [policyName, resolver] of policies) {
         // for policies, the context becomes the args
-        ret[policyName] = async () =>
+        ret[policyName] = async (args: Record<string, unknown>) =>
           await lazyResolver<boolean | null>(resolver)({
-            ...context,
+            ...args,
             _: {
               parent: {},
-              context: {},
+              context,
               variables: {},
             },
           });
