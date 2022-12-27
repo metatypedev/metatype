@@ -2,7 +2,7 @@
 
 import { getCookies } from "std/http/cookie.ts";
 import { Engine } from "../engine.ts";
-import { OAuth2Auth } from "../auth.ts";
+import { OAuth2Auth } from "../auth/protocols/oauth2.ts";
 import { b64decode } from "../utils.ts";
 
 export const renderDebugAuth = async (
@@ -15,7 +15,7 @@ export const renderDebugAuth = async (
   const jwt = (cookies[name] ?? "").split(".")[1];
   const claims = jwt ? JSON.parse(b64decode(jwt)) : {};
   const provider = engine.tg.auths.get(claims.provider);
-  const profile = provider && provider.authDS.protocol === "oauth2"
+  const profile = provider && provider.auth.protocol === "oauth2"
     ? await (provider as OAuth2Auth).getProfile(claims.accessToken)
     : {};
   return `
