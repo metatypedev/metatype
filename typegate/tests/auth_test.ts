@@ -5,7 +5,8 @@ import { execute, gql, sleep, test } from "./utils.ts";
 
 import * as mf from "test/mock_fetch";
 import { signJWT, unsafeExtractJWT, verifyJWT } from "../src/crypto.ts";
-import { JWTClaims, nextAuthorizationHeader } from "../src/auth.ts";
+import { JWTClaims } from "../src/auth/protocols/jwt.ts";
+import { nextAuthorizationHeader } from "../src/auth/auth.ts";
 import { getSetCookies } from "std/http/cookie.ts";
 import { b64decode } from "../src/utils.ts";
 
