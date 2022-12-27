@@ -1,14 +1,14 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { TypeGraphDS } from "../typegraph.ts";
-import { ObjectNode } from "../type_node.ts";
+import { ObjectNode, TypeNode } from "../type_node.ts";
 
 type PropertiesTable = Record<string, number>;
 
 /**
  * Appends a new node to the end of the TypeGraph, and returns its index.
  */
-function addNewObjectNode(typegraph: TypeGraphDS, node: ObjectNode): number {
+function addNode(typegraph: TypeGraphDS, node: TypeNode): number {
   const { types } = typegraph;
   types.push(node);
   return types.length - 1;
@@ -50,13 +50,13 @@ function splitGraphQLOperations(
             __namespace: true,
           });
         } else {
-          queryProperties[propertyName] = addNewObjectNode(typegraph, {
+          queryProperties[propertyName] = addNode(typegraph, {
             ...node,
             title: `${node.title}_q`,
             properties: childQueryProperties,
             config: { ...(node.config ?? {}), __namespace: true },
           });
-          mutationProperties[propertyName] = addNewObjectNode(typegraph, {
+          mutationProperties[propertyName] = addNode(typegraph, {
             ...node,
             title: `${node.title}_m`,
             properties: childMutationProperties,
@@ -102,7 +102,7 @@ export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
   // don't append `query` or `mutation` if they don't have
   // at least one property
   if (Object.keys(queryProperties).length > 0) {
-    const queryIndex = addNewObjectNode(typegraph, {
+    const queryIndex = addNode(typegraph, {
       ...rootNode,
       title: "Query",
       properties: queryProperties,
@@ -110,7 +110,7 @@ export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
     rootNode.properties.query = queryIndex;
   }
   if (Object.keys(mutationProperties).length > 0) {
-    const mutationIndex = addNewObjectNode(typegraph, {
+    const mutationIndex = addNode(typegraph, {
       ...rootNode,
       title: "Mutation",
       properties: mutationProperties,
