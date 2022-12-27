@@ -7,7 +7,6 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 pub struct Codegen {
-    #[clap()]
     modules: Vec<String>,
 }
 
