@@ -1,156 +1,15 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { OAuth2Client, Tokens } from "oauth2_client";
-import config from "./config.ts";
-import { signJWT, signKey as nativeSignKey, verifyJWT } from "./crypto.ts";
-import { b64decode, envOrFail } from "./utils.ts";
+import { Auth, AuthDS, nextAuthorizationHeader } from "../auth.ts";
+import config from "../../config.ts";
 import { deleteCookie, setCookie } from "std/http/cookie.ts";
-import { crypto } from "std/crypto/mod.ts";
-import * as jwt from "jwt";
-import * as bcrypt from "bcrypt";
-import * as _bcrypt from "_bcrypt"; // https://github.com/JamesBroadberry/deno-bcrypt/issues/31
-import { SystemTypegraph } from "./system_typegraphs.ts";
+import { OAuth2Client, Tokens } from "oauth2_client";
+import { signJWT, verifyJWT } from "../../crypto.ts";
+import { envOrFail } from "../../utils.ts";
+import { JWTClaims } from "./jwt.ts";
 
-export type AuthDS = {
-  name: string;
-  protocol: "oauth2" | "jwk" | "basic";
-  auth_data: Record<string, unknown>;
-};
-
-export type JWTClaims = {
-  provider: string;
-  accessToken: string;
-  refreshToken: string;
-  refreshAt: number;
-};
-
-// localhost:7890/biscuicuits/auth/github?redirect_uri=localhost:7890/biscuicuits
-export const nextAuthorizationHeader = "Next-Authorization";
-
-export abstract class Auth {
-  typegraphName: string;
-  authDS: AuthDS;
-
-  static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
-    switch (auth.protocol) {
-      case "oauth2":
-        return await OAuth2Auth.init(typegraphName, auth);
-      case "basic":
-        return await BasicAuth.init(typegraphName, auth);
-      case "jwk":
-        return await JWKAuth.init(typegraphName, auth);
-      default:
-        throw new Error(`${auth.protocol} not yet supported`);
-    }
-  }
-
-  protected constructor(typegraphName: string, auth: AuthDS) {
-    this.typegraphName = typegraphName;
-    this.authDS = auth;
-  }
-
-  abstract authMiddleware(request: Request): Promise<Response>;
-
-  abstract tokenMiddleware(
-    token: string,
-  ): Promise<[Record<string, unknown>, Headers]>;
-}
-
-export class BasicAuth extends Auth {
-  static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
-    const tokens = new Map();
-    for (const user of auth.auth_data.users as string[]) {
-      const password = SystemTypegraph.check(typegraphName)
-        ? envOrFail(user, "password")
-        : envOrFail(typegraphName, `${auth.name}_${user}`);
-      const token = await bcrypt.hash(password);
-      tokens.set(user, token);
-    }
-    return Promise.resolve(new BasicAuth(typegraphName, auth, tokens));
-  }
-
-  private constructor(
-    typegraphName: string,
-    auth: AuthDS,
-    private hashes: Map<string, string>,
-  ) {
-    super(typegraphName, auth);
-  }
-
-  authMiddleware(_request: Request): Promise<Response> {
-    const res = new Response("not found", {
-      status: 404,
-    });
-    return Promise.resolve(res);
-  }
-
-  async tokenMiddleware(
-    jwt: string,
-  ): Promise<[Record<string, unknown>, Headers]> {
-    const [user, token] = b64decode(jwt).split(
-      ":",
-    );
-
-    const hash = this.hashes.get(user);
-    const claims = hash && await bcrypt.compare(token, hash)
-      ? {
-        user,
-      }
-      : {};
-
-    return Promise.resolve([claims, new Headers()]);
-  }
-}
-
-export class JWKAuth extends Auth {
-  static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
-    if (auth.name === "native") {
-      return new JWKAuth(typegraphName, auth, nativeSignKey);
-    }
-    const jwk = envOrFail(typegraphName, `${auth.name}_JWK`);
-    const signKey = await crypto.subtle.importKey(
-      "jwk",
-      jwk as JsonWebKey,
-      auth.auth_data as unknown as
-        | AlgorithmIdentifier
-        | HmacImportParams
-        | RsaHashedImportParams
-        | EcKeyImportParams,
-      false,
-      ["verify"],
-    );
-    return new JWKAuth(typegraphName, auth, signKey);
-  }
-
-  private constructor(
-    typegraphName: string,
-    auth: AuthDS,
-    private signKey: CryptoKey,
-  ) {
-    super(typegraphName, auth);
-  }
-
-  authMiddleware(_request: Request): Promise<Response> {
-    const res = new Response("not found", {
-      status: 404,
-    });
-    return Promise.resolve(res);
-  }
-
-  async tokenMiddleware(
-    token: string,
-  ): Promise<[Record<string, unknown>, Headers]> {
-    try {
-      const claims = await jwt.verify(token, this.signKey);
-      return [claims, new Headers()];
-    } catch {
-      return [{}, new Headers()];
-    }
-  }
-}
-
-export class OAuth2Auth extends Auth {
-  static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
+export class OAuth2Auth implements Auth {
+  static init(typegraphName: string, auth: AuthDS): Promise<Auth> {
     const clientId = envOrFail(typegraphName, `${auth.name}_CLIENT_ID`);
     const clientSecret = envOrFail(
       typegraphName,
@@ -168,22 +27,22 @@ export class OAuth2Auth extends Auth {
         scope: scopes as string,
       },
     });
-    return await new OAuth2Auth(
-      typegraphName,
-      auth,
-      client,
-      profile_url as string,
+    return Promise.resolve(
+      new OAuth2Auth(
+        typegraphName,
+        auth,
+        client,
+        profile_url as string,
+      ),
     );
   }
 
   private constructor(
-    typegraphName: string,
-    auth: AuthDS,
+    public typegraphName: string,
+    public auth: AuthDS,
     private client: OAuth2Client,
     private profileUrl: string,
-  ) {
-    super(typegraphName, auth);
-  }
+  ) {}
 
   async authMiddleware(request: Request): Promise<Response> {
     const url = new URL(request.url);
@@ -293,7 +152,7 @@ export class OAuth2Auth extends Auth {
 
   private async createJWT(token: Tokens, maxAge: number): Promise<string> {
     const payload: JWTClaims = {
-      provider: this.authDS.name,
+      provider: this.auth.name,
       accessToken: token.accessToken,
       refreshToken: token.refreshToken as string,
       refreshAt: Math.floor(
