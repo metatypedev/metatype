@@ -7,14 +7,13 @@ use clap::{Parser, Subcommand};
 use codegen::Codegen;
 
 #[derive(Parser, Debug)]
-#[command()]
 struct Args {
     #[command(subcommand)]
-    command: Commands,
+    command: Command,
 }
 
 #[derive(Subcommand, Debug)]
-enum Commands {
+enum Command {
     Codegen(Codegen),
 }
 
@@ -22,6 +21,6 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     match args.command {
-        Commands::Codegen(cg) => cg.run(),
+        Command::Codegen(cg) => cg.run(),
     }
 }
