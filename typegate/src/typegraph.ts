@@ -14,7 +14,7 @@ import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure, envOrFail, mapo } from "./utils.ts";
 
-import { Auth, AuthDS, nextAuthorizationHeader } from "./auth.ts";
+import { Auth, AuthDS, nextAuthorizationHeader } from "./auth/auth.ts";
 import * as semver from "std/semver/mod.ts";
 
 import {
