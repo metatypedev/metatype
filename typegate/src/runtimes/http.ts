@@ -148,12 +148,8 @@ export class HTTPRuntime extends Runtime {
       );
 
       if (res.status >= 400) {
-        const body = await res.text();
         this.logger.warning(`${pathname} → ${body}`);
-        // TODO: add error message
         // TODO: only if return type is optional
-        // throw new Error(await res.text());
-        return traverseLift(null);
       }
 
       const contentType = res.headers.get("content-type")?.split("; ")[0];

@@ -24,7 +24,7 @@ with TypeGraph(
                 "header#api-key": t.string().from_secret("SENDINBLUE_KEY"),
             }
         ),
-        t.struct({"id": t.integer()}),
+        t.struct({"id": t.integer().optional()}),
     ).add_policy(public)
 
     g.expose(
