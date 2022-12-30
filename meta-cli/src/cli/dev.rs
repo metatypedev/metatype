@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use crate::codegen;
+use crate::config;
 use crate::typegraph::{LoaderResult, TypegraphLoader};
 use crate::utils::clap::UrlValueParser;
 use crate::utils::{ensure_venv, Node};
@@ -52,7 +53,10 @@ fn log_err(err: Error) {
 impl Action for Dev {
     fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
-        let config = crate::config::Config::load_or_find(config_path, &dir)?;
+
+        // load config file or use default values if doesn't exist
+        let config = config::Config::load_or_find(config_path, &dir)
+            .unwrap_or_else(|_| config::Config::default_in(&dir));
 
         let node_config = config.node("dev");
 

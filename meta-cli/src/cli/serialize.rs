@@ -57,7 +57,15 @@ pub struct Serialize {
 impl Action for Serialize {
     fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
-        let config = Config::load_or_find(config_path, &dir)?;
+
+        // config file is not used when `TypeGraph` files
+        // are provided in the CLI by flags
+        let config = if !self.files.is_empty() {
+            Config::default_in(&dir)
+        } else {
+            Config::load_or_find(config_path, &dir)?
+        };
+
         let loader = TypegraphLoader::with_config(&config);
         let files: Vec<_> = self.files.iter().map(|f| Path::new(f).to_owned()).collect();
         let loaded = if !self.files.is_empty() {
