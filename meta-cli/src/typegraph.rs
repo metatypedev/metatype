@@ -161,8 +161,16 @@ impl<'a> TypegraphLoader<'a> {
     pub fn load_python_module<P: AsRef<Path>>(self, path: P) -> Result<String> {
         ensure_venv(&self.config.base_dir)?;
 
-        let p = Command::new("py-tg")
+        // Search in PATH does not work on Windows
+        // See: https://doc.rust-lang.org/std/process/struct.Command.html#method.new
+        #[cfg(target_os = "windows")]
+        let program_name = Path::new(&env::var("VIRTUAL_ENV")?).join("Scripts/py-tg.cmd");
+        #[cfg(not(target_os = "windows"))]
+        let program_name = "py-tg";
+
+        let p = Command::new(program_name)
             .arg(path.as_ref().to_str().unwrap())
+            // .args(args)
             .current_dir(&self.config.base_dir)
             .envs(env::vars())
             .env("PYTHONUNBUFFERED", "1")
@@ -172,7 +180,13 @@ impl<'a> TypegraphLoader<'a> {
                 if self.skip_deno_modules { "1" } else { "" },
             )
             .output()
-            .with_context(|| format!("Running the command 'py-tg {:?}'", path.as_ref()))?;
+            .with_context(|| {
+                format!(
+                    "Running the command '{:?} {:?}'",
+                    program_name,
+                    path.as_ref()
+                )
+            })?;
 
         if p.status.success() {
             Ok(String::from_utf8(p.stdout)?)
