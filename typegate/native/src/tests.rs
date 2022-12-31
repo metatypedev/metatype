@@ -181,7 +181,7 @@ async fn recreate_db_schema(t: &TestContext) -> Result<()> {
 
 #[tokio::test]
 async fn simple_record() -> Result<()> {
-    let t = TestContext::new("../tests/typegraphs/prisma.py").await?;
+    let t = TestContext::new("../tests/prisma/prisma.py").await?;
     recreate_db_schema(&t).await?;
 
     let ret = t

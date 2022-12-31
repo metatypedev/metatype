@@ -329,7 +329,7 @@ export class TypeGraphRuntime extends Runtime {
           description: () => `${type.title} type`,
           fields: () => {
             let entries = Object.entries(type.properties);
-            if (Deno.env.get("TEST_ENV")) {
+            if (Deno.env.get("DENO_ENV") === "test") {
               entries = entries.sort((a, b) => b[1] - a[1]);
             }
             return entries.map(this.formatField(false));

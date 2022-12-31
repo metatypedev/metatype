@@ -25,11 +25,23 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
 
     if venv_dir.is_dir() {
         let venv = venv_dir.to_str().unwrap();
-        let venv_bin = venv_dir.join("bin");
-        let venv_bin = venv_bin.to_str().unwrap();
+
         let path = var("PATH")?;
+
+        // https://github.com/pypa/virtualenv/commit/993ba1316a83b760370f5a3872b3f5ef4dd904c1
+        #[cfg(target_os = "windows")]
+        let path = format!(
+            "{venv_bin};{path}",
+            venv_bin = venv_dir.as_path().join("Scripts").to_str().unwrap()
+        );
+        #[cfg(not(target_os = "windows"))]
+        let path = format!(
+            "{venv_bin}:{path}",
+            venv_bin = venv_dir.as_path().join("bin").to_str().unwrap()
+        );
+
         set_var("VIRTUAL_ENV", venv);
-        set_var("PATH", format!("{venv_bin}:{path}"));
+        set_var("PATH", path);
         Ok(())
     } else if let Some(dir) = dir.parent() {
         ensure_venv(dir)
