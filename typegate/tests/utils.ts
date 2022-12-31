@@ -246,11 +246,11 @@ const testConfig = parse(Deno.args);
 
 export function testAll(engineName: string) {
   test(`Auto-tests for ${engineName}`, async (t) => {
-    const e = await t.pythonFile(`typegraphs/${engineName}.py`);
+    const e = await t.pythonFile(`auto/${engineName}.py`);
 
     for await (
       const f of Deno.readDir(
-        join(localDir, `queries/${engineName}`),
+        join(localDir, `auto/queries/${engineName}`),
       )
     ) {
       if (f.name.endsWith(".graphql")) {
@@ -304,8 +304,8 @@ export class Q {
   }
 
   static async fs(path: string, engine: Engine) {
-    const input = join(localDir, `queries/${path}.graphql`);
-    const output = join(localDir, `queries/${path}.json`);
+    const input = join(localDir, `auto/queries/${path}.graphql`);
+    const output = join(localDir, `auto/queries/${path}.json`);
     const query = Deno.readTextFile(input);
     if (testConfig.override || !(await exists(output))) {
       const { ...result } = await engine!.execute(

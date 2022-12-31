@@ -10,12 +10,13 @@ import { FuncTask, ImportFuncTask, Task, TaskContext } from "./utils/codes.ts";
 import { ensure, envOrFail } from "../utils.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { DenoRuntimeData } from "../type_node.ts";
+import { dirname, fromFileUrl, resolve, toFileUrl } from "std/path/mod.ts";
 
 const logger = getLogger(import.meta);
 
-const workerFile =
-  new URL("../src/runtimes/utils/deno-worker.ts", Deno.mainModule)
-    .href;
+const localDir = dirname(fromFileUrl(import.meta.url));
+
+const workerFile = toFileUrl(resolve(localDir, "utils/deno-worker.ts"));
 
 const defaultPermissions = {
   env: false,
