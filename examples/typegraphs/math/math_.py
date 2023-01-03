@@ -18,7 +18,7 @@ with TypeGraph(name="math") as g:
         ),
     ).named("restrict_referer_policy")
 
-    fib = ModuleMat("includes/fib.ts", runtime=worker)
+    fib = ModuleMat("fib.ts", runtime=worker)
 
     random_item_fn = "({ items }) => items[Math.floor(Math.random() * items.length)]"
 
