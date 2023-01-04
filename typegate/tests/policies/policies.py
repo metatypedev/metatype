@@ -20,10 +20,10 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
     mod = ModuleMat("ts/policies.ts")
 
     secret_data = t.struct(
-        dict(
-            username=t.string(),
-            data=t.string(),
-        )
+        {
+            "username": t.string(),
+            "data": t.string(),
+        }
     ).named("SecretData")
 
     g.expose(
@@ -33,6 +33,6 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
             g, "eq_two", "(_args, { context }) => Number(context.a) === 2"
         ),
         secret=t.func(
-            t.struct(dict(username=t.string())), secret_data, mod.imp("readSecret")
+            t.struct({"username": t.string()}), secret_data, mod.imp("readSecret")
         ).add_policy(p.special(mod.imp("isAllowedToReadSecret"))),
     )
