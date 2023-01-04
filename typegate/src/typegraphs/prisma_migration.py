@@ -23,9 +23,7 @@ with TypeGraph(
     ),
 ) as g:
     admin_only = Policy(
-        FunMat(
-            "(_args, { context }) => { console.log('CONTEXT', context); return true; return context.user === 'admin' }"
-        )
+        FunMat("(_args, { context }) => context.user === 'admin'")
     ).named("admin_only")
 
     base = t.struct(
