@@ -29,8 +29,8 @@ export class Planner {
   constructor(
     readonly operation: ast.OperationDefinitionNode,
     readonly fragments: FragmentDefs,
-    private tg: TypeGraph,
-    private verbose: boolean,
+    private readonly tg: TypeGraph,
+    private readonly verbose: boolean,
   ) {}
 
   getPlan(): [ComputeStage[], PolicyStagesFactory] {
@@ -105,9 +105,12 @@ export class Planner {
       } = field;
       const path = [...node.path, name ?? alias];
       const fieldIdx = props[name];
-      if (fieldIdx == undefined) {
+      if (
+        fieldIdx == undefined &&
+        !(name === "__schema" || name === "__type" || name === "__typename")
+      ) {
         const suggestions = Object.keys(props).join(", ");
-        const formattedPath = this.formatPath(path);
+        const formattedPath = this.formatPath(node.path);
         throw new Error(
           `'${name}' not found at '${formattedPath}', available names are: ${suggestions}`,
         );
@@ -143,16 +146,22 @@ export class Planner {
       path.length === 1 && this.tg.introspection &&
       (name === "__schema" || name === "__type")
     ) {
-      const root = this.tg.introspection.type(0, "object");
-      return this.tg.introspection.traverse(
+      const introspection = new Planner(
+        this.operation,
         this.fragments,
-        parent.name,
-        parent.args,
-        { kind: Kind.SELECTION_SET, selections: [field] },
+        this.tg.introspection,
         this.verbose,
-        [],
-        root.properties["query"],
-      ).map((stage) => {
+      );
+      const root = this.tg.introspection.type(0, "object");
+      return introspection.traverse({
+        name: parent.name,
+        path: [],
+        args: parent.args,
+        selectionSet: { kind: Kind.SELECTION_SET, selections: [field] },
+        typeIdx: root.properties["query"],
+        parent: undefined,
+        parentStage: undefined,
+      }, undefined).map((stage) => {
         stage.props.rateWeight = 0;
         return stage;
       });
