@@ -69,6 +69,7 @@ export interface Operation {
   type: OperationType;
 }
 export interface ComputeStageProps {
+  // TODO expand
   operation: Operation;
   dependencies: string[];
   parent?: ComputeStage;

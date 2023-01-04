@@ -3,7 +3,7 @@
 import { Kind, parse } from "graphql";
 import * as ast from "graphql/ast";
 import { RuntimeResolver, TypeGraph, TypeGraphDS } from "./typegraph.ts";
-import { ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
+import { ensure, JSONValue, mapo, Maybe } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
@@ -12,7 +12,6 @@ import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { RateLimit } from "./rate_limiter.ts";
-import { ObjectNode } from "./type_node.ts";
 import {
   ComputeStageProps,
   Context,
@@ -24,6 +23,7 @@ import {
 } from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./query_parsers/graphql.ts";
+import { Planner } from "./planner.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -313,48 +313,6 @@ export class Engine {
     return ret;
   }
 
-  traverse(
-    operation: ast.OperationDefinitionNode,
-    fragments: FragmentDefs,
-    verbose: boolean,
-  ): [ComputeStage[], PolicyStagesFactory] {
-    const serial = operation.operation === "mutation";
-    const rootIdx =
-      (this.tg.type(0) as ObjectNode).properties[operation.operation];
-    ensure(
-      rootIdx != null,
-      `operation ${operation.operation} is not available`,
-    );
-
-    const stages = this.tg.traverse(
-      fragments,
-      operation.name?.value ?? "",
-      [],
-      operation.selectionSet,
-      verbose,
-      [],
-      rootIdx,
-      undefined,
-      serial,
-    );
-
-    const varTypes: Record<string, string> =
-      (operation?.variableDefinitions ?? []).reduce(
-        (agg, { variable, type }) => ({
-          ...agg,
-          [variable.name.value]: unparse(type.loc!),
-        }),
-        {},
-      );
-
-    for (const stage of stages) {
-      stage.varTypes = varTypes;
-    }
-
-    const policies = this.tg.preparePolicies(stages);
-    return [stages, policies];
-  }
-
   materialize(
     stages: ComputeStage[],
     verbose: boolean,
@@ -398,7 +356,8 @@ export class Engine {
     }
 
     // what
-    const [stages, policies] = this.traverse(operation, fragments, verbose);
+    const planner = new Planner(operation, fragments, this.tg, verbose);
+    const [stages, policies] = planner.getPlan();
     /*
     this.logger.info(
       "stages:",
