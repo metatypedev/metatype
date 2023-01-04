@@ -41,6 +41,7 @@ SCALAR_TYPE_MAP = {
     "String": "t.string()",
     "Boolean": "t.boolean()",
     "ID": "t.string()",
+    "Char": "t.string()",
 }
 
 
