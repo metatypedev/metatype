@@ -111,7 +111,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/download-artifact@v3
         with:
           name: meta
@@ -140,7 +140,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - name: Install and test build
         run: |
           python3 -m venv .venv
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - name: Install and test build
         run: |
           python3 -m venv .venv
@@ -243,7 +243,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/download-artifact@v3
         with:
           name: meta
@@ -277,7 +277,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/download-artifact@v3
         with:
           name: meta
@@ -302,5 +302,5 @@ jobs:
           file: dev/Dockerfile
           platforms: linux/amd64
           push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache,mode=max

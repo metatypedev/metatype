@@ -1,4 +1,25 @@
+include:
+  - project: "devops/gitlab-ci-templates"
+    ref: main
+    file: "docker.yml"
+
+stages:
+  - bundle
+  - deploy
+
+docker:
+  stage: test
+  tags:
+    - docker
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+  variables:
+    DOCKER_DOCKERFILE: dev/Dockerfile
+
 sync:
+  stage: deploy
+  tags:
+    - docker
   rules:
     - if: $CI_COMMIT_REF_NAME == "main"
   variables:
