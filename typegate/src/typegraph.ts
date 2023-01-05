@@ -11,7 +11,7 @@ import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
-import { ensure, envOrFail, mapo } from "./utils.ts";
+import { ensure, envOrFail } from "./utils.ts";
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "./auth/auth.ts";
 import * as semver from "std/semver/mod.ts";
@@ -30,7 +30,6 @@ import {
 import config from "./config.ts";
 import {
   Batcher,
-  ComputeArg,
   Context,
   Operation,
   PolicyStages,
@@ -379,275 +378,276 @@ export class TypeGraph {
     );
   }
   // value, policies, dependencies
-  collectArg(
-    fieldArg: ast.ArgumentNode | ast.ObjectFieldNode | undefined,
-    argIdx: number,
-    parentContext: Record<string, number>,
-    noDefault = false,
-  ): [
-    compute: ComputeArg,
-    policies: Record<string, string[]>,
-    deps: string[],
-  ] | null {
-    const arg = this.tg.types[argIdx];
+  // collectArg(
+  //   fieldArg: ast.ArgumentNode | ast.ObjectFieldNode | undefined,
+  //   argIdx: number,
+  //   parentContext: Record<string, number>,
+  //   noDefault = false,
+  // ): [
+  //   compute: ComputeArg,
+  //   policies: Record<string, string[]>,
+  //   deps: string[],
+  // ] | null {
+  //   const arg = this.tg.types[argIdx];
 
-    if (!arg) {
-      throw Error(`${argIdx} not found in type`);
-    }
+  //   if (!arg) {
+  //     throw Error(`${argIdx} not found in type`);
+  //   }
 
-    let policies = arg.policies.length > 0
-      ? {
-        [arg.title]: arg.policies.map((p) => this.policy(p).name),
-      }
-      : {};
+  //   let policies = arg.policies.length > 0
+  //     ? {
+  //       [arg.title]: arg.policies.map((p) => this.policy(p).name),
+  //     }
+  //     : {};
 
-    if ("injection" in arg) {
-      const { injection, inject } = arg;
-      ensure(!fieldArg, "cannot set injected arg");
+  //   if ("injection" in arg) {
+  //     const { injection, inject } = arg;
+  //     ensure(!fieldArg, "cannot set injected arg");
 
-      switch (injection) {
-        case "raw": {
-          const value = JSON.parse(inject as string);
-          // typecheck
-          return [() => value, policies, []];
-        }
-        case "secret": {
-          const name = inject as string;
-          const value = this.parseSecret(arg, name);
+  //     switch (injection) {
+  //       case "raw": {
+  //         const value = JSON.parse(inject as string);
+  //         // typecheck
+  //         return [() => value, policies, []];
+  //       }
+  //       case "secret": {
+  //         const name = inject as string;
+  //         const value = this.parseSecret(arg, name);
 
-          return [() => value, policies, []];
-        }
-        case "context": {
-          const name = inject as string;
-          return [
-            (_parent, _variables, { [name]: value }) => {
-              if (
-                value === undefined &&
-                (value === null && !isOptional(arg))
-              ) {
-                // manage default?
-                throw new Error(`injection ${name} was not found in context`);
-              }
-              return value;
-            },
-            policies,
-            [],
-          ];
-        }
-        case "parent": {
-          const ref = inject as number;
-          const name = Object.keys(parentContext).find(
-            (name) => parentContext[name] === ref,
-          );
-          if (!name) {
-            throw Error(
-              `cannot find injection ${
-                JSON.stringify(
-                  arg,
-                )
-              } in parent ${JSON.stringify(parentContext)}`,
-            );
-          }
-          return [
-            ({ [name]: value }) => {
-              if (
-                value === undefined &&
-                (value === null && !isOptional(arg))
-              ) {
-                // manage default?
-                throw new Error(`injection ${name} was not found in parent`);
-              }
-              return value;
-            },
-            policies,
-            [name],
-          ];
-        }
-        default:
-          ensure(false, "cannot happen");
-      }
-    }
+  //         return [() => value, policies, []];
+  //       }
+  //       case "context": {
+  //         const name = inject as string;
+  //         return [
+  //           (_variables, _parent, context) => {
+  //             const { [name]: value } = context;
+  //             if (
+  //               value === undefined &&
+  //               (value === null && !isOptional(arg))
+  //             ) {
+  //               // manage default?
+  //               throw new Error(`injection ${name} was not found in context`);
+  //             }
+  //             return value;
+  //           },
+  //           policies,
+  //           [],
+  //         ];
+  //       }
+  //       case "parent": {
+  //         const ref = inject as number;
+  //         const name = Object.keys(parentContext).find(
+  //           (name) => parentContext[name] === ref,
+  //         );
+  //         if (!name) {
+  //           throw Error(
+  //             `cannot find injection ${
+  //               JSON.stringify(
+  //                 arg,
+  //               )
+  //             } in parent ${JSON.stringify(parentContext)}`,
+  //           );
+  //         }
+  //         return [
+  //           ({ [name]: value }) => {
+  //             if (
+  //               value === undefined &&
+  //               (value === null && !isOptional(arg))
+  //             ) {
+  //               // manage default?
+  //               throw new Error(`injection ${name} was not found in parent`);
+  //             }
+  //             return value;
+  //           },
+  //           policies,
+  //           [name],
+  //         ];
+  //       }
+  //       default:
+  //         ensure(false, "cannot happen");
+  //     }
+  //   }
 
-    if (!fieldArg) {
-      if (isOptional(arg)) {
-        const { default_value: defaultValue } = arg;
-        return !noDefault && defaultValue
-          ? [() => defaultValue, policies, []]
-          : null;
-      }
+  //   if (!fieldArg) {
+  //     if (isOptional(arg)) {
+  //       const { default_value: defaultValue } = arg;
+  //       return !noDefault && defaultValue
+  //         ? [() => defaultValue, policies, []]
+  //         : null;
+  //     }
 
-      if (isObject(arg)) {
-        const argSchema = arg.properties;
-        const values: Record<string, any> = {};
-        const deps = [];
+  //     if (isObject(arg)) {
+  //       const argSchema = arg.properties;
+  //       const values: Record<string, any> = {};
+  //       const deps = [];
 
-        for (const [fieldName, fieldIdx] of Object.entries(argSchema)) {
-          const nested = this.collectArg(
-            undefined,
-            fieldIdx,
-            parentContext,
-            true,
-          );
-          if (!nested) {
-            continue;
-          }
-          const [value, nestedPolicies, nestedDeps] = nested;
-          deps.push(...nestedDeps);
-          values[fieldName] = value;
-          policies = { ...policies, ...nestedPolicies };
-        }
+  //       for (const [fieldName, fieldIdx] of Object.entries(argSchema)) {
+  //         const nested = this.collectArg(
+  //           undefined,
+  //           fieldIdx,
+  //           parentContext,
+  //           true,
+  //         );
+  //         if (!nested) {
+  //           continue;
+  //         }
+  //         const [value, nestedPolicies, nestedDeps] = nested;
+  //         deps.push(...nestedDeps);
+  //         values[fieldName] = value;
+  //         policies = { ...policies, ...nestedPolicies };
+  //       }
 
-        if (Object.values(values).length < 1) {
-          throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
-        }
+  //       if (Object.values(values).length < 1) {
+  //         throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
+  //       }
 
-        return [
-          (ctx, vars) => mapo(values, (e) => e(ctx, vars)),
-          policies,
-          deps,
-        ];
-      }
+  //       return [
+  //         (ctx, vars) => mapo(values, (e) => e(ctx, vars)),
+  //         policies,
+  //         deps,
+  //       ];
+  //     }
 
-      throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
-    }
+  //     throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
+  //   }
 
-    if (isOptional(arg)) {
-      return this.collectArg(fieldArg, arg.item, parentContext);
-    }
+  //   if (isOptional(arg)) {
+  //     return this.collectArg(fieldArg, arg.item, parentContext);
+  //   }
 
-    const { value: argValue } = fieldArg;
-    const { kind } = argValue;
+  //   const { value: argValue } = fieldArg;
+  //   const { kind } = argValue;
 
-    if (kind === Kind.VARIABLE) {
-      const { kind: _, value: varName } = (argValue as ast.VariableNode).name;
-      return [
-        (_ctx, vars) =>
-          vars == null
-            ? (vars: Record<string, unknown> | null) =>
-              vars == null ? varName : vars[varName]
-            : vars[varName],
-        policies,
-        [],
-      ];
-    }
+  //   if (kind === Kind.VARIABLE) {
+  //     const { kind: _, value: varName } = (argValue as ast.VariableNode).name;
+  //     return [
+  //       (_ctx, vars) =>
+  //         vars == null
+  //           ? (vars: Record<string, unknown> | null) =>
+  //             vars == null ? varName : vars[varName]
+  //           : vars[varName],
+  //       policies,
+  //       [],
+  //     ];
+  //   }
 
-    if (isObject(arg)) {
-      ensure(
-        kind === Kind.OBJECT,
-        `type mismatch, got ${kind} but expected OBJECT for ${arg.title}`,
-      );
-      const { fields } = argValue as ast.ObjectValueNode;
-      const argSchema = arg.properties as Record<string, number>;
+  //   if (isObject(arg)) {
+  //     ensure(
+  //       kind === Kind.OBJECT,
+  //       `type mismatch, got ${kind} but expected OBJECT for ${arg.title}`,
+  //     );
+  //     const { fields } = argValue as ast.ObjectValueNode;
+  //     const argSchema = arg.properties as Record<string, number>;
 
-      const fieldArgsIdx: Record<string, ast.ObjectFieldNode> = fields.reduce(
-        (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
-        {},
-      );
+  //     const fieldArgsIdx: Record<string, ast.ObjectFieldNode> = fields.reduce(
+  //       (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
+  //       {},
+  //     );
 
-      const values: Record<string, any> = {};
-      const deps = [];
+  //     const values: Record<string, any> = {};
+  //     const deps = [];
 
-      for (const [fieldName, fieldIdx] of Object.entries(argSchema)) {
-        const nested = this.collectArg(
-          fieldArgsIdx[fieldName],
-          fieldIdx,
-          parentContext,
-        );
-        if (!nested) {
-          continue;
-        }
-        const [value, nestedPolicies, nestedDeps] = nested;
-        deps.push(...nestedDeps);
-        // FIXME
-        // const renames = arg.renames ?? {}
-        const renames = {} as Record<string, string>;
-        values[renames[fieldName] ?? fieldName] = value;
-        delete fieldArgsIdx[fieldName];
-        policies = { ...policies, ...nestedPolicies };
-      }
+  //     for (const [fieldName, fieldIdx] of Object.entries(argSchema)) {
+  //       const nested = this.collectArg(
+  //         fieldArgsIdx[fieldName],
+  //         fieldIdx,
+  //         parentContext,
+  //       );
+  //       if (!nested) {
+  //         continue;
+  //       }
+  //       const [value, nestedPolicies, nestedDeps] = nested;
+  //       deps.push(...nestedDeps);
+  //       // FIXME
+  //       // const renames = arg.renames ?? {}
+  //       const renames = {} as Record<string, string>;
+  //       values[renames[fieldName] ?? fieldName] = value;
+  //       delete fieldArgsIdx[fieldName];
+  //       policies = { ...policies, ...nestedPolicies };
+  //     }
 
-      for (const name of Object.keys(fieldArgsIdx)) {
-        throw Error(`${name} input as field but unknown`);
-      }
+  //     for (const name of Object.keys(fieldArgsIdx)) {
+  //       throw Error(`${name} input as field but unknown`);
+  //     }
 
-      return [(ctx, vars) => mapo(values, (e) => e(ctx, vars)), policies, deps];
-    }
+  //     return [(ctx, vars) => mapo(values, (e) => e(ctx, vars)), policies, deps];
+  //   }
 
-    if (isArray(arg)) {
-      ensure(
-        kind === Kind.LIST,
-        `type mismatch, got ${kind} but expected LIST for ${arg.title}`,
-      );
-      const { values: valueOfs } = argValue as ast.ListValueNode;
-      const valueIdx = arg.items as number;
+  //   if (isArray(arg)) {
+  //     ensure(
+  //       kind === Kind.LIST,
+  //       `type mismatch, got ${kind} but expected LIST for ${arg.title}`,
+  //     );
+  //     const { values: valueOfs } = argValue as ast.ListValueNode;
+  //     const valueIdx = arg.items as number;
 
-      const values: any[] = [];
-      const deps = [];
+  //     const values: any[] = [];
+  //     const deps = [];
 
-      // likely optimizable as type should be shared
-      for (const valueOf of valueOfs) {
-        const nested = this.collectArg(
-          { value: valueOf } as unknown as ast.ArgumentNode,
-          valueIdx,
-          parentContext,
-        );
-        if (!nested) {
-          throw Error("unknown subtype");
-        }
-        const [value, nestedPolicies, nestedDeps] = nested;
-        deps.push(...nestedDeps);
-        values.push(value);
-        policies = { ...policies, ...nestedPolicies };
-      }
+  //     // likely optimizable as type should be shared
+  //     for (const valueOf of valueOfs) {
+  //       const nested = this.collectArg(
+  //         { value: valueOf } as unknown as ast.ArgumentNode,
+  //         valueIdx,
+  //         parentContext,
+  //       );
+  //       if (!nested) {
+  //         throw Error("unknown subtype");
+  //       }
+  //       const [value, nestedPolicies, nestedDeps] = nested;
+  //       deps.push(...nestedDeps);
+  //       values.push(value);
+  //       policies = { ...policies, ...nestedPolicies };
+  //     }
 
-      return [(ctx, vars) => values.map((e) => e(ctx, vars)), policies, deps];
-    }
+  //     return [(ctx, vars) => values.map((e) => e(ctx, vars)), policies, deps];
+  //   }
 
-    if (isInteger(arg)) {
-      ensure(
-        kind === Kind.INT,
-        `type mismatch, got ${kind} but expected INT for ${arg.title}`,
-      );
-      const { value } = argValue as ast.IntValueNode;
-      const parsed = Number(value);
-      return [() => parsed, policies, []];
-    }
+  //   if (isInteger(arg)) {
+  //     ensure(
+  //       kind === Kind.INT,
+  //       `type mismatch, got ${kind} but expected INT for ${arg.title}`,
+  //     );
+  //     const { value } = argValue as ast.IntValueNode;
+  //     const parsed = Number(value);
+  //     return [() => parsed, policies, []];
+  //   }
 
-    if (isNumber(arg)) {
-      ensure(
-        kind === Kind.FLOAT || kind === Kind.INT,
-        `type mismatch, got ${kind} but expected FLOAT for ${arg.title}`,
-      );
-      const { value } = argValue as ast.FloatValueNode;
-      const parsed = Number(value);
-      return [() => parsed, policies, []];
-    }
+  //   if (isNumber(arg)) {
+  //     ensure(
+  //       kind === Kind.FLOAT || kind === Kind.INT,
+  //       `type mismatch, got ${kind} but expected FLOAT for ${arg.title}`,
+  //     );
+  //     const { value } = argValue as ast.FloatValueNode;
+  //     const parsed = Number(value);
+  //     return [() => parsed, policies, []];
+  //   }
 
-    if (isBoolean(arg)) {
-      ensure(
-        kind === Kind.BOOLEAN,
-        `type mismatch, got ${kind} but expected BOOLEAN for ${arg.title}`,
-      );
-      const { value } = argValue as ast.BooleanValueNode;
-      const parsed = Boolean(value);
-      return [() => parsed, policies, []];
-    }
+  //   if (isBoolean(arg)) {
+  //     ensure(
+  //       kind === Kind.BOOLEAN,
+  //       `type mismatch, got ${kind} but expected BOOLEAN for ${arg.title}`,
+  //     );
+  //     const { value } = argValue as ast.BooleanValueNode;
+  //     const parsed = Boolean(value);
+  //     return [() => parsed, policies, []];
+  //   }
 
-    if (isString(arg)) {
-      ensure(
-        kind === Kind.STRING,
-        `type mismatch, got ${kind} but expected STRING for ${arg.title}`,
-      );
-      const { value } = argValue as ast.StringValueNode;
-      const parsed = String(value);
-      return [() => parsed, policies, []];
-    }
+  //   if (isString(arg)) {
+  //     ensure(
+  //       kind === Kind.STRING,
+  //       `type mismatch, got ${kind} but expected STRING for ${arg.title}`,
+  //     );
+  //     const { value } = argValue as ast.StringValueNode;
+  //     const parsed = String(value);
+  //     return [() => parsed, policies, []];
+  //   }
 
-    throw Error(
-      `unknown variable value ${JSON.stringify(arg)} ${JSON.stringify(fieldArg)}
-      (${kind}) for ${arg.title}`,
-    );
-  }
+  //   throw Error(
+  //     `unknown variable value ${JSON.stringify(arg)} ${JSON.stringify(fieldArg)}
+  //     (${kind}) for ${arg.title}`,
+  //   );
+  // }
 
   preparePolicies(
     stages: ComputeStage[],

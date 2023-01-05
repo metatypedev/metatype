@@ -23,7 +23,7 @@ import {
 } from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./query_parsers/graphql.ts";
-import { Planner } from "./planner.ts";
+import { Planner } from "./planner/mod.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -255,8 +255,8 @@ export class Engine {
         (decisions.some((d) => d === null) || decisions.length < 1)
       ) {
         // root level field inherit false
-        throw Error(
-          `no authorization policy took a decision in root field ${stage.id()}`,
+        throw new Error(
+          `no authorization policy took a decision in root field '${stage.id()}'`,
         );
       }
 
@@ -276,7 +276,7 @@ export class Engine {
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...mapo(args, (e) => e(parent, variables, context)),
+            ...mapo(args, (e) => e(variables, parent, context)),
             _: {
               parent: parent ?? {},
               context,

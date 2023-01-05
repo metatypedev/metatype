@@ -5,6 +5,7 @@ import { Runtime } from "./runtimes/Runtime.ts";
 import type { TypeGraphDS, TypeMaterializer } from "./typegraph.ts";
 import { ObjectNode, TypeNode } from "./type_node.ts";
 import * as ast from "graphql/ast";
+import { ComputeArg } from "./planner/args.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;
@@ -54,13 +55,13 @@ export type RuntimeInit = Record<
  * Pass null `variables` to get a FromVars<_> that computes the argument value
  * from variables or returns the variable name if the `variables` param is null.
  */
-export interface ComputeArg {
-  (
-    parent: Parents,
-    variables: Variables | null,
-    context: Context,
-  ): unknown;
-}
+// export interface ComputeArg {
+//   (
+//     parent: Parents,
+//     variables: Variables | null,
+//     context: Context,
+//   ): unknown;
+// }
 
 export type OperationType = "Query" | "Mutation";
 

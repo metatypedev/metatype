@@ -2,18 +2,14 @@
 
 import * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { ComputeStage } from "./engine.ts";
-import { FragmentDefs, resolveSelection } from "./graphql.ts";
-import { TypeGraph } from "./typegraph.ts";
-import {
-  ComputeArg,
-  ComputeStageProps,
-  Operation,
-  PolicyStagesFactory,
-} from "./types.ts";
-import { getWrappedType, isQuantifier, Type } from "./type_node.ts";
-import { DenoRuntime } from "./runtimes/deno.ts";
-import { ensure, unparse } from "./utils.ts";
+import { ComputeStage } from "../engine.ts";
+import { FragmentDefs, resolveSelection } from "../graphql.ts";
+import { TypeGraph } from "../typegraph.ts";
+import { ComputeStageProps, Operation, PolicyStagesFactory } from "../types.ts";
+import { getWrappedType, isQuantifier, Type } from "../type_node.ts";
+import { DenoRuntime } from "../runtimes/deno.ts";
+import { ensure, unparse } from "../utils.ts";
+import { ArgumentCollector, ComputeArg } from "./args.ts";
 
 interface Node {
   name: string;
@@ -26,6 +22,8 @@ interface Node {
 }
 
 export class Planner {
+  rawArgs: Record<string, ComputeArg> = {};
+
   constructor(
     readonly operation: ast.OperationDefinitionNode,
     readonly fragments: FragmentDefs,
@@ -57,7 +55,7 @@ export class Planner {
           ...agg,
           [variable.name.value]: unparse(type.loc!),
         }),
-        {},
+        {} as Record<string, string>,
       );
 
     for (const stage of stages) {
@@ -68,8 +66,10 @@ export class Planner {
     return [stages, policies];
   }
 
-  // TODO private
-  traverse(node: Node, stage: ComputeStage | undefined): ComputeStage[] {
+  private traverse(
+    node: Node,
+    stage: ComputeStage | undefined,
+  ): ComputeStage[] {
     const { name, selectionSet, args, typeIdx } = node;
     const typ = this.tg.type(typeIdx);
     const stages: ComputeStage[] = [];
@@ -307,19 +307,20 @@ export class Planner {
         {} as Record<string, ast.ArgumentNode>,
       );
 
+    const argumentCollector = new ArgumentCollector(this.tg);
     const nestedDepsUnion = [];
     for (
       const [argName, argIdx] of Object.entries(argSchema.properties ?? {})
     ) {
-      const nested = this.tg.collectArg(argNodes[argName], argIdx, parentProps);
-      if (!nested) {
-        continue;
-      }
+      const nested = argumentCollector.collectArg(
+        argNodes[argName],
+        argIdx,
+        parentProps,
+      );
 
-      const [value, inputPolicies, nestedDeps] = nested;
-      nestedDepsUnion.push(...nestedDeps);
-      args[argName] = value;
-      policies = { ...policies, ...inputPolicies };
+      nestedDepsUnion.push(...nested.deps);
+      args[argName] = nested.compute;
+      Object.assign(policies, nested.policies);
     }
 
     // check that no unwanted arg is given
@@ -418,7 +419,7 @@ export class Planner {
       this.operation.operation.charAt(0).toUpperCase();
   }
 
-  createComputeStage(
+  private createComputeStage(
     node: Node,
     props:
       & Omit<
@@ -437,7 +438,7 @@ export class Planner {
     });
   }
 
-  formatPath(path: string[]) {
+  private formatPath(path: string[]) {
     return [this.operationName, ...path].join(".");
   }
 }
