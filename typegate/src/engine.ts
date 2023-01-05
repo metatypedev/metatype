@@ -244,7 +244,6 @@ export class Engine {
             checks,
             policiesRegistry,
             verbose,
-            // TODO what if argument computation requires parent to be set?
             policyArgs,
           )
         ),

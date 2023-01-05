@@ -189,8 +189,8 @@ pub struct TGRuntime {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Policy {
-    name: String,
-    materializer: u32,
+    pub name: String,
+    pub materializer: u32,
 }
 
 impl Typegraph {

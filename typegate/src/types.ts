@@ -50,19 +50,6 @@ export type RuntimeInit = Record<
   (params: RuntimeInitParams) => Promise<Runtime> | Runtime
 >;
 
-/**
- * A function that computes argument from parent, variables and context
- * Pass null `variables` to get a FromVars<_> that computes the argument value
- * from variables or returns the variable name if the `variables` param is null.
- */
-// export interface ComputeArg {
-//   (
-//     parent: Parents,
-//     variables: Variables | null,
-//     context: Context,
-//   ): unknown;
-// }
-
 export type OperationType = "Query" | "Mutation";
 
 export interface Operation {
