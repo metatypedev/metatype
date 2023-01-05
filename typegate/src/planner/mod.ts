@@ -10,6 +10,9 @@ import { getWrappedType, isQuantifier, Type } from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno.ts";
 import { ensure, unparse } from "../utils.ts";
 import { ArgumentCollector, ComputeArg } from "./args.ts";
+import { FromVars } from "../runtimes/graphql.ts";
+import { mapValues } from "std/collections/map_values.ts";
+import { filterValues } from "std/collections/filter_values.ts";
 
 interface Node {
   name: string;
@@ -19,6 +22,12 @@ interface Node {
   typeIdx: number;
   parent: Node | undefined;
   parentStage: ComputeStage | undefined;
+}
+
+export interface Plan {
+  stages: ComputeStage[];
+  policies: PolicyStagesFactory;
+  policyArgs: FromVars<Record<string, Record<string, unknown>>>;
 }
 
 export class Planner {
@@ -31,7 +40,7 @@ export class Planner {
     private readonly verbose: boolean,
   ) {}
 
-  getPlan(): [ComputeStage[], PolicyStagesFactory] {
+  getPlan(): Plan {
     const rootIdx =
       this.tg.type(0, Type.OBJECT).properties[this.operation.operation];
     ensure(
@@ -63,7 +72,7 @@ export class Planner {
     }
 
     const policies = this.tg.preparePolicies(stages);
-    return [stages, policies];
+    return { stages, policies, policyArgs: this.policyArgs(stages) };
   }
 
   private traverse(
@@ -440,5 +449,26 @@ export class Planner {
 
   private formatPath(path: string[]) {
     return [this.operationName, ...path].join(".");
+  }
+
+  private policyArgs(
+    stages: ComputeStage[],
+  ): FromVars<Record<string, Record<string, unknown>>> {
+    //
+    const computes: Record<string, FromVars<Record<string, unknown>>> = {};
+    for (const stage of stages) {
+      const args = stage.props.args;
+      if (Object.keys(args).length === 0) {
+        continue;
+      }
+      const key = stage.props.path.join(".");
+      computes[key] = (vars) => mapValues(args, (c) => c(vars, null, null));
+    }
+
+    return (vars) =>
+      filterValues(
+        mapValues(computes, (c) => c(vars)),
+        (v) => v != undefined,
+      );
   }
 }

@@ -13,13 +13,10 @@ export function readSecret(
   return { username, data: "secret" };
 }
 
-interface IsAllowedToReadSecretInput {
-  username: string;
-}
-
 export function isAllowedToReadSecret(
-  { username }: IsAllowedToReadSecretInput,
+  args: Record<string, Record<string, unknown>>,
   { context }: { context: Record<string, unknown> },
 ): boolean {
-  return username === context.username;
+  console.log("POLICY", { args });
+  return args.secret.username === context.username;
 }

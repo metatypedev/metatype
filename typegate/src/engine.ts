@@ -24,6 +24,7 @@ import {
 import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./query_parsers/graphql.ts";
 import { Planner } from "./planner/mod.ts";
+import { FromVars } from "./runtimes/graphql.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -167,6 +168,7 @@ function isIntrospectionQuery(
 interface Plan {
   stages: ComputeStage[];
   policies: PolicyStagesFactory;
+  policyArgs: FromVars<Record<string, Record<string, unknown>>>;
   validator: TypeCheck;
 }
 
@@ -209,6 +211,7 @@ export class Engine {
   async compute(
     plan: ComputeStage[],
     policesFactory: PolicyStagesFactory,
+    policyArgs: Record<string, Record<string, unknown>>,
     context: Context,
     variables: Record<string, unknown>,
     limit: RateLimit | null,
@@ -242,7 +245,7 @@ export class Engine {
             policiesRegistry,
             verbose,
             // TODO what if argument computation requires parent to be set?
-            mapo(args, (e) => e(variables, null, context)),
+            policyArgs,
           )
         ),
       );
@@ -357,7 +360,7 @@ export class Engine {
 
     // what
     const planner = new Planner(operation, fragments, this.tg, verbose);
-    const [stages, policies] = planner.getPlan();
+    const { stages, policies, policyArgs } = planner.getPlan();
     /*
     this.logger.info(
       "stages:",
@@ -382,6 +385,7 @@ export class Engine {
     const plan: Plan = {
       stages: optimizedStages,
       policies,
+      policyArgs,
       validator,
     };
 
@@ -425,12 +429,13 @@ export class Engine {
       );
       const planTime = performance.now();
 
-      const { stages, policies, validator } = plan;
+      const { stages, policies, policyArgs, validator } = plan;
 
       //logger.info("dag:", stages);
       const res = await this.compute(
         stages,
         policies,
+        policyArgs(variables),
         context,
         variables,
         limit,
