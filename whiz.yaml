@@ -2,7 +2,7 @@ meta:
     workdir: .
     watches:
         - "meta-cli/src/**/*.rs"
-    shell: "cargo run -p meta -- --help"
+    shell: "cargo run -p meta-cli -- --help"
     depends_on:
         - libs
 
@@ -10,7 +10,7 @@ examples:
     workdir: .
     watches:
         - "examples/metatype.yaml"
-    shell: "cargo run -p meta -- -C examples dev"
+    shell: "cargo run -p meta-cli -- -C examples dev"
     envs:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH
@@ -60,16 +60,20 @@ codegen:
     workdir: .
     watches:
         - "libs/xtask/src/**/*.rs"
-    shell: "bash -c 'env $(cat codegen.env | xargs) cargo xtask codegen'"
+    envs:
+        TG_JSONSCHEMA_OUT: website/static/typegraph.json
+    shell: "cargo run --package xtask -- codegen"
 
 clean_deno_bindgen_cache:
-    shell: rm -rf $(deno info --json | jq -r .denoDir)/plug/file bindings.json
+    shell: rm -rfv $(deno info --json | jq -r .denoDir)/plug/file
     depends_on:
         - typegate_native
 
 typegate_native:
     watches:
         - "typegate/native/src/**/*.rs"
+    envs:
+        OUT_DIR: "target"
     shell: "deno_bindgen -- -p native"
     depends_on:
         - libs
@@ -92,7 +96,7 @@ website_meta:
     watches:
         - "meta-cli/src/**/*.rs"
         - "website/**/*.py"
-    shell: "cargo run -p meta -- -C website dev -p password --port 5001"
+    shell: "cargo run -p meta-cli -- -C website dev -u admin -p password --port 5001"
     envs:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH

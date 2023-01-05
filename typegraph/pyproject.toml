@@ -5,28 +5,23 @@ description = "Free and open ecosystem for API composition."
 authors = [
     "Metatype Contributors <support@metatype.dev>",
 ]
-readme = "README.md"
 license = "ELv2"
 homepage = "https://metatype.dev"
 repository = "https://github.com/metatypedev/metatype"
 include = [
     "typegraph/**/*",
-    "README.md",
     "LICENSE.md"
 ]
 keywords = [
     "api",
     "composition",
     "typesystem",
-    "policy",
-    "materializer",
-    "runtime",
-    "types"
+    "graphql",
+    "ecosystem"
 ]
 classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.8",
 ]
 
 [tool.poetry.scripts]

@@ -6,8 +6,6 @@
 __pycache__/
 *.py[cod]
 dist/
-!typegraph/typegraph/dist
-.ipynb_checkpoints
 
 **/.terraform/*
 *.tfstate
@@ -17,21 +15,18 @@ crash.log
 
 target
 **/*.rs.bk
-bindings
-bindings.json
 
 typegate/workers
 typegate/codegen
 typegate/tests/prisma-migrations
 .env
+typegate/native/bindings.json
+bindings
 
 node_modules
 build
 .docusaurus
 .cache-loader
 website/vale/Google
-
-typegate/LICENSE.md
-typegraph/LICENSE.md
-
+recipe.json
 *-debug.whiz.yaml

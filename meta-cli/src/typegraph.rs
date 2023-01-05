@@ -166,9 +166,9 @@ impl<'a> TypegraphLoader<'a> {
         #[cfg(target_os = "windows")]
         let program_name = Path::new(&env::var("VIRTUAL_ENV")?).join("Scripts/py-tg.cmd");
         #[cfg(not(target_os = "windows"))]
-        let program_name = "py-tg";
+        let program_name = Path::new("py-tg").to_path_buf();
 
-        let p = Command::new(program_name)
+        let p = Command::new(program_name.clone())
             .arg(path.as_ref().to_str().unwrap())
             // .args(args)
             .current_dir(&self.config.base_dir)

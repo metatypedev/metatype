@@ -10,14 +10,15 @@ services:
       - "host.docker.internal:host-gateway"
 
   postgres:
-    image: postgres:14
+    image: postgres:15
     restart: always
     ports:
       - "5432:5432"
     environment:
       POSTGRES_DB: db
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-    command: "-c app.test=true" # -c log_statement=all
+    command: "-c log_statement=all"
 
   redis:
     image: redis:7

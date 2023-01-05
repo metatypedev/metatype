@@ -6,14 +6,8 @@ import { ComputeStage, Engine } from "../engine.ts";
 import { Register } from "../register.ts";
 import { PrismaRuntimeDS } from "../type_node.ts";
 import * as native from "native";
-import { nativeResult } from "../utils.ts";
-
-interface SerializedMigrationSession {
-  typegraph: string;
-  runtime: string;
-  id: string;
-  migrationFolder: string;
-}
+import { envOrFail, nativeResult } from "../utils.ts";
+import { makeDatasource } from "./prisma.ts";
 
 function findPrismaRuntime(engine: Engine, name: string | null) {
   const prismaRuntimes = engine.tg.tg.runtimes.filter(
@@ -48,16 +42,24 @@ function findPrismaRuntime(engine: Engine, name: string | null) {
 }
 
 export class PrismaMigrate {
+  private datasource: string;
   constructor(
     private engine: Engine,
     private runtime: PrismaRuntimeDS,
     private migrations: string | null,
-  ) {}
+  ) {
+    const typegraphName = engine.tg.tg.types[0].title;
+    const { connection_string_secret } = runtime.data;
+    this.datasource = makeDatasource(envOrFail(
+      typegraphName,
+      connection_string_secret as string,
+    ));
+  }
 
   apply: Resolver<{ resetDatabase: boolean }> = async ({ resetDatabase }) => {
-    const { datasource, datamodel } = this.runtime.data;
+    const { datamodel } = this.runtime.data;
     const res = await native.prisma_apply({
-      datasource,
+      datasource: this.datasource,
       datamodel,
       migrations: this.migrations,
       reset_database: resetDatabase,
@@ -84,10 +86,10 @@ export class PrismaMigrate {
   create: Resolver<{ name: string; apply?: boolean }> = async (
     { name: migrationName, apply = true },
   ) => {
-    const { datasource, datamodel, name } = this.runtime.data;
+    const { datamodel, name } = this.runtime.data;
     const res = nativeResult(
       await native.prisma_create({
-        datasource,
+        datasource: this.datasource,
         datamodel,
         migrations: this.migrations,
         migration_name: migrationName,
@@ -168,9 +170,13 @@ export class PrismaMigrationRuntime extends Runtime {
         resolver = (async (
           args: ResolverArgsEx<{ migrations: never; script: boolean }>,
         ) => {
-          const { typegraph: tg, runtime: rt, script } = args;
-          const [_, runtime] = this.getMigrationTarget(tg, rt);
-          const { datasource, datamodel, name } = runtime.data;
+          const { typegraph: tgName, runtime: rt, script } = args;
+          const [_, runtime] = this.getMigrationTarget(tgName, rt);
+          const { connection_string_secret, datamodel, name } = runtime.data;
+          const datasource = makeDatasource(envOrFail(
+            tgName,
+            connection_string_secret as string,
+          ));
 
           return {
             runtimeName: name,
@@ -188,7 +194,11 @@ export class PrismaMigrationRuntime extends Runtime {
             throw new Error(`could not find typegraph ${tgName}`);
           }
           const runtime = findPrismaRuntime(engine, rtName ?? null);
-          const { datasource, datamodel } = runtime.data;
+          const { connection_string_secret, datamodel } = runtime.data;
+          const datasource = makeDatasource(envOrFail(
+            tgName,
+            connection_string_secret as string,
+          ));
 
           const res = nativeResult(
             await native.prisma_deploy({
