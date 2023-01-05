@@ -1,7 +1,4 @@
 on:
-  push:
-    branches:
-      - "ci"
   pull_request:
     types:
       - opened
