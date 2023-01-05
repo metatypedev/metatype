@@ -9,9 +9,7 @@ from typegraph.types import types as t
 # debugpy.wait_for_client()
 
 with TypeGraph(name="blog") as g:
-    db = PrismaRuntime(
-        "blog", "postgresql://postgres:password@localhost:5432/db?schema=blog"
-    )
+    db = PrismaRuntime("blog", "POSTGRES")
 
     postAuthor = db.one_to_many(g("User"), g("Post")).named("postAuthor")
 

@@ -39,36 +39,34 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs'
+        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs && cd ../dev && deno fmt'
         pass_filenames: false
         types:
           - ts
-        files: ^typegate/
+        files: ^(typegate|dev)/
       - id: deno-lint
         name: Deno lint
         language: system
-        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native'
+        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native && cd ../dev && deno lint'
         pass_filenames: false
         types:
           - ts
-        files: ^typegate/
+        files: ^(typegate|dev)/
       - id: es-lint
         name: Eslint
         language: system
-        entry: bash -c 'cd website && pnpm lint'
+        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint || echo "eslint not installed, skipping"'
         pass_filenames: false
         types_or:
           - ts
           - tsx
         files: ^website/
-      - id: codegen
-        name: "Codegen from Rust"
+      - id: version
+        name: "Lock versions"
+        always_run: true
         language: system
-        entry: bash -c 'env $(cat codegen.env | xargs) cargo xtask codegen'
-        files: ^(libs/common|libs/xtask)/
+        entry: bash -c 'deno run -A dev/lock.ts'
         pass_filenames: false
-        types_or:
-          - rust
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.3.1
     hooks:
@@ -76,7 +74,7 @@ repos:
         name: "License header python"
         args:
           #- --remove-header
-          - --license-filepath=license-header.txt
+          - --license-filepath=dev/license-header.txt
           - "--comment-style=#"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
@@ -86,7 +84,7 @@ repos:
         name: "License header rust"
         args:
           #- --remove-header
-          - --license-filepath=license-header.txt
+          - --license-filepath=dev/license-header.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
@@ -96,7 +94,7 @@ repos:
         name: "License header deno"
         args:
           #- --remove-header
-          - --license-filepath=license-header.txt
+          - --license-filepath=dev/license-header.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
@@ -106,7 +104,7 @@ repos:
         name: "License header typescript"
         args:
           #- --remove-header
-          - --license-filepath=license-header.txt
+          - --license-filepath=dev/license-header.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:

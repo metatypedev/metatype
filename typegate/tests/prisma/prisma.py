@@ -1,18 +1,11 @@
-from os import environ
-
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
 from typegraph.types import types as t
 
-
-postgres = environ.get(
-    "TEST_POSTGRES_DB", "postgresql://postgres:password@localhost:5432/db?schema=test"
-)
-
 with TypeGraph("prisma") as g:
 
-    db = PrismaRuntime("prisma", postgres)
+    db = PrismaRuntime("prisma", "POSTGRES")
 
     allow_all = policies.allow_all()
 

@@ -1,24 +1,25 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  // https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
       "name": "Python: Remote Attach",
       "type": "python",
       "request": "attach",
-      "connect": { "host": "localhost", "port": 5678 },
+      "connect": {
+        "host": "localhost",
+        "port": 5678
+      },
       "justMyCode": true
     },
     {
       "request": "launch",
       "name": "test:typegate",
-      "type": "pwa-node",
+      "type": "node",
       // "program": "${workspaceFolder}/typegate/src/main.ts",
       "env": {
-        "VIRTUAL_ENV": "${workspaceFolder}/typegraph/.venv",
-        "PATH": "${workspaceFolder}/typegraph/.venv/bin:${env:PATH}"
+        "VIRTUAL_ENV": "${workspaceFolder}/.venv",
+        "PATH": "${workspaceFolder}/.venv/bin:${env:PATH}"
       },
       "cwd": "${workspaceFolder}/typegate",
       "runtimeExecutable": "deno",

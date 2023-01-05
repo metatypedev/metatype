@@ -1,12 +1,26 @@
-ARG RUST_VERSION
-ARG DENO_VERSION
+ARG RUST_VERSION=1.66.0
+ARG DENO_VERSION=1.29.1
 
-FROM rust:${RUST_VERSION} AS builder
+FROM lukemathwalker/cargo-chef:latest-rust-${RUST_VERSION} AS base
 
 WORKDIR /
 
-ARG DENO_VERSION
-ARG DENO_BINDGEN_URL
+# 
+
+FROM base as plan
+
+COPY . .
+RUN rm -rf meta-cli \
+    && cargo new meta-cli \
+    && cargo chef prepare --recipe-path recipe.json && cat recipe.json
+
+#
+
+FROM base AS builder
+
+ARG DENO_VERSION=1.29.1
+ARG DENO_BINDGEN_URL=https://github.com/denoland/deno_bindgen/raw/main/cli.ts
+
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
 ENV PATH "${DENO_INSTALL}/bin:${PATH}"
@@ -15,12 +29,14 @@ RUN curl -fsSL https://deno.land/x/install/install.sh -o install.sh \
     && sh ./install.sh v${DENO_VERSION} \
     && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
 
-COPY . .
+COPY --from=plan /recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
 
-RUN deno_bindgen --release -- --locked --package native
+COPY . .
+RUN OUT_DIR=target deno_bindgen --release -- --locked --package native \
+    && mv /target/release/libnative.so .
 
 WORKDIR /typegate
-
 RUN deno cache --config=deno.json --unstable src/main.ts
 
 #
@@ -36,11 +52,9 @@ WORKDIR /app
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
 COPY LICENSE.md .
 COPY --from=builder /bindings/bindings.ts /bindings/
-COPY --from=builder /target/release/libnative.so /target/release/
-COPY --from=builder /typegate/import_map.json /typegate/.env.defaults /typegate/deno.json ./
+COPY --from=builder /libnative.so /target/release/
+COPY --from=builder /typegate/deno_import.json /typegate/deno.json ./
 COPY --from=builder /typegate/src ./src
-
-RUN useradd nonroot
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir

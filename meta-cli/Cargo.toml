@@ -1,8 +1,21 @@
 [package]
-name = "meta"
+name = "meta-cli"
 version = "0.0.2-alpha.13"
 edition = "2021"
 
+description = "Free and open ecosystem for API composition."
+authors = ["Metatype Contributors <support@metatype.dev>"]
+license-file = "../LICENSE.md"
+homepage = "https://metatype.dev"
+documentation = "https://metatype.dev"
+repository = "https://github.com/metatypedev/metatype"
+include = ["src"]
+keywords = ["api", "composition", "typesystem", "graphql", "ecosystem"]
+categories = ["accessibility", "api-bindings", "data-structures", "development-tools", "wasm"]
+
+[[bin]]
+name = "meta"
+path = "src/main.rs"
 
 [dependencies]
 dprint-plugin-typescript = "0.78.0"
