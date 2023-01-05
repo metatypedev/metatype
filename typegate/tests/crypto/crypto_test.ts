@@ -1,5 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import "../load_test_env.ts";
+
 import {
   decrypt,
   encrypt,

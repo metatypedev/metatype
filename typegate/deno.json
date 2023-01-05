@@ -4,6 +4,6 @@
     "strict": true,
     "lib": ["deno.ns", "deno.unstable", "deno.worker"]
   },
-  "importMap": "import_map.json",
+  "importMap": "deno_import.json",
   "lock": "deno.lock"
 }

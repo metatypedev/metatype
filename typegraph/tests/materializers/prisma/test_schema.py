@@ -1,6 +1,5 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from os import environ
 from os import getcwd
 from pathlib import Path
 import subprocess
@@ -19,9 +18,6 @@ from typegraph.types import types as t
 #     print("Waiting for debugger attach...")
 #     debugpy.wait_for_client()
 
-postgres = environ.get(
-    "TEST_POSTGRES_DB", "postgresql://postgres:password@localhost:5432/db?schema=test"
-)
 
 META_BIN = str(Path(getcwd()) / "../target/debug/meta")
 
@@ -60,7 +56,7 @@ class TestPrismaSchema:
         self.maxDiff = None
 
         with TypeGraph(name="test_one_to_many") as g:
-            db = PrismaRuntime("test", postgres)
+            db = PrismaRuntime("test", "POSTGRES")
 
             postAuthor = db.one_to_many(g("User"), g("Post")).named("postAuthor")
 
@@ -87,7 +83,7 @@ class TestPrismaSchema:
         self.maxDiff = None
 
         with TypeGraph(name="test_one_to_one") as g:
-            db = PrismaRuntime("test", postgres)
+            db = PrismaRuntime("test", "POSTGRES")
 
             userProfile = db.one_to_one(g("User"), g("Profile")).named("userProfile")
 

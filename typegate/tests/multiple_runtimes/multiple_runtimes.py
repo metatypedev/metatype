@@ -1,25 +1,11 @@
-from os import environ
-
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.prisma import PrismaRuntime
 from typegraph.types import types as t
 
-
-postgres = environ.get(
-    "TEST_POSTGRES_DB",
-    "postgresql://postgres:password@localhost:5432/db?schema=test",
-)
-
-postgres2 = environ.get(
-    "TEST_POSTGRES_DB2",
-    "postgresql://postgres:password@localhost:5432/db?schema=test2",
-)
-
-
-with TypeGraph(name="prisma2") as g:
-    db1 = PrismaRuntime("db1", postgres)
-    db2 = PrismaRuntime("db2", postgres2)
+with TypeGraph(name="prisma") as g:
+    db1 = PrismaRuntime("db1", "POSTGRES")
+    db2 = PrismaRuntime("db2", "POSTGRES_2")
 
     user1 = t.struct(
         {

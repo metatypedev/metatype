@@ -1,0 +1,306 @@
+on:
+  push:
+    branches:
+      - "ci"
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+env:
+  PYTHON_VERSION: "3.8"
+  POETRY_VERSION: "1.3.1"
+  RUST_VERSION: "1.66.0"
+  DENO_BINDGEN_URL: https://github.com/denoland/deno_bindgen/raw/main/cli.ts
+  DENO_VERSION: "1.29.1"
+  PNPM_VERSION: "7.9.3"
+  NODE_VERSION: "18.12.1"
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            website:
+              - 'website/**'
+            typegraph:
+              - 'typegraph/**'
+            meta-cli:
+              - 'libs/**'
+              - 'meta-cli/**'
+              - 'Cargo.lock'
+            typegate:
+              - 'libs/**'
+              - 'typegate/**'
+              - 'Cargo.lock'
+            rust:
+              - 'libs/**'
+              - 'typegate/native/**'
+              - 'Cargo.lock'
+    outputs:
+      website: ${{ steps.filter.outputs.website }}
+      typegraph: ${{ steps.filter.outputs.typegraph }}
+      meta-cli: ${{ steps.filter.outputs.meta-cli }}
+      typegate: ${{ steps.filter.outputs.typegate }}
+      rust: ${{ steps.filter.outputs.rust }}
+
+  test-pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - name: Install
+        working-directory: website
+        run: |
+          pnpm install --frozen-lockfile
+      - uses: pre-commit/action@v3.0.0
+
+  test-website:
+    needs: changes
+    if: ${{ needs.changes.outputs.website == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+          cache-dependency-path: website/pnpm-lock.yaml
+      - name: Install and test build
+        working-directory: website
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+          pnpm build
+
+  test-typegraph:
+    needs:
+      - changes
+      - test-meta-cli
+    if: ${{ needs.changes.outputs.typegraph == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+      - uses: actions/download-artifact@v3
+        with:
+          name: meta
+      - run: tar -xvf meta.tar
+      - name: Install and test build
+        working-directory: typegraph
+        run: |
+          python3 -m venv ../.venv
+          source ../.venv/bin/activate
+          poetry install --sync
+          pytest -s tests
+
+  test-meta-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+      - name: Install and test build
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip3 install ./typegraph
+          cargo run --locked --package meta-cli -- --help
+          cargo test --locked --package meta-cli
+          tar -cvf meta.tar target/debug/meta
+      - uses: actions/upload-artifact@v3
+        with:
+          name: meta
+          path: meta.tar
+          retention-days: 1
+
+  test-meta-cli-compat:
+    needs: changes
+    if: ${{ needs.changes.outputs.meta-cli == 'true' }}
+    runs-on: "${{ matrix.os }}"
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            activate: "source .venv/bin/activate"
+          #- os: windows-latest
+          #  activate: '.venv\Scripts\activate.bat'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ runner.os }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+      - name: Install and test build
+        run: |
+          python3 -m venv .venv
+          ${{ runner.activate }}
+          pip3 install ./typegraph
+          cargo run --locked --package meta-cli -- --help
+          cargo test --locked --package meta-cli
+
+  test-typegate:
+    needs:
+      - changes
+      - test-meta-cli
+    if: ${{ needs.changes.outputs.typegate == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DENO_DIR: deno-dir
+      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=test"
+      TG_PRISMA_POSTGRES_2: "postgresql://postgres:password@localhost:5432/db?schema=test2"
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: ${{ env.DENO_DIR }}
+          key: deno-${{ hashFiles('typegate/deno.lock') }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+      - uses: actions/download-artifact@v3
+        with:
+          name: meta
+      - run: tar -xvf meta.tar
+      - name: Install and test build
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip3 install ./typegraph
+          deno install -A -n deno_bindgen $DENO_BINDGEN_URL
+          OUT_DIR=target deno_bindgen -- --locked --package native
+          which py-tg
+          deno run -A dev/test.ts
+          cargo test --locked --workspace --package native
+
+  test-libs:
+    needs:
+      - changes
+      - test-meta-cli
+    if: ${{ needs.changes.outputs.rust == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+      - uses: actions/download-artifact@v3
+        with:
+          name: meta
+      - run: tar -xvf meta.tar
+      - name: Install and test build
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip3 install ./typegraph
+          cargo test --locked --exclude meta-cli --exclude native --workspace
+
+  test-docker:
+    needs: changes
+    if: ${{ needs.changes.outputs.typegate == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: docker/setup-buildx-action@v2
+      - name: Build
+        uses: docker/build-push-action@v3
+        with:
+          file: dev/Dockerfile
+          platforms: linux/amd64
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

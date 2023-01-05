@@ -329,9 +329,7 @@ export class TypeGraphRuntime extends Runtime {
           description: () => `${type.title} type`,
           fields: () => {
             let entries = Object.entries(type.properties);
-            if (Deno.env.get("DENO_ENV") === "test") {
-              entries = entries.sort((a, b) => b[1] - a[1]);
-            }
+            entries = entries.sort((a, b) => b[1] - a[1]);
             return entries.map(this.formatField(false));
           },
           interfaces: () => [],
@@ -379,9 +377,7 @@ export class TypeGraphRuntime extends Runtime {
             `${type} cannot be an input field, require struct`,
           );
           let entries = Object.entries((inp as ObjectNode).properties);
-          if (Deno.env.get("TEST_ENV")) {
-            entries = entries.sort((a, b) => b[1] - a[1]);
-          }
+          entries = entries.sort((a, b) => b[1] - a[1]);
           return entries
             .map(this.formatInputFields)
             .filter((f) => f !== null);

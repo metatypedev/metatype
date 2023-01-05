@@ -88,9 +88,8 @@ export interface DenoRuntimeData {
 
 export interface PrismaRuntimeData {
   name: string;
-  connection_string: string;
+  connection_string_secret: string;
   managed_types: Array<number>;
-  datasource: string;
   datamodel: string;
 }
 

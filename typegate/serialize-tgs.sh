@@ -16,6 +16,6 @@ for tg_file in ./*.py; do
   name="${name%.py}"
   target=$name.json
   echo "Serializing typegraph $name ..."
-  cargo run -p meta -q --color always -- serialize -f $tg_file -1 -o $target
+  cargo run -p meta-cli -q --color always -- serialize -f $tg_file -1 -o $target
   echo "  Done"
 done

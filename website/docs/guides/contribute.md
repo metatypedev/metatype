@@ -2,10 +2,13 @@
 
 ## Prerequisite
 
-Install [Rust](https://www.rust-lang.org/tools/install),
-[python](https://www.python.org/downloads/)
-[pipx](https://pypa.github.io/pipx/installation/) and
-[pnpm](https://pnpm.io/installation).
+Install:
+
+- [Rust](https://www.rust-lang.org/tools/install)
+- [Python](https://www.python.org/downloads/)
+- [pipx](https://pypa.github.io/pipx/installation/)
+- [pNpm](https://pnpm.io/installation)
+- [Deno](https://deno.land/manual@v1.29.1/getting_started/installation)
 
 ## Getting started
 
@@ -48,6 +51,10 @@ whiz
 ## Tests
 
 ```
-typegate/test.sh --quiet
-typegate/test-all.sh --quiet # on Linux (otherwise segfaulting)
+docker compose -f dev/docker-compose.yml up -d
+cargo test
+cd typegate && deno run -A test.ts
+cd typegraph && pytest -s
+
+docker compose -f dev/docker-compose.yml down
 ```
