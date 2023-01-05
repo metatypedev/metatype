@@ -27,6 +27,6 @@ sync:
     CREATED_AT: $CI_PIPELINE_CREATED_AT
     SHORT_SHA: $CI_COMMIT_SHORT_SHA
   trigger:
-    project: metatype/cloud
+    project: metatypedev/cloud
     branch: main
     strategy: depend
