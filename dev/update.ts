@@ -3,16 +3,21 @@
 import {
   dirname,
   fromFileUrl,
+  resolve,
 } from "https://deno.land/std@0.170.0/path/mod.ts";
-import { expandGlob } from "https://deno.land/std@0.170.0/fs/mod.ts";
+import {
+  expandGlobSync,
+  WalkEntry,
+} from "https://deno.land/std@0.170.0/fs/mod.ts";
 
-const localDir = dirname(fromFileUrl(import.meta.url));
+const thisDir = dirname(fromFileUrl(import.meta.url));
+const typegateDir = resolve(thisDir, "../typegate");
 
-const tsFiles = [];
-
-for await (const entry of expandGlob("src/**/*.ts", { root: localDir })) {
-  tsFiles.push(entry.path);
-}
+const tsFiles = [
+  ...expandGlobSync("{src,tests}/**/*.ts", {
+    root: typegateDir,
+  }),
+].map((f: WalkEntry) => f.path);
 
 const cmd = [
   "deno",
@@ -24,9 +29,9 @@ const cmd = [
   ...tsFiles,
 ];
 
-const p = Deno.run({ cmd, cwd: localDir });
-
+const p = Deno.run({ cmd, cwd: typegateDir });
 const status = await p.status();
+
 if (!status.success) {
   Deno.exit(status.code);
 }

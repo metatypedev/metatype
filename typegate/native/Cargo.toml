@@ -41,3 +41,6 @@ convert_case = "0.6.0"
 rust-s3 = { git = "https://github.com/zifeo/rust-s3", branch = "order" }
 http = "0.2.8"
 uuid = { version = "1.2.2", features = ["v4"] }
+
+[dev-dependencies]
+dotenv = "0.15.0"

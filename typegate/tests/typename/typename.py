@@ -1,5 +1,3 @@
-from os import environ
-
 from typegraph import policies
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
@@ -8,17 +6,13 @@ from typegraph.materializers.random import RandomMat
 from typegraph.materializers.random import RandomRuntime
 from typegraph.types import types as t
 
-postgres = environ.get(
-    "TEST_POSTGRES_DB", "postgresql://postgres:password@localhost:5432/db?schema=test"
-)
-
-with TypeGraph("typename") as g:
+with TypeGraph("prisma") as g:
 
     allow_all = policies.allow_all()
     userModel = t.struct({"id": t.integer()}).named("user")
     userModelPrisma = t.struct({"id": t.integer().config("id")}).named("userprisma")
 
-    prismaRuntimePosgres = PrismaRuntime("prisma", postgres)
+    prismaRuntimePosgres = PrismaRuntime("prisma", "POSTGRES")
     prismaRuntimePosgres.manage(userModelPrisma)
 
     randomRuntimeSeeded = RandomRuntime(seed=1)

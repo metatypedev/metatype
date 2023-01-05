@@ -368,7 +368,7 @@ mod tests {
 				sqrt(7);
 			"#;
             let code = code.to_string();
-            let transformed_code = transform_module(code).unwrap();
+            transform_module(code).unwrap();
         }
     }
 }

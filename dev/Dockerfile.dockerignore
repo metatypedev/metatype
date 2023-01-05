@@ -1,14 +1,12 @@
 *
 # exceptions does not support wildcard: https://github.com/moby/moby/issues/30018
-!/typegate/deno.json
+!/typegate
 !/typegate/deno.lock
-!/typegate/import_map.json
-!/typegate/.env.defaults
+!/typegate/deno_import.json
 !/typegate/src
 !/typegate/native
-!/typegate/LICENSE.md
+!/LICENSE.md
 !/Cargo.lock
 !/Cargo.toml
 !/meta-cli
 !/libs
-!/.git

@@ -30,22 +30,28 @@ import { expandGlob } from "https://deno.land/std@0.170.0/fs/mod.ts";
 
 const flags = parse(Deno.args, { "--": true });
 
-const localDir = dirname(fromFileUrl(import.meta.url));
+const thisDir = dirname(fromFileUrl(import.meta.url));
+const typegateDir = resolve(thisDir, "../typegate");
 
 const testFiles = [];
 
 // find test files
 if (flags._.length === 0) {
   // run all the tests
-  for await (const entry of expandGlob("tests/**/*_test.ts")) {
+  for await (
+    const entry of expandGlob("tests/**/*_test.ts", {
+      root: typegateDir,
+    })
+  ) {
     testFiles.push(entry.path);
   }
 } else {
   for (const f of flags._) {
-    const path = resolve(localDir, "tests", f as string);
+    const path = resolve(typegateDir, "tests", f as string);
     const stat = await Deno.stat(path);
+
     if (stat.isDirectory) {
-      for await (const entry of expandGlob("*_test.ts", { root: path })) {
+      for await (const entry of expandGlob("**/*_test.ts", { root: path })) {
         testFiles.push(entry.path);
       }
       continue;
@@ -61,43 +67,31 @@ if (flags._.length === 0) {
   }
 }
 
-setVenvVars(resolve(localDir, "../typegraph/.venv"));
-Deno.env.set("DENO_ENV", "test");
-
+const failures = [];
 for await (const testFile of testFiles) {
-  await runOne(testFile);
-}
-
-//
-// functions
-
-async function runOne(file: string) {
   const cmd = [
     "deno",
     "test",
     "--unstable",
     "--allow-all",
-    file,
+    testFile,
     ...flags["--"],
   ];
   const p = Deno.run({
     cmd,
-    cwd: localDir,
+    cwd: typegateDir,
+    env: Deno.env.toObject(),
   });
-
   const status = await p.status();
   if (!status.success) {
-    Deno.exit(status.code);
+    failures.push(testFile);
   }
 }
 
-function setVenvVars(venvDir: string): Record<string, string> {
-  const bin = resolve(venvDir, "bin");
-  Deno.env.set("VIRTUAL_ENV", venvDir);
-  const pathEnvSep = Deno.build.os === "windows" ? ";" : ":";
-  Deno.env.set("PATH", `${bin}${pathEnvSep}${Deno.env.get("PATH")}`);
-  return {
-    "VIRTUAL_ENV": venvDir,
-    "PATH": `${bin}:${Deno.env.get("PATH") ?? ""}`,
-  };
+if (failures.length > 0) {
+  console.log("Some errors were detected:");
+  for (const failure of failures) {
+    console.log(`- ${failure}`);
+  }
+  Deno.exit(1);
 }

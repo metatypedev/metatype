@@ -5,17 +5,13 @@ import * as native from "native";
 import { FromVars, GraphQLRuntime } from "./graphql.ts";
 import { ResolverError } from "../errors.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { nativeResult } from "../utils.ts";
+import { envOrFail, nativeResult } from "../utils.ts";
 
-const makeDatasource = (uri: string) => {
-  const engine = (() => {
-    if (uri.startsWith("postgres")) {
-      return "postgresql";
-    }
-  })();
+export const makeDatasource = (uri: string) => {
+  const scheme = new URL(uri).protocol.slice(0, -1);
   return `
   datasource db {
-    provider = "${engine}"
+    provider = "${scheme}"
     url      = "${uri}"
   }
   `;
@@ -34,7 +30,13 @@ export class PrismaRuntime extends GraphQLRuntime {
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     const { typegraph, args } = params;
-    const schema = `${args.datasource}${args.datamodel}`;
+    const typegraphName = typegraph.types[0].title;
+
+    const datasource = makeDatasource(envOrFail(
+      typegraphName,
+      args.connection_string_secret as string,
+    ));
+    const schema = `${datasource}${args.datamodel}`;
     //console.log(schema);
     const instance = new PrismaRuntime(schema);
     await instance.registerEngine(typegraph.types[0].title);
