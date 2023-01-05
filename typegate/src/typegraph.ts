@@ -40,17 +40,10 @@ import {
 } from "./types.ts";
 import { S3Runtime } from "./runtimes/s3.ts";
 
-interface Policy {
+interface TypePolicy {
   name: string;
   materializer: number;
 }
-
-interface SpecialPolicy {
-  name: string;
-  function: number;
-}
-
-export type TypePolicy = Policy | SpecialPolicy;
 
 export interface TypeMaterializer {
   name: string;
@@ -341,9 +334,7 @@ export class TypeGraph {
   }
 
   policyMaterializer(policy: TypePolicy): TypeMaterializer {
-    const matIdx = "materializer" in policy
-      ? policy.materializer
-      : this.type(policy.function, "function").materializer;
+    const matIdx = policy.materializer;
     return this.materializer(matIdx);
   }
 

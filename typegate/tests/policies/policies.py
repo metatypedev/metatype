@@ -1,4 +1,3 @@
-from typegraph import policies as p
 from typegraph.graphs.typegraph import Auth
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
@@ -34,5 +33,5 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
         ),
         secret=t.func(
             t.struct({"username": t.string()}), secret_data, mod.imp("readSecret")
-        ).add_policy(p.special(mod.imp("isAllowedToReadSecret"))),
+        ).add_policy(mod.imp("isAllowedToReadSecret")),
     )

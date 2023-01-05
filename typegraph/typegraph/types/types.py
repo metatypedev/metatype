@@ -26,9 +26,6 @@ from typegraph.graphs.typegraph import TypegraphContext
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.base import Runtime
 from typegraph.policies import Policy
-from typegraph.policies import PolicyType
-from typegraph.policies import SpecialPolicy
-from typegraph.policies import SpecialPolicyBuilder
 from typegraph.utils.attrs import always
 from typegraph.utils.attrs import asdict
 from typegraph.utils.attrs import SKIP
@@ -111,7 +108,7 @@ class typedef(Node):
     runtime: Optional["Runtime"] = optional_field()
     inject: Optional[Union[str, TypeNode]] = optional_field()
     injection: Optional[Any] = optional_field()
-    policies: Tuple[PolicyType, ...] = field(kw_only=True, factory=tuple)
+    policies: Tuple[Policy, ...] = field(kw_only=True, factory=tuple)
     runtime_config: Dict[str, Any] = field(
         kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
     )
@@ -599,25 +596,6 @@ class func(typedef):
         ret["output"] = collector.index(ret.pop("out"))
         ret["materializer"] = collector.index(ret.pop("mat"))
         return ret
-
-    def add_policy(
-        self,
-        *policies: List[
-            Union[Policy, Materializer, SpecialPolicy, SpecialPolicyBuilder, "func"]
-        ],
-    ):
-        def policy_from(p) -> Union[Policy, SpecialPolicy]:
-            if isinstance(p, func):
-                return SpecialPolicy(p)
-            if isinstance(p, SpecialPolicyBuilder):
-                return p.build(self.inp)
-            if isinstance(p, SpecialPolicy):
-                return p
-            return Policy.get_from(p)
-
-        return self.replace(
-            policies=self.policies + tuple(policy_from(p) for p in policies)
-        )
 
     # this is not function composition
     def compose(self, out: Dict[str, typedef]):

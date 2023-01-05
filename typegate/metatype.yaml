@@ -1,3 +1,0 @@
-typegraphs:
-  python:
-    include: "src/typegraphs/*.py"

@@ -242,7 +242,7 @@ export class Engine {
             policiesRegistry,
             verbose,
             // TODO what if argument computation requires parent to be set?
-            mapo(args, (e) => e({}, variables, context)),
+            mapo(args, (e) => e(variables, null, context)),
           )
         ),
       );
