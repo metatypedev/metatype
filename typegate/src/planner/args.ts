@@ -136,7 +136,7 @@ export class ArgumentCollector {
           `type mismatch, got '${valueNode.kind}' but expected 'BOOLEAN' for '${typ.title}`,
         );
       }
-      const value = Boolean(astNode.value);
+      const value = Boolean(valueNode.value);
       return { compute: () => value, policies, deps: [] };
     }
 

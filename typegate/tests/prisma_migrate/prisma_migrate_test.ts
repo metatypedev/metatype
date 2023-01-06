@@ -3,13 +3,13 @@
 import { gql, removeMigrations, test } from "../utils.ts";
 import {
   assert,
-  // assertArrayIncludes,
+  assertArrayIncludes,
   assertEquals,
   assertExists,
 } from "std/testing/asserts.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import * as native from "native";
-// import { nativeResult } from "../../src/utils.ts";
+import { nativeResult } from "../../src/utils.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 
@@ -128,111 +128,111 @@ test("prisma migrations", async (t) => {
       .on(e);
   });
 
-  // let mig: string;
+  let mig: string;
 
-  // await t.should("require database reset on drift", async () => {
-  //   const path = join(migrationDir, createdMigrations[0]);
-  //   await Deno.rename(path, `${path}_renamed`);
-  //   mig = nativeResult(
-  //     await native.archive({ path: migrationDir }),
-  //   ).base64;
-  //   await gql`
-  //     mutation PrismaApply($mig: String!) {
-  //       apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
-  //         appliedMigrations
-  //       }
-  //     }
-  //   `
-  //     .withVars({ mig })
-  //     .withHeaders({
-  //       "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
-  //     })
-  //     .expectErrorContains("database reset required")
-  //     .on(migrations);
+  await t.should("require database reset on drift", async () => {
+    const path = join(migrationDir, createdMigrations[0]);
+    await Deno.rename(path, `${path}_renamed`);
+    mig = nativeResult(
+      await native.archive({ path: migrationDir }),
+    ).base64;
+    await gql`
+      mutation PrismaApply($mig: String!) {
+        apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
+          appliedMigrations
+        }
+      }
+    `
+      .withVars({ mig })
+      .withHeaders({
+        "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
+      })
+      .expectErrorContains("database reset required")
+      .on(migrations);
 
-  //   await gql`
-  //     mutation PrismaApply($mig: String!) {
-  //       apply(migrations: $mig, typegraph: "prisma", resetDatabase: true) {
-  //         databaseReset
-  //         appliedMigrations
-  //       }
-  //     }
-  //   `
-  //     .withVars({ mig })
-  //     .withHeaders({
-  //       "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
-  //     })
-  //     .expectBody((body) => {
-  //       const { appliedMigrations, databaseReset } = body.data.apply;
-  //       console.log({ appliedMigrations, databaseReset });
-  //       assert(databaseReset);
-  //       assertArrayIncludes(
-  //         appliedMigrations,
-  //         createdMigrations.slice(0, 1).map((n) => `${n}_renamed`),
-  //       );
-  //     })
-  //     .on(migrations);
+    await gql`
+      mutation PrismaApply($mig: String!) {
+        apply(migrations: $mig, typegraph: "prisma", resetDatabase: true) {
+          databaseReset
+          appliedMigrations
+        }
+      }
+    `
+      .withVars({ mig })
+      .withHeaders({
+        "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
+      })
+      .expectBody((body) => {
+        const { appliedMigrations, databaseReset } = body.data.apply;
+        console.log({ appliedMigrations, databaseReset });
+        assert(databaseReset);
+        assertArrayIncludes(
+          appliedMigrations,
+          createdMigrations.slice(0, 1).map((n) => `${n}_renamed`),
+        );
+      })
+      .on(migrations);
 
-  //   // database is empty
-  //   await gql`
-  //     query {
-  //       findManyRecords{
-  //         id
-  //         name
-  //       }
-  //     }
-  //   `
-  //     .expectData({ findManyRecords: [] })
-  //     .on(e);
-  // });
+    // database is empty
+    await gql`
+        query {
+          findManyRecords{
+            id
+            name
+          }
+        }
+      `
+      .expectData({ findManyRecords: [] })
+      .on(e);
+  });
 
-  // await t.should("apply pending migrations", async () => {
-  //   // reset database
-  //   // TODO use reset mutation on prisma_migrations
-  //   await gql`
-  //     mutation a {
-  //       executeRaw(
-  //         query: "DROP SCHEMA IF EXISTS test CASCADE"
-  //         parameters: "[]"
-  //       )
-  //     }
-  //   `
-  //     .expectData({
-  //       executeRaw: 0,
-  //     })
-  //     .on(e);
+  await t.should("apply pending migrations", async () => {
+    // reset database
+    // TODO use reset mutation on prisma_migrations
+    await gql`
+        mutation a {
+          executeRaw(
+            query: "DROP SCHEMA IF EXISTS test CASCADE"
+            parameters: "[]"
+          )
+        }
+      `
+      .expectData({
+        executeRaw: 0,
+      })
+      .on(e);
 
-  //   await gql`
-  //     mutation PrismaApply($mig: String!) {
-  //       apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
-  //         databaseReset
-  //         appliedMigrations
-  //       }
-  //     }
-  //   `
-  //     .withVars({ mig })
-  //     .withHeaders({
-  //       "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
-  //     })
-  //     .expectBody((body) => {
-  //       const { appliedMigrations, databaseReset } = body.data.apply;
-  //       assert(!databaseReset);
-  //       assertArrayIncludes(
-  //         appliedMigrations,
-  //         createdMigrations.slice(0, 1).map((n) => `${n}_renamed`),
-  //       );
-  //     })
-  //     .on(migrations);
+    await gql`
+        mutation PrismaApply($mig: String!) {
+          apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
+            databaseReset
+            appliedMigrations
+          }
+        }
+      `
+      .withVars({ mig })
+      .withHeaders({
+        "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
+      })
+      .expectBody((body) => {
+        const { appliedMigrations, databaseReset } = body.data.apply;
+        assert(!databaseReset);
+        assertArrayIncludes(
+          appliedMigrations,
+          createdMigrations.slice(0, 1).map((n) => `${n}_renamed`),
+        );
+      })
+      .on(migrations);
 
-  //   await gql`
-  //     query {
-  //       findManyRecords{
-  //         id
-  //         name
-  //       }
-  //     }
-  //   `
-  //     .expectData({ findManyRecords: [] })
-  //     .on(e);
-  // });
+    await gql`
+        query {
+          findManyRecords{
+            id
+            name
+          }
+        }
+      `
+      .expectData({ findManyRecords: [] })
+      .on(e);
+  });
 }, { systemTypegraphs: true });
