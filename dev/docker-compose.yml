@@ -20,12 +20,6 @@ services:
       POSTGRES_PASSWORD: password
     command: "-c log_statement=all"
 
-  adminer:
-    image: adminer:latest
-    restart: always
-    ports:
-      - 8080:8080
-
   redis:
     image: redis:7
     restart: always
