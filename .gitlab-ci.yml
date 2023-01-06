@@ -1,11 +1,4 @@
-sync:
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "main"
-  variables:
-    REF_SLUG: $CI_COMMIT_REF_SLUG
-    CREATED_AT: $CI_PIPELINE_CREATED_AT
-    SHORT_SHA: $CI_COMMIT_SHORT_SHA
-  trigger:
-    project: metatype/cloud
-    branch: main
-    strategy: depend
+include:
+  - project: "metatypedev/cloud"
+    ref: main
+    file: "metatype-ci.yml"
