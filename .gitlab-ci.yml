@@ -1,30 +1,4 @@
 include:
-  - project: "devops/gitlab-ci-templates"
+  - project: "metatypedev/cloud"
     ref: main
-    file: "docker.yml"
-
-stages:
-  - bundle
-  - deploy
-
-docker:
-  stage: bundle
-  tags:
-    - docker
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "main"
-  variables:
-    DOCKER_DOCKERFILE: dev/Dockerfile
-
-sync:
-  stage: deploy
-  rules:
-    - if: $CI_COMMIT_REF_NAME == "main"
-  variables:
-    REF_SLUG: $CI_COMMIT_REF_SLUG
-    CREATED_AT: $CI_PIPELINE_CREATED_AT
-    SHORT_SHA: $CI_COMMIT_SHORT_SHA
-  trigger:
-    project: metatypedev/cloud
-    branch: main
-    strategy: depend
+    file: "metatype-ci.yml"
