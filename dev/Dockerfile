@@ -12,7 +12,7 @@ FROM base as plan
 COPY . .
 RUN rm -rf meta-cli \
     && cargo new meta-cli \
-    && cargo chef prepare --recipe-path recipe.json && cat recipe.json
+    && cargo chef prepare --recipe-path recipe.json
 
 #
 
