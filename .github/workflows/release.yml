@@ -115,9 +115,9 @@ jobs:
       - name: Build & publish
         uses: docker/build-push-action@v3
         with:
-          file: typegate/Dockerfile
+          file: dev/Dockerfile
           platforms: linux/amd64
           push: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache,mode=max
           tags: ghcr.io/${{ github.repository_owner }}/typegate:${{ github.ref_name }},ghcr.io/${{ github.repository_owner }}/typegate:latest

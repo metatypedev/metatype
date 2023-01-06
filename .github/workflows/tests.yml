@@ -1,7 +1,4 @@
 on:
-  push:
-    branches:
-      - "ci"
   pull_request:
     types:
       - opened
@@ -111,7 +108,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/download-artifact@v3
         with:
           name: meta
@@ -125,6 +122,8 @@ jobs:
           pytest -s tests
 
   test-meta-cli:
+    needs: changes
+    if: ${{ needs.changes.outputs.meta-cli == 'true' || needs.changes.outputs.typegraph == 'true' || needs.changes.outputs.typegate == 'true' || needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -140,7 +139,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - name: Install and test build
         run: |
           python3 -m venv .venv
@@ -180,7 +179,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - name: Install and test build
         run: |
           python3 -m venv .venv
@@ -243,7 +242,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/download-artifact@v3
         with:
           name: meta
@@ -277,7 +276,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/download-artifact@v3
         with:
           name: meta
@@ -296,11 +295,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: docker/setup-buildx-action@v2
+      - uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
         uses: docker/build-push-action@v3
         with:
           file: dev/Dockerfile
           platforms: linux/amd64
           push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache,mode=max
