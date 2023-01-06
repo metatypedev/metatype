@@ -9,7 +9,7 @@ Support Metatype by starring ⭐ this repository,
 [discussing](https://github.com/metatypedev/metatype/discussions)
 functionalities 💬, watching new releases 🔔, reporting
 [issues](https://github.com/metatypedev/metatype/issues) 🐛 or even contributing
-back :octocat: fixing an issue, improving clarity or adding new features.
+back :octocat: fixing a bug, improving clarity or adding new features.
 
 ### Browse the [documentation](https://metatype.dev) or start directly [building your first typegraph](https://metatype.dev/docs/tutorials/quickstart)!
 
