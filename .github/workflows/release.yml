@@ -20,7 +20,7 @@ jobs:
       - id: version
         uses: mikefarah/yq@master
         with:
-          cmd: yq '.METATYPE_VERSION' tools/lock.yml
+          cmd: yq '.METATYPE_VERSION' dev/lock.yml
       - name: Check and bump version
         run: |
           if [[ "${{ github.ref_name }}" != "v${{ steps.version.outputs.result }}" ]]; then
