@@ -20,14 +20,15 @@ jobs:
       - id: version
         uses: mikefarah/yq@master
         with:
-          cmd: yq '.METATYPE_VERSION' dev/lock.yml
-      - name: Check and bump version
+          deno-version: vx.x.x
+      - name: Check version
         run: |
-          if [[ "${{ github.ref_name }}" != "v${{ steps.version.outputs.result }}" ]]; then
+          VERSION=$(deno run -A dev/lock.ts --version)
+          if [[ "${{ github.ref_name }}" != "v$VERSION" ]]; then
             echo "Tag does not match code version, stopping."
             exit -1
           fi
-          echo "Building v${{ steps.version.outputs.result }}"
+          echo "Releasing v$VERSION
 
   meta-cli:
     needs:
@@ -112,8 +113,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build & publish
-        uses: docker/build-push-action@v3
+      - uses: docker/build-push-action@v3
         with:
           file: dev/Dockerfile
           platforms: linux/amd64
@@ -121,3 +121,27 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache,mode=max
           tags: ghcr.io/${{ github.repository_owner }}/typegate:${{ github.ref_name }},ghcr.io/${{ github.repository_owner }}/typegate:latest
+
+  bump:
+    needs:
+      - meta-cli
+      - typegraph
+      - typegate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: vx.x.x
+      - name: Bump version
+        id: bump
+        run: |
+          deno run -A dev/lock.ts --bump prerelease
+          echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
+      - uses: actions-js/push@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+          message: "chore: preparing release ${{ steps.bump.outputs.version }}"
+          coauthor_email: ${{ github.event.pull_request.user.email }}
+          coauthor_name: ${{ github.event.pull_request.user.name }}
