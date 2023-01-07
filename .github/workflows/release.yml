@@ -58,17 +58,17 @@ jobs:
         with:
           use-cross: false
           command: build
-          args: "--locked --release --package meta --target ${{ matrix.target }}"
+          args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
       - name: Compress
         run: |
           cd target/${{ matrix.target }}/release          
-          tar czvf ../../../meta-${{ github.ref_name }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+          tar czvf ../../../meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
       - name: Upload
         uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}
-          file: "meta-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
-          asset_name: "meta-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
+          file: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
+          asset_name: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
           overwrite: false
 
   typegraph:
@@ -77,13 +77,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
       - name: Build & publish
         working-directory: typegraph
         env:
