@@ -1,18 +1,10 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { TypeGraphDS } from "../typegraph.ts";
-import { ObjectNode, TypeNode } from "../type_node.ts";
+import { ObjectNode } from "../type_node.ts";
+import { addNode } from "./utils.ts";
 
 type PropertiesTable = Record<string, number>;
-
-/**
- * Appends a new node to the end of the TypeGraph, and returns its index.
- */
-function addNode(typegraph: TypeGraphDS, node: TypeNode): number {
-  const { types } = typegraph;
-  types.push(node);
-  return types.length - 1;
-}
 
 /**
  * Splits a TypeGraph into GraphQL `queries` and `mutations`

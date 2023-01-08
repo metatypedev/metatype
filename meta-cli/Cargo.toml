@@ -1,8 +1,21 @@
 [package]
-name = "meta"
-version = "0.0.2-alpha.13"
+name = "meta-cli"
+version = "0.0.2-alpha.14"
 edition = "2021"
 
+description = "Free and open ecosystem for API composition."
+authors = ["Metatype Contributors <support@metatype.dev>"]
+license-file = "../LICENSE.md"
+homepage = "https://metatype.dev"
+documentation = "https://metatype.dev"
+repository = "https://github.com/metatypedev/metatype"
+include = ["src"]
+keywords = ["api", "composition", "typesystem", "graphql", "ecosystem"]
+categories = ["accessibility", "api-bindings", "data-structures", "development-tools", "wasm"]
+
+[[bin]]
+name = "meta"
+path = "src/main.rs"
 
 [dependencies]
 dprint-plugin-typescript = "0.78.0"
@@ -14,7 +27,7 @@ swc_ecma_transforms = "0.198.26"
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines" }
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
-tokio = { version = "1.23.0", features = ["full"] }
+tokio = { version = "1.23.1", features = ["full"] }
 log = "0.4.17"
 clap = { version = "4.0.29", features = ["derive"] }
 crossbeam-channel = "0.5.6"

@@ -5,17 +5,18 @@ use anyhow::{anyhow, bail, Context, Result};
 use common::typegraph::Typegraph;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
+use std::any::type_name;
 use std::collections::HashMap;
 use std::convert::AsRef;
+use std::env;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use url::Url;
 
 #[derive(Deserialize, Debug)]
 struct PrismaRuntimeData {
-    //connection_string: String,
-    datasource: String,
+    connection_string_secret: String,
     datamodel: String,
-    //managed_types: Vec<usize>,
 }
 
 fn get_workspace_root() -> Result<PathBuf> {
@@ -117,9 +118,30 @@ struct TestContext {
     engine_id: String,
 }
 
+fn make_datasource(uri: String) -> Result<String> {
+    let url = Url::parse(&uri)?;
+    let datasource = format!(
+        r#"
+        datasource db {{
+            provider = "{}"
+            url      = "{}"
+        }}
+        "#,
+        url.scheme(),
+        uri
+    );
+    Ok(datasource)
+}
+
+fn env_fetch(typegraph_name: String, var: String) -> String {
+    let name = format!("TG_{}_{}", typegraph_name, var).to_uppercase();
+    env::var(name.clone()).expect(&format!("Cannot find env var {}", name))
+}
+
 impl TestContext {
     async fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let tg = load_typegraph(path).context("could not load typegraph")?;
+        let tg_name = tg.name()?;
         let runtime = tg
             .runtimes
             .into_iter()
@@ -134,21 +156,19 @@ impl TestContext {
             .next()
             .ok_or(anyhow!("no prisma runtime"))?;
 
+        let secret = env_fetch(tg_name, runtime.connection_string_secret);
+        let datasource = make_datasource(secret)?;
         let engine_id = crate::prisma::register_engine(
-            format!("{}{}", runtime.datasource, runtime.datamodel),
+            format!("{}{}", datasource, runtime.datamodel),
             tg.types[0].base().title.clone(),
         )
         .await?;
 
         Ok(Self {
-            datasource: runtime.datasource,
+            datasource,
             datamodel: runtime.datamodel,
             engine_id: engine_id,
         })
-    }
-
-    fn datamodel(&self) -> String {
-        format!("{}{}", self.datasource, self.datamodel)
     }
 
     async fn query(&self, query: &str) -> Result<String> {
@@ -181,7 +201,9 @@ async fn recreate_db_schema(t: &TestContext) -> Result<()> {
 
 #[tokio::test]
 async fn simple_record() -> Result<()> {
-    let t = TestContext::new("../tests/typegraphs/prisma.py").await?;
+    dotenv::from_path("../.env.ci")?;
+
+    let t = TestContext::new("../tests/prisma/prisma.py").await?;
     recreate_db_schema(&t).await?;
 
     let ret = t

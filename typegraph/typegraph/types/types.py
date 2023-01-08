@@ -68,6 +68,33 @@ def optional_field():
     return field(kw_only=True, default=None)
 
 
+# reserved types are used for internal implementation
+# and cannot be used to define user custom types
+#
+# more information at https://spec.graphql.org/draft/
+reserved_types = [
+    # Primitives
+    "Int",
+    "Float",
+    "Boolean",
+    "String",
+    # Operations
+    "Query",
+    "Mutation",
+    "Subscription",
+    "Fragment",
+    # Extras
+    "Date",
+    "ID",
+    "UUID",
+    "URL",
+    "Point",
+    "PointList",
+    "Polygon",
+    "MultiPolygon",
+]
+
+
 @frozen
 class typedef(Node):
     graph: TypeGraph = field(
@@ -118,6 +145,13 @@ class typedef(Node):
         # TODO compare types
         if name in types:
             raise Exception(f"type name {name} already used")
+        if name in reserved_types:
+            raise Exception(f"type name {name} is a reserved type")
+        # https://spec.graphql.org/draft/#sel-GAJTBAABABFj6D
+        if name.startswith("__"):
+            raise Exception(
+                f"type name {name} cannot start with `__`, it's reserved for introspection"
+            )
         ret = self.replace(name=name)
         types[name] = ret
         return ret

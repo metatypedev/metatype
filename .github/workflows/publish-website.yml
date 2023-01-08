@@ -1,0 +1,36 @@
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PNPM_VERSION: "7.9.3"
+  NODE_VERSION: "18.12.1"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: pnpm/action-setup@v2.2.2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - name: Install dependencies
+        working-directory: website
+        env:
+          TG_URL: https://cloud.metatype.dev
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: website/build
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+          cname: metatype.dev

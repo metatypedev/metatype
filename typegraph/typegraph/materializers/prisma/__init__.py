@@ -1,7 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from collections import defaultdict
-from textwrap import dedent
 from typing import DefaultDict
 from typing import Dict
 from typing import List
@@ -12,7 +11,6 @@ from typing import Union
 
 from attrs import field
 from attrs import frozen
-from furl import furl
 from typegraph.graphs.builder import Collector
 from typegraph.graphs.node import Node
 from typegraph.graphs.typegraph import find
@@ -333,7 +331,7 @@ managed_types: DefaultDict["PrismaRuntime", Set[t.struct]] = defaultdict(set)
 @frozen
 class PrismaRuntime(Runtime):
     name: str
-    connection_string: str
+    connection_string_secret: str
     runtime_name: str = always("prisma")
 
     # one_to_many_relations: dict[str, OneToMany] = dataclasses.field(default_factory=dict,repr=False, hash=False, metadata={"json_serialize": False})
@@ -510,21 +508,11 @@ class PrismaRuntime(Runtime):
     def datamodel(self):
         return PrismaSchema(managed_types[self]).build()
 
-    def datasource(self):
-        f = furl(self.connection_string)
-        source = f"""
-        datasource db {{
-            provider = "{f.scheme}"
-            url      = "{f.url}"
-        }}\n
-        """
-        return dedent(source)
-
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
         data["data"].update(
             datamodel=self.datamodel(),
-            datasource=self.datasource(),
+            connection_string_secret=self.connection_string_secret,
             models=[collector.index(tp) for tp in managed_types[self]],
         )
         return data

@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import "./load_test_env.ts";
 import {
   assert,
   assertEquals,
@@ -26,8 +27,8 @@ const testRuntimesConfig = {
   worker: { lazy: false },
 };
 
-const localDir = dirname(fromFileUrl(import.meta.url));
-const metaCli = resolve(localDir, "../../target/debug/meta");
+const thisDir = dirname(fromFileUrl(import.meta.url));
+const metaCli = resolve(thisDir, "../../target/debug/meta");
 
 export async function meta(...input: string[]): Promise<void> {
   console.log(await shell([metaCli, ...input]));
@@ -35,7 +36,7 @@ export async function meta(...input: string[]): Promise<void> {
 
 export async function shell(cmd: string[]): Promise<string> {
   const p = Deno.run({
-    cwd: localDir,
+    cwd: thisDir,
     cmd,
     stdout: "piped",
     stderr: "piped",
@@ -246,11 +247,11 @@ const testConfig = parse(Deno.args);
 
 export function testAll(engineName: string) {
   test(`Auto-tests for ${engineName}`, async (t) => {
-    const e = await t.pythonFile(`typegraphs/${engineName}.py`);
+    const e = await t.pythonFile(`auto/${engineName}.py`);
 
     for await (
       const f of Deno.readDir(
-        join(localDir, `queries/${engineName}`),
+        join(thisDir, `auto/queries/${engineName}`),
       )
     ) {
       if (f.name.endsWith(".graphql")) {
@@ -304,8 +305,8 @@ export class Q {
   }
 
   static async fs(path: string, engine: Engine) {
-    const input = join(localDir, `queries/${path}.graphql`);
-    const output = join(localDir, `queries/${path}.json`);
+    const input = join(thisDir, `auto/queries/${path}.graphql`);
+    const output = join(thisDir, `auto/queries/${path}.json`);
     const query = Deno.readTextFile(input);
     if (testConfig.override || !(await exists(output))) {
       const { ...result } = await engine!.execute(
@@ -448,7 +449,7 @@ export async function recreateMigrations(engine: Engine) {
     rt.name === "prisma"
   ) as PrismaRuntimeDS[];
 
-  const migrationsBaseDir = join(localDir, "prisma-migrations");
+  const migrationsBaseDir = join(thisDir, "prisma-migrations");
 
   for await (const runtime of runtimes) {
     const prisma = new PrismaMigrate(engine, runtime, null);
@@ -464,7 +465,7 @@ export async function recreateMigrations(engine: Engine) {
 }
 
 export async function removeMigrations(engine: Engine) {
-  await Deno.remove(join(localDir, "prisma-migrations", engine.name), {
+  await Deno.remove(join(thisDir, "prisma-migrations", engine.name), {
     recursive: true,
   }).catch(() => {});
 }

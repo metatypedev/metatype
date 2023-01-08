@@ -27,7 +27,7 @@ migration-connector = { git = "https://github.com/prisma/prisma-engines" }
 connection-string = "0.1.14"
 url = "2.3.1"
 thiserror = "1.0.38"
-tokio = { version = "1.23.0", features = ["full"] }
+tokio = { version = "1.23.1", features = ["full"] }
 lazy_static = "1.4.0"
 log = "0.4.17"
 env_logger = "0.10.0"
@@ -41,3 +41,6 @@ convert_case = "0.6.0"
 rust-s3 = { git = "https://github.com/zifeo/rust-s3", branch = "order" }
 http = "0.2.8"
 uuid = { version = "1.2.2", features = ["v4"] }
+
+[dev-dependencies]
+dotenv = "0.15.0"

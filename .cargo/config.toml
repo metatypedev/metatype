@@ -1,2 +1,2 @@
-[alias]
-xtask = "run --package xtask --"
+[env]
+OUT_DIR = { value = "target", relative = true }

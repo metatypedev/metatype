@@ -186,12 +186,6 @@ impl Config {
         Ok(config)
     }
 
-    pub fn from_str<P: AsRef<Path>>(text: &str, base_dir: P) -> Result<Config> {
-        let mut config: Self = serde_yaml::from_str(text)?;
-        config.base_dir = base_dir.as_ref().to_owned();
-        Ok(config)
-    }
-
     /// Load config file: recursively search from `start_dir` to parent directories...
     pub fn find<P: AsRef<Path>>(start_dir: P) -> Result<Option<Config>> {
         let mut current_dir = fs::canonicalize(start_dir)?;

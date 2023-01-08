@@ -2,7 +2,7 @@
 
 import { Engine, initTypegraph } from "./engine.ts";
 import { RedisReplicatedMap } from "./replicated_map.ts";
-import { RedisConfig } from "./config.ts";
+import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import { RuntimesConfig } from "./types.ts";
 
@@ -21,7 +21,9 @@ export abstract class Register {
 }
 
 export class ReplicatedRegister extends Register {
-  static async init(redisConfig: RedisConfig): Promise<ReplicatedRegister> {
+  static async init(
+    redisConfig: RedisConnectOptions,
+  ): Promise<ReplicatedRegister> {
     const replicatedMap = await RedisReplicatedMap.init<Engine>(
       "typegraph",
       redisConfig,
