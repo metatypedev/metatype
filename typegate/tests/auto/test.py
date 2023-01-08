@@ -13,7 +13,7 @@ from typegraph.types import types as t
 with TypeGraph("test") as g:
 
     remote = GraphQLRuntime("http://localhost:5000/graphql")
-    db = PrismaRuntime("test", "postgresql://postgres:password@localhost:5432/db")
+    db = PrismaRuntime("test", "POSTGRES")
     ipApi = HTTPRuntime("http://ip-api.com/json")
     js = DenoRuntime(worker="js")
 
