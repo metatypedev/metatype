@@ -25,6 +25,6 @@ updates:
     schedule:
       interval: weekly
   - package-ecosystem: pip
-    directory: /example
+    directory: /examples
     schedule:
       interval: weekly
