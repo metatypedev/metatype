@@ -20,3 +20,11 @@ updates:
     directory: /typegraph
     schedule:
       interval: weekly
+  - package-ecosystem: pip
+    directory: /website
+    schedule:
+      interval: weekly
+  - package-ecosystem: pip
+    directory: /example
+    schedule:
+      interval: weekly
