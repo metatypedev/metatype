@@ -22,7 +22,6 @@ const rules: Record<string, Rules> = {
     '(  PYTHON_VERSION: ").+(")': "PYTHON_VERSION",
     '(  POETRY_VERSION: ").+(")': "POETRY_VERSION",
     '(  RUST_VERSION: ").+(")': "RUST_VERSION",
-    '(  DENO_BINDGEN_URL: ").+(")': "DENO_BINDGEN_URL",
     '(  DENO_VERSION: ").+(")': "DENO_VERSION",
   },
   "../.github/workflows/publish-website.yml": {
