@@ -9,6 +9,7 @@ export const Type = {
   OBJECT: "object",
   ARRAY: "array",
   FUNCTION: "function",
+  ANY: "any",
 } as const;
 
 type Injection =

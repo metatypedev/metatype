@@ -169,7 +169,7 @@ export class Planner {
         this.tg.introspection,
         this.verbose,
       );
-      const root = this.tg.introspection.type(0, "object");
+      const root = this.tg.introspection.type(0, Type.OBJECT);
 
       // traverse on the root node: parent, parentStage and node stage are undefined
       return introspection.traverse({
@@ -405,6 +405,7 @@ export class Planner {
   }
 
   get operationName(): string {
+    // Unnamed queries/mutations will be named "Q"/"M"
     return this.operation.name?.value ??
       this.operation.operation.charAt(0).toUpperCase();
   }
