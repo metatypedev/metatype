@@ -2492,7 +2492,7 @@ name = "meta-cli"
 version = "0.0.3-dev.0"
 dependencies = [
  "anyhow",
- "base64 0.13.1",
+ "base64 0.20.0",
  "clap",
  "colored",
  "common",
