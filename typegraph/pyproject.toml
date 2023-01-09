@@ -54,7 +54,7 @@ pytest = "^7.2.0"
 flake8 = "^5.0.4"
 pytest-asyncio = "^0.20.3"
 debugpy = "^1.6.5"
-mypy = "^0.982"
+mypy = "^0.991"
 
 [build-system]
 requires = ["poetry-core"]
