@@ -270,7 +270,8 @@ export class Planner {
       return stages;
     }
 
-    // support for nested quantifiers?
+    // TODO support for nested quantifiers
+    // What nested quantifiers should be supported: t.optional(t.optional(...)), ...
     if (isQuantifier(schema)) {
       const itemTypeIdx = getWrappedType(schema);
       const itemSchema = this.tg.type(itemTypeIdx);

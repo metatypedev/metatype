@@ -23,16 +23,20 @@ interface CollectedArg {
   deps: string[];
 }
 
+/**
+ * Utility class to collect the arguments for fields.
+ */
 export class ArgumentCollector {
   constructor(
     private tg: TypeGraph,
   ) {}
 
   // TODO fieldPath, path (in arg)
+  /** Collect the arguments for the node `astNode` corresponding to type at `typeIdx` */
   collectArg(
     astNode: ast.ArgumentNode | ast.ObjectFieldNode | undefined,
     typeIdx: number,
-    parentProps: Record<string, number>, // TODO rename parent context?
+    parentProps: Record<string, number>, // parent context?
   ): CollectedArg {
     const typ = this.tg.type(typeIdx);
     if (typ == null) {
@@ -153,7 +157,8 @@ export class ArgumentCollector {
     throw new Error(`unknown variable type '${typ.type}'`);
   }
 
-  collectArrayArg(
+  /** Collect the arguments of an array field */
+  private collectArrayArg(
     valueNode: ast.ListValueNode,
     typ: ArrayNode,
     parentProps: Record<string, number>,
@@ -186,7 +191,8 @@ export class ArgumentCollector {
     };
   }
 
-  collectObjectArg(valueNode: ast.ObjectValueNode, typ: ObjectNode) {
+  /** Collect the arguments of an object field */
+  private collectObjectArg(valueNode: ast.ObjectValueNode, typ: ObjectNode) {
     const { fields } = valueNode;
     const fieldByKeys = fields.reduce(
       (agg, field) => ({ ...agg, [field.name.value]: field }),
@@ -222,6 +228,7 @@ export class ArgumentCollector {
     };
   }
 
+  /** Merge the policies and the deps */
   private merge(a: Partial<Omit<CollectedArg, "compute">>, b: CollectedArg) {
     return {
       compute: b.compute,
@@ -230,6 +237,7 @@ export class ArgumentCollector {
     };
   }
 
+  /** Collect the default value for an object parameter */
   private collectDefaults(props: Record<string, number>): CollectedArg {
     const computes: Record<string, ComputeArg> = {};
     const deps = [];
