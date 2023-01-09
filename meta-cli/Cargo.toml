@@ -45,7 +45,7 @@ question = "0.2.2"
 dialoguer = "0.10.2"
 flate2 = "1.0.25"
 tar = "0.4.38"
-base64 = "0.13.1"
+base64 = "0.20.0"
 common = { path = "../libs/common" }
 walkdir = "2.3.2"
 self_update = { version = "0.32.0", features = ["archive-tar", "archive-zip", "compression-flate2", "compression-zip-deflate", "compression-zip-bzip2"] }
