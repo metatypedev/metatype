@@ -43,7 +43,7 @@
     "@typescript-eslint/eslint-plugin": "^5.44.0",
     "@typescript-eslint/parser": "^5.44.0",
     "docusaurus-lunr-search": "^2.3.2",
-    "docusaurus-plugin-drawio": "^0.1.7",
+    "docusaurus-plugin-drawio": "^0.2.0",
     "docusaurus-plugin-sass": "^0.2.2",
     "docusaurus-tailwindcss": "^0.1.0",
     "eslint": "^8.28.0",
