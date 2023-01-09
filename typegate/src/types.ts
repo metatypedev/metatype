@@ -50,15 +50,9 @@ export type RuntimeInit = Record<
   (params: RuntimeInitParams) => Promise<Runtime> | Runtime
 >;
 
-export type OperationType = "Query" | "Mutation";
-
-export interface Operation {
-  name: string;
-  type: OperationType;
-}
 export interface ComputeStageProps {
-  // TODO expand
-  operation: Operation;
+  operationName: string;
+  operationType: ast.OperationTypeNode;
   dependencies: string[];
   parent?: ComputeStage;
   args: Record<string, ComputeArg>;

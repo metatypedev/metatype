@@ -3,7 +3,6 @@
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
 import { ComputeStage } from "./engine.ts";
-import { FragmentDefs } from "./graphql.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";
 import { GoogleapisRuntime } from "./runtimes/googleapis.ts";
 import { GraphQLRuntime } from "./runtimes/graphql.ts";
@@ -31,7 +30,6 @@ import config from "./config.ts";
 import {
   Batcher,
   Context,
-  Operation,
   PolicyStages,
   PolicyStagesFactory,
   Resolver,
@@ -89,19 +87,6 @@ export interface TypeGraphDS {
 
 export type RuntimeResolver = Record<string, Runtime>;
 
-interface TraverseParams {
-  operation: Operation;
-  fragments: FragmentDefs;
-  parentName: string;
-  parentArgs: readonly ast.ArgumentNode[];
-  parentSelectionSet: ast.SelectionSetNode;
-  verbose: boolean;
-  queryPath?: string[];
-  parentIdx: number;
-  parentStage?: ComputeStage;
-  serial?: boolean;
-}
-
 const runtimeInit: RuntimeInit = {
   s3: S3Runtime.init,
   graphql: GraphQLRuntime.init,
@@ -123,18 +108,6 @@ const typegraphChangelog: Record<
     "transform": (x) => x,
   },
 };
-
-interface TypegraphTraverseParams {
-  fragments: FragmentDefs;
-  parentName: string;
-  readonly parentArgs: ast.ArgumentNode[];
-  parentSelectionSet: ast.SelectionSetNode;
-  verbose: boolean;
-  queryPath?: string;
-  parentIdx?: number;
-  parentStage?: ComputeStage;
-  serial: boolean;
-}
 
 export class TypeGraph {
   static readonly emptyArgs: ast.ArgumentNode[] = [];

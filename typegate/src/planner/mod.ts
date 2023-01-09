@@ -5,7 +5,7 @@ import { Kind } from "graphql";
 import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
-import { ComputeStageProps, Operation, PolicyStagesFactory } from "../types.ts";
+import { ComputeStageProps, PolicyStagesFactory } from "../types.ts";
 import { getWrappedType, isQuantifier, Type } from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno.ts";
 import { ensure, unparse } from "../utils.ts";
@@ -197,7 +197,8 @@ export class Planner {
       const outType = this.tg.type(parent.typeIdx);
       return [
         new ComputeStage({
-          operation: this.operationProp,
+          operationType: this.operation.operation,
+          operationName: this.operationName,
           dependencies: [],
           parent: parent.parentStage,
           args: {},
@@ -422,26 +423,6 @@ export class Planner {
     return stages;
   }
 
-  get operationProp(): Operation {
-    const op = this.operation.operation;
-
-    // TODO: no mapping -- forward the value
-    const type = (() => {
-      switch (op) {
-        case ast.OperationTypeNode.QUERY:
-          return "Query";
-        case ast.OperationTypeNode.MUTATION:
-          return "Mutation";
-        default:
-          throw new Error(`Unsupported operation type '${op}'`);
-      }
-    })();
-    return {
-      type,
-      name: this.operation.name?.value ?? type[0],
-    };
-  }
-
   get operationName(): string {
     return this.operation.name?.value ??
       this.operation.operation.charAt(0).toUpperCase();
@@ -455,12 +436,18 @@ export class Planner {
     props:
       & Omit<
         ComputeStageProps,
-        "operation" | "outType" | "node" | "path" | "parent"
+        | "operationType"
+        | "operationName"
+        | "outType"
+        | "node"
+        | "path"
+        | "parent"
       >
       & Partial<Pick<ComputeStageProps, "outType">>,
   ): ComputeStage {
     return new ComputeStage({
-      operation: this.operationProp,
+      operationType: this.operation.operation,
+      operationName: this.operationName,
       outType: this.tg.type(node.typeIdx),
       node: node.name,
       path: node.path,
