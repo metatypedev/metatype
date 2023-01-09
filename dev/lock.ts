@@ -9,22 +9,12 @@ const rules: Record<string, Rules> = {
   "../rust-toolchain.toml": {
     '(channel = ").+(")': "RUST_VERSION",
   },
-  "../.github/workflows/tests.yml": {
+  "../.github/*/*.yml": {
     '(  PYTHON_VERSION: ").+(")': "PYTHON_VERSION",
     '(  POETRY_VERSION: ").+(")': "POETRY_VERSION",
     '(  RUST_VERSION: ").+(")': "RUST_VERSION",
     '(  DENO_BINDGEN_URL: ").+(")': "DENO_BINDGEN_URL",
     '(  DENO_VERSION: ").+(")': "DENO_VERSION",
-    '(  PNPM_VERSION: ").+(")': "PNPM_VERSION",
-    '(  NODE_VERSION: ").+(")': "NODE_VERSION",
-  },
-  "../.github/workflows/release.yml": {
-    '(  PYTHON_VERSION: ").+(")': "PYTHON_VERSION",
-    '(  POETRY_VERSION: ").+(")': "POETRY_VERSION",
-    '(  RUST_VERSION: ").+(")': "RUST_VERSION",
-    '(  DENO_VERSION: ").+(")': "DENO_VERSION",
-  },
-  "../.github/workflows/publish-website.yml": {
     '(  PNPM_VERSION: ").+(")': "PNPM_VERSION",
     '(  NODE_VERSION: ").+(")': "NODE_VERSION",
   },
@@ -41,13 +31,6 @@ const rules: Record<string, Rules> = {
     "(ARG DENO_VERSION=).*()": "DENO_VERSION",
     "(ARG DENO_BINDGEN_URL=).*()": "DENO_BINDGEN_URL",
     "(ARG RUST_VERSION=).*()": "RUST_VERSION",
-  },
-  "../dev/Dockerfile.test": {
-    "(ARG DENO_VERSION=).*()": "DENO_VERSION",
-    "(ARG DENO_BINDGEN_URL=).*()": "DENO_BINDGEN_URL",
-    "(ARG RUST_VERSION=).*()": "RUST_VERSION",
-    "(ARG POETRY_VERSION=).*()": "POETRY_VERSION",
-    "(ARG PYTHON_VERSION=).*()": "PYTHON_VERSION",
   },
 };
 
@@ -100,6 +83,7 @@ for (const [glob, lookups] of Object.entries(rules)) {
   const url = new URL(glob, import.meta.url);
 
   for (const { path } of expandGlobSync(url, { includeDirs: false })) {
+    console.log(path);
     const text = Deno.readTextFileSync(path);
     const rewrite = [...text.split("\n")];
 
