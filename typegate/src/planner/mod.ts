@@ -20,8 +20,8 @@ interface Node {
   selectionSet?: ast.SelectionSetNode;
   args: readonly ast.ArgumentNode[];
   typeIdx: number;
-  parent: Node | undefined;
-  parentStage: ComputeStage | undefined;
+  parent?: Node;
+  parentStage?: ComputeStage;
 }
 
 export interface Plan {
@@ -48,15 +48,14 @@ export class Planner {
       `operation '${this.operation.operation}' is not available`,
     );
 
+    // traverse on the root node: parent, parentStage and node stage are undefined
     const stages = this.traverse({
-      parent: undefined,
       name: this.operation.name?.value ?? "",
       path: [],
       selectionSet: this.operation.selectionSet,
       args: [],
       typeIdx: rootIdx,
-      parentStage: undefined,
-    }, undefined);
+    });
 
     const varTypes: Record<string, string> =
       (this.operation?.variableDefinitions ?? []).reduce(
@@ -82,7 +81,7 @@ export class Planner {
    */
   private traverse(
     node: Node,
-    stage: ComputeStage | undefined,
+    stage?: ComputeStage,
   ): ComputeStage[] {
     const { name, selectionSet, args, typeIdx } = node;
     const typ = this.tg.type(typeIdx);
@@ -171,15 +170,15 @@ export class Planner {
         this.verbose,
       );
       const root = this.tg.introspection.type(0, "object");
+
+      // traverse on the root node: parent, parentStage and node stage are undefined
       return introspection.traverse({
         name: parent.name,
         path: [],
         args: parent.args,
         selectionSet: { kind: Kind.SELECTION_SET, selections: [field] },
         typeIdx: root.properties["query"],
-        parent: undefined,
-        parentStage: undefined,
-      }, undefined).map((stage) => {
+      }).map((stage) => {
         stage.props.rateWeight = 0;
         return stage;
       });
