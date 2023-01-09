@@ -75,6 +75,11 @@ export class Planner {
     return { stages, policies, policyArgs: this.policyArgs(stages) };
   }
 
+  /**
+   * Create child `ComputeStage`s for `node`
+   * @param node
+   * @param stage `ComputeStage` for `node`
+   */
   private traverse(
     node: Node,
     stage: ComputeStage | undefined,
@@ -133,16 +138,20 @@ export class Planner {
         typeIdx: props[name],
         parentStage: stage,
       };
-      stages.push(...this.traverseField(field, childNode));
+      stages.push(...this.traverseField(childNode, field));
     }
 
     return stages;
   }
 
-  // TODO no return; addStage(s, ...)
+  /**
+   * Create compute stages for `node` and its child nodes.
+   * @param field {FieldNode} The selection field for node
+   * @param node
+   */
   private traverseField(
-    field: ast.FieldNode,
     node: Node,
+    field: ast.FieldNode,
   ): ComputeStage[] {
     const { parent, path, name } = node;
     const policies: Record<string, string[]> = {};
@@ -221,6 +230,12 @@ export class Planner {
     );
   }
 
+  /**
+   * Create `ComputeStage`s for `node` and its child nodes,
+   * where `node` corresponds to a selection field for a value (non-function type).
+   * @param node
+   * @param policies
+   */
   private traverseValueField(
     node: Node,
     policies: Record<string, any>,
@@ -288,6 +303,10 @@ export class Planner {
     return stages;
   }
 
+  /**
+   * Create `ComputeStage`s for `node and its child nodes,
+   * where `node` corresponds to a selection field for a function.
+   */
   private traverseFuncField(
     node: Node,
     policies: Record<string, string[]>,
@@ -428,6 +447,9 @@ export class Planner {
       this.operation.operation.charAt(0).toUpperCase();
   }
 
+  /**
+   * Create a `ComputeStage` from `node` and the additional props.
+   */
   private createComputeStage(
     node: Node,
     props:
@@ -451,10 +473,10 @@ export class Planner {
     return [this.operationName, ...path].join(".");
   }
 
+  /** Create a function that will be used to compute the args for the policies. */
   private policyArgs(
     stages: ComputeStage[],
   ): FromVars<Record<string, Record<string, unknown>>> {
-    //
     const computes: Record<string, FromVars<Record<string, unknown>>> = {};
     for (const stage of stages) {
       const args = stage.props.args;
