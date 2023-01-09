@@ -31,7 +31,6 @@ export class ArgumentCollector {
     private tg: TypeGraph,
   ) {}
 
-  // TODO fieldPath, path (in arg)
   /** Collect the arguments for the node `astNode` corresponding to type at `typeIdx` */
   collectArg(
     astNode: ast.ArgumentNode | ast.ObjectFieldNode | undefined,
@@ -157,7 +156,7 @@ export class ArgumentCollector {
     throw new Error(`unknown variable type '${typ.type}'`);
   }
 
-  /** Collect the arguments of an array field */
+  /** Collect the value of a parameter of type 'array'. */
   private collectArrayArg(
     valueNode: ast.ListValueNode,
     typ: ArrayNode,
@@ -191,7 +190,7 @@ export class ArgumentCollector {
     };
   }
 
-  /** Collect the arguments of an object field */
+  /** Collect the value of an parameter of type 'object'. */
   private collectObjectArg(valueNode: ast.ObjectValueNode, typ: ObjectNode) {
     const { fields } = valueNode;
     const fieldByKeys = fields.reduce(
@@ -237,7 +236,7 @@ export class ArgumentCollector {
     };
   }
 
-  /** Collect the default value for an object parameter */
+  /** Collect the default value for a parameter of type 'object' */
   private collectDefaults(props: Record<string, number>): CollectedArg {
     const computes: Record<string, ComputeArg> = {};
     const deps = [];
@@ -258,6 +257,7 @@ export class ArgumentCollector {
     };
   }
 
+  /** Collect the value for a missing parameter. */
   private collectDefault(
     typeIdx: number,
     parentProps: Record<string, number>,
@@ -282,6 +282,7 @@ export class ArgumentCollector {
     };
   }
 
+  /** Collect the value of an injected parameter. */
   private collectInjection(
     typ: TypeNode,
     parentProps: Record<string, number>,
@@ -326,6 +327,7 @@ export class ArgumentCollector {
     }
   }
 
+  /** Collect the value of an injected parameter with 'parent' injection. */
   private collectParentInjection(
     typ: TypeNode,
     parentProps: Record<string, number>,
@@ -365,6 +367,7 @@ export class ArgumentCollector {
     ];
   }
 
+  /** Get policies from a `TypeNode`. */
   private getPolicies(typ: TypeNode): Record<string, string[]> {
     if (typ.policies.length === 0) {
       return {};
