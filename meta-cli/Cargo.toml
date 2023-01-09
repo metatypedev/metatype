@@ -18,7 +18,7 @@ name = "meta"
 path = "src/main.rs"
 
 [dependencies]
-dprint-plugin-typescript = "0.78.0"
+dprint-plugin-typescript = "0.80.2"
 swc = "0.232.52"
 swc_common = { version = "0.29.10", features = ["tty-emitter"] }
 swc_ecma_ast = "0.94.14"
