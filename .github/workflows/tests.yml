@@ -54,7 +54,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v2.2.4
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions-rs/toolchain@v1
@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v2.2.4
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v3
