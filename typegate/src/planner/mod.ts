@@ -270,26 +270,7 @@ export class Planner {
       return stages;
     }
 
-    // TODO why these branches?
-    if (schema.type === Type.OPTIONAL) {
-      const itemTypeIdx = schema.item;
-      const itemSchema = this.tg.type(itemTypeIdx);
-      if (itemSchema.type === Type.ARRAY) {
-        const arrayItemTypeIdx = itemSchema.items;
-        const arrayItemSchema = this.tg.type(arrayItemTypeIdx);
-
-        // TODO why??
-        if (arrayItemSchema.type === Type.STRING) {
-          stages.push(...this.traverse({
-            ...node,
-            typeIdx: arrayItemTypeIdx,
-          }, stage));
-        }
-
-        return stages;
-      }
-    }
-
+    // support for nested quantifiers?
     if (isQuantifier(schema)) {
       const itemTypeIdx = getWrappedType(schema);
       const itemSchema = this.tg.type(itemTypeIdx);
