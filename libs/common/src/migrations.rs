@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use anyhow::Result;
-use base64;
+use base64::{engine::general_purpose::STANDARD, Engine};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use std::fs;
 use std::path::Path;
@@ -12,7 +12,7 @@ pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<String>) -> Result<()>
     let Some(migrations) = migrations else {
         return Ok(())
     };
-    let bytes = base64::decode(migrations)?;
+    let bytes = STANDARD.decode(migrations)?;
     let decoder = GzDecoder::new(bytes.as_slice());
     let mut archive = Archive::new(decoder);
     archive.unpack(dest)?;
@@ -25,5 +25,5 @@ pub fn archive<P: AsRef<Path>>(folder: P) -> Result<String> {
     tar.append_dir_all(".", &folder)?;
     let bytes = tar.into_inner()?.finish()?;
 
-    Ok(base64::encode(bytes))
+    Ok(STANDARD.encode(bytes))
 }
