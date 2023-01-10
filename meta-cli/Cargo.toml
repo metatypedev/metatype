@@ -23,7 +23,7 @@ swc = "0.232.52"
 swc_common = { version = "0.29.10", features = ["tty-emitter"] }
 swc_ecma_ast = "0.94.14"
 swc_ecmascript = { version = "0.205.47", features = ["visit", "transforms", "typescript-parser", "parser", "codegen"] }
-swc_ecma_transforms = "0.198.26"
+swc_ecma_transforms = "0.199.21"
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines" }
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
