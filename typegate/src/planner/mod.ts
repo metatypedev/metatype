@@ -30,6 +30,19 @@ export interface Plan {
   policyArgs: FromVars<Record<string, Record<string, unknown>>>;
 }
 
+/**
+ * A utility class to plan the execution of a query/mutation.
+ *
+ * The following code block explains the execution as a flow diagram in the comments.
+ * ```graphql
+ *  query {  # o -> traverse()
+ *      findUser(id: 12) {  # -> traverseField() -> traverseFuncField() -> traverse()
+ *          username  # -> traverseField() -> traverseValueField()
+ *          email # -> traverseField() -> traverseValueField()
+ *      }
+ *  }
+ * ```
+ */
 export class Planner {
   rawArgs: Record<string, ComputeArg> = {};
 

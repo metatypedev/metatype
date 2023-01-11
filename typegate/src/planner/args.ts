@@ -25,6 +25,23 @@ interface CollectedArg {
 
 /**
  * Utility class to collect the arguments for fields.
+ *
+ * The execution is explained in the following code block as a flow diagram in the comments.
+ * ```graphql
+ *  field(
+ *      scalar_arg: 1,  # o -> collectArg()
+ *      object_arg: {  # o -> collectArg() -> collectObjectArg()
+ *          nested1: 12  # -> collectArg()
+ *      },
+ *      array_arg: [  # o -> collectArg() -> collectArrayArg()
+ *          'hello',  # -> collectArg()
+ *          'world',  # -> collectArg()
+ *      ]
+ *  ) {
+ *      selection1
+ *     selection2
+ * }
+ * ```
  */
 export class ArgumentCollector {
   constructor(
