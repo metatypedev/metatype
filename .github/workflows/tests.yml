@@ -1,7 +1,4 @@
 on:
-  push:
-    branches:
-      - "ci"
   pull_request:
     types:
       - opened
@@ -12,7 +9,7 @@ env:
   POETRY_VERSION: "1.3.1"
   RUST_VERSION: "1.66.0"
   DENO_BINDGEN_URL: https://github.com/denoland/deno_bindgen/raw/main/cli.ts
-  DENO_VERSION: "1.29.1"
+  DENO_VERSION: "1.29.2"
   PNPM_VERSION: "7.9.3"
   NODE_VERSION: "18.12.1"
 
@@ -22,7 +19,7 @@ jobs:
     permissions:
       pull-requests: read
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: dorny/paths-filter@v2
         id: filter
         with:
@@ -53,11 +50,11 @@ jobs:
   test-pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v2.2.4
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions-rs/toolchain@v1
@@ -78,8 +75,8 @@ jobs:
     if: ${{ needs.changes.outputs.website == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: pnpm/action-setup@v2
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2.2.4
         with:
           version: ${{ env.PNPM_VERSION }}
       - uses: actions/setup-node@v3
@@ -101,7 +98,7 @@ jobs:
     if: ${{ needs.changes.outputs.typegraph == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: abatilo/actions-poetry@v2
         with:
           poetry-version: ${{ env.POETRY_VERSION }}
@@ -111,7 +108,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/download-artifact@v3
         with:
           name: meta
@@ -125,9 +122,11 @@ jobs:
           pytest -s tests
 
   test-meta-cli:
+    needs: changes
+    if: ${{ needs.changes.outputs.meta-cli == 'true' || needs.changes.outputs.typegraph == 'true' || needs.changes.outputs.typegate == 'true' || needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
@@ -140,7 +139,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - name: Install and test build
         run: |
           python3 -m venv .venv
@@ -167,7 +166,7 @@ jobs:
           #- os: windows-latest
           #  activate: '.venv\Scripts\activate.bat'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
@@ -180,7 +179,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - name: Install and test build
         run: |
           python3 -m venv .venv
@@ -225,7 +224,7 @@ jobs:
       TG_PRISMA_POSTGRES_2: "postgresql://postgres:password@localhost:5432/db?schema=test2"
       REDIS_URL: redis://localhost:6379/0
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
@@ -243,7 +242,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/download-artifact@v3
         with:
           name: meta
@@ -266,7 +265,7 @@ jobs:
     if: ${{ needs.changes.outputs.rust == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: ${{ env.RUST_VERSION }}
@@ -277,7 +276,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: .venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/download-artifact@v3
         with:
           name: meta
@@ -294,13 +293,18 @@ jobs:
     if: ${{ needs.changes.outputs.typegate == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: docker/setup-buildx-action@v2
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build
         uses: docker/build-push-action@v3
         with:
           file: dev/Dockerfile
           platforms: linux/amd64
           push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache,mode=max

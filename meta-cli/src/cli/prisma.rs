@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use anyhow::{bail, Context, Result};
+use base64::{engine::general_purpose::STANDARD, Engine};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use flate2::{write::GzEncoder, Compression};
@@ -160,7 +161,7 @@ impl Action for Deploy {
         tar.append_dir_all("migrations", migrations_path.as_path())?;
         let enc = tar.into_inner()?;
         let migrations = enc.finish()?;
-        let migrations = base64::encode(migrations);
+        let migrations = STANDARD.encode(migrations);
 
         let node_config = config.node("deploy");
         let node_url = node_config.url(self.gate.clone());
