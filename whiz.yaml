@@ -52,7 +52,8 @@ libs:
     workdir: libs
     watches:
         - common/**/*.rs
-    shell: "cargo build -p common"
+        - typescript/**/*.rs
+    shell: "cargo build -p common -p typescript"
 
 codegen:
     depends_on:
@@ -62,6 +63,7 @@ codegen:
         - "libs/xtask/src/**/*.rs"
     envs:
         TG_JSONSCHEMA_OUT: website/static/typegraph.json
+        TG_TYPESCRIPT_OUT: typegate/src/types/typegraph.ts
     shell: "cargo run --package xtask -- codegen"
 
 clean_deno_bindgen_cache:

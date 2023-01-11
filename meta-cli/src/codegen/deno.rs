@@ -2,8 +2,6 @@
 
 use anyhow::{bail, Context, Result};
 use common::typegraph::{TypeNode, Typegraph};
-use dprint_plugin_typescript::{configuration::Configuration, format_text};
-use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
@@ -12,19 +10,7 @@ use std::fmt::Write as _;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
-
-lazy_static! {
-    static ref TS_FORMAT_CONFIG: Configuration = {
-        use dprint_plugin_typescript::configuration::*;
-        ConfigurationBuilder::new()
-            .line_width(80)
-            .prefer_hanging(true)
-            .prefer_single_line(false)
-            .quote_style(QuoteStyle::PreferSingle)
-            .next_control_flow_position(NextControlFlowPosition::SameLine)
-            .build()
-    };
-}
+use typescript as ts;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ImportFuncMatData {
@@ -186,9 +172,7 @@ impl<'a> Codegen<'a> {
             .into_iter()
             .map(|(name, code)| -> Result<ModuleCode> {
                 let path = self.ts_modules.remove(&name).unwrap().path;
-                let code = format_text(&path, &code, &TS_FORMAT_CONFIG)
-                    .context("could not format code")?
-                    .unwrap(); // TODO no unwrap
+                let code = ts::format_text(&path, &code).context("could not format code")?;
                 Ok(ModuleCode { path, code })
             })
             .collect::<Result<Vec<_>>>()
@@ -228,10 +212,10 @@ impl<'a> Codegen<'a> {
         if !mod_path.as_ref().exists() {
             return HashSet::new();
         }
-        let module = crate::ts::parser::parse_module(mod_path.as_ref())
+        let module = ts::parser::parse_module(mod_path.as_ref())
             .unwrap_or_else(|_| panic!("could not load module: {:?}", mod_path.as_ref()));
 
-        crate::ts::parser::get_exported_functions(&module.body)
+        ts::parser::get_exported_functions(&module.body)
     }
 
     /// Returns `true` if the function named `name` should be generated in the specified file.
@@ -408,13 +392,8 @@ mod tests {
             t
         };
 
-        let formatted_code = format_text(
-            &Path::new(expected_output_path),
-            &expected_output,
-            &TS_FORMAT_CONFIG,
-        )?;
-        let formatted_code = formatted_code.as_ref().unwrap_or(&expected_output);
-        assert_eq!(&module_codes[0].code, formatted_code);
+        let formatted_code = ts::format_text(expected_output_path, &expected_output)?;
+        assert_eq!(module_codes[0].code, formatted_code);
         Ok(())
     }
 }

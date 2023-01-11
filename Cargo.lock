@@ -637,6 +637,7 @@ dependencies = [
  "serde_json",
  "serde_with 2.2.0",
  "tar",
+ "ts-rs",
 ]
 
 [[package]]
@@ -2491,7 +2492,6 @@ dependencies = [
  "crossbeam-channel",
  "datamodel-renderer",
  "dialoguer",
- "dprint-plugin-typescript",
  "flate2",
  "globset",
  "ignore",
@@ -2509,13 +2509,10 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "swc",
- "swc_common",
- "swc_ecma_ast 0.94.14",
- "swc_ecma_transforms",
- "swc_ecmascript",
  "tar",
  "tiny_http",
  "tokio",
+ "typescript",
  "walkdir",
 ]
 
@@ -6506,6 +6503,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3528ecfd12c466c6f163363caf2d02a71161dd5e1cc6ae7b34207ea2d42d81ed"
 
 [[package]]
+name = "ts-rs"
+version = "6.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4added4070a4fdf9df03457206cd2e4b12417c8560a2954d91ffcbe60177a56a"
+dependencies = [
+ "thiserror",
+ "ts-rs-macros",
+]
+
+[[package]]
+name = "ts-rs-macros"
+version = "6.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f807fdb3151fee75df7485b901a89624358cd07a67a8fb1a5831bf5a07681ff"
+dependencies = [
+ "Inflector",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "termcolor",
+]
+
+[[package]]
 name = "twox-hash"
 version = "1.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6538,6 +6558,20 @@ name = "typenum"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
+
+[[package]]
+name = "typescript"
+version = "0.0.3-dev.0"
+dependencies = [
+ "anyhow",
+ "dprint-plugin-typescript",
+ "lazy_static",
+ "string_cache",
+ "swc_common",
+ "swc_ecma_ast 0.94.14",
+ "swc_ecma_transforms",
+ "swc_ecmascript",
+]
 
 [[package]]
 name = "ucd-trie"
@@ -7048,6 +7082,7 @@ dependencies = [
  "common",
  "schemars",
  "serde_json",
+ "typescript",
 ]
 
 [[package]]
