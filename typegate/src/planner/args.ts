@@ -92,76 +92,63 @@ export class ArgumentCollector {
       };
     }
 
-    if (typ.type === Type.OBJECT) {
-      if (valueNode.kind !== Kind.OBJECT) {
-        throw new Error(
-          `type mismatch, got '${valueNode.kind}' but expected OBJECT for '${typ.title}'`,
-        );
-      }
-      return this.merge({ policies }, this.collectObjectArg(valueNode, typ));
-    }
+    switch (typ.type) {
+      case Type.OBJECT:
+        return this.merge({ policies }, this.collectObjectArg(valueNode, typ));
 
-    if (typ.type === Type.ARRAY) {
-      if (valueNode.kind !== Kind.LIST) {
-        throw new Error(
-          `type mismatch, got '${valueNode.kind}' but expected 'LIST' for '${typ.title}'`,
+      case Type.ARRAY:
+        return this.merge(
+          { policies },
+          this.collectArrayArg(valueNode, typ, parentProps),
         );
-      }
-      return this.merge(
-        { policies },
-        this.collectArrayArg(valueNode, typ, parentProps),
-      );
-    }
 
-    if (typ.type === Type.INTEGER) {
-      if (valueNode.kind !== Kind.INT) {
-        throw new Error(
-          `type mismatch, got '${valueNode.kind}' but expected INT for '${typ.title}'`,
-        );
+      case Type.INTEGER: {
+        if (valueNode.kind !== Kind.INT) {
+          throw typeMismatchError(valueNode.kind, "INT", typ.title);
+        }
+        const value = Number(valueNode.value);
+        return { compute: () => value, policies, deps: [] };
       }
-      const value = Number(valueNode.value);
-      return { compute: () => value, policies, deps: [] };
-    }
 
-    if (typ.type === Type.NUMBER) {
-      if (valueNode.kind !== Kind.FLOAT && valueNode.kind !== Kind.INT) {
-        throw new Error(
-          `type mismatch, got '${valueNode.kind}' but expected FLOAT or INT for '${typ.title}'`,
-        );
+      case Type.NUMBER: {
+        if (valueNode.kind !== Kind.FLOAT && valueNode.kind !== Kind.INT) {
+          throw typeMismatchError(valueNode.kind, ["FLOAT", "INT"], typ.title);
+        }
+        const value = Number(valueNode.value);
+        return { compute: () => value, policies, deps: [] };
       }
-      const value = Number(valueNode.value);
-      return { compute: () => value, policies, deps: [] };
-    }
 
-    if (typ.type === Type.BOOLEAN) {
-      if (valueNode.kind !== Kind.BOOLEAN) {
-        throw new Error(
-          `type mismatch, got '${valueNode.kind}' but expected 'BOOLEAN' for '${typ.title}`,
-        );
+      case Type.BOOLEAN: {
+        if (valueNode.kind !== Kind.BOOLEAN) {
+          throw typeMismatchError(valueNode.kind, "BOOLEAN", typ.title);
+        }
+        const value = Boolean(valueNode.value);
+        return { compute: () => value, policies, deps: [] };
       }
-      const value = Boolean(valueNode.value);
-      return { compute: () => value, policies, deps: [] };
-    }
 
-    if (typ.type === Type.STRING) {
-      if (valueNode.kind !== Kind.STRING) {
-        throw new Error(
-          `type mismatch, got '${valueNode.kind}' but expected 'STRING' for '${typ.title}'`,
-        );
+      case Type.STRING: {
+        if (valueNode.kind !== Kind.STRING) {
+          throw typeMismatchError(valueNode.kind, "STRING", typ.title);
+        }
+        const value = String(valueNode.value);
+        return { compute: () => value, policies, deps: [] };
       }
-      const value = String(valueNode.value);
-      return { compute: () => value, policies, deps: [] };
-    }
 
-    throw new Error(`unknown variable type '${typ.type}'`);
+      default:
+        throw new Error(`unknown variable type '${typ.type}'`);
+    }
   }
 
   /** Collect the value of a parameter of type 'array'. */
   private collectArrayArg(
-    valueNode: ast.ListValueNode,
+    valueNode: ast.ValueNode,
     typ: ArrayNode,
     parentProps: Record<string, number>,
   ) {
+    if (valueNode.kind !== Kind.LIST) {
+      throw typeMismatchError(valueNode.kind, "LIST", typ.title);
+    }
+
     const { values: valueNodes } = valueNode;
     const itemTypeIdx = typ.items;
 
@@ -191,7 +178,11 @@ export class ArgumentCollector {
   }
 
   /** Collect the value of an parameter of type 'object'. */
-  private collectObjectArg(valueNode: ast.ObjectValueNode, typ: ObjectNode) {
+  private collectObjectArg(valueNode: ast.ValueNode, typ: ObjectNode) {
+    if (valueNode.kind !== Kind.OBJECT) {
+      throw typeMismatchError(valueNode.kind, "OBJECT", typ.title);
+    }
+
     const { fields } = valueNode;
     const fieldByKeys = fields.reduce(
       (agg, field) => ({ ...agg, [field.name.value]: field }),
@@ -376,4 +367,17 @@ export class ArgumentCollector {
       [typ.title]: typ.policies.map((p) => this.tg.policy(p).name),
     };
   }
+}
+
+function typeMismatchError(
+  actual: string,
+  expected: string | string[],
+  title: string,
+) {
+  const exp = (typeof expected == "string" ? [expected] : expected).map((t) =>
+    `'${t}'`
+  ).join(" or ");
+  return new Error(
+    `Type mismatch: got '${actual}' but expected ${exp} for '${title}'`,
+  );
 }
