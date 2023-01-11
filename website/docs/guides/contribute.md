@@ -40,7 +40,6 @@ deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen/cli.ts
 pre-commit install
 
 python3 -m venv .venv
-python3 -m venv typegraph/.venv
 python3 -m venv examples/.venv
 
 cd typegraph
@@ -59,7 +58,8 @@ cd ..
 
 cd typegate
 cp .env.sample .env
-source ../.venv/bin/activate
+cd ..
+
 whiz
 ```
 
