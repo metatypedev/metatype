@@ -9,8 +9,17 @@ Install:
 - [pipx](https://pypa.github.io/pipx/installation/)
 - [pNpm](https://pnpm.io/installation)
 - [Deno](https://deno.land/manual@v1.29.1/getting_started/installation)
+- [Node](https://nodejs.org/en/download/)
 
 ## Getting started
+
+### Essential packages for Linux / WSL
+
+```
+sudo apt install build-essential
+sudo apt install unzip
+sudo apt install pkg-config libssl-dev
+```
 
 ### Toolset
 
