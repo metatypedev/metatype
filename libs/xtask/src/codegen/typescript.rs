@@ -25,9 +25,10 @@ pub fn run() -> Result<()> {
     let p = Command::new("pnpm")
         .args([
             "dlx",
-            "json-schema-to-typescript",
+            "github:metatypedev/json-schema-to-typescript#feat/boolean-schemas-2",
             jsonschema_path,
             "--no-additionalProperties",
+            "--booleanSchemas",
         ])
         .output()
         .context("Executing command script from json-schema-to-typescript")?;
@@ -45,7 +46,6 @@ pub fn run() -> Result<()> {
 
     let (idx, variants) = find_union_type(&module, "TypeNode")?
         .ok_or_else(|| anyhow!("Could not find union type 'TypeNode'"))?;
-    println!("idx: {idx}");
 
     let exports = variants
         .into_iter()
@@ -71,6 +71,10 @@ pub fn run() -> Result<()> {
 
     let code = typescript::format_text(path, std::str::from_utf8(&buffer)?)?;
 
+    let license_header =
+        fs::read_to_string(project_root::get_project_root()?.join("dev/license-header.txt"))?;
+    let lint_ignore_directive = "deno-lint-ignore-file no-explicit-any";
+
     println!("Writing at {path:?}");
     let mut file = fs::File::options()
         .write(true)
@@ -79,8 +83,11 @@ pub fn run() -> Result<()> {
         .with_context(|| format!("Opening output file {path:?}"))?;
 
     file.set_len(0)?;
-    file.write(code.as_bytes())
-        .with_context(|| format!("Writing to output file {path:?}"))?;
+    write!(
+        file,
+        "// {license_header}\n// {lint_ignore_directive}\n\n{code}"
+    )
+    .with_context(|| format!("Writing to output file {path:?}"))?;
     println!("  > written at {:?}", path.canonicalize()?);
 
     Ok(())

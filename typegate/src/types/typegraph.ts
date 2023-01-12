@@ -1,12 +1,14 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+// deno-lint-ignore-file no-explicit-any
+
 export type OptionalNode = {
   config?: {
     [k: string]: unknown;
   };
-  default_value?: true;
+  default_value?: any;
   description?: string | null;
-  enum?: true[] | null;
+  enum?: any[] | null;
   inject?: {
     [k: string]: unknown;
   };
@@ -22,7 +24,7 @@ export type BooleanNode = {
     [k: string]: unknown;
   };
   description?: string | null;
-  enum?: true[] | null;
+  enum?: any[] | null;
   inject?: {
     [k: string]: unknown;
   };
@@ -37,7 +39,7 @@ export type NumberNode = {
     [k: string]: unknown;
   };
   description?: string | null;
-  enum?: true[] | null;
+  enum?: any[] | null;
   exclusiveMaximum?: number | null;
   exclusiveMinimum?: number | null;
   inject?: {
@@ -57,7 +59,7 @@ export type IntegerNode = {
     [k: string]: unknown;
   };
   description?: string | null;
-  enum?: true[] | null;
+  enum?: any[] | null;
   exclusiveMaximum?: number | null;
   exclusiveMinimum?: number | null;
   inject?: {
@@ -77,7 +79,7 @@ export type StringNode = {
     [k: string]: unknown;
   };
   description?: string | null;
-  enum?: true[] | null;
+  enum?: any[] | null;
   format?: string | null;
   inject?: {
     [k: string]: unknown;
@@ -96,7 +98,7 @@ export type ObjectNode = {
     [k: string]: unknown;
   };
   description?: string | null;
-  enum?: true[] | null;
+  enum?: any[] | null;
   inject?: {
     [k: string]: unknown;
   };
@@ -115,7 +117,7 @@ export type ArrayNode = {
     [k: string]: unknown;
   };
   description?: string | null;
-  enum?: true[] | null;
+  enum?: any[] | null;
   inject?: {
     [k: string]: unknown;
   };
@@ -134,7 +136,7 @@ export type FunctionNode = {
     [k: string]: unknown;
   };
   description?: string | null;
-  enum?: true[] | null;
+  enum?: any[] | null;
   inject?: {
     [k: string]: unknown;
   };
@@ -154,7 +156,7 @@ export type AnyNode = {
     [k: string]: unknown;
   };
   description?: string | null;
-  enum?: true[] | null;
+  enum?: any[] | null;
   inject?: {
     [k: string]: unknown;
   };

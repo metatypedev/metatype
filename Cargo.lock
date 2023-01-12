@@ -7080,6 +7080,7 @@ dependencies = [
  "anyhow",
  "clap",
  "common",
+ "project-root",
  "schemars",
  "serde_json",
  "typescript",
