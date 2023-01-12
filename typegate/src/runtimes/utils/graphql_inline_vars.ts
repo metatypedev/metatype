@@ -3,6 +3,8 @@
 import { iterParentStages, JSONValue } from "../../utils.ts";
 import type { FromVars } from "../graphql.ts";
 import { ComputeStage } from "../../engine.ts";
+import { filterValues } from "std/collections/filter_values.ts";
+import { mapValues } from "std/collections/map_values.ts";
 
 export function stringifyQL(
   obj: JSONValue | FromVars<JSONValue>,
@@ -44,17 +46,28 @@ export function rebuildGraphQuery(
     );
 
     if (Object.keys(stage.props.args).length > 0) {
-      ss.push((vars) =>
-        `(${
-          Object.entries(stage.props.args).map(([argName, argValue]) => {
+      ss.push((vars) => {
+        const args = Object.entries(
+          filterValues(
+            mapValues(stage.props.args, (c) => c(vars, {}, {})),
+            (v) => v != undefined,
+          ),
+        );
+        if (args.length === 0) {
+          return "";
+        }
+
+        return `(${
+          args.map(([argName, argValue]) => {
+            console.log("arg", argName, argValue);
             return `${argName}: ${
               stringifyQL(
-                argValue({}, null, {}) as JSONValue | FromVars<JSONValue>,
+                argValue as JSONValue,
               )(vars)
             }`;
           }).join(", ")
-        })`
-      );
+        })`;
+      });
     }
 
     if (children.length > 0) {

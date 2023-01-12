@@ -215,12 +215,11 @@ class typedef(Node):
 
     def add_policy(
         self,
-        *policies: List["Policy"],
+        *policies: List[Union[Policy, Materializer]],
     ):
-        for policy in policies:
-            if not isinstance(policy, Policy):
-                raise Exception("invalid policy")
-        return self.replace(policies=self.policies + policies)
+        return self.replace(
+            policies=self.policies + tuple(Policy.get_from(p) for p in policies)
+        )
 
     def config(self, *flags: str, **kwargs: Any):
         d = dict()
