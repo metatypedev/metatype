@@ -94,14 +94,7 @@ website:
         - website_deps
 
 website_meta:
-    workdir: .
-    watches:
-        - "meta-cli/src/**/*.rs"
-        - "website/**/*.py"
-    shell: "cargo run -p meta-cli -- -C website dev -u admin -p password --port 5001"
-    envs:
-        VIRTUAL_ENV: $PWD/examples/.venv
-        PATH: $PWD/examples/.venv/bin:$PATH
+    workdir: website
+    shell: "cargo run -p meta-cli -- dev -u admin -p password --port 5001"
     depends_on:
-        - libs
-        - typegate_native
+        - meta

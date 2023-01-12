@@ -69,7 +69,7 @@ pub struct TypeNodeBase {
     pub description: Option<String>,
     #[serde(default)]
     pub injection: Option<String>,
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "serde_json::Value::is_null")]
     pub inject: Value,
     #[serde(default, rename = "enum")]
     pub enum_: Option<Vec<Value>>,

@@ -263,7 +263,7 @@
               ],
               "items": true
             },
-            "inject": {},
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -329,7 +329,7 @@
               ],
               "items": true
             },
-            "inject": {},
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -404,7 +404,7 @@
               ],
               "format": "double"
             },
-            "inject": {},
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -500,7 +500,7 @@
               ],
               "format": "int64"
             },
-            "inject": {},
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -588,7 +588,7 @@
                 "null"
               ]
             },
-            "inject": {},
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -670,7 +670,7 @@
               ],
               "items": true
             },
-            "inject": {},
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -747,7 +747,7 @@
               ],
               "items": true
             },
-            "inject": {},
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -839,7 +839,7 @@
               ],
               "items": true
             },
-            "inject": {},
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -926,7 +926,7 @@
               ],
               "items": true
             },
-            "inject": {},
+            "inject": true,
             "injection": {
               "default": null,
               "type": [

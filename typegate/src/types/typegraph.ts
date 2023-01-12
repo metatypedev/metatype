@@ -9,7 +9,7 @@ export type OptionalNode = {
   default_value?: any;
   description?: string | null;
   enum?: any[] | null;
-  inject?: unknown;
+  inject?: any;
   injection?: string | null;
   item: number;
   policies: number[];
@@ -23,7 +23,7 @@ export type BooleanNode = {
   };
   description?: string | null;
   enum?: any[] | null;
-  inject?: unknown;
+  inject?: any;
   injection?: string | null;
   policies: number[];
   runtime: number;
@@ -38,7 +38,7 @@ export type NumberNode = {
   enum?: any[] | null;
   exclusiveMaximum?: number | null;
   exclusiveMinimum?: number | null;
-  inject?: unknown;
+  inject?: any;
   injection?: string | null;
   maximum?: number | null;
   minimum?: number | null;
@@ -56,7 +56,7 @@ export type IntegerNode = {
   enum?: any[] | null;
   exclusiveMaximum?: number | null;
   exclusiveMinimum?: number | null;
-  inject?: unknown;
+  inject?: any;
   injection?: string | null;
   maximum?: number | null;
   minimum?: number | null;
@@ -73,7 +73,7 @@ export type StringNode = {
   description?: string | null;
   enum?: any[] | null;
   format?: string | null;
-  inject?: unknown;
+  inject?: any;
   injection?: string | null;
   maxLength?: number | null;
   minLength?: number | null;
@@ -89,7 +89,7 @@ export type ObjectNode = {
   };
   description?: string | null;
   enum?: any[] | null;
-  inject?: unknown;
+  inject?: any;
   injection?: string | null;
   policies: number[];
   properties: {
@@ -106,7 +106,7 @@ export type ArrayNode = {
   };
   description?: string | null;
   enum?: any[] | null;
-  inject?: unknown;
+  inject?: any;
   injection?: string | null;
   items: number;
   maxItems?: number | null;
@@ -123,7 +123,7 @@ export type FunctionNode = {
   };
   description?: string | null;
   enum?: any[] | null;
-  inject?: unknown;
+  inject?: any;
   injection?: string | null;
   input: number;
   materializer: number;
@@ -141,7 +141,7 @@ export type AnyNode = {
   };
   description?: string | null;
   enum?: any[] | null;
-  inject?: unknown;
+  inject?: any;
   injection?: string | null;
   policies: number[];
   runtime: number;
