@@ -3,7 +3,7 @@
 import { Kind, parse } from "graphql";
 import * as ast from "graphql/ast";
 import { RuntimeResolver, TypeGraph, TypeGraphDS } from "./typegraph.ts";
-import { ensure, JSONValue, mapo, Maybe, unparse } from "./utils.ts";
+import { ensure, JSONValue, mapo, Maybe } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
@@ -12,7 +12,6 @@ import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { RateLimit } from "./rate_limiter.ts";
-import { ObjectNode } from "./type_node.ts";
 import {
   ComputeStageProps,
   Context,
@@ -24,6 +23,8 @@ import {
 } from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./query_parsers/graphql.ts";
+import { Planner } from "./planner/mod.ts";
+import { FromVars } from "./runtimes/graphql.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -123,6 +124,7 @@ const authorize = async (
   checks: string[],
   policiesRegistry: PolicyStages,
   verbose: boolean,
+  args: Record<string, unknown>,
 ): Promise<true | null> => {
   if (Object.values(checks).length < 1) {
     // null = inherit
@@ -130,12 +132,12 @@ const authorize = async (
   }
 
   const [check, ...nextChecks] = checks;
-  const decision = await policiesRegistry[check]();
+  const decision = await policiesRegistry[check](args);
   verbose && console.log(stageId, decision);
 
   if (decision === null) {
     // next policy
-    return authorize(stageId, nextChecks, policiesRegistry, verbose);
+    return authorize(stageId, nextChecks, policiesRegistry, verbose, args);
   }
 
   if (!decision) {
@@ -166,6 +168,7 @@ function isIntrospectionQuery(
 interface Plan {
   stages: ComputeStage[];
   policies: PolicyStagesFactory;
+  policyArgs: FromVars<Record<string, Record<string, unknown>>>;
   validator: TypeCheck;
 }
 
@@ -208,6 +211,7 @@ export class Engine {
   async compute(
     plan: ComputeStage[],
     policesFactory: PolicyStagesFactory,
+    policyArgs: Record<string, Record<string, unknown>>,
     context: Context,
     variables: Record<string, unknown>,
     limit: RateLimit | null,
@@ -235,7 +239,13 @@ export class Engine {
 
       const decisions = await Promise.all(
         Object.values(policies).map((checks) =>
-          authorize(stage.id(), checks, policiesRegistry, verbose)
+          authorize(
+            stage.id(),
+            checks,
+            policiesRegistry,
+            verbose,
+            policyArgs,
+          )
         ),
       );
 
@@ -247,8 +257,8 @@ export class Engine {
         (decisions.some((d) => d === null) || decisions.length < 1)
       ) {
         // root level field inherit false
-        throw Error(
-          `no authorization policy took a decision in root field ${stage.id()}`,
+        throw new Error(
+          `no authorization policy took a decision in root field '${stage.id()}'`,
         );
       }
 
@@ -268,7 +278,7 @@ export class Engine {
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...mapo(args, (e) => e(parent, variables, context)),
+            ...mapo(args, (e) => e(variables, parent, context)),
             _: {
               parent: parent ?? {},
               context,
@@ -303,48 +313,6 @@ export class Engine {
     }
 
     return ret;
-  }
-
-  traverse(
-    operation: ast.OperationDefinitionNode,
-    fragments: FragmentDefs,
-    verbose: boolean,
-  ): [ComputeStage[], PolicyStagesFactory] {
-    const serial = operation.operation === "mutation";
-    const rootIdx =
-      (this.tg.type(0) as ObjectNode).properties[operation.operation];
-    ensure(
-      rootIdx != null,
-      `operation ${operation.operation} is not available`,
-    );
-
-    const stages = this.tg.traverse(
-      fragments,
-      operation.name?.value ?? "",
-      [],
-      operation.selectionSet,
-      verbose,
-      [],
-      rootIdx,
-      undefined,
-      serial,
-    );
-
-    const varTypes: Record<string, string> =
-      (operation?.variableDefinitions ?? []).reduce(
-        (agg, { variable, type }) => ({
-          ...agg,
-          [variable.name.value]: unparse(type.loc!),
-        }),
-        {},
-      );
-
-    for (const stage of stages) {
-      stage.varTypes = varTypes;
-    }
-
-    const policies = this.tg.preparePolicies(stages);
-    return [stages, policies];
   }
 
   materialize(
@@ -390,7 +358,8 @@ export class Engine {
     }
 
     // what
-    const [stages, policies] = this.traverse(operation, fragments, verbose);
+    const planner = new Planner(operation, fragments, this.tg, verbose);
+    const { stages, policies, policyArgs } = planner.getPlan();
     /*
     this.logger.info(
       "stages:",
@@ -415,6 +384,7 @@ export class Engine {
     const plan: Plan = {
       stages: optimizedStages,
       policies,
+      policyArgs,
       validator,
     };
 
@@ -458,12 +428,13 @@ export class Engine {
       );
       const planTime = performance.now();
 
-      const { stages, policies, validator } = plan;
+      const { stages, policies, policyArgs, validator } = plan;
 
       //logger.info("dag:", stages);
       const res = await this.compute(
         stages,
         policies,
+        policyArgs(variables),
         context,
         variables,
         limit,

@@ -11,6 +11,7 @@ import { ensure, envOrFail } from "../utils.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { DenoRuntimeData } from "../type_node.ts";
 import { dirname, fromFileUrl, resolve, toFileUrl } from "std/path/mod.ts";
+import * as ast from "graphql/ast";
 
 const logger = getLogger(import.meta);
 
@@ -112,9 +113,19 @@ export class DenoRuntime extends Runtime {
     if (stage.props.node === "__typename") {
       return [stage.withResolver(() => {
         const { parent: parentStage } = stage.props;
-        return parentStage != null
-          ? parentStage.props.outType.title
-          : stage.props.operation.type;
+        if (parentStage != null) {
+          return parentStage.props.outType.title;
+        }
+        switch (stage.props.operationType) {
+          case ast.OperationTypeNode.QUERY:
+            return "Query";
+          case ast.OperationTypeNode.MUTATION:
+            return "Mutation";
+          default:
+            throw new Error(
+              `Unsupported operation type '${stage.props.operationType}'`,
+            );
+        }
       })];
     }
 

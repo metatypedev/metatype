@@ -44,7 +44,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "function_9",
+    title: "function_8",
     type: "function",
   },
   {
@@ -57,7 +57,7 @@ snapshot[`GraphQL parser 1`] = `
     required: [
     ],
     runtime: 1,
-    title: "object_8",
+    title: "object_7",
     type: "object",
   },
   {
@@ -102,7 +102,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "function_10",
+    title: "function_9",
     type: "function",
   },
   {
@@ -130,7 +130,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "function_12",
+    title: "function_11",
     type: "function",
   },
   {
@@ -143,7 +143,7 @@ snapshot[`GraphQL parser 1`] = `
     required: [
     ],
     runtime: 1,
-    title: "object_11",
+    title: "object_10",
     type: "object",
   },
   {
@@ -180,7 +180,7 @@ snapshot[`GraphQL parser 1`] = `
     rate_calls: false,
     rate_weight: null,
     runtime: 1,
-    title: "function_13",
+    title: "function_12",
     type: "function",
   },
   {

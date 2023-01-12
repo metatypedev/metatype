@@ -6,7 +6,7 @@ SCRIPT_PATH=$(dirname $(realpath -s $0))
 
 cd $SCRIPT_PATH
 
-export VIRTUAL_ENV=$(realpath ../typegraph/.venv)
+export VIRTUAL_ENV=$(realpath ../.venv)
 export PATH=$VIRTUAL_ENV/bin:$PATH
 
 cd src/typegraphs

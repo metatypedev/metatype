@@ -140,6 +140,7 @@ pub struct Materializers {
 pub struct Typegraphs {
     #[serde(default)]
     pub python: TypegraphLoaderConfig,
+    #[serde(default)]
     pub materializers: Materializers,
 }
 

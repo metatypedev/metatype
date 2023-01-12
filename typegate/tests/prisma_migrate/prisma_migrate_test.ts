@@ -175,13 +175,13 @@ test("prisma migrations", async (t) => {
 
     // database is empty
     await gql`
-      query {
-        findManyRecords{
-          id
-          name
+        query {
+          findManyRecords{
+            id
+            name
+          }
         }
-      }
-    `
+      `
       .expectData({ findManyRecords: [] })
       .on(e);
   });
@@ -190,26 +190,26 @@ test("prisma migrations", async (t) => {
     // reset database
     // TODO use reset mutation on prisma_migrations
     await gql`
-      mutation a {
-        executeRaw(
-          query: "DROP SCHEMA IF EXISTS test CASCADE"
-          parameters: "[]"
-        )
-      }
-    `
+        mutation a {
+          executeRaw(
+            query: "DROP SCHEMA IF EXISTS test CASCADE"
+            parameters: "[]"
+          )
+        }
+      `
       .expectData({
         executeRaw: 0,
       })
       .on(e);
 
     await gql`
-      mutation PrismaApply($mig: String!) {
-        apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
-          databaseReset
-          appliedMigrations
+        mutation PrismaApply($mig: String!) {
+          apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
+            databaseReset
+            appliedMigrations
+          }
         }
-      }
-    `
+      `
       .withVars({ mig })
       .withHeaders({
         "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
@@ -225,13 +225,13 @@ test("prisma migrations", async (t) => {
       .on(migrations);
 
     await gql`
-      query {
-        findManyRecords{
-          id
-          name
+        query {
+          findManyRecords{
+            id
+            name
+          }
         }
-      }
-    `
+      `
       .expectData({ findManyRecords: [] })
       .on(e);
   });
