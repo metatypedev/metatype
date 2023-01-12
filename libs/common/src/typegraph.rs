@@ -70,7 +70,7 @@ pub struct TypeNodeBase {
     #[serde(default)]
     pub injection: Option<String>,
     #[serde(default)]
-    pub inject: Option<Value>,
+    pub inject: Value,
     #[serde(default, rename = "enum")]
     pub enum_: Option<Vec<Value>>,
     #[serde(default)]

@@ -263,9 +263,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": {},
             "injection": {
               "default": null,
               "type": [
@@ -331,9 +329,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": {},
             "injection": {
               "default": null,
               "type": [
@@ -408,9 +404,7 @@
               ],
               "format": "double"
             },
-            "inject": {
-              "default": null
-            },
+            "inject": {},
             "injection": {
               "default": null,
               "type": [
@@ -506,9 +500,7 @@
               ],
               "format": "int64"
             },
-            "inject": {
-              "default": null
-            },
+            "inject": {},
             "injection": {
               "default": null,
               "type": [
@@ -596,9 +588,7 @@
                 "null"
               ]
             },
-            "inject": {
-              "default": null
-            },
+            "inject": {},
             "injection": {
               "default": null,
               "type": [
@@ -680,9 +670,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": {},
             "injection": {
               "default": null,
               "type": [
@@ -759,9 +747,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": {},
             "injection": {
               "default": null,
               "type": [
@@ -853,9 +839,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": {},
             "injection": {
               "default": null,
               "type": [
@@ -942,9 +926,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": {},
             "injection": {
               "default": null,
               "type": [
