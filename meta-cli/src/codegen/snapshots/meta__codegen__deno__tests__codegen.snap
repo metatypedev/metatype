@@ -1,0 +1,17 @@
+---
+source: meta-cli/src/codegen/deno.rs
+expression: "&module_codes[0].code"
+---
+interface DivInput {
+  dividend: number;
+  divisor: number;
+}
+
+export function div({ dividend, divisor }: DivInput,
+  { context }: { context: Record<string, unknown> }
+): {
+  quotient: number;
+  remainder: number;
+} {
+  return { quotient: 0, remainder: 0 };
+}

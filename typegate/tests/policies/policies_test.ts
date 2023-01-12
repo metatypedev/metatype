@@ -62,3 +62,27 @@ test("Policies", async (t) => {
       .on(e);
   });
 });
+
+test("Policy args", async (t) => {
+  const e = await t.pythonFile("policies/policies.py");
+
+  await t.should("pass raw args to the policy", async () => {
+    await gql`
+      query {
+        secret(username: "User") {
+          username
+          data
+        }
+      }
+    `
+      .expectData({
+        secret: {
+          username: "User",
+          data: "secret",
+        },
+      }).withContext({
+        username: "User",
+      })
+      .on(e);
+  });
+});

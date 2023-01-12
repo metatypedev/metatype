@@ -1,10 +1,8 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import type * as ast from "graphql/ast";
-import { FieldNode, Kind } from "graphql";
+import { Kind } from "graphql";
 import { ComputeStage } from "./engine.ts";
-import * as graphql from "./graphql.ts";
-import { FragmentDefs } from "./graphql.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";
 import { GoogleapisRuntime } from "./runtimes/googleapis.ts";
 import { GraphQLRuntime } from "./runtimes/graphql.ts";
@@ -12,15 +10,12 @@ import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
-import { ensure, envOrFail, mapo } from "./utils.ts";
+import { ensure, envOrFail } from "./utils.ts";
 
 import { Auth, nextAuthorizationHeader } from "./auth/auth.ts";
 import * as semver from "std/semver/mod.ts";
 
 import {
-  ArrayNode,
-  FunctionNode,
-  getWrappedType,
   isArray,
   isBoolean,
   isFunction,
@@ -28,16 +23,13 @@ import {
   isNumber,
   isObject,
   isOptional,
-  isQuantifier,
   isString,
-  ObjectNode,
   TypeNode,
 } from "./type_node.ts";
 import config from "./config.ts";
 import {
   Batcher,
-  ComputeArg,
-  Operation,
+  Context,
   PolicyStages,
   PolicyStagesFactory,
   Resolver,
@@ -58,19 +50,6 @@ import type {
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
 export type RuntimeResolver = Record<string, Runtime>;
-
-interface TraverseParams {
-  operation: Operation;
-  fragments: FragmentDefs;
-  parentName: string;
-  parentArgs: readonly ast.ArgumentNode[];
-  parentSelectionSet: ast.SelectionSetNode;
-  verbose: boolean;
-  queryPath?: string[];
-  parentIdx: number;
-  parentStage?: ComputeStage;
-  serial?: boolean;
-}
 
 const runtimeInit: RuntimeInit = {
   s3: S3Runtime.init,
@@ -93,22 +72,6 @@ const typegraphChangelog: Record<
     "transform": (x) => x,
   },
 };
-
-function formatPath(path: string[]) {
-  return ["<root>", ...path].join(".");
-}
-
-interface TypegraphTraverseParams {
-  fragments: FragmentDefs;
-  parentName: string;
-  readonly parentArgs: ast.ArgumentNode[];
-  parentSelectionSet: ast.SelectionSetNode;
-  verbose: boolean;
-  queryPath?: string;
-  parentIdx?: number;
-  parentStage?: ComputeStage;
-  serial: boolean;
-}
 
 export class TypeGraph {
   static readonly emptyArgs: ast.ArgumentNode[] = [];
@@ -280,16 +243,36 @@ export class TypeGraph {
     }
   }
 
-  type(idx: number): TypeNode {
+  type(idx: number): TypeNode;
+  type<T extends TypeNode["type"]>(
+    idx: number,
+    asType: T,
+  ): TypeNode & { type: T };
+  type<T extends TypeNode["type"]>(
+    idx: number,
+    asType?: T,
+  ): TypeNode {
     ensure(
       typeof idx === "number" && idx < this.tg.types.length,
       `cannot find type with "${idx}" index`,
     );
-    return this.tg.types[idx];
+    const ret = this.tg.types[idx];
+    if (asType != undefined) {
+      if (ret.type !== asType) {
+        throw new Error(`Expected type '${asType}', got '${ret.type}'`);
+      }
+    }
+
+    return ret;
   }
 
   materializer(idx: number): TypeMaterializer {
     return this.tg.materializers[idx];
+  }
+
+  policyMaterializer(policy: TypePolicy): TypeMaterializer {
+    const matIdx = policy.materializer;
+    return this.materializer(matIdx);
   }
 
   runtime(idx: number): TypeRuntime {
@@ -322,720 +305,6 @@ export class TypeGraph {
       `invalid type for secret injection: ${schema.type}`,
     );
   }
-  // value, policies, dependencies
-  collectArg(
-    fieldArg: ast.ArgumentNode | ast.ObjectFieldNode | undefined,
-    argIdx: number,
-    parentContext: Record<string, number>,
-    noDefault = false,
-  ): [
-    compute: ComputeArg,
-    policies: Record<string, string[]>,
-    deps: string[],
-  ] | null {
-    const arg = this.tg.types[argIdx];
-
-    if (!arg) {
-      throw Error(`${argIdx} not found in type`);
-    }
-
-    let policies = arg.policies.length > 0
-      ? {
-        [arg.title]: arg.policies.map((p) => this.policy(p).name),
-      }
-      : {};
-
-    if ("injection" in arg) {
-      const { injection, inject } = arg;
-      ensure(!fieldArg, "cannot set injected arg");
-
-      switch (injection) {
-        case "raw": {
-          const value = JSON.parse(inject as string);
-          // typecheck
-          return [() => value, policies, []];
-        }
-        case "secret": {
-          const name = inject as string;
-          const value = this.parseSecret(arg, name);
-
-          return [() => value, policies, []];
-        }
-        case "context": {
-          const name = inject as string;
-          return [
-            (_parent, _variables, { [name]: value }) => {
-              if (
-                value === undefined &&
-                (value === null && !isOptional(arg))
-              ) {
-                // manage default?
-                throw new Error(`injection ${name} was not found in context`);
-              }
-              return value;
-            },
-            policies,
-            [],
-          ];
-        }
-        case "parent": {
-          const ref = inject as number;
-          const name = Object.keys(parentContext).find(
-            (name) => parentContext[name] === ref,
-          );
-          if (!name) {
-            throw Error(
-              `cannot find injection ${
-                JSON.stringify(
-                  arg,
-                )
-              } in parent ${JSON.stringify(parentContext)}`,
-            );
-          }
-          return [
-            ({ [name]: value }) => {
-              if (
-                value === undefined &&
-                (value === null && !isOptional(arg))
-              ) {
-                // manage default?
-                throw new Error(`injection ${name} was not found in parent`);
-              }
-              return value;
-            },
-            policies,
-            [name],
-          ];
-        }
-        default:
-          ensure(false, "cannot happen");
-      }
-    }
-
-    if (!fieldArg) {
-      if (isOptional(arg)) {
-        const { default_value: defaultValue } = arg;
-        return !noDefault && defaultValue
-          ? [() => defaultValue, policies, []]
-          : null;
-      }
-
-      if (isObject(arg)) {
-        const argSchema = arg.properties;
-        const values: Record<string, any> = {};
-        const deps = [];
-
-        for (const [fieldName, fieldIdx] of Object.entries(argSchema)) {
-          const nested = this.collectArg(
-            undefined,
-            fieldIdx,
-            parentContext,
-            true,
-          );
-          if (!nested) {
-            continue;
-          }
-          const [value, nestedPolicies, nestedDeps] = nested;
-          deps.push(...nestedDeps);
-          values[fieldName] = value;
-          policies = { ...policies, ...nestedPolicies };
-        }
-
-        if (Object.values(values).length < 1) {
-          throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
-        }
-
-        return [
-          (ctx, vars) => mapo(values, (e) => e(ctx, vars)),
-          policies,
-          deps,
-        ];
-      }
-
-      throw Error(`mandatory arg ${JSON.stringify(arg)} not found`);
-    }
-
-    if (isOptional(arg)) {
-      return this.collectArg(fieldArg, arg.item, parentContext);
-    }
-
-    const { value: argValue } = fieldArg;
-    const { kind } = argValue;
-
-    if (kind === Kind.VARIABLE) {
-      const { kind: _, value: varName } = (argValue as ast.VariableNode).name;
-      return [
-        (_ctx, vars) =>
-          vars == null
-            ? (vars: Record<string, unknown> | null) =>
-              vars == null ? varName : vars[varName]
-            : vars[varName],
-        policies,
-        [],
-      ];
-    }
-
-    if (isObject(arg)) {
-      ensure(
-        kind === Kind.OBJECT,
-        `type mismatch, got ${kind} but expected OBJECT for ${arg.title}`,
-      );
-      const { fields } = argValue as ast.ObjectValueNode;
-      const argSchema = arg.properties as Record<string, number>;
-
-      const fieldArgsIdx: Record<string, ast.ObjectFieldNode> = fields.reduce(
-        (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
-        {},
-      );
-
-      const values: Record<string, any> = {};
-      const deps = [];
-
-      for (const [fieldName, fieldIdx] of Object.entries(argSchema)) {
-        const nested = this.collectArg(
-          fieldArgsIdx[fieldName],
-          fieldIdx,
-          parentContext,
-        );
-        if (!nested) {
-          continue;
-        }
-        const [value, nestedPolicies, nestedDeps] = nested;
-        deps.push(...nestedDeps);
-        // FIXME
-        // const renames = arg.renames ?? {}
-        const renames = {} as Record<string, string>;
-        values[renames[fieldName] ?? fieldName] = value;
-        delete fieldArgsIdx[fieldName];
-        policies = { ...policies, ...nestedPolicies };
-      }
-
-      for (const name of Object.keys(fieldArgsIdx)) {
-        throw Error(`${name} input as field but unknown`);
-      }
-
-      return [(ctx, vars) => mapo(values, (e) => e(ctx, vars)), policies, deps];
-    }
-
-    if (isArray(arg)) {
-      ensure(
-        kind === Kind.LIST,
-        `type mismatch, got ${kind} but expected LIST for ${arg.title}`,
-      );
-      const { values: valueOfs } = argValue as ast.ListValueNode;
-      const valueIdx = arg.items as number;
-
-      const values: any[] = [];
-      const deps = [];
-
-      // likely optimizable as type should be shared
-      for (const valueOf of valueOfs) {
-        const nested = this.collectArg(
-          { value: valueOf } as unknown as ast.ArgumentNode,
-          valueIdx,
-          parentContext,
-        );
-        if (!nested) {
-          throw Error("unknown subtype");
-        }
-        const [value, nestedPolicies, nestedDeps] = nested;
-        deps.push(...nestedDeps);
-        values.push(value);
-        policies = { ...policies, ...nestedPolicies };
-      }
-
-      return [(ctx, vars) => values.map((e) => e(ctx, vars)), policies, deps];
-    }
-
-    if (isInteger(arg)) {
-      ensure(
-        kind === Kind.INT,
-        `type mismatch, got ${kind} but expected INT for ${arg.title}`,
-      );
-      const { value } = argValue as ast.IntValueNode;
-      const parsed = Number(value);
-      return [() => parsed, policies, []];
-    }
-
-    if (isNumber(arg)) {
-      ensure(
-        kind === Kind.FLOAT || kind === Kind.INT,
-        `type mismatch, got ${kind} but expected FLOAT for ${arg.title}`,
-      );
-      const { value } = argValue as ast.FloatValueNode;
-      const parsed = Number(value);
-      return [() => parsed, policies, []];
-    }
-
-    if (isBoolean(arg)) {
-      ensure(
-        kind === Kind.BOOLEAN,
-        `type mismatch, got ${kind} but expected BOOLEAN for ${arg.title}`,
-      );
-      const { value } = argValue as ast.BooleanValueNode;
-      const parsed = Boolean(value);
-      return [() => parsed, policies, []];
-    }
-
-    if (isString(arg)) {
-      ensure(
-        kind === Kind.STRING,
-        `type mismatch, got ${kind} but expected STRING for ${arg.title}`,
-      );
-      const { value } = argValue as ast.StringValueNode;
-      const parsed = String(value);
-      return [() => parsed, policies, []];
-    }
-
-    throw Error(
-      `unknown variable value ${JSON.stringify(arg)} ${JSON.stringify(fieldArg)}
-      (${kind}) for ${arg.title}`,
-    );
-  }
-
-  // selection field?
-  traverseField(
-    { field, traverseParams: p, parentProps }: {
-      field: FieldNode;
-      traverseParams: TraverseParams;
-      parentProps: Record<string, number>;
-    },
-  ): ComputeStage[] {
-    const {
-      name: { value: name },
-      alias: { value: alias } = {},
-      arguments: args,
-      // selectionSet,
-    } = field;
-
-    const path = p.queryPath ?? [];
-    const policies: Record<string, string[]> = {};
-    // console.log("typegraph name", this.name);
-    // console.log("introspection is not null", this.introspection != null);
-    // console.log({ name });
-
-    // introspection case
-    if (
-      path.length < 1 && this.introspection &&
-      (name === "__schema" || name === "__type")
-    ) {
-      const root = this.introspection.type(0) as ObjectNode;
-      const stages = [
-        ...this.introspection.traverse(
-          p.fragments,
-          p.parentName,
-          p.parentArgs,
-          {
-            kind: Kind.SELECTION_SET,
-            selections: [field],
-          },
-          p.verbose,
-          [],
-          root.properties["query"],
-        ).map((stage) => {
-          // disable rate limiting for introspection
-          stage.props.rateWeight = 0;
-          return stage;
-        }),
-      ];
-      // console.log({
-      //   stages: stages.map((s) => s.props.path.join("/")).join(", "),
-      // });
-      return stages;
-    }
-
-    // typename case
-    if (name === "__typename") {
-      if (args && args.length > 0) {
-        throw Error(`__typename cannot have args ${JSON.stringify(args)}`);
-      }
-
-      const outputType = this.type(p.parentIdx);
-
-      return [
-        new ComputeStage({
-          operation: p.operation,
-          dependencies: [],
-          parent: p.parentStage,
-          args: {},
-          policies,
-          outType: TypeGraph.typenameType,
-          runtime: DenoRuntime.getDefaultRuntime(this.name),
-          batcher: this.nextBatcher(outputType),
-          node: name,
-          path: [...path, alias ?? name],
-          rateCalls: true,
-          rateWeight: 0,
-        }),
-      ];
-    }
-
-    const fieldIdx = parentProps[name];
-    if (fieldIdx == undefined) {
-      throw Error(
-        `${name} not found at ${formatPath(path)}, available names are: ${
-          Object.keys(parentProps).join(", ")
-        }`,
-      );
-    }
-    const fieldType = this.type(fieldIdx);
-    const checksField = fieldType.policies.map((p) => this.policy(p).name);
-    if (checksField.length > 0) {
-      policies[fieldType.title] = checksField;
-    }
-
-    if (!isFunction(fieldType)) {
-      return this.traverseValueField({
-        field,
-        schema: fieldType,
-        idx: fieldIdx,
-        traverseParams: p,
-        policies,
-      });
-    }
-
-    // function case
-    return this.traverseFuncField({
-      field,
-      schema: fieldType,
-      idx: fieldIdx,
-      traverseParams: p,
-      policies,
-      parentProps,
-    });
-  }
-
-  traverseValueField(
-    { field, schema, idx, traverseParams: p, policies }: {
-      field: FieldNode;
-      schema: TypeNode;
-      idx: number;
-      traverseParams: TraverseParams;
-      policies: Record<string, string[]>;
-    },
-  ): ComputeStage[] {
-    const {
-      name: { value: name },
-      alias: { value: alias } = {},
-      arguments: args = TypeGraph.emptyArgs,
-      selectionSet: fields = TypeGraph.emptyFields,
-    } = field;
-    const path = [...(p.queryPath ?? []), alias ?? name];
-    const stages = [];
-
-    if (args.length > 0) {
-      throw Error(
-        `unexpected args ${JSON.stringify(args)} at ${path.join(".")}`,
-      );
-    }
-
-    const runtime = this.runtimeReferences[schema.runtime];
-
-    const stage = new ComputeStage({
-      operation: p.operation,
-      dependencies: p.parentStage ? [p.parentStage.id()] : [],
-      parent: p.parentStage,
-      args: {},
-      policies,
-      outType: schema,
-      runtime,
-      batcher: this.nextBatcher(schema),
-      node: name,
-      path,
-      rateCalls: true,
-      rateWeight: 0,
-    });
-
-    stages.push(stage);
-
-    if (isObject(schema)) {
-      stages.push(...this.traverse(
-        p.fragments,
-        name,
-        args,
-        fields,
-        p.verbose,
-        path,
-        idx,
-        stage,
-        p.serial,
-      ));
-      return stages;
-    }
-
-    if (isOptional(schema)) {
-      const itemTypeIdx = schema.item;
-      const itemSchema = this.type(itemTypeIdx);
-      if (isArray(itemSchema)) {
-        const arrayItemTypeIdx = itemSchema.items;
-        const arrayItemSchema = this.type(arrayItemTypeIdx);
-
-        if (isString(arrayItemSchema)) {
-          stages.push(
-            ...this.traverse(
-              p.fragments,
-              name,
-              args,
-              fields,
-              p.verbose,
-              path,
-              arrayItemTypeIdx,
-              stage,
-            ),
-          );
-        }
-
-        return stages;
-      }
-    }
-
-    if (isQuantifier(schema)) {
-      const itemTypeIdx = getWrappedType(schema);
-      const itemSchema = this.type(itemTypeIdx);
-
-      if (isObject(itemSchema)) {
-        stages.push(
-          ...this.traverse(
-            p.fragments,
-            name,
-            args,
-            fields,
-            p.verbose,
-            path,
-            itemTypeIdx,
-            stage,
-          ),
-        );
-      }
-
-      return stages;
-    }
-
-    return stages;
-  }
-
-  traverseFuncField(
-    { field, schema, traverseParams: p, policies, parentProps }: {
-      field: FieldNode;
-      schema: FunctionNode;
-      idx: number;
-      traverseParams: TraverseParams;
-      policies: Record<string, string[]>;
-      parentProps: Record<string, number>;
-    },
-  ): ComputeStage[] {
-    const {
-      name: { value: name },
-      alias: { value: alias } = {},
-      arguments: fieldArgs = TypeGraph.emptyArgs,
-      selectionSet: fields = TypeGraph.emptyFields,
-    } = field;
-    const path = p.queryPath ?? [];
-
-    const stages = [] as ComputeStage[];
-    const deps = [];
-    if (p.parentStage) {
-      deps.push(p.parentStage.id());
-    }
-
-    const { input: inputIdx, output: outputIdx, rate_calls, rate_weight } =
-      schema;
-    const outputType = this.type(outputIdx);
-
-    const checks = outputType.policies.map((p) => this.policy(p).name);
-    if (checks.length > 0) {
-      policies[outputType.title] = checks;
-    }
-    const args: Record<string, ComputeArg> = {};
-
-    const argSchema = this.type(inputIdx) as ObjectNode;
-    const fieldArgsIdx: Record<string, ast.ArgumentNode> = (
-      fieldArgs ?? []
-    ).reduce(
-      (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
-      {},
-    );
-
-    const nestedDepsUnion = [];
-    for (
-      const [argName, argIdx] of Object.entries(argSchema.properties ?? {})
-    ) {
-      const nested = this.collectArg(
-        fieldArgsIdx[argName],
-        argIdx,
-        parentProps,
-      );
-      if (!nested) {
-        continue;
-      }
-      const [value, inputPolicies, nestedDeps] = nested;
-      nestedDepsUnion.push(...nestedDeps);
-      args[argName] = value;
-      policies = { ...policies, ...inputPolicies };
-      // else variable
-    }
-
-    // check that no unwanted arg is given
-    for (const fieldArg of fieldArgs ?? []) {
-      const name = fieldArg.name.value;
-      if (!(name in args)) {
-        throw Error(`${name} input as field but unknown`);
-      }
-    }
-
-    deps.push(
-      ...Array.from(new Set(nestedDepsUnion)).map((dep) =>
-        [...path, dep].join(".")
-      ),
-    );
-
-    const mat = this.tg.materializers[schema.materializer];
-    const runtime = this.runtimeReferences[mat.runtime];
-    if (!p.serial && mat.data.serial) {
-      throw Error(
-        `${schema.title} via ${mat.name} can only be executed in mutation`,
-      );
-    }
-
-    const stage = new ComputeStage({
-      operation: p.operation,
-      dependencies: deps,
-      parent: p.parentStage,
-      args,
-      policies,
-      argumentNodes: fieldArgs,
-      inpType: argSchema,
-      outType: outputType,
-      runtime,
-      materializer: mat,
-      batcher: this.nextBatcher(outputType),
-      node: name,
-      path: [...path, alias ?? name],
-      rateCalls: rate_calls,
-      rateWeight: rate_weight as number, // FIXME what is the right type?
-    });
-    stages.push(stage);
-
-    if (isObject(outputType)) {
-      stages.push(
-        ...this.traverse(
-          p.fragments,
-          name,
-          fieldArgs,
-          fields,
-          p.verbose,
-          [...path, name ?? alias],
-          outputIdx,
-          stage,
-        ),
-      );
-    } else if (
-      isOptional(outputType) &&
-      isArray(this.type(outputType.item))
-    ) {
-      const subTypeIdx = outputType.item;
-      const subType = this.type(subTypeIdx) as ArrayNode;
-      const subSubTypeIdx = subType.items;
-      const subSubType = this.type(subSubTypeIdx);
-
-      if (isObject(subSubType)) {
-        stages.push(
-          ...this.traverse(
-            p.fragments,
-            name,
-            fieldArgs,
-            fields,
-            p.verbose,
-            [...path, alias ?? name], // FIXME
-            subSubTypeIdx,
-            stage,
-          ),
-        );
-      }
-    } else if (
-      isQuantifier(outputType)
-    ) {
-      const subTypeIdx = getWrappedType(outputType);
-      const subType = this.type(subTypeIdx);
-      if (isObject(subType)) {
-        stages.push(
-          ...this.traverse(
-            p.fragments,
-            name,
-            fieldArgs,
-            fields,
-            p.verbose,
-            [...path, alias ?? name], // FIXME
-            subTypeIdx,
-            stage,
-          ),
-        );
-      }
-    }
-
-    return stages;
-  }
-
-  traverse(
-    fragments: FragmentDefs,
-    parentName: string,
-    parentArgs: readonly ast.ArgumentNode[],
-    parentSelectionSet: ast.SelectionSetNode,
-    verbose: boolean,
-    queryPath: string[],
-    parentIdx: number,
-    parentStage: ComputeStage | undefined = undefined,
-    serial = false,
-  ): ComputeStage[] {
-    const parentType = this.type(parentIdx) as ObjectNode;
-    const stages: ComputeStage[] = [];
-
-    const parentSelection = graphql.resolveSelection(
-      parentSelectionSet,
-      fragments,
-    );
-    const parentProps = (parentType.properties ?? {}) as Record<string, number>;
-    verbose &&
-      console.log(
-        this.root.title,
-        parentName,
-        parentArgs.map((n) => n.name?.value),
-        parentSelection.map((n) => n.name?.value),
-        parentType.type,
-        Object.entries(parentProps).reduce(
-          (agg, [k, v]) => ({ ...agg, [k]: this.type(v).type }),
-          {},
-        ),
-      );
-
-    if (isObject(parentType) && parentSelection.length < 1) {
-      throw Error(`struct "${parentName}" must a field selection`);
-    }
-
-    for (const field of parentSelection) {
-      stages.push(...this.traverseField({
-        field,
-        traverseParams: {
-          operation: {
-            type: serial ? "Mutation" : "Query",
-            name: serial ? "M" : "Q", // TODO
-          },
-          fragments,
-          parentName,
-          parentArgs,
-          parentSelectionSet,
-          verbose,
-          queryPath,
-          parentIdx,
-          parentStage,
-          serial,
-        },
-        parentProps,
-      }));
-    }
-
-    return stages;
-  }
 
   preparePolicies(
     stages: ComputeStage[],
@@ -1052,9 +321,9 @@ export class TypeGraph {
         );
 
         if (introPolicy) {
-          const mat = this.introspection.tg.materializers[
-            introPolicy.materializer as number
-          ];
+          const mat = this.introspection.policyMaterializer(
+            introPolicy,
+          );
           const rt = this.introspection
             .runtimeReferences[mat.runtime] as DenoRuntime;
           return [introPolicy.name, rt.delegate(mat, false)] as [
@@ -1069,7 +338,7 @@ export class TypeGraph {
         throw Error(`cannot find policy ${policyName}`);
       }
 
-      const mat = this.tg.materializers[policy.materializer as number];
+      const mat = this.policyMaterializer(policy);
       const rt = this.runtimeReferences[mat.runtime] as DenoRuntime;
       ensure(
         rt.constructor === DenoRuntime,
@@ -1078,16 +347,16 @@ export class TypeGraph {
       return [policy.name, rt.delegate(mat, false)] as [string, Resolver];
     });
 
-    return (context: Record<string, any>) => {
+    return (context: Context) => {
       const ret: PolicyStages = {};
       for (const [policyName, resolver] of policies) {
         // for policies, the context becomes the args
-        ret[policyName] = async () =>
+        ret[policyName] = async (args: Record<string, unknown>) =>
           await lazyResolver<boolean | null>(resolver)({
-            ...context,
+            ...args,
             _: {
               parent: {},
-              context: {},
+              context,
               variables: {},
             },
           });

@@ -62,4 +62,5 @@ serde_yaml = "0.9.16"
 pathdiff = "0.2.1"
 
 [dev-dependencies]
+insta = "1.23.0"
 project-root = "0.2.2"

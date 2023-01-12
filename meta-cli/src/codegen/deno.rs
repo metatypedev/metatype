@@ -33,6 +33,7 @@ where
     let codes = cg.codegen()?;
     for code in codes.into_iter() {
         let mut file = File::options()
+            .create(true)
             .append(true)
             .open(&code.path)
             .context(format!("could not open output file: {:?}", code.path))?;
@@ -318,7 +319,7 @@ impl<'a> Codegen<'a> {
             .context("failed to generate output type")?;
 
         let code = format!(
-            "{}\nexport function {}({}: {}): {} {{\n  return {};\n}}",
+            "{}\nexport function {}({}: {}, {{ context }}: {{ context: Record<string, unknown> }}): {} {{\n  return {};\n}}",
             inp_typedef,
             name,
             self.destructure_object(input)?,
@@ -370,7 +371,6 @@ mod tests {
     use crate::config::Config;
     use crate::tests::utils::ensure_venv;
     use crate::typegraph::TypegraphLoader;
-    use std::io::Read;
 
     #[test]
     fn codegen() -> Result<()> {
@@ -385,15 +385,7 @@ mod tests {
         let module_codes = Codegen::new(&tg, "./src/tests/typegraphs/codegen.py").codegen()?;
         assert_eq!(module_codes.len(), 1);
 
-        let expected_output_path = "./src/tests/typegraphs/codegen-expected-output.ts";
-        let expected_output = {
-            let mut t = String::new();
-            std::fs::File::open(expected_output_path)?.read_to_string(&mut t)?;
-            t
-        };
-
-        let formatted_code = ts::format_text(expected_output_path, &expected_output)?;
-        assert_eq!(module_codes[0].code, formatted_code);
+        insta::assert_snapshot!(&module_codes[0].code);
         Ok(())
     }
 }
