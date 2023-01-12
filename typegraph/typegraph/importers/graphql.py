@@ -54,7 +54,9 @@ def typify(tpe: Box, opt: bool = True, name=None, object_as_ref=False):
     if opt:
         return f"t.optional({typify(tpe, False, name, object_as_ref)})"
 
-    if object_as_ref and (tpe.kind == "OBJECT" or tpe.kind == "INPUT_OBJECT"):
+    if object_as_ref and (
+        tpe.kind == "OBJECT" or tpe.kind == "INPUT_OBJECT" or tpe.kind == "INTERFACE"
+    ):
         return f'g("{tpe.name}")'
 
     if name is not None:
