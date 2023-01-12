@@ -2,6 +2,7 @@
 
 // deno-lint-ignore-file no-explicit-any
 
+export type AuthProtocol = "oauth2" | "jwk" | "basic";
 export type OptionalNode = {
   config?: {
     [k: string]: unknown;
@@ -159,9 +160,9 @@ export type TypeNode =
   | FunctionNode
   | AnyNode;
 export interface Typegraph {
-  materializers?: Materializer[];
+  materializers: Materializer[];
   meta: TypeMeta;
-  policies?: Policy[];
+  policies: Policy[];
   runtimes: TGRuntime[];
   types: TypeNode[];
 }
@@ -184,11 +185,12 @@ export interface Auth {
     [k: string]: unknown;
   };
   name: string;
-  protocol: string;
+  protocol: AuthProtocol;
 }
 export interface Cors {
   allow_credentials: boolean;
   allow_headers: string[];
+  allow_methods?: string[];
   allow_origin: string[];
   expose_headers: string[];
   max_age?: number | null;

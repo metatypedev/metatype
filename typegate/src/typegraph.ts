@@ -14,7 +14,7 @@ import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure, envOrFail, mapo } from "./utils.ts";
 
-import { Auth, AuthDS, nextAuthorizationHeader } from "./auth/auth.ts";
+import { Auth, nextAuthorizationHeader } from "./auth/auth.ts";
 import * as semver from "std/semver/mod.ts";
 
 import {
@@ -46,52 +46,16 @@ import {
 } from "./types.ts";
 import { S3Runtime } from "./runtimes/s3.ts";
 
-interface TypePolicy {
-  name: string;
-  materializer: number;
-}
+import type {
+  Cors,
+  Materializer as TypeMaterializer,
+  Policy as TypePolicy,
+  Rate,
+  TGRuntime as TypeRuntime,
+  Typegraph as TypeGraphDS,
+} from "./types/typegraph.ts";
 
-export interface TypeMaterializer {
-  name: string;
-  runtime: number;
-  data: Record<string, unknown>;
-}
-
-export interface TypeRuntime {
-  name: string;
-  data: Record<string, unknown>;
-}
-
-export interface Rate {
-  window_limit: number;
-  window_sec: number;
-  query_limit: number;
-  local_excess: number;
-  context_identifier: string;
-}
-
-export interface TypeMeta {
-  secrets: Array<string>;
-  cors: {
-    allow_origin: Array<string>;
-    allow_methods: Array<string>;
-    allow_headers: Array<string>;
-    expose_headers: Array<string>;
-    allow_credentials: boolean;
-    max_age: number | null;
-  };
-  auths: Array<AuthDS>;
-  rate: Rate | null;
-  version: string;
-}
-
-export interface TypeGraphDS {
-  types: Array<TypeNode>;
-  materializers: Array<TypeMaterializer>;
-  runtimes: Array<TypeRuntime>;
-  policies: Array<TypePolicy>;
-  meta: TypeMeta;
-}
+export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
 export type RuntimeResolver = Record<string, Runtime>;
 
