@@ -176,18 +176,19 @@ struct PrismaDiffInp {
 }
 
 #[deno_bindgen]
-struct PrismaDiffOut {
-    diff: Option<String>,
+enum PrismaDiffOut {
+    Ok { diff: Option<String> },
+    Err { message: String },
 }
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_diff(input: PrismaDiffInp) -> PrismaDiffOut {
-    let fut = migration::diff(input.datasource, input.datamodel, input.script);
-    let res = RT.block_on(fut);
-    if let Ok(diff) = res {
-        PrismaDiffOut { diff }
-    } else {
-        PrismaDiffOut { diff: None }
+    let res = migration::diff(input.datasource, input.datamodel, input.script);
+    match RT.block_on(res) {
+        Ok(diff) => PrismaDiffOut::Ok { diff },
+        Err(e) => PrismaDiffOut::Err {
+            message: e.to_string(),
+        },
     }
 }
 
