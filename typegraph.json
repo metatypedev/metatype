@@ -3,13 +3,14 @@
   "title": "Typegraph",
   "type": "object",
   "required": [
+    "materializers",
     "meta",
+    "policies",
     "runtimes",
     "types"
   ],
   "properties": {
     "materializers": {
-      "default": [],
       "type": "array",
       "items": {
         "$ref": "#/definitions/Materializer"
@@ -19,7 +20,6 @@
       "$ref": "#/definitions/TypeMeta"
     },
     "policies": {
-      "default": [],
       "type": "array",
       "items": {
         "$ref": "#/definitions/Policy"
@@ -55,9 +55,17 @@
           "type": "string"
         },
         "protocol": {
-          "type": "string"
+          "$ref": "#/definitions/AuthProtocol"
         }
       }
+    },
+    "AuthProtocol": {
+      "type": "string",
+      "enum": [
+        "oauth2",
+        "jwk",
+        "basic"
+      ]
     },
     "Cors": {
       "type": "object",
@@ -72,6 +80,13 @@
           "type": "boolean"
         },
         "allow_headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "allow_methods": {
+          "default": [],
           "type": "array",
           "items": {
             "type": "string"
@@ -263,9 +278,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -331,9 +344,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -408,9 +419,7 @@
               ],
               "format": "double"
             },
-            "inject": {
-              "default": null
-            },
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -506,9 +515,7 @@
               ],
               "format": "int64"
             },
-            "inject": {
-              "default": null
-            },
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -596,9 +603,7 @@
                 "null"
               ]
             },
-            "inject": {
-              "default": null
-            },
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -680,9 +685,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -759,9 +762,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -853,9 +854,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
@@ -942,9 +941,7 @@
               ],
               "items": true
             },
-            "inject": {
-              "default": null
-            },
+            "inject": true,
             "injection": {
               "default": null,
               "type": [
