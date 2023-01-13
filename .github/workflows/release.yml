@@ -16,8 +16,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - id: version
-        uses: mikefarah/yq@master
+      - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
       - name: Check version
