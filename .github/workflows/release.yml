@@ -19,6 +19,9 @@ jobs:
       - id: version
         uses: mikefarah/yq@master
         with:
+          cmd: yq 'METATYPE_VERSION' 'dev/lock.yml'
+      - uses: denoland/setup-deno@v1
+        with:
           deno-version: v${{ env.DENO_VERSION }}
       - name: Check version
         run: |
