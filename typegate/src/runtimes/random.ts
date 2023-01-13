@@ -63,7 +63,7 @@ export class RandomRuntime extends Runtime {
       const config = typ.config ?? {};
       if (Object.prototype.hasOwnProperty.call(config, "gen")) {
         const { gen, ...arg } = config;
-        return this.chance[gen](arg);
+        return this.chance[gen as string](arg);
       }
 
       switch (typ.type) {

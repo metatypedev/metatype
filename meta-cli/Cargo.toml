@@ -11,19 +11,28 @@ documentation = "https://metatype.dev"
 repository = "https://github.com/metatypedev/metatype"
 include = ["src"]
 keywords = ["api", "composition", "typesystem", "graphql", "ecosystem"]
-categories = ["accessibility", "api-bindings", "data-structures", "development-tools", "wasm"]
+categories = [
+  "accessibility",
+  "api-bindings",
+  "data-structures",
+  "development-tools",
+  "wasm",
+]
 
 [[bin]]
 name = "meta"
 path = "src/main.rs"
 
 [dependencies]
-dprint-plugin-typescript = "0.80.2"
+
+self_update = { version = "0.34.0", features = [
+  "archive-tar",
+  "archive-zip",
+  "compression-flate2",
+  "compression-zip-deflate",
+  "compression-zip-bzip2",
+] }
 swc = "0.232.52"
-swc_common = { version = "0.29.10", features = ["tty-emitter"] }
-swc_ecma_ast = "0.94.14"
-swc_ecmascript = { version = "0.205.47", features = ["visit", "transforms", "typescript-parser", "parser", "codegen"] }
-swc_ecma_transforms = "0.198.26"
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines" }
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
@@ -47,8 +56,8 @@ flate2 = "1.0.25"
 tar = "0.4.38"
 base64 = "0.21.0"
 common = { path = "../libs/common" }
+typescript = { path = "../libs/typescript" }
 walkdir = "2.3.2"
-self_update = { version = "0.34.0", features = ["archive-tar", "archive-zip", "compression-flate2", "compression-zip-deflate", "compression-zip-bzip2"] }
 serde_yaml = "0.9.16"
 pathdiff = "0.2.1"
 

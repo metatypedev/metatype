@@ -226,7 +226,7 @@ where
 
 /// Parses a string as a TypeScript module and
 /// generates its [`Module`] and [`SourceMap`].
-fn parse_module_source(source: String) -> Result<(Module, Lrc<SourceMap>)> {
+pub fn parse_module_source(source: String) -> Result<(Module, Lrc<SourceMap>)> {
     let cm: Lrc<SourceMap> = Default::default();
     let handler = Handler::with_tty_emitter(ColorConfig::Auto, true, false, Some(cm.clone()));
 

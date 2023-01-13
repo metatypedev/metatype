@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 mod jsonschema;
+mod typescript;
 
 use anyhow::Result;
 use clap::Parser;
@@ -12,7 +13,10 @@ pub struct Codegen {
 
 type CodegenEntry = (&'static str, fn() -> Result<()>);
 
-const CODEGEN_ENTRIES: &[CodegenEntry] = &[("jsonschema", jsonschema::run)];
+const CODEGEN_ENTRIES: &[CodegenEntry] = &[
+    ("jsonschema", jsonschema::run),
+    ("typescript", typescript::run),
+];
 
 impl Codegen {
     pub fn run(&self) -> Result<()> {
