@@ -73,15 +73,20 @@ struct PrismaIntrospectionInp {
 }
 
 #[deno_bindgen]
-struct PrismaIntrospectionOut {
-    introspection: String,
+enum PrismaIntrospectionOut {
+    Ok { introspection: String },
+    Err { message: String },
 }
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
 fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut {
     let fut = Introspection::introspect(input.datamodel);
-    let introspection = RT.block_on(fut).unwrap();
-    PrismaIntrospectionOut { introspection }
+    match RT.block_on(fut) {
+        Ok(res) => PrismaIntrospectionOut::Ok { introspection: res },
+        Err(e) => PrismaIntrospectionOut::Err {
+            message: e.to_string(),
+        },
+    }
 }
 
 // register engine
