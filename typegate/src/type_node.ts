@@ -19,77 +19,33 @@ type Injection =
   | { injection: "context"; inject: string }
   | { injection: "raw"; inject: string /* json */ };
 
-type TypeNodeBase =
-  & {
-    // type: string;
-    title: string;
-    description?: string;
-    runtime: number;
-    policies: Array<number>;
-    config?: Record<string, any>;
-  }
-  & Injection;
+import type {
+  AnyNode,
+  ArrayNode,
+  BooleanNode,
+  FunctionNode,
+  IntegerNode,
+  NumberNode,
+  ObjectNode,
+  OptionalNode,
+  StringNode,
+  TypeNode,
+} from "./types/typegraph.ts";
 
-export type OptionalNode = TypeNodeBase & {
-  type: "optional";
-  item: number;
-  default_value: any;
-};
-
-export type BooleanNode = TypeNodeBase & { type: "boolean" };
-
-export type NumberNode = TypeNodeBase & {
-  type: "number";
-  minimum?: number;
-  exclusiveMinimum?: number;
-  exclusiveMaximum?: number;
-  multipleOf?: number;
-};
-
-export type IntegerNode = { type: "integer" } & Omit<NumberNode, "type">;
-
-export type StringNode = TypeNodeBase & {
-  type: "string";
-  format?: string;
-  pattern?: string;
-  minLength?: number;
-  maxLength?: number;
-};
-
-export type ObjectNode = TypeNodeBase & {
-  type: "object";
-  properties: Record<string, number>;
-  required?: string[];
-};
-
-export type ArrayNode = TypeNodeBase & {
-  type: "array";
-  items: number;
-  minItems?: number;
-  maxItems?: number;
-  uniqueItems?: boolean;
-};
-
-export type FunctionNode = TypeNodeBase & {
-  type: "function";
-  input: number;
-  output: number;
-  materializer: number;
-  rate_weight: number | null;
-  rate_calls: boolean;
+export type {
+  AnyNode,
+  ArrayNode,
+  BooleanNode,
+  FunctionNode,
+  IntegerNode,
+  NumberNode,
+  ObjectNode,
+  OptionalNode,
+  StringNode,
+  TypeNode,
 };
 
 export type QuantifierNode = OptionalNode | ArrayNode;
-
-export type TypeNode =
-  | OptionalNode
-  | BooleanNode
-  | NumberNode
-  | IntegerNode
-  | StringNode
-  | ObjectNode
-  | ArrayNode
-  | FunctionNode;
 
 //
 // Runtimes
