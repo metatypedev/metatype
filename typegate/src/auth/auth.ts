@@ -4,11 +4,8 @@ import { JWKAuth } from "./protocols/jwt.ts";
 import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
-export type AuthDS = {
-  name: string;
-  protocol: "oauth2" | "jwk" | "basic";
-  auth_data: Record<string, unknown>;
-};
+import type { Auth as AuthDS } from "../types/typegraph.ts";
+export { AuthDS };
 
 // localhost:7890/biscuicuits/auth/github?redirect_uri=localhost:7890/biscuicuits
 export const nextAuthorizationHeader = "Next-Authorization";

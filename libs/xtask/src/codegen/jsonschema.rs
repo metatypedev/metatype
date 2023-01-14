@@ -21,6 +21,7 @@ pub fn run() -> Result<()> {
         .create(true)
         .open(path)
         .context("Opening the output file")?;
+    file.set_len(0)?;
     let schema = schema_for!(Typegraph);
     serde_json::to_writer_pretty(&mut file, &schema)?;
     writeln!(file)?;

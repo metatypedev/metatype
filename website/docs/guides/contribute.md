@@ -9,8 +9,17 @@ Install:
 - [pipx](https://pypa.github.io/pipx/installation/)
 - [pNpm](https://pnpm.io/installation)
 - [Deno](https://deno.land/manual@v1.29.1/getting_started/installation)
+- [Node](https://nodejs.org/en/download/)
 
 ## Getting started
+
+### Essential packages for Linux / WSL
+
+```
+sudo apt install build-essential
+sudo apt install unzip
+sudo apt install pkg-config libssl-dev
+```
 
 ### Toolset
 
@@ -30,11 +39,13 @@ deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen/cli.ts
 ```
 pre-commit install
 
-python3 -m venv typegraph/.venv
+python3 -m venv .venv
 python3 -m venv examples/.venv
 
 cd typegraph
+source ../.venv/bin/activate
 poetry install
+deactivate
 cd ..
 
 cd examples
@@ -45,6 +56,10 @@ cd website
 pnpm install
 cd ..
 
+cd typegate
+cp .env.sample .env
+cd ..
+
 whiz
 ```
 
@@ -53,7 +68,7 @@ whiz
 ```
 docker compose -f dev/docker-compose.yml up -d
 cargo test
-cd typegate && deno run -A test.ts
+deno run -A dev/test.ts
 cd typegraph && pytest -s
 
 docker compose -f dev/docker-compose.yml down

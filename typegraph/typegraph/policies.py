@@ -1,41 +1,51 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from typing import List
-from typing import Optional
 
+from attrs import evolve
+from attrs import field
+from attrs import frozen
 from typegraph.graphs.builder import Collector
 from typegraph.graphs.node import Node
 from typegraph.graphs.typegraph import TypegraphContext
 from typegraph.materializers.base import Materializer
 from typegraph.materializers.deno import FunMat
+from typegraph.utils.attrs import always
 
 
+def policy_name_factory():
+    tg = TypegraphContext.get_active()
+    if tg is None:
+        raise Exception("typegraph context needed")
+    return f"policy_{tg.next_type_id()}"
+
+
+@frozen
 class Policy(Node):
+    name: str = field(factory=policy_name_factory, kw_only=True)
     mat: Materializer
-    name: Optional[str]
+    collector_target: str = always(Collector.policies)
 
-    def __init__(self, mat: Materializer):
-        super().__init__(Collector.policies)
-        self.mat = mat
-        tg = TypegraphContext.get_active()
-        self.name = f"policy_{tg.next_type_id()}"
+    def named(self, name: str):
+        return evolve(self, name=name)
 
     @property
     def edges(self) -> List[Node]:
         return [self.mat]
 
     def data(self, collector):
-        if self.name is None:
-            raise Exception("Policy name is required.")
         return {
             "name": self.name,
             "materializer": collector.index(self.mat),
         }
 
-    def named(self, name: str):
-        pol = Policy(self.mat)
-        pol.name = name
-        return pol
+    @classmethod
+    def get_from(cls, p) -> "Policy":
+        if isinstance(p, Materializer):
+            return cls(p)
+        if isinstance(p, cls):
+            return p
+        raise Exception(f"Cannot create Policy from a {type(p).__name__}")
 
 
 def allow_all(name: str = "__allow_all"):

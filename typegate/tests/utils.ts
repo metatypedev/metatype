@@ -386,7 +386,11 @@ export class Q {
 
   expectErrorContains(partial: string) {
     return this.expectBody((body) => {
-      assertEquals(Array.isArray(body.errors), true, "no 'errors' field found");
+      assertEquals(
+        Array.isArray(body.errors),
+        true,
+        `no 'errors' field found in body: ${JSON.stringify(body)}`,
+      );
       assert(body.errors.length > 0);
       assertStringIncludes(body.errors[0].message, partial);
     });

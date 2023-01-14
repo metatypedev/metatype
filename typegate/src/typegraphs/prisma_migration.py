@@ -22,7 +22,9 @@ with TypeGraph(
         context_identifier="user",
     ),
 ) as g:
-    admin_only = Policy(FunMat("(args) => args.user === 'admin'")).named("admin_only")
+    admin_only = Policy(
+        FunMat("(_args, { context }) => context.user === 'admin'")
+    ).named("admin_only")
 
     base = t.struct(
         {
