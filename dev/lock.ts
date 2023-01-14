@@ -35,9 +35,9 @@ const rules: Record<string, Rules> = {
 };
 
 const args = flags.parse(Deno.args, {
-  boolean: ["version"],
+  boolean: ["version", "check"],
   string: ["bump"],
-  default: { version: false },
+  default: { version: false, check: false },
 });
 
 const lockfile = new URL("lock.yml", import.meta.url);
@@ -105,4 +105,6 @@ for (const [glob, lookups] of Object.entries(rules)) {
   }
 }
 
-Deno.exit(dirty ? 1 : 0);
+if (args.check) {
+  Deno.exit(dirty ? 1 : 0);
+}

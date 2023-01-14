@@ -5,4 +5,4 @@ DENO_BINDGEN_URL: 'https://github.com/denoland/deno_bindgen/raw/main/cli.ts'
 DENO_VERSION: 1.29.2
 NODE_VERSION: 18.12.1
 PNPM_VERSION: 7.9.3
-METATYPE_VERSION: 0.0.3-dev.0
+METATYPE_VERSION: 0.0.3-dev.1
