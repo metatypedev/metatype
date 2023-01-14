@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.0.2-alpha.14"
+version = "0.0.3-dev.0"
 edition = "2021"
 
 description = "Free and open ecosystem for API composition."
@@ -18,7 +18,7 @@ name = "meta"
 path = "src/main.rs"
 
 [dependencies]
-dprint-plugin-typescript = "0.78.0"
+dprint-plugin-typescript = "0.80.2"
 swc = "0.232.52"
 swc_common = { version = "0.29.10", features = ["tty-emitter"] }
 swc_ecma_ast = "0.94.14"
@@ -45,10 +45,10 @@ question = "0.2.2"
 dialoguer = "0.10.2"
 flate2 = "1.0.25"
 tar = "0.4.38"
-base64 = "0.13.1"
+base64 = "0.21.0"
 common = { path = "../libs/common" }
 walkdir = "2.3.2"
-self_update = { version = "0.32.0", features = ["archive-tar", "archive-zip", "compression-flate2", "compression-zip-deflate", "compression-zip-bzip2"] }
+self_update = { version = "0.34.0", features = ["archive-tar", "archive-zip", "compression-flate2", "compression-zip-deflate", "compression-zip-bzip2"] }
 serde_yaml = "0.9.16"
 pathdiff = "0.2.1"
 

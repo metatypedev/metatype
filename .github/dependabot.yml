@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: daily
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: daily
+  - package-ecosystem: pip
+    directory: /typegraph
+    schedule:
+      interval: daily
+  - package-ecosystem: pip
+    directory: /website
+    schedule:
+      interval: daily
+  - package-ecosystem: pip
+    directory: /examples
+    schedule:
+      interval: daily

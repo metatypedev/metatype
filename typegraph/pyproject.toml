@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph"
-version = "0.0.2-alpha.14"
+version = "0.0.3-dev.0"
 description = "Free and open ecosystem for API composition."
 authors = [
     "Metatype Contributors <support@metatype.dev>",
@@ -29,9 +29,9 @@ py-tg = "typegraph.utils.loaders:cmd"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-dataconf = "^2.1.2"
-httpx = {extras = ["http2"], version = "^0.22.0"}
-orjson = "^3.8.2"
+dataconf = "^2.1.3"
+httpx = {extras = ["http2"], version = ">=0.22,<0.24"}
+orjson = "^3.8.4"
 redbaron = "^0.9.2"
 python-dotenv = "^0.21.0"
 python-box = "^6.1.0"
@@ -45,16 +45,16 @@ gql = {extras = ["requests"], version = "^3.4.0"}
 jsons = "^1.6.3"
 ordered-set = "^4.1.0"
 typing-extensions = "^4.4.0"
-attrs = "^22.1.0"
+attrs = "^22.2.0"
 astunparse = "^1.6.3"
 
 [tool.poetry.dev-dependencies]
-black = "^22.10.0"
+black = "^22.12.0"
 pytest = "^7.2.0"
 flake8 = "^5.0.4"
-pytest-asyncio = "^0.19.0"
-debugpy = "^1.6.3"
-mypy = "^0.982"
+pytest-asyncio = "^0.20.3"
+debugpy = "^1.6.5"
+mypy = "^0.991"
 
 [build-system]
 requires = ["poetry-core"]
