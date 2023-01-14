@@ -26,7 +26,7 @@ jobs:
             echo "Tag does not match code version, stopping."
             exit -1
           fi
-          echo "Releasing v$VERSION
+          echo "Releasing v$VERSION"
 
   meta-cli:
     needs:
