@@ -91,9 +91,8 @@ python3 -c 'import typegraph; print(typegraph.version)'
 Finally download and launch a docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
 
 ```bash
-curl -o docker-compose.yml \
-  https://raw.githubusercontent.com/metatypedev/metatype/main/examples/docker-compose.yml
-docker compose up -d
+curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/examples/docker-compose.yml -o docker-compose.yml
+docker compose up
 
 curl -X POST http://localhost:7890/typegate \
   -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQ=' \
