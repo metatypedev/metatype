@@ -36,6 +36,7 @@ typegate1:
         REQUEST_LOG: "tg1"
     env_file:
         - ../examples/.env.sample
+        - ../website/.env.sample
         - .env.sample
     command: "./run.sh"
     depends_on:
@@ -51,6 +52,7 @@ typegate2:
         REQUEST_LOG: "tg2"
     env_file:
         - ../examples/.env.sample
+        - ../website/.env.sample
         - .env.sample
     command: "./run.sh"
     depends_on:
