@@ -13,10 +13,10 @@ from astunparse import unparse
 from attrs import field
 from attrs import frozen
 from frozendict import frozendict
-from typegraph.graphs.builder import Collector
-from typegraph.graphs.node import Node
-from typegraph.materializers.base import Materializer
-from typegraph.materializers.base import Runtime
+from typegraph.graph.builder import Collector
+from typegraph.graph.nodes import Node
+from typegraph.runtimes.base import Materializer
+from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
 from typegraph.utils.attrs import SKIP
 
@@ -131,7 +131,7 @@ class ModuleMat(Materializer):
             if self.code is not None:
                 raise Exception("you must only give either source file or source code")
 
-            from typegraph.graphs.typegraph import get_absolute_path
+            from typegraph.graph.typegraph import get_absolute_path
 
             path = get_absolute_path(self.file)
             if os.environ.get("DONT_READ_EXTERNAL_TS_FILES"):

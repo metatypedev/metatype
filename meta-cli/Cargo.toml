@@ -24,7 +24,6 @@ name = "meta"
 path = "src/main.rs"
 
 [dependencies]
-
 self_update = { version = "0.34.0", features = [
   "archive-tar",
   "archive-zip",

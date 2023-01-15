@@ -29,7 +29,7 @@ This allows to describe almost any data type you may encounter, and verify the d
 ```py
 t.struct({
   "name": t.string(),
-  "age": t.optional(integer()),
+  "age": t.optional(t.integer()),
   "messages": t.array(t.struct({
     "text": t.string(),
     "sentAt": t.datetime()
@@ -79,3 +79,10 @@ t.struct({
     }
   `}
 />
+
+```
+from typegraph import t # all types
+from typegraph import m # core materializer
+from typegraph.providers.XXX import XXX #
+
+```

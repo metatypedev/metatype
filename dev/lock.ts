@@ -32,6 +32,15 @@ const rules: Record<string, Rules> = {
     "(ARG DENO_BINDGEN_URL=).*()": "DENO_BINDGEN_URL",
     "(ARG RUST_VERSION=).*()": "RUST_VERSION",
   },
+  "../typegate/src/typegraph.ts": {
+    '(const typegraphVersion = ").*(";)': "TYPEGRAPH_VERSION",
+  },
+  "../typegraph/typegraph/graph/typegraph.py": {
+    '(typegraph_version = ").*(")': "TYPEGRAPH_VERSION",
+  },
+  "../whiz.yaml": {
+    '(  TYPEGRAPH_VERSION: ").+(")': "TYPEGRAPH_VERSION",
+  },
 };
 
 const args = flags.parse(Deno.args, {

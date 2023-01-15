@@ -1,17 +1,17 @@
-from typegraph.graphs.typegraph import github_auth
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.deno import IdentityMat
-from typegraph.materializers.http import HTTPRuntime
-from typegraph.policies import allow_all
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.graph.auth.oauth2 import github_auth
 from typegraph.policies import Policy
-from typegraph.types import types as t
+from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import IdentityMat
+from typegraph.runtimes.http import HTTPRuntime
 
 
 with TypeGraph("test_auth", auths=[github_auth]) as g:
     remote = HTTPRuntime("https://api.github.com")
 
-    public = allow_all()
+    public = policies.allow_all()
     private = Policy(
         FunMat("(_args, { context }) => !!context.user1"),
     )

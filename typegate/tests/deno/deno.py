@@ -1,9 +1,9 @@
 from typegraph import policies
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import DenoRuntime
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.deno import ModuleMat
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import ModuleMat
 
 
 with TypeGraph("test-vars") as g:

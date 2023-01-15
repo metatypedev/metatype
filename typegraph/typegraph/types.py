@@ -17,15 +17,15 @@ from attrs import field
 from attrs import frozen
 from frozendict import frozendict
 import orjson
-from typegraph.graphs.builder import Collector
-from typegraph.graphs.node import Node
-from typegraph.graphs.typegraph import find
-from typegraph.graphs.typegraph import NodeProxy
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.graphs.typegraph import TypegraphContext
-from typegraph.materializers.base import Materializer
-from typegraph.materializers.base import Runtime
+from typegraph.graph.builder import Collector
+from typegraph.graph.nodes import Node
+from typegraph.graph.nodes import NodeProxy
+from typegraph.graph.typegraph import find
+from typegraph.graph.typegraph import TypeGraph
+from typegraph.graph.typegraph import TypegraphContext
 from typegraph.policies import Policy
+from typegraph.runtimes.base import Materializer
+from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
 from typegraph.utils.attrs import asdict
 from typegraph.utils.attrs import SKIP

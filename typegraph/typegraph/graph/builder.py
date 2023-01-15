@@ -1,15 +1,11 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from collections import defaultdict
-from typing import DefaultDict
-from typing import TYPE_CHECKING
+from typing import Dict
 from typing import Union
 
 from ordered_set import OrderedSet
-from typegraph.graphs.node import Node
-
-if TYPE_CHECKING:
-    from typegraph.graphs.typegraph import NodeProxy
+from typegraph.graph.nodes import Node
+from typegraph.graph.nodes import NodeProxy
 
 
 class Collector:
@@ -17,12 +13,22 @@ class Collector:
     runtimes = "runtimes"
     materializers = "materializers"
     policies = "policies"
+    secrets = "secrets"
 
-    collects: DefaultDict[str, OrderedSet]
+    collects: Dict[str, OrderedSet]
     frozen = False
 
     def __init__(self):
-        self.collects = defaultdict(OrderedSet)
+        self.collects = {
+            f: OrderedSet()
+            for f in [
+                Collector.types,
+                Collector.runtimes,
+                Collector.materializers,
+                Collector.policies,
+                Collector.secrets,
+            ]
+        }
 
     def freeze(self):
         self.frozen = True
@@ -34,7 +40,6 @@ class Collector:
             bool: `True` if the node was added to the collect,
                   `False` if it had already been added from previous operations
         """
-        from typegraph.graphs.typegraph import NodeProxy
 
         if self.frozen:
             raise Exception("Frozen collector cannot collect")
@@ -53,8 +58,6 @@ class Collector:
 
     # returns the index of the node in its collect
     def index(self, node: Union[Node, "NodeProxy"]):
-        from typegraph.graphs.typegraph import NodeProxy
-
         if not isinstance(node, Node):
             raise Exception(f"expected Node, got {type(node).__name__}")
 

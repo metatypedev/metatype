@@ -1,7 +1,7 @@
-from typegraph.graphs.typegraph import TypeGraph
+from typegraph import t
+from typegraph import TypeGraph
 from typegraph.importers.google_discovery import import_googleapis
-from typegraph.materializers import googleapis
-from typegraph.types import types as t
+from typegraph.providers.google.runtimes import googleapis
 
 discovery = (
     "https://mybusinessbusinessinformation.googleapis.com/$discovery/rest?version=v1"

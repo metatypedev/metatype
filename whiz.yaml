@@ -1,17 +1,20 @@
+env:
+    TYPEGRAPH_VERSION: "0.0.1"
+
 meta:
     workdir: .
-    watches:
+    watch:
         - "meta-cli/src/**/*.rs"
-    shell: "cargo run -p meta-cli -- --help"
+    command: "cargo run -p meta-cli -- --help"
     depends_on:
         - libs
 
 examples:
     workdir: .
-    watches:
+    watch:
         - "examples/metatype.yaml"
-    shell: "cargo run -p meta-cli -- -C examples dev"
-    envs:
+    command: "cargo run -p meta-cli -- -C examples dev"
+    env:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH
     depends_on:
@@ -19,88 +22,94 @@ examples:
 
 system_graphs:
     workdir: typegate
-    watches: src/typegraphs/*.py
-    shell: "./serialize-tgs.sh"
+    watch: src/typegraphs/*.py
+    command: "./serialize-tgs.sh"
     depends_on:
         - meta
 
 typegate1:
     workdir: typegate
-    watches: "src/**/*.ts"
-    envs:
+    watch: "src/**/*.ts"
+    env:
         TG_PORT: "7891"
         PACKAGED: "false"
         REQUEST_LOG: "tg1"
-    shell: "./run.sh"
+    env_file:
+        - ../examples/.env.sample
+        - .env.sample
+    command: "./run.sh"
     depends_on:
         - clean_deno_bindgen_cache
         - typegate_native
 
 typegate2:
     workdir: typegate
-    watches: "src/**/*.ts"
-    envs:
+    watch: "src/**/*.ts"
+    env:
         TG_PORT: "7892"
         PACKAGED: "false"
         REQUEST_LOG: "tg2"
-    shell: "./run.sh"
+    env_file:
+        - ../examples/.env.sample
+        - .env.sample
+    command: "./run.sh"
     depends_on:
         - clean_deno_bindgen_cache
         - typegate_native
 
 libs:
     workdir: libs
-    watches:
+    watch:
         - common/**/*.rs
         - typescript/**/*.rs
-    shell: "cargo build -p common -p typescript"
+    command: "cargo build -p common -p typescript"
 
 codegen:
     depends_on:
         - libs
     workdir: .
-    watches:
+    watch:
         - "libs/xtask/src/**/*.rs"
-    envs:
-        TG_JSONSCHEMA_OUT: website/static/typegraph.json
+    env:
+        TG_JSONSCHEMA_OUT: website/static/specs/$TYPEGRAPH_VERSION.json
         TG_TYPESCRIPT_OUT: typegate/src/types/typegraph.ts
-    shell: "cargo run --package xtask -- codegen"
+    command: "cargo run --package xtask -- codegen"
 
 clean_deno_bindgen_cache:
-    shell: rm -rfv $(deno info --json | jq -r .denoDir)/plug/file
+    command: rm -rfv $(deno info --json | jq -r .denoDir)/plug/file
     depends_on:
         - typegate_native
 
 typegate_native:
-    watches:
+    watch:
         - "typegate/native/src/**/*.rs"
-    envs:
+    env:
         OUT_DIR: "target"
-    shell: "deno_bindgen -- -p native"
+    command: "deno_bindgen -- -p native"
     depends_on:
         - libs
 
 website_deps:
     workdir: website
-    watches: "package.json"
-    shell: "pnpm install"
+    watch: "package.json"
+    command: "pnpm install"
 
 website:
     workdir: website
-    shell: "pnpm start --no-open"
-    envs:
+    command: "pnpm start --no-open"
+    env:
         TG_URL: http://localhost:7890
     depends_on:
         - website_deps
 
 website_meta:
     workdir: .
-    watches:
+    watch:
         - "meta-cli/src/**/*.rs"
         - "website/**/*.py"
         - "typegate/src/**/*.ts"
-    shell: "cargo run -p meta-cli -- -C website dev -u admin -p password --port 5001"
-    envs:
+    command: "cargo run -p meta-cli -- -C website dev -u admin -p password --port 5001"
+    env:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH
     depends_on:

@@ -7,9 +7,9 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from typegraph.graphs.typegraph import NodeProxy
-from typegraph.graphs.typegraph import resolve_proxy
-from typegraph.types import types as t
+from typegraph import types as t
+from typegraph.graph.nodes import NodeProxy
+from typegraph.graph.typegraph import resolve_proxy
 
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
@@ -81,7 +81,7 @@ class PrismaModel:
 
             that_entity = field.tpe
 
-            from typegraph.materializers.prisma import PrismaRelation
+            from typegraph.providers.prisma.runtimes.prisma import PrismaRelation
 
             if PrismaRelation.check(that_entity):
                 if not PrismaRelation.multi(that_entity):
@@ -126,7 +126,7 @@ class PrismaSchema:
         for model in self.models.values():
             model.link(self)
 
-        from typegraph.materializers.prisma import PrismaRelation
+        from typegraph.providers.prisma.runtimes.prisma import PrismaRelation
 
         for model in self.models.values():
             additional_fields = {}
@@ -189,10 +189,10 @@ def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
         f.prisma_type = "Json"
         return
 
-    from typegraph.materializers.prisma import PrismaRelation
+    from typegraph.providers.prisma.runtimes.prisma import PrismaRelation
 
     if PrismaRelation.check(f.tpe):
-        from typegraph.materializers.prisma import Relation
+        from typegraph.providers.prisma.runtimes.prisma import Relation
 
         relation = f.tpe.mat.relation
         if isinstance(relation, Relation):

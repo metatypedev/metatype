@@ -6,14 +6,14 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 from attrs import frozen
-from typegraph.graphs.builder import Collector
-from typegraph.graphs.node import Node
+from typegraph.graph.builder import Collector
+from typegraph.graph.nodes import Node
 from typegraph.utils.attrs import always
 from typegraph.utils.attrs import asdict
 
 
 if TYPE_CHECKING:
-    from typegraph.types import types as t
+    from typegraph import types as t
 
 
 @frozen

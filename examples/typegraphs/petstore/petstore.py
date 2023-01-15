@@ -1,14 +1,13 @@
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.http import HTTPRuntime
-from typegraph.policies import Policy
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph("swagger-petstore") as g:
 
     remote = HTTPRuntime("https://petstore.swagger.io/v2")
 
-    allow_all = Policy(FunMat("() => true")).named("allow_all_policy")
+    allow_all = policies.allow_all()
 
     category = t.struct(
         {

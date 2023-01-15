@@ -93,7 +93,7 @@ export class TypeGraph {
 
   private constructor(
     typegraph: TypeGraphDS,
-    private runtimeReferences: Runtime[],
+    public runtimeReferences: Runtime[],
     private secrets: Record<string, string>,
     public cors: (req: Request) => Record<string, string>,
     public auths: Map<string, Auth>,

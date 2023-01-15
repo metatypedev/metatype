@@ -4,9 +4,9 @@ from typing import Optional
 from typing import Tuple
 
 from attrs import frozen
-from typegraph.materializers.base import Materializer
-from typegraph.materializers.base import Runtime
-from typegraph.types import types as t
+from typegraph import types as t
+from typegraph.runtimes.base import Materializer
+from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
 
 

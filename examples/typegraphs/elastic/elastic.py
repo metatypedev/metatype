@@ -1,13 +1,13 @@
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.http import HTTPRuntime
-from typegraph.policies import allow_all
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph(
     "elastic",
 ) as g:
 
-    all = allow_all()
+    all = policies.allow_all()
     remote = HTTPRuntime(
         "https://localhost:9200",
         basic_auth_secret="basic",

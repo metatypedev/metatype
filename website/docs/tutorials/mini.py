@@ -1,8 +1,8 @@
+from typegraph import types as t
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.deno import FunMat
 from typegraph.materializers.graphql import GraphQLRuntime
 from typegraph.policies import Policy
-from typegraph.types import types as t
 
 with TypeGraph("mini") as g:
 

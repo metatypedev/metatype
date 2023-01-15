@@ -5,101 +5,33 @@ from pathlib import Path
 from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Literal
 from typing import Optional
 from typing import Set
 from typing import TYPE_CHECKING
 from typing import Union
 
-from attrs import define
-from attrs import field
-from attrs import frozen
-from typegraph.graphs.builder import Collector
-from typegraph.graphs.node import Node
-from typegraph.materializers.deno import DenoRuntime
-
+from typegraph.graph.builder import Collector
+from typegraph.graph.models import Auth
+from typegraph.graph.models import Cors
+from typegraph.graph.models import Rate
+from typegraph.graph.nodes import Node
+from typegraph.graph.nodes import NodeProxy
+from typegraph.runtimes.deno import DenoRuntime
 
 if TYPE_CHECKING:
-    from typegraph.types import types as t
-
-
-typegraph_version = "0.0.1"
-
-
-@frozen
-class Code:
-    name: str
-    source: str
-    type: Literal["func", "module"] = field(default="func")
-
-
-@define
-class Auth:
-    name: str
-    protocol: str
-    auth_data: Dict[str, str]
-
-    @classmethod
-    def oauth2(
-        cls,
-        name: str,
-        authorize_url: str,
-        access_url: str,
-        scopes: str,
-        profile_url: Optional[str] = None,
-    ) -> "Auth":
-        return Auth(
-            name,
-            "oauth2",
-            dict(
-                authorize_url=authorize_url,
-                access_url=access_url,
-                scopes=scopes,
-                profile_url=profile_url,
-            ),
-        )
-
-    # deno eval 'await crypto.subtle.generateKey({name: "ECDSA", namedCurve: "P-384"}, true, ["sign", "verify"]).then(k => crypto.subtle.exportKey("jwk", k.publicKey)).then(JSON.stringify).then(console.log);'
-    @classmethod
-    def jwk(cls, name: str, args=None) -> "Auth":
-        return Auth(name, "jwk", args if args is not None else {})
-
-    @classmethod
-    def basic(cls, users: List[str]) -> "Auth":
-        return Auth("basic", "basic", {"users": users})
-
-
-github_auth = Auth.oauth2(
-    "github",
-    "https://github.com/login/oauth/authorize",
-    "https://github.com/login/oauth/access_token",
-    "openid profile email",
-    "https://api.github.com/user",
-)
-
-
-@define
-class Cors:
-    allow_origin: List[str] = field(factory=list)
-    allow_headers: List[str] = field(factory=list)
-    expose_headers: List[str] = field(factory=list)
-    allow_credentials: bool = True
-    max_age: Optional[int] = None
-
-
-@define
-class Rate:
-    window_limit: int
-    window_sec: int
-    query_limit: int
-    context_identifier: Optional[str] = None
-    local_excess: int = 0
+    from typegraph import types as t
 
 
 OperationTable = Dict[str, Union["t.func", "t.struct"]]
 
+typegraph_version = "0.0.1"
+
 
 class TypeGraph:
+    Auth = Auth
+    Cors = Cors
+    Rate = Rate
+
     # repesent domain projected to an interface
     name: str
     # version should be commit based
@@ -148,7 +80,7 @@ class TypeGraph:
         return NodeProxy(self, node, after_apply)
 
     def expose(self, **ops: Union["t.func", "t.struct"]):
-        from typegraph.types import types as t
+        from typegraph import types as t
 
         # allow to expose only functions or structures (namespaces)
         for name, op in ops.items():
@@ -163,7 +95,7 @@ class TypeGraph:
         return self
 
     def root(self) -> "t.struct":
-        from typegraph.types import types as t
+        from typegraph import types as t
 
         def assert_non_serial_materializers(
             tpe: Union[t.typedef, NodeProxy], history: Set[t.typedef] = set()
@@ -222,6 +154,8 @@ class TypeGraph:
             "version": typegraph_version,
         }
 
+        ret["$id"] = f"https://metatype.dev/specs/${typegraph_version}.json"
+
         return ret
 
 
@@ -252,53 +186,6 @@ def get_absolute_path(relative: str) -> Path:
     return tg_path.parent / relative
 
 
-class NodeProxy(Node):
-    g: TypeGraph
-    node: str
-    after_apply: Optional[Callable[["t.typedef"], "t.typedef"]]
-
-    def __init__(
-        self,
-        g: TypeGraph,
-        node: str,
-        after_apply: Optional[Callable[["t.typedef"], "t.typedef"]] = None,
-    ):
-        super().__init__()
-        self.g = g
-        self.node = node
-        self.after_apply = after_apply
-
-    def then(self, then_apply: Callable[["t.typedef"], "t.typedef"]):
-        return NodeProxy(self.g, self.node, lambda n: then_apply(self.after_apply(n)))
-
-    def get(self) -> "t.typedef":
-        tpe = self.g.type_by_names.get(self.node)
-        if tpe is None:
-            raise Exception(f"No registered type named '{self.node}'")
-        if self.after_apply is None:
-            return tpe
-        tpe = self.after_apply(tpe)
-        self.g.type_by_names[tpe.name] = tpe
-        self.node, self.after_apply = tpe.name, None
-        return tpe
-
-    @property
-    def edges(self) -> List["Node"]:
-        return self.get().edges
-
-    def data(self, collector: "Collector") -> dict:
-        return self.get().data(collector)
-
-    @property
-    def name(self) -> str:
-        return self.node
-
-    def optional(self):
-        from typegraph.types import types as t
-
-        return t.optional(self)
-
-
 def find(node: str) -> Optional[NodeProxy]:
     g = TypegraphContext.get_active()
     if g is None:
@@ -310,7 +197,7 @@ def find(node: str) -> Optional[NodeProxy]:
 
 
 def resolve_proxy(tpe: Union[NodeProxy, "t.typedef"]) -> "t.typedef":
-    from typegraph.types import types as t
+    from typegraph import types as t
 
     if isinstance(tpe, NodeProxy):
         return tpe.get()

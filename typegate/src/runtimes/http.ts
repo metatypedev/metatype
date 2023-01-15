@@ -164,6 +164,10 @@ export class HTTPRuntime extends Runtime {
         return traverseLift(true);
       }
 
+      if (res.status === 404) { // not found
+        return traverseLift(null);
+      }
+
       throw new Error(`Unsupported content type "${contentType}"`);
     };
   }

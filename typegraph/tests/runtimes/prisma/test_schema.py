@@ -5,10 +5,10 @@ from pathlib import Path
 import subprocess
 from typing import Iterable
 
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.materializers.prisma import PrismaSchema
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph.providers.prisma.runtimes.prisma import PrismaSchema
 
 # import debugpy
 

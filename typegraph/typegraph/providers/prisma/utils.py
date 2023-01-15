@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typegraph.graphs.typegraph import NodeProxy
-from typegraph.types import types as t
+from typegraph import types as t
+from typegraph.graph.nodes import NodeProxy
 
 
 def resolve_entity_quantifier(tpe: t.typedef):

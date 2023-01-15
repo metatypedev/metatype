@@ -1,2 +1,4 @@
 [flake8]
 ignore = E501, W503, F541, E231
+per-file-ignores =
+    typegraph/typegraph/__init__.py:F401

@@ -1,16 +1,16 @@
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.deno import ModuleMat
-from typegraph.materializers.s3 import S3Runtime
-from typegraph.policies import allow_all
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.providers.aws.runtimes.s3 import S3Runtime
+from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import ModuleMat
 
 
 with TypeGraph(
     "retrend",
 ) as g:
 
-    all = allow_all()
+    all = policies.allow_all()
     s3 = S3Runtime("http://localhost:9000", "local", "access_key", "secret_key")
 
     f = ModuleMat("image_proxy_resize.ts", secrets=("IMGPROXY_SALT", "IMGPROXY_SECRET"))

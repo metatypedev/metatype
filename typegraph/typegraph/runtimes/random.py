@@ -9,12 +9,12 @@ from typing import TYPE_CHECKING
 from attrs import field
 from attrs import frozen
 from typegraph import utils
-from typegraph.materializers.base import Materializer
-from typegraph.materializers.base import Runtime
+from typegraph.runtimes.base import Materializer
+from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
 
 if TYPE_CHECKING:
-    from typegraph.types import types as t
+    from typegraph import types as t
 
 
 def pick(d: Dict, *largs) -> Dict:

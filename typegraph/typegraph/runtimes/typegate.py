@@ -1,8 +1,8 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from attrs import frozen
-from typegraph.materializers.base import Materializer
-from typegraph.materializers.base import Runtime
+from typegraph.runtimes.base import Materializer
+from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
 
 
