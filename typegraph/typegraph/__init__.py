@@ -2,4 +2,4 @@
 
 # shortcut imports
 
-version = "0.0.3-dev.0"
+version = "0.0.3-dev.1"
