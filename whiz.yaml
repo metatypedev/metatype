@@ -116,3 +116,8 @@ website_meta:
         PATH: $PWD/examples/.venv/bin:$PATH
     depends_on:
         - meta
+
+website_pydoc:
+    workdir: website
+    watch: "../typegraph/typegraph/**/*.py"
+    command: "pydoc-markdown"

@@ -63,8 +63,8 @@ class Secret(Node):
         return self.secret  # this is a string
 
 
+# Optional keyword-only field
 def optional_field():
-    """Optional keyword-only field"""
     return field(kw_only=True, default=None)
 
 
@@ -284,9 +284,8 @@ TYPE_CONSTRAINT = "__type_constraint_name"
 
 
 def constraint(name: Optional[str] = None):
-    """Additional constraint on type: Validation keyword.
-    Field to be manually set on the serialization.
-    """
+    # Additional constraint on type: Validation keyword.
+    # Field to be manually set on the serialization.
     return field(
         kw_only=True, default=None, metadata={SKIP: True, TYPE_CONSTRAINT: name or True}
     )
@@ -366,9 +365,19 @@ class boolean(typedef):
 @with_constraints
 @frozen
 class number(typedef):
+    """Represents a generic number.
+
+    Args:
+        _min (float, optional): minimum constraint
+        _max (float, optional): maximum constraint
+        _x_min (float, optional): exclusive minimum constraint
+        _x_max (float, optional): exclusive maximum constraint
+        _multiple_of (float, optional): number must be a multiple of
+    """
+
     _min: Optional[float] = constraint("minimum")
     _max: Optional[float] = constraint("maximum")
-    _x_min: Optional[float] = constraint("exculiveMinimum")
+    _x_min: Optional[float] = constraint("exclusiveMinimum")
     _x_max: Optional[float] = constraint("exclusiveMaximum")
     _multiple_of: Optional[float] = constraint("multipleOf")
 
@@ -379,6 +388,8 @@ def float() -> number:
 
 @frozen
 class integer(number):
+    """An integer."""
+
     pass
 
 

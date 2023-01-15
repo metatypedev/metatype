@@ -29,10 +29,7 @@ class TypegraphError:
 
 
 def import_file(path: str) -> List[TypeGraph]:
-    """
-    Import typegraphs from a TDM.
-    """
-
+    # Import typegraphs from a TDM.
     path = Path(path)
 
     spec = importlib.util.spec_from_file_location(path.name, path)

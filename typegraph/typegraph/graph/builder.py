@@ -34,12 +34,10 @@ class Collector:
         self.frozen = True
 
     def collect(self, node: Node) -> bool:
-        """Add `node` to its target collect
-
-        Returns:
-            bool: `True` if the node was added to the collect,
-                  `False` if it had already been added from previous operations
-        """
+        # Add `node` to its target collect.
+        # Returns:
+        #    bool: `True` if the node was added to the collect,
+        #          `False` if it had already been added from previous operations
 
         if self.frozen:
             raise Exception("Frozen collector cannot collect")

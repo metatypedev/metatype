@@ -51,7 +51,7 @@ const config = {
     () => ({
       name: "releases",
       async loadContent() {
-        const file = "docs/reference/changelog.mdx";
+        const file = "pages/docs/reference/changelog.mdx";
         const content = await fs.readFile(file, "utf8");
         const { ctime } = await fs.stat(file);
         if (new Date() - ctime < 24 * 60 * 60 * 1000) {
@@ -99,6 +99,8 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
+          path: "pages",
+          routeBasePath: "/",
           sidebarPath: require.resolve("./sidebars.js"),
           editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
         },
@@ -131,27 +133,9 @@ const config = {
           },
           {
             type: "docSidebar",
-            sidebarId: "tutorials",
+            sidebarId: "docs",
             position: "left",
-            label: "Tutorials",
-          },
-          {
-            type: "docSidebar",
-            sidebarId: "guides",
-            position: "left",
-            label: "Guides",
-          },
-          {
-            type: "docSidebar",
-            sidebarId: "reference",
-            position: "left",
-            label: "Reference",
-          },
-          {
-            type: "docSidebar",
-            sidebarId: "concepts",
-            position: "left",
-            label: "Concepts",
+            label: "Docs",
           },
           {
             href: "https://github.com/metatypedev/metatype",

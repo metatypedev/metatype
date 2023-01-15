@@ -13,6 +13,21 @@ from typegraph.utils.attrs import always
 
 @frozen
 class HTTPRuntime(Runtime):
+    """Runs HTTP requests.
+
+    Example:
+    ```python
+    from typegraph.runtime.http import HTTPRuntime
+
+    remote = HTTPRuntime('https://dev.to/api')
+    remote.get(
+        '/test',
+        t.struct({}),
+        t.array(t.struct({'a': t.integer()})),
+    )
+    ```
+    """
+
     endpoint: str
     cert_secret: Optional[str] = None
     basic_auth_secret: Optional[str] = None
