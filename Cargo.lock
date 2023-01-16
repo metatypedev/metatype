@@ -627,7 +627,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.3-dev.0"
+version = "0.0.3-dev.1"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -1993,6 +1993,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "insta"
+version = "1.23.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e48b08a091dfe5b09a6a9688c468fdd5b4396e92ce09e2eb932f0884b02788a4"
+dependencies = [
+ "console",
+ "lazy_static",
+ "linked-hash-map",
+ "similar",
+ "yaml-rust",
+]
+
+[[package]]
 name = "instant"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2481,7 +2494,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.0.3-dev.0"
+version = "0.0.3-dev.1"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -2491,11 +2504,11 @@ dependencies = [
  "crossbeam-channel",
  "datamodel-renderer",
  "dialoguer",
- "dprint-plugin-typescript",
  "flate2",
  "globset",
  "ignore",
  "indoc",
+ "insta",
  "lazy_static",
  "log",
  "notify",
@@ -2509,13 +2522,10 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "swc",
- "swc_common",
- "swc_ecma_ast 0.94.14",
- "swc_ecma_transforms",
- "swc_ecmascript",
  "tar",
  "tiny_http",
  "tokio",
+ "typescript",
  "walkdir",
 ]
 
@@ -2956,7 +2966,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.0.3-dev.0"
+version = "0.0.3-dev.1"
 dependencies = [
  "anyhow",
  "common",
@@ -4937,6 +4947,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "similar"
+version = "2.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "420acb44afdae038210c99e69aae24109f32f15500aa708e81d46c9f29d55fcf"
+
+[[package]]
 name = "siphasher"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6540,6 +6556,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
+name = "typescript"
+version = "0.0.3-dev.1"
+dependencies = [
+ "anyhow",
+ "dprint-plugin-typescript",
+ "lazy_static",
+ "string_cache",
+ "swc_common",
+ "swc_ecma_ast 0.94.14",
+ "swc_ecma_transforms",
+ "swc_ecmascript",
+]
+
+[[package]]
 name = "ucd-trie"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7041,13 +7071,15 @@ checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
 
 [[package]]
 name = "xtask"
-version = "0.0.3-dev.0"
+version = "0.0.3-dev.1"
 dependencies = [
  "anyhow",
  "clap",
  "common",
+ "project-root",
  "schemars",
  "serde_json",
+ "typescript",
 ]
 
 [[package]]

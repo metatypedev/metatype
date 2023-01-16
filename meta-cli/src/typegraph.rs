@@ -12,8 +12,8 @@ use std::process::Command;
 use walkdir::{DirEntry, WalkDir};
 
 use crate::config::Config;
-use crate::ts::parser::{transform_module, transform_script};
 use crate::utils::ensure_venv;
+use typescript::parser::{transform_module, transform_script};
 
 pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
 

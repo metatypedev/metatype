@@ -5,7 +5,6 @@ mod codegen;
 mod config;
 #[cfg(test)]
 mod tests;
-mod ts;
 mod typegraph;
 mod utils;
 

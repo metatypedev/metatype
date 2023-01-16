@@ -100,9 +100,11 @@ export class PrismaRuntime extends GraphQLRuntime {
       const res = JSON.parse(ret.res);
       if ("errors" in res) {
         throw new ResolverError(
-          res.errors
-            .map((e: any) => e.user_facing_error?.message ?? e.error)
-            .join("\n"),
+          `Error from the prisma engine: ${
+            res.errors
+              .map((e: any) => e.user_facing_error?.message ?? e.error)
+              .join("\n")
+          }`,
         );
       }
       return path.reduce((r, field) => r[field], res.data);

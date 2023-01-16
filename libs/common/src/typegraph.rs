@@ -12,10 +12,8 @@ use std::collections::HashMap;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Typegraph {
     pub types: Vec<TypeNode>,
-    #[serde(default)]
     pub materializers: Vec<Materializer>,
     pub runtimes: Vec<TGRuntime>,
-    #[serde(default)]
     pub policies: Vec<Policy>,
     pub meta: TypeMeta,
 }
@@ -26,15 +24,26 @@ pub struct Cors {
     pub allow_origin: Vec<String>,
     pub allow_headers: Vec<String>,
     pub expose_headers: Vec<String>,
+    #[serde(default)]
+    pub allow_methods: Vec<String>,
     pub allow_credentials: bool,
     pub max_age: Option<u32>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum AuthProtocol {
+    OAuth2,
+    Jwk,
+    Basic,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Auth {
     pub name: String,
-    pub protocol: String,
+    pub protocol: AuthProtocol,
     pub auth_data: HashMap<String, Value>,
 }
 
@@ -69,10 +78,10 @@ pub struct TypeNodeBase {
     pub description: Option<String>,
     #[serde(default)]
     pub injection: Option<String>,
-    #[serde(default)]
-    pub inject: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "serde_json::Value::is_null")]
+    pub inject: Value,
     #[serde(default, rename = "enum")]
-    pub enum_: Option<Vec<serde_json::Value>>,
+    pub enum_: Option<Vec<Value>>,
     #[serde(default)]
     pub config: HashMap<String, serde_json::Value>,
 }
