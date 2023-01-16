@@ -98,7 +98,7 @@ class TestTypegraph:
                     ),
                     "version": "0.0.1",
                 },
-                "$id": "https://metatype.dev/specs/$0.0.1.json",
+                "$id": "https://metatype.dev/specs/0.0.1.json",
             }
         )
 
@@ -233,6 +233,6 @@ class TestTypegraph:
                     ),
                     "version": "0.0.1",
                 },
-                "$id": "https://metatype.dev/specs/$0.0.1.json",
+                "$id": "https://metatype.dev/specs/0.0.1.json",
             }
         )
