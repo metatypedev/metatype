@@ -21,7 +21,7 @@ impl Introspection {
 
         let ds_opt = config.datasources.first();
         if ds_opt.is_none() {
-            let msg = String::from("failed to access config.datasources, None encountered");
+            let msg = String::from("no datasources found in the configuration, None encountered");
             return Result::Err(Error::Generic(msg));
         }
 
