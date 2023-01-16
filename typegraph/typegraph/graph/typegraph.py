@@ -154,7 +154,7 @@ class TypeGraph:
             "version": typegraph_version,
         }
 
-        ret["$id"] = f"https://metatype.dev/specs/${typegraph_version}.json"
+        ret["$id"] = f"https://metatype.dev/specs/{typegraph_version}.json"
 
         return ret
 
