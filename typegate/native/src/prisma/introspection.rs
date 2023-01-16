@@ -19,8 +19,20 @@ impl Introspection {
             Err(e) => return Result::Err(Error::DatamodelError(e.to_string())),
         };
 
-        let ds = config.datasources.first().unwrap();
-        let url = ds.load_url(load_env_var).unwrap();
+        let ds_opt = config.datasources.first();
+        if ds_opt.is_none() {
+            let msg = String::from("failed to access config.datasources, None encountered");
+            return Result::Err(Error::Generic(msg));
+        }
+
+        let ds = ds_opt.unwrap();
+        let url_res = ds.load_url(load_env_var);
+        if url_res.is_err() {
+            let msg = String::from("datasource_load_url failed");
+            return Result::Err(Error::Generic(msg));
+        }
+        let url = url_res.unwrap();
+
         let connector = match SqlIntrospectionConnector::new(url.as_str(), Default::default()).await
         {
             introspection_connector::ConnectorResult::Ok(connector) => connector,

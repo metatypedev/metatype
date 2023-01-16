@@ -27,7 +27,7 @@ pub async fn register_engine(datamodel: String, tg_name: String) -> Result<Strin
 }
 
 pub async fn query(engine_key: String, query: serde_json::Value) -> Result<String> {
-    let body: request_handlers::GraphQlBody = serde_json::from_value(query).unwrap();
+    let body = serde_json::from_value(query)?;
     let engine = super::ENGINES
         .get(&engine_key)
         .with_context(|| format!("Cound not find engine '{engine_key}"))?;

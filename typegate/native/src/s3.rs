@@ -44,6 +44,13 @@ fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> String {
     let mut bucket = Bucket::new(&presigning.bucket, region, credentials).unwrap();
     bucket.set_path_style();
     let mut headers = HeaderMap::new();
+
+    // Note :
+    // parse::<String>() is expected to never fail
+    // as S3Presigning::content_type and S3Presigning::content_length are both Strings
+    // Ex: String::from("hello world").parse::<String>() => Result<String, Infallible>
+    // https://web.mit.edu/rust-lang_v1.25/arch/amd64_ubuntu1404/share/doc/rust/html/std/convert/enum.Infallible.html
+
     headers.insert(
         header::CONTENT_TYPE,
         presigning.content_type.parse().unwrap(),
@@ -52,6 +59,7 @@ fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> String {
         header::CONTENT_LENGTH,
         presigning.content_length.parse().unwrap(),
     );
+
     bucket
         .presign_put(presigning.key, presigning.expires, Some(headers))
         .unwrap()
@@ -66,9 +74,14 @@ struct S3Item {
 
 #[derive(Debug)]
 #[deno_bindgen]
-struct S3Items {
-    prefix: Vec<String>,
-    items: Vec<S3Item>,
+enum S3Items {
+    Ok {
+        prefix: Vec<String>,
+        items: Vec<S3Item>,
+    },
+    Err {
+        message: String,
+    },
 }
 
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
@@ -84,25 +97,38 @@ fn s3_list(client: S3Client, bucket: &str, path: &str) -> S3Items {
         session_token: None,
         expiration: None,
     };
-    let mut bucket = Bucket::new(bucket, region, credentials).unwrap();
+
+    let temp = Bucket::new(bucket, region, credentials);
+    if let Err(e) = temp {
+        return S3Items::Err {
+            message: e.to_string(),
+        };
+    }
+
+    let mut bucket = temp.unwrap();
     bucket.set_path_style();
-    let ls = RT
-        .block_on(bucket.list(path.to_string(), Some("/".to_string())))
-        .unwrap();
-    S3Items {
-        prefix: ls
-            .clone()
-            .into_iter()
-            .flat_map(|page| page.common_prefixes.unwrap_or_default())
-            .map(|e| e.prefix)
-            .collect(),
-        items: ls
-            .into_iter()
-            .flat_map(|page| page.contents)
-            .map(|e| S3Item {
-                key: e.key,
-                size: e.size,
-            })
-            .collect(),
+
+    let temp = RT.block_on(bucket.list(path.to_string(), Some("/".to_string())));
+
+    match temp {
+        Ok(ls) => S3Items::Ok {
+            prefix: ls
+                .clone()
+                .into_iter()
+                .flat_map(|page| page.common_prefixes.unwrap_or_default())
+                .map(|e| e.prefix)
+                .collect(),
+            items: ls
+                .into_iter()
+                .flat_map(|page| page.contents)
+                .map(|e| S3Item {
+                    key: e.key,
+                    size: e.size,
+                })
+                .collect(),
+        },
+        Err(e) => S3Items::Err {
+            message: e.to_string(),
+        },
     }
 }
