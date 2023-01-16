@@ -4,7 +4,7 @@
 
 use introspection_connector::{CompositeTypeDepth, IntrospectionConnector, IntrospectionContext};
 use introspection_core::Error;
-use prisma_models::psl::{self, SourceFile};
+use prisma_models::psl::{self, Diagnostics, SourceFile};
 use sql_introspection_connector::SqlIntrospectionConnector;
 use std::result::Result;
 
@@ -12,26 +12,33 @@ pub struct Introspection {}
 
 impl Introspection {
     pub async fn introspect(schema: String) -> Result<String, Error> {
-        let config = match psl::parse_configuration(&schema).map_err(|diagnostics| {
-            Error::DatamodelError(diagnostics.to_pretty_string("schema.prisma", &schema))
-        }) {
+        let customize = |diag: Diagnostics| {
+            Error::DatamodelError(diag.to_pretty_string("schema.prisma", &schema))
+        };
+
+        let config_res = psl::parse_configuration(&schema).map_err(customize);
+        let config = match config_res {
             Ok(config) => config,
             Err(e) => return Result::Err(Error::DatamodelError(e.to_string())),
         };
 
-        let ds_opt = config.datasources.first();
-        if ds_opt.is_none() {
-            let msg = String::from("no datasources found in the configuration, None encountered");
-            return Result::Err(Error::Generic(msg));
-        }
+        let ds = match config.datasources.first() {
+            Some(res) => res,
+            None => {
+                let msg =
+                    String::from("no datasources found in the configuration, None encountered");
+                return Result::Err(Error::Generic(msg));
+            }
+        };
 
-        let ds = ds_opt.unwrap();
-        let url_res = ds.load_url(load_env_var);
-        if url_res.is_err() {
-            let msg = String::from("datasource_load_url failed");
-            return Result::Err(Error::Generic(msg));
-        }
-        let url = url_res.unwrap();
+        let url_res = ds.load_url(load_env_var).map_err(customize);
+
+        let url = match url_res {
+            Ok(url) => url,
+            Err(e) => {
+                return Result::Err(Error::DatamodelError(e.to_string()));
+            }
+        };
 
         let connector = match SqlIntrospectionConnector::new(url.as_str(), Default::default()).await
         {
