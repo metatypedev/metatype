@@ -3,7 +3,12 @@
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { envOrFail, iterParentStages, JSONValue } from "../utils.ts";
+import {
+  envOrFail,
+  iterParentStages,
+  JSONValue,
+  nativeResult,
+} from "../utils.ts";
 import { s3_list, s3_presign_put, S3Client, S3Presigning } from "native";
 
 const fieldSelectorResolver = (stage: ComputeStage) => {
@@ -89,10 +94,12 @@ export class S3Runtime extends Runtime {
     const resolver: Resolver = (() => {
       if (name === "list") {
         return async ({ path }) => {
-          const { items, prefix } = await s3_list(
-            this.client,
-            bucket as string,
-            path,
+          const { items, prefix } = nativeResult(
+            await s3_list(
+              this.client,
+              bucket as string,
+              path,
+            ),
           );
           return pick({ keys: items, prefix }, mask);
         };
@@ -107,7 +114,7 @@ export class S3Runtime extends Runtime {
             content_length: length.toString(),
             expires: 60,
           };
-          return await s3_presign_put(this.client, params);
+          return nativeResult(await s3_presign_put(this.client, params)).res;
         };
       }
 
