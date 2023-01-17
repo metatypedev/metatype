@@ -48,9 +48,11 @@ export class PrismaRuntime extends GraphQLRuntime {
   }
 
   static async introspection(uri: string): Promise<string> {
-    const intro = await native.prisma_introspection({
-      datamodel: makeDatasource(uri),
-    });
+    const intro = nativeResult(
+      await native.prisma_introspection({
+        datamodel: makeDatasource(uri),
+      }),
+    );
     return intro.introspection;
   }
 

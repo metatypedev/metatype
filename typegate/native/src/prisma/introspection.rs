@@ -4,7 +4,7 @@
 
 use introspection_connector::{CompositeTypeDepth, IntrospectionConnector, IntrospectionContext};
 use introspection_core::Error;
-use prisma_models::psl::{self, SourceFile};
+use prisma_models::psl::{self, Diagnostics, SourceFile};
 use sql_introspection_connector::SqlIntrospectionConnector;
 use std::result::Result;
 
@@ -12,15 +12,34 @@ pub struct Introspection {}
 
 impl Introspection {
     pub async fn introspect(schema: String) -> Result<String, Error> {
-        let config = match psl::parse_configuration(&schema).map_err(|diagnostics| {
-            Error::DatamodelError(diagnostics.to_pretty_string("schema.prisma", &schema))
-        }) {
+        let customize = |diag: Diagnostics| {
+            Error::DatamodelError(diag.to_pretty_string("schema.prisma", &schema))
+        };
+
+        let config_res = psl::parse_configuration(&schema).map_err(customize);
+        let config = match config_res {
             Ok(config) => config,
             Err(e) => return Result::Err(Error::DatamodelError(e.to_string())),
         };
 
-        let ds = config.datasources.first().unwrap();
-        let url = ds.load_url(load_env_var).unwrap();
+        let ds = match config.datasources.first() {
+            Some(res) => res,
+            None => {
+                let msg =
+                    String::from("no datasources found in the configuration, None encountered");
+                return Result::Err(Error::Generic(msg));
+            }
+        };
+
+        let url_res = ds.load_url(load_env_var).map_err(customize);
+
+        let url = match url_res {
+            Ok(url) => url,
+            Err(e) => {
+                return Result::Err(Error::DatamodelError(e.to_string()));
+            }
+        };
+
         let connector = match SqlIntrospectionConnector::new(url.as_str(), Default::default()).await
         {
             introspection_connector::ConnectorResult::Ok(connector) => connector,
