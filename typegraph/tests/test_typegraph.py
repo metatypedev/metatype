@@ -36,6 +36,7 @@ class TestTypegraph:
 
         assert g.build() == overridable(
             {
+                "policies": [],
                 "types": [
                     {
                         "runtime": 0,
@@ -125,6 +126,7 @@ class TestTypegraph:
 
         assert g.build() == overridable(
             {
+                "policies": [],
                 "types": [
                     {
                         "runtime": 0,

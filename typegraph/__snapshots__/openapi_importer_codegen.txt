@@ -1,0 +1,4 @@
+    remote = HTTPRuntime("http://example.com/")
+    t.struct({"id": t.string(),"email": t.string(),"username": t.string(),}).named("User")
+    t.struct({"id": t.string(),"username": t.string(),"gender": t.string(),"profilePicture": t.optional(t.string()),}).named("UserProfile")
+    g.expose(listUsers=remote.get("/users", t.struct({}), t.array(g("User")), ).add_policy(allow_all()),createuser=remote.post("/users", t.struct({}), g("User"), ).add_policy(allow_all()),deleteUser=remote.delete("users/{userId}", t.struct({"userId":t.float(),}), t.optional(t.boolean()), ).add_policy(allow_all()),getUserProfile=remote.get("/profile/{userId}", t.struct({"userId":t.float(),}), t.optional(g("UserProfile")), ).add_policy(allow_all()),updateUserProfile=remote.patch("/profile/{userId}", t.struct({"userId":t.float(),}), g("UserProfile"), ).add_policy(allow_all()),)

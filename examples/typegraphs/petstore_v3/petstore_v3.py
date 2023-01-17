@@ -4,6 +4,7 @@ from typegraph.importers.openapi import import_openapi
 from typegraph.policies import allow_all
 from typegraph.runtimes.http import HTTPRuntime
 
+# Needs support for 'application/octet-stream' request body
 import_openapi("https://petstore3.swagger.io/api/v3/openapi.json", False)
 
 with TypeGraph(name="petstore-v3") as g:

@@ -7,6 +7,7 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 from urllib.parse import urljoin
+import pathlib
 
 from attrs import define
 import black
@@ -16,6 +17,7 @@ import httpx
 from redbaron import RedBaron
 import semver
 import yaml
+import orjson
 
 
 MIME_TYPES = Box(
@@ -43,19 +45,32 @@ class Input:
 
 
 class Document:
-    def __init__(self, uri):
-        self.uri = uri
-        self.root = Document.load(uri)
-        self.additional_types = []
-
-    def load(uri: str):
+    @classmethod
+    def from_uri(cls, uri):
         res = httpx.get(uri)
         if res.headers.get("content-type").find("yaml") >= 0 or re.search(
             r"\.yaml$", uri
         ):
-            return Box(yaml.safe_load(res.text))
+            return cls(uri, Box(yaml.safe_load(res.text)))
         # suppose it is JSON
-        return Box(res.json())
+        return cls(uri, Box(res.json()))
+
+    @classmethod
+    def from_file(cls, path, base_uri):
+        path = pathlib.Path(path)
+        with open(path) as f:
+            if path.suffix == ".json":
+                return cls(base_uri, Box(orjson.loads(f.read())))
+            if path.suffix == ".yaml" or path.suffix == ".yml":
+                return cls(base_uri, Box(yaml.safe_load(f.read())))
+            raise Exception(
+                f"Expected a JSON or a YAML file, got a file with extension '{path.suffix}'"
+            )
+
+    def __init__(self, base_uri, spec: Box):
+        self.base_uri = base_uri
+        self.root = spec
+        self.additional_types = []
 
     def merge_schemas(self, schemas: List[Box]):
         return Box(merge_all([self.resolve_ref(s) for s in schemas]))
@@ -165,7 +180,7 @@ class Document:
         else:
             server_url = "/"
 
-        url = urljoin(self.uri, server_url)
+        url = urljoin(self.base_uri, server_url)
 
         cg = ""
         cg += f'    remote = HTTPRuntime("{url}")\n'
@@ -220,7 +235,7 @@ class Path:
             elif MIME_TYPES.multipart in types:
                 content_type = MIME_TYPES.multipart
             else:
-                raise Exception(f'Unsupported content types "types"')
+                raise Exception(f'Unsupported content types {types}')
             (body_schema, ref_name) = self.doc.resolve_ref(
                 body[content_type].schema, export_name=True
             )
@@ -245,7 +260,7 @@ class Path:
 
         return Input(type, kwargs)
 
-    def success_code(responses: Box) -> str:
+    def success_code(responses: Box) -> Optional[str]:
         if "200" in responses:
             return "200"
         for status in responses:
@@ -254,13 +269,16 @@ class Path:
         # ? what if there are more than one 2xx codes
         if "default" in responses:
             return "default"
-        raise Exception(f"No success response found in {responses}")
+        # raise Exception(f"No success response found in {responses}")
+        return None
 
     def gen_function(self, method: str) -> Tuple[str, str]:
         op_obj = self.path_obj[method]
         inp = self.input_type(method)
         success_code = Path.success_code(op_obj.responses)
-        if success_code == "204":  # No Content
+        if success_code is None:
+            out = "t.struct()"
+        elif success_code == "204":  # No Content
             out = "t.boolean()"
         else:
             res = op_obj.responses[success_code]
@@ -326,7 +344,7 @@ def import_openapi(uri: str, gen: bool):
             code.insert(0, f"from {frm} import {imp}\n")
 
     wth = code.find("with")
-    wth.value = Document(uri).codegen()
+    wth.value = Document.from_uri(uri).codegen()
 
     new_code = black.format_str(code.dumps(), mode=black.FileMode())
 

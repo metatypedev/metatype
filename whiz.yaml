@@ -13,6 +13,7 @@ examples:
     workdir: .
     watch:
         - "examples/metatype.yaml"
+        - "typegraph/typegraph/**/*.py"
     command: "cargo run -p meta-cli -- -C examples dev"
     env:
         VIRTUAL_ENV: $PWD/examples/.venv
