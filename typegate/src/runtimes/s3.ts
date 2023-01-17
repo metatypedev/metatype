@@ -114,7 +114,7 @@ export class S3Runtime extends Runtime {
             content_length: length.toString(),
             expires: 60,
           };
-          return await s3_presign_put(this.client, params);
+          return nativeResult(await s3_presign_put(this.client, params)).res;
         };
       }
 

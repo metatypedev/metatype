@@ -2,7 +2,7 @@
 
 use deno_bindgen::deno_bindgen;
 use http::header::{self};
-use http::HeaderMap;
+use http::{HeaderMap, HeaderValue};
 use s3::bucket::Bucket;
 use s3::creds::Credentials;
 use s3::Region;
@@ -28,8 +28,14 @@ struct S3Presigning {
     expires: u32,
 }
 
+#[deno_bindgen]
+enum S3PresigningOut {
+    Ok { res: String },
+    Err { message: String },
+}
+
 #[cfg_attr(not(test), deno_bindgen(non_blocking))]
-fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> String {
+fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> S3PresigningOut {
     let region = Region::Custom {
         region: client.region,
         endpoint: client.endpoint,
@@ -46,23 +52,36 @@ fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> String {
     let mut headers = HeaderMap::new();
 
     // Note :
-    // parse::<String>() is expected to never fail
-    // as S3Presigning::content_type and S3Presigning::content_length are both Strings
-    // Ex: String::from("hello world").parse::<String>() => Result<String, Infallible>
-    // https://web.mit.edu/rust-lang_v1.25/arch/amd64_ubuntu1404/share/doc/rust/html/std/convert/enum.Infallible.html
+    // Only visible ASCII characters (32-127) are permitted
 
-    headers.insert(
-        header::CONTENT_TYPE,
-        presigning.content_type.parse().unwrap(),
-    );
-    headers.insert(
-        header::CONTENT_LENGTH,
-        presigning.content_length.parse().unwrap(),
-    );
+    match HeaderValue::from_str(&presigning.content_type) {
+        Ok(ctype) => {
+            headers.insert(header::CONTENT_TYPE, ctype);
+        }
+        Err(e) => {
+            return S3PresigningOut::Err {
+                message: e.to_string(),
+            };
+        }
+    }
 
-    bucket
-        .presign_put(presigning.key, presigning.expires, Some(headers))
-        .unwrap()
+    match HeaderValue::from_str(&presigning.content_length) {
+        Ok(clength) => {
+            headers.insert(header::CONTENT_LENGTH, clength);
+        }
+        Err(e) => {
+            return S3PresigningOut::Err {
+                message: e.to_string(),
+            };
+        }
+    }
+
+    match bucket.presign_put(presigning.key, presigning.expires, Some(headers)) {
+        Ok(res) => S3PresigningOut::Ok { res },
+        Err(e) => S3PresigningOut::Err {
+            message: e.to_string(),
+        },
+    }
 }
 
 #[derive(Debug)]
