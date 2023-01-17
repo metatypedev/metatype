@@ -126,14 +126,15 @@ fn s3_list(client: S3Client, bucket: &str, path: &str) -> S3Items {
         expiration: None,
     };
 
-    let temp = Bucket::new(bucket, region, credentials);
-    if let Err(e) = temp {
-        return S3Items::Err {
-            message: e.to_string(),
-        };
-    }
+    let mut bucket = match Bucket::new(bucket, region, credentials) {
+        Ok(bucket) => bucket,
+        Err(e) => {
+            return S3Items::Err {
+                message: e.to_string(),
+            };
+        }
+    };
 
-    let mut bucket = temp.unwrap();
     bucket.set_path_style();
 
     let temp = RT.block_on(bucket.list(path.to_string(), Some("/".to_string())));
