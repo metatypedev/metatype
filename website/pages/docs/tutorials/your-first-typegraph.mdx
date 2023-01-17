@@ -1,0 +1,88 @@
+---
+sidebar_position: 2
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import MiniQL from "@site/src/components/MiniQL";
+import gql from "graphql-tag";
+
+# Your first typegraph
+
+Typegraphs (or graphs of types) are the secret sauce of the ecosystem. Similar to type systems in programming languages, they let the developer describe:
+
+1. **what** data types exists
+2. **where** these data types are available
+3. **how** to combine these data types together
+4. **who** can access these data types
+
+## Describing types
+
+There is no such thing like a "class" type or "primitive" types but there are 4 categories:
+
+- value types: `t.integer()`, `t.string()`, `t.uuid()`, etc.
+- quantifier types: `t.optional(·)`, `t.array(·)`, etc.
+- consolidator types: `t.struct(·, ·)`, `t.union(·, ·)`, etc.
+- function types: `t.func(· → ·)`, `t.gen(→ ·)`, etc.
+
+This allows to describe almost any data type you may encounter, and verify the data format.
+
+```py
+t.struct({
+  "name": t.string(),
+  "age": t.optional(t.integer()),
+  "messages": t.array(t.struct({
+    "text": t.string(),
+    "sentAt": t.datetime()
+  }))
+})
+
+# will let the following pass
+{
+  "name": "Alan",
+  "age": null,
+  "messages": [
+    {
+      "text": "Hello!",
+      "sentAt": "2022-12-28T01:11:10Z"
+    }
+  ]
+}
+
+# and will reject
+{
+  "name": "Turing",
+  "messages": [
+    {
+      "sentAt": 1
+    }
+  ]
+}
+```
+
+## Describing graphs
+
+<CodeBlock language="py" title="first-typegraph.py">
+  {require("./mini.py").default}
+</CodeBlock>
+
+<MiniQL
+  typegraph="typegate"
+  variables={{ a: "1" }}
+  headers={{
+    Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",
+  }}
+  query={gql`
+    {
+      typegraphs {
+        name
+      }
+    }
+  `}
+/>
+
+```
+from typegraph import t # all types
+from typegraph import m # core materializer
+from typegraph.providers.XXX import XXX #
+
+```

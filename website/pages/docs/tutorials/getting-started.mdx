@@ -1,0 +1,111 @@
+---
+sidebar_position: 1
+---
+
+import PaginatorNavLink from "@theme/PaginatorNavLink";
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import DocButton from "@site/src/components/DocButton";
+import Newsletter from "@site/src/components/Newsletter";
+import Metatype from "../../shared/metatype.mdx";
+
+# Getting started
+
+<Metatype />
+
+:::info Looking first for some explanation?
+Head over to the [conceptual overview](/docs/concepts/overview) to understand the components.
+:::
+
+## Introduction
+
+In this tutorial, you will write your first typegraph and deploy it on a typegate node using the Meta CLI.
+You will design some API blocks for a chat-based app where users can exchange messages and share products.
+
+Running the ecosystem requires Python >= 3.8 which should be available on most the recent OS.
+
+<Tabs>
+  <TabItem value="linux" label="Debian-based Linux" default>
+
+```bash
+sudo apt-get update
+sudo apt-get install python3 python3-pip python3-venv
+```
+
+  </TabItem>
+  <TabItem value="macos" label="MacOS">
+
+```bash
+brew install python3
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+Download the [installer](https://www.python.org/downloads/windows/) from the official Python website and follow the steps.
+
+  </TabItem>
+</Tabs>
+
+:::info No previous Python knowledge required.
+While the definition of typegraphs is currently done in Python, it doesn't require previous experience in Python.
+The tutorial covers all the basics and doesn't use advanced features of the language.
+:::
+
+## Quickstart with Metatype Cloud
+
+This is the easiest way to get started, yet it's not publicly accessible. You can sign-up for the private beta below.
+
+<Newsletter />
+
+## Quickstart with Docker
+
+### 1. `meta` CLI
+
+You can download the binary executable from
+[releases page](https://github.com/metatypedev/metatype/releases/) on Github, make it
+executable and add it to your `$PATH` or use
+[eget](https://github.com/zyedidia/eget) to automate those steps.
+
+```bash
+eget metatypedev/metatype --to $HOME/.local/bin
+
+meta --help
+meta upgrade
+```
+
+### 2. `typegraph` package
+
+Create (and activate) the virtual environment (a local folder where you install the dependency of a project) for your project. Then install the `typegraph` package from PyPi using pip.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip3 install typegraph --upgrade
+
+python3 -c 'import typegraph; print(typegraph.version)'
+```
+
+### 3. `typegate` node
+
+Finally download and launch a docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/examples/docker-compose.yml -o docker-compose.yml
+docker compose up
+
+curl -X POST http://localhost:7890/typegate \
+  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQ=' \
+  --data '{"query":"query list { typegraphs { name  }}"}'
+```
+
+And go the next section.
+
+### Source installation
+
+Alternatively, you can install directly the `typegraph` package and the CLI from the Github repository (useful to check out unreleased features).
+
+```
+pip3 install --upgrade git+https://github.com/metatypedev/metatype#subdirectory=typegraph
+cargo install --force meta-cli --git https://github.com/metatypedev/metatype
+```

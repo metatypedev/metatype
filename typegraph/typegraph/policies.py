@@ -5,11 +5,11 @@ from typing import List
 from attrs import evolve
 from attrs import field
 from attrs import frozen
-from typegraph.graphs.builder import Collector
-from typegraph.graphs.node import Node
-from typegraph.graphs.typegraph import TypegraphContext
-from typegraph.materializers.base import Materializer
-from typegraph.materializers.deno import FunMat
+from typegraph.graph.builder import Collector
+from typegraph.graph.nodes import Node
+from typegraph.graph.typegraph import TypegraphContext
+from typegraph.runtimes.base import Materializer
+from typegraph.runtimes.deno import FunMat
 from typegraph.utils.attrs import always
 
 

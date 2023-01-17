@@ -106,9 +106,10 @@ export const typegate =
       }
 
       // cors
+      const corsHeaders = engine.tg.cors(request);
       if (request.method === "OPTIONS") {
         return new Response(null, {
-          headers: engine.tg.cors,
+          headers: corsHeaders,
         });
       }
 
@@ -159,7 +160,7 @@ export const typegate =
       }
 
       headers.set("content-type", "application/json");
-      for (const [k, v] of Object.entries(engine.tg.cors)) {
+      for (const [k, v] of Object.entries(corsHeaders)) {
         headers.set(k, v);
       }
 

@@ -8,7 +8,23 @@ env:
   NODE_VERSION: "18.12.1"
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            website:
+              - 'website/**'
+    outputs:
+      website: ${{ steps.filter.outputs.website }}
+
   deploy:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.website == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

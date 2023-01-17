@@ -1,7 +1,7 @@
 from typegraph import policies
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.graphql import GraphQLRuntime
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 with TypeGraph("graphql_namespaces") as g:
     gql = GraphQLRuntime("https://example.com/api/graphql")

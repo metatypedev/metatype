@@ -7,7 +7,6 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.3.1"
-  RUST_VERSION: "1.66.0"
   DENO_BINDGEN_URL: https://github.com/denoland/deno_bindgen/raw/main/cli.ts
   DENO_VERSION: "1.29.2"
   PNPM_VERSION: "7.9.3"
@@ -57,9 +56,7 @@ jobs:
       - uses: pnpm/action-setup@v2.2.4
         with:
           version: ${{ env.PNPM_VERSION }}
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
+      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - uses: denoland/setup-deno@v1
         with:
@@ -127,9 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
+      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}
@@ -167,9 +162,7 @@ jobs:
           #  activate: '.venv\Scripts\activate.bat'
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
+      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}
@@ -225,9 +218,7 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
+      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - uses: denoland/setup-deno@v1
         with:
@@ -266,9 +257,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
+      - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-python@v4
         with:

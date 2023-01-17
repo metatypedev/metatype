@@ -1,10 +1,9 @@
-from typegraph.graphs.typegraph import github_auth
-from typegraph.graphs.typegraph import Rate
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import ModuleMat
-from typegraph.materializers.http import HTTPRuntime
-from typegraph.policies import allow_all
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.graph.auth import oauth2
+from typegraph.runtimes.deno import ModuleMat
+from typegraph.runtimes.http import HTTPRuntime
 
 
 def send_in_blue_send(subject, frm, to, api_key):
@@ -29,11 +28,11 @@ def send_in_blue_send(subject, frm, to, api_key):
 
 with TypeGraph(
     "biscuicuits",
-    auths=[github_auth],
-    rate=Rate(window_limit=2000, window_sec=60, query_limit=200),
+    auths=[oauth2.github_auth],
+    rate=TypeGraph.Rate(window_limit=2000, window_sec=60, query_limit=200),
 ) as g:
 
-    all = allow_all()
+    all = policies.allow_all()
     remote = HTTPRuntime("https://api.github.com")
 
     g.expose(

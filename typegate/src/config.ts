@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { getLogger } from "./log.ts";
-import { load } from "std/dotenv/mod.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { mapKeys } from "std/collections/map_keys.ts";
 import * as base64 from "std/encoding/base64.ts";
@@ -38,13 +37,6 @@ const defaults: Record<string, string | boolean | number> = {
 
 const sources = [
   defaults,
-  mapKeys(
-    await load({
-      envPath: "./.env",
-      export: true,
-    }),
-    (k: string) => k.toLowerCase(),
-  ),
   mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
   parse(Deno.args) as Record<string, unknown>,
 ];

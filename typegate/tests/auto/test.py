@@ -1,19 +1,19 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import DenoRuntime
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.deno import PredefinedFunMat
-from typegraph.materializers.graphql import GraphQLRuntime
-from typegraph.materializers.http import HTTPRuntime
-from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.policies import Policy
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph.runtimes.deno import DenoRuntime
+from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PredefinedFunMat
+from typegraph.runtimes.graphql import GraphQLRuntime
+from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph("test") as g:
 
     remote = GraphQLRuntime("http://localhost:5000/graphql")
-    db = PrismaRuntime("test", "postgresql://postgres:password@localhost:5432/db")
+    db = PrismaRuntime("test", "POSTGRES")
     ipApi = HTTPRuntime("http://ip-api.com/json")
     js = DenoRuntime(worker="js")
 
@@ -35,7 +35,7 @@ with TypeGraph("test") as g:
         }
     ).named("users")
 
-    allow_all_policy = Policy(FunMat("() => true")).named("allow_all_policy")
+    allow_all_policy = policies.allow_all()
 
     arg = t.struct({"value": t.integer(), "nested": t.struct({"value": t.integer()})})
 

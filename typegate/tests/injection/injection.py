@@ -1,7 +1,7 @@
 from typegraph import policies
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers import deno
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes import deno
 
 
 with TypeGraph("injection") as g:

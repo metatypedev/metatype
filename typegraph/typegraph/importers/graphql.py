@@ -136,9 +136,9 @@ def import_graphql(uri: str, gen: bool):
         code = RedBaron(f.read())
 
     imports = [
-        ["typegraph.materializers.graphql", "GraphQLRuntime"],
-        ["typegraph.types", "types as t"],
-        ["typegraph.graphs.typegraph", "TypeGraph"],
+        ["typegraph.runtimes.graphql", "GraphQLRuntime"],
+        ["typegraph", "t"],
+        ["typegraph", "TypeGraph"],
     ]
 
     importer = code.find(

@@ -1,8 +1,8 @@
-from typegraph.graphs.typegraph import TypeGraph
+from typegraph import t
+from typegraph import TypeGraph
 from typegraph.importers.openapi import import_openapi
-from typegraph.materializers.http import HTTPRuntime
 from typegraph.policies import allow_all
-from typegraph.types import types as t
+from typegraph.runtimes.http import HTTPRuntime
 
 import_openapi(
     "https://raw.githubusercontent.com/APIs-guru/openapi-directory/main/APIs/dev.to/0.9.7/openapi.yaml",

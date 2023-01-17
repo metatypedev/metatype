@@ -1,14 +1,11 @@
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.graphql import GraphQLRuntime
-from typegraph.policies import Policy
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 with TypeGraph("mini") as g:
 
     remote = GraphQLRuntime("https://graphqlzero.almansi.me/api")
-
-    allow_all = Policy(FunMat("() => true")).named("allow_all_policy")
 
     post = t.struct(
         {
@@ -19,7 +16,7 @@ with TypeGraph("mini") as g:
     ).named("Post")
 
     getter = remote.query(t.struct({"id": t.integer()}), t.optional(post)).add_policy(
-        allow_all
+        policies.allow_all()
     )
 
     g.expose(post=getter)

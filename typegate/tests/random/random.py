@@ -1,8 +1,8 @@
 from typegraph import policies
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.random import RandomMat
-from typegraph.materializers.random import RandomRuntime
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.random import RandomMat
+from typegraph.runtimes.random import RandomRuntime
 
 with TypeGraph(name="random") as g:
     runtime = RandomRuntime(seed=1)

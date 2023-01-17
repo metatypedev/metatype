@@ -46,6 +46,7 @@ import styles from "./styles.module.scss";
 import { GraphiQLInterfaceProps } from "graphiql";
 
 const autoHeight = (cm) => {
+  console.log(cm);
   const target = cm.getWrapperElement().closest(".graphiql-editor");
   target.style.height = `${cm.doc.height}px`;
 };
@@ -66,6 +67,18 @@ export default function GraphiQLInterface(
   const prettify = usePrettifyEditors();
 
   useEffect(() => {
+    if (variableEditor) {
+      autoHeight(variableEditor);
+    }
+  }, [tab, variableEditor]);
+
+  useEffect(() => {
+    if (headerEditor) {
+      autoHeight(headerEditor);
+    }
+  }, [tab, headerEditor]);
+
+  useEffect(() => {
     prettify();
   }, [prettify]);
 
@@ -83,7 +96,6 @@ export default function GraphiQLInterface(
       variableEditor.setOption("lineNumbers", false);
       variableEditor.setOption("gutters", []);
       variableEditor.on("change", autoHeight);
-      autoHeight(variableEditor);
     }
   }, [variableEditor]);
 
@@ -92,7 +104,6 @@ export default function GraphiQLInterface(
       headerEditor.setOption("lineNumbers", false);
       headerEditor.setOption("gutters", []);
       headerEditor.on("change", autoHeight);
-      autoHeight(headerEditor);
     }
   }, [headerEditor]);
 
