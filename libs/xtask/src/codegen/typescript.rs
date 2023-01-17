@@ -25,7 +25,7 @@ pub fn run() -> Result<()> {
     let p = Command::new("pnpm")
         .args([
             "dlx",
-            "github:metatypedev/json-schema-to-typescript#feat/boolean-schemas-2",
+            "github:metatypedev/json-schema-to-typescript#feat/boolean-schemas-pnpm",
             jsonschema_path,
             "--no-additionalProperties",
             "--booleanSchemas",
