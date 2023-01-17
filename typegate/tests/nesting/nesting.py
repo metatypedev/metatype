@@ -1,7 +1,7 @@
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.http import HTTPRuntime
-from typegraph.policies import allow_all
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph("nesting") as g:
 
@@ -36,11 +36,11 @@ with TypeGraph("nesting") as g:
 
     user_by_id = remote.get(
         "/users/{id}", t.struct({"id": t.integer()}), t.optional(g("User"))
-    ).add_policy(allow_all())
+    ).add_policy(policies.allow_all())
 
     post_by_id = remote.get(
         "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g("Post"))
-    ).add_policy(allow_all())
+    ).add_policy(policies.allow_all())
 
     g.expose(
         user=user_by_id,

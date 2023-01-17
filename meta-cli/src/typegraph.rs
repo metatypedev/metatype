@@ -69,7 +69,7 @@ impl<'a> TypegraphLoader<'a> {
                     let ext = ext
                         .map(|ext| format!(".{ext}"))
                         .unwrap_or_else(|| "".to_owned());
-                    bail!("Unsupported typegraph definition module with extension \".{ext}\": current version only support Python modules.");
+                    bail!("Unsupported typegraph definition module with extension \"{ext}\": current version only support Python modules.");
                 }
             }
         };

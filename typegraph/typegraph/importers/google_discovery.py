@@ -134,9 +134,9 @@ def import_googleapis(uri: str, gen: bool) -> None:
         code = redbaron.RedBaron(f.read())
 
     imports = [
-        ["typegraph.materializers", "googleapis"],
-        ["typegraph.types", "types as t"],
-        ["typegraph.graphs.typegraph", "TypeGraph"],
+        ["typegraph.providers.google.runtimes", "googleapis"],
+        ["typegraph", "t"],
+        ["typegraph", "TypeGraph"],
     ]
 
     importer = code.find(

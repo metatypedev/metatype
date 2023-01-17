@@ -30,7 +30,7 @@ export default function MiniQL({
       customFields: { tgUrl },
     },
   } = useDocusaurusContext();
-  console.log(query);
+
   const storage = useMemo(() => new MemoryStorage(), []);
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>

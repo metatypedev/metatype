@@ -33,22 +33,24 @@ export function useClient(gate: string) {
 
 export default function Newsletter() {
   const [email, setEmail] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
   const client = useClient("docs");
 
   const onSubmit = async (e) => {
     e.preventDefault();
     if (email.length > 0) {
-      const { id } = await client.mutate({
+      const { data } = await client.mutate({
         mutation: signUp,
         variables: { email },
       });
-      setSuccess(true);
+      setMessage(
+        data?.newsletterSignUp?.id ? "Success!" : "Already subscribed!"
+      );
     }
   };
 
-  if (success) {
-    return "Success!";
+  if (message) {
+    return message;
   }
 
   return (

@@ -1,10 +1,10 @@
 from typegraph import policies
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.materializers.random import RandomMat
-from typegraph.materializers.random import RandomRuntime
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.random import RandomMat
+from typegraph.runtimes.random import RandomRuntime
 
 with TypeGraph("prisma") as g:
 

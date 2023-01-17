@@ -1,20 +1,16 @@
-from typegraph.graphs.typegraph import Auth
-from typegraph.graphs.typegraph import Rate
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.prisma import PrismaApplyMat
-from typegraph.materializers.prisma import PrismaCreateMat
-from typegraph.materializers.prisma import PrismaDeployMat
-from typegraph.materializers.prisma import PrismaDiffMat
+from typegraph import t
+from typegraph import TypeGraph
 from typegraph.policies import Policy
-from typegraph.types import types as t
-
-# from typegraph.materializers.prisma import PrismaMigrateMat
+from typegraph.providers.prisma.runtimes.prisma import PrismaApplyMat
+from typegraph.providers.prisma.runtimes.prisma import PrismaCreateMat
+from typegraph.providers.prisma.runtimes.prisma import PrismaDeployMat
+from typegraph.providers.prisma.runtimes.prisma import PrismaDiffMat
+from typegraph.runtimes.deno import FunMat
 
 with TypeGraph(
     "typegate/prisma_migration",
-    auths=[Auth.basic(["admin"])],
-    rate=Rate(
+    auths=[TypeGraph.Auth.basic(["admin"])],
+    rate=TypeGraph.Rate(
         window_sec=60,
         window_limit=128,
         query_limit=8,

@@ -3,36 +3,12 @@ import { expandGlobSync } from "https://deno.land/std@0.170.0/fs/expand_glob.ts"
 import * as flags from "https://deno.land/std@0.170.0/flags/mod.ts";
 import * as semver from "https://deno.land/x/semver/mod.ts";
 
-type Rules = Record<string, string>;
-
-const rules: Record<string, Rules> = {
-  "../rust-toolchain.toml": {
-    '(channel = ").+(")': "RUST_VERSION",
-  },
-  "../.github/*/*.yml": {
-    '(  PYTHON_VERSION: ").+(")': "PYTHON_VERSION",
-    '(  POETRY_VERSION: ").+(")': "POETRY_VERSION",
-    '(  RUST_VERSION: ").+(")': "RUST_VERSION",
-    '(  DENO_BINDGEN_URL: ").+(")': "DENO_BINDGEN_URL",
-    '(  DENO_VERSION: ").+(")': "DENO_VERSION",
-    '(  PNPM_VERSION: ").+(")': "PNPM_VERSION",
-    '(  NODE_VERSION: ").+(")': "NODE_VERSION",
-  },
-  "../typegraph/typegraph/__init__.py": {
-    '(version = ").+(")': "METATYPE_VERSION",
-  },
-  "../**/*/pyproject.toml": {
-    '(version = ").+(")': "METATYPE_VERSION",
-  },
-  "../**/*/Cargo.toml": {
-    '(version = ").+(")': "METATYPE_VERSION",
-  },
-  "../dev/Dockerfile": {
-    "(ARG DENO_VERSION=).*()": "DENO_VERSION",
-    "(ARG DENO_BINDGEN_URL=).*()": "DENO_BINDGEN_URL",
-    "(ARG RUST_VERSION=).*()": "RUST_VERSION",
-  },
-};
+interface Lockfile {
+  [channel: string]: {
+    rules: Record<string, Record<string, string>>;
+    lock: Record<string, string>;
+  };
+}
 
 const args = flags.parse(Deno.args, {
   boolean: ["version", "check"],
@@ -40,12 +16,12 @@ const args = flags.parse(Deno.args, {
   default: { version: false, check: false },
 });
 
-const lockfile = new URL("lock.yml", import.meta.url);
-const lock = yaml.parse(
-  Deno.readTextFileSync(lockfile),
-) as Record<string, unknown>;
-const version = lock.METATYPE_VERSION as string;
+const lockfileUrl = new URL("lock.yml", import.meta.url);
+const lockfile = yaml.parse(
+  Deno.readTextFileSync(lockfileUrl),
+) as Lockfile;
 
+const version = lockfile.dev.lock.METATYPE_VERSION;
 if (args.version) {
   console.log(version);
   Deno.exit();
@@ -71,36 +47,42 @@ if (args.bump) {
     args.bump as semver.ReleaseType,
     undefined,
     "dev",
-  );
-  lock.METATYPE_VERSION = newVersion;
+  )!;
+  lockfile.released.lock = lockfile.dev.lock;
+  lockfile.dev.lock.METATYPE_VERSION = newVersion;
   console.log(`Bumping ${version} → ${newVersion}`);
-  Deno.writeTextFileSync(lockfile, yaml.stringify(lock));
 }
+Deno.writeTextFileSync(lockfileUrl, yaml.stringify(lockfile));
 
 let dirty = false;
 
-for (const [glob, lookups] of Object.entries(rules)) {
-  const url = new URL(glob, import.meta.url);
+for (const [channel, { rules, lock }] of Object.entries(lockfile)) {
+  console.log(`Updating channel ${channel}:`);
+  for (const [glob, lookups] of Object.entries(rules)) {
+    const url = new URL(`../${glob}`, import.meta.url);
 
-  for (const { path } of expandGlobSync(url, { includeDirs: false })) {
-    console.log(path);
-    const text = Deno.readTextFileSync(path);
-    const rewrite = [...text.split("\n")];
+    for (const { path } of expandGlobSync(url, { includeDirs: false })) {
+      const text = Deno.readTextFileSync(path);
+      const rewrite = [...text.split("\n")];
 
-    for (const [pattern, replacement] of Object.entries(lookups)) {
-      const regex = new RegExp(`^${pattern}$`);
-      for (let i = 0; i < rewrite.length; i += 1) {
-        rewrite[i] = rewrite[i].replace(
-          regex,
-          `$1${lock[replacement]}$2`,
-        );
+      for (const [pattern, replacement] of Object.entries(lookups)) {
+        const regex = new RegExp(`^${pattern}$`);
+        for (let i = 0; i < rewrite.length; i += 1) {
+          rewrite[i] = rewrite[i].replace(
+            regex,
+            `$1${lock[replacement]}$2`,
+          );
+        }
       }
-    }
 
-    const newText = rewrite.join("\n");
-    if (text != newText) {
-      Deno.writeTextFileSync(path, newText);
-      dirty = true;
+      const newText = rewrite.join("\n");
+      if (text != newText) {
+        console.log(`- Updated ${path}`);
+        Deno.writeTextFileSync(path, newText);
+        dirty = true;
+      } else {
+        console.log(`- No change ${path}`);
+      }
     }
   }
 }

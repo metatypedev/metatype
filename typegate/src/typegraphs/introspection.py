@@ -1,12 +1,12 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.typegate import ResolverMat
-from typegraph.materializers.typegate import SchemaMat
-from typegraph.materializers.typegate import TypeMat
+from typegraph import t
+from typegraph import TypeGraph
 from typegraph.policies import Policy
-from typegraph.types import types as t
+from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.typegate import ResolverMat
+from typegraph.runtimes.typegate import SchemaMat
+from typegraph.runtimes.typegate import TypeMat
 
 with TypeGraph("introspection") as g:
 

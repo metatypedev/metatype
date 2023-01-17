@@ -255,7 +255,7 @@ mod tests {
     fn find_config_file() -> Result<()> {
         let project_root = get_project_root()?;
         let config = Config::load_or_find(None, &project_root.join("meta-cli/tests/graphs/nested"));
-        assert!(config.is_ok());
+        assert!(config.is_ok(), "{:?}", config);
         let config = config.unwrap();
         assert_eq!(config.base_dir, project_root.join("meta-cli/tests"));
         Ok(())

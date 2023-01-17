@@ -11,6 +11,8 @@ use std::collections::HashMap;
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Typegraph {
+    #[serde(rename = "$id")]
+    pub id: String,
     pub types: Vec<TypeNode>,
     pub materializers: Vec<Materializer>,
     pub runtimes: Vec<TGRuntime>,

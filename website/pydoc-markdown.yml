@@ -1,0 +1,17 @@
+loaders:
+  - type: python
+    search_path:
+      - ../typegraph
+processors:
+  - type: filter
+    skip_empty_modules: true
+  - type: smart
+  - type: crossref
+renderer:
+  type: docusaurus
+  docs_base_path: pages
+  relative_output_path: docs/reference
+  relative_sidebar_path: python.json
+  sidebar_top_level_label: Python module
+  markdown:
+    escape_html_in_docstring: false

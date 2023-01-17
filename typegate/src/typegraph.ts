@@ -88,29 +88,19 @@ export class TypeGraph {
   };
 
   tg: TypeGraphDS;
-  runtimeReferences: Runtime[];
   root: TypeNode;
-  introspection: TypeGraph | null;
   typeByName: Record<string, TypeNode>;
-  secrets: Record<string, string>;
-  auths: Map<string, Auth>;
-  cors: Record<string, string>;
 
   private constructor(
     typegraph: TypeGraphDS,
-    runtimeReferences: Runtime[],
-    secrets: Record<string, string>,
-    cors: Record<string, string>,
-    auths: Map<string, Auth>,
-    introspection: TypeGraph | null,
+    public runtimeReferences: Runtime[],
+    private secrets: Record<string, string>,
+    public cors: (req: Request) => Record<string, string>,
+    public auths: Map<string, Auth>,
+    public introspection: TypeGraph | null,
   ) {
     this.tg = typegraph;
-    this.runtimeReferences = runtimeReferences;
     this.root = this.type(0);
-    this.secrets = secrets;
-    this.cors = cors;
-    this.auths = auths;
-    this.introspection = introspection;
     // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
     const typeByName: Record<string, TypeNode> = {};
     typegraph.types.forEach((tpe) => {
@@ -151,30 +141,38 @@ export class TypeGraph {
       {},
     );
 
-    const cors = (() => {
+    const staticCors: Record<string, string> = {
+      "Access-Control-Allow-Methods": "POST,OPTIONS",
+      "Access-Control-Allow-Headers": [
+        nextAuthorizationHeader,
+        "Cache-Control",
+        "Content-Language",
+        "Content-Type",
+      ].concat(
+        meta.cors.allow_headers,
+      ).join(","),
+      "Access-Control-Expose-Headers": meta.cors.expose_headers.join(","),
+      "Access-Control-Allow-Credentials": meta.cors.allow_credentials
+        .toString(),
+    };
+    if (meta.cors.max_age) {
+      staticCors["Access-Control-Max-Age"] = meta.cors.max_age.toString();
+    }
+    const exposeOrigins = new Set(meta.cors.expose_headers);
+
+    const cors = (req: Request) => {
       if (meta.cors.allow_origin.length === 0) {
         return {};
       }
-      const ret: Record<string, string> = {
-        "Access-Control-Allow-Origin": meta.cors.allow_origin.join(","),
-        "Access-Control-Allow-Methods": "POST,OPTIONS",
-        "Access-Control-Allow-Headers": [
-          nextAuthorizationHeader,
-          "Cache-Control",
-          "Content-Language",
-          "Content-Type",
-        ].concat(
-          meta.cors.allow_headers,
-        ).join(","),
-        "Access-Control-Expose-Headers": meta.cors.expose_headers.join(","),
-        "Access-Control-Allow-Credentials": meta.cors.allow_credentials
-          .toString(),
-      };
-      if (meta.cors.max_age) {
-        ret["Access-Control-Max-Age"] = meta.cors.max_age.toString();
+      const origin = req.headers.get("origin");
+      if (!origin || exposeOrigins.has(origin)) {
+        return {};
       }
-      return ret;
-    })();
+      return {
+        ...staticCors,
+        "Access-Control-Allow-Origin": origin,
+      };
+    };
 
     const auths = new Map<string, Auth>();
     for (const auth of meta.auths) {

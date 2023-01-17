@@ -1,0 +1,93 @@
+---
+sidebar_position: 1
+---
+
+import Metatype from "../../shared/metatype.mdx";
+
+# Overview
+
+This page gives a high-level description of what Metatype is and how it works.
+
+:::info Looking to build?
+For a hands-on introduction, head over to the [quickstart](/docs/tutorials/getting-started) and start build your first typegraph.
+:::
+
+## What's Metatype?
+
+<Metatype />
+
+<div style={{textAlign: 'center'}}>
+
+![](ecosystem.drawio.svg)
+
+</div>
+
+## Why Metatype ?
+
+As a project/product/start-up evolves, the technological stack becomes a challenging place where initiatives collides and efficiency struggles. Especially:
+
+- validating data objects at multiple levels (e.g. front, back, storage, underlying services)
+- hiring talented engineers become a [bottleneck](https://martinfowler.com/articles/bottlenecks-of-scaleups/02-talent.html)
+- new API or data consumers arise (e.g. new partner/team/tools)
+- technical debt become unhealthy [topics](https://martinfowler.com/articles/bottlenecks-of-scaleups/01-tech-debt.html)
+- new features expand features and the modelling domains
+- constrained technological progress and innovation by current state
+- complexity and frictions decrease [developer experience](https://martinfowler.com/articles/developer-effectiveness.html)
+- security and observability needs widen
+
+Metatype provides an abstraction layer to enable API composition and tackle with agility the above scenarii.
+
+| 5W1H                 | Specialized API    | Metatype                                     |
+| -------------------- | ------------------ | -------------------------------------------- |
+| Why (goal)           | project defined    | owned by clients                             |
+| How (logic)          | server code        | compose with [materializers](#materializers) |
+| What (content)       | server defined     | client selects from [types](#types)          |
+| Where (execution)    | single environment | orchestrate [runtimes](#runtimes)            |
+| Who (authentication) | hard-coded rules   | controlled by [policies](#policies)          |
+| When (event)         | based on requests  | based on [triggers](#triggers)               |
+
+### Types
+
+A graph of types or typegraph defines a type system describing all data objects processed in Metatype. This data structure is the primary building block of the system and can be extended by the user.
+
+```py
+t.struct({
+    "id": t.string().id,
+    "age": t.integer(),
+    "cars": t.struct({
+        "name": t.string().s_optional()
+    })
+})
+```
+
+Taking the analogy of a Postgres database, this is similar to SQL data definition language (DDL) and is not limited to tabular data.
+
+### Materializers
+
+The type system also supports first-order types which are specified by providing a materializer. This provides support for transforming between two types.
+
+```py
+t.func(t.struct({"name": t.string()}), t.string(), deno.FunMat("sayHello"))
+```
+
+The equivalent is SQL would be joins, functions or aliases.
+
+### Runtimes
+
+Materializers alone are not enough to perform the transformations. A materializer should also define in which runtime the transform will be operated.
+
+In SQL, the runtime would be the database running the queries.
+
+### Policies
+
+Policies are a special type of materializer `t.struct({}) => t.boolean()` and can be attached to any type. It determines on evaluation whether one of the polices authorizes the callee to access it.
+
+Row level security (RLS) is similar for a Postgres database.
+
+### Triggers
+
+Materializers can be triggered by a HTTP requests or any general purpose events.
+
+## GraphQL support
+
+Once a typegraph is defined, it can be projected to GraphQL and become compatible with GraphQL queries/mutations. This is the most convient way to interact with a typegraph for now. However the system could also support other query language and should not be limited to what GraphQL offers.

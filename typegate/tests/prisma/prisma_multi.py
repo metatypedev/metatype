@@ -1,7 +1,7 @@
 from typegraph import policies
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.prisma import PrismaRuntime
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 
 with TypeGraph("prisma") as g:
