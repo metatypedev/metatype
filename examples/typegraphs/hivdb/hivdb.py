@@ -1,7 +1,7 @@
-from typegraph.graphs.typegraph import TypeGraph
+from typegraph import t
+from typegraph import TypeGraph
 from typegraph.importers.graphql import import_graphql
-from typegraph.materializers.graphql import GraphQLRuntime
-from typegraph.types import types as t
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 import_graphql("https://hivdb.stanford.edu/graphql", False)
 
@@ -39,7 +39,7 @@ with TypeGraph(name="hivdb") as g:
             "alignedAAs": t.optional(t.string()),
             "adjustedAlignedNAs": t.optional(t.string()),
             "adjustedAlignedAAs": t.optional(t.string()),
-            "mutations": t.optional(t.array(g("Mutation"))),
+            "mutations": t.optional(t.array(g("Mut"))),
             "mutationCount": t.optional(t.integer()),
             "unusualMutationCount": t.optional(t.integer()),
             "insertionCount": t.optional(t.integer()),
@@ -62,7 +62,7 @@ with TypeGraph(name="hivdb") as g:
             "type": t.optional(t.string()),
             "text": t.optional(t.string()),
             "triggeredAAs": t.optional(t.string()),
-            "boundMutation": t.optional(g("Mutation")),
+            "boundMutation": t.optional(g("Mut")),
             "highlightText": t.optional(t.array(t.string())),
         }
     ).named(
@@ -70,7 +70,7 @@ with TypeGraph(name="hivdb") as g:
     )  # kind: OBJECT
     t.struct(
         {
-            "boundMutation": t.optional(g("Mutation")),
+            "boundMutation": t.optional(g("Mut")),
             "matched": t.optional(t.array(g("MutationPrevalenceByAA"))),
             "others": t.optional(t.array(g("MutationPrevalenceByAA"))),
         }
@@ -150,9 +150,9 @@ with TypeGraph(name="hivdb") as g:
             "fullName": t.optional(t.string()),
             "drugs": t.optional(t.array(g("Drug"))),
             "gene": t.optional(g("Gene")),
-            "drugResistMutations": t.optional(t.array(g("Mutation"))),
-            "surveilDrugResistMutations": t.optional(t.array(g("Mutation"))),
-            "rxSelectedMutations": t.optional(t.array(g("Mutation"))),
+            "drugResistMutations": t.optional(t.array(g("Mut"))),
+            "surveilDrugResistMutations": t.optional(t.array(g("Mut"))),
+            "rxSelectedMutations": t.optional(t.array(g("Mut"))),
             "mutationTypes": t.optional(t.array(t.string())),
             "hasDrugResistMutations": t.optional(t.boolean()),
             "hasSurveilDrugResistMutations": t.optional(t.boolean()),
@@ -165,7 +165,7 @@ with TypeGraph(name="hivdb") as g:
     t.string().named("DrugEnum")  # kind: ENUM
     t.struct(
         {
-            "mutations": t.optional(t.array(g("Mutation"))),
+            "mutations": t.optional(t.array(g("Mut"))),
             "score": t.optional(t.number()),
         }
     ).named(
@@ -243,7 +243,7 @@ with TypeGraph(name="hivdb") as g:
     t.struct(
         {
             "gene": t.optional(g("Gene")),
-            "mutations": t.optional(t.array(g("Mutation"))),
+            "mutations": t.optional(t.array(g("Mut"))),
         }
     ).named(
         "GeneMutations"
@@ -260,7 +260,7 @@ with TypeGraph(name="hivdb") as g:
             "readDepthStats": t.optional(g("DescriptiveStatistics")),
             "alignedNAs": t.optional(t.string()),
             "alignedAAs": t.optional(t.string()),
-            "mutations": t.optional(t.array(g("Mutation"))),
+            "mutations": t.optional(t.array(g("Mut"))),
             "mutationCount": t.optional(t.integer()),
             "unusualMutationCount": t.optional(t.integer()),
             "histogram": t.optional(g("SequenceReadsHistogram")),
@@ -335,7 +335,7 @@ with TypeGraph(name="hivdb") as g:
             "allAAReads": t.optional(t.array(g("AAReads"))),
         }
     ).named(
-        "Mutation"
+        "Mut"
     )  # kind: OBJECT
     t.struct(
         {
@@ -394,7 +394,7 @@ with TypeGraph(name="hivdb") as g:
         {
             "drugClass": t.optional(g("DrugClass")),
             "mutationType": t.optional(t.string()),
-            "mutations": t.optional(t.array(g("Mutation"))),
+            "mutations": t.optional(t.array(g("Mut"))),
         }
     ).named(
         "MutationsByType"
@@ -480,7 +480,7 @@ with TypeGraph(name="hivdb") as g:
             "bestMatchingGenotype": t.optional(g("HIVBoundSubtype")),
             "mixturePcnt": t.optional(t.number()),
             "mixtureRate": t.optional(t.number()),
-            "mutations": t.optional(t.array(g("Mutation"))),
+            "mutations": t.optional(t.array(g("Mut"))),
             "mutationCount": t.optional(t.integer()),
             "unusualMutationCount": t.optional(t.integer()),
             "insertionCount": t.optional(t.integer()),
@@ -517,7 +517,7 @@ with TypeGraph(name="hivdb") as g:
             "bestMatchingSubtype": t.optional(g("HIVBoundSubtype")),
             "maxMixtureRate": t.optional(t.number()),
             "mixtureRate": t.optional(t.number()),
-            "mutations": t.optional(t.array(g("Mutation"))),
+            "mutations": t.optional(t.array(g("Mut"))),
             "mutationCount": t.optional(t.integer()),
             "unusualMutationCount": t.optional(t.integer()),
             "histogram": t.optional(g("SequenceReadsHistogram")),

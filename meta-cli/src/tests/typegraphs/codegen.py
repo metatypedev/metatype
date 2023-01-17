@@ -1,7 +1,7 @@
 from typegraph import policies
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import ModuleMat
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.deno import ModuleMat
 
 with TypeGraph(name="math") as g:
     allow_all = policies.allow_all()

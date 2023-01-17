@@ -1,27 +1,24 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph.graphs.typegraph import Auth
-from typegraph.graphs.typegraph import Cors
-from typegraph.graphs.typegraph import Rate
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.typegate import AddTypeGraphMat
-from typegraph.materializers.typegate import RemoveTypeGraphMat
-from typegraph.materializers.typegate import SerializedTypegraphMat
-from typegraph.materializers.typegate import TypeGraphMat
-from typegraph.materializers.typegate import TypeGraphsMat
+from typegraph import t
+from typegraph import TypeGraph
 from typegraph.policies import Policy
-from typegraph.types import types as t
+from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.typegate import AddTypeGraphMat
+from typegraph.runtimes.typegate import RemoveTypeGraphMat
+from typegraph.runtimes.typegate import SerializedTypegraphMat
+from typegraph.runtimes.typegate import TypeGraphMat
+from typegraph.runtimes.typegate import TypeGraphsMat
 
 with TypeGraph(
     "typegate",
-    auths=[Auth.basic(["admin"])],
-    cors=Cors(
+    auths=[TypeGraph.Auth.basic(["admin"])],
+    cors=TypeGraph.Cors(
         allow_origin=["*"],
         allow_headers=["*"],
         allow_credentials=True,
     ),
-    rate=Rate(
+    rate=TypeGraph.Rate(
         window_sec=60,
         window_limit=128,
         query_limit=8,

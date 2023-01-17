@@ -1,6 +1,6 @@
 services:
   typegate:
-    image: ghcr.io/metatypedev/typegate:latest
+    image: ghcr.io/metatypedev/typegate:0.0.3-dev.0
     restart: always
     ports:
       - "7890:7890"
@@ -11,6 +11,8 @@ services:
       TG_EXTERNAL_URL: http://localhost:7890
       TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
       TG_ADMIN_PASSWORD: password
+    env_file:
+      - .env.example
 
   redis:
     image: redis:7

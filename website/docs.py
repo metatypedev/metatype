@@ -1,19 +1,19 @@
-from typegraph.graphs.typegraph import Cors
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.http import HTTPRuntime
-from typegraph.materializers.random import RandomMat
-from typegraph.policies import Policy
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.http import HTTPRuntime
+from typegraph.runtimes.random import RandomMat
 
 with TypeGraph(
     "docs",
-    cors=Cors(allow_origin=["http://localhost:3000", "https://cloud.metatype.dev"]),
+    cors=TypeGraph.Cors(
+        allow_origin=["http://localhost:3000", "https://cloud.metatype.dev"]
+    ),
 ) as g:
 
     sendinblue = HTTPRuntime("https://api.sendinblue.com")
 
-    public = Policy(FunMat("() => true")).named("allow_all_policy")
+    public = policies.allow_all()
 
     newsletterSignUp = sendinblue.post(
         "v3/contacts",
@@ -24,7 +24,7 @@ with TypeGraph(
                 "header#api-key": t.string().from_secret("SENDINBLUE_KEY"),
             }
         ),
-        t.struct({"id": t.integer()}),
+        t.struct({"id": t.integer().optional()}),
     ).add_policy(public)
 
     g.expose(

@@ -10,8 +10,8 @@ import attrs
 from attrs import define
 from frozendict import frozendict
 import orjson
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.prisma import Relation
+from typegraph.graph.typegraph import TypeGraph
+from typegraph.providers.prisma.runtimes.prisma import Relation
 from typegraph.utils.attrs import asdict
 
 
@@ -29,10 +29,7 @@ class TypegraphError:
 
 
 def import_file(path: str) -> List[TypeGraph]:
-    """
-    Import typegraphs from a TDM.
-    """
-
+    # Import typegraphs from a TDM.
     path = Path(path)
 
     spec = importlib.util.spec_from_file_location(path.name, path)
@@ -82,7 +79,7 @@ def cmd():
     def default(obj):
         if isinstance(obj, frozendict):
             return dict(obj)
-        if isinstance(obj, Relation):
+        if isinstance(obj, Relation):  # TODO: should not happen
             return {}
         if attrs.has(obj.__class__):
             return asdict(obj)

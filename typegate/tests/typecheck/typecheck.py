@@ -1,9 +1,9 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.policies import Policy
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.deno import FunMat
 
 
 with TypeGraph(
@@ -28,7 +28,7 @@ with TypeGraph(
         }
     ).named("Post")
 
-    my_policy = Policy(FunMat("() => true"))
+    my_policy = policies.allow_all()
 
     posts = t.func(t.struct(), t.array(post).max(20), FunMat("() => []")).named("posts")
     find_post = t.func(

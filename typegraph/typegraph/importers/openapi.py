@@ -305,9 +305,9 @@ def import_openapi(uri: str, gen: bool):
         code = RedBaron(f.read())
 
     imports = [
-        ["typegraph.materializers.http", "HTTPRuntime"],
-        ["typegraph.types", "types as t"],
-        ["typegraph.graphs.typegraph", "TypeGraph"],
+        ["typegraph.runtimes.http", "HTTPRuntime"],
+        ["typegraph", "t"],
+        ["typegraph", "TypeGraph"],
         ["typegraph.policies", "allow_all"],
     ]
 

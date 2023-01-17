@@ -1,2 +1,5 @@
 [flake8]
-ignore = E501, W503, F541, E231
+ignore = E501, W503, F541, E231, D100, D101, D102, D103, D104, D105, D106, D107
+docstring-convention = google
+exclude =
+    .venv

@@ -1,10 +1,10 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import frozendict
-from typegraph.graphs.typegraph import Cors
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.graph.models import Cors
+from typegraph.runtimes.deno import FunMat
 
 
 class TestTypegraph:
@@ -84,6 +84,7 @@ class TestTypegraph:
                         },
                     }
                 ],
+                "policies": [],
                 "meta": {
                     "secrets": [],
                     "auths": [],
@@ -97,6 +98,7 @@ class TestTypegraph:
                     ),
                     "version": "0.0.1",
                 },
+                "$id": "https://metatype.dev/specs/0.0.1.json",
             }
         )
 
@@ -217,6 +219,7 @@ class TestTypegraph:
                         },
                     },
                 ],
+                "policies": [],
                 "meta": {
                     "secrets": [],
                     "auths": [],
@@ -230,5 +233,6 @@ class TestTypegraph:
                     ),
                     "version": "0.0.1",
                 },
+                "$id": "https://metatype.dev/specs/0.0.1.json",
             }
         )

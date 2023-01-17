@@ -1,9 +1,9 @@
-from typegraph.graphs.typegraph import Auth
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.deno import ModuleMat
-from typegraph.materializers.deno import PredefinedFunMat
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.graph.models import Auth
+from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import ModuleMat
+from typegraph.runtimes.deno import PredefinedFunMat
 
 
 def make_policy(g, name, fn):

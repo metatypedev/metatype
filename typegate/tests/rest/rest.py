@@ -1,14 +1,13 @@
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.materializers.http import HTTPRuntime
-from typegraph.policies import Policy
-from typegraph.types import types as t
+from typegraph import policies
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph("blog") as g:
 
     remote = HTTPRuntime("https://blog.example.com/api")
 
-    allow_all = Policy(FunMat("() => true")).named("allow_all_policy")
+    allow_all = policies.allow_all()
 
     post = t.struct(
         {

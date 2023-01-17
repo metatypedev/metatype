@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "items": [
+        {
+          "items": [
+            "docs/reference/typegraph/runtimes/http"
+          ],
+          "label": "typegraph.runtimes",
+          "type": "category"
+        },
+        "docs/reference/typegraph/types"
+      ],
+      "label": "typegraph",
+      "type": "category"
+    }
+  ],
+  "label": "Python module",
+  "type": "category"
+}

@@ -1,7 +1,7 @@
 from typegraph import policies
-from typegraph.graphs.typegraph import TypeGraph
-from typegraph.materializers.deno import FunMat
-from typegraph.types import types as t
+from typegraph import t
+from typegraph import TypeGraph
+from typegraph.runtimes.deno import FunMat
 
 with TypeGraph("test-vars") as g:
     g.expose(
