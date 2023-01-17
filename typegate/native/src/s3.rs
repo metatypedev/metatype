@@ -47,7 +47,16 @@ fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> S3PresigningOut
         session_token: None,
         expiration: None,
     };
-    let mut bucket = Bucket::new(&presigning.bucket, region, credentials).unwrap();
+
+    let mut bucket = match Bucket::new(&presigning.bucket, region, credentials) {
+        Ok(bucket) => bucket,
+        Err(e) => {
+            return S3PresigningOut::Err {
+                message: e.to_string(),
+            };
+        }
+    };
+
     bucket.set_path_style();
     let mut headers = HeaderMap::new();
 
