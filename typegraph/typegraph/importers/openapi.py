@@ -1,23 +1,23 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import inspect
+import pathlib
 import re
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
 from urllib.parse import urljoin
-import pathlib
 
 from attrs import define
 import black
 from box import Box
 from deepmerge import always_merger
 import httpx
+import orjson
 from redbaron import RedBaron
 import semver
 import yaml
-import orjson
 
 
 MIME_TYPES = Box(
@@ -235,7 +235,7 @@ class Path:
             elif MIME_TYPES.multipart in types:
                 content_type = MIME_TYPES.multipart
             else:
-                raise Exception(f'Unsupported content types {types}')
+                raise Exception(f"Unsupported content types {types}")
             (body_schema, ref_name) = self.doc.resolve_ref(
                 body[content_type].schema, export_name=True
             )

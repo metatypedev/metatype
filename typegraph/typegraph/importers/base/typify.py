@@ -1,18 +1,54 @@
+# Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
+from typing import Callable
+from typing import cast
+from typing import Optional
+from typing import TYPE_CHECKING
+from typing import Union
+
+from attrs import define
+from attrs import field
+from attrs import frozen
 from typegraph import types as t
 from typegraph.graph.nodes import NodeProxy
-from typing import cast
-from attrs import define
+from typegraph.runtimes.base import Materializer
+from typegraph.runtimes.base import Runtime
+from typegraph.utils.attrs import always
+
+if TYPE_CHECKING:
+    from typegraph.importers.base.importer import Importer
+
+
+@frozen
+class TypifyRuntime(Runtime):
+    runtime_name: str = always("__typify__")
+
+    def data(self, _c):
+        raise Exception("Cannot serialize TypifyRuntime")
+
+
+@frozen
+class TypifyMat(Materializer):
+    codegen: Union[str, Callable[[str, str], str]]
+    runtime: Runtime = field(factory=TypifyRuntime)
+
+    def data(self, _c):
+        raise Exception("Cannot serialize TypifyMat")
 
 
 @define
 class Typify:
-    ns: str
+    importer: "Importer"
+    ns: str = field(default="t")
+    tg_alias: str = field(default="g")
 
-    def __call__(self, typ: t.TypeNode) -> str:
+    def __call__(self, typ: t.TypeNode, name: Optional[str] = None) -> str:
         # dispatch
         if isinstance(typ, NodeProxy):
-            return f"{self.ns}.proxy({repr(typ.node)}"
-        print(f"typ: {typ}")
+            renames = self.importer.renames
+            name = renames[typ.node] if typ.node in renames else typ.node
+            return f"{self.tg_alias}({repr(name)})"
+
         if hasattr(self, typ.type):
             method = getattr(self, typ.type)
         else:
@@ -20,7 +56,9 @@ class Typify:
                 method = getattr(self, "simple")
             else:
                 raise Exception(f"No handler for type '{typ.type}'")
-        return method(typ)
+
+        suffix = "" if name is None else f".named({repr(name)})"
+        return method(typ) + suffix
 
     def constraints(typ: t.typedef) -> str:
         ret = ""
@@ -42,7 +80,7 @@ class Typify:
 
     def object(self, typ: t.typedef) -> str:
         typ = cast(t.struct, typ)
-        fields = ", ".join([f'{repr(k)}: {self(v)}' for k, v in typ.props.items()])
+        fields = ", ".join([f"{repr(k)}: {self(v)}" for k, v in typ.props.items()])
         ret = f"{self.ns}.struct({{{fields}}})"
         if typ.additional_props is not None:
             if isinstance(typ.additional_props, bool):
@@ -54,15 +92,20 @@ class Typify:
 
     def array(self, typ: t.typedef) -> str:
         typ = cast(t.array, typ)
-        return f"{self.ns}.array({self(typ.of)}){self.constraints(typ)}"
+        return f"{self.ns}.array({self(typ.of)}){Typify.constraints(typ)}"
 
     def union(self, typ: t.typedef) -> str:
         typ = cast(t.union, typ)
         variants = [self(v) for v in typ.variants]
         return f"{self.ns}.union({', '.join(variants)})"
 
-    def func(self, typ: t.typedef) -> str:
+    def function(self, typ: t.typedef) -> str:
         typ = cast(t.func, typ)
+        assert isinstance(typ.mat, TypifyMat)
+        codegen = typ.mat.codegen
+        if callable(codegen):
+            return codegen(self(typ.inp), self(typ.out))
+        return f"{self.ns}.func({self(typ.inp)}, {self(typ.out)}, {typ.mat.codegen}"
 
 
 simple_types = {"boolean", "number", "integer", "string"}

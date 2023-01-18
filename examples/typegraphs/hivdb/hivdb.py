@@ -1,760 +1,676 @@
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.importers.graphql import import_graphql
+from typegraph.importers.graphql import GraphQLImporter
 from typegraph.runtimes.graphql import GraphQLRuntime
 
-import_graphql("https://hivdb.stanford.edu/graphql", False)
+GraphQLImporter("hivdb", "https://hivdb.stanford.edu/graphql").imp(False)
 
 with TypeGraph(name="hivdb") as g:
-    remote = GraphQLRuntime("https://hivdb.stanford.edu/graphql")
+    hivdb = GraphQLRuntime("https://hivdb.stanford.edu/graphql")
+
     t.struct(
         {
-            "aminoAcid": t.optional(t.string()),
-            "percent": t.optional(t.number()),
-            "numReads": t.optional(t.integer()),
+            "aminoAcid": t.string().optional(),
+            "percent": t.number().optional(),
+            "numReads": t.integer().optional(),
         }
-    ).named(
-        "AAReads"
-    )  # kind: OBJECT
-    t.string().named("ASIAlgorithm")  # kind: ENUM
+    ).named("AAReads")
+    t.string().named("ASIAlgorithm")
     t.struct(
         {
-            "drugClass": t.optional(g("DrugClass")),
-            "drugScores": t.optional(t.array(g("ComparableDrugScore"))),
+            "drugClass": g("DrugClass").optional(),
+            "drugScores": t.array(g("ComparableDrugScore").optional()).optional(),
         }
-    ).named(
-        "AlgorithmComparison"
-    )  # kind: OBJECT
+    ).named("AlgorithmComparison")
     t.struct(
         {
-            "gene": t.optional(g("Gene")),
-            "firstAA": t.optional(t.integer()),
-            "lastAA": t.optional(t.integer()),
-            "firstNA": t.optional(t.integer()),
-            "lastNA": t.optional(t.integer()),
-            "matchPcnt": t.optional(t.number()),
-            "size": t.optional(t.integer()),
-            "prettyPairwise": t.optional(g("PrettyPairwise")),
-            "alignedNAs": t.optional(t.string()),
-            "alignedAAs": t.optional(t.string()),
-            "adjustedAlignedNAs": t.optional(t.string()),
-            "adjustedAlignedAAs": t.optional(t.string()),
-            "mutations": t.optional(t.array(g("Mut"))),
-            "mutationCount": t.optional(t.integer()),
-            "unusualMutationCount": t.optional(t.integer()),
-            "insertionCount": t.optional(t.integer()),
-            "deletionCount": t.optional(t.integer()),
-            "stopCodonCount": t.optional(t.integer()),
-            "ambiguousMutationCount": t.optional(t.integer()),
-            "apobecMutationCount": t.optional(t.integer()),
-            "apobecDRMCount": t.optional(t.integer()),
-            "frameShifts": t.optional(t.array(g("FrameShift"))),
-            "unsequencedRegions": t.optional(g("UnsequencedRegions")),
+            "gene": g("Gene").optional(),
+            "firstAA": t.integer().optional(),
+            "lastAA": t.integer().optional(),
+            "firstNA": t.integer().optional(),
+            "lastNA": t.integer().optional(),
+            "matchPcnt": t.number().optional(),
+            "size": t.integer().optional(),
+            "prettyPairwise": g("PrettyPairwise").optional(),
+            "alignedNAs": t.string().optional(),
+            "alignedAAs": t.string().optional(),
+            "adjustedAlignedNAs": t.string().optional(),
+            "adjustedAlignedAAs": t.string().optional(),
+            "mutations": t.array(g("Mutation_hivdb").optional()).optional(),
+            "mutationCount": t.integer().optional(),
+            "unusualMutationCount": t.integer().optional(),
+            "insertionCount": t.integer().optional(),
+            "deletionCount": t.integer().optional(),
+            "stopCodonCount": t.integer().optional(),
+            "ambiguousMutationCount": t.integer().optional(),
+            "apobecMutationCount": t.integer().optional(),
+            "apobecDRMCount": t.integer().optional(),
+            "frameShifts": t.array(g("FrameShift").optional()).optional(),
+            "unsequencedRegions": g("UnsequencedRegions").optional(),
         }
-    ).named(
-        "AlignedGeneSequence"
-    )  # kind: OBJECT
+    ).named("AlignedGeneSequence")
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "gene": t.optional(g("Gene")),
-            "drugClass": t.optional(g("DrugClass")),
-            "type": t.optional(t.string()),
-            "text": t.optional(t.string()),
-            "triggeredAAs": t.optional(t.string()),
-            "boundMutation": t.optional(g("Mut")),
-            "highlightText": t.optional(t.array(t.string())),
+            "name": t.string().optional(),
+            "gene": g("Gene").optional(),
+            "drugClass": g("DrugClass").optional(),
+            "type": g("CommentType").optional(),
+            "text": t.string().optional(),
+            "triggeredAAs": t.string().optional(),
+            "boundMutation": g("Mutation_hivdb").optional(),
+            "highlightText": t.array(t.string().optional()).optional(),
         }
-    ).named(
-        "BoundMutationComment"
-    )  # kind: OBJECT
+    ).named("BoundMutationComment")
     t.struct(
         {
-            "boundMutation": t.optional(g("Mut")),
-            "matched": t.optional(t.array(g("MutationPrevalenceByAA"))),
-            "others": t.optional(t.array(g("MutationPrevalenceByAA"))),
+            "boundMutation": g("Mutation_hivdb").optional(),
+            "matched": t.array(g("MutationPrevalenceByAA").optional()).optional(),
+            "others": t.array(g("MutationPrevalenceByAA").optional()).optional(),
         }
-    ).named(
-        "BoundMutationPrevalence"
-    )  # kind: OBJECT
+    ).named("BoundMutationPrevalence")
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "distancePcnt": t.optional(t.number()),
-            "display": t.optional(t.string()),
+            "name": g("Subtype").optional(),
+            "distancePcnt": t.number().optional(),
+            "display": t.string().optional(),
         }
-    ).named(
-        "BoundSubtype"
-    )  # kind: OBJECT
-    t.string().named("CommentType")  # kind: ENUM
+    ).named("BoundSubtype")
+    t.string().named("CommentType")
     t.struct(
         {
-            "mutationType": t.optional(t.string()),
-            "commentType": t.optional(t.string()),
-            "comments": t.optional(t.array(g("BoundMutationComment"))),
+            "mutationType": g("CommentType").optional(),
+            "commentType": g("CommentType").optional(),
+            "comments": t.array(g("BoundMutationComment").optional()).optional(),
         }
-    ).named(
-        "CommentsByType"
-    )  # kind: OBJECT
+    ).named("CommentsByType")
     t.struct(
         {
-            "drug": t.optional(g("Drug")),
-            "algorithm": t.optional(t.string()),
-            "SIR": t.optional(t.string()),
-            "interpretation": t.optional(t.string()),
-            "explanation": t.optional(t.string()),
+            "drug": g("Drug").optional(),
+            "algorithm": t.string().optional(),
+            "SIR": g("SIR").optional(),
+            "interpretation": t.string().optional(),
+            "explanation": t.string().optional(),
         }
-    ).named(
-        "ComparableDrugScore"
-    )  # kind: OBJECT
-    t.struct({"name": t.optional(t.string()), "xml": t.optional(t.string()),}).named(
+    ).named("ComparableDrugScore")
+    t.struct({"name": t.string().optional(), "xml": t.string().optional()}).named(
         "CustomASIAlgorithm"
-    )  # kind: INPUT_OBJECT
+    )
     t.struct(
         {
-            "mixtureRate": t.optional(t.number()),
-            "minPrevalence": t.optional(t.number()),
-            "isAboveMixtureRateThreshold": t.optional(t.boolean()),
-            "isBelowMinPrevalenceThreshold": t.optional(t.boolean()),
+            "mixtureRate": t.number().optional(),
+            "minPrevalence": t.number().optional(),
+            "isAboveMixtureRateThreshold": t.boolean().optional(),
+            "isBelowMinPrevalenceThreshold": t.boolean().optional(),
         }
-    ).named(
-        "CutoffKeyPoint"
-    )  # kind: OBJECT
+    ).named("CutoffKeyPoint")
     t.struct(
         {
-            "mean": t.optional(t.number()),
-            "standardDeviation": t.optional(t.number()),
-            "min": t.optional(t.number()),
-            "max": t.optional(t.number()),
-            "n": t.optional(t.number()),
-            "sum": t.optional(t.number()),
-            "values": t.optional(t.array(t.number())),
-            "percentile": t.optional(t.number()),
+            "mean": t.number().optional(),
+            "standardDeviation": t.number().optional(),
+            "min": t.number().optional(),
+            "max": t.number().optional(),
+            "n": t.number().optional(),
+            "sum": t.number().optional(),
+            "values": t.array(t.number().optional()).optional(),
+            "percentile": t.number().optional(),
         }
-    ).named(
-        "DescriptiveStatistics"
-    )  # kind: OBJECT
+    ).named("DescriptiveStatistics")
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "displayAbbr": t.optional(t.string()),
-            "fullName": t.optional(t.string()),
-            "drugClass": t.optional(g("DrugClass")),
+            "name": g("DrugEnum").optional(),
+            "displayAbbr": t.string().optional(),
+            "fullName": t.string().optional(),
+            "drugClass": g("DrugClass").optional(),
         }
-    ).named(
-        "Drug"
-    )  # kind: OBJECT
+    ).named("Drug")
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "fullName": t.optional(t.string()),
-            "drugs": t.optional(t.array(g("Drug"))),
-            "gene": t.optional(g("Gene")),
-            "drugResistMutations": t.optional(t.array(g("Mut"))),
-            "surveilDrugResistMutations": t.optional(t.array(g("Mut"))),
-            "rxSelectedMutations": t.optional(t.array(g("Mut"))),
-            "mutationTypes": t.optional(t.array(t.string())),
-            "hasDrugResistMutations": t.optional(t.boolean()),
-            "hasSurveilDrugResistMutations": t.optional(t.boolean()),
-            "hasRxSelectedMutations": t.optional(t.boolean()),
+            "name": g("DrugClassEnum").optional(),
+            "fullName": t.string().optional(),
+            "drugs": t.array(g("Drug").optional()).optional(),
+            "gene": g("Gene").optional(),
+            "drugResistMutations": t.array(g("Mutation_hivdb").optional()).optional(),
+            "surveilDrugResistMutations": t.array(
+                g("Mutation_hivdb").optional()
+            ).optional(),
+            "rxSelectedMutations": t.array(g("Mutation_hivdb").optional()).optional(),
+            "mutationTypes": t.array(g("MutationType").optional()).optional(),
+            "hasDrugResistMutations": t.boolean().optional(),
+            "hasSurveilDrugResistMutations": t.boolean().optional(),
+            "hasRxSelectedMutations": t.boolean().optional(),
         }
-    ).named(
-        "DrugClass"
-    )  # kind: OBJECT
-    t.string().named("DrugClassEnum")  # kind: ENUM
-    t.string().named("DrugEnum")  # kind: ENUM
+    ).named("DrugClass")
+    t.string().named("DrugClassEnum")
+    t.string().named("DrugEnum")
     t.struct(
         {
-            "mutations": t.optional(t.array(g("Mut"))),
-            "score": t.optional(t.number()),
+            "mutations": t.array(g("Mutation_hivdb").optional()).optional(),
+            "score": t.number().optional(),
         }
-    ).named(
-        "DrugPartialScore"
-    )  # kind: OBJECT
+    ).named("DrugPartialScore")
     t.struct(
         {
-            "version": t.optional(g("DrugResistanceAlgorithm")),
-            "algorithm": t.optional(g("DrugResistanceAlgorithm")),
-            "gene": t.optional(g("Gene")),
-            "drugScores": t.optional(t.array(g("DrugScore"))),
-            "mutationsByTypes": t.optional(t.array(g("MutationsByType"))),
-            "commentsByTypes": t.optional(t.array(g("CommentsByType"))),
+            "version": g("DrugResistanceAlgorithm").optional(),
+            "algorithm": g("DrugResistanceAlgorithm").optional(),
+            "gene": g("Gene").optional(),
+            "drugScores": t.array(g("DrugScore").optional()).optional(),
+            "mutationsByTypes": t.array(g("MutationsByType").optional()).optional(),
+            "commentsByTypes": t.array(g("CommentsByType").optional()).optional(),
         }
-    ).named(
-        "DrugResistance"
-    )  # kind: OBJECT
+    ).named("DrugResistance")
     t.struct(
         {
-            "text": t.optional(t.string()),
-            "display": t.optional(t.string()),
-            "family": t.optional(t.string()),
-            "version": t.optional(t.string()),
-            "strain": t.optional(g("Strain")),
-            "publishDate": t.optional(t.string()),
+            "text": t.string().optional(),
+            "display": t.string().optional(),
+            "family": t.string().optional(),
+            "version": t.string().optional(),
+            "strain": g("Strain").optional(),
+            "publishDate": t.string().optional(),
         }
-    ).named(
-        "DrugResistanceAlgorithm"
-    )  # kind: OBJECT
+    ).named("DrugResistanceAlgorithm")
     t.struct(
         {
-            "drugClass": t.optional(g("DrugClass")),
-            "drug": t.optional(g("Drug")),
-            "SIR": t.optional(t.string()),
-            "score": t.optional(t.number()),
-            "level": t.optional(t.integer()),
-            "text": t.optional(t.string()),
-            "partialScores": t.optional(t.array(g("DrugPartialScore"))),
+            "drugClass": g("DrugClass").optional(),
+            "drug": g("Drug").optional(),
+            "SIR": g("SIR").optional(),
+            "score": t.number().optional(),
+            "level": t.integer().optional(),
+            "text": t.string().optional(),
+            "partialScores": t.array(g("DrugPartialScore").optional()).optional(),
         }
-    ).named(
-        "DrugScore"
-    )  # kind: OBJECT
-    t.string().named("EnumGene")  # kind: ENUM
-    t.string().named("EnumSequenceReadsHistogramAggregatesOption")  # kind: ENUM
+    ).named("DrugScore")
+    t.string().named("EnumGene")
+    t.string().named("EnumSequenceReadsHistogramAggregatesOption")
     t.struct(
         {
-            "gene": t.optional(g("Gene")),
-            "position": t.optional(t.integer()),
-            "isInsertion": t.optional(t.boolean()),
-            "isDeletion": t.optional(t.boolean()),
-            "size": t.optional(t.integer()),
-            "NAs": t.optional(t.string()),
-            "text": t.optional(t.string()),
+            "gene": g("Gene").optional(),
+            "position": t.integer().optional(),
+            "isInsertion": t.boolean().optional(),
+            "isDeletion": t.boolean().optional(),
+            "size": t.integer().optional(),
+            "NAs": t.string().optional(),
+            "text": t.string().optional(),
         }
-    ).named(
-        "FrameShift"
-    )  # kind: OBJECT
+    ).named("FrameShift")
     t.struct(
         {
-            "nameWithStrain": t.optional(t.string()),
-            "name": t.optional(t.string()),
-            "strain": t.optional(g("Strain")),
-            "refSequence": t.optional(t.string()),
-            "reference": t.optional(t.string()),
-            "consensus": t.optional(t.string()),
-            "length": t.optional(t.integer()),
-            "AASize": t.optional(t.integer()),
-            "NASize": t.optional(t.integer()),
-            "drugClasses": t.optional(t.array(g("DrugClass"))),
-            "mutationTypes": t.optional(t.array(t.string())),
+            "nameWithStrain": t.string().optional(),
+            "name": g("EnumGene").optional(),
+            "strain": g("Strain").optional(),
+            "refSequence": t.string().optional(),
+            "reference": t.string().optional(),
+            "consensus": t.string().optional(),
+            "length": t.integer().optional(),
+            "AASize": t.integer().optional(),
+            "NASize": t.integer().optional(),
+            "drugClasses": t.array(g("DrugClass").optional()).optional(),
+            "mutationTypes": t.array(g("MutationType").optional()).optional(),
         }
-    ).named(
-        "Gene"
-    )  # kind: OBJECT
+    ).named("Gene")
     t.struct(
         {
-            "gene": t.optional(g("Gene")),
-            "mutations": t.optional(t.array(g("Mut"))),
+            "gene": g("Gene").optional(),
+            "mutations": t.array(g("Mutation_hivdb").optional()).optional(),
         }
-    ).named(
-        "GeneMutations"
-    )  # kind: OBJECT
+    ).named("GeneMutations")
     t.struct(
         {
-            "gene": t.optional(g("Gene")),
-            "firstAA": t.optional(t.integer()),
-            "lastAA": t.optional(t.integer()),
-            "allPositionCodonReads": t.optional(t.array(g("PositionCodonReads"))),
-            "internalJsonAllPositionCodonReads": t.optional(t.string()),
-            "size": t.optional(t.integer()),
-            "numPositions": t.optional(t.integer()),
-            "readDepthStats": t.optional(g("DescriptiveStatistics")),
-            "alignedNAs": t.optional(t.string()),
-            "alignedAAs": t.optional(t.string()),
-            "mutations": t.optional(t.array(g("Mut"))),
-            "mutationCount": t.optional(t.integer()),
-            "unusualMutationCount": t.optional(t.integer()),
-            "histogram": t.optional(g("SequenceReadsHistogram")),
-            "unsequencedRegions": t.optional(g("UnsequencedRegions")),
+            "gene": g("Gene").optional(),
+            "firstAA": t.integer().optional(),
+            "lastAA": t.integer().optional(),
+            "allPositionCodonReads": t.array(
+                g("PositionCodonReads").optional()
+            ).optional(),
+            "internalJsonAllPositionCodonReads": t.string().optional(),
+            "size": t.integer().optional(),
+            "numPositions": t.integer().optional(),
+            "readDepthStats": g("DescriptiveStatistics").optional(),
+            "alignedNAs": t.string().optional(),
+            "alignedAAs": t.string().optional(),
+            "mutations": t.array(g("Mutation_hivdb").optional()).optional(),
+            "mutationCount": t.integer().optional(),
+            "unusualMutationCount": t.integer().optional(),
+            "histogram": g("SequenceReadsHistogram").optional(),
+            "unsequencedRegions": g("UnsequencedRegions").optional(),
         }
-    ).named(
-        "GeneSequenceReads"
-    )  # kind: OBJECT
+    ).named("GeneSequenceReads")
     t.struct(
         {
-            "display": t.optional(t.string()),
-            "displayWithoutDistance": t.optional(t.string()),
-            "subtype": t.optional(g("HIVSubtype")),
-            "genotype": t.optional(g("HIVSubtype")),
-            "displaySubtypes": t.optional(t.array(g("HIVSubtype"))),
-            "displayGenotypes": t.optional(t.array(g("HIVSubtype"))),
-            "firstNA": t.optional(t.integer()),
-            "lastNA": t.optional(t.integer()),
-            "distance": t.optional(t.number()),
-            "distancePcnt": t.optional(t.string()),
-            "referenceAccession": t.optional(t.string()),
-            "referenceCountry": t.optional(t.string()),
-            "referenceYear": t.optional(t.integer()),
-            "discordanceList": t.optional(t.array(t.integer())),
+            "display": t.string().optional(),
+            "displayWithoutDistance": t.string().optional(),
+            "subtype": g("HIVSubtype").optional(),
+            "genotype": g("HIVSubtype").optional(),
+            "displaySubtypes": t.array(g("HIVSubtype").optional()).optional(),
+            "displayGenotypes": t.array(g("HIVSubtype").optional()).optional(),
+            "firstNA": t.integer().optional(),
+            "lastNA": t.integer().optional(),
+            "distance": t.number().optional(),
+            "distancePcnt": t.string().optional(),
+            "referenceAccession": t.string().optional(),
+            "referenceCountry": t.string().optional(),
+            "referenceYear": t.integer().optional(),
+            "discordanceList": t.array(t.integer().optional()).optional(),
         }
-    ).named(
-        "HIVBoundSubtype"
-    )  # kind: OBJECT
-    t.string().named("HIVClassificationLevel")  # kind: ENUM
+    ).named("HIVBoundSubtype")
+    t.string().named("HIVClassificationLevel")
     t.struct(
         {
-            "indexName": t.optional(t.string()),
-            "displayName": t.optional(t.string()),
-            "classificationLevel": t.optional(t.string()),
+            "indexName": t.string().optional(),
+            "displayName": t.string().optional(),
+            "classificationLevel": g("HIVClassificationLevel").optional(),
         }
-    ).named(
-        "HIVSubtype"
-    )  # kind: OBJECT
+    ).named("HIVSubtype")
     t.struct(
         {
-            "gene": t.optional(g("Gene")),
-            "reference": t.optional(t.string()),
-            "consensus": t.optional(t.string()),
-            "position": t.optional(t.integer()),
-            "displayAAs": t.optional(t.string()),
-            "AAs": t.optional(t.string()),
-            "unusualAAs": t.optional(t.string()),
-            "displayAAChars": t.optional(t.array(t.string())),
-            "AAChars": t.optional(t.array(t.string())),
-            "triplet": t.optional(t.string()),
-            "insertedNAs": t.optional(t.string()),
-            "isInsertion": t.optional(t.boolean()),
-            "isDeletion": t.optional(t.boolean()),
-            "isIndel": t.optional(t.boolean()),
-            "isAmbiguous": t.optional(t.boolean()),
-            "isApobecMutation": t.optional(t.boolean()),
-            "isApobecDRM": t.optional(t.boolean()),
-            "isUnsequenced": t.optional(t.boolean()),
-            "isDRM": t.optional(t.boolean()),
-            "DRMDrugClass": t.optional(g("DrugClass")),
-            "hasStop": t.optional(t.boolean()),
-            "isUnusual": t.optional(t.boolean()),
-            "isSDRM": t.optional(t.boolean()),
-            "SDRMDrugClass": t.optional(g("DrugClass")),
-            "TSMDrugClass": t.optional(g("DrugClass")),
-            "types": t.optional(t.array(t.string())),
-            "primaryType": t.optional(t.string()),
-            "comments": t.optional(t.array(g("BoundMutationComment"))),
-            "text": t.optional(t.string()),
-            "shortText": t.optional(t.string()),
-            "totalReads": t.optional(t.integer()),
-            "allAAReads": t.optional(t.array(g("AAReads"))),
+            "gene": g("Gene").optional(),
+            "reference": t.string().optional(),
+            "consensus": t.string().optional(),
+            "position": t.integer().optional(),
+            "displayAAs": t.string().optional(),
+            "AAs": t.string().optional(),
+            "unusualAAs": t.string().optional(),
+            "displayAAChars": t.array(t.string().optional()).optional(),
+            "AAChars": t.array(t.string().optional()).optional(),
+            "triplet": t.string().optional(),
+            "insertedNAs": t.string().optional(),
+            "isInsertion": t.boolean().optional(),
+            "isDeletion": t.boolean().optional(),
+            "isIndel": t.boolean().optional(),
+            "isAmbiguous": t.boolean().optional(),
+            "isApobecMutation": t.boolean().optional(),
+            "isApobecDRM": t.boolean().optional(),
+            "isUnsequenced": t.boolean().optional(),
+            "isDRM": t.boolean().optional(),
+            "DRMDrugClass": g("DrugClass").optional(),
+            "hasStop": t.boolean().optional(),
+            "isUnusual": t.boolean().optional(),
+            "isSDRM": t.boolean().optional(),
+            "SDRMDrugClass": g("DrugClass").optional(),
+            "TSMDrugClass": g("DrugClass").optional(),
+            "types": t.array(g("MutationType").optional()).optional(),
+            "primaryType": g("MutationType").optional(),
+            "comments": t.array(g("BoundMutationComment").optional()).optional(),
+            "text": t.string().optional(),
+            "shortText": t.string().optional(),
+            "totalReads": t.integer().optional(),
+            "allAAReads": t.array(g("AAReads").optional()).optional(),
         }
-    ).named(
-        "Mut"
-    )  # kind: OBJECT
+    ).named("Mutation_hivdb")
     t.struct(
         {
-            "AA": t.optional(t.string()),
-            "subtype": t.optional(g("MutationPrevalenceSubtype")),
-            "totalNaive": t.optional(t.integer()),
-            "frequencyNaive": t.optional(t.integer()),
-            "percentageNaive": t.optional(t.number()),
-            "totalTreated": t.optional(t.integer()),
-            "frequencyTreated": t.optional(t.integer()),
-            "percentageTreated": t.optional(t.number()),
+            "AA": t.string().optional(),
+            "subtype": g("MutationPrevalenceSubtype").optional(),
+            "totalNaive": t.integer().optional(),
+            "frequencyNaive": t.integer().optional(),
+            "percentageNaive": t.number().optional(),
+            "totalTreated": t.integer().optional(),
+            "frequencyTreated": t.integer().optional(),
+            "percentageTreated": t.number().optional(),
         }
-    ).named(
-        "MutationPrevalence"
-    )  # kind: OBJECT
+    ).named("MutationPrevalence")
     t.struct(
         {
-            "AA": t.optional(t.string()),
-            "subtypes": t.optional(t.array(g("MutationPrevalence"))),
+            "AA": t.string().optional(),
+            "subtypes": t.array(g("MutationPrevalence").optional()).optional(),
         }
-    ).named(
-        "MutationPrevalenceByAA"
-    )  # kind: OBJECT
+    ).named("MutationPrevalenceByAA")
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "stats": t.optional(t.array(g("MutationPrevalenceSubtypeStat"))),
+            "name": t.string().optional(),
+            "stats": t.array(g("MutationPrevalenceSubtypeStat").optional()).optional(),
         }
-    ).named(
-        "MutationPrevalenceSubtype"
-    )  # kind: OBJECT
+    ).named("MutationPrevalenceSubtype")
     t.struct(
         {
-            "gene": t.optional(g("Gene")),
-            "totalNaive": t.optional(t.integer()),
-            "totalTreated": t.optional(t.integer()),
+            "gene": g("Gene").optional(),
+            "totalNaive": t.integer().optional(),
+            "totalTreated": t.integer().optional(),
         }
-    ).named(
-        "MutationPrevalenceSubtypeStat"
-    )  # kind: OBJECT
-    t.string().named("MutationSetFilterOption")  # kind: ENUM
-    t.string().named("MutationType")  # kind: ENUM
+    ).named("MutationPrevalenceSubtypeStat")
+    t.string().named("MutationSetFilterOption")
+    t.string().named("MutationType")
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "validationResults": t.optional(t.array(g("ValidationResult"))),
-            "allGeneMutations": t.optional(t.array(g("GeneMutations"))),
-            "mutationPrevalences": t.optional(t.array(g("BoundMutationPrevalence"))),
-            "drugResistance": t.optional(t.array(g("DrugResistance"))),
-            "algorithmComparison": t.optional(t.array(g("AlgorithmComparison"))),
+            "name": t.string().optional(),
+            "validationResults": t.array(g("ValidationResult").optional()).optional(),
+            "allGeneMutations": t.array(g("GeneMutations").optional()).optional(),
+            "mutationPrevalences": t.array(
+                g("BoundMutationPrevalence").optional()
+            ).optional(),
+            "drugResistance": t.array(g("DrugResistance").optional()).optional(),
+            "algorithmComparison": t.array(
+                g("AlgorithmComparison").optional()
+            ).optional(),
         }
-    ).named(
-        "MutationsAnalysis"
-    )  # kind: OBJECT
+    ).named("MutationsAnalysis")
     t.struct(
         {
-            "drugClass": t.optional(g("DrugClass")),
-            "mutationType": t.optional(t.string()),
-            "mutations": t.optional(t.array(g("Mut"))),
+            "drugClass": g("DrugClass").optional(),
+            "mutationType": g("MutationType").optional(),
+            "mutations": t.array(g("Mutation_hivdb").optional()).optional(),
         }
-    ).named(
-        "MutationsByType"
-    )  # kind: OBJECT
+    ).named("MutationsByType")
     t.struct(
         {
-            "codon": t.optional(t.string()),
-            "reads": t.optional(t.integer()),
-            "refAminoAcid": t.optional(t.string()),
-            "aminoAcid": t.optional(t.string()),
-            "proportion": t.optional(t.number()),
-            "codonPercent": t.optional(t.number()),
-            "aaPercent": t.optional(t.number()),
-            "isReference": t.optional(t.boolean()),
-            "isDRM": t.optional(t.boolean()),
-            "isUnusual": t.optional(t.boolean()),
-            "isApobecMutation": t.optional(t.boolean()),
-            "isApobecDRM": t.optional(t.boolean()),
+            "codon": t.string().optional(),
+            "reads": t.integer().optional(),
+            "refAminoAcid": t.string().optional(),
+            "aminoAcid": t.string().optional(),
+            "proportion": t.number().optional(),
+            "codonPercent": t.number().optional(),
+            "aaPercent": t.number().optional(),
+            "isReference": t.boolean().optional(),
+            "isDRM": t.boolean().optional(),
+            "isUnusual": t.boolean().optional(),
+            "isApobecMutation": t.boolean().optional(),
+            "isApobecDRM": t.boolean().optional(),
         }
-    ).named(
-        "OneCodonReads"
-    )  # kind: OBJECT
+    ).named("OneCodonReads")
     t.struct(
         {
-            "gene": t.optional(g("Gene")),
-            "position": t.optional(t.integer()),
-            "totalReads": t.optional(t.integer()),
-            "isTrimmed": t.optional(t.boolean()),
+            "gene": g("Gene").optional(),
+            "position": t.integer().optional(),
+            "totalReads": t.integer().optional(),
+            "isTrimmed": t.boolean().optional(),
         }
-    ).named(
-        "OneCodonReadsCoverage"
-    )  # kind: OBJECT
-    t.struct(
-        {
-            "codon": t.optional(t.string()),
-            "reads": t.optional(t.integer()),
-        }
-    ).named(
+    ).named("OneCodonReadsCoverage")
+    t.struct({"codon": t.string().optional(), "reads": t.integer().optional()}).named(
         "OneCodonReadsInput"
-    )  # kind: INPUT_OBJECT
+    )
     t.struct(
         {
-            "gene": t.optional(g("Gene")),
-            "position": t.optional(t.integer()),
-            "totalReads": t.optional(t.integer()),
-            "codonReads": t.optional(t.array(g("OneCodonReads"))),
+            "gene": g("Gene").optional(),
+            "position": t.integer().optional(),
+            "totalReads": t.integer().optional(),
+            "codonReads": t.array(g("OneCodonReads").optional()).optional(),
         }
-    ).named(
-        "PositionCodonReads"
-    )  # kind: OBJECT
+    ).named("PositionCodonReads")
     t.struct(
         {
-            "gene": t.optional(t.string()),
-            "position": t.optional(t.integer()),
-            "totalReads": t.optional(t.integer()),
-            "allCodonReads": t.optional(t.array(g("OneCodonReadsInput"))),
+            "gene": g("EnumGene").optional(),
+            "position": t.integer().optional(),
+            "totalReads": t.integer().optional(),
+            "allCodonReads": t.array(g("OneCodonReadsInput").optional()).optional(),
         }
-    ).named(
-        "PositionCodonReadsInput"
-    )  # kind: INPUT_OBJECT
+    ).named("PositionCodonReadsInput")
     t.struct(
         {
-            "positionLine": t.optional(t.array(t.string())),
-            "refAALine": t.optional(t.array(t.string())),
-            "alignedNAsLine": t.optional(t.array(t.string())),
-            "mutationLine": t.optional(t.array(t.string())),
+            "positionLine": t.array(t.string().optional()).optional(),
+            "refAALine": t.array(t.string().optional()).optional(),
+            "alignedNAsLine": t.array(t.string().optional()).optional(),
+            "mutationLine": t.array(t.string().optional()).optional(),
         }
-    ).named(
-        "PrettyPairwise"
-    )  # kind: OBJECT
-    t.string().named("SIR")  # kind: ENUM
+    ).named("PrettyPairwise")
+    t.string().named("SIR")
     t.struct(
         {
-            "inputSequence": t.optional(g("UnalignedSequenceOutput")),
-            "strain": t.optional(g("Strain")),
-            "isReverseComplement": t.optional(t.boolean()),
-            "availableGenes": t.optional(t.array(g("Gene"))),
-            "validationResults": t.optional(t.array(g("ValidationResult"))),
-            "alignedGeneSequences": t.optional(t.array(g("AlignedGeneSequence"))),
-            "subtypesV2": t.optional(t.array(g("HIVBoundSubtype"))),
-            "bestMatchingSubtype": t.optional(g("HIVBoundSubtype")),
-            "genotypes": t.optional(t.array(g("HIVBoundSubtype"))),
-            "bestMatchingGenotype": t.optional(g("HIVBoundSubtype")),
-            "mixturePcnt": t.optional(t.number()),
-            "mixtureRate": t.optional(t.number()),
-            "mutations": t.optional(t.array(g("Mut"))),
-            "mutationCount": t.optional(t.integer()),
-            "unusualMutationCount": t.optional(t.integer()),
-            "insertionCount": t.optional(t.integer()),
-            "deletionCount": t.optional(t.integer()),
-            "stopCodonCount": t.optional(t.integer()),
-            "ambiguousMutationCount": t.optional(t.integer()),
-            "apobecMutationCount": t.optional(t.integer()),
-            "apobecDRMCount": t.optional(t.integer()),
-            "frameShiftCount": t.optional(t.integer()),
-            "frameShifts": t.optional(t.array(g("FrameShift"))),
-            "mutationPrevalences": t.optional(t.array(g("BoundMutationPrevalence"))),
-            "subtypes": t.optional(t.array(g("BoundSubtype"))),
-            "subtypeText": t.optional(t.string()),
-            "drugResistance": t.optional(t.array(g("DrugResistance"))),
-            "algorithmComparison": t.optional(t.array(g("AlgorithmComparison"))),
+            "inputSequence": g("UnalignedSequenceOutput").optional(),
+            "strain": g("Strain").optional(),
+            "isReverseComplement": t.boolean().optional(),
+            "availableGenes": t.array(g("Gene").optional()).optional(),
+            "validationResults": t.array(g("ValidationResult").optional()).optional(),
+            "alignedGeneSequences": t.array(
+                g("AlignedGeneSequence").optional()
+            ).optional(),
+            "subtypesV2": t.array(g("HIVBoundSubtype").optional()).optional(),
+            "bestMatchingSubtype": g("HIVBoundSubtype").optional(),
+            "genotypes": t.array(g("HIVBoundSubtype").optional()).optional(),
+            "bestMatchingGenotype": g("HIVBoundSubtype").optional(),
+            "mixturePcnt": t.number().optional(),
+            "mixtureRate": t.number().optional(),
+            "mutations": t.array(g("Mutation_hivdb").optional()).optional(),
+            "mutationCount": t.integer().optional(),
+            "unusualMutationCount": t.integer().optional(),
+            "insertionCount": t.integer().optional(),
+            "deletionCount": t.integer().optional(),
+            "stopCodonCount": t.integer().optional(),
+            "ambiguousMutationCount": t.integer().optional(),
+            "apobecMutationCount": t.integer().optional(),
+            "apobecDRMCount": t.integer().optional(),
+            "frameShiftCount": t.integer().optional(),
+            "frameShifts": t.array(g("FrameShift").optional()).optional(),
+            "mutationPrevalences": t.array(
+                g("BoundMutationPrevalence").optional()
+            ).optional(),
+            "subtypes": t.array(g("BoundSubtype").optional()).optional(),
+            "subtypeText": t.string().optional(),
+            "drugResistance": t.array(g("DrugResistance").optional()).optional(),
+            "algorithmComparison": t.array(
+                g("AlgorithmComparison").optional()
+            ).optional(),
         }
-    ).named(
-        "SequenceAnalysis"
-    )  # kind: OBJECT
+    ).named("SequenceAnalysis")
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "strain": t.optional(g("Strain")),
-            "cutoffSuggestionLooserLimit": t.optional(t.number()),
-            "cutoffSuggestionStricterLimit": t.optional(t.number()),
-            "validationResults": t.optional(t.array(g("ValidationResult"))),
-            "actualMinPrevalence": t.optional(t.number()),
-            "minPrevalence": t.optional(t.number()),
-            "minCodonReads": t.optional(t.integer()),
-            "minPositionReads": t.optional(t.integer()),
-            "availableGenes": t.optional(t.array(g("Gene"))),
-            "allGeneSequenceReads": t.optional(t.array(g("GeneSequenceReads"))),
-            "subtypes": t.optional(t.array(g("HIVBoundSubtype"))),
-            "bestMatchingSubtype": t.optional(g("HIVBoundSubtype")),
-            "maxMixtureRate": t.optional(t.number()),
-            "mixtureRate": t.optional(t.number()),
-            "mutations": t.optional(t.array(g("Mut"))),
-            "mutationCount": t.optional(t.integer()),
-            "unusualMutationCount": t.optional(t.integer()),
-            "histogram": t.optional(g("SequenceReadsHistogram")),
-            "histogramByCodonReads": t.optional(
-                g("SequenceReadsHistogramByCodonReads")
-            ),
-            "readDepthStats": t.optional(g("DescriptiveStatistics")),
-            "readDepthStatsDRP": t.optional(g("DescriptiveStatistics")),
-            "codonReadsCoverage": t.optional(t.array(g("OneCodonReadsCoverage"))),
-            "internalJsonCodonReadsCoverage": t.optional(t.string()),
-            "cutoffKeyPoints": t.optional(t.array(g("CutoffKeyPoint"))),
-            "assembledConsensus": t.optional(t.string()),
-            "assembledUnambiguousConsensus": t.optional(t.string()),
-            "mutationPrevalences": t.optional(t.array(g("BoundMutationPrevalence"))),
-            "drugResistance": t.optional(t.array(g("DrugResistance"))),
-            "algorithmComparison": t.optional(t.array(g("AlgorithmComparison"))),
+            "name": t.string().optional(),
+            "strain": g("Strain").optional(),
+            "cutoffSuggestionLooserLimit": t.number().optional(),
+            "cutoffSuggestionStricterLimit": t.number().optional(),
+            "validationResults": t.array(g("ValidationResult").optional()).optional(),
+            "actualMinPrevalence": t.number().optional(),
+            "minPrevalence": t.number().optional(),
+            "minCodonReads": t.integer().optional(),
+            "minPositionReads": t.integer().optional(),
+            "availableGenes": t.array(g("Gene").optional()).optional(),
+            "allGeneSequenceReads": t.array(
+                g("GeneSequenceReads").optional()
+            ).optional(),
+            "subtypes": t.array(g("HIVBoundSubtype").optional()).optional(),
+            "bestMatchingSubtype": g("HIVBoundSubtype").optional(),
+            "maxMixtureRate": t.number().optional(),
+            "mixtureRate": t.number().optional(),
+            "mutations": t.array(g("Mutation_hivdb").optional()).optional(),
+            "mutationCount": t.integer().optional(),
+            "unusualMutationCount": t.integer().optional(),
+            "histogram": g("SequenceReadsHistogram").optional(),
+            "histogramByCodonReads": g("SequenceReadsHistogramByCodonReads").optional(),
+            "readDepthStats": g("DescriptiveStatistics").optional(),
+            "readDepthStatsDRP": g("DescriptiveStatistics").optional(),
+            "codonReadsCoverage": t.array(
+                g("OneCodonReadsCoverage").optional()
+            ).optional(),
+            "internalJsonCodonReadsCoverage": t.string().optional(),
+            "cutoffKeyPoints": t.array(g("CutoffKeyPoint").optional()).optional(),
+            "assembledConsensus": t.string().optional(),
+            "assembledUnambiguousConsensus": t.string().optional(),
+            "mutationPrevalences": t.array(
+                g("BoundMutationPrevalence").optional()
+            ).optional(),
+            "drugResistance": t.array(g("DrugResistance").optional()).optional(),
+            "algorithmComparison": t.array(
+                g("AlgorithmComparison").optional()
+            ).optional(),
         }
-    ).named(
-        "SequenceReadsAnalysis"
-    )  # kind: OBJECT
+    ).named("SequenceReadsAnalysis")
     t.struct(
         {
-            "usualSites": t.optional(t.array(g("SequenceReadsHistogramBin"))),
-            "usualSitesBy": t.optional(t.array(g("SequenceReadsHistogramBin"))),
-            "drmSites": t.optional(t.array(g("SequenceReadsHistogramBin"))),
-            "unusualSites": t.optional(t.array(g("SequenceReadsHistogramBin"))),
-            "unusualApobecSites": t.optional(t.array(g("SequenceReadsHistogramBin"))),
-            "unusualNonApobecSites": t.optional(
-                t.array(g("SequenceReadsHistogramBin"))
-            ),
-            "apobecSites": t.optional(t.array(g("SequenceReadsHistogramBin"))),
-            "apobecDrmSites": t.optional(t.array(g("SequenceReadsHistogramBin"))),
-            "stopCodonSites": t.optional(t.array(g("SequenceReadsHistogramBin"))),
-            "numPositions": t.optional(t.integer()),
+            "usualSites": t.array(g("SequenceReadsHistogramBin").optional()).optional(),
+            "usualSitesBy": t.array(
+                g("SequenceReadsHistogramBin").optional()
+            ).optional(),
+            "drmSites": t.array(g("SequenceReadsHistogramBin").optional()).optional(),
+            "unusualSites": t.array(
+                g("SequenceReadsHistogramBin").optional()
+            ).optional(),
+            "unusualApobecSites": t.array(
+                g("SequenceReadsHistogramBin").optional()
+            ).optional(),
+            "unusualNonApobecSites": t.array(
+                g("SequenceReadsHistogramBin").optional()
+            ).optional(),
+            "apobecSites": t.array(
+                g("SequenceReadsHistogramBin").optional()
+            ).optional(),
+            "apobecDrmSites": t.array(
+                g("SequenceReadsHistogramBin").optional()
+            ).optional(),
+            "stopCodonSites": t.array(
+                g("SequenceReadsHistogramBin").optional()
+            ).optional(),
+            "numPositions": t.integer().optional(),
         }
-    ).named(
-        "SequenceReadsHistogram"
-    )  # kind: OBJECT
+    ).named("SequenceReadsHistogram")
     t.struct(
         {
-            "percentStart": t.optional(t.number()),
-            "percentStop": t.optional(t.number()),
-            "count": t.optional(t.integer()),
+            "percentStart": t.number().optional(),
+            "percentStop": t.number().optional(),
+            "count": t.integer().optional(),
         }
-    ).named(
-        "SequenceReadsHistogramBin"
-    )  # kind: OBJECT
+    ).named("SequenceReadsHistogramBin")
     t.struct(
         {
-            "usualSites": t.optional(
-                t.array(g("SequenceReadsHistogramByCodonReadsBin"))
-            ),
-            "drmSites": t.optional(t.array(g("SequenceReadsHistogramByCodonReadsBin"))),
-            "unusualSites": t.optional(
-                t.array(g("SequenceReadsHistogramByCodonReadsBin"))
-            ),
-            "unusualApobecSites": t.optional(
-                t.array(g("SequenceReadsHistogramByCodonReadsBin"))
-            ),
-            "unusualNonApobecSites": t.optional(
-                t.array(g("SequenceReadsHistogramByCodonReadsBin"))
-            ),
-            "apobecSites": t.optional(
-                t.array(g("SequenceReadsHistogramByCodonReadsBin"))
-            ),
-            "apobecDrmSites": t.optional(
-                t.array(g("SequenceReadsHistogramByCodonReadsBin"))
-            ),
-            "stopCodonSites": t.optional(
-                t.array(g("SequenceReadsHistogramByCodonReadsBin"))
-            ),
-            "numPositions": t.optional(t.integer()),
+            "usualSites": t.array(
+                g("SequenceReadsHistogramByCodonReadsBin").optional()
+            ).optional(),
+            "drmSites": t.array(
+                g("SequenceReadsHistogramByCodonReadsBin").optional()
+            ).optional(),
+            "unusualSites": t.array(
+                g("SequenceReadsHistogramByCodonReadsBin").optional()
+            ).optional(),
+            "unusualApobecSites": t.array(
+                g("SequenceReadsHistogramByCodonReadsBin").optional()
+            ).optional(),
+            "unusualNonApobecSites": t.array(
+                g("SequenceReadsHistogramByCodonReadsBin").optional()
+            ).optional(),
+            "apobecSites": t.array(
+                g("SequenceReadsHistogramByCodonReadsBin").optional()
+            ).optional(),
+            "apobecDrmSites": t.array(
+                g("SequenceReadsHistogramByCodonReadsBin").optional()
+            ).optional(),
+            "stopCodonSites": t.array(
+                g("SequenceReadsHistogramByCodonReadsBin").optional()
+            ).optional(),
+            "numPositions": t.integer().optional(),
         }
-    ).named(
-        "SequenceReadsHistogramByCodonReads"
-    )  # kind: OBJECT
-    t.struct(
-        {
-            "cutoff": t.optional(t.integer()),
-            "count": t.optional(t.integer()),
-        }
-    ).named(
+    ).named("SequenceReadsHistogramByCodonReads")
+    t.struct({"cutoff": t.integer().optional(), "count": t.integer().optional()}).named(
         "SequenceReadsHistogramByCodonReadsBin"
-    )  # kind: OBJECT
+    )
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "strain": t.optional(t.string()),
-            "allReads": t.optional(t.array(g("PositionCodonReadsInput"))),
-            "untranslatedRegions": t.optional(t.array(g("UntranslatedRegionInput"))),
-            "maxMixtureRate": t.optional(t.number()),
-            "minPrevalence": t.optional(t.number()),
-            "minCodonReads": t.optional(t.integer()),
-            "minPositionReads": t.optional(t.integer()),
+            "name": t.string().optional(),
+            "strain": g("StrainEnum").optional(),
+            "allReads": t.array(g("PositionCodonReadsInput").optional()).optional(),
+            "untranslatedRegions": t.array(
+                g("UntranslatedRegionInput").optional()
+            ).optional(),
+            "maxMixtureRate": t.number().optional(),
+            "minPrevalence": t.number().optional(),
+            "minCodonReads": t.integer().optional(),
+            "minPositionReads": t.integer().optional(),
         }
-    ).named(
-        "SequenceReadsInput"
-    )  # kind: INPUT_OBJECT
+    ).named("SequenceReadsInput")
     t.struct(
-        {
-            "text": t.optional(t.string()),
-            "publishDate": t.optional(t.string()),
-        }
-    ).named(
-        "SierraVersion"
-    )  # kind: OBJECT
-    t.struct(
-        {
-            "name": t.optional(t.string()),
-            "display": t.optional(t.string()),
-        }
-    ).named(
+        {"text": t.string().optional(), "publishDate": t.string().optional()}
+    ).named("SierraVersion")
+    t.struct({"name": t.string().optional(), "display": t.string().optional()}).named(
         "Strain"
-    )  # kind: OBJECT
-    t.string().named("StrainEnum")  # kind: ENUM
-    t.string().named("Subtype")  # kind: ENUM
+    )
+    t.string().named("StrainEnum")
+    t.string().named("Subtype")
+    t.struct(
+        {"header": t.string().optional(), "sequence": t.string().optional()}
+    ).named("UnalignedSequenceInput")
     t.struct(
         {
-            "header": t.optional(t.string()),
-            "sequence": t.optional(t.string()),
+            "header": t.string().optional(),
+            "sequence": t.string().optional(),
+            "MD5": t.string().optional(),
+            "SHA512": t.string().optional(),
         }
-    ).named(
-        "UnalignedSequenceInput"
-    )  # kind: INPUT_OBJECT
+    ).named("UnalignedSequenceOutput")
     t.struct(
         {
-            "header": t.optional(t.string()),
-            "sequence": t.optional(t.string()),
-            "MD5": t.optional(t.string()),
-            "SHA512": t.optional(t.string()),
+            "posStart": t.integer().optional(),
+            "posEnd": t.integer().optional(),
+            "size": t.integer().optional(),
         }
-    ).named(
-        "UnalignedSequenceOutput"
-    )  # kind: OBJECT
+    ).named("UnsequencedRegion")
     t.struct(
         {
-            "posStart": t.optional(t.integer()),
-            "posEnd": t.optional(t.integer()),
-            "size": t.optional(t.integer()),
+            "gene": g("Gene").optional(),
+            "regions": t.array(g("UnsequencedRegion").optional()).optional(),
+            "size": t.integer().optional(),
         }
-    ).named(
-        "UnsequencedRegion"
-    )  # kind: OBJECT
+    ).named("UnsequencedRegions")
     t.struct(
         {
-            "gene": t.optional(g("Gene")),
-            "regions": t.optional(t.array(g("UnsequencedRegion"))),
-            "size": t.optional(t.integer()),
+            "name": t.string().optional(),
+            "refStart": t.integer().optional(),
+            "refEnd": t.integer().optional(),
+            "consensus": t.string().optional(),
         }
-    ).named(
-        "UnsequencedRegions"
-    )  # kind: OBJECT
+    ).named("UntranslatedRegionInput")
+    t.string().named("ValidationLevel")
+    t.struct(
+        {"level": g("ValidationLevel").optional(), "message": t.string().optional()}
+    ).named("ValidationResult")
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "refStart": t.optional(t.integer()),
-            "refEnd": t.optional(t.integer()),
-            "consensus": t.optional(t.string()),
+            "currentVersion": g("DrugResistanceAlgorithm").optional(),
+            "currentProgramVersion": g("SierraVersion").optional(),
+            "sequenceAnalysis": t.array(g("SequenceAnalysis").optional()).optional(),
+            "sequenceReadsAnalysis": t.array(
+                g("SequenceReadsAnalysis").optional()
+            ).optional(),
+            "mutationsAnalysis": g("MutationsAnalysis").optional(),
+            "patternAnalysis": t.array(g("MutationsAnalysis").optional()).optional(),
+            "genes": t.array(g("Gene").optional()).optional(),
+            "mutationPrevalenceSubtypes": t.array(
+                g("MutationPrevalenceSubtype").optional()
+            ).optional(),
         }
-    ).named(
-        "UntranslatedRegionInput"
-    )  # kind: INPUT_OBJECT
-    t.string().named("ValidationLevel")  # kind: ENUM
-    t.struct(
-        {
-            "level": t.optional(t.string()),
-            "message": t.optional(t.string()),
-        }
-    ).named(
-        "ValidationResult"
-    )  # kind: OBJECT
-    t.struct(
-        {
-            "currentVersion": t.optional(g("DrugResistanceAlgorithm")),
-            "currentProgramVersion": t.optional(g("SierraVersion")),
-            "sequenceAnalysis": t.optional(t.array(g("SequenceAnalysis"))),
-            "sequenceReadsAnalysis": t.optional(t.array(g("SequenceReadsAnalysis"))),
-            "mutationsAnalysis": t.optional(g("MutationsAnalysis")),
-            "patternAnalysis": t.optional(t.array(g("MutationsAnalysis"))),
-            "genes": t.optional(t.array(g("Gene"))),
-            "mutationPrevalenceSubtypes": t.optional(
-                t.array(g("MutationPrevalenceSubtype"))
-            ),
-        }
-    ).named(
-        "Viewer"
-    )  # kind: OBJECT
+    ).named("Viewer")
+
     g.expose(
-        currentVersion=remote.query(
-            t.struct({}), t.optional(g("DrugResistanceAlgorithm"))
+        currentVersion=hivdb.query(
+            t.struct({}), g("DrugResistanceAlgorithm").optional()
         ),
-        currentProgramVersion=remote.query(
-            t.struct({}), t.optional(g("SierraVersion"))
-        ),
-        sequenceAnalysis=remote.query(
+        currentProgramVersion=hivdb.query(t.struct({}), g("SierraVersion").optional()),
+        sequenceAnalysis=hivdb.query(
             t.struct(
                 {
-                    "sequences": t.optional(t.array(g("UnalignedSequenceInput"))),
+                    "sequences": t.array(
+                        g("UnalignedSequenceInput").optional()
+                    ).optional()
                 }
             ),
-            t.optional(t.array(g("SequenceAnalysis"))),
+            t.array(g("SequenceAnalysis").optional()).optional(),
         ),
-        sequenceReadsAnalysis=remote.query(
+        sequenceReadsAnalysis=hivdb.query(
             t.struct(
                 {
-                    "sequenceReads": t.optional(t.array(g("SequenceReadsInput"))),
+                    "sequenceReads": t.array(
+                        g("SequenceReadsInput").optional()
+                    ).optional()
                 }
             ),
-            t.optional(t.array(g("SequenceReadsAnalysis"))),
+            t.array(g("SequenceReadsAnalysis").optional()).optional(),
         ),
-        mutationsAnalysis=remote.query(
+        mutationsAnalysis=hivdb.query(
+            t.struct({"mutations": t.array(t.string().optional()).optional()}),
+            g("MutationsAnalysis").optional(),
+        ),
+        patternAnalysis=hivdb.query(
             t.struct(
                 {
-                    "mutations": t.optional(t.array(t.string())),
+                    "patterns": t.array(
+                        t.array(t.string().optional()).optional()
+                    ).optional(),
+                    "patternNames": t.array(t.string().optional()).optional(),
                 }
             ),
-            t.optional(g("MutationsAnalysis")),
+            t.array(g("MutationsAnalysis").optional()).optional(),
         ),
-        patternAnalysis=remote.query(
-            t.struct(
-                {
-                    "patterns": t.optional(t.array(t.array(t.string()))),
-                    "patternNames": t.optional(t.array(t.string())),
-                }
-            ),
-            t.optional(t.array(g("MutationsAnalysis"))),
+        genes=hivdb.query(
+            t.struct({"names": t.array(g("EnumGene").optional()).optional()}),
+            t.array(g("Gene").optional()).optional(),
         ),
-        genes=remote.query(
-            t.struct(
-                {
-                    "names": t.optional(t.array(t.string())),
-                }
-            ),
-            t.optional(t.array(g("Gene"))),
+        mutationPrevalenceSubtypes=hivdb.query(
+            t.struct({}), t.array(g("MutationPrevalenceSubtype").optional()).optional()
         ),
-        mutationPrevalenceSubtypes=remote.query(
-            t.struct({}), t.optional(t.array(g("MutationPrevalenceSubtype")))
-        ),
-        viewer=remote.query(t.struct({}), t.optional(g("Viewer"))),
+        viewer=hivdb.query(t.struct({}), g("Viewer").optional()),
     )

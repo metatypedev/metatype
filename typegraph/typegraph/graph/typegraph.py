@@ -139,6 +139,9 @@ class TypeGraph:
         return collector
 
     def build(self):
+        if self.name.startswith("__"):
+            raise Exception(f"cannot build typegraph with reserved name '{self.name}'")
+
         collector = self.collect_nodes()
 
         ret = {
@@ -174,7 +177,7 @@ class TypegraphContext:
             return None
 
     @classmethod
-    def get_active(cls) -> TypeGraph:
+    def get_active(cls) -> Optional[TypeGraph]:
         try:
             return cls.typegraphs[-1]
         except IndexError:

@@ -4,6 +4,19 @@
       "items": [
         {
           "items": [
+            {
+              "items": [
+                "docs/reference/typegraph/importers/base/importer"
+              ],
+              "label": "typegraph.importers.base",
+              "type": "category"
+            }
+          ],
+          "label": "typegraph.importers",
+          "type": "category"
+        },
+        {
+          "items": [
             "docs/reference/typegraph/runtimes/http"
           ],
           "label": "typegraph.runtimes",

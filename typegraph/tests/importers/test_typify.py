@@ -1,3 +1,5 @@
+# Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
 from typegraph import types as t
 from typegraph.graph.typegraph import TypeGraph
 from typegraph.importers.base.typify import Typify

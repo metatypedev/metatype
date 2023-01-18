@@ -1,6 +1,7 @@
+# Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
 from os import path
 
-import orjson
 from typegraph.importers.openapi import Document
 
 
