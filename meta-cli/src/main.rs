@@ -22,7 +22,6 @@ use cli::Action;
 use common::get_version;
 use std::path::Path;
 
-/// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None, disable_version_flag = true)]
 struct Args {
@@ -46,11 +45,11 @@ enum Commands {
     Serialize(Serialize),
     /// Manage prisma migration
     Prisma(Prisma),
-    /// Enable development mode
+    /// Push typegraph(s) with development mode features enabled
     Dev(Dev),
     /// Push typegraph(s) to typegate
     Deploy(Deploy),
-    /// Codegen
+    /// Generate materializers code from typegraph definition
     Codegen(Codegen),
     /// Upgrade
     Upgrade,
