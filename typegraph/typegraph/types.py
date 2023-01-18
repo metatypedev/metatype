@@ -276,9 +276,6 @@ class typedef(Node):
         )
         return f"{self.type}({attrs})"
 
-    def regenerate_source(self, ns: str) -> str:
-        return f"{ns}.{self.type}()"
-
 
 #
 # Type constraints
