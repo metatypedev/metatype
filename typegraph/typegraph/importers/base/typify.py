@@ -1,0 +1,73 @@
+from typegraph import types as t
+from typegraph.graph.nodes import NodeProxy
+from typing import cast
+from attrs import define
+
+
+@define
+class Typify:
+    ns: str
+
+    def __call__(self, typ: t.TypeNode) -> str:
+        # dispatch
+        if isinstance(typ, NodeProxy):
+            return f"{self.ns}.proxy({repr(typ.node)}"
+        print(f"typ: {typ}")
+        if hasattr(self, typ.type):
+            method = getattr(self, typ.type)
+        else:
+            if typ.type in simple_types:
+                method = getattr(self, "simple")
+            else:
+                raise Exception(f"No handler for type '{typ.type}'")
+        return method(typ)
+
+    def constraints(typ: t.typedef) -> str:
+        ret = ""
+        if not hasattr(typ, "_constraints"):
+            return ret
+        for k, v in typ._constraints().items():
+            ret += f".{k}({repr(v)})"
+        return ret
+
+    def simple(self, typ: t.typedef) -> str:
+        return f"{self.ns}.{typ.type}(){Typify.constraints(typ)}"
+
+    def optional(self, typ: t.typedef) -> str:
+        typ = cast(t.optional, typ)
+        ret = f"{self(typ.of)}.optional()"
+        if typ.default_value is not None:
+            ret += f".default({repr(typ.default_value)})"
+        return ret
+
+    def object(self, typ: t.typedef) -> str:
+        typ = cast(t.struct, typ)
+        fields = ", ".join([f'{repr(k)}: {self(v)}' for k, v in typ.props.items()])
+        ret = f"{self.ns}.struct({{{fields}}})"
+        if typ.additional_props is not None:
+            if isinstance(typ.additional_props, bool):
+                ret += f".additional({repr(typ.additional_props)})"
+            else:
+                ret += f".additional({self(typ.additional)})"
+        ret += Typify.constraints(typ)
+        return ret
+
+    def array(self, typ: t.typedef) -> str:
+        typ = cast(t.array, typ)
+        return f"{self.ns}.array({self(typ.of)}){self.constraints(typ)}"
+
+    def union(self, typ: t.typedef) -> str:
+        typ = cast(t.union, typ)
+        variants = [self(v) for v in typ.variants]
+        return f"{self.ns}.union({', '.join(variants)})"
+
+    def func(self, typ: t.typedef) -> str:
+        typ = cast(t.func, typ)
+
+
+simple_types = {"boolean", "number", "integer", "string"}
+
+
+def typify(typ: t.typedef, ns: str = "t") -> str:
+    tp = Typify(ns)
+    return tp(typ)

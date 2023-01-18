@@ -276,6 +276,9 @@ class typedef(Node):
         )
         return f"{self.type}({attrs})"
 
+    def regenerate_source(self, ns: str) -> str:
+        return f"{ns}.{self.type}()"
+
 
 #
 # Type constraints
@@ -328,7 +331,13 @@ def with_constraints(cls):
                 {key: getattr(self, name) for key, name in constraints.items()}
             )
 
+        def _constraints(self):
+            return remove_none_values(
+                {name[1:]: getattr(self, name) for name in constraints.values()}
+            )
+
         setattr(cls, "constraint_data", constraint_data)
+        setattr(cls, "_constraints", _constraints)
 
     return cls
 
@@ -634,3 +643,7 @@ def named(name: str, define: Callable[[], typedef]) -> TypeNode:
         return defined
     else:
         return define().named(name)
+
+
+def proxy(name: str) -> NodeProxy:
+    return NodeProxy(TypegraphContext.get_active(), name)
