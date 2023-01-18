@@ -44,11 +44,11 @@ struct Args {
 enum Commands {
     /// Serialize the typegraphs defined in the specified python file(s) into JSON.
     Serialize(Serialize),
-    /// Adds files to myapp
+    /// Manage prisma migration
     Prisma(Prisma),
-    /// Adds files to myapp
+    /// Enable development mode
     Dev(Dev),
-    /// Adds files to myapp
+    /// Push typegraph(s) to typegate
     Deploy(Deploy),
     /// Codegen
     Codegen(Codegen),
