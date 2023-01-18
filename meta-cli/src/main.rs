@@ -22,7 +22,6 @@ use cli::Action;
 use common::get_version;
 use std::path::Path;
 
-/// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None, disable_version_flag = true)]
 struct Args {
@@ -44,13 +43,13 @@ struct Args {
 enum Commands {
     /// Serialize the typegraphs defined in the specified python file(s) into JSON.
     Serialize(Serialize),
-    /// Adds files to myapp
+    /// Manage prisma migration
     Prisma(Prisma),
-    /// Adds files to myapp
+    /// Push typegraph(s) with development mode features enabled
     Dev(Dev),
-    /// Adds files to myapp
+    /// Push typegraph(s) to typegate
     Deploy(Deploy),
-    /// Codegen
+    /// Generate materializers code from typegraph definition
     Codegen(Codegen),
     /// Upgrade
     Upgrade,
