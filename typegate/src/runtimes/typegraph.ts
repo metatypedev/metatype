@@ -6,7 +6,6 @@ import { ensure } from "../utils.ts";
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import {
-  FunctionNode,
   isArray,
   isBoolean,
   isFunction,
@@ -17,9 +16,18 @@ import {
   isQuantifier,
   isString,
   ObjectNode,
+  Type,
   TypeNode,
 } from "../type_node.ts";
 import { Resolver, RuntimeConfig } from "../types.ts";
+import {
+  getChildTypes,
+  TypeVisitorMap,
+  visitType,
+  visitTypes,
+} from "../typegraph/visitor.ts";
+import { distinctBy } from "std/collections/distinct_by.ts";
+import { treeView } from "../typegraph/utils.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -86,6 +94,8 @@ export class TypeGraphRuntime extends Runtime {
   getSchema: Resolver = () => {
     const root = this.tg.types[0] as ObjectNode;
 
+    treeView(this.tg, 0, 6);
+
     // const queriesBind: Record<string, number> = {};
     // const mutationsBind: Record<string, number> = {};
 
@@ -128,52 +138,60 @@ export class TypeGraphRuntime extends Runtime {
           return [];
         };
 
-        const inputTypes = this.tg.types
-          .filter((type) => isFunction(type))
-          .flatMap((type) =>
-            collectInputType(
-              this.tg.types[(type as FunctionNode).input as number],
-            )
+        const filter = (type: TypeNode) => {
+          const isEnforced = type.injection ||
+            (isObject(type) &&
+              Object.values(type.properties)
+                .map((prop) => this.tg.types[prop])
+                .every((nested) => nested.injection));
+          const isQuant = isQuantifier(type);
+          const isInp = this.tg.types.some(
+            (t) => (isFunction(t)) && this.tg.types[t.input] === type,
           );
+          const isOutQuant = (isFunction(type)) &&
+            isQuantifier(this.tg.types[type.output]);
+          return !isQuant && !isInp && !isOutQuant && !isEnforced;
+        };
 
-        const visitedTypes = new Set();
+        const inputTypeIndices = new Set<number>();
+        const nonInputTypeIndices = new Set<number>();
 
-        return this.tg.types
-          .slice(1) // pop root into query & mutation
-          .filter((type) => {
-            // filter non-native GraphQL types
-            const isEnforced = type.injection ||
-              (isObject(type) &&
-                Object.values(type.properties)
-                  .map((prop) => this.tg.types[prop])
-                  .every((nested) => nested.injection));
-            const isQuant = isQuantifier(type);
-            const isInp = this.tg.types.some(
-              (t) => (isFunction(t)) && this.tg.types[t.input] === type,
-            );
-            const isOutQuant = (isFunction(type)) &&
-              isQuantifier(this.tg.types[type.output]);
-            return !isQuant && !isInp && !isOutQuant && !isEnforced;
-          })
-          .map((type) => {
-            const res = this.formatType(
-              type,
-              false,
-              inputTypes.includes(type.title),
-            );
-            return res;
-          })
-          // deduplicate types by their type name
-          .filter((formattedType) => {
-            const typeName = formattedType.name();
-
-            if (!visitedTypes.has(typeName)) {
-              visitedTypes.add(typeName);
+        const myVisitor: TypeVisitorMap = {
+          [Type.FUNCTION]: ({ type }) => {
+            visitType(this.tg, type.input, ({ type, idx }) => {
+              if (filter(type)) {
+                inputTypeIndices.add(idx);
+              }
               return true;
-            }
+            });
 
+            visitType(this.tg, type.output, myVisitor);
             return false;
-          });
+          },
+          default: ({ type, idx }) => {
+            if (filter(type)) {
+              nonInputTypeIndices.add(idx);
+            }
+            return true;
+          },
+        };
+
+        visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
+
+        const regularTypes = distinctBy(
+          [...nonInputTypeIndices].map((idx) => this.tg.types[idx]),
+          (t) => t.title,
+        ).map((type) => this.formatType(type, false, false));
+        const inputTypes = distinctBy(
+          [...inputTypeIndices].map((idx) => this.tg.types[idx]),
+          (t) => t.title,
+        ).map((type) => {
+          return this.formatType(type, false, true);
+        });
+
+        const types = [...regularTypes, ...inputTypes];
+
+        return types;
       },
       queryType: () => {
         if (!queries || Object.values(queries.properties).length === 0) {
@@ -317,7 +335,9 @@ export class TypeGraphRuntime extends Runtime {
           name: () => `${type.title}Inp`,
           description: () => `${type.title} input type`,
           inputFields: () => {
-            return Object.entries(type.properties).map(this.formatField(true));
+            return Object.entries(type.properties).map(
+              this.formatField(true),
+            );
           },
           interfaces: () => [],
         };
