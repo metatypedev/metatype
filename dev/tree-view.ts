@@ -2,7 +2,13 @@
 
 /**
  * Usage:
- *   deno run -A dev/tree-view.ts --import-map typegate/deno-import.json [--depth <N>] <file.py>
+ *   deno run -A dev/tree-view.ts --import-map typegate/deno-import.json [<options>] <file.py>
+ *
+ * Options:
+ *    --depth <N>   The depth of the tree
+ *                  Default: 6
+ *    --root <N>    The index of the root type
+ *                  Default: 0
  */
 
 import * as flags from "https://deno.land/std@0.170.0/flags/mod.ts";
@@ -10,12 +16,11 @@ import { TypeGraphDS } from "../typegate/src/typegraph.ts";
 import { treeView } from "../typegate/src/typegraph/utils.ts";
 
 const args = flags.parse(Deno.args, {
-  string: ["depth"],
+  string: ["depth", "root"],
 });
 
-const defaultDepth = 6;
-const parsedDepth = parseInt(args.depth ?? `${defaultDepth}`);
-const depth = isNaN(parsedDepth) ? defaultDepth : parsedDepth;
+const depth = argToInt(args.depth, 6);
+const rootIdx = argToInt(args.root, 0);
 
 const files = args._ as string[];
 if (files.length === 0) {
@@ -36,5 +41,10 @@ const tgs: TypeGraphDS[] = JSON.parse(
 );
 
 for (const tg of tgs) {
-  treeView(tg, 0, depth);
+  treeView(tg, rootIdx, depth);
+}
+
+function argToInt(arg: string | undefined, defaultValue: number): number {
+  const parsed = parseInt(arg ?? `${defaultValue}`);
+  return isNaN(parsed) ? defaultValue : parsed;
 }

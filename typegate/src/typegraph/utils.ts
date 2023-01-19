@@ -11,5 +11,5 @@ export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
     const idxStr = green(`${idx}`);
     console.log(`${indent}${edge} → ${idxStr} ${type.type}:${type.title}`);
     return path.edges.length < depth;
-  });
+  }, { allowCircular: true });
 }

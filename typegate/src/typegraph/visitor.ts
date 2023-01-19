@@ -71,11 +71,18 @@ export function getEdges(type: TypeNode): Record<string, number> {
 
 const noopVisitor: TypeVisitorFn = () => true;
 
+interface VisitOptions {
+  allowCircular?: boolean;
+}
+
 export function visitType(
   tg: TypeGraphDS,
   typeIdx: number,
   visitor: TypeVisitor,
+  opts: VisitOptions = {},
 ) {
+  const { allowCircular = false } = opts;
+
   const visited = new Set<number>();
   const types = tg.types;
 
@@ -88,8 +95,10 @@ export function visitType(
 
   function visit(node: VisitorNode<TypeNode>) {
     const { idx } = node;
-    if (visited.has(idx)) return;
-    visited.add(idx);
+    if (!allowCircular) {
+      if (visited.has(idx)) return;
+      visited.add(idx);
+    }
     if (visitorFn(node)) {
       // console.log({ node });
       for (const [edgeName, childIdx] of Object.entries(getEdges(node.type))) {
