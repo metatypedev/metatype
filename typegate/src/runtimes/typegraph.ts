@@ -116,7 +116,7 @@ export class TypeGraphRuntime extends Runtime {
         };
 
         const inputTypeIndices = new Set<number>();
-        const nonInputTypeIndices = new Set<number>();
+        const regularTypeIndices = new Set<number>();
 
         const myVisitor: TypeVisitorMap = {
           [Type.FUNCTION]: ({ type }) => {
@@ -132,7 +132,7 @@ export class TypeGraphRuntime extends Runtime {
           },
           default: ({ type, idx }) => {
             if (filter(type)) {
-              nonInputTypeIndices.add(idx);
+              regularTypeIndices.add(idx);
             }
             return true;
           },
@@ -141,7 +141,7 @@ export class TypeGraphRuntime extends Runtime {
         visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
 
         const regularTypes = distinctBy(
-          [...nonInputTypeIndices].map((idx) => this.tg.types[idx]),
+          [...regularTypeIndices].map((idx) => this.tg.types[idx]),
           (t) => t.title,
         ).map((type) => this.formatType(type, false, false));
         const inputTypes = distinctBy(
