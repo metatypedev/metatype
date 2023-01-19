@@ -1,3 +1,10 @@
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
+/**
+ * Usage:
+ *   deno run -A dev/tree-view.ts --import-map typegate/deno-import.json [--depth <N>] <file.py>
+ */
+
 import * as flags from "https://deno.land/std@0.170.0/flags/mod.ts";
 import { TypeGraphDS } from "../typegate/src/typegraph.ts";
 import { treeView } from "../typegate/src/typegraph/utils.ts";
