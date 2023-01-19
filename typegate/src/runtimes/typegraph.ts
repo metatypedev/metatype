@@ -27,7 +27,6 @@ import {
   visitTypes,
 } from "../typegraph/visitor.ts";
 import { distinctBy } from "std/collections/distinct_by.ts";
-import { treeView } from "../typegraph/utils.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -94,11 +93,6 @@ export class TypeGraphRuntime extends Runtime {
   getSchema: Resolver = () => {
     const root = this.tg.types[0] as ObjectNode;
 
-    treeView(this.tg, 0, 6);
-
-    // const queriesBind: Record<string, number> = {};
-    // const mutationsBind: Record<string, number> = {};
-
     const queries = this.tg.types[root.properties["query"]] as ObjectNode;
     const mutations = this.tg.types[root.properties["mutation"]] as ObjectNode;
 
@@ -106,38 +100,6 @@ export class TypeGraphRuntime extends Runtime {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L36
       description: () => `${root.type} typegraph`,
       types: () => {
-        // FIXME prefer traversal
-        const collectInputType = (
-          type: TypeNode,
-          history: Set<string> = new Set(),
-        ): string[] => {
-          if (history.has(type.title)) {
-            return [];
-          }
-          if (isObject(type)) {
-            history.add(type.title);
-            return [
-              type.title,
-              ...Object.values(type.properties).flatMap((subTypeIdx) =>
-                collectInputType(this.tg.types[subTypeIdx], history)
-              ),
-            ];
-          }
-          if (isArray(type)) {
-            return collectInputType(
-              this.tg.types[type.items],
-              history,
-            );
-          }
-          if (isOptional(type)) {
-            return collectInputType(
-              this.tg.types[type.item],
-              history,
-            );
-          }
-          return [];
-        };
-
         const filter = (type: TypeNode) => {
           const isEnforced = type.injection ||
             (isObject(type) &&
