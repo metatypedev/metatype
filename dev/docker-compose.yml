@@ -27,15 +27,6 @@ services:
       - "6379:6379"
     command: --requirepass password
 
-  elastic:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.3
-    ports:
-      - 9200:9200
-    environment:
-      discovery.type: single-node
-      # docker exec metatype-elastic-1 cat /usr/share/elasticsearch/config/certs/http_ca.crt | jq -sR .
-      ELASTIC_PASSWORD: password
-
   minio:
     image: bitnami/minio:2022
     restart: always
