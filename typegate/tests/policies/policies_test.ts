@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { gql, test } from "../utils.ts";
-
 test("Policies", async (t) => {
   const e = await t.pythonFile("policies/policies.py");
 
@@ -82,6 +81,37 @@ test("Policy args", async (t) => {
         },
       }).withContext({
         username: "User",
+      })
+      .on(e);
+  });
+});
+
+test("Role jwt policy access", async (t) => {
+  const e = await t.pythonFile("policies/policies_jwt.py");
+
+  await t.should("have role", async () => {
+    await gql`
+      query {
+        sayHelloWorld
+      }
+    `.withContext({
+      "user selected role": "some role",
+    })
+      .expectData({
+        sayHelloWorld: "Hello World!",
+      })
+      .on(e);
+  });
+
+  await t.should("not have a role", async () => {
+    await gql`
+      query {
+        sayHelloWorld
+      }
+    `
+      .expectErrorContains("__jwt in sayHelloWorld")
+      .withContext({
+        "user selected role": "another role",
       })
       .on(e);
   });

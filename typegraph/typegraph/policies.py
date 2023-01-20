@@ -54,5 +54,5 @@ def allow_all(name: str = "__allow_all"):
 
 def jwt(role_name: str, field: str = "role", name: str = "__jwt"):
     # TODO: we should be wary of potential script injections
-    src = f"""(context) => context.get("{role_name}") == "{field}" """
+    src = f'''(_, {{ context }}) => context?.["{role_name}"] == "{field}"'''
     return Policy(FunMat(src)).named(name)
