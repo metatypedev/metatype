@@ -10,7 +10,7 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
     no matter what the context is (see policies_test.ts)
     for that reason the input has to be sanitized with sanitizers.sanitize_ts_string(.)
     """
-    some_policy = policies.jwt('"] || false || ["')
+    some_policy = policies.jwt('"] || true || ["')
     g.expose(
         sayHelloWorld=t.func(
             t.struct(),
