@@ -54,16 +54,27 @@ export function getChildTypes(type: TypeNode): number[] {
   }
 }
 
+export const Edge = {
+  OPTIONAL_ITEM: "[item]",
+  ARRAY_ITEMS: "[items]",
+  FUNCTION_INPUT: "[in]",
+  FUNCTION_OUTPUT: "[out]",
+  // OBJECT_PROPERTY: <property name>
+};
+
 export function getEdges(type: TypeNode): Record<string, number> {
   switch (type.type) {
     case Type.OPTIONAL:
-      return { "[item]": type.item };
+      return { [Edge.OPTIONAL_ITEM]: type.item };
     case Type.ARRAY:
-      return { "[items]": type.items };
+      return { [Edge.ARRAY_ITEMS]: type.items };
     case Type.OBJECT:
       return { ...type.properties };
     case Type.FUNCTION:
-      return { "[in]": type.input, "[out]": type.output };
+      return {
+        [Edge.FUNCTION_INPUT]: type.input,
+        [Edge.FUNCTION_OUTPUT]: type.output,
+      };
     default:
       return {};
   }

@@ -45,6 +45,11 @@ export type {
   TypeNode,
 };
 
+export type ScalarNode =
+  | BooleanNode
+  | IntegerNode
+  | NumberNode
+  | StringNode;
 export type QuantifierNode = OptionalNode | ArrayNode;
 
 //
@@ -82,31 +87,35 @@ export type TypeRuntime = DenoRuntimeDS | PrismaRuntimeDS;
 // Type utils
 
 export function isBoolean(t: TypeNode): t is BooleanNode {
-  return t.type === "boolean";
+  return t.type === Type.BOOLEAN;
 }
 
 export function isNumber(t: TypeNode): t is NumberNode {
-  return t.type === "number";
+  return t.type === Type.NUMBER;
 }
 
 export function isInteger(t: TypeNode): t is IntegerNode {
-  return t.type === "integer";
+  return t.type === Type.INTEGER;
 }
 
 export function isString(t: TypeNode): t is StringNode {
-  return t.type === "string";
+  return t.type === Type.STRING;
 }
 
 export function isObject(t: TypeNode): t is ObjectNode {
-  return t.type === "object";
+  return t.type === Type.OBJECT;
 }
 
 export function isOptional(t: TypeNode): t is OptionalNode {
-  return t.type === "optional";
+  return t.type === Type.OPTIONAL;
 }
 
 export function isArray(t: TypeNode): t is ArrayNode {
-  return t.type === "array";
+  return t.type === Type.ARRAY;
+}
+
+export function isScalar(t: TypeNode): t is ScalarNode {
+  return isBoolean(t) || isInteger(t) || isNumber(t) || isString(t);
 }
 
 export function isQuantifier(t: TypeNode): t is QuantifierNode {
