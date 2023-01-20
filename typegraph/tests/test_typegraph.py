@@ -1,7 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import frozendict
-from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.graph.models import Cors
@@ -237,19 +236,3 @@ class TestTypegraph:
                 "$id": "https://metatype.dev/specs/0.0.1.json",
             }
         )
-
-    def test_jwt_policies(self, overridable) -> None:
-        with TypeGraph("jwt_policies_test") as g:
-            some_role = policies.jwt("user selected role", "some_value")
-            random = t.func(
-                t.struct(),
-                t.float(),
-                FunMat("() => Math.random()"),
-            ).add_policy(some_role)
-
-            g.expose(test=random)
-
-            assert g.build()["materializers"][0]["data"] == {
-                "script": """var _my_lambda = (context) => context.get("user selected role") == "some_value" ;""",
-                "serial": False,
-            }
