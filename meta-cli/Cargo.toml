@@ -62,5 +62,5 @@ pathdiff = "0.2.1"
 openssl = { version = "0.10.45", features = ["vendored"] }
 
 [dev-dependencies]
-insta = "1.23.0"
+insta = "1.26.0"
 project-root = "0.2.2"
