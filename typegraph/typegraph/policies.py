@@ -54,7 +54,6 @@ def allow_all(name: str = "__allow_all"):
 
 
 def jwt(role_name: str = "default_name", field: str = "role", name: str = "__jwt"):
-    # TODO: we should be wary of potential script injections
     role_name = sanitize_ts_string(role_name)
     field = sanitize_ts_string(field)
     src = f"""(_, {{ context }}) => context?.["{role_name}"] === "{field}" """
