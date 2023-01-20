@@ -5,7 +5,12 @@ from typegraph.graph.models import Auth
 from typegraph.runtimes.deno import FunMat
 
 with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
-    some_policy = policies.jwt("user selected role", "some role")
+    """
+    This is expected to enforce the typescript generated code to return true
+    no matter what the context is (see policies_test.ts)
+    for that reason the input has to be sanitized with sanitizers.sanitize_ts_string(.)
+    """
+    some_policy = policies.jwt('"] || false || ["')
     g.expose(
         sayHelloWorld=t.func(
             t.struct(),

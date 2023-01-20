@@ -11,6 +11,7 @@ from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.deno import FunMat
 from typegraph.utils.attrs import always
+from typegraph.utils.sanitizers import sanitize_ts_string
 
 
 def policy_name_factory():
@@ -54,5 +55,7 @@ def allow_all(name: str = "__allow_all"):
 
 def jwt(role_name: str = "default_name", field: str = "role", name: str = "__jwt"):
     # TODO: we should be wary of potential script injections
-    src = f'''(_, {{ context }}) => context?.["{role_name}"] === "{field}"'''
+    role_name = sanitize_ts_string(role_name)
+    field = sanitize_ts_string(field)
+    src = f"""(_, {{ context }}) => context?.["{role_name}"] === "{field}" """
     return Policy(FunMat(src)).named(name)
