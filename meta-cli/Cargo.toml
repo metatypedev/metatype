@@ -59,6 +59,7 @@ typescript = { path = "../libs/typescript" }
 walkdir = "2.3.2"
 serde_yaml = "0.9.16"
 pathdiff = "0.2.1"
+openssl = { version = "0.10.45", features = ["vendored"] }
 
 [dev-dependencies]
 insta = "1.23.0"
