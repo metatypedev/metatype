@@ -13,6 +13,8 @@ services:
       TG_ADMIN_PASSWORD: password
     env_file:
       - .env.example
+    depends_on:
+      - redis
 
   redis:
     image: redis:7
