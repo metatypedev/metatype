@@ -49,7 +49,9 @@ export const typegate =
           debug: config.debug,
         };
         return new Response(JSON.stringify(info), {
-          headers: { "content-type": "application/json" },
+          headers: {
+            "content-type": "application/json",
+          },
         });
       }
 

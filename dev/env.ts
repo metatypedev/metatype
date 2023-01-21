@@ -20,7 +20,7 @@ const envs = Object.fromEntries(
     .map((e) => [path.basename(e.path).split(".")[1], e.path]),
 );
 
-const on = new Set([envs["base"]]);
+const on = new Set<string>();
 if (Deno.args.length === 1 && Deno.args[0] === "all") {
   Object.values(envs).forEach(on.add);
 } else {
@@ -36,15 +36,6 @@ if (Deno.args.length === 1 && Deno.args[0] === "all") {
     on.add(envs[arg]);
   }
 }
-const off = new Set(Object.values(envs).filter((e) => !on.has(e)));
-
-if (off.size > 0) {
-  await run([
-    "docker-compose",
-    ...Array.from(off).flatMap((f) => ["-f", f]),
-    "down",
-  ]);
-}
 
 if (on.size > 0) {
   await run([
@@ -52,6 +43,14 @@ if (on.size > 0) {
     ...Array.from(on).flatMap((f) => ["-f", f]),
     "up",
     "-d",
+    "--remove-orphans",
+  ]);
+} else {
+  await run([
+    "docker-compose",
+    ...Object.values(envs).flatMap((f) => ["-f", f]),
+    "down",
+    "--remove-orphans",
   ]);
 }
 

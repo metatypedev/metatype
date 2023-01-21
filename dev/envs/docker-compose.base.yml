@@ -1,11 +1,12 @@
 services:
-  haproxy:
-    image: haproxy:2.5
+  envoy:
+    image: envoyproxy/envoy:v1.25.0
     restart: always
     ports:
-      - "7890:8000"
+      - "9901:9901"
+      - "7890:10000"
     volumes:
-      - ../haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ../envoy.yaml:/etc/envoy/envoy.yaml:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
