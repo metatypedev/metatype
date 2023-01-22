@@ -9,6 +9,17 @@ meta:
     depends_on:
         - libs
 
+examples:
+    workdir: .
+    watch:
+        - "examples/metatype.yaml"
+    command: "cargo run -p meta-cli -- -C examples dev"
+    env:
+        VIRTUAL_ENV: $PWD/examples/.venv
+        PATH: $PWD/examples/.venv/bin:$PATH
+    depends_on:
+        - meta
+
 system_graphs:
     workdir: typegate
     watch: src/typegraphs/*.py

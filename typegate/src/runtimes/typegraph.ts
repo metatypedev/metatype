@@ -19,7 +19,7 @@ import {
   ObjectNode,
   TypeNode,
 } from "../type_node.ts";
-import { Resolver, RuntimeConfig } from "../types.ts";
+import { Resolver } from "../types.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -35,7 +35,6 @@ export class TypeGraphRuntime extends Runtime {
     typegraph: TypeGraphDS,
     _materializers: TypeMaterializer[],
     _args: Record<string, unknown>,
-    _config: RuntimeConfig,
   ): Runtime {
     return new TypeGraphRuntime(typegraph);
   }

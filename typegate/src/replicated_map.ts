@@ -91,6 +91,7 @@ export class RedisReplicatedMap<T> {
           throw Error(`added message without payload ${name}`);
         }
         logger.info(`received addition: ${name}`);
+
         memory.set(name, await deserializer(payload));
       } else if (event === "-") {
         logger.info(`received removal: ${name}`);
