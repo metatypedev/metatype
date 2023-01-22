@@ -34,7 +34,7 @@ enum S3PresigningOut {
     Err { message: String },
 }
 
-#[cfg_attr(not(test), deno_bindgen(non_blocking))]
+#[deno_bindgen(non_blocking)]
 fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> S3PresigningOut {
     let region = Region::Custom {
         region: client.region,
@@ -112,7 +112,7 @@ enum S3Items {
     },
 }
 
-#[cfg_attr(not(test), deno_bindgen(non_blocking))]
+#[deno_bindgen(non_blocking)]
 fn s3_list(client: S3Client, bucket: &str, path: &str) -> S3Items {
     let region = Region::Custom {
         region: client.region,

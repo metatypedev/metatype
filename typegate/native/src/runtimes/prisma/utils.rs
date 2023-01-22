@@ -1,8 +1,12 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use super::*;
-use migration_core::GenericApi;
-use std::ops::Deref;
+use migration_connector::{BoxFuture, ConnectorHost, ConnectorResult};
+use migration_core::{CoreError, GenericApi};
+use std::{
+    ops::Deref,
+    sync::{Arc, Mutex},
+};
 
 type StringBufferInner = Arc<Mutex<Option<String>>>;
 

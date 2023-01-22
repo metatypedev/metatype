@@ -1,15 +1,11 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-pub mod engine;
-pub mod introspection;
-pub mod migration;
-
 use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 
 use anyhow::{Context, Result};
 
 pub async fn register_engine(datamodel: String, tg_name: String) -> Result<String> {
-    let conf = engine::ConstructorOptions {
+    let conf = super::engine_import::ConstructorOptions {
         datamodel,
         log_level: "info".to_string(),
         log_queries: true,
@@ -18,11 +14,11 @@ pub async fn register_engine(datamodel: String, tg_name: String) -> Result<Strin
         config_dir: PathBuf::from_str(".")?,
         ignore_env_var_errors: false,
     };
-    let engine = engine::QueryEngine::new(conf)
+    let engine = super::engine_import::QueryEngine::new(conf)
         .with_context(|| format!("Error while registering engine for typegraph {tg_name}"))?;
     engine.connect().await?;
-    let engine_id = format!("{tg_name}_{}", crate::ENGINES.len() + 1);
-    crate::ENGINES.insert(engine_id.clone(), engine);
+    let engine_id = format!("{tg_name}_{}", super::ENGINES.len() + 1);
+    super::ENGINES.insert(engine_id.clone(), engine);
     Ok(engine_id)
 }
 

@@ -24,6 +24,7 @@ sql-introspection-connector = { git = "https://github.com/prisma/prisma-engines"
 mongodb-introspection-connector = { git = "https://github.com/prisma/prisma-engines" }
 migration-core = { git = "https://github.com/prisma/prisma-engines" }
 migration-connector = { git = "https://github.com/prisma/prisma-engines" }
+temporal-client = { git = "https://github.com/temporalio/sdk-core" }
 connection-string = "0.1.14"
 url = "2.3.1"
 thiserror = "1.0.38"
