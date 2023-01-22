@@ -164,7 +164,6 @@ enum PrismaApplyOut {
     },
 }
 
-// TODO use `.expect()` instead of `.unwrap()`
 #[deno_bindgen(non_blocking)]
 fn prisma_apply(input: PrismaApplyInp) -> PrismaApplyOut {
     match RT.block_on(migration::apply(input)) {

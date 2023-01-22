@@ -7,7 +7,7 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 use migration_core::json_rpc::types::{
     ApplyMigrationsInput, CreateMigrationInput, DiffParams, DiffTarget, EvaluateDataLossInput,
-    ListMigrationDirectoriesInput, SchemaContainer, SchemaPushInput,
+    ListMigrationDirectoriesInput, SchemaContainer,
 };
 use migration_core::CoreError;
 use std::io::Write;
@@ -15,6 +15,7 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tempfile::{tempdir, TempDir};
 
+#[allow(dead_code)]
 pub async fn loss(
     datasource: String,
     datamodel: String,
@@ -119,27 +120,6 @@ pub(super) async fn create(input: super::PrismaCreateInp) -> Result<super::Prism
         applied_migrations,
         migrations: migrations.serialize()?,
     })
-}
-
-pub async fn push(datasource: String, datamodel: String) -> Result<String, CoreError> {
-    let schema = format!("{datasource}{datamodel}");
-    let api = migration_core::migration_api(Some(datasource.clone()), None)?;
-
-    let push = SchemaPushInput {
-        force: false,
-        schema,
-    };
-
-    let apply = api.schema_push(push).await?;
-    if !apply.unexecutable.is_empty() || !apply.warnings.is_empty() {
-        Ok(format!(
-            "{}{}",
-            apply.unexecutable.join("\n"),
-            apply.warnings.join("\n")
-        ))
-    } else {
-        Ok("applied".to_string())
-    }
 }
 
 pub async fn diff(

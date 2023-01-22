@@ -37,7 +37,7 @@ repos:
       - id: cargo-check
         args: ["--locked"]
       - id: clippy
-        args: ["--locked", "--", "--deny", "warnings", "--allow", "dead-code"]
+        args: ["--locked", "--", "--deny", "warnings"]
   - repo: local
     hooks:
       - id: deno-fmt
