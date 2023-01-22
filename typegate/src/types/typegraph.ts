@@ -2,152 +2,151 @@
 
 // deno-lint-ignore-file no-explicit-any
 
-export type AuthProtocol = "oauth2" | "jwk" | "basic";
 export type OptionalNode = {
+  type: "optional";
+  item: number;
+  default_value?: any;
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
   config?: {
     [k: string]: unknown;
   };
-  default_value?: any;
-  description?: string | null;
-  enum?: any[] | null;
-  inject?: any;
-  injection?: string | null;
-  item: number;
-  policies: number[];
-  runtime: number;
-  title: string;
-  type: "optional";
 };
 export type BooleanNode = {
+  type: "boolean";
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
   config?: {
     [k: string]: unknown;
   };
-  description?: string | null;
-  enum?: any[] | null;
-  inject?: any;
-  injection?: string | null;
-  policies: number[];
-  runtime: number;
-  title: string;
-  type: "boolean";
 };
 export type NumberNode = {
+  type: "number";
+  minimum?: number | null;
+  maximum?: number | null;
+  exclusiveMinimum?: number | null;
+  exclusiveMaximum?: number | null;
+  multipleOf?: number | null;
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
   config?: {
     [k: string]: unknown;
   };
-  description?: string | null;
-  enum?: any[] | null;
-  exclusiveMaximum?: number | null;
-  exclusiveMinimum?: number | null;
-  inject?: any;
-  injection?: string | null;
-  maximum?: number | null;
-  minimum?: number | null;
-  multipleOf?: number | null;
-  policies: number[];
-  runtime: number;
-  title: string;
-  type: "number";
 };
 export type IntegerNode = {
+  type: "integer";
+  minimum?: number | null;
+  maximum?: number | null;
+  exclusiveMinimum?: number | null;
+  exclusiveMaximum?: number | null;
+  multipleOf?: number | null;
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
   config?: {
     [k: string]: unknown;
   };
-  description?: string | null;
-  enum?: any[] | null;
-  exclusiveMaximum?: number | null;
-  exclusiveMinimum?: number | null;
-  inject?: any;
-  injection?: string | null;
-  maximum?: number | null;
-  minimum?: number | null;
-  multipleOf?: number | null;
-  policies: number[];
-  runtime: number;
-  title: string;
-  type: "integer";
 };
 export type StringNode = {
+  type: "string";
+  minLength?: number | null;
+  maxLength?: number | null;
+  pattern?: string | null;
+  format?: string | null;
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
   config?: {
     [k: string]: unknown;
   };
-  description?: string | null;
-  enum?: any[] | null;
-  format?: string | null;
-  inject?: any;
-  injection?: string | null;
-  maxLength?: number | null;
-  minLength?: number | null;
-  pattern?: string | null;
-  policies: number[];
-  runtime: number;
-  title: string;
-  type: "string";
 };
 export type ObjectNode = {
-  config?: {
-    [k: string]: unknown;
-  };
-  description?: string | null;
-  enum?: any[] | null;
-  inject?: any;
-  injection?: string | null;
-  policies: number[];
+  type: "object";
   properties: {
     [k: string]: number;
   };
   required?: string[];
-  runtime: number;
   title: string;
-  type: "object";
-};
-export type ArrayNode = {
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
   config?: {
     [k: string]: unknown;
   };
-  description?: string | null;
-  enum?: any[] | null;
-  inject?: any;
-  injection?: string | null;
+};
+export type ArrayNode = {
+  type: "array";
   items: number;
   maxItems?: number | null;
   minItems?: number | null;
-  policies: number[];
-  runtime: number;
-  title: string;
-  type: "array";
   uniqueItems?: boolean | null;
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
+  config?: {
+    [k: string]: unknown;
+  };
 };
 export type FunctionNode = {
+  type: "function";
+  input: number;
+  output: number;
+  materializer: number;
+  rate_weight?: number | null;
+  rate_calls: boolean;
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
   config?: {
     [k: string]: unknown;
   };
-  description?: string | null;
-  enum?: any[] | null;
-  inject?: any;
-  injection?: string | null;
-  input: number;
-  materializer: number;
-  output: number;
-  policies: number[];
-  rate_calls: boolean;
-  rate_weight?: number | null;
-  runtime: number;
-  title: string;
-  type: "function";
 };
 export type AnyNode = {
+  type: "any";
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
   config?: {
     [k: string]: unknown;
   };
-  description?: string | null;
-  enum?: any[] | null;
-  inject?: any;
-  injection?: string | null;
-  policies: number[];
-  runtime: number;
-  title: string;
-  type: "any";
 };
 export type TypeNode =
   | OptionalNode
@@ -159,57 +158,58 @@ export type TypeNode =
   | ArrayNode
   | FunctionNode
   | AnyNode;
+export type AuthProtocol = "oauth2" | "jwk" | "basic";
 export interface Typegraph {
   $id: string;
-  materializers: Materializer[];
-  meta: TypeMeta;
-  policies: Policy[];
-  runtimes: TGRuntime[];
   types: TypeNode[];
+  materializers: Materializer[];
+  runtimes: TGRuntime[];
+  policies: Policy[];
+  meta: TypeMeta;
 }
 export interface Materializer {
+  name: string;
+  runtime: number;
   data: {
     [k: string]: unknown;
   };
+}
+export interface TGRuntime {
   name: string;
-  runtime: number;
+  data: {
+    [k: string]: unknown;
+  };
+}
+export interface Policy {
+  name: string;
+  materializer: number;
 }
 export interface TypeMeta {
-  auths: Auth[];
-  cors: Cors;
-  rate?: Rate | null;
   secrets: string[];
+  cors: Cors;
+  auths: Auth[];
+  rate?: Rate | null;
   version: string;
 }
+export interface Cors {
+  allow_origin: string[];
+  allow_headers: string[];
+  expose_headers: string[];
+  allow_methods?: string[];
+  allow_credentials: boolean;
+  max_age?: number | null;
+}
 export interface Auth {
+  name: string;
+  protocol: AuthProtocol;
   auth_data: {
     [k: string]: unknown;
   };
-  name: string;
-  protocol: AuthProtocol;
-}
-export interface Cors {
-  allow_credentials: boolean;
-  allow_headers: string[];
-  allow_methods?: string[];
-  allow_origin: string[];
-  expose_headers: string[];
-  max_age?: number | null;
 }
 export interface Rate {
-  context_identifier?: string | null;
-  local_excess: number;
-  query_limit: number;
   window_limit: number;
   window_sec: number;
-}
-export interface Policy {
-  materializer: number;
-  name: string;
-}
-export interface TGRuntime {
-  data: {
-    [k: string]: unknown;
-  };
-  name: string;
+  query_limit: number;
+  context_identifier?: string | null;
+  local_excess: number;
 }

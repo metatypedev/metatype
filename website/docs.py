@@ -29,7 +29,6 @@ with TypeGraph(
 
     g.expose(
         newsletterSignUp=newsletterSignUp,
-        get=t.gen(t.string(), RandomMat()).add_policy(
-            public
-        ),  # https://metatype.atlassian.net/browse/MET-11
+        get=t.gen(t.string(), RandomMat()).add_policy(public),
+        # https://metatype.atlassian.net/browse/MET-11
     )

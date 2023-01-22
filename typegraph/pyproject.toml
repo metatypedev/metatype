@@ -30,7 +30,6 @@ py-tg = "typegraph.utils.loaders:cmd"
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 httpx = {extras = ["http2"], version = ">=0.22,<0.24"}
-orjson = "^3.8.4"
 redbaron = "^0.9.2"
 python-box = "^6.1.0"
 frozendict = "2.3.4"

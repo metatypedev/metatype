@@ -632,6 +632,7 @@ dependencies = [
  "anyhow",
  "base64 0.21.0",
  "flate2",
+ "indexmap",
  "schemars",
  "serde",
  "serde_json",
@@ -2507,6 +2508,7 @@ dependencies = [
  "flate2",
  "globset",
  "ignore",
+ "indexmap",
  "indoc",
  "insta",
  "lazy_static",
@@ -4514,6 +4516,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2a5fb6c61f29e723026dc8e923d94c694313212abbecbbe5f55a7748eec5b307"
 dependencies = [
  "dyn-clone",
+ "indexmap",
  "schemars_derive",
  "serde",
  "serde_json",

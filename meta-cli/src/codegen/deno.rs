@@ -138,8 +138,9 @@ impl<'a> Codegen<'a> {
                     continue;
                 }
                 if mat.name == "import_function" {
-                    let mat_data: ImportFuncMatData = serde_json::from_value(mat.data.into_json())
-                        .expect("invalid materializer data for function materializer");
+                    let mat_data: ImportFuncMatData =
+                        serde_json::from_value(serde_json::to_value(mat.data)?)
+                            .expect("invalid materializer data for function materializer");
                     let module_mat = &self.tg.materializers[mat_data.module as usize];
                     let path: String =
                         serde_json::from_value(module_mat.data.get("code").unwrap().clone())

@@ -22,7 +22,7 @@ const envs = Object.fromEntries(
 
 const on = new Set<string>();
 if (Deno.args.length === 1 && Deno.args[0] === "all") {
-  Object.values(envs).forEach(on.add);
+  Object.values(envs).forEach((e) => on.add(e));
 } else {
   for (const arg of Deno.args) {
     if (!envs[arg]) {

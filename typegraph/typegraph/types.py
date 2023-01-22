@@ -16,7 +16,6 @@ from attrs import evolve
 from attrs import field
 from attrs import frozen
 from frozendict import frozendict
-import orjson
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.nodes import NodeProxy
@@ -192,7 +191,9 @@ class typedef(Node):
         if self.inject is not None:
             raise Exception(f"{self.name} can only have one injection")
 
-        return self.replace(injection="raw", inject=orjson.dumps(value).decode())
+        import json
+
+        return self.replace(injection="raw", inject=json.dumps(value))
 
     def from_secret(self, secret_name):
         if self.inject is not None:

@@ -46,7 +46,7 @@ globset = "0.4.10"
 anyhow = "1.0.68"
 indoc = "1.0.8"
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.91"
+serde_json = { version = "1.0.91", features = ["preserve_order"] }
 reqwest = { version = "0.11.13", features = ["blocking", "json"] }
 colored = "2.0.0"
 question = "0.2.2"
@@ -60,6 +60,7 @@ walkdir = "2.3.2"
 serde_yaml = "0.9.16"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.45", features = ["vendored"] }
+indexmap = { version = "1.9.2", features = ["serde"] }
 
 [dev-dependencies]
 insta = "1.23.0"

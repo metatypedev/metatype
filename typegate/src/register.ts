@@ -48,7 +48,6 @@ export class ReplicatedRegister extends Register {
       // no need for a sync
       this.replicatedMap.memory.set(engine.name, engine);
     } else {
-      console.debug(`registering (replicated): ${engine.name}`);
       await this.replicatedMap.set(engine.name, engine);
     }
 

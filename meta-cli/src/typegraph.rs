@@ -221,40 +221,38 @@ fn postprocess(mut typegraph: Typegraph) -> Result<Typegraph> {
 
 fn postprocess_function_mat(mut mat: Materializer, typegraph: &Typegraph) -> Result<Materializer> {
     if &mat.name == "function" && typegraph.runtimes[mat.runtime as usize].name == "deno" {
-        let mut mat_data: FunctionMatData =
-            utils::object_from_hashmap(std::mem::take(&mut mat.data))?;
+        let mut mat_data: FunctionMatData = utils::object_from_map(std::mem::take(&mut mat.data))?;
         // TODO check variable `_my_lambda` exists and is a function expression/lambda
         mat_data.script = transform_script(mat_data.script)?;
-        mat.data = utils::hashmap_from_object(mat_data)?;
+        mat.data = utils::map_from_object(mat_data)?;
     }
     Ok(mat)
 }
 
 fn postprocess_module_mat(mut mat: Materializer, typegraph: &Typegraph) -> Result<Materializer> {
     if mat.name == "module" && typegraph.runtimes[mat.runtime as usize].name == "deno" {
-        let mut mat_data: ModuleMatData =
-            utils::object_from_hashmap(std::mem::take(&mut mat.data))?;
+        let mut mat_data: ModuleMatData = utils::object_from_map(std::mem::take(&mut mat.data))?;
         if !mat_data.code.starts_with("file:") {
             // TODO check imported functions exist
             mat_data.code = transform_module(mat_data.code)?;
         }
-        mat.data = utils::hashmap_from_object(mat_data)?;
+        mat.data = utils::map_from_object(mat_data)?;
     }
     Ok(mat)
 }
 
 mod utils {
     use anyhow::{bail, Result};
+    use indexmap::IndexMap;
     use serde::{de::DeserializeOwned, ser::Serialize};
     use serde_json::{from_value, to_value, Value};
-    use std::collections::HashMap;
 
-    pub fn object_from_hashmap<T: DeserializeOwned>(map: HashMap<String, Value>) -> Result<T> {
+    pub fn object_from_map<T: DeserializeOwned>(map: IndexMap<String, Value>) -> Result<T> {
         let map = Value::Object(map.into_iter().collect());
         Ok(from_value(map)?)
     }
 
-    pub fn hashmap_from_object<T: Serialize>(obj: T) -> Result<HashMap<String, Value>> {
+    pub fn map_from_object<T: Serialize>(obj: T) -> Result<IndexMap<String, Value>> {
         let val = to_value(obj)?;
         if let Value::Object(map) = val {
             Ok(map.into_iter().collect())
