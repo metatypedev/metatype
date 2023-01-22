@@ -79,7 +79,7 @@ def cmd():
             if attrs.has(o):
                 return attrs.asdict(o)
             if isinstance(o, frozendict):
-                return super().default(dict(o))
+                return dict(o)
             return super().default(o)
 
     opt = dict(indent=2) if args.pretty else {}
