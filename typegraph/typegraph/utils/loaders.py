@@ -9,6 +9,7 @@ from typing import List
 
 import attrs
 from attrs import define
+from frozendict import frozendict
 from typegraph.graph.typegraph import TypeGraph
 
 
@@ -77,6 +78,8 @@ def cmd():
         def default(self, o):
             if attrs.has(o):
                 return attrs.asdict(o)
+            if isinstance(o, frozendict):
+                return super().default(dict(o))
             return super().default(o)
 
     opt = dict(indent=2) if args.pretty else {}
