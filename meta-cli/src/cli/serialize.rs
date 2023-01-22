@@ -113,6 +113,7 @@ impl Serialize {
             if let Some(path) = self.out.as_ref() {
                 let file = File::options()
                     .truncate(true)
+                    .create(true)
                     .write(true)
                     .open(path)
                     .context("Could not open file")?;
