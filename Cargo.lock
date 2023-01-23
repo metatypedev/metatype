@@ -2583,6 +2583,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "macros"
+version = "0.0.3-dev.1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "match_cfg"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3155,6 +3164,7 @@ dependencies = [
  "introspection-core",
  "lazy_static",
  "log",
+ "macros",
  "migration-connector",
  "migration-core",
  "mongodb-introspection-connector",
@@ -3170,6 +3180,7 @@ dependencies = [
  "static_init",
  "tempfile",
  "temporal-client",
+ "temporal-sdk-core-protos",
  "thiserror",
  "tokio",
  "url",

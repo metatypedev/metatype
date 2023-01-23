@@ -33,7 +33,7 @@ COPY --from=plan /recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 
 COPY . .
-RUN OUT_DIR=target deno_bindgen --release -- --locked --package native \
+RUN OUT_DIR=target deno_bindgen --release -- --locked --package native -F deno \
     && mv /target/release/libnative.so .
 
 WORKDIR /typegate

@@ -43,6 +43,7 @@ import type {
   TGRuntime as TypeRuntime,
   Typegraph as TypeGraphDS,
 } from "./types/typegraph.ts";
+import { TemporalRuntime } from "./runtimes/temporal.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -55,6 +56,7 @@ const runtimeInit: RuntimeInit = {
   http: HTTPRuntime.init,
   deno: DenoRuntime.init,
   googleapis: GoogleapisRuntime.init,
+  temporal: TemporalRuntime.init,
   random: RandomRuntime.init,
   //typegraph: TypeGraphRuntime.init,
 };

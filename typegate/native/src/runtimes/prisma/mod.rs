@@ -2,7 +2,6 @@
 
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use deno_bindgen::deno_bindgen;
 mod engine;
 mod engine_import;
 mod introspection;
@@ -12,6 +11,7 @@ use crate::RT;
 use dashmap::DashMap;
 use lazy_static::lazy_static;
 mod utils;
+use macros::deno;
 
 lazy_static! {
     static ref ENGINES: DashMap<String, engine_import::QueryEngine> = DashMap::new();
@@ -19,18 +19,18 @@ lazy_static! {
 
 // introspection
 
-#[deno_bindgen]
+#[deno]
 struct PrismaIntrospectionInp {
     datamodel: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum PrismaIntrospectionOut {
     Ok { introspection: String },
     Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut {
     let fut = Introspection::introspect(input.datamodel);
     match RT.block_on(fut) {
@@ -43,19 +43,19 @@ fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut
 
 // register engine
 
-#[deno_bindgen]
+#[deno]
 struct PrismaRegisterEngineInp {
     datamodel: String,
     typegraph: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum PrismaRegisterEngineOut {
     Ok { engine_id: String },
     Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngineOut {
     match RT.block_on(engine::register_engine(input.datamodel, input.typegraph)) {
         Ok(engine_id) => PrismaRegisterEngineOut::Ok { engine_id },
@@ -67,18 +67,18 @@ fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngin
 
 // unregister engine
 
-#[deno_bindgen]
+#[deno]
 struct PrismaUnregisterEngineInp {
     key: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum PrismaUnregisterEngineOut {
     Ok { key: String },
     Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregisterEngineOut {
     let Some((key, engine)) = ENGINES.remove(&input.key) else {
         return PrismaUnregisterEngineOut::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.key})};
@@ -93,20 +93,20 @@ fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregiste
 
 // query
 
-#[deno_bindgen]
+#[deno]
 struct PrismaQueryInp {
     key: String,
     query: serde_json::Value,
     datamodel: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum PrismaQueryOut {
     Ok { res: String },
     Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn prisma_query(input: PrismaQueryInp) -> PrismaQueryOut {
     let fut = RT.block_on(engine::query(input.key, input.query));
     match fut {
@@ -117,20 +117,20 @@ fn prisma_query(input: PrismaQueryInp) -> PrismaQueryOut {
     }
 }
 
-#[deno_bindgen]
+#[deno]
 struct PrismaDiffInp {
     datasource: String,
     datamodel: String,
     script: bool,
 }
 
-#[deno_bindgen]
+#[deno]
 enum PrismaDiffOut {
     Ok { diff: Option<String> },
     Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn prisma_diff(input: PrismaDiffInp) -> PrismaDiffOut {
     let res = migration::diff(input.datasource, input.datamodel, input.script);
     match RT.block_on(res) {
@@ -141,7 +141,7 @@ fn prisma_diff(input: PrismaDiffInp) -> PrismaDiffOut {
     }
 }
 
-#[deno_bindgen]
+#[deno]
 struct PrismaApplyInp {
     datasource: String,
     datamodel: String,
@@ -149,7 +149,7 @@ struct PrismaApplyInp {
     reset_database: bool,
 }
 
-#[deno_bindgen]
+#[deno]
 enum PrismaApplyOut {
     ResetRequired {
         reset_reason: String,
@@ -164,7 +164,7 @@ enum PrismaApplyOut {
     },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn prisma_apply(input: PrismaApplyInp) -> PrismaApplyOut {
     match RT.block_on(migration::apply(input)) {
         Ok(res) => res,
@@ -174,14 +174,14 @@ fn prisma_apply(input: PrismaApplyInp) -> PrismaApplyOut {
     }
 }
 
-#[deno_bindgen]
+#[deno]
 struct PrismaDeployInp {
     datasource: String,
     datamodel: String,
     migrations: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum PrismaDeployOut {
     Ok {
         migration_count: usize,
@@ -192,7 +192,7 @@ enum PrismaDeployOut {
     },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn prisma_deploy(input: PrismaDeployInp) -> PrismaDeployOut {
     let ret = RT.block_on(migration::deploy(
         input.datasource,
@@ -211,7 +211,7 @@ fn prisma_deploy(input: PrismaDeployInp) -> PrismaDeployOut {
     }
 }
 
-#[deno_bindgen]
+#[deno]
 pub struct PrismaCreateInp {
     datasource: String,
     datamodel: String,
@@ -220,7 +220,7 @@ pub struct PrismaCreateInp {
     apply: bool,
 }
 
-#[deno_bindgen]
+#[deno]
 pub enum PrismaCreateOut {
     Ok {
         created_migration_name: String,
@@ -232,7 +232,7 @@ pub enum PrismaCreateOut {
     },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn prisma_create(input: PrismaCreateInp) -> PrismaCreateOut {
     match RT.block_on(migration::create(input)) {
         Ok(res) => res,
@@ -242,19 +242,19 @@ fn prisma_create(input: PrismaCreateInp) -> PrismaCreateOut {
     }
 }
 
-#[deno_bindgen]
+#[deno]
 struct UnpackInp {
     dest: String,
     migrations: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum UnpackResult {
     Ok,
     Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn unpack(input: UnpackInp) -> UnpackResult {
     match common::migrations::unpack(&input.dest, Some(input.migrations)) {
         Ok(_) => UnpackResult::Ok,
@@ -264,18 +264,18 @@ fn unpack(input: UnpackInp) -> UnpackResult {
     }
 }
 
-#[deno_bindgen]
+#[deno]
 struct ArchiveInp {
     path: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum ArchiveResult {
     Ok { base64: String },
     Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn archive(input: ArchiveInp) -> ArchiveResult {
     match common::migrations::archive(input.path) {
         Ok(b) => ArchiveResult::Ok { base64: b },

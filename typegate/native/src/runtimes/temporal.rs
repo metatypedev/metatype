@@ -3,31 +3,34 @@
 use crate::RT;
 use anyhow::Context;
 use dashmap::DashMap;
-use deno_bindgen::deno_bindgen;
 use lazy_static::lazy_static;
+use macros::deno;
+use std::collections::HashMap;
 use std::str::FromStr;
 use temporal_client::{Client, ClientOptionsBuilder, RetryClient};
 use temporal_client::{WorkflowClientTrait, WorkflowOptions};
+use temporal_sdk_core_protos::temporal::api::common::v1::Payload;
+
 use url::Url;
 
 lazy_static! {
     static ref CLIENTS: DashMap<String, RetryClient<Client>> = DashMap::new();
 }
 
-#[deno_bindgen]
+#[deno]
 struct TemporalRegisterInput {
     url: String,
     namespace: String,
     typegraph: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum TemporalRegisterOutput {
     Ok { client_id: String },
     Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn temporal_register(input: TemporalRegisterInput) -> TemporalRegisterOutput {
     let opts = ClientOptionsBuilder::default()
         .identity("integ_tester".to_string())
@@ -45,18 +48,18 @@ fn temporal_register(input: TemporalRegisterInput) -> TemporalRegisterOutput {
     TemporalRegisterOutput::Ok { client_id }
 }
 
-#[deno_bindgen]
+#[deno]
 struct TemporalUnregisterInput {
     client_id: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum TemporalUnregisterOutput {
     Ok { client_id: String },
     Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn temporal_unregister(input: TemporalUnregisterInput) -> TemporalUnregisterOutput {
     let Some((client_id, _client)) = CLIENTS.remove(&input.client_id) else {
         return TemporalUnregisterOutput::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.client_id})};
@@ -64,20 +67,23 @@ fn temporal_unregister(input: TemporalUnregisterInput) -> TemporalUnregisterOutp
     TemporalUnregisterOutput::Ok { client_id }
 }
 
-#[deno_bindgen]
+#[deno]
 struct TemporalWorkflowStartInput {
     client_id: String,
     workflow_id: String,
+    workflow_type: String,
     task_queue: String,
     request_id: Option<String>,
+    args: Vec<String>,
 }
 
-#[deno_bindgen]
-struct TemporalWorkflowStartOutput {
-    workflow_id: String,
+#[deno]
+enum TemporalWorkflowStartOutput {
+    Ok { run_id: String },
+    Err { message: String },
 }
 
-#[deno_bindgen(non_blocking)]
+#[deno]
 fn temporal_workflow_start(input: TemporalWorkflowStartInput) -> TemporalWorkflowStartOutput {
     let client_id = input.client_id;
     let client = CLIENTS
@@ -85,17 +91,31 @@ fn temporal_workflow_start(input: TemporalWorkflowStartInput) -> TemporalWorkflo
         .with_context(|| format!("Cound not find engine '{client_id}"))
         .unwrap();
 
-    let workflow = client.start_workflow(
-        Vec::default(),
-        input.task_queue,
-        input.workflow_id,
-        "example".to_string(),
-        input.request_id,
-        WorkflowOptions::default(),
-    );
-    println!("{:?}", RT.block_on(workflow).unwrap());
+    let run = RT
+        .block_on(
+            client.start_workflow(
+                input
+                    .args
+                    .iter()
+                    .map(|arg| json_payload(arg.clone()))
+                    .collect(),
+                input.task_queue,
+                input.workflow_id,
+                input.workflow_type,
+                input.request_id,
+                WorkflowOptions::default(),
+            ),
+        )
+        .unwrap();
 
-    TemporalWorkflowStartOutput {
-        workflow_id: "123".to_string(),
+    TemporalWorkflowStartOutput::Ok { run_id: run.run_id }
+}
+
+fn json_payload(json: String) -> Payload {
+    let mut metadata = HashMap::new();
+    metadata.insert("encoding".to_string(), b"json/plain".to_vec());
+    Payload {
+        metadata,
+        data: json.into_bytes(),
     }
 }

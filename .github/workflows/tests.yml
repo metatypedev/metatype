@@ -244,7 +244,7 @@ jobs:
           source .venv/bin/activate
           pip3 install ./typegraph
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
-          OUT_DIR=target deno_bindgen -- --locked --package native
+          OUT_DIR=target deno_bindgen -- --locked --package native -F deno
           which py-tg
           deno run -A dev/test.ts
           cargo test --locked --workspace --package native

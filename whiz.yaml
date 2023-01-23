@@ -84,7 +84,7 @@ typegate_native:
         - "typegate/native/src/**/*.rs"
     env:
         OUT_DIR: "target"
-    command: "deno_bindgen -- -p native"
+    command: "deno_bindgen -- -p native -F deno"
     depends_on:
         - libs
 

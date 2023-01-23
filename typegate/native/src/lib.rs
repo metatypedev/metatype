@@ -5,9 +5,9 @@ mod runtimes;
 mod typegraph;
 
 use crate::conf::CONFIG;
-use deno_bindgen::deno_bindgen;
 use lazy_static::lazy_static;
 use log::info;
+use macros::deno;
 use static_init::dynamic;
 use std::{borrow::Cow, panic};
 use tokio::runtime::Runtime;
@@ -38,7 +38,7 @@ static SENTRY: sentry::ClientInitGuard = {
     ))
 };
 
-#[deno_bindgen]
+#[deno]
 fn init() {
     env_logger::init();
     info!("init");
@@ -49,7 +49,7 @@ fn init() {
     }));
 }
 
-#[deno_bindgen]
+#[deno]
 fn get_version() -> String {
     common::get_version()
 }
