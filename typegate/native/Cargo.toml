@@ -41,12 +41,12 @@ dashmap = "5.4.0"
 common = { path = "../../libs/common" }
 macros = { path = "../../libs/macros" }
 sentry = "0.29.1"
-static_init = "1.0.3"
 tempfile = "3.3.0"
 convert_case = "0.6.0"
 rust-s3 = { git = "https://github.com/zifeo/rust-s3", branch = "order" }
 http = "0.2.8"
 uuid = { version = "1.2.2", features = ["v4"] }
+envconfig = "0.10.0"
 
 [dev-dependencies]
 dotenv = "0.15.0"
