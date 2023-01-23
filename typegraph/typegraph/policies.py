@@ -63,7 +63,7 @@ def jwt(role_name: str, field: str = "role"):
     role_name = sanitize_ts_string(role_name)
     field = sanitize_ts_string(field)
     src = f"""
-            (_, {{ context }} : string) => {{
+            (_, {{ context }}) => {{
                 const role_chunks = "{role_name}".split(".");
                 let value = context?.[role_chunks.shift()];
                 for (const chunk of role_chunks)
