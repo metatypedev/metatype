@@ -1,5 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+from re import sub as reg_sub
 from typing import List
 
 from attrs import evolve
@@ -53,8 +54,13 @@ def allow_all(name: str = "__allow_all"):
     return Policy(FunMat("() => true")).named(name)
 
 
-def jwt(role_name: str = "default_name", field: str = "role", name: str = "__jwt"):
+def jwt(role_name: str, field: str = "role"):
+    # join role_name, field with '__jwt' as prefix
+    separator, pattern = "_", r"[^a-zA-Z0-9_-]+"
+    prefix = "__jwt"
+    jwt_name = reg_sub(pattern, separator, separator.join([prefix, role_name, field]))
+    # build the policy
     role_name = sanitize_ts_string(role_name)
     field = sanitize_ts_string(field)
     src = f"""(_, {{ context }}) => context?.["{role_name}"] === "{field}" """
-    return Policy(FunMat(src)).named(name)
+    return Policy(FunMat(src)).named(jwt_name)

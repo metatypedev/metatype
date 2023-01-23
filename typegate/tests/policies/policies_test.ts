@@ -111,7 +111,9 @@ test("Role jwt policy access", async (t) => {
         sayHelloWorld
       }
     `
-      .expectErrorContains("__jwt in sayHelloWorld")
+      .expectErrorContains(
+        "__jwt_user_selected_role_some_role in sayHelloWorld",
+      )
       .withContext({
         "user selected role": "another role",
       })
@@ -127,7 +129,7 @@ test("Role jwt policy access", async (t) => {
         sayHelloWorld
       }
     `
-        .expectErrorContains("__jwt in sayHelloWorld")
+        .expectErrorContains("sayHelloWorld")
         .withContext({
           "literally": "anything",
         })
