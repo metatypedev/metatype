@@ -1,3 +1,5 @@
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
 import { expandGlobSync, projectDir, runOrExit } from "./mod.ts";
 
 const typegraphs = Array.from(
