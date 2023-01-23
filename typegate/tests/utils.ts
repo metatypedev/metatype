@@ -281,7 +281,7 @@ async function exists(path: string): Promise<boolean> {
 
 type Expect = (res: Response) => Promise<void> | void;
 type Variables = Record<string, JSONValue>;
-type Context = Record<string, string>;
+type Context = Record<string, unknown>;
 
 export class Q {
   query: string;

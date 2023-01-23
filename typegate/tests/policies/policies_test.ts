@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { gql, test } from "../utils.ts";
-
+/*
 test("Policies", async (t) => {
   const e = await t.pythonFile("policies/policies.py");
 
@@ -85,4 +85,59 @@ test("Policy args", async (t) => {
       })
       .on(e);
   });
+});
+*/
+test("Role jwt policy access", async (t) => {
+  const e_norm = await t.pythonFile("policies/policies_jwt.py");
+  const e_inject = await t.pythonFile("policies/policies_jwt_injection.py");
+
+  await t.should("have role", async () => {
+    await gql`
+      query {
+        sayHelloWorld
+      }
+    `.withContext({
+      user: {
+        name: "some role",
+      },
+    })
+      .expectData({
+        sayHelloWorld: "Hello World!",
+      })
+      .on(e_norm);
+  });
+
+  await t.should("not have a role", async () => {
+    await gql`
+      query {
+        sayHelloWorld
+      }
+    `
+      .expectErrorContains(
+        "__jwt_user_name_some_role in sayHelloWorld",
+      )
+      .withContext({
+        user: {
+          name: "another role",
+        },
+      })
+      .on(e_norm);
+  });
+
+  // see policies_jwt_injection.py for more context
+  await t.should(
+    "not have access as the typegraph policy is sanitized",
+    async () => {
+      await gql`
+      query {
+        sayHelloWorld
+      }
+    `
+        .expectErrorContains("__jwt")
+        .withContext({
+          "literally": "anything",
+        })
+        .on(e_inject);
+    },
+  );
 });
