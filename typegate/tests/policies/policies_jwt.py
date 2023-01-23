@@ -5,7 +5,7 @@ from typegraph.graph.models import Auth
 from typegraph.runtimes.deno import FunMat
 
 with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
-    some_policy = policies.jwt("user selected role", "some role")
+    some_policy = policies.jwt("user.name", "some role")
     g.expose(
         sayHelloWorld=t.func(
             t.struct(),

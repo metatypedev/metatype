@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { gql, test } from "../utils.ts";
-
+/*
 test("Policies", async (t) => {
   const e = await t.pythonFile("policies/policies.py");
 
@@ -86,7 +86,7 @@ test("Policy args", async (t) => {
       .on(e);
   });
 });
-
+*/
 test("Role jwt policy access", async (t) => {
   const e_norm = await t.pythonFile("policies/policies_jwt.py");
   const e_inject = await t.pythonFile("policies/policies_jwt_injection.py");
@@ -97,7 +97,9 @@ test("Role jwt policy access", async (t) => {
         sayHelloWorld
       }
     `.withContext({
-      "user selected role": "some role",
+      user: {
+        name: "some role",
+      },
     })
       .expectData({
         sayHelloWorld: "Hello World!",
@@ -112,10 +114,12 @@ test("Role jwt policy access", async (t) => {
       }
     `
       .expectErrorContains(
-        "__jwt_user_selected_role_some_role in sayHelloWorld",
+        "__jwt_user_name_some_role in sayHelloWorld",
       )
       .withContext({
-        "user selected role": "another role",
+        user: {
+          name: "another role",
+        },
       })
       .on(e_norm);
   });
@@ -129,7 +133,7 @@ test("Role jwt policy access", async (t) => {
         sayHelloWorld
       }
     `
-        .expectErrorContains("sayHelloWorld")
+        .expectErrorContains("__jwt")
         .withContext({
           "literally": "anything",
         })

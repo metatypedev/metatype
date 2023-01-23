@@ -56,11 +56,19 @@ def allow_all(name: str = "__allow_all"):
 
 def jwt(role_name: str, field: str = "role"):
     # join role_name, field with '__jwt' as prefix
-    separator, pattern = "_", r"[^a-zA-Z0-9_-]+"
+    separator, pattern = "_", r"[^a-zA-Z0-9_]+"
     prefix = "__jwt"
     jwt_name = reg_sub(pattern, separator, separator.join([prefix, role_name, field]))
     # build the policy
     role_name = sanitize_ts_string(role_name)
     field = sanitize_ts_string(field)
-    src = f"""(_, {{ context }}) => context?.["{role_name}"] === "{field}" """
+    src = f"""
+            (_, {{ context }} : string) => {{
+                const role_chunks = "{role_name}".split(".");
+                let value = context?.[role_chunks.shift()];
+                for (const chunk of role_chunks)
+                    value = value?.[chunk];
+                return value === "{field}";
+            }}
+        """
     return Policy(FunMat(src)).named(jwt_name)
