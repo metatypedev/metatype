@@ -21,37 +21,34 @@
 
 import {
   basename,
-  dirname,
-  fromFileUrl,
+  expandGlobSync,
+  parseFlags,
+  projectDir,
   resolve,
-} from "https://deno.land/std@0.170.0/path/mod.ts";
-import { parse } from "https://deno.land/std@0.170.0/flags/mod.ts";
-import { expandGlob } from "https://deno.land/std@0.170.0/fs/mod.ts";
+  run,
+} from "./mod.ts";
 
-const flags = parse(Deno.args, { "--": true });
-
-const thisDir = dirname(fromFileUrl(import.meta.url));
-const typegateDir = resolve(thisDir, "../typegate");
+const flags = parseFlags(Deno.args, { "--": true });
 
 const testFiles = [];
 
 // find test files
 if (flags._.length === 0) {
   // run all the tests
-  for await (
-    const entry of expandGlob("tests/**/*_test.ts", {
-      root: typegateDir,
+  for (
+    const entry of expandGlobSync("typegate/tests/**/*_test.ts", {
+      root: projectDir,
     })
   ) {
     testFiles.push(entry.path);
   }
 } else {
   for (const f of flags._) {
-    const path = resolve(typegateDir, "tests", f as string);
+    const path = resolve(projectDir, "typegate/tests", f as string);
     const stat = await Deno.stat(path);
 
     if (stat.isDirectory) {
-      for await (const entry of expandGlob("**/*_test.ts", { root: path })) {
+      for (const entry of expandGlobSync("**/*_test.ts", { root: path })) {
         testFiles.push(entry.path);
       }
       continue;
@@ -69,20 +66,16 @@ if (flags._.length === 0) {
 
 const failures = [];
 for await (const testFile of testFiles) {
-  const cmd = [
+  const status = await run([
     "deno",
     "test",
+    "--config=typegate/deno.json",
     "--unstable",
     "--allow-all",
     testFile,
     ...flags["--"],
-  ];
-  const p = Deno.run({
-    cmd,
-    cwd: typegateDir,
-    env: Deno.env.toObject(),
-  });
-  const status = await p.status();
+  ], projectDir);
+
   if (!status.success) {
     failures.push(testFile);
   }

@@ -1,0 +1,54 @@
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9901
+static_resources:
+  listeners:
+    - name: typegate
+      address:
+        socket_address:
+          protocol: TCP
+          address: 0.0.0.0
+          port_value: 10000
+      default_filter_chain:
+        filters:
+          - name: envoy.filters.network.http_connection_manager
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+              stat_prefix: typegate
+              codec_type: HTTP1
+              http_filters:
+                - name: envoy.filters.http.router
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+              route_config:
+                name: typegate
+                virtual_hosts:
+                  - name: typegate
+                    domains:
+                      - "*"
+                    routes:
+                      - match:
+                          prefix: "/"
+                        route:
+                          cluster: typegate
+  clusters:
+    - name: typegate
+      type: STRICT_DNS
+      load_assignment:
+        cluster_name: typegate
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  health_check_config: {}
+                  address:
+                    socket_address:
+                      address: host.docker.internal
+                      port_value: 7891
+              - endpoint:
+                  health_check_config: {}
+                  address:
+                    socket_address:
+                      address: host.docker.internal
+                      port_value: 7892

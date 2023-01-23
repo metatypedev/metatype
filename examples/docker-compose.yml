@@ -1,6 +1,6 @@
 services:
   typegate:
-    image: ghcr.io/metatypedev/typegate:0.0.3-dev.0
+    image: ghcr.io/metatypedev/typegate:v0.0.3-dev.0
     restart: always
     ports:
       - "7890:7890"
@@ -13,6 +13,8 @@ services:
       TG_ADMIN_PASSWORD: password
     env_file:
       - .env.example
+    depends_on:
+      - redis
 
   redis:
     image: redis:7

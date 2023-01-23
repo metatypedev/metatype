@@ -1,16 +1,14 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use deno_bindgen::deno_bindgen;
+use crate::RT;
 use http::header::{self};
 use http::{HeaderMap, HeaderValue};
+use macros::deno;
 use s3::bucket::Bucket;
 use s3::creds::Credentials;
 use s3::Region;
 
-use crate::RT;
-
-#[derive(Debug)]
-#[deno_bindgen]
+#[deno]
 struct S3Client {
     region: String,
     access_key: String,
@@ -18,8 +16,7 @@ struct S3Client {
     endpoint: String,
 }
 
-#[derive(Debug)]
-#[deno_bindgen]
+#[deno]
 struct S3Presigning {
     bucket: String,
     key: String,
@@ -28,13 +25,13 @@ struct S3Presigning {
     expires: u32,
 }
 
-#[deno_bindgen]
+#[deno]
 enum S3PresigningOut {
     Ok { res: String },
     Err { message: String },
 }
 
-#[cfg_attr(not(test), deno_bindgen(non_blocking))]
+#[deno]
 fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> S3PresigningOut {
     let region = Region::Custom {
         region: client.region,
@@ -93,15 +90,13 @@ fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> S3PresigningOut
     }
 }
 
-#[derive(Debug)]
-#[deno_bindgen]
+#[deno]
 struct S3Item {
     key: String,
     size: u64,
 }
 
-#[derive(Debug)]
-#[deno_bindgen]
+#[deno]
 enum S3Items {
     Ok {
         prefix: Vec<String>,
@@ -112,7 +107,7 @@ enum S3Items {
     },
 }
 
-#[cfg_attr(not(test), deno_bindgen(non_blocking))]
+#[deno]
 fn s3_list(client: S3Client, bucket: &str, path: &str) -> S3Items {
     let region = Region::Custom {
         region: client.region,

@@ -5,6 +5,7 @@ members = [
   "libs/common",
   "libs/typescript",
   "libs/xtask",
+  "libs/macros",
 ]
 
 [patch.crates-io]

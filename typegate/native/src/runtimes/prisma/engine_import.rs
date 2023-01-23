@@ -21,14 +21,8 @@ use prisma_models::psl;
 use psl::diagnostics::Diagnostics;
 use query_connector::error::ConnectorError;
 use query_core::CoreError;
-use query_core::{
-    executor,
-    schema::{QuerySchema, QuerySchemaRenderer},
-    schema_builder, QueryExecutor, TxId,
-};
-use request_handlers::{
-    GraphQLSchemaRenderer, GraphQlBody, GraphQlHandler, PrismaResponse, TxInput,
-};
+use query_core::{executor, schema::QuerySchema, schema_builder, QueryExecutor, TxId};
+use request_handlers::{GraphQlBody, GraphQlHandler, PrismaResponse, TxInput};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
@@ -198,12 +192,12 @@ impl QueryEngine {
                 })
                 .map_err(|err| ApiError::Conversion(err, builder.schema.db.source().to_owned()))?;
 
-            let (db_name, executor) = executor::load(data_source, preview_features, &url).await?;
+            let executor = executor::load(data_source, preview_features, &url).await?;
             let connector = executor.primary_connector();
             connector.get_connection().await?;
 
             // Build internal data model
-            let internal_data_model = prisma_models::convert(Arc::clone(&builder.schema), db_name);
+            let internal_data_model = prisma_models::convert(Arc::clone(&builder.schema));
 
             let query_schema = schema_builder::build(internal_data_model, true);
 
@@ -250,6 +244,7 @@ impl QueryEngine {
     }
 
     /// If connected, attempts to start a transaction in the core and returns its ID.
+    #[allow(dead_code)]
     pub async fn start_tx(&self, input: TxInput) -> Result<String> {
         match *self.inner.read().await {
             Inner::Connected(ref engine) => {
@@ -272,6 +267,7 @@ impl QueryEngine {
     }
 
     /// If connected, attempts to commit a transaction with id `tx_id` in the core.
+    #[allow(dead_code)]
     pub async fn commit_tx(&self, tx_id: String) -> Result<String> {
         match *self.inner.read().await {
             Inner::Connected(ref engine) => {
@@ -285,6 +281,7 @@ impl QueryEngine {
     }
 
     /// If connected, attempts to roll back a transaction with id `tx_id` in the core.
+    #[allow(dead_code)]
     pub async fn rollback_tx(&self, tx_id: String) -> Result<String> {
         match *self.inner.read().await {
             Inner::Connected(ref engine) => {
@@ -292,16 +289,6 @@ impl QueryEngine {
                     Ok(_) => Ok("{}".to_string()),
                     Err(err) => Ok(map_known_error(err)?),
                 }
-            }
-            Inner::Builder(_) => Err(ApiError::NotConnected),
-        }
-    }
-
-    /// Loads the query schema. Only available when connected.
-    pub async fn sdl_schema(&self) -> Result<String> {
-        match *self.inner.read().await {
-            Inner::Connected(ref engine) => {
-                Ok(GraphQLSchemaRenderer::render(engine.query_schema().clone()))
             }
             Inner::Builder(_) => Err(ApiError::NotConnected),
         }

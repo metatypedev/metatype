@@ -4,6 +4,25 @@
       "items": [
         {
           "items": [
+            {
+              "items": [
+                {
+                  "items": [
+                    "docs/reference/typegraph/providers/temporal/runtimes/temporal"
+                  ],
+                  "label": "typegraph.providers.temporal.runtimes",
+                  "type": "category"
+                }
+              ],
+              "label": "typegraph.providers.temporal",
+              "type": "category"
+            }
+          ],
+          "label": "typegraph.providers",
+          "type": "category"
+        },
+        {
+          "items": [
             "docs/reference/typegraph/runtimes/http"
           ],
           "label": "typegraph.runtimes",

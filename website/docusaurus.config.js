@@ -87,6 +87,12 @@ const config = {
         persistence: "memory",
       },
     ],
+    [
+      "docusaurus-plugin-sentry",
+      {
+        DSN: "d951b2e2b71d43e0b2fc41555cf8bf75@sentry.triage.dev/5",
+      },
+    ],
     "docusaurus-lunr-search",
   ],
   i18n: {

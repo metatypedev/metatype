@@ -4,12 +4,11 @@ import { Engine, initTypegraph } from "./engine.ts";
 import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
-import { RuntimesConfig } from "./types.ts";
 
 console.log("init replicated map");
 
 export abstract class Register {
-  abstract set(payload: string, config?: RuntimesConfig): Promise<string>;
+  abstract set(payload: string): Promise<string>;
 
   abstract remove(name: string): Promise<void>;
 
@@ -27,7 +26,7 @@ export class ReplicatedRegister extends Register {
     const replicatedMap = await RedisReplicatedMap.init<Engine>(
       "typegraph",
       redisConfig,
-      (engine) => JSON.stringify(engine.tg.tg),
+      (engine) => JSON.stringify(engine.tg.tgRaw),
       (payload) => initTypegraph(payload),
     );
 
@@ -38,17 +37,15 @@ export class ReplicatedRegister extends Register {
     super();
   }
 
-  async set(payload: string, config?: RuntimesConfig): Promise<string> {
+  async set(payload: string): Promise<string> {
     const engine = await initTypegraph(
       payload,
       SystemTypegraph.getCustomRuntimes(this),
-      config,
     );
     if (SystemTypegraph.check(engine.name)) {
       // no need for a sync
       this.replicatedMap.memory.set(engine.name, engine);
     } else {
-      console.debug(`registering (replicated): ${engine.name}`);
       await this.replicatedMap.set(engine.name, engine);
     }
 

@@ -2,14 +2,14 @@
 
 use anyhow::Result;
 use common::typegraph::Typegraph;
-use deno_bindgen::deno_bindgen;
+use macros::deno;
 
-#[deno_bindgen]
+#[deno]
 struct TypegraphValidateInp {
     json: String,
 }
 
-#[deno_bindgen]
+#[deno]
 enum TypegraphValidateOut {
     Valid { json: String },
     NotValid { reason: String },
@@ -20,7 +20,7 @@ fn validate(json: String) -> Result<String> {
     Ok(serde_json::to_string(&tg)?)
 }
 
-#[cfg_attr(not(test), deno_bindgen(non_blocking))]
+#[deno]
 fn typegraph_validate(input: TypegraphValidateInp) -> TypegraphValidateOut {
     match validate(input.json) {
         Ok(json) => TypegraphValidateOut::Valid { json },

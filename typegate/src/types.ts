@@ -37,13 +37,10 @@ export type Resolver<T = Record<string, any>> = (
 
 export type Batcher = (x: any) => any;
 
-export type RuntimeConfig = Record<string, unknown>;
-export type RuntimesConfig = Record<string, RuntimeConfig>;
 export interface RuntimeInitParams {
   typegraph: TypeGraphDS;
   materializers: TypeMaterializer[];
   args: Record<string, unknown>;
-  config: RuntimeConfig;
 }
 export type RuntimeInit = Record<
   string,
