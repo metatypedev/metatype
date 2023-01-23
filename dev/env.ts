@@ -41,7 +41,8 @@ if (Deno.args.length === 1 && Deno.args[0] === "all") {
 
 if (on.size > 0) {
   await runOrExit([
-    "docker-compose",
+    "docker",
+    "compose",
     ...Array.from(on).flatMap((f) => ["-f", f]),
     "up",
     "-d",
@@ -49,7 +50,8 @@ if (on.size > 0) {
   ]);
 } else {
   await runOrExit([
-    "docker-compose",
+    "docker",
+    "compose",
     ...Object.values(envs).flatMap((f) => ["-f", f]),
     "down",
     "--remove-orphans",

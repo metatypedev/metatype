@@ -9,7 +9,7 @@ export { parse as parseFlags } from "https://deno.land/std@0.170.0/flags/mod.ts"
 export { expandGlobSync } from "https://deno.land/std@0.170.0/fs/mod.ts";
 export type { WalkEntry } from "https://deno.land/std@0.170.0/fs/mod.ts";
 export * as yaml from "https://deno.land/std@0.170.0/encoding/yaml.ts";
-export * as semver from "https://deno.land/x/semver/mod.ts";
+export * as semver from "https://deno.land/x/semver@v1.4.1/mod.ts";
 
 import {
   dirname,
