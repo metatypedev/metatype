@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use temporal_client::{Client, ClientOptionsBuilder, RetryClient};
 use temporal_client::{WorkflowClientTrait, WorkflowOptions};
-use temporal_sdk_core_protos::temporal::api::common::v1::Payload;
+use temporal_sdk_core_protos::temporal::api::common::v1::{Payload, Payloads};
 
 use url::Url;
 
@@ -117,5 +117,148 @@ fn json_payload(json: String) -> Payload {
     Payload {
         metadata,
         data: json.into_bytes(),
+    }
+}
+
+#[deno]
+struct TemporalWorkflowSignalInput {
+    client_id: String,
+    workflow_id: String,
+    run_id: String,
+    signal_name: String,
+    request_id: Option<String>,
+    args: Option<String>,
+}
+
+#[deno]
+enum TemporalWorkflowSignalOutput {
+    Ok,
+    Err { message: String },
+}
+
+#[deno]
+fn temporal_workflow_signal(input: TemporalWorkflowSignalInput) -> TemporalWorkflowSignalOutput {
+    let client_id = input.client_id;
+    let client = CLIENTS
+        .get(&client_id)
+        .with_context(|| format!("Cound not find engine '{client_id}"))
+        .unwrap();
+
+    // empty response
+    RT.block_on(client.signal_workflow_execution(
+        input.workflow_id,
+        input.run_id,
+        input.signal_name,
+        input.args.map(|arg| Payloads {
+            payloads: vec![json_payload(arg)],
+        }),
+        input.request_id,
+    ))
+    .unwrap();
+
+    TemporalWorkflowSignalOutput::Ok
+}
+
+#[deno]
+struct TemporalWorkflowQueryInput {
+    client_id: String,
+    workflow_id: String,
+    run_id: String,
+    query_type: String,
+    args: Option<String>,
+}
+
+#[deno]
+enum TemporalWorkflowQueryOutput {
+    Ok { data: Vec<String> },
+    Err { message: String },
+}
+
+#[deno]
+fn temporal_workflow_query(input: TemporalWorkflowQueryInput) -> TemporalWorkflowQueryOutput {
+    use temporal_sdk_core_protos::temporal::api::query::v1::WorkflowQuery;
+
+    let client_id = input.client_id;
+    let client = CLIENTS
+        .get(&client_id)
+        .with_context(|| format!("Cound not find engine '{client_id}"))
+        .unwrap();
+
+    // empty response
+    let query = RT
+        .block_on(client.query_workflow_execution(
+            input.workflow_id,
+            input.run_id,
+            WorkflowQuery {
+                query_type: input.query_type,
+                query_args: input.args.map(|arg| Payloads {
+                    payloads: vec![json_payload(arg)],
+                }),
+                header: None,
+            },
+        ))
+        .unwrap();
+
+    if let Some(query_results) = query.query_result {
+        TemporalWorkflowQueryOutput::Ok {
+            data: query_results
+                .payloads
+                .into_iter()
+                .map(|payload| String::from_utf8(payload.data).unwrap())
+                .collect(),
+        }
+    } else {
+        return TemporalWorkflowQueryOutput::Err {
+            message: format!("Query failed: {:?}", query),
+        };
+    }
+}
+
+#[deno]
+struct TemporalWorkflowDescribeInput {
+    client_id: String,
+    workflow_id: String,
+    run_id: String,
+}
+
+#[deno]
+enum TemporalWorkflowDescribeOutput {
+    Ok {
+        start_time: Option<i64>,
+        close_time: Option<i64>,
+        state: Option<i32>,
+    },
+    Err {
+        message: String,
+    },
+}
+
+#[deno]
+fn temporal_workflow_describe(
+    input: TemporalWorkflowDescribeInput,
+) -> TemporalWorkflowDescribeOutput {
+    let client_id = input.client_id;
+    let client = CLIENTS
+        .get(&client_id)
+        .with_context(|| format!("Cound not find engine '{client_id}"))
+        .unwrap();
+
+    // empty response
+    let mut query = RT
+        .block_on(client.describe_workflow_execution(input.workflow_id, Some(input.run_id)))
+        .unwrap();
+
+    TemporalWorkflowDescribeOutput::Ok {
+        start_time: query
+            .workflow_execution_info
+            .as_mut()
+            .and_then(|t| t.start_time.take())
+            .map(|t| t.seconds),
+        close_time: query
+            .workflow_execution_info
+            .as_mut()
+            .and_then(|t| t.close_time.take())
+            .map(|t| t.seconds),
+        state: query.workflow_execution_info.map(|t| t.status),
     }
 }
