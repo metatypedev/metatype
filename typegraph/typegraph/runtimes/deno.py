@@ -16,9 +16,9 @@ from frozendict import frozendict
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
+from typegraph.runtimes.base import Runtime, Effect
 from typegraph.utils.attrs import always
-from typegraph.utils.attrs import SKIP
+from typegraph.utils.attrs import SKIP, required
 
 
 @frozen
@@ -66,7 +66,8 @@ class FunMat(Materializer):
     script: Optional[str] = field(kw_only=True, default=None)
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = field(default="function", init=False)
-    serial = field(kw_only=True, default=False)
+    effect: Optional[Effect] = required()
+    idempotent: bool = required()
 
     @classmethod
     def from_lambda(cls, function, runtime=DenoRuntime()):
@@ -99,6 +100,8 @@ class ImportFunMat(Materializer):
     mod: "ModuleMat" = field()
     name: str = field(default="default")
     secrets: Tuple[str] = field(kw_only=True, factory=tuple)
+    effect: Optional[Effect] = required()
+    idempotent: bool = required()
     runtime: DenoRuntime = field(
         kw_only=True, factory=DenoRuntime
     )  # should be the same runtime as `mod`'s
@@ -122,6 +125,7 @@ class ModuleMat(Materializer):
     code: Optional[str] = field(kw_only=True, default=None)
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)  # DenoRuntime
     materializer_name: str = always("module")
+    # effect = None
 
     def __attrs_post_init__(self):
         if self.file is None:
@@ -140,8 +144,8 @@ class ModuleMat(Materializer):
                 with open(path) as f:
                     object.__setattr__(self, "code", f.read())
 
-    def imp(self, name: str = "default") -> FunMat:
-        return ImportFunMat(self, name, runtime=self.runtime, secrets=self.secrets)
+    def imp(self, name: str = "default", **kwargs) -> FunMat:
+        return ImportFunMat(self, name, runtime=self.runtime, secrets=self.secrets, **kwargs)
 
 
 @frozen

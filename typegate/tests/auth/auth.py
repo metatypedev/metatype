@@ -13,10 +13,10 @@ with TypeGraph("test_auth", auths=[github_auth]) as g:
 
     public = policies.allow_all()
     private = Policy(
-        FunMat("(_args, { context }) => !!context.user1"),
+        FunMat("(_args, { context }) => !!context.user1", effect=None, idempotent=True),
     )
     with_token = Policy(
-        FunMat("(_args, { context }) => !!context.accessToken"),
+        FunMat("(_args, { context }) => !!context.accessToken", effect=None, idempotent=True),
     )
 
     x = t.struct({"x": t.integer()})

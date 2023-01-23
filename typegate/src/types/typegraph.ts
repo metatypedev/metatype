@@ -158,6 +158,7 @@ export type TypeNode =
   | ArrayNode
   | FunctionNode
   | AnyNode;
+export type MaterializerEffect = "create" | "update" | "delete" | "unknown";
 export type AuthProtocol = "oauth2" | "jwk" | "basic";
 export interface Typegraph {
   $id: string;
@@ -170,6 +171,8 @@ export interface Typegraph {
 export interface Materializer {
   name: string;
   runtime: number;
+  effect?: MaterializerEffect | null;
+  idempotent: boolean;
   data: {
     [k: string]: unknown;
   };

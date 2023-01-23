@@ -23,7 +23,7 @@ with TypeGraph("prisma") as g:
     denoUser = t.func(
         t.struct(),
         userModel,
-        FunMat("() => ({ id: 12 })"),
+        FunMat("() => ({ id: 12 })", effect=None, idempotent=True),
     ).add_policy(allow_all)
 
     g.expose(

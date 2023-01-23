@@ -184,9 +184,21 @@ impl TypeNode {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum MaterializerEffect {
+    Create,
+    Update,
+    Delete,
+    Unknown,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Materializer {
     pub name: String,
     pub runtime: u32,
+    pub effect: Option<MaterializerEffect>,
+    pub idempotent: bool,
     pub data: IndexMap<String, Value>,
 }
 
@@ -228,12 +240,10 @@ impl TypeNode {
 #[derive(Serialize, Deserialize)]
 pub struct FunctionMatData {
     pub script: String,
-    serial: bool,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize)]
 pub struct ModuleMatData {
     pub code: String,
-    serial: bool,
 }

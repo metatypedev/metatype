@@ -20,7 +20,7 @@ function splitGraphQLOperations(
     const childNode = typegraph.types[typeIndex];
 
     // if the leaf node of a path its a function
-    // with a materializer that is serial
+    // with a materializer that has an effect,
     // classify the root node of this path as a `mutation`
     // otherwise as a `query`
     switch (childNode.type) {
@@ -62,7 +62,7 @@ function splitGraphQLOperations(
         const childMaterializer =
           typegraph.materializers[childNode.materializer];
 
-        if (!childMaterializer.data.serial) {
+        if (childMaterializer.effect == null) {
           queryProperties[propertyName] = typeIndex;
           // TODO additional checks
         } else {

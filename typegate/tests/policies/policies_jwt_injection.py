@@ -15,6 +15,6 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
         sayHelloWorld=t.func(
             t.struct(),
             t.string(),
-            FunMat("""() => "Hello World!" """),
+            FunMat("""() => "Hello World!" """, effect=None, idempotent=False),
         ).add_policy(some_policy),
     )

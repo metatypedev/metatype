@@ -3,6 +3,7 @@
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.policies import Policy
+from typegraph import policies as p
 from typegraph.runtimes.deno import FunMat
 from typegraph.runtimes.typegate import ResolverMat
 from typegraph.runtimes.typegate import SchemaMat
@@ -138,7 +139,7 @@ with TypeGraph("introspection") as g:
         }
     ).named("directive")
 
-    allow_all = Policy(FunMat("() => true")).named("__allow_all")
+    allow_all = p.allow_all()
 
     get_type = t.func(
         t.struct({"name": t.string()}), type.optional(), TypeMat()

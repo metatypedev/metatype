@@ -11,7 +11,7 @@ def make_policy(g, name, fn):
         t.struct({"a": t.integer()}),
         t.struct({"a": t.integer()}),
         PredefinedFunMat("identity"),
-    ).add_policy(FunMat(fn))
+    ).add_policy(FunMat(fn, effect=None, idempotent=True))
 
 
 with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
@@ -32,6 +32,6 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
             g, "eq_two", "(_args, { context }) => Number(context.a) === 2"
         ),
         secret=t.func(
-            t.struct({"username": t.string()}), secret_data, mod.imp("readSecret")
-        ).add_policy(mod.imp("isAllowedToReadSecret")),
+            t.struct({"username": t.string()}), secret_data, mod.imp("readSecret", effect=None, idempotent=True)
+        ).add_policy(mod.imp("isAllowedToReadSecret", effect=None, idempotent=True)),
     )

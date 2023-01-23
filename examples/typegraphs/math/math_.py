@@ -15,6 +15,8 @@ with TypeGraph(name="math") as g:
         FunMat(
             '(context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
             runtime=worker,
+            effect=None,
+            idempotent=True,
         ),
     ).named("restrict_referer_policy")
 
@@ -26,17 +28,17 @@ with TypeGraph(name="math") as g:
         fib=t.func(
             t.struct({"size": t.integer()}),
             t.array(t.float()),
-            fib.imp("default"),
+            fib.imp("default", effect=None, idempotent=True),
         ).add_policy(restrict_referer),
         random=t.func(
             t.struct(),
             t.float(),
-            FunMat("() => Math.random()"),
+            FunMat("() => Math.random()", effect=None, idempotent=True),
         ).add_policy(allow_all),
         randomItem=t.func(
             t.struct({"items": t.array(t.string())}),
             t.string(),
-            FunMat(random_item_fn, runtime=worker),
+            FunMat(random_item_fn, runtime=worker, effect=None, idempotent=True),
         ).add_policy(allow_all),
         randomIntInRange=t.func(
             t.struct({"from": t.integer(), "to": t.integer()}),
@@ -53,6 +55,6 @@ with TypeGraph(name="math") as g:
                     }
                     """,
                 runtime=worker,
-            ).imp("default"),
+            ).imp("default", effect=None, idempotent=True),
         ).add_policy(allow_all),
     )

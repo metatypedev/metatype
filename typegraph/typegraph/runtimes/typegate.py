@@ -2,8 +2,9 @@
 
 from attrs import frozen
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
+from typegraph.runtimes.base import Runtime, Effect
 from typegraph.utils.attrs import always
+from typing import Optional
 
 
 @frozen
@@ -50,14 +51,16 @@ class TypeGraphMat(Materializer):
 class AddTypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = always("addTypegraph")
-    serial: bool = always(True)
+    effect: Optional[Effect] = always(Effect.CREATE)
+    idempotent: bool = always(True)
 
 
 @frozen
 class RemoveTypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = always("removeTypegraph")
-    serial: bool = always(True)
+    effect: Optional[Effect] = always(Effect.DELETE)
+    idempotent: bool = always(True)
 
 
 @frozen

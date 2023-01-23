@@ -9,7 +9,7 @@ with TypeGraph("testing") as g:
     rec = t.func(
         t.struct({"nested": t.struct({"arg": t.integer()}).named("Nested")}),
         t.integer(),
-        FunMat("(args) => args.nested && args.nested.arg"),
+        FunMat("(args) => args.nested && args.nested.arg", effect=None, idempotent=True),
     )
 
     g.expose(

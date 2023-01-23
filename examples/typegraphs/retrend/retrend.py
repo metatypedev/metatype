@@ -27,12 +27,12 @@ with TypeGraph(
                 }
             ),
             t.string(),
-            f.imp("default"),
+            f.imp("default", effect=None, idempotent=True),
         ).add_policy(all),
         getImage=t.func(
             t.struct(),
             t.struct({"path": t.string().named("Path")}),
-            FunMat('() => ({"path": "test.jpg"})'),
+            FunMat('() => ({"path": "test.jpg"})', effect=None, idempotent=True),
         )
         .compose(
             {
@@ -45,7 +45,7 @@ with TypeGraph(
                         }
                     ),
                     t.string(),
-                    f.imp("default"),
+                    f.imp("default", effect=None, idempotent=True),
                 )
             }
         )

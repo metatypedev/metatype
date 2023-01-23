@@ -7,8 +7,8 @@ from attrs import field
 from attrs import frozen
 from typegraph import types as t
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
-from typegraph.utils.attrs import always
+from typegraph.runtimes.base import Runtime, Effect
+from typegraph.utils.attrs import always, required
 
 
 @frozen
@@ -41,19 +41,19 @@ class HTTPRuntime(Runtime):
         }
 
     def get(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "GET", path, **kwargs, serial=False))
+        return t.func(inp, out, RESTMat(self, "GET", path, **kwargs, effect=None, idempotent=True))
 
     def post(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "POST", path, **kwargs, serial=True))
+        return t.func(inp, out, RESTMat(self, "POST", path, **kwargs, effect=Effect.CREATE, idempotent=False))
 
     def put(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "PUT", path, **kwargs, serial=True))
+        return t.func(inp, out, RESTMat(self, "PUT", path, **kwargs, effect=Effect.UNKNOWN, idempotent=True))
 
     def patch(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "PATCH", path, **kwargs, serial=True))
+        return t.func(inp, out, RESTMat(self, "PATCH", path, **kwargs, effect=Effect.UPDATE, idempotent=True))
 
     def delete(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "DELETE", path, **kwargs, serial=True))
+        return t.func(inp, out, RESTMat(self, "DELETE", path, **kwargs, effect=Effect.DELETE, idempotent=True))
 
 
 @frozen
@@ -68,4 +68,5 @@ class RESTMat(Materializer):
     body_fields: Optional[Tuple[str, ...]] = field(kw_only=True, default=None)
     auth_token_field: Optional[str] = field(kw_only=True, default=None)
     materializer_name: str = always("rest")
-    serial: bool = field(kw_only=True)
+    effect: Optional[Effect] = required()
+    idempotent: bool = required()

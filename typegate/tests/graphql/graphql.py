@@ -2,6 +2,7 @@ from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.runtimes.graphql import GraphQLRuntime
+from typegraph.runtimes.base import Effect
 
 with TypeGraph("graphql") as g:
     gql = GraphQLRuntime("https://example.com/api/graphql")
@@ -30,6 +31,8 @@ with TypeGraph("graphql") as g:
             }
         ),
         g("User"),
+        effect=Effect.UPDATE,
+        idempotent=True
     ).add_policy(policies.allow_all())
 
     g.expose(user=user_by_id, updateUser=update_user)

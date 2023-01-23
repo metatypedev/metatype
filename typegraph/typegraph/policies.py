@@ -51,7 +51,7 @@ class Policy(Node):
 
 
 def allow_all(name: str = "__allow_all"):
-    return Policy(FunMat("() => true")).named(name)
+    return Policy(FunMat("() => true", effect=None, idempotent=True)).named(name)
 
 
 def jwt(role_name: str, field: str = "role"):
@@ -71,4 +71,4 @@ def jwt(role_name: str, field: str = "role"):
                 return value === "{field}";
             }}
         """
-    return Policy(FunMat(src)).named(jwt_name)
+    return Policy(FunMat(src, effect=None, idempotent=True)).named(jwt_name)

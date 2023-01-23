@@ -10,6 +10,8 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.utils.attrs import always
 from typegraph.utils.attrs import asdict
+from strenum import LowercaseStrEnum
+from enum import auto
 
 
 if TYPE_CHECKING:
@@ -30,10 +32,18 @@ class Runtime(Node):
         return dict()
 
 
+class Effect(LowercaseStrEnum):
+    CREATE = auto()
+    UPDATE = auto()
+    DELETE = auto()
+    UNKNOWN = auto()
+
+
 @frozen
 class Materializer(Node):
     runtime: Runtime
-    serial: bool = always(False)  # to be set by child classes
+    effect: Optional[Effect] = always(None)  # to be set by child classes
+    idempotent: bool = always(True)  # to be set by child classes
     collector_target: Optional[str] = always(Collector.materializers)
 
     @property
@@ -46,5 +56,7 @@ class Materializer(Node):
         return {
             "name": data.pop("materializer_name"),
             "runtime": collector.index(data.pop("runtime")),
+            "effect": data.pop("effect"),
+            "idempotent": data.pop("idempotent"),
             "data": data,
         }

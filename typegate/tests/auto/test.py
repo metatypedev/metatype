@@ -110,14 +110,14 @@ with TypeGraph("test") as g:
                                 "duration": t.func(
                                     t.struct({"integer": g("reint")}),
                                     t.integer().named("duration_remote"),
-                                    FunMat("(args) => args.parent.integer * 3"),
+                                    FunMat("(args) => args.parent.integer * 3", effect=None, idempotent=True),
                                 ).named("compute_duration_remote"),
                             }
                         ).named("remote"),
                     ),
                     "duration": t.gen(
                         t.integer().named("duration"),
-                        FunMat("(args) => args.parent.out * 2"),
+                        FunMat("(args) => args.parent.out * 2", effect=None, idempotent=True),
                     ).named("compute_duration"),
                     "self": g("f"),
                     "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),
@@ -132,7 +132,8 @@ with TypeGraph("test") as g:
                         b: null,
                     };
                 }
-                """
+                """,
+                effect=None, idempotent=True
             ),
             # FunMat(
             #     """

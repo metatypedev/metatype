@@ -37,7 +37,7 @@ with TypeGraph(
     ).named("typegraph")
 
     admin_only = Policy(
-        FunMat("(_args, { context }) => context.user === 'admin'")
+        FunMat("(_args, { context }) => context.user === 'admin'", effect=None, idempotent=False)
     ).named("admin_only")
 
     g.expose(

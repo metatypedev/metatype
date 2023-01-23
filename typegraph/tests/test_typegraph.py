@@ -32,7 +32,13 @@ class TestTypegraph:
             arg1 = t.integer().named("arg1")
             inp = t.struct({"a": arg1}).named("inp")
             out = t.integer().named("out")
-            g.expose(test=t.func(inp, out, FunMat("(args) => args.a * 2")).named("f"))
+            g.expose(
+                test=t.func(
+                    inp,
+                    out,
+                    FunMat("(args) => args.a * 2", effect=None, idempotent=True),
+                ).named("f")
+            )
 
         assert g.build() == overridable(
             {
@@ -78,10 +84,9 @@ class TestTypegraph:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "data": {
-                            "script": "var _my_lambda = (args) => args.a * 2;",
-                            "serial": False,
-                        },
+                        "effect": None,
+                        "idempotent": True,
+                        "data": {"script": "var _my_lambda = (args) => args.a * 2;"},
                     }
                 ],
                 "policies": [],
@@ -113,13 +118,13 @@ class TestTypegraph:
                         "out": out,
                         "duration": t.gen(
                             t.integer().named("duration"),
-                            FunMat("() => 1"),
+                            FunMat("() => 1", effect=None, idempotent=False),
                         ).named("compute_duration"),
                         "self": g("f"),
                         "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),
                     }
                 ).named("res"),
-                FunMat("(args) => args.a"),
+                FunMat("(args) => args.a", effect=None, idempotent=True),
             ).named("f")
             g.expose(test=getter)
 
@@ -205,18 +210,16 @@ class TestTypegraph:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "data": {
-                            "script": "var _my_lambda = () => 1;",
-                            "serial": False,
-                        },
+                        "effect": None,
+                        "idempotent": False,
+                        "data": {"script": "var _my_lambda = () => 1;"},
                     },
                     {
                         "name": "function",
                         "runtime": 0,
-                        "data": {
-                            "script": "var _my_lambda = (args) => args.a;",
-                            "serial": False,
-                        },
+                        "effect": None,
+                        "idempotent": True,
+                        "data": {"script": "var _my_lambda = (args) => args.a;"},
                     },
                 ],
                 "policies": [],

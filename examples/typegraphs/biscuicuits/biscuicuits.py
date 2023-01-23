@@ -2,6 +2,7 @@ from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.graph.auth import oauth2
+from typegraph.runtimes.base import Effect
 from typegraph.runtimes.deno import ModuleMat
 from typegraph.runtimes.http import HTTPRuntime
 
@@ -22,7 +23,7 @@ def send_in_blue_send(subject, frm, to, api_key):
             }
         ),
         t.struct({"success": t.boolean(), "error": t.string().optional()}),
-        f.imp("default"),
+        f.imp("default", effect=Effect.CREATE, idempotent=False),
     ).rate(weight=2)
 
 
