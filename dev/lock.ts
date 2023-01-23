@@ -1,3 +1,5 @@
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
 import * as yaml from "https://deno.land/std@0.170.0/encoding/yaml.ts";
 import { expandGlobSync } from "https://deno.land/std@0.170.0/fs/expand_glob.ts";
 import * as flags from "https://deno.land/std@0.170.0/flags/mod.ts";

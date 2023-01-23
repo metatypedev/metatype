@@ -160,6 +160,7 @@ export type TypeNode =
   | FunctionNode
   | AnyNode;
 export interface Typegraph {
+  $id: string;
   materializers: Materializer[];
   meta: TypeMeta;
   policies: Policy[];

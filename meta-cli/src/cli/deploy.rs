@@ -13,7 +13,7 @@ use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 pub struct Deploy {
-    /// Name of the person to greet
+    /// Load specific typegraph from a file
     #[clap(short, long)]
     file: Option<String>,
 

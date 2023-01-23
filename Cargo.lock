@@ -2512,6 +2512,7 @@ dependencies = [
  "lazy_static",
  "log",
  "notify",
+ "openssl",
  "pathdiff",
  "prisma-models",
  "project-root",

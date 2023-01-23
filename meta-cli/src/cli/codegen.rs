@@ -17,7 +17,7 @@ pub struct Codegen {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// deno codegen
+    /// Generate materializer code for Deno runtime
     Deno(Deno),
 }
 
