@@ -103,7 +103,7 @@ repos:
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - ts
-        files: ^typegate/
+        files: ^(typegate|dev)/
       - id: insert-license
         name: "License header typescript"
         args:

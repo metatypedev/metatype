@@ -6,22 +6,34 @@ import { ensure } from "../utils.ts";
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import {
-  FunctionNode,
   isArray,
-  isBoolean,
   isFunction,
-  isInteger,
-  isNumber,
   isObject,
   isOptional,
   isQuantifier,
-  isString,
+  isScalar,
   ObjectNode,
+  Type,
   TypeNode,
 } from "../type_node.ts";
 import { Resolver } from "../types.ts";
+import {
+  getChildTypes,
+  TypeVisitorMap,
+  visitType,
+  visitTypes,
+} from "../typegraph/visitor.ts";
+import { distinctBy } from "std/collections/distinct_by.ts";
+import { isInjected } from "../typegraph/utils.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
+
+const SCALAR_TYPE_MAP = {
+  "boolean": "Boolean",
+  "integer": "Int",
+  "number": "Float",
+  "string": "String",
+};
 
 export class TypeGraphRuntime extends Runtime {
   tg: TypeGraphDS;
@@ -85,9 +97,6 @@ export class TypeGraphRuntime extends Runtime {
   getSchema: Resolver = () => {
     const root = this.tg.types[0] as ObjectNode;
 
-    // const queriesBind: Record<string, number> = {};
-    // const mutationsBind: Record<string, number> = {};
-
     const queries = this.tg.types[root.properties["query"]] as ObjectNode;
     const mutations = this.tg.types[root.properties["mutation"]] as ObjectNode;
 
@@ -95,84 +104,66 @@ export class TypeGraphRuntime extends Runtime {
       // https://github.com/graphql/graphql-js/blob/main/src/type/introspection.ts#L36
       description: () => `${root.type} typegraph`,
       types: () => {
-        // FIXME prefer traversal
-        const collectInputType = (
-          type: TypeNode,
-          history: Set<string> = new Set(),
-        ): string[] => {
-          if (history.has(type.title)) {
-            return [];
-          }
-          if (isObject(type)) {
-            history.add(type.title);
-            return [
-              type.title,
-              ...Object.values(type.properties).flatMap((subTypeIdx) =>
-                collectInputType(this.tg.types[subTypeIdx], history)
-              ),
-            ];
-          }
-          if (isArray(type)) {
-            return collectInputType(
-              this.tg.types[type.items],
-              history,
-            );
-          }
-          if (isOptional(type)) {
-            return collectInputType(
-              this.tg.types[type.item],
-              history,
-            );
-          }
-          return [];
+        // filter non-native GraphQL types
+        const filter = (type: TypeNode) => {
+          return !isInjected(this.tg, type) && !isQuantifier(type);
         };
 
-        const inputTypes = this.tg.types
-          .filter((type) => isFunction(type))
-          .flatMap((type) =>
-            collectInputType(
-              this.tg.types[(type as FunctionNode).input as number],
-            )
-          );
+        const scalarTypeIndices = new Set<number>();
+        const inputTypeIndices = new Set<number>();
+        const regularTypeIndices = new Set<number>();
 
-        const visitedTypes = new Set();
-
-        return this.tg.types
-          .slice(1) // pop root into query & mutation
-          .filter((type) => {
-            // filter non-native GraphQL types
-            const isEnforced = type.injection ||
-              (isObject(type) &&
-                Object.values(type.properties)
-                  .map((prop) => this.tg.types[prop])
-                  .every((nested) => nested.injection));
-            const isQuant = isQuantifier(type);
-            const isInp = this.tg.types.some(
-              (t) => (isFunction(t)) && this.tg.types[t.input] === type,
+        const myVisitor: TypeVisitorMap = {
+          [Type.FUNCTION]: ({ type }) => {
+            // the struct input of a function never generates a GrahpQL type
+            // the actual inputs are the properties
+            visitTypes(
+              this.tg,
+              getChildTypes(this.tg.types[type.input]),
+              ({ type, idx }) => {
+                if (isScalar(type)) {
+                  scalarTypeIndices.add(idx);
+                  return false;
+                }
+                if (filter(type)) {
+                  inputTypeIndices.add(idx);
+                }
+                return true;
+              },
             );
-            const isOutQuant = (isFunction(type)) &&
-              isQuantifier(this.tg.types[type.output]);
-            return !isQuant && !isInp && !isOutQuant && !isEnforced;
-          })
-          .map((type) => {
-            const res = this.formatType(
-              type,
-              false,
-              inputTypes.includes(type.title),
-            );
-            return res;
-          })
-          // deduplicate types by their type name
-          .filter((formattedType) => {
-            const typeName = formattedType.name();
 
-            if (!visitedTypes.has(typeName)) {
-              visitedTypes.add(typeName);
-              return true;
-            }
-
+            visitType(this.tg, type.output, myVisitor);
             return false;
-          });
+          },
+          default: ({ type, idx }) => {
+            if (isScalar(type)) {
+              scalarTypeIndices.add(idx);
+              return false;
+            }
+            if (filter(type)) {
+              regularTypeIndices.add(idx);
+            }
+            return true;
+          },
+        };
+
+        visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
+
+        const scalarTypes = distinctBy(
+          [...scalarTypeIndices].map((idx) => this.tg.types[idx]),
+          (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
+        ).map((type) => this.formatType(type, false, false));
+        const regularTypes = distinctBy(
+          [...regularTypeIndices].map((idx) => this.tg.types[idx]),
+          (t) => t.title,
+        ).map((type) => this.formatType(type, false, false));
+        const inputTypes = distinctBy(
+          [...inputTypeIndices].map((idx) => this.tg.types[idx]),
+          (t) => t.title,
+        ).map((type) => this.formatType(type, false, true));
+
+        const types = [...scalarTypes, ...regularTypes, ...inputTypes];
+        return types;
       },
       queryType: () => {
         if (!queries || Object.values(queries.properties).length === 0) {
@@ -267,39 +258,12 @@ export class TypeGraphRuntime extends Runtime {
       };
     }
 
-    if (isBoolean(type)) {
+    if (isScalar(type)) {
       return {
         ...common,
         kind: () => TypeKind.SCALAR,
-        name: () => "Boolean",
-        description: () => `${type.title} type`,
-      };
-    }
-
-    if (isInteger(type)) {
-      return {
-        ...common,
-        kind: () => TypeKind.SCALAR,
-        name: () => "Int",
-        description: () => `${type.title} type`,
-      };
-    }
-
-    if (isNumber(type)) {
-      return {
-        ...common,
-        kind: () => TypeKind.SCALAR,
-        name: () => "Float", // TODO or Int??
-        description: () => `${type.title} type`,
-      };
-    }
-
-    if (isString(type)) {
-      return {
-        ...common,
-        kind: () => TypeKind.SCALAR,
-        name: () => "String",
-        description: () => `${type.title} type`,
+        name: () => SCALAR_TYPE_MAP[type.type],
+        description: () => `${type.type} type`,
       };
     }
 
@@ -316,7 +280,9 @@ export class TypeGraphRuntime extends Runtime {
           name: () => `${type.title}Inp`,
           description: () => `${type.title} input type`,
           inputFields: () => {
-            return Object.entries(type.properties).map(this.formatField(true));
+            return Object.entries(type.properties).map(
+              this.formatField(true),
+            );
           },
           interfaces: () => [],
         };
