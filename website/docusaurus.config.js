@@ -48,36 +48,23 @@ const config = {
         };
       },
     }),
-    () => ({
-      name: "releases",
-      async loadContent() {
-        const file = "pages/docs/reference/changelog.mdx";
-        const content = await fs.readFile(file, "utf8");
-        const { ctime } = await fs.stat(file);
-        if (new Date() - ctime < 24 * 60 * 60 * 1000) {
-          console.log("cached releases");
-          return content;
-        }
-
-        const res = await fetch(
-          `https://api.github.com/repos/${organizationName}/${projectName}/releases?per_page=100&page=1`
-        ).then((r) => r.json());
-
-        const changelog = res
-          .filter((r) => !r.draft)
-          .map(
-            ({ html_url, name, tag_name, body, prerelease, created_at }) =>
-              `## [${name !== "" ? name : tag_name}](${html_url}) (${
-                prerelease ? "Prerelease, " : ""
-              }${new Date(created_at).toLocaleDateString("en-US")})\n\n${body}`
-          )
-          .join("\n\n");
-
-        const header = content.split("# Changelog")[0];
-        await fs.writeFile(file, `${header}\n\n# Changelog\n\n${changelog}`);
-        console.log("freshly loaded release");
+    [
+      "docusaurus-graphql-plugin",
+      {
+        id: "typegate",
+        schema: "http://localhost:7890/typegate",
+        routeBasePath: "../pages/docs/reference/typegate/typegate",
       },
-    }),
+    ],
+    [
+      "docusaurus-graphql-plugin",
+      {
+        id: "prisma-migration",
+        schema: "http://localhost:7890/typegate/prisma_migration",
+        routeBasePath: "../pages/docs/reference/typegate/prisma-migration",
+      },
+    ],
+    require("./plugins/changelog"),
     [
       "posthog-docusaurus",
       {

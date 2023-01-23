@@ -10,8 +10,8 @@ processors:
 renderer:
   type: docusaurus
   docs_base_path: pages
-  relative_output_path: docs/reference
+  relative_output_path: docs/reference/typegraph
   relative_sidebar_path: python.json
-  sidebar_top_level_label: Python module
+  sidebar_top_level_label: null
   markdown:
     escape_html_in_docstring: false
