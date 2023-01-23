@@ -25,7 +25,11 @@ ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
 ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 
-RUN curl -fsSL https://deno.land/x/install/install.sh -o install.sh \
+RUN apt-get update \
+    && apt-get install -y \
+    protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://deno.land/x/install/install.sh -o install.sh \
     && sh ./install.sh v${DENO_VERSION} \
     && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
 

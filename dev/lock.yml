@@ -10,6 +10,7 @@ dev:
       '(  DENO_VERSION: ").+(")': DENO_VERSION
       '(  PNPM_VERSION: ").+(")': PNPM_VERSION
       '(  NODE_VERSION: ").+(")': NODE_VERSION
+      '(  PROTOC_VERSION: ").+(")': PROTOC_VERSION
     typegraph/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     '**/*/pyproject.toml':
@@ -29,6 +30,7 @@ dev:
   lock:
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.3.1
+    PROTOC_VERSION: 3.x
     RUST_VERSION: 1.66.0
     DENO_BINDGEN_URL: 'https://github.com/denoland/deno_bindgen/raw/main/cli.ts'
     DENO_VERSION: 1.29.4
