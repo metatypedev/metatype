@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use anyhow::{bail, Result};
+use indexmap::IndexMap;
 #[cfg(feature = "codegen")]
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::skip_serializing_none;
-use std::collections::HashMap;
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
@@ -46,7 +46,7 @@ pub enum AuthProtocol {
 pub struct Auth {
     pub name: String,
     pub protocol: AuthProtocol,
-    pub auth_data: HashMap<String, Value>,
+    pub auth_data: IndexMap<String, Value>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -85,7 +85,7 @@ pub struct TypeNodeBase {
     #[serde(default, rename = "enum")]
     pub enum_: Option<Vec<Value>>,
     #[serde(default)]
-    pub config: HashMap<String, serde_json::Value>,
+    pub config: IndexMap<String, serde_json::Value>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -136,7 +136,7 @@ pub enum TypeNode {
     Object {
         #[serde(flatten)]
         base: TypeNodeBase,
-        properties: HashMap<String, u32>,
+        properties: IndexMap<String, u32>,
         #[serde(default)]
         required: Vec<String>,
     },
@@ -187,14 +187,14 @@ impl TypeNode {
 pub struct Materializer {
     pub name: String,
     pub runtime: u32,
-    pub data: HashMap<String, Value>,
+    pub data: IndexMap<String, Value>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TGRuntime {
     pub name: String,
-    pub data: HashMap<String, Value>,
+    pub data: IndexMap<String, Value>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -215,7 +215,7 @@ impl Typegraph {
 }
 
 impl TypeNode {
-    pub fn get_struct_fields(&self) -> Result<HashMap<String, u32>> {
+    pub fn get_struct_fields(&self) -> Result<IndexMap<String, u32>> {
         if let TypeNode::Object { properties, .. } = &self {
             Ok(properties.clone())
         } else {

@@ -2,7 +2,6 @@ env:
     TYPEGRAPH_VERSION: "0.0.1"
 
 meta:
-    workdir: .
     watch:
         - "meta-cli/src/**/*.rs"
     command: "cargo run -p meta-cli -- --help"
@@ -10,7 +9,6 @@ meta:
         - libs
 
 examples:
-    workdir: .
     watch:
         - "examples/metatype.yaml"
     command: "cargo run -p meta-cli -- -C examples dev"
@@ -21,9 +19,8 @@ examples:
         - meta
 
 system_graphs:
-    workdir: typegate
-    watch: src/typegraphs/*.py
-    command: "./serialize-tgs.sh"
+    watch: typegate/src/typegraphs/*.py
+    command: "deno run -A dev/serialize.ts"
     depends_on:
         - meta
 
@@ -87,7 +84,7 @@ typegate_native:
         - "typegate/native/src/**/*.rs"
     env:
         OUT_DIR: "target"
-    command: "deno_bindgen -- -p native"
+    command: "deno_bindgen -- -p native -F deno"
     depends_on:
         - libs
 

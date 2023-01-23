@@ -3,7 +3,7 @@ from typegraph import t
 from typegraph import TypeGraph
 from typegraph.runtimes.graphql import GraphQLRuntime
 
-with TypeGraph("allow_all") as g:
+with TypeGraph("policies") as g:
 
     remote = GraphQLRuntime("https://graphqlzero.almansi.me/api")
     allow_all = policies.allow_all()

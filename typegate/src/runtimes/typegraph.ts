@@ -16,7 +16,7 @@ import {
   Type,
   TypeNode,
 } from "../type_node.ts";
-import { Resolver, RuntimeConfig } from "../types.ts";
+import { Resolver } from "../types.ts";
 import {
   getChildTypes,
   TypeVisitorMap,
@@ -47,7 +47,6 @@ export class TypeGraphRuntime extends Runtime {
     typegraph: TypeGraphDS,
     _materializers: TypeMaterializer[],
     _args: Record<string, unknown>,
-    _config: RuntimeConfig,
   ): Runtime {
     return new TypeGraphRuntime(typegraph);
   }

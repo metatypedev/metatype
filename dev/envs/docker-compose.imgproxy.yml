@@ -1,44 +1,4 @@
 services:
-  haproxy:
-    image: haproxy:2.5
-    restart: always
-    ports:
-      - "7890:8000"
-    volumes:
-      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-  postgres:
-    image: postgres:15
-    restart: always
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_DB: db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    command: "-c log_statement=all"
-
-  redis:
-    image: redis:7
-    restart: always
-    ports:
-      - "6379:6379"
-    command: --requirepass password
-
-  minio:
-    image: bitnami/minio:2022
-    restart: always
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_REGION_NAME: local
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: password
-      MINIO_DEFAULT_BUCKETS: 'bucket:none'
-
   imgproxy:
     image: darthsim/imgproxy:v3.9
     restart: always

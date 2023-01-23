@@ -1,0 +1,13 @@
+services:
+  minio:
+    image: bitnami/minio:2022
+    platform: linux/amd64
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_REGION_NAME: local
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: password
+      MINIO_DEFAULT_BUCKETS: "bucket:none"

@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 import importlib
+import json
 from pathlib import Path
 import pkgutil
 from typing import List
@@ -9,10 +10,7 @@ from typing import List
 import attrs
 from attrs import define
 from frozendict import frozendict
-import orjson
 from typegraph.graph.typegraph import TypeGraph
-from typegraph.providers.prisma.runtimes.prisma import Relation
-from typegraph.utils.attrs import asdict
 
 
 # TDM is: typegraph definition module, defining one or more typegraphs
@@ -76,15 +74,14 @@ def cmd():
 
     tgs = import_file(args.module)
 
-    def default(obj):
-        if isinstance(obj, frozendict):
-            return dict(obj)
-        if isinstance(obj, Relation):  # TODO: should not happen
-            return {}
-        if attrs.has(obj.__class__):
-            return asdict(obj)
-        raise TypeError
+    class JSONEncoder(json.JSONEncoder):
+        def default(self, o):
+            if attrs.has(o):
+                return attrs.asdict(o)
+            if isinstance(o, frozendict):
+                return dict(o)
+            return super().default(o)
 
-    opt = dict(option=orjson.OPT_INDENT_2) if args.pretty else {}
-    json = orjson.dumps([tg.build() for tg in tgs], default=default, **opt).decode()
-    print(json)
+    opt = dict(indent=2) if args.pretty else {}
+    output = json.dumps([tg.build() for tg in tgs], cls=JSONEncoder, **opt)
+    print(output)

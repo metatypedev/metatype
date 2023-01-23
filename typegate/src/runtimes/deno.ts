@@ -64,7 +64,7 @@ export class DenoRuntime extends Runtime {
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { typegraph: tg, config, args, materializers } = params;
+    const { typegraph: tg, args, materializers } = params;
     const typegraphName = tg.types[0].title;
 
     const { worker: name } = args as unknown as DenoRuntimeData;
@@ -91,7 +91,7 @@ export class DenoRuntime extends Runtime {
     const rt = new DenoRuntime(
       name,
       (args.permissions ?? {}) as Deno.PermissionOptionsObject,
-      config.lazy as boolean ?? false,
+      false,
       tg,
       secrets,
     );

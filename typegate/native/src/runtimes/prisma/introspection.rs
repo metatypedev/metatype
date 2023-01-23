@@ -49,7 +49,8 @@ impl Introspection {
         };
 
         let previous = psl::validate(SourceFile::new_static(""));
-        let ctx = IntrospectionContext::new_config_only(previous, CompositeTypeDepth::Level(3));
+        let ctx =
+            IntrospectionContext::new_config_only(previous, CompositeTypeDepth::Level(3), None);
 
         match connector.introspect(&ctx).await {
             Ok(introspection_result) => {

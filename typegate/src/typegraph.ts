@@ -13,7 +13,6 @@ import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure, envOrFail } from "./utils.ts";
 
 import { Auth, nextAuthorizationHeader } from "./auth/auth.ts";
-import * as semver from "std/semver/mod.ts";
 
 import {
   isArray,
@@ -26,7 +25,6 @@ import {
   isString,
   TypeNode,
 } from "./type_node.ts";
-import config from "./config.ts";
 import {
   Batcher,
   Context,
@@ -34,7 +32,6 @@ import {
   PolicyStagesFactory,
   Resolver,
   RuntimeInit,
-  RuntimesConfig,
 } from "./types.ts";
 import { S3Runtime } from "./runtimes/s3.ts";
 
@@ -46,6 +43,7 @@ import type {
   TGRuntime as TypeRuntime,
   Typegraph as TypeGraphDS,
 } from "./types/typegraph.ts";
+import { TemporalRuntime } from "./runtimes/temporal.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -58,20 +56,12 @@ const runtimeInit: RuntimeInit = {
   http: HTTPRuntime.init,
   deno: DenoRuntime.init,
   googleapis: GoogleapisRuntime.init,
+  temporal: TemporalRuntime.init,
   random: RandomRuntime.init,
   //typegraph: TypeGraphRuntime.init,
 };
 
-const typegraphVersion = "0.0.1";
-const typegraphChangelog: Record<
-  string,
-  { next: string; transform: (x: TypeGraphDS) => TypeGraphDS }
-> = {
-  "0.0.0": {
-    "next": "0.0.1",
-    "transform": (x) => x,
-  },
-};
+export const typegraphVersion = "0.0.1";
 
 export class TypeGraph {
   static readonly emptyArgs: ast.ArgumentNode[] = [];
@@ -87,11 +77,13 @@ export class TypeGraph {
     runtime: -1,
   };
 
+  tgRaw: TypeGraphDS;
   tg: TypeGraphDS;
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
 
   private constructor(
+    typegraphRaw: TypeGraphDS,
     typegraph: TypeGraphDS,
     public runtimeReferences: Runtime[],
     private secrets: Record<string, string>,
@@ -99,6 +91,7 @@ export class TypeGraph {
     public auths: Map<string, Auth>,
     public introspection: TypeGraph | null,
   ) {
+    this.tgRaw = typegraphRaw;
     this.tg = typegraph;
     this.root = this.type(0);
     // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
@@ -114,25 +107,13 @@ export class TypeGraph {
   }
 
   static async init(
+    typegraphRaw: TypeGraphDS,
     typegraph: TypeGraphDS,
     staticReference: RuntimeResolver,
     introspection: TypeGraph | null,
-    runtimeConfig: RuntimesConfig,
   ): Promise<TypeGraph> {
     const typegraphName = typegraph.types[0].title;
     const { meta, runtimes } = typegraph;
-
-    let currentVersion = meta.version;
-    while (semver.neq(typegraphVersion, currentVersion)) {
-      const migration = typegraphChangelog[currentVersion];
-      if (!migration) {
-        throw Error(
-          `typegate ${config.version} supports typegraph ${typegraphVersion} which is incompatible with ${typegraphName} ${meta.version} (max auto upgrade was ${currentVersion})`,
-        );
-      }
-      typegraph = migration.transform(typegraph);
-      currentVersion = migration.next;
-    }
 
     const secrets: Record<string, string> = meta.secrets.sort().reduce(
       (agg, secretName) => {
@@ -204,12 +185,12 @@ export class TypeGraph {
             (mat) => mat.runtime === idx,
           ),
           args: runtime.data,
-          config: runtimeConfig[runtime.name] ?? {},
         });
       }),
     );
 
     const tg = new TypeGraph(
+      typegraphRaw,
       typegraph,
       runtimeReferences,
       secrets,

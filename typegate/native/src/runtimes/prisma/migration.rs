@@ -1,16 +1,13 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-mod utils;
-
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/rpc.rs
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/api.rs
+
 use anyhow::Result;
 use convert_case::{Case, Casing};
-use migration_connector::{BoxFuture, ConnectorHost, ConnectorResult};
-use migration_core;
 use migration_core::json_rpc::types::{
     ApplyMigrationsInput, CreateMigrationInput, DiffParams, DiffTarget, EvaluateDataLossInput,
-    ListMigrationDirectoriesInput, SchemaContainer, SchemaPushInput,
+    ListMigrationDirectoriesInput, SchemaContainer,
 };
 use migration_core::CoreError;
 use std::io::Write;
@@ -18,6 +15,7 @@ use std::path::Path;
 use std::sync::{Arc, Mutex};
 use tempfile::{tempdir, TempDir};
 
+#[allow(dead_code)]
 pub async fn loss(
     datasource: String,
     datamodel: String,
@@ -43,7 +41,7 @@ pub async fn loss(
     }
 }
 
-pub(crate) async fn apply(inp: crate::PrismaApplyInp) -> Result<crate::PrismaApplyOut> {
+pub(super) async fn apply(inp: super::PrismaApplyInp) -> Result<super::PrismaApplyOut> {
     use migration_core::json_rpc::types::{DevAction, DevDiagnosticInput};
     use migration_core::migration_api;
 
@@ -62,7 +60,7 @@ pub(crate) async fn apply(inp: crate::PrismaApplyInp) -> Result<crate::PrismaApp
             api.reset().await.unwrap();
             Some(reset.reason)
         } else {
-            return Ok(crate::PrismaApplyOut::ResetRequired {
+            return Ok(super::PrismaApplyOut::ResetRequired {
                 reset_reason: reset.reason,
             });
         }
@@ -78,14 +76,14 @@ pub(crate) async fn apply(inp: crate::PrismaApplyInp) -> Result<crate::PrismaApp
 
     let applied_migrations = res.applied_migration_names;
 
-    Ok(crate::PrismaApplyOut::MigrationsApplied {
+    Ok(super::PrismaApplyOut::MigrationsApplied {
         reset_reason,
         applied_migrations,
         migrations: migrations.serialize()?,
     })
 }
 
-pub(crate) async fn create(input: crate::PrismaCreateInp) -> Result<crate::PrismaCreateOut> {
+pub(super) async fn create(input: super::PrismaCreateInp) -> Result<super::PrismaCreateOut> {
     use migration_core::migration_api;
 
     let migrations = MigrationsFolder::from(input.migrations)?;
@@ -117,32 +115,11 @@ pub(crate) async fn create(input: crate::PrismaCreateInp) -> Result<crate::Prism
         vec![]
     };
 
-    Ok(crate::PrismaCreateOut::Ok {
+    Ok(super::PrismaCreateOut::Ok {
         created_migration_name,
         applied_migrations,
         migrations: migrations.serialize()?,
     })
-}
-
-pub async fn push(datasource: String, datamodel: String) -> Result<String, CoreError> {
-    let schema = format!("{datasource}{datamodel}");
-    let api = migration_core::migration_api(Some(datasource.clone()), None)?;
-
-    let push = SchemaPushInput {
-        force: false,
-        schema,
-    };
-
-    let apply = api.schema_push(push).await?;
-    if !apply.unexecutable.is_empty() || !apply.warnings.is_empty() {
-        Ok(format!(
-            "{}{}",
-            apply.unexecutable.join("\n"),
-            apply.warnings.join("\n")
-        ))
-    } else {
-        Ok("applied".to_string())
-    }
 }
 
 pub async fn diff(
@@ -154,7 +131,9 @@ pub async fn diff(
     let buffer = Arc::new(Mutex::new(Some(String::default())));
     let api = migration_core::migration_api(
         Some(datasource.clone()),
-        Some(Arc::new(utils::StringBuffer::new(Arc::clone(&buffer)))),
+        Some(Arc::new(super::utils::StringBuffer::new(Arc::clone(
+            &buffer,
+        )))),
     )?;
 
     let mut source_file = tempfile::NamedTempFile::new().unwrap();
