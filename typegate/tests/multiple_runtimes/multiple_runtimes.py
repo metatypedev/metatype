@@ -24,22 +24,22 @@ with TypeGraph(name="prisma") as g:
     db1.manage(user1)
     db2.manage(user2)
 
-    allow_all = policies.allow_all()
+    public = policies.public()
 
     g.expose(
         **db1.gen(
             {
-                "executeRaw": (t.struct(), "executeRaw", allow_all),
-                "createUser1": (user1, "create", allow_all),
-                "findUniqueUser1": (user1, "findUnique", allow_all),
-                "findManyUsers1": (user1, "findMany", allow_all),
+                "executeRaw": (t.struct(), "executeRaw", public),
+                "createUser1": (user1, "create", public),
+                "findUniqueUser1": (user1, "findUnique", public),
+                "findManyUsers1": (user1, "findMany", public),
             }
         ),
         **db2.gen(
             {
-                "createUser2": (user2, "create", allow_all),
-                "findUniqueUser2": (user2, "findUnique", allow_all),
-                "findManyUsers2": (user2, "findMany", allow_all),
+                "createUser2": (user2, "create", public),
+                "findUniqueUser2": (user2, "findUnique", public),
+                "findManyUsers2": (user2, "findMany", public),
             }
         )
     )

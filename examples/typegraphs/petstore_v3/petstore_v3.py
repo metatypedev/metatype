@@ -1,7 +1,7 @@
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.importers.openapi import import_openapi
-from typegraph.policies import allow_all
+from typegraph.policies import public
 from typegraph.runtimes.http import HTTPRuntime
 
 import_openapi("https://petstore3.swagger.io/api/v3/openapi.json", False)
@@ -76,9 +76,9 @@ with TypeGraph(name="petstore-v3") as g:
     ).named("ApiResponse")
     g.expose(
         updatePet=remote.put("/pet", t.struct({}), t.optional(g("Pet"))).add_policy(
-            allow_all()
+            public()
         ),
-        addPet=remote.post("/pet", t.struct({}), g("Pet")).add_policy(allow_all()),
+        addPet=remote.post("/pet", t.struct({}), g("Pet")).add_policy(public()),
         findPetsByStatus=remote.get(
             "/pet/findByStatus",
             t.struct(
@@ -87,7 +87,7 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.array(g("Pet")),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         findPetsByTags=remote.get(
             "/pet/findByTags",
             t.struct(
@@ -96,7 +96,7 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.array(g("Pet")),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         getPetById=remote.get(
             "/pet/{petId}",
             t.struct(
@@ -105,7 +105,7 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.optional(g("Pet")),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         updatePetWithForm=remote.post(
             "/pet/{petId}",
             t.struct(
@@ -116,7 +116,7 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.struct({}),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         deletePet=remote.delete(
             "/pet/{petId}",
             t.struct(
@@ -126,7 +126,7 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.struct({}),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         uploadFile=remote.post(
             "/pet/{petId}/uploadImage",
             t.struct(
@@ -136,12 +136,12 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             g("ApiResponse"),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         getInventory=remote.get(
             "/store/inventory", t.struct({}), t.struct({})
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         placeOrder=remote.post("/store/order", t.struct({}), g("Order")).add_policy(
-            allow_all()
+            public()
         ),
         getOrderById=remote.get(
             "/store/order/{orderId}",
@@ -151,7 +151,7 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.optional(g("Order")),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         deleteOrder=remote.delete(
             "/store/order/{orderId}",
             t.struct(
@@ -160,13 +160,11 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.optional(t.struct({})),
-        ).add_policy(allow_all()),
-        createUser=remote.post("/user", t.struct({}), g("User")).add_policy(
-            allow_all()
-        ),
+        ).add_policy(public()),
+        createUser=remote.post("/user", t.struct({}), g("User")).add_policy(public()),
         createUsersWithListInput=remote.post(
             "/user/createWithList", t.struct({}), t.optional(t.boolean())
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         loginUser=remote.get(
             "/user/login",
             t.struct(
@@ -176,10 +174,10 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.string(),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         logoutUser=remote.get(
             "/user/logout", t.struct({}), t.optional(t.boolean())
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         getUserByName=remote.get(
             "/user/{username}",
             t.struct(
@@ -188,7 +186,7 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.optional(g("User")),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         updateUser=remote.put(
             "/user/{username}",
             t.struct(
@@ -197,7 +195,7 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.optional(t.boolean()),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
         deleteUser=remote.delete(
             "/user/{username}",
             t.struct(
@@ -206,5 +204,5 @@ with TypeGraph(name="petstore-v3") as g:
                 }
             ),
             t.optional(t.struct({})),
-        ).add_policy(allow_all()),
+        ).add_policy(public()),
     )

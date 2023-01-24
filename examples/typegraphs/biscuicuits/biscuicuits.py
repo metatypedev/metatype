@@ -32,7 +32,7 @@ with TypeGraph(
     rate=TypeGraph.Rate(window_limit=2000, window_sec=60, query_limit=200),
 ) as g:
 
-    all = policies.allow_all()
+    all = policies.public()
     remote = HTTPRuntime("https://api.github.com")
 
     g.expose(

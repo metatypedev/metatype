@@ -7,7 +7,7 @@ with TypeGraph(
     "elastic",
 ) as g:
 
-    all = policies.allow_all()
+    all = policies.public()
     remote = HTTPRuntime(
         "https://localhost:9200",
         basic_auth_secret="basic",

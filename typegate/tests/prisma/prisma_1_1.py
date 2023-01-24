@@ -7,7 +7,7 @@ with TypeGraph("prisma") as g:
 
     db = PrismaRuntime("prisma", "POSTGRES")
 
-    allow_all = policies.allow_all()
+    public = policies.public()
 
     userProfile = db.one_to_one(g("User"), g("Profile")).named("userProfile")
 
@@ -31,12 +31,12 @@ with TypeGraph("prisma") as g:
     g.expose(
         **db.gen(
             {
-                "queryRaw": (t.struct(), "queryRaw", allow_all),
-                "executeRaw": (t.struct(), "executeRaw", allow_all),
-                "createUser": (user, "create", allow_all),
-                "updateUser": (user, "update", allow_all),
-                "findUniqueProfile": (profile, "findUnique", allow_all),
-                "deleteUser": (user, "delete", allow_all),
+                "queryRaw": (t.struct(), "queryRaw", public),
+                "executeRaw": (t.struct(), "executeRaw", public),
+                "createUser": (user, "create", public),
+                "updateUser": (user, "update", public),
+                "findUniqueProfile": (profile, "findUnique", public),
+                "deleteUser": (user, "delete", public),
             }
         )
     )

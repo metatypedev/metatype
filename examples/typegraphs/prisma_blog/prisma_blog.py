@@ -44,19 +44,19 @@ with TypeGraph(name="blog") as g:
     db.manage(posts)
     db.manage(profiles)
 
-    allow_all = policies.allow_all()
+    public = policies.public()
 
     g.expose(
         **db.gen(
             {
-                "createUser": (users, "create", allow_all),
-                "findUniqueUser": (users, "findUnique", allow_all),
-                "findManyUsers": (users, "findMany", allow_all),
-                "updateUser": (users, "update", allow_all),
-                "deleteUser": (users, "delete", allow_all),
-                "createPost": (posts, "create", allow_all),
-                "findUniquePost": (posts, "findUnique", allow_all),
-                "findManyPosts": (posts, "findMany", allow_all),
+                "createUser": (users, "create", public),
+                "findUniqueUser": (users, "findUnique", public),
+                "findManyUsers": (users, "findMany", public),
+                "updateUser": (users, "update", public),
+                "deleteUser": (users, "delete", public),
+                "createPost": (posts, "create", public),
+                "findUniquePost": (posts, "findUnique", public),
+                "findManyPosts": (posts, "findMany", public),
             }
         )
     )
