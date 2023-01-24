@@ -7,7 +7,7 @@ sidebar_position: 1
 
 ## typegraph
 
-**Type:** [typegraph](/../pages/docs/reference/typegate/typegate/objects#typegraph)
+**Type:** [typegraph](/docs/reference/typegate/typegate/objects#typegraph)
 
 typegraph field
 
@@ -22,7 +22,7 @@ Policies:
 <tr>
 <td>
 name<br />
-<a href="/../pages/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>name input field</p>
@@ -33,7 +33,7 @@ name<br />
 
 ## typegraphs
 
-**Type:** [[typegraph!]!](/../pages/docs/reference/typegate/typegate/objects#typegraph)
+**Type:** [[typegraph!]!](/docs/reference/typegate/typegate/objects#typegraph)
 
 typegraphs field
 

@@ -9,9 +9,9 @@ processors:
   - type: crossref
 renderer:
   type: docusaurus
-  docs_base_path: pages
+  docs_base_path: .
   relative_output_path: docs/reference/typegraph
-  relative_sidebar_path: python.json
+  relative_sidebar_path: pydoc.json
   sidebar_top_level_label: null
   markdown:
     escape_html_in_docstring: false

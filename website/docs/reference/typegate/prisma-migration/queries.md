@@ -7,7 +7,7 @@ sidebar_position: 1
 
 ## diff
 
-**Type:** [object_16!](/../pages/docs/reference/typegate/prisma-migration/objects#object_16)
+**Type:** [object_16!](/docs/reference/typegate/prisma-migration/objects#object_16)
 
 diff field
 
@@ -22,7 +22,7 @@ Policies:
 <tr>
 <td>
 script<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#boolean"><code>Boolean!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>script input field</p>
@@ -31,7 +31,7 @@ script<br />
 <tr>
 <td>
 runtime<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>runtime input field</p>
@@ -40,7 +40,7 @@ runtime<br />
 <tr>
 <td>
 typegraph<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>typegraph input field</p>

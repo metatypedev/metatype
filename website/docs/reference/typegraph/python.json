@@ -6,7 +6,7 @@
           "items": [
             {
               "items": [
-                "docs/reference/typegraph/providers/temporal/runtimes/temporal"
+                "docs/reference/typegraph/typegraph/providers/temporal/runtimes/temporal"
               ],
               "label": "typegraph.providers.temporal.runtimes",
               "type": "category"
@@ -21,12 +21,12 @@
     },
     {
       "items": [
-        "docs/reference/typegraph/runtimes/http"
+        "docs/reference/typegraph/typegraph/runtimes/http"
       ],
       "label": "typegraph.runtimes",
       "type": "category"
     },
-    "docs/reference/typegraph/types"
+    "docs/reference/typegraph/typegraph/types"
   ],
   "label": "typegraph",
   "type": "category"

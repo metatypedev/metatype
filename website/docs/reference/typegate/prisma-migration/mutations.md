@@ -7,7 +7,7 @@ sidebar_position: 2
 
 ## apply
 
-**Type:** [object_22!](/../pages/docs/reference/typegate/prisma-migration/objects#object_22)
+**Type:** [object_22!](/docs/reference/typegate/prisma-migration/objects#object_22)
 
 apply field
 
@@ -22,7 +22,7 @@ Policies:
 <tr>
 <td>
 resetDatabase<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#boolean"><code>Boolean!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>resetDatabase input field</p>
@@ -31,7 +31,7 @@ resetDatabase<br />
 <tr>
 <td>
 migrations<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>migrations input field</p>
@@ -40,7 +40,7 @@ migrations<br />
 <tr>
 <td>
 runtime<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>runtime input field</p>
@@ -49,7 +49,7 @@ runtime<br />
 <tr>
 <td>
 typegraph<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>typegraph input field</p>
@@ -60,7 +60,7 @@ typegraph<br />
 
 ## create
 
-**Type:** [object_31!](/../pages/docs/reference/typegate/prisma-migration/objects#object_31)
+**Type:** [object_31!](/docs/reference/typegate/prisma-migration/objects#object_31)
 
 create field
 
@@ -75,7 +75,7 @@ Policies:
 <tr>
 <td>
 apply<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#boolean"><code>Boolean!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>apply input field</p>
@@ -84,7 +84,7 @@ apply<br />
 <tr>
 <td>
 name<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>name input field</p>
@@ -93,7 +93,7 @@ name<br />
 <tr>
 <td>
 migrations<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>migrations input field</p>
@@ -102,7 +102,7 @@ migrations<br />
 <tr>
 <td>
 runtime<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>runtime input field</p>
@@ -111,7 +111,7 @@ runtime<br />
 <tr>
 <td>
 typegraph<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>typegraph input field</p>
@@ -122,7 +122,7 @@ typegraph<br />
 
 ## deploy
 
-**Type:** [object_37!](/../pages/docs/reference/typegate/prisma-migration/objects#object_37)
+**Type:** [object_37!](/docs/reference/typegate/prisma-migration/objects#object_37)
 
 deploy field
 
@@ -137,7 +137,7 @@ Policies:
 <tr>
 <td>
 migrations<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>migrations input field</p>
@@ -146,7 +146,7 @@ migrations<br />
 <tr>
 <td>
 runtime<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>runtime input field</p>
@@ -155,7 +155,7 @@ runtime<br />
 <tr>
 <td>
 typegraph<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>typegraph input field</p>

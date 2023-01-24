@@ -17,7 +17,7 @@ typegraph type
 <tr>
 <td>
 url<br />
-<a href="/../pages/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>url field</p>
@@ -30,7 +30,7 @@ url<br />
 <tr>
 <td>
 name<br />
-<a href="/../pages/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>name field</p>

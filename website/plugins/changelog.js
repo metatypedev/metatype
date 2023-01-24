@@ -8,10 +8,11 @@ const plugin = (context) => ({
     const { organizationName, projectName } = context.siteConfig;
     cli
       .command(["docs", "generate", "changelog"].filter(Boolean).join(":"))
-      .description("Generate the GraphQL documentation based on the schema")
+      .description("Generate the changelog based on Github releases.")
       .action(async () => {
-        const file = "pages/docs/reference/changelog.mdx";
-        const content = await fs.readFile(file, "utf8");
+        const file = "docs/reference/changelog.mdx";
+        const content = await fs.readFile(file, "utf8").catch(() => "");
+        const header = content.split("# Changelog")[0];
 
         const res = await fetch(
           `https://api.github.com/repos/${organizationName}/${projectName}/releases?per_page=100&page=1`
@@ -27,7 +28,6 @@ const plugin = (context) => ({
           )
           .join("\n\n");
 
-        const header = content.split("# Changelog")[0];
         await fs.writeFile(file, `${header}\n\n# Changelog\n\n${changelog}`);
         console.log("freshly loaded release");
       });

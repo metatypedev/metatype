@@ -51,7 +51,7 @@ const config = {
       {
         id: "typegate",
         schema: "http://localhost:7890/typegate",
-        routeBasePath: "../pages/docs/reference/typegate/typegate",
+        routeBasePath: "/docs/reference/typegate/typegate",
       },
     ],
     [
@@ -59,7 +59,7 @@ const config = {
       {
         id: "prisma-migration",
         schema: "http://localhost:7890/typegate/prisma_migration",
-        routeBasePath: "../pages/docs/reference/typegate/prisma-migration",
+        routeBasePath: "/docs/reference/typegate/prisma-migration",
       },
     ],
     require("./plugins/changelog"),
@@ -78,6 +78,16 @@ const config = {
         DSN: "d951b2e2b71d43e0b2fc41555cf8bf75@sentry.triage.dev/5",
       },
     ],
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "marketing",
+        path: "use-cases",
+        routeBasePath: "/use-cases",
+        sidebarPath: require.resolve("./use-cases/sidebars.js"),
+        editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
+      },
+    ],
     "docusaurus-lunr-search",
   ],
   i18n: {
@@ -90,9 +100,10 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          path: "pages",
-          routeBasePath: "/",
-          sidebarPath: require.resolve("./sidebars.js"),
+          id: "docs",
+          path: "docs",
+          routeBasePath: "/docs",
+          sidebarPath: require.resolve("./docs/sidebars.js"),
           editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
         },
         theme: {
@@ -110,7 +121,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: "METATYPE",
+        title: "Metatype",
         logo: {
           alt: "Metatype Logo",
           src: "img/logo.svg",
@@ -118,12 +129,14 @@ const config = {
         items: [
           {
             type: "docSidebar",
+            docsPluginId: "marketing",
             sidebarId: "useCases",
             position: "left",
             label: "Use cases",
           },
           {
             type: "docSidebar",
+            docsPluginId: "docs",
             sidebarId: "docs",
             position: "left",
             label: "Docs",

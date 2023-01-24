@@ -7,7 +7,7 @@ sidebar_position: 2
 
 ## addTypegraph
 
-**Type:** [typegraph](/../pages/docs/reference/typegate/typegate/objects#typegraph)
+**Type:** [typegraph](/docs/reference/typegate/typegate/objects#typegraph)
 
 addTypegraph field
 
@@ -22,7 +22,7 @@ Policies:
 <tr>
 <td>
 fromString<br />
-<a href="/../pages/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>fromString input field</p>
@@ -33,7 +33,7 @@ fromString<br />
 
 ## removeTypegraph
 
-**Type:** [Int!](/../pages/docs/reference/typegate/typegate/scalars#int)
+**Type:** [Int!](/docs/reference/typegate/typegate/scalars#int)
 
 removeTypegraph field
 
@@ -48,7 +48,7 @@ Policies:
 <tr>
 <td>
 name<br />
-<a href="/../pages/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>name input field</p>

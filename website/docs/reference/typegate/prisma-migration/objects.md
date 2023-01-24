@@ -17,7 +17,7 @@ object_16 type
 <tr>
 <td>
 runtimeName<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>runtimeName field</p>
@@ -30,7 +30,7 @@ runtimeName<br />
 <tr>
 <td>
 diff<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>diff field</p>
@@ -55,7 +55,7 @@ object_22 type
 <tr>
 <td>
 appliedMigrations<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>[String!]!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>[String!]!</code></a>
 </td>
 <td>
 <p>appliedMigrations field</p>
@@ -68,7 +68,7 @@ appliedMigrations<br />
 <tr>
 <td>
 databaseReset<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#boolean"><code>Boolean!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>databaseReset field</p>
@@ -93,7 +93,7 @@ object_31 type
 <tr>
 <td>
 runtimeName<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>runtimeName field</p>
@@ -106,7 +106,7 @@ runtimeName<br />
 <tr>
 <td>
 migrations<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>migrations field</p>
@@ -119,7 +119,7 @@ migrations<br />
 <tr>
 <td>
 appliedMigrations<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>[String!]!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>[String!]!</code></a>
 </td>
 <td>
 <p>appliedMigrations field</p>
@@ -132,7 +132,7 @@ appliedMigrations<br />
 <tr>
 <td>
 createdMigrationName<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>createdMigrationName field</p>
@@ -157,7 +157,7 @@ object_37 type
 <tr>
 <td>
 appliedMigrations<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#string"><code>[String!]!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>[String!]!</code></a>
 </td>
 <td>
 <p>appliedMigrations field</p>
@@ -170,7 +170,7 @@ appliedMigrations<br />
 <tr>
 <td>
 migrationCount<br />
-<a href="/../pages/docs/reference/typegate/prisma-migration/scalars#int"><code>Int!</code></a>
+<a href="/docs/reference/typegate/prisma-migration/scalars#int"><code>Int!</code></a>
 </td>
 <td>
 <p>migrationCount field</p>
