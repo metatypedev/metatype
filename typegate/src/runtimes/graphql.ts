@@ -63,9 +63,11 @@ export class GraphQLRuntime extends Runtime {
     const renames: Record<string, string> = {
       ql: "typegraph",
     };
+
+    const operationLevel = stage.props.path.length;
     for (const field of fields) {
-      const { node } = field.props;
-      if (mat?.name == "prisma_operation") {
+      const { node, path } = field.props;
+      if (mat?.name == "prisma_operation" && path.length === operationLevel) {
         const { operation, table } = mat.data as {
           operation: string;
           table: string;
