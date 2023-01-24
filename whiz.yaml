@@ -114,7 +114,12 @@ website_meta:
     depends_on:
         - meta
 
-website_pydoc:
+website_docgen:
     workdir: website
-    watch: "../typegraph/typegraph/**/*.py"
-    command: "pydoc-markdown"
+    command: |
+        pydoc-markdown
+        npx docusaurus docs:generate:graphql:typegate
+        npx docusaurus docs:generate:graphql:prisma-migration
+        npx docusaurus docs:generate:changelog
+    depends_on:
+        - typegate1
