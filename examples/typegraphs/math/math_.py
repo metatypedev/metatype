@@ -3,8 +3,8 @@ from typegraph import t
 from typegraph import TypeGraph
 from typegraph.policies import Policy
 from typegraph.runtimes.deno import DenoRuntime
-from typegraph.runtimes.deno import FunMat
 from typegraph.runtimes.deno import ModuleMat
+from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph(name="math") as g:
     worker = DenoRuntime(worker="worker 1")
@@ -12,11 +12,9 @@ with TypeGraph(name="math") as g:
     allow_all = policies.allow_all()
 
     restrict_referer = Policy(
-        FunMat(
+        PureFunMat(
             '(context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
             runtime=worker,
-            effect=None,
-            idempotent=True,
         ),
     ).named("restrict_referer_policy")
 
@@ -33,12 +31,12 @@ with TypeGraph(name="math") as g:
         random=t.func(
             t.struct(),
             t.float(),
-            FunMat("() => Math.random()", effect=None, idempotent=True),
+            PureFunMat("() => Math.random()"),
         ).add_policy(allow_all),
         randomItem=t.func(
             t.struct({"items": t.array(t.string())}),
             t.string(),
-            FunMat(random_item_fn, runtime=worker, effect=None, idempotent=True),
+            PureFunMat(random_item_fn, runtime=worker),
         ).add_policy(allow_all),
         randomIntInRange=t.func(
             t.struct({"from": t.integer(), "to": t.integer()}),

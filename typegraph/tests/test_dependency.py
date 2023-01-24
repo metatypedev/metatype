@@ -23,7 +23,7 @@ class TestDependency:
                             }
                         ).named("deps"),
                         t.integer(),
-                        deno.FunMat("x2", effect=None, idempotent=True),
+                        deno.PureFunMat("x2"),
                     ).named("dep_a"),
                     "a": a,
                 }
@@ -32,7 +32,7 @@ class TestDependency:
                 test=t.func(
                     t.struct({}).named("no_arg"),
                     res,
-                    deno.FunMat("x2", effect=None, idempotent=True),
+                    deno.PureFunMat("x2"),
                 ).named("f")
             )
 

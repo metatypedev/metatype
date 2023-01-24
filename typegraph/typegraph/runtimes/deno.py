@@ -15,10 +15,12 @@ from attrs import frozen
 from frozendict import frozendict
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
+from typegraph.runtimes.base import Effect
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime, Effect
+from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
-from typegraph.utils.attrs import SKIP, required
+from typegraph.utils.attrs import required
+from typegraph.utils.attrs import SKIP
 
 
 @frozen
@@ -88,6 +90,12 @@ class FunMat(Materializer):
 
 
 @frozen
+class PureFunMat(FunMat):
+    effect: Optional[Effect] = always(None)
+    idempotent: bool = always(True)
+
+
+@frozen
 class PredefinedFunMat(Materializer):
     name: str
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
@@ -144,8 +152,10 @@ class ModuleMat(Materializer):
                 with open(path) as f:
                     object.__setattr__(self, "code", f.read())
 
-    def imp(self, name: str = "default", **kwargs) -> FunMat:
-        return ImportFunMat(self, name, runtime=self.runtime, secrets=self.secrets, **kwargs)
+    def imp(self, name: str = "default", **kwargs) -> ImportFunMat:
+        return ImportFunMat(
+            self, name, runtime=self.runtime, secrets=self.secrets, **kwargs
+        )
 
 
 @frozen

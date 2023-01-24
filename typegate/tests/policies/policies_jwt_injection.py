@@ -2,7 +2,7 @@ from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.graph.models import Auth
-from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
     """
@@ -15,6 +15,6 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
         sayHelloWorld=t.func(
             t.struct(),
             t.string(),
-            FunMat("""() => "Hello World!" """, effect=None, idempotent=False),
+            PureFunMat("""() => "Hello World!" """),
         ).add_policy(some_policy),
     )

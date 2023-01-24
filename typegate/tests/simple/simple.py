@@ -1,15 +1,15 @@
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.runtimes.deno import FunMat
 from typegraph.runtimes.deno import PredefinedFunMat
+from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph("testing") as g:
 
     rec = t.func(
         t.struct({"nested": t.struct({"arg": t.integer()}).named("Nested")}),
         t.integer(),
-        FunMat("(args) => args.nested && args.nested.arg", effect=None, idempotent=True),
+        PureFunMat("(args) => args.nested && args.nested.arg"),
     )
 
     g.expose(

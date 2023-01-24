@@ -1,10 +1,8 @@
 # Copyright Metatype under the Elastic License 2.0.
 
+from typegraph import policies as p
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.policies import Policy
-from typegraph import policies as p
-from typegraph.runtimes.deno import FunMat
 from typegraph.runtimes.typegate import ResolverMat
 from typegraph.runtimes.typegate import SchemaMat
 from typegraph.runtimes.typegate import TypeMat

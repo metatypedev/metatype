@@ -4,7 +4,7 @@ import frozendict
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.graph.models import Cors
-from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PureFunMat
 
 
 class TestTypegraph:
@@ -36,7 +36,7 @@ class TestTypegraph:
                 test=t.func(
                     inp,
                     out,
-                    FunMat("(args) => args.a * 2", effect=None, idempotent=True),
+                    PureFunMat("(args) => args.a * 2"),
                 ).named("f")
             )
 
@@ -118,13 +118,13 @@ class TestTypegraph:
                         "out": out,
                         "duration": t.gen(
                             t.integer().named("duration"),
-                            FunMat("() => 1", effect=None, idempotent=False),
+                            PureFunMat("() => 1"),
                         ).named("compute_duration"),
                         "self": g("f"),
                         "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),
                     }
                 ).named("res"),
-                FunMat("(args) => args.a", effect=None, idempotent=True),
+                PureFunMat("(args) => args.a"),
             ).named("f")
             g.expose(test=getter)
 

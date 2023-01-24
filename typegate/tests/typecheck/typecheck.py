@@ -3,8 +3,9 @@
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.runtimes.deno import FunMat
 from typegraph.runtimes.base import Effect
+from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PureFunMat
 
 
 with TypeGraph(
@@ -31,14 +32,17 @@ with TypeGraph(
 
     my_policy = policies.allow_all()
 
-    posts = t.func(t.struct(), t.array(post).max(20), FunMat("() => []", effect=None, idempotent=True)).named("posts")
+    posts = t.func(t.struct(), t.array(post).max(20), PureFunMat("() => []")).named(
+        "posts"
+    )
     find_post = t.func(
-        t.struct({"id": t.uuid()}), post.optional(), FunMat("() => null", effect=None, idempotent=True)
+        t.struct({"id": t.uuid()}), post.optional(), PureFunMat("() => null")
     ).named("findPost")
 
     create_post_mat = FunMat(
         "() => ({ title: 'Hello Metatype', content: 'Greeting from Metatype', authorId: 123})",
-        effect=Effect.CREATE, idempotent=False
+        effect=Effect.CREATE,
+        idempotent=False,
     )
 
     create_post = t.func(
