@@ -6,9 +6,11 @@ from typing import Tuple
 from attrs import field
 from attrs import frozen
 from typegraph import types as t
+from typegraph.runtimes.base import Effect
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime, Effect
-from typegraph.utils.attrs import always, required
+from typegraph.runtimes.base import Runtime
+from typegraph.utils.attrs import always
+from typegraph.utils.attrs import required
 
 
 @frozen
@@ -41,19 +43,45 @@ class HTTPRuntime(Runtime):
         }
 
     def get(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "GET", path, **kwargs, effect=None, idempotent=True))
+        return t.func(
+            inp, out, RESTMat(self, "GET", path, **kwargs, effect=None, idempotent=True)
+        )
 
     def post(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "POST", path, **kwargs, effect=Effect.CREATE, idempotent=False))
+        return t.func(
+            inp,
+            out,
+            RESTMat(
+                self, "POST", path, **kwargs, effect=Effect.CREATE, idempotent=False
+            ),
+        )
 
     def put(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "PUT", path, **kwargs, effect=Effect.UNKNOWN, idempotent=True))
+        return t.func(
+            inp,
+            out,
+            RESTMat(
+                self, "PUT", path, **kwargs, effect=Effect.UNKNOWN, idempotent=True
+            ),
+        )
 
     def patch(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "PATCH", path, **kwargs, effect=Effect.UPDATE, idempotent=True))
+        return t.func(
+            inp,
+            out,
+            RESTMat(
+                self, "PATCH", path, **kwargs, effect=Effect.UPDATE, idempotent=True
+            ),
+        )
 
     def delete(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "DELETE", path, **kwargs, effect=Effect.DELETE, idempotent=True))
+        return t.func(
+            inp,
+            out,
+            RESTMat(
+                self, "DELETE", path, **kwargs, effect=Effect.DELETE, idempotent=True
+            ),
+        )
 
 
 @frozen

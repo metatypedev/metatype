@@ -5,9 +5,11 @@ from typing import Tuple
 
 from attrs import frozen
 from typegraph import types as t
+from typegraph.runtimes.base import Effect
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime, Effect
-from typegraph.utils.attrs import always, required
+from typegraph.runtimes.base import Runtime
+from typegraph.utils.attrs import always
+from typegraph.utils.attrs import required
 
 
 @frozen
@@ -23,7 +25,11 @@ class GraphQLRuntime(Runtime):
         return t.func(inp, out, QueryMat(self, path))
 
     def mutation(
-        self, inp: t.struct, out: t.typedef, path: Optional[Tuple[str, ...]] = None, **kwargs
+        self,
+        inp: t.struct,
+        out: t.typedef,
+        path: Optional[Tuple[str, ...]] = None,
+        **kwargs
     ):
         if path is not None and len(path) == 0:
             raise Exception("Unexpected empty path")

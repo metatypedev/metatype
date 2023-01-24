@@ -1,8 +1,8 @@
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.runtimes.graphql import GraphQLRuntime
 from typegraph.runtimes.base import Effect
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 with TypeGraph("graphql_namespaces") as g:
     gql = GraphQLRuntime("https://example.com/api/graphql")
@@ -21,7 +21,11 @@ with TypeGraph("graphql_namespaces") as g:
                     t.struct({"id": user_id}), user_model, path=("findUser",)
                 ).add_policy(public),
                 "update": gql.mutation(
-                    user_model, user_model, path=("updateUser",), effect=Effect.UPDATE, idempotent=True
+                    user_model,
+                    user_model,
+                    path=("updateUser",),
+                    effect=Effect.UPDATE,
+                    idempotent=True,
                 ).add_policy(public),
                 # operations in nested namespace `user.profile`
                 "profile": t.struct(
@@ -32,8 +36,11 @@ with TypeGraph("graphql_namespaces") as g:
                             path=("profile", "picture"),
                         ).add_policy(public),
                         "setPicture": gql.mutation(
-                            picture_model, picture_model, path=("profile", "setPicture"),
-                            effect=Effect.UPDATE, idempotent=True
+                            picture_model,
+                            picture_model,
+                            path=("profile", "setPicture"),
+                            effect=Effect.UPDATE,
+                            idempotent=True,
                         ).add_policy(public),
                     }
                 ).named("profile_namespace"),

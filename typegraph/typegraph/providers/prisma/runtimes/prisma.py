@@ -20,11 +20,12 @@ from typegraph.graph.typegraph import resolve_proxy
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.policies import Policy
 from typegraph.providers.prisma.schema import PrismaSchema
+from typegraph.runtimes.base import Effect
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
-from typegraph.utils.attrs import always, required
+from typegraph.utils.attrs import always
+from typegraph.utils.attrs import required
 from typegraph.utils.attrs import SKIP
-from typegraph.runtimes.base import Effect
 
 
 def comp_exp(tpe):
@@ -378,14 +379,18 @@ class PrismaRuntime(Runtime):
                 }
             ).named("ExecuteRawInp"),
             t.integer(),
-            PrismaOperationMat(self, "", "executeRaw", effect=Effect.UNKNOWN, idempotent=False),
+            PrismaOperationMat(
+                self, "", "executeRaw", effect=Effect.UNKNOWN, idempotent=False
+            ),
         )
 
     def gen_find_unique(self, tpe: t.struct) -> t.func:
         return t.func(
             t.struct({"where": get_where_type(tpe).named(f"{tpe.name}WhereUnique")}),
             get_out_type(tpe).named(f"{tpe.name}UniqueOutput").optional(),
-            PrismaOperationMat(self, tpe.name, "findUnique", effect=None, idempotent=True),
+            PrismaOperationMat(
+                self, tpe.name, "findUnique", effect=None, idempotent=True
+            ),
         )
 
     def gen_find_many(self, tpe: t.struct) -> t.func:
@@ -394,7 +399,9 @@ class PrismaRuntime(Runtime):
                 {"where": get_where_type(tpe).named(f"{tpe.name}Where").optional()}
             ),
             t.array(get_out_type(tpe).named(f"{tpe.name}Output")),
-            PrismaOperationMat(self, tpe.name, "findMany", effect=None, idempotent=True),
+            PrismaOperationMat(
+                self, tpe.name, "findMany", effect=None, idempotent=True
+            ),
         )
 
     def gen_create(self, tpe: t.struct) -> t.func:
@@ -405,7 +412,9 @@ class PrismaRuntime(Runtime):
                 }
             ),
             get_out_type(tpe).named(f"{tpe.name}CreateOutput"),
-            PrismaOperationMat(self, tpe.name, "createOne", effect=Effect.CREATE, idempotent=False),
+            PrismaOperationMat(
+                self, tpe.name, "createOne", effect=Effect.CREATE, idempotent=False
+            ),
         )
 
     def gen_update(self, tpe: t.struct) -> t.func:
@@ -420,7 +429,9 @@ class PrismaRuntime(Runtime):
                 }
             ),
             get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
-            PrismaOperationMat(self, tpe.name, "updateOne", effect=Effect.UPDATE, idempotent=True),
+            PrismaOperationMat(
+                self, tpe.name, "updateOne", effect=Effect.UPDATE, idempotent=True
+            ),
         )
 
     def gen_delete(self, tpe: t.struct) -> t.func:
@@ -429,7 +440,9 @@ class PrismaRuntime(Runtime):
                 {"where": get_where_type(tpe).named(f"{tpe.name}DeleteInput")},
             ),
             get_out_type(tpe).named(f"{tpe.name}DeleteOutput"),
-            PrismaOperationMat(self, tpe.name, "deleteOne", effect=Effect.DELETE, idempotent=True),
+            PrismaOperationMat(
+                self, tpe.name, "deleteOne", effect=Effect.DELETE, idempotent=True
+            ),
         )
 
     def gen_delete_many(self, tpe: t.struct) -> t.func:
@@ -442,7 +455,9 @@ class PrismaRuntime(Runtime):
                 }
             ),
             t.struct({"count": t.integer()}).named(f"{tpe.name}BatchDeletePayload"),
-            PrismaOperationMat(self, tpe.name, "deleteMany", effect=Effect.DELETE, idempotent=True),
+            PrismaOperationMat(
+                self, tpe.name, "deleteMany", effect=Effect.DELETE, idempotent=True
+            ),
         )
 
     def gen(self, ops: Dict[str, Tuple[t.Type, str, Policy]]) -> Dict[str, t.func]:
@@ -543,7 +558,7 @@ class PrismaMigrationRuntime(Runtime):
 class PrismaApplyMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("apply")
-    effect: Optional[Effect] = always(Effect.CREATE)   # ? create or update?
+    effect: Optional[Effect] = always(Effect.CREATE)  # ? create or update?
     idempotent: bool = always(False)
 
 
