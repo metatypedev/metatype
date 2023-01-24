@@ -14,17 +14,17 @@ with TypeGraph("test-vars") as g:
             ),
             t.integer(),
             FunMat("({ first, second }) => first + second"),
-        ).add_policy(policies.allow_all()),
+        ).add_policy(policies.public()),
         sum=t.func(
             t.struct({"numbers": t.array(t.integer())}),
             t.integer(),
             FunMat("({ numbers }) => numbers.reduce((a, b) => a + b, 0)"),
-        ).add_policy(policies.allow_all()),
+        ).add_policy(policies.public()),
         level2=t.func(
             t.struct(
                 {"level1": t.struct({"level2": t.array(t.string())}).named("Level1")}
             ),
             t.string(),
             FunMat("(arg) => arg.level1.level2[0]"),
-        ).add_policy(policies.allow_all()),
+        ).add_policy(policies.public()),
     )

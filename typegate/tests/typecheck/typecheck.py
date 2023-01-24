@@ -28,7 +28,7 @@ with TypeGraph(
         }
     ).named("Post")
 
-    my_policy = policies.allow_all()
+    my_policy = policies.public()
 
     posts = t.func(t.struct(), t.array(post).max(20), FunMat("() => []")).named("posts")
     find_post = t.func(

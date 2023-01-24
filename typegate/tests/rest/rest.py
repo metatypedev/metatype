@@ -7,7 +7,7 @@ with TypeGraph("blog") as g:
 
     remote = HTTPRuntime("https://blog.example.com/api")
 
-    allow_all = policies.allow_all()
+    public = policies.public()
 
     post = t.struct(
         {
@@ -29,53 +29,53 @@ with TypeGraph("blog") as g:
 
     post_by_id = remote.get(
         "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g("Post"))
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     update_post = remote.patch(
         "/posts/{id}", t.struct({"id": t.integer(), "content": t.string()}), g("Post")
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     approve_post = remote.put(
         "posts/{id}/approved",
         t.struct({"id": t.integer(), "approved": t.boolean(), "authToken": t.string()}),
         t.struct({"approved": t.boolean()}),
         auth_token_field="authToken",
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     get_posts = remote.get("/posts", t.struct({}), t.array(g("Post"))).add_policy(
-        allow_all
+        public
     )
 
     get_posts_by_tags = remote.get(
         "/posts", t.struct({"tags": t.array(t.string())}), t.array(g("Post"))
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     delete_post = remote.delete(
         "/posts/{postId}",
         t.struct({"postId": t.integer()}),
         t.struct({"postId": t.integer()}),
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     get_comments = remote.get(
         "/comments", t.struct({"postId": t.integer()}), t.array(g("Comment"))
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     post_comment = remote.post(
         "/comments",
         t.struct({"postId": t.integer(), "content": t.string()}),
         g("Comment"),
         query_fields=("postId",),
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     replace_comment = remote.put(
         "/comments/{id}",
         g("Comment"),
         g("Comment"),
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     delete_comment = remote.delete(
         "/comments/{id}", t.struct({"id": t.integer()}), t.boolean()
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     g.expose(
         post=post_by_id,
