@@ -10,13 +10,13 @@ TG_RETREND_SECRET_KEY=password
 ```py
 from typegraph.graphs.typegraph import TypeGraph
 from typegraph.materializers.s3 import S3Runtime
-from typegraph.policies import allow_all
+from typegraph.policies import public
 
 with TypeGraph(
     "retrend",
 ) as g:
 
-    all = allow_all()
+    all = public()
     s3 = S3Runtime("http://localhost:9000", "local", "access_key", "secret_key")
 
     g.expose(

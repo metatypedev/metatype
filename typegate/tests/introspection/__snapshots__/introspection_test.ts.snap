@@ -46,7 +46,7 @@ snapshot[`Full introspection 1`] = `
             description: "test field
 
 Policies:
-- __allow_all",
+- __public",
             isDeprecated: false,
             name: "test",
             type: {
@@ -80,7 +80,7 @@ Policies:
             description: "rec field
 
 Policies:
-- __allow_all",
+- __public",
             isDeprecated: false,
             name: "rec",
             type: {
