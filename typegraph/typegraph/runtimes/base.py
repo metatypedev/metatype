@@ -1,17 +1,17 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+from enum import auto
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import TYPE_CHECKING
 
 from attrs import frozen
+from strenum import LowercaseStrEnum
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.utils.attrs import always
 from typegraph.utils.attrs import asdict
-from strenum import LowercaseStrEnum
-from enum import auto
 
 
 if TYPE_CHECKING:
@@ -43,6 +43,7 @@ class Effect(LowercaseStrEnum):
 class Materializer(Node):
     runtime: Runtime
     effect: Optional[Effect] = always(None)  # to be set by child classes
+    # see: https://developer.mozilla.org/en-US/docs/Glossary/Idempotent
     idempotent: bool = always(True)  # to be set by child classes
     collector_target: Optional[str] = always(Collector.materializers)
 
