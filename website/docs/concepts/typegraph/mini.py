@@ -7,7 +7,7 @@ with TypeGraph("mini") as g:
 
     remote = GraphQLRuntime("https://graphqlzero.almansi.me/api")
 
-    allow_all = policies.allow_all()
+    public = policies.public()
 
     post = t.struct(
         {
@@ -18,7 +18,7 @@ with TypeGraph("mini") as g:
     ).named("Post")
 
     getter = remote.query(t.struct({"id": t.integer()}), t.optional(post)).add_policy(
-        allow_all
+        public
     )
 
     g.expose(post=getter)

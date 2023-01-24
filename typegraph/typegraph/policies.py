@@ -50,7 +50,7 @@ class Policy(Node):
         raise Exception(f"Cannot create Policy from a {type(p).__name__}")
 
 
-def allow_all(name: str = "__allow_all"):
+def public(name: str = "__public"):
     return Policy(FunMat("() => true")).named(name)
 
 

@@ -138,11 +138,11 @@ with TypeGraph("introspection") as g:
         }
     ).named("directive")
 
-    allow_all = Policy(FunMat("() => true")).named("__allow_all")
+    public = Policy(FunMat("() => true")).named("__public")
 
     get_type = t.func(
         t.struct({"name": t.string()}), type.optional(), TypeMat()
-    ).add_policy(allow_all)
+    ).add_policy(public)
     g.expose(__type=get_type)
 
     schema = t.struct(
@@ -156,5 +156,5 @@ with TypeGraph("introspection") as g:
         }
     ).named("schema")
 
-    get_schema = t.func(t.struct({}), schema, SchemaMat()).add_policy(allow_all)
+    get_schema = t.func(t.struct({}), schema, SchemaMat()).add_policy(public)
     g.expose(__schema=get_schema)

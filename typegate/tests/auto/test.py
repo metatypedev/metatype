@@ -35,7 +35,7 @@ with TypeGraph("test") as g:
         }
     ).named("users")
 
-    allow_all_policy = policies.allow_all()
+    public_policy = policies.public()
 
     arg = t.struct({"value": t.integer(), "nested": t.struct({"value": t.integer()})})
 
@@ -150,7 +150,7 @@ with TypeGraph("test") as g:
             # ),
         )
         .named("f")
-        .add_policy(allow_all_policy)
+        .add_policy(public_policy)
     )
 
     g.expose(test=getter)

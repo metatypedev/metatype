@@ -13,7 +13,7 @@ with TypeGraph(
 
     sendinblue = HTTPRuntime("https://api.sendinblue.com")
 
-    public = policies.allow_all()
+    public = policies.public()
 
     newsletterSignUp = sendinblue.post(
         "v3/contacts",
