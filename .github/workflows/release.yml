@@ -133,10 +133,9 @@ jobs:
         run: |
           deno run -A dev/lock.ts --bump prerelease
           echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
-      - uses: actions-js/push@master
+      - uses: peter-evans/create-pull-request@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
-          message: "chore: prepare release ${{ steps.bump.outputs.version }}"
-          coauthor_email: ${{ github.event.pull_request.user.email }}
-          coauthor_name: ${{ github.event.pull_request.user.name }}
+          branch: bump-${{ steps.bump.outputs.version }}
+          delete-branch: true
+          commit-message: "chore: prepare release ${{ steps.bump.outputs.version }}"
+          title: "chore: prepare release ${{ steps.bump.outputs.version }}"

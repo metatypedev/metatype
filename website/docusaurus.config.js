@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // @ts-check
-// Note: type annotations allow type checking and IDEs autocompletion
-const fs = require("fs/promises");
 
 const lightCodeTheme = require("prism-react-renderer/themes/github");
 const darkCodeTheme = require("prism-react-renderer/themes/dracula");
@@ -48,36 +46,23 @@ const config = {
         };
       },
     }),
-    () => ({
-      name: "releases",
-      async loadContent() {
-        const file = "pages/docs/reference/changelog.mdx";
-        const content = await fs.readFile(file, "utf8");
-        const { ctime } = await fs.stat(file);
-        if (new Date() - ctime < 24 * 60 * 60 * 1000) {
-          console.log("cached releases");
-          return content;
-        }
-
-        const res = await fetch(
-          `https://api.github.com/repos/${organizationName}/${projectName}/releases?per_page=100&page=1`
-        ).then((r) => r.json());
-
-        const changelog = res
-          .filter((r) => !r.draft)
-          .map(
-            ({ html_url, name, tag_name, body, prerelease, created_at }) =>
-              `## [${name !== "" ? name : tag_name}](${html_url}) (${
-                prerelease ? "Prerelease, " : ""
-              }${new Date(created_at).toLocaleDateString("en-US")})\n\n${body}`
-          )
-          .join("\n\n");
-
-        const header = content.split("# Changelog")[0];
-        await fs.writeFile(file, `${header}\n\n# Changelog\n\n${changelog}`);
-        console.log("freshly loaded release");
+    [
+      "docusaurus-graphql-plugin",
+      {
+        id: "typegate",
+        schema: "http://localhost:7890/typegate",
+        routeBasePath: "/docs/reference/typegate/typegate",
       },
-    }),
+    ],
+    [
+      "docusaurus-graphql-plugin",
+      {
+        id: "prisma-migration",
+        schema: "http://localhost:7890/typegate/prisma_migration",
+        routeBasePath: "/docs/reference/typegate/prisma-migration",
+      },
+    ],
+    require("./plugins/changelog"),
     [
       "posthog-docusaurus",
       {
@@ -93,6 +78,16 @@ const config = {
         DSN: "d951b2e2b71d43e0b2fc41555cf8bf75@sentry.triage.dev/5",
       },
     ],
+    [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "marketing",
+        path: "use-cases",
+        routeBasePath: "/use-cases",
+        sidebarPath: require.resolve("./use-cases/sidebars.js"),
+        editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
+      },
+    ],
     "docusaurus-lunr-search",
   ],
   i18n: {
@@ -105,9 +100,10 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          path: "pages",
-          routeBasePath: "/",
-          sidebarPath: require.resolve("./sidebars.js"),
+          id: "docs",
+          path: "docs",
+          routeBasePath: "/docs",
+          sidebarPath: require.resolve("./docs/sidebars.js"),
           editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
         },
         theme: {
@@ -125,7 +121,7 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: "METATYPE",
+        title: "Metatype",
         logo: {
           alt: "Metatype Logo",
           src: "img/logo.svg",
@@ -133,12 +129,14 @@ const config = {
         items: [
           {
             type: "docSidebar",
+            docsPluginId: "marketing",
             sidebarId: "useCases",
             position: "left",
             label: "Use cases",
           },
           {
             type: "docSidebar",
+            docsPluginId: "docs",
             sidebarId: "docs",
             position: "left",
             label: "Docs",
