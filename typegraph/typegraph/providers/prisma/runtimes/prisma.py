@@ -558,16 +558,16 @@ class PrismaMigrationRuntime(Runtime):
 class PrismaApplyMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("apply")
-    effect: Optional[Effect] = always(Effect.CREATE)  # ? create or update?
-    idempotent: bool = always(False)
+    effect: Optional[Effect] = always(Effect.UPSERT)
+    idempotent: bool = always(True)
 
 
 @frozen
 class PrismaDeployMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("deploy")
-    effect: Optional[Effect] = always(Effect.CREATE)  # ? create or update?
-    idempotent: bool = always(False)
+    effect: Optional[Effect] = always(Effect.UPSERT)
+    idempotent: bool = always(True)
 
 
 @frozen

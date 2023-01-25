@@ -35,6 +35,7 @@ class Runtime(Node):
 class Effect(LowercaseStrEnum):
     CREATE = auto()
     UPDATE = auto()
+    UPSERT = auto()
     DELETE = auto()
     UNKNOWN = auto()
 

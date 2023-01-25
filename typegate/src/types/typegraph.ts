@@ -158,7 +158,12 @@ export type TypeNode =
   | ArrayNode
   | FunctionNode
   | AnyNode;
-export type MaterializerEffect = "create" | "update" | "delete" | "unknown";
+export type MaterializerEffect =
+  | "create"
+  | "update"
+  | "upsert"
+  | "delete"
+  | "unknown";
 export type AuthProtocol = "oauth2" | "jwk" | "basic";
 export interface Typegraph {
   $id: string;

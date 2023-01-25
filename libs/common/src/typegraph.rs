@@ -188,6 +188,7 @@ impl TypeNode {
 pub enum MaterializerEffect {
     Create,
     Update,
+    Upsert,
     Delete,
     Unknown,
 }

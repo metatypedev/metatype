@@ -814,6 +814,7 @@
       "enum": [
         "create",
         "update",
+        "upsert",
         "delete",
         "unknown"
       ]
