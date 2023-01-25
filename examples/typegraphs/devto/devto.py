@@ -54,21 +54,25 @@ def import_devto():
         {
             "article": t.struct(
                 {
-                    "body_markdown": t.string(),
-                    "canonical_url": t.string(),
-                    "description": t.string(),
-                    "main_image": t.string(),
-                    "organization_id": t.integer(),
-                    "published": t.boolean(),
-                    "series": t.string(),
-                    "tags": t.array(t.string()),
-                    "title": t.string(),
+                    "body_markdown": t.string().optional(),
+                    "canonical_url": t.string().optional(),
+                    "description": t.string().optional(),
+                    "main_image": t.string().optional(),
+                    "organization_id": t.integer().optional(),
+                    "published": t.boolean().optional(),
+                    "series": t.string().optional(),
+                    "tags": t.array(t.string()).optional(),
+                    "title": t.string().optional(),
                 }
-            )
+            ).optional()
         }
     ).named(renames["ArticleCreate"])
     types["ArticleFlareTag"] = t.struct(
-        {"bg_color_hex": t.string(), "name": t.string(), "text_color_hex": t.string()}
+        {
+            "bg_color_hex": t.string().optional(),
+            "name": t.string().optional(),
+            "text_color_hex": t.string().optional(),
+        }
     ).named(renames["ArticleFlareTag"])
     types["ArticleIndex"] = t.struct(
         {
@@ -79,10 +83,10 @@ def import_devto():
             "crossposted_at": t.string(),
             "description": t.string(),
             "edited_at": t.string(),
-            "flare_tag": t.proxy(renames["ArticleFlareTag"]),
+            "flare_tag": t.proxy(renames["ArticleFlareTag"]).optional(),
             "id": t.integer(),
             "last_comment_at": t.string(),
-            "organization": t.proxy(renames["SharedOrganization"]),
+            "organization": t.proxy(renames["SharedOrganization"]).optional(),
             "path": t.string(),
             "positive_reactions_count": t.integer(),
             "public_reactions_count": t.integer(),
@@ -107,9 +111,9 @@ def import_devto():
             "comments_count": t.integer(),
             "cover_image": t.string(),
             "description": t.string(),
-            "flare_tag": t.proxy(renames["ArticleFlareTag"]),
+            "flare_tag": t.proxy(renames["ArticleFlareTag"]).optional(),
             "id": t.integer(),
-            "organization": t.proxy(renames["SharedOrganization"]),
+            "organization": t.proxy(renames["SharedOrganization"]).optional(),
             "page_views_count": t.integer(),
             "path": t.string(),
             "positive_reactions_count": t.integer(),
@@ -137,10 +141,10 @@ def import_devto():
             "crossposted_at": t.string(),
             "description": t.string(),
             "edited_at": t.string(),
-            "flare_tag": t.proxy(renames["ArticleFlareTag"]),
+            "flare_tag": t.proxy(renames["ArticleFlareTag"]).optional(),
             "id": t.integer(),
             "last_comment_at": t.string(),
-            "organization": t.proxy(renames["SharedOrganization"]),
+            "organization": t.proxy(renames["SharedOrganization"]).optional(),
             "path": t.string(),
             "positive_reactions_count": t.integer(),
             "public_reactions_count": t.integer(),
@@ -162,17 +166,17 @@ def import_devto():
         {
             "article": t.struct(
                 {
-                    "body_markdown": t.string(),
-                    "canonical_url": t.string(),
-                    "description": t.string(),
-                    "main_image": t.string(),
-                    "organization_id": t.integer(),
-                    "published": t.boolean(),
-                    "series": t.string(),
-                    "tags": t.array(t.string()),
-                    "title": t.string(),
+                    "body_markdown": t.string().optional(),
+                    "canonical_url": t.string().optional(),
+                    "description": t.string().optional(),
+                    "main_image": t.string().optional(),
+                    "organization_id": t.integer().optional(),
+                    "published": t.boolean().optional(),
+                    "series": t.string().optional(),
+                    "tags": t.array(t.string()).optional(),
+                    "title": t.string().optional(),
                 }
-            )
+            ).optional()
         }
     ).named(renames["ArticleUpdate"])
     types["ArticleVideo"] = t.struct(
@@ -182,7 +186,7 @@ def import_devto():
             "path": t.string(),
             "title": t.string(),
             "type_of": t.string(),
-            "user": t.struct({"name": t.string()}),
+            "user": t.struct({"name": t.string().optional()}),
             "user_id": t.integer(),
             "video_duration_in_minutes": t.string(),
             "video_source_url": t.string(),
@@ -217,7 +221,7 @@ def import_devto():
             "body_markdown": t.string(),
             "category": t.proxy(renames["ListingCategory"]),
             "id": t.integer(),
-            "organization": t.proxy(renames["SharedOrganization"]),
+            "organization": t.proxy(renames["SharedOrganization"]).optional(),
             "processed_html": t.string(),
             "published": t.boolean(),
             "slug": t.string(),
@@ -233,52 +237,52 @@ def import_devto():
         {
             "listing": t.struct(
                 {
-                    "action": t.string(),
+                    "action": t.string().optional(),
                     "body_markdown": t.string(),
                     "category": t.proxy(renames["ListingCategory"]),
-                    "contact_via_connect": t.boolean(),
-                    "expires_at": t.string(),
-                    "location": t.string(),
-                    "organization_id": t.integer(),
-                    "tag_list": t.string(),
-                    "tags": t.array(t.string()),
+                    "contact_via_connect": t.boolean().optional(),
+                    "expires_at": t.string().optional(),
+                    "location": t.string().optional(),
+                    "organization_id": t.integer().optional(),
+                    "tag_list": t.string().optional(),
+                    "tags": t.array(t.string()).optional(),
                     "title": t.string(),
                 }
-            )
+            ).optional()
         }
     ).named(renames["ListingCreate"])
     types["ListingUpdate"] = t.struct(
         {
             "listing": t.struct(
                 {
-                    "action": t.string(),
-                    "body_markdown": t.string(),
-                    "category": t.proxy(renames["ListingCategory"]),
-                    "contact_via_connect": t.boolean(),
-                    "expires_at": t.string(),
-                    "location": t.string(),
-                    "tag_list": t.string(),
-                    "tags": t.array(t.string()),
-                    "title": t.string(),
+                    "action": t.string().optional(),
+                    "body_markdown": t.string().optional(),
+                    "category": t.proxy(renames["ListingCategory"]).optional(),
+                    "contact_via_connect": t.boolean().optional(),
+                    "expires_at": t.string().optional(),
+                    "location": t.string().optional(),
+                    "tag_list": t.string().optional(),
+                    "tags": t.array(t.string()).optional(),
+                    "title": t.string().optional(),
                 }
-            )
+            ).optional()
         }
     ).named(renames["ListingUpdate"])
     types["Organization"] = t.struct(
         {
-            "github_username": t.string(),
-            "joined_at": t.string(),
-            "location": t.string(),
-            "name": t.string(),
-            "profile_image": t.string(),
-            "story": t.string(),
-            "summary": t.string(),
-            "tag_line": t.string(),
-            "tech_stack": t.string(),
-            "twitter_username": t.string(),
-            "type_of": t.string(),
-            "url": t.string(),
-            "username": t.string(),
+            "github_username": t.string().optional(),
+            "joined_at": t.string().optional(),
+            "location": t.string().optional(),
+            "name": t.string().optional(),
+            "profile_image": t.string().optional(),
+            "story": t.string().optional(),
+            "summary": t.string().optional(),
+            "tag_line": t.string().optional(),
+            "tech_stack": t.string().optional(),
+            "twitter_username": t.string().optional(),
+            "type_of": t.string().optional(),
+            "url": t.string().optional(),
+            "username": t.string().optional(),
         }
     ).named(renames["Organization"])
     types["PodcastEpisode"] = t.struct(
@@ -287,7 +291,11 @@ def import_devto():
             "image_url": t.string(),
             "path": t.string(),
             "podcast": t.struct(
-                {"image_url": t.string(), "slug": t.string(), "title": t.string()}
+                {
+                    "image_url": t.string().optional(),
+                    "slug": t.string().optional(),
+                    "title": t.string().optional(),
+                }
             ),
             "title": t.string(),
             "type_of": t.string(),
@@ -295,10 +303,10 @@ def import_devto():
     ).named(renames["PodcastEpisode"])
     types["ProfileImage"] = t.struct(
         {
-            "image_of": t.string(),
-            "profile_image": t.string(),
-            "profile_image_90": t.string(),
-            "type_of": t.string(),
+            "image_of": t.string().optional(),
+            "profile_image": t.string().optional(),
+            "profile_image_90": t.string().optional(),
+            "type_of": t.string().optional(),
         }
     ).named(renames["ProfileImage"])
     types["ReadingList"] = t.struct(
@@ -312,22 +320,22 @@ def import_devto():
     ).named(renames["ReadingList"])
     types["SharedOrganization"] = t.struct(
         {
-            "name": t.string(),
-            "profile_image": t.string(),
-            "profile_image_90": t.string(),
-            "slug": t.string(),
-            "username": t.string(),
+            "name": t.string().optional(),
+            "profile_image": t.string().optional(),
+            "profile_image_90": t.string().optional(),
+            "slug": t.string().optional(),
+            "username": t.string().optional(),
         }
     ).named(renames["SharedOrganization"])
     types["SharedUser"] = t.struct(
         {
-            "github_username": t.string(),
-            "name": t.string(),
-            "profile_image": t.string(),
-            "profile_image_90": t.string(),
-            "twitter_username": t.string(),
-            "username": t.string(),
-            "website_url": t.string(),
+            "github_username": t.string().optional(),
+            "name": t.string().optional(),
+            "profile_image": t.string().optional(),
+            "profile_image_90": t.string().optional(),
+            "twitter_username": t.string().optional(),
+            "username": t.string().optional(),
+            "website_url": t.string().optional(),
         }
     ).named(renames["SharedUser"])
     types["Tag"] = t.struct(
@@ -361,28 +369,28 @@ def import_devto():
                     "source": t.string(),
                     "target_url": t.string(),
                 }
-            )
+            ).optional()
         }
     ).named(renames["WebhookCreate"])
     types["WebhookIndex"] = t.struct(
         {
-            "created_at": t.string(),
-            "events": t.array(t.string()),
-            "id": t.integer(),
-            "source": t.string(),
-            "target_url": t.string(),
-            "type_of": t.string(),
+            "created_at": t.string().optional(),
+            "events": t.array(t.string()).optional(),
+            "id": t.integer().optional(),
+            "source": t.string().optional(),
+            "target_url": t.string().optional(),
+            "type_of": t.string().optional(),
         }
     ).named(renames["WebhookIndex"])
     types["WebhookShow"] = t.struct(
         {
-            "created_at": t.string(),
-            "events": t.array(t.string()),
-            "id": t.integer(),
-            "source": t.string(),
-            "target_url": t.string(),
-            "type_of": t.string(),
-            "user": t.proxy(renames["SharedUser"]),
+            "created_at": t.string().optional(),
+            "events": t.array(t.string()).optional(),
+            "id": t.integer().optional(),
+            "source": t.string().optional(),
+            "target_url": t.string().optional(),
+            "type_of": t.string().optional(),
+            "user": t.proxy(renames["SharedUser"]).optional(),
         }
     ).named(renames["WebhookShow"])
 
@@ -410,17 +418,17 @@ def import_devto():
             {
                 "article": t.struct(
                     {
-                        "body_markdown": t.string(),
-                        "canonical_url": t.string(),
-                        "description": t.string(),
-                        "main_image": t.string(),
-                        "organization_id": t.integer(),
-                        "published": t.boolean(),
-                        "series": t.string(),
-                        "tags": t.array(t.string()),
-                        "title": t.string(),
+                        "body_markdown": t.string().optional(),
+                        "canonical_url": t.string().optional(),
+                        "description": t.string().optional(),
+                        "main_image": t.string().optional(),
+                        "organization_id": t.integer().optional(),
+                        "published": t.boolean().optional(),
+                        "series": t.string().optional(),
+                        "tags": t.array(t.string()).optional(),
+                        "title": t.string().optional(),
                     }
-                )
+                ).optional()
             }
         ),
         t.proxy(renames["ArticleShow"]),
@@ -464,17 +472,17 @@ def import_devto():
                 "id": t.integer(),
                 "article": t.struct(
                     {
-                        "body_markdown": t.string(),
-                        "canonical_url": t.string(),
-                        "description": t.string(),
-                        "main_image": t.string(),
-                        "organization_id": t.integer(),
-                        "published": t.boolean(),
-                        "series": t.string(),
-                        "tags": t.array(t.string()),
-                        "title": t.string(),
+                        "body_markdown": t.string().optional(),
+                        "canonical_url": t.string().optional(),
+                        "description": t.string().optional(),
+                        "main_image": t.string().optional(),
+                        "organization_id": t.integer().optional(),
+                        "published": t.boolean().optional(),
+                        "series": t.string().optional(),
+                        "tags": t.array(t.string()).optional(),
+                        "title": t.string().optional(),
                     }
-                ),
+                ).optional(),
             }
         ),
         t.proxy(renames["ArticleShow"]),
@@ -519,18 +527,18 @@ def import_devto():
             {
                 "listing": t.struct(
                     {
-                        "action": t.string(),
+                        "action": t.string().optional(),
                         "body_markdown": t.string(),
                         "category": t.proxy(renames["ListingCategory"]),
-                        "contact_via_connect": t.boolean(),
-                        "expires_at": t.string(),
-                        "location": t.string(),
-                        "organization_id": t.integer(),
-                        "tag_list": t.string(),
-                        "tags": t.array(t.string()),
+                        "contact_via_connect": t.boolean().optional(),
+                        "expires_at": t.string().optional(),
+                        "location": t.string().optional(),
+                        "organization_id": t.integer().optional(),
+                        "tag_list": t.string().optional(),
+                        "tags": t.array(t.string()).optional(),
                         "title": t.string(),
                     }
-                )
+                ).optional()
             }
         ),
         t.proxy(renames["Listing"]),
@@ -560,17 +568,17 @@ def import_devto():
                 "id": t.integer(),
                 "listing": t.struct(
                     {
-                        "action": t.string(),
-                        "body_markdown": t.string(),
-                        "category": t.proxy(renames["ListingCategory"]),
-                        "contact_via_connect": t.boolean(),
-                        "expires_at": t.string(),
-                        "location": t.string(),
-                        "tag_list": t.string(),
-                        "tags": t.array(t.string()),
-                        "title": t.string(),
+                        "action": t.string().optional(),
+                        "body_markdown": t.string().optional(),
+                        "category": t.proxy(renames["ListingCategory"]).optional(),
+                        "contact_via_connect": t.boolean().optional(),
+                        "expires_at": t.string().optional(),
+                        "location": t.string().optional(),
+                        "tag_list": t.string().optional(),
+                        "tags": t.array(t.string()).optional(),
+                        "title": t.string().optional(),
                     }
-                ),
+                ).optional(),
             }
         ),
         t.proxy(renames["ArticleShow"]),
@@ -677,7 +685,7 @@ def import_devto():
                         "source": t.string(),
                         "target_url": t.string(),
                     }
-                )
+                ).optional()
             }
         ),
         t.proxy(renames["WebhookShow"]),

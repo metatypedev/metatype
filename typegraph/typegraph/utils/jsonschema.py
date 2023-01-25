@@ -35,7 +35,11 @@ class TypedefFromJsonSchema:
             "array": lambda s: t.array(self(s["items"])),
             "object": lambda s: t.struct(
                 {
-                    prop_name: self(prop_schema)
+                    prop_name: (
+                        self(prop_schema)
+                        if prop_name in s.get("required", [])
+                        else self(prop_schema).optional()
+                    )
                     for prop_name, prop_schema in s.properties.items()
                 }
             ),
