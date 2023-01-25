@@ -9,6 +9,7 @@ export const Type = {
   OBJECT: "object",
   ARRAY: "array",
   FUNCTION: "function",
+  UNION: "union",
   ANY: "any",
 } as const;
 
@@ -30,6 +31,7 @@ import type {
   OptionalNode,
   StringNode,
   TypeNode,
+  UnionNode,
 } from "./types/typegraph.ts";
 
 export type {
@@ -124,6 +126,10 @@ export function isQuantifier(t: TypeNode): t is QuantifierNode {
 
 export function isFunction(t: TypeNode): t is FunctionNode {
   return t.type === "function";
+}
+
+export function isUnion(t: TypeNode): t is UnionNode {
+  return t.type === "union";
 }
 
 export function getWrappedType(t: QuantifierNode): number {
