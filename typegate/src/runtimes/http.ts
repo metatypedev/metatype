@@ -28,16 +28,21 @@ const encodeRequestBody = (
   body: Record<string, any>,
   contentType: string,
 ): string | FormData => {
+  const mapToFormData = (body: Record<string, any>) => {
+    const formData = new FormData();
+    for (const [name, value] of Object.entries(body)) {
+      formData.append(name, value);
+    }
+    return formData;
+  };
   switch (contentType) {
     case "application/json":
       return JSON.stringify(body);
-    case "application/x-www-form-urlencoded": {
-      const formData = new FormData();
-      for (const [name, value] of Object.entries(body)) {
-        formData.append(name, value);
-      }
-      return formData;
-    }
+    // -- form handler --
+    case "application/x-www-form-urlencoded":
+    case "multipart/form-data":
+      return mapToFormData(body);
+    // -- form handler --
     default:
       throw new Error(`Content-Type ${contentType} not supported`);
   }
