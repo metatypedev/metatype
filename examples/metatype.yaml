@@ -6,7 +6,7 @@ typegates:
 
 typegraphs:
   python:
-    include: "typegraphs/**/*.py"
+    include: "typegraphs/devto/*.py"
   materializers:
     prisma:
       migrations_path: "prisma/migrations"

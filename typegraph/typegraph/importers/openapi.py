@@ -1,5 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import json
 import pathlib
 import re
 from typing import Callable
@@ -76,7 +77,7 @@ class OpenApiImporter(Importer):
             path = pathlib.Path(file)
             with open(path) as f:
                 if path.suffix == ".json":
-                    self.specification = Box(orjson.loads(f.read()))
+                    self.specification = Box(json.loads(f.read()))
                 elif path.suffix in [".yaml", ".yml"]:
                     self.specification = Box(yaml.safe_load(f.read()))
                 raise Exception(
