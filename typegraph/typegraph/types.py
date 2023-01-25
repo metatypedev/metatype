@@ -542,15 +542,19 @@ class array(typedef):
 
 @frozen
 class union(typedef):
-    variants: List[TypeNode]
+    variants: List[TypeNode] = []
 
     @property
     def edges(self) -> List[Node]:
-        return super().edges + self.variants
+        nodes = super().edges + self.variants
+        return nodes
 
     def data(self, collector: Collector) -> dict:
         ret = super().data(collector)
-        ret["anyOf"] = [collector.index(v) for v in ret.pop("variants")]
+        nodeIndexes = [collector.index(v) for v in ret.pop("variants")]
+        ret["anyOf"] = tuple(nodeIndexes)
+
+        return ret
 
 
 def ipv4() -> string:
