@@ -135,6 +135,20 @@ export type FunctionNode = {
     [k: string]: unknown;
   };
 };
+export type UnionNode = {
+  type: "union";
+  anyOf: number[];
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
+  config?: {
+    [k: string]: unknown;
+  };
+};
 export type AnyNode = {
   type: "any";
   title: string;
@@ -157,6 +171,7 @@ export type TypeNode =
   | ObjectNode
   | ArrayNode
   | FunctionNode
+  | UnionNode
   | AnyNode;
 export type AuthProtocol = "oauth2" | "jwk" | "basic";
 export interface Typegraph {
