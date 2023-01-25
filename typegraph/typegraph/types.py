@@ -468,7 +468,9 @@ def enum(variants: List[str]) -> string:
 def validate_struct_props(instance, attribute, props):
     for tpe in props.values():
         if not isinstance(tpe, typedef) and not isinstance(tpe, NodeProxy):
-            raise Exception(f"expected typedef or NodeProxy, got {type(tpe).__name__}")
+            raise Exception(
+                f"expected typedef or NodeProxy, got {type(tpe).__name__}: {props}"
+            )
 
 
 @with_constraints

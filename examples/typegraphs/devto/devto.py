@@ -1,46 +1,37 @@
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.importers.openapi import import_openapi
-from typegraph.policies import public
+from typegraph.importers.openapi import OpenApiImporter
 from typegraph.runtimes.http import HTTPRuntime
 
-import_openapi(
-    "https://raw.githubusercontent.com/APIs-guru/openapi-directory/main/APIs/dev.to/0.9.7/openapi.yaml",
-    False,
-)
+
+OpenApiImporter(
+    "devto",
+    url="https://raw.githubusercontent.com/APIs-guru/openapi-directory/main/APIs/dev.to/0.9.7/openapi.yaml",
+).imp(False)
 
 with TypeGraph(name="devto") as g:
-    remote = HTTPRuntime("https://dev.to/api")
+    devto = HTTPRuntime("https://dev.to/api")
+
+    t.struct({"error": t.string(), "status": t.integer()}).named("APIError")
     t.struct(
         {
-            "error": t.string(),
-            "status": t.integer(),
-        }
-    ).named("APIError")
-    t.struct(
-        {
-            "article": t.optional(g("ArticleCreate__article")),
+            "article": t.struct(
+                {
+                    "body_markdown": t.string(),
+                    "canonical_url": t.string(),
+                    "description": t.string(),
+                    "main_image": t.string(),
+                    "organization_id": t.integer(),
+                    "published": t.boolean(),
+                    "series": t.string(),
+                    "tags": t.array(t.string()),
+                    "title": t.string(),
+                }
+            )
         }
     ).named("ArticleCreate")
     t.struct(
-        {
-            "body_markdown": t.optional(t.string()),
-            "canonical_url": t.optional(t.string()),
-            "description": t.optional(t.string()),
-            "main_image": t.optional(t.string()),
-            "organization_id": t.optional(t.integer()),
-            "published": t.optional(t.boolean()),
-            "series": t.optional(t.string()),
-            "tags": t.optional(t.array(t.string())),
-            "title": t.optional(t.string()),
-        }
-    ).named("ArticleCreate__article")
-    t.struct(
-        {
-            "bg_color_hex": t.optional(t.string()),
-            "name": t.optional(t.string()),
-            "text_color_hex": t.optional(t.string()),
-        }
+        {"bg_color_hex": t.string(), "name": t.string(), "text_color_hex": t.string()}
     ).named("ArticleFlareTag")
     t.struct(
         {
@@ -51,10 +42,10 @@ with TypeGraph(name="devto") as g:
             "crossposted_at": t.string(),
             "description": t.string(),
             "edited_at": t.string(),
-            "flare_tag": t.optional(g("ArticleFlareTag")),
+            "flare_tag": g("ArticleFlareTag"),
             "id": t.integer(),
             "last_comment_at": t.string(),
-            "organization": t.optional(g("SharedOrganization")),
+            "organization": g("SharedOrganization"),
             "path": t.string(),
             "positive_reactions_count": t.integer(),
             "public_reactions_count": t.integer(),
@@ -79,9 +70,9 @@ with TypeGraph(name="devto") as g:
             "comments_count": t.integer(),
             "cover_image": t.string(),
             "description": t.string(),
-            "flare_tag": t.optional(g("ArticleFlareTag")),
+            "flare_tag": g("ArticleFlareTag"),
             "id": t.integer(),
-            "organization": t.optional(g("SharedOrganization")),
+            "organization": g("SharedOrganization"),
             "page_views_count": t.integer(),
             "path": t.string(),
             "positive_reactions_count": t.integer(),
@@ -109,10 +100,10 @@ with TypeGraph(name="devto") as g:
             "crossposted_at": t.string(),
             "description": t.string(),
             "edited_at": t.string(),
-            "flare_tag": t.optional(g("ArticleFlareTag")),
+            "flare_tag": g("ArticleFlareTag"),
             "id": t.integer(),
             "last_comment_at": t.string(),
-            "organization": t.optional(g("SharedOrganization")),
+            "organization": g("SharedOrganization"),
             "path": t.string(),
             "positive_reactions_count": t.integer(),
             "public_reactions_count": t.integer(),
@@ -132,22 +123,21 @@ with TypeGraph(name="devto") as g:
     ).named("ArticleShow")
     t.struct(
         {
-            "article": t.optional(g("ArticleUpdate__article")),
+            "article": t.struct(
+                {
+                    "body_markdown": t.string(),
+                    "canonical_url": t.string(),
+                    "description": t.string(),
+                    "main_image": t.string(),
+                    "organization_id": t.integer(),
+                    "published": t.boolean(),
+                    "series": t.string(),
+                    "tags": t.array(t.string()),
+                    "title": t.string(),
+                }
+            )
         }
     ).named("ArticleUpdate")
-    t.struct(
-        {
-            "body_markdown": t.optional(t.string()),
-            "canonical_url": t.optional(t.string()),
-            "description": t.optional(t.string()),
-            "main_image": t.optional(t.string()),
-            "organization_id": t.optional(t.integer()),
-            "published": t.optional(t.boolean()),
-            "series": t.optional(t.string()),
-            "tags": t.optional(t.array(t.string())),
-            "title": t.optional(t.string()),
-        }
-    ).named("ArticleUpdate__article")
     t.struct(
         {
             "cloudinary_video_url": t.string(),
@@ -155,17 +145,12 @@ with TypeGraph(name="devto") as g:
             "path": t.string(),
             "title": t.string(),
             "type_of": t.string(),
-            "user": g("ArticleVideo__user"),
+            "user": t.struct({"name": t.string()}),
             "user_id": t.integer(),
             "video_duration_in_minutes": t.string(),
             "video_source_url": t.string(),
         }
     ).named("ArticleVideo")
-    t.struct(
-        {
-            "name": t.optional(t.string()),
-        }
-    ).named("ArticleVideo__user")
     t.struct(
         {
             "body_html": t.string(),
@@ -176,13 +161,9 @@ with TypeGraph(name="devto") as g:
             "user": g("SharedUser"),
         }
     ).named("Comment")
-    t.struct(
-        {
-            "id": t.integer(),
-            "name": t.string(),
-            "points": t.float(),
-        }
-    ).named("FollowedTag")
+    t.struct({"id": t.integer(), "name": t.string(), "points": t.number()}).named(
+        "FollowedTag"
+    )
     t.struct(
         {
             "created_at": t.string(),
@@ -199,7 +180,7 @@ with TypeGraph(name="devto") as g:
             "body_markdown": t.string(),
             "category": g("ListingCategory"),
             "id": t.integer(),
-            "organization": t.optional(g("SharedOrganization")),
+            "organization": g("SharedOrganization"),
             "processed_html": t.string(),
             "published": t.boolean(),
             "slug": t.string(),
@@ -213,56 +194,54 @@ with TypeGraph(name="devto") as g:
     t.string().named("ListingCategory")
     t.struct(
         {
-            "listing": t.optional(g("ListingCreate__listing")),
+            "listing": t.struct(
+                {
+                    "action": t.string(),
+                    "body_markdown": t.string(),
+                    "category": g("ListingCategory"),
+                    "contact_via_connect": t.boolean(),
+                    "expires_at": t.string(),
+                    "location": t.string(),
+                    "organization_id": t.integer(),
+                    "tag_list": t.string(),
+                    "tags": t.array(t.string()),
+                    "title": t.string(),
+                }
+            )
         }
     ).named("ListingCreate")
     t.struct(
         {
-            "action": t.optional(t.string()),
-            "body_markdown": t.string(),
-            "category": g("ListingCategory"),
-            "contact_via_connect": t.optional(t.boolean()),
-            "expires_at": t.optional(t.string()),
-            "location": t.optional(t.string()),
-            "organization_id": t.optional(t.integer()),
-            "tag_list": t.optional(t.string()),
-            "tags": t.optional(t.array(t.string())),
-            "title": t.string(),
-        }
-    ).named("ListingCreate__listing")
-    t.struct(
-        {
-            "listing": t.optional(g("ListingUpdate__listing")),
+            "listing": t.struct(
+                {
+                    "action": t.string(),
+                    "body_markdown": t.string(),
+                    "category": g("ListingCategory"),
+                    "contact_via_connect": t.boolean(),
+                    "expires_at": t.string(),
+                    "location": t.string(),
+                    "tag_list": t.string(),
+                    "tags": t.array(t.string()),
+                    "title": t.string(),
+                }
+            )
         }
     ).named("ListingUpdate")
     t.struct(
         {
-            "action": t.optional(t.string()),
-            "body_markdown": t.optional(t.string()),
-            "category": t.optional(g("ListingCategory")),
-            "contact_via_connect": t.optional(t.boolean()),
-            "expires_at": t.optional(t.string()),
-            "location": t.optional(t.string()),
-            "tag_list": t.optional(t.string()),
-            "tags": t.optional(t.array(t.string())),
-            "title": t.optional(t.string()),
-        }
-    ).named("ListingUpdate__listing")
-    t.struct(
-        {
-            "github_username": t.optional(t.string()),
-            "joined_at": t.optional(t.string()),
-            "location": t.optional(t.string()),
-            "name": t.optional(t.string()),
-            "profile_image": t.optional(t.string()),
-            "story": t.optional(t.string()),
-            "summary": t.optional(t.string()),
-            "tag_line": t.optional(t.string()),
-            "tech_stack": t.optional(t.string()),
-            "twitter_username": t.optional(t.string()),
-            "type_of": t.optional(t.string()),
-            "url": t.optional(t.string()),
-            "username": t.optional(t.string()),
+            "github_username": t.string(),
+            "joined_at": t.string(),
+            "location": t.string(),
+            "name": t.string(),
+            "profile_image": t.string(),
+            "story": t.string(),
+            "summary": t.string(),
+            "tag_line": t.string(),
+            "tech_stack": t.string(),
+            "twitter_username": t.string(),
+            "type_of": t.string(),
+            "url": t.string(),
+            "username": t.string(),
         }
     ).named("Organization")
     t.struct(
@@ -270,24 +249,19 @@ with TypeGraph(name="devto") as g:
             "id": t.integer(),
             "image_url": t.string(),
             "path": t.string(),
-            "podcast": g("PodcastEpisode__podcast"),
+            "podcast": t.struct(
+                {"image_url": t.string(), "slug": t.string(), "title": t.string()}
+            ),
             "title": t.string(),
             "type_of": t.string(),
         }
     ).named("PodcastEpisode")
     t.struct(
         {
-            "image_url": t.optional(t.string()),
-            "slug": t.optional(t.string()),
-            "title": t.optional(t.string()),
-        }
-    ).named("PodcastEpisode__podcast")
-    t.struct(
-        {
-            "image_of": t.optional(t.string()),
-            "profile_image": t.optional(t.string()),
-            "profile_image_90": t.optional(t.string()),
-            "type_of": t.optional(t.string()),
+            "image_of": t.string(),
+            "profile_image": t.string(),
+            "profile_image_90": t.string(),
+            "type_of": t.string(),
         }
     ).named("ProfileImage")
     t.struct(
@@ -301,22 +275,22 @@ with TypeGraph(name="devto") as g:
     ).named("ReadingList")
     t.struct(
         {
-            "name": t.optional(t.string()),
-            "profile_image": t.optional(t.string()),
-            "profile_image_90": t.optional(t.string()),
-            "slug": t.optional(t.string()),
-            "username": t.optional(t.string()),
+            "name": t.string(),
+            "profile_image": t.string(),
+            "profile_image_90": t.string(),
+            "slug": t.string(),
+            "username": t.string(),
         }
     ).named("SharedOrganization")
     t.struct(
         {
-            "github_username": t.optional(t.string()),
-            "name": t.optional(t.string()),
-            "profile_image": t.optional(t.string()),
-            "profile_image_90": t.optional(t.string()),
-            "twitter_username": t.optional(t.string()),
-            "username": t.optional(t.string()),
-            "website_url": t.optional(t.string()),
+            "github_username": t.string(),
+            "name": t.string(),
+            "profile_image": t.string(),
+            "profile_image_90": t.string(),
+            "twitter_username": t.string(),
+            "username": t.string(),
+            "website_url": t.string(),
         }
     ).named("SharedUser")
     t.struct(
@@ -344,397 +318,345 @@ with TypeGraph(name="devto") as g:
     ).named("User")
     t.struct(
         {
-            "webhook_endpoint": t.optional(g("WebhookCreate__webhook_endpoint")),
+            "webhook_endpoint": t.struct(
+                {
+                    "events": t.array(t.string()),
+                    "source": t.string(),
+                    "target_url": t.string(),
+                }
+            )
         }
     ).named("WebhookCreate")
     t.struct(
         {
+            "created_at": t.string(),
             "events": t.array(t.string()),
+            "id": t.integer(),
             "source": t.string(),
             "target_url": t.string(),
-        }
-    ).named("WebhookCreate__webhook_endpoint")
-    t.struct(
-        {
-            "created_at": t.optional(t.string()),
-            "events": t.optional(t.array(t.string())),
-            "id": t.optional(t.integer()),
-            "source": t.optional(t.string()),
-            "target_url": t.optional(t.string()),
-            "type_of": t.optional(t.string()),
+            "type_of": t.string(),
         }
     ).named("WebhookIndex")
     t.struct(
         {
-            "created_at": t.optional(t.string()),
-            "events": t.optional(t.array(t.string())),
-            "id": t.optional(t.integer()),
-            "source": t.optional(t.string()),
-            "target_url": t.optional(t.string()),
-            "type_of": t.optional(t.string()),
-            "user": t.optional(g("SharedUser")),
+            "created_at": t.string(),
+            "events": t.array(t.string()),
+            "id": t.integer(),
+            "source": t.string(),
+            "target_url": t.string(),
+            "type_of": t.string(),
+            "user": g("SharedUser"),
         }
     ).named("WebhookShow")
+
     g.expose(
-        getArticles=remote.get(
+        getArticles=devto.get(
             "/articles",
             t.struct(
                 {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                    "tag": t.optional(t.string()),
-                    "tags": t.optional(t.string()),
-                    "tags_exclude": t.optional(t.string()),
-                    "username": t.optional(t.string()),
-                    "state": t.optional(t.string()),
-                    "top": t.optional(t.integer()),
-                    "collection_id": t.optional(t.integer()),
-                }
-            ),
-            t.array(g("ArticleIndex")),
-        ).add_policy(public()),
-        createArticle=remote.post(
-            "/articles",
-            t.struct(
-                {
-                    "article": t.optional(g("ArticleCreate__article")),
-                }
-            ),
-            g("ArticleShow"),
-            content_type="application/json",
-            body_fields=("article",),
-        ).add_policy(public()),
-        getLatestArticles=remote.get(
-            "/articles/latest",
-            t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
-            ),
-            t.array(g("ArticleIndex")),
-        ).add_policy(public()),
-        getUserArticles=remote.get(
-            "/articles/me",
-            t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
-            ),
-            t.array(g("ArticleMe")),
-        ).add_policy(public()),
-        getUserAllArticles=remote.get(
-            "/articles/me/all",
-            t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
-            ),
-            t.array(g("ArticleMe")),
-        ).add_policy(public()),
-        getUserPublishedArticles=remote.get(
-            "/articles/me/published",
-            t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
-            ),
-            t.array(g("ArticleMe")),
-        ).add_policy(public()),
-        getUserUnpublishedArticles=remote.get(
-            "/articles/me/unpublished",
-            t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
-            ),
-            t.array(g("ArticleMe")),
-        ).add_policy(public()),
-        getArticleById=remote.get(
-            "/articles/{id}",
-            t.struct(
-                {
-                    "id": t.integer(),
-                }
-            ),
-            t.optional(g("ArticleShow")),
-        ).add_policy(public()),
-        updateArticle=remote.put(
-            "/articles/{id}",
-            t.struct(
-                {
-                    "id": t.integer(),
-                    "article": t.optional(g("ArticleUpdate__article")),
-                }
-            ),
-            g("ArticleShow"),
-            content_type="application/json",
-            body_fields=("article",),
-        ).add_policy(public()),
-        getArticleByPath=remote.get(
-            "/articles/{username}/{slug}",
-            t.struct(
-                {
+                    "page": t.integer(),
+                    "per_page": t.integer(),
+                    "tag": t.string(),
+                    "tags": t.string(),
+                    "tags_exclude": t.string(),
                     "username": t.string(),
-                    "slug": t.string(),
+                    "state": t.string(),
+                    "top": t.integer(),
+                    "collection_id": t.integer(),
                 }
             ),
-            t.optional(g("ArticleShow")),
-        ).add_policy(public()),
-        getCommentsByArticleId=remote.get(
+            t.array(g("ArticleIndex")),
+        ),
+        createArticle=devto.post(
+            "/articles",
+            t.struct(
+                {
+                    "article": t.struct(
+                        {
+                            "body_markdown": t.string(),
+                            "canonical_url": t.string(),
+                            "description": t.string(),
+                            "main_image": t.string(),
+                            "organization_id": t.integer(),
+                            "published": t.boolean(),
+                            "series": t.string(),
+                            "tags": t.array(t.string()),
+                            "title": t.string(),
+                        }
+                    )
+                }
+            ),
+            g("ArticleShow"),
+            content_type="application/json",
+            body_fields=("article",),
+        ),
+        getLatestArticles=devto.get(
+            "/articles/latest",
+            t.struct({"page": t.integer(), "per_page": t.integer()}),
+            t.array(g("ArticleIndex")),
+        ),
+        getUserArticles=devto.get(
+            "/articles/me",
+            t.struct({"page": t.integer(), "per_page": t.integer()}),
+            t.array(g("ArticleMe")),
+        ),
+        getUserAllArticles=devto.get(
+            "/articles/me/all",
+            t.struct({"page": t.integer(), "per_page": t.integer()}),
+            t.array(g("ArticleMe")),
+        ),
+        getUserPublishedArticles=devto.get(
+            "/articles/me/published",
+            t.struct({"page": t.integer(), "per_page": t.integer()}),
+            t.array(g("ArticleMe")),
+        ),
+        getUserUnpublishedArticles=devto.get(
+            "/articles/me/unpublished",
+            t.struct({"page": t.integer(), "per_page": t.integer()}),
+            t.array(g("ArticleMe")),
+        ),
+        getArticleById=devto.get(
+            "/articles/{id}",
+            t.struct({"id": t.integer()}),
+            g("ArticleShow").optional(),
+        ),
+        updateArticle=devto.put(
+            "/articles/{id}",
+            t.struct(
+                {
+                    "id": t.integer(),
+                    "article": t.struct(
+                        {
+                            "body_markdown": t.string(),
+                            "canonical_url": t.string(),
+                            "description": t.string(),
+                            "main_image": t.string(),
+                            "organization_id": t.integer(),
+                            "published": t.boolean(),
+                            "series": t.string(),
+                            "tags": t.array(t.string()),
+                            "title": t.string(),
+                        }
+                    ),
+                }
+            ),
+            g("ArticleShow"),
+            content_type="application/json",
+            body_fields=("article",),
+        ),
+        getArticleByPath=devto.get(
+            "/articles/{username}/{slug}",
+            t.struct({"username": t.string(), "slug": t.string()}),
+            g("ArticleShow").optional(),
+        ),
+        getCommentsByArticleId=devto.get(
             "/comments",
-            t.struct(
-                {
-                    "a_id": t.optional(t.integer()),
-                    "p_id": t.optional(t.integer()),
-                }
-            ),
-            t.optional(t.array(g("Comment"))),
-        ).add_policy(public()),
-        getCommentById=remote.get(
+            t.struct({"a_id": t.integer(), "p_id": t.integer()}),
+            t.array(g("Comment")).optional(),
+        ),
+        getCommentById=devto.get(
             "/comments/{id}",
-            t.struct(
-                {
-                    "id": t.string(),
-                }
-            ),
-            t.optional(g("Comment")),
-        ).add_policy(public()),
-        getFollowers=remote.get(
+            t.struct({"id": t.string()}),
+            g("Comment").optional(),
+        ),
+        getFollowers=devto.get(
             "/followers/users",
             t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                    "sort": t.optional(t.string()),
-                }
+                {"page": t.integer(), "per_page": t.integer(), "sort": t.string()}
             ),
             t.array(g("Follower")),
-        ).add_policy(public()),
-        getFollowedTags=remote.get(
+        ),
+        getFollowedTags=devto.get(
             "/follows/tags",
             t.struct({}),
             t.array(g("FollowedTag")),
-        ).add_policy(public()),
-        getListings=remote.get(
+        ),
+        getListings=devto.get(
             "/listings",
             t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                    "category": t.optional(t.string()),
-                }
+                {"page": t.integer(), "per_page": t.integer(), "category": t.string()}
             ),
             t.array(g("Listing")),
-        ).add_policy(public()),
-        createListing=remote.post(
+        ),
+        createListing=devto.post(
             "/listings",
             t.struct(
                 {
-                    "listing": t.optional(g("ListingCreate__listing")),
+                    "listing": t.struct(
+                        {
+                            "action": t.string(),
+                            "body_markdown": t.string(),
+                            "category": g("ListingCategory"),
+                            "contact_via_connect": t.boolean(),
+                            "expires_at": t.string(),
+                            "location": t.string(),
+                            "organization_id": t.integer(),
+                            "tag_list": t.string(),
+                            "tags": t.array(t.string()),
+                            "title": t.string(),
+                        }
+                    )
                 }
             ),
             g("Listing"),
             content_type="application/json",
             body_fields=("listing",),
-        ).add_policy(public()),
-        getListingsByCategory=remote.get(
+        ),
+        getListingsByCategory=devto.get(
             "/listings/category/{category}",
             t.struct(
                 {
                     "category": g("ListingCategory"),
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
+                    "page": t.integer(),
+                    "per_page": t.integer(),
                 }
             ),
             t.array(g("Listing")),
-        ).add_policy(public()),
-        getListingById=remote.get(
+        ),
+        getListingById=devto.get(
+            "/listings/{id}",
+            t.struct({"id": t.integer()}),
+            g("Listing").optional(),
+        ),
+        updateListing=devto.put(
             "/listings/{id}",
             t.struct(
                 {
                     "id": t.integer(),
-                }
-            ),
-            t.optional(g("Listing")),
-        ).add_policy(public()),
-        updateListing=remote.put(
-            "/listings/{id}",
-            t.struct(
-                {
-                    "id": t.integer(),
-                    "listing": t.optional(g("ListingUpdate__listing")),
+                    "listing": t.struct(
+                        {
+                            "action": t.string(),
+                            "body_markdown": t.string(),
+                            "category": g("ListingCategory"),
+                            "contact_via_connect": t.boolean(),
+                            "expires_at": t.string(),
+                            "location": t.string(),
+                            "tag_list": t.string(),
+                            "tags": t.array(t.string()),
+                            "title": t.string(),
+                        }
+                    ),
                 }
             ),
             g("ArticleShow"),
             content_type="application/json",
             body_fields=("listing",),
-        ).add_policy(public()),
-        getOrganization=remote.get(
+        ),
+        getOrganization=devto.get(
             "/organizations/{username}",
-            t.struct(
-                {
-                    "username": t.string(),
-                }
-            ),
-            t.optional(g("Organization")),
-        ).add_policy(public()),
-        getOrgArticles=remote.get(
+            t.struct({"username": t.string()}),
+            g("Organization").optional(),
+        ),
+        getOrgArticles=devto.get(
             "/organizations/{username}/articles",
             t.struct(
-                {
-                    "username": t.string(),
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
+                {"username": t.string(), "page": t.integer(), "per_page": t.integer()}
             ),
-            t.optional(t.array(g("ArticleIndex"))),
-        ).add_policy(public()),
-        getOrgListings=remote.get(
+            t.array(g("ArticleIndex")).optional(),
+        ),
+        getOrgListings=devto.get(
             "/organizations/{username}/listings",
             t.struct(
                 {
                     "username": t.string(),
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                    "category": t.optional(t.string()),
+                    "page": t.integer(),
+                    "per_page": t.integer(),
+                    "category": t.string(),
                 }
             ),
-            t.optional(
-                t.array(
-                    t.struct(
-                        {
-                            "body_markdown": t.string(),
-                            "category": g("ListingCategory"),
-                            "id": t.integer(),
-                            "organization": g("SharedOrganization"),
-                            "processed_html": t.string(),
-                            "published": t.boolean(),
-                            "slug": t.string(),
-                            "tag_list": t.string(),
-                            "tags": t.array(t.string()),
-                            "title": t.string(),
-                            "type_of": t.string(),
-                            "user": g("SharedUser"),
-                        }
-                    )
+            t.array(
+                t.struct(
+                    {
+                        "body_markdown": t.string(),
+                        "category": g("ListingCategory"),
+                        "id": t.integer(),
+                        "organization": g("SharedOrganization"),
+                        "processed_html": t.string(),
+                        "published": t.boolean(),
+                        "slug": t.string(),
+                        "tag_list": t.string(),
+                        "tags": t.array(t.string()),
+                        "title": t.string(),
+                        "type_of": t.string(),
+                        "user": g("SharedUser"),
+                    }
                 )
-            ),
-        ).add_policy(public()),
-        getOrgUsers=remote.get(
+            ).optional(),
+        ),
+        getOrgUsers=devto.get(
             "/organizations/{username}/users",
             t.struct(
-                {
-                    "username": t.string(),
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
+                {"username": t.string(), "page": t.integer(), "per_page": t.integer()}
             ),
-            t.optional(t.array(g("User"))),
-        ).add_policy(public()),
-        getPodcastEpisodes=remote.get(
+            t.array(g("User")).optional(),
+        ),
+        getPodcastEpisodes=devto.get(
             "/podcast_episodes",
             t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                    "username": t.optional(t.string()),
-                }
+                {"page": t.integer(), "per_page": t.integer(), "username": t.string()}
             ),
-            t.optional(t.array(g("PodcastEpisode"))),
-        ).add_policy(public()),
-        getProfileImage=remote.get(
+            t.array(g("PodcastEpisode")).optional(),
+        ),
+        getProfileImage=devto.get(
             "/profile_images/{username}",
-            t.struct(
-                {
-                    "username": t.string(),
-                }
-            ),
-            t.optional(g("ProfileImage")),
-        ).add_policy(public()),
-        getReadinglist=remote.get(
+            t.struct({"username": t.string()}),
+            g("ProfileImage").optional(),
+        ),
+        getReadinglist=devto.get(
             "/readinglist",
-            t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
-            ),
+            t.struct({"page": t.integer(), "per_page": t.integer()}),
             t.array(g("ReadingList")),
-        ).add_policy(public()),
-        getTags=remote.get(
+        ),
+        getTags=devto.get(
             "/tags",
-            t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
-            ),
+            t.struct({"page": t.integer(), "per_page": t.integer()}),
             t.array(g("Tag")),
-        ).add_policy(public()),
-        getUserMe=remote.get(
+        ),
+        getUserMe=devto.get(
             "/users/me",
             t.struct({}),
             g("User"),
-        ).add_policy(public()),
-        getUser=remote.get(
+        ),
+        getUser=devto.get(
             "/users/{id}",
-            t.struct(
-                {
-                    "id": t.string(),
-                    "url": t.optional(t.string()),
-                }
-            ),
-            t.optional(g("User")),
-        ).add_policy(public()),
-        getArticlesWithVideo=remote.get(
+            t.struct({"id": t.string(), "url": t.string()}),
+            g("User").optional(),
+        ),
+        getArticlesWithVideo=devto.get(
             "/videos",
-            t.struct(
-                {
-                    "page": t.optional(t.integer()),
-                    "per_page": t.optional(t.integer()),
-                }
-            ),
+            t.struct({"page": t.integer(), "per_page": t.integer()}),
             t.array(g("ArticleVideo")),
-        ).add_policy(public()),
-        getWebhooks=remote.get(
+        ),
+        getWebhooks=devto.get(
             "/webhooks",
             t.struct({}),
             t.array(g("WebhookIndex")),
-        ).add_policy(public()),
-        createWebhook=remote.post(
+        ),
+        createWebhook=devto.post(
             "/webhooks",
             t.struct(
                 {
-                    "webhook_endpoint": t.optional(
-                        g("WebhookCreate__webhook_endpoint")
-                    ),
+                    "webhook_endpoint": t.struct(
+                        {
+                            "events": t.array(t.string()),
+                            "source": t.string(),
+                            "target_url": t.string(),
+                        }
+                    )
                 }
             ),
             g("WebhookShow"),
             content_type="application/json",
             body_fields=("webhook_endpoint",),
-        ).add_policy(public()),
-        getWebhookById=remote.get(
+        ),
+        deleteWebhook=devto.delete(
             "/webhooks/{id}",
-            t.struct(
-                {
-                    "id": t.integer(),
-                }
-            ),
-            t.optional(g("WebhookShow")),
-        ).add_policy(public()),
-        deleteWebhook=remote.delete(
+            t.struct({"id": t.integer()}),
+            t.boolean().optional(),
+        ),
+        getWebhookById=devto.get(
             "/webhooks/{id}",
-            t.struct(
-                {
-                    "id": t.integer(),
-                }
-            ),
-            t.optional(t.boolean()),
-        ).add_policy(public()),
+            t.struct({"id": t.integer()}),
+            g("WebhookShow").optional(),
+        ),
     )

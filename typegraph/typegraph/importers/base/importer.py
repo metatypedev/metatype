@@ -198,7 +198,7 @@ class ImporterContext:
 
     @classmethod
     def push(cls, importer: Importer):
-        if cls.importer is not None:
+        if cls.importer is not None and cls.importer is not importer:
             raise Exception(f"Cannot replace active ImporterContext {cls.importer}")
         cls.importer = importer
 
