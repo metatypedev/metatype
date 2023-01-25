@@ -28,7 +28,10 @@ export const replaceDynamicPathParams = (
 };
 
 export interface MatOptions extends Record<string, any> {
-  content_type: "application/json" | "application/x-www-form-urlencoded";
+  content_type:
+    | "application/json"
+    | "application/x-www-form-urlencoded"
+    | "multipart/form-data";
   query_fields: string[] | null;
   body_fields: string[] | null;
   auth_token_field: string | null;
