@@ -1,5 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+from re import sub as reg_sub
 from typing import List
 
 from attrs import evolve
@@ -11,6 +12,7 @@ from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.deno import FunMat
 from typegraph.utils.attrs import always
+from typegraph.utils.sanitizers import sanitize_ts_string
 
 
 def policy_name_factory():
@@ -48,5 +50,25 @@ class Policy(Node):
         raise Exception(f"Cannot create Policy from a {type(p).__name__}")
 
 
-def allow_all(name: str = "__allow_all"):
+def public(name: str = "__public"):
     return Policy(FunMat("() => true")).named(name)
+
+
+def jwt(role_name: str, field: str = "role"):
+    # join role_name, field with '__jwt' as prefix
+    separator, pattern = "_", r"[^a-zA-Z0-9_]+"
+    prefix = "__jwt"
+    jwt_name = reg_sub(pattern, separator, separator.join([prefix, role_name, field]))
+    # build the policy
+    role_name = sanitize_ts_string(role_name)
+    field = sanitize_ts_string(field)
+    src = f"""
+            (_, {{ context }}) => {{
+                const role_chunks = "{role_name}".split(".");
+                let value = context?.[role_chunks.shift()];
+                for (const chunk of role_chunks)
+                    value = value?.[chunk];
+                return value === "{field}";
+            }}
+        """
+    return Policy(FunMat(src)).named(jwt_name)

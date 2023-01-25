@@ -49,7 +49,9 @@ export const typegate =
           debug: config.debug,
         };
         return new Response(JSON.stringify(info), {
-          headers: { "content-type": "application/json" },
+          headers: {
+            "content-type": "application/json",
+          },
         });
       }
 
@@ -99,7 +101,14 @@ export const typegate =
       }
 
       if (request.method === "GET" && config.debug) {
-        const playground = renderPlayground(`${url.origin}/${lookup}`);
+        const forwarded_scheme = request.headers.get("x-forwarded-scheme");
+        const forwarded_host = request.headers.get("x-forwarded-host");
+        const targetUrl = (forwarded_scheme && forwarded_host)
+          ? `${forwarded_scheme}://${forwarded_host}`
+          : url.origin;
+        const playground = renderPlayground(
+          `${targetUrl}/${lookup}`,
+        );
         return new Response(playground, {
           headers: { "content-type": "text/html" },
         });

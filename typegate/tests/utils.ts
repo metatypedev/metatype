@@ -17,15 +17,10 @@ import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { RateLimiter } from "../src/rate_limiter.ts";
-import { RuntimesConfig } from "../src/types.ts";
 import { PrismaRuntimeDS, TypeRuntimeBase } from "../src/type_node.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";
 import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
 import * as native from "native";
-
-const testRuntimesConfig = {
-  worker: { lazy: false },
-};
 
 const thisDir = dirname(fromFileUrl(import.meta.url));
 const metaCli = resolve(thisDir, "../../target/debug/meta");
@@ -92,11 +87,10 @@ export class MemoryRegister extends Register {
     super();
   }
 
-  async set(payload: string, config?: RuntimesConfig): Promise<string> {
+  async set(payload: string): Promise<string> {
     const engine = await initTypegraph(
       payload,
       SystemTypegraph.getCustomRuntimes(this),
-      config,
       this.introspection ? undefined : null, // no need to have introspection for tests
     );
     this.map.set(engine.name, engine);
@@ -145,31 +139,28 @@ class MetaTest {
     return this.register.get(name);
   }
 
-  async pythonCode(code: string, config: RuntimesConfig = {}): Promise<Engine> {
+  async pythonCode(code: string): Promise<Engine> {
     const path = await Deno.makeTempFile({ suffix: ".py" });
     try {
       await Deno.writeTextFile(path, code);
-      return this.pythonFile(path, config);
+      return this.pythonFile(path);
     } finally {
       await Deno.remove(path);
     }
   }
 
-  async pythonFile(path: string, config: RuntimesConfig = {}): Promise<Engine> {
+  async pythonFile(path: string): Promise<Engine> {
     return await this.parseTypegraph(
       path,
-      deepMerge(testRuntimesConfig, config),
     );
   }
 
   async parseTypegraph(
     path: string,
-    config: RuntimesConfig = {},
   ): Promise<Engine> {
     const stdout = await shell([metaCli, "serialize", "-f", path, "-1"]);
     const engineName = await this.register.set(
       stdout,
-      deepMerge(testRuntimesConfig, config),
     );
     return this.register.get(engineName)!;
   }
@@ -281,7 +272,7 @@ async function exists(path: string): Promise<boolean> {
 
 type Expect = (res: Response) => Promise<void> | void;
 type Variables = Record<string, JSONValue>;
-type Context = Record<string, string>;
+type Context = Record<string, unknown>;
 
 export class Q {
   query: string;

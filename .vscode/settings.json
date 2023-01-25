@@ -15,5 +15,6 @@
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
   },
-  "deno.unstable": true
+  "deno.unstable": true,
+  "rust-analyzer.checkOnSave": true
 }

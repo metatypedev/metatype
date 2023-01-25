@@ -24,13 +24,13 @@ test("Basic introspection", async (t) => {
               "name": "Int",
             },
             {
-              "name": "NestedInp",
+              "name": "Query",
             },
             {
               "name": "res",
             },
             {
-              "name": "Query",
+              "name": "NestedInp",
             },
           ],
         },
@@ -338,7 +338,6 @@ test("Full introspection", async (t) => {
     `
       .expectBody((body) => {
         t.assertSnapshot(body.data);
-        console.log("schema", body.data.__schema);
       })
       .on(e);
   });

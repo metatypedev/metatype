@@ -295,7 +295,7 @@ class Path:
             out = f"t.optional({out})"
         return (
             op_obj.operationId,
-            f'remote.{method}("{self.path}", {inp.type}, {out}, {as_kwargs(inp.kwargs)}).add_policy(allow_all())',
+            f'remote.{method}("{self.path}", {inp.type}, {out}, {as_kwargs(inp.kwargs)}).add_policy(public())',
         )
 
     def gen_functions(self):
@@ -326,7 +326,7 @@ def import_openapi(uri: str, gen: bool):
         ["typegraph.runtimes.http", "HTTPRuntime"],
         ["typegraph", "t"],
         ["typegraph", "TypeGraph"],
-        ["typegraph.policies", "allow_all"],
+        ["typegraph.policies", "public"],
     ]
 
     importer = code.find(

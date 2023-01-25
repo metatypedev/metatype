@@ -13,7 +13,7 @@ with TypeGraph(
 
     sendinblue = HTTPRuntime("https://api.sendinblue.com")
 
-    public = policies.allow_all()
+    public = policies.public()
 
     newsletterSignUp = sendinblue.post(
         "v3/contacts",
@@ -29,7 +29,6 @@ with TypeGraph(
 
     g.expose(
         newsletterSignUp=newsletterSignUp,
-        get=t.gen(t.string(), RandomMat()).add_policy(
-            public
-        ),  # https://metatype.atlassian.net/browse/MET-11
+        get=t.gen(t.string(), RandomMat()).add_policy(public),
+        # https://metatype.atlassian.net/browse/MET-11
     )

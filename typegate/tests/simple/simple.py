@@ -13,12 +13,12 @@ with TypeGraph("testing") as g:
     )
 
     g.expose(
-        rec=rec.add_policy(policies.allow_all()),
+        rec=rec.add_policy(policies.public()),
         test=t.func(
             t.struct({"a": t.integer().named("arg1")}).named("inp"),
             t.struct({"a": t.integer().named("deps")}).named("res"),
             PredefinedFunMat("identity"),
         )
         .named("f")
-        .add_policy(policies.allow_all()),
+        .add_policy(policies.public()),
     )

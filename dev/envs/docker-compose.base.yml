@@ -1,0 +1,18 @@
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.25.0
+    restart: always
+    ports:
+      - "9901:9901"
+      - "7890:10000"
+    volumes:
+      - ../envoy.yaml:/etc/envoy/envoy.yaml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+    command: --requirepass password

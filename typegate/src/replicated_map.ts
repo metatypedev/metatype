@@ -2,6 +2,9 @@
 
 import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
+import { getLogger } from "./log.ts";
+
+const logger = getLogger("sync");
 
 type SyncContext = {
   start: (cursor: XIdInput) => AsyncIterableIterator<Record<string, string>>;
@@ -87,10 +90,11 @@ export class RedisReplicatedMap<T> {
         if (!payload) {
           throw Error(`added message without payload ${name}`);
         }
-        console.log(`adding ${name}`);
+        logger.info(`received addition: ${name}`);
+
         memory.set(name, await deserializer(payload));
       } else if (event === "-") {
-        console.log(`removing ${name}`);
+        logger.info(`received removal: ${name}`);
         memory.delete(name);
       } else {
         throw Error(`unexpected message ${name} with ${event}`);
@@ -125,7 +129,7 @@ export class RedisReplicatedMap<T> {
             }
           } catch (error) {
             Sentry.captureException(error);
-            console.error(error);
+            logger.error(error);
           }
         }
         resolve();
@@ -144,6 +148,7 @@ export class RedisReplicatedMap<T> {
     const { key, ekey, redis, serializer } = this;
 
     this.memory.set(name, elem);
+    logger.info(`sent addition: ${name}`);
 
     const tx = redis.tx();
     tx.hset(key, name, await serializer(elem));
@@ -168,6 +173,7 @@ export class RedisReplicatedMap<T> {
     const { key, ekey, redis, instance } = this;
 
     this.memory.delete(name);
+    logger.info(`sent removal: ${name}`);
 
     const tx = redis.tx();
     tx.hdel(key, name);
@@ -178,19 +184,5 @@ export class RedisReplicatedMap<T> {
       { approx: true, elements: 10000 },
     );
     await tx.flush();
-  }
-
-  async filter(
-    predicat: (elem: Record<string, string>) => boolean,
-  ): Promise<number> {
-    const { ekey, redis } = this;
-    const [stream] = await redis.xread([{ key: ekey, xid: 0 }], { block: 1 });
-    const out = stream.messages
-      .filter((message) => predicat(message.fieldValues))
-      .map((message) => message.xid);
-    if (out.length < 1) {
-      return 0;
-    }
-    return redis.xdel(ekey, ...out);
   }
 }

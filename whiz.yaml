@@ -2,7 +2,6 @@ env:
     TYPEGRAPH_VERSION: "0.0.1"
 
 meta:
-    workdir: .
     watch:
         - "meta-cli/src/**/*.rs"
     command: "cargo run -p meta-cli -- --help"
@@ -10,7 +9,6 @@ meta:
         - libs
 
 examples:
-    workdir: .
     watch:
         - "examples/metatype.yaml"
         - "typegraph/typegraph/**/*.py"
@@ -22,9 +20,8 @@ examples:
         - meta
 
 system_graphs:
-    workdir: typegate
-    watch: src/typegraphs/*.py
-    command: "./serialize-tgs.sh"
+    watch: typegate/src/typegraphs/*.py
+    command: "deno run -A dev/serialize.ts"
     depends_on:
         - meta
 
@@ -88,7 +85,7 @@ typegate_native:
         - "typegate/native/src/**/*.rs"
     env:
         OUT_DIR: "target"
-    command: "deno_bindgen -- -p native"
+    command: "deno_bindgen -- -p native -F deno"
     depends_on:
         - libs
 
@@ -118,7 +115,12 @@ website_meta:
     depends_on:
         - meta
 
-website_pydoc:
+website_docgen:
     workdir: website
-    watch: "../typegraph/typegraph/**/*.py"
-    command: "pydoc-markdown"
+    command: |
+        pydoc-markdown
+        npx docusaurus docs:generate:graphql:typegate
+        npx docusaurus docs:generate:graphql:prisma-migration
+        npx docusaurus docs:generate:changelog
+    depends_on:
+        - typegate1

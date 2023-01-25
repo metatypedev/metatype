@@ -9,7 +9,7 @@ import {
   JSONValue,
   nativeResult,
 } from "../utils.ts";
-import { s3_list, s3_presign_put, S3Client, S3Presigning } from "native";
+import * as native from "native";
 
 const fieldSelectorResolver = (stage: ComputeStage) => {
   const resolver: Resolver = async ({ _: { parent }, ...args }) => {
@@ -53,7 +53,7 @@ const getMask = (stages: ComputeStage[]): Mask => {
 
 export class S3Runtime extends Runtime {
   private constructor(
-    private client: S3Client,
+    private client: native.S3Client,
   ) {
     super();
   }
@@ -63,7 +63,7 @@ export class S3Runtime extends Runtime {
     const typegraphName = typegraph.types[0].title;
 
     const { host, region } = args;
-    const client: S3Client = {
+    const client: native.S3Client = {
       region: region as string,
       access_key: envOrFail(
         typegraphName,
@@ -95,7 +95,7 @@ export class S3Runtime extends Runtime {
       if (name === "list") {
         return async ({ path }) => {
           const { items, prefix } = nativeResult(
-            await s3_list(
+            await native.s3_list(
               this.client,
               bucket as string,
               path,
@@ -107,14 +107,15 @@ export class S3Runtime extends Runtime {
 
       if (name === "sign") {
         return async ({ length, path }) => {
-          const params: S3Presigning = {
+          const params: native.S3Presigning = {
             bucket: bucket as string,
             key: path,
             content_type: content_type as string,
             content_length: length.toString(),
             expires: 60,
           };
-          return nativeResult(await s3_presign_put(this.client, params)).res;
+          return nativeResult(await native.s3_presign_put(this.client, params))
+            .res;
         };
       }
 

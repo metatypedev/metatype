@@ -27,5 +27,5 @@ with TypeGraph("injection") as g:
             req,
             res,
             deno.PredefinedFunMat("identity"),
-        ).add_policy(policies.allow_all()),
+        ).add_policy(policies.public()),
     )

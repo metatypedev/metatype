@@ -2,7 +2,12 @@
 
 import { Kind, parse } from "graphql";
 import * as ast from "graphql/ast";
-import { RuntimeResolver, TypeGraph, TypeGraphDS } from "./typegraph.ts";
+import {
+  RuntimeResolver,
+  TypeGraph,
+  TypeGraphDS,
+  typegraphVersion,
+} from "./typegraph.ts";
 import { ensure, JSONValue, mapo, Maybe } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
@@ -18,56 +23,85 @@ import {
   PolicyStages,
   PolicyStagesFactory,
   Resolver,
-  RuntimeConfig,
   Variables,
 } from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
-import { parseGraphQLTypeGraph } from "./query_parsers/graphql.ts";
+import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
 import { FromVars } from "./runtimes/graphql.ts";
+import config from "./config.ts";
+import * as semver from "std/semver/mod.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
   join(localDir, "typegraphs/introspection.json"),
 );
 
+const typegraphChangelog: Record<
+  string,
+  { next: string; transform: (x: TypeGraphDS) => TypeGraphDS }
+> = {
+  "0.0.0": {
+    "next": "0.0.1",
+    "transform": (x) => x,
+  },
+};
+
+function upgradeTypegraph(typegraph: TypeGraphDS) {
+  const typegraphName = typegraph.types[0].title;
+  const { meta } = typegraph;
+
+  let currentVersion = meta.version;
+  while (semver.neq(typegraphVersion, currentVersion)) {
+    const migration = typegraphChangelog[currentVersion];
+    if (!migration) {
+      throw Error(
+        `typegate ${config.version} supports typegraph ${typegraphVersion} which is incompatible with ${typegraphName} ${meta.version} (max auto upgrade was ${currentVersion})`,
+      );
+    }
+    typegraph = migration.transform(typegraph);
+    currentVersion = migration.next;
+  }
+
+  return typegraph;
+}
+
 export const initTypegraph = async (
   payload: string,
   customRuntime: RuntimeResolver = {},
-  config: Record<string, RuntimeConfig> = {},
   introspectionDefPayload: string | null = introspectionDefStatic,
 ) => {
-  const typegraphDS = JSON.parse(payload);
+  const typegraphDSRaw = upgradeTypegraph(JSON.parse(payload));
+  const typegraphDS = structuredClone(typegraphDSRaw);
   parseGraphQLTypeGraph(typegraphDS);
 
-  const introspectionDef = introspectionDefPayload == null
-    ? null
-    : JSON.parse(introspectionDefPayload) as TypeGraphDS;
-  if (introspectionDef) {
-    parseGraphQLTypeGraph(introspectionDef);
-  }
+  let introspection = null;
 
-  const introspection = introspectionDef
-    ? await TypeGraph.init(
+  if (introspectionDefPayload) {
+    const introspectionDefRaw = JSON.parse(
+      introspectionDefPayload,
+    ) as TypeGraphDS;
+    const introspectionDef = structuredClone(introspectionDefRaw);
+    parseGraphQLTypeGraph(introspectionDef);
+    introspection = await TypeGraph.init(
+      introspectionDefRaw,
       introspectionDef,
       {
         typegraph: TypeGraphRuntime.init(
           typegraphDS,
           [],
           {},
-          config,
         ),
       },
       null,
-      {},
-    )
-    : null;
+    );
+  }
 
   const tg = await TypeGraph.init(
+    typegraphDSRaw,
     typegraphDS,
     customRuntime,
     introspection,
-    {},
   );
   return new Engine(tg);
 };

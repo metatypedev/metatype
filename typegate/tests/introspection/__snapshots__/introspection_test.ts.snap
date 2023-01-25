@@ -12,7 +12,7 @@ snapshot[`Full introspection 1`] = `
     subscriptionType: null,
     types: [
       {
-        description: "integer_4 type",
+        description: "integer type",
         enumValues: null,
         fields: null,
         inputFields: null,
@@ -22,16 +22,67 @@ snapshot[`Full introspection 1`] = `
         possibleTypes: null,
       },
       {
-        description: "Nested input type",
+        description: "Query type",
         enumValues: null,
-        fields: null,
-        inputFields: [
+        fields: [
           {
-            description: "arg field
+            args: [
+              {
+                defaultValue: null,
+                description: "a input field",
+                name: "a",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    kind: "SCALAR",
+                    name: "Int",
+                    ofType: null,
+                  },
+                },
+              },
+            ],
+            deprecationReason: null,
+            description: "test field
 
 Policies:
-- inherit",
-            name: "arg",
+- __public",
+            isDeprecated: false,
+            name: "test",
+            type: {
+              kind: "NON_NULL",
+              name: null,
+              ofType: {
+                kind: "OBJECT",
+                name: "res",
+                ofType: null,
+              },
+            },
+          },
+          {
+            args: [
+              {
+                defaultValue: null,
+                description: "nested input field",
+                name: "nested",
+                type: {
+                  kind: "NON_NULL",
+                  name: null,
+                  ofType: {
+                    kind: "INPUT_OBJECT",
+                    name: "NestedInp",
+                    ofType: null,
+                  },
+                },
+              },
+            ],
+            deprecationReason: null,
+            description: "rec field
+
+Policies:
+- __public",
+            isDeprecated: false,
+            name: "rec",
             type: {
               kind: "NON_NULL",
               name: null,
@@ -43,10 +94,11 @@ Policies:
             },
           },
         ],
+        inputFields: null,
         interfaces: [
         ],
-        kind: "INPUT_OBJECT",
-        name: "NestedInp",
+        kind: "OBJECT",
+        name: "Query",
         possibleTypes: null,
       },
       {
@@ -82,67 +134,16 @@ Policies:
         possibleTypes: null,
       },
       {
-        description: "Query type",
+        description: "Nested input type",
         enumValues: null,
-        fields: [
+        fields: null,
+        inputFields: [
           {
-            args: [
-              {
-                defaultValue: null,
-                description: "a input field",
-                name: "a",
-                type: {
-                  kind: "NON_NULL",
-                  name: null,
-                  ofType: {
-                    kind: "SCALAR",
-                    name: "Int",
-                    ofType: null,
-                  },
-                },
-              },
-            ],
-            deprecationReason: null,
-            description: "test field
+            description: "arg field
 
 Policies:
-- __allow_all",
-            isDeprecated: false,
-            name: "test",
-            type: {
-              kind: "NON_NULL",
-              name: null,
-              ofType: {
-                kind: "OBJECT",
-                name: "res",
-                ofType: null,
-              },
-            },
-          },
-          {
-            args: [
-              {
-                defaultValue: null,
-                description: "nested input field",
-                name: "nested",
-                type: {
-                  kind: "NON_NULL",
-                  name: null,
-                  ofType: {
-                    kind: "INPUT_OBJECT",
-                    name: "NestedInp",
-                    ofType: null,
-                  },
-                },
-              },
-            ],
-            deprecationReason: null,
-            description: "rec field
-
-Policies:
-- __allow_all",
-            isDeprecated: false,
-            name: "rec",
+- inherit",
+            name: "arg",
             type: {
               kind: "NON_NULL",
               name: null,
@@ -154,11 +155,10 @@ Policies:
             },
           },
         ],
-        inputFields: null,
         interfaces: [
         ],
-        kind: "OBJECT",
-        name: "Query",
+        kind: "INPUT_OBJECT",
+        name: "NestedInp",
         possibleTypes: null,
       },
     ],

@@ -35,31 +35,33 @@ swc = "0.232.52"
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines" }
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
-tokio = { version = "1.24.1", features = ["full"] }
+tokio = { version = "1.24.2", features = ["full"] }
 log = "0.4.17"
-clap = { version = "4.0.32", features = ["derive"] }
+clap = { version = "4.1.2", features = ["derive"] }
 crossbeam-channel = "0.5.6"
 notify = "5.0.0"
 tiny_http = "0.12.0"
-ignore = "0.4.19"
+ignore = "0.4.20"
 globset = "0.4.10"
 anyhow = "1.0.68"
 indoc = "1.0.8"
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = "1.0.91"
-reqwest = { version = "0.11.13", features = ["blocking", "json"] }
+serde_json = { version = "1.0.91", features = ["preserve_order"] }
+reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 colored = "2.0.0"
 question = "0.2.2"
-dialoguer = "0.10.2"
+dialoguer = "0.10.3"
 flate2 = "1.0.25"
 tar = "0.4.38"
 base64 = "0.21.0"
 common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
 walkdir = "2.3.2"
-serde_yaml = "0.9.16"
+serde_yaml = "0.9.17"
 pathdiff = "0.2.1"
+openssl = { version = "0.10.45", features = ["vendored"] }
+indexmap = { version = "1.9.2", features = ["serde"] }
 
 [dev-dependencies]
-insta = "1.23.0"
+insta = "1.26.0"
 project-root = "0.2.2"
