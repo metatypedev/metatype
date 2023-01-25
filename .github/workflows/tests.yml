@@ -60,6 +60,7 @@ jobs:
       - uses: arduino/setup-protoc@v1
         with:
           version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - uses: denoland/setup-deno@v1
@@ -237,6 +238,7 @@ jobs:
       - uses: arduino/setup-protoc@v1
         with:
           version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/cache@v3
         with:
           path: .venv
