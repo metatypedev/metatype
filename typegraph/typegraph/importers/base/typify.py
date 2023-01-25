@@ -40,14 +40,13 @@ class TypifyMat(Materializer):
 class Typify:
     importer: "Importer"
     ns: str = field(default="t")
-    tg_alias: str = field(default="g")
 
     def __call__(self, typ: t.TypeNode, name: Optional[str] = None) -> str:
         # dispatch
         if isinstance(typ, NodeProxy):
             renames = self.importer.renames
             name = renames[typ.node] if typ.node in renames else typ.node
-            return f"{self.tg_alias}({repr(name)})"
+            return f"{self.ns}.proxy(renames[{repr(name)}])"
 
         if hasattr(self, typ.type):
             method = getattr(self, typ.type)

@@ -49,10 +49,12 @@ class OpenApiImporter(Importer):
         url: Optional[str] = None,
         file: Optional[str] = None,
         base_url: Optional[str] = None,
+        renames: Dict[str, str] = {},
+        keep_names: List[str] = [],
     ):
         """Requires either only `url` or `file` and `base_url`"""
 
-        super().__init__(name)
+        super().__init__(name, renames=renames, keep_names=keep_names)
 
         self.name = name
         self.additiona_types = []
