@@ -42,44 +42,82 @@ class HTTPRuntime(Runtime):
             "basic_auth_secret": self.basic_auth_secret,
         }
 
-    def get(self, path: str, inp, out, **kwargs):
+    def get(
+        self,
+        path: str,
+        inp,
+        out,
+        effect: Optional[Effect] = None,
+        idempotent: bool = True,
+        **kwargs
+    ):
         return t.func(
-            inp, out, RESTMat(self, "GET", path, **kwargs, effect=None, idempotent=True)
+            inp,
+            out,
+            RESTMat(self, "GET", path, effect=effect, idempotent=idempotent, **kwargs),
         )
 
-    def post(self, path: str, inp, out, **kwargs):
+    def post(
+        self,
+        path: str,
+        inp,
+        out,
+        effect: Optional[Effect] = Effect.CREATE,
+        idempotent: bool = False,
+        **kwargs
+    ):
+        return t.func(
+            inp,
+            out,
+            RESTMat(self, "POST", path, effect=effect, idempotent=idempotent, **kwargs),
+        )
+
+    def put(
+        self,
+        path: str,
+        inp,
+        out,
+        effect: Optional[Effect] = Effect.UPSERT,
+        idempotent: bool = True,
+        **kwargs
+    ):
+        return t.func(
+            inp,
+            out,
+            RESTMat(self, "PUT", path, effect=effect, idempotent=idempotent, **kwargs),
+        )
+
+    def patch(
+        self,
+        path: str,
+        inp,
+        out,
+        effect: Optional[Effect] = Effect.UPDATE,
+        idempotent: bool = False,
+        **kwargs
+    ):
         return t.func(
             inp,
             out,
             RESTMat(
-                self, "POST", path, **kwargs, effect=Effect.CREATE, idempotent=False
+                self, "PATCH", path, effect=effect, idempotent=idempotent, **kwargs
             ),
         )
 
-    def put(self, path: str, inp, out, **kwargs):
+    def delete(
+        self,
+        path: str,
+        inp,
+        out,
+        effect: Optional[Effect] = Effect.DELETE,
+        idempotent: bool = True,
+        **kwargs
+    ):
         return t.func(
             inp,
             out,
             RESTMat(
-                self, "PUT", path, **kwargs, effect=Effect.UNKNOWN, idempotent=True
-            ),
-        )
-
-    def patch(self, path: str, inp, out, **kwargs):
-        return t.func(
-            inp,
-            out,
-            RESTMat(
-                self, "PATCH", path, **kwargs, effect=Effect.UPDATE, idempotent=True
-            ),
-        )
-
-    def delete(self, path: str, inp, out, **kwargs):
-        return t.func(
-            inp,
-            out,
-            RESTMat(
-                self, "DELETE", path, **kwargs, effect=Effect.DELETE, idempotent=True
+                self, "DELETE", path, effect=effect, idempotent=idempotent, **kwargs
             ),
         )
 
