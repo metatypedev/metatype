@@ -159,6 +159,14 @@ pub enum TypeNode {
         rate_weight: Option<u32>,
         rate_calls: bool,
     },
+    #[serde(rename_all = "camelCase")]
+    Union {
+        #[serde(flatten)]
+        base: TypeNodeBase,
+        /// Array of indexes of the nodes that are used as subschemes in the
+        /// anyOf field of JSON Schema.
+        any_of: Vec<u32>,
+    },
     Any {
         #[serde(flatten)]
         base: TypeNodeBase,
@@ -177,6 +185,7 @@ impl TypeNode {
             | Object { base, .. }
             | Array { base, .. }
             | Function { base, .. }
+            | Union { base, .. }
             | Any { base, .. } => base,
         }
     }
