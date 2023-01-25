@@ -82,9 +82,10 @@ class OpenApiImporter(Importer):
                     self.specification = Box(json.loads(f.read()))
                 elif path.suffix in [".yaml", ".yml"]:
                     self.specification = Box(yaml.safe_load(f.read()))
-                raise Exception(
-                    f"Expected a JSON or a YAML file, but got a file with extension '{path.suffix}'"
-                )
+                else:
+                    raise Exception(
+                        f"Expected a JSON or a YAML file, but got a file with extension '{path.suffix}'"
+                    )
 
         self.typedef_from_jsonschema = TypedefFromJsonSchema(
             ref_to_name, lambda ref: self.resolve_ref(ref)

@@ -56,7 +56,7 @@ class Typify:
             else:
                 raise Exception(f"No handler for type '{typ.type}'")
 
-        suffix = "" if name is None else f".named({repr(name)})"
+        suffix = "" if name is None else f".named(renames[{repr(name)}])"
         return method(typ) + suffix
 
     def constraints(typ: t.typedef) -> str:

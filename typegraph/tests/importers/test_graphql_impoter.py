@@ -2,16 +2,18 @@
 
 from os import path
 
-from box import Box
-import orjson
-from typegraph.importers.graphql import codegen
+from typegraph.importers.base.importer import Codegen
+from typegraph.importers.graphql import GraphQLImporter
 
 
 def test_codegen(snapshot):
-    with open(
-        path.join(path.dirname(__file__), "graphql_full_introspection.json")
-    ) as f:
-        intros = orjson.loads(f.read())
+    importer = GraphQLImporter(
+        "test",
+        "https://example.com/api",
+        file=path.join(path.dirname(__file__), "graphql_full_introspection.json"),
+    )
 
     snapshot.snapshot_dir = "__snapshots__"
-    snapshot.assert_match(codegen(Box(intros)), "graphql_importer_codegen.txt")
+    snapshot.assert_match(
+        importer.codegen(Codegen()).res, "graphql_importer_codegen.txt"
+    )

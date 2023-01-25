@@ -1,6 +1,8 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import json
 from typing import Literal
+from typing import Optional
 
 from box import Box
 from gql import Client
@@ -33,16 +35,20 @@ SCALAR_TYPES = {
 class GraphQLImporter(Importer):
     intros: Box
 
-    def __init__(self, name: str, uri: str):
+    def __init__(self, name: str, url: str, *, file: Optional[str] = None):
         super().__init__(name)
         self.imports.add(("typegraph.runtimes.graphql", "GraphQLRuntime"))
-        self.headers.append(f"{name}=GraphQLRuntime('{uri}')")
+        self.headers.append(f"{name}=GraphQLRuntime('{url}')")
 
-        transport = RequestsHTTPTransport(url=uri, verify=True)
-        client = Client(transport=transport, fetch_schema_from_transport=True)
-        query = gql(get_introspection_query())
-        schema = client.execute(query)
-        self.intros = Box(schema)
+        if file is None:
+            transport = RequestsHTTPTransport(url=url, verify=True)
+            client = Client(transport=transport, fetch_schema_from_transport=True)
+            query = gql(get_introspection_query())
+            schema = client.execute(query)
+            self.intros = Box(schema)
+        else:
+            with open(file) as f:
+                self.intros = Box(json.loads(f.read()))
 
         self.generate()
 

@@ -2,14 +2,18 @@
 
 from os import path
 
-from typegraph.importers.openapi import Document
+from typegraph.importers.base.importer import Codegen
+from typegraph.importers.openapi import OpenApiImporter
 
 
 def test_codegen(snapshot):
-    doc = Document.from_file(
-        path.join(path.dirname(__file__), "openapi_spec.json"),
-        "http://example.com/api/",
+    importer = OpenApiImporter(
+        "test",
+        file=path.join(path.dirname(__file__), "openapi_spec.json"),
+        base_url="http://example.com/api/",
     )
 
     snapshot.snapshot_dir = "__snapshots__"
-    snapshot.assert_match(doc.codegen(), "openapi_importer_codegen.txt")
+    snapshot.assert_match(
+        importer.codegen(Codegen()).res, "openapi_importer_codegen.txt"
+    )

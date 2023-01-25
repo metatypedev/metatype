@@ -1,4 +1,16 @@
-    remote = HTTPRuntime("http://example.com/")
-    t.struct({"id": t.string(),"email": t.string(),"username": t.string(),}).named("User")
-    t.struct({"id": t.string(),"username": t.string(),"gender": t.string(),"profilePicture": t.optional(t.string()),}).named("UserProfile")
-    g.expose(listUsers=remote.get("/users", t.struct({}), t.array(g("User")), ).add_policy(allow_all()),createuser=remote.post("/users", t.struct({}), g("User"), ).add_policy(allow_all()),deleteUser=remote.delete("users/{userId}", t.struct({"userId":t.float(),}), t.optional(t.boolean()), ).add_policy(allow_all()),getUserProfile=remote.get("/profile/{userId}", t.struct({"userId":t.float(),}), t.optional(g("UserProfile")), ).add_policy(allow_all()),updateUserProfile=remote.patch("/profile/{userId}", t.struct({"userId":t.float(),}), g("UserProfile"), ).add_policy(allow_all()),)
+    test = HTTPRuntime('http://example.com/')
+
+    renames = {'User': '_test_1_User', 'UserProfile': '_test_2_UserProfile'}
+
+    types = {}
+    types['User'] = t.struct({'id': t.string(), 'email': t.string(), 'username': t.string()}).named(renames['_test_1_User'])
+    types['UserProfile'] = t.struct({'id': t.string(), 'username': t.string(), 'gender': t.string(), 'profilePicture': t.string()}).named(renames['_test_2_UserProfile'])
+
+    functions = {}
+    functions['listUsers'] = test.get('/users', t.struct({}), t.array(t.proxy(renames['User'])), )
+    functions['createuser'] = test.post('/users', t.struct({}), t.proxy(renames['User']), )
+    functions['deleteUser'] = test.delete('users/{userId}', t.struct({'userId': t.number()}), t.boolean().optional(), )
+    functions['getUserProfile'] = test.get('/profile/{userId}', t.struct({'userId': t.number()}), t.proxy(renames['UserProfile']).optional(), )
+    functions['updateUserProfile'] = test.patch('/profile/{userId}', t.struct({'userId': t.number()}), t.proxy(renames['UserProfile']), )
+
+    return Import(importer='test', renames=renames, types=types, functions=functions)
