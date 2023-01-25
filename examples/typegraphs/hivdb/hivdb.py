@@ -87,8 +87,8 @@ def import_hivdb():
             "percent": t.number().optional(),
             "numReads": t.integer().optional(),
         }
-    ).named("_hivdb_1_AAReads")
-    types["ASIAlgorithm"] = t.string().named("_hivdb_2_ASIAlgorithm")
+    ).named(renames["AAReads"])
+    types["ASIAlgorithm"] = t.string().named(renames["ASIAlgorithm"])
     types["AlgorithmComparison"] = t.struct(
         {
             "drugClass": t.proxy(renames["DrugClass"]).optional(),
@@ -96,7 +96,7 @@ def import_hivdb():
                 t.proxy(renames["ComparableDrugScore"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_3_AlgorithmComparison")
+    ).named(renames["AlgorithmComparison"])
     types["AlignedGeneSequence"] = t.struct(
         {
             "gene": t.proxy(renames["Gene"]).optional(),
@@ -125,7 +125,7 @@ def import_hivdb():
             ).optional(),
             "unsequencedRegions": t.proxy(renames["UnsequencedRegions"]).optional(),
         }
-    ).named("_hivdb_4_AlignedGeneSequence")
+    ).named(renames["AlignedGeneSequence"])
     types["BoundMutationComment"] = t.struct(
         {
             "name": t.string().optional(),
@@ -137,7 +137,7 @@ def import_hivdb():
             "boundMutation": t.proxy(renames["Mutation"]).optional(),
             "highlightText": t.array(t.string().optional()).optional(),
         }
-    ).named("_hivdb_5_BoundMutationComment")
+    ).named(renames["BoundMutationComment"])
     types["BoundMutationPrevalence"] = t.struct(
         {
             "boundMutation": t.proxy(renames["Mutation"]).optional(),
@@ -148,15 +148,15 @@ def import_hivdb():
                 t.proxy(renames["MutationPrevalenceByAA"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_6_BoundMutationPrevalence")
+    ).named(renames["BoundMutationPrevalence"])
     types["BoundSubtype"] = t.struct(
         {
             "name": t.proxy(renames["Subtype"]).optional(),
             "distancePcnt": t.number().optional(),
             "display": t.string().optional(),
         }
-    ).named("_hivdb_7_BoundSubtype")
-    types["CommentType"] = t.string().named("_hivdb_8_CommentType")
+    ).named(renames["BoundSubtype"])
+    types["CommentType"] = t.string().named(renames["CommentType"])
     types["CommentsByType"] = t.struct(
         {
             "mutationType": t.proxy(renames["CommentType"]).optional(),
@@ -165,7 +165,7 @@ def import_hivdb():
                 t.proxy(renames["BoundMutationComment"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_9_CommentsByType")
+    ).named(renames["CommentsByType"])
     types["ComparableDrugScore"] = t.struct(
         {
             "drug": t.proxy(renames["Drug"]).optional(),
@@ -174,10 +174,10 @@ def import_hivdb():
             "interpretation": t.string().optional(),
             "explanation": t.string().optional(),
         }
-    ).named("_hivdb_10_ComparableDrugScore")
+    ).named(renames["ComparableDrugScore"])
     types["CustomASIAlgorithm"] = t.struct(
         {"name": t.string().optional(), "xml": t.string().optional()}
-    ).named("_hivdb_11_CustomASIAlgorithm")
+    ).named(renames["CustomASIAlgorithm"])
     types["CutoffKeyPoint"] = t.struct(
         {
             "mixtureRate": t.number().optional(),
@@ -185,7 +185,7 @@ def import_hivdb():
             "isAboveMixtureRateThreshold": t.boolean().optional(),
             "isBelowMinPrevalenceThreshold": t.boolean().optional(),
         }
-    ).named("_hivdb_12_CutoffKeyPoint")
+    ).named(renames["CutoffKeyPoint"])
     types["DescriptiveStatistics"] = t.struct(
         {
             "mean": t.number().optional(),
@@ -197,7 +197,7 @@ def import_hivdb():
             "values": t.array(t.number().optional()).optional(),
             "percentile": t.number().optional(),
         }
-    ).named("_hivdb_13_DescriptiveStatistics")
+    ).named(renames["DescriptiveStatistics"])
     types["Drug"] = t.struct(
         {
             "name": t.proxy(renames["DrugEnum"]).optional(),
@@ -205,7 +205,7 @@ def import_hivdb():
             "fullName": t.string().optional(),
             "drugClass": t.proxy(renames["DrugClass"]).optional(),
         }
-    ).named("_hivdb_14_Drug")
+    ).named(renames["Drug"])
     types["DrugClass"] = t.struct(
         {
             "name": t.proxy(renames["DrugClassEnum"]).optional(),
@@ -228,15 +228,15 @@ def import_hivdb():
             "hasSurveilDrugResistMutations": t.boolean().optional(),
             "hasRxSelectedMutations": t.boolean().optional(),
         }
-    ).named("_hivdb_15_DrugClass")
-    types["DrugClassEnum"] = t.string().named("_hivdb_16_DrugClassEnum")
-    types["DrugEnum"] = t.string().named("_hivdb_17_DrugEnum")
+    ).named(renames["DrugClass"])
+    types["DrugClassEnum"] = t.string().named(renames["DrugClassEnum"])
+    types["DrugEnum"] = t.string().named(renames["DrugEnum"])
     types["DrugPartialScore"] = t.struct(
         {
             "mutations": t.array(t.proxy(renames["Mutation"]).optional()).optional(),
             "score": t.number().optional(),
         }
-    ).named("_hivdb_18_DrugPartialScore")
+    ).named(renames["DrugPartialScore"])
     types["DrugResistance"] = t.struct(
         {
             "version": t.proxy(renames["DrugResistanceAlgorithm"]).optional(),
@@ -250,7 +250,7 @@ def import_hivdb():
                 t.proxy(renames["CommentsByType"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_19_DrugResistance")
+    ).named(renames["DrugResistance"])
     types["DrugResistanceAlgorithm"] = t.struct(
         {
             "text": t.string().optional(),
@@ -260,7 +260,7 @@ def import_hivdb():
             "strain": t.proxy(renames["Strain"]).optional(),
             "publishDate": t.string().optional(),
         }
-    ).named("_hivdb_20_DrugResistanceAlgorithm")
+    ).named(renames["DrugResistanceAlgorithm"])
     types["DrugScore"] = t.struct(
         {
             "drugClass": t.proxy(renames["DrugClass"]).optional(),
@@ -273,10 +273,10 @@ def import_hivdb():
                 t.proxy(renames["DrugPartialScore"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_21_DrugScore")
-    types["EnumGene"] = t.string().named("_hivdb_22_EnumGene")
+    ).named(renames["DrugScore"])
+    types["EnumGene"] = t.string().named(renames["EnumGene"])
     types["EnumSequenceReadsHistogramAggregatesOption"] = t.string().named(
-        "_hivdb_23_EnumSequenceReadsHistogramAggregatesOption"
+        renames["EnumSequenceReadsHistogramAggregatesOption"]
     )
     types["FrameShift"] = t.struct(
         {
@@ -288,7 +288,7 @@ def import_hivdb():
             "NAs": t.string().optional(),
             "text": t.string().optional(),
         }
-    ).named("_hivdb_24_FrameShift")
+    ).named(renames["FrameShift"])
     types["Gene"] = t.struct(
         {
             "nameWithStrain": t.string().optional(),
@@ -305,13 +305,13 @@ def import_hivdb():
                 t.proxy(renames["MutationType"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_25_Gene")
+    ).named(renames["Gene"])
     types["GeneMutations"] = t.struct(
         {
             "gene": t.proxy(renames["Gene"]).optional(),
             "mutations": t.array(t.proxy(renames["Mutation"]).optional()).optional(),
         }
-    ).named("_hivdb_26_GeneMutations")
+    ).named(renames["GeneMutations"])
     types["GeneSequenceReads"] = t.struct(
         {
             "gene": t.proxy(renames["Gene"]).optional(),
@@ -332,7 +332,7 @@ def import_hivdb():
             "histogram": t.proxy(renames["SequenceReadsHistogram"]).optional(),
             "unsequencedRegions": t.proxy(renames["UnsequencedRegions"]).optional(),
         }
-    ).named("_hivdb_27_GeneSequenceReads")
+    ).named(renames["GeneSequenceReads"])
     types["HIVBoundSubtype"] = t.struct(
         {
             "display": t.string().optional(),
@@ -354,9 +354,9 @@ def import_hivdb():
             "referenceYear": t.integer().optional(),
             "discordanceList": t.array(t.integer().optional()).optional(),
         }
-    ).named("_hivdb_28_HIVBoundSubtype")
+    ).named(renames["HIVBoundSubtype"])
     types["HIVClassificationLevel"] = t.string().named(
-        "_hivdb_29_HIVClassificationLevel"
+        renames["HIVClassificationLevel"]
     )
     types["HIVSubtype"] = t.struct(
         {
@@ -366,7 +366,7 @@ def import_hivdb():
                 renames["HIVClassificationLevel"]
             ).optional(),
         }
-    ).named("_hivdb_30_HIVSubtype")
+    ).named(renames["HIVSubtype"])
     types["Mutation"] = t.struct(
         {
             "gene": t.proxy(renames["Gene"]).optional(),
@@ -404,7 +404,7 @@ def import_hivdb():
             "totalReads": t.integer().optional(),
             "allAAReads": t.array(t.proxy(renames["AAReads"]).optional()).optional(),
         }
-    ).named("_hivdb_31_Mutation")
+    ).named(renames["Mutation"])
     types["MutationPrevalence"] = t.struct(
         {
             "AA": t.string().optional(),
@@ -416,7 +416,7 @@ def import_hivdb():
             "frequencyTreated": t.integer().optional(),
             "percentageTreated": t.number().optional(),
         }
-    ).named("_hivdb_32_MutationPrevalence")
+    ).named(renames["MutationPrevalence"])
     types["MutationPrevalenceByAA"] = t.struct(
         {
             "AA": t.string().optional(),
@@ -424,7 +424,7 @@ def import_hivdb():
                 t.proxy(renames["MutationPrevalence"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_33_MutationPrevalenceByAA")
+    ).named(renames["MutationPrevalenceByAA"])
     types["MutationPrevalenceSubtype"] = t.struct(
         {
             "name": t.string().optional(),
@@ -432,18 +432,18 @@ def import_hivdb():
                 t.proxy(renames["MutationPrevalenceSubtypeStat"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_34_MutationPrevalenceSubtype")
+    ).named(renames["MutationPrevalenceSubtype"])
     types["MutationPrevalenceSubtypeStat"] = t.struct(
         {
             "gene": t.proxy(renames["Gene"]).optional(),
             "totalNaive": t.integer().optional(),
             "totalTreated": t.integer().optional(),
         }
-    ).named("_hivdb_35_MutationPrevalenceSubtypeStat")
+    ).named(renames["MutationPrevalenceSubtypeStat"])
     types["MutationSetFilterOption"] = t.string().named(
-        "_hivdb_36_MutationSetFilterOption"
+        renames["MutationSetFilterOption"]
     )
-    types["MutationType"] = t.string().named("_hivdb_37_MutationType")
+    types["MutationType"] = t.string().named(renames["MutationType"])
     types["MutationsAnalysis"] = t.struct(
         {
             "name": t.string().optional(),
@@ -463,14 +463,14 @@ def import_hivdb():
                 t.proxy(renames["AlgorithmComparison"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_38_MutationsAnalysis")
+    ).named(renames["MutationsAnalysis"])
     types["MutationsByType"] = t.struct(
         {
             "drugClass": t.proxy(renames["DrugClass"]).optional(),
             "mutationType": t.proxy(renames["MutationType"]).optional(),
             "mutations": t.array(t.proxy(renames["Mutation"]).optional()).optional(),
         }
-    ).named("_hivdb_39_MutationsByType")
+    ).named(renames["MutationsByType"])
     types["OneCodonReads"] = t.struct(
         {
             "codon": t.string().optional(),
@@ -486,7 +486,7 @@ def import_hivdb():
             "isApobecMutation": t.boolean().optional(),
             "isApobecDRM": t.boolean().optional(),
         }
-    ).named("_hivdb_40_OneCodonReads")
+    ).named(renames["OneCodonReads"])
     types["OneCodonReadsCoverage"] = t.struct(
         {
             "gene": t.proxy(renames["Gene"]).optional(),
@@ -494,10 +494,10 @@ def import_hivdb():
             "totalReads": t.integer().optional(),
             "isTrimmed": t.boolean().optional(),
         }
-    ).named("_hivdb_41_OneCodonReadsCoverage")
+    ).named(renames["OneCodonReadsCoverage"])
     types["OneCodonReadsInput"] = t.struct(
         {"codon": t.string().optional(), "reads": t.integer().optional()}
-    ).named("_hivdb_42_OneCodonReadsInput")
+    ).named(renames["OneCodonReadsInput"])
     types["PositionCodonReads"] = t.struct(
         {
             "gene": t.proxy(renames["Gene"]).optional(),
@@ -507,7 +507,7 @@ def import_hivdb():
                 t.proxy(renames["OneCodonReads"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_43_PositionCodonReads")
+    ).named(renames["PositionCodonReads"])
     types["PositionCodonReadsInput"] = t.struct(
         {
             "gene": t.proxy(renames["EnumGene"]).optional(),
@@ -517,7 +517,7 @@ def import_hivdb():
                 t.proxy(renames["OneCodonReadsInput"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_44_PositionCodonReadsInput")
+    ).named(renames["PositionCodonReadsInput"])
     types["PrettyPairwise"] = t.struct(
         {
             "positionLine": t.array(t.string().optional()).optional(),
@@ -525,8 +525,8 @@ def import_hivdb():
             "alignedNAsLine": t.array(t.string().optional()).optional(),
             "mutationLine": t.array(t.string().optional()).optional(),
         }
-    ).named("_hivdb_45_PrettyPairwise")
-    types["SIR"] = t.string().named("_hivdb_46_SIR")
+    ).named(renames["PrettyPairwise"])
+    types["SIR"] = t.string().named(renames["SIR"])
     types["SequenceAnalysis"] = t.struct(
         {
             "inputSequence": t.proxy(renames["UnalignedSequenceOutput"]).optional(),
@@ -574,7 +574,7 @@ def import_hivdb():
                 t.proxy(renames["AlgorithmComparison"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_47_SequenceAnalysis")
+    ).named(renames["SequenceAnalysis"])
     types["SequenceReadsAnalysis"] = t.struct(
         {
             "name": t.string().optional(),
@@ -626,7 +626,7 @@ def import_hivdb():
                 t.proxy(renames["AlgorithmComparison"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_48_SequenceReadsAnalysis")
+    ).named(renames["SequenceReadsAnalysis"])
     types["SequenceReadsHistogram"] = t.struct(
         {
             "usualSites": t.array(
@@ -658,14 +658,14 @@ def import_hivdb():
             ).optional(),
             "numPositions": t.integer().optional(),
         }
-    ).named("_hivdb_49_SequenceReadsHistogram")
+    ).named(renames["SequenceReadsHistogram"])
     types["SequenceReadsHistogramBin"] = t.struct(
         {
             "percentStart": t.number().optional(),
             "percentStop": t.number().optional(),
             "count": t.integer().optional(),
         }
-    ).named("_hivdb_50_SequenceReadsHistogramBin")
+    ).named(renames["SequenceReadsHistogramBin"])
     types["SequenceReadsHistogramByCodonReads"] = t.struct(
         {
             "usualSites": t.array(
@@ -694,10 +694,10 @@ def import_hivdb():
             ).optional(),
             "numPositions": t.integer().optional(),
         }
-    ).named("_hivdb_51_SequenceReadsHistogramByCodonReads")
+    ).named(renames["SequenceReadsHistogramByCodonReads"])
     types["SequenceReadsHistogramByCodonReadsBin"] = t.struct(
         {"cutoff": t.integer().optional(), "count": t.integer().optional()}
-    ).named("_hivdb_52_SequenceReadsHistogramByCodonReadsBin")
+    ).named(renames["SequenceReadsHistogramByCodonReadsBin"])
     types["SequenceReadsInput"] = t.struct(
         {
             "name": t.string().optional(),
@@ -713,18 +713,18 @@ def import_hivdb():
             "minCodonReads": t.integer().optional(),
             "minPositionReads": t.integer().optional(),
         }
-    ).named("_hivdb_53_SequenceReadsInput")
+    ).named(renames["SequenceReadsInput"])
     types["SierraVersion"] = t.struct(
         {"text": t.string().optional(), "publishDate": t.string().optional()}
-    ).named("_hivdb_54_SierraVersion")
+    ).named(renames["SierraVersion"])
     types["Strain"] = t.struct(
         {"name": t.string().optional(), "display": t.string().optional()}
-    ).named("_hivdb_55_Strain")
-    types["StrainEnum"] = t.string().named("_hivdb_56_StrainEnum")
-    types["Subtype"] = t.string().named("_hivdb_57_Subtype")
+    ).named(renames["Strain"])
+    types["StrainEnum"] = t.string().named(renames["StrainEnum"])
+    types["Subtype"] = t.string().named(renames["Subtype"])
     types["UnalignedSequenceInput"] = t.struct(
         {"header": t.string().optional(), "sequence": t.string().optional()}
-    ).named("_hivdb_58_UnalignedSequenceInput")
+    ).named(renames["UnalignedSequenceInput"])
     types["UnalignedSequenceOutput"] = t.struct(
         {
             "header": t.string().optional(),
@@ -732,14 +732,14 @@ def import_hivdb():
             "MD5": t.string().optional(),
             "SHA512": t.string().optional(),
         }
-    ).named("_hivdb_59_UnalignedSequenceOutput")
+    ).named(renames["UnalignedSequenceOutput"])
     types["UnsequencedRegion"] = t.struct(
         {
             "posStart": t.integer().optional(),
             "posEnd": t.integer().optional(),
             "size": t.integer().optional(),
         }
-    ).named("_hivdb_60_UnsequencedRegion")
+    ).named(renames["UnsequencedRegion"])
     types["UnsequencedRegions"] = t.struct(
         {
             "gene": t.proxy(renames["Gene"]).optional(),
@@ -748,7 +748,7 @@ def import_hivdb():
             ).optional(),
             "size": t.integer().optional(),
         }
-    ).named("_hivdb_61_UnsequencedRegions")
+    ).named(renames["UnsequencedRegions"])
     types["UntranslatedRegionInput"] = t.struct(
         {
             "name": t.string().optional(),
@@ -756,14 +756,14 @@ def import_hivdb():
             "refEnd": t.integer().optional(),
             "consensus": t.string().optional(),
         }
-    ).named("_hivdb_62_UntranslatedRegionInput")
-    types["ValidationLevel"] = t.string().named("_hivdb_63_ValidationLevel")
+    ).named(renames["UntranslatedRegionInput"])
+    types["ValidationLevel"] = t.string().named(renames["ValidationLevel"])
     types["ValidationResult"] = t.struct(
         {
             "level": t.proxy(renames["ValidationLevel"]).optional(),
             "message": t.string().optional(),
         }
-    ).named("_hivdb_64_ValidationResult")
+    ).named(renames["ValidationResult"])
     types["Viewer"] = t.struct(
         {
             "currentVersion": t.proxy(renames["DrugResistanceAlgorithm"]).optional(),
@@ -783,7 +783,7 @@ def import_hivdb():
                 t.proxy(renames["MutationPrevalenceSubtype"]).optional()
             ).optional(),
         }
-    ).named("_hivdb_65_Viewer")
+    ).named(renames["Viewer"])
 
     functions = {}
     functions["currentVersion"] = hivdb.query(

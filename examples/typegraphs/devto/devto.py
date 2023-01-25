@@ -48,7 +48,7 @@ def import_devto():
 
     types = {}
     types["APIError"] = t.struct({"error": t.string(), "status": t.integer()}).named(
-        "_devto_1_APIError"
+        renames["APIError"]
     )
     types["ArticleCreate"] = t.struct(
         {
@@ -66,10 +66,10 @@ def import_devto():
                 }
             )
         }
-    ).named("_devto_2_ArticleCreate")
+    ).named(renames["ArticleCreate"])
     types["ArticleFlareTag"] = t.struct(
         {"bg_color_hex": t.string(), "name": t.string(), "text_color_hex": t.string()}
-    ).named("_devto_3_ArticleFlareTag")
+    ).named(renames["ArticleFlareTag"])
     types["ArticleIndex"] = t.struct(
         {
             "canonical_url": t.string(),
@@ -99,7 +99,7 @@ def import_devto():
             "url": t.string(),
             "user": t.proxy(renames["SharedUser"]),
         }
-    ).named("_devto_4_ArticleIndex")
+    ).named(renames["ArticleIndex"])
     types["ArticleMe"] = t.struct(
         {
             "body_markdown": t.string(),
@@ -125,7 +125,7 @@ def import_devto():
             "url": t.string(),
             "user": t.proxy(renames["SharedUser"]),
         }
-    ).named("_devto_5_ArticleMe")
+    ).named(renames["ArticleMe"])
     types["ArticleShow"] = t.struct(
         {
             "body_html": t.string(),
@@ -157,7 +157,7 @@ def import_devto():
             "url": t.string(),
             "user": t.proxy(renames["SharedUser"]),
         }
-    ).named("_devto_6_ArticleShow")
+    ).named(renames["ArticleShow"])
     types["ArticleUpdate"] = t.struct(
         {
             "article": t.struct(
@@ -174,7 +174,7 @@ def import_devto():
                 }
             )
         }
-    ).named("_devto_7_ArticleUpdate")
+    ).named(renames["ArticleUpdate"])
     types["ArticleVideo"] = t.struct(
         {
             "cloudinary_video_url": t.string(),
@@ -187,7 +187,7 @@ def import_devto():
             "video_duration_in_minutes": t.string(),
             "video_source_url": t.string(),
         }
-    ).named("_devto_8_ArticleVideo")
+    ).named(renames["ArticleVideo"])
     types["Comment"] = t.struct(
         {
             "body_html": t.string(),
@@ -197,10 +197,10 @@ def import_devto():
             "type_of": t.string(),
             "user": t.proxy(renames["SharedUser"]),
         }
-    ).named("_devto_9_Comment")
+    ).named(renames["Comment"])
     types["FollowedTag"] = t.struct(
         {"id": t.integer(), "name": t.string(), "points": t.number()}
-    ).named("_devto_10_FollowedTag")
+    ).named(renames["FollowedTag"])
     types["Follower"] = t.struct(
         {
             "created_at": t.string(),
@@ -211,7 +211,7 @@ def import_devto():
             "type_of": t.string(),
             "username": t.string(),
         }
-    ).named("_devto_11_Follower")
+    ).named(renames["Follower"])
     types["Listing"] = t.struct(
         {
             "body_markdown": t.string(),
@@ -227,8 +227,8 @@ def import_devto():
             "type_of": t.string(),
             "user": t.proxy(renames["SharedUser"]),
         }
-    ).named("Listing")
-    types["ListingCategory"] = t.string().named("ListingCategory")
+    ).named(renames["Listing"])
+    types["ListingCategory"] = t.string().named(renames["ListingCategory"])
     types["ListingCreate"] = t.struct(
         {
             "listing": t.struct(
@@ -246,7 +246,7 @@ def import_devto():
                 }
             )
         }
-    ).named("_devto_14_ListingCreate")
+    ).named(renames["ListingCreate"])
     types["ListingUpdate"] = t.struct(
         {
             "listing": t.struct(
@@ -263,7 +263,7 @@ def import_devto():
                 }
             )
         }
-    ).named("_devto_15_ListingUpdate")
+    ).named(renames["ListingUpdate"])
     types["Organization"] = t.struct(
         {
             "github_username": t.string(),
@@ -280,7 +280,7 @@ def import_devto():
             "url": t.string(),
             "username": t.string(),
         }
-    ).named("_devto_16_Organization")
+    ).named(renames["Organization"])
     types["PodcastEpisode"] = t.struct(
         {
             "id": t.integer(),
@@ -292,7 +292,7 @@ def import_devto():
             "title": t.string(),
             "type_of": t.string(),
         }
-    ).named("_devto_17_PodcastEpisode")
+    ).named(renames["PodcastEpisode"])
     types["ProfileImage"] = t.struct(
         {
             "image_of": t.string(),
@@ -300,7 +300,7 @@ def import_devto():
             "profile_image_90": t.string(),
             "type_of": t.string(),
         }
-    ).named("_devto_18_ProfileImage")
+    ).named(renames["ProfileImage"])
     types["ReadingList"] = t.struct(
         {
             "article": t.proxy(renames["ArticleIndex"]),
@@ -309,7 +309,7 @@ def import_devto():
             "status": t.string(),
             "type_of": t.string(),
         }
-    ).named("_devto_19_ReadingList")
+    ).named(renames["ReadingList"])
     types["SharedOrganization"] = t.struct(
         {
             "name": t.string(),
@@ -318,7 +318,7 @@ def import_devto():
             "slug": t.string(),
             "username": t.string(),
         }
-    ).named("_devto_20_SharedOrganization")
+    ).named(renames["SharedOrganization"])
     types["SharedUser"] = t.struct(
         {
             "github_username": t.string(),
@@ -329,7 +329,7 @@ def import_devto():
             "username": t.string(),
             "website_url": t.string(),
         }
-    ).named("_devto_21_SharedUser")
+    ).named(renames["SharedUser"])
     types["Tag"] = t.struct(
         {
             "bg_color_hex": t.string(),
@@ -337,7 +337,7 @@ def import_devto():
             "name": t.string(),
             "text_color_hex": t.string(),
         }
-    ).named("_devto_22_Tag")
+    ).named(renames["Tag"])
     types["User"] = t.struct(
         {
             "github_username": t.string(),
@@ -352,7 +352,7 @@ def import_devto():
             "username": t.string(),
             "website_url": t.string(),
         }
-    ).named("_devto_23_User")
+    ).named(renames["User"])
     types["WebhookCreate"] = t.struct(
         {
             "webhook_endpoint": t.struct(
@@ -363,7 +363,7 @@ def import_devto():
                 }
             )
         }
-    ).named("_devto_24_WebhookCreate")
+    ).named(renames["WebhookCreate"])
     types["WebhookIndex"] = t.struct(
         {
             "created_at": t.string(),
@@ -373,7 +373,7 @@ def import_devto():
             "target_url": t.string(),
             "type_of": t.string(),
         }
-    ).named("_devto_25_WebhookIndex")
+    ).named(renames["WebhookIndex"])
     types["WebhookShow"] = t.struct(
         {
             "created_at": t.string(),
@@ -384,7 +384,7 @@ def import_devto():
             "type_of": t.string(),
             "user": t.proxy(renames["SharedUser"]),
         }
-    ).named("_devto_26_WebhookShow")
+    ).named(renames["WebhookShow"])
 
     functions = {}
     functions["getArticles"] = devto.get(
