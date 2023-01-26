@@ -72,6 +72,7 @@ export type StringNode = {
   maxLength?: number | null;
   pattern?: string | null;
   format?: string | null;
+  _enum?: string[] | null;
   title: string;
   runtime: number;
   policies: number[];
@@ -137,7 +138,7 @@ export type FunctionNode = {
 };
 export type UnionNode = {
   type: "union";
-  anyOf: number[];
+  allOf: number[];
   title: string;
   runtime: number;
   policies: number[];

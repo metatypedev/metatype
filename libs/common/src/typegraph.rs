@@ -166,8 +166,8 @@ pub enum TypeNode {
         #[serde(flatten)]
         base: TypeNodeBase,
         /// Array of indexes of the nodes that are used as subschemes in the
-        /// anyOf field of JSON Schema.
-        any_of: Vec<u32>,
+        /// allOf field of JSON Schema.
+        all_of: Vec<u32>,
     },
     Any {
         #[serde(flatten)]

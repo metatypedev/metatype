@@ -551,7 +551,7 @@ class union(typedef):
 
     def data(self, collector: Collector) -> dict:
         ret = super().data(collector)
-        ret["anyOf"] = [collector.index(v) for v in ret.pop("variants")]
+        ret["allOf"] = [collector.index(v) for v in ret.pop("variants")]
         return ret
 
 

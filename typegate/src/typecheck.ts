@@ -123,19 +123,19 @@ export class ValidationSchemaBuilder {
       }
 
       case "union": {
-        const variants = type.anyOf.map((typeIndex) => this.types[typeIndex]);
+        const variants = type.allOf.map((typeIndex) => this.types[typeIndex]);
         const variantsSchema = variants.map((variant) =>
           this.get(path, variant, selectionSet)
         );
 
         const trimmedType = trimType(type);
         // remove `type` field as the type is ruled by the
-        // anyOf subschemes
+        // allOf subschemes
         const { type: _, ...untyped } = trimmedType;
 
         return {
           ...untyped,
-          anyOf: variantsSchema,
+          allOf: variantsSchema,
         };
       }
 
