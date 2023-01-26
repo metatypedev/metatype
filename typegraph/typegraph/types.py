@@ -542,11 +542,13 @@ class array(typedef):
 
 @frozen
 class union(typedef):
-    variants: List[TypeNode]
+    variants: Tuple[TypeNode]
 
     @property
     def edges(self) -> List[Node]:
-        return super().edges + self.variants
+        nodes = super().edges
+        nodes.extend(self.variants.__iter__())
+        return nodes
 
     def data(self, collector: Collector) -> dict:
         ret = super().data(collector)
