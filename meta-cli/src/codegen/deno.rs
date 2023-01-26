@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use typescript as ts;
@@ -32,6 +32,9 @@ where
     let cg = Codegen::new(&tg, base_dir);
     let codes = cg.codegen()?;
     for code in codes.into_iter() {
+        let parent_folder = Path::new(&code.path).parent().unwrap();
+        fs::create_dir_all(parent_folder).unwrap();
+
         let mut file = File::options()
             .create(true)
             .append(true)
