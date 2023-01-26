@@ -542,18 +542,15 @@ class array(typedef):
 
 @frozen
 class union(typedef):
-    variants: List[TypeNode] = []
+    variants: List[TypeNode]
 
     @property
     def edges(self) -> List[Node]:
-        nodes = super().edges + self.variants
-        return nodes
+        return super().edges + self.variants
 
     def data(self, collector: Collector) -> dict:
         ret = super().data(collector)
-        nodeIndexes = [collector.index(v) for v in ret.pop("variants")]
-        ret["anyOf"] = tuple(nodeIndexes)
-
+        ret["anyOf"] = [collector.index(v) for v in ret.pop("variants")]
         return ret
 
 
