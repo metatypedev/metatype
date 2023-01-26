@@ -24,8 +24,7 @@ with TypeGraph("graphql_namespaces") as g:
                     user_model,
                     user_model,
                     path=("updateUser",),
-                    effect=Effect.UPDATE,
-                    idempotent=True,
+                    effect=Effect.update(True),
                 ).add_policy(public),
                 # operations in nested namespace `user.profile`
                 "profile": t.struct(
@@ -39,8 +38,7 @@ with TypeGraph("graphql_namespaces") as g:
                             picture_model,
                             picture_model,
                             path=("profile", "setPicture"),
-                            effect=Effect.UPDATE,
-                            idempotent=True,
+                            effect=Effect.update(True),
                         ).add_policy(public),
                     }
                 ).named("profile_namespace"),

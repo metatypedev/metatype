@@ -30,22 +30,22 @@ with TypeGraph("test-vars") as g:
         sum=t.func(
             t.struct({"numbers": t.array(t.integer())}),
             t.integer(),
-            mod.imp("sum", effect=None, idempotent=False),
+            mod.imp("sum", effect=Effect.none()),
         ).add_policy(allow_all),
         count=t.func(
             t.struct(),
             t.integer().min(0),
-            mod.imp("counter", effect=Effect.UPDATE, idempotent=False),
+            mod.imp("counter", effect=Effect.update()),
         ).add_policy(allow_all),
         min0=t.func(
-            min_input, t.number(), math0.imp("min", effect=None, idempotent=True)
+            min_input, t.number(), math0.imp("min", effect=Effect.none())
         ).add_policy(allow_all),
         min1=t.func(
-            min_input, t.number(), math1.imp("min", effect=None, idempotent=True)
+            min_input, t.number(), math1.imp("min", effect=Effect.none())
         ).add_policy(allow_all),
         log=t.func(
             t.struct({"number": t.number(), "base": t.number().optional()}),
             t.number(),
-            math_npm.imp("log", effect=None, idempotent=True),
+            math_npm.imp("log", effect=Effect.none()),
         ).add_policy(allow_all),
     )

@@ -42,19 +42,11 @@ class HTTPRuntime(Runtime):
             "basic_auth_secret": self.basic_auth_secret,
         }
 
-    def get(
-        self,
-        path: str,
-        inp,
-        out,
-        effect: Optional[Effect] = None,
-        idempotent: bool = True,
-        **kwargs
-    ):
+    def get(self, path: str, inp, out, effect: Effect = Effect.none(), **kwargs):
         return t.func(
             inp,
             out,
-            RESTMat(self, "GET", path, effect=effect, idempotent=idempotent, **kwargs),
+            RESTMat(self, "GET", path, effect=effect, **kwargs),
         )
 
     def post(
@@ -62,63 +54,35 @@ class HTTPRuntime(Runtime):
         path: str,
         inp,
         out,
-        effect: Optional[Effect] = Effect.CREATE,
+        effect: Effect = Effect.create(),
         idempotent: bool = False,
         **kwargs
     ):
         return t.func(
             inp,
             out,
-            RESTMat(self, "POST", path, effect=effect, idempotent=idempotent, **kwargs),
+            RESTMat(self, "POST", path, effect=effect, **kwargs),
         )
 
-    def put(
-        self,
-        path: str,
-        inp,
-        out,
-        effect: Optional[Effect] = Effect.UPSERT,
-        idempotent: bool = True,
-        **kwargs
-    ):
+    def put(self, path: str, inp, out, effect: Effect = Effect.upsert(), **kwargs):
         return t.func(
             inp,
             out,
-            RESTMat(self, "PUT", path, effect=effect, idempotent=idempotent, **kwargs),
+            RESTMat(self, "PUT", path, effect=effect, **kwargs),
         )
 
-    def patch(
-        self,
-        path: str,
-        inp,
-        out,
-        effect: Optional[Effect] = Effect.UPDATE,
-        idempotent: bool = False,
-        **kwargs
-    ):
+    def patch(self, path: str, inp, out, effect: Effect = Effect.update(), **kwargs):
         return t.func(
             inp,
             out,
-            RESTMat(
-                self, "PATCH", path, effect=effect, idempotent=idempotent, **kwargs
-            ),
+            RESTMat(self, "PATCH", path, effect=effect, **kwargs),
         )
 
-    def delete(
-        self,
-        path: str,
-        inp,
-        out,
-        effect: Optional[Effect] = Effect.DELETE,
-        idempotent: bool = True,
-        **kwargs
-    ):
+    def delete(self, path: str, inp, out, effect: Effect = Effect.delete(), **kwargs):
         return t.func(
             inp,
             out,
-            RESTMat(
-                self, "DELETE", path, effect=effect, idempotent=idempotent, **kwargs
-            ),
+            RESTMat(self, "DELETE", path, effect=effect, **kwargs),
         )
 
 
@@ -134,5 +98,4 @@ class RESTMat(Materializer):
     body_fields: Optional[Tuple[str, ...]] = field(kw_only=True, default=None)
     auth_token_field: Optional[str] = field(kw_only=True, default=None)
     materializer_name: str = always("rest")
-    effect: Optional[Effect] = required()
-    idempotent: bool = required()
+    effect: Effect = required()

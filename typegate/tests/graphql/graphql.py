@@ -27,12 +27,11 @@ with TypeGraph("graphql") as g:
                         "name": t.string().optional(),
                         "email": t.string().optional(),
                     }
-                ),  # TODO min_props: 1
+                ).min(1),
             }
         ),
         g("User"),
-        effect=Effect.UPDATE,
-        idempotent=True,
+        effect=Effect.update(idempotent=True),
     ).add_policy(policies.allow_all())
 
     g.expose(user=user_by_id, updateUser=update_user)

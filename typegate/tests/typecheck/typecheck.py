@@ -41,8 +41,7 @@ with TypeGraph(
 
     create_post_mat = FunMat(
         "() => ({ title: 'Hello Metatype', content: 'Greeting from Metatype', authorId: 123})",
-        effect=Effect.CREATE,
-        idempotent=False,
+        effect=Effect.create(),
     )
 
     create_post = t.func(

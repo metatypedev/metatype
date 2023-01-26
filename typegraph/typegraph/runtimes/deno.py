@@ -68,8 +68,7 @@ class FunMat(Materializer):
     script: Optional[str] = field(kw_only=True, default=None)
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = field(default="function", init=False)
-    effect: Optional[Effect] = required()
-    idempotent: bool = required()
+    effect: Effect = required()
 
     @classmethod
     def from_lambda(cls, function, runtime=DenoRuntime()):
@@ -91,8 +90,7 @@ class FunMat(Materializer):
 
 @frozen
 class PureFunMat(FunMat):
-    effect: Optional[Effect] = always(None)
-    idempotent: bool = always(True)
+    effect: Effect = always(Effect.none())
 
 
 @frozen
@@ -108,8 +106,7 @@ class ImportFunMat(Materializer):
     mod: "ModuleMat" = field()
     name: str = field(default="default")
     secrets: Tuple[str] = field(kw_only=True, factory=tuple)
-    effect: Optional[Effect] = required()
-    idempotent: bool = required()
+    effect: Effect = required()
     runtime: DenoRuntime = field(
         kw_only=True, factory=DenoRuntime
     )  # should be the same runtime as `mod`'s
@@ -133,12 +130,14 @@ class ModuleMat(Materializer):
     code: Optional[str] = field(kw_only=True, default=None)
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)  # DenoRuntime
     materializer_name: str = always("module")
-    # effect = None
+    effect: Effect = always(Effect.none())
 
     def __attrs_post_init__(self):
         if self.file is None:
             if self.code is None:
-                raise Exception("you must give source code for the module")
+                raise Exception(
+                    f"you must give source code for the module: {self.file}"
+                )
         else:
             if self.code is not None:
                 raise Exception("you must only give either source file or source code")
@@ -152,9 +151,14 @@ class ModuleMat(Materializer):
                 with open(path) as f:
                     object.__setattr__(self, "code", f.read())
 
-    def imp(self, name: str = "default", **kwargs) -> ImportFunMat:
+    def imp(self, name: str = "default", *, effect: Effect, **kwargs) -> ImportFunMat:
         return ImportFunMat(
-            self, name, runtime=self.runtime, secrets=self.secrets, **kwargs
+            self,
+            name,
+            runtime=self.runtime,
+            secrets=self.secrets,
+            effect=effect,
+            **kwargs,
         )
 
 

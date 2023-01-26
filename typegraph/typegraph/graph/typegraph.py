@@ -111,7 +111,7 @@ class TypeGraph:
                     continue
 
                 if isinstance(e, t.func):
-                    if e.mat.effect is not None:
+                    if e.mat.effect.effect is not None:
                         raise Exception(
                             f"expected materializer to have no effect: ({e.mat})"
                         )

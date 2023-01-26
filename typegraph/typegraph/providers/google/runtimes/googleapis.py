@@ -2,9 +2,11 @@
 
 from attrs import field
 from attrs import frozen
+from typegraph import Effect
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
+from typegraph.utils.attrs import required
 
 
 @frozen
@@ -16,5 +18,6 @@ class GoogleapisRuntime(Runtime):
 class RestMat(Materializer):
     verb: str
     url: str
+    effect: Effect = required()
     runtime: Runtime = field(kw_only=True, factory=GoogleapisRuntime)
     materializer_name: str = always("restmat")

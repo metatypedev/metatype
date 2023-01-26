@@ -109,8 +109,7 @@ class PrismaOperationMat(Materializer):
     table: str
     operation: str
     materializer_name: str = always("prisma_operation")
-    effect: Optional[Effect] = required()
-    idempotent: bool = required()
+    effect: Effect = required()
 
 
 @frozen
@@ -119,6 +118,7 @@ class PrismaRelation(Materializer):
     materializer_name: str = always("prisma_relation")
     relation: "Relation" = field(metadata={SKIP: True})
     owner: bool = field(metadata={SKIP: True})
+    effect: Effect = always(Effect.none())
 
     @classmethod
     def check(cls, tpe: t.typedef):
@@ -358,39 +358,33 @@ class PrismaRuntime(Runtime):
 
     #     return config
 
-    def queryRaw(self) -> t.func:
+    def queryRaw(self, query: str, *, effect: Effect) -> t.func:
         return t.func(
             t.struct(
                 {
-                    "query": t.string(),
                     "parameters": t.json(),
                 }
             ).named("QueryRawInp"),
             t.array(t.json()),
-            PrismaOperationMat(self, "", "queryRaw", effect=None, idempotent=True),
+            PrismaOperationMat(self, query, "queryRaw", effect=effect),
         )
 
-    def executeRaw(self) -> t.func:
+    def executeRaw(self, query: str, *, effect: Effect) -> t.func:
         return t.func(
             t.struct(
                 {
-                    "query": t.string(),
                     "parameters": t.json(),
                 }
             ).named("ExecuteRawInp"),
             t.integer(),
-            PrismaOperationMat(
-                self, "", "executeRaw", effect=Effect.UNKNOWN, idempotent=False
-            ),
+            PrismaOperationMat(self, query, "executeRaw", effect=effect),
         )
 
     def gen_find_unique(self, tpe: t.struct) -> t.func:
         return t.func(
             t.struct({"where": get_where_type(tpe).named(f"{tpe.name}WhereUnique")}),
             get_out_type(tpe).named(f"{tpe.name}UniqueOutput").optional(),
-            PrismaOperationMat(
-                self, tpe.name, "findUnique", effect=None, idempotent=True
-            ),
+            PrismaOperationMat(self, tpe.name, "findUnique", effect=Effect.none()),
         )
 
     def gen_find_many(self, tpe: t.struct) -> t.func:
@@ -399,9 +393,7 @@ class PrismaRuntime(Runtime):
                 {"where": get_where_type(tpe).named(f"{tpe.name}Where").optional()}
             ),
             t.array(get_out_type(tpe).named(f"{tpe.name}Output")),
-            PrismaOperationMat(
-                self, tpe.name, "findMany", effect=None, idempotent=True
-            ),
+            PrismaOperationMat(self, tpe.name, "findMany", effect=Effect.none()),
         )
 
     def gen_create(self, tpe: t.struct) -> t.func:
@@ -412,9 +404,7 @@ class PrismaRuntime(Runtime):
                 }
             ),
             get_out_type(tpe).named(f"{tpe.name}CreateOutput"),
-            PrismaOperationMat(
-                self, tpe.name, "createOne", effect=Effect.CREATE, idempotent=False
-            ),
+            PrismaOperationMat(self, tpe.name, "createOne", effect=Effect.create()),
         )
 
     def gen_update(self, tpe: t.struct) -> t.func:
@@ -429,9 +419,7 @@ class PrismaRuntime(Runtime):
                 }
             ),
             get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
-            PrismaOperationMat(
-                self, tpe.name, "updateOne", effect=Effect.UPDATE, idempotent=True
-            ),
+            PrismaOperationMat(self, tpe.name, "updateOne", effect=Effect.update(True)),
         )
 
     def gen_delete(self, tpe: t.struct) -> t.func:
@@ -440,9 +428,7 @@ class PrismaRuntime(Runtime):
                 {"where": get_where_type(tpe).named(f"{tpe.name}DeleteInput")},
             ),
             get_out_type(tpe).named(f"{tpe.name}DeleteOutput"),
-            PrismaOperationMat(
-                self, tpe.name, "deleteOne", effect=Effect.DELETE, idempotent=True
-            ),
+            PrismaOperationMat(self, tpe.name, "deleteOne", effect=Effect.delete()),
         )
 
     def gen_delete_many(self, tpe: t.struct) -> t.func:
@@ -455,9 +441,7 @@ class PrismaRuntime(Runtime):
                 }
             ),
             t.struct({"count": t.integer()}).named(f"{tpe.name}BatchDeletePayload"),
-            PrismaOperationMat(
-                self, tpe.name, "deleteMany", effect=Effect.DELETE, idempotent=True
-            ),
+            PrismaOperationMat(self, tpe.name, "deleteMany", effect=Effect.delete()),
         )
 
     def gen(self, ops: Dict[str, Tuple[t.Type, str, Policy]]) -> Dict[str, t.func]:
@@ -558,28 +542,25 @@ class PrismaMigrationRuntime(Runtime):
 class PrismaApplyMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("apply")
-    effect: Optional[Effect] = always(Effect.UPSERT)
-    idempotent: bool = always(True)
+    effect: Effect = always(Effect.upsert())
 
 
 @frozen
 class PrismaDeployMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("deploy")
-    effect: Optional[Effect] = always(Effect.UPSERT)
-    idempotent: bool = always(True)
+    effect: Effect = always(Effect.upsert())
 
 
 @frozen
 class PrismaCreateMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("create")
-    effect: Optional[Effect] = always(Effect.CREATE)
-    idempotent: bool = always(False)
+    effect: Effect = always(Effect.create())
 
 
 @frozen
 class PrismaDiffMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("diff")
-    # effect = None
+    effect: Effect = always(Effect.none())

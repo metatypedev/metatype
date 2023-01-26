@@ -41,7 +41,7 @@ class QueryMat(Materializer):
     runtime: Runtime
     path: Optional[Tuple[str]]
     materializer_name: str = always("query")
-    # effect = None
+    effect: Effect = always(Effect.none())
 
 
 @frozen
@@ -49,5 +49,4 @@ class MutationMat(Materializer):
     runtime: Runtime
     path: Optional[Tuple[str]]
     materializer_name: str = always("mutation")
-    effect: Optional[Effect] = required()
-    idempotent: bool = required()
+    effect: Effect = required()

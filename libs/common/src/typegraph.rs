@@ -185,12 +185,18 @@ impl TypeNode {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "lowercase")]
-pub enum MaterializerEffect {
+pub enum EffectType {
     Create,
     Update,
     Upsert,
     Delete,
-    Unknown,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Effect {
+    effect: Option<EffectType>,
+    idempotent: bool,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -198,8 +204,7 @@ pub enum MaterializerEffect {
 pub struct Materializer {
     pub name: String,
     pub runtime: u32,
-    pub effect: Option<MaterializerEffect>,
-    pub idempotent: bool,
+    pub effect: Effect,
     pub data: IndexMap<String, Value>,
 }
 

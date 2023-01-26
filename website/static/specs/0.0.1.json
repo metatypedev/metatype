@@ -777,7 +777,7 @@
       "type": "object",
       "required": [
         "data",
-        "idempotent",
+        "effect",
         "name",
         "runtime"
       ],
@@ -791,9 +791,24 @@
           "minimum": 0.0
         },
         "effect": {
+          "$ref": "#/definitions/Effect"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "Effect": {
+      "type": "object",
+      "required": [
+        "idempotent"
+      ],
+      "properties": {
+        "effect": {
           "anyOf": [
             {
-              "$ref": "#/definitions/MaterializerEffect"
+              "$ref": "#/definitions/EffectType"
             },
             {
               "type": "null"
@@ -802,21 +817,16 @@
         },
         "idempotent": {
           "type": "boolean"
-        },
-        "data": {
-          "type": "object",
-          "additionalProperties": true
         }
       }
     },
-    "MaterializerEffect": {
+    "EffectType": {
       "type": "string",
       "enum": [
         "create",
         "update",
         "upsert",
-        "delete",
-        "unknown"
+        "delete"
       ]
     },
     "TGRuntime": {

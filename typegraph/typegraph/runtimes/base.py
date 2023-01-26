@@ -32,7 +32,7 @@ class Runtime(Node):
         return dict()
 
 
-class Effect(LowercaseStrEnum):
+class EffectType(LowercaseStrEnum):
     CREATE = auto()
     UPDATE = auto()
     UPSERT = auto()
@@ -41,11 +41,36 @@ class Effect(LowercaseStrEnum):
 
 
 @frozen
+class Effect:
+    effect: Optional[EffectType]
+    # see: https://developer.mozilla.org/en-US/docs/Glossary/Idempotent
+    idempotent: bool
+
+    @classmethod
+    def none(cls):
+        return cls(None, True)
+
+    @classmethod
+    def create(cls, idempotent=False):
+        return cls(EffectType.CREATE, idempotent)
+
+    @classmethod
+    def update(cls, idempotent=False):
+        return cls(EffectType.UPDATE, idempotent)
+
+    @classmethod
+    def upsert(cls, idempotent=True):
+        return cls(EffectType.UPSERT, idempotent)
+
+    @classmethod
+    def delete(cls, idempotent=True):
+        return cls(EffectType.DELETE, idempotent)
+
+
+@frozen
 class Materializer(Node):
     runtime: Runtime
-    effect: Optional[Effect] = always(None)  # to be set by child classes
-    # see: https://developer.mozilla.org/en-US/docs/Glossary/Idempotent
-    idempotent: bool = always(True)  # to be set by child classes
+    effect: Effect
     collector_target: Optional[str] = always(Collector.materializers)
 
     @property
@@ -59,6 +84,5 @@ class Materializer(Node):
             "name": data.pop("materializer_name"),
             "runtime": collector.index(data.pop("runtime")),
             "effect": data.pop("effect"),
-            "idempotent": data.pop("idempotent"),
             "data": data,
         }
