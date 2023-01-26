@@ -297,7 +297,7 @@ impl<'a> Codegen<'a> {
                     .join(", ");
                 Ok(format!("{{ {body} }}"))
             }
-            _ => bail!("unsupported type"),
+            _ => bail!("unsupported type: {tpe:#?}"),
         }
     }
 
@@ -354,7 +354,7 @@ impl<'a> Codegen<'a> {
                 }
             }
             TypeNode::Object { .. } => self.gen_obj_type(tpe),
-            _ => bail!("unsupported type"),
+            _ => bail!("unsupported type: {tpe:#?}"),
         }
     }
 }
