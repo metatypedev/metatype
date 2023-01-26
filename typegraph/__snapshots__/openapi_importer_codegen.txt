@@ -3,8 +3,8 @@
     renames = {'User': '_test_1_User', 'UserProfile': '_test_2_UserProfile'}
 
     types = {}
-    types['User'] = t.struct({'id': t.string(), 'email': t.string(), 'username': t.string()}).named(renames['_test_1_User'])
-    types['UserProfile'] = t.struct({'id': t.string(), 'username': t.string(), 'gender': t.string(), 'profilePicture': t.string()}).named(renames['_test_2_UserProfile'])
+    types['User'] = t.struct({'id': t.string(), 'email': t.string(), 'username': t.string()}).named(renames['User'])
+    types['UserProfile'] = t.struct({'id': t.string(), 'username': t.string(), 'gender': t.string(), 'profilePicture': t.string().optional()}).named(renames['UserProfile'])
 
     functions = {}
     functions['listUsers'] = test.get('/users', t.struct({}), t.array(t.proxy(renames['User'])), )
