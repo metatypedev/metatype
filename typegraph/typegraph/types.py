@@ -546,8 +546,7 @@ class union(typedef):
 
     @property
     def edges(self) -> List[Node]:
-        nodes = super().edges
-        nodes.extend(self.variants.__iter__())
+        nodes = super().edges + list(self.variants)
         return nodes
 
     def data(self, collector: Collector) -> dict:
