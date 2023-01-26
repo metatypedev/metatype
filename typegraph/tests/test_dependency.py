@@ -119,8 +119,7 @@ class TestDependency:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "effect": None,
-                        "idempotent": True,
+                        "effect": {"effect": None, "idempotent": True},
                         "data": {"script": "var _my_lambda = x2;"},
                     }
                 ],

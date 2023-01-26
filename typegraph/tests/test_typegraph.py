@@ -84,8 +84,7 @@ class TestTypegraph:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "effect": None,
-                        "idempotent": True,
+                        "effect": {"effect": None, "idempotent": True},
                         "data": {"script": "var _my_lambda = (args) => args.a * 2;"},
                     }
                 ],
@@ -210,15 +209,13 @@ class TestTypegraph:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "effect": None,
-                        "idempotent": False,
+                        "effect": {"effect": None, "idempotent": True},
                         "data": {"script": "var _my_lambda = () => 1;"},
                     },
                     {
                         "name": "function",
                         "runtime": 0,
-                        "effect": None,
-                        "idempotent": True,
+                        "effect": {"effect": None, "idempotent": True},
                         "data": {"script": "var _my_lambda = (args) => args.a;"},
                     },
                 ],

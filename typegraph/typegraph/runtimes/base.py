@@ -83,6 +83,6 @@ class Materializer(Node):
         return {
             "name": data.pop("materializer_name"),
             "runtime": collector.index(data.pop("runtime")),
-            "effect": data.pop("effect"),
+            "effect": asdict(data.pop("effect")),
             "data": data,
         }
