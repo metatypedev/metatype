@@ -6,58 +6,54 @@ test("Union type", async (t) => {
   const e = await t.pythonFile("type_nodes/union.py");
 
   await t.should(
-    "fail to request fields that are not present in the returned response type",
+    "allow query type user extended from base model",
     async () => {
       await gql`
-      query {
-        get_response(
-					expected_response_type: "data"
-				) {
-					# shared field
-					code_status
+				query {
+					student(id: "student-1") {
+						# base fields
+						id
+						name
+						age
 
-					# on good response
-					data
-					timestamp
-
-					# on bad response (this field should not be allowed to be queried as the response type is "data" and it doesn't have this field)
-					error_message
-        }
-      }
-    `
-        .expectErrorContains("'error_message' not found")
+						# specific fields for student
+						school
+					}
+				}
+			`
+        .expectData({
+          id: "student-1",
+          name: "Student 1",
+          age: 14,
+          school: "The School",
+        })
         .on(e);
     },
   );
 
-  await t.should("return error response", async () => {
-    await gql`
-      query {
-        get_response(
-					expected_response_type: "error"
-				) {
-					code_status
-					error_message
-        }
-      }
-    `
-      .expectData({})
-      .on(e);
-  });
+  await t.should(
+    "allow query type worker extended from base model",
+    async () => {
+      await gql`
+				query {
+					worker(id: "worker-1") {
+						# base fields
+						id
+						name
+						age
 
-  await t.should("return success response", async () => {
-    await gql`
-      query {
-        get_response(
-					expected_response_type: "data"
-				) {
-					code_status
-					data
-					timestamp
-        }
-      }
-    `
-      .expectData({})
-      .on(e);
-  });
+						# specific fields for worker
+						company
+					}
+				}
+			`
+        .expectData({
+          id: "worker-1",
+          name: "Worker 1",
+          age: 30,
+          company: "The Company",
+        })
+        .on(e);
+    },
+  );
 });

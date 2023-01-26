@@ -4,32 +4,35 @@ from typegraph import TypeGraph
 from typegraph.runtimes.deno import ModuleMat
 
 with TypeGraph("union") as g:
-    server_request = t.struct(
+    user_base_model = t.struct(
         {
-            "expected_response_type": t.enum(
-                [
-                    "data",
-                    "error",
-                ]
-            )
+            "id": t.uuid(),
+            "name": t.string(),
+            "age": t.integer(),
         }
     )
 
-    server_transformer = ModuleMat("ts/server_transformers.ts")
+    student_materializer = ModuleMat("ts/union/student.ts")
 
-    server_response = t.union(
-        (
-            t.struct(
-                {"code_status": t.integer(), "data": t.string(), "timestamp": t.date()}
-            ),
-            t.struct({"code_status": t.integer(), "error_message": t.string()}),
-        )
-    )
+    student_model = t.union((user_base_model, t.struct({"school": t.string()})))
 
-    get_response = t.func(
-        server_request,
-        server_response,
-        server_transformer.imp("get_response"),
+    get_student = t.func(
+        t.struct({"id": t.uuid()}),
+        student_model,
+        student_materializer.imp("get_student"),
     ).add_policy(policies.public())
 
-    g.expose(get_response=get_response)
+    worker_model = t.union((user_base_model, t.struct({"company": t.string()})))
+
+    worker_materializer = ModuleMat("ts/union/worker.ts")
+
+    get_worker = t.func(
+        t.struct({"id": t.uuid()}),
+        worker_model,
+        worker_materializer.imp("get_worker"),
+    ).add_policy(policies.public())
+
+    g.expose(
+        student=get_student,
+        worker=get_worker,
+    )
