@@ -40,7 +40,7 @@ serde_json = "1.0.91"
 dashmap = "5.4.0"
 common = { path = "../../libs/common" }
 macros = { path = "../../libs/macros" }
-sentry = "0.29.1"
+sentry = "0.29.2"
 tempfile = "3.3.0"
 convert_case = "0.6.0"
 rust-s3 = { git = "https://github.com/zifeo/rust-s3", branch = "order" }
