@@ -132,6 +132,8 @@ pub enum TypeNode {
         max_length: Option<i64>,
         pattern: Option<String>,
         format: Option<String>,
+        #[serde(rename = "_enum")]
+        enumeration: Option<Vec<String>>,
     },
     Object {
         #[serde(flatten)]

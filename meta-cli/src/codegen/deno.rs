@@ -341,7 +341,18 @@ impl<'a> Codegen<'a> {
             TypeNode::Array { items, .. } => Ok(format!("Array<{}>", self.get_typespec(*items)?)),
             TypeNode::Boolean { .. } => Ok("boolean".to_owned()),
             TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
-            TypeNode::String { .. } => Ok("string".to_owned()),
+            TypeNode::String { enumeration, .. } => {
+                if let Some(variants) = enumeration {
+                    let variants: Vec<String> = variants
+                        .iter()
+                        .map(|variant| format!("\"{variant}\""))
+                        .collect();
+                    let enum_definition = variants.join(" | ");
+                    Ok(enum_definition)
+                } else {
+                    Ok("\"\"".to_owned())
+                }
+            }
             TypeNode::Object { .. } => self.gen_obj_type(tpe),
             _ => bail!("unsupported type"),
         }
