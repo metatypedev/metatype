@@ -3,10 +3,11 @@ from typegraph import t
 from typegraph import TypeGraph
 from typegraph.runtimes.graphql import GraphQLRuntime
 
-with TypeGraph("policies") as g:
+with TypeGraph("mini2") as g:
 
     remote = GraphQLRuntime("https://graphqlzero.almansi.me/api")
-    allow_all = policies.allow_all()
+
+    public = policies.public()
 
     post = t.struct(
         {
@@ -17,7 +18,7 @@ with TypeGraph("policies") as g:
     ).named("Post")
 
     getter = remote.query(t.struct({"id": t.integer()}), t.optional(post)).add_policy(
-        policies.allow_all()
+        public
     )
 
     g.expose(post=getter)

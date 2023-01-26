@@ -16,7 +16,7 @@ with TypeGraph("mini") as g:
     ).named("Post")
 
     getter = remote.query(t.struct({"id": t.integer()}), t.optional(post)).add_policy(
-        policies.allow_all()
+        policies.public()
     )
 
     g.expose(post=getter)

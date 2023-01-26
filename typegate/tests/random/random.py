@@ -32,9 +32,9 @@ with TypeGraph(name="random") as g:
         }
     ).named("User")
 
-    allow_all = policies.allow_all()
+    public = policies.public()
 
     g.expose(
-        randomRec=t.gen(rec, RandomMat(runtime=runtime)).add_policy(allow_all),
-        randomUser=t.gen(g("User"), RandomMat(runtime=runtime)).add_policy(allow_all),
+        randomRec=t.gen(rec, RandomMat(runtime=runtime)).add_policy(public),
+        randomUser=t.gen(g("User"), RandomMat(runtime=runtime)).add_policy(public),
     )

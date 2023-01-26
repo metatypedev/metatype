@@ -36,11 +36,11 @@ with TypeGraph("nesting") as g:
 
     user_by_id = remote.get(
         "/users/{id}", t.struct({"id": t.integer()}), t.optional(g("User"))
-    ).add_policy(policies.allow_all())
+    ).add_policy(policies.public())
 
     post_by_id = remote.get(
         "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g("Post"))
-    ).add_policy(policies.allow_all())
+    ).add_policy(policies.public())
 
     g.expose(
         user=user_by_id,

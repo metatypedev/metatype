@@ -26,7 +26,9 @@ sudo apt install pkg-config libssl-dev
 ```bash
 cargo install cargo-watch
 cargo install cargo-edit
-cargo install --force --git https://github.com/zifeo/whiz
+cargo install --git https://github.com/zifeo/whiz --locked
+
+apt install -y protobuf-compiler
 
 pipx install pre-commit
 pipx install poetry
