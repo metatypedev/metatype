@@ -30,6 +30,18 @@ function trimType(node: TypeNode): JSONSchema {
   return ret as unknown as JSONSchema;
 }
 
+class InvalidNodePathsError extends Error {
+  constructor(
+    public invalidNodePaths: string[],
+    public generatedSchema: JSONSchema,
+  ) {
+    const nodePaths = invalidNodePaths.join(", ");
+    const quantifier = invalidNodePaths.length <= 1 ? "is" : "are";
+
+    super(`${nodePaths} ${quantifier} undefined`);
+  }
+}
+
 // Build a jsonschema for a query result
 export class ValidationSchemaBuilder {
   constructor(
@@ -127,11 +139,10 @@ export class ValidationSchemaBuilder {
         };
 
         if (invalidNodePaths.length > 0) {
-          throw {
+          throw new InvalidNodePathsError(
             invalidNodePaths,
             generatedSchema,
-            message: "invalid node paths, all of them are undefined",
-          };
+          );
         }
 
         return generatedSchema;
@@ -152,21 +163,30 @@ export class ValidationSchemaBuilder {
 
             variantsSchema.push(variantSchema);
           } catch (error) {
-            for (const invalidPath of error.invalidNodePaths) {
-              let count = undefinedNodePaths.get(invalidPath) || 0;
-              count += 1;
-              undefinedNodePaths.set(invalidPath, count);
-            }
+            if (error instanceof InvalidNodePathsError) {
+              for (const invalidPath of error.invalidNodePaths) {
+                let count = undefinedNodePaths.get(invalidPath) || 0;
+                count += 1;
+                undefinedNodePaths.set(invalidPath, count);
+              }
 
-            variantsSchema.push(error.generatedSchema);
+              variantsSchema.push(error.generatedSchema);
+            } else {
+              throw error;
+            }
           }
         }
 
-        // only throw that a node path is undefined if it doesn't exist on any of the subschemes
+        // only throw that a node path is undefined if it doesn't exist on any
+        // of the subschemes
+        const invalidPaths = [];
         for (const [nodePath, count] of undefinedNodePaths.entries()) {
           if (count === variants.length) {
-            throw new Error(`${nodePath} is undefined`);
+            invalidPaths.push(nodePath);
           }
+        }
+        if (invalidPaths.length > 0) {
+          throw new InvalidNodePathsError(invalidPaths, {});
         }
 
         const trimmedType = trimType(type);
