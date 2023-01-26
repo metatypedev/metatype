@@ -7,7 +7,6 @@ typegates:
 typegraphs:
   python:
     include: "typegraphs/**/*.py"
-    exclude: "typegraphs/mybusiness/*.py"
   materializers:
     prisma:
       migrations_path: "prisma/migrations"
