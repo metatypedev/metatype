@@ -174,7 +174,8 @@ impl<'a> Codegen<'a> {
             .into_iter()
             .map(|(name, code)| -> Result<ModuleCode> {
                 let path = self.ts_modules.remove(&name).unwrap().path;
-                let code = ts::format_text(&path, &code).context("could not format code")?;
+                let code = ts::format_text(&path, &code)
+                    .context(format!("could not format code: {code:#?}"))?;
                 Ok(ModuleCode { path, code })
             })
             .collect::<Result<Vec<_>>>()
@@ -243,6 +244,24 @@ impl<'a> Codegen<'a> {
         Ok(format!("interface {name} {}\n", self.gen_obj_type(tpe)?))
     }
 
+    fn gen_type_definition(&self, name: &str, idx: u32) -> Result<String> {
+        Ok(format!("type {name} = {}\n", self.get_typespec(idx)?))
+    }
+
+    fn gen_union_type_definition(&self, all_of: &[u32]) -> Result<String> {
+        let mut variant_definitions = Vec::new();
+        for &variant_type_index in all_of {
+            let variant_type_definition = self
+                .get_typespec(variant_type_index)
+                .expect("type definition generation for variant type should be supported");
+            variant_definitions.push(variant_type_definition);
+        }
+        // field `allOf` in JSON Schema can be represented in TypeScript
+        // as an intersection of all the variant types
+        let intersection_type = variant_definitions.join(" & ");
+        Ok(intersection_type)
+    }
+
     fn gen_obj_type(&self, tpe: &TypeNode) -> Result<String> {
         let fields = tpe.get_struct_fields()?;
         let fields = fields
@@ -297,6 +316,33 @@ impl<'a> Codegen<'a> {
                     .join(", ");
                 Ok(format!("{{ {body} }}"))
             }
+            TypeNode::Union { all_of, .. } => {
+                let mut properties_map = HashMap::new();
+
+                for &variant_type_index in all_of {
+                    let variant_type = &self.tg.types[variant_type_index as usize];
+
+                    match variant_type {
+                        TypeNode::Object { properties, .. } => {
+                            for (property_name, &property_definition_index) in properties {
+                                let property_definition =
+                                    self.gen_default_value(property_definition_index).expect("property in object node should have default value generation");
+                                properties_map.insert(property_name, property_definition);
+                            }
+                        }
+                        _ => bail!("only unions of object nodes can have default value generation"),
+                    }
+                }
+
+                let body: Vec<String> = properties_map
+                    .iter()
+                    .map(|(property_name, property_default_value)| {
+                        format!("{property_name}: {property_default_value}")
+                    })
+                    .collect();
+                let body = body.join(", ");
+                Ok(format!("{{ {body} }}"))
+            }
             _ => bail!("unsupported type: {tpe:#?}"),
         }
     }
@@ -315,13 +361,37 @@ impl<'a> Codegen<'a> {
             .gen_interface(&inp_type_name, input)
             .context("failed to generate input type")?;
 
-        let out_typespec = self
-            .get_typespec(output)
-            .context("failed to generate output type")?;
+        let output_type_node = &self.tg.types[output as usize];
+        // variable helper in case out_typespec is an interface
+        let mut output_type_definition: Option<String> = None;
+        // for types that can be too verbose as Objects or Unions
+        // use interfaces to avoid cluttering the function definition
+        let out_typespec = match output_type_node {
+            TypeNode::Union { .. } => {
+                let output_type_name = {
+                    let mut name = name.to_string();
+                    let (lead, _) = name.split_at_mut(1);
+                    lead.make_ascii_uppercase();
+                    name.push_str("Output");
+                    name
+                };
+
+                output_type_definition = Some(
+                    self.gen_type_definition(&output_type_name, output)
+                        .context("failed to generate output type")?,
+                );
+
+                output_type_name
+            }
+            _ => self
+                .get_typespec(output)
+                .context("failed to generate output type")?,
+        };
 
         let code = format!(
-            "{}\nexport function {}({}: {}, {{ context }}: {{ context: Record<string, unknown> }}): {} {{\n  return {};\n}}",
+            "{}\n{}\nexport function {}({}: {}, {{ context }}: {{ context: Record<string, unknown> }}): {} {{\n  return {};\n}}",
             inp_typedef,
+			output_type_definition.unwrap_or_default(),
             name,
             self.destructure_object(input)?,
             inp_type_name,
@@ -350,10 +420,11 @@ impl<'a> Codegen<'a> {
                     let enum_definition = variants.join(" | ");
                     Ok(enum_definition)
                 } else {
-                    Ok("\"\"".to_owned())
+                    Ok("string".to_owned())
                 }
             }
             TypeNode::Object { .. } => self.gen_obj_type(tpe),
+            TypeNode::Union { all_of, .. } => self.gen_union_type_definition(all_of),
             _ => bail!("unsupported type: {tpe:#?}"),
         }
     }

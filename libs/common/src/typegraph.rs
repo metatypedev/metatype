@@ -230,7 +230,7 @@ impl TypeNode {
         if let TypeNode::Object { properties, .. } = &self {
             Ok(properties.clone())
         } else {
-            bail!("node is not an object variant")
+            bail!("node is not an object variant, found: {self:#?}")
         }
     }
 }
