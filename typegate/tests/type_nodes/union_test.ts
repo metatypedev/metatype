@@ -3,7 +3,7 @@
 import { gql, test } from "../utils.ts";
 
 test("Union type", async (t) => {
-  const e = await t.pythonFile("type_nodes/union.py");
+  const e = await t.pythonFile("type_nodes/union_node.py");
 
   const studentID = "b7831fd1-799d-4b20-9a84-830588f750a2";
 
