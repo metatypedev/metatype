@@ -67,6 +67,10 @@ export class ValidationSchemaBuilder {
           throw new Error(`Path ${path} must be a field selection`);
         }
 
+        // variable helper to bundle all the errors found instead of throwing
+        // on the first error found
+        const invalidNodePaths: string[] = [];
+
         const addProperty = (node: SelectionNode) => {
           switch (node.kind) {
             case Kind.FIELD: {
@@ -88,7 +92,8 @@ export class ValidationSchemaBuilder {
                   selectionSet,
                 );
               } else {
-                throw new Error(`${path}.${name.value} is undefined`);
+                const nodePath = `${path}.${name.value}`;
+                invalidNodePaths.push(nodePath);
               }
               break;
             }
@@ -114,28 +119,72 @@ export class ValidationSchemaBuilder {
           addProperty(node);
         }
 
-        return {
+        const generatedSchema = {
           ...trimType(type),
           properties,
           required,
           additionalProperties: false,
         };
+
+        if (invalidNodePaths.length > 0) {
+          throw {
+            invalidNodePaths,
+            generatedSchema,
+            message: "invalid node paths, all of them are undefined",
+          };
+        }
+
+        return generatedSchema;
       }
 
       case "union": {
         const variants = type.allOf.map((typeIndex) => this.types[typeIndex]);
-        const variantsSchema = variants.map((variant) =>
-          this.get(path, variant, selectionSet)
-        );
+        const variantsSchema: JSONSchema[] = [];
+        const undefinedNodePaths = new Map<string, number>();
+
+        for (const variant of variants) {
+          try {
+            const variantSchema = this.get(
+              path,
+              variant,
+              selectionSet,
+            );
+
+            variantsSchema.push(variantSchema);
+          } catch (error) {
+            for (const invalidPath of error.invalidNodePaths) {
+              let count = undefinedNodePaths.get(invalidPath) || 0;
+              count += 1;
+              undefinedNodePaths.set(invalidPath, count);
+            }
+
+            variantsSchema.push(error.generatedSchema);
+          }
+        }
+
+        // only throw that a node path is undefined if it doesn't exist on any of the subschemes
+        for (const [nodePath, count] of undefinedNodePaths.entries()) {
+          if (count === variants.length) {
+            throw new Error(`${nodePath} is undefined`);
+          }
+        }
 
         const trimmedType = trimType(type);
         // remove `type` field as the type is ruled by the
         // allOf subschemes
         const { type: _, ...untyped } = trimmedType;
 
+        const trimmedVariantsSchema = variantsSchema.map((variant) => {
+          // remove `additionalProperties = false` if present as each subschema
+          // in `allOf` is used to check the properties of a value, therefore
+          // without additionalProperties only one variant would be used to check
+          const { additionalProperties, ...trimmedVariant } = variant;
+          return trimmedVariant;
+        });
+
         return {
           ...untyped,
-          allOf: variantsSchema,
+          allOf: trimmedVariantsSchema,
         };
       }
 

@@ -22,9 +22,9 @@ with TypeGraph("union") as g:
         student_materializer.imp("get_student"),
     ).add_policy(policies.public())
 
-    worker_model = t.union((user_base_model, t.struct({"company": t.string()})))
-
     worker_materializer = ModuleMat("ts/union/worker.ts")
+
+    worker_model = t.union((user_base_model, t.struct({"company": t.string()})))
 
     get_worker = t.func(
         t.struct({"id": t.uuid()}),

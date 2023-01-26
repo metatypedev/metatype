@@ -16,5 +16,5 @@ export function get_student(
   { id }: Get_studentInput,
   { context: _ }: { context: Record<string, unknown> },
 ): Get_studentOutput {
-  return { id, name: "User 1", age: 14, school: "The School" };
+  return { id, name: "Student 1", age: 14, school: "The School" };
 }
