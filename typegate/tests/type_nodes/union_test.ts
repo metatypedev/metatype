@@ -11,18 +11,18 @@ test("Union type", async (t) => {
     "allow query type user extended from base model",
     async () => {
       await gql`
-				query {
-					student(id: ${studentID}) {
-						# base fields
-						id
-						name
-						age
+        query {
+          student(id: ${studentID}) {
+            # base fields
+            id
+            name
+            age
 
-						# specific fields for student
-						school
-					}
-				}
-			`
+            # specific fields for student
+            school
+          }
+        }
+      `
         .expectData({
           student: {
             id: studentID,
@@ -39,21 +39,21 @@ test("Union type", async (t) => {
     "fail to query fields not present on union type student",
     async () => {
       await gql`
-				query {
-					student(id: ${studentID}) {
-						# base fields
-						id
-						name
-						age
+        query {
+          student(id: ${studentID}) {
+            # base fields
+            id
+            name
+            age
 
-						# specific fields for student
-						school
+            # specific fields for student
+            school
 
-						# this field should not exist, it is only for workers
-						company
-					}
-				}
-			`
+            # this field should not exist, it is only for workers
+            company
+          }
+        }
+      `
         .expectErrorContains("Q.student.company is undefined")
         .on(e);
     },
@@ -65,18 +65,18 @@ test("Union type", async (t) => {
     "allow query type worker extended from base model",
     async () => {
       await gql`
-				query {
-					worker(id: ${workerID}) {
-						# base fields
-						id
-						name
-						age
+        query {
+          worker(id: ${workerID}) {
+            # base fields
+            id
+            name
+            age
 
-						# specific fields for worker
-						company
-					}
-				}
-			`
+            # specific fields for worker
+            company
+          }
+        }
+      `
         .expectData({
           worker: {
             id: workerID,
@@ -93,21 +93,21 @@ test("Union type", async (t) => {
     "fail to query fields not present on union type worker",
     async () => {
       await gql`
-				query {
-					worker(id: ${workerID}) {
-						# base fields
-						id
-						name
-						age
+        query {
+          worker(id: ${workerID}) {
+            # base fields
+            id
+            name
+            age
 
-						# specific fields for worker
-						company
+            # specific fields for worker
+            company
 
-						# this field should not exist, it is only for students
-						school
-					}
-				}
-			`
+            # this field should not exist, it is only for students
+            school
+          }
+        }
+      `
         .expectErrorContains("Q.worker.school is undefined")
         .on(e);
     },
