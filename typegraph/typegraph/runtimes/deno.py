@@ -19,7 +19,6 @@ from typegraph.graph.nodes import Node
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
-from typegraph.utils.attrs import required
 from typegraph.utils.attrs import SKIP
 
 
