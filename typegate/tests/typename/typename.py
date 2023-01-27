@@ -9,7 +9,7 @@ from typegraph.runtimes.random import RandomRuntime
 
 with TypeGraph("prisma") as g:
 
-    allow_all = policies.allow_all()
+    public = policies.public()
     userModel = t.struct({"id": t.integer()}).named("user")
     userModelPrisma = t.struct({"id": t.integer().config("id")}).named("userprisma")
 
@@ -18,24 +18,24 @@ with TypeGraph("prisma") as g:
 
     randomRuntimeSeeded = RandomRuntime(seed=1)
     randomUser = t.gen(g("user"), RandomMat(runtime=randomRuntimeSeeded)).add_policy(
-        allow_all
+        public
     )
 
     denoUser = t.func(
         t.struct(),
         userModel,
         PureFunMat("() => ({ id: 12 })"),
-    ).add_policy(allow_all)
+    ).add_policy(public)
 
     g.expose(
         denoUser=denoUser,
         randomUser=randomUser,
         dropSchema=prismaRuntimePostgres.executeRaw(
             "DROP SCHEMA IF EXISTS test CASCADE", effect=Effect.delete()
-        ).add_policy(allow_all),
+        ).add_policy(public),
         **prismaRuntimePostgres.gen(
             {
-                "createUser": (userModelPrisma, "create", allow_all),
+                "createUser": (userModelPrisma, "create", public),
             }
         ),
     )

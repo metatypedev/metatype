@@ -16,7 +16,7 @@ with TypeGraph("graphql") as g:
     ).named("User")
 
     user_by_id = gql.query(t.struct({"id": t.integer()}), g("User")).add_policy(
-        policies.allow_all()
+        policies.public()
     )
     update_user = gql.mutation(
         t.struct(
@@ -32,6 +32,6 @@ with TypeGraph("graphql") as g:
         ),
         g("User"),
         effect=Effect.update(idempotent=True),
-    ).add_policy(policies.allow_all())
+    ).add_policy(policies.public())
 
     g.expose(user=user_by_id, updateUser=update_user)

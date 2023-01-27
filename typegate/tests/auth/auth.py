@@ -11,7 +11,7 @@ from typegraph.runtimes.http import HTTPRuntime
 with TypeGraph("test_auth", auths=[github_auth]) as g:
     remote = HTTPRuntime("https://api.github.com")
 
-    public = policies.allow_all()
+    public = policies.public()
     private = Policy(
         PureFunMat("(_args, { context }) => !!context.user1"),
     )

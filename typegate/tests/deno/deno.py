@@ -8,7 +8,7 @@ from typegraph.runtimes.deno import PureFunMat
 
 
 with TypeGraph("test-vars") as g:
-    allow_all = policies.allow_all()
+    public = policies.public()
     mod = ModuleMat("ts/deno.ts")
     math0 = ModuleMat("ts/math.ts")
 
@@ -26,26 +26,26 @@ with TypeGraph("test-vars") as g:
             t.struct({"first": t.number(), "second": t.number()}),
             t.number(),
             PureFunMat("({ first, second }) => first + second"),
-        ).add_policy(allow_all),
+        ).add_policy(public),
         sum=t.func(
             t.struct({"numbers": t.array(t.integer())}),
             t.integer(),
             mod.imp("sum", effect=Effect.none()),
-        ).add_policy(allow_all),
+        ).add_policy(public),
         count=t.func(
             t.struct(),
             t.integer().min(0),
             mod.imp("counter", effect=Effect.update()),
-        ).add_policy(allow_all),
+        ).add_policy(public),
         min0=t.func(
             min_input, t.number(), math0.imp("min", effect=Effect.none())
-        ).add_policy(allow_all),
+        ).add_policy(public),
         min1=t.func(
             min_input, t.number(), math1.imp("min", effect=Effect.none())
-        ).add_policy(allow_all),
+        ).add_policy(public),
         log=t.func(
             t.struct({"number": t.number(), "base": t.number().optional()}),
             t.number(),
-            math_npm.imp("log", effect=Effect.none()),
-        ).add_policy(allow_all),
+            math_npm.imp("log"),
+        ).add_policy(public),
     )

@@ -1,8 +1,9 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import policies as p
 from typegraph import t
 from typegraph import TypeGraph
+from typegraph.policies import Policy
+from typegraph.runtimes.deno import PureFunMat
 from typegraph.runtimes.typegate import ResolverMat
 from typegraph.runtimes.typegate import SchemaMat
 from typegraph.runtimes.typegate import TypeMat
@@ -137,11 +138,11 @@ with TypeGraph("introspection") as g:
         }
     ).named("directive")
 
-    allow_all = p.allow_all()
+    public = Policy(PureFunMat("() => true")).named("__public")
 
     get_type = t.func(
         t.struct({"name": t.string()}), type.optional(), TypeMat()
-    ).add_policy(allow_all)
+    ).add_policy(public)
     g.expose(__type=get_type)
 
     schema = t.struct(
@@ -155,5 +156,5 @@ with TypeGraph("introspection") as g:
         }
     ).named("schema")
 
-    get_schema = t.func(t.struct({}), schema, SchemaMat()).add_policy(allow_all)
+    get_schema = t.func(t.struct({}), schema, SchemaMat()).add_policy(public)
     g.expose(__schema=get_schema)

@@ -10,7 +10,7 @@ from typegraph.runtimes.deno import PureFunMat
 with TypeGraph(name="math") as g:
     worker = DenoRuntime(worker="worker 1")
 
-    allow_all = policies.allow_all()
+    public = policies.public()
 
     restrict_referer = Policy(
         PureFunMat(
@@ -33,12 +33,12 @@ with TypeGraph(name="math") as g:
             t.struct(),
             t.float(),
             PureFunMat("() => Math.random()"),
-        ).add_policy(allow_all),
+        ).add_policy(public),
         randomItem=t.func(
             t.struct({"items": t.array(t.string())}),
             t.string(),
             PureFunMat(random_item_fn, runtime=worker),
-        ).add_policy(allow_all),
+        ).add_policy(public),
         randomIntInRange=t.func(
             t.struct({"from": t.integer(), "to": t.integer()}),
             t.integer(),
@@ -55,5 +55,5 @@ with TypeGraph(name="math") as g:
                     """,
                 runtime=worker,
             ).imp("default", effect=Effect.none()),
-        ).add_policy(allow_all),
+        ).add_policy(public),
     )

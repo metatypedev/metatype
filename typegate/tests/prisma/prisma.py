@@ -8,7 +8,7 @@ with TypeGraph("prisma") as g:
 
     db = PrismaRuntime("prisma", "POSTGRES")
 
-    allow_all = policies.allow_all()
+    public = policies.public()
 
     record = t.struct(
         {
@@ -48,18 +48,18 @@ with TypeGraph("prisma") as g:
     g.expose(
         dropSchema=db.executeRaw(
             "DROP SCHEMA IF EXISTS test CASCADE", effect=Effect.delete()
-        ).add_policy(allow_all),
+        ).add_policy(public),
         **db.gen(
             {
-                "findManyRecords": (record, "findMany", allow_all),
-                "createOneRecord": (record, "create", allow_all),
-                "deleteOneRecord": (record, "delete", allow_all),
-                "updateOneRecord": (record, "update", allow_all),
-                "createUser": (users, "create", allow_all),
-                "findUniqueUser": (users, "findUnique", allow_all),
-                "findMessages": (messages, "findMany", allow_all),
-                "updateUser": (users, "update", allow_all),
-                "deleteMessages": (messages, "deleteMany", allow_all),
+                "findManyRecords": (record, "findMany", public),
+                "createOneRecord": (record, "create", public),
+                "deleteOneRecord": (record, "delete", public),
+                "updateOneRecord": (record, "update", public),
+                "createUser": (users, "create", public),
+                "findUniqueUser": (users, "findUnique", public),
+                "findMessages": (messages, "findMany", public),
+                "updateUser": (users, "update", public),
+                "deleteMessages": (messages, "deleteMany", public),
             }
         )
     )

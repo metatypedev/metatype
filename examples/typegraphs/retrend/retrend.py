@@ -11,7 +11,7 @@ with TypeGraph(
     "retrend",
 ) as g:
 
-    all = policies.allow_all()
+    all = policies.public()
     s3 = S3Runtime("http://localhost:9000", "local", "access_key", "secret_key")
 
     f = ModuleMat("image_proxy_resize.ts", secrets=("IMGPROXY_SALT", "IMGPROXY_SECRET"))

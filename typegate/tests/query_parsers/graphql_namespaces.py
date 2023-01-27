@@ -12,7 +12,7 @@ with TypeGraph("graphql_namespaces") as g:
 
     picture_model = t.struct({"id": user_id, "url": t.uri()}).named("picture_model")
 
-    public = policies.allow_all()
+    public = policies.public()
     user = (
         t.struct(
             {
