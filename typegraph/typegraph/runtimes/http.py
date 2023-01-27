@@ -49,15 +49,7 @@ class HTTPRuntime(Runtime):
             RESTMat(self, "GET", path, effect=effect, **kwargs),
         )
 
-    def post(
-        self,
-        path: str,
-        inp,
-        out,
-        effect: Effect = Effect.create(),
-        idempotent: bool = False,
-        **kwargs
-    ):
+    def post(self, path: str, inp, out, effect: Effect = Effect.create(), **kwargs):
         return t.func(
             inp,
             out,

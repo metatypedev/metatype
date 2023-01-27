@@ -90,4 +90,4 @@ class RandomRuntime(Runtime):
 class RandomMat(Materializer):
     runtime: Runtime = field(factory=RandomRuntime)
     materializer_name: str = always("random")
-    effect: Effect = Effect.none()
+    effect: Effect = field(kw_only=True, default=Effect.none())

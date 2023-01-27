@@ -68,7 +68,7 @@ class FunMat(Materializer):
     script: Optional[str] = field(kw_only=True, default=None)
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = field(default="function", init=False)
-    effect: Effect = Effect.none()
+    effect: Effect = field(kw_only=True, default=Effect.none())
 
     @classmethod
     def from_lambda(cls, function, runtime=DenoRuntime()):
@@ -96,7 +96,7 @@ class PureFunMat(FunMat):
 @frozen
 class PredefinedFunMat(Materializer):
     name: str
-    effect: Effect = Effect.none()
+    effect: Effect = field(kw_only=True, default=Effect.none())
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = always("predefined_function")
 
@@ -107,7 +107,7 @@ class ImportFunMat(Materializer):
     mod: "ModuleMat" = field()
     name: str = field(default="default")
     secrets: Tuple[str] = field(kw_only=True, factory=tuple)
-    effect: Effect = required()
+    effect: Effect = field(kw_only=True, default=Effect.none())
     runtime: DenoRuntime = field(
         kw_only=True, factory=DenoRuntime
     )  # should be the same runtime as `mod`'s
@@ -152,7 +152,9 @@ class ModuleMat(Materializer):
                 with open(path) as f:
                     object.__setattr__(self, "code", f.read())
 
-    def imp(self, name: str = "default", *, effect: Effect, **kwargs) -> ImportFunMat:
+    def imp(
+        self, name: str = "default", *, effect: Effect = Effect.none(), **kwargs
+    ) -> ImportFunMat:
         return ImportFunMat(
             self,
             name,
