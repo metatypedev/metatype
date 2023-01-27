@@ -63,11 +63,11 @@ test("http custom content-type queries", async (t) => {
       }
     `
       .expectData({
-        sumRangeWithFormData: removeRandomBoundary({
+        sumRangeWithFormData: {
           self_content_type: "multipart/form-data",
           total: 5050,
           steps: 101,
-        }),
+        },
       })
       .on(e);
   });
