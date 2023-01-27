@@ -4,6 +4,7 @@ from ast import literal_eval
 import inspect
 import itertools
 import re
+import sys
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -107,7 +108,12 @@ class Importer:
             raise Exception(f"Cannot expose '{name}' more than once")
         self.exposed[name] = fn
 
+    def generate(self):
+        raise Exception("Must be overriden")
+
     def codegen(self, cg: Codegen):
+        self.generate()
+
         typify = Typify(self, "t")
 
         for header_line in self.headers:
@@ -194,7 +200,8 @@ class Importer:
         with open(file, "w") as f:
             f.write(new_code)
 
-        # TODO: exit (1)
+        print(f"File updated: {file}", file=sys.stderr)
+        exit(0)
 
     def find_generate_arg(self, code: RedBaron) -> Optional[NameNode]:
         for node in code.find_all("atomtrailers"):

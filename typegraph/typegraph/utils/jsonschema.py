@@ -40,7 +40,7 @@ class TypedefFromJsonSchema:
                         if prop_name in s.get("required", [])
                         else self(prop_schema).optional()
                     )
-                    for prop_name, prop_schema in s.properties.items()
+                    for prop_name, prop_schema in s.get("properties", dict()).items()
                 }
             ),
         }

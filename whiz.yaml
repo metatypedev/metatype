@@ -12,7 +12,7 @@ examples:
     watch:
         - "examples/metatype.yaml"
         - "typegraph/typegraph/**/*.py"
-    command: "cargo run -p meta-cli -- -C examples dev"
+    command: "cargo run --color always -p meta-cli -- -C examples dev"
     env:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH

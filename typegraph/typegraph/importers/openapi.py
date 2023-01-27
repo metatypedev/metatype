@@ -3,6 +3,7 @@
 import json
 import pathlib
 import re
+from sys import stderr
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -100,8 +101,6 @@ class OpenApiImporter(Importer):
         url = urljoin(self.base_url, server_url)
         self.headers.append(f"{name} = HTTPRuntime({repr(url)})")
 
-        self.generate()
-
     def resolve_ref(self, obj: Box):
         if "$ref" not in obj:
             return obj
@@ -177,13 +176,24 @@ class Path:
         self.resolve_ref = lambda ref: importer.resolve_ref(ref)
 
     def generate_functions(self):
-        return dict(
-            [
-                self.generate_function(method)
-                for method in self.spec
-                if method in METHODS
-            ]
-        )
+        ret = {}
+        for method in self.spec:
+            if method in METHODS:
+                try:
+                    name, fn = self.generate_function(method)
+                    ret[name] = fn
+                except Exception as e:
+                    name = self.spec[method].operationId
+                    print(
+                        f"Warning: Generation of function '{name}' skipped: {e}",
+                        file=stderr,
+                    )
+            else:
+                print(
+                    f"Warning: Unsupported method {method}: generation skipped",
+                    file=stderr,
+                )
+        return ret
 
     def generate_function(self, method: str) -> Tuple[str, t.func]:
         spec = self.spec[method]
@@ -201,7 +211,9 @@ class Path:
                 if MIME_TYPES.json in content:
                     out = self.typedef_from_jsonschema(content[MIME_TYPES.json].schema)
                 else:
-                    raise Exception(f"Unsupported response types res={res}")
+                    raise Exception(
+                        f"No supported content type for response: {', '.join(content)}"
+                    )
             else:
                 out = t.struct()
 
@@ -243,16 +255,19 @@ class Path:
             elif MIME_TYPES.multipart in types:
                 content_type = MIME_TYPES.multipart
             else:
-                raise Exception(f"Unsupported content types {types}")
+                raise Exception(
+                    f"No supported content type for request: {', '.join(types)}"
+                )
 
             schema = body[content_type].schema
             schema = self.resolve_ref(schema)
-            assert schema.type == "object"
+            if schema.type != "object":
+                raise Exception(f"Unsupported type for request body: {schema.type}")
 
             for name, typ in self.typedef_from_jsonschema(schema).props.items():
                 if name in props:
                     raise Exception(
-                        "Name clash: '{name}' present in both query parameters and request body"
+                        f"Name clash: '{name}' present in both query parameters and request body"
                     )
                 props[name] = typ
 

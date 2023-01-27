@@ -50,8 +50,6 @@ class GraphQLImporter(Importer):
             with open(file) as f:
                 self.intros = Box(json.loads(f.read()))
 
-        self.generate()
-
     def generate(self):
         schema = self.intros["__schema"]
         queryType = schema.queryType.name if schema.queryType is not None else None
