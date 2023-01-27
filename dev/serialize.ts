@@ -25,6 +25,7 @@ for (const file of typegraphs) {
     "-f",
     file.path,
     "-1",
+    "--pretty",
     "-o",
     target,
   ]);
