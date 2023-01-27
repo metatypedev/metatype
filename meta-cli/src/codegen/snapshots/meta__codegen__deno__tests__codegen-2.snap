@@ -1,0 +1,21 @@
+---
+source: meta-cli/src/codegen/deno.rs
+expression: "&module_codes[0].code"
+---
+interface Get_studentInput {
+  id: string;
+}
+
+type Get_studentOutput = {
+  age: number;
+  id: string;
+  name: string;
+} & {
+  school: string;
+};
+
+export function get_student({ id }: Get_studentInput,
+  { context }: { context: Record<string, unknown> }): Get_studentOutput
+{
+  return { age: 0, id: "", name: "", school: "" };
+}
