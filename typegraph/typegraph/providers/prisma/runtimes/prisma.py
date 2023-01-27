@@ -373,9 +373,9 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "parameters": t.json(),
+                    "parameters": t.json().optional().default("[]"),
                 }
-            ).named("ExecuteRawInp"),
+            ).named(f"ExecuteRawInp_{TypegraphContext.get_active().next_type_id()}"),
             t.integer(),
             PrismaOperationMat(self, query, "executeRaw", effect=effect),
         )
@@ -461,10 +461,6 @@ class PrismaRuntime(Runtime):
                 ret[name] = self.gen_delete(tpe).add_policy(policy)
             elif op == "deleteMany":
                 ret[name] = self.gen_delete_many(tpe).add_policy(policy)
-            elif op == "queryRaw":
-                ret[name] = self.queryRaw().add_policy(policy)
-            elif op == "executeRaw":
-                ret[name] = self.executeRaw().add_policy(policy)
             else:
                 raise Exception(f'Operation not supported: "{op}"')
         # raise Exception(f'ret: {ret}')

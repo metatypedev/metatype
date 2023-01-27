@@ -77,7 +77,7 @@ export class GraphQLRuntime extends Runtime {
     }
 
     const query = (() => {
-      const operationType = mat?.effect != null
+      const operationType = mat?.effect.effect != null
         ? OperationTypeNode.MUTATION
         : OperationTypeNode.QUERY;
       if (this.forwardVars) {

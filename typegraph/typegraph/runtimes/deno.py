@@ -13,9 +13,9 @@ from astunparse import unparse
 from attrs import field
 from attrs import frozen
 from frozendict import frozendict
+from typegraph.effect import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
-from typegraph.runtimes.base import Effect
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
@@ -68,7 +68,7 @@ class FunMat(Materializer):
     script: Optional[str] = field(kw_only=True, default=None)
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = field(default="function", init=False)
-    effect: Effect = required()
+    effect: Effect = Effect.none()
 
     @classmethod
     def from_lambda(cls, function, runtime=DenoRuntime()):
@@ -96,6 +96,7 @@ class PureFunMat(FunMat):
 @frozen
 class PredefinedFunMat(Materializer):
     name: str
+    effect: Effect = Effect.none()
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = always("predefined_function")
 
@@ -165,3 +166,4 @@ class ModuleMat(Materializer):
 @frozen
 class IdentityMat(PredefinedFunMat):
     name: str = always("identity")
+    effect: Effect = always(Effect.none())

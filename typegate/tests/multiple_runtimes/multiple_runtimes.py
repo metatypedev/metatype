@@ -1,3 +1,4 @@
+from typegraph import Effect
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
@@ -27,9 +28,15 @@ with TypeGraph(name="prisma") as g:
     allow_all = policies.allow_all()
 
     g.expose(
+        dropSchema1=db1.executeRaw(
+            "DROP SCHEMA IF EXISTS test1 CASCADE",
+            effect=Effect.delete(idempotent=True),
+        ).add_policy(allow_all),
+        dropSchema2=db2.executeRaw(
+            "DROP SCHEMA IF EXISTS test2 CASCADE", effect=Effect.delete(idempotent=True)
+        ).add_policy(allow_all),
         **db1.gen(
             {
-                "executeRaw": (t.struct(), "executeRaw", allow_all),
                 "createUser1": (user1, "create", allow_all),
                 "findUniqueUser1": (user1, "findUnique", allow_all),
                 "findManyUsers1": (user1, "findMany", allow_all),

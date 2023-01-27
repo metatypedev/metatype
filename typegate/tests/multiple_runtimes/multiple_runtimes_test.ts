@@ -6,22 +6,15 @@ test("prisma", async (t) => {
   const tgPath = "multiple_runtimes/multiple_runtimes.py";
   const e = await t.pythonFile(tgPath);
 
-  function sql(q: string, res: any = 0) {
-    return gql`
-      mutation a($sql: String) {
-        executeRaw(
-          query: $sql
-          parameters: "[]"
-        )
-      }
-    `
-      .withVars({ sql: q })
-      .expectData({ executeRaw: res });
-  }
-
   await t.should("drop schemas and recreate", async () => {
-    await sql("DROP SCHEMA IF EXISTS test CASCADE").on(e);
-    await sql("DROP SCHEMA IF EXISTS test2 CASCADE").on(e);
+    await gql`mutation { dropSchema1 }`
+      .expectData({
+        dropSchema1: 0,
+      }).on(e);
+    await gql`mutation { dropSchema2 }`
+      .expectData({
+        dropSchema2: 0,
+      }).on(e);
     await removeMigrations(e);
     await recreateMigrations(e);
   });

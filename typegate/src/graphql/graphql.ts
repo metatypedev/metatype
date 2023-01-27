@@ -62,7 +62,7 @@ function splitGraphQLOperations(
         const childMaterializer =
           typegraph.materializers[childNode.materializer];
 
-        if (childMaterializer.effect == null) {
+        if (childMaterializer.effect.effect == null) {
           queryProperties[propertyName] = typeIndex;
           // TODO additional checks
         } else {

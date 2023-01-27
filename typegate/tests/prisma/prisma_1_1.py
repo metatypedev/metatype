@@ -1,3 +1,4 @@
+from typegraph import Effect
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
@@ -29,10 +30,11 @@ with TypeGraph("prisma") as g:
     db.manage(profile)
 
     g.expose(
+        dropSchema=db.executeRaw(
+            "DROP SCHEMA IF EXISTS test CASCADE", effect=Effect.delete()
+        ).add_policy(allow_all),
         **db.gen(
             {
-                "queryRaw": (t.struct(), "queryRaw", allow_all),
-                "executeRaw": (t.struct(), "executeRaw", allow_all),
                 "createUser": (user, "create", allow_all),
                 "updateUser": (user, "update", allow_all),
                 "findUniqueProfile": (profile, "findUnique", allow_all),
