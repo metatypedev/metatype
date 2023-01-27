@@ -19,7 +19,7 @@ with TypeGraph("content-type") as g:
         "/sum_range",
         t.struct({"start": t.integer(), "end": t.integer()}),
         g("OutputResult"),
-        query_fields=(
+        body_fields=(
             "start",
             "end",
         ),

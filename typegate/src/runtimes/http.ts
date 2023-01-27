@@ -107,7 +107,12 @@ export class HTTPRuntime extends Runtime {
 
       const headers = new Headers(this.headers);
       headers.set("accept", "application/json");
-      headers.set("content-type", options.content_type);
+
+      // if left unspecified, the http-client will assign a proper header automatically since
+      // the request body is a `FormData` i.e. we get a multipart/form-data + a proper boundary for free
+      if (options.content_type !== "multipart/form-data") {
+        headers.set("content-type", options.content_type);
+      }
 
       if (authToken) {
         headers.set("authorization", `Bearer ${authToken}`);
