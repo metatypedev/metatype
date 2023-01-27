@@ -193,9 +193,8 @@ impl<'a> Codegen<'a> {
             name,
         } in gen_list.into_iter()
         {
-            map.entry(path)
-                .and_modify(|l| l.push(self.gen_func(input, output, &name)))
-                .or_insert_with(|| vec![self.gen_func(input, output, &name)]);
+            let functions = map.entry(path).or_default();
+            functions.push(self.gen_func(input, output, &name));
         }
 
         let map = map
@@ -245,10 +244,6 @@ impl<'a> Codegen<'a> {
     fn gen_interface(&self, name: &str, idx: u32) -> Result<String> {
         let tpe = &self.tg.types[idx as usize];
         Ok(format!("interface {name} {}\n", self.gen_obj_type(tpe)?))
-    }
-
-    fn gen_type_definition(&self, name: &str, idx: u32) -> Result<String> {
-        Ok(format!("type {name} = {}\n", self.get_typespec(idx)?))
     }
 
     fn gen_union_type_definition(&self, all_of: &[u32]) -> Result<String> {
@@ -351,44 +346,50 @@ impl<'a> Codegen<'a> {
     }
 
     fn gen_func(&self, input: u32, output: u32, name: &str) -> Result<String> {
-        // input type
-        let inp_type_name = {
+        let type_name = {
             let mut name = name.to_string();
             let (lead, _) = name.split_at_mut(1);
             lead.make_ascii_uppercase();
-            name.push_str("Input");
             name
         };
+
+        // input type
+        let inp_type_name = format!("{type_name}Input");
+
         // let inp_type = &self.tg.types[fn_data.input as usize];
         let inp_typedef = self
             .gen_interface(&inp_type_name, input)
             .context("failed to generate input type")?;
 
         let output_type_node = &self.tg.types[output as usize];
+
         // variable helper in case out_typespec is an interface
         let mut output_type_definition: Option<String> = None;
-        // for types that can be too verbose as Objects or Unions
-        // use interfaces to avoid cluttering the function definition
-        let out_typespec = match output_type_node {
-            TypeNode::Union { .. } => {
-                let output_type_name = {
-                    let mut name = name.to_string();
-                    let (lead, _) = name.split_at_mut(1);
-                    lead.make_ascii_uppercase();
-                    name.push_str("Output");
-                    name
-                };
 
-                output_type_definition = Some(
-                    self.gen_type_definition(&output_type_name, output)
-                        .context("failed to generate output type")?,
-                );
+        // for type definitions that are too long use interfaces/types
+        // to avoid cluttering the function definition
+        let out_typespec = {
+            const LENGTH_LIMIT: usize = 35;
+            let output_type_name = format!("{type_name}Output");
 
-                output_type_name
+            match output_type_node {
+                TypeNode::Union { .. } => {
+                    let type_definition = self
+                        .get_typespec(output)
+                        .context("failed to generate type definition")?;
+
+                    if type_definition.len() > LENGTH_LIMIT {
+                        output_type_definition =
+                            Some(format!("type {output_type_name} = {type_definition}\n"));
+                        output_type_name
+                    } else {
+                        type_definition
+                    }
+                }
+                _ => self
+                    .get_typespec(output)
+                    .context("failed to generate output type")?,
             }
-            _ => self
-                .get_typespec(output)
-                .context("failed to generate output type")?,
         };
 
         let code = format!(
