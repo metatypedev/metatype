@@ -113,8 +113,7 @@ jobs:
           file: dev/Dockerfile
           platforms: linux/amd64
           push: true
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:cache,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
           tags: ghcr.io/${{ github.repository_owner }}/typegate:${{ github.ref_name }},ghcr.io/${{ github.repository_owner }}/typegate:latest
 
   bump:
@@ -133,7 +132,7 @@ jobs:
         run: |
           deno run -A dev/lock.ts --bump prerelease
           echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
-      - uses: peter-evans/create-pull-request@v3
+      - uses: peter-evans/create-pull-request@v4
         with:
           branch: bump-${{ steps.bump.outputs.version }}
           delete-branch: true
