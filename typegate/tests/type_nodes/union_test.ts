@@ -112,4 +112,36 @@ test("Union type", async (t) => {
         .on(e);
     },
   );
-});
+
+  await t.should(
+    "allow to introspect the union type",
+    async () => {
+      await gql`
+        query IntrospectionQuery {
+          __schema {
+            types {
+              name
+              kind
+              possibleTypes {
+                name
+                kind
+                fields {
+                  name
+                  type {
+                    ofType {
+                      name
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `
+        .expectBody((body: { data: string }) => {
+          t.assertSnapshot(body.data);
+        })
+        .on(e);
+    },
+  );
+}, { introspection: true });

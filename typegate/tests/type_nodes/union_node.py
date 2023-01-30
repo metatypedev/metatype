@@ -10,11 +10,13 @@ with TypeGraph("union") as g:
             "name": t.string(),
             "age": t.integer(),
         }
-    )
+    ).named("User")
 
     student_materializer = ModuleMat("ts/union/student.ts")
 
-    student_model = t.union((user_base_model, t.struct({"school": t.string()})))
+    student_model = t.union(
+        (user_base_model, t.struct({"school": t.string()}).named("StudentInformation"))
+    ).named("Student")
 
     get_student = t.func(
         t.struct({"id": t.uuid()}),
@@ -24,7 +26,9 @@ with TypeGraph("union") as g:
 
     worker_materializer = ModuleMat("ts/union/worker.ts")
 
-    worker_model = t.union((user_base_model, t.struct({"company": t.string()})))
+    worker_model = t.union(
+        (user_base_model, t.struct({"company": t.string()}).named("WorkerInformation"))
+    ).named("Worker")
 
     get_worker = t.func(
         t.struct({"id": t.uuid()}),
