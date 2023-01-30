@@ -167,6 +167,19 @@ export class MetaTest {
     return this.register.get(engineName)!;
   }
 
+  async unregister(engine: Engine) {
+    const engines = this.register.list().filter((e) => e == engine);
+    await Promise.all(
+      engines,
+    );
+    await Promise.all(
+      this.register.list().filter((e) => e == engine).map((e) => {
+        this.register.remove(e.name);
+        return e.terminate();
+      }),
+    );
+  }
+
   async terminate() {
     await Promise.all(
       this.register.list().map((e) => e.terminate()),

@@ -6,7 +6,7 @@ import { copyFile, gql, MetaTest, Q, test } from "../utils.ts";
 async function testImporter(t: MetaTest, name: string, testQuery?: Q) {
   const file = `importers/copy/${name}.py`;
 
-  await t.should("Copy source typegraph definition", async () => {
+  await t.should("copy source typegraph definition", async () => {
     await copyFile(`importers/${name}.py`, file);
   });
 
@@ -21,7 +21,7 @@ async function testImporter(t: MetaTest, name: string, testQuery?: Q) {
         .expectStatus(200)
         .on(e);
     }
-    await e.terminate();
+    await t.unregister(e);
   });
 }
 
@@ -36,5 +36,24 @@ test("GraphQL importer", async (t) => {
         }
       }
     `,
+  );
+});
+
+test("OpenAPI importer", async (t) => {
+  await testImporter(
+    t,
+    "openapi",
+    gql`
+    query {
+      getPetById(petId: 1) {
+        id
+        name
+        tags {
+          id
+          name
+        }
+      }
+    }
+  `,
   );
 });
