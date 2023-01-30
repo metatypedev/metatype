@@ -26,8 +26,8 @@ with TypeGraph("prisma") as g:
         }
     ).named("Profile")
 
-    db.manage(user)
-    db.manage(profile)
+    db.__manage(user)
+    db.__manage(profile)
 
     g.expose(
         dropSchema=db.executeRaw(

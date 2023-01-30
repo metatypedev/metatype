@@ -14,7 +14,7 @@ with TypeGraph("prisma") as g:
     userModelPrisma = t.struct({"id": t.integer().config("id")}).named("userprisma")
 
     prismaRuntimePostgres = PrismaRuntime("prisma", "POSTGRES")
-    prismaRuntimePostgres.manage(userModelPrisma)
+    prismaRuntimePostgres.__manage(userModelPrisma)
 
     randomRuntimeSeeded = RandomRuntime(seed=1)
     randomUser = t.gen(g("user"), RandomMat(runtime=randomRuntimeSeeded)).add_policy(

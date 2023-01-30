@@ -22,8 +22,8 @@ with TypeGraph(name="prisma") as g:
         }
     ).named("test2_User")
 
-    db1.manage(user1)
-    db2.manage(user2)
+    db1.__manage(user1)
+    db2.__manage(user2)
 
     public = policies.public()
 

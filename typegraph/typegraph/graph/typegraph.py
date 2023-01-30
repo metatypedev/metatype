@@ -36,7 +36,7 @@ class TypeGraph:
     name: str
     # version should be commit based
     # types: List["t.typedef"]
-    type_by_names: Dict[str, "t.typedef"]  # for explicit names
+    type_by_names: Dict[str, "t.TypeNode"]  # for explicit names
     exposed: OperationTable
     latest_type_id: int
     auths: List[Auth]

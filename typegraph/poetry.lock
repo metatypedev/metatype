@@ -865,14 +865,14 @@ files = [
 
 [[package]]
 name = "pathspec"
-version = "0.10.3"
+version = "0.11.0"
 description = "Utility library for gitignore style pattern matching of file paths."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "pathspec-0.10.3-py3-none-any.whl", hash = "sha256:3c95343af8b756205e2aba76e843ba9520a24dd84f68c22b9f93251507509dd6"},
-    {file = "pathspec-0.10.3.tar.gz", hash = "sha256:56200de4077d9d0791465aa9095a01d421861e405b5096955051deefd697d6f6"},
+    {file = "pathspec-0.11.0-py3-none-any.whl", hash = "sha256:3a66eb970cbac598f9e5ccb5b2cf58930cd8e3ed86d393d541eaf2d8b1705229"},
+    {file = "pathspec-0.11.0.tar.gz", hash = "sha256:64d338d4e0914e91c1792321e6907b5a593f1ab1851de7fc269557a21b30ebbc"},
 ]
 
 [[package]]
@@ -925,7 +925,7 @@ version = "4.6.4"
 description = "Create Python API documentation in Markdown format."
 category = "dev"
 optional = false
-python-versions = "^3.7"
+python-versions = "^3.8"
 files = []
 develop = false
 
@@ -945,14 +945,14 @@ watchdog = "*"
 yapf = ">=0.30.0"
 
 [package.extras]
-docs = []
-novella = []
+docs = ["mkdocs (>=1.4.2,<2.0.0)", "mkdocs-material (>=9.0.8,<10.0.0)", "novella (>=0.1.10,<0.3.0)"]
+novella = ["novella (>=0.1.10,<0.3.0)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/metatypedev/pydoc-markdown"
 reference = "develop"
-resolved_reference = "660f320a3d25ed8a083232ffd9ab6178c3ec571d"
+resolved_reference = "994c941a41cdd5fe747801f0b4cf18f490fcd23a"
 
 [[package]]
 name = "pydocstyle"

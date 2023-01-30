@@ -15,7 +15,7 @@ with TypeGraph("prisma") as g:
         {"id": t.uuid().config("id"), "name": t.string(), "age": t.integer().optional()}
     ).named("record")
 
-    db.manage(record)
+    db.__manage(record)
 
     messageSender = db.one_to_many(g("users"), g("messages")).named("messageSender")
     messageRecipient = db.one_to_many(g("users"), g("messages")).named(
@@ -33,7 +33,7 @@ with TypeGraph("prisma") as g:
         }
     ).named("messages")
 
-    db.manage(messages)
+    db.__manage(messages)
 
     users = t.struct(
         {
@@ -46,7 +46,7 @@ with TypeGraph("prisma") as g:
         }
     ).named("users")
 
-    db.manage(users)
+    db.__manage(users)
 
     g.expose(
         dropSchema=db.executeRaw(

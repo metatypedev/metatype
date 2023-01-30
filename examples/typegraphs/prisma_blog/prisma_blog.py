@@ -40,9 +40,9 @@ with TypeGraph(name="blog") as g:
         }
     ).named("Post")
 
-    db.manage(users)
-    db.manage(posts)
-    db.manage(profiles)
+    db.__manage(users)
+    db.__manage(posts)
+    db.__manage(profiles)
 
     public = policies.public()
 
