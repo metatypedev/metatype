@@ -29,7 +29,7 @@ with TypeGraph(name="prisma") as g:
 
     g.expose(
         dropSchema1=db1.executeRaw(
-            "DROP SCHEMA IF EXISTS test1 CASCADE",
+            "DROP SCHEMA IF EXISTS test CASCADE",
             effect=Effect.delete(idempotent=True),
         ).add_policy(public),
         dropSchema2=db2.executeRaw(

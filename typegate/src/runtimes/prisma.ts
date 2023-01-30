@@ -157,7 +157,6 @@ export class PrismaRuntime extends GraphQLRuntime {
     if (mat && isPrismaOperationMat(mat)) {
       const { operation } = mat.data;
       if (operation === "queryRaw" || operation === "executeRaw") {
-        console.log("RAW QUERY", { mat });
         return [stage.withResolver(
           this.raw(
             mat,

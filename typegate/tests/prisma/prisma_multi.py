@@ -54,8 +54,6 @@ with TypeGraph("prisma") as g:
         ).add_policy(public),
         **db.gen(
             {
-                "queryRaw": (t.struct(), "queryRaw", public),
-                "executeRaw": (t.struct(), "executeRaw", public),
                 "findManyRecords": (record, "findMany", public),
                 "createOneRecord": (record, "create", public),
                 "deleteOneRecord": (record, "delete", public),
