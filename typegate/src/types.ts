@@ -22,7 +22,6 @@ export interface Context {
 interface ResolverArgsBase {
   _: {
     parent: Parents;
-    // FIXME : variables really needed?
     variables: Variables;
     context: Context;
     [dep: string]: unknown;
