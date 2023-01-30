@@ -10,16 +10,16 @@ import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
 import { urlJoin } from "url_join";
 
-// FIXME better solution require
 const traverseLift = (obj: JSONValue): any => {
   if (Array.isArray(obj)) {
     return obj.map(traverseLift);
   }
   if (typeof obj === "object" && obj !== null) {
-    return Object.entries(obj).reduce(
-      (agg, [k, v]) => ({ ...agg, [k]: () => v }),
-      {},
-    );
+    const res: any = {};
+    for (const k in obj) {
+      res[k] = () => traverseLift(obj[k]);
+    }
+    return res;
   }
   return obj;
 };
