@@ -479,7 +479,8 @@ mod tests {
             let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
             assert_eq!(module_codes.len(), 1);
 
-            insta::assert_snapshot!(&module_codes[0].code);
+            let test_name = typegraph_test.to_string_lossy().to_string();
+            insta::assert_snapshot!(test_name, &module_codes[0].code);
         }
 
         Ok(())
