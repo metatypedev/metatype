@@ -188,7 +188,6 @@ test("Basic introspection", async (t) => {
       }
     `
       .expectData({
-        // FIXME non-deterministic order of the fields
         __schema: {
           queryType: {
             fields: [
