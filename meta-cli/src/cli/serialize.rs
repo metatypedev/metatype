@@ -84,6 +84,11 @@ impl Action for Serialize {
             .flatten()
             .collect();
 
+        if tgs.is_empty() {
+            eprintln!("No typegraph!");
+            return Ok(());
+        }
+
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
                 self.write(&self.to_string(&tg)?)?;
@@ -94,7 +99,7 @@ impl Action for Serialize {
             if tgs.len() == 1 {
                 self.write(&self.to_string(&tgs[0])?)?;
             } else {
-                eprint!("expected only one typegraph, got {}", tgs.len());
+                eprintln!("expected only one typegraph, got {}", tgs.len());
                 std::process::exit(1);
             }
         } else {
