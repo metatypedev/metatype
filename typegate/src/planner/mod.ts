@@ -381,7 +381,7 @@ export class Planner {
       materializer: mat,
       batcher: this.tg.nextBatcher(outputType),
       rateCalls: rate_calls,
-      rateWeight: rate_weight as number, // FIXME waht is the right type?
+      rateWeight: (rate_weight as number ?? 0), // `as number` does not promote null or undefined to a number
     });
     stages.push(stage);
 
