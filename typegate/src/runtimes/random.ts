@@ -69,9 +69,6 @@ export class RandomRuntime extends Runtime {
       switch (typ.type) {
         case "object":
           return {};
-        case "array":
-          // TODO
-          return [];
         case "integer":
           return this.chance.integer();
         case "string":
@@ -84,6 +81,9 @@ export class RandomRuntime extends Runtime {
           return this.chance.string();
         case "boolean":
           return this.chance.bool();
+        case "array":
+          // the size should be at least explicitly specified
+          throw new Error("array type is not yet supported");
         default:
           throw new Error(`type not supported "${typ.type}"`);
       }
