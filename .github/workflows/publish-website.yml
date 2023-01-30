@@ -6,6 +6,7 @@ on:
 env:
   PNPM_VERSION: "7.9.3"
   NODE_VERSION: "18.12.1"
+  PYTHON_VERSION: "3.8"
 
 jobs:
   changes:
@@ -22,8 +23,7 @@ jobs:
       website: ${{ steps.filter.outputs.website }}
 
   deploy:
-    needs:
-      - changes
+    needs: changes
     if: ${{ needs.changes.outputs.website == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -35,13 +35,28 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-      - name: Install dependencies
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
+      - name: Install and deploy
         working-directory: website
         env:
           TG_URL: https://cloud.metatype.dev
         run: |
           pnpm install --frozen-lockfile
           pnpm build
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip3 install ./typegraph
+          cargo run --locked --package meta-cli -- deploy -f website/docs.py -g {{ env.TG_URL }} -u admin -p {{ secrets.DOCS_TG_ADMIN_PASSWORD }}}
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
