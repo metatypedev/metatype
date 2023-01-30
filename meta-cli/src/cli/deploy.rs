@@ -20,6 +20,14 @@ pub struct Deploy {
     /// Typegate url
     #[clap(short, long, value_parser = UrlValueParser::new().http())]
     gate: Option<Url>,
+
+    /// Username
+    #[clap(short, long)]
+    username: Option<String>,
+
+    /// Password
+    #[clap(short, long)]
+    password: Option<String>,
 }
 
 impl Action for Deploy {
@@ -48,7 +56,7 @@ impl Action for Deploy {
         let node_config = config.node("deploy");
         let node_url = node_config.url(self.gate.clone());
 
-        let auth = node_config.basic_auth(None, None)?;
+        let auth = node_config.basic_auth(self.username.clone(), self.password.clone())?;
 
         let node = Node::new(node_url, Some(auth))?;
 
