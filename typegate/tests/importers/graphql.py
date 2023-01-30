@@ -14,9 +14,4 @@ with TypeGraph("GraphQL") as g:
     hivdb = import_hivdb()
 
     public = p.public()
-    # TODO expose all
-    g.expose(
-        mutationPrevalenceSubtypes=hivdb.func("mutationPrevalenceSubtypes").add_policy(
-            public
-        )
-    )
+    g.expose(**{name: fn.add_policy(public) for name, fn in hivdb.all().items()})

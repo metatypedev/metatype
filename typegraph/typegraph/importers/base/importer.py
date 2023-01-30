@@ -274,3 +274,6 @@ class Import:
         if fn is None:
             raise Exception(f"Function '{name}' not found in import '{self.importer}'")
         return fn
+
+    def all(self):
+        return self.functions
