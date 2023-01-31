@@ -2,13 +2,12 @@
 
 export const renderPlayground = (
   url: string,
-  headers: Record<string, string> = {},
   version?: string,
   logoUrl?: string,
   documentationUrl?: string,
-  typegraphList?: { name: string, url: string }[]
+  typegraphList?: { name: string; url: string }[],
 ) => {
-  const strOptions = (typegraphList || []).map(tg => `
+  const strOptions = (typegraphList || []).map((tg) => `
     <option key={${tg.url}} value={${tg.url}}>{${tg.name}}</option>)
   `);
 
@@ -79,8 +78,10 @@ export const renderPlayground = (
           const fetcher =  GraphiQL.createFetcher({
             url: ${url}
           });
-          const logoLink = ${logoUrl || 'https://graphql.org/img/logo.svg'}
-          const documentationLink = ${documentationUrl || 'https://github.com/graphql/graphiql'}
+          const logoLink = ${logoUrl || "https://graphql.org/img/logo.svg"}
+          const documentationLink = ${
+    documentationUrl || "https://github.com/graphql/graphiql"
+  }
 
           ReactDOM.render(<GraphiQL fetcher={fetcher}>
             <GraphiQL.Logo>
@@ -89,12 +90,12 @@ export const renderPlayground = (
               </select>
               <a href={documentationLink} target="_blank" rel="noreferrer">
                 <span className="graphiql-logo-link"><img src={logoLink} alt="logo" className="logo" /></span>
-                <span className="graphiql-logo-version">${version || ''}</span>
+                <span className="graphiql-logo-version">${version || ""}</span>
               </a>
             </GraphiQL.Logo>
           </GraphiQL>, document.getElementById('graphiql'));
         </script>
       </body>
     </html>
-    `
+    `;
 };
