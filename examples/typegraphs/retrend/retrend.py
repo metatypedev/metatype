@@ -1,4 +1,3 @@
-from typegraph import Effect
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
@@ -28,7 +27,7 @@ with TypeGraph(
                 }
             ),
             t.string(),
-            f.imp("default", effect=Effect.none()),
+            f.imp("default"),
         ).add_policy(all),
         getImage=t.func(
             t.struct(),
@@ -46,7 +45,7 @@ with TypeGraph(
                         }
                     ),
                     t.string(),
-                    f.imp("default", effect=Effect.none()),
+                    f.imp("default"),
                 )
             }
         )

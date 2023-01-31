@@ -1,4 +1,4 @@
-from typegraph import Effect
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
@@ -27,7 +27,7 @@ with TypeGraph(name="math") as g:
         fib=t.func(
             t.struct({"size": t.integer()}),
             t.array(t.float()),
-            fib.imp("default", effect=Effect.none()),
+            fib.imp("default"),
         ).add_policy(restrict_referer),
         random=t.func(
             t.struct(),
@@ -54,6 +54,6 @@ with TypeGraph(name="math") as g:
                     }
                     """,
                 runtime=worker,
-            ).imp("default", effect=Effect.none()),
+            ).imp("default", effect=effects.none()),
         ).add_policy(public),
     )

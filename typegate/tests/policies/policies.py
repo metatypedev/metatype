@@ -1,4 +1,3 @@
-from typegraph import Effect
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.graph.models import Auth
@@ -35,6 +34,6 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
         secret=t.func(
             t.struct({"username": t.string()}),
             secret_data,
-            mod.imp("readSecret", effect=Effect.none()),
-        ).add_policy(mod.imp("isAllowedToReadSecret", effect=Effect.none())),
+            mod.imp("readSecret"),
+        ).add_policy(mod.imp("isAllowedToReadSecret")),
     )

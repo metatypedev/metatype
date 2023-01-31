@@ -21,22 +21,22 @@ class Effect:
     # see: https://developer.mozilla.org/en-US/docs/Glossary/Idempotent
     idempotent: bool
 
-    @classmethod
-    def none(cls):
-        return cls(None, True)
 
-    @classmethod
-    def create(cls, idempotent=False):
-        return cls(EffectType.CREATE, idempotent)
+def none():
+    return Effect(None, True)
 
-    @classmethod
-    def update(cls, idempotent=False):
-        return cls(EffectType.UPDATE, idempotent)
 
-    @classmethod
-    def upsert(cls, idempotent=True):
-        return cls(EffectType.UPSERT, idempotent)
+def create(idempotent=False):
+    return Effect(EffectType.CREATE, idempotent)
 
-    @classmethod
-    def delete(cls, idempotent=True):
-        return cls(EffectType.DELETE, idempotent)
+
+def update(idempotent=False):
+    return Effect(EffectType.UPDATE, idempotent)
+
+
+def upsert(idempotent=True):
+    return Effect(EffectType.UPSERT, idempotent)
+
+
+def delete(idempotent=True):
+    return Effect(EffectType.DELETE, idempotent)

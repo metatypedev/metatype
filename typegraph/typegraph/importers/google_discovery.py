@@ -73,15 +73,15 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
 
 def get_effect(method):
     if method == "GET":
-        return "Effect.none()"
+        return "effects.none()"
     if method == "POST":
-        return "Effect.create()"
+        return "effects.create()"
     if method == "PUT":
-        return "Effect.upsert()"
+        return "effects.upsert()"
     if method == "DELETE":
-        return "Effect.delete()"
+        return "effects.delete()"
     if method == "PATCH":
-        return "Effect.update()"
+        return "effects.update()"
     raise Exception(f"Unsupported HTTP method '{method}'")
 
 
@@ -153,7 +153,7 @@ def import_googleapis(uri: str, gen: bool) -> None:
         ["typegraph.providers.google.runtimes", "googleapis"],
         ["typegraph", "t"],
         ["typegraph", "TypeGraph"],
-        ["typegraph", "Effect"],
+        ["typegraph", "effects"],
     ]
 
     importer = code.find(

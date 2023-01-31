@@ -5,8 +5,9 @@ from typing import Tuple
 
 from attrs import field
 from attrs import frozen
+from typegraph import effects
 from typegraph import types as t
-from typegraph.runtimes.base import Effect
+from typegraph.effects import Effect
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
@@ -42,35 +43,35 @@ class HTTPRuntime(Runtime):
             "basic_auth_secret": self.basic_auth_secret,
         }
 
-    def get(self, path: str, inp, out, effect: Effect = Effect.none(), **kwargs):
+    def get(self, path: str, inp, out, effect: Effect = effects.none(), **kwargs):
         return t.func(
             inp,
             out,
             RESTMat(self, "GET", path, effect=effect, **kwargs),
         )
 
-    def post(self, path: str, inp, out, effect: Effect = Effect.create(), **kwargs):
+    def post(self, path: str, inp, out, effect: Effect = effects.create(), **kwargs):
         return t.func(
             inp,
             out,
             RESTMat(self, "POST", path, effect=effect, **kwargs),
         )
 
-    def put(self, path: str, inp, out, effect: Effect = Effect.upsert(), **kwargs):
+    def put(self, path: str, inp, out, effect: Effect = effects.upsert(), **kwargs):
         return t.func(
             inp,
             out,
             RESTMat(self, "PUT", path, effect=effect, **kwargs),
         )
 
-    def patch(self, path: str, inp, out, effect: Effect = Effect.update(), **kwargs):
+    def patch(self, path: str, inp, out, effect: Effect = effects.update(), **kwargs):
         return t.func(
             inp,
             out,
             RESTMat(self, "PATCH", path, effect=effect, **kwargs),
         )
 
-    def delete(self, path: str, inp, out, effect: Effect = Effect.delete(), **kwargs):
+    def delete(self, path: str, inp, out, effect: Effect = effects.delete(), **kwargs):
         return t.func(
             inp,
             out,

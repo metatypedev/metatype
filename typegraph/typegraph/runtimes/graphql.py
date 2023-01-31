@@ -4,8 +4,9 @@ from typing import Optional
 from typing import Tuple
 
 from attrs import frozen
+from typegraph import effects
 from typegraph import types as t
-from typegraph.runtimes.base import Effect
+from typegraph.effects import Effect
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
@@ -41,7 +42,7 @@ class QueryMat(Materializer):
     runtime: Runtime
     path: Optional[Tuple[str]]
     materializer_name: str = always("query")
-    effect: Effect = always(Effect.none())
+    effect: Effect = always(effects.none())
 
 
 @frozen

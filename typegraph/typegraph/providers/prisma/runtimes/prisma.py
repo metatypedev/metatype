@@ -11,7 +11,9 @@ from typing import Union
 
 from attrs import field
 from attrs import frozen
+from typegraph import effects
 from typegraph import types as t
+from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.nodes import NodeProxy
@@ -20,7 +22,6 @@ from typegraph.graph.typegraph import resolve_proxy
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.policies import Policy
 from typegraph.providers.prisma.schema import PrismaSchema
-from typegraph.runtimes.base import Effect
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
@@ -118,7 +119,7 @@ class PrismaRelation(Materializer):
     materializer_name: str = always("prisma_relation")
     relation: "Relation" = field(metadata={SKIP: True})
     owner: bool = field(metadata={SKIP: True})
-    effect: Effect = always(Effect.none())
+    effect: Effect = always(effects.none())
 
     @classmethod
     def check(cls, tpe: t.typedef):
@@ -384,7 +385,7 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct({"where": get_where_type(tpe).named(f"{tpe.name}WhereUnique")}),
             get_out_type(tpe).named(f"{tpe.name}UniqueOutput").optional(),
-            PrismaOperationMat(self, tpe.name, "findUnique", effect=Effect.none()),
+            PrismaOperationMat(self, tpe.name, "findUnique", effect=effects.none()),
         )
 
     def gen_find_many(self, tpe: t.struct) -> t.func:
@@ -393,7 +394,7 @@ class PrismaRuntime(Runtime):
                 {"where": get_where_type(tpe).named(f"{tpe.name}Where").optional()}
             ),
             t.array(get_out_type(tpe).named(f"{tpe.name}Output")),
-            PrismaOperationMat(self, tpe.name, "findMany", effect=Effect.none()),
+            PrismaOperationMat(self, tpe.name, "findMany", effect=effects.none()),
         )
 
     def gen_create(self, tpe: t.struct) -> t.func:
@@ -404,7 +405,7 @@ class PrismaRuntime(Runtime):
                 }
             ),
             get_out_type(tpe).named(f"{tpe.name}CreateOutput"),
-            PrismaOperationMat(self, tpe.name, "createOne", effect=Effect.create()),
+            PrismaOperationMat(self, tpe.name, "createOne", effect=effects.create()),
         )
 
     def gen_update(self, tpe: t.struct) -> t.func:
@@ -419,7 +420,9 @@ class PrismaRuntime(Runtime):
                 }
             ),
             get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
-            PrismaOperationMat(self, tpe.name, "updateOne", effect=Effect.update(True)),
+            PrismaOperationMat(
+                self, tpe.name, "updateOne", effect=effects.update(True)
+            ),
         )
 
     def gen_delete(self, tpe: t.struct) -> t.func:
@@ -428,7 +431,7 @@ class PrismaRuntime(Runtime):
                 {"where": get_where_type(tpe).named(f"{tpe.name}DeleteInput")},
             ),
             get_out_type(tpe).named(f"{tpe.name}DeleteOutput"),
-            PrismaOperationMat(self, tpe.name, "deleteOne", effect=Effect.delete()),
+            PrismaOperationMat(self, tpe.name, "deleteOne", effect=effects.delete()),
         )
 
     def gen_delete_many(self, tpe: t.struct) -> t.func:
@@ -441,7 +444,7 @@ class PrismaRuntime(Runtime):
                 }
             ),
             t.struct({"count": t.integer()}).named(f"{tpe.name}BatchDeletePayload"),
-            PrismaOperationMat(self, tpe.name, "deleteMany", effect=Effect.delete()),
+            PrismaOperationMat(self, tpe.name, "deleteMany", effect=effects.delete()),
         )
 
     def gen(self, ops: Dict[str, Tuple[t.Type, str, Policy]]) -> Dict[str, t.func]:
@@ -538,25 +541,25 @@ class PrismaMigrationRuntime(Runtime):
 class PrismaApplyMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("apply")
-    effect: Effect = always(Effect.upsert())
+    effect: Effect = always(effects.upsert())
 
 
 @frozen
 class PrismaDeployMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("deploy")
-    effect: Effect = always(Effect.upsert())
+    effect: Effect = always(effects.upsert())
 
 
 @frozen
 class PrismaCreateMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("create")
-    effect: Effect = always(Effect.create())
+    effect: Effect = always(effects.create())
 
 
 @frozen
 class PrismaDiffMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("diff")
-    effect: Effect = always(Effect.none())
+    effect: Effect = always(effects.none())

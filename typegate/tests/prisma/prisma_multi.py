@@ -1,4 +1,4 @@
-from typegraph import Effect
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
@@ -50,7 +50,7 @@ with TypeGraph("prisma") as g:
 
     g.expose(
         dropSchema=db.executeRaw(
-            "DROP SCHEMA IF EXISTS test CASCADE", effect=Effect.delete()
+            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
         **db.gen(
             {
