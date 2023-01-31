@@ -2,8 +2,8 @@ from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.providers.aws.runtimes.s3 import S3Runtime
-from typegraph.runtimes.deno import FunMat
 from typegraph.runtimes.deno import ModuleMat
+from typegraph.runtimes.deno import PureFunMat
 
 
 with TypeGraph(
@@ -32,7 +32,7 @@ with TypeGraph(
         getImage=t.func(
             t.struct(),
             t.struct({"path": t.string().named("Path")}),
-            FunMat('() => ({"path": "test.jpg"})'),
+            PureFunMat('() => ({"path": "test.jpg"})'),
         )
         .compose(
             {

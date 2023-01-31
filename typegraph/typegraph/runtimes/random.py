@@ -8,7 +8,9 @@ from typing import TYPE_CHECKING
 
 from attrs import field
 from attrs import frozen
+from typegraph import effects
 from typegraph import utils
+from typegraph.effects import Effect
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
@@ -89,3 +91,4 @@ class RandomRuntime(Runtime):
 class RandomMat(Materializer):
     runtime: Runtime = field(factory=RandomRuntime)
     materializer_name: str = always("random")
+    effect: Effect = field(kw_only=True, default=effects.none())

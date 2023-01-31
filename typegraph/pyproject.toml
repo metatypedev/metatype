@@ -42,6 +42,7 @@ ordered-set = "^4.1.0"
 typing-extensions = "^4.4.0"
 attrs = "^22.2.0"
 astunparse = "^1.6.3"
+strenum = "^0.4.9"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.12.0"

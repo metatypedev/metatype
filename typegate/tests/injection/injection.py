@@ -19,7 +19,10 @@ with TypeGraph("injection") as g:
     copy = t.struct({"a2": t.integer().from_parent(g("A"))})
 
     res = t.struct(
-        {**req.props, "e": t.func(copy, copy, deno.PredefinedFunMat("identity"))}
+        {
+            **req.props,
+            "e": t.func(copy, copy, deno.PredefinedFunMat("identity")),
+        }
     )
 
     g.expose(

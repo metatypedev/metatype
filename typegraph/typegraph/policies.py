@@ -10,7 +10,7 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PureFunMat
 from typegraph.utils.attrs import always
 from typegraph.utils.sanitizers import sanitize_ts_string
 
@@ -25,7 +25,7 @@ def policy_name_factory():
 @frozen
 class Policy(Node):
     name: str = field(factory=policy_name_factory, kw_only=True)
-    mat: Materializer
+    mat: Materializer  # Should be a PureFunMat?
     collector_target: str = always(Collector.policies)
 
     def named(self, name: str):
@@ -51,7 +51,7 @@ class Policy(Node):
 
 
 def public(name: str = "__public"):
-    return Policy(FunMat("() => true")).named(name)
+    return Policy(PureFunMat("() => true")).named(name)
 
 
 def jwt(role_name: str, field: str = "role"):
@@ -71,4 +71,4 @@ def jwt(role_name: str, field: str = "role"):
                 return value === "{field}";
             }}
         """
-    return Policy(FunMat(src)).named(jwt_name)
+    return Policy(PureFunMat(src)).named(jwt_name)

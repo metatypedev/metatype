@@ -31,7 +31,7 @@ test("Deno runtime", async (t) => {
 
   await t.should("work with global variables in a module", async () => {
     await gql`
-      query {
+      mutation {
         count
       }
     `
@@ -41,7 +41,7 @@ test("Deno runtime", async (t) => {
       .on(e);
 
     await gql`
-      query {
+      mutation {
         count
       }
     `
