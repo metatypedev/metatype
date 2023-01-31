@@ -6683,7 +6683,7 @@ dependencies = [
 [[package]]
 name = "temporal-client"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#a5a1a7533fc8fc2ca7bbd96e732651779f4a26f6"
+source = "git+https://github.com/temporalio/sdk-core#7401148d1ec63da2665ee075793120f844144b45"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6710,7 +6710,7 @@ dependencies = [
 [[package]]
 name = "temporal-sdk-core-protos"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#a5a1a7533fc8fc2ca7bbd96e732651779f4a26f6"
+source = "git+https://github.com/temporalio/sdk-core#7401148d1ec63da2665ee075793120f844144b45"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
