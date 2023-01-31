@@ -249,7 +249,9 @@ pub fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<()> {
         match e {
             EndpointNotReachable(e) => {
                 if backoff > 1 {
-                    println!("retry: {e:?}");
+                    #[cfg(debug_assertions)]
+                    eprintln!("Endpoint not reachable: {e}");
+                    println!("Retry: typegate not reachable");
                     sleep(Duration::from_secs(5));
                     push_typegraph(tg, node, backoff - 1)
                 } else {
@@ -258,7 +260,9 @@ pub fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<()> {
             }
             FailedQuery(e) => {
                 if backoff > 1 {
-                    println!("retry:\n{}", e.error_messages().dimmed());
+                    #[cfg(debug_assertions)]
+                    eprintln!("Query failed:\n{}", e.error_messages());
+                    println!("Retry: Query failed");
                     sleep(Duration::from_secs(5));
                     push_typegraph(tg, node, backoff - 1)
                 } else {
@@ -267,7 +271,9 @@ pub fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<()> {
             }
             InvalidResponse(e) => {
                 if backoff > 1 {
-                    println!("retry:\n{}", e);
+                    #[cfg(debug_assertions)]
+                    eprintln!("Invalid response: {e:?}");
+                    println!("Retry: Invalid response");
                     sleep(Duration::from_secs(5));
                     push_typegraph(tg, node, backoff - 1)
                 } else {

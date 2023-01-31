@@ -1,0 +1,16 @@
+    test = HTTPRuntime('http://example.com/')
+
+    renames = {'User': '_test_1_User', 'UserProfile': '_test_2_UserProfile'}
+
+    types = {}
+    types['User'] = t.struct({'id': t.string(), 'email': t.string(), 'username': t.string()}).named(renames['User'])
+    types['UserProfile'] = t.struct({'id': t.string(), 'username': t.string(), 'gender': t.string(), 'profilePicture': t.string().optional()}).named(renames['UserProfile'])
+
+    functions = {}
+    functions['listUsers'] = test.get('/users', t.struct({}), t.array(t.proxy(renames['User'])), )
+    functions['createuser'] = test.post('/users', t.struct({}), t.proxy(renames['User']), )
+    functions['deleteUser'] = test.delete('users/{userId}', t.struct({'userId': t.number()}), t.boolean().optional(), )
+    functions['getUserProfile'] = test.get('/profile/{userId}', t.struct({'userId': t.number()}), t.proxy(renames['UserProfile']).optional(), )
+    functions['updateUserProfile'] = test.patch('/profile/{userId}', t.struct({'userId': t.number()}), t.proxy(renames['UserProfile']), )
+
+    return Import(importer='test', renames=renames, types=types, functions=functions)
