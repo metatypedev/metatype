@@ -3,9 +3,10 @@
 import { ComputeStage } from "./engine.ts";
 import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
+import { None, Option, Some } from "monads";
 
-// FIXME replace with monads
-export type Maybe<T> = null | undefined | T;
+export type Maybe<T> = Option<T>;
+
 export type JSONValue =
   | string
   | number
@@ -13,6 +14,14 @@ export type JSONValue =
   | null
   | JSONValue[]
   | { [key: string]: JSONValue };
+
+export const liftMaybe = <T>(v: null | undefined | T): Maybe<T> => {
+  return v ? Some(v) : None;
+};
+
+export const unwrapToValue = <T>(m: Maybe<T>): T | undefined => {
+  return m.isSome() ? m.unwrap() : undefined;
+};
 
 export const ensure = (predicat: boolean, message: string | (() => string)) => {
   if (!predicat) {

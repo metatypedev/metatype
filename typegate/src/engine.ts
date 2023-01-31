@@ -440,13 +440,20 @@ export class Engine {
       const document = parse(query);
 
       const [operation, fragments] = findOperation(document, operationName);
-      if (!operation) {
-        throw Error(`operation ${operationName} not found`);
+      if (operation.isNone()) {
+        throw Error(`operation ${operationName.unwrapOr("<none>")} not found`);
       }
+      const unwrappedOperation = operation.unwrap();
 
-      this.validateVariables(operation?.variableDefinitions ?? [], variables);
+      this.validateVariables(
+        unwrappedOperation.variableDefinitions ?? [],
+        variables,
+      );
 
-      const isIntrospection = isIntrospectionQuery(operation, fragments);
+      const isIntrospection = isIntrospectionQuery(
+        unwrappedOperation,
+        fragments,
+      );
 
       const verbose = !isIntrospection;
 
@@ -455,7 +462,7 @@ export class Engine {
 
       const startTime = performance.now();
       const [plan, cacheHit] = await this.getPlan(
-        operation,
+        operation.unwrap(),
         fragments,
         true,
         verbose,

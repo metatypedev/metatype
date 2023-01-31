@@ -2,7 +2,7 @@
 
 import * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { Maybe } from "./utils.ts";
+import { liftMaybe, Maybe, unwrapToValue } from "./utils.ts";
 
 export type FragmentDefs = Record<string, ast.FragmentDefinitionNode>;
 
@@ -18,7 +18,7 @@ export const findOperation = (
       case Kind.OPERATION_DEFINITION:
         lastDef = definition;
         if (
-          definition.name?.value === operationName &&
+          definition.name?.value === unwrapToValue(operationName) &&
           (definition.operation == "query" ||
             definition.operation == "mutation")
         ) {
@@ -41,7 +41,7 @@ export const findOperation = (
     def = lastDef;
   }
 
-  return [def, fragments];
+  return [liftMaybe(def), fragments];
 };
 
 export const resolveSelection = (
