@@ -462,7 +462,7 @@ export class Engine {
 
       const startTime = performance.now();
       const [plan, cacheHit] = await this.getPlan(
-        operation.unwrap(),
+        unwrappedOperation,
         fragments,
         true,
         verbose,

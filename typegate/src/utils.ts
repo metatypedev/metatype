@@ -15,11 +15,13 @@ export type JSONValue =
   | JSONValue[]
   | { [key: string]: JSONValue };
 
-export const liftMaybe = <T>(v: null | undefined | T): Maybe<T> => {
-  return v ? Some(v) : None;
+// Map undefined | null to None
+export const forceAnyToMaybe = (v: any): Maybe<any> => {
+  return v === undefined || v === null ? None : Some(v);
 };
 
-export const unwrapToValue = <T>(m: Maybe<T>): T | undefined => {
+// Map None to undefined
+export const forceMaybeToValue = <T>(m: Maybe<T>): T | undefined => {
   return m.isSome() ? m.unwrap() : undefined;
 };
 

@@ -8,7 +8,7 @@ import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { getRequestLogger } from "./log.ts";
-import { liftMaybe } from "./utils.ts";
+import { forceAnyToMaybe } from "./utils.ts";
 
 interface ParsedPath {
   lookup: string;
@@ -158,7 +158,7 @@ export const typegate =
       const { query, operationName, variables } = await request.json();
       const { status, ...res } = await engine.execute(
         query,
-        liftMaybe(operationName),
+        forceAnyToMaybe(operationName),
         variables,
         context,
         limit,
