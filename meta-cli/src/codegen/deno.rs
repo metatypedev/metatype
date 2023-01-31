@@ -14,7 +14,6 @@ use typescript as ts;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ImportFuncMatData {
-    serial: bool,
     name: String,
     #[serde(rename = "mod")]
     module: u32,

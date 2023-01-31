@@ -71,6 +71,20 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
     raise Exception(f"Unexpect type {cursor}")
 
 
+def get_effect(method):
+    if method == "GET":
+        return "effects.none()"
+    if method == "POST":
+        return "effects.create()"
+    if method == "PUT":
+        return "effects.upsert()"
+    if method == "DELETE":
+        return "effects.delete()"
+    if method == "PATCH":
+        return "effects.update()"
+    raise Exception(f"Unsupported HTTP method '{method}'")
+
+
 def flatten_calls(cursor, hierarchy="", url_prefix=""):
     ret = ""
 
@@ -83,7 +97,9 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
 
             out = typify(method.response, suffix="Out")
 
-            ret += f'{hierarchy}{upper_first(methodName)}=t.func(t.struct({{{inp}}}),{out},googleapis.RestMat("{method.httpMethod}", "{url_prefix}{method.path}")).named("{method.id}"),\n'
+            effect = get_effect(method.httpMethod)
+            mat = f'googleapis.RestMat("{method.httpMethod}", "{url_prefix}{method.path}", effect={effect})'
+            ret += f'{hierarchy}{upper_first(methodName)}=t.func(t.struct({{{inp}}}), {out}, {mat}).named("{method.id}"),\n'
 
     if "resources" in cursor:
         for resourceName, resource in cursor.resources.items():
@@ -137,6 +153,7 @@ def import_googleapis(uri: str, gen: bool) -> None:
         ["typegraph.providers.google.runtimes", "googleapis"],
         ["typegraph", "t"],
         ["typegraph", "TypeGraph"],
+        ["typegraph", "effects"],
     ]
 
     importer = code.find(

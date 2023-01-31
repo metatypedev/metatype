@@ -5,8 +5,8 @@ from typegraph import t
 from typegraph import TypeGraph
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.deno import DenoRuntime
-from typegraph.runtimes.deno import FunMat
 from typegraph.runtimes.deno import PredefinedFunMat
+from typegraph.runtimes.deno import PureFunMat
 from typegraph.runtimes.graphql import GraphQLRuntime
 from typegraph.runtimes.http import HTTPRuntime
 
@@ -110,20 +110,22 @@ with TypeGraph("test") as g:
                                 "duration": t.func(
                                     t.struct({"integer": g("reint")}),
                                     t.integer().named("duration_remote"),
-                                    FunMat("(args) => args.parent.integer * 3"),
+                                    PureFunMat("(args) => args.parent.integer * 3"),
                                 ).named("compute_duration_remote"),
                             }
                         ).named("remote"),
                     ),
                     "duration": t.gen(
                         t.integer().named("duration"),
-                        FunMat("(args) => args.parent.out * 2"),
+                        PureFunMat(
+                            "(args) => args.parent.out * 2",
+                        ),
                     ).named("compute_duration"),
                     "self": g("f"),
                     "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),
                 }
             ).named("res"),
-            FunMat(
+            PureFunMat(
                 """
                 ({ a }: { a: number; }) => {
                     return {
@@ -132,9 +134,9 @@ with TypeGraph("test") as g:
                         b: null,
                     };
                 }
-                """
+                """,
             ),
-            # FunMat(
+            # PureFunMat(
             #     """
             #     ({ a }: { a: number; }) => {
             #         return {

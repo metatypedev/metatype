@@ -1,10 +1,11 @@
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.policies import Policy
 from typegraph.runtimes.deno import DenoRuntime
-from typegraph.runtimes.deno import FunMat
 from typegraph.runtimes.deno import ModuleMat
+from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph(name="math") as g:
     worker = DenoRuntime(worker="worker 1")
@@ -12,7 +13,7 @@ with TypeGraph(name="math") as g:
     public = policies.public()
 
     restrict_referer = Policy(
-        FunMat(
+        PureFunMat(
             '(context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
             runtime=worker,
         ),
@@ -31,12 +32,12 @@ with TypeGraph(name="math") as g:
         random=t.func(
             t.struct(),
             t.float(),
-            FunMat("() => Math.random()"),
+            PureFunMat("() => Math.random()"),
         ).add_policy(public),
         randomItem=t.func(
             t.struct({"items": t.array(t.string())}),
             t.string(),
-            FunMat(random_item_fn, runtime=worker),
+            PureFunMat(random_item_fn, runtime=worker),
         ).add_policy(public),
         randomIntInRange=t.func(
             t.struct({"from": t.integer(), "to": t.integer()}),
@@ -53,6 +54,6 @@ with TypeGraph(name="math") as g:
                     }
                     """,
                 runtime=worker,
-            ).imp("default"),
+            ).imp("default", effect=effects.none()),
         ).add_policy(public),
     )

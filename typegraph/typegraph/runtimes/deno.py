@@ -13,6 +13,8 @@ from astunparse import unparse
 from attrs import field
 from attrs import frozen
 from frozendict import frozendict
+from typegraph import effects
+from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.runtimes.base import Materializer
@@ -66,7 +68,7 @@ class FunMat(Materializer):
     script: Optional[str] = field(kw_only=True, default=None)
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = field(default="function", init=False)
-    serial = field(kw_only=True, default=False)
+    effect: Effect = field(kw_only=True, default=effects.none())
 
     @classmethod
     def from_lambda(cls, function, runtime=DenoRuntime()):
@@ -87,8 +89,14 @@ class FunMat(Materializer):
 
 
 @frozen
+class PureFunMat(FunMat):
+    effect: Effect = always(effects.none())
+
+
+@frozen
 class PredefinedFunMat(Materializer):
     name: str
+    effect: Effect = field(kw_only=True, default=effects.none())
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = always("predefined_function")
 
@@ -99,6 +107,7 @@ class ImportFunMat(Materializer):
     mod: "ModuleMat" = field()
     name: str = field(default="default")
     secrets: Tuple[str] = field(kw_only=True, factory=tuple)
+    effect: Effect = field(kw_only=True, default=effects.none())
     runtime: DenoRuntime = field(
         kw_only=True, factory=DenoRuntime
     )  # should be the same runtime as `mod`'s
@@ -122,11 +131,14 @@ class ModuleMat(Materializer):
     code: Optional[str] = field(kw_only=True, default=None)
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)  # DenoRuntime
     materializer_name: str = always("module")
+    effect: Effect = always(effects.none())
 
     def __attrs_post_init__(self):
         if self.file is None:
             if self.code is None:
-                raise Exception("you must give source code for the module")
+                raise Exception(
+                    f"you must give source code for the module: {self.file}"
+                )
         else:
             if self.code is not None:
                 raise Exception("you must only give either source file or source code")
@@ -140,10 +152,20 @@ class ModuleMat(Materializer):
                 with open(path) as f:
                     object.__setattr__(self, "code", f.read())
 
-    def imp(self, name: str = "default") -> FunMat:
-        return ImportFunMat(self, name, runtime=self.runtime, secrets=self.secrets)
+    def imp(
+        self, name: str = "default", *, effect: Effect = effects.none(), **kwargs
+    ) -> ImportFunMat:
+        return ImportFunMat(
+            self,
+            name,
+            runtime=self.runtime,
+            secrets=self.secrets,
+            effect=effect,
+            **kwargs,
+        )
 
 
 @frozen
 class IdentityMat(PredefinedFunMat):
     name: str = always("identity")
+    effect: Effect = always(effects.none())

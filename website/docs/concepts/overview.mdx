@@ -67,7 +67,7 @@ Taking the analogy of a Postgres database, this is similar to SQL data definitio
 The type system also supports first-order types which are specified by providing a materializer. This provides support for transforming between two types.
 
 ```py
-t.func(t.struct({"name": t.string()}), t.string(), deno.FunMat("sayHello"))
+t.func(t.struct({"name": t.string()}), t.string(), deno.PureFunMat("sayHello"))
 ```
 
 The equivalent is SQL would be joins, functions or aliases.

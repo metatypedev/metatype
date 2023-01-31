@@ -184,9 +184,27 @@ impl TypeNode {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum EffectType {
+    Create,
+    Update,
+    Upsert,
+    Delete,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Effect {
+    effect: Option<EffectType>,
+    idempotent: bool,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Materializer {
     pub name: String,
     pub runtime: u32,
+    pub effect: Effect,
     pub data: IndexMap<String, Value>,
 }
 
@@ -228,12 +246,10 @@ impl TypeNode {
 #[derive(Serialize, Deserialize)]
 pub struct FunctionMatData {
     pub script: String,
-    serial: bool,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize)]
 pub struct ModuleMatData {
     pub code: String,
-    serial: bool,
 }
