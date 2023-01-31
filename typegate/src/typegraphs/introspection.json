@@ -788,31 +788,40 @@
     {
       "name": "function",
       "runtime": 0,
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
       "data": {
-        "script": "var _my_lambda=()=>true;",
-        "serial": false
+        "script": "var _my_lambda=()=>true;"
       }
     },
     {
       "name": "resolver",
       "runtime": 1,
-      "data": {
-        "serial": false
-      }
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
     },
     {
       "name": "getType",
       "runtime": 1,
-      "data": {
-        "serial": false
-      }
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
     },
     {
       "name": "getSchema",
       "runtime": 1,
-      "data": {
-        "serial": false
-      }
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
     }
   ],
   "runtimes": [

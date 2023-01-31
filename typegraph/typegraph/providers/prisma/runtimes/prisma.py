@@ -11,7 +11,9 @@ from typing import Union
 
 from attrs import field
 from attrs import frozen
+from typegraph import effects
 from typegraph import types as t
+from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.nodes import NodeProxy
@@ -23,6 +25,7 @@ from typegraph.providers.prisma.schema import PrismaSchema
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
+from typegraph.utils.attrs import required
 from typegraph.utils.attrs import SKIP
 
 
@@ -107,7 +110,7 @@ class PrismaOperationMat(Materializer):
     table: str
     operation: str
     materializer_name: str = always("prisma_operation")
-    serial: bool = field(kw_only=True)
+    effect: Effect = required()
 
 
 @frozen
@@ -116,6 +119,7 @@ class PrismaRelation(Materializer):
     materializer_name: str = always("prisma_relation")
     relation: "Relation" = field(metadata={SKIP: True})
     owner: bool = field(metadata={SKIP: True})
+    effect: Effect = always(effects.none())
 
     @classmethod
     def check(cls, tpe: t.typedef):
@@ -355,35 +359,33 @@ class PrismaRuntime(Runtime):
 
     #     return config
 
-    def queryRaw(self) -> t.func:
+    def queryRaw(self, query: str, *, effect: Effect) -> t.func:
         return t.func(
             t.struct(
                 {
-                    "query": t.string(),
                     "parameters": t.json(),
                 }
             ).named("QueryRawInp"),
             t.array(t.json()),
-            PrismaOperationMat(self, "", "queryRaw", serial=False),
+            PrismaOperationMat(self, query, "queryRaw", effect=effect),
         )
 
-    def executeRaw(self) -> t.func:
+    def executeRaw(self, query: str, *, effect: Effect) -> t.func:
         return t.func(
             t.struct(
                 {
-                    "query": t.string(),
-                    "parameters": t.json(),
+                    "parameters": t.json().optional().default("[]"),
                 }
-            ).named("ExecuteRawInp"),
+            ).named(f"ExecuteRawInp_{TypegraphContext.get_active().next_type_id()}"),
             t.integer(),
-            PrismaOperationMat(self, "", "executeRaw", serial=True),
+            PrismaOperationMat(self, query, "executeRaw", effect=effect),
         )
 
     def gen_find_unique(self, tpe: t.struct) -> t.func:
         return t.func(
             t.struct({"where": get_where_type(tpe).named(f"{tpe.name}WhereUnique")}),
             get_out_type(tpe).named(f"{tpe.name}UniqueOutput").optional(),
-            PrismaOperationMat(self, tpe.name, "findUnique", serial=False),
+            PrismaOperationMat(self, tpe.name, "findUnique", effect=effects.none()),
         )
 
     def gen_find_many(self, tpe: t.struct) -> t.func:
@@ -392,7 +394,7 @@ class PrismaRuntime(Runtime):
                 {"where": get_where_type(tpe).named(f"{tpe.name}Where").optional()}
             ),
             t.array(get_out_type(tpe).named(f"{tpe.name}Output")),
-            PrismaOperationMat(self, tpe.name, "findMany", serial=False),
+            PrismaOperationMat(self, tpe.name, "findMany", effect=effects.none()),
         )
 
     def gen_create(self, tpe: t.struct) -> t.func:
@@ -403,7 +405,7 @@ class PrismaRuntime(Runtime):
                 }
             ),
             get_out_type(tpe).named(f"{tpe.name}CreateOutput"),
-            PrismaOperationMat(self, tpe.name, "createOne", serial=True),
+            PrismaOperationMat(self, tpe.name, "createOne", effect=effects.create()),
         )
 
     def gen_update(self, tpe: t.struct) -> t.func:
@@ -418,7 +420,9 @@ class PrismaRuntime(Runtime):
                 }
             ),
             get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
-            PrismaOperationMat(self, tpe.name, "updateOne", serial=True),
+            PrismaOperationMat(
+                self, tpe.name, "updateOne", effect=effects.update(True)
+            ),
         )
 
     def gen_delete(self, tpe: t.struct) -> t.func:
@@ -427,7 +431,7 @@ class PrismaRuntime(Runtime):
                 {"where": get_where_type(tpe).named(f"{tpe.name}DeleteInput")},
             ),
             get_out_type(tpe).named(f"{tpe.name}DeleteOutput"),
-            PrismaOperationMat(self, tpe.name, "deleteOne", serial=True),
+            PrismaOperationMat(self, tpe.name, "deleteOne", effect=effects.delete()),
         )
 
     def gen_delete_many(self, tpe: t.struct) -> t.func:
@@ -440,7 +444,7 @@ class PrismaRuntime(Runtime):
                 }
             ),
             t.struct({"count": t.integer()}).named(f"{tpe.name}BatchDeletePayload"),
-            PrismaOperationMat(self, tpe.name, "deleteMany", serial=True),
+            PrismaOperationMat(self, tpe.name, "deleteMany", effect=effects.delete()),
         )
 
     def gen(self, ops: Dict[str, Tuple[t.Type, str, Policy]]) -> Dict[str, t.func]:
@@ -460,10 +464,6 @@ class PrismaRuntime(Runtime):
                 ret[name] = self.gen_delete(tpe).add_policy(policy)
             elif op == "deleteMany":
                 ret[name] = self.gen_delete_many(tpe).add_policy(policy)
-            elif op == "queryRaw":
-                ret[name] = self.queryRaw().add_policy(policy)
-            elif op == "executeRaw":
-                ret[name] = self.executeRaw().add_policy(policy)
             else:
                 raise Exception(f'Operation not supported: "{op}"')
         # raise Exception(f'ret: {ret}')
@@ -537,50 +537,29 @@ class PrismaMigrationRuntime(Runtime):
     runtime_name: str = always("prisma_migration")
 
 
-# @frozen
-# class PrismaMigrateMat(Materializer):
-#     runtime: Runtime = PrismaMigrationRuntime()
-#     materializer_name: str = always("migrate")
-#     serial: bool = always(True)
-
-
 @frozen
 class PrismaApplyMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("apply")
-    serial: bool = always(True)
+    effect: Effect = always(effects.upsert())
 
 
 @frozen
 class PrismaDeployMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("deploy")
-    serial: bool = always(True)
+    effect: Effect = always(effects.upsert())
 
 
 @frozen
 class PrismaCreateMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("create")
-    serial: bool = always(True)
+    effect: Effect = always(effects.create())
 
 
 @frozen
 class PrismaDiffMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("diff")
-    # serial = False
-
-
-@frozen
-class PrismaStartSessionMat(Materializer):
-    runtime: Runtime = PrismaMigrationRuntime()
-    materializer_name: str = always("startSession")
-    serial: bool = always(True)
-
-
-@frozen
-class PrismaEndSessionMat(Materializer):
-    runtime: Runtime = PrismaMigrationRuntime()
-    materializer_name: str = always("endSession")
-    serial: bool = always(True)
+    effect: Effect = always(effects.none())

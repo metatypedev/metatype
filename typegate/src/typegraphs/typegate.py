@@ -3,7 +3,7 @@
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.policies import Policy
-from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PureFunMat
 from typegraph.runtimes.typegate import AddTypeGraphMat
 from typegraph.runtimes.typegate import RemoveTypeGraphMat
 from typegraph.runtimes.typegate import SerializedTypegraphMat
@@ -37,7 +37,7 @@ with TypeGraph(
     ).named("typegraph")
 
     admin_only = Policy(
-        FunMat("(_args, { context }) => context.user === 'admin'")
+        PureFunMat("(_args, { context }) => context.user === 'admin'")
     ).named("admin_only")
 
     g.expose(

@@ -1,3 +1,4 @@
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
@@ -26,10 +27,11 @@ with TypeGraph("graphql") as g:
                         "name": t.string().optional(),
                         "email": t.string().optional(),
                     }
-                ),  # TODO min_props: 1
+                ).min(1),
             }
         ),
         g("User"),
+        effect=effects.update(idempotent=True),
     ).add_policy(policies.public())
 
     g.expose(user=user_by_id, updateUser=update_user)

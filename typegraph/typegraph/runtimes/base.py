@@ -6,6 +6,7 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 from attrs import frozen
+from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.utils.attrs import always
@@ -33,7 +34,7 @@ class Runtime(Node):
 @frozen
 class Materializer(Node):
     runtime: Runtime
-    serial: bool = always(False)  # to be set by child classes
+    effect: Effect
     collector_target: Optional[str] = always(Collector.materializers)
 
     @property
@@ -46,5 +47,6 @@ class Materializer(Node):
         return {
             "name": data.pop("materializer_name"),
             "runtime": collector.index(data.pop("runtime")),
+            "effect": asdict(data.pop("effect")),
             "data": data,
         }

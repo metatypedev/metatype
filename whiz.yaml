@@ -20,7 +20,9 @@ examples:
         - meta
 
 system_graphs:
-    watch: typegate/src/typegraphs/*.py
+    watch:
+        - typegate/src/typegraphs/*.py
+        - typegraph/**/*.py
     command: "deno run -A dev/serialize.ts"
     depends_on:
         - meta

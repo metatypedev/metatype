@@ -456,7 +456,9 @@
       },
       "agent-base@6.0.2": {
         "integrity": "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==",
-        "dependencies": { "debug": "debug@4.3.4" }
+        "dependencies": {
+          "debug": "debug@4.3.4"
+        }
       },
       "chance@1.1.8": {
         "integrity": "sha512-v7fi5Hj2VbR6dJEGRWLmJBA83LJMS47pkAbmROFxHWd9qmE1esHRZW8Clf1Fhzr3rjxnNZVCjOEv/ivFxeIMtg==",
@@ -468,7 +470,9 @@
       },
       "debug@4.3.4": {
         "integrity": "sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==",
-        "dependencies": { "ms": "ms@2.1.2" }
+        "dependencies": {
+          "ms": "ms@2.1.2"
+        }
       },
       "https-proxy-agent@5.0.1": {
         "integrity": "sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==",

@@ -9,7 +9,9 @@ from typing import Union
 from attrs import define
 from attrs import field
 from attrs import frozen
+from typegraph import effects
 from typegraph import types as t
+from typegraph.effects import Effect
 from typegraph.graph.nodes import NodeProxy
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
@@ -31,6 +33,7 @@ class TypifyRuntime(Runtime):
 class TypifyMat(Materializer):
     codegen: Union[str, Callable[[str, str], str]]
     runtime: Runtime = field(factory=TypifyRuntime)
+    effect: Effect = always(effects.none())
 
     def data(self, _c):
         raise Exception("Cannot serialize TypifyMat")

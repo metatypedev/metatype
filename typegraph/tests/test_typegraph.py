@@ -4,7 +4,7 @@ import frozendict
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.graph.models import Cors
-from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PureFunMat
 
 
 class TestTypegraph:
@@ -32,7 +32,13 @@ class TestTypegraph:
             arg1 = t.integer().named("arg1")
             inp = t.struct({"a": arg1}).named("inp")
             out = t.integer().named("out")
-            g.expose(test=t.func(inp, out, FunMat("(args) => args.a * 2")).named("f"))
+            g.expose(
+                test=t.func(
+                    inp,
+                    out,
+                    PureFunMat("(args) => args.a * 2"),
+                ).named("f")
+            )
 
         assert g.build() == overridable(
             {
@@ -78,10 +84,8 @@ class TestTypegraph:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "data": {
-                            "script": "var _my_lambda = (args) => args.a * 2;",
-                            "serial": False,
-                        },
+                        "effect": {"effect": None, "idempotent": True},
+                        "data": {"script": "var _my_lambda = (args) => args.a * 2;"},
                     }
                 ],
                 "policies": [],
@@ -113,13 +117,13 @@ class TestTypegraph:
                         "out": out,
                         "duration": t.gen(
                             t.integer().named("duration"),
-                            FunMat("() => 1"),
+                            PureFunMat("() => 1"),
                         ).named("compute_duration"),
                         "self": g("f"),
                         "nested": t.struct({"ok": out, "self": g("f")}).named("nested"),
                     }
                 ).named("res"),
-                FunMat("(args) => args.a"),
+                PureFunMat("(args) => args.a"),
             ).named("f")
             g.expose(test=getter)
 
@@ -205,18 +209,14 @@ class TestTypegraph:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "data": {
-                            "script": "var _my_lambda = () => 1;",
-                            "serial": False,
-                        },
+                        "effect": {"effect": None, "idempotent": True},
+                        "data": {"script": "var _my_lambda = () => 1;"},
                     },
                     {
                         "name": "function",
                         "runtime": 0,
-                        "data": {
-                            "script": "var _my_lambda = (args) => args.a;",
-                            "serial": False,
-                        },
+                        "effect": {"effect": None, "idempotent": True},
+                        "data": {"script": "var _my_lambda = (args) => args.a;"},
                     },
                 ],
                 "policies": [],

@@ -12,4 +12,4 @@ class TemporalRuntime(Runtime)
 
 Interacts with Temporal server.
 
-This runtime is *experimental* state and is subject to change.
+This runtime is _experimental_ state and is subject to change.

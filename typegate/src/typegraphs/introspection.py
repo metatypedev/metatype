@@ -3,7 +3,7 @@
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.policies import Policy
-from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PureFunMat
 from typegraph.runtimes.typegate import ResolverMat
 from typegraph.runtimes.typegate import SchemaMat
 from typegraph.runtimes.typegate import TypeMat
@@ -138,7 +138,7 @@ with TypeGraph("introspection") as g:
         }
     ).named("directive")
 
-    public = Policy(FunMat("() => true")).named("__public")
+    public = Policy(PureFunMat("() => true")).named("__public")
 
     get_type = t.func(
         t.struct({"name": t.string()}), type.optional(), TypeMat()

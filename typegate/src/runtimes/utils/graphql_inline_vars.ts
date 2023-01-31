@@ -5,6 +5,7 @@ import type { FromVars } from "../graphql.ts";
 import { ComputeStage } from "../../engine.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 import { mapValues } from "std/collections/map_values.ts";
+import { ComputeArg } from "../../planner/args.ts";
 
 export function stringifyQL(
   obj: JSONValue | FromVars<JSONValue>,
@@ -46,28 +47,7 @@ export function rebuildGraphQuery(
     );
 
     if (Object.keys(stage.props.args).length > 0) {
-      ss.push((vars) => {
-        const args = Object.entries(
-          filterValues(
-            mapValues(stage.props.args, (c) => c(vars, {}, {})),
-            (v) => v != undefined,
-          ),
-        );
-        if (args.length === 0) {
-          return "";
-        }
-
-        return `(${
-          args.map(([argName, argValue]) => {
-            console.log("arg", argName, argValue);
-            return `${argName}: ${
-              stringifyQL(
-                argValue as JSONValue,
-              )(vars)
-            }`;
-          }).join(", ")
-        })`;
-      });
+      ss.push((vars) => formatArgs(stage.props.args, vars));
     }
 
     if (children.length > 0) {
@@ -78,4 +58,34 @@ export function rebuildGraphQuery(
   });
 
   return (vars) => ss.map((s) => s(vars)).join("");
+}
+
+function formatArgs(
+  args: Record<string, ComputeArg>,
+  vars: Record<string, unknown>,
+) {
+  const computedArgs = Object.entries(
+    filterValues(
+      mapValues(args, (c) => c(vars, {}, {})),
+      (v) => v != undefined,
+    ),
+  );
+  if (computedArgs.length === 0) {
+    return "";
+  }
+  return `(${
+    computedArgs.map(([argName, argValue]) =>
+      `${argName}: ${stringifyQL(argValue as JSONValue)(vars)}`
+    ).join(", ")
+  })`;
+}
+
+export function buildRawQuery(
+  fn: "queryRaw" | "executeRaw",
+  sql: string,
+  args: Record<string, ComputeArg>,
+  vars: Record<string, unknown>,
+) {
+  const formattedArgs = formatArgs({ ...args, query: () => sql }, vars);
+  return `${fn}${formattedArgs}`;
 }

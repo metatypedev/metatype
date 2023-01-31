@@ -381,38 +381,49 @@
     {
       "name": "function",
       "runtime": 0,
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
       "data": {
-        "script": "var _my_lambda=(_args,{context})=>context.user===\"admin\";",
-        "serial": false
+        "script": "var _my_lambda=(_args,{context})=>context.user===\"admin\";"
       }
     },
     {
       "name": "diff",
       "runtime": 1,
-      "data": {
-        "serial": false
-      }
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
     },
     {
       "name": "apply",
       "runtime": 1,
-      "data": {
-        "serial": true
-      }
+      "effect": {
+        "effect": "upsert",
+        "idempotent": true
+      },
+      "data": {}
     },
     {
       "name": "create",
       "runtime": 1,
-      "data": {
-        "serial": true
-      }
+      "effect": {
+        "effect": "create",
+        "idempotent": false
+      },
+      "data": {}
     },
     {
       "name": "deploy",
       "runtime": 1,
-      "data": {
-        "serial": true
-      }
+      "effect": {
+        "effect": "upsert",
+        "idempotent": true
+      },
+      "data": {}
     }
   ],
   "runtimes": [

@@ -240,45 +240,58 @@
     {
       "name": "function",
       "runtime": 0,
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
       "data": {
-        "script": "var _my_lambda=(_args,{context})=>context.user===\"admin\";",
-        "serial": false
+        "script": "var _my_lambda=(_args,{context})=>context.user===\"admin\";"
       }
     },
     {
       "name": "typegraphs",
       "runtime": 1,
-      "data": {
-        "serial": false
-      }
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
     },
     {
       "name": "serializedTypegraph",
       "runtime": 1,
-      "data": {
-        "serial": false
-      }
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
     },
     {
       "name": "typegraph",
       "runtime": 1,
-      "data": {
-        "serial": false
-      }
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
     },
     {
       "name": "addTypegraph",
       "runtime": 1,
-      "data": {
-        "serial": true
-      }
+      "effect": {
+        "effect": "create",
+        "idempotent": false
+      },
+      "data": {}
     },
     {
       "name": "removeTypegraph",
       "runtime": 1,
-      "data": {
-        "serial": true
-      }
+      "effect": {
+        "effect": "delete",
+        "idempotent": true
+      },
+      "data": {}
     }
   ],
   "runtimes": [
