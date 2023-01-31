@@ -17,9 +17,9 @@
   },
   "dependencies": {
     "@apollo/client": "^3.7.3",
-    "@docusaurus/core": "^2.2.0",
-    "@docusaurus/preset-classic": "^2.2.0",
-    "@docusaurus/theme-common": "^2.2.0",
+    "@docusaurus/core": "2.2.0",
+    "@docusaurus/preset-classic": "2.2.0",
+    "@docusaurus/theme-common": "2.2.0",
     "@giscus/react": "^2.2.6",
     "@graphiql/react": "^0.15.0",
     "@graphiql/toolkit": "^0.8.0",
