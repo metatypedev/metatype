@@ -1,5 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import sys
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -170,13 +171,17 @@ class typedef(Node):
         object.__setattr__(self, "runtime", runtime)
         return self
 
-    def _propagate_runtime(self, runtime: "Runtime", visited: Set["typedef"] = None):
+    def _propagate_runtime(self, runtime: "Runtime", visited: Set[str] = None):
+        print(
+            f"dir self={[(k, getattr(self, k)) for k in dir(self) if isinstance(getattr(self,k), dict)]}",
+            file=sys.stderr,
+        )
         if visited is None:
             visited = set()
-        elif self in visited:
+        elif self.name in visited:
             return
         else:
-            visited.add(self)
+            visited.add(self.name)
 
         if self.runtime is None:
             object.__setattr__(self, "runtime", runtime)

@@ -1,16 +1,26 @@
-from typing import List, Optional, Union, Dict, DefaultDict, Tuple
+# Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
 from collections import defaultdict
+from typing import DefaultDict
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+
+from attrs import field
+from attrs import frozen
 from typegraph import t
-from typegraph.providers.prisma.relations import Relation, check_field
-from typegraph.graph.typegraph import resolve_proxy, find
+from typegraph.graph.typegraph import find
+from typegraph.graph.typegraph import resolve_proxy
+from typegraph.providers.prisma.relations import check_field
+from typegraph.providers.prisma.relations import Relation
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
-from attrs import frozen, field
 
 
 @frozen
 class TypeGenerator:
-    relations: Dict[str, Relation]
     models: Dict[str, t.struct]
+    relations: Dict[str, Relation]
     relation_by_models: DefaultDict[str, List[str]] = field(
         init=False, factory=lambda: defaultdict(list)
     )
@@ -20,16 +30,14 @@ class TypeGenerator:
             self.relation_by_models[rel.owner_type.name].append(rel_name)
             self.relation_by_models[rel.owned_type.name].append(rel_name)
 
-    def __find_relation(
-        self, tpe: t.struct, field_name: str
-    ) -> Optional[Tuple[str, Relation]]:
+    def __find_relation(self, tpe: t.struct, field_name: str) -> Optional[str]:
         if not check_field(tpe, field_name):
             return None
 
         type_name = tpe.name
         return next(
             (
-                (relname, relation)
+                relname
                 for relname, relation in (
                     (relname, self.relations[relname])
                     for relname in self.relation_by_models[type_name]
@@ -62,10 +70,11 @@ class TypeGenerator:
             raise Exception(f'expected a struct, got: "{type(tpe).__name__}"')
         for key, field_type in tpe.props.items():
             field_type = resolve_proxy(field_type)
-            relname, relation = self.__find_relation(tpe, key)
+            relname = self.__find_relation(tpe, key)
             if relname is not None:
                 if relname in skip:
                     continue
+                relation = self.relations[relname]
                 out = resolve_proxy(resolve_entity_quantifier)
                 entries = {
                     "create": self.get_input_type(
@@ -127,6 +136,7 @@ class TypeGenerator:
 
         for k, v in tpe.props.items():
             # not for this runtime
+            v = resolve_proxy(v)
             if v.runtime is not None and v.runtime != tpe.runtime:
                 continue
 

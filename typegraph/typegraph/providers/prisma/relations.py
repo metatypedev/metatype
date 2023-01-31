@@ -1,9 +1,12 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typegraph import types as t
-from typing import Optional, Tuple, List
+from typing import List
+from typing import Optional
+from typing import Tuple
+
 from attrs import frozen
 from strenum import StrEnum
+from typegraph import types as t
 from typegraph.graph.typegraph import resolve_proxy
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
@@ -20,7 +23,7 @@ class LinkItem:
     target_field: Optional[str]
 
     def resolve_proxy(self) -> "LinkItem":
-        return LinkItem(resolve_proxy(self.tpe), self.target_fields)
+        return LinkItem(resolve_proxy(self.tpe), self.target_field)
 
 
 # return True iff a and b represents the same type
@@ -90,7 +93,7 @@ class Relation:
             owner_field = owned.target_field
         if owned.target_field is None:
             owned_field = cls.get_reference_field(
-                resolve_entity_quantifier(owned.tpe), owner.tpe
+                resolve_proxy(resolve_entity_quantifier(owned.tpe)), owner.tpe
             )
         else:
             cls.check_reference_field(

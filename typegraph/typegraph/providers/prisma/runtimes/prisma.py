@@ -5,8 +5,6 @@ from typing import DefaultDict
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Set
-from typing import Tuple
 from typing import Union
 
 from attrs import field
@@ -14,20 +12,17 @@ from attrs import frozen
 from typegraph import types as t
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
-from typegraph.graph.nodes import NodeProxy
-from typegraph.graph.typegraph import find
-from typegraph.graph.typegraph import resolve_proxy
 from typegraph.graph.typegraph import TypegraphContext
-from typegraph.policies import Policy
+from typegraph.providers.prisma.relations import LinkItem
+from typegraph.providers.prisma.relations import Relation
 from typegraph.providers.prisma.schema import PrismaSchema
+from typegraph.providers.prisma.type_generator import TypeGenerator
+from typegraph.providers.prisma.utils import resolve_entity_quantifier
 from typegraph.runtimes.base import Effect
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
 from typegraph.utils.attrs import required
-from typegraph.utils.attrs import SKIP
-from typegraph.providers.prisma.relations import Relation, LinkItem, check_field
-from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
 
 def comp_exp(tpe):
@@ -178,6 +173,10 @@ class PrismaRuntime(Runtime):
         self.links[name].append(LinkItem(tpe=tpe, target_field=field))
         return tpe
 
+    @property
+    def typegen(self):
+        return TypeGenerator(models=self.managed_types, relations=self.relationships)
+
     def queryRaw(self, query: str, *, effect: Effect) -> t.func:
         return t.func(
             t.struct(
@@ -202,65 +201,79 @@ class PrismaRuntime(Runtime):
 
     def find_unique(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
+        typegen = self.typegen
         return t.func(
-            t.struct({"where": get_where_type(tpe).named(f"{tpe.name}WhereUnique")}),
-            get_out_type(tpe).named(f"{tpe.name}UniqueOutput").optional(),
+            t.struct(
+                {"where": typegen.get_where_type(tpe).named(f"{tpe.name}WhereUnique")}
+            ),
+            typegen.get_out_type(tpe).named(f"{tpe.name}UniqueOutput").optional(),
             PrismaOperationMat(self, tpe.name, "findUnique", effect=Effect.none()),
         )
 
     def find_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
+        typegen = self.typegen
         return t.func(
             t.struct(
-                {"where": get_where_type(tpe).named(f"{tpe.name}Where").optional()}
+                {
+                    "where": typegen.get_where_type(tpe)
+                    .named(f"{tpe.name}Where")
+                    .optional()
+                }
             ),
-            t.array(get_out_type(tpe).named(f"{tpe.name}Output")),
+            t.array(typegen.get_out_type(tpe).named(f"{tpe.name}Output")),
             PrismaOperationMat(self, tpe.name, "findMany", effect=Effect.none()),
         )
 
     def create(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
+        typegen = self.typegen
         return t.func(
             t.struct(
                 {
-                    "data": get_input_type(tpe).named(f"{tpe.name}CreateInput"),
+                    "data": typegen.get_input_type(tpe).named(f"{tpe.name}CreateInput"),
                 }
             ),
-            get_out_type(tpe).named(f"{tpe.name}CreateOutput"),
+            typegen.get_out_type(tpe).named(f"{tpe.name}CreateOutput"),
             PrismaOperationMat(self, tpe.name, "createOne", effect=Effect.create()),
         )
 
     def update(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
+        typegen = self.typegen
         return t.func(
             t.struct(
                 {
-                    "data": get_input_type(tpe, update=True).named(
+                    "data": typegen.get_input_type(tpe, update=True).named(
                         f"{tpe.name}UpdateInput"
                     ),
-                    "where": get_where_type(tpe).named(f"{tpe.name}UpdateOneWhere"),
+                    "where": typegen.get_where_type(tpe).named(
+                        f"{tpe.name}UpdateOneWhere"
+                    ),
                 }
             ),
-            get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
+            typegen.get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
             PrismaOperationMat(self, tpe.name, "updateOne", effect=Effect.update(True)),
         )
 
     def delete(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
+        typegen = self.typegen
         return t.func(
             t.struct(
-                {"where": get_where_type(tpe).named(f"{tpe.name}DeleteInput")},
+                {"where": typegen.get_where_type(tpe).named(f"{tpe.name}DeleteInput")},
             ),
-            get_out_type(tpe).named(f"{tpe.name}DeleteOutput"),
+            typegen.get_out_type(tpe).named(f"{tpe.name}DeleteOutput"),
             PrismaOperationMat(self, tpe.name, "deleteOne", effect=Effect.delete()),
         )
 
     def delete_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
+        typegen = self.typegen
         return t.func(
             t.struct(
                 {
-                    "where": get_where_type(tpe).named(
+                    "where": typegen.get_where_type(tpe).named(
                         f"{tpe.name}DeleteManyWhereInput"
                     ),
                 }
@@ -301,9 +314,9 @@ class PrismaRuntime(Runtime):
 
         self.managed_types[tpe.name] = tpe.within(self)
 
-        for rel_name, rel in self.__find_relations(tpe):
+        for rel_name, rel in self.__find_relations(tpe).items():
             self.relationships[rel_name] = rel
-            for typ in self.rel.types:
+            for typ in rel.types:
                 self.__manage(typ)
 
     # return the relations that involve the type
