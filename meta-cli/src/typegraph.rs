@@ -9,6 +9,7 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::process::Stdio;
 use walkdir::{DirEntry, WalkDir};
 
 use crate::config::Config;
@@ -58,7 +59,7 @@ impl<'a> TypegraphLoader<'a> {
         let path = path.as_ref().canonicalize()?;
         let ext = path.extension().and_then(|ext| ext.to_str());
 
-        let tgs = match ext {
+        let output = match ext {
             Some(ext) if ext == "py" => self
                 .load_python_module(&path)
                 .with_context(|| format!("Loading python module {:?}", path))?,
@@ -74,12 +75,18 @@ impl<'a> TypegraphLoader<'a> {
             }
         };
 
-        let tgs: Vec<Typegraph> = serde_json::from_str(&tgs)?;
-        Ok(Some(
-            tgs.into_iter()
-                .map(postprocess)
-                .collect::<Result<Vec<_>>>()?,
-        ))
+        if output.is_empty() {
+            // an importer have written in the file
+            Ok(None)
+        } else {
+            let tgs: Vec<Typegraph> =
+                serde_json::from_str(&output).context("Parsing serialized typegraph")?;
+            Ok(Some(
+                tgs.into_iter()
+                    .map(postprocess)
+                    .collect::<Result<Vec<_>>>()?,
+            ))
+        }
     }
 
     pub fn load_files(self, files: &[PathBuf]) -> LoaderResult {
@@ -179,6 +186,7 @@ impl<'a> TypegraphLoader<'a> {
                 "DONT_READ_EXTERNAL_TS_FILES",
                 if self.skip_deno_modules { "1" } else { "" },
             )
+            .stderr(Stdio::inherit())
             .output()
             .with_context(|| {
                 format!(

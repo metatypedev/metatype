@@ -52,6 +52,9 @@ pub struct Serialize {
 
     #[clap(skip)]
     writer: Writer,
+
+    #[clap(long, default_value_t = false)]
+    pretty: bool,
 }
 
 impl Action for Serialize {
@@ -81,21 +84,26 @@ impl Action for Serialize {
             .flatten()
             .collect();
 
+        if tgs.is_empty() {
+            eprintln!("No typegraph!");
+            return Ok(());
+        }
+
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
-                self.write(&serde_json::to_string(&tg)?)?;
+                self.write(&self.to_string(&tg)?)?;
             } else {
                 bail!("typegraph \"{}\" not found", tg_name);
             }
         } else if self.unique {
             if tgs.len() == 1 {
-                self.write(&serde_json::to_string(&tgs[0])?)?;
+                self.write(&self.to_string(&tgs[0])?)?;
             } else {
-                eprint!("expected only one typegraph, got {}", tgs.len());
+                eprintln!("expected only one typegraph, got {}", tgs.len());
                 std::process::exit(1);
             }
         } else {
-            self.write(&serde_json::to_string(&tgs)?)?;
+            self.write(&self.to_string(&tgs)?)?;
         }
 
         self.write("\n")?;
@@ -122,6 +130,14 @@ impl Serialize {
                 self.writer.set(Some(Box::new(io::stdout())));
             }
             self.write(contents)
+        }
+    }
+
+    fn to_string<T: serde::Serialize>(&self, val: &T) -> serde_json::Result<String> {
+        if self.pretty {
+            serde_json::to_string_pretty(val)
+        } else {
+            serde_json::to_string(val)
         }
     }
 }

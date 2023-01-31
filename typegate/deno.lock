@@ -249,6 +249,8 @@
     "https://deno.land/std@0.170.0/path/separator.ts": "fe1816cb765a8068afb3e8f13ad272351c85cbc739af56dacfc7d93d710fe0f9",
     "https://deno.land/std@0.170.0/path/win32.ts": "7cebd2bda6657371adc00061a1d23fdd87bcdf64b4843bb148b0b24c11b40f69",
     "https://deno.land/std@0.170.0/semver/mod.ts": "7bff23d6165f0f3d3ea9a165afdb3e0c761acb335012f050ab21575c84828b76",
+    "https://deno.land/std@0.170.0/streams/_common.ts": "a931bdab61de705bbfeda25d7bcf8e6edbba37492f90737b3c2889604313df46",
+    "https://deno.land/std@0.170.0/streams/copy.ts": "9a972a4befee3306095e9bb058a5a4d73b681df6ca088d7209f9a0736271aadc",
     "https://deno.land/std@0.170.0/testing/_diff.ts": "a23e7fc2b4d8daa3e158fa06856bedf5334ce2a2831e8bf9e509717f455adb2c",
     "https://deno.land/std@0.170.0/testing/_format.ts": "cd11136e1797791045e639e9f0f4640d5b4166148796cad37e6ef75f7d7f3832",
     "https://deno.land/std@0.170.0/testing/asserts.ts": "51353e79437361d4b02d8e32f3fc83b22231bc8f8d4c841d86fd32b0b0afe940",

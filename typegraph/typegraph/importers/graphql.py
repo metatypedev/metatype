@@ -1,171 +1,135 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import inspect
-import itertools
-from typing import Dict
+import json
+from typing import Literal
+from typing import Optional
 
-import black
 from box import Box
 from gql import Client
 from gql import gql
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import get_introspection_query
-from redbaron import RedBaron
+from typegraph import t
+from typegraph.importers.base.importer import Importer
+from typegraph.importers.base.typify import TypifyMat
 
 
-def struct_field(name, type):
-    return f'"{name}": {typify(type, True, object_as_ref=True)},'
+# map type kind to type key of fields
+OBJECT_TYPES = {
+    "OBJECT": "fields",
+    "INTERFACE": "fields",
+    "INPUT_OBJECT": "inputFields",
+}
 
-
-def gen_functions(queries, mutations) -> Dict[str, str]:
-    fns = {}
-
-    for field in itertools.chain(
-        queries.fields if queries else [], mutations.fields if mutations else []
-    ):
-        inp = "t.struct({"
-        for arg in field.args or []:
-            # ?? INPUT_OBJECT
-            inp += struct_field(arg.name, arg.type)
-        inp += "})"
-        out = typify(field.type, True, object_as_ref=True)
-        fns[field.name] = f"remote.query({inp}, {out})"
-
-    return fns
-
-
-SCALAR_TYPE_MAP = {
-    "Int": "t.integer()",
-    "Long": "t.integer()",
-    "Float": "t.number()",
-    "String": "t.string()",
-    "Boolean": "t.boolean()",
-    "ID": "t.string()",
-    "Char": "t.string()",
+SCALAR_TYPES = {
+    "Int": lambda: t.integer(),
+    "Long": lambda: t.integer(),
+    "Float": lambda: t.number(),
+    "String": lambda: t.string(),
+    "Boolean": lambda: t.boolean(),
+    "ID": lambda: t.string(),
+    "Char": lambda: t.string(),
 }
 
 
-def typify(tpe: Box, opt: bool = True, name=None, object_as_ref=False):
-    # A type is nullable by default, unless it is wrapped in a "NON_NULL".
+class GraphQLImporter(Importer):
+    intros: Box
 
-    if tpe.kind == "NON_NULL":
-        return typify(tpe.ofType, False, name, object_as_ref)
+    def __init__(self, name: str, url: str, *, file: Optional[str] = None):
+        super().__init__(name)
+        self.imports.add(("typegraph.runtimes.graphql", "GraphQLRuntime"))
+        self.headers.append(f"{name}=GraphQLRuntime('{url}')")
 
-    if opt:
-        return f"t.optional({typify(tpe, False, name, object_as_ref)})"
+        if file is None:
+            transport = RequestsHTTPTransport(url=url, verify=True)
+            client = Client(transport=transport, fetch_schema_from_transport=True)
+            query = gql(get_introspection_query())
+            schema = client.execute(query)
+            self.intros = Box(schema)
+        else:
+            with open(file) as f:
+                self.intros = Box(json.loads(f.read()))
 
-    if object_as_ref and (tpe.kind == "OBJECT" or tpe.kind == "INPUT_OBJECT"):
-        return f'g("{tpe.name}")'
+    def generate(self):
+        schema = self.intros["__schema"]
+        queryType = schema.queryType.name if schema.queryType is not None else None
+        mutationType = (
+            schema.mutationType.name if schema.mutationType is not None else None
+        )
 
-    if name is not None:
-        return f'{typify(tpe, opt)}.named("{name}")'
+        queries, mutations = None, None
 
-    if tpe.kind == "SCALAR":
-        if tpe.name in SCALAR_TYPE_MAP:
-            return SCALAR_TYPE_MAP[tpe.name]
-        raise Exception(f"Unsupported scalar type {tpe.name}")
+        for tpe in schema.types:
+            if tpe.kind == "SCALAR" or tpe.name.startswith("__"):
+                continue
+            if tpe.name == queryType:
+                queries = tpe
+                continue
+            if tpe.name == mutationType:
+                mutations = tpe
+                continue
+            self.add_type_from_node(tpe)
 
-    if tpe.kind == "ENUM":
-        return "t.string()"
+        def expose(f, method: Literal["query", "mutation"]):
+            with self:
+                self.expose(
+                    f.name,
+                    t.func(
+                        t.struct(
+                            {
+                                arg.name: self.type_from_node(arg.type)
+                                for arg in f.args or []
+                            }
+                        ),
+                        self.type_from_node(f.type),
+                        TypifyMat(
+                            lambda inp, out: f"{self.name}.{method}({inp}, {out})"
+                        ),
+                    ),
+                )
 
-    if tpe.kind == "LIST":
-        return f"t.array({typify(tpe.ofType, False, object_as_ref=True)})"
+        for q in queries.fields if queries is not None else []:
+            expose(q, "query")
+        for m in mutations.fields if mutations is not None else []:
+            expose(m, "mutation")
 
-    if tpe.kind == "UNION":
-        return f't.union([{", ".join(map(lambda variant: typify(variant, False, object_as_ref=True), tpe.possibleTypes))}])'
+    def add_type_from_node(self, node: Box):
+        with self as imp:
+            imp(node.name, self.non_optional_type_from_node(node))
 
-    if tpe.kind == "OBJECT" or tpe.kind == "INTERFACE":
-        cg = "t.struct({"
-        for field in tpe.fields:
-            cg += struct_field(field.name, field.type)
-        cg += "})"
-        return cg
+    def non_optional_type_from_node(self, node: Box):
+        if node.kind == "SCALAR":
+            return self.scalar_type(node.name)
 
-    if tpe.kind == "INPUT_OBJECT":
-        cg = "t.struct({"
-        for field in tpe.inputFields:
-            cg += struct_field(field.name, field.type)
-        cg += "})"
-        return cg
+        if node.kind == "ENUM":
+            if not hasattr(node, "enumValues"):
+                return t.proxy(node.name)
+            return t.string().enum([val.name for val in node.enumValues])
 
-    raise Exception(f"Unsupported type kind {tpe.kind}")
+        if node.kind == "LIST":
+            return t.array(self.type_from_node(node.ofType))
 
+        if node.kind == "UNION":
+            return t.union([self.type_from_node(t) for t in node.possibleTypes])
 
-def codegen(intros: Box):
-    schema = intros.__schema
+        if node.kind in OBJECT_TYPES:
+            if not hasattr(node, OBJECT_TYPES[node.kind]):
+                return t.proxy(node.name)
 
-    cg = ""
+            return t.struct(
+                {
+                    field.name: self.type_from_node(field.type)
+                    for field in node[OBJECT_TYPES[node.kind]]
+                }
+            )
 
-    queryType = schema.queryType.name if schema.queryType is not None else None
-    mutationType = schema.mutationType.name if schema.mutationType is not None else None
+        raise Exception(f"Unsupported type kind {node.kind}")
 
-    queries, mutations = None, None
+    def type_from_node(self, node: Box) -> t.typedef:
+        if node.kind == "NON_NULL":
+            return self.non_optional_type_from_node(node.ofType)
+        else:
+            return t.optional(self.non_optional_type_from_node(node))
 
-    for tpe in schema.types:
-        if tpe.kind == "SCALAR" or tpe.name.startswith("__"):
-            continue
-        if tpe.name == queryType:
-            queries = tpe
-            continue
-        if tpe.name == mutationType:
-            mutations = tpe
-            continue
-        cg += f"    {typify(tpe, False, name=tpe.name)} # kind: {tpe.kind}\n"
-
-    cg += f"    g.expose({as_kwargs(gen_functions(queries, mutations))})\n"
-
-    # View of the introspection data
-    # cg += f"    schema = {schema}\n"
-    return cg
-
-
-def as_kwargs(kwargs: Dict[str, str]):
-    cg = ""
-    for key, val in kwargs.items():
-        cg += f"{key}={val},"
-    return cg
-
-
-def import_graphql(uri: str, gen: bool):
-    if not gen:
-        return
-
-    file = inspect.stack()[1].filename
-
-    with open(file) as f:
-        code = RedBaron(f.read())
-
-    imports = [
-        ["typegraph.runtimes.graphql", "GraphQLRuntime"],
-        ["typegraph", "t"],
-        ["typegraph", "TypeGraph"],
-    ]
-
-    importer = code.find(
-        "atomtrailers", value=lambda x: x.find("name", value="import_graphql")
-    ).find("name", value="True")
-    if importer:
-        importer.value = "False"
-
-    for frm, imp in imports:
-        if not code.find(
-            "from_import",
-            value=lambda x: x.dumps() == frm,
-            targets=lambda x: x.dumps() == imp,
-        ):
-            code.insert(0, f"from {frm} import {imp}\n")
-
-    transport = RequestsHTTPTransport(url=uri, verify=True)
-    client = Client(transport=transport, fetch_schema_from_transport=True)
-
-    query = gql(get_introspection_query())
-
-    schema = client.execute(query)
-
-    wth = code.find("with")
-    wth.value = f'    remote=GraphQLRuntime("{uri}")\n' + codegen(Box(schema))
-
-    new_code = black.format_str(code.dumps(), mode=black.FileMode())
-
-    with open(file, "w") as f:
-        f.write(new_code)
+    def scalar_type(self, name: str) -> t.typedef:
+        return SCALAR_TYPES[name]()
