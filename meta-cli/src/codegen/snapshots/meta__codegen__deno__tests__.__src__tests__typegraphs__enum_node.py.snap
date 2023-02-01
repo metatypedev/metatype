@@ -1,6 +1,5 @@
 ---
 source: meta-cli/src/codegen/deno.rs
-assertion_line: 490
 expression: "&module_codes[0].code"
 ---
 interface Get_rgbInput {
