@@ -67,7 +67,7 @@ impl BasicAuth {
         Ok(Self { username, password })
     }
 
-    pub fn as_user(username: String) -> Result<Self> {
+    pub fn prompt_as_user(username: String) -> Result<Self> {
         let password = Password::new()
             .with_prompt(format!("Password for user {username}"))
             .interact()?;

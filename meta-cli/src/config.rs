@@ -85,7 +85,7 @@ impl NodeConfig {
 
         match (username, password) {
             (Some(username), Some(password)) => Ok(BasicAuth::new(username, password)),
-            (Some(username), None) => BasicAuth::as_user(username),
+            (Some(username), None) => BasicAuth::prompt_as_user(username),
             (None, _) => BasicAuth::prompt(),
         }
     }
