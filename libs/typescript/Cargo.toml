@@ -16,5 +16,5 @@ swc_ecmascript = { version = "0.205.47", features = [
 ] }
 swc_ecma_transforms = { version = "0.198.26", features = ["typescript"] }
 string_cache = "0.8.4"
-dprint-plugin-typescript = "0.80.2"
+dprint-plugin-typescript = "0.81.1"
 lazy_static = "1.4.0"
