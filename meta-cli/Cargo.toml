@@ -44,7 +44,7 @@ tiny_http = "0.12.0"
 ignore = "0.4.20"
 globset = "0.4.10"
 anyhow = "1.0.68"
-indoc = "1.0.8"
+indoc = "2.0.0"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = { version = "1.0.91", features = ["preserve_order"] }
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
