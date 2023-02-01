@@ -7,6 +7,7 @@ env:
   PNPM_VERSION: "7.9.3"
   NODE_VERSION: "18.12.1"
   PYTHON_VERSION: "3.8"
+  TG_URL: https://cloud.metatype.dev
 
 jobs:
   changes:
@@ -46,13 +47,13 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - name: Install and deploy
+      - name: Install and build
         working-directory: website
-        env:
-          TG_URL: https://cloud.metatype.dev
         run: |
           pnpm install --frozen-lockfile
           pnpm build
+      - name: Deploy typegraph
+        run: |
           python3 -m venv .venv
           source .venv/bin/activate
           pip3 install ./typegraph
