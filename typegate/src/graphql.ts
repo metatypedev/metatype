@@ -2,7 +2,8 @@
 
 import * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { forceAnyToMaybe, forceMaybeToValue, Maybe } from "./utils.ts";
+import { None, Some } from "monads";
+import { forceMaybeToValue, Maybe } from "./utils.ts";
 
 export type FragmentDefs = Record<string, ast.FragmentDefinitionNode>;
 
@@ -10,25 +11,25 @@ export const findOperation = (
   document: ast.DocumentNode,
   operationName: Maybe<string>,
 ): [Maybe<ast.OperationDefinitionNode>, FragmentDefs] => {
-  let def = null;
-  let lastDef = null;
+  let def: Maybe<ast.OperationDefinitionNode> = None;
+  let lastDef: Maybe<ast.OperationDefinitionNode> = None;
   const fragments: FragmentDefs = {};
   for (const definition of document.definitions) {
     switch (definition.kind) {
       case Kind.OPERATION_DEFINITION:
-        lastDef = definition;
+        lastDef = Some(definition);
         if (
           definition.name?.value === forceMaybeToValue(operationName) &&
           (definition.operation == "query" ||
             definition.operation == "mutation")
         ) {
-          if (def !== null) {
+          if (def.isSome()) {
             throw Error(
               `multiple definition of same operation ${operationName}`,
             );
           }
 
-          def = definition;
+          def = Some(definition);
         }
         break;
       case Kind.FRAGMENT_DEFINITION:
@@ -37,11 +38,11 @@ export const findOperation = (
       default:
     }
   }
-  if (!operationName && lastDef) {
+  if (operationName.isNone() && lastDef.isSome()) {
     def = lastDef;
   }
 
-  return [forceAnyToMaybe(def), fragments];
+  return [def, fragments];
 };
 
 export const resolveSelection = (
