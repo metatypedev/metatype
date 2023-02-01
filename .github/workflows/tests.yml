@@ -306,7 +306,7 @@ jobs:
           username: zifeo
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build with cache (internal)
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         if: steps.check.outputs.has-permission
         with:
           file: dev/Dockerfile
@@ -315,7 +315,7 @@ jobs:
           cache-from: type=registry,ref=docker.io/zifeo/metatype-cache:ci
           cache-to: type=registry,ref=docker.io/zifeo/metatype-cache:ci,mode=max
       - name: Build without cache (external)
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         if: "! steps.check.outputs.has-permission"
         with:
           file: dev/Dockerfile

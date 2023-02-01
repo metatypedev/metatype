@@ -857,6 +857,7 @@
       "type": "object",
       "required": [
         "data",
+        "effect",
         "name",
         "runtime"
       ],
@@ -869,11 +870,44 @@
           "format": "uint32",
           "minimum": 0.0
         },
+        "effect": {
+          "$ref": "#/definitions/Effect"
+        },
         "data": {
           "type": "object",
           "additionalProperties": true
         }
       }
+    },
+    "Effect": {
+      "type": "object",
+      "required": [
+        "idempotent"
+      ],
+      "properties": {
+        "effect": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EffectType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "idempotent": {
+          "type": "boolean"
+        }
+      }
+    },
+    "EffectType": {
+      "type": "string",
+      "enum": [
+        "create",
+        "update",
+        "upsert",
+        "delete"
+      ]
     },
     "TGRuntime": {
       "type": "object",

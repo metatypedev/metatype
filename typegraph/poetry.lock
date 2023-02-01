@@ -99,7 +99,7 @@ rply = "*"
 name = "black"
 version = "22.12.0"
 description = "The uncompromising code formatter."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -245,7 +245,7 @@ files = [
 name = "click"
 version = "8.1.3"
 description = "Composable command line interface toolkit"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -260,7 +260,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 name = "colorama"
 version = "0.4.6"
 description = "Cross-platform colored terminal text."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 files = [
@@ -812,7 +812,7 @@ files = [
 name = "mypy-extensions"
 version = "0.4.3"
 description = "Experimental type system extensions for programs checked with the mypy typechecker."
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 files = [
@@ -867,7 +867,7 @@ files = [
 name = "pathspec"
 version = "0.11.0"
 description = "Utility library for gitignore style pattern matching of file paths."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -879,7 +879,7 @@ files = [
 name = "platformdirs"
 version = "2.6.2"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1007,6 +1007,21 @@ tomli = {version = ">=1.0.0", markers = "python_version < \"3.11\""}
 
 [package.extras]
 testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.7.2)", "requests", "xmlschema"]
+
+[[package]]
+name = "pytest-snapshot"
+version = "0.9.0"
+description = "A plugin for snapshot testing with pytest."
+category = "dev"
+optional = false
+python-versions = ">=3.5"
+files = [
+    {file = "pytest-snapshot-0.9.0.tar.gz", hash = "sha256:c7013c3abc3e860f9feff899f8b4debe3708650d8d8242a61bf2625ff64db7f3"},
+    {file = "pytest_snapshot-0.9.0-py3-none-any.whl", hash = "sha256:4b9fe1c21c868fe53a545e4e3184d36bc1c88946e3f5c1d9dd676962a9b3d4ab"},
+]
+
+[package.dependencies]
+pytest = ">=3.0.0"
 
 [[package]]
 name = "python-box"
@@ -1231,10 +1246,27 @@ files = [
 ]
 
 [[package]]
+name = "strenum"
+version = "0.4.9"
+description = "An Enum that inherits from str."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "StrEnum-0.4.9-py3-none-any.whl", hash = "sha256:c3df653030837b8077b2eb929738283481f01b07c7ef73ab4db368449830cc46"},
+    {file = "StrEnum-0.4.9.tar.gz", hash = "sha256:1b15ccff9eb0e22e77b8f874366ea752754280adc9144e6e388705d14cc350e7"},
+]
+
+[package.extras]
+docs = ["myst-parser[linkify]", "sphinx", "sphinx-rtd-theme"]
+release = ["twine"]
+test = ["pylint", "pytest", "pytest-black", "pytest-cov", "pytest-pylint"]
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
@@ -1516,4 +1548,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "123f21a975be4328d7b03fb027975cdb4f67e5edd3a839f084b3090ef2ad91eb"
+content-hash = "63f53e93f0830b5f22ff9ab0726dbefd7ac58c0ad5495f45632d186bcac3e922"

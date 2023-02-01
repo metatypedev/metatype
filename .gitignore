@@ -19,6 +19,7 @@ target
 typegate/workers
 typegate/codegen
 typegate/tests/prisma-migrations
+typegate/tests/importers/copy/
 .env
 typegate/native/bindings.json
 bindings

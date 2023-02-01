@@ -2,7 +2,7 @@ from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.graph.models import Auth
-from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
     """
@@ -10,11 +10,11 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
     no matter what the context is (see policies_test.ts)
     for that reason the input has to be sanitized with sanitizers.sanitize_ts_string(.)
     """
-    some_policy = policies.jwt('"] || true || ["')
+    some_policy = policies.jwt('"; return true; "')
     g.expose(
         sayHelloWorld=t.func(
             t.struct(),
             t.string(),
-            FunMat("""() => "Hello World!" """),
+            PureFunMat("""() => "Hello World!" """),
         ).add_policy(some_policy),
     )

@@ -11,7 +11,8 @@ meta:
 examples:
     watch:
         - "examples/metatype.yaml"
-    command: "cargo run -p meta-cli -- -C examples dev"
+        - "typegraph/typegraph/**/*.py"
+    command: "cargo run --color always -p meta-cli -- -C examples dev"
     env:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH
@@ -19,7 +20,9 @@ examples:
         - meta
 
 system_graphs:
-    watch: typegate/src/typegraphs/*.py
+    watch:
+        - typegate/src/typegraphs/*.py
+        - typegraph/**/*.py
     command: "deno run -A dev/serialize.ts"
     depends_on:
         - meta
