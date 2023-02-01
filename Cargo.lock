@@ -531,7 +531,7 @@ dependencies = [
  "connection-string",
  "either",
  "enumflags2",
- "indoc",
+ "indoc 1.0.9",
  "lsp-types",
  "once_cell",
  "psl-core",
@@ -1219,7 +1219,7 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines#fb90d778e372d29967a8243be3bc4e91b81f06fd"
 dependencies = [
  "colored",
- "indoc",
+ "indoc 1.0.9",
  "pest",
 ]
 
@@ -1290,7 +1290,7 @@ dependencies = [
  "cuid",
  "either",
  "enumflags2",
- "indoc",
+ "indoc 1.0.9",
  "nanoid",
  "prisma-value",
  "psl-core",
@@ -2250,9 +2250,15 @@ dependencies = [
 
 [[package]]
 name = "indoc"
-version = "1.0.8"
+version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da2d6f23ffea9d7e76c53eee25dfb67bcd8fde7f1198b0855350698c9f07c780"
+checksum = "bfa799dd5ed20a7e349f3b4639aa80d74549c81716d9ec4f994c9b5815598306"
+
+[[package]]
+name = "indoc"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fe2b9d82064e8a0226fddb3547f37f28eaa46d0fc210e275d835f08cf3b76a7"
 
 [[package]]
 name = "inotify"
@@ -2827,7 +2833,7 @@ dependencies = [
  "globset",
  "ignore",
  "indexmap",
- "indoc",
+ "indoc 2.0.0",
  "insta",
  "lazy_static",
  "log",
@@ -3134,7 +3140,7 @@ dependencies = [
  "datamodel-renderer",
  "enumflags2",
  "futures",
- "indoc",
+ "indoc 1.0.9",
  "introspection-connector",
  "mongodb",
  "mongodb-client",
@@ -4314,7 +4320,7 @@ dependencies = [
  "chrono",
  "diagnostics",
  "enumflags2",
- "indoc",
+ "indoc 1.0.9",
  "itertools",
  "lsp-types",
  "once_cell",
@@ -5692,7 +5698,7 @@ dependencies = [
  "connection-string",
  "either",
  "enumflags2",
- "indoc",
+ "indoc 1.0.9",
  "migration-connector",
  "once_cell",
  "psl",
@@ -5750,7 +5756,7 @@ dependencies = [
  "bigdecimal",
  "enumflags2",
  "indexmap",
- "indoc",
+ "indoc 1.0.9",
  "once_cell",
  "psl",
  "quaint",
@@ -7499,7 +7505,7 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines#fb90d778e372d29967a8243be3bc4e91b81f06fd"
 dependencies = [
  "backtrace",
- "indoc",
+ "indoc 1.0.9",
  "quaint",
  "serde",
  "serde_json",
