@@ -945,14 +945,14 @@ watchdog = "*"
 yapf = ">=0.30.0"
 
 [package.extras]
-docs = []
-novella = []
+docs = ["mkdocs (>=1.4.2,<2.0.0)", "mkdocs-material (>=9.0.8,<10.0.0)", "novella (>=0.1.10,<0.3.0)"]
+novella = ["novella (>=0.1.10,<0.3.0)"]
 
 [package.source]
 type = "git"
-url = "https://github.com/msga-mmm/pydoc-markdown-fork"
-reference = "feat/no-ref/upgrade-minimum-python-supported-version"
-resolved_reference = "216613fe197e29320b7d62d71bfc2432fd61812b"
+url = "https://github.com/metatypedev/pydoc-markdown"
+reference = "develop"
+resolved_reference = "994c941a41cdd5fe747801f0b4cf18f490fcd23a"
 
 [[package]]
 name = "pydocstyle"
@@ -1516,4 +1516,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "4a2224e387d374df8606535d2ebeaacccb4a178e6e5620bfe2fdf3e86ec99abc"
+content-hash = "123f21a975be4328d7b03fb027975cdb4f67e5edd3a839f084b3090ef2ad91eb"
