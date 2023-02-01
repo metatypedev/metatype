@@ -417,12 +417,19 @@ impl<'a> Codegen<'a> {
             TypeNode::Array { items, .. } => Ok(format!("Array<{}>", self.get_typespec(*items)?)),
             TypeNode::Boolean { .. } => Ok("boolean".to_owned()),
             TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
-            TypeNode::String { enumeration, .. } => {
-                if let Some(variants) = enumeration {
+            TypeNode::String { base, .. } => {
+                if let Some(variants) = &base.enumeration {
                     let variants: Vec<String> = variants
                         .iter()
-                        .map(|variant| format!("\"{variant}\""))
+                        .map(|variant| {
+                            let variant = variant
+                                .as_str()
+                                .expect("each variant of a string enum should be a string");
+
+                            format!("\"{variant}\"")
+                        })
                         .collect();
+
                     let enum_definition = variants.join(" | ");
                     Ok(enum_definition)
                 } else {

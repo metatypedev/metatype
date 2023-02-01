@@ -82,8 +82,8 @@ pub struct TypeNodeBase {
     pub injection: Option<String>,
     #[serde(default, skip_serializing_if = "serde_json::Value::is_null")]
     pub inject: Value,
-    #[serde(default, rename = "enum")]
-    pub enum_: Option<Vec<Value>>,
+    #[serde(default, rename = "_enum")]
+    pub enumeration: Option<Vec<Value>>,
     #[serde(default)]
     pub config: IndexMap<String, serde_json::Value>,
 }
@@ -132,8 +132,6 @@ pub enum TypeNode {
         max_length: Option<i64>,
         pattern: Option<String>,
         format: Option<String>,
-        #[serde(rename = "_enum")]
-        enumeration: Option<Vec<String>>,
     },
     Object {
         #[serde(flatten)]
