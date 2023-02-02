@@ -5,7 +5,8 @@ from typegraph.runtimes.random import RandomMat
 from typegraph.runtimes.random import RandomRuntime
 
 with TypeGraph(name="random") as g:
-    runtime = RandomRuntime(seed=1)
+    runtime_1 = RandomRuntime(seed=1)
+    runtime_2 = RandomRuntime(seed=1)
 
     rec = t.struct(
         {
@@ -32,9 +33,18 @@ with TypeGraph(name="random") as g:
         }
     ).named("User")
 
+    list = t.struct(
+        {
+            "array_of_array_of_names": t.array(t.array(t.string().config(gen="name"))),
+        }
+    ).named("RandomList")
+
     public = policies.public()
 
     g.expose(
-        randomRec=t.gen(rec, RandomMat(runtime=runtime)).add_policy(public),
-        randomUser=t.gen(g("User"), RandomMat(runtime=runtime)).add_policy(public),
+        randomRec=t.gen(rec, RandomMat(runtime=runtime_1)).add_policy(public),
+        randomUser=t.gen(g("User"), RandomMat(runtime=runtime_1)).add_policy(public),
+        randomList=t.gen(g("RandomList"), RandomMat(runtime=runtime_2)).add_policy(
+            public
+        ),
     )
