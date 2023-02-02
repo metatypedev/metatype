@@ -31,11 +31,11 @@ export class RandomRuntime extends Runtime {
     return runtime;
   }
 
-  setTgTypes(tg_types: TypeNode[]) {
+  private setTgTypes(tg_types: TypeNode[]) {
     this._tgTypes = tg_types;
   }
 
-  getTgTypeNameByIndex(index: number) {
+  private getTgTypeNameByIndex(index: number) {
     return this._tgTypes[index];
   }
 
