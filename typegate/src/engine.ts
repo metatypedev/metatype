@@ -8,7 +8,7 @@ import {
   TypeGraphDS,
   typegraphVersion,
 } from "./typegraph.ts";
-import { ensure, JSONValue, mapo, Maybe } from "./utils.ts";
+import { ensure, JSONValue, Maybe } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
@@ -31,6 +31,7 @@ import { Planner } from "./planner/mod.ts";
 import { FromVars } from "./runtimes/graphql.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
+import { mapValues } from "collections";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -312,7 +313,7 @@ export class Engine {
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...mapo(args, (e) => e(variables, parent, context)),
+            ...mapValues(args, (e: any) => e(variables, parent, context)),
             _: {
               parent: parent ?? {},
               context,

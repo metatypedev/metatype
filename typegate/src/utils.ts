@@ -40,16 +40,6 @@ export const collectFields = (
 
 export const b = (value: any): string => JSON.stringify(value, null, 2);
 
-// FIXME remplace all instance
-export const mapo = <V1, V2>(
-  vs: Record<string, V1>,
-  map: (e: V1) => V2,
-): Record<string, V2> =>
-  Object.entries(vs).reduce((agg, [key, value]) => {
-    agg[key] = map(value);
-    return agg;
-  }, {} as Record<string, V2>);
-
 export const unparse = (loc: ast.Location): string => {
   return loc.source.body.slice(loc.start, loc.end);
 };
