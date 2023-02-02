@@ -59,16 +59,6 @@ export function iterParentStages(
   }
 }
 
-export function unzip<A, B>(arrays: ([A, B])[]): [A[], B[]] {
-  const as: A[] = [];
-  const bs: B[] = [];
-  arrays.forEach(([a, b]) => {
-    as.push(a);
-    bs.push(b);
-  });
-  return [as, bs];
-}
-
 export function envOrFail(typegraph: string, name: string): string {
   const envName = `TG_${typegraph}_${name}`.toUpperCase();
   const value = Deno.env.get(envName);
