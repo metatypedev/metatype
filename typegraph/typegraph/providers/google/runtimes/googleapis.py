@@ -2,7 +2,7 @@
 
 from attrs import field
 from attrs import frozen
-from typegraph import Effect
+from typegraph.effects import Effect
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always

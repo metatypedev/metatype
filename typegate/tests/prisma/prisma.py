@@ -1,4 +1,4 @@
-from typegraph import Effect
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
@@ -28,15 +28,33 @@ with TypeGraph("prisma") as g:
         }
     ).named("messages")
 
-    users = (
-        t.struct(
+    users = t.struct(
+        {
+            "id": t.integer().config("id", "auto"),
+            "email": t.string(),
+            "name": t.string(),
+            # "favoriteMessage": db.link(messages),
+            "messages": db.link(t.array(g("messages")), "messageSender"),
+        }
+    ).named("users")
+
+    db.manage(users)
+
+    g.expose(
+        dropSchema=db.executeRaw(
+            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
+        ).add_policy(public),
+        **db.gen(
             {
-                "id": t.integer().config("id", "auto"),
-                "email": t.string(),
-                "name": t.string(),
-                # "favoriteMessage": db.link(messages),
-                # "messages": t.array(g("messages")).config(rel="messageSender"),
-                "messages": db.link(t.array(g("messages")), "messageSender"),
+                "findManyRecords": (record, "findMany", public),
+                "createOneRecord": (record, "create", public),
+                "deleteOneRecord": (record, "delete", public),
+                "updateOneRecord": (record, "update", public),
+                "createUser": (users, "create", public),
+                "findUniqueUser": (users, "findUnique", public),
+                "findMessages": (messages, "findMany", public),
+                "updateUser": (users, "update", public),
+                "deleteMessages": (messages, "deleteMany", public),
             }
         )
         .config(rel={"messageSender": "messages"})
@@ -45,7 +63,7 @@ with TypeGraph("prisma") as g:
 
     g.expose(
         dropSchema=db.executeRaw(
-            "DROP SCHEMA IF EXISTS test CASCADE", effect=Effect.delete()
+            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
         findManyRecords=db.find_many(record).add_policy(public),
         createoneRecord=db.create(record).add_policy(public),

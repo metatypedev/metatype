@@ -35,16 +35,16 @@ swc = "0.232.52"
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines" }
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
-tokio = { version = "1.24.2", features = ["full"] }
+tokio = { version = "1.25.0", features = ["full"] }
 log = "0.4.17"
 clap = { version = "4.1.4", features = ["derive"] }
 crossbeam-channel = "0.5.6"
-notify = "5.0.0"
+notify = "5.1.0"
 tiny_http = "0.12.0"
 ignore = "0.4.20"
 globset = "0.4.10"
 anyhow = "1.0.68"
-indoc = "1.0.8"
+indoc = "2.0.0"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = { version = "1.0.91", features = ["preserve_order"] }
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }

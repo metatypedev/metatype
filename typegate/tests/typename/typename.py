@@ -1,4 +1,4 @@
-from typegraph import Effect
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
@@ -14,7 +14,7 @@ with TypeGraph("prisma") as g:
     userModelPrisma = t.struct({"id": t.integer().config("id")}).named("userprisma")
 
     prismaRuntimePostgres = PrismaRuntime("prisma", "POSTGRES")
-    prismaRuntimePostgres.__manage(userModelPrisma)
+    prismaRuntimePostgres.manage(userModelPrisma)
 
     randomRuntimeSeeded = RandomRuntime(seed=1)
     randomUser = t.gen(g("user"), RandomMat(runtime=randomRuntimeSeeded)).add_policy(
@@ -31,7 +31,7 @@ with TypeGraph("prisma") as g:
         denoUser=denoUser,
         randomUser=randomUser,
         dropSchema=prismaRuntimePostgres.executeRaw(
-            "DROP SCHEMA IF EXISTS test CASCADE", effect=Effect.delete()
+            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
         **prismaRuntimePostgres.gen(
             {

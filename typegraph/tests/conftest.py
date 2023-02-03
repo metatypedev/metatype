@@ -34,7 +34,7 @@ class OverrideWrapper:
             "atomtrailers", lambda n: n.value[0].value == "overridable"
         )[self.id]
         override = override_tag.find("call_argument")
-        override.value = f"{new_value}"
+        override.value = f"{repr(new_value)}"
 
         new_code = black.format_str(code.dumps(), mode=black.FileMode())
 

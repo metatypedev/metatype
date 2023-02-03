@@ -2,6 +2,7 @@
 
 import inspect
 from pathlib import Path
+import sys
 from typing import Callable
 from typing import Dict
 from typing import List
@@ -9,7 +10,6 @@ from typing import Optional
 from typing import Set
 from typing import TYPE_CHECKING
 from typing import Union
-import sys
 
 from typegraph.graph.builder import Collector
 from typegraph.graph.models import Auth
@@ -140,6 +140,9 @@ class TypeGraph:
         return collector
 
     def build(self):
+        if self.name.startswith("__"):
+            raise Exception(f"cannot build typegraph with reserved name '{self.name}'")
+
         collector = self.collect_nodes()
 
         ret = {
@@ -175,7 +178,7 @@ class TypegraphContext:
             return None
 
     @classmethod
-    def get_active(cls) -> TypeGraph:
+    def get_active(cls) -> Optional[TypeGraph]:
         try:
             return cls.typegraphs[-1]
         except IndexError:

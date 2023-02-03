@@ -151,7 +151,6 @@ class typedef(Node):
         types = self.graph.type_by_names
         # TODO compare types
         if name in types:
-            by = types[name]
             raise Exception(f"type name {name} already used")
         if name in reserved_types:
             raise Exception(f"type name {name} is a reserved type")
@@ -346,7 +345,13 @@ def with_constraints(cls):
                 {key: getattr(self, name) for key, name in constraints.items()}
             )
 
+        def _constraints(self):
+            return remove_none_values(
+                {name[1:]: getattr(self, name) for name in constraints.values()}
+            )
+
         setattr(cls, "constraint_data", constraint_data)
+        setattr(cls, "_constraints", _constraints)
 
     return cls
 
@@ -483,7 +488,9 @@ def enum(variants: List[str]) -> string:
 def validate_struct_props(instance, attribute, props):
     for tpe in props.values():
         if not isinstance(tpe, typedef) and not isinstance(tpe, NodeProxy):
-            raise Exception(f"expected typedef or NodeProxy, got {type(tpe).__name__}")
+            raise Exception(
+                f"expected typedef or NodeProxy, got {type(tpe).__name__}: {props}"
+            )
 
 
 @with_constraints
@@ -668,6 +675,10 @@ def named(name: str, define: Callable[[], typedef]) -> TypeNode:
         return defined
     else:
         return define().named(name)
+
+
+def proxy(name: str) -> NodeProxy:
+    return NodeProxy(TypegraphContext.get_active(), name)
 
 
 def visit_reversed(

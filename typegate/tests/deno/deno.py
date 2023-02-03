@@ -1,7 +1,7 @@
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.runtimes.base import Effect
 from typegraph.runtimes.deno import DenoRuntime
 from typegraph.runtimes.deno import ModuleMat
 from typegraph.runtimes.deno import PureFunMat
@@ -30,19 +30,15 @@ with TypeGraph("test-vars") as g:
         sum=t.func(
             t.struct({"numbers": t.array(t.integer())}),
             t.integer(),
-            mod.imp("sum", effect=Effect.none()),
+            mod.imp("sum"),
         ).add_policy(public),
         count=t.func(
             t.struct(),
             t.integer().min(0),
-            mod.imp("counter", effect=Effect.update()),
+            mod.imp("counter", effect=effects.update()),
         ).add_policy(public),
-        min0=t.func(
-            min_input, t.number(), math0.imp("min", effect=Effect.none())
-        ).add_policy(public),
-        min1=t.func(
-            min_input, t.number(), math1.imp("min", effect=Effect.none())
-        ).add_policy(public),
+        min0=t.func(min_input, t.number(), math0.imp("min")).add_policy(public),
+        min1=t.func(min_input, t.number(), math1.imp("min")).add_policy(public),
         log=t.func(
             t.struct({"number": t.number(), "base": t.number().optional()}),
             t.number(),

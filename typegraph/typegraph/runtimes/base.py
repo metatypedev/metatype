@@ -6,7 +6,7 @@ from typing import Optional
 from typing import TYPE_CHECKING
 
 from attrs import frozen
-from typegraph.effect import Effect
+from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.utils.attrs import always

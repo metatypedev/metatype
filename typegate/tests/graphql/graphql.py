@@ -1,7 +1,7 @@
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.runtimes.base import Effect
 from typegraph.runtimes.graphql import GraphQLRuntime
 
 with TypeGraph("graphql") as g:
@@ -31,7 +31,7 @@ with TypeGraph("graphql") as g:
             }
         ),
         g("User"),
-        effect=Effect.update(idempotent=True),
+        effect=effects.update(idempotent=True),
     ).add_policy(policies.public())
 
     g.expose(user=user_by_id, updateUser=update_user)

@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { gql, test } from "../utils.ts";
-/*
+
 test("Policies", async (t) => {
   const e = await t.pythonFile("policies/policies.py");
 
@@ -86,7 +86,7 @@ test("Policy args", async (t) => {
       .on(e);
   });
 });
-*/
+
 test("Role jwt policy access", async (t) => {
   const e_norm = await t.pythonFile("policies/policies_jwt.py");
   const e_inject = await t.pythonFile("policies/policies_jwt_injection.py");

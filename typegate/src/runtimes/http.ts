@@ -28,16 +28,21 @@ const encodeRequestBody = (
   body: Record<string, any>,
   contentType: string,
 ): string | FormData => {
+  const mapToFormData = (body: Record<string, any>) => {
+    const formData = new FormData();
+    for (const [name, value] of Object.entries(body)) {
+      formData.append(name, value);
+    }
+    return formData;
+  };
   switch (contentType) {
     case "application/json":
       return JSON.stringify(body);
-    case "application/x-www-form-urlencoded": {
-      const formData = new FormData();
-      for (const [name, value] of Object.entries(body)) {
-        formData.append(name, value);
-      }
-      return formData;
-    }
+    // -- form handler --
+    case "application/x-www-form-urlencoded":
+    case "multipart/form-data":
+      return mapToFormData(body);
+    // -- form handler --
     default:
       throw new Error(`Content-Type ${contentType} not supported`);
   }
@@ -102,7 +107,12 @@ export class HTTPRuntime extends Runtime {
 
       const headers = new Headers(this.headers);
       headers.set("accept", "application/json");
-      headers.set("content-type", options.content_type);
+
+      // if left unspecified, the http-client will assign a proper header automatically since
+      // the request body is a `FormData` i.e. we get a multipart/form-data + a proper boundary for free
+      if (options.content_type !== "multipart/form-data") {
+        headers.set("content-type", options.content_type);
+      }
 
       if (authToken) {
         headers.set("authorization", `Bearer ${authToken}`);

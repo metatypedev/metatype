@@ -1,9 +1,9 @@
 # Copyright Metatype under the Elastic License 2.0.
 
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.runtimes.base import Effect
 from typegraph.runtimes.deno import FunMat
 from typegraph.runtimes.deno import PureFunMat
 
@@ -41,7 +41,7 @@ with TypeGraph(
 
     create_post_mat = FunMat(
         "() => ({ title: 'Hello Metatype', content: 'Greeting from Metatype', authorId: 123})",
-        effect=Effect.create(),
+        effect=effects.create(),
     )
 
     create_post = t.func(

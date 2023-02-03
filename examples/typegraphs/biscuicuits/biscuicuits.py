@@ -1,4 +1,4 @@
-from typegraph import Effect
+from typegraph import effects
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
@@ -23,7 +23,7 @@ def send_in_blue_send(subject, frm, to, api_key):
             }
         ),
         t.struct({"success": t.boolean(), "error": t.string().optional()}),
-        f.imp("default", effect=Effect.create()),
+        f.imp("default", effect=effects.create()),
     ).rate(weight=2)
 
 

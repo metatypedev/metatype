@@ -20,6 +20,7 @@ import { RateLimiter } from "../src/rate_limiter.ts";
 import { PrismaRuntimeDS, TypeRuntimeBase } from "../src/type_node.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";
 import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
+import { copy } from "std/streams/copy.ts";
 import * as native from "native";
 
 const thisDir = dirname(fromFileUrl(import.meta.url));
@@ -34,21 +35,19 @@ export async function shell(cmd: string[]): Promise<string> {
     cwd: thisDir,
     cmd,
     stdout: "piped",
-    stderr: "piped",
+    stderr: "inherit",
   });
 
-  const [_status, stdout, stderr] = await Promise.all([
+  const [status, stdout] = await Promise.all([
     p.status(),
     p.output(),
-    p.stderrOutput(),
   ]);
   p.close();
 
   const out = new TextDecoder().decode(stdout).trim();
-  const err = new TextDecoder().decode(stderr).trim();
 
-  if (err.length > 0) {
-    throw new Error(err);
+  if (!status.success) {
+    throw new Error(`Command failed: ${cmd.join(" ")}`);
   }
 
   return out;
@@ -131,7 +130,7 @@ export class NoLimiter extends RateLimiter {
 type AssertSnapshotParams<T> = typeof assertSnapshot extends
   (ctx: Deno.TestContext, ...rest: infer R) => Promise<void> ? R : never;
 
-class MetaTest {
+export class MetaTest {
   constructor(public t: Deno.TestContext, public register: Register) {
   }
 
@@ -159,10 +158,26 @@ class MetaTest {
     path: string,
   ): Promise<Engine> {
     const stdout = await shell([metaCli, "serialize", "-f", path, "-1"]);
+    if (stdout.length == 0) {
+      throw new Error("No typegraph");
+    }
     const engineName = await this.register.set(
       stdout,
     );
     return this.register.get(engineName)!;
+  }
+
+  async unregister(engine: Engine) {
+    const engines = this.register.list().filter((e) => e == engine);
+    await Promise.all(
+      engines,
+    );
+    await Promise.all(
+      this.register.list().filter((e) => e == engine).map((e) => {
+        this.register.remove(e.name);
+        return e.terminate();
+      }),
+    );
   }
 
   async terminate() {
@@ -476,4 +491,16 @@ export function displayMetrics(msg?: string) {
       console.table(val);
     }
   }
+}
+
+export async function copyFile(src: string, dest: string) {
+  const srcFile = await Deno.open(join(thisDir, src));
+  const destPath = join(thisDir, dest);
+  await Deno.mkdir(dirname(destPath), { recursive: true });
+  const destFile = await Deno.create(destPath);
+
+  await copy(srcFile, destFile);
+
+  srcFile.close();
+  destFile.close();
 }
