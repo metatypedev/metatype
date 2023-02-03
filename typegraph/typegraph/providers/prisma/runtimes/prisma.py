@@ -16,7 +16,7 @@ from typegraph.graph.typegraph import TypegraphContext
 from typegraph.providers.prisma.relations import RawLinkItem
 from typegraph.providers.prisma.relations import Relation
 from typegraph.providers.prisma.schema import PrismaSchema
-from typegraph.providers.prisma.schema import SourceOfTruth
+from typegraph.providers.prisma.schema import SourceOfTruth, build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 from typegraph.runtimes.base import Effect
@@ -147,7 +147,7 @@ class PrismaRuntime(Runtime):
     links: DefaultDict[str, List[RawLinkItem]] = field(
         init=False, factory=lambda: defaultdict(list), hash=False, metadata={SKIP: True}
     )
-    spec: SourceOfTruth = field(init=False, hash=False)
+    spec: SourceOfTruth = field(init=False, hash=False, metadata={SKIP: True})
 
     def __attrs_post_init__(self):
         object.__setattr__(self, "spec", SourceOfTruth(self))
@@ -179,7 +179,7 @@ class PrismaRuntime(Runtime):
 
     @property
     def typegen(self):
-        return TypeGenerator(models=self.managed_types, relations=self.relationships)
+        return TypeGenerator(spec=self.spec)
 
     def queryRaw(self, query: str, *, effect: Effect) -> t.func:
         return t.func(
@@ -287,34 +287,34 @@ class PrismaRuntime(Runtime):
         )
 
     def __manage(self, tpe):
-        if tpe.name in self.managed_types:
-            return
+        # if tpe.name in self.managed_types:
+        #     return
 
-        if isinstance(tpe, t.NodeProxy):
-            tg = TypegraphContext.get_active()
-            if tg is None:
-                raise Exception("No typegraph context")
-            tpe = tpe.get()
-        if not isinstance(tpe, t.struct):
-            raise Exception("cannot manage non struct types")
+        # if isinstance(tpe, t.NodeProxy):
+        #     tg = TypegraphContext.get_active()
+        #     if tg is None:
+        #         raise Exception("No typegraph context")
+        #     tpe = tpe.get()
+        # if not isinstance(tpe, t.struct):
+        #     raise Exception("cannot manage non struct types")
 
-        ids = [
-            k
-            for k, v in tpe.props.items()
-            if isinstance(v, t.typedef)
-            and not isinstance(v, t.optional)
-            and v.runtime_config.get("id", False)
-        ]
+        # ids = [
+        #     k
+        #     for k, v in tpe.props.items()
+        #     if isinstance(v, t.typedef)
+        #     and not isinstance(v, t.optional)
+        #     and v.runtime_config.get("id", False)
+        # ]
 
-        if len(ids) == 0:
-            non_null_fields = [
-                k
-                for k, v in tpe.props.items()
-                if isinstance(v, t.typedef) and not isinstance(v, t.optional)
-            ]
-            raise Exception(
-                f'{tpe.name} must have at least an id among {",".join(non_null_fields)}'
-            )
+        # if len(ids) == 0:
+        #     non_null_fields = [
+        #         k
+        #         for k, v in tpe.props.items()
+        #         if isinstance(v, t.typedef) and not isinstance(v, t.optional)
+        #     ]
+        #     raise Exception(
+        #         f'{tpe.name} must have at least an id among {",".join(non_null_fields)}'
+        #     )
 
         self.spec.manage(tpe.name)
 
@@ -351,20 +351,22 @@ class PrismaRuntime(Runtime):
         return rels
 
     def datamodel(self):
-        return PrismaSchema(self.managed_types.values()).build()
+        models = [build_model(ty, self.spec) for ty in self.spec.types]
+        return "\n\n".join(models)
+        # return PrismaSchema(self.managed_types.values()).build()
 
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
         data["data"].update(
             datamodel=self.datamodel(),
             connection_string_secret=self.connection_string_secret,
-            models=[collector.index(tp) for tp in self.managed_types],
+            models=[collector.index(tp) for tp in self.spec.types.values()],
         )
         return data
 
     @property
     def edges(self) -> List[Node]:
-        return super().edges + list(self.managed_types.values())
+        return super().edges + list(self.spec.types.values())
 
 
 @frozen

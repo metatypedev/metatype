@@ -13,46 +13,39 @@ from typegraph import t
 from typegraph.graph.typegraph import find
 from typegraph.graph.typegraph import resolve_proxy
 from typegraph.providers.prisma.relations import check_field
-from typegraph.providers.prisma.relations import Relation
+from typegraph.providers.prisma.relations import Relation, SourceOfTruth
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
 
 @frozen
 class TypeGenerator:
-    models: Dict[str, t.struct]
-    relations: Dict[str, Relation]
-    relation_by_models: DefaultDict[str, List[str]] = field(
-        init=False, factory=lambda: defaultdict(list)
-    )
-
-    def __attrs_post_init__(self):
-        for rel_name, rel in self.relations.items():
-            self.relation_by_models[rel.owner_type.name].append(rel_name)
-            self.relation_by_models[rel.owned_type.name].append(rel_name)
+    spec: SourceOfTruth
 
     def __find_relation(self, tpe: t.struct, field_name: str) -> Optional[str]:
         if not check_field(tpe, field_name):
             return None
 
-        type_name = tpe.name
-        return next(
-            (
-                relname
-                for relname, relation in (
-                    (relname, self.relations[relname])
-                    for relname in self.relation_by_models[type_name]
-                )
-                if (
-                    relation.owner_type.name == type_name
-                    and relation.owner_field == field_name
-                )
-                or (
-                    relation.owned_type.name == type_name
-                    and relation.owned_field == field_name
-                )
-            ),
-            None,
-        )
+        return self.spec.field_relations[tpe.name][field_name].name
+
+        # type_name = tpe.name
+        # return next(
+        #     (
+        #         relname
+        #         for relname, relation in (
+        #             (relname, self.spec.relations[relname])
+        #             for relname in self.spec.relation_by_models[type_name]
+        #         )
+        #         if (
+        #             relation.owner_type.name == type_name
+        #             and relation.owner_field == field_name
+        #         )
+        #         or (
+        #             relation.owned_type.name == type_name
+        #             and relation.owned_field == field_name
+        #         )
+        #     ),
+        #     None,
+        # )
 
     def get_input_type(
         self,
@@ -74,17 +67,18 @@ class TypeGenerator:
             if relname is not None:
                 if relname in skip:
                     continue
-                relation = self.relations[relname]
-                out = resolve_proxy(resolve_entity_quantifier)
+                relation = self.spec.relations[relname]
+                nested = resolve_proxy(resolve_entity_quantifier(field_type))
+                
                 entries = {
                     "create": self.get_input_type(
-                        out, skip=skip | {relname}, name=f"Input{out.name}Create"
+                        nested, skip=skip | {relname}, name=f"Input{nested.name}Create"
                     ).optional(),
                     "connect": self.get_where_type(
-                        out, name=f"Input{out.name}"
+                        nested, name=f"Input{nested.name}"
                     ).optional(),
                 }
-                if relation.is_owner(tpe) and relation.is_one_to_many():
+                if relation.side_of(tpe.name).is_left() and relation.cardinality.is_one_to_many():
                     entries["createMany"] = t.struct(
                         {"data": t.array(entries["create"].of)}
                     ).optional()
@@ -145,7 +139,7 @@ class TypeGenerator:
             if nested.type == "object":
                 if skip_rel:
                     continue
-                fields[k] = self.get_where_type(v, skip_rel=True).optional()
+                fields[k] = self.get_where_type(nested, skip_rel=True).optional()
                 continue
             if isinstance(v, t.optional):
                 v = v.of

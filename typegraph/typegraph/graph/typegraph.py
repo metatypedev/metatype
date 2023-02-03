@@ -9,6 +9,7 @@ from typing import Optional
 from typing import Set
 from typing import TYPE_CHECKING
 from typing import Union
+import sys
 
 from typegraph.graph.builder import Collector
 from typegraph.graph.models import Auth
@@ -202,5 +203,6 @@ def resolve_proxy(tpe: Union[NodeProxy, "t.typedef"]) -> "t.typedef":
     if isinstance(tpe, NodeProxy):
         return tpe.get()
     else:
+        print(f"type: {type(tpe).__name__}", file=sys.stderr)
         assert isinstance(tpe, t.typedef)
         return tpe

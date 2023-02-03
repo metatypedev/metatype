@@ -234,9 +234,22 @@ class RawLinkItem:
     field: Optional[str]
 
 
+
 class Side(StrEnum):
-    LEFT = "left"  # aka owner
-    RIGHT = "right"  # aka ownee
+    """
+    A relationship is defined between two models:
+    - the "owner", on the "left" side of the relationship, has the foreign key
+    - the "ownee", on the "right" side of the relationship
+    """
+
+    LEFT = "left"
+    RIGHT = "right"
+
+    def is_left(self):
+        return self == Side.LEFT
+
+    def is_right(self):
+        return self == Side.RIGHT
 
 
 @frozen
@@ -252,6 +265,32 @@ class FieldRelation:
 class Relation2:
     left: FieldRelation
     right: FieldRelation
+
+    def __attrs_post_init__(self):
+        assert self.left.cardinality == self.right.cardinality, f"left and right sides of a relationship must have the same cardinality"
+
+    @property
+    def name(self):
+        return self.left.name
+    
+    @property
+    def left_type_name(self):
+        return self.left.typ.name
+
+    @property
+    def right_type_name(self):
+        return self.right.typ.name
+
+    def side_of(self, type_name: str) -> Optional[Side]:
+        if self.left_type_name == type_name:
+            return Side.LEFT
+        if self.right_type_name == type_name:
+            return Side.RIGHT
+        return None
+
+    @property
+    def cardinality(self):
+        return self.right.cardinality
 
 
 class SourceOfTruth:
@@ -283,7 +322,7 @@ class SourceOfTruth:
 
             left, right = link_items
 
-            if left.typ.type != "object":
+            if resolve_proxy(left.typ).type != "object":
                 left, right = right, left
             # right side type must be a quantifier
             assert right.typ.type in [

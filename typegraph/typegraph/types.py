@@ -152,7 +152,6 @@ class typedef(Node):
         # TODO compare types
         if name in types:
             by = types[name]
-            print(f"By: {by.type}, {by.name}")
             raise Exception(f"type name {name} already used")
         if name in reserved_types:
             raise Exception(f"type name {name} is a reserved type")
