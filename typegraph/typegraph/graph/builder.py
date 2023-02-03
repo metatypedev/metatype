@@ -45,12 +45,21 @@ class Collector:
         if isinstance(node, NodeProxy):
             node = node.get()
 
+        # print(f"type={type(node).__name__}", file=sys.stderr)
         c = node.collector_target
         if c is None:
             raise Exception("Attempting to collect non collectible node")
 
         collect = self.collects[c]
         prev_size = len(collect)
+
+        # from typegraph import t
+
+        # if isinstance(node, t.typedef):
+        #     print(f"name={node.name}, type={node.type}", file=sys.stderr)
+        #     print(f"runtime_config={node.runtime_config}", file=sys.stderr)
+        # else:
+        #     print(f"class={type(node).__name__}", file=sys.stderr)
         collect.add(node)
         return len(collect) > prev_size
 

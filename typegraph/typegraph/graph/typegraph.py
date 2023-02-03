@@ -186,12 +186,12 @@ def get_absolute_path(relative: str) -> Path:
     return tg_path.parent / relative
 
 
-def find(node: str) -> Optional[NodeProxy]:
+def find(node: str) -> Optional["t.typedef"]:
     g = TypegraphContext.get_active()
     if g is None:
         raise Exception("No active TypegraphContext")
     if node in g.type_by_names:
-        return g(node)
+        return g.type_by_names[node]
     else:
         return None
 

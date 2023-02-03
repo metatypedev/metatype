@@ -7,9 +7,14 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+from attrs import frozen
 from typegraph import types as t
 from typegraph.graph.nodes import NodeProxy
 from typegraph.graph.typegraph import resolve_proxy
+from typegraph.providers.prisma.relations import Relation
+from typegraph.providers.prisma.relations import SourceOfTruth
+
+# from attrs import field, frozen
 
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
@@ -59,6 +64,7 @@ class PrismaModel:
         self.fields = {}
         self.tags = []
         for field_name, field_type in entity.props.items():
+            field_type = resolve_proxy(field_type)
             f = PrismaField(field_name, field_type)
             if field_type.runtime_config.get("id", False):
                 f.tags.append("@id")
@@ -75,20 +81,17 @@ class PrismaModel:
 
     def link(self, schema: "PrismaSchema"):
         for field_name, field in list(self.fields.items()):
+            # TODO resolve before PrismaSchema __init__
+            # field.tpe = resolve_proxy(field.tpe)
+            # that_entity = field.tpe
 
-            if isinstance(field.tpe, NodeProxy):
-                field.tpe = field.tpe.get()
-
-            that_entity = field.tpe
-
-            from typegraph.providers.prisma.runtimes.prisma import PrismaRelation
-
-            if PrismaRelation.check(that_entity):
-                if not PrismaRelation.multi(that_entity):
-                    for ref_field, ref_type in that_entity.inp.props.items():
-                        ref_field = f"{field_name}{ref_field.title()}"
-                        self.fields[ref_field] = PrismaField(ref_field, ref_type)
-
+            # if PrismaRelation.check(that_entity):
+            #     if not PrismaRelation.multi(that_entity):
+            #         for ref_field, ref_type in that_entity.inp.props.items():
+            #             ref_field = f"{field_name}{ref_field.title()}"
+            #             self.fields[ref_field] = PrismaField(ref_field, ref_type)
+            if False:
+                pass
                 # that_real_entity = resolve_entity_quantifier(that_entity.out)
                 # that_model = schema.models[that_real_entity.node]
 
@@ -114,8 +117,182 @@ class PrismaModel:
                 #     that_model.fields[key] = f
 
 
+# @frozen
+# class SchemaBuilder:
+#     models: Dict[str, Tuple[t.struct, FieldRelation]]
+#     relations: Dict[str, Relation2]
+
+#     def __init__(self, types: Dict[str, t.struct], relations: Dict[str, Relation]):
+#         self.types = types
+#         self.relations = relations
+
+#         type_relations = defaultdict(list)
+#         for name, rel in relations.items():
+#             type_relations[rel.owner_type.name].append(name)
+#             type_relations[rel.owned_type.name].append(name)
+
+
+#     def __attrs_post_init__(self):
+#         for rel_name, rel in self.relations.items():
+#             self.relation_by_models[rel.owner_type.name].append(rel_name)
+#             self.relation_by_models[rel.owned_type.name].append(rel_name)
+
+#     def __find_relation(self, tpe: t.struct, field_name: str) -> Optional[str]:
+#         if not check_field(tpe, field_name):
+#             return None
+
+#         type_name = tpe.name
+#         return next(
+#             (
+#                 relname
+#                 for relname, relation in (
+#                     (relname, self.relations[relname])
+#                     for relname in self.relation_by_models[type_name]
+#                 )
+#                 if (
+#                     relation.owner_type.name == type_name
+#                     and relation.owner_field == field_name
+#                 )
+#                 or (
+#                     relation.owned_type.name == type_name
+#                     and relation.owned_field == field_name
+#                 )
+#             ),
+#             None,
+#         )
+
+#     def build(self):
+#         for model in self.models.values():
+
+
+@frozen
+class SchemaField:
+    name: str
+    typ: str
+    tags: List[str]
+
+    def build(self) -> str:
+        return f"{self.name} {self.typ} {' '.join(self.tags)}"
+
+
+@frozen
+class FieldBuilder:
+    spec: SourceOfTruth
+
+    def additional_tags(self, typ: t.typedef) -> List[str]:
+        tags = []
+        if typ.runtime_config.get("id", False):
+            tags.append("@id")
+        if typ.runtime_config.get("unique", False):
+            tags.append("@unique")
+        if typ.runtime_config.get("auto", False):
+            if typ.type == "integer":
+                tags.append("@default(autoincrement())")
+            elif typ.type == "string" and typ.format == "uuid":
+                tags.append("@default(uuid())")
+            else:
+                raise Exception(f"'auto' tag not supported for type '{typ.type}'")
+        return tags
+
+    def get_type_ids(self, typ: t.struct) -> List[str]:
+        return [k for k, ty in typ.props.items() if ty.runtime_config.get("id", False)]
+
+    def relation(self, field: str, typ: t.struct, rel_name: str) -> str:
+        # rel = self.spec.field_relations[parent_type.name][field]
+
+        references = self.get_type_ids(typ)
+        fields = [f"{field}{ref.title()}" for ref in references]
+
+        return f"@relation({rel_name}, fields={repr(fields)}, references={repr(references)})"
+
+    def build(self, field: str, typ: t.typedef, parent_type: t.struct) -> SchemaField:
+        quant = ""
+        if typ.type == "optional":
+            quant = "?"
+            typ = resolve_proxy(typ.of)
+        if typ.type == "array":
+            quant = "[]"
+            typ = resolve_proxy(typ.of)
+
+        # TODO: default value
+
+        assert typ.type not in ["optional", "array"], "Nested quantifiers not supported"
+
+        tags = []
+
+        if isinstance(typ, t.string):
+            # TODO: enum? json?
+            if typ.format == "uuid":
+                tags.append("@db.Uuid")  # postgres only
+            if typ.format == "date":
+                name = "DateTime"
+            else:
+                name = "String"
+
+        elif isinstance(typ, t.boolean):
+            name = "Boolean"
+
+        elif isinstance(typ, t.integer):
+            name = "Int"
+        elif isinstance(typ, t.number):
+            name = "Float"
+
+        else:
+            assert typ.type == "struct", f"Type f'{typ.type}' not supported"
+            name = typ.name
+
+            rel = self.field_relations[typ.name][field]
+            if rel == self.relations[rel.name].left:
+                # left side of the relation: the one that has the foreign key defined in
+                assert quant == ""
+                tags.push(self.relation(field, typ, rel.name))
+                # TODO add additional fields for the foreign keys
+
+        tags.extend(self.additional_tags(typ))
+
+        return SchemaField(name=field, typ=f"{name}{quant}", tags=tags)
+
+
+def build_model(name: str, spec: SourceOfTruth) -> str:
+    fields = []
+
+    # struct
+    s = spec.types[name]
+
+    field_builder = FieldBuilder(spec)
+
+    for key, typ in s.props.items():
+        typ = resolve_proxy(typ)
+        if typ.runtime is not None and typ.runtime != s.runtime:
+            continue
+        fields.append(field_builder.build(key, typ, s))
+
+    tags = []
+
+    # TODO support for multi-field ids and indexes -- to be defined as config on the struct!!
+
+    print(f"fields={fields}")
+
+    ids = [field.name for field in fields if "@id" in field.tags]
+    assert len(ids) > 0, f"No id field defined in '{name}'"
+
+    if len(ids) > 1:
+        # multi-field id
+        # ? should require declaration on the struct??
+        tags.append(f"@@id([{', '.join(ids)}]")
+        for field in fields:
+            field.tags.remove("@id")
+
+    # TODO process other struct-level config
+
+    formatted_fields = "".join((f"    {f.build()}\n" for f in fields))
+
+    return f"""model {name} {{\n{formatted_fields}}}\n"""
+
+
 class PrismaSchema:
     models: Dict[str, PrismaModel]
+    relations: Dict[str, Relation]
 
     def __init__(self, models: Iterable[Union[t.struct, NodeProxy]]):
         self.models = {}
@@ -126,23 +303,22 @@ class PrismaSchema:
         for model in self.models.values():
             model.link(self)
 
-        from typegraph.providers.prisma.runtimes.prisma import PrismaRelation
-
         for model in self.models.values():
             additional_fields = {}
             for field in model.fields.values():
-                if PrismaRelation.check(field.tpe):
-                    relation = field.tpe.mat.relation
-                    owner_type = resolve_proxy(relation.owner_type)
-                    if field.tpe.mat.owner:
-                        if len(relation.ids) == 0:
-                            relation.ids = get_ids(owner_type)
-                        for key in relation.ids:
-                            field_name = f"{field.name}{key.title()}"
-                            field_type = owner_type.props[key]
-                            additional_fields[field_name] = PrismaField(
-                                field_name, field_type
-                            )
+                # if PrismaRelation.check(field.tpe):
+                #     relation = field.tpe.mat.relation
+                #     owner_type = resolve_proxy(relation.owner_type)
+                #     if field.tpe.mat.owner:
+                #         if len(relation.ids) == 0:
+                #             relation.ids = get_ids(owner_type)
+                #         for key in relation.ids:
+                #             field_name = f"{field.name}{key.title()}"
+                #             field_type = owner_type.props[key]
+                #             additional_fields[field_name] = PrismaField(
+                #                 field_name, field_type
+                #             )
+                pass
             model.fields.update(additional_fields)
 
             for field in model.fields.values():

@@ -14,8 +14,10 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.providers.prisma.relations import LinkItem
+from typegraph.providers.prisma.relations import RawLinkItem
 from typegraph.providers.prisma.relations import Relation
 from typegraph.providers.prisma.schema import PrismaSchema
+from typegraph.providers.prisma.schema import SourceOfTruth
 from typegraph.providers.prisma.type_generator import TypeGenerator
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 from typegraph.runtimes.base import Effect
@@ -23,6 +25,7 @@ from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
 from typegraph.utils.attrs import required
+from typegraph.utils.attrs import SKIP
 
 
 def comp_exp(tpe):
@@ -142,11 +145,13 @@ class PrismaRuntime(Runtime):
     name: str
     connection_string_secret: str
     runtime_name: str = always("prisma")
-    managed_types: Dict[str, t.struct] = field(init=False, factory=dict)
-    links: DefaultDict[str, List[t.TypeNode]] = field(
-        init=False, factory=lambda: defaultdict(list)
+    links: DefaultDict[str, List[RawLinkItem]] = field(
+        init=False, factory=lambda: defaultdict(list), hash=False, metadata={SKIP: True}
     )
-    relationships: Dict[str, Relation] = field(init=False, factory=dict)
+    spec: SourceOfTruth = field(init=False, hash=False)
+
+    def __attrs_post_init__(self):
+        object.__setattr__(self, "spec", SourceOfTruth(self))
 
     # auto = {None: {t.uuid(): "auto"}}
 
@@ -312,12 +317,14 @@ class PrismaRuntime(Runtime):
                 f'{tpe.name} must have at least an id among {",".join(non_null_fields)}'
             )
 
-        self.managed_types[tpe.name] = tpe.within(self)
+        self.spec.manage(tpe.name)
 
-        for rel_name, rel in self.__find_relations(tpe).items():
-            self.relationships[rel_name] = rel
-            for typ in rel.types:
-                self.__manage(typ)
+        # self.managed_types[tpe.name] = tpe.within(self)
+
+        # for rel_name, rel in self.__find_relations(tpe).items():
+        #     self.relationships[rel_name] = rel
+        #     for typ in rel.types:
+        #         self.__manage(typ)
 
     # return the relations that involve the type
     def __find_relations(self, tpe: t.struct) -> Dict[str, Relation]:
@@ -345,7 +352,7 @@ class PrismaRuntime(Runtime):
         return rels
 
     def datamodel(self):
-        return PrismaSchema(self.managed_types).build()
+        return PrismaSchema(self.managed_types.values()).build()
 
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
@@ -358,7 +365,7 @@ class PrismaRuntime(Runtime):
 
     @property
     def edges(self) -> List[Node]:
-        return super().edges + list(self.managed_types)
+        return super().edges + list(self.managed_types.values())
 
 
 @frozen

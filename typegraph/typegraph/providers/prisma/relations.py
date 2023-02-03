@@ -1,14 +1,22 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+from collections import defaultdict
+from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+from typing import TYPE_CHECKING
 
 from attrs import frozen
 from strenum import StrEnum
 from typegraph import types as t
+from typegraph.graph.typegraph import find
 from typegraph.graph.typegraph import resolve_proxy
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
+
+if TYPE_CHECKING:
+    from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 
 class Cardinality(StrEnum):
@@ -211,3 +219,148 @@ def check_field(type: t.struct, field_name: str) -> bool:
         field_type.type == "struct"
         or resolve_proxy(resolve_entity_quantifier(field_type)).type == "struct"
     )
+
+
+@frozen
+class RawLinkItem:
+    typ: t.typedef
+    field: Optional[str]
+
+
+class Side(StrEnum):
+    LEFT = "left"  # aka owner
+    RIGHT = "right"  # aka ownee
+
+
+@frozen
+class FieldRelation:
+    name: str
+    typ: t.struct
+    field: str
+    cardinality: Cardinality
+    side: Side
+
+
+@frozen
+class Relation2:
+    left: FieldRelation
+    right: FieldRelation
+
+
+class SourceOfTruth:
+    runtime: "PrismaRuntime"
+    types: Dict[str, t.struct]
+    field_relations: Dict[str, Dict[str, FieldRelation]]
+    relations: Dict[str, Relation2]
+
+    def __init__(self, runtime):
+        self.runtime = runtime
+        self.types = {}
+        self.field_relations = defaultdict(dict)
+        self.relations = {}
+
+    def manage(self, type_name: str):
+        # if type_name in self.types:
+        #     return
+
+        deps = []
+
+        self.types[type_name] = find(type_name).within(self.runtime)
+
+        for rel_name, link_items in self.runtime.links.items():
+            if rel_name in self.relations:
+                continue
+
+            if len(link_items) != 2:  # TODO
+                continue
+
+            left, right = link_items
+
+            if left.typ.type != "struct":
+                left, right = right, left
+            # right side type must be a quantifier
+            assert right.typ.type in [
+                "optional",
+                "array",
+            ], "Right side type must be a quantifier"
+
+            left_type = left.typ.within(self.runtime)
+            right_type = resolve_proxy(resolve_entity_quantifier(right.typ)).within(
+                self.runtime
+            )
+
+            names = (left_type.name, right_type.name)
+            if type_name not in names:
+                continue
+            deps.extend((n for n in names if n != type_name))
+
+            assert (
+                right_type.type == "struct"
+            ), "Right side type must be a optional/array of struct"
+
+            cardinality = (
+                Cardinality.ONE
+                if right.typ.type == "optional"
+                else (Cardinality.MANY if right.typ.type == "array" else None)
+            )
+            assert (
+                cardinality is not None
+            ), f"Right side type expected to be a quantifier, got a '{right.typ.type}'"
+
+            q = "?" if cardinality.is_one_to_one() else "[]"
+
+            if left.field is None:
+                left.field = find_unique_prop(
+                    left_type,
+                    lambda ty: ty.type == right.typ.type and ty.name == right_type.name,
+                    f"Field of type '{right_type.name}{q}'",
+                )
+            if right.field is None:
+                right.field = find_unique_prop(
+                    right_type,
+                    lambda ty: ty.type == left_type.name,
+                    f"Field of type '{left_type.name}'",
+                )
+
+            rel = Relation2(
+                left=FieldRelation(
+                    name=rel_name,
+                    typ=left_type,
+                    field=left.field,
+                    cardinality=cardinality,
+                    side=Side.LEFT,
+                ),
+                right=FieldRelation(
+                    name=rel_name,
+                    typ=right_type,
+                    field=right.field,
+                    cardinality=cardinality,
+                    side=Side.RIGHT,
+                ),
+            )
+
+            self.types[left_type.name] = left_type
+            self.types[right_type.name] = right_type
+            self.field_relations[left_type.name][left.field] = rel.right
+            self.field_relations[right_type.name][right.field] = rel.left
+            self.relations[rel_name] = rel
+
+        for ty in deps:
+            self.manage(ty)
+
+
+# find the unique property of the struct that satisfies the given test
+def find_unique_prop(
+    s: t.struct, test: Callable[[t.typedef], bool], context: str
+) -> str:
+    found = []
+    for key, typ in s.props.items():
+        if test(resolve_proxy(typ)):
+            found.append(key)
+
+    if len(found) == 0:
+        raise Exception(f"{context}: not found in '{s.name}'")
+    if len(found) > 1:
+        raise Exception(f"{context}: found more than one in '{s.name}'")
+
+    return found[0]
