@@ -5,8 +5,6 @@ import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
 import { None, Option, Some } from "monads";
 
-export type Maybe<T> = Option<T>;
-
 export type JSONValue =
   | string
   | number
@@ -16,12 +14,12 @@ export type JSONValue =
   | { [key: string]: JSONValue };
 
 // Map undefined | null to None
-export const forceAnyToMaybe = (v: any): Maybe<any> => {
+export const forceAnyToOption = (v: any): Option<any> => {
   return v === undefined || v === null ? None : Some(v);
 };
 
 // Map None to undefined
-export const forceMaybeToValue = <T>(m: Maybe<T>): T | undefined => {
+export const forceOptionToValue = <T>(m: Option<T>): T | undefined => {
   return m.isSome() ? m.unwrap() : undefined;
 };
 

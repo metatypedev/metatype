@@ -8,7 +8,7 @@ import {
   TypeGraphDS,
   typegraphVersion,
 } from "./typegraph.ts";
-import { ensure, JSONValue, Maybe } from "./utils.ts";
+import { ensure, JSONValue } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
@@ -32,6 +32,7 @@ import { FromVars } from "./runtimes/graphql.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
 import { mapValues } from "collections";
+import { Option } from "monads";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -432,7 +433,7 @@ export class Engine {
 
   async execute(
     query: string,
-    operationName: Maybe<string>,
+    operationName: Option<string>,
     variables: Variables,
     context: Context,
     limit: RateLimit | null,
