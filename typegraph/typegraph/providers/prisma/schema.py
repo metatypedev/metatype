@@ -7,6 +7,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
+from attrs import evolve
 from attrs import frozen
 from typegraph import types as t
 from typegraph.graph.nodes import NodeProxy
@@ -29,6 +30,14 @@ prisma_types = {
     # 'Json',
     # 'Bytes'
 }
+
+
+def to_prisma_string(s: str) -> str:
+    return f'"{repr(s)[1:-1]}"'
+
+
+def to_prisma_list(lst: List[str]) -> str:
+    return f"[{', '.join(lst)}]"
 
 
 class PrismaField:
@@ -170,6 +179,8 @@ class SchemaField:
     name: str
     typ: str
     tags: List[str]
+    fkeys: List["SchemaField"] = []  # foreign keys
+    fkeys_unique: bool = False
 
     def build(self) -> str:
         return f"{self.name} {self.typ} {' '.join(self.tags)}"
@@ -188,22 +199,40 @@ class FieldBuilder:
         if typ.runtime_config.get("auto", False):
             if typ.type == "integer":
                 tags.append("@default(autoincrement())")
-            elif typ.type == "string" and typ.format == "uuid":
+            elif typ.type == "string" and typ._format == "uuid":
                 tags.append("@default(uuid())")
             else:
                 raise Exception(f"'auto' tag not supported for type '{typ.type}'")
         return tags
 
     def get_type_ids(self, typ: t.struct) -> List[str]:
-        return [k for k, ty in typ.props.items() if ty.runtime_config.get("id", False)]
+        return [
+            k
+            for k, ty in typ.props.items()
+            if resolve_proxy(ty).runtime_config.get("id", False)
+        ]
 
-    def relation(self, field: str, typ: t.struct, rel_name: str) -> str:
-        # rel = self.spec.field_relations[parent_type.name][field]
+    def relation(
+        self, field: str, typ: t.struct, rel_name: str
+    ) -> [str, List[SchemaField]]:
 
         references = self.get_type_ids(typ)
         fields = [f"{field}{ref.title()}" for ref in references]
 
-        return f"@relation({rel_name}, fields={repr(fields)}, references={repr(references)})"
+        fkeys = [
+            evolve(self.build(ref, typ.props[ref], typ), tags=[], name=f)
+            for f, ref in zip(fields, references)
+        ]
+
+        name = to_prisma_string(rel_name)
+        fields = to_prisma_list(fields)
+        references = to_prisma_list(references)
+
+        tag = f"@relation(name: {name}, fields: {fields}, references: {references})"
+
+        print(f"fkeys={fkeys}")
+
+        return [tag, fkeys]
 
     def build(self, field: str, typ: t.typedef, parent_type: t.struct) -> SchemaField:
         quant = ""
@@ -219,12 +248,14 @@ class FieldBuilder:
         assert typ.type not in ["optional", "array"], "Nested quantifiers not supported"
 
         tags = []
+        fkeys = []
+        fkeys_unique = False
 
         if isinstance(typ, t.string):
             # TODO: enum? json?
-            if typ.format == "uuid":
+            if typ._format == "uuid":
                 tags.append("@db.Uuid")  # postgres only
-            if typ.format == "date":
+            if typ._format == "date":
                 name = "DateTime"
             else:
                 name = "String"
@@ -238,19 +269,32 @@ class FieldBuilder:
             name = "Float"
 
         else:
-            assert typ.type == "struct", f"Type f'{typ.type}' not supported"
+            assert typ.type == "object", f"Type f'{typ.type}' not supported"
             name = typ.name
 
-            rel = self.field_relations[typ.name][field]
-            if rel == self.relations[rel.name].left:
+            print(f"{parent_type.name}, {field}")
+            rel = self.spec.field_relations[parent_type.name][field]
+            if rel == self.spec.relations[rel.name].left:
                 # left side of the relation: the one that has the foreign key defined in
                 assert quant == ""
-                tags.push(self.relation(field, typ, rel.name))
-                # TODO add additional fields for the foreign keys
+                tag, fkeys = self.relation(field, typ, rel.name)
+                tags.append(tag)
+                fkeys = fkeys
+                fkeys_unique = rel.cardinality.is_one_to_one()
+            else:
+                # right side of the relation
+                tags.append(f"@relation(name: {to_prisma_string(rel.name)})")
+            # TODO add additional fields for the foreign keys
 
         tags.extend(self.additional_tags(typ))
 
-        return SchemaField(name=field, typ=f"{name}{quant}", tags=tags)
+        return SchemaField(
+            name=field,
+            typ=f"{name}{quant}",
+            tags=tags,
+            fkeys=fkeys,
+            fkeys_unique=fkeys_unique,
+        )
 
 
 def build_model(name: str, spec: SourceOfTruth) -> str:
@@ -261,13 +305,17 @@ def build_model(name: str, spec: SourceOfTruth) -> str:
 
     field_builder = FieldBuilder(spec)
 
+    tags = []
+
     for key, typ in s.props.items():
         typ = resolve_proxy(typ)
         if typ.runtime is not None and typ.runtime != s.runtime:
             continue
-        fields.append(field_builder.build(key, typ, s))
-
-    tags = []
+        field = field_builder.build(key, typ, s)
+        fields.append(field)
+        fields.extend(field.fkeys)
+        if field.fkeys_unique:
+            tags.append(f"@@unique({', '.join((f.name for f in field.fkeys))})")
 
     # TODO support for multi-field ids and indexes -- to be defined as config on the struct!!
 
@@ -286,8 +334,9 @@ def build_model(name: str, spec: SourceOfTruth) -> str:
     # TODO process other struct-level config
 
     formatted_fields = "".join((f"    {f.build()}\n" for f in fields))
+    formatted_tags = "".join(f"    {t}\n" for t in tags)
 
-    return f"""model {name} {{\n{formatted_fields}}}\n"""
+    return f"""model {name} {{\n{formatted_fields}\n{formatted_tags}}}\n"""
 
 
 class PrismaSchema:

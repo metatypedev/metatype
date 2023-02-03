@@ -13,7 +13,6 @@ from typegraph import types as t
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
-from typegraph.providers.prisma.relations import LinkItem
 from typegraph.providers.prisma.relations import RawLinkItem
 from typegraph.providers.prisma.relations import Relation
 from typegraph.providers.prisma.schema import PrismaSchema
@@ -173,10 +172,10 @@ class PrismaRuntime(Runtime):
     #     return config
 
     def link(
-        self, tpe: t.TypeNode, name: str, field: Optional[str] = None
+        self, typ: t.TypeNode, name: str, field: Optional[str] = None
     ) -> t.TypeNode:
-        self.links[name].append(LinkItem(tpe=tpe, target_field=field))
-        return tpe
+        self.links[name].append(RawLinkItem(typ=typ, field=field))
+        return typ
 
     @property
     def typegen(self):

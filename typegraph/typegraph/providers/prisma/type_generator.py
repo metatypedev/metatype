@@ -142,7 +142,7 @@ class TypeGenerator:
 
             nested = resolve_proxy(resolve_entity_quantifier(v))
             # relation
-            if nested.type == "struct":
+            if nested.type == "object":
                 if skip_rel:
                     continue
                 fields[k] = self.get_where_type(v, skip_rel=True).optional()

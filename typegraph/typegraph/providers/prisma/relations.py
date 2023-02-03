@@ -8,6 +8,7 @@ from typing import Optional
 from typing import Tuple
 from typing import TYPE_CHECKING
 
+from attrs import evolve
 from attrs import frozen
 from strenum import StrEnum
 from typegraph import types as t
@@ -22,6 +23,12 @@ if TYPE_CHECKING:
 class Cardinality(StrEnum):
     ONE = "one to one"
     MANY = "one to many"
+
+    def is_one_to_one(self):
+        return self == Cardinality.ONE
+
+    def is_one_to_many(self):
+        return self == Cardinality.MANY
 
 
 @frozen
@@ -216,8 +223,8 @@ def check_field(type: t.struct, field_name: str) -> bool:
     field_type = resolve_proxy(type.props[field_name])
 
     return (field_type.runtime is None or field_type.runtime == type.runtime) and (
-        field_type.type == "struct"
-        or resolve_proxy(resolve_entity_quantifier(field_type)).type == "struct"
+        field_type.type == "object"
+        or resolve_proxy(resolve_entity_quantifier(field_type)).type == "object"
     )
 
 
@@ -276,7 +283,7 @@ class SourceOfTruth:
 
             left, right = link_items
 
-            if left.typ.type != "struct":
+            if left.typ.type != "object":
                 left, right = right, left
             # right side type must be a quantifier
             assert right.typ.type in [
@@ -284,7 +291,7 @@ class SourceOfTruth:
                 "array",
             ], "Right side type must be a quantifier"
 
-            left_type = left.typ.within(self.runtime)
+            left_type = resolve_proxy(left.typ).within(self.runtime)
             right_type = resolve_proxy(resolve_entity_quantifier(right.typ)).within(
                 self.runtime
             )
@@ -295,8 +302,8 @@ class SourceOfTruth:
             deps.extend((n for n in names if n != type_name))
 
             assert (
-                right_type.type == "struct"
-            ), "Right side type must be a optional/array of struct"
+                right_type.type == "object"
+            ), f"Right side type must be a optional/array of struct: got '{right_type.type}'"
 
             cardinality = (
                 Cardinality.ONE
@@ -310,16 +317,23 @@ class SourceOfTruth:
             q = "?" if cardinality.is_one_to_one() else "[]"
 
             if left.field is None:
-                left.field = find_unique_prop(
-                    left_type,
-                    lambda ty: ty.type == right.typ.type and ty.name == right_type.name,
-                    f"Field of type '{right_type.name}{q}'",
+                left = evolve(
+                    left,
+                    field=find_unique_prop(
+                        left_type,
+                        lambda ty: ty.type == right.typ.type
+                        and ty.of.name == right_type.name,
+                        f"Field of type '{right_type.name}{q}'",
+                    ),
                 )
             if right.field is None:
-                right.field = find_unique_prop(
-                    right_type,
-                    lambda ty: ty.type == left_type.name,
-                    f"Field of type '{left_type.name}'",
+                right = evolve(
+                    right,
+                    field=find_unique_prop(
+                        right_type,
+                        lambda ty: ty.name == left_type.name,
+                        f"Field of type '{left_type.name}'",
+                    ),
                 )
 
             rel = Relation2(

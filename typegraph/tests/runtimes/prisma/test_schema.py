@@ -31,17 +31,22 @@ def reformat_schema(schema: str):
 
 
 class TestPrismaSchema:
-    def assert_schema(self, models: Iterable[t.struct], schema: str):
-        spec = SourceOfTruth(PrismaRuntime("test", ""))
+    def assert_schema(
+        self, runtime: PrismaRuntime, models: Iterable[t.struct], schema: str
+    ):
+        spec = SourceOfTruth(runtime)
         for m in models:
             spec.manage(m.name)
 
-        assert reformat_schema(
+        generated = reformat_schema(
             "\n".join((build_model(m.name, spec) for m in models))
-        ) == reformat_schema(schema)
+        )
+        print(f"generated={generated}")
+        assert generated == reformat_schema(schema)
 
     def test_simple_model(self):
         with TypeGraph(""):
+            db = PrismaRuntime("test", "POSTGRES")
             model = t.struct(
                 {
                     "id": t.integer().config("id", "auto"),
@@ -50,6 +55,7 @@ class TestPrismaSchema:
             ).named("ModelA")
 
             self.assert_schema(
+                db,
                 {model},
                 """
                     model ModelA {
@@ -59,56 +65,52 @@ class TestPrismaSchema:
                 """,
             )
 
-    # def test_one_to_many(self):
-    #     self.maxDiff = None
+    def test_one_to_many(self):
+        self.maxDiff = None
 
-    #     with TypeGraph(name="test_one_to_many") as g:
-    #         db = PrismaRuntime("test", "POSTGRES")
+        with TypeGraph(name="test_one_to_many") as g:
+            db = PrismaRuntime("test", "POSTGRES")
 
-    #         postAuthor = db.one_to_many(g("User"), g("Post")).named("postAuthor")
+            user = t.struct(
+                {
+                    "id": t.integer().config("id"),
+                    "posts": db.link(t.array(g("Post")), "postAuthor"),
+                }
+            ).named("User")
 
-    #         user = t.struct(
-    #             {
-    #                 "id": t.integer().config("id"),
-    #                 "posts": postAuthor.owned(),
-    #             }
-    #         ).named("User")
+            post = t.struct(
+                {
+                    "id": t.integer().config("id"),
+                    "author": db.link(g("User"), "postAuthor"),
+                }
+            ).named("Post")
 
-    #         post = t.struct(
-    #             {
-    #                 "id": t.integer().config("id"),
-    #                 "author": postAuthor.owner(),
-    #             }
-    #         ).named("Post")
+            with open(
+                Path(__file__).parent.joinpath("schemas/one_to_many.prisma"), "r"
+            ) as f:
+                self.assert_schema(db, [user, post], f.read())
 
-    #         with open(
-    #             Path(__file__).parent.joinpath("schemas/one_to_many.prisma"), "r"
-    #         ) as f:
-    #             self.assert_schema([user, post], f.read())
+    def test_one_to_one(self):
+        self.maxDiff = None
 
-    # def test_one_to_one(self):
-    #     self.maxDiff = None
+        with TypeGraph(name="test_one_to_one") as g:
+            db = PrismaRuntime("test", "POSTGRES")
 
-    #     with TypeGraph(name="test_one_to_one") as g:
-    #         db = PrismaRuntime("test", "POSTGRES")
+            user = t.struct(
+                {
+                    "id": t.integer().config("id"),
+                    "profile": db.link(g("Profile").optional(), "userProfile"),
+                }
+            ).named("User")
 
-    #         userProfile = db.one_to_one(g("User"), g("Profile")).named("userProfile")
+            profile = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "user": db.link(g("User"), "userProfile"),
+                }
+            ).named("Profile")
 
-    #         user = t.struct(
-    #             {
-    #                 "id": t.integer().config("id"),
-    #                 "profile": userProfile.owned(),
-    #             }
-    #         ).named("User")
-
-    #         profile = t.struct(
-    #             {
-    #                 "id": t.uuid().config("id", "auto"),
-    #                 "user": userProfile.owner(),
-    #             }
-    #         ).named("Profile")
-
-    #         with open(
-    #             Path(__file__).parent.joinpath("schemas/one_to_one.prisma"), "r"
-    #         ) as f:
-    #             self.assert_schema([user, profile], f.read())
+            with open(
+                Path(__file__).parent.joinpath("schemas/one_to_one.prisma"), "r"
+            ) as f:
+                self.assert_schema(db, [user, profile], f.read())
