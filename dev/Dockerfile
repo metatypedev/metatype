@@ -1,5 +1,5 @@
 ARG RUST_VERSION=1.66.1
-ARG DENO_VERSION=1.30.0
+ARG DENO_VERSION=1.30.2
 
 FROM lukemathwalker/cargo-chef:latest-rust-${RUST_VERSION} AS base
 
@@ -18,7 +18,7 @@ RUN rm -rf meta-cli \
 
 FROM base AS builder
 
-ARG DENO_VERSION=1.30.0
+ARG DENO_VERSION=1.30.2
 ARG DENO_BINDGEN_URL=https://github.com/denoland/deno_bindgen/raw/main/cli.ts
 
 ENV DENO_DIR /deno-dir/
