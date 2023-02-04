@@ -26,6 +26,13 @@ jobs:
             exit -1
           fi
           echo "Releasing v$VERSION"
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref }}
+          makeLatest: false
+          prerelease: true
+          generateReleaseNotes: true
+          discussionCategory: "Announcements"
 
   meta-cli:
     needs:
