@@ -531,6 +531,12 @@ class PrismaRuntime(Runtime):
     #         f"delete_{name}": t.func(sql_delete(tpe), tpe, PrismaDeleteMat(self)),
     #     }
 
+    def insert_one(self, tpe):
+        return self.gen_create(tpe)
+
+    def find_many(self, tpe):
+        return self.gen_find_many(tpe)
+
 
 @frozen
 class PrismaMigrationRuntime(Runtime):

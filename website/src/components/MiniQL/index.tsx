@@ -9,13 +9,14 @@ import { GraphiQLProvider } from "@graphiql/react";
 import GraphiQLInterface, { Tab } from "./GraphiQLInterface";
 import * as ast from "graphql/language/ast";
 import { MemoryStorage } from "./MemoryStore";
+import * as deindent from "de-indent";
 
 interface MiniQLProps {
   typegraph: string;
   query: ast.DocumentNode;
-  headers: Record<string, unknown>;
-  variables: Record<string, unknown>;
-  tab: Tab;
+  headers?: Record<string, unknown>;
+  variables?: Record<string, unknown>;
+  tab?: Tab;
 }
 
 export default function MiniQL({
@@ -45,7 +46,7 @@ export default function MiniQL({
         return (
           <GraphiQLProvider
             fetcher={fetcher}
-            defaultQuery={query.loc.source.body}
+            defaultQuery={deindent(query.loc.source.body)}
             defaultHeaders={JSON.stringify(headers)}
             variables={JSON.stringify(variables)}
             storage={storage}

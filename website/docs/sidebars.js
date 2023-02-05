@@ -22,6 +22,10 @@ const sidebars = {
       label: "Reference",
       collapsible: true,
       collapsed: false,
+      link: {
+        type: "doc",
+        id: "reference/index",
+      },
       items: [
         {
           type: "category",

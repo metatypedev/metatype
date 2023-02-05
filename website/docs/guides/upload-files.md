@@ -27,7 +27,7 @@ with TypeGraph(
 ## Usage
 
 ```ts
-const image = await Deno.readFile("website/static/img/logo.png");
+const image = await Deno.readFile("website/static/images/logo.png");
 
 const { data: { presigned } } = await fetch("http://localhost:7891/retrend", {
   method: "POST",

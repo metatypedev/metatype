@@ -79,10 +79,6 @@ export default function GraphiQLInterface(
   }, [tab, headerEditor]);
 
   useEffect(() => {
-    prettify();
-  }, [prettify]);
-
-  useEffect(() => {
     if (queryEditor) {
       queryEditor.setOption("lineNumbers", false);
       queryEditor.setOption("gutters", []);

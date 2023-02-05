@@ -18,6 +18,7 @@ specifiers:
   '@typescript-eslint/eslint-plugin': ^5.50.0
   '@typescript-eslint/parser': ^5.50.0
   clsx: ^1.2.1
+  de-indent: ^1.0.2
   docusaurus-graphql-plugin: ^0.8.1
   docusaurus-lunr-search: ^2.3.2
   docusaurus-plugin-drawio: ^0.4.0
@@ -50,6 +51,7 @@ dependencies:
   '@graphiql/toolkit': 0.8.0_graphql@16.6.0
   '@mdx-js/react': 1.6.22_react@18.2.0
   clsx: 1.2.1
+  de-indent: 1.0.2
   docusaurus-theme-frontmatter: 1.3.0
   graphiql: 2.2.0_gfvjcgkzjgpidpvrmfsbitoime
   graphql: 16.6.0
@@ -5692,6 +5694,10 @@ packages:
     resolution: {integrity: sha512-qTcEYLen3r7ojZNgVUaRggOI+KM7jrKxXeSHhogh/TWxYMeONEMqY+hmkobiYQozsGIyg9OYVzO4ZIfoB4I0pQ==}
     dev: true
 
+  /de-indent/1.0.2:
+    resolution: {integrity: sha512-e/1zu3xH5MQryN2zdVaF0OrdNLUbvWxzMbi+iNA6Bky7l1RoP8a2fIbRocyHclXt/arDrrR6lL3TqFD9pMQTsg==}
+    dev: false
+
   /debug/2.6.9:
     resolution: {integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==}
     peerDependencies:
@@ -6884,6 +6890,18 @@ packages:
       debug:
         optional: true
 
+  /follow-redirects/1.15.2_debug@4.3.4:
+    resolution: {integrity: sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    dependencies:
+      debug: 4.3.4_supports-color@6.1.0
+    dev: true
+
   /for-each/0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
     dependencies:
@@ -7703,7 +7721,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.2
+      follow-redirects: 1.15.2_debug@4.3.4
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug

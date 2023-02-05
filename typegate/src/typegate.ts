@@ -106,6 +106,7 @@ export const typegate =
           : url.origin;
         const playground = renderPlayground(
           `${targetUrl}/${lookup}`,
+          register.list().map((e) => e.name),
         );
         return new Response(playground, {
           headers: { "content-type": "text/html" },
@@ -161,7 +162,10 @@ export const typegate =
         limit,
       );
 
-      if (lookup !== "typegate" && lookup !== "introspection") {
+      if (
+        lookup !== "typegate" && (!operationName ||
+          !operationName.toLowerCase().includes("introspection"))
+      ) {
         logger.debug({ req: { query, operationName, variables }, res });
       }
 
