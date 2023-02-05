@@ -145,11 +145,11 @@ function Example(): JSX.Element {
       <div className="container">
         <div className="row flex justify-center">
           <TGExample
-            python={require("./homepage.py")}
+            python={require("./index.py")}
             typegraph="homepage"
             variables={{ message: "Great tool!" }}
             tab="variables"
-            query={require("./homepage.graphql")}
+            query={require("./index.graphql")}
           />
         </div>
       </div>
