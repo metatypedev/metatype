@@ -11,6 +11,7 @@ import gql from "graphql-tag";
 import styles from "./index.module.scss";
 import MiniQL from "../components/MiniQL";
 import CodeBlock from "@theme-original/CodeBlock";
+import TGExample from "../components/TGExample";
 
 function Header() {
   return (
@@ -142,55 +143,14 @@ function Example(): JSX.Element {
   return (
     <section className="flex items-center m-8">
       <div className="container">
-        <div className="row flex gap-8 justify-center">
-          <div className="flex-1 max-w-3xl text-s w-full">
-            <CodeBlock language="python">
-              {require("./homepage.py").default}
-            </CodeBlock>
-          </div>
-          <div className="flex-1 max-w-3xl">
-            <div className="pb-4 h-full">
-              <MiniQL
-                typegraph="homepage"
-                variables={{ message: "Great tool!" }}
-                tab="variables"
-                query={gql`
-                  query A {
-                    stargazers {
-                      login
-                    }
-                  }
-
-                  query B {
-                    stargazers {
-                      login
-                      user {
-                        name
-                      }
-                    }
-                  }
-
-                  mutation C($message: String!) {
-                    send_feedback(
-                      data: {
-                        email: "" # fill me
-                        message: $message
-                      }
-                    ) {
-                      id
-                    }
-                  }
-
-                  query D {
-                    list_feedback {
-                      email # delete me
-                      message
-                    }
-                  }
-                `}
-              />
-            </div>
-          </div>
+        <div className="row flex justify-center">
+          <TGExample
+            python={require("./homepage.py")}
+            typegraph="homepage"
+            variables={{ message: "Great tool!" }}
+            tab="variables"
+            query={require("./homepage.graphql")}
+          />
         </div>
       </div>
     </section>
@@ -239,7 +199,7 @@ const runtimeList = [
 function Runtimes(): JSX.Element {
   return (
     <section className={styles.features}>
-      <div className="container">
+      <div className="container p-8">
         <div className="text-center w-full">
           <h2 className="">Supported runtimes</h2>
         </div>

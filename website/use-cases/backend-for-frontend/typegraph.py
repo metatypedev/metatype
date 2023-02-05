@@ -7,6 +7,8 @@ from typegraph.runtimes.http import HTTPRuntime
 # skip:end
 with TypeGraph(
     "backend-for-frontend",
+    # skip:next-line
+    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
 
     public = policies.public()

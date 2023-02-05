@@ -3,7 +3,9 @@ const commentsPrefix = ["#", "//"];
 const loader = (source) => {
   const ret = [];
   let skipping = false;
-  for (const line of source.split("\n")) {
+  const lines = source.split("\n");
+  for (let cursor = 0; cursor < lines.length; cursor += 1) {
+    const line = lines[cursor];
     if (commentsPrefix.some((prefix) => line.trim().startsWith(prefix))) {
       if (line.includes("skip:start")) {
         if (skipping) {
@@ -16,6 +18,12 @@ const loader = (source) => {
           throw new Error("skip:end without skip:start");
         }
         skipping = false;
+        continue;
+      } else if (line.includes("skip:next-line")) {
+        if (skipping) {
+          throw new Error("skip:next-line without skip:end");
+        }
+        cursor += 1;
         continue;
       }
     }

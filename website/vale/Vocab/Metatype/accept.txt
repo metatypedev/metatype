@@ -6,5 +6,9 @@ materializer
 runtime
 will
 CLI
-Cloud
+[cC]loud
 BFF
+API
+FaaS
+Deno
+ORM
