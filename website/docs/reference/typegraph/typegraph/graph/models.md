@@ -10,6 +10,8 @@ title: typegraph.graph.models
 class Auth()
 ```
 
+Authentication options
+
 #### oauth2
 
 ```python

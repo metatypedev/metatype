@@ -1,3 +1,5 @@
+const deindent = require("de-indent");
+
 const commentsPrefix = ["#", "//"];
 
 const loader = (source) => {
@@ -31,7 +33,7 @@ const loader = (source) => {
       ret.push(line);
     }
   }
-  const exp = ret.join("\n").replaceAll(/ {4}/g, "  ");
+  const exp = deindent(ret.join("\n")).replaceAll(/ {4}/g, "  ").trim();
   return `module.exports = ${JSON.stringify(exp)};`;
 };
 

@@ -6,13 +6,26 @@ sidebar_position: 3
 
 The typegate nodes - or shorter, typegates - are the central component of the ecosystems. They build and verify typegraphs, and expose them through a GraphQL interface. They enforce the type safety of the data flows, connect to all the runtimes and orchestrate the execution of incoming requests.
 
-## A request
+## Request lifecycle
 
-## Query engine
+When a new request fires a trigger, the typegate orchestrate the following stages:
+
+1. extract the secure request context from custom authentication or JSON Web Token (JWT)
+1. retrieve cached execution plan or compute a new one
+   - traverse the typegraph to create a DAG of the required types
+   - optimize the DAG to reduce the number of calls to the runtimes
+   - pre-compute all structural elements and data resolutions
+1. execute the plan
+   - typecheck the arguments
+   - verify lazily policies on the need
+   - run the DAG execution
+   - enforce the rate-limiting
+   - typecheck the response
+1. manage metadata of the request
 
 ## HTTP/GraphQL interface
 
-For now, the typegate nodes are only accessible through HTTP/1.1 and HTTP/2. More protocols could be supported in the future. Typegates expose a GraphQL interface which is the result of a [typegraph](./typegraph) projected onto corresponding GraphQL types. While this reduces the type safety of the data flowing, it makes more interoperable thanks to the many high-quality and well-known GraphQL tooling already available. The underlying graphs of type is also exposed in order for API clients to verify the underlying types.
+For now, the typegate nodes are only accessible through HTTP/1.1 and HTTP/2. More protocols could be supported in the future. Typegates expose a GraphQL interface which is the result of a [typegraph](./typegraph) projected onto corresponding GraphQL types. While this reduces the type safety of the data flowing, it makes more interoperable thanks to the many high-quality and well-known GraphQL tooling already available. The underlying types are also exposed in order for API clients to verify the underlying types.
 
 GraphQL, being a query language, offer a great asset for Metatype's philosophy:
 
