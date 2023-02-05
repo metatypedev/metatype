@@ -62,8 +62,9 @@ const featureList = [
     svg: require("@site/static/icons/design-discover.svg").default,
     description: (
       <>
-        Focus on what matters. Leave the implementation details and use your
-        energy to design efficient interfaces. Metatype covers the rest for you.
+        Focus on what matters. Leave the implementation details and focus your
+        energy on designing efficient interfaces. Metatype covers the rest for
+        you.
       </>
     ),
   },
@@ -82,7 +83,7 @@ const featureList = [
     svg: require("@site/static/icons/bring-your-own-components.svg").default,
     description: (
       <>
-        Enjoy being technology agnostic. Host, deploy, build and extend your
+        Enjoy being technology agnostic. Import, deploy, host and extend your
         stacks with Metatype's open ecosystem without being afraid of vendor
         lock-ins.
       </>
@@ -94,7 +95,7 @@ const featureList = [
     description: (
       <>
         Enforce Policy Based Access Control (PBAC). By default no access, unless
-        you provide an explicit policy. Metatype includes authentication and
+        you provide one explicitly. Metatype comes with many authentication and
         delegation standards.
       </>
     ),
@@ -105,8 +106,8 @@ const featureList = [
     description: (
       <>
         Get expert advices. Metatype expert team is here to help you with your
-        projects and objectives. We offer training, consulting and dedicated
-        support options.
+        products and objectives. We offer training, consulting, managed services
+        and support options.
       </>
     ),
   },

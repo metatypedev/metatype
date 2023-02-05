@@ -46,7 +46,7 @@ const config = {
           },
           resolveLoader: {
             alias: {
-              "code-loader": require.resolve("./plugins/code-loader.js"),
+              "code-loader": require.resolve("./packages/code-loader.js"),
             },
           },
         };
@@ -68,7 +68,7 @@ const config = {
         routeBasePath: "/docs/reference/typegate/prisma-migration",
       },
     ],
-    require("./plugins/changelog"),
+    require("./packages/changelog"),
     [
       "posthog-docusaurus",
       {

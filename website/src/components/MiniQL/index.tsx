@@ -46,7 +46,7 @@ export default function MiniQL({
         return (
           <GraphiQLProvider
             fetcher={fetcher}
-            defaultQuery={deindent(query.loc.source.body)}
+            defaultQuery={deindent(query.loc.source.body).trim()}
             defaultHeaders={JSON.stringify(headers)}
             variables={JSON.stringify(variables)}
             storage={storage}
