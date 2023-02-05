@@ -25,7 +25,7 @@ def policy_name_factory():
 @frozen
 class Policy(Node):
     name: str = field(factory=policy_name_factory, kw_only=True)
-    mat: Materializer  # Should be a PureFunMat?
+    mat: Materializer
     collector_target: str = always(Collector.policies)
 
     def named(self, name: str):

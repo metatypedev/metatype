@@ -12,6 +12,10 @@ from attrs import frozen
 
 @define
 class Auth:
+    """
+    Authentication options
+    """
+
     name: str
     protocol: str
     auth_data: Dict[str, str]
@@ -25,6 +29,9 @@ class Auth:
         scopes: str,
         profile_url: Optional[str] = None,
     ) -> "Auth":
+        """
+        OAuth2 authentication
+        """
         return Auth(
             name,
             "oauth2",
@@ -48,6 +55,10 @@ class Auth:
 
 @define
 class Cors:
+    """
+    CORS options
+    """
+
     allow_origin: List[str] = field(factory=list)
     allow_headers: List[str] = field(factory=list)
     expose_headers: List[str] = field(factory=list)
@@ -57,6 +68,10 @@ class Cors:
 
 @define
 class Rate:
+    """
+    Rate limiting options
+    """
+
     window_limit: int
     window_sec: int
     query_limit: int

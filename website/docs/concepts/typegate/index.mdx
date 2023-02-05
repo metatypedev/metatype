@@ -1,0 +1,22 @@
+---
+sidebar_position: 3
+---
+
+# Typegate
+
+The typegate nodes - or shorter, typegates - are the central component of the ecosystems. They build and verify typegraphs, and expose them through a GraphQL interface. They enforce the type safety of the data flows, connect to all the runtimes and orchestrate the execution of incoming requests.
+
+## A request
+
+## Query engine
+
+## HTTP/GraphQL interface
+
+For now, the typegate nodes are only accessible through HTTP/1.1 and HTTP/2. More protocols could be supported in the future. Typegates expose a GraphQL interface which is the result of a [typegraph](./typegraph) projected onto corresponding GraphQL types. While this reduces the type safety of the data flowing, it makes more interoperable thanks to the many high-quality and well-known GraphQL tooling already available. The underlying graphs of type is also exposed in order for API clients to verify the underlying types.
+
+GraphQL, being a query language, offer a great asset for Metatype's philosophy:
+
+1. Efficient querying: the client can specify exactly what data it needs, reducing the amount of over- or under-fetching
+2. Flexiblity: allows for retrieving multiple resources in a single request, unlike REST, which often requires multiple ones
+3. Typing: GraphQL has a built-in type system that allows for better documentation and stronger validation of the requests
+4. Improved tooling: tools and libraries around GraphQL are rapidly growing and great development experience

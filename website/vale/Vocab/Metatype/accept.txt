@@ -12,3 +12,9 @@ API
 FaaS
 Deno
 ORM
+HTTP
+GraphQL
+REST
+DDL
+RLS
+RSP

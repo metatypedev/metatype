@@ -48,7 +48,7 @@ function Header() {
 
 const featureList = [
   {
-    title: "Compose typesafe API blocks",
+    title: "Compose type safe API blocks",
     svg: require("@site/static/icons/compose-api-blocks.svg").default,
     description: (
       <>
@@ -70,12 +70,13 @@ const featureList = [
     ),
   },
   {
-    title: "Stay productive as your stacks grow",
+    title: "Stay productive as your stacks evolve",
     svg: require("@site/static/icons/iterate-quickly.svg").default,
     description: (
       <>
         Cut your time to deployment in half. Metatype's iterative approach lets
-        improve your systems step by step without making compromises.
+        innovate in your (legacy) systems step by step without making
+        compromises.
       </>
     ),
   },
