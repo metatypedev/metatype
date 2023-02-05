@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 const fs = require("fs/promises");
-const deindent = require("de-indent");
 
 const plugin = (context) => ({
   name: "changelog",
@@ -36,6 +35,10 @@ const plugin = (context) => ({
               .replaceAll(
                 /(https:\/\/github.com\/.+\/pull\/([0-9]+))/g,
                 "[#$2]($1)"
+              )
+              .replaceAll(
+                /(https:\/\/github.com\/.+\/compare\/(.+))/g,
+                "[$2]($1)"
               );
             return `## [${releaseName}](${html_url}) (${date})\n\n${content}`;
           })
@@ -45,8 +48,6 @@ const plugin = (context) => ({
 ${header}
 
 <!-- vale off -->
-
-# Changelog
 
 ${changelog}
 

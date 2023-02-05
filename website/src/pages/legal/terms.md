@@ -4,7 +4,7 @@ title: Terms of services
 
 <!-- vale off -->
 
-# Terms Of Services
+# Terms of services
 
 PLEASE READ THIS TERMS OF SERVICE AGREEMENT CAREFULLY, AS IT CONTAINS IMPORTANT
 INFORMATION REGARDING YOUR LEGAL RIGHTS AND REMEDIES.
@@ -53,7 +53,7 @@ this Agreement, Company finds that you do not have the legal authority to bind
 such corporate entity, you will be personally responsible for the obligations
 contained in this Agreement.
 
-## 3. Rules Of User Conduct
+## 3. Rules of user conduct
 
 By using this Site You acknowledge and agree that:
 
@@ -90,7 +90,7 @@ You will not:
 - access Companies Content (as defined below) or User Content through any
   technology or means other than through this Site itself.
 
-## 4. Intellectual Property
+## 4. Intellectual property
 
 In addition to the general rules above, the provisions in this Section apply
 specifically to your use of Companies Content posted to Site. Companies Content
@@ -106,7 +106,7 @@ exploited for any purposes whatsoever without the express prior written consent
 of Company. No right or license under any copyright, trademark, patent, or other
 proprietary right or license is granted by this Agreement.
 
-## 5. Your Use Of User Content
+## 5. Your use of user content
 
 Some of the features of this Site may allow Users to view, post, publish, share,
 or manage (a) ideas, opinions, recommendations, or advice ("User Submissions"),
@@ -124,7 +124,7 @@ this Site (including without limitation those features that prevent or restrict
 use or copying of any Companies Content or User Content) or enforce limitations
 on the use of this Site, the Companies Content or the User Content therein.
 
-## 6. Companies Use Of User Content
+## 6. Companies use of user content
 
 The provisions in this Section apply specifically to Companies use of User
 Content posted to Site. You shall be solely responsible for any and all of your
@@ -170,7 +170,7 @@ whether any item of User Content is appropriate and/or complies with this
 Agreement. Company may remove any item of User Content if it violating this
 Agreement, at any time and without prior notice.
 
-## 7. Links To Third-Party Websites
+## 7. Links to third party websites
 
 This Site may contain links to third-party websites that are not owned or
 controlled by Company. Company assumes no responsibility for the content, terms
@@ -182,7 +182,7 @@ encourages you to be aware when you leave this Site and to review the terms and
 conditions, privacy policies, and other governing documents of each other
 website that you may visit.
 
-## 8. Disclaimer Of Representations And Warranties
+## 8. Disclaimer of representations and warranties
 
 YOU SPECIFICALLY ACKNOWLEDGE AND AGREE THAT YOUR USE OF THIS SITE SHALL BE AT
 YOUR OWN RISK AND THAT THIS SITE ARE PROVIDED "AS IS", "AS AVAILABLE" AND "WITH
@@ -205,7 +205,7 @@ DISCLAIMER OF REPRESENTATIONS AND WARRANTIES SHALL APPLY TO THE FULLEST EXTENT
 PERMITTED BY LAW, and shall survive any termination or expiration of this
 Agreement or your use of this Site or the Services found at this Site.
 
-## 9. Limitation Of Liability
+## 9. Limitation of liability
 
 IN NO EVENT SHALL COMPANY, ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND ALL
 THIRD PARTY SERVICE PROVIDERS, BE LIABLE TO YOU OR ANY OTHER PERSON OR ENTITY
@@ -249,14 +249,14 @@ intellectual property or other proprietary right. The indemnification
 obligations under this section shall survive any termination or expiration of
 this Agreement or your use of this Site or the Services found at this Site.
 
-## 11. Data Transfer
+## 11. Data transfer
 
 If you are visiting this Site from a country other than the country in which our
 servers are located, your communications with us may result in the transfer of
 information across international boundaries. By visiting this Site and
 communicating electronically with us, you consent to such transfers.
 
-## 12. Availability Of Website
+## 12. Availability of website
 
 Subject to the terms and conditions of this Agreement and our policies, we shall
 use commercially reasonable efforts to attempt to provide this Site on 24/7
@@ -269,7 +269,7 @@ acknowledge and agree that we have no control over the availability of this Site
 on a continuous or uninterrupted basis, and that we assume no liability to you
 or any other party with regard thereto.
 
-## 13. Discontinued Services
+## 13. Discontinued services
 
 Company reserves the right to cease offering or providing any of the Services at
 any time, for any or no reason, and without prior notice. Although Company makes
@@ -280,7 +280,7 @@ either offer a comparable Service for you to migrate to or a refund. Company
 will not be liable to you or any third party for any modification, suspension,
 or discontinuance of any of the Services we may offer or facilitate access to.
 
-## 14. Fees And Payments
+## 14. Fees and payments
 
 You acknowledge and agree that your payment will be charged and processed by
 Metatype. You agree to pay any and all prices and fees due for Services
@@ -293,12 +293,12 @@ within 30 days of purchase ("Refund Period"). The refund will be processed in 30
 days from the request. In no event will you be eligible for more than one refund
 of the same service.
 
-## 15. No Third-Party Beneficiaries
+## 15. No third party beneficiaries
 
 Nothing in this Agreement shall be deemed to confer any third-party rights or
 benefits.
 
-## 16. Compliance With Local Laws
+## 16. Compliance with local laws
 
 Company makes no representation or warranty that the content available on this
 Site are appropriate in every country or jurisdiction, and access to this Site
@@ -306,14 +306,14 @@ from countries or jurisdictions where its content is illegal is prohibited.
 Users who choose to access this Site are responsible for compliance with all
 local laws, rules and regulations.
 
-## 17. Governing Law
+## 17. Governing law
 
 This Agreement and any dispute or claim arising out of or in connection with it
 or its subject matter or formation shall be governed by and construed in
 accordance with the laws of Estonia, Tallinn, to the exclusion of conflict of
 law rules.
 
-## 18. Dispute Resolution
+## 18. Dispute resolution
 
 Any controversy or claim arising out of or relating to these Terms of Services
 will be settled by binding arbitration. Any such controversy or claim must be
@@ -322,7 +322,7 @@ arbitration with any claim or controversy of any other party. The arbitration
 must be conducted in Estonia, Tallinn, and judgment on the arbitration award may
 be entered into any court having jurisdiction thereof.
 
-## 19. Titles And Headings
+## 19. Titles and headings
 
 The titles and headings of this Agreement are for convenience and ease of
 reference only and shall not be utilized in any way to construe or interpret the
@@ -338,7 +338,7 @@ provisions (or portions of provisions) of this Agreement shall not be affected
 thereby and shall be found to be valid and enforceable to the fullest extent
 permitted by law.
 
-## 21. Contact Information
+## 21. Contact information
 
 If you have any questions about this Agreement, please contact us by email or
 regular mail at the following address: Metatype OÜ, Sepapaja tn 6, 15551

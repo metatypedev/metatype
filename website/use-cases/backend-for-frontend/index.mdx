@@ -1,0 +1,36 @@
+import TGExample from "@site/src/components/TGExample";
+
+# Backend for frontend
+
+Backend for frontend (BFF) is an architectural pattern in which each frontend
+client has a dedicated backend system. It allows for client-specific
+customization of the API, including endpoints and data transformations, to
+support unique needs of the frontend.
+
+## Scenario
+
+Imagine you have a web frontend and mobile app that both consume data from a
+microservice-based backend. The web frontend requires certain data fields in one
+format, and the mobile app requires different data fields in another different
+format.
+
+In a traditional architecture, both the web and mobile frontends would have to
+make separate API calls to the microservices, and then format the data into the
+appropriate structure themselves. This can lead to duplicated code, increased
+latency, and decreased efficiency.
+
+However, with a BFF in place, the BFF can handle the formatting of the data,
+based on the specific needs of each frontend. This means that the frontends can
+make a single API call to the BFF, which then communicates with the
+microservices, retrieves the data, and formats it into the required structure
+before returning it to the frontend. This results in reduced duplicated code,
+improved performance, and a cleaner separation of concerns between frontend and
+backend.
+
+## Suggested solution
+
+<TGExample
+  typegraph="homepage"
+  python={require("./typegraph.py")}
+  query={require("./query.graphql")}
+/>

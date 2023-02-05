@@ -1,0 +1,8 @@
+{
+  stargazers {
+    login
+    user {
+      name
+    }
+  }
+}

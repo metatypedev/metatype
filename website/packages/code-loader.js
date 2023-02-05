@@ -23,7 +23,8 @@ const loader = (source) => {
       ret.push(line);
     }
   }
-  return `export default ${JSON.stringify(ret.join("\n"))};`;
+  const exp = ret.join("\n").replaceAll(/ {4}/g, "  ");
+  return `module.exports = ${JSON.stringify(exp)};`;
 };
 
 module.exports = loader;

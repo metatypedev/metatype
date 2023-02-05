@@ -42,6 +42,11 @@ const config = {
                 test: /\.py$/i,
                 use: ["code-loader"],
               },
+              {
+                test: /\.(graphql|gql)$/,
+                exclude: /node_modules/,
+                loader: "graphql-tag/loader",
+              },
             ],
           },
           resolveLoader: {

@@ -2,9 +2,9 @@
 title: Privacy policy
 ---
 
-<!-- vale off -->
+# Privacy policy
 
-# Privacy Policy
+<!-- vale off -->
 
 Your privacy is important to us, so Metatype OÜ, a company based in the Estonia,
 has created the following Privacy Policy ("Policy") to let you know what
@@ -20,7 +20,7 @@ This Privacy Policy is governed by our [Terms of Services](/legal/terms).
 For any questions regarding this Policy or any requests regarding the processing
 of personal data, please contact us (support at metatype.dev).
 
-## 1. Information We Collect From You
+## 1. Information we collect from you
 
 We collect the information You provide to us and this information is necessary
 for the adequate performance of the contractual arrangement which is in place
@@ -31,7 +31,7 @@ between You and us and allow us to comply with our legal obligations.
 - Login information. We collect Login information if You are logging to our
   account with Authentication Data.
 
-## 2. Information We Collect Automatically
+## 2. Information we collect automatically
 
 When you use our Site or contact us directly we may collect information,
 including your personal information, about the way you act in our Site, the
@@ -48,7 +48,7 @@ provide and improve the functionalities of the Site.
 - Tracking technologies and Cookies. We use Customer number. We also
   automatically collect information about device’s operating system, .
 
-## 3. The Way We Use Your Information
+## 3. The way we use your information
 
 We process your information adhering to the general data processing principles.
 We may use the information we collect through our Site for a number of reasons,
@@ -69,7 +69,7 @@ We will normally collect personal information from you only where we have your
 consent to do so, where we need the personal information to perform a contract
 with you, or where the processing is in our legitimate business interests.
 
-## 4. How We May Share Your Information
+## 4. How we may share your information
 
 We may share your information with third parties that we use to provide and
 support our Services:
@@ -109,7 +109,7 @@ You may find more information about how to delete cookies, as well as the other
 useful information related to the use of the cookies, on the website
 http://www.allaboutcookies.org/.
 
-## 6. Sensitive Information
+## 6. Sensitive information
 
 We do not collect sensitive information such as political opinions, religious or
 philosophical beliefs, racial or ethnic origin, genetic data, biometric data,
@@ -118,7 +118,7 @@ provide us any sensitive data and contact us using the contact details below if
 you believe that we might have such information. We have a right to delete any
 information we believe it might contain sensitive data.
 
-## 7. Payment Information
+## 7. Payment information
 
 To order and use our services we may require you to provide certain financial
 information to facilitate the processing of payments. We will not store or
@@ -149,7 +149,7 @@ cause you substantial or irreparable harm. If you have any questions regarding
 the security of our Site or Services, you are welcome to contact us (support at
 metatype.dev).
 
-## 10. Your Rights
+## 10. Your rights
 
 You are entitled to a range of rights regarding the protection of your personal
 information. Those rights are:
@@ -173,7 +173,7 @@ information. Those rights are:
   necessary for the purposes it was collected, or where the data has been
   unlawfully processed.
 
-## 11. Application Of Policy
+## 11. Application of policy
 
 This Policy applies only to the services offered by our Company. Our Policy does
 not apply to services offered by other companies or individuals, including
@@ -187,7 +187,7 @@ Site and, if the changes are significant, we may consider providing a more
 explicit notice (including, for certain services, email notification of Policy
 changes).
 
-## 13. Acceptance Of This Policy
+## 13. Acceptance of this policy
 
 We assume that all Users of this Site have carefully read this document and
 agree to its contents. If someone does not agree with this Policy, they should
@@ -195,7 +195,7 @@ refrain from using our Site. We reserve the right to change our Policy at any
 time and inform by using the way as indicated in Section 13. Continued use of
 this Site implies acceptance of the revised Policy.
 
-## 14. Further Information
+## 14. Further information
 
 If you have any further questions regarding the data we collect, or how we use
 it, then please feel free to contact us at the details as indicated above. Users
