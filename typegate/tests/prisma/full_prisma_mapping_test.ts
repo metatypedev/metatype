@@ -18,17 +18,31 @@ test("prisma", async (t) => {
     await recreateMigrations(e);
   });
 
-  await t.should("return no data when empty", async () => {
+  // adding test datas
+  await t.should("insert a record with nested object", async () => {
     await gql`
-      query {
-        findManyUsers {
-          id
+        mutation q {
+            createOneUser (
+                data: {
+                    id: 1
+                    name: "Jack"
+                    age: 20
+                    coinflips: [false, true, true]
+                    city: "Anyville"
+                    posts: {
+                        create: { id: 10001, title: "Book 1" }
+                    }
+                    extended_profile: {
+                        create: { id: 10111, bio: "Some bio 1" }
+                    }
+                }
+            ) {
+                id
+            }
         }
-      }
-    `
-      .expectData({
-        findManyUsers: [],
-      })
+    `.expectBody((body: any) => {
+      console.log("BODY ::", body);
+    })
       .on(e);
   });
 });

@@ -5,44 +5,48 @@ from typegraph import TypeGraph
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 with TypeGraph("prisma") as g:
-    # schema model:
+    # schema ref:
     # https://www.prisma.io/docs/reference/api-reference/prisma-client-reference
 
     db = PrismaRuntime("prisma", "POSTGRES")
     public = policies.public()
 
-    userPost = db.one_to_many(g("users"), g("posts")).named("userPost")
-    postAuthor = db.one_to_one(g("posts"), g("users")).named("postAuthor")
-    userExtendedProfile = db.one_to_one(g("users"), g("extendedProfiles")).named(
-        "userExtendedProfile"
+    user_post = db.one_to_many(g("User"), g("Post")).named("UserPost")
+    user_extended_profile = db.one_to_one(g("User"), g("ExtendedProfile")).named(
+        "UserExtendedProfile"
     )
 
-    posts = t.struct(
+    user = t.struct(
         {
-            "id": t.uuid().config("id", "auto"),
-            "title": t.string(),
-            "published": t.boolean(),
-            "author": postAuthor.owned(),
-            "views": t.integer(),
-            "likes": t.integer(),
-        }
-    )
-    db.manage(posts)
-
-    users = t.struct(
-        {
-            "id": t.uuid().config("id", "auto"),
+            "id": t.integer().config("id"),
             "name": t.string(),
-            "email": t.string(),
-            "profileViews": t.integer(),
             "age": t.integer().optional(),
             "coinflips": t.array(t.boolean()),
             "city": t.string(),
-            "posts": userPost.owner(),
-            "extendedProfile": userExtendedProfile.owned().optional(),
+            "posts": user_post.owned(),
+            "extended_profile": user_extended_profile.owned(),
         },
-    ).named("users")
-    db.manage(users)
+    ).named("User")
+
+    post = t.struct(
+        {
+            "id": t.integer().config("id"),
+            "title": t.string(),
+            "author": user_post.owner(),
+        }
+    ).named("Post")
+
+    extended_profile = t.struct(
+        {
+            "id": t.integer().config("id"),
+            "bio": t.string(),
+            "User": user_extended_profile.owner(),
+        }
+    ).named("ExtendedProfile")
+
+    db.manage(user)
+    db.manage(post)
+    db.manage(extended_profile)
 
     g.expose(
         dropSchema=db.executeRaw(
@@ -50,10 +54,12 @@ with TypeGraph("prisma") as g:
         ).add_policy(public),
         **db.gen(
             {
-                "findManyUsers": (users, "findMany", public),
-                "createOneUser": (users, "create", public),
-                "findManyPosts": (posts, "findMany", public),
-                "createOnePost": (posts, "create", public),
+                "findManyUsers": (user, "findMany", public),
+                "createOneUser": (user, "create", public),
+                "findManyPosts": (post, "findMany", public),
+                "createOnePost": (post, "create", public),
+                "findManyExtendedProfile": (extended_profile, "findMany", public),
+                "createOneExtendedProfile": (extended_profile, "create", public),
             }
         )
     )
