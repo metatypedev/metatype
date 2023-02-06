@@ -1,7 +1,5 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from collections import defaultdict
-from typing import DefaultDict
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -13,10 +11,11 @@ from typegraph import effects
 from typegraph import types as t
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
-from typegraph.graph.nodes import Node, NodeProxy
-from typegraph.graph.typegraph import TypegraphContext, TypeGraph
-from typegraph.providers.prisma.relations import RawLinkItem
-from typegraph.providers.prisma.relations import Relation, LinkProxy
+from typegraph.graph.nodes import Node
+from typegraph.graph.nodes import NodeProxy
+from typegraph.graph.typegraph import TypegraphContext
+from typegraph.providers.prisma.relations import LinkProxy
+from typegraph.providers.prisma.relations import Relation
 from typegraph.providers.prisma.schema import build_model
 from typegraph.providers.prisma.schema import SourceOfTruth
 from typegraph.providers.prisma.type_generator import TypeGenerator

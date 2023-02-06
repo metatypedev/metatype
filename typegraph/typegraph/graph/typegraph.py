@@ -2,7 +2,6 @@
 
 import inspect
 from pathlib import Path
-import sys
 from typing import Callable
 from typing import Dict
 from typing import List

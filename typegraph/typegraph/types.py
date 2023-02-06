@@ -1,6 +1,5 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import sys
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -152,9 +151,7 @@ class typedef(Node):
         name = self.name
         if name in types:
             if types[name] != self:
-                raise Exception(
-                    f"Name '{name}' is already registered for another type"
-                )
+                raise Exception(f"Name '{name}' is already registered for another type")
             return
 
         if name in reserved_types:

@@ -31,18 +31,17 @@ def reformat_schema(schema: str):
 
 
 class TestPrismaSchema:
-    def assert_schema(
-        self, runtime: PrismaRuntime, models: Iterable[t.struct], schema: str
-    ):
+    def init_snapshot(self, snapshot):
+        snapshot.snapshot_dir = "tests/__snapshots__/prisma-schema"
+
+    def build_schema(self, runtime: PrismaRuntime, models: Iterable[t.struct]):
         spec = SourceOfTruth(runtime)
         for m in models:
             spec.manage(m)
-        generated = reformat_schema(
-            "\n".join((build_model(m.name, spec) for m in models))
-        )
-        assert generated == reformat_schema(schema)
+        return reformat_schema("\n".join((build_model(m.name, spec) for m in models)))
 
-    def test_simple_model(self):
+    def test_simple_model(self, snapshot):
+        self.init_snapshot(snapshot)
         with TypeGraph(""):
             db = PrismaRuntime("test", "POSTGRES")
             model = t.struct(
@@ -52,19 +51,11 @@ class TestPrismaSchema:
                 }
             ).named("ModelA")
 
-            self.assert_schema(
-                db,
-                {model},
-                """
-                    model ModelA {
-                        id Int @id @default(autoincrement())
-                        name String
-                    }
-                """,
-            )
+            snapshot.assert_match(self.build_schema(db, {model}), "simple-model.prisma")
 
-    def test_one_to_many(self):
-        self.maxDiff = None
+    def test_one_to_many(self, snapshot):
+        self.init_snapshot(snapshot)
+        # self.maxDiff = None
 
         with TypeGraph(name="test_one_to_many") as g:
             db = PrismaRuntime("test", "POSTGRES")
@@ -83,13 +74,13 @@ class TestPrismaSchema:
                 }
             ).named("Post")
 
-            with open(
-                Path(__file__).parent.joinpath("schemas/one_to_many.prisma"), "r"
-            ) as f:
-                self.assert_schema(db, [user, post], f.read())
+            snapshot.assert_match(
+                self.build_schema(db, [user, post]), "one-to-many.prisma"
+            )
 
-    def test_one_to_one(self):
-        self.maxDiff = None
+    def test_one_to_one(self, snapshot):
+        self.init_snapshot(snapshot)
+        # self.maxDiff = None
 
         with TypeGraph(name="test_one_to_one") as g:
             db = PrismaRuntime("test", "POSTGRES")
@@ -108,7 +99,6 @@ class TestPrismaSchema:
                 }
             ).named("Profile")
 
-            with open(
-                Path(__file__).parent.joinpath("schemas/one_to_one.prisma"), "r"
-            ) as f:
-                self.assert_schema(db, [user, profile], f.read())
+            snapshot.assert_match(
+                self.build_schema(db, [user, profile]), "one-to-one.prisma"
+            )

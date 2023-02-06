@@ -16,13 +16,12 @@ from typing import Optional
 from typing import Tuple
 from typing import TYPE_CHECKING
 
-from attrs import evolve
 from attrs import frozen
 from strenum import StrEnum
 from typegraph import types as t
-from typegraph.graph.typegraph import find, TypeGraph
 from typegraph.graph.nodes import NodeProxy
 from typegraph.graph.typegraph import resolve_proxy
+from typegraph.graph.typegraph import TypeGraph
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
 if TYPE_CHECKING:
@@ -349,15 +348,15 @@ class SourceOfTruth:
                 left.target_field = left_field
 
             return left
-                # match by target_field
-                # right_type = right.get()
-                # target_type = resolve_proxy(typ.props[left.target_field])
-                # assert (
-                #     right_type.type == target_type.type
-                #     and resolve_entity_quantifier(right_type).name
-                #     == resolve_entity_quantifer(target_type).name
-                # )
-                # return left
+            # match by target_field
+            # right_type = right.get()
+            # target_type = resolve_proxy(typ.props[left.target_field])
+            # assert (
+            #     right_type.type == target_type.type
+            #     and resolve_entity_quantifier(right_type).name
+            #     == resolve_entity_quantifer(target_type).name
+            # )
+            # return left
 
             # # find left.target_field
             # right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
@@ -370,13 +369,13 @@ class SourceOfTruth:
         raise Exception("Not supported (yet)")
         # we need to wrap `typ` in a LinkProxy
 
-        right_type_wrapper = right.get()  # optional or array
-        right_type = resolve_proxy(resolve_entity_quantifier(right_type_wrapper))
+        # right_type_wrapper = right.get()  # optional or array
+        # right_type = resolve_proxy(resolve_entity_quantifier(right_type_wrapper))
 
-        # find matching field in right_type
-        fields = [f for f, ty in right_type.props.items() if ty.name == typ.name]
-        assert len(fields) == 1
-        return self.runtime.link(typ, right.link_name, fields[0])
+        # # find matching field in right_type
+        # fields = [f for f, ty in right_type.props.items() if ty.name == typ.name]
+        # assert len(fields) == 1
+        # return self.runtime.link(typ, right.link_name, fields[0])
 
     def get_right_proxy(self, right_field: str, left: LinkProxy) -> LinkProxy:
         left_type = left.get()
@@ -394,25 +393,26 @@ class SourceOfTruth:
 
             # find right.target_field
             # we should find typ (the same reference) in left_type
-            fields = [f for f, ty in left_type.props.items() if ty == typ]
-            assert len(fields) == 1
-            right.target_field = fields[0]
-            return right
+            # fields = [f for f, ty in left_type.props.items() if ty == typ]
+            # assert len(fields) == 1
+            # right.target_field = fields[0]
+            # return right
 
         raise Exception("Not supported (yet)")
 
         # we need to wrap `typ` in a LinkProxy
         # find matching field in left_type
-        right_type_wrapper = resolve_proxy(typ)
-        right_type = resolve_proxy(resolve_entity_quantifier(right_type_wrapper))
-        fields = [
-            f
-            for f, ty in left_type.props.items()
-            if ty.type == right_type_wrapper.type
-            and resolve_entity_quantifier(ty).name == right_type.name
-        ]
-        assert len(fields) == 1
-        return self.runtime.link(typ, left.link_name, fields[0])
+        # right_type_wrapper = resolve_proxy(typ)
+        # right_type = resolve_proxy(resolve_entity_quantifier(right_type_wrapper))
+        # fields = [
+        #     f
+        #     for f, ty in left_type.props.items()
+        #     if ty.type == right_type_wrapper.type
+        #     and resolve_entity_quantifier(ty).name == right_type.name
+        # ]
+        # assert len(fields) == 1
+        # return self.runtime.link(typ, left.link_name, fields[0])
+        return None
 
     # TODO return a list instead; there could be more than one?
     # get (left, right) LinkProxy's for a relationship
@@ -431,7 +431,7 @@ class SourceOfTruth:
                     right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
                     # TODO
                     fields = [
-                        f 
+                        f
                         for f, ty in right_type.props.items()
                         if isinstance(ty, LinkProxy) and ty.link_name == right.link_name
                     ]
@@ -525,7 +525,7 @@ class SourceOfTruth:
             if link1:
                 link_fields = [
                     name
-                    for name in link_links
+                    for name in link_fields
                     if right.props[name].link_name == link1.name
                 ]
                 assert len(link_fields) < 2
