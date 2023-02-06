@@ -3,8 +3,7 @@
 import { gql, recreateMigrations, test } from "../utils.ts";
 
 test("prisma", async (t) => {
-  const tgPath = "prisma/prisma.py";
-  const e = await t.pythonFile(tgPath);
+  const e = await t.pythonFile("prisma/full_prisma_mapping.py");
 
   await t.should("drop schema and recreate", async () => {
     await gql`

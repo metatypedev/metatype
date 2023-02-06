@@ -11,10 +11,6 @@ with TypeGraph("prisma") as g:
     db = PrismaRuntime("prisma", "POSTGRES")
     public = policies.public()
 
-    roles = t.enum(["USER", "ADMIN"])
-    db.manage(roles)
-
-    userRole = db.one_to_one(g("users"), g("roles")).named("userRole")
     userPost = db.one_to_many(g("users"), g("posts")).named("userPost")
     postAuthor = db.one_to_one(g("posts"), g("users")).named("postAuthor")
     userExtendedProfile = db.one_to_one(g("users"), g("extendedProfiles")).named(
@@ -42,7 +38,6 @@ with TypeGraph("prisma") as g:
             "age": t.integer().optional(),
             "coinflips": t.array(t.boolean()),
             "city": t.string(),
-            "role": userRole.owner(),
             "posts": userPost.owner(),
             "extendedProfile": userExtendedProfile.owned().optional(),
         },
@@ -59,7 +54,6 @@ with TypeGraph("prisma") as g:
                 "createOneUser": (users, "create", public),
                 "findManyPosts": (posts, "findMany", public),
                 "createOnePost": (posts, "create", public),
-                "findManyRoles": (roles, "findMany", public),
             }
         )
     )
