@@ -233,8 +233,6 @@ class FieldBuilder:
         return [tag, fkeys]
 
     def build(self, field: str, typ: t.typedef, parent_type: t.struct) -> SchemaField:
-        print(f"spec: {self.spec.relations}")
-
         quant = ""
         if typ.type == "optional":
             quant = "?"
@@ -271,8 +269,6 @@ class FieldBuilder:
         else:
             assert typ.type == "object", f"Type f'{typ.type}' not supported"
             name = typ.name
-
-            print(f"type: {parent_type.name}; field: {field}")
 
             rel = self.spec.field_relations[parent_type.name][field]
             if rel == self.spec.relations[rel.name].left:

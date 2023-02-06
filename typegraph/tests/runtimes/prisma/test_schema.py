@@ -37,15 +37,9 @@ class TestPrismaSchema:
         spec = SourceOfTruth(runtime)
         for m in models:
             spec.manage(m)
-
-        print(f"relations: {spec.relations}")
-        print(f"types: {[tp for tp in spec.types]}")
-        print(f"field relations: {spec.field_relations}")
-
         generated = reformat_schema(
             "\n".join((build_model(m.name, spec) for m in models))
         )
-        print(f"generated={generated}")
         assert generated == reformat_schema(schema)
 
     def test_simple_model(self):

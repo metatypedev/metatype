@@ -478,7 +478,6 @@ class SourceOfTruth:
 
             # find link1.target_field
             if from_type.type in ["optional", "array"]:  # right
-                print(f"from_type: {from_type.name}")
                 right = link1
                 nested_type = resolve_proxy(resolve_entity_quantifier(from_type))
                 # fields = [f for f, ty in nested_types.props.items() if ty.name = target_type.name]
@@ -489,7 +488,6 @@ class SourceOfTruth:
                 ]
                 assert len(fields) == 1
                 right.target_field = fields[0]
-                print(f"target type={target_type.name}, target_field={from_field}")
                 left = self.get_left_link(target_type.props[from_field], right)
             else:
                 left = link1
@@ -602,19 +600,14 @@ class SourceOfTruth:
                 prop_type = resolve_proxy(prop_type)
                 prop_type = self.get_link_proxy(prop_type, typ)
                 if prop_type is None:
-                    print(f"no link proxy for {typ.name}::{prop_name}")
                     continue  # not a relationship field
 
             links = self.get_relationship(prop_type, typ, prop_name)
-            print(f"no relationship for {typ.name}::{prop_name}")
             if links is None:
                 continue
             left_proxy, right_proxy = links
             left_type = left_proxy.get()
             right_type = resolve_proxy(resolve_entity_quantifier(right_proxy.get()))
-
-            print(f"left type: {left_type.name}, right type: {right_type.name}")
-            print(f"left field: {left_proxy.target_field}, right field: {right_proxy.target_field}")
 
             deps.append(left_type)
             deps.append(right_type)

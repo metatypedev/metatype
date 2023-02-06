@@ -10,8 +10,6 @@ with TypeGraph("prisma") as g:
 
     public = policies.public()
 
-    userProfile = db.one_to_one(g("User"), g("Profile")).named("userProfile")
-
     user = t.struct(
         {
             "id": t.integer().config("id"),

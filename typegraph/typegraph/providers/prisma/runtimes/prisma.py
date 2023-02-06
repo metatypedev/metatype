@@ -327,8 +327,8 @@ class PrismaRuntime(Runtime):
         #     raise Exception(
         #         f'{tpe.name} must have at least an id among {",".join(non_null_fields)}'
         #     )
-
-        self.spec.manage(tpe.name)
+        tpe._propagate_runtime(self)
+        self.spec.manage(tpe)
 
         # self.managed_types[tpe.name] = tpe.within(self)
 

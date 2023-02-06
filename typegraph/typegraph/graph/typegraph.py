@@ -206,6 +206,5 @@ def resolve_proxy(tpe: Union[NodeProxy, "t.typedef"]) -> "t.typedef":
     if isinstance(tpe, NodeProxy):
         return tpe.get()
     else:
-        print(f"type: {type(tpe).__name__}", file=sys.stderr)
         assert isinstance(tpe, t.typedef)
         return tpe

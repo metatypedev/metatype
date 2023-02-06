@@ -152,7 +152,9 @@ class typedef(Node):
         name = self.name
         if name in types:
             if types[name] != self:
-                raise Exception(f"Name '{name}' is already registered for another type")
+                raise Exception(
+                    f"Name '{name}' is already registered for another type"
+                )
             return
 
         if name in reserved_types:
@@ -185,15 +187,9 @@ class typedef(Node):
         return self
 
     def _propagate_runtime(self, runtime: "Runtime", visited: Set["typedef"] = None):
-        print(f"name={self.name}, edges={self.labeled_edges}", file=sys.stderr)
-        # print(
-        #     f"dir self={[(k, getattr(self, k)) for k in dir(self) if isinstance(getattr(self,k), dict)]}",
-        #     file=sys.stderr,
-        # )
         if visited is None:
             visited = set()
         elif self in visited:
-            print(f"skip={self.name}", file=sys.stderr)
             return
         else:
             visited.add(self)
@@ -253,9 +249,7 @@ class typedef(Node):
         return self.replace(enum=tuple(variants))
 
     def data(self, collector) -> dict:
-        print(f"Data: name={self.name}, edges={self.labeled_edges}", file=sys.stderr)
         if self.runtime is None:
-            print(f"self={self}", file=sys.stderr)
             raise Exception("Expected Runtime, got None")
 
         ret = remove_none_values(asdict(self))
