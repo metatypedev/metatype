@@ -13,10 +13,10 @@ from typegraph import effects
 from typegraph import types as t
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
-from typegraph.graph.nodes import Node
-from typegraph.graph.typegraph import TypegraphContext
+from typegraph.graph.nodes import Node, NodeProxy
+from typegraph.graph.typegraph import TypegraphContext, TypeGraph
 from typegraph.providers.prisma.relations import RawLinkItem
-from typegraph.providers.prisma.relations import Relation
+from typegraph.providers.prisma.relations import Relation, LinkProxy
 from typegraph.providers.prisma.schema import build_model
 from typegraph.providers.prisma.schema import SourceOfTruth
 from typegraph.providers.prisma.type_generator import TypeGenerator
@@ -139,15 +139,16 @@ class PrismaOperationMat(Materializer):
 #         }
 #     )
 
+
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries
 @frozen
 class PrismaRuntime(Runtime):
     name: str
     connection_string_secret: str
     runtime_name: str = always("prisma")
-    links: DefaultDict[str, List[RawLinkItem]] = field(
-        init=False, factory=lambda: defaultdict(list), hash=False, metadata={SKIP: True}
-    )
+    # links: DefaultDict[str, List[RawLinkItem]] = field(
+    #     init=False, factory=lambda: defaultdict(list), hash=False, metadata={SKIP: True}
+    # )
     spec: SourceOfTruth = field(init=False, hash=False, metadata={SKIP: True})
 
     def __attrs_post_init__(self):
@@ -173,10 +174,18 @@ class PrismaRuntime(Runtime):
     #     return config
 
     def link(
-        self, typ: t.TypeNode, name: str, field: Optional[str] = None
+        self, typ: Union[t.TypeNode, str], name: str, field: Optional[str] = None
     ) -> t.TypeNode:
-        self.links[name].append(RawLinkItem(typ=typ, field=field))
-        return typ
+        if isinstance(typ, t.typedef) or isinstance(typ, NodeProxy):
+            g = typ.graph
+            if isinstance(typ, t.typedef):
+                typ.register_name()
+            typ = typ.name
+        else:
+            g = TypegraphContext.get_active()
+        return LinkProxy(g, typ, self, name, field)
+        # self.links[name].append(RawLinkItem(typ=typ, field=field))
+        # return typ
 
     @property
     def typegen(self):

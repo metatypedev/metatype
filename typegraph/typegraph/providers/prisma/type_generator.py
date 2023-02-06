@@ -1,19 +1,14 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from collections import defaultdict
-from typing import DefaultDict
-from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Union
 
-from attrs import field
 from attrs import frozen
 from typegraph import t
 from typegraph.graph.typegraph import find
 from typegraph.graph.typegraph import resolve_proxy
 from typegraph.providers.prisma.relations import check_field
-from typegraph.providers.prisma.relations import Relation, SourceOfTruth
+from typegraph.providers.prisma.relations import SourceOfTruth
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
 
@@ -69,7 +64,7 @@ class TypeGenerator:
                     continue
                 relation = self.spec.relations[relname]
                 nested = resolve_proxy(resolve_entity_quantifier(field_type))
-                
+
                 entries = {
                     "create": self.get_input_type(
                         nested, skip=skip | {relname}, name=f"Input{nested.name}Create"
@@ -78,7 +73,10 @@ class TypeGenerator:
                         nested, name=f"Input{nested.name}"
                     ).optional(),
                 }
-                if relation.side_of(tpe.name).is_left() and relation.cardinality.is_one_to_many():
+                if (
+                    relation.side_of(tpe.name).is_left()
+                    and relation.cardinality.is_one_to_many()
+                ):
                     entries["createMany"] = t.struct(
                         {"data": t.array(entries["create"].of)}
                     ).optional()

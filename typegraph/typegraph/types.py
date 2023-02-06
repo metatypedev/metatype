@@ -147,20 +147,26 @@ class typedef(Node):
     def labeled_edges(self) -> Dict[str, str]:
         return {}
 
-    def named(self, name: str) -> "typedef":
+    def register_name(self):
         types = self.graph.type_by_names
-        # TODO compare types
+        name = self.name
         if name in types:
-            raise Exception(f"type name {name} already used")
+            if types[name] != self:
+                raise Exception(f"Name '{name}' is already registered for another type")
+            return
+
         if name in reserved_types:
-            raise Exception(f"type name {name} is a reserved type")
+            raise Exception(f"Type name '{name}' is a reserved type")
         # https://spec.graphql.org/draft/#sel-GAJTBAABABFj6D
         if name.startswith("__"):
             raise Exception(
                 f"type name {name} cannot start with `__`, it's reserved for introspection"
             )
+        types[name] = self
+
+    def named(self, name: str) -> "typedef":
         ret = self.replace(name=name)
-        types[name] = ret
+        ret.register_name()
         return ret
 
     def describe(self, description: str) -> "typedef":

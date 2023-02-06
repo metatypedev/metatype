@@ -36,7 +36,11 @@ class TestPrismaSchema:
     ):
         spec = SourceOfTruth(runtime)
         for m in models:
-            spec.manage(m.name)
+            spec.manage(m)
+
+        print(f"relations: {spec.relations}")
+        print(f"types: {[tp for tp in spec.types]}")
+        print(f"field relations: {spec.field_relations}")
 
         generated = reformat_schema(
             "\n".join((build_model(m.name, spec) for m in models))

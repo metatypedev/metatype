@@ -15,30 +15,23 @@ with TypeGraph("prisma") as g:
     user = t.struct(
         {
             "id": t.integer().config("id"),
-            "profile": userProfile.owned(),
+            "profile": db.link(g("Profile").optional(), "userProfile"),
         }
     ).named("User")
 
     profile = t.struct(
         {
             "id": t.integer().config("id"),
-            "user": userProfile.owner(),
+            "user": db.link(g("User"), "userProfile"),
         }
     ).named("Profile")
-
-    db.__manage(user)
-    db.__manage(profile)
 
     g.expose(
         dropSchema=db.executeRaw(
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
-        **db.gen(
-            {
-                "createUser": (user, "create", public),
-                "updateUser": (user, "update", public),
-                "findUniqueProfile": (profile, "findUnique", public),
-                "deleteUser": (user, "delete", public),
-            }
-        )
+        createUser=db.create(user).add_policy(public),
+        updateUser=db.update(user).add_policy(public),
+        findUniqueProfile=db.find_unique(profile).add_policy(public),
+        deleteUser=db.delete(user).add_policy(public),
     )

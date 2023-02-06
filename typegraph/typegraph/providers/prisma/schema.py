@@ -230,11 +230,11 @@ class FieldBuilder:
 
         tag = f"@relation(name: {name}, fields: {fields}, references: {references})"
 
-        print(f"fkeys={fkeys}")
-
         return [tag, fkeys]
 
     def build(self, field: str, typ: t.typedef, parent_type: t.struct) -> SchemaField:
+        print(f"spec: {self.spec.relations}")
+
         quant = ""
         if typ.type == "optional":
             quant = "?"
@@ -272,7 +272,8 @@ class FieldBuilder:
             assert typ.type == "object", f"Type f'{typ.type}' not supported"
             name = typ.name
 
-            print(f"{parent_type.name}, {field}")
+            print(f"type: {parent_type.name}; field: {field}")
+
             rel = self.spec.field_relations[parent_type.name][field]
             if rel == self.spec.relations[rel.name].left:
                 # left side of the relation: the one that has the foreign key defined in
@@ -318,8 +319,6 @@ def build_model(name: str, spec: SourceOfTruth) -> str:
             tags.append(f"@@unique({', '.join((f.name for f in field.fkeys))})")
 
     # TODO support for multi-field ids and indexes -- to be defined as config on the struct!!
-
-    print(f"fields={fields}")
 
     ids = [field.name for field in fields if "@id" in field.tags]
     assert len(ids) > 0, f"No id field defined in '{name}'"

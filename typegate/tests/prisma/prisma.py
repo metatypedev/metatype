@@ -23,7 +23,6 @@ with TypeGraph("prisma") as g:
             "id": t.integer().config("id"),
             "time": t.integer(),
             "message": t.string(),
-            # "sender": g("users", lambda u: u.config(rel="messageSender")),
             "sender": db.link(g("users"), "messageSender"),
         }
     ).named("messages")
@@ -33,40 +32,16 @@ with TypeGraph("prisma") as g:
             "id": t.integer().config("id", "auto"),
             "email": t.string(),
             "name": t.string(),
-            # "favoriteMessage": db.link(messages),
             "messages": db.link(t.array(g("messages")), "messageSender"),
         }
     ).named("users")
-
-    db.manage(users)
-
-    g.expose(
-        dropSchema=db.executeRaw(
-            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
-        ).add_policy(public),
-        **db.gen(
-            {
-                "findManyRecords": (record, "findMany", public),
-                "createOneRecord": (record, "create", public),
-                "deleteOneRecord": (record, "delete", public),
-                "updateOneRecord": (record, "update", public),
-                "createUser": (users, "create", public),
-                "findUniqueUser": (users, "findUnique", public),
-                "findMessages": (messages, "findMany", public),
-                "updateUser": (users, "update", public),
-                "deleteMessages": (messages, "deleteMany", public),
-            }
-        )
-        .config(rel={"messageSender": "messages"})
-        .named("users")
-    )
 
     g.expose(
         dropSchema=db.executeRaw(
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
         findManyRecords=db.find_many(record).add_policy(public),
-        createoneRecord=db.create(record).add_policy(public),
+        createOneRecord=db.create(record).add_policy(public),
         deleteOneRecord=db.delete(record).add_policy(public),
         updateOneRecord=db.update(record).add_policy(public),
         createUser=db.create(users).add_policy(public),
