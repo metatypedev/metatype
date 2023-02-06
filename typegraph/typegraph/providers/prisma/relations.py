@@ -294,6 +294,9 @@ class Relation2:
 
     def __attrs_post_init__(self):
         assert (
+            self.left.name == self.right.name
+        ), "left and right sides of a relationship must have the same name"
+        assert (
             self.left.cardinality == self.right.cardinality
         ), f"left and right sides of a relationship must have the same cardinality"
 
@@ -414,134 +417,89 @@ class SourceOfTruth:
         # return self.runtime.link(typ, left.link_name, fields[0])
         return None
 
-    # TODO return a list instead; there could be more than one?
-    # get (left, right) LinkProxy's for a relationship
-    def get_relationship(
-        self, from_type: t.TypeNode, target_type: t.struct, from_field: str
-    ) -> Optional[Tuple[LinkProxy, LinkProxy]]:
-        link1 = None
-        link2 = None
-        if isinstance(from_type, LinkProxy):
-            link1 = from_type
-            from_type = from_type.get()
+    def get_link_from_proxy(
+        self, proxy: LinkProxy, target_type: t.struct, target_field: str
+    ):
+        typ = proxy.get()
 
-            if from_type.type in ["optional", "array"]:
-                right = link1
-                if right.target_field is None:
-                    right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
-                    # TODO
-                    fields = [
-                        f
-                        for f, ty in right_type.props.items()
-                        if isinstance(ty, LinkProxy) and ty.link_name == right.link_name
-                    ]
-                    assert len(fields) == 1
-                    right.target_field = fields[0]
-
-                left_field = from_field
-                left = self.get_left_proxy(left_field, right)
-                return left, right
-
-            assert from_type.type == "object"
-            left = link1
-            if left.target_field is None:
-                left_type = left.get()
+        if typ.type in ["optional", "array"]:
+            right = proxy
+            if right.target_field is None:
+                right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
+                # TODO
+                # match by link name
                 fields = [
                     f
-                    for f, ty in left_type.props.items()
-                    if isinstance(ty, LinkProxy) and ty.link_name == left.link_name
-                ]
-                assert len(fields) == 1
-                left.target_field = fields[0]
-
-            right_field = from_field
-            right = self.get_right_proxy(right_field, left)
-            return left, right
-
-            if link1.target_field is not None:
-                # assert link1.target_field == from_field
-                # left or right ?
-                if from_type.type in ["optional", "array"]:  # right
-                    right = link1
-                    # left_type = target_type
-                    left_field = from_field
-                    left = self.get_left_link(left_field, right)
-                    return left, right
-
-                # left
-                assert from_type.type == "object"
-                left = link1
-                # right_type = target_type
-                right_field = from_field
-                right = self.get_right_proxy(right_field, left)
-                return left, right
-
-            # find link1.target_field
-            if from_type.type in ["optional", "array"]:  # right
-                right = link1
-                nested_type = resolve_proxy(resolve_entity_quantifier(from_type))
-                # fields = [f for f, ty in nested_types.props.items() if ty.name = target_type.name]
-                fields = [
-                    f
-                    for f, ty in nested_type.props.items()
-                    if isinstance(ty, LinkProxy) and ty.link_name == link1.link_name
+                    for f, ty in right_type.props.items()
+                    if isinstance(ty, LinkProxy) and ty.link_name == right.link_name
                 ]
                 assert len(fields) == 1
                 right.target_field = fields[0]
-                left = self.get_left_link(target_type.props[from_field], right)
-            else:
-                left = link1
-                fields = [
-                    f
-                    for f, ty in from_type.props.items()
-                    if isinstance(ty, LinkProxy) and ty.link_name == link1.link_name
-                ]
-                assert len(fields) == 1
-                left.target_field = fields[0]
-                right = self.get_right_link(target_type.props[from_field], left)
 
+            left_field = target_field
+            left = self.get_left_proxy(left_field, right)
             return left, right
 
-        else:
-            raise Exception("not supported (yet)")
-            from_type = resolve_proxy(from_type)
+        assert typ.type == "object"
+        left = proxy
+        if left.target_field is None:
+            left_type = left.get()
+            fields = [
+                f
+                for f, ty in left_type.props.items()
+                if isinstance(ty, LinkProxy) and ty.link_name == left.link_name
+            ]
+            assert len(fields) == 1
+            left.target_field = fields[0]
+
+        right_field = target_field
+        right = self.get_right_proxy(right_field, left)
+        return left, right
+
+    # get (left, right) LinkProxy's for a relationship
+    def get_link(
+        self, target_type: t.struct, target_field: str
+    ) -> Optional[Tuple[LinkProxy, LinkProxy]]:
+        from_type = target_type.props[target_field]
+        if isinstance(from_type, LinkProxy):
+            return self.get_link_from_proxy(from_type, target_type, target_field)
 
         return None
 
-        if from_type.type in ["optional", "array"]:
-            nested_type = resolve_proxy(resolve_entity_quantifier(from_type))
-            if nested_type.type != "object":
-                return None
-            right = nested_type
-            left = target_type
+        # if from_type.type in ["optional", "array"]:
+        #     nested_type = resolve_proxy(resolve_entity_quantifier(from_type))
+        #     if nested_type.type != "object":
+        #         return None
+        #     right = nested_type
+        #     left = target_type
 
-            fields = []
+        #     fields = []
 
-            fields = [name for name, ty in right.props.items() if ty.name == left.name]
-            link_fields = [
-                name for name in fields if isinstance(right.props[name], LinkProxy)
-            ]
+        #     fields = [name for name, ty in right.props.items() if ty.name == left.name]
+        #     link_fields = [
+        #         name for name in fields if isinstance(right.props[name], LinkProxy)
+        #     ]
 
-            if link1:
-                link_fields = [
-                    name
-                    for name in link_fields
-                    if right.props[name].link_name == link1.name
-                ]
-                assert len(link_fields) < 2
-                link1.target_field = next(iter(link_fields))
-                if link1.target_field is not None:
-                    # match by name
-                    link2 = right.props[link1.target_field]
-                    assert link2.get().type == "object"
-                    if link2.target_field is not None:
-                        assert link2.target_field == from_field
-                    else:
-                        link2.target_field == from_field
-                    return link2, link1
+        #     if link1:
+        #         link_fields = [
+        #             name
+        #             for name in link_fields
+        #             if right.props[name].link_name == link1.name
+        #         ]
+        #         assert len(link_fields) < 2
+        #         link1.target_field = next(iter(link_fields))
+        #         if link1.target_field is not None:
+        #             # match by name
+        #             link2 = right.props[link1.target_field]
+        #             assert link2.get().type == "object"
+        #             if link2.target_field is not None:
+        #                 assert link2.target_field == target_field
+        #             else:
+        #                 link2.target_field == target_field
+        #             return link2, link1
 
-            # if link1 and link1.link_name in [link.name for link in links]:
-            # for name, ty in right.props.items():
+        #     # if link1 and link1.link_name in [link.name for link in links]:
+        #     # for name, ty in right.props.items():
 
     # return a LinkProxy if field `typ` defines a relationship
     def get_link_proxy(
@@ -590,7 +548,7 @@ class SourceOfTruth:
         if typ.name in self.types:
             return
 
-        assert typ.type == "object", f"Prisma cannot manage '{typ.type}' types'"
+        assert typ.type == "object", f"Prisma cannot manage '{typ.type}' types"
         self.types[typ.name] = typ
 
         deps = []
@@ -602,132 +560,62 @@ class SourceOfTruth:
                 if prop_type is None:
                     continue  # not a relationship field
 
-            links = self.get_relationship(prop_type, typ, prop_name)
-            if links is None:
+            link = self.get_link(typ, prop_name)
+            if link is None:
                 continue
-            left_proxy, right_proxy = links
+            left_proxy, right_proxy = link
             left_type = left_proxy.get()
             right_type = resolve_proxy(resolve_entity_quantifier(right_proxy.get()))
 
-            deps.append(left_type)
-            deps.append(right_type)
-
-            cardinality, q = (
-                (Cardinality.ONE, "?")
-                if right_proxy.get().type == "optional"
-                else (Cardinality.MANY, "[]")
-            )
-            relname = left_proxy.link_name
-
-            rel = Relation2(
-                left=FieldRelation(
-                    name=relname,
-                    typ=left_type,
-                    field=right_proxy.target_field,
-                    cardinality=cardinality,
-                    side=Side.LEFT,
-                ),
-                right=FieldRelation(
-                    name=relname,
-                    typ=right_type,
-                    field=left_proxy.target_field,
-                    cardinality=cardinality,
-                    side=Side.RIGHT,
-                ),
-            )
-
+            rel = create_relationship(left_proxy, right_proxy)
             self.field_relations[left_type.name][left_proxy.target_field] = rel.right
             self.field_relations[right_type.name][right_proxy.target_field] = rel.left
-            self.relations[relname] = rel
-
-            # else:
-            #     # check target field
-            #     p = self.get_link_proxy(prop_type.get(), typ)
-            #     assert p is not None
-            #     if prop_type.target_field is not None:
-            #         # prop_type.target_field = find_relationship_target_field(prop_type.get(), typ)
-            #         prop_type.target_field = p.target_field
-            #     else:
-            #         # check_relationship_target_field(prop_type.get(), typ, prop_type.target_field)
-            #         assert prop_type.target_field == p.target_field
-
-            # left_field = left_type.target_field
-            # right_field = right_type.target_field
-
-            # left_type = prop_type.get()
-            # right_type = prop_type.get()
-
-            # if left_type.type != "object":
-            #     assert right_type.type == "object"
-            #     queue.append(right_type)
-            #     left_type, right_type = right_type, left_type
-            # else:
-            #     queue.append(resolve_proxy(resolve_entity_quantifier(right_type)))
-
-            # assert right_type.type in [
-            #     "optional",
-            #     "array",
-            # ], "Right side type must be a quantifier"
-
-            # cardinality = (
-            #     Cardinality.ONE if right_type.type == "optional" else Cardinality.MANY
-            # )
-
-            # right_type = resolve_proxy(resolve_entity_quantifier(right_type)).within(
-            #     self.runtime
-            # )
-
-            # assert (
-            #     right_type.type == "object"
-            # ), f"Right type must be an array/optional of 'object', got: '{right_type.type}'"
-
-            # q = "?" if cardinality.is_one_to_one() else "[]"
-
-            # if left.field is None:
-            #     left = evolve(
-            #         left,
-            #         field=find_unique_prop(
-            #             left_type,
-            #             lambda ty: ty.type == right.typ.type
-            #             and ty.of.name == right_type.name,
-            #             f"Field of type '{right_type.name}{q}'",
-            #         ),
-            #     )
-            # if right.field is None:
-            #     right = evolve(
-            #         right,
-            #         field=find_unique_prop(
-            #             right_type,
-            #             lambda ty: ty.name == left_type.name,
-            #             f"Field of type '{left_type.name}'",
-            #         ),
-            #     )
-
-            # rel = Relation2(
-            #     left=FieldRelation(
-            #         name=rel_name,
-            #         typ=left_type,
-            #         field=left.field,
-            #         cardinality=cardinality,
-            #         side=Side.LEFT,
-            #     ),
-            #     right=FieldRelation(
-            #         name=rel_name,
-            #         typ=right_type,
-            #         field=right.field,
-            #         cardinality=cardinality,
-            #         side=Side.RIGHT,
-            #     ),
-            # )
-
-            # self.types[left_type.name] = left_type
-            # self.types[right_type.name] = right_type
-            # self.field_relations[left_type.name][left.field] = rel.right
-            # self.field_relations[right_type.name][right.field] = rel.left
-            # self.relations[rel_name] = rel
+            self.relations[rel.name] = rel
+            deps.append(rel.left.typ)
+            deps.append(rel.right.typ)
 
         for ty in deps:
             self.manage(ty)
+
+
+def create_relationship(left_proxy: LinkProxy, right_proxy: LinkProxy) -> Relation2:
+    left_type = left_proxy.get()
+    left_model = left_type
+    right_type = right_proxy.get()
+    right_model = resolve_proxy(resolve_entity_quantifier(right_type))
+    assert left_model.type == "object", "Relationships can only be defined on objects"
+    assert (
+        right_type.type in ["optional", "array"] and right_model.type == "object"
+    ), "Right side of a relationship must be an array or optional"
+
+    left_field = left_proxy.target_field
+    right_field = right_proxy.target_field
+    assert left_model.props[left_field].name == right_type.name
+    assert right_model.props[right_field].name == left_type.name
+
+    cardinality, q = (
+        (Cardinality.ONE, "?")
+        if right_type.type == "optional"
+        else (Cardinality.MANY, "[]")
+    )
+    relname = left_proxy.link_name
+
+    return Relation2(
+        left=FieldRelation(
+            name=relname,
+            typ=left_model,
+            field=right_proxy.target_field,  # what??
+            cardinality=cardinality,
+            side=Side.LEFT,
+        ),
+        right=FieldRelation(
+            name=relname,
+            typ=right_model,
+            field=left_proxy.target_field,  # what??
+            cardinality=cardinality,
+            side=Side.RIGHT,
+        ),
+    )
 
 
 # find the unique property of the struct that satisfies the given test
