@@ -4,7 +4,7 @@ version = "0.0.3-dev.1"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.68"
+anyhow = "1.0.69"
 clap = { version = "4.1.4", features = ["derive"] }
 common = { path = "../common", features = ["codegen"] }
 typescript = { path = "../typescript" }
