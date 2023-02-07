@@ -5,7 +5,6 @@ from collections import defaultdict
 from typing import Callable
 from typing import Dict
 from typing import Optional
-from typing import Tuple
 from typing import TYPE_CHECKING
 
 from attrs import frozen
@@ -142,14 +141,15 @@ class RelationshipRegister:
 
     runtime: "PrismaRuntime"
     types: Dict[str, t.struct]
-    field_relations: Dict[str, Dict[str, FieldRelation]]
     relations: Dict[str, Relation]
+    proxies: Dict[str, Dict[str, LinkProxy]]
 
     def __init__(self, runtime):
         self.runtime = runtime
         self.types = {}
         self.field_relations = defaultdict(dict)
         self.relations = {}
+        self.proxies = defaultdict(dict)
 
     def get_left_proxy(self, left_field: str, right: LinkProxy) -> LinkProxy:
         right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
@@ -198,39 +198,20 @@ class RelationshipRegister:
     def get_right_proxy(self, right_field: str, left: LinkProxy) -> LinkProxy:
         left_type = left.get()
         prop_type = left_type.props[left.target_field]
-        if isinstance(prop_type, LinkProxy):
-            right = prop_type
-            assert left.link_name == right.link_name
-            assert right.get().type in ["optional", "array"]
-            if right.target_field is not None:
-                assert right.target_field == right_field
-            else:
-                right.target_field = right_field
+        if not isinstance(prop_type, LinkProxy):
+            prop_type = self.proxies[left_type.name][left.target_field]
+        right = prop_type
+        assert left.link_name == right.link_name
+        assert right.get().type in [
+            "optional",
+            "array",
+        ], f"Expected optional or array, got '{right.get().type}'"
+        if right.target_field is not None:
+            assert right.target_field == right_field
+        else:
+            right.target_field = right_field
 
-            return right
-
-            # find right.target_field
-            # we should find typ (the same reference) in left_type
-            # fields = [f for f, ty in left_type.props.items() if ty == typ]
-            # assert len(fields) == 1
-            # right.target_field = fields[0]
-            # return right
-
-        raise Exception("Not supported (yet)")
-
-        # we need to wrap `typ` in a LinkProxy
-        # find matching field in left_type
-        # right_type_wrapper = resolve_proxy(typ)
-        # right_type = resolve_proxy(resolve_entity_quantifier(right_type_wrapper))
-        # fields = [
-        #     f
-        #     for f, ty in left_type.props.items()
-        #     if ty.type == right_type_wrapper.type
-        #     and resolve_entity_quantifier(ty).name == right_type.name
-        # ]
-        # assert len(fields) == 1
-        # return self.runtime.link(typ, left.link_name, fields[0])
-        return None
+        return right
 
     def get_link_from_proxy(
         self, proxy: LinkProxy, target_type: t.struct, target_field: str
@@ -270,16 +251,6 @@ class RelationshipRegister:
         right_field = target_field
         right = self.get_right_proxy(right_field, left)
         return left, right
-
-    # get (left, right) LinkProxy's for a relationship
-    def get_link(
-        self, target_type: t.struct, target_field: str
-    ) -> Optional[Tuple[LinkProxy, LinkProxy]]:
-        from_type = target_type.props[target_field]
-        if isinstance(from_type, LinkProxy):
-            return self.get_link_from_proxy(from_type, target_type, target_field)
-
-        return None
 
     # return a LinkProxy if field `typ` defines a relationship
     def get_link_proxy(
@@ -324,26 +295,96 @@ class RelationshipRegister:
         link_name = f"__{left.name}_to_{right.name}"
         return self.link(from_type, link_name, target_field)
 
+    def register_type(self, typ: t.struct):
+        self.types[typ.name] = typ
+        # TODO set runtime, propagate runtime
+        proxies = self.proxies[typ.name]
+        for prop_name, prop_type in typ.props.items():
+            if isinstance(prop_type, LinkProxy):
+                proxies[prop_name] = prop_type
+                continue
+            if prop_name in proxies:
+                continue
+
+            prop_type = resolve_proxy(prop_type)
+            if isinstance(prop_type, t.struct):
+                # find all props of `prop_type` that define a relationship to `typ` (RIGHT proxy)
+                fields = [
+                    f
+                    for f, ty in prop_type.props.items()
+                    if isinstance(ty, LinkProxy)
+                    and resolve_entity_quantifier(ty.get()).name == typ.name
+                ]
+
+                # todo: assert link_name
+                assert (
+                    len(fields) <= 1
+                ), f"Link must be explicitly specified when there are more than one links targetting the same model: on '{prop_type.name}': {' or '.join(fields)}"
+
+                if len(fields) == 1:
+                    link_name = prop_type.props[fields[0]].link_name
+                    proxies[prop_name] = self.runtime.link(
+                        prop_type, link_name, fields[0]
+                    )
+                    continue
+
+                # len(fields) == 0
+                # find all props of `prop_type` of type optional/array of `typ`
+                fields = [
+                    f
+                    for f, ty in prop_type.props.items()
+                    if (isinstance(ty, t.optional) or isinstance(ty, t.array))
+                    and resolve_entity_quantifier(ty).name == typ.name
+                ]
+
+                assert (
+                    len(fields) <= 1
+                ), f"Link must be explicitly specified when there are more than one implicit links targetting the same model: on '{prop_type.name}'"
+                assert (
+                    len(fields) == 1
+                ), f"No field match to a relationship to '{typ.name}' on '{prop_type.name}'"
+                # TODO handle eventual name clash
+                link_name = f"_{typ.name}_to_{prop_type.name}"
+                proxies[prop_name] = self.runtime.link(prop_type, link_name, fields[0])
+                self.proxies[prop_type.name][fields[0]] = self.runtime.link(
+                    prop_type.props[fields[0]], link_name, prop_name
+                )
+                continue
+
+            if isinstance(prop_type, t.optional) or isinstance(prop_type, t.array):
+                model = prop_type.of
+                if not isinstance(model, t.struct):
+                    continue
+
+                # find all props of `model` that define a relationship to `typ` (LEFT proxy)
+                fields = [
+                    f
+                    for f, ty in model.props.items()
+                    if isinstance(ty, LinkProxy) and ty.name == model.name
+                ]
+
+                assert (
+                    len(fields) <= 1
+                ), f"Ambiguous link targetting '{typ.name}' on '{model.name}': {' or '.join(fields)}?"
+                assert (
+                    len(fields) == 1
+                ), f"Cannot find a field linking to '{typ.name}' on '{model.name}'"
+
+                link_name = model.props[fields[0]].link_name
+                proxies[prop_name] = self.runtime.link(prop_type, link_name, fields[0])
+                continue
+
     def manage(self, typ: t.struct):
         if typ.name in self.types:
             return
 
         assert typ.type == "object", f"Prisma cannot manage '{typ.type}' types"
-        self.types[typ.name] = typ
+        self.register_type(typ)
 
         deps = []
 
-        for prop_name, prop_type in typ.props.items():
-            if not isinstance(prop_type, LinkProxy):
-                prop_type = resolve_proxy(prop_type)
-                prop_type = self.get_link_proxy(prop_type, typ)
-                if prop_type is None:
-                    continue  # not a relationship field
-
-            link = self.get_link(typ, prop_name)
-            if link is None:
-                continue
-            left_proxy, right_proxy = link
+        for prop_name, proxy in self.proxies[typ.name].items():
+            left_proxy, right_proxy = self.get_link_from_proxy(proxy, typ, prop_name)
             left_type = left_proxy.get()
             right_type = resolve_proxy(resolve_entity_quantifier(right_proxy.get()))
 
