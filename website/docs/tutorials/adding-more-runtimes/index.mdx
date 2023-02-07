@@ -2,6 +2,72 @@
 sidebar_position: 3
 ---
 
+import TGExample from "@site/src/components/TGExample";
+import CodeBlock from "@theme/CodeBlock";
+
 # Adding more runtimes
 
-Share your feedback
+Getting random data from your first typegraph is great, but having some input variables and meaningful output would be even better. Typically, the random runtime is used to quickly draft and iteration on an API prototype. Once the interface feel efficient and well design, it's time to move another runtime backed by some storage.
+
+:::info Please share your feedback
+You can raise issues, suggest improvements, ask questions and share your feedback using Giscus powered comments below, private communications with the "Help, Feedback & Roadmap" button on the right or directly use the [GitHub discussion](https://github.com/metatypedev/metatype/discussions).
+:::
+
+## Prisma runtime
+
+Prisma is a "Next-generation Node.js and Typescript ORM" with support for PostgreSQL, MySQL/MariaDB, SQLite, MongoDB, CockroadDB and Microsoft SQL Server.
+
+<TGExample
+  typegraph="database"
+  python={require("./database.py")}
+  query={require("./database.graphql")}
+/>
+
+A few things to note:
+
+1. The `config` method is used to specify runtime specific attributes. In this case, `id` shall be automatically set and incremented by the database.
+2. Types get generated deterministic names unless manually specified. You can find the exact names in the playground documentation. Here you want to have a human friendly name to show as a table in your database.
+3. Runtimes often come with some sugar syntax to generate some types and avoid manipulating materializers directly. A corresponding declaration would have looked like this:
+
+<CodeBlock language="python">{require("./prisma-no-sugar.py")}</CodeBlock>
+
+In order to use the Prisma runtime, you need to add a new environment variables to the typegate and restart the docker container. Runtimes don't take raw secrets, but instead takes a secret key used to look up environment variables with format `TG_[typegraph name]_[key]`. You also need to run a separate command to generate the database migration.
+
+```bash
+cat docker-compose.yml
+#services:
+#  ..
+#  environment:
+# highlight-next-line
+#    TG_PRISMA_POSTGRES_CONN: postgres://postges:password@postgres:5432/db
+
+docker compose down
+docker compose up -d
+
+meta prisma dev database # you need to mention the typegraph name, in this case database
+```
+
+And now you iteratively add more complexities to your types stored inside Prisma.
+
+## GraphQL runtime
+
+Lets introduce another one, the GraphQL runtime allows to query remote GraphQL endpoints.
+
+<TGExample
+  typegraph="graphql"
+  python={require("./graphql.py")}
+  query={require("./graphql.graphql")}
+/>
+
+Again, a few interesting happened here:
+
+1. No need to run `meta prisma dev [typegraph name]` again. The field `user` comes from another runtime and doesn't exist in the database. The typegate will orchestrate the query execution in all runtimes and minimize the work done
+2. The `from_parent` automatically fill the input type with the parent field named `uid`. The `g(·)` allows to make named reference to another type.
+
+Other type enforcement rules also exists:
+
+- `from_secret(key)` to fill the input type with the secret in the `TG_[typegraph name]_[key]` format
+- `from_context(·)` to fill the input type with content from request context, such as JSON Web Token (JWT), etc.
+- `set(x)` to fill the input type with content `x`
+
+Now you may already see the power provided by Metatype and might wonder how to integrate it step by step with your existing systems. Writing all those types by hand is tedious and error prone. The next section will show you how to generate types from existing sources.

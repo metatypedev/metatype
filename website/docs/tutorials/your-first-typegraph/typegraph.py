@@ -1,6 +1,7 @@
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
+from typegraph.runtimes.random import RandomMat
 from typegraph.runtimes.random import RandomRuntime
 
 with TypeGraph(
@@ -17,12 +18,13 @@ with TypeGraph(
         {
             "id": t.integer(),
             "title": t.string(),
-            "body": t.string(),
+            "user_id": t.integer(),
         }
     )
 
-    # expore them with materializers
+    # expose them with policies
     g.expose(
-        get_message=t.func(t.struct(), message, random.generate()),
+        # input → output via materializer
+        get_message=t.func(t.struct(), message, RandomMat(random)),
         default_policy=[public],
     )

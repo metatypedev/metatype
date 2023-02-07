@@ -21,3 +21,5 @@ RSP
 typecheck
 DAG
 JWT
+Giscus
+Prisma

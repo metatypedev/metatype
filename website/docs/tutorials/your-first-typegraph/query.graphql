@@ -2,7 +2,7 @@ query {
   get_message {
     id
     title
-    # body
+    # user_id
   }
 
   second_one: get_message {

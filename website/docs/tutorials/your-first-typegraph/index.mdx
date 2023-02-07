@@ -9,19 +9,19 @@ import TGExample from "@site/src/components/TGExample";
 
 The typegraphs - virtual graphs of types - are the secret sauce of the ecosystem. Similar to programming languages type systems, they let the developer describe:
 
-1. **what** data types exists
-2. **how** to combine these data types together
-3. **where** these data and transformations run
-4. **who** can access them
+1. _what_ data types exists
+2. _how_ these data get transformed
+3. _where_ these data and transformations run
+4. _who_ can access them
 
 ## The type system
 
-There is 4 main categories (no "class" or "primitive" type):
+There is 4 main categories and no "class" or "primitive" type:
 
 - value types: `t.integer()`, `t.string()`, `t.uuid()`, etc.
 - quantifier types: `t.optional(·)`, `t.array(·)`, etc.
 - consolidator types: `t.struct(·, ·)`, `t.union(·, ·)`, etc.
-- function types: `t.func(· → ·)`, `t.gen(→ ·)`, etc.
+- function types: `t.func(· → ·)`, `t.policy(· → ·)`, etc.
 
 This allows to describe almost any data type you may encounter, and typecheck the data flowing through the typegates.
 
@@ -29,10 +29,17 @@ This allows to describe almost any data type you may encounter, and typecheck th
 
 ## The typegraph package
 
-The typegraph package is a Python package that allows to describe a typegraph. It is a thin wrapper around the type system, and provides a few helpers to make the typegraph definition easier.
+The typegraph package is a Python package that allows to describe a typegraph. It's a thin wrapper around the type system, and provides a few helpers to make the typegraph definition easier. It builds on the type system to provide some more building blocks:
+
+1. _what_ data types exists → value, quantifier, consolidator **types**
+2. _how_ these data get transformed → function types with **materializers** specifying the transformation
+3. _where_ these data and transformations run → **runtimes** where materializers operate
+4. _who_ can access them → special function types named **policies** that control accesses
+
+This tutorial will cover these abstraction step by step and show how to use them by example.
 
 :::info Code sample are interactive
-You can interact with most of the typegraph in the documentation. Some parts might be voluntary hidden and full source can be found on Github. Click on "edit this page" to jump there and look into the parent folder.
+You can interact with most of the typegraph in the documentation. Some parts might be voluntary hidden and full source can be found on GitHub. Click on "edit this page" to jump there and look into the parent folder.
 :::
 
 A simple typegraph looks like this:
