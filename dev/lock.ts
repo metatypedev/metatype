@@ -47,7 +47,7 @@ if (args.bump) {
     undefined,
     "dev",
   )!;
-  lockfile.released.lock = lockfile.dev.lock;
+  lockfile.released.lock = structuredClone(lockfile.dev.lock);
   lockfile.dev.lock.METATYPE_VERSION = newVersion;
   console.log(`Bumping ${version} → ${newVersion}`);
 }
