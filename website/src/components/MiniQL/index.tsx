@@ -26,9 +26,8 @@ export interface MiniQLProps {
 }
 
 function Loader() {
-  const executionContext = useExecutionContext({ nonNull: true });
-
-  return executionContext.isFetching ? <Spinner /> : null;
+  const ec = useExecutionContext({ nonNull: true });
+  return ec.isFetching ? <Spinner /> : null;
 }
 
 export default function MiniQL({
@@ -46,16 +45,17 @@ export default function MiniQL({
   } = useDocusaurusContext();
 
   const storage = useMemo(() => new MemoryStorage(), []);
+  const fetcher = useMemo(
+    () =>
+      createGraphiQLFetcher({
+        url: `${tgUrl}/${typegraph}`,
+      }),
+    []
+  );
+
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => {
-        const fetcher = useMemo(
-          () =>
-            createGraphiQLFetcher({
-              url: `${tgUrl}/${typegraph}`,
-            }),
-          []
-        );
         return (
           <GraphiQLProvider
             fetcher={fetcher}

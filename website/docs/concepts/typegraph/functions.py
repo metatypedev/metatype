@@ -1,4 +1,5 @@
 # skip:start
+from typegraph import effects
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.runtimes.deno import PureFunMat
@@ -18,5 +19,5 @@ with TypeGraph("functions") as g:
     t.func(
         t.struct({}),
         t.enum(["head", "tail"]),
-        RESTMat(http, "GET", "/flip_coin"),  # where the logic is
+        RESTMat(http, "GET", "/flip_coin", effect=effects.none),  # where the logic is
     )

@@ -86,6 +86,9 @@ class RandomRuntime(Runtime):
 
         return dict()
 
+    def generate(self):
+        return RandomMat(runtime=self)
+
 
 @frozen
 class RandomMat(Materializer):

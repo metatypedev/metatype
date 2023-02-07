@@ -2,10 +2,8 @@
 sidebar_position: 1
 ---
 
-import PaginatorNavLink from "@theme/PaginatorNavLink";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
-import DocButton from "@site/src/components/DocButton";
 import Newsletter from "@site/src/components/Newsletter";
 import Metatype from "../../shared/metatype-intro.mdx";
 
@@ -88,14 +86,14 @@ python3 -c 'import typegraph; print(typegraph.version)'
 
 ### 3. `typegate` node
 
-Finally download and launch a docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
+Finally download and launch the docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/examples/docker-compose.yml -o docker-compose.yml
-docker compose up
+docker compose up --detach
 
 curl -X POST http://localhost:7890/typegate \
-  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQ=' \
+  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQ=' \ # base64 encoded "admin:password"
   --data '{"query":"query list { typegraphs { name  }}"}'
 ```
 

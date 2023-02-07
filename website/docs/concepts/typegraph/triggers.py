@@ -12,9 +12,6 @@ with TypeGraph("triggers") as g:
     # skip:end
     # ...
     g.expose(
-        flip=t.func(
-            t.struct({}),
-            t.enum(["head", "tail"]),
-            http.get("/flip_coin"),
-        ).add_policy(public),
+        flip=http.get("/flip_coin", t.struct({}), t.enum(["head", "tail"])),
+        default_policy=[public],
     )

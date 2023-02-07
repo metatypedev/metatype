@@ -8,8 +8,6 @@ with TypeGraph("runtimes") as g:
     http = HTTPRuntime("https://random.org/api")
 
     # same func as above
-    t.func(
-        t.struct({}),
-        t.enum(["head", "tail"]),
-        http.get("/flip_coin"),  # implicitly attaches runtime to all types
-    )
+    http.get(
+        "/flip_coin", t.struct({}), t.enum(["head", "tail"])
+    )  # implicitly attaches runtime to all types

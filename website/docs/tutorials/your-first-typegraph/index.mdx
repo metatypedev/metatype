@@ -1,0 +1,88 @@
+---
+sidebar_position: 2
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import TGExample from "@site/src/components/TGExample";
+
+# Your first typegraph
+
+The typegraphs - virtual graphs of types - are the secret sauce of the ecosystem. Similar to programming languages type systems, they let the developer describe:
+
+1. **what** data types exists
+2. **how** to combine these data types together
+3. **where** these data and transformations run
+4. **who** can access them
+
+## The type system
+
+There is 4 main categories (no "class" or "primitive" type):
+
+- value types: `t.integer()`, `t.string()`, `t.uuid()`, etc.
+- quantifier types: `t.optional(·)`, `t.array(·)`, etc.
+- consolidator types: `t.struct(·, ·)`, `t.union(·, ·)`, etc.
+- function types: `t.func(· → ·)`, `t.gen(→ ·)`, etc.
+
+This allows to describe almost any data type you may encounter, and typecheck the data flowing through the typegates.
+
+<CodeBlock language="python">{require("./types.py")}</CodeBlock>
+
+## The typegraph package
+
+The typegraph package is a Python package that allows to describe a typegraph. It is a thin wrapper around the type system, and provides a few helpers to make the typegraph definition easier.
+
+:::info Code sample are interactive
+You can interact with most of the typegraph in the documentation. Some parts might be voluntary hidden and full source can be found on Github. Click on "edit this page" to jump there and look into the parent folder.
+:::
+
+A simple typegraph looks like this:
+
+<TGExample
+  typegraph="first-typegraph"
+  python={require("./typegraph.py")}
+  query={require("./query.graphql")}
+/>
+
+Copy this into a file named `typegraph.py` near your `docker-compose.yml` file.
+
+## The meta CLI
+
+The meta CLI use a config file named `metatype.yml` to give some defaults and avoid typing the same arguments over and over again. It is a simple YAML file that looks like this:
+
+```yaml
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+typegraphs:
+  python:
+    include: "**/*.py"
+```
+
+At this point, you should have everything ready for your first typegraph. Run the following command in your terminal:
+
+```bash
+ls -1a
+# ./
+# ../
+# .venv/
+# docker-compose.yml
+# metatype.yml
+# typegraph.py
+
+meta dev
+# Loaded 1 typegraph from ./typegraph.py:
+#  → Pushing typegraph first-typegraph...
+#  ✓ Success!
+```
+
+You can now opens [http://localhost:7890/first-typegraph](http://localhost:7890/first-typegraph) in your browser. The CLI will automatically watch for changes in the typegraph and reload the typegraph. You should see a graphql playground and be able to play with your first typegraph, congrats!
+
+<div className="text-center">
+  <img
+    src={require("./playground.png").default}
+    width="600"
+    alt="typegate playground"
+  />
+</div>
