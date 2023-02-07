@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const deindent = require("de-indent");
 
 const commentsPrefix = ["#", "//"];

@@ -7,10 +7,7 @@ import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
-import gql from "graphql-tag";
 import styles from "./index.module.scss";
-import MiniQL from "../components/MiniQL";
-import CodeBlock from "@theme-original/CodeBlock";
 import TGExample from "../components/TGExample";
 
 function Header() {
