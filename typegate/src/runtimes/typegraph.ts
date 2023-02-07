@@ -21,7 +21,6 @@ import { Resolver } from "../types.ts";
 import {
   getChildTypes,
   TypeVisitorMap,
-  visitType,
   visitTypes,
 } from "../typegraph/visitor.ts";
 import { distinctBy } from "std/collections/distinct_by.ts";
@@ -114,10 +113,13 @@ export class TypeGraphRuntime extends Runtime {
         const inputTypeIndices = new Set<number>();
         const regularTypeIndices = new Set<number>();
 
+        const inputRootTypeIndices = new Set<number>();
+
         const myVisitor: TypeVisitorMap = {
           [Type.FUNCTION]: ({ type }) => {
             // the struct input of a function never generates a GrahpQL type
             // the actual inputs are the properties
+            inputRootTypeIndices.add(type.input);
             visitTypes(
               this.tg,
               getChildTypes(this.tg.types[type.input]),
@@ -133,10 +135,12 @@ export class TypeGraphRuntime extends Runtime {
               },
             );
 
-            visitType(this.tg, type.output, myVisitor);
-            return false;
+            return true;
           },
           default: ({ type, idx }) => {
+            if (inputRootTypeIndices.has(idx)) {
+              return false;
+            }
             if (isScalar(type)) {
               scalarTypeIndices.add(idx);
               return false;

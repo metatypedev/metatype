@@ -4,7 +4,7 @@ version = "0.0.3-dev.1"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.68"
+anyhow = "1.0.69"
 swc_common = { version = "0.29.10", features = ["tty-emitter"] }
 swc_ecma_ast = "0.94.14"
 swc_ecmascript = { version = "0.205.47", features = [
@@ -16,5 +16,5 @@ swc_ecmascript = { version = "0.205.47", features = [
 ] }
 swc_ecma_transforms = { version = "0.198.26", features = ["typescript"] }
 string_cache = "0.8.4"
-dprint-plugin-typescript = "0.80.2"
+dprint-plugin-typescript = "0.82.0"
 lazy_static = "1.4.0"
