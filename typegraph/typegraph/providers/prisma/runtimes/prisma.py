@@ -1,6 +1,5 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
@@ -15,11 +14,9 @@ from typegraph.graph.nodes import Node
 from typegraph.graph.nodes import NodeProxy
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.providers.prisma.relations import LinkProxy
-from typegraph.providers.prisma.relations import Relation
 from typegraph.providers.prisma.schema import build_model
 from typegraph.providers.prisma.schema import SourceOfTruth
 from typegraph.providers.prisma.type_generator import TypeGenerator
-from typegraph.providers.prisma.utils import resolve_entity_quantifier
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
 from typegraph.utils.attrs import always
@@ -111,34 +108,6 @@ class PrismaOperationMat(Materializer):
     effect: Effect = required()
 
 
-# def get_inp_type(tpe: t.Type) -> t.Type:
-#     if isinstance(tpe, t.func):
-#         raise Exception("Invalid type")
-
-#     if not isinstance(tpe, t.struct):
-#         return tpe
-
-#     return t.struct(
-#         {k: get_inp_type(v) for k, v in tpe.of.items() if not isinstance(v, t.func)}
-#     )
-
-
-# def get_update_inp_type(tpe: t.Type) -> t.Type:
-#     if isinstance(tpe, t.func):
-#         raise Exception("Invalid type")
-
-#     if not isinstance(tpe, t.struct):
-#         return tpe
-
-#     return t.struct(
-#         {
-#             k: get_inp_type(v).optional()
-#             for k, v in tpe.of.items()
-#             if not isinstance(v, t.func)
-#         }
-#     )
-
-
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries
 @frozen
 class PrismaRuntime(Runtime):
@@ -153,25 +122,6 @@ class PrismaRuntime(Runtime):
     def __attrs_post_init__(self):
         object.__setattr__(self, "spec", SourceOfTruth(self))
 
-    # auto = {None: {t.uuid(): "auto"}}
-
-    # No need to send this with the typegraph
-    #
-    # def get_type_config(self, tpe: t.typedef) -> dict:
-    #     base = tpe.runtime_config
-    #     config = dict()
-
-    #     # primary key
-    #     if "id" in base and base["id"]:
-    #         config["id"] = True
-
-    #     # auto generate: auto-increment (integer), random (uuid)
-    #     if "auto" in base and base["auto"]:
-    #         if isinstance(tpe, t.integer) or (isinstance(tpe, t.string) and tpe.format == "uuid"):
-    #             config["auto"] = True
-
-    #     return config
-
     def link(
         self, typ: Union[t.TypeNode, str], name: str, field: Optional[str] = None
     ) -> t.TypeNode:
@@ -183,8 +133,6 @@ class PrismaRuntime(Runtime):
         else:
             g = TypegraphContext.get_active()
         return LinkProxy(g, typ, self, name, field)
-        # self.links[name].append(RawLinkItem(typ=typ, field=field))
-        # return typ
 
     @property
     def typegen(self):
@@ -298,68 +246,8 @@ class PrismaRuntime(Runtime):
         )
 
     def __manage(self, tpe):
-        # if tpe.name in self.managed_types:
-        #     return
-
-        # if isinstance(tpe, t.NodeProxy):
-        #     tg = TypegraphContext.get_active()
-        #     if tg is None:
-        #         raise Exception("No typegraph context")
-        #     tpe = tpe.get()
-        # if not isinstance(tpe, t.struct):
-        #     raise Exception("cannot manage non struct types")
-
-        # ids = [
-        #     k
-        #     for k, v in tpe.props.items()
-        #     if isinstance(v, t.typedef)
-        #     and not isinstance(v, t.optional)
-        #     and v.runtime_config.get("id", False)
-        # ]
-
-        # if len(ids) == 0:
-        #     non_null_fields = [
-        #         k
-        #         for k, v in tpe.props.items()
-        #         if isinstance(v, t.typedef) and not isinstance(v, t.optional)
-        #     ]
-        #     raise Exception(
-        #         f'{tpe.name} must have at least an id among {",".join(non_null_fields)}'
-        #     )
         tpe._propagate_runtime(self)
         self.spec.manage(tpe)
-
-        # self.managed_types[tpe.name] = tpe.within(self)
-
-        # for rel_name, rel in self.__find_relations(tpe).items():
-        #     self.relationships[rel_name] = rel
-        #     for typ in rel.types:
-        #         self.__manage(typ)
-
-    # return the relations that involve the type
-    def __find_relations(self, tpe: t.struct) -> Dict[str, Relation]:
-        rels = {}
-        for name, link in self.links.items():
-            found = next(
-                (i for i in link if resolve_entity_quantifier(i.tpe).name == tpe.name),
-                None,
-            )
-            if found is None:
-                continue
-            rels[name] = Relation.from_link(name, link)
-
-        # TODO: handle implicit relationship definitions
-
-        # TODO check that all relationships have be defined
-        # for prop_name, prop_type in tpe.props.items():
-        #     prop_type = resolve_proxy(tpe)
-        #     if prop_type.runtime is not None and prop_type.runtime != self:
-        #         continue
-        #     if isinstance(prop_type, t.struct):
-        #         # `prop_type`: owner
-        #         found = next((rel for rel in rels.values() if rel.owner_type.name == prop_type.name and rel.owner_field == prop_name))
-
-        return rels
 
     def datamodel(self):
         models = [build_model(ty, self.spec) for ty in self.spec.types]
