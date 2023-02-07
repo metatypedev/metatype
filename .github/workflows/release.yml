@@ -145,3 +145,4 @@ jobs:
           delete-branch: true
           commit-message: "chore: prepare release ${{ steps.bump.outputs.version }}"
           title: "chore: prepare release ${{ steps.bump.outputs.version }}"
+          base: "${{ github.head_ref }}"
