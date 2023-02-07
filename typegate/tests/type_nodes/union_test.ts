@@ -11,10 +11,10 @@ test(
       "allow query with variant colorName of type string in union value Color",
       async () => {
         await gql`
-        query {
-          convert(color: "blue", to: "rgb")
-        }
-      `
+          query {
+            convert(color: "blue", to: "rgb")
+          }
+        `
           .expectData({
             convert: [0, 0, 255],
           })
@@ -26,10 +26,10 @@ test(
       "allow query with variant HEX of type string in union value Color",
       async () => {
         await gql`
-        query {
-          convert(color: "#ffffff", to: "rgb")
-        }
-      `
+          query {
+            convert(color: "#ffffff", to: "rgb")
+          }
+        `
           .expectData({
             convert: [255, 255, 255],
           })
@@ -41,10 +41,10 @@ test(
       "allow query with variant RGB of type array in union value Color",
       async () => {
         await gql`
-        query {
-          convert(color: [220, 20, 60], to: "hex")
-        }
-      `
+          query {
+            convert(color: [220, 20, 60], to: "hex")
+          }
+        `
           .expectData({
             convert: "#dc143c",
           })
@@ -57,7 +57,7 @@ test(
       async () => {
         await gql`
           query {
-    			convert(color: 100, to: "rgb")
+            convert(color: 100, to: "rgb")
           }
         `
           .expectErrorContains(
@@ -67,29 +67,26 @@ test(
       },
     );
 
-    await t.should(
-      "allow to introspect the union type",
-      async () => {
-        await gql`
-         query IntrospectionQuery {
-           __schema {
-             types {
-               name
-               kind
-               possibleTypes {
-                 name
-                 kind
-               }
-             }
-           }
-         }
-       `
-          .expectBody((body: { data: string }) => {
-            t.assertSnapshot(body.data);
-          })
-          .on(e);
-      },
-    );
+    await t.should("allow to introspect the union type", async () => {
+      await gql`
+        query IntrospectionQuery {
+          __schema {
+            types {
+              name
+              kind
+              possibleTypes {
+                name
+                kind
+              }
+            }
+          }
+        }
+      `
+        .expectBody((body: { data: string }) => {
+          t.assertSnapshot(body.data);
+        })
+        .on(e);
+    });
   },
   { introspection: true },
 );

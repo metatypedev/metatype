@@ -191,7 +191,7 @@ export class ValidationSchemaBuilder {
 
         const trimmedType = trimType(type);
         // remove `type` field as the type is ruled by the
-        // allOf subschemes
+        // anyOf subschemes
         const { type: _, ...untyped } = trimmedType;
 
         const trimmedVariantsSchema = variantsSchema.map((variant) => {
