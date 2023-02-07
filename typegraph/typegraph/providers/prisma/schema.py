@@ -8,7 +8,7 @@ from attrs import evolve
 from attrs import frozen
 from typegraph import types as t
 from typegraph.graph.typegraph import resolve_proxy
-from typegraph.providers.prisma.relations import SourceOfTruth
+from typegraph.providers.prisma.relations import RelationshipRegister
 
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
@@ -68,7 +68,7 @@ class SchemaField:
 
 @frozen
 class FieldBuilder:
-    spec: SourceOfTruth
+    spec: RelationshipRegister
 
     def additional_tags(self, typ: t.typedef) -> List[str]:
         tags = []
@@ -174,7 +174,7 @@ class FieldBuilder:
         )
 
 
-def build_model(name: str, spec: SourceOfTruth) -> str:
+def build_model(name: str, spec: RelationshipRegister) -> str:
     fields = []
 
     # struct

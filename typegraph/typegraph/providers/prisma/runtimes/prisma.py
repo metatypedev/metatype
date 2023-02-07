@@ -15,7 +15,7 @@ from typegraph.graph.nodes import NodeProxy
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.providers.prisma.relations import LinkProxy
 from typegraph.providers.prisma.schema import build_model
-from typegraph.providers.prisma.schema import SourceOfTruth
+from typegraph.providers.prisma.schema import RelationshipRegister
 from typegraph.providers.prisma.type_generator import TypeGenerator
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.base import Runtime
@@ -114,13 +114,10 @@ class PrismaRuntime(Runtime):
     name: str
     connection_string_secret: str
     runtime_name: str = always("prisma")
-    # links: DefaultDict[str, List[RawLinkItem]] = field(
-    #     init=False, factory=lambda: defaultdict(list), hash=False, metadata={SKIP: True}
-    # )
-    spec: SourceOfTruth = field(init=False, hash=False, metadata={SKIP: True})
+    spec: RelationshipRegister = field(init=False, hash=False, metadata={SKIP: True})
 
     def __attrs_post_init__(self):
-        object.__setattr__(self, "spec", SourceOfTruth(self))
+        object.__setattr__(self, "spec", RelationshipRegister(self))
 
     def link(
         self, typ: Union[t.TypeNode, str], name: str, field: Optional[str] = None

@@ -7,9 +7,9 @@ from typing import Iterable
 
 from typegraph import t
 from typegraph import TypeGraph
+from typegraph.providers.prisma.relations import RelationshipRegister
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.providers.prisma.schema import build_model
-from typegraph.providers.prisma.schema import SourceOfTruth
 
 # import debugpy
 
@@ -35,7 +35,7 @@ class TestPrismaSchema:
         snapshot.snapshot_dir = "tests/__snapshots__/prisma-schema"
 
     def build_schema(self, runtime: PrismaRuntime, models: Iterable[t.struct]):
-        spec = SourceOfTruth(runtime)
+        spec = RelationshipRegister(runtime)
         for m in models:
             spec.manage(m)
         return reformat_schema("\n".join((build_model(m.name, spec) for m in models)))

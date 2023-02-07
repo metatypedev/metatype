@@ -1,13 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 
-"""
-
-
-
-"""
-
-
 from collections import defaultdict
 from typing import Callable
 from typing import Dict
@@ -106,7 +99,7 @@ class FieldRelation:
 
 
 @frozen
-class Relation2:
+class Relation:
     left: FieldRelation
     right: FieldRelation
 
@@ -142,11 +135,15 @@ class Relation2:
         return self.right.cardinality
 
 
-class SourceOfTruth:
+class RelationshipRegister:
+    """
+    Relationships are defined by `LinkProxy` NodeProxy types on the model types (`t.struct`).
+    """
+
     runtime: "PrismaRuntime"
     types: Dict[str, t.struct]
     field_relations: Dict[str, Dict[str, FieldRelation]]
-    relations: Dict[str, Relation2]
+    relations: Dict[str, Relation]
 
     def __init__(self, runtime):
         self.runtime = runtime
@@ -361,7 +358,7 @@ class SourceOfTruth:
             self.manage(ty)
 
 
-def create_relationship(left_proxy: LinkProxy, right_proxy: LinkProxy) -> Relation2:
+def create_relationship(left_proxy: LinkProxy, right_proxy: LinkProxy) -> Relation:
     left_type = left_proxy.get()
     left_model = left_type
     right_type = right_proxy.get()
@@ -383,7 +380,7 @@ def create_relationship(left_proxy: LinkProxy, right_proxy: LinkProxy) -> Relati
     )
     relname = left_proxy.link_name
 
-    return Relation2(
+    return Relation(
         left=FieldRelation(
             name=relname,
             typ=left_model,

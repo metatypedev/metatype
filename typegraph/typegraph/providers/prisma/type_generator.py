@@ -8,13 +8,13 @@ from typegraph import t
 from typegraph.graph.typegraph import find
 from typegraph.graph.typegraph import resolve_proxy
 from typegraph.providers.prisma.relations import check_field
-from typegraph.providers.prisma.relations import SourceOfTruth
+from typegraph.providers.prisma.relations import RelationshipRegister
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
 
 @frozen
 class TypeGenerator:
-    spec: SourceOfTruth
+    spec: RelationshipRegister
 
     def __find_relation(self, tpe: t.struct, field_name: str) -> Optional[str]:
         if not check_field(tpe, field_name):
