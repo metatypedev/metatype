@@ -82,7 +82,7 @@ pub struct TypeNodeBase {
     pub injection: Option<String>,
     #[serde(default, skip_serializing_if = "serde_json::Value::is_null")]
     pub inject: Value,
-    #[serde(default, rename = "_enum")]
+    #[serde(default, rename = "enum")]
     pub enumeration: Option<Vec<Value>>,
     #[serde(default)]
     pub config: IndexMap<String, serde_json::Value>,
@@ -164,8 +164,8 @@ pub enum TypeNode {
         #[serde(flatten)]
         base: TypeNodeBase,
         /// Array of indexes of the nodes that are used as subschemes in the
-        /// allOf field of JSON Schema.
-        all_of: Vec<u32>,
+        /// anyOf field of JSON Schema.
+        any_of: Vec<u32>,
     },
     Any {
         #[serde(flatten)]

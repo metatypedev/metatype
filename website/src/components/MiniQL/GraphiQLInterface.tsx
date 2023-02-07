@@ -36,9 +36,9 @@ import {
   ToolbarButton,
   UnStyledButton,
   useCopyQuery,
+  useEditorContext,
   useExecutionContext,
   usePrettifyEditors,
-  useEditorContext,
   VariableEditor,
 } from "@graphiql/react";
 
@@ -54,7 +54,7 @@ const autoHeight = (cm) => {
 export type Tab = "variables" | "headers" | "";
 
 export default function GraphiQLInterface(
-  props: GraphiQLInterfaceProps & { defaultTab: Tab }
+  props: GraphiQLInterfaceProps & { defaultTab: Tab },
 ) {
   const { queryEditor, variableEditor, headerEditor } = useEditorContext({
     nonNull: true,

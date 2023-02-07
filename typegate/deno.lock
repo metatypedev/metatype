@@ -1,6 +1,7 @@
 {
   "version": "2",
   "remote": {
+    "https://cdn.skypack.dev/-/big.js@v5.2.2-sUR8fKsGHRxsJyqyvOSP/dist=es2019,mode=imports/optimized/bigjs.js": "b6d8e6af0c1f7bdc7e8cd0890819ecee2dcbb0776ec4089eae281de8ebd7b2bd",
     "https://cdn.skypack.dev/-/graphql@v16.6.0-LSwlwUw61uFtjUF6PMr3/dist=es2019,mode=imports/optimized/common/GraphQLError-897dd7cd.js": "c72db2e66f79854889aabdfb109e20999c57fcd5c877bd3bee815528d22ca45b",
     "https://cdn.skypack.dev/-/graphql@v16.6.0-LSwlwUw61uFtjUF6PMr3/dist=es2019,mode=imports/optimized/common/NoSchemaIntrospectionCustomRule-6916fb0e.js": "0c1d2b7e7e3789dbd9df5c9a19f16c97c172fc9104d9ba7ecf44b61f7f67368f",
     "https://cdn.skypack.dev/-/graphql@v16.6.0-LSwlwUw61uFtjUF6PMr3/dist=es2019,mode=imports/optimized/common/coerceInputValue-29ff5dea.js": "4fc9e8bc2a616e814acd9565b891a9f53eb985da29ab320320a64d109eb3eb49",
@@ -163,6 +164,7 @@
     "https://cdn.skypack.dev/-/graphql@v16.6.0-LSwlwUw61uFtjUF6PMr3/dist=es2019,mode=types/validation/specifiedRules.d.ts": "077f1d6f6e2ab604af4a0d963e8469c6b7fae98a5b9febbba0e31e75f9b820b5",
     "https://cdn.skypack.dev/-/graphql@v16.6.0-LSwlwUw61uFtjUF6PMr3/dist=es2019,mode=types/validation/validate.d.ts": "507246f5474832222d374254f1d802a620e8abca0bf83db425f4585356d5be87",
     "https://cdn.skypack.dev/-/graphql@v16.6.0-LSwlwUw61uFtjUF6PMr3/dist=es2019,mode=types/version.d.ts": "78647004e18e4c16b8a2e8345fca9267573d1c5a29e11ddfee71858fd077ef6e",
+    "https://cdn.skypack.dev/big.js@^5.2.2": "f74e8935c06af6664d64a5534d1d6db1ab66649df8164696117ab5a1cd10714e",
     "https://cdn.skypack.dev/graphql@16.6.0/language/ast?dts": "8ed2b3b60f74407bd8eedb94b091388e72620f24f63b7161200b6f9a17b9683a",
     "https://cdn.skypack.dev/graphql@16.6.0?dts": "6040960f9706c9e43082d6d083b91a5536723cf921b9560484270735435bf0b7",
     "https://crux.land/api/get/2KNRVU.ts": "6a77d55844aba78d01520c5ff0b2f0af7f24cc1716a0de8b3bb6bd918c47b5ba",
@@ -260,12 +262,47 @@
     "https://deno.land/x/bcrypt@v0.4.0/src/bcrypt/bcrypt.ts": "ec221648cc6453ea5e3803bc817c01157dada06aa6f7a0ba6b9f87aae32b21e2",
     "https://deno.land/x/bcrypt@v0.4.0/src/main.ts": "08d201b289c8d9c46f8839c69cd6625b213863db29775c7a200afc3b540e64f8",
     "https://deno.land/x/bcrypt@v0.4.0/src/worker.ts": "5a73bdfee9c9e622f47c9733d374b627dce52fb3ec1e74c8226698b3fc57ffac",
+    "https://deno.land/x/color_util@1.0.1/colors/cmykcolor.ts": "f717cee02bdec255c7c2879b55033da7547d46c1fbb8ada7980d49bd2c1554ee",
+    "https://deno.land/x/color_util@1.0.1/colors/hexcolor.ts": "3b75112b8d693f157d3e6367f9ec44779f3ccef7c7b5f8e0859897f51eb05c4f",
+    "https://deno.land/x/color_util@1.0.1/colors/hsbcolor.ts": "bdfe171f7e6de43625ea4a33bce2b25dec410fa67f34af71821a6c73f4e23351",
+    "https://deno.land/x/color_util@1.0.1/colors/hslcolor.ts": "2c61e987dc49822444adbd62249e33cc6fd6a0a33a20fcb287240cf96e6ef41f",
+    "https://deno.land/x/color_util@1.0.1/colors/hwbcolor.ts": "d1e9558d89c6fbd1b6a7f9bb86fc9c93e114a8e0eb614aee83cbc8201a67f15a",
+    "https://deno.land/x/color_util@1.0.1/colors/mod.ts": "31099d332b123efc9d3ae0016173daba7cb8242440bf198851a34b339c69a555",
+    "https://deno.land/x/color_util@1.0.1/colors/rgbcolor.ts": "384ceac5fd708cb6515df2a371de6bf1eea58376003c7015d82819c7809a1b26",
+    "https://deno.land/x/color_util@1.0.1/mod.ts": "d79c71f1c6583c56cdf56963d020928fdef05d8060d59601fe4f46f7ee1488fd",
     "https://deno.land/x/djwt@v2.7/algorithm.ts": "ba9941961c46838f35a507414407e48aa9a4eca69c679b04fbbede55fe276a09",
     "https://deno.land/x/djwt@v2.7/deps.ts": "a5d7952aaf7fad421717c9a2db0b2e736b409632cb70f3f7f9e68f8e96e04f45",
     "https://deno.land/x/djwt@v2.7/mod.ts": "08cb2c745c9bc33883c2d027fc4af5c157f0a30564c3ba503a56fe0ab6959c8e",
     "https://deno.land/x/djwt@v2.7/signature.ts": "f79b4e521cd6a6dff28cd2779b1d9f2059f9e0822fb99c9f747ff34ae26532e4",
     "https://deno.land/x/json_schema_typed@v8.0.0/draft_2020_12.ts": "126783a400a891fce19c88533874b41073eb898725cb2a86a878e3b18e4e71f8",
     "https://deno.land/x/json_schema_typed@v8.0.0/draft_latest.ts": "bdaa8b3aab99d2e44294b2c3a7c9ff233d628fdfe9ecf8a78294465469b85493",
+    "https://deno.land/x/math@v1.1.0/abs.ts": "d64fe603ae4bb57037f06a1a5004285b99ed016dab6bfcded07c8155efce24b7",
+    "https://deno.land/x/math@v1.1.0/big/big.d.ts": "34794a7d39c9c6e1ff28f395b4c9c1e0ca741e90463263ce6ae503aa39014ed2",
+    "https://deno.land/x/math@v1.1.0/big/mod.ts": "ba561f56a24ecc9f03542693ed0c81166ed0c921f8017d220ec70c963e935509",
+    "https://deno.land/x/math@v1.1.0/div.ts": "5dda45b8bb5c1f778f2cfb28cbee648c5c7aa818f915acce336651fd13994f07",
+    "https://deno.land/x/math@v1.1.0/eq.ts": "145727b71b5bdd993c5d44fd9c9089419dac508527ef3812c590aabcd943236c",
+    "https://deno.land/x/math@v1.1.0/gt.ts": "6e493f3cc2ecd9be244bb67dde28b1d5ec4d4218747fc9efd6f551a52093aaf7",
+    "https://deno.land/x/math@v1.1.0/gte.ts": "4eddc58c2b79315974c328d92b512e133796d785e1f570f9e8d232e32d620e66",
+    "https://deno.land/x/math@v1.1.0/lt.ts": "999e4d118c9a5e8e653bd34a32ef532634a68e0dd4ba6a200ad35cc7fd9ceb31",
+    "https://deno.land/x/math@v1.1.0/lte.ts": "637c12db7307d33024054d9671f4f932a42dbaad4c60559c47be17c94f39eb1e",
+    "https://deno.land/x/math@v1.1.0/matrix/eye.ts": "b7b060fc60a6f4ae4e3caa82e5a094cd622bd8519f67ad81e305b197a9d19d1c",
+    "https://deno.land/x/math@v1.1.0/matrix/identity.ts": "00246e8133f2fac4a1481af7390907cc4cf3e8415a00d29a1e0beb47bdd81074",
+    "https://deno.land/x/math@v1.1.0/matrix/matrix.ts": "2b80cd4fb8aa0ab9eca31cf6eb1037a2885f37ae7f84e1b7f050fa831089e937",
+    "https://deno.land/x/math@v1.1.0/matrix/mod.ts": "123212ccd86007864c3400ca3deaa998c7e9453b77538094d06edc1add50f199",
+    "https://deno.land/x/math@v1.1.0/max.ts": "bf646a3553e8800de240fad977eabbef365c388d33f79ef6fb5f015d8d7ff104",
+    "https://deno.land/x/math@v1.1.0/min.ts": "9a617f3b2c76045f9169324787399cb709eba81fae8dbd4ff540336ea82eb470",
+    "https://deno.land/x/math@v1.1.0/minus.ts": "e64bfe637c5d5c790f40dd6681b206dc9996303daacb6cd1533e7dc1969acda6",
+    "https://deno.land/x/math@v1.1.0/mod.ts": "85f6d29ba8faaae2fb24c4ac3f5772474f1452ee27068714521a7c9aabfd1ee6",
+    "https://deno.land/x/math@v1.1.0/modulo.ts": "c83ebdc4f4c9ddabf64ade595802502f2333220b1f59010457f4064e4bb94e6c",
+    "https://deno.land/x/math@v1.1.0/plus.ts": "8d500d86c8f27acc9a754f636c530abe17bdb8f240aea2ece4b29e86ca121f40",
+    "https://deno.land/x/math@v1.1.0/pow.ts": "47120d27e42fce01572340e724de26039beef6daae25133029af6df6fa7dec4c",
+    "https://deno.land/x/math@v1.1.0/round.ts": "1b54a5d440f9a0d44d4ff8ba000f59b4895c37a1b2c2aaf5ec59a5fe8081e308",
+    "https://deno.land/x/math@v1.1.0/sqrt.ts": "50d94b4d1d9077f887eec904d73cf5439c1ef4b724d1949414ba5ec7fb9343b3",
+    "https://deno.land/x/math@v1.1.0/sum.ts": "6a0fddf3b50a965c79d96edc7fe2e146d4a95915fce90928fb4068abe9d8f059",
+    "https://deno.land/x/math@v1.1.0/times.ts": "7359e88b8456fc121bdb800543712d637e0ca260777aa1bb0d43724fe576222e",
+    "https://deno.land/x/math@v1.1.0/to_exponential.ts": "9038215c1cfd430acb835ca5e9c967f1a9da8d0658f7eeab8852662b201596d4",
+    "https://deno.land/x/math@v1.1.0/to_fixed.ts": "3702a47b14950a9d37f13147e1340b5a3f5f07183d480af59fcdf9d10bb6084e",
+    "https://deno.land/x/math@v1.1.0/to_precision.ts": "b7fb70b79649c9fd48f3747d285a5086e457487986c0f395a8275302e13a9b5e",
     "https://deno.land/x/mock_fetch@0.3.0/mod.ts": "7e7806c65ab17b2b684c334c4e565812bdaf504a3e9c938d2bb52bb67428bc89",
     "https://deno.land/x/oauth2_client@v0.2.1/mod.ts": "546510317fb743bfca618b65f3327e40e1cce85765fc8b05f58435b776c6664a",
     "https://deno.land/x/oauth2_client@v0.2.1/src/authorization_code_grant.ts": "dad337ed28f06292663274f6a5a3b0c667d4d526afaeea7757d89fec47675689",
@@ -369,9 +406,16 @@
   "npm": {
     "specifiers": {
       "@sentry/node@7.12.1": "@sentry/node@7.12.1",
-      "chance@1.1.8": "chance@1.1.8"
+      "chance@1.1.8": "chance@1.1.8",
+      "mathjs": "mathjs@11.5.0"
     },
     "packages": {
+      "@babel/runtime@7.20.7": {
+        "integrity": "sha512-UF0tvkUtxwAgZ5W/KrkHf0Rn0fdnLDU9ScxBrEVNUprE/MzirjK4MJUX1/BVDv00Sv8cljtukVK1aky++X1SjQ==",
+        "dependencies": {
+          "regenerator-runtime": "regenerator-runtime@0.13.11"
+        }
+      },
       "@sentry/core@7.12.1": {
         "integrity": "sha512-DFHbzHFjukhlkRZ5xzfebx0IBzblW43kmfnalBBq7xEMscUvnhsYnlvL9Y20tuPZ/PrTcq4JAHbFluAvw6M0QQ==",
         "dependencies": {
@@ -423,6 +467,10 @@
         "integrity": "sha512-v7fi5Hj2VbR6dJEGRWLmJBA83LJMS47pkAbmROFxHWd9qmE1esHRZW8Clf1Fhzr3rjxnNZVCjOEv/ivFxeIMtg==",
         "dependencies": {}
       },
+      "complex.js@2.1.1": {
+        "integrity": "sha512-8njCHOTtFFLtegk6zQo0kkVX1rngygb/KQI6z1qZxlFI3scluC+LVTCFbrkWjBv4vvLlbQ9t88IPMC6k95VTTg==",
+        "dependencies": {}
+      },
       "cookie@0.4.2": {
         "integrity": "sha512-aSWTXFzaKWkvHO1Ny/s+ePFpvKsPnjc551iI41v3ny/ow6tBG5Vd+FuqGNhh1LxOmVzOlGUriIlOaokOvhaStA==",
         "dependencies": {}
@@ -433,6 +481,18 @@
           "ms": "ms@2.1.2"
         }
       },
+      "decimal.js@10.4.3": {
+        "integrity": "sha512-VBBaLc1MgL5XpzgIP7ny5Z6Nx3UrRkIViUkPUdtl9aya5amy3De1gsUUSB1g3+3sExYNjCAsAznmukyxCb1GRA==",
+        "dependencies": {}
+      },
+      "escape-latex@1.2.0": {
+        "integrity": "sha512-nV5aVWW1K0wEiUIEdZ4erkGGH8mDxGyxSeqPzRNtWP7ataw+/olFObw7hujFWlVjNsaDFw5VZ5NzVSIqRgfTiw==",
+        "dependencies": {}
+      },
+      "fraction.js@4.2.0": {
+        "integrity": "sha512-MhLuK+2gUcnZe8ZHlaaINnQLl0xRIGRfcGk2yl8xoQAfHrSsL3rYu6FCmBdkdbhc9EPlwyGHewaRsvwRMJtAlA==",
+        "dependencies": {}
+      },
       "https-proxy-agent@5.0.1": {
         "integrity": "sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==",
         "dependencies": {
@@ -440,16 +500,50 @@
           "debug": "debug@4.3.4"
         }
       },
+      "javascript-natural-sort@0.7.1": {
+        "integrity": "sha512-nO6jcEfZWQXDhOiBtG2KvKyEptz7RVbpGP4vTD2hLBdmNQSsCiicO2Ioinv6UI4y9ukqnBpy+XZ9H6uLNgJTlw==",
+        "dependencies": {}
+      },
       "lru_map@0.3.3": {
         "integrity": "sha512-Pn9cox5CsMYngeDbmChANltQl+5pi6XmTrraMSzhPmMBbmgcxmqWry0U3PGapCU1yB4/LqCcom7qhHZiF/jGfQ==",
         "dependencies": {}
+      },
+      "mathjs@11.5.0": {
+        "integrity": "sha512-vJ/+SqWtxjW6/aeDRt8xL3TlOVKqwN15BIyTGVqGbIWuiqgY4SxZ0yLuna82YH9CB757iFP7uJ4m3KvVBX7Qcg==",
+        "dependencies": {
+          "@babel/runtime": "@babel/runtime@7.20.7",
+          "complex.js": "complex.js@2.1.1",
+          "decimal.js": "decimal.js@10.4.3",
+          "escape-latex": "escape-latex@1.2.0",
+          "fraction.js": "fraction.js@4.2.0",
+          "javascript-natural-sort": "javascript-natural-sort@0.7.1",
+          "seedrandom": "seedrandom@3.0.5",
+          "tiny-emitter": "tiny-emitter@2.1.0",
+          "typed-function": "typed-function@4.1.0"
+        }
       },
       "ms@2.1.2": {
         "integrity": "sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==",
         "dependencies": {}
       },
+      "regenerator-runtime@0.13.11": {
+        "integrity": "sha512-kY1AZVr2Ra+t+piVaJ4gxaFaReZVH40AKNo7UCX6W+dEwBo/2oZJzqfuN1qLq1oL45o56cPaTXELwrTh8Fpggg==",
+        "dependencies": {}
+      },
+      "seedrandom@3.0.5": {
+        "integrity": "sha512-8OwmbklUNzwezjGInmZ+2clQmExQPvomqjL7LFqOYqtmuxRgQYqOD3mHaU+MvZn5FLUeVxVfQjwLZW/n/JFuqg==",
+        "dependencies": {}
+      },
+      "tiny-emitter@2.1.0": {
+        "integrity": "sha512-NB6Dk1A9xgQPMoGqC5CVXn123gWyte215ONT5Pp5a0yt4nlEoO1ZWeCwpncaekPHXO60i47ihFnZPiRPjRMq4Q==",
+        "dependencies": {}
+      },
       "tslib@1.14.1": {
         "integrity": "sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==",
+        "dependencies": {}
+      },
+      "typed-function@4.1.0": {
+        "integrity": "sha512-DGwUl6cioBW5gw2L+6SMupGwH/kZOqivy17E4nsh1JI9fKF87orMmlQx3KISQPmg3sfnOUGlwVkroosvgddrlg==",
         "dependencies": {}
       }
     }

@@ -245,17 +245,17 @@ impl<'a> Codegen<'a> {
         Ok(format!("interface {name} {}\n", self.gen_obj_type(tpe)?))
     }
 
-    fn gen_union_type_definition(&self, all_of: &[u32]) -> Result<String> {
+    fn gen_union_type_definition(&self, any_of: &[u32]) -> Result<String> {
         let mut variant_definitions = Vec::new();
-        for &variant_type_index in all_of {
+        for &variant_type_index in any_of {
             let variant_type_definition = self
                 .get_typespec(variant_type_index)
                 .expect("type definition generation for variant type should be supported");
             variant_definitions.push(variant_type_definition);
         }
-        // field `allOf` in JSON Schema can be represented in TypeScript
-        // as an intersection of all the variant types
-        let intersection_type = variant_definitions.join(" & ");
+        // field `anyOf` in JSON Schema can be represented in TypeScript
+        // as a union of all the variant types
+        let intersection_type = variant_definitions.join(" | ");
         Ok(intersection_type)
     }
 
@@ -313,34 +313,15 @@ impl<'a> Codegen<'a> {
                     .join(", ");
                 Ok(format!("{{ {body} }}"))
             }
-            TypeNode::Union { all_of, .. } => {
-                let mut properties_map = HashMap::new();
-
-                for &variant_type_index in all_of {
-                    let variant_type = &self.tg.types[variant_type_index as usize];
-
-                    match variant_type {
-                        TypeNode::Object { properties, .. } => {
-                            for (property_name, &property_definition_index) in properties {
-                                let property_definition =
-                                    self.gen_default_value(property_definition_index).expect("property in object node should have default value generation");
-                                properties_map.insert(property_name, property_definition);
-                            }
-                        }
-                        _ => bail!("only unions of object nodes can have default value generation"),
-                    }
-                }
-
-                let mut body: Vec<String> = properties_map
-                    .iter()
-                    .map(|(property_name, property_default_value)| {
-                        format!("{property_name}: {property_default_value}")
-                    })
-                    .collect();
-                // prettify body definition by ordering properties
-                body.sort();
-                let body = body.join(", ");
-                Ok(format!("{{ {body} }}"))
+            TypeNode::Union { any_of, .. } => {
+                // a type cannot be all the variants, as they might be a
+                // disjoint union, therefore by returning the default value of
+                // one variant would be enought
+                let variant_type_index = any_of
+                    .clone()
+                    .pop()
+                    .expect("the union type should have at least one variant of type nodes");
+                self.gen_default_value(variant_type_index)
             }
             _ => bail!("unsupported type: {tpe:#?}"),
         }
@@ -436,7 +417,7 @@ impl<'a> Codegen<'a> {
                 }
             }
             TypeNode::Object { .. } => self.gen_obj_type(tpe),
-            TypeNode::Union { all_of, .. } => self.gen_union_type_definition(all_of),
+            TypeNode::Union { any_of, .. } => self.gen_union_type_definition(any_of),
             _ => bail!("unsupported type: {tpe:#?}"),
         }
     }

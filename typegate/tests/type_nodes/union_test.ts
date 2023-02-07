@@ -2,146 +2,94 @@
 
 import { gql, test } from "../utils.ts";
 
-test("Union type", async (t) => {
-  const e = await t.pythonFile("type_nodes/union_node.py");
+test(
+  "Union type",
+  async (t) => {
+    const e = await t.pythonFile("type_nodes/union_node.py");
 
-  const studentID = "b7831fd1-799d-4b20-9a84-830588f750a2";
-
-  await t.should(
-    "allow query type user extended from base model",
-    async () => {
-      await gql`
+    await t.should(
+      "allow query with variant colorName of type string in union value Color",
+      async () => {
+        await gql`
         query {
-          student(id: ${studentID}) {
-            # base fields
-            id
-            name
-            age
-
-            # specific fields for student
-            school
-          }
+          convert(color: "blue", to: "rgb")
         }
       `
-        .expectData({
-          student: {
-            id: studentID,
-            name: "Student 1",
-            age: 14,
-            school: "The School",
-          },
-        })
-        .on(e);
-    },
-  );
+          .expectData({
+            convert: [0, 0, 255],
+          })
+          .on(e);
+      },
+    );
 
-  await t.should(
-    "fail to query fields not present on union type student",
-    async () => {
-      await gql`
+    await t.should(
+      "allow query with variant HEX of type string in union value Color",
+      async () => {
+        await gql`
         query {
-          student(id: ${studentID}) {
-            # base fields
-            id
-            name
-            age
-
-            # specific fields for student
-            school
-
-            # this field should not exist, it is only for workers
-            company
-          }
+          convert(color: "#ffffff", to: "rgb")
         }
       `
-        .expectErrorContains("Q.student.company is undefined")
-        .on(e);
-    },
-  );
+          .expectData({
+            convert: [255, 255, 255],
+          })
+          .on(e);
+      },
+    );
 
-  const workerID = "f9c1c81c-6f68-4203-8780-732ab4ba08da";
-
-  await t.should(
-    "allow query type worker extended from base model",
-    async () => {
-      await gql`
+    await t.should(
+      "allow query with variant RGB of type array in union value Color",
+      async () => {
+        await gql`
         query {
-          worker(id: ${workerID}) {
-            # base fields
-            id
-            name
-            age
-
-            # specific fields for worker
-            company
-          }
+          convert(color: [220, 20, 60], to: "hex")
         }
       `
-        .expectData({
-          worker: {
-            id: workerID,
-            name: "Worker 1",
-            age: 30,
-            company: "The Company",
-          },
-        })
-        .on(e);
-    },
-  );
+          .expectData({
+            convert: "#dc143c",
+          })
+          .on(e);
+      },
+    );
 
-  await t.should(
-    "fail to query fields not present on union type worker",
-    async () => {
-      await gql`
-        query {
-          worker(id: ${workerID}) {
-            # base fields
-            id
-            name
-            age
-
-            # specific fields for worker
-            company
-
-            # this field should not exist, it is only for students
-            school
+    await t.should(
+      "fail to query with a type not present in union type Color",
+      async () => {
+        await gql`
+          query {
+    			convert(color: 100, to: "rgb")
           }
-        }
-      `
-        .expectErrorContains("Q.worker.school is undefined")
-        .on(e);
-    },
-  );
+        `
+          .expectErrorContains(
+            "Type mismatch: got 'IntValue' but expected 'ARRAY' or 'STRING' for argument 'color' named as 'Color'",
+          )
+          .on(e);
+      },
+    );
 
-  await t.should(
-    "allow to introspect the union type",
-    async () => {
-      await gql`
-        query IntrospectionQuery {
-          __schema {
-            types {
-              name
-              kind
-              possibleTypes {
-                name
-                kind
-                fields {
-                  name
-                  type {
-                    ofType {
-                      name
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      `
-        .expectBody((body: { data: string }) => {
-          t.assertSnapshot(body.data);
-        })
-        .on(e);
-    },
-  );
-}, { introspection: true });
+    await t.should(
+      "allow to introspect the union type",
+      async () => {
+        await gql`
+         query IntrospectionQuery {
+           __schema {
+             types {
+               name
+               kind
+               possibleTypes {
+                 name
+                 kind
+               }
+             }
+           }
+         }
+       `
+          .expectBody((body: { data: string }) => {
+            t.assertSnapshot(body.data);
+          })
+          .on(e);
+      },
+    );
+  },
+  { introspection: true },
+);

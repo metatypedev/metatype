@@ -45,6 +45,7 @@ export type {
   OptionalNode,
   StringNode,
   TypeNode,
+  UnionNode,
 };
 
 export type ScalarNode =

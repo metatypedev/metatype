@@ -1,27 +1,36 @@
-from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
 from typegraph.runtimes.deno import ModuleMat
 
 with TypeGraph("union") as g:
-    user_base_model = t.struct(
-        {
-            "id": t.uuid(),
-            "name": t.string(),
-            "age": t.integer(),
-        }
+    rgb = t.array(t.integer().min(0).max(255)).min(3).max(3).named("RGB")
+    hex = t.string().format("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").named("HEX")
+    colorName = (
+        t.string()
+        .enum(
+            [
+                "red",
+                "black",
+                "blue",
+                "orange",
+                "purple",
+                "white",
+                "yellow",
+            ]
+        )
+        .named("ColorName")
     )
 
-    student_materializer = ModuleMat("ts/union/student.ts")
+    color = t.union((rgb, hex, colorName)).named("Color")
 
-    student_model = t.union((user_base_model, t.struct({"school": t.string()})))
+    colorFormat = t.string().enum(["rgb", "hex", "colorName"])
 
-    get_student = t.func(
-        t.struct({"id": t.uuid()}),
-        student_model,
-        student_materializer.imp("get_student"),
-    ).add_policy(policies.public())
+    colorMaterializer = ModuleMat("ts/color_converter.ts")
 
-    g.expose(
-        student=get_student,
+    convert = t.func(
+        t.struct({"color": color, "to": colorFormat}),
+        color,
+        colorMaterializer.imp("convert"),
     )
+
+    g.expose(convert=convert)

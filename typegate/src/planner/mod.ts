@@ -362,6 +362,7 @@ export class Planner {
         argNodes[argName],
         argIdx,
         parentProps,
+        argName,
       );
 
       nestedDepsUnion.push(...nested.deps);

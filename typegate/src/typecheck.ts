@@ -149,7 +149,7 @@ export class ValidationSchemaBuilder {
       }
 
       case "union": {
-        const variants = type.allOf.map((typeIndex) => this.types[typeIndex]);
+        const variants = type.anyOf.map((typeIndex) => this.types[typeIndex]);
         const variantsSchema: JSONSchema[] = [];
         const undefinedNodePaths = new Map<string, number>();
 
@@ -204,7 +204,7 @@ export class ValidationSchemaBuilder {
 
         return {
           ...untyped,
-          allOf: trimmedVariantsSchema,
+          anyOf: trimmedVariantsSchema,
         };
       }
 

@@ -4,39 +4,34 @@ from typegraph import TypeGraph
 from typegraph.runtimes.deno import ModuleMat
 
 with TypeGraph("union") as g:
-    user_base_model = t.struct(
-        {
-            "id": t.uuid(),
-            "name": t.string(),
-            "age": t.integer(),
-        }
-    ).named("User")
-
-    student_materializer = ModuleMat("ts/union/student.ts")
-
-    student_model = t.union(
-        (user_base_model, t.struct({"school": t.string()}).named("StudentInformation"))
-    ).named("Student")
-
-    get_student = t.func(
-        t.struct({"id": t.uuid()}),
-        student_model,
-        student_materializer.imp("get_student"),
-    ).add_policy(policies.public())
-
-    worker_materializer = ModuleMat("ts/union/worker.ts")
-
-    worker_model = t.union(
-        (user_base_model, t.struct({"company": t.string()}).named("WorkerInformation"))
-    ).named("Worker")
-
-    get_worker = t.func(
-        t.struct({"id": t.uuid()}),
-        worker_model,
-        worker_materializer.imp("get_worker"),
-    ).add_policy(policies.public())
-
-    g.expose(
-        student=get_student,
-        worker=get_worker,
+    rgb = t.array(t.integer().min(0).max(255)).min(3).max(3).named("RGB")
+    hex = t.string().pattern("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").named("HEX")
+    colorName = (
+        t.string()
+        .enum(
+            [
+                "red",
+                "green",
+                "blue",
+                "black",
+                "white",
+            ]
+        )
+        .named("ColorName")
     )
+
+    color = t.union((rgb, hex, colorName)).named("Color")
+
+    colorFormat = t.string().enum(["rgb", "hex", "colorName"])
+
+    colorMaterializer = ModuleMat("ts/union/color_converter.ts")
+
+    convert = t.func(
+        t.struct({"color": color, "to": colorFormat}),
+        color,
+        colorMaterializer.imp("convert"),
+    )
+
+    public = policies.public()
+
+    g.expose(convert=convert.add_policy(public))

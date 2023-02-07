@@ -15,7 +15,7 @@ const plugin = (context) => ({
         const header = content.split("# Changelog")[0];
 
         const res = await fetch(
-          `https://api.github.com/repos/${organizationName}/${projectName}/releases?per_page=100&page=1`
+          `https://api.github.com/repos/${organizationName}/${projectName}/releases?per_page=100&page=1`,
         ).then((r) => r.json());
 
         const changelog = res
@@ -24,7 +24,7 @@ const plugin = (context) => ({
             ({ html_url, name, tag_name, body, prerelease, created_at }) =>
               `## [${name !== "" ? name : tag_name}](${html_url}) (${
                 prerelease ? "Prerelease, " : ""
-              }${new Date(created_at).toLocaleDateString("en-US")})\n\n${body}`
+              }${new Date(created_at).toLocaleDateString("en-US")})\n\n${body}`,
           )
           .join("\n\n");
 

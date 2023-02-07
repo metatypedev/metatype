@@ -253,6 +253,9 @@ class typedef(Node):
         if hasattr(type(self), "constraint_data"):
             ret.update(self.constraint_data())
 
+        if self._enum is not None:
+            ret["enum"] = ret.pop("_enum")
+
         ret.pop("collector_target")
 
         return ret
@@ -559,7 +562,7 @@ class union(typedef):
 
     def data(self, collector: Collector) -> dict:
         ret = super().data(collector)
-        ret["allOf"] = [collector.index(v) for v in ret.pop("variants")]
+        ret["anyOf"] = [collector.index(v) for v in ret.pop("variants")]
         return ret
 
 

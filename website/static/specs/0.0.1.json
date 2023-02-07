@@ -407,15 +407,6 @@
                 "null"
               ]
             },
-            "_enum": {
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": {
-                "type": "string"
-              }
-            },
             "title": {
               "type": "string"
             },
@@ -722,7 +713,7 @@
         {
           "type": "object",
           "required": [
-            "allOf",
+            "anyOf",
             "policies",
             "runtime",
             "title",
@@ -735,8 +726,8 @@
                 "union"
               ]
             },
-            "allOf": {
-              "description": "Array of indexes of the nodes that are used as subschemes in the allOf field of JSON Schema.",
+            "anyOf": {
+              "description": "Array of indexes of the nodes that are used as subschemes in the anyOf field of JSON Schema.",
               "type": "array",
               "items": {
                 "type": "integer",

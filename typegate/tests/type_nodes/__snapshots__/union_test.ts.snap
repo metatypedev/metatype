@@ -16,101 +16,37 @@ snapshot[`Union type 1`] = `
       },
       {
         kind: "UNION",
-        name: "Student",
+        name: "Color",
         possibleTypes: [
           {
-            fields: [
-              {
-                name: "age",
-                type: {
-                  ofType: {
-                    name: "Int",
-                  },
-                },
-              },
-              {
-                name: "name",
-                type: {
-                  ofType: {
-                    name: "String",
-                  },
-                },
-              },
-              {
-                name: "id",
-                type: {
-                  ofType: {
-                    name: "String",
-                  },
-                },
-              },
-            ],
-            kind: "OBJECT",
-            name: "User",
+            kind: "LIST",
+            name: null,
           },
           {
-            fields: [
-              {
-                name: "school",
-                type: {
-                  ofType: {
-                    name: "String",
-                  },
-                },
-              },
-            ],
-            kind: "OBJECT",
-            name: "StudentInformation",
+            kind: "SCALAR",
+            name: "String",
+          },
+          {
+            kind: "SCALAR",
+            name: "String",
           },
         ],
       },
       {
         kind: "UNION",
-        name: "Worker",
+        name: "Color",
         possibleTypes: [
           {
-            fields: [
-              {
-                name: "age",
-                type: {
-                  ofType: {
-                    name: "Int",
-                  },
-                },
-              },
-              {
-                name: "name",
-                type: {
-                  ofType: {
-                    name: "String",
-                  },
-                },
-              },
-              {
-                name: "id",
-                type: {
-                  ofType: {
-                    name: "String",
-                  },
-                },
-              },
-            ],
-            kind: "OBJECT",
-            name: "User",
+            kind: "LIST",
+            name: null,
           },
           {
-            fields: [
-              {
-                name: "company",
-                type: {
-                  ofType: {
-                    name: "String",
-                  },
-                },
-              },
-            ],
-            kind: "OBJECT",
-            name: "WorkerInformation",
+            kind: "SCALAR",
+            name: "String",
+          },
+          {
+            kind: "SCALAR",
+            name: "String",
           },
         ],
       },

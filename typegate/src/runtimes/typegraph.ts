@@ -310,7 +310,7 @@ export class TypeGraphRuntime extends Runtime {
         name: () => type.title,
         description: () => `${type.title} type`,
         possibleTypes: () => {
-          const variantNodes = type.allOf.map((typeIndex) =>
+          const variantNodes = type.anyOf.map((typeIndex) =>
             this.tg.types[typeIndex]
           );
 

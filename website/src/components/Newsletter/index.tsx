@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import React, { useMemo, useState } from "react";
-import { ApolloClient, InMemoryCache, gql } from "@apollo/client";
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 const signUp = gql`
@@ -25,7 +25,7 @@ export function useClient(gate: string) {
         uri: `${tgUrl}/${gate}`,
         cache: new InMemoryCache(),
       }),
-    [tgUrl]
+    [tgUrl],
   );
 
   return client;
@@ -44,7 +44,7 @@ export default function Newsletter() {
         variables: { email },
       });
       setMessage(
-        data?.newsletterSignUp?.id ? "Success!" : "Already subscribed!"
+        data?.newsletterSignUp?.id ? "Success!" : "Already subscribed!",
       );
     }
   };

@@ -40,7 +40,7 @@ export default function MiniQL({
             createGraphiQLFetcher({
               url: `${tgUrl}/${typegraph}`,
             }),
-          []
+          [],
         );
         return (
           <GraphiQLProvider
