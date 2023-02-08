@@ -59,7 +59,7 @@ class TestPrismaSchema:
                 }
             ).named("ModelA")
 
-            snapshot.assert_match(self.build_schema(db, {model}), "simple-model.prisma")
+            self.assert_snapshot(db, {model}, "simple-model.prisma")
 
     def test_one_to_many(self, snapshot):
         self.init_snapshot(snapshot)
@@ -82,9 +82,7 @@ class TestPrismaSchema:
                 }
             ).named("Post")
 
-            snapshot.assert_match(
-                self.build_schema(db, [user, post]), "one-to-many.prisma"
-            )
+            self.assert_snapshot(db, [user, post], "one-to-many.prisma")
 
     def test_implicit_one_to_many(self, snapshot):
         self.init_snapshot(snapshot)
@@ -99,9 +97,7 @@ class TestPrismaSchema:
                 {"id": t.integer().config("id", "auto"), "author": g("User")}
             ).named("Post")
 
-            snapshot.assert_match(
-                self.build_schema(db, [user, post]), "implicit-one-to-many.prisma"
-            )
+            self.assert_snapshot(db, [user, post], "implicit-one-to-many.prisma")
 
     def test_one_to_one(self, snapshot):
         self.init_snapshot(snapshot)
@@ -124,9 +120,7 @@ class TestPrismaSchema:
                 }
             ).named("Profile")
 
-            snapshot.assert_match(
-                self.build_schema(db, [user, profile]), "one-to-one.prisma"
-            )
+            self.assert_snapshot(db, [user, profile], "one-to-one.prisma")
 
     def test_implicit_one_to_one(self, snapshot):
         self.init_snapshot(snapshot)
@@ -145,9 +139,7 @@ class TestPrismaSchema:
                 {"id": t.uuid().config("id", "auto"), "user": g("User")}
             ).named("Profile")
 
-            snapshot.assert_match(
-                self.build_schema(db, [user, profile]), "implicit-one-to-one.prisma"
-            )
+            self.assert_snapshot(db, [user, profile], "implicit-one-to-one.prisma")
 
     def test_semi_implicit(self, snapshot):
         self.init_snapshot(snapshot)
