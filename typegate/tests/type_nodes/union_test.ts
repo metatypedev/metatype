@@ -67,6 +67,25 @@ test(
       },
     );
 
+    await t.should(
+      "fail to query if the value does not match a variant type",
+      async () => {
+        await gql`
+          query {
+            convert(color: "hello world", to: "rgb")
+          }
+        `
+          .expectErrorContains(
+            [
+              `must be array`,
+              `must match pattern "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"`,
+              `must be equal to one of the allowed values: red, green, blue, black, white`,
+            ].join(" or "),
+          )
+          .on(e);
+      },
+    );
+
     await t.should("allow to introspect the union type", async () => {
       await gql`
         query IntrospectionQuery {

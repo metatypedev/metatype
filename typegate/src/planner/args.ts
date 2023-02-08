@@ -15,6 +15,13 @@ import {
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
+import { JSONSchema, SchemaValidatorError, trimType } from "../typecheck.ts";
+
+const ajv = new Ajv({ removeAdditional: true });
+addFormats(ajv);
+
 export interface ComputeArg {
   (
     variables: Variables,
@@ -58,6 +65,7 @@ export class ArgumentCollector {
     typeIdx: number,
     parentProps: Record<string, number>, // parent context?
     argName: string,
+    argumentSchema?: JSONSchema,
   ): CollectedArg {
     const typ = this.tg.type(typeIdx);
     if (typ == null) {
@@ -170,15 +178,22 @@ export class ArgumentCollector {
       }
 
       case Type.STRING: {
-        if (
-          valueNode.kind !== Kind.STRING
-        ) {
+        if (valueNode.kind !== Kind.STRING) {
           throw new TypeMismatchError(
             valueNode.kind,
             "STRING",
             argName,
             typ.title,
           );
+        }
+
+        if (argumentSchema !== undefined) {
+          const validator = ajv.compile(argumentSchema);
+          validator(valueNode.value);
+
+          if (validator.errors) {
+            throw new SchemaValidatorError(validator.errors, " or ");
+          }
         }
 
         const value = String(valueNode.value);
@@ -197,6 +212,36 @@ export class ArgumentCollector {
     }
   }
 
+  private getArgumentSchema(typenode: TypeNode): JSONSchema {
+    switch (typenode.type) {
+      case Type.ARRAY: {
+        const itemsTypeNode = this.tg.type(typenode.items);
+        const schema = {
+          ...trimType(typenode),
+          items: this.getArgumentSchema(itemsTypeNode),
+        };
+        return schema;
+      }
+
+      case Type.UNION: {
+        const schemes = typenode.anyOf
+          .map((variantTypeIndex) => this.tg.type(variantTypeIndex))
+          .map((variant) => this.getArgumentSchema(variant));
+
+        const argumentSchema = {
+          anyOf: schemes,
+        };
+
+        return argumentSchema;
+      }
+
+      default: {
+        const schema = trimType(typenode);
+        return schema;
+      }
+    }
+  }
+
   /**
    * Collect the value of a parameter of type 'union'.
    */
@@ -207,12 +252,19 @@ export class ArgumentCollector {
     argName: string,
   ): CollectedArg {
     const { value: valueNode } = astNode;
+    const argumentSchema = this.getArgumentSchema(typ);
 
     // throw type mismatch error only if the argument node of the query
     // does not match any of the subschemes (variant nodes).
     for (const variantTypeIndex of typ.anyOf) {
       try {
-        return this.collectArg(astNode, variantTypeIndex, parentProps, argName);
+        return this.collectArg(
+          astNode,
+          variantTypeIndex,
+          parentProps,
+          argName,
+          argumentSchema,
+        );
       } catch (error) {
         if (!(error instanceof TypeMismatchError)) {
           throw error;

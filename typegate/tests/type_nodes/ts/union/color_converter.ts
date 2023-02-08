@@ -25,13 +25,11 @@ const colorNameToRGB = {
   blue: [0, 0, 255],
   black: [0, 0, 0],
   white: [255, 255, 255],
-};
+} as Record<string, [number, number, number]>;
 
 type colorFormat = "rgb" | "hex" | "colorName";
 
-function getColorFormat(
-  color: Array<number> | string,
-): colorFormat {
+function getColorFormat(color: Array<number> | string): colorFormat {
   if (Array.isArray(color)) {
     return "rgb";
   } else if (color.startsWith("#")) {
@@ -53,55 +51,48 @@ export function convert(
 
   switch (format) {
     case "rgb": {
-      const rgb = new RGBColor(...color);
+      const rgb = new RGBColor(...(color as [number, number, number]));
 
-      switch (to) {
-        case "rgb":
-          return color;
-
-        case "hex": {
-          const colorHex = rgb.toHex();
-          return colorHex.hex;
-        }
-
-        case "colorName":
-          throw new Error("RGB to color name not supported");
+      if (to == "rgb") {
+        return color;
       }
-      break;
+
+      if (to == "hex") {
+        const colorHex = rgb.toHex();
+        return colorHex.toString();
+      }
+
+      throw new Error("RGB to color name not supported");
     }
 
     case "hex": {
-      const hex = new HexColor(color);
+      const hex = new HexColor(color as string);
 
-      switch (to) {
-        case "rgb":
-          return rgbToArray(hex.toRGB());
-
-        case "hex":
-          return color;
-
-        case "colorName":
-          throw new Error("HEX to color name not supported");
+      if (to == "rgb") {
+        return rgbToArray(hex.toRGB());
       }
-      break;
+
+      if (to == "hex") {
+        return color;
+      }
+
+      throw new Error("HEX to color name not supported");
     }
 
     case "colorName": {
-      const rgb = new RGBColor(...colorNameToRGB[color as string]);
+      const rgbValues = colorNameToRGB[color as string];
+      const rgb = new RGBColor(...rgbValues);
 
-      switch (to) {
-        case "rgb":
-          return rgbToArray(rgb);
-
-        case "hex": {
-          const colorHex = rgb.toHex();
-          return colorHex.hex;
-        }
-
-        case "colorName":
-          return color;
+      if (to == "rgb") {
+        return rgbToArray(rgb);
       }
-      break;
+
+      if (to == "hex") {
+        const colorHex = rgb.toHex();
+        return colorHex.toString();
+      }
+
+      return color;
     }
   }
 }

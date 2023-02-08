@@ -3,7 +3,7 @@
 // deno-lint-ignore-file no-unused-vars
 import type * as jst from "json_schema_typed";
 import { Kind } from "graphql";
-import Ajv, { ValidateFunction } from "ajv";
+import Ajv, { ErrorObject, ValidateFunction } from "ajv";
 
 import addFormats from "ajv-formats";
 import {
@@ -23,9 +23,9 @@ import { isOptional, ObjectNode, TypeNode } from "./type_node.ts";
 // - optional
 // - func
 
-type JSONSchema = Exclude<jst.JSONSchema, boolean>;
+export type JSONSchema = Exclude<jst.JSONSchema, boolean>;
 
-function trimType(node: TypeNode): JSONSchema {
+export function trimType(node: TypeNode): JSONSchema {
   const { runtime, policies, config, injection, inject, ...ret } = node;
   return ret as unknown as JSONSchema;
 }
@@ -42,6 +42,30 @@ class InvalidNodePathsError extends Error {
   }
 }
 
+export class SchemaValidatorError extends Error {
+  constructor(errors: ErrorObject[], separator: string) {
+    const errorMessages: string[] = [];
+
+    for (const error of errors) {
+      if (Object.entries(error.params).length > 0 && error.message) {
+        let errorMessage = error.message;
+        const allowedValues: string[] = error.params.allowedValues;
+
+        if (allowedValues?.length > 0) {
+          errorMessage += `: ${allowedValues.join(", ")}`;
+        }
+
+        if (error.instancePath.length > 0) {
+          errorMessage += `at ${error.instancePath}`;
+        }
+
+        errorMessages.push(errorMessage);
+      }
+    }
+    super(errorMessages?.join(separator));
+  }
+}
+
 // Build a jsonschema for a query result
 export class ValidationSchemaBuilder {
   constructor(
@@ -52,7 +76,7 @@ export class ValidationSchemaBuilder {
 
   public build(): JSONSchema {
     const { name, operation } = this.operation;
-    const rootPath = name?.value ?? (operation[0].toUpperCase());
+    const rootPath = name?.value ?? operation[0].toUpperCase();
     if (operation !== "query" && operation !== "mutation") {
       throw new Error(`unsupported operation type: ${operation}`);
     }
@@ -139,10 +163,7 @@ export class ValidationSchemaBuilder {
         };
 
         if (invalidNodePaths.length > 0) {
-          throw new InvalidNodePathsError(
-            invalidNodePaths,
-            generatedSchema,
-          );
+          throw new InvalidNodePathsError(invalidNodePaths, generatedSchema);
         }
 
         return generatedSchema;
@@ -155,11 +176,7 @@ export class ValidationSchemaBuilder {
 
         for (const variant of variants) {
           try {
-            const variantSchema = this.get(
-              path,
-              variant,
-              selectionSet,
-            );
+            const variantSchema = this.get(path, variant, selectionSet);
 
             variantsSchema.push(variantSchema);
           } catch (error) {
@@ -254,23 +271,29 @@ export class TypeCheck {
     operation: OperationDefinitionNode,
     fragments: FragmentDefs,
   ) {
-    const schema = new ValidationSchemaBuilder(types, operation, fragments)
-      .build();
+    const schema = new ValidationSchemaBuilder(
+      types,
+      operation,
+      fragments,
+    ).build();
     return new TypeCheck(schema);
   }
 
-  public check(value: any): boolean {
+  public check(value: unknown): boolean {
     return this.validator(value);
   }
 
-  public validate(value: any) {
-    if (!this.check(value)) {
+  public validate(value: unknown) {
+    this.check(value);
+
+    if (this.validator.errors) {
       console.error({ errors: this.validator.errors });
-      const errors = this.validator.errors!
-        .map((err) => `${err.message} at ${err.instancePath}`);
+      const schemaError = new SchemaValidatorError(this.validator.errors, ", ");
       throw new Error(
-        `errors: ${errors.join(", ")};\nvalue: ${
-          JSON.stringify(value)
+        `errors: ${schemaError.message};\nvalue: ${
+          JSON.stringify(
+            value,
+          )
         }\nschema: ${JSON.stringify(this.schema)}`,
       );
     }
