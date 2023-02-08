@@ -4167,9 +4167,9 @@ checksum = "dc375e1527247fe1a97d8b7156678dfe7c1af2fc075c9a4db3690ecd2a148068"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.51"
+version = "1.0.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5d727cae5b39d21da60fa540906919ad737832fe0b1c165da3a34d6548c849d6"
+checksum = "6ef7d57beacfaf2d8aee5937dab7b7f28de3cb8b1828479bb5de2a7106f2bae2"
 dependencies = [
  "unicode-ident",
 ]
@@ -6689,7 +6689,7 @@ dependencies = [
 [[package]]
 name = "temporal-client"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#17ceab7952fc67674b624183b62eae16ecd12824"
+source = "git+https://github.com/temporalio/sdk-core#106b09f9db76bf3f7372de8da3f23e8194eecba1"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6716,7 +6716,7 @@ dependencies = [
 [[package]]
 name = "temporal-sdk-core-protos"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#17ceab7952fc67674b624183b62eae16ecd12824"
+source = "git+https://github.com/temporalio/sdk-core#106b09f9db76bf3f7372de8da3f23e8194eecba1"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -7302,7 +7302,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
  "cfg-if",
- "rand 0.7.3",
+ "rand 0.8.5",
  "static_assertions",
 ]
 

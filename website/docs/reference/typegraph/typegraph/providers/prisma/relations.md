@@ -3,14 +3,6 @@ sidebar_label: relations
 title: typegraph.providers.prisma.relations
 ---
 
-#### check\_field
-
-```python
-def check_field(type: t.struct, field_name: str) -> bool
-```
-
-Check if a field represents a relationship
-
 ## Side Objects
 
 ```python
