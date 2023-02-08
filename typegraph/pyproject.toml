@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph"
-version = "0.0.3-dev.1"
+version = "0.0.3-dev.2"
 description = "Free and open ecosystem for API composition."
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license = "ELv2"
@@ -20,7 +20,7 @@ py-tg = "typegraph.utils.loaders:cmd"
 python = ">=3.8,<4.0"
 httpx = { extras = ["http2"], version = ">=0.22,<0.24" }
 redbaron = "^0.9.2"
-python-box = "^6.1.0"
+python-box = ">=6.1,<8.0"
 frozendict = "2.3.4"
 semver = "^2.13.0"
 PyYAML = "^6.0"

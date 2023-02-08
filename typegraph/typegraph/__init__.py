@@ -5,4 +5,4 @@ from typegraph import types as t  # noqa
 from typegraph.effect import Effect  # noqa
 from typegraph.graph.typegraph import TypeGraph  # noqa
 
-version = "0.0.3-dev.1"
+version = "0.0.3-dev.2"

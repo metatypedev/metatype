@@ -76,12 +76,12 @@ export const renderPlayground = (
         <script src="https://unpkg.com/graphiql/graphiql.min.js" type="application/javascript"></script>
         <script data-plugins="transform-es2015-modules-umd" type="text/babel">
           const fetcher =  GraphiQL.createFetcher({
-            url: ${url}
+            url: "${url}"
           });
-          const logoLink = ${logoUrl || "https://graphql.org/img/logo.svg"}
-          const documentationLink = ${
+          const logoLink = "${logoUrl || "https://graphql.org/img/logo.svg"}"
+          const documentationLink = "${
     documentationUrl || "https://github.com/graphql/graphiql"
-  }
+  }"
 
           ReactDOM.render(<GraphiQL fetcher={fetcher}>
             <GraphiQL.Logo>
