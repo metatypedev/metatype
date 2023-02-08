@@ -212,8 +212,8 @@ class Relation:
 #     )
 
 
-def get_name_generator(op_name: str, tpe: t.struct):
-    return lambda name: f"{tpe.name}{op_name}{name}"
+def get_name_generator(op_label: str, tpe: t.struct):
+    return lambda name: f"{tpe.name}{op_label}{name}"
 
 
 def get_input_type(
@@ -296,6 +296,21 @@ def get_out_type(
         return ret
     else:
         return ret.named(name)
+
+
+def promote_num_to_float(tpe: t.struct) -> t.struct:
+    props = {}
+    for key, value in tpe.props.items():
+        props[key] = t.float() if isinstance(value, t.number) else value
+    return t.struct(props)
+
+
+def extract_number_types(tpe: t.struct) -> t.struct:
+    props = {}
+    for key, value in tpe.props.items():
+        if isinstance(value, t.number):
+            props[key] = value
+    return t.struct(props)
 
 
 def get_where_type(
@@ -430,11 +445,20 @@ class PrismaRuntime(Runtime):
                     .optional()
                     .named("Where"),
                 }
-            ),
+            ).named(_pref("Input")),
             t.struct(
                 {
-                    "_count": t.struct({"_all": t.integer(), "views": t.integer()}),
-                    "_sum": t.struct({"views": t.integer()}),
+                    "_count": t.struct({"_all": t.integer()})
+                    .compose(tpe.props)
+                    .named(_pref("Count")),
+                    "take": t.integer().named(_pref("Take")),
+                    "skip": t.integer().named(_pref("Skip")),
+                    "_avg": promote_num_to_float(extract_number_types(tpe)).named(
+                        _pref("Avg")
+                    ),
+                    "_sum": extract_number_types(tpe).named(_pref("Sum")),
+                    "_min": extract_number_types(tpe).named(_pref("Min")),
+                    "_max": extract_number_types(tpe).named(_pref("Max")),
                 }
             ).named(_pref("Output")),
             PrismaOperationMat(self, tpe.name, "aggregate", effect=effects.none()),

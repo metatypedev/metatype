@@ -35,6 +35,7 @@ test("prisma", async (t) => {
                     { id: 10001, title: "Book 1", likes: 7, views: 13 },
                     { id: 10002, title: "Book 2", likes: 3, views: 7 },
                     { id: 10003, title: "Book 3", likes: 20, views: 15 },
+                    { id: 10004, title: "Book 4", likes: 14, views: 2 },
                   ]
                 }
               }
@@ -47,8 +48,8 @@ test("prisma", async (t) => {
           id
         }
       }
-    `.expectBody((body: any) => {
-      console.log("BODY ::", body);
+    `.expectData({
+      createOneUser: { id: 1 },
     })
       .on(e);
   });
@@ -75,22 +76,26 @@ test("prisma", async (t) => {
       .on(e);
   });*/
 
-  await t.should("do a count", async () => {
+  await t.should("do an aggregate", async () => {
     await gql`
         query {
           aggregatePost
           {
-            _count {
-              _all
-              views
-            }
-            _sum {
-              views
-            }
+            _count { _all views likes }
+            _sum { views likes }
+            _max { views likes }
+            _min { views likes }
+            _avg { views likes }
           }
         }
-    `.expectBody((body: any) => {
-      console.log("BODY ::", body);
+    `.expectData({
+      aggregatePost: {
+        _count: { _all: 4, views: 4, likes: 4 },
+        _sum: { views: 37, likes: 44 },
+        _max: { views: 15, likes: 20 },
+        _min: { views: 2, likes: 3 },
+        _avg: { views: 9.25, likes: 11 },
+      },
     })
       .on(e);
   });
