@@ -92,13 +92,13 @@ test("typecheck", async (t) => {
     assertThrows(
       () => query1.validate({ posts: [post1] }),
       Error,
-      "required property 'author' at /posts/0",
+      "must have required property 'author' at /posts/0",
     );
 
     assertThrows(
       () => query1.validate({ posts: [post2] }),
       Error,
-      "required property 'username' at /posts/0/author",
+      "must have required property 'username' at /posts/0/author",
     );
 
     query1.validate({ posts: [post3] });
@@ -106,7 +106,7 @@ test("typecheck", async (t) => {
     assertThrows(
       () => query1.validate({ posts: [post3, post2] }),
       Error,
-      "required property 'username' at /posts/1/author",
+      "must have required property 'username' at /posts/1/author",
     );
 
     const query2 = typecheck(graphql`

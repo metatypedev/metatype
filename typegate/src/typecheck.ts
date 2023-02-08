@@ -56,7 +56,7 @@ export class SchemaValidatorError extends Error {
         }
 
         if (error.instancePath.length > 0) {
-          errorMessage += `at ${error.instancePath}`;
+          errorMessage += ` at ${error.instancePath}`;
         }
 
         errorMessages.push(errorMessage);
