@@ -150,8 +150,11 @@ class FieldBuilder:
             assert typ.type == "object", f"Type f'{typ.type}' not supported"
             name = typ.name
 
-            rel = self.spec.field_relations[parent_type.name][field]
-            if rel == self.spec.relations[rel.name].left:
+            proxy = self.spec.proxies[parent_type.name].get(field, None)
+            assert proxy is not None, f"No proxy for '{parent_type.name}' at '{field}'"
+            rel = self.spec.relations[proxy.link_name]
+
+            if isinstance(proxy.get(), t.struct):
                 # left side of the relation: the one that has the foreign key defined in
                 assert quant == ""
                 tag, fkeys = self.relation(field, typ, rel.name)

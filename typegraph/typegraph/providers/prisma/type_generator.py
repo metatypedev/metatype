@@ -7,7 +7,6 @@ from attrs import frozen
 from typegraph import t
 from typegraph.graph.typegraph import find
 from typegraph.graph.typegraph import resolve_proxy
-from typegraph.providers.prisma.relations import check_field
 from typegraph.providers.prisma.relations import RelationshipRegister
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
@@ -17,30 +16,8 @@ class TypeGenerator:
     spec: RelationshipRegister
 
     def __find_relation(self, tpe: t.struct, field_name: str) -> Optional[str]:
-        if not check_field(tpe, field_name):
-            return None
-
-        return self.spec.field_relations[tpe.name][field_name].name
-
-        # type_name = tpe.name
-        # return next(
-        #     (
-        #         relname
-        #         for relname, relation in (
-        #             (relname, self.spec.relations[relname])
-        #             for relname in self.spec.relation_by_models[type_name]
-        #         )
-        #         if (
-        #             relation.owner_type.name == type_name
-        #             and relation.owner_field == field_name
-        #         )
-        #         or (
-        #             relation.owned_type.name == type_name
-        #             and relation.owned_field == field_name
-        #         )
-        #     ),
-        #     None,
-        # )
+        proxy = self.spec.proxies[tpe.name].get(field_name)
+        return proxy.link_name if proxy is not None else None
 
     def get_input_type(
         self,
@@ -58,6 +35,7 @@ class TypeGenerator:
             raise Exception(f'expected a struct, got: "{type(tpe).__name__}"')
         for key, field_type in tpe.props.items():
             field_type = resolve_proxy(field_type)
+            relname = self.spec.proxies[tpe.name].get(key)
             relname = self.__find_relation(tpe, key)
             if relname is not None:
                 if relname in skip:

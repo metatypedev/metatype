@@ -4,6 +4,27 @@
       "items": [
         {
           "items": [
+            "docs/reference/typegraph/typegraph/importers/base/importer"
+          ],
+          "label": "typegraph.importers.base",
+          "type": "category"
+        },
+        "docs/reference/typegraph/typegraph/importers/openapi"
+      ],
+      "label": "typegraph.importers",
+      "type": "category"
+    },
+    {
+      "items": [
+        {
+          "items": [
+            "docs/reference/typegraph/typegraph/providers/prisma/relations"
+          ],
+          "label": "typegraph.providers.prisma",
+          "type": "category"
+        },
+        {
+          "items": [
             {
               "items": [
                 "docs/reference/typegraph/typegraph/providers/temporal/runtimes/temporal"

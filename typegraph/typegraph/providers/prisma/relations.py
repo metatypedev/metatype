@@ -61,16 +61,6 @@ def test_types(a: t.TypeNode, b: t.TypeNode):
     )
 
 
-def check_field(type: t.struct, field_name: str) -> bool:
-    """Check if a field represents a relationship"""
-    field_type = resolve_proxy(type.props[field_name])
-
-    return (field_type.runtime is None or field_type.runtime == type.runtime) and (
-        field_type.type == "object"
-        or resolve_proxy(resolve_entity_quantifier(field_type)).type == "object"
-    )
-
-
 class Side(StrEnum):
     """
     A relationship is defined between two models:
@@ -147,7 +137,6 @@ class RelationshipRegister:
     def __init__(self, runtime):
         self.runtime = runtime
         self.types = {}
-        self.field_relations = defaultdict(dict)
         self.relations = {}
         self.proxies = defaultdict(dict)
 
@@ -167,34 +156,6 @@ class RelationshipRegister:
             left.target_field = left_field
 
         return left
-        # match by target_field
-        # right_type = right.get()
-        # target_type = resolve_proxy(typ.props[left.target_field])
-        # assert (
-        #     right_type.type == target_type.type
-        #     and resolve_entity_quantifier(right_type).name
-        #     == resolve_entity_quantifer(target_type).name
-        # )
-        # return left
-
-        # # find left.target_field
-        # right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
-        # # we should find typ (the same reference) in right_type
-        # fields = [f for f, ty in right_type.props.items() if ty == typ]
-        # assert len(fields) == 1
-        # left.target_field = fields[0]
-        # return left
-
-        # raise Exception("Not supported (yet)")
-        # we need to wrap `typ` in a LinkProxy
-
-        # right_type_wrapper = right.get()  # optional or array
-        # right_type = resolve_proxy(resolve_entity_quantifier(right_type_wrapper))
-
-        # # find matching field in right_type
-        # fields = [f for f, ty in right_type.props.items() if ty.name == typ.name]
-        # assert len(fields) == 1
-        # return self.runtime.link(typ, right.link_name, fields[0])
 
     def get_right_proxy(self, right_field: str, left: LinkProxy) -> LinkProxy:
         left_type = left.get()
@@ -313,16 +274,15 @@ class RelationshipRegister:
 
         if isinstance(typ, t.struct):
             left_model = typ
+
             fields = [
                 f
                 for f, ty in left_model.props.items()
-                if isinstance(ty, LinkProxy)
-                and (isinstance(ty.get(), t.optional) or isinstance(ty.get(), t.array))
-                and ty.get().of.name == model.name
+                if isinstance(ty, LinkProxy) and ty.link_name == proxy.link_name
             ]
             assert (
                 len(fields) <= 1
-            ), f"Ambiguous target field for '{proxy.link_name}' on '{left_model.name}': {' or '.join(fields)} ?"
+            ), f"Relationship names must be unique: got multiple '{proxy.link_name}' on '{left_model.name}': {', '.join(fields)}"
             if len(fields) == 1:
                 proxy.target_field = fields[0]
                 return
@@ -346,6 +306,19 @@ class RelationshipRegister:
         assert isinstance(typ, t.optional) or isinstance(typ, t.array)
         right_model = resolve_proxy(typ.of)
         assert isinstance(right_model, t.struct)
+
+        fields = [
+            f
+            for f, ty in right_model.props.items()
+            if isinstance(ty, LinkProxy) and ty.link_name == proxy.link_name
+        ]
+        assert (
+            len(fields) <= 1
+        ), f"Relationship names must be unique: got multiple '{proxy.link_name}' on '{right_model.name}': {', '.join(fields)}"
+        if len(fields) == 1:
+            proxy.target_field = fields[0]
+            return
+
         fields = [f for f, ty in right_model.props.items() if ty.name == model.name]
         assert (
             len(fields) <= 1
@@ -479,10 +452,11 @@ class RelationshipRegister:
                 self.proxies[prop_type.name][fields[0]] = self.runtime.link(
                     prop_type.props[fields[0]], link_name, prop_name
                 )
+                self.ensure_proxy_target(proxies[prop_name], prop_name, typ)
                 continue
 
             if isinstance(prop_type, t.optional) or isinstance(prop_type, t.array):
-                model = prop_type.of
+                model = resolve_proxy(prop_type.of)
                 if not isinstance(model, t.struct):
                     continue
 
@@ -490,19 +464,37 @@ class RelationshipRegister:
                 fields = [
                     f
                     for f, ty in model.props.items()
-                    if isinstance(ty, LinkProxy) and ty.name == model.name
+                    if isinstance(ty, LinkProxy) and ty.name == typ.name
                 ]
 
                 assert (
                     len(fields) <= 1
                 ), f"Ambiguous link targetting '{typ.name}' on '{model.name}': {' or '.join(fields)}?"
-                assert (
-                    len(fields) == 1
-                ), f"Cannot find a field linking to '{typ.name}' on '{model.name}'"
 
-                link_name = model.props[fields[0]].link_name
+                if len(fields) == 1:
+                    link_name = model.props[fields[0]].link_name
+                    proxies[prop_name] = self.runtime.link(
+                        prop_type, link_name, fields[0]
+                    )
+                    continue
+
+                # len(fields) == 0
+                # find all props of `model` of `typ`
+                fields = [
+                    f
+                    for f, ty in model.props.items()
+                    if ty.name == typ.name
+                    # if isinstance(resolve_proxy(ty))
+                ]
+                assert len(fields) <= 1
+                assert len(fields) == 1
+                # TODO handle eventual name clash
+                # generate link_name
+                link_name = f"_{model.name}_to_{typ.name}"
                 proxies[prop_name] = self.runtime.link(prop_type, link_name, fields[0])
-                continue
+                self.proxies[model.name][fields[0]] = self.runtime.link(
+                    model.props[fields[0]], link_name, prop_name
+                )
 
     def manage(self, typ: t.struct):
         if typ.name in self.types:
@@ -515,12 +507,8 @@ class RelationshipRegister:
 
         for prop_name, proxy in self.proxies[typ.name].items():
             left_proxy, right_proxy = self.get_link_from_proxy(proxy, typ, prop_name)
-            left_type = left_proxy.get()
-            right_type = resolve_proxy(resolve_entity_quantifier(right_proxy.get()))
 
             rel = create_relationship(left_proxy, right_proxy)
-            self.field_relations[left_type.name][left_proxy.target_field] = rel.right
-            self.field_relations[right_type.name][right_proxy.target_field] = rel.left
             self.relations[rel.name] = rel
             deps.append(rel.left.typ)
             deps.append(rel.right.typ)
