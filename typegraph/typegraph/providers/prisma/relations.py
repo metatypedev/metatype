@@ -2,7 +2,6 @@
 
 
 from collections import defaultdict
-from typing import Callable
 from typing import Dict
 from typing import Optional
 from typing import TYPE_CHECKING
@@ -47,18 +46,6 @@ class Cardinality(StrEnum):
 
     def is_one_to_many(self):
         return self == Cardinality.MANY
-
-
-# return True iff a and b represents the same type
-def test_types(a: t.TypeNode, b: t.TypeNode):
-    if a.name == b.name:
-        return True
-    a = resolve_proxy(a)
-    b = resolve_proxy(b)
-    return (
-        a.type == b.type
-        and resolve_entity_quantifier(a).name == resolve_entity_quantifier(b).name
-    )
 
 
 class Side(StrEnum):
@@ -223,49 +210,6 @@ class RelationshipRegister:
         right_field = target_field
         right = self.get_right_proxy(right_field, left)
         return left, right
-
-    # return a LinkProxy if field `typ` defines a relationship
-    def get_link_proxy(
-        self, from_type: t.typedef, target_type: t.struct
-    ) -> Optional[LinkProxy]:
-        return None
-        if from_type.type in ["optional", "array"]:
-            nested_type = resolve_proxy(resolve_entity_quantifier)
-            if nested_type.type != "object":  # not `t.struct`
-                return None
-
-            right = nested_type
-            left = target_type
-
-            # TODO not necessarily unique if the context is clear:
-            # The target type should have:
-            # - a LinkProxy targetting the current field; or
-            # - a LinkProxy targetting targetting the current type and
-            #   no other field on the current type matches to the relationship requirements.
-            # TODO: def find_relationship_target_field(on: t.struct, target: t.struct)
-            target_field = find_unique_prop(
-                nested_type,
-                lambda ty: ty.name == target_type.name,
-                f"Field of type '{target_type.name}'",
-            )
-
-        else:
-            if from_type.type != "object":
-                return None
-
-            left = from_type
-            right = target_type
-
-            # TODO not necessarily unique if the context is clear: see supra
-            target_field = find_unique_prop(
-                from_type,
-                lambda ty: ty.type in ["optional", "array"]
-                and ty.of.name == target_type.name,
-                f"Field of type: array/optional of '{target_type.name}'",
-            )
-
-        link_name = f"__{left.name}_to_{right.name}"
-        return self.link(from_type, link_name, target_field)
 
     def fill_proxy_target_field(self, proxy: LinkProxy, model: t.struct):
         if proxy.target_field is not None:
@@ -555,20 +499,3 @@ def create_relationship(left_proxy: LinkProxy, right_proxy: LinkProxy) -> Relati
             side=Side.RIGHT,
         ),
     )
-
-
-# find the unique property of the struct that satisfies the given test
-def find_unique_prop(
-    s: t.struct, test: Callable[[t.typedef], bool], context: str
-) -> str:
-    found = []
-    for key, typ in s.props.items():
-        if test(resolve_proxy(typ)):
-            found.append(key)
-
-    if len(found) == 0:
-        raise Exception(f"{context}: not found in '{s.name}'")
-    if len(found) > 1:
-        raise Exception(f"{context}: found more than one in '{s.name}'")
-
-    return found[0]
