@@ -33,6 +33,14 @@ def reformat_schema(schema: str):
 class TestPrismaSchema:
     def init_snapshot(self, snapshot):
         snapshot.snapshot_dir = "tests/__snapshots__/prisma-schema"
+        self.snapshot = snapshot
+
+    def assert_snapshot(
+        self, runtime: PrismaRuntime, models: Iterable[t.struct], snapshot_name: str
+    ):
+        return self.snapshot.assert_match(
+            self.build_schema(runtime, models), snapshot_name
+        )
 
     def build_schema(self, runtime: PrismaRuntime, models: Iterable[t.struct]):
         spec = RelationshipRegister(runtime)
@@ -140,3 +148,41 @@ class TestPrismaSchema:
             snapshot.assert_match(
                 self.build_schema(db, [user, profile]), "implicit-one-to-one.prisma"
             )
+
+    def test_semi_implicit(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph(name="test_semi_implicit") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            user = t.struct(
+                {
+                    "id": t.integer().config("id"),
+                    "profile": db.link(g("Profile").optional(), "userProfile"),
+                }
+            ).named("User")
+
+            profile = t.struct(
+                {"id": t.uuid().config("id", "auto"), "user": g("User")}
+            ).named("Profile")
+
+            self.assert_snapshot(db, [user, profile], "one-to-one.prisma")
+
+        with TypeGraph(name="test_semi_implicit_2") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            user = t.struct(
+                {
+                    "id": t.integer().config("id"),
+                    "profile": g("Profile").optional(),
+                }
+            ).named("User")
+
+            profile = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "user": db.link(g("User"), "userProfile"),
+                }
+            ).named("Profile")
+
+            self.assert_snapshot(db, [user, profile], "one-to-one.prisma")

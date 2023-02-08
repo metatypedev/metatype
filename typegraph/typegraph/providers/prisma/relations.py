@@ -154,37 +154,38 @@ class RelationshipRegister:
     def get_left_proxy(self, left_field: str, right: LinkProxy) -> LinkProxy:
         right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
         prop_type = right_type.props[right.target_field]
-        if isinstance(prop_type, LinkProxy):
-            left = prop_type
-            assert left.link_name == right.link_name
-            left_type = left.get()
-            assert left_type.type == "object", f"Expected object, got {left_type.type}"
+        if not isinstance(prop_type, LinkProxy):
+            prop_type = self.proxies[right_type.name][right.target_field]
+        left = prop_type
+        assert left.link_name == right.link_name
+        left_type = left.get()
+        assert left_type.type == "object", f"Expected object, got {left_type.type}"
 
-            if left.target_field is not None:
-                assert left.target_field == left_field
-            else:
-                left.target_field = left_field
+        if left.target_field is not None:
+            assert left.target_field == left_field
+        else:
+            left.target_field = left_field
 
-            return left
-            # match by target_field
-            # right_type = right.get()
-            # target_type = resolve_proxy(typ.props[left.target_field])
-            # assert (
-            #     right_type.type == target_type.type
-            #     and resolve_entity_quantifier(right_type).name
-            #     == resolve_entity_quantifer(target_type).name
-            # )
-            # return left
+        return left
+        # match by target_field
+        # right_type = right.get()
+        # target_type = resolve_proxy(typ.props[left.target_field])
+        # assert (
+        #     right_type.type == target_type.type
+        #     and resolve_entity_quantifier(right_type).name
+        #     == resolve_entity_quantifer(target_type).name
+        # )
+        # return left
 
-            # # find left.target_field
-            # right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
-            # # we should find typ (the same reference) in right_type
-            # fields = [f for f, ty in right_type.props.items() if ty == typ]
-            # assert len(fields) == 1
-            # left.target_field = fields[0]
-            # return left
+        # # find left.target_field
+        # right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
+        # # we should find typ (the same reference) in right_type
+        # fields = [f for f, ty in right_type.props.items() if ty == typ]
+        # assert len(fields) == 1
+        # left.target_field = fields[0]
+        # return left
 
-        raise Exception("Not supported (yet)")
+        # raise Exception("Not supported (yet)")
         # we need to wrap `typ` in a LinkProxy
 
         # right_type_wrapper = right.get()  # optional or array
@@ -229,7 +230,17 @@ class RelationshipRegister:
                     for f, ty in right_type.props.items()
                     if isinstance(ty, LinkProxy) and ty.link_name == right.link_name
                 ]
-                assert len(fields) == 1
+                if len(fields) == 0:
+                    print(
+                        f"proxies: {repr({k: f'{l.link_name}, {l.name}, {l.target_field}' for k, l in self.proxies[right_type.name].items()})}"
+                    )
+                    fields = [
+                        f
+                        for f, p in self.proxies[right_type.name].items()
+                        if p.link_name == right.link_name
+                    ]
+                print(f"right: link name={right.link_name}")
+                assert len(fields) == 1, f"got: {repr(fields)}"
                 right.target_field = fields[0]
 
             left_field = target_field
@@ -295,6 +306,124 @@ class RelationshipRegister:
         link_name = f"__{left.name}_to_{right.name}"
         return self.link(from_type, link_name, target_field)
 
+    def fill_proxy_target_field(self, proxy: LinkProxy, model: t.struct):
+        if proxy.target_field is not None:
+            return
+        typ = proxy.get()
+
+        if isinstance(typ, t.struct):
+            left_model = typ
+            fields = [
+                f
+                for f, ty in left_model.props.items()
+                if isinstance(ty, LinkProxy)
+                and (isinstance(ty.get(), t.optional) or isinstance(ty.get(), t.array))
+                and ty.get().of.name == model.name
+            ]
+            assert (
+                len(fields) <= 1
+            ), f"Ambiguous target field for '{proxy.link_name}' on '{left_model.name}': {' or '.join(fields)} ?"
+            if len(fields) == 1:
+                proxy.target_field = fields[0]
+                return
+
+            fields = [
+                f
+                for f, ty in left_model.props.items()
+                if isinstance(ty, t.optional)
+                or isinstance(ty, t.array)
+                and ty.of.name == model.name
+            ]
+            assert (
+                len(fields) <= 1
+            ), f"Ambiguous target field for '{proxy.link_name}' on '{left_model.name}': {' or '.join(fields)} ?"
+            assert (
+                len(fields) == 1
+            ), f"No target for '{proxy.link_name}' on '{left_model.name}'"
+            proxy.target_field = fields[0]
+            return
+
+        assert isinstance(typ, t.optional) or isinstance(typ, t.array)
+        right_model = resolve_proxy(typ.of)
+        assert isinstance(right_model, t.struct)
+        fields = [f for f, ty in right_model.props.items() if ty.name == model.name]
+        assert (
+            len(fields) <= 1
+        ), f"Ambiguous target field for '{proxy.link_name}' on '{right_model.name}': {' or '.join(fields)} ?"
+        assert (
+            len(fields) == 1
+        ), f"No target for '{proxy.link_name}' on '{right_model.name}'"
+        proxy.target_field = fields[0]
+
+    # ensure that there is a proxy on the other side
+    # TODO: full validation??
+    def ensure_proxy_target(self, proxy: LinkProxy, field: str, model: t.struct):
+        typ = proxy.get()
+        self.fill_proxy_target_field(proxy, model)
+
+        if isinstance(typ, t.struct):
+            # TODO: find target field
+            left_model = typ
+            # assert proxy.target_field is not None
+            right_proxy = left_model.props.get(proxy.target_field)
+
+            assert (
+                right_proxy is not None
+            ), f"Expected field '{proxy.target_field}' on '{left_model.name}'"
+
+            if isinstance(right_proxy, LinkProxy):
+                assert right_proxy.link_name == proxy.link_name
+                if right_proxy.target_field is None:
+                    right_proxy.target_field = field
+                else:
+                    assert right_proxy.target_field == field
+                registered_proxy = self.proxies[typ.name][proxy.target_field]
+                if registered_proxy is None:
+                    self.proxies[typ.name][proxy.target_field] = right_proxy
+                else:
+                    assert registered_proxy == right_proxy
+
+            else:
+                # wrap type in a proxy
+                self.proxies[left_model.name][proxy.target_field] = self.runtime.link(
+                    right_proxy, proxy.link_name, field
+                )
+
+        else:
+            assert isinstance(typ, t.optional) or isinstance(
+                typ, t.array
+            ), "LinkProxy can only wrap a struct, optional or array"
+            right_model = resolve_proxy(typ.of)
+            assert isinstance(
+                right_model, t.struct
+            ), f"Expected an struct for a model, got '{right_model.type}'"
+
+            left_proxy = right_model.props.get(proxy.target_field)
+            assert (
+                left_proxy is not None
+            ), f"Expected field '{proxy.target_field}' on '{right_model.name}'"
+
+            if isinstance(left_proxy, LinkProxy):
+                assert left_proxy.link_name == proxy.link_name
+                if left_proxy.target_field is None:
+                    left_proxy.target_field = field
+                else:
+                    assert left_proxy.target_field == field
+
+                registered_proxy = self.proxies[right_model.name].get(
+                    proxy.target_field, None
+                )
+                if registered_proxy is None:
+                    self.proxies[right_model.name][proxy.target_field] = left_proxy
+                else:
+                    assert registered_proxy == left_proxy
+
+            else:
+                # wrap type in a proxy
+                self.proxies[right_model.name][proxy.target_field] = self.runtime.link(
+                    left_proxy, proxy.link_name, field
+                )
+
     def register_type(self, typ: t.struct):
         self.types[typ.name] = typ
         # TODO set runtime, propagate runtime
@@ -302,6 +431,7 @@ class RelationshipRegister:
         for prop_name, prop_type in typ.props.items():
             if isinstance(prop_type, LinkProxy):
                 proxies[prop_name] = prop_type
+                self.ensure_proxy_target(prop_type, prop_name, typ)
                 continue
             if prop_name in proxies:
                 continue
