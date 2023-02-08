@@ -14,7 +14,6 @@ with TypeGraph("prisma") as g:
     userModelPrisma = t.struct({"id": t.integer().config("id")}).named("userprisma")
 
     prismaRuntimePostgres = PrismaRuntime("prisma", "POSTGRES")
-    prismaRuntimePostgres.manage(userModelPrisma)
 
     randomRuntimeSeeded = RandomRuntime(seed=1)
     randomUser = t.gen(g("user"), RandomMat(runtime=randomRuntimeSeeded)).add_policy(
@@ -33,9 +32,5 @@ with TypeGraph("prisma") as g:
         dropSchema=prismaRuntimePostgres.executeRaw(
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
-        **prismaRuntimePostgres.gen(
-            {
-                "createUser": (userModelPrisma, "create", public),
-            }
-        ),
+        createUser=prismaRuntimePostgres.create(userModelPrisma).add_policy(public),
     )
