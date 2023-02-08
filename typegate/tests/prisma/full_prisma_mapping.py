@@ -32,6 +32,8 @@ with TypeGraph("prisma") as g:
         {
             "id": t.integer().config("id"),
             "title": t.string(),
+            "views": t.integer(),
+            "likes": t.integer(),
             "author": user_post.owner(),
         }
     ).named("Post")
@@ -57,6 +59,9 @@ with TypeGraph("prisma") as g:
                 "findManyUsers": (user, "findMany", public),
                 "createOneUser": (user, "create", public),
                 "findManyPosts": (post, "findMany", public),
+                "groupByPost": (post, "groupBy", public),
+                "countPosts": (post, "count", public),
+                "aggregatePost": (post, "aggregate", public),
                 "createOnePost": (post, "create", public),
                 "findManyExtendedProfile": (extended_profile, "findMany", public),
                 "createOneExtendedProfile": (extended_profile, "create", public),

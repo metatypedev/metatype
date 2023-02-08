@@ -212,6 +212,10 @@ class Relation:
 #     )
 
 
+def get_name_generator(op_name: str, tpe: t.struct):
+    return lambda name: f"{tpe.name}{op_name}{name}"
+
+
 def get_input_type(
     tpe: t.struct,
     skip=set(),  # set of relation names, indicates related models to skip
@@ -397,6 +401,59 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "findMany", effect=effects.none()),
         )
 
+    def gen_count(self, tpe: t.struct) -> t.func:
+        _pref = get_name_generator("Count", tpe)
+        return t.func(
+            t.struct(
+                {
+                    "where": get_where_type(tpe).named(_pref("Where")).optional(),
+                    "select": t.struct(
+                        {
+                            "_all": t.boolean(),
+                        }
+                    )
+                    .named(_pref("Select"))
+                    .optional(),
+                }
+            ),
+            t.struct({"_all": t.integer()}),
+            PrismaOperationMat(self, tpe.name, "count", effect=effects.none()),
+        )
+
+    def gen_aggregate(self, tpe: t.struct) -> t.func:
+        _pref = get_name_generator("Aggregate", tpe)
+        return t.func(
+            t.struct(
+                {
+                    "where": get_where_type(tpe)
+                    .named(_pref("Where"))
+                    .optional()
+                    .named("Where"),
+                }
+            ),
+            t.struct(
+                {
+                    "_count": t.struct({"_all": t.integer(), "views": t.integer()}),
+                    "_sum": t.struct({"views": t.integer()}),
+                }
+            ).named(_pref("Output")),
+            PrismaOperationMat(self, tpe.name, "aggregate", effect=effects.none()),
+        )
+
+    def gen_group_by(self, tpe: t.struct) -> t.func:
+        _pref = get_name_generator("GroupBy", tpe)
+        return t.func(
+            t.struct(
+                {
+                    "where": get_where_type(tpe).named(_pref("Where")).optional(),
+                }
+            ).named(_pref("Input")),
+            t.struct({"_count": t.struct({"_all": t.integer()})}).named(
+                _pref("Output")
+            ),
+            PrismaOperationMat(self, tpe.name, "result", effect=effects.none()),
+        )
+
     def gen_create(self, tpe: t.struct) -> t.func:
         return t.func(
             t.struct(
@@ -464,6 +521,12 @@ class PrismaRuntime(Runtime):
                 ret[name] = self.gen_delete(tpe).add_policy(policy)
             elif op == "deleteMany":
                 ret[name] = self.gen_delete_many(tpe).add_policy(policy)
+            elif op == "groupBy":
+                ret[name] = self.gen_group_by(tpe).add_policy(policy)
+            elif op == "count":
+                ret[name] = self.gen_count(tpe).add_policy(policy)
+            elif op == "aggregate":
+                ret[name] = self.gen_aggregate(tpe).add_policy(policy)
             else:
                 raise Exception(f'Operation not supported: "{op}"')
         # raise Exception(f'ret: {ret}')

@@ -22,23 +22,72 @@ test("prisma", async (t) => {
   await t.should("insert a record with nested object", async () => {
     await gql`
         mutation q {
-            createOneUser (
-                data: {
-                    id: 1
-                    name: "Jack"
-                    age: 20
-                    coinflips: [false, true, true]
-                    city: "Anyville"
-                    posts: {
-                        create: { id: 10001, title: "Book 1" }
-                    }
-                    extended_profile: {
-                        create: { id: 10111, bio: "Some bio 1" }
-                    }
+          createOneUser (
+            data: {
+              id: 1
+              name: "Jack"
+              age: 20
+              coinflips: [false, true, true]
+              city: "Anyville"
+              posts: {
+                createMany: {
+                  data: [
+                    { id: 10001, title: "Book 1", likes: 7, views: 13 },
+                    { id: 10002, title: "Book 2", likes: 3, views: 7 },
+                    { id: 10003, title: "Book 3", likes: 20, views: 15 },
+                  ]
                 }
-            ) {
-                id
+              }
+              extended_profile: {
+                create: { id: 10111, bio: "Some bio 1" }
+              }
             }
+          ) 
+        {
+          id
+        }
+      }
+    `.expectBody((body: any) => {
+      console.log("BODY ::", body);
+    })
+      .on(e);
+  });
+
+  /*
+  await t.should("do a groupBy likes", async () => {
+    await gql`
+        query {
+          groupByPost(
+            by: ["likes", "views"],
+            _count: {
+              _all: true,
+            }
+          )
+          {
+            _count {
+              _all
+            }
+          }
+        }
+    `.expectBody((body: any) => {
+      console.log("BODY ::", body);
+    })
+      .on(e);
+  });*/
+
+  await t.should("do a count", async () => {
+    await gql`
+        query {
+          aggregatePost
+          {
+            _count {
+              _all
+              views
+            }
+            _sum {
+              views
+            }
+          }
         }
     `.expectBody((body: any) => {
       console.log("BODY ::", body);
