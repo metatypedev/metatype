@@ -32,10 +32,10 @@ test("prisma", async (t) => {
               posts: {
                 createMany: {
                   data: [
-                    { id: 10001, title: "Book 1", likes: 7, views: 13 },
-                    { id: 10002, title: "Book 2", likes: 3, views: 7 },
-                    { id: 10003, title: "Book 3", likes: 20, views: 15 },
-                    { id: 10004, title: "Book 4", likes: 14, views: 2 },
+                    { id: 10001, title: "Book 1", views: 9, likes: 7 },
+                    { id: 10002, title: "Book 2", views: 8, likes: 3 },
+                    { id: 10003, title: "Book 3", views: 5, likes: 20 },
+                    { id: 10004, title: "Book 4", views: 5, likes: 14 },
                   ]
                 }
               }
@@ -54,20 +54,38 @@ test("prisma", async (t) => {
       .on(e);
   });
 
+  await t.should("orderBy likes and views", async () => {
+    await gql`
+        query {
+          findManyPosts(
+            orderBy: [{likes: "desc"}, {views: "asc"}]
+          )
+          { 
+            id
+            likes
+            views
+          }
+        }
+    `.expectData({
+      findManyPosts: [
+        { id: 10003, likes: 20, views: 5 },
+        { id: 10004, likes: 14, views: 5 },
+        { id: 10001, likes: 7, views: 9 },
+        { id: 10002, likes: 3, views: 8 },
+      ],
+    })
+      .on(e);
+  });
+
   /*
-  await t.should("do a groupBy likes", async () => {
+  await t.should("do a groupBy", async () => {
     await gql`
         query {
           groupByPost(
-            by: ["likes", "views"],
-            _count: {
-              _all: true,
-            }
+            by: ["likes"]
           )
           {
-            _count {
-              _all
-            }
+            _count { likes }
           }
         }
     `.expectBody((body: any) => {
@@ -79,8 +97,7 @@ test("prisma", async (t) => {
   await t.should("do an aggregate", async () => {
     await gql`
         query {
-          aggregatePost
-          {
+          aggregatePost(where: {author: {id: 1}}) {
             _count { _all views likes }
             _sum { views likes }
             _max { views likes }
@@ -91,10 +108,10 @@ test("prisma", async (t) => {
     `.expectData({
       aggregatePost: {
         _count: { _all: 4, views: 4, likes: 4 },
-        _sum: { views: 37, likes: 44 },
-        _max: { views: 15, likes: 20 },
-        _min: { views: 2, likes: 3 },
-        _avg: { views: 9.25, likes: 11 },
+        _sum: { views: 27, likes: 44 },
+        _max: { views: 9, likes: 20 },
+        _min: { views: 5, likes: 3 },
+        _avg: { views: 6.75, likes: 11 },
       },
     })
       .on(e);

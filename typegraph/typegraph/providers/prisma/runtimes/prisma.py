@@ -299,18 +299,32 @@ def get_out_type(
 
 
 def promote_num_to_float(tpe: t.struct) -> t.struct:
-    props = {}
+    fields = {}
     for key, value in tpe.props.items():
-        props[key] = t.float() if isinstance(value, t.number) else value
-    return t.struct(props)
+        fields[key] = t.float() if isinstance(value, t.number) else value
+    return t.struct(fields)
 
 
 def extract_number_types(tpe: t.struct) -> t.struct:
-    props = {}
+    fields = {}
     for key, value in tpe.props.items():
         if isinstance(value, t.number):
-            props[key] = value
-    return t.struct(props)
+            fields[key] = value
+    return t.struct(fields)
+
+
+def deep_map(tpe: t.struct, node_value: any) -> t.struct:
+    fields = {}
+    for key, value in tpe.props.items():
+        if isinstance(value, t.struct):
+            fields[key] = deep_map(value, node_value)
+        else:
+            fields[key] = node_value
+    return t.struct(fields)
+
+
+def get_order_by_type(tpe: t.struct) -> t.struct:
+    return t.array(deep_map(tpe, t.enum(["asc", "desc"]).optional()))
 
 
 def get_where_type(
@@ -401,66 +415,51 @@ class PrismaRuntime(Runtime):
         )
 
     def gen_find_unique(self, tpe: t.struct) -> t.func:
+        _pref = get_name_generator("Unique", tpe)
         return t.func(
-            t.struct({"where": get_where_type(tpe).named(f"{tpe.name}WhereUnique")}),
-            get_out_type(tpe).named(f"{tpe.name}UniqueOutput").optional(),
+            t.struct({"where": get_where_type(tpe).named(_pref("Where")).optional()}),
+            get_out_type(tpe).named(_pref("Output")).optional(),
             PrismaOperationMat(self, tpe.name, "findUnique", effect=effects.none()),
         )
 
     def gen_find_many(self, tpe: t.struct) -> t.func:
-        return t.func(
-            t.struct(
-                {"where": get_where_type(tpe).named(f"{tpe.name}Where").optional()}
-            ),
-            t.array(get_out_type(tpe).named(f"{tpe.name}Output")),
-            PrismaOperationMat(self, tpe.name, "findMany", effect=effects.none()),
-        )
-
-    def gen_count(self, tpe: t.struct) -> t.func:
-        _pref = get_name_generator("Count", tpe)
+        _pref = get_name_generator("Many", tpe)
         return t.func(
             t.struct(
                 {
                     "where": get_where_type(tpe).named(_pref("Where")).optional(),
-                    "select": t.struct(
-                        {
-                            "_all": t.boolean(),
-                        }
-                    )
-                    .named(_pref("Select"))
+                    "orderBy": get_order_by_type(tpe)
+                    .named(_pref("OrderBy"))
                     .optional(),
                 }
             ),
-            t.struct({"_all": t.integer()}),
-            PrismaOperationMat(self, tpe.name, "count", effect=effects.none()),
+            t.array(get_out_type(tpe).named(_pref("Output"))),
+            PrismaOperationMat(self, tpe.name, "findMany", effect=effects.none()),
         )
 
     def gen_aggregate(self, tpe: t.struct) -> t.func:
         _pref = get_name_generator("Aggregate", tpe)
+        output = t.struct(
+            {
+                "_count": t.struct({"_all": t.integer()})
+                .compose(tpe.props)
+                .named(_pref("Count")),
+                "take": t.integer().named(_pref("Take")),
+                "skip": t.integer().named(_pref("Skip")),
+                "_avg": promote_num_to_float(extract_number_types(tpe)).named(
+                    _pref("Avg")
+                ),
+                "_sum": extract_number_types(tpe).named(_pref("Sum")),
+                "_min": extract_number_types(tpe).named(_pref("Min")),
+                "_max": extract_number_types(tpe).named(_pref("Max")),
+            }
+        )
+
         return t.func(
             t.struct(
-                {
-                    "where": get_where_type(tpe)
-                    .named(_pref("Where"))
-                    .optional()
-                    .named("Where"),
-                }
+                {"where": get_where_type(tpe).named(_pref("Where")).optional()}
             ).named(_pref("Input")),
-            t.struct(
-                {
-                    "_count": t.struct({"_all": t.integer()})
-                    .compose(tpe.props)
-                    .named(_pref("Count")),
-                    "take": t.integer().named(_pref("Take")),
-                    "skip": t.integer().named(_pref("Skip")),
-                    "_avg": promote_num_to_float(extract_number_types(tpe)).named(
-                        _pref("Avg")
-                    ),
-                    "_sum": extract_number_types(tpe).named(_pref("Sum")),
-                    "_min": extract_number_types(tpe).named(_pref("Min")),
-                    "_max": extract_number_types(tpe).named(_pref("Max")),
-                }
-            ).named(_pref("Output")),
+            output.named(_pref("Output")),
             PrismaOperationMat(self, tpe.name, "aggregate", effect=effects.none()),
         )
 
@@ -469,49 +468,62 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
+                    "by": t.array(t.string()).named(_pref("By")),
+                    "take": t.integer().named(_pref("Take")).optional(),
+                    "skip": t.integer().named(_pref("Skip")).optional(),
                     "where": get_where_type(tpe).named(_pref("Where")).optional(),
                 }
             ).named(_pref("Input")),
-            t.struct({"_count": t.struct({"_all": t.integer()})}).named(
-                _pref("Output")
-            ),
-            PrismaOperationMat(self, tpe.name, "result", effect=effects.none()),
+            t.struct(
+                {
+                    "_count": t.struct({"_all": t.integer()})
+                    .compose(tpe.props)
+                    .named(_pref("Count")),
+                    "_avg": promote_num_to_float(extract_number_types(tpe)).named(
+                        _pref("Avg")
+                    ),
+                    "_sum": extract_number_types(tpe).named(_pref("Sum")),
+                    "_min": extract_number_types(tpe).named(_pref("Min")),
+                    "_max": extract_number_types(tpe).named(_pref("Max")),
+                }
+            ).named(_pref("Output")),
+            PrismaOperationMat(self, tpe.name, "groupBy", effect=effects.none()),
         )
 
     def gen_create(self, tpe: t.struct) -> t.func:
+        _pref = get_name_generator("Create", tpe)
         return t.func(
             t.struct(
                 {
-                    "data": get_input_type(tpe).named(f"{tpe.name}CreateInput"),
+                    "data": get_input_type(tpe).named(_pref("Input")),
                 }
             ),
-            get_out_type(tpe).named(f"{tpe.name}CreateOutput"),
+            get_out_type(tpe).named(_pref("Output")),
             PrismaOperationMat(self, tpe.name, "createOne", effect=effects.create()),
         )
 
     def gen_update(self, tpe: t.struct) -> t.func:
-
+        _pref = get_name_generator("Update", tpe)
         return t.func(
             t.struct(
                 {
-                    "data": get_input_type(tpe, update=True).named(
-                        f"{tpe.name}UpdateInput"
-                    ),
-                    "where": get_where_type(tpe).named(f"{tpe.name}UpdateOneWhere"),
+                    "data": get_input_type(tpe, update=True).named(_pref("Input")),
+                    "where": get_where_type(tpe).named(_pref("OneWhere")),
                 }
             ),
-            get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
+            get_out_type(tpe).named(_pref("Output")),
             PrismaOperationMat(
                 self, tpe.name, "updateOne", effect=effects.update(True)
             ),
         )
 
     def gen_delete(self, tpe: t.struct) -> t.func:
+        _pref = get_name_generator("Delete", tpe)
         return t.func(
             t.struct(
-                {"where": get_where_type(tpe).named(f"{tpe.name}DeleteInput")},
+                {"where": get_where_type(tpe).named(_pref("Input"))},
             ),
-            get_out_type(tpe).named(f"{tpe.name}DeleteOutput"),
+            get_out_type(tpe).named(_pref("Output")),
             PrismaOperationMat(self, tpe.name, "deleteOne", effect=effects.delete()),
         )
 
@@ -547,8 +559,6 @@ class PrismaRuntime(Runtime):
                 ret[name] = self.gen_delete_many(tpe).add_policy(policy)
             elif op == "groupBy":
                 ret[name] = self.gen_group_by(tpe).add_policy(policy)
-            elif op == "count":
-                ret[name] = self.gen_count(tpe).add_policy(policy)
             elif op == "aggregate":
                 ret[name] = self.gen_aggregate(tpe).add_policy(policy)
             else:

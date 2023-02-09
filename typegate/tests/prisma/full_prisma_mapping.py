@@ -60,7 +60,6 @@ with TypeGraph("prisma") as g:
                 "createOneUser": (user, "create", public),
                 "findManyPosts": (post, "findMany", public),
                 "groupByPost": (post, "groupBy", public),
-                "countPosts": (post, "count", public),
                 "aggregatePost": (post, "aggregate", public),
                 "createOnePost": (post, "create", public),
                 "findManyExtendedProfile": (extended_profile, "findMany", public),
