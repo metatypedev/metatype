@@ -31,7 +31,7 @@ import { Planner } from "./planner/mod.ts";
 import { FromVars } from "./runtimes/graphql.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
-import { mapValues } from "collections";
+import { mapValues } from "std/collections/map_values.ts";
 import { Option } from "monads";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
