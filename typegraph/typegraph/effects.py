@@ -12,7 +12,6 @@ class EffectType(LowercaseStrEnum):
     UPDATE = auto()
     UPSERT = auto()
     DELETE = auto()
-    UNKNOWN = auto()
 
 
 @frozen

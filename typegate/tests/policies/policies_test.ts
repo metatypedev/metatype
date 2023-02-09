@@ -141,3 +141,24 @@ test("Role jwt policy access", async (t) => {
     },
   );
 });
+
+test("Namespace policies", async (t) => {
+  const e = await t.pythonFile("policies/policies.py");
+
+  // TODO fail
+  await t.should("fail when no policy", async () => {
+    await gql`
+      query {
+        ns {
+          select { id } 
+        }
+      }
+    `
+      .expectData({
+        ns: {
+          select: { id: 12 },
+        },
+      })
+      .on(e);
+  });
+});

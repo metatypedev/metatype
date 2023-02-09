@@ -4,7 +4,6 @@ import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { Register } from "../register.ts";
 import config from "../config.ts";
-import * as path from "std/path/mod.ts";
 import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphDS } from "../typegraph.ts";
@@ -31,9 +30,6 @@ interface FuncNode {
 }
 
 type Node = StructNode | FuncNode;
-
-const localGraphs = ["introspection", "test"];
-const dirName = path.dirname(path.fromFileUrl(import.meta.url));
 
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
@@ -138,14 +134,7 @@ export class TypeGateRuntime extends Runtime {
       throw new Error(`Typegraph name ${name} cannot be used`);
     }
 
-    if (localGraphs.includes(name)) {
-      await Deno.writeTextFile(
-        path.join(dirName, "../typegraphs", `${name}.json`),
-        `${json}\n`,
-      );
-    } else {
-      await this.register.set(json);
-    }
+    await this.register.set(json);
     return { name };
   };
 

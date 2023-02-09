@@ -32,4 +32,13 @@ with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
             secret_data,
             mod.imp("readSecret"),
         ).add_policy(mod.imp("isAllowedToReadSecret")),
+        ns=t.struct(
+            {
+                "select": t.func(
+                    t.struct(),
+                    t.struct({"id": t.integer()}),
+                    PureFunMat("() => ({ id: 12 })"),
+                )
+            }
+        ),
     )

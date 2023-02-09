@@ -32,13 +32,13 @@ function splitGraphQLOperations(
           );
 
         if (Object.keys(childQueryProperties).length === 0) {
-          queryProperties[propertyName] = typeIndex;
+          mutationProperties[propertyName] = typeIndex;
           childNode.config = Object.assign(childNode.config ?? {}, {
             __namespace: true,
           });
         } else if (Object.keys(childMutationProperties).length === 0) {
-          mutationProperties[propertyName] = typeIndex;
-          childNode.config = Object.assign(childNode ?? {}, {
+          queryProperties[propertyName] = typeIndex;
+          childNode.config = Object.assign(childNode.config ?? {}, {
             __namespace: true,
           });
         } else {
