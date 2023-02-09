@@ -98,8 +98,8 @@ export class RandomRuntime extends Runtime {
           case "array": {
             const res = [];
             let size = this.chance.integer({ min: 1, max: 10 });
+            const childNodeName = this.getTgTypeNameByIndex(typ.items);
             while (size--) {
-              const childNodeName = this.getTgTypeNameByIndex(typ.items);
               res.push(randomizeRecursively(childNodeName));
             }
             return res;
