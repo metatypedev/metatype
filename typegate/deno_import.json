@@ -19,7 +19,6 @@
     "_bcrypt": "https://deno.land/x/bcrypt@v0.4.0/src/worker.ts",
     "oauth2_client": "https://deno.land/x/oauth2_client@v0.2.1/mod.ts",
     "test/mock_fetch": "https://deno.land/x/mock_fetch@0.3.0/mod.ts",
-    "json_schema_typed": "https://deno.land/x/json_schema_typed@v8.0.0/draft_latest.ts",
-    "url_join": "https://deno.land/x/url_join@1.0.0/mod.ts"
+    "json_schema_typed": "https://deno.land/x/json_schema_typed@v8.0.0/draft_latest.ts"
   }
 }

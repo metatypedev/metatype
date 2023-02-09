@@ -2,13 +2,12 @@
 
 import { ComputeStage } from "../engine.ts";
 import { Runtime } from "./Runtime.ts";
-import { envOrFail, JSONValue } from "../utils.ts";
+import { createUrl, envOrFail, JSONValue } from "../utils.ts";
 import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
-import { urlJoin } from "url_join";
 
 const traverseLift = (obj: JSONValue): any => {
   if (Array.isArray(obj)) {
@@ -139,16 +138,14 @@ export class HTTPRuntime extends Runtime {
           }
         }
       }
-      const query = searchParams.toString();
 
       const body = encodeRequestBody(
         bodyFields,
         options.content_type,
       );
 
-      // TODO : rewrite a fast url join, and removing trailling "?""
       const res = await fetch(
-        urlJoin(this.endpoint, pathname, `?${query}`),
+        createUrl(this.endpoint, pathname, searchParams),
         {
           method,
           headers,

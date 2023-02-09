@@ -23,6 +23,20 @@ export const forceOptionToValue = <T>(m: Option<T>): T | undefined => {
   return m.isSome() ? m.unwrap() : undefined;
 };
 
+export const createUrl = (
+  base: string,
+  path: string,
+  search_params?: URLSearchParams,
+): string => {
+  // replace repeating / to a single /
+  const sanitized_path = path.replace(/[\/]+/g, "/");
+  const url = new URL(sanitized_path, base);
+  if (search_params) {
+    url.search = search_params.toString();
+  }
+  return url.href;
+};
+
 export const ensure = (predicat: boolean, message: string | (() => string)) => {
   if (!predicat) {
     throw Error(typeof message === "function" ? message() : message);
