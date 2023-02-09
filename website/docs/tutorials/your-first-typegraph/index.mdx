@@ -7,42 +7,42 @@ import TGExample from "@site/src/components/TGExample";
 
 # Your first typegraph
 
-The typegraphs - virtual graphs of types - are the secret sauce of the ecosystem. Similar to programming languages type systems, they let the developer describe:
+Before you jump into coding, a brief introduction. The typegraphs - virtual graphs of types - are the secret sauce of the ecosystem. They establish the foundation for all the abstraction that will be introduced later. Similar to programming languages, they let the developer describe with a type system:
 
 1. _what_ data types exists
 2. _how_ these data get transformed
 3. _where_ these data and transformations run
 4. _who_ can access them
 
-## The type system
+## Zooming on the types
 
-There is 4 main categories and no "class" or "primitive" type:
+There is no "object" or "primitive" type, only 4 main categories of types:
 
 - value types: `t.integer()`, `t.string()`, `t.uuid()`, etc.
 - quantifier types: `t.optional(·)`, `t.array(·)`, etc.
 - consolidator types: `t.struct(·, ·)`, `t.union(·, ·)`, etc.
 - function types: `t.func(· → ·)`, `t.policy(· → ·)`, etc.
 
-This allows to describe almost any data type you may encounter, and typecheck the data flowing through the typegates.
+You can combine them with each other to describe almost any data type you may need. The typegate enforces the data validation when data flows through it. Some syntactic sugar is available to make the type definition shorter:
 
 <CodeBlock language="python">{require("./types.py")}</CodeBlock>
 
 ## The typegraph package
 
-The typegraph package is a Python package that allows to describe a typegraph. It's a thin wrapper around the type system, and provides a few helpers to make the typegraph definition easier. It builds on the type system to provide some more building blocks:
+The typegraph package is a Python package that allows to describe a full typegraph. It's a thin wrapper around the type system, and provides a few helpers to make the typegraph definition easier. It builds on the type system to provide some more building blocks:
 
 1. _what_ data types exists → value, quantifier, consolidator **types**
-2. _how_ these data get transformed → function types with **materializers** specifying the transformation
-3. _where_ these data and transformations run → **runtimes** where materializers operate
-4. _who_ can access them → special function types named **policies** that control accesses
+2. _how_ these data get transformed → function types and **materializers** that specify the transformation
+3. _where_ these data and transformations run → **runtimes** metadata that describe materializers operate
+4. _who_ can access them → a special case of function types named **policies** that control accesses
 
-This tutorial will cover these abstraction step by step and show how to use them by example.
+This tutorial will cover these abstraction concept by concept and show how to use them by example.
 
 :::info Code sample are interactive
 You can interact with most of the typegraph in the documentation. Some parts might be voluntary hidden and full source can be found on GitHub. Click on "edit this page" to jump there and look into the parent folder.
 :::
 
-A simple typegraph looks like this:
+A complete typegraph definition may look like the following:
 
 <TGExample
   typegraph="first-typegraph"
@@ -50,16 +50,17 @@ A simple typegraph looks like this:
   query={require("./query.graphql")}
 />
 
-Copy this into a file named `typegraph.py` near your `docker-compose.yml` file.
+To start with the chat app design, copy the typegraph into a file named `typegraph.py` next to your `docker-compose.yml` file.
 
 ## The meta CLI
 
-The meta CLI use a config file named `metatype.yml` to give some defaults and avoid typing the same arguments over and over again. It is a simple YAML file that looks like this:
+The meta CLI use a YAML configuration file to source some information and avoid typing the same arguments over and over again. Copy the following into named `metatype.yml` also next to previous files:
 
 ```yaml
 typegates:
   dev:
     url: "http://localhost:7890"
+    # default values
     username: admin
     password: password
 typegraphs:
@@ -84,7 +85,7 @@ meta dev
 #  ✓ Success!
 ```
 
-You can now opens [http://localhost:7890/first-typegraph](http://localhost:7890/first-typegraph) in your browser. The CLI will automatically watch for changes in the typegraph and reload the typegraph. You should see a graphql playground and be able to play with your first typegraph, congrats!
+You can now open [http://localhost:7890/first-typegraph](http://localhost:7890/first-typegraph) in your browser. The CLI will automatically watch for changes in the typegraph and reload the typegraph. You should see a GraphQL playground with a query editor and some auto-generated documentation clicking the top-left menu item. **Congrats**, you can now to play with your first typegraph!
 
 <div className="text-center">
   <img

@@ -12,7 +12,7 @@ API
 FaaS
 Deno
 ORM
-HTTP
+HTTPs?
 GraphQL
 REST
 DDL
@@ -23,3 +23,12 @@ DAG
 JWT
 Giscus
 Prisma
+GRPC
+boolean
+PATCH
+PUT
+PBAC
+CORS
+OAuth2
+Deno
+sandboxed

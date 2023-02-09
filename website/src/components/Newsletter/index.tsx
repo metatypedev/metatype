@@ -63,7 +63,7 @@ export default function Newsletter() {
       />
       <input
         type="submit"
-        className="p-1 border border-solid font-sans border-gray-300 rounded-sm cursor-pointer text-base bg-transparent"
+        className="ml-2 p-1 border border-solid font-sans border-gray-300 rounded-sm cursor-pointer text-base bg-transparent"
         value="Submit"
       />
     </form>

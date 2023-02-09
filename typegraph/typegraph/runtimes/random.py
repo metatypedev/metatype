@@ -86,8 +86,8 @@ class RandomRuntime(Runtime):
 
         return dict()
 
-    def generate(self):
-        return RandomMat(runtime=self)
+    def generate(self, out, **kwargs):
+        return t.gen(out, RandomMat(runtime=self), **kwargs)
 
 
 @frozen
