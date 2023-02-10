@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.0.3-dev.1"
+version = "0.0.3-dev.2"
 edition = "2021"
 
 description = "Free and open ecosystem for API composition."
@@ -46,7 +46,7 @@ globset = "0.4.10"
 anyhow = "1.0.69"
 indoc = "2.0.0"
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = { version = "1.0.92", features = ["preserve_order"] }
+serde_json = { version = "1.0.93", features = ["preserve_order"] }
 reqwest = { version = "0.11.14", features = ["blocking", "json"] }
 colored = "2.0.0"
 question = "0.2.2"

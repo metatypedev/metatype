@@ -1,6 +1,6 @@
 [package]
 name = "typescript"
-version = "0.0.3-dev.1"
+version = "0.0.3-dev.2"
 edition = "2021"
 
 [dependencies]
@@ -16,5 +16,5 @@ swc_ecmascript = { version = "0.205.47", features = [
 ] }
 swc_ecma_transforms = { version = "0.198.26", features = ["typescript"] }
 string_cache = "0.8.4"
-dprint-plugin-typescript = "0.82.0"
+dprint-plugin-typescript = "0.83.0"
 lazy_static = "1.4.0"
