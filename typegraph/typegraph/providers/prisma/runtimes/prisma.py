@@ -313,6 +313,7 @@ def extract_number_types(tpe: t.struct) -> t.struct:
     return t.struct(fields)
 
 
+# apply fn to all terminal nodes
 def deep_map(tpe: t.typedef, fn: callable) -> t.struct:
     if isinstance(tpe, t.NodeProxy):
         return deep_map(tpe.get(), fn)
@@ -433,12 +434,16 @@ class PrismaRuntime(Runtime):
 
     def gen_find_many(self, tpe: t.struct) -> t.func:
         _pref = get_name_generator("Many", tpe)
+        rel_cols = tpe.props.keys()
         return t.func(
             t.struct(
                 {
                     "where": get_where_type(tpe).named(_pref("Where")).optional(),
                     "orderBy": get_order_by_type(tpe)
                     .named(_pref("OrderBy"))
+                    .optional(),
+                    "distinct": t.array(t.enum(rel_cols))
+                    .named(_pref("Distinct"))
                     .optional(),
                 }
             ),

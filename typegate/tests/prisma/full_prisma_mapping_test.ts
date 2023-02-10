@@ -131,4 +131,20 @@ test("prisma", async (t) => {
     })
       .on(e);
   });
+
+  await t.should("do a distinct on col `published`", async () => {
+    await gql`
+        query {
+          findManyPosts(distinct: ["published"]) {
+            published
+          }
+        }
+    `.expectData({
+      findManyPosts: [
+        { published: true },
+        { published: false },
+      ],
+    })
+      .on(e);
+  });
 });
