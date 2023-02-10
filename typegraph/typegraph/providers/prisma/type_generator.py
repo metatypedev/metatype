@@ -15,10 +15,6 @@ from typegraph.providers.prisma.utils import resolve_entity_quantifier
 class TypeGenerator:
     spec: RelationshipRegister
 
-    def __find_relation(self, tpe: t.struct, field_name: str) -> Optional[str]:
-        proxy = self.spec.proxies[tpe.name].get(field_name)
-        return proxy.link_name if proxy is not None else None
-
     def get_input_type(
         self,
         tpe: t.struct,
@@ -35,8 +31,8 @@ class TypeGenerator:
             raise Exception(f'expected a struct, got: "{type(tpe).__name__}"')
         for key, field_type in tpe.props.items():
             field_type = resolve_proxy(field_type)
-            relname = self.spec.proxies[tpe.name].get(key)
-            relname = self.__find_relation(tpe, key)
+            proxy = self.spec.proxies[tpe.name].get(key)
+            relname = proxy.link_name if proxy is not None else None
             if relname is not None:
                 if relname in skip:
                     continue
