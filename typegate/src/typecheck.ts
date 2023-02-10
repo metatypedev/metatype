@@ -55,11 +55,20 @@ function toPrettyJSON(value: unknown) {
 
 export class SchemaValidatorError extends Error {
   constructor(value: unknown, schemaErrors: ErrorObject[], schema: JSONSchema) {
-    const errorMessage = [
-      `value: ${toPrettyJSON(value)}`,
-      `errors: ${toPrettyJSON(schemaErrors)}`,
-      `schema: ${toPrettyJSON(schema)}`,
-    ].join("\n\n");
+    let errorMessage = "";
+
+    if (schemaErrors.length > 1) {
+      errorMessage = [
+        `value: ${toPrettyJSON(value)}`,
+        `errors: ${toPrettyJSON(schemaErrors)}`,
+        `schema: ${toPrettyJSON(schema)}`,
+      ].join("\n\n");
+    } else {
+      // if there is only one error, return it instead of the whole error,
+      // as it may be redundant
+      const error = schemaErrors[0];
+      errorMessage = `${error.message} at ${error.instancePath}`;
+    }
 
     super(errorMessage);
   }
