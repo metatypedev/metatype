@@ -77,11 +77,13 @@ test("prisma", async (t) => {
       .on(e);
   });
 
-  await t.should("do a groupBy", async () => {
+  await t.should("do a groupBy with orderBy", async () => {
     await gql`
         query {
           groupByPost(
-            by: ["published"]
+            by: ["published"],
+            where: {author: {id: 1}},
+            orderBy: [{_sum: {likes: "desc"}}]
           )
           {
             published
@@ -89,16 +91,21 @@ test("prisma", async (t) => {
             _sum { likes views }
           }
         }
-    `.expectData({
-      groupByPost: [
-        { published: false, _count: { _all: 1 }, _sum: { likes: 3, views: 8 } },
-        {
-          published: true,
-          _count: { _all: 3 },
-          _sum: { likes: 41, views: 19 },
-        },
-      ],
-    })
+    `
+      .expectData({
+        groupByPost: [
+          {
+            published: true,
+            _count: { _all: 3 },
+            _sum: { likes: 41, views: 19 },
+          },
+          {
+            published: false,
+            _count: { _all: 1 },
+            _sum: { likes: 3, views: 8 },
+          },
+        ],
+      })
       .on(e);
   });
 

@@ -313,18 +313,27 @@ def extract_number_types(tpe: t.struct) -> t.struct:
     return t.struct(fields)
 
 
-def deep_map(tpe: t.struct, node_value: any) -> t.struct:
-    fields = {}
-    for key, value in tpe.props.items():
-        if isinstance(value, t.struct):
-            fields[key] = deep_map(value, node_value)
+def deep_map(tpe: t.typedef, fn: callable) -> t.struct:
+    if isinstance(tpe, t.NodeProxy):
+        return deep_map(tpe.get(), fn)
+
+    if isinstance(tpe, t.array) or isinstance(tpe, t.optional):
+        content = tpe.of
+        if isinstance(tpe, t.array):
+            return t.array(deep_map(content, fn))
         else:
-            fields[key] = node_value
-    return t.struct(fields)
+            return deep_map(content, fn).optional()
+
+    if isinstance(tpe, t.struct):
+        return t.struct({k: deep_map(v, fn) for k, v in tpe.props.items()})
+
+    return fn(tpe)
 
 
 def get_order_by_type(tpe: t.struct) -> t.struct:
-    return t.array(deep_map(tpe, t.enum(["asc", "desc"]).optional()))
+    term_node_value = t.enum(["asc", "desc"]).optional()
+    remap_struct = deep_map(tpe, lambda _: term_node_value).optional()
+    return t.array(remap_struct)
 
 
 def get_where_type(
@@ -468,13 +477,14 @@ class PrismaRuntime(Runtime):
             {
                 "_count": t.struct({"_all": t.integer()})
                 .compose(tpe.props)
-                .named(_pref("Count")),
-                "_avg": promote_num_to_float(extract_number_types(tpe)).named(
-                    _pref("Avg")
-                ),
-                "_sum": extract_number_types(tpe).named(_pref("Sum")),
-                "_min": extract_number_types(tpe).named(_pref("Min")),
-                "_max": extract_number_types(tpe).named(_pref("Max")),
+                .named(_pref("Count"))
+                .optional(),
+                "_avg": promote_num_to_float(extract_number_types(tpe))
+                .named(_pref("Avg"))
+                .optional(),
+                "_sum": extract_number_types(tpe).named(_pref("Sum")).optional(),
+                "_min": extract_number_types(tpe).named(_pref("Min")).optional(),
+                "_max": extract_number_types(tpe).named(_pref("Max")).optional(),
             }
         ).compose(tpe.props)
 
@@ -482,6 +492,13 @@ class PrismaRuntime(Runtime):
             t.struct(
                 {
                     "by": t.array(t.string()).named(_pref("By")),
+                    "take": t.integer().named(_pref("Take")).optional(),
+                    "skip": t.integer().named(_pref("Skip")).optional(),
+                    "where": get_where_type(row_def).named(_pref("Where")).optional(),
+                    # "orderBy": t.array(t.struct({"_sum": t.struct({"likes": t.string()})})).named(_pref("OrderBy")).optional(),
+                    "orderBy": get_order_by_type(row_def)
+                    .named(_pref("OrderBy"))
+                    .optional(),
                 }
             ).named(_pref("Input")),
             t.array(row_def).named(_pref("Output")),
