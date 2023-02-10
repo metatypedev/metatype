@@ -566,6 +566,21 @@ class union(typedef):
         return ret
 
 
+@frozen
+class either(typedef):
+    variants: Tuple[TypeNode]
+
+    @property
+    def edges(self) -> List[Node]:
+        nodes = super().edges + list(self.variants)
+        return nodes
+
+    def data(self, collector: Collector) -> dict:
+        ret = super().data(collector)
+        ret["oneOf"] = [collector.index(v) for v in ret.pop("variants")]
+        return ret
+
+
 def ipv4() -> string:
     return string().format("ipv4")
 

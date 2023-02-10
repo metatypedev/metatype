@@ -1,6 +1,88 @@
 export const snapshot = {};
 
 snapshot[`Union type 1`] = `
+[
+  'value: "hello world"
+
+errors: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/0/type",
+    "keyword": "type",
+    "params": {
+      "type": "array"
+    },
+    "message": "must be array"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/1/pattern",
+    "keyword": "pattern",
+    "params": {
+      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$"
+    },
+    "message": "must match pattern \\\\"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$\\\\""
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/2/enum",
+    "keyword": "enum",
+    "params": {
+      "allowedValues": [
+        "red",
+        "green",
+        "blue",
+        "black",
+        "white"
+      ]
+    },
+    "message": "must be equal to one of the allowed values"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf",
+    "keyword": "anyOf",
+    "params": {},
+    "message": "must match a schema in anyOf"
+  }
+]
+
+schema: {
+  "anyOf": [
+    {
+      "type": "array",
+      "title": "RGB",
+      "items": {
+        "type": "integer",
+        "title": "integer_1",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "maxItems": 3,
+      "minItems": 3
+    },
+    {
+      "type": "string",
+      "title": "HEX",
+      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$"
+    },
+    {
+      "type": "string",
+      "title": "ColorName",
+      "enum": [
+        "red",
+        "green",
+        "blue",
+        "black",
+        "white"
+      ]
+    }
+  ]
+}',
+]
+`;
+
+snapshot[`Union type 2`] = `
 {
   __schema: {
     types: [

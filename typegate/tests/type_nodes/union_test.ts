@@ -75,13 +75,7 @@ test(
             convert(color: "hello world", to: "rgb")
           }
         `
-          .expectErrorContains(
-            [
-              `must be array`,
-              `must match pattern "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"`,
-              `must be equal to one of the allowed values: red, green, blue, black, white`,
-            ].join(" or "),
-          )
+          .matchErrorSnapshot(t)
           .on(e);
       },
     );
@@ -101,9 +95,7 @@ test(
           }
         }
       `
-        .expectBody((body: { data: string }) => {
-          t.assertSnapshot(body.data);
-        })
+        .matchSnapshot(t)
         .on(e);
     });
   },

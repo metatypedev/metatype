@@ -4,6 +4,7 @@ import "./load_test_env.ts";
 import {
   assert,
   assertEquals,
+  AssertionError,
   assertStringIncludes,
 } from "std/testing/asserts.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
@@ -26,6 +27,15 @@ import * as native from "native";
 const thisDir = dirname(fromFileUrl(import.meta.url));
 const metaCli = resolve(thisDir, "../../target/debug/meta");
 
+interface ResponseBodyError {
+  message: string;
+}
+
+interface ResponseBody {
+  data?: string;
+  errors?: ResponseBodyError[];
+}
+
 export async function meta(...input: string[]): Promise<void> {
   console.log(await shell([metaCli, ...input]));
 }
@@ -38,10 +48,7 @@ export async function shell(cmd: string[]): Promise<string> {
     stderr: "inherit",
   });
 
-  const [status, stdout] = await Promise.all([
-    p.status(),
-    p.output(),
-  ]);
+  const [status, stdout] = await Promise.all([p.status(), p.output()]);
   p.close();
 
   const out = new TextDecoder().decode(stdout).trim();
@@ -127,12 +134,14 @@ export class NoLimiter extends RateLimiter {
   }
 }
 
-type AssertSnapshotParams<T> = typeof assertSnapshot extends
-  (ctx: Deno.TestContext, ...rest: infer R) => Promise<void> ? R : never;
+type AssertSnapshotParams<T> = typeof assertSnapshot extends (
+  ctx: Deno.TestContext,
+  ...rest: infer R
+) => Promise<void> ? R
+  : never;
 
 export class MetaTest {
-  constructor(public t: Deno.TestContext, public register: Register) {
-  }
+  constructor(public t: Deno.TestContext, public register: Register) {}
 
   getTypegraph(name: string): Engine | undefined {
     return this.register.get(name);
@@ -149,41 +158,34 @@ export class MetaTest {
   }
 
   async pythonFile(path: string): Promise<Engine> {
-    return await this.parseTypegraph(
-      path,
-    );
+    return await this.parseTypegraph(path);
   }
 
-  async parseTypegraph(
-    path: string,
-  ): Promise<Engine> {
+  async parseTypegraph(path: string): Promise<Engine> {
     const stdout = await shell([metaCli, "serialize", "-f", path, "-1"]);
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }
-    const engineName = await this.register.set(
-      stdout,
-    );
+    const engineName = await this.register.set(stdout);
     return this.register.get(engineName)!;
   }
 
   async unregister(engine: Engine) {
     const engines = this.register.list().filter((e) => e == engine);
+    await Promise.all(engines);
     await Promise.all(
-      engines,
-    );
-    await Promise.all(
-      this.register.list().filter((e) => e == engine).map((e) => {
-        this.register.remove(e.name);
-        return e.terminate();
-      }),
+      this.register
+        .list()
+        .filter((e) => e == engine)
+        .map((e) => {
+          this.register.remove(e.name);
+          return e.terminate();
+        }),
     );
   }
 
   async terminate() {
-    await Promise.all(
-      this.register.list().map((e) => e.terminate()),
-    );
+    await Promise.all(this.register.list().map((e) => e.terminate()));
   }
 
   async should(
@@ -380,6 +382,35 @@ export class Q {
     });
   }
 
+  /**
+   * assert if the response body error matches the previous generated snapshot
+   */
+  matchErrorSnapshot(testContext: MetaTest): Q {
+    return this.expectBody((body: ResponseBody) => {
+      if (body.errors === undefined) {
+        throw new AssertionError(
+          "should have 'errors' field in the response body",
+        );
+      }
+      const errors: string[] = body.errors.map((error) => error.message);
+      testContext.assertSnapshot(errors);
+    });
+  }
+
+  /**
+   * assert if the response body matches the previous generated snapshot
+   */
+  matchSnapshot(testContext: MetaTest): Q {
+    return this.expectBody((body: ResponseBody) => {
+      if (body.data === undefined) {
+        throw new AssertionError(
+          "should have 'data' field in the response body",
+        );
+      }
+      testContext.assertSnapshot(body.data);
+    });
+  }
+
   expectValue(result: JSONValue) {
     return this.expectBody((body) => {
       assertEquals(body, result);
@@ -414,13 +445,11 @@ export class Q {
 
     const request = new Request(`http://typegate.local/${engine.name}`, {
       method: "POST",
-      body: JSON.stringify(
-        {
-          query,
-          variables,
-          operationName: null,
-        },
-      ),
+      body: JSON.stringify({
+        query,
+        variables,
+        operationName: null,
+      }),
       headers: {
         ...defaults,
         ...headers,
@@ -441,31 +470,28 @@ export async function execute(
 ): Promise<Response> {
   const register = new SingleRegister(engine.name, engine);
   const limiter = new NoLimiter();
-  const server = typegate(
-    register,
-    limiter,
-  );
-  return await server(
-    request,
-    { remoteAddr: { hostname: "localhost" } } as ConnInfo,
-  );
+  const server = typegate(register, limiter);
+  return await server(request, {
+    remoteAddr: { hostname: "localhost" },
+  } as ConnInfo);
 }
 
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function recreateMigrations(engine: Engine) {
-  const runtimes = (engine.tg.tg.runtimes as TypeRuntimeBase[]).filter((rt) =>
-    rt.name === "prisma"
+  const runtimes = (engine.tg.tg.runtimes as TypeRuntimeBase[]).filter(
+    (rt) => rt.name === "prisma",
   ) as PrismaRuntimeDS[];
 
   const migrationsBaseDir = join(thisDir, "prisma-migrations");
 
   for await (const runtime of runtimes) {
     const prisma = new PrismaMigrate(engine, runtime, null);
-    const { migrations } = await prisma.create(
-      { name: "init", apply: true } as any,
-    );
+    const { migrations } = await prisma.create({
+      name: "init",
+      apply: true,
+    } as any);
     const dest = join(migrationsBaseDir, engine.tg.name, runtime.data.name);
     const res = await native.unpack({ dest, migrations });
     if (res !== "Ok") {
