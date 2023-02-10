@@ -32,10 +32,10 @@ test("prisma", async (t) => {
               posts: {
                 createMany: {
                   data: [
-                    { id: 10001, title: "Book 1", views: 9, likes: 7 },
-                    { id: 10002, title: "Book 2", views: 8, likes: 3 },
-                    { id: 10003, title: "Book 3", views: 5, likes: 20 },
-                    { id: 10004, title: "Book 4", views: 5, likes: 14 },
+                    { id: 10001, title: "Book 1", views: 9, likes: 7, published: true },
+                    { id: 10002, title: "Book 2", views: 8, likes: 3, published: false },
+                    { id: 10003, title: "Book 3", views: 5, likes: 20, published: true },
+                    { id: 10004, title: "Book 4", views: 5, likes: 14, published: true },
                   ]
                 }
               }
@@ -77,22 +77,30 @@ test("prisma", async (t) => {
       .on(e);
   });
 
-  /*
   await t.should("do a groupBy", async () => {
     await gql`
         query {
           groupByPost(
-            by: ["likes"]
+            by: ["published"]
           )
           {
-            _count { likes }
+            published
+            _count { _all }
+            _sum { likes views }
           }
         }
-    `.expectBody((body: any) => {
-      console.log("BODY ::", body);
+    `.expectData({
+      groupByPost: [
+        { published: false, _count: { _all: 1 }, _sum: { likes: 3, views: 8 } },
+        {
+          published: true,
+          _count: { _all: 3 },
+          _sum: { likes: 41, views: 19 },
+        },
+      ],
     })
       .on(e);
-  });*/
+  });
 
   await t.should("do an aggregate", async () => {
     await gql`

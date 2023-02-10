@@ -439,46 +439,18 @@ class PrismaRuntime(Runtime):
 
     def gen_aggregate(self, tpe: t.struct) -> t.func:
         _pref = get_name_generator("Aggregate", tpe)
-        output = t.struct(
-            {
-                "_count": t.struct({"_all": t.integer()})
-                .compose(tpe.props)
-                .named(_pref("Count")),
-                "take": t.integer().named(_pref("Take")),
-                "skip": t.integer().named(_pref("Skip")),
-                "_avg": promote_num_to_float(extract_number_types(tpe)).named(
-                    _pref("Avg")
-                ),
-                "_sum": extract_number_types(tpe).named(_pref("Sum")),
-                "_min": extract_number_types(tpe).named(_pref("Min")),
-                "_max": extract_number_types(tpe).named(_pref("Max")),
-            }
-        )
 
         return t.func(
             t.struct(
                 {"where": get_where_type(tpe).named(_pref("Where")).optional()}
-            ).named(_pref("Input")),
-            output.named(_pref("Output")),
-            PrismaOperationMat(self, tpe.name, "aggregate", effect=effects.none()),
-        )
-
-    def gen_group_by(self, tpe: t.struct) -> t.func:
-        _pref = get_name_generator("GroupBy", tpe)
-        return t.func(
-            t.struct(
-                {
-                    "by": t.array(t.string()).named(_pref("By")),
-                    "take": t.integer().named(_pref("Take")).optional(),
-                    "skip": t.integer().named(_pref("Skip")).optional(),
-                    "where": get_where_type(tpe).named(_pref("Where")).optional(),
-                }
             ).named(_pref("Input")),
             t.struct(
                 {
                     "_count": t.struct({"_all": t.integer()})
                     .compose(tpe.props)
                     .named(_pref("Count")),
+                    "take": t.integer().named(_pref("Take")),
+                    "skip": t.integer().named(_pref("Skip")),
                     "_avg": promote_num_to_float(extract_number_types(tpe)).named(
                         _pref("Avg")
                     ),
@@ -487,6 +459,32 @@ class PrismaRuntime(Runtime):
                     "_max": extract_number_types(tpe).named(_pref("Max")),
                 }
             ).named(_pref("Output")),
+            PrismaOperationMat(self, tpe.name, "aggregate", effect=effects.none()),
+        )
+
+    def gen_group_by(self, tpe: t.struct) -> t.func:
+        _pref = get_name_generator("GroupBy", tpe)
+        row_def = t.struct(
+            {
+                "_count": t.struct({"_all": t.integer()})
+                .compose(tpe.props)
+                .named(_pref("Count")),
+                "_avg": promote_num_to_float(extract_number_types(tpe)).named(
+                    _pref("Avg")
+                ),
+                "_sum": extract_number_types(tpe).named(_pref("Sum")),
+                "_min": extract_number_types(tpe).named(_pref("Min")),
+                "_max": extract_number_types(tpe).named(_pref("Max")),
+            }
+        ).compose(tpe.props)
+
+        return t.func(
+            t.struct(
+                {
+                    "by": t.array(t.string()).named(_pref("By")),
+                }
+            ).named(_pref("Input")),
+            t.array(row_def).named(_pref("Output")),
             PrismaOperationMat(self, tpe.name, "groupBy", effect=effects.none()),
         )
 

@@ -34,6 +34,7 @@ with TypeGraph("prisma") as g:
             "title": t.string(),
             "views": t.integer(),
             "likes": t.integer(),
+            "published": t.boolean(),
             "author": user_post.owner(),
         }
     ).named("Post")
