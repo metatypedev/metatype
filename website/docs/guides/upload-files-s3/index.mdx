@@ -1,0 +1,46 @@
+import TGExample from "@site/src/components/TGExample";
+import CodeBlock from "@theme-original/CodeBlock";
+
+# How-to upload images to S3
+
+## Typegraph
+
+```ini
+TG_RETREND_ACCESS_KEY=minio
+TG_RETREND_SECRET_KEY=password
+```
+
+<CodeBlock language="python">{require("./typegraph.py")}</CodeBlock>
+
+## Usage
+
+```ts
+const image = await Deno.readFile("website/static/images/logo.png");
+
+const {
+  data: { presigned },
+} = await fetch("http://localhost:7891/retrend", {
+  method: "POST",
+  body: JSON.stringify({
+    query: `
+        query sign($length: Int) {
+            presigned(length: $length, path: "my-super-image.png")
+        }
+    `,
+    variables: {
+      length: image.length,
+    },
+  }),
+}).then((r) => r.json());
+
+const upload = await fetch(presigned, {
+  method: "PUT",
+  body: image,
+  headers: {
+    "content-type": "image/png",
+    "content-length": image.length,
+  },
+});
+
+console.log(upload.status);
+```

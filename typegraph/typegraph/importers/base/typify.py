@@ -1,20 +1,14 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Callable
-from typing import cast
-from typing import Optional
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import TYPE_CHECKING, Callable, Optional, Union, cast
 
-from attrs import define
-from attrs import field
-from attrs import frozen
+from attrs import define, field, frozen
+
 from typegraph import effects
 from typegraph import types as t
 from typegraph.effects import Effect
 from typegraph.graph.nodes import NodeProxy
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
+from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
 
 if TYPE_CHECKING:

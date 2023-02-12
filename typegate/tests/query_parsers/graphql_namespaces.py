@@ -1,7 +1,4 @@
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.runtimes.graphql import GraphQLRuntime
 
 with TypeGraph("graphql_namespaces") as g:

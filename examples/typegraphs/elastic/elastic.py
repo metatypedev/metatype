@@ -1,12 +1,9 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph(
     "elastic",
 ) as g:
-
     all = policies.public()
     remote = HTTPRuntime(
         "https://localhost:9200",

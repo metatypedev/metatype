@@ -1,14 +1,9 @@
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.deno import PureFunMat
-from typegraph.runtimes.random import RandomMat
-from typegraph.runtimes.random import RandomRuntime
+from typegraph.runtimes.random import RandomMat, RandomRuntime
 
 with TypeGraph("prisma") as g:
-
     public = policies.public()
     userModel = t.struct({"id": t.integer()}).named("user")
     userModelPrisma = t.struct({"id": t.integer().config("id")}).named("userprisma")

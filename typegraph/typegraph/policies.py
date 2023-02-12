@@ -3,9 +3,8 @@
 from re import sub as reg_sub
 from typing import List
 
-from attrs import evolve
-from attrs import field
-from attrs import frozen
+from attrs import evolve, field, frozen
+
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
@@ -25,7 +24,7 @@ def policy_name_factory():
 @frozen
 class Policy(Node):
     name: str = field(factory=policy_name_factory, kw_only=True)
-    mat: Materializer  # Should be a PureFunMat?
+    mat: Materializer
     collector_target: str = always(Collector.policies)
 
     def named(self, name: str):
@@ -72,3 +71,8 @@ def jwt(role_name: str, field: str = "role"):
             }}
         """
     return Policy(PureFunMat(src)).named(jwt_name)
+
+
+def internal():
+    # https://metatype.atlassian.net/browse/MET-107
+    return Policy(PureFunMat("() => false")).named("internal")

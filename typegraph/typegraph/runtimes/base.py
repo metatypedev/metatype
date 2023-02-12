@@ -1,17 +1,13 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from attrs import frozen
+
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
-from typegraph.utils.attrs import always
-from typegraph.utils.attrs import asdict
-
+from typegraph.utils.attrs import always, asdict
 
 if TYPE_CHECKING:
     from typegraph import types as t

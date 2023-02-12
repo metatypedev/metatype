@@ -1,12 +1,8 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.graph.auth.oauth2 import github_auth
 from typegraph.policies import Policy
-from typegraph.runtimes.deno import IdentityMat
-from typegraph.runtimes.deno import PureFunMat
+from typegraph.runtimes.deno import IdentityMat, PureFunMat
 from typegraph.runtimes.http import HTTPRuntime
-
 
 with TypeGraph("test_auth", auths=[github_auth]) as g:
     remote = HTTPRuntime("https://api.github.com")

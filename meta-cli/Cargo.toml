@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.0.3-dev.2"
+version = "0.0.3-dev.3"
 edition = "2021"
 
 description = "Free and open ecosystem for API composition."

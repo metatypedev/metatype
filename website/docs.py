@@ -1,6 +1,4 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.http import HTTPRuntime
 from typegraph.runtimes.random import RandomMat
 
@@ -10,7 +8,6 @@ with TypeGraph(
         allow_origin=["http://localhost:3000", "https://cloud.metatype.dev"]
     ),
 ) as g:
-
     sendinblue = HTTPRuntime("https://api.sendinblue.com")
 
     public = policies.public()

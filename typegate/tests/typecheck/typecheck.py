@@ -1,12 +1,7 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.runtimes.deno import FunMat
-from typegraph.runtimes.deno import PureFunMat
-
+from typegraph import TypeGraph, effects, policies, t
+from typegraph.runtimes.deno import FunMat, PureFunMat
 
 with TypeGraph(
     "typecheck",
