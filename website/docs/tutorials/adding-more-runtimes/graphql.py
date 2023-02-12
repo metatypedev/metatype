@@ -1,10 +1,11 @@
 # skip:start
 from typegraph import TypeGraph, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
-from typegraph.runtimes.graphql import GraphQLRuntime
 
+# isort: off
 # skip:end
 # highlight-next-line
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 with TypeGraph(
     "graphql",
@@ -24,10 +25,10 @@ with TypeGraph(
             "title": t.string(),
             "user_id": t.integer().named("uid"),
             # highlight-next-line
-            "user": gql.query(  # 1
+            "user": gql.query(
                 {
                     # highlight-next-line
-                    "id": t.integer().from_parent(g("uid"))  # 2
+                    "id": t.integer().from_parent(g("uid"))
                 },
                 t.optional(user),
             ),

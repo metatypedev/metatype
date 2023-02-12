@@ -1,6 +1,6 @@
 # skip:start
-from typegraph import TypeGraph, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaInsertMat, PrismaRuntime
+from typegraph import TypeGraph, effects, t
+from typegraph.providers.prisma.runtimes.prisma import PrismaOperationMat, PrismaRuntime
 
 with TypeGraph("prisma-no-sugar") as g:
     db = PrismaRuntime("database", "POSTGRES_CONN")
@@ -19,5 +19,10 @@ with TypeGraph("prisma-no-sugar") as g:
             }
         ),
         t.array(message),
-        PrismaInsertMat(db),
+        PrismaOperationMat(
+            db,
+            "Message",
+            "createOne",
+            effect=effects.create(),
+        ),
     )

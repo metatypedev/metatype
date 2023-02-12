@@ -162,7 +162,7 @@ where
                         "Changes detected in {}",
                         paths
                             .iter()
-                            .map(|p| utils::relative_path_display(p, diff_base.clone()))
+                            .map(|p| utils::relative_path_display(diff_base.clone(), p))
                             .collect::<Vec<_>>()
                             .join(", "),
                     );

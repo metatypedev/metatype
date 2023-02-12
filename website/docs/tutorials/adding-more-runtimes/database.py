@@ -1,9 +1,10 @@
 # skip:start
 from typegraph import TypeGraph, policies, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
+# isort: off
 # skip:end
 # highlight-next-line
+from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 with TypeGraph(
     "database",
@@ -16,19 +17,17 @@ with TypeGraph(
     message = t.struct(
         {
             # highlight-next-line
-            "id": t.integer().config("id", "auto"),  # 2
+            "id": t.integer().config("id", "auto"),
             "title": t.string(),
             "user_id": t.integer(),
         }
         # highlight-next-line
-    ).named(  # 3
-        "message"
-    )
+    ).named("message")
     db.manage(message)  # soon removed
 
     g.expose(
         # highlight-next-line
-        create_message=db.insert_one(message),  # 4
+        create_message=db.insert_one(message),
         list_messages=db.find_many(message),
         default_policy=[public],
     )

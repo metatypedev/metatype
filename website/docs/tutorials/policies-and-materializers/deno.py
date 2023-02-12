@@ -1,6 +1,6 @@
 # skip:start
 from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.random import PureFunMat
+from typegraph.runtimes.deno import PureFunMat
 
 # skip:end
 

@@ -71,3 +71,8 @@ def jwt(role_name: str, field: str = "role"):
             }}
         """
     return Policy(PureFunMat(src)).named(jwt_name)
+
+
+def internal():
+    # https://metatype.atlassian.net/browse/MET-107
+    return Policy(PureFunMat("() => false")).named("internal")

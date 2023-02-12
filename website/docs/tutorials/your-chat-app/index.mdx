@@ -14,7 +14,7 @@ Back to your typegraph for the chat-based app. You learn all keys components and
 The Deno runtime can register external files for longer functions. You can use the meta CLI to generate the types once the `ModuleMat` has been defined in your typegraph: `meta codegen deno -f typegraph.py`.
 
 <CodeBlock language="typescript">
-  {require("raw-loader!./business-logic.ts").default}
+  {require("!!code-loader!./business-logic.ts")}
 </CodeBlock>
 
 ## Connecting the pieces together

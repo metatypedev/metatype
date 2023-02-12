@@ -188,7 +188,8 @@ impl<'a> TypegraphLoader<'a> {
                 "DONT_READ_EXTERNAL_TS_FILES",
                 if self.skip_deno_modules { "1" } else { "" },
             )
-            .stderr(Stdio::inherit())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
             .output()
             .with_context(|| {
                 format!(

@@ -1,15 +1,26 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const deindent = require("de-indent");
 
-const commentsPrefix = ["#", "//"];
+const commentsPrefix = {
+  py: "#",
+  ts: "//",
+};
 
-const loader = (source) => {
+const postTransformations = {
+  py: (source) => source.replaceAll(/ {4}/g, "  "),
+  ts: (source) => source,
+};
+
+function loader(source) {
+  const ext = this.resourcePath.split(".").pop();
+  const prefix = commentsPrefix[ext];
+
   const ret = [];
   let skipping = false;
   const lines = source.split("\n");
   for (let cursor = 0; cursor < lines.length; cursor += 1) {
     const line = lines[cursor];
-    if (commentsPrefix.some((prefix) => line.trim().startsWith(prefix))) {
+    if (line.trim().startsWith(prefix)) {
       if (line.includes("skip:start")) {
         if (skipping) {
           throw new Error("skip:start without skip:end");
@@ -34,8 +45,11 @@ const loader = (source) => {
       ret.push(line);
     }
   }
-  const exp = deindent(ret.join("\n")).replaceAll(/ {4}/g, "  ").trim();
+
+  const transformation = postTransformations[ext];
+
+  const exp = transformation(deindent(ret.join("\n"))).trim();
   return `module.exports = ${JSON.stringify(exp)};`;
-};
+}
 
 module.exports = loader;

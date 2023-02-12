@@ -21,7 +21,7 @@ with TypeGraph(
         # expects a secret `TG_[typegraph name]_BASIC_[user name]`
         TypeGraph.Auth.basic(["admin"]),
         # expects a secret `TG_[typegraph name]_[auth name]_JWK`
-        Auth.jwk("native", "role_field"),
+        Auth.jwk("native", {"role": "superuser"}),
     ],
     # hightlight-end
     # skip:next-line
