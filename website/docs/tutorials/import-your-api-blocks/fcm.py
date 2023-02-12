@@ -1,14 +1,19 @@
 # skip:start
-import google  # noqa: F401
-
 from typegraph import TypeGraph, effects, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.graphql import GraphQLRuntime
 
+# isort: off
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent))
 # skip:end
 # highlight-next-line
+import google  # noqa: E402
 
-
+# skip:next-line
+# isort: on
 with TypeGraph(
     "fcm",
     # skip:next-line

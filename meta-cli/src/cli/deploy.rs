@@ -60,7 +60,7 @@ impl Action for Deploy {
 
         let node = Node::new(node_url, Some(auth))?;
 
-        push_loaded_typegraphs(loaded, &node);
+        push_loaded_typegraphs(dir, loaded, &node);
 
         Ok(())
     }

@@ -100,7 +100,6 @@ website_meta:
     workdir: .
     watch:
         - "meta-cli/src/**/*.rs"
-        - "website/**/*.py"
         - "typegate/src/**/*.ts"
     command: "cargo run -p meta-cli -- -C website dev -u admin -p password --port 5001"
     env:

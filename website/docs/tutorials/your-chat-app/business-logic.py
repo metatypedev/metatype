@@ -8,9 +8,10 @@ from typegraph.runtimes.graphql import GraphQLRuntime
 
 # isort: off
 import sys
+from pathlib import Path
 
-sys.path.append("../import-your-api-blocks")  # noqa
-import google  # noqa nosort
+sys.path.append(str(Path(__file__).parent.joinpath("import-your-api-blocks")))
+import google  # noqa: E402
 
 # isort: on
 

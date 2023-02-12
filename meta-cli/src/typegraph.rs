@@ -127,7 +127,7 @@ impl<'a> TypegraphLoader<'a> {
         let include_set = py_loader.get_include_set()?;
         let exclude_set = py_loader.get_exclude_set()?;
 
-        Ok(WalkDir::new(dir)
+        Ok(WalkDir::new(dir.clone())
             .into_iter()
             .filter_entry(|e| !is_hidden(e))
             .filter_map(|e| {
@@ -145,9 +145,11 @@ impl<'a> TypegraphLoader<'a> {
                 let included = include_set.is_empty() || include_set.is_match(&relative);
                 let excluded = !exclude_set.is_empty() && exclude_set.is_match(&relative);
                 if included && !excluded {
+                    let rel_path = crate::utils::relative_path_display(dir.clone(), path.clone());
+
                     println!(
                         "{}",
-                        format!("Found typegraph definition module at {path:?}").dimmed()
+                        format!("Found typegraph definition module at {rel_path}").dimmed()
                     );
                     Some(path)
                 } else {

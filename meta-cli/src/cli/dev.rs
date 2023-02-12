@@ -1,8 +1,10 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+use super::Action;
 use crate::codegen;
 use crate::config;
 use crate::typegraph::{LoaderResult, TypegraphLoader};
+use crate::utils;
 use crate::utils::clap::UrlValueParser;
 use crate::utils::{ensure_venv, Node};
 use anyhow::{bail, Context, Error, Result};
@@ -25,8 +27,6 @@ use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 use tiny_http::{Header, Response, Server};
-
-use super::Action;
 
 #[derive(Parser, Debug)]
 pub struct Dev {
@@ -79,7 +79,7 @@ impl Action for Dev {
                     println!("No typegraph found. Watching the directory for changes...");
                 } else {
                     println!();
-                    push_loaded_typegraphs(loaded, &node);
+                    push_loaded_typegraphs(dir.clone(), loaded, &node);
                 }
             }
             Err(err) => log_err(err),
@@ -104,7 +104,7 @@ impl Action for Dev {
 
             let loaded = TypegraphLoader::with_config(&config).load_files(paths);
 
-            push_loaded_typegraphs(loaded, &node);
+            push_loaded_typegraphs(watch_path.clone(), loaded, &node);
         })
         .unwrap();
 
@@ -121,7 +121,7 @@ impl Action for Dev {
                     Some(node) => {
                         let tgs = TypegraphLoader::with_config(&config).load_folder(&dir)?;
                         let node = Node::new(node, Some(auth.clone()))?;
-                        push_loaded_typegraphs(tgs, &node);
+                        push_loaded_typegraphs(dir.clone(), tgs, &node);
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
                                 "Content-Type: application/json".parse::<Header>().unwrap(),
@@ -147,6 +147,7 @@ fn watch<H>(dir: String, handler: H) -> Result<RecommendedWatcher>
 where
     H: Fn(&Vec<PathBuf>) + Send + 'static,
 {
+    let diff_base = Path::new(&dir).to_path_buf().canonicalize()?;
     let mut watcher = recommended_watcher(move |res: Result<Event, notify::Error>| {
         let event = res.unwrap();
         let paths = get_paths(&event);
@@ -157,7 +158,14 @@ where
                 | EventKind::Remove(_)
                 | EventKind::Modify(ModifyKind::Data(_))
                 | EventKind::Modify(ModifyKind::Name(_)) => {
-                    println!("file change {:?}", event);
+                    println!(
+                        "Changes detected in {}",
+                        paths
+                            .iter()
+                            .map(|p| utils::relative_path_display(p, diff_base.clone()))
+                            .collect::<Vec<_>>()
+                            .join(", "),
+                    );
                     handler(&paths);
                 }
                 _ => {}
@@ -198,13 +206,14 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
         .collect()
 }
 
-pub fn push_loaded_typegraphs(loaded: LoaderResult, node: &Node) {
-    // TODO concurrent pushing
+pub fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) {
+    let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
     for (path, res) in loaded.into_iter() {
         match res.with_context(|| format!("Error while loading typegraphs from {path}")) {
             Result::Ok(tgs) => {
+                let path = utils::relative_path_display(diff_base.clone(), path);
                 println!(
-                    "Loaded {count} typegraph{s} from {path}:",
+                    "Loading {count} typegraph{s} from {path}:",
                     count = tgs.len(),
                     s = if tgs.len() == 1 { "" } else { "s" }
                 );
