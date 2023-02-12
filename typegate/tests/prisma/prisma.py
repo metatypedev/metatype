@@ -5,7 +5,6 @@ from typegraph import TypeGraph
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 with TypeGraph("prisma") as g:
-
     db = PrismaRuntime("prisma", "POSTGRES")
 
     public = policies.public()

@@ -8,7 +8,6 @@ from typegraph.runtimes.deno import PureFunMat
 
 
 class TestTypegraph:
-
     # def test_register_struct(self) -> None:
 
     #     with TypeGraph("") as g:
@@ -27,7 +26,6 @@ class TestTypegraph:
     #     assert g.types == [o1]
 
     def test_build_single_runtime(self, overridable) -> None:
-
         with TypeGraph("single_runtime") as g:
             arg1 = t.integer().named("arg1")
             inp = t.struct({"a": arg1}).named("inp")
@@ -107,7 +105,6 @@ class TestTypegraph:
         )
 
     def test_build_two_runtimes(self, overridable) -> None:
-
         with TypeGraph("two_runtimes") as g:
             out = t.integer().named("out")
             getter = t.func(

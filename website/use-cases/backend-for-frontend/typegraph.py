@@ -10,7 +10,6 @@ with TypeGraph(
     # skip:next-line
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
-
     public = policies.public()
     github = HTTPRuntime("https://api.github.com")
 

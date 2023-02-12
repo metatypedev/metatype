@@ -6,7 +6,6 @@ from typegraph.runtimes.http import HTTPRuntime
 with TypeGraph(
     "elastic",
 ) as g:
-
     all = policies.public()
     remote = HTTPRuntime(
         "https://localhost:9200",

@@ -13,7 +13,6 @@ with TypeGraph(
     rate=TypeGraph.Rate(window_limit=2000, window_sec=60, query_limit=200),
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
-
     public = policies.public()
     meta_only = policies.jwt("email", ".+@metatype.dev")
     public_read_only = meta_only  # {effects.create: public, effects.none: meta_only}

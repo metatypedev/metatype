@@ -409,7 +409,6 @@ class PrismaRuntime(Runtime):
         )
 
     def gen_update(self, tpe: t.struct) -> t.func:
-
         return t.func(
             t.struct(
                 {

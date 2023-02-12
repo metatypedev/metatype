@@ -5,7 +5,6 @@ from typegraph.runtimes.deno import PredefinedFunMat
 from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph("testing") as g:
-
     rec = t.func(
         t.struct({"nested": t.struct({"arg": t.integer()}).named("Nested")}),
         t.integer(),

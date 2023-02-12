@@ -5,7 +5,6 @@ from typegraph.runtimes import deno
 
 
 with TypeGraph("injection") as g:
-
     req = t.struct(
         {
             "a": t.integer().named("A"),

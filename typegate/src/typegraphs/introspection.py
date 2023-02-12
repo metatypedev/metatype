@@ -9,7 +9,6 @@ from typegraph.runtimes.typegate import SchemaMat
 from typegraph.runtimes.typegate import TypeMat
 
 with TypeGraph("introspection") as g:
-
     enum_value = t.struct(
         {
             "name": t.string(),

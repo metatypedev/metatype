@@ -9,7 +9,6 @@ from typegraph.runtimes import deno
 
 class TestDependency:
     def test_simple_dep(self, overridable) -> None:
-
         with TypeGraph("single_runtime") as g:
             a = t.integer().named("a")
             res = t.struct(

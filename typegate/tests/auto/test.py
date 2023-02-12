@@ -11,7 +11,6 @@ from typegraph.runtimes.graphql import GraphQLRuntime
 from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph("test") as g:
-
     remote = GraphQLRuntime("http://localhost:5000/graphql")
     db = PrismaRuntime("test", "POSTGRES")
     ipApi = HTTPRuntime("http://ip-api.com/json")

@@ -75,7 +75,6 @@ class PrismaModel:
 
     def link(self, schema: "PrismaSchema"):
         for field_name, field in list(self.fields.items()):
-
             if isinstance(field.tpe, NodeProxy):
                 field.tpe = field.tpe.get()
 
@@ -163,7 +162,6 @@ class PrismaSchema:
 
 
 def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
-
     if isinstance(f.tpe, NodeProxy):
         f.tpe = f.tpe.get()
         return resolve(schema, model, f)

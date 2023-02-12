@@ -9,7 +9,6 @@ from typegraph.runtimes.deno import PureFunMat
 with TypeGraph(
     "retrend",
 ) as g:
-
     all = policies.public()
     s3 = S3Runtime("http://localhost:9000", "local", "access_key", "secret_key")
 

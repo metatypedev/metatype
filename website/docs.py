@@ -10,7 +10,6 @@ with TypeGraph(
         allow_origin=["http://localhost:3000", "https://cloud.metatype.dev"]
     ),
 ) as g:
-
     sendinblue = HTTPRuntime("https://api.sendinblue.com")
 
     public = policies.public()

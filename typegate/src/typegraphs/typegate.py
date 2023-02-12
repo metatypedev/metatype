@@ -26,7 +26,6 @@ with TypeGraph(
         context_identifier="user",
     ),
 ) as g:
-
     serialized = t.gen(t.string(), SerializedTypegraphMat())
 
     typegraph = t.struct(

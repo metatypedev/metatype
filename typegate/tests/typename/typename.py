@@ -8,7 +8,6 @@ from typegraph.runtimes.random import RandomMat
 from typegraph.runtimes.random import RandomRuntime
 
 with TypeGraph("prisma") as g:
-
     public = policies.public()
     userModel = t.struct({"id": t.integer()}).named("user")
     userModelPrisma = t.struct({"id": t.integer().config("id")}).named("userprisma")
