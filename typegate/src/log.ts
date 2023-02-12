@@ -3,9 +3,12 @@
 import { handlers, LevelName, Logger } from "std/log/mod.ts";
 import { basename, extname, fromFileUrl } from "std/path/mod.ts";
 
-const console = new handlers.ConsoleHandler("DEBUG", {
-  formatter: "{levelName} [{loggerName}] {msg}",
-});
+const console = new handlers.ConsoleHandler(
+  Deno.env.get("LOG_LEVEL") as LevelName ?? "INFO",
+  {
+    formatter: "{levelName} [{loggerName}] {msg}",
+  },
+);
 
 const loggers = new Map<string, Logger>();
 const defaultLogger = new Logger("default", "NOTSET", { handlers: [console] });
@@ -27,20 +30,4 @@ export function getLogger(
     loggers.set(name, logger);
   }
   return logger;
-}
-
-export function getRequestLogger(name: string): Logger {
-  Deno.mkdirSync("logs", { recursive: true });
-  const handler = new handlers.FileHandler("INFO", {
-    filename: "logs/requests.log",
-    formatter: "[{loggerName}] {msg}",
-  });
-  handler.setup();
-  return new Logger(
-    `req:${name}`,
-    "NOTSET",
-    {
-      handlers: [handler],
-    },
-  );
 }

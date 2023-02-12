@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
+  --ifm-color-primary: rgba(149, 31, 94, 1);
+  --ifm-color-primary-dark: rgba(149, 31, 94, 0.75);
   --ifm-color-primary-darker: #277148;
   --ifm-color-primary-darkest: #205d3b;
   --ifm-color-primary-light: #33925d;

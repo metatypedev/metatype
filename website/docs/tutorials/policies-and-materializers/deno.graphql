@@ -1,0 +1,6 @@
+query {
+  compute_fib(n: 3) {
+    res
+    ms
+  }
+}

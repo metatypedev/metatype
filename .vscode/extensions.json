@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        "charliermarsh.ruff",
+        "rust-lang.rust-analyzer",
+        "ms-python.black-formatter",
+        "denoland.vscode-deno",
+        "ms-vscode-remote.remote-containers",
+        "dbaeumer.vscode-eslint",
+        "graphql.vscode-graphql-syntax",
+        "unifiedjs.vscode-mdx",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "errata-ai.vale-server",
+        "hediet.vscode-drawio"
+    ]
+}

@@ -1,14 +1,15 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, t
 from typegraph.policies import Policy
 from typegraph.runtimes.deno import PureFunMat
-from typegraph.runtimes.typegate import AddTypeGraphMat
-from typegraph.runtimes.typegate import RemoveTypeGraphMat
-from typegraph.runtimes.typegate import SerializedTypegraphMat
-from typegraph.runtimes.typegate import TypeGraphMat
-from typegraph.runtimes.typegate import TypeGraphsMat
+from typegraph.runtimes.typegate import (
+    AddTypeGraphMat,
+    RemoveTypeGraphMat,
+    SerializedTypegraphMat,
+    TypeGraphMat,
+    TypeGraphsMat,
+)
 
 with TypeGraph(
     "typegate",
@@ -26,7 +27,6 @@ with TypeGraph(
         context_identifier="user",
     ),
 ) as g:
-
     serialized = t.gen(t.string(), SerializedTypegraphMat())
 
     typegraph = t.struct(

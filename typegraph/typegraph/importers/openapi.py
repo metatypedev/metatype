@@ -4,22 +4,18 @@ import json
 import pathlib
 import re
 from sys import stderr
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
 
-from box import Box
 import httpx
 import semver
+import yaml
+from box import Box
+
 from typegraph import t
 from typegraph.importers.base.importer import Importer
 from typegraph.importers.base.typify import TypifyMat
 from typegraph.utils.jsonschema import TypedefFromJsonSchema
-import yaml
-
 
 MIME_TYPES = Box(
     {

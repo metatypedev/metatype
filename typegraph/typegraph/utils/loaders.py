@@ -1,15 +1,16 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from argparse import ArgumentParser
 import importlib
 import json
-from pathlib import Path
 import pkgutil
+from argparse import ArgumentParser
+from pathlib import Path
 from typing import List
 
 import attrs
 from attrs import define
 from frozendict import frozendict
+
 from typegraph.graph.typegraph import TypeGraph
 
 
