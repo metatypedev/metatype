@@ -19,6 +19,7 @@ jobs:
         with:
           filters: |
             website:
+              - '.github/**'
               - 'website/**'
     outputs:
       website: ${{ steps.filter.outputs.website }}
