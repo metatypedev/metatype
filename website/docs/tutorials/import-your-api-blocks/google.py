@@ -1,7 +1,5 @@
 # skip:start
-from typegraph import effects
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, t
 from typegraph.importers.google_discovery import import_googleapis
 from typegraph.providers.google.runtimes import googleapis
 

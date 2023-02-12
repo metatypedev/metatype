@@ -1,10 +1,7 @@
 # skip:start
-from typegraph import effects
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, t
 from typegraph.runtimes.deno import PureFunMat
-from typegraph.runtimes.http import HTTPRuntime
-from typegraph.runtimes.http import RESTMat
+from typegraph.runtimes.http import HTTPRuntime, RESTMat
 
 http = HTTPRuntime("https://random.org/api")
 

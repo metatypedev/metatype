@@ -1,5 +1,5 @@
-from typegraph import policies as p
 from typegraph import TypeGraph
+from typegraph import policies as p
 from typegraph.importers.graphql import GraphQLImporter
 
 # TODO use local graphql (mock)

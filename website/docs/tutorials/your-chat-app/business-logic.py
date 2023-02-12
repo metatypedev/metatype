@@ -1,17 +1,18 @@
 # skip:start
-import sys
 
-import google
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.graph.auth.oauth2 import github_auth
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.deno import ModuleMat
 from typegraph.runtimes.graphql import GraphQLRuntime
 
-sys.path.append("../import-your-api-blocks")
+# isort: off
+import sys
+
+sys.path.append("../import-your-api-blocks")  # noqa
+import google  # noqa nosort
+
+# isort: on
 
 # skip:end
 

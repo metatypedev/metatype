@@ -1,6 +1,5 @@
 # skip:start
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, t
 
 with TypeGraph("types") as g:
     # skip:end

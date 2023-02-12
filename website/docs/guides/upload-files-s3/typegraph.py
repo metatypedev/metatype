@@ -1,5 +1,4 @@
-from typegraph import policies
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies
 from typegraph.providers.aws.runtimes.s3 import S3Runtime
 
 with TypeGraph(

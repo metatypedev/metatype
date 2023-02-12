@@ -1,7 +1,4 @@
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.graph.auth import oauth2
 from typegraph.runtimes.deno import ModuleMat
 from typegraph.runtimes.http import HTTPRuntime

@@ -1,13 +1,8 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Dict
-from typing import List
-from typing import Literal
-from typing import Optional
+from typing import Dict, List, Literal, Optional
 
-from attrs import define
-from attrs import field
-from attrs import frozen
+from attrs import define, field, frozen
 
 
 @define

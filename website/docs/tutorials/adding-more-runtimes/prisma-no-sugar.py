@@ -1,8 +1,6 @@
 # skip:start
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.providers.prisma.runtimes.prisma import PrismaInsertMat
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph import TypeGraph, t
+from typegraph.providers.prisma.runtimes.prisma import PrismaInsertMat, PrismaRuntime
 
 with TypeGraph("prisma-no-sugar") as g:
     db = PrismaRuntime("database", "POSTGRES_CONN")

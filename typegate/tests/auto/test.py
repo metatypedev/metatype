@@ -1,12 +1,8 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
-from typegraph.runtimes.deno import DenoRuntime
-from typegraph.runtimes.deno import PredefinedFunMat
-from typegraph.runtimes.deno import PureFunMat
+from typegraph.runtimes.deno import DenoRuntime, PredefinedFunMat, PureFunMat
 from typegraph.runtimes.graphql import GraphQLRuntime
 from typegraph.runtimes.http import HTTPRuntime
 

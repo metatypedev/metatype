@@ -1,9 +1,7 @@
 # skip:start
 import google  # noqa: F401
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.graphql import GraphQLRuntime
 

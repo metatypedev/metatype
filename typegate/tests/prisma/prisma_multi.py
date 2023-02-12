@@ -1,9 +1,5 @@
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
-
 
 with TypeGraph("prisma") as g:
     db = PrismaRuntime("prisma", "POSTGRES")

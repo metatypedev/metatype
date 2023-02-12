@@ -3,9 +3,8 @@
 from re import sub as reg_sub
 from typing import List
 
-from attrs import evolve
-from attrs import field
-from attrs import frozen
+from attrs import evolve, field, frozen
+
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext

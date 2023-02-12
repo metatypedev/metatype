@@ -1,18 +1,16 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import json
-from typing import Literal
-from typing import Optional
+from typing import Literal, Optional
 
 from box import Box
-from gql import Client
-from gql import gql
+from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
 from graphql import get_introspection_query
+
 from typegraph import t
 from typegraph.importers.base.importer import Importer
 from typegraph.importers.base.typify import TypifyMat
-
 
 # map type kind to type key of fields
 OBJECT_TYPES = {

@@ -1,10 +1,6 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.providers.aws.runtimes.s3 import S3Runtime
-from typegraph.runtimes.deno import ModuleMat
-from typegraph.runtimes.deno import PureFunMat
-
+from typegraph.runtimes.deno import ModuleMat, PureFunMat
 
 with TypeGraph(
     "retrend",

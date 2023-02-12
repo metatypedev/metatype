@@ -7,9 +7,6 @@
   "python.formatting.provider": "black",
   "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
-  "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
-  },
   "deno.importMap": "typegate/deno.json",
   "deno.enablePaths": [
     "typegate",
@@ -30,4 +27,14 @@
   "deno.codeLens.references": true,
   "deno.codeLens.referencesAllFunctions": true,
   "editor.wordWrap": "on",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true,
+      "source.organizeImports": true
+    }
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "denoland.vscode-deno"
+  },
 }

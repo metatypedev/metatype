@@ -1,6 +1,4 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph(

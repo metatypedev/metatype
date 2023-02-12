@@ -1,25 +1,17 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from ast import literal_eval
 import inspect
 import itertools
 import re
 import sys
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Tuple
+from ast import literal_eval
+from typing import Dict, List, Optional, Set, Tuple
 
-from attrs import define
-from attrs import field
-from attrs import frozen
 import black
-from redbaron import AtomtrailersNode
-from redbaron import NameNode
-from redbaron import RedBaron
-from typegraph import t
-from typegraph import TypeGraph
+from attrs import define, field, frozen
+from redbaron import AtomtrailersNode, NameNode, RedBaron
+
+from typegraph import TypeGraph, t
 from typegraph.importers.base.typify import Typify
 from typegraph.types import reserved_types
 
@@ -158,7 +150,7 @@ class Importer:
 
         gen_arg = self.find_generate_arg(code)
         if not gen_arg:
-            raise Exception(f"Expected to find generate argument import node")
+            raise Exception("Expected to find generate argument import node")
         gen_arg.value = "False"
 
         cg = self.codegen(Codegen()).res

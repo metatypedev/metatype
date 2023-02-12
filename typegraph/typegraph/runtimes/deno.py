@@ -3,24 +3,18 @@
 import ast
 import inspect
 import os
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from astunparse import unparse
-from attrs import field
-from attrs import frozen
+from attrs import field, frozen
 from frozendict import frozendict
+
 from typegraph import effects
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
-from typegraph.utils.attrs import always
-from typegraph.utils.attrs import SKIP
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils.attrs import SKIP, always
 
 
 @frozen

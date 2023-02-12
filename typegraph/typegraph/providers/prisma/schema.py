@@ -1,16 +1,10 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 from typegraph import types as t
 from typegraph.graph.nodes import NodeProxy
 from typegraph.graph.typegraph import resolve_proxy
-
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
 prisma_types = {

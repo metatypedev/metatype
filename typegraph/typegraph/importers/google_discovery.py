@@ -4,9 +4,9 @@ import inspect
 import re
 
 import black
-from box import Box
 import httpx
 import redbaron
+from box import Box
 
 
 def camel_to_snake(name):
@@ -30,21 +30,21 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
         return f'g("{cursor["$ref"]}{suffix}")'
 
     if cursor.type == "string":
-        return f"t.string()"
+        return "t.string()"
 
     if cursor.type == "boolean":
-        return f"t.boolean()"
+        return "t.boolean()"
 
     if cursor.type == "integer":
         # cursor.format = 'int32'
-        return f"t.integer()"
+        return "t.integer()"
 
     if cursor.type == "number":
         # cursor.format = 'double'
-        return f"t.float()"
+        return "t.float()"
 
     if cursor.type == "any":
-        return f"t.any()"
+        return "t.any()"
 
     if cursor.type == "array":
         return f't.array({typify(cursor["items"], filter_read_only, suffix)})'
@@ -62,7 +62,7 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
             fields.append('"_": t.optional(t.any())')
 
         ret += ",".join(fields)
-        ret += f"}})"
+        ret += "}})"
         if "id" in cursor:
             ref = f"{cursor.id}{suffix}"
             ret += f'.named("{ref}")'
