@@ -7,7 +7,7 @@ env:
   PNPM_VERSION: "7.9.3"
   NODE_VERSION: "18.12.1"
   PYTHON_VERSION: "3.8"
-  TG_URL: https://cloud.metatype.dev
+  TG_URL: https://demo.metatype.dev
 
 jobs:
   changes:
@@ -19,6 +19,7 @@ jobs:
         with:
           filters: |
             website:
+              - '.github/**'
               - 'website/**'
     outputs:
       website: ${{ steps.filter.outputs.website }}
@@ -57,7 +58,7 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip3 install ./typegraph
-          cargo run --locked --package meta-cli -- deploy -f website/docs.py -g {{ env.TG_URL }} -u admin -p {{ secrets.DOCS_TG_ADMIN_PASSWORD }}}
+          # cargo run --locked --package meta-cli -- -C website deploy -g {{ env.TG_URL }} -u admin -p {{ secrets.DOCS_TG_ADMIN_PASSWORD }}}
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

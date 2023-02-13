@@ -1,0 +1,15 @@
+query A {
+  lightweight_call
+}
+
+query B {
+  medium_call
+}
+
+query C {
+  heavy_call
+}
+
+query D {
+  by_result_count
+}

@@ -1,11 +1,10 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from attrs import frozen
-from typegraph import effects
-from typegraph import t
+
+from typegraph import effects, t
 from typegraph.effects import Effect
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
+from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
 
 

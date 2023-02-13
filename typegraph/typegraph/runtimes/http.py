@@ -1,17 +1,14 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Optional
-from typing import Tuple
+from typing import Optional, Tuple
 
-from attrs import field
-from attrs import frozen
+from attrs import field, frozen
+
 from typegraph import effects
 from typegraph import types as t
 from typegraph.effects import Effect
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
-from typegraph.utils.attrs import always
-from typegraph.utils.attrs import required
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils.attrs import always, required
 
 
 @frozen

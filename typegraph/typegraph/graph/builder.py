@@ -1,11 +1,10 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Dict
-from typing import Union
+from typing import Dict, Union
 
 from ordered_set import OrderedSet
-from typegraph.graph.nodes import Node
-from typegraph.graph.nodes import NodeProxy
+
+from typegraph.graph.nodes import Node, NodeProxy
 
 
 class Collector:

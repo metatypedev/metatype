@@ -1,9 +1,6 @@
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, t
 from typegraph.graph.models import Auth
-from typegraph.runtimes.deno import ModuleMat
-from typegraph.runtimes.deno import PredefinedFunMat
-from typegraph.runtimes.deno import PureFunMat
+from typegraph.runtimes.deno import ModuleMat, PredefinedFunMat, PureFunMat
 
 
 def make_policy(g, name, fn):
@@ -15,7 +12,6 @@ def make_policy(g, name, fn):
 
 
 with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
-
     mod = ModuleMat("ts/policies.ts")
 
     secret_data = t.struct(

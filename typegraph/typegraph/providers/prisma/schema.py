@@ -1,15 +1,12 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import List, Optional, Tuple
 
-from attrs import evolve
-from attrs import frozen
+from attrs import evolve, frozen
+
 from typegraph import types as t
 from typegraph.graph.typegraph import resolve_proxy
 from typegraph.providers.prisma.relations import RelationshipRegister
-
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
 prisma_types = {
@@ -95,7 +92,6 @@ class FieldBuilder:
     def relation(
         self, field: str, typ: t.struct, rel_name: str
     ) -> [str, List[SchemaField]]:
-
         references = self.get_type_ids(typ)
         fields = [f"{field}{ref.title()}" for ref in references]
 

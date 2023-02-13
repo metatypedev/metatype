@@ -1,6 +1,6 @@
 [package]
 name = "native"
-version = "0.0.3-dev.2"
+version = "0.0.3-dev.3"
 edition = "2021"
 
 [lib]
@@ -36,11 +36,11 @@ tokio = { version = "1.25.0", features = ["full"] }
 lazy_static = "1.4.0"
 log = "0.4.17"
 env_logger = "0.10.0"
-serde_json = "1.0.92"
+serde_json = "1.0.93"
 dashmap = "5.4.0"
 common = { path = "../../libs/common" }
 macros = { path = "../../libs/macros" }
-sentry = "0.29.2"
+sentry = "0.29.3"
 tempfile = "3.3.0"
 convert_case = "0.6.0"
 rust-s3 = { git = "https://github.com/zifeo/rust-s3", branch = "order" }

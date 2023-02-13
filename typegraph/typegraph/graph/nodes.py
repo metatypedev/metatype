@@ -1,10 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from typegraph import types as t

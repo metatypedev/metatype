@@ -7,14 +7,34 @@
   "python.formatting.provider": "black",
   "python.linting.flake8Enabled": true,
   "python.linting.enabled": true,
-  "deno.importMap": "typegate/deno_import.json",
+  "deno.importMap": "typegate/deno.json",
   "deno.enablePaths": [
     "typegate",
     "dev"
   ],
+  "deno.unstable": true,
+  "deno.suggest.completeFunctionCalls": true,
+  "deno.inlayHints.variableTypes.enabled": true,
+  "deno.inlayHints.propertyDeclarationTypes.enabled": true,
+  "deno.inlayHints.parameterTypes.enabled": true,
+  "deno.inlayHints.parameterNames.enabled": "all",
+  "deno.inlayHints.parameterNames.suppressWhenArgumentMatchesName": true,
+  "deno.inlayHints.enumMemberValues.enabled": true,
+  "deno.inlayHints.variableTypes.suppressWhenTypeMatchesName": true,
+  "deno.inlayHints.functionLikeReturnTypes.enabled": true,
+  "rust-analyzer.checkOnSave": true,
+  "deno.codeLens.implementations": true,
+  "deno.codeLens.references": true,
+  "deno.codeLens.referencesAllFunctions": true,
+  "editor.wordWrap": "on",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.codeActionsOnSave": {
+      "source.fixAll": true,
+      "source.organizeImports": true
+    }
+  },
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
   },
-  "deno.unstable": true,
-  "rust-analyzer.checkOnSave": true
 }

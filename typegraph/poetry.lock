@@ -424,39 +424,6 @@ files = [
 test = ["pytest (>=6)"]
 
 [[package]]
-name = "flake8"
-version = "5.0.4"
-description = "the modular source code checker: pep8 pyflakes and co"
-category = "dev"
-optional = false
-python-versions = ">=3.6.1"
-files = [
-    {file = "flake8-5.0.4-py2.py3-none-any.whl", hash = "sha256:7a1cf6b73744f5806ab95e526f6f0d8c01c66d7bbe349562d22dfca20610b248"},
-    {file = "flake8-5.0.4.tar.gz", hash = "sha256:6fbe320aad8d6b95cec8b8e47bc933004678dc63095be98528b7bdd2a9f510db"},
-]
-
-[package.dependencies]
-mccabe = ">=0.7.0,<0.8.0"
-pycodestyle = ">=2.9.0,<2.10.0"
-pyflakes = ">=2.5.0,<2.6.0"
-
-[[package]]
-name = "flake8-docstrings"
-version = "1.7.0"
-description = "Extension for flake8 which uses pydocstyle to check docstrings"
-category = "dev"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "flake8_docstrings-1.7.0-py2.py3-none-any.whl", hash = "sha256:51f2344026da083fc084166a9353f5082b01f72901df422f74b4d953ae88ac75"},
-    {file = "flake8_docstrings-1.7.0.tar.gz", hash = "sha256:4c8cc748dc16e6869728699e5d0d685da9a10b0ea718e090b1ba088e67a941af"},
-]
-
-[package.dependencies]
-flake8 = ">=3"
-pydocstyle = ">=2.1"
-
-[[package]]
 name = "frozendict"
 version = "2.3.4"
 description = "A simple immutable dictionary"
@@ -727,18 +694,6 @@ files = [
 ]
 
 [[package]]
-name = "mccabe"
-version = "0.7.0"
-description = "McCabe checker, plugin for flake8"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "mccabe-0.7.0-py2.py3-none-any.whl", hash = "sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e"},
-    {file = "mccabe-0.7.0.tar.gz", hash = "sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325"},
-]
-
-[[package]]
 name = "multidict"
 version = "6.0.4"
 description = "multidict implementation"
@@ -824,14 +779,14 @@ files = [
 
 [[package]]
 name = "mypy-extensions"
-version = "0.4.3"
-description = "Experimental type system extensions for programs checked with the mypy typechecker."
+version = "1.0.0"
+description = "Type system extensions for programs checked with the mypy type checker."
 category = "main"
 optional = false
-python-versions = "*"
+python-versions = ">=3.5"
 files = [
-    {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
-    {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
+    {file = "mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d"},
+    {file = "mypy_extensions-1.0.0.tar.gz", hash = "sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782"},
 ]
 
 [[package]]
@@ -891,19 +846,19 @@ files = [
 
 [[package]]
 name = "platformdirs"
-version = "2.6.2"
+version = "3.0.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-2.6.2-py3-none-any.whl", hash = "sha256:83c8f6d04389165de7c9b6f0c682439697887bca0aa2f1c87ef1826be3584490"},
-    {file = "platformdirs-2.6.2.tar.gz", hash = "sha256:e1fea1fe471b9ff8332e229df3cb7de4f53eeea4998d3b6bfff542115e998bd2"},
+    {file = "platformdirs-3.0.0-py3-none-any.whl", hash = "sha256:b1d5eb14f221506f50d6604a561f4c5786d9e80355219694a1b244bcd96f4567"},
+    {file = "platformdirs-3.0.0.tar.gz", hash = "sha256:8a1228abb1ef82d788f74139988b137e78692984ec7b08eaa6c65f1723af28f9"},
 ]
 
 [package.extras]
-docs = ["furo (>=2022.12.7)", "proselint (>=0.13)", "sphinx (>=5.3)", "sphinx-autodoc-typehints (>=1.19.5)"]
-test = ["appdirs (==1.4.4)", "covdefaults (>=2.2.2)", "pytest (>=7.2)", "pytest-cov (>=4)", "pytest-mock (>=3.10)"]
+docs = ["furo (>=2022.12.7)", "proselint (>=0.13)", "sphinx (>=6.1.3)", "sphinx-autodoc-typehints (>=1.22,!=1.23.4)"]
+test = ["appdirs (==1.4.4)", "covdefaults (>=2.2.2)", "pytest (>=7.2.1)", "pytest-cov (>=4)", "pytest-mock (>=3.10)"]
 
 [[package]]
 name = "pluggy"
@@ -920,18 +875,6 @@ files = [
 [package.extras]
 dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
-
-[[package]]
-name = "pycodestyle"
-version = "2.9.1"
-description = "Python style guide checker"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "pycodestyle-2.9.1-py2.py3-none-any.whl", hash = "sha256:d1735fc58b418fd7c5f658d28d943854f8a849b01a5d0a1e6f3f3fdd0166804b"},
-    {file = "pycodestyle-2.9.1.tar.gz", hash = "sha256:2c9607871d58c76354b697b42f5d57e1ada7d261c261efac224b664affdc5785"},
-]
 
 [[package]]
 name = "pydoc-markdown"
@@ -967,36 +910,6 @@ type = "git"
 url = "https://github.com/metatypedev/pydoc-markdown"
 reference = "develop"
 resolved_reference = "994c941a41cdd5fe747801f0b4cf18f490fcd23a"
-
-[[package]]
-name = "pydocstyle"
-version = "6.3.0"
-description = "Python docstring style checker"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "pydocstyle-6.3.0-py3-none-any.whl", hash = "sha256:118762d452a49d6b05e194ef344a55822987a462831ade91ec5c06fd2169d019"},
-    {file = "pydocstyle-6.3.0.tar.gz", hash = "sha256:7ce43f0c0ac87b07494eb9c0b462c0b73e6ff276807f204d6b53edc72b7e44e1"},
-]
-
-[package.dependencies]
-snowballstemmer = ">=2.2.0"
-
-[package.extras]
-toml = ["tomli (>=1.2.3)"]
-
-[[package]]
-name = "pyflakes"
-version = "2.5.0"
-description = "passive checker of Python programs"
-category = "dev"
-optional = false
-python-versions = ">=3.6"
-files = [
-    {file = "pyflakes-2.5.0-py2.py3-none-any.whl", hash = "sha256:4579f67d887f804e67edb544428f264b7b24f435b263c4614f384135cea553d2"},
-    {file = "pyflakes-2.5.0.tar.gz", hash = "sha256:491feb020dca48ccc562a8c0cbe8df07ee13078df59813b83959cbdada312ea3"},
-]
 
 [[package]]
 name = "pytest"
@@ -1222,6 +1135,32 @@ files = [
 appdirs = "*"
 
 [[package]]
+name = "ruff"
+version = "0.0.245"
+description = "An extremely fast Python linter, written in Rust."
+category = "dev"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "ruff-0.0.245-py3-none-macosx_10_7_x86_64.whl", hash = "sha256:9f3210cd7faa00894c7dbdb5c370e43f43481193bceb96da5e5cded3f4079e64"},
+    {file = "ruff-0.0.245-py3-none-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:776acbadbac4feb9d6f077963a1b339ce6374d5911464587c304a5705bac47e0"},
+    {file = "ruff-0.0.245-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:adc5def9e3a6d998f2c2121011b44fee235c92dbf5417a80f0b40b38a72bd722"},
+    {file = "ruff-0.0.245-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:4f7309411dc185ab21fb0940825fac29fc6d064c200324eec86c40364691382c"},
+    {file = "ruff-0.0.245-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:d0fee8371d8624cb1efd6464a17832ad23761050456fb33e1e4e24ca0dfddbc1"},
+    {file = "ruff-0.0.245-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:95ac8826f11f027866f5fe8bfaccf2ac4882347b4845e7ff196ad880f5b3e508"},
+    {file = "ruff-0.0.245-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:11a8bf37b51108499bb0660d43786be1a6979057d491115c9c8ec362f98e839a"},
+    {file = "ruff-0.0.245-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:fb4fc2ab7a121309c45e35759f369c14b03a32b5d5b7ffa65335aecc41668de3"},
+    {file = "ruff-0.0.245-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:db68fce0818e24a766a03c2abc57a2445ccd6fd3e83f9cfb26e092bc6aac6162"},
+    {file = "ruff-0.0.245-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:7824ca46abe7b26cba8f4ca3f2124d2315331e4aad546409feec41f929139500"},
+    {file = "ruff-0.0.245-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:460600ddccb9586f88d24cc6cbef3bf87bb77a1d57aba9ed900f42591e0fa7a7"},
+    {file = "ruff-0.0.245-py3-none-musllinux_1_2_i686.whl", hash = "sha256:6d8c93ba539e9a43191ce86d740b1e7d2a58491902255383ff0e625e95c85d15"},
+    {file = "ruff-0.0.245-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:97b440d6fba04042be810111090429d3f90434f1d642e5d14e4f25e02cbe67ba"},
+    {file = "ruff-0.0.245-py3-none-win32.whl", hash = "sha256:36e11d525a9b282b78892d5d82a9bf0def17dd9c83354a8e01f852cf43cde5ce"},
+    {file = "ruff-0.0.245-py3-none-win_amd64.whl", hash = "sha256:5982a169e3c511f72eddcd9e05206441ded6017e8d90e1cebf6cb9dfbf80311c"},
+    {file = "ruff-0.0.245.tar.gz", hash = "sha256:57e85121b270b3f596391ae3c7c39941619abfc27a6cf372cf0aa525b8ca18e4"},
+]
+
+[[package]]
 name = "semver"
 version = "2.13.0"
 description = "Python helper for Semantic Versioning (http://semver.org/)"
@@ -1255,18 +1194,6 @@ python-versions = ">=3.7"
 files = [
     {file = "sniffio-1.3.0-py3-none-any.whl", hash = "sha256:eecefdce1e5bbfb7ad2eeaabf7c1eeb404d7757c379bd1f7e5cce9d8bf425384"},
     {file = "sniffio-1.3.0.tar.gz", hash = "sha256:e60305c5e5d314f5389259b7f22aaa33d8f7dee49763119234af3755c55b9101"},
-]
-
-[[package]]
-name = "snowballstemmer"
-version = "2.2.0"
-description = "This package provides 29 stemmers for 28 languages generated from Snowball algorithms."
-category = "dev"
-optional = false
-python-versions = "*"
-files = [
-    {file = "snowballstemmer-2.2.0-py2.py3-none-any.whl", hash = "sha256:c8e1716e83cc398ae16824e5572ae04e0d9fc2c6b985fb0f900f5f0c96ecba1a"},
-    {file = "snowballstemmer-2.2.0.tar.gz", hash = "sha256:09b16deb8547d3412ad7b590689584cd0fe25ec8db3be37788be3810cbf19cb1"},
 ]
 
 [[package]]
@@ -1572,4 +1499,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "771e0c5703b3249daad6e05336dc2ede26fcc5255f52dac468e3169a6a265ac4"
+content-hash = "dd9580c845f267beeb9ac4ec47c764ec2e84b6c2575587e71ab98279ae721b70"

@@ -17,7 +17,7 @@ lazy_static! {
         info!("Runtime created");
         Runtime::new().unwrap()
     };
-    static ref SENTRY: sentry::ClientInitGuard = {
+    static ref SENTRY_GUARD: sentry::ClientInitGuard = {
         sentry::init((
             CONFIG.sentry_dsn.clone(),
             sentry::ClientOptions {
@@ -41,7 +41,7 @@ fn init() {
     info!("init");
     let default_panic = std::panic::take_hook();
     panic::set_hook(Box::new(move |panic_info| {
-        println!("ERRROR");
+        println!("Panic: {}", panic_info);
         default_panic(panic_info);
     }));
 }

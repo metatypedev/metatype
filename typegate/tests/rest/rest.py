@@ -1,10 +1,7 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph("blog") as g:
-
     remote = HTTPRuntime("https://blog.example.com/api")
 
     public = policies.public()

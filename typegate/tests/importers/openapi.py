@@ -1,7 +1,6 @@
-from typegraph import policies as p
 from typegraph import TypeGraph
+from typegraph import policies as p
 from typegraph.importers.openapi import OpenApiImporter
-
 
 OpenApiImporter("petstore", url="https://petstore3.swagger.io/api/v3/openapi.json").imp(
     True

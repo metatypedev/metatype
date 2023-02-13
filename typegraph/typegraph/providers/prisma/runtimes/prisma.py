@@ -1,27 +1,20 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import List, Optional, Union
 
-from attrs import field
-from attrs import frozen
+from attrs import field, frozen
+
 from typegraph import effects
 from typegraph import types as t
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
-from typegraph.graph.nodes import Node
-from typegraph.graph.nodes import NodeProxy
+from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.providers.prisma.relations import LinkProxy
-from typegraph.providers.prisma.schema import build_model
-from typegraph.providers.prisma.schema import RelationshipRegister
+from typegraph.providers.prisma.schema import RelationshipRegister, build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
-from typegraph.utils.attrs import always
-from typegraph.utils.attrs import required
-from typegraph.utils.attrs import SKIP
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils.attrs import SKIP, always, required
 
 
 def comp_exp(tpe):
@@ -414,6 +407,9 @@ class PrismaRuntime(Runtime):
     @property
     def edges(self) -> List[Node]:
         return super().edges + list(self.spec.types.values())
+
+    def insert_one(self, tpe):
+        return self.gen_create(tpe)
 
 
 @frozen

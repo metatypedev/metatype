@@ -3,6 +3,8 @@ on:
     types:
       - opened
       - edited
+      - synchronize
+      - ready_for_review
 
 jobs:
   check:
