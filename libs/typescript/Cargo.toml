@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.69"
 swc_common = { version = "0.29.10", features = ["tty-emitter"] }
-swc_ecma_ast = "0.94.14"
+swc_ecma_ast = "0.96.3"
 swc_ecmascript = { version = "0.205.47", features = [
   "visit",
   "transforms",
