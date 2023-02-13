@@ -2,7 +2,7 @@
 
 import { gql, recreateMigrations, test } from "../utils.ts";
 
-test("prisma", async (t) => {
+test("prisma full mapping", async (t) => {
   const e = await t.pythonFile("prisma/full_prisma_mapping.py");
 
   await t.should("drop schema and recreate", async () => {
@@ -53,6 +53,32 @@ test("prisma", async (t) => {
     })
       .on(e);
   });
+  /*
+  await t.should("do a row count with findManyPost", async () => {
+    await gql`
+        query {
+          findManyUsers {
+            _count { posts extended_profile }
+          }
+        }
+    `.expectBody((body: any) => {
+      console.log("body findManyPost :::", body);
+    })
+      .on(e);
+  });
+
+  await t.should("do a row count with findUniquePost", async () => {
+    await gql`
+        query {
+          findUniquePost {
+            _count { posts extended_profile }
+          }
+        }
+    `.expectBody((body: any) => {
+      console.log("body findManyPost :::", body);
+    })
+      .on(e);
+  });*/
 
   await t.should("orderBy likes and views", async () => {
     await gql`
@@ -60,7 +86,7 @@ test("prisma", async (t) => {
           findManyPosts(
             orderBy: [{likes: "desc"}, {views: "asc"}]
           )
-          { 
+          {
             id
             likes
             views

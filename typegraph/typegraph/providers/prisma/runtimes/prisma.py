@@ -299,10 +299,7 @@ def get_out_type(
 
 
 def promote_num_to_float(tpe: t.struct) -> t.struct:
-    fields = {}
-    for key, value in tpe.props.items():
-        fields[key] = t.float() if isinstance(value, t.number) else value
-    return t.struct(fields)
+    return deep_map(tpe, lambda term: t.float() if isinstance(term, t.number) else term)
 
 
 def extract_number_types(tpe: t.struct) -> t.struct:
@@ -426,6 +423,11 @@ class PrismaRuntime(Runtime):
 
     def gen_find_unique(self, tpe: t.struct) -> t.func:
         _pref = get_name_generator("Unique", tpe)
+        # TODO
+        # base_output = get_out_type(tpe)
+        # count_ouptut = get_out_type(tpe)
+        # IDEA : t.union([base_output, count_output])
+        # output = either(base_output, count_output)
         return t.func(
             t.struct({"where": get_where_type(tpe).named(_pref("Where")).optional()}),
             get_out_type(tpe).named(_pref("Output")).optional(),
@@ -435,6 +437,11 @@ class PrismaRuntime(Runtime):
     def gen_find_many(self, tpe: t.struct) -> t.func:
         _pref = get_name_generator("Many", tpe)
         rel_cols = tpe.props.keys()
+        # TODO
+        # array_output = t.array(get_out_type(tpe)))
+        # count_ouptut = get_out_type(tpe)
+        # IDEA : t.union([array_output, count_output])
+        # output = either(array_output, count_output)
         return t.func(
             t.struct(
                 {

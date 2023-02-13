@@ -58,8 +58,10 @@ with TypeGraph("prisma") as g:
         **db.gen(
             {
                 "findManyUsers": (user, "findMany", public),
+                "findUniqueUser": (user, "findUnique", public),
                 "createOneUser": (user, "create", public),
                 "findManyPosts": (post, "findMany", public),
+                "findUniquePost": (post, "findUnique", public),
                 "groupByPost": (post, "groupBy", public),
                 "aggregatePost": (post, "aggregate", public),
                 "createOnePost": (post, "create", public),
