@@ -449,6 +449,8 @@ class PrismaRuntime(Runtime):
                     "orderBy": get_order_by_type(tpe)
                     .named(_pref("OrderBy"))
                     .optional(),
+                    "take": t.integer().named(_pref("Take")).optional(),
+                    "skip": t.integer().named(_pref("Skip")).optional(),
                     "distinct": t.array(t.enum(rel_cols))
                     .named(_pref("Distinct"))
                     .optional(),
@@ -463,15 +465,17 @@ class PrismaRuntime(Runtime):
         tpe_nums = extract_number_types(tpe)
         return t.func(
             t.struct(
-                {"where": get_where_type(tpe).named(_pref("Where")).optional()}
+                {
+                    "where": get_where_type(tpe).named(_pref("Where")).optional(),
+                    "take": t.integer().named(_pref("Take")).optional(),
+                    "skip": t.integer().named(_pref("Skip")).optional(),
+                }
             ).named(_pref("Input")),
             t.struct(
                 {
                     "_count": t.struct({"_all": t.integer()})
                     .compose(tpe.props)
                     .named(_pref("Count")),
-                    "take": t.integer().named(_pref("Take")),
-                    "skip": t.integer().named(_pref("Skip")),
                     "_avg": promote_num_to_float(tpe_nums).named(_pref("Avg")),
                     "_sum": tpe_nums.named(_pref("Sum")),
                     "_min": tpe_nums.named(_pref("Min")),

@@ -54,7 +54,7 @@ test("prisma full mapping", async (t) => {
       .on(e);
   });
   /*
-  await t.should("do a row count with findManyPost", async () => {
+  await t.should("do a count with findManyPost", async () => {
     await gql`
         query {
           findManyUsers {
@@ -67,7 +67,7 @@ test("prisma full mapping", async (t) => {
       .on(e);
   });
 
-  await t.should("do a row count with findUniquePost", async () => {
+  await t.should("do a count with findUniquePost", async () => {
     await gql`
         query {
           findUniquePost {
@@ -79,6 +79,23 @@ test("prisma full mapping", async (t) => {
     })
       .on(e);
   });*/
+
+  await t.should("paginate correctly with findManyPosts", async () => {
+    await gql`
+        query {
+          findManyPosts(skip: 1, take: 2) {
+            id 
+            title
+          }
+        }
+    `.expectData({
+      findManyPosts: [
+        { id: 10002, title: "Book 2" },
+        { id: 10003, title: "Book 3" },
+      ],
+    })
+      .on(e);
+  });
 
   await t.should("orderBy likes and views", async () => {
     await gql`
@@ -176,6 +193,36 @@ test("prisma full mapping", async (t) => {
     })
       .on(e);
   });
+
+  await t.should(
+    "aggregate after taking 2 items starting from the second row (skip first row)",
+    async () => {
+      await gql`
+        query {
+          aggregatePost(
+            where: {author: {id: 1}}, 
+            skip: 1,
+            take: 2
+          ) {
+            _count { _all views likes }
+            _sum { views likes }
+            _max { views likes }
+            _min { views likes }
+            _avg { views likes }
+          }
+        }
+    `.expectData({
+        aggregatePost: {
+          _count: { _all: 2, views: 2, likes: 2 },
+          _sum: { views: 13, likes: 23 },
+          _max: { views: 8, likes: 20 },
+          _min: { views: 5, likes: 3 },
+          _avg: { views: 6.5, likes: 11.5 },
+        },
+      })
+        .on(e);
+    },
+  );
 
   await t.should("do a distinct on col `published`", async () => {
     await gql`
