@@ -85,7 +85,7 @@ class Relation:
         ), "left and right sides of a relationship must have the same name"
         assert (
             self.left.cardinality == self.right.cardinality
-        ), f"left and right sides of a relationship must have the same cardinality"
+        ), "left and right sides of a relationship must have the same cardinality"
 
     @property
     def name(self):
@@ -180,7 +180,7 @@ class RelationshipRegister:
                 ]
                 if len(fields) == 0:
                     print(
-                        f"proxies: {repr({k: f'{l.link_name}, {l.name}, {l.target_field}' for k, l in self.proxies[right_type.name].items()})}"
+                        f"proxies: {repr({k: f'{ln.link_name}, {ln.name}, {ln.target_field}' for k, ln in self.proxies[right_type.name].items()})}"
                     )
                     fields = [
                         f
