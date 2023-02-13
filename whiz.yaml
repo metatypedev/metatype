@@ -110,6 +110,8 @@ website_meta:
 
 website_docgen:
     workdir: website
+    watch:
+        - "../typegraph/typegraph/**/*.py"
     command: |
         pydoc-markdown
         npx docusaurus docs:generate:graphql:typegate

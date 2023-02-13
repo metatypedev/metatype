@@ -227,6 +227,7 @@ pub fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) {
                             println!("  {}", "✓ Success!".to_owned().green());
                         }
                         Err(e) => {
+                            println!("  {}", "✗ Failed!".to_owned().red());
                             println!("Could not push typegraph:\n{e:?}");
                         }
                     }

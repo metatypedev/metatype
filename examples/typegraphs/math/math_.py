@@ -1,4 +1,4 @@
-from typegraph import TypeGraph, effects, policies, t
+from typegraph import TypeGraph, policies, t
 from typegraph.policies import Policy
 from typegraph.runtimes.deno import DenoRuntime, ModuleMat, PureFunMat
 
@@ -49,6 +49,6 @@ with TypeGraph(name="math") as g:
                     }
                     """,
                 runtime=worker,
-            ).imp("default", effect=effects.none()),
+            ).imp("default"),
         ).add_policy(public),
     )

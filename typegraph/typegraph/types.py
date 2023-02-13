@@ -102,8 +102,11 @@ class typedef(Node):
     inject: Optional[Union[str, TypeNode]] = optional_field()
     injection: Optional[Any] = optional_field()
     policies: Tuple[Policy, ...] = field(kw_only=True, factory=tuple)
+    # runtime_config: Dict[str, Any] = field(
+    #     kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
+    # )
     runtime_config: Dict[str, Any] = field(
-        kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
+        kw_only=True, factory=frozendict, hash=False, metadata={SKIP: True}
     )
     _enum: Optional[Tuple[Any]] = optional_field()
 
@@ -133,20 +136,30 @@ class typedef(Node):
             + list(filter(None, [self.runtime, secret]))
         )
 
-    def named(self, name: str) -> "typedef":
+    @property
+    def labeled_edges(self) -> Dict[str, str]:
+        return {}
+
+    def register_name(self):
         types = self.graph.type_by_names
-        # TODO compare types
+        name = self.name
         if name in types:
-            raise Exception(f"type name {name} already used")
+            if types[name] != self:
+                raise Exception(f"Name '{name}' is already registered for another type")
+            return
+
         if name in reserved_types:
-            raise Exception(f"type name {name} is a reserved type")
+            raise Exception(f"Type name '{name}' is a reserved type")
         # https://spec.graphql.org/draft/#sel-GAJTBAABABFj6D
         if name.startswith("__"):
             raise Exception(
                 f"type name {name} cannot start with `__`, it's reserved for introspection"
             )
+        types[name] = self
+
+    def named(self, name: str) -> "typedef":
         ret = self.replace(name=name)
-        types[name] = ret
+        ret.register_name()
         return ret
 
     def describe(self, description: str) -> "typedef":
@@ -221,7 +234,7 @@ class typedef(Node):
         d.update(self.runtime_config)
         d.update(kwargs)
         d.update({f: True for f in flags})
-        return self.replace(runtime_config=d)
+        return self.replace(runtime_config=frozendict(d))
 
     def enum(self, variants: List[Any]) -> Self:
         return self.replace(enum=tuple(variants))
@@ -355,6 +368,10 @@ class optional(typedef):
     def edges(self) -> List[Node]:
         return super().edges + [self.of]
 
+    @property
+    def labeled_edges(self) -> Dict[str, str]:
+        return {"[item]": self.of.name}
+
     def data(self, collector) -> dict:
         ret = super().data(collector)
         ret["item"] = collector.index(ret.pop("of"))
@@ -487,7 +504,7 @@ class struct(typedef):
     def compose(self, props: Dict[str, typedef]):
         new_props = dict(self.props)
         new_props.update(props)
-        return self.replace(props=new_props)
+        return self.replace(props=frozendict(new_props))
 
     def __getattr__(self, attr):
         try:
@@ -507,6 +524,10 @@ class struct(typedef):
     @property
     def edges(self) -> List[Node]:
         return super().edges + list(self.props.values())
+
+    @property
+    def labeled_edges(self) -> Dict[str, str]:
+        return {k: v.name for k, v in self.props.items()}
 
     def data(self, collector) -> dict:
         ret = super().data(collector)
@@ -538,6 +559,10 @@ class array(typedef):
     @property
     def edges(self) -> List[Node]:
         return super().edges + [self.of]
+
+    @property
+    def labeled_edges(self):
+        return {"[items]": self.of.name}
 
     def data(self, collector) -> dict:
         ret = super().data(collector)
@@ -601,6 +626,10 @@ class func(typedef):
         return super().edges + [self.inp, self.out, self.mat]
 
     @property
+    def labeled_edges(self) -> Dict[str, str]:
+        return {"[in]": self.inp.name, "[out]": self.out.name}
+
+    @property
     def type(self) -> str:
         return "function"
 
@@ -646,3 +675,15 @@ def named(name: str, define: Callable[[], typedef]) -> TypeNode:
 
 def proxy(name: str) -> NodeProxy:
     return NodeProxy(TypegraphContext.get_active(), name)
+
+
+def visit_reversed(
+    tpe: typedef, fn: Callable[[typedef], Any], visited: Set[str] = set()
+):
+    for node in tpe.edges:
+        if isinstance(node, typedef):
+            if node.name in visited:
+                continue
+            visited.add(node.name)
+            visit_reversed(node, fn, visited)
+            fn(node)
