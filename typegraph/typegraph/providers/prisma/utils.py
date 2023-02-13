@@ -13,12 +13,10 @@ def resolve_entity_quantifier(tpe: t.typedef):
 
 
 def clean_virtual_link(tpe: t.typedef):
-
     if isinstance(tpe, t.struct):
         ret = {}
         # renames = {}
         for k, v in tpe.props.items():
-
             if isinstance(v, NodeProxy):
                 v = v.get()
 

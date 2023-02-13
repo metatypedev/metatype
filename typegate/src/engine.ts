@@ -447,11 +447,12 @@ export class Engine {
       this.validateVariables(operation?.variableDefinitions ?? [], variables);
 
       const isIntrospection = isIntrospectionQuery(operation, fragments);
-
       const verbose = !isIntrospection;
 
-      verbose && this.logger.info("———");
-      verbose && this.logger.info("op:", operationName);
+      if (verbose) {
+        this.logger.info("———");
+        this.logger.info("op:", operationName);
+      }
 
       const startTime = performance.now();
       const [plan, cacheHit] = await this.getPlan(
@@ -479,7 +480,7 @@ export class Engine {
       validator.validate(res);
       const endTime = performance.now();
 
-      verbose &&
+      if (verbose) {
         this.logger.info(
           `${cacheHit ? "fetched" : "planned"}  in ${
             (
@@ -487,15 +488,13 @@ export class Engine {
             ).toFixed(2)
           }ms`,
         );
-      verbose &&
         this.logger.info(
           `computed in ${(computeTime - planTime).toFixed(2)}ms`,
         );
-
-      verbose &&
         this.logger.info(
           `validated in ${(endTime - computeTime).toFixed(2)}ms`,
         );
+      }
 
       return { status: 200, data: res };
     } catch (e) {

@@ -1,32 +1,20 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from collections import defaultdict
-from typing import DefaultDict
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Tuple
-from typing import Union
+from typing import DefaultDict, Dict, List, Optional, Set, Tuple, Union
 
-from attrs import field
-from attrs import frozen
+from attrs import field, frozen
+
 from typegraph import effects
 from typegraph import types as t
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
-from typegraph.graph.nodes import Node
-from typegraph.graph.nodes import NodeProxy
-from typegraph.graph.typegraph import find
-from typegraph.graph.typegraph import resolve_proxy
-from typegraph.graph.typegraph import TypegraphContext
+from typegraph.graph.nodes import Node, NodeProxy
+from typegraph.graph.typegraph import TypegraphContext, find, resolve_proxy
 from typegraph.policies import Policy
 from typegraph.providers.prisma.schema import PrismaSchema
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
-from typegraph.utils.attrs import always
-from typegraph.utils.attrs import required
-from typegraph.utils.attrs import SKIP
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils.attrs import SKIP, always, required
 
 
 def comp_exp(tpe):
@@ -665,6 +653,12 @@ class PrismaRuntime(Runtime):
     #         f"insert_{name}": t.func(sql_insert(tpe), tpe, PrismaInsertMat(self)),
     #         f"delete_{name}": t.func(sql_delete(tpe), tpe, PrismaDeleteMat(self)),
     #     }
+
+    def insert_one(self, tpe):
+        return self.gen_create(tpe)
+
+    def find_many(self, tpe):
+        return self.gen_find_many(tpe)
 
 
 @frozen

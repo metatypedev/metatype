@@ -5,22 +5,35 @@ import { createGraphiQLFetcher } from "@graphiql/toolkit";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
-import { GraphiQLProvider } from "@graphiql/react";
+import {
+  GraphiQLProvider,
+  ResponseEditor,
+  Spinner,
+  useExecutionContext,
+} from "@graphiql/react";
 import GraphiQLInterface, { Tab } from "./GraphiQLInterface";
 import * as ast from "graphql/language/ast";
 import { MemoryStorage } from "./MemoryStore";
+import styles from "./styles.module.scss";
 
-interface MiniQLProps {
+export interface MiniQLProps {
   typegraph: string;
   query: ast.DocumentNode;
-  headers: Record<string, unknown>;
-  variables: Record<string, unknown>;
-  tab: Tab;
+  panel?: React.ReactNode;
+  headers?: Record<string, unknown>;
+  variables?: Record<string, unknown>;
+  tab?: Tab;
+}
+
+function Loader() {
+  const ec = useExecutionContext({ nonNull: true });
+  return ec.isFetching ? <Spinner /> : null;
 }
 
 export default function MiniQL({
   typegraph,
   query,
+  panel = null,
   headers = {},
   variables = {},
   tab = "",
@@ -32,6 +45,7 @@ export default function MiniQL({
   } = useDocusaurusContext();
 
   const storage = useMemo(() => new MemoryStorage(), []);
+
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>
       {() => {
@@ -45,12 +59,26 @@ export default function MiniQL({
         return (
           <GraphiQLProvider
             fetcher={fetcher}
-            defaultQuery={query.loc.source.body}
+            defaultQuery={query.loc.source.body.trim()}
             defaultHeaders={JSON.stringify(headers)}
             variables={JSON.stringify(variables)}
             storage={storage}
           >
-            <GraphiQLInterface defaultTab={tab} />
+            <div className={`graphiql-container ${styles.container}`}>
+              {panel ? (
+                <div className={`graphiql-response ${styles.panel}`}>
+                  {panel}
+                </div>
+              ) : null}
+
+              <div className={`graphiql-session ${styles.editor}`}>
+                <GraphiQLInterface defaultTab={tab} />
+              </div>
+              <div className={`graphiql-response ${styles.response}`}>
+                <Loader />
+                <ResponseEditor />
+              </div>
+            </div>
           </GraphiQLProvider>
         );
       }}

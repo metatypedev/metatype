@@ -1,15 +1,11 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, t
 from typegraph.policies import Policy
 from typegraph.runtimes.deno import PureFunMat
-from typegraph.runtimes.typegate import ResolverMat
-from typegraph.runtimes.typegate import SchemaMat
-from typegraph.runtimes.typegate import TypeMat
+from typegraph.runtimes.typegate import ResolverMat, SchemaMat, TypeMat
 
 with TypeGraph("introspection") as g:
-
     enum_value = t.struct(
         {
             "name": t.string(),

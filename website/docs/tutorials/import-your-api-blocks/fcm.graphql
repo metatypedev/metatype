@@ -1,0 +1,8 @@
+mutation {
+  send_notification(parent: "firebase-project-id") {
+    message {
+      id
+      message
+    }
+  }
+}

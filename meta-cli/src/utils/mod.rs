@@ -4,16 +4,17 @@ pub mod clap;
 
 use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
+use pathdiff::diff_paths;
 use reqwest::{
     blocking::{Client, RequestBuilder},
     IntoUrl, Url,
 };
-use std::collections::HashMap;
 use std::env::{set_var, var};
 use std::fs;
 use std::hash::Hash;
 use std::path::Path;
 use std::time::Duration;
+use std::{collections::HashMap, path::PathBuf};
 
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if var("VIRTUAL_ENV").is_ok() {
@@ -67,7 +68,7 @@ impl BasicAuth {
         Ok(Self { username, password })
     }
 
-    pub fn as_user(username: String) -> Result<Self> {
+    pub fn prompt_as_user(username: String) -> Result<Self> {
         let password = Password::new()
             .with_prompt(format!("Password for user {username}"))
             .interact()?;
@@ -297,4 +298,12 @@ where
     {
         self.into_iter().map(|(k, v)| (k, f(v))).collect()
     }
+}
+
+pub fn relative_path_display<P1: Into<PathBuf>, P2: Into<PathBuf>>(base: P1, path: P2) -> String {
+    let path: PathBuf = path.into();
+    diff_paths(&path, base.into())
+        .unwrap_or(path)
+        .display()
+        .to_string()
 }

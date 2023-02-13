@@ -1,6 +1,4 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.importers.base.importer import Import
 from typegraph.importers.graphql import GraphQLImporter
 from typegraph.runtimes.graphql import GraphQLRuntime

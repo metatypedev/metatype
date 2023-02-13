@@ -1,0 +1,7 @@
+query {
+  get_context {
+    basic
+    jwk
+    github
+  }
+}

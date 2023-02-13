@@ -1,5 +1,5 @@
 ARG RUST_VERSION=1.66.1
-ARG DENO_VERSION=1.29.4
+ARG DENO_VERSION=1.30.3
 
 FROM lukemathwalker/cargo-chef:latest-rust-${RUST_VERSION} AS base
 
@@ -18,7 +18,7 @@ RUN rm -rf meta-cli \
 
 FROM base AS builder
 
-ARG DENO_VERSION=1.29.4
+ARG DENO_VERSION=1.30.3
 ARG DENO_BINDGEN_URL=https://github.com/denoland/deno_bindgen/raw/main/cli.ts
 
 ENV DENO_DIR /deno-dir/
@@ -57,7 +57,7 @@ COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
 COPY LICENSE.md .
 COPY --from=builder /bindings/bindings.ts /bindings/
 COPY --from=builder /libnative.so /target/release/
-COPY --from=builder /typegate/deno_import.json /typegate/deno.json ./
+COPY --from=builder /typegate/deno.json ./
 COPY --from=builder /typegate/src ./src
 
 # writeable

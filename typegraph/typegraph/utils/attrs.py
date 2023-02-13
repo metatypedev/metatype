@@ -1,9 +1,7 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import attrs
-from attrs import Attribute
-from attrs import field
-
+from attrs import Attribute, field
 
 SKIP = "asdict_skip"
 
