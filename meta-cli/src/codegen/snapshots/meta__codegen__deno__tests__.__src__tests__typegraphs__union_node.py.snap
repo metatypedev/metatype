@@ -1,0 +1,34 @@
+---
+source: meta-cli/src/codegen/deno.rs
+expression: "&module_codes[0].code"
+---
+interface ConvertInput {
+  color:
+    | Array<number>
+    | string
+    | "red"
+    | "black"
+    | "blue"
+    | "orange"
+    | "purple"
+    | "white"
+    | "yellow";
+  to: "rgb" | "hex" | "colorName";
+}
+
+type ConvertOutput =
+  | Array<number>
+  | string
+  | "red"
+  | "black"
+  | "blue"
+  | "orange"
+  | "purple"
+  | "white"
+  | "yellow";
+
+export function convert({ color, to }: ConvertInput,
+  { context }: { context: Record<string, unknown> }): ConvertOutput
+{
+  return "";
+}

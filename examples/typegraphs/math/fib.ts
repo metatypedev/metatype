@@ -1,7 +1,7 @@
 const CACHE = [1, 1];
 const MAX_CACHE_SIZE = 1000;
 
-export default function fib({ size }: { size: number; }) {
+export default function fib({ size }: { size: number }) {
   if (size > MAX_CACHE_SIZE) {
     throw new Error(`unsupported size ${size} > ${MAX_CACHE_SIZE}`);
   }

@@ -6,7 +6,13 @@ import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
 import { ComputeStageProps, PolicyStagesFactory } from "../types.ts";
-import { getWrappedType, isQuantifier, Type } from "../type_node.ts";
+import {
+  getWrappedType,
+  isArray,
+  isObject,
+  isQuantifier,
+  Type,
+} from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno.ts";
 import { ensure, unparse } from "../utils.ts";
 import { ArgumentCollector, ComputeArg } from "./args.ts";
@@ -253,7 +259,7 @@ export class Planner {
     node: Node,
     policies: Record<string, any>,
   ): ComputeStage[] {
-    const stages = [];
+    const stages: ComputeStage[] = [];
     const schema = this.tg.type(node.typeIdx);
 
     const { args = TypeGraph.emptyArgs, path } = node;
@@ -292,6 +298,23 @@ export class Planner {
       if (itemSchema.type === Type.OBJECT) {
         stages.push(...this.traverse({ ...node, typeIdx: itemTypeIdx }, stage));
       }
+
+      // support for nested quantifier `t.array(t.struct()).optional()`,
+      // which is necessary to compute some introspection fields
+      if (isArray(itemSchema)) {
+        const nestedItemTypeIndex = getWrappedType(itemSchema);
+        const nestedItemNode = this.tg.type(nestedItemTypeIndex);
+
+        if (isObject(nestedItemNode)) {
+          stages.push(
+            ...this.traverse(
+              { ...node, typeIdx: nestedItemTypeIndex },
+              stage,
+            ),
+          );
+        }
+      }
+
       return stages;
     }
 
@@ -339,6 +362,7 @@ export class Planner {
         argNodes[argName],
         argIdx,
         parentProps,
+        argName,
       );
 
       nestedDepsUnion.push(...nested.deps);

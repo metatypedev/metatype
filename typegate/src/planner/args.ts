@@ -5,9 +5,22 @@ import { Kind } from "graphql";
 import { TypeGraph } from "../typegraph.ts";
 import { Context, Parents, Variables } from "../types.ts";
 import { ensure } from "../utils.ts";
-import { ArrayNode, ObjectNode, Type, TypeNode } from "../type_node.ts";
+import {
+  ArrayNode,
+  ObjectNode,
+  Type,
+  TypeNode,
+  UnionNode,
+} from "../type_node.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
+
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
+import { JSONSchema, SchemaValidatorError, trimType } from "../typecheck.ts";
+
+const ajv = new Ajv({ removeAdditional: true });
+addFormats(ajv);
 
 export interface ComputeArg {
   (
@@ -44,15 +57,15 @@ interface CollectedArg {
  * ```
  */
 export class ArgumentCollector {
-  constructor(
-    private tg: TypeGraph,
-  ) {}
+  constructor(private tg: TypeGraph) {}
 
   /** Collect the arguments for the node `astNode` corresponding to type at `typeIdx` */
   collectArg(
     astNode: ast.ArgumentNode | ast.ObjectFieldNode | undefined,
     typeIdx: number,
     parentProps: Record<string, number>, // parent context?
+    argName: string,
+    argumentSchema?: JSONSchema,
   ): CollectedArg {
     const typ = this.tg.type(typeIdx);
     if (typ == null) {
@@ -64,14 +77,13 @@ export class ArgumentCollector {
     const policies = this.getPolicies(typ);
 
     if ("injection" in typ) {
-      ensure(
-        astNode == null,
-        `cannot set injected arg: '${typ.title}'`,
-      );
+      ensure(astNode == null, `cannot set injected arg: '${typ.title}'`);
       const [compute, deps] = this.collectInjection(typ, parentProps);
       return { compute, policies, deps };
     }
 
+    // in case the argument node of the query is null,
+    // try to get a default value for it, else throw an error
     if (astNode == null) {
       if (typ.type === Type.OPTIONAL) {
         const { default_value: defaultValue } = typ;
@@ -88,20 +100,24 @@ export class ArgumentCollector {
         return this.collectDefaults(props);
       }
 
-      throw new Error(`mandatory arg '${typ.type}' not found`);
+      throw new Error(
+        `mandatory argument '${argName}' of type '${typ.type}' not found`,
+      );
     }
 
     if (typ.type === Type.OPTIONAL) {
       return this.merge(
         { policies },
-        this.collectArg(astNode, typ.item, parentProps),
+        this.collectArg(astNode, typ.item, parentProps, argName),
       );
     }
 
     const { value: valueNode } = astNode;
 
     if (valueNode.kind === Kind.VARIABLE) {
-      const { name: { value: varName } } = valueNode;
+      const {
+        name: { value: varName },
+      } = valueNode;
       return {
         compute: (vars) => vars[varName],
         policies,
@@ -111,17 +127,25 @@ export class ArgumentCollector {
 
     switch (typ.type) {
       case Type.OBJECT:
-        return this.merge({ policies }, this.collectObjectArg(valueNode, typ));
+        return this.merge(
+          { policies },
+          this.collectObjectArg(valueNode, typ, argName),
+        );
 
       case Type.ARRAY:
         return this.merge(
           { policies },
-          this.collectArrayArg(valueNode, typ, parentProps),
+          this.collectArrayArg(valueNode, typ, parentProps, argName),
         );
 
       case Type.INTEGER: {
         if (valueNode.kind !== Kind.INT) {
-          throw typeMismatchError(valueNode.kind, "INT", typ.title);
+          throw new TypeMismatchError(
+            valueNode.kind,
+            "INT",
+            argName,
+            typ.title,
+          );
         }
         const value = Number(valueNode.value);
         return { compute: () => value, policies, deps: [] };
@@ -129,7 +153,12 @@ export class ArgumentCollector {
 
       case Type.NUMBER: {
         if (valueNode.kind !== Kind.FLOAT && valueNode.kind !== Kind.INT) {
-          throw typeMismatchError(valueNode.kind, ["FLOAT", "INT"], typ.title);
+          throw new TypeMismatchError(
+            valueNode.kind,
+            ["FLOAT", "INT"],
+            argName,
+            typ.title,
+          );
         }
         const value = Number(valueNode.value);
         return { compute: () => value, policies, deps: [] };
@@ -137,7 +166,12 @@ export class ArgumentCollector {
 
       case Type.BOOLEAN: {
         if (valueNode.kind !== Kind.BOOLEAN) {
-          throw typeMismatchError(valueNode.kind, "BOOLEAN", typ.title);
+          throw new TypeMismatchError(
+            valueNode.kind,
+            "BOOLEAN",
+            argName,
+            typ.title,
+          );
         }
         const value = Boolean(valueNode.value);
         return { compute: () => value, policies, deps: [] };
@@ -145,10 +179,32 @@ export class ArgumentCollector {
 
       case Type.STRING: {
         if (valueNode.kind !== Kind.STRING) {
-          throw typeMismatchError(valueNode.kind, "STRING", typ.title);
+          throw new TypeMismatchError(
+            valueNode.kind,
+            "STRING",
+            argName,
+            typ.title,
+          );
         }
+
+        if (argumentSchema !== undefined) {
+          const validator = ajv.compile(argumentSchema);
+          validator(valueNode.value);
+
+          if (validator.errors) {
+            throw new SchemaValidatorError(validator.errors, " or ");
+          }
+        }
+
         const value = String(valueNode.value);
         return { compute: () => value, policies, deps: [] };
+      }
+
+      case Type.UNION: {
+        return this.merge(
+          { policies },
+          this.collectUnionArg(astNode, typ, parentProps, argName),
+        );
       }
 
       default:
@@ -156,14 +212,90 @@ export class ArgumentCollector {
     }
   }
 
+  private getArgumentSchema(typenode: TypeNode): JSONSchema {
+    switch (typenode.type) {
+      case Type.ARRAY: {
+        const itemsTypeNode = this.tg.type(typenode.items);
+        const schema = {
+          ...trimType(typenode),
+          items: this.getArgumentSchema(itemsTypeNode),
+        };
+        return schema;
+      }
+
+      case Type.UNION: {
+        const schemes = typenode.anyOf
+          .map((variantTypeIndex) => this.tg.type(variantTypeIndex))
+          .map((variant) => this.getArgumentSchema(variant));
+
+        const argumentSchema = {
+          anyOf: schemes,
+        };
+
+        return argumentSchema;
+      }
+
+      default: {
+        const schema = trimType(typenode);
+        return schema;
+      }
+    }
+  }
+
+  /**
+   * Collect the value of a parameter of type 'union'.
+   */
+  private collectUnionArg(
+    astNode: ast.ArgumentNode | ast.ObjectFieldNode,
+    typ: UnionNode,
+    parentProps: Record<string, number>,
+    argName: string,
+  ): CollectedArg {
+    const { value: valueNode } = astNode;
+    const argumentSchema = this.getArgumentSchema(typ);
+
+    // throw type mismatch error only if the argument node of the query
+    // does not match any of the subschemes (variant nodes).
+    for (const variantTypeIndex of typ.anyOf) {
+      try {
+        return this.collectArg(
+          astNode,
+          variantTypeIndex,
+          parentProps,
+          argName,
+          argumentSchema,
+        );
+      } catch (error) {
+        if (!(error instanceof TypeMismatchError)) {
+          throw error;
+        }
+      }
+    }
+
+    const expectedVariants: Set<string> = new Set();
+
+    typ.anyOf
+      .map((variantTypeIndex) => this.tg.type(variantTypeIndex))
+      .map((variantType) => variantType.type)
+      .forEach((typeName) => expectedVariants.add(typeName.toUpperCase()));
+
+    throw new TypeMismatchError(
+      valueNode.kind,
+      [...expectedVariants],
+      argName,
+      typ.title,
+    );
+  }
+
   /** Collect the value of a parameter of type 'array'. */
   private collectArrayArg(
     valueNode: ast.ValueNode,
     typ: ArrayNode,
     parentProps: Record<string, number>,
+    argName: string,
   ) {
     if (valueNode.kind !== Kind.LIST) {
-      throw typeMismatchError(valueNode.kind, "LIST", typ.title);
+      throw new TypeMismatchError(valueNode.kind, "LIST", argName, typ.title);
     }
 
     const { values: valueNodes } = valueNode;
@@ -179,6 +311,7 @@ export class ArgumentCollector {
         { value: node } as unknown as ast.ArgumentNode,
         itemTypeIdx,
         parentProps,
+        argName,
       );
       values.push(nested.compute);
       deps.push(...nested.deps);
@@ -195,9 +328,13 @@ export class ArgumentCollector {
   }
 
   /** Collect the value of an parameter of type 'object'. */
-  private collectObjectArg(valueNode: ast.ValueNode, typ: ObjectNode) {
+  private collectObjectArg(
+    valueNode: ast.ValueNode,
+    typ: ObjectNode,
+    argName: string,
+  ) {
     if (valueNode.kind !== Kind.OBJECT) {
-      throw typeMismatchError(valueNode.kind, "OBJECT", typ.title);
+      throw new TypeMismatchError(valueNode.kind, "OBJECT", argName, typ.title);
     }
 
     const { fields } = valueNode;
@@ -212,7 +349,7 @@ export class ArgumentCollector {
     const policies: Record<string, string[]> = {};
 
     for (const [name, idx] of Object.entries(props)) {
-      const nested = this.collectArg(fieldByKeys[name], idx, props);
+      const nested = this.collectArg(fieldByKeys[name], idx, props, name);
       // TODO: apply renames
       computes[name] = nested.compute;
       deps.push(...nested.deps);
@@ -313,18 +450,21 @@ export class ArgumentCollector {
 
       case "context": {
         const name = inject as string;
-        return [(_vars, _parent, context) => {
-          if (context == null) {
-            // computing raw arguments -- without injection
-            return null;
-          }
+        return [
+          (_vars, _parent, context) => {
+            if (context == null) {
+              // computing raw arguments -- without injection
+              return null;
+            }
 
-          const { [name]: value } = context;
-          if (value == null && typ.type != Type.OPTIONAL) {
-            throw new Error(`injection '${name}' was not found in context`);
-          }
-          return value;
-        }, []];
+            const { [name]: value } = context;
+            if (value == null && typ.type != Type.OPTIONAL) {
+              throw new Error(`injection '${name}' was not found in context`);
+            }
+            return value;
+          },
+          [],
+        ];
       }
 
       case "parent":
@@ -341,8 +481,8 @@ export class ArgumentCollector {
     parentProps: Record<string, number>,
   ): [compute: ComputeArg, deps: string[]] {
     const ref = typ.inject as number;
-    const name = Object.keys(parentProps).find((name) =>
-      parentProps[name] === ref
+    const name = Object.keys(parentProps).find(
+      (name) => parentProps[name] === ref,
     );
     if (name == undefined) {
       throw new Error(`injection '${typ.title} (${name})' not found in parent`);
@@ -362,7 +502,9 @@ export class ArgumentCollector {
           }
 
           const suggestions = `available fields from parent are: ${
-            Object.keys(parent).join(", ")
+            Object.keys(
+              parent,
+            ).join(", ")
           }`;
           throw new Error(
             `non-optional injection '${typ.title} (${name}) is missing from parent: ${suggestions}`,
@@ -386,15 +528,18 @@ export class ArgumentCollector {
   }
 }
 
-function typeMismatchError(
-  actual: string,
-  expected: string | string[],
-  title: string,
-) {
-  const exp = (typeof expected == "string" ? [expected] : expected).map((t) =>
-    `'${t}'`
-  ).join(" or ");
-  return new Error(
-    `Type mismatch: got '${actual}' but expected ${exp} for '${title}'`,
-  );
+class TypeMismatchError extends Error {
+  constructor(
+    actual: string,
+    expected: string | string[],
+    argName: string,
+    title: string,
+  ) {
+    const exp = (typeof expected == "string" ? [expected] : expected)
+      .map((t) => `'${t}'`)
+      .join(" or ");
+    const errorMessage =
+      `Type mismatch: got '${actual}' but expected ${exp} for argument '${argName}' named as '${title}'`;
+    super(errorMessage);
+  }
 }

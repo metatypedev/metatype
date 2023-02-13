@@ -23,6 +23,7 @@ import {
   isObject,
   isOptional,
   isString,
+  isUnion,
   TypeNode,
 } from "./type_node.ts";
 import {
@@ -371,7 +372,7 @@ export class TypeGraph {
     }
     ensure(
       isObject(type) || isInteger(type) || isNumber(type) || isBoolean(type) ||
-        isFunction(type) || isString(type),
+        isFunction(type) || isString(type) || isUnion(type),
       `object expected but got ${type.type}`,
     );
     return (x: any) => ensureArray(x);
