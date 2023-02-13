@@ -14,7 +14,6 @@ use typescript as ts;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ImportFuncMatData {
-    serial: bool,
     name: String,
     #[serde(rename = "mod")]
     module: u32,
@@ -95,7 +94,6 @@ impl<'a> Codegen<'a> {
                 let code: String =
                     serde_json::from_value(mat.data.get("code").unwrap().clone()).unwrap();
                 if let Some(relpath) = code.strip_prefix("file:") {
-                    println!("module: {relpath}");
                     let path = {
                         let mut path = base_dir.clone();
                         path.push(relpath);

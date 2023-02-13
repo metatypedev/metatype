@@ -1,20 +1,15 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import TYPE_CHECKING
+from typing import Callable, Dict, List, Optional
 
-from attrs import field
-from attrs import frozen
+from attrs import field, frozen
+
+from typegraph import effects
+from typegraph import types as t
 from typegraph import utils
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
+from typegraph.effects import Effect
+from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
-
-if TYPE_CHECKING:
-    from typegraph import types as t
 
 
 def pick(d: Dict, *largs) -> Dict:
@@ -84,8 +79,12 @@ class RandomRuntime(Runtime):
 
         return dict()
 
+    def generate(self, out, **kwargs):
+        return t.gen(out, RandomMat(runtime=self), **kwargs)
+
 
 @frozen
 class RandomMat(Materializer):
     runtime: Runtime = field(factory=RandomRuntime)
     materializer_name: str = always("random")
+    effect: Effect = field(kw_only=True, default=effects.none())

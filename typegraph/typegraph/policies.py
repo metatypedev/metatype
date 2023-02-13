@@ -3,14 +3,13 @@
 from re import sub as reg_sub
 from typing import List
 
-from attrs import evolve
-from attrs import field
-from attrs import frozen
+from attrs import evolve, field, frozen
+
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.deno import FunMat
+from typegraph.runtimes.deno import PureFunMat
 from typegraph.utils.attrs import always
 from typegraph.utils.sanitizers import sanitize_ts_string
 
@@ -51,7 +50,7 @@ class Policy(Node):
 
 
 def public(name: str = "__public"):
-    return Policy(FunMat("() => true")).named(name)
+    return Policy(PureFunMat("() => true")).named(name)
 
 
 def jwt(role_name: str, field: str = "role"):
@@ -71,4 +70,9 @@ def jwt(role_name: str, field: str = "role"):
                 return value === "{field}";
             }}
         """
-    return Policy(FunMat(src)).named(jwt_name)
+    return Policy(PureFunMat(src)).named(jwt_name)
+
+
+def internal():
+    # https://metatype.atlassian.net/browse/MET-107
+    return Policy(PureFunMat("() => false")).named("internal")

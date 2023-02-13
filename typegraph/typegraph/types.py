@@ -1,35 +1,29 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import get_args
-from typing import get_origin
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Tuple
-from typing import Type
-from typing import Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+    get_args,
+    get_origin,
+)
 
-from attrs import evolve
-from attrs import field
-from attrs import frozen
+from attrs import evolve, field, frozen
 from frozendict import frozendict
-from typegraph.graph.builder import Collector
-from typegraph.graph.nodes import Node
-from typegraph.graph.nodes import NodeProxy
-from typegraph.graph.typegraph import find
-from typegraph.graph.typegraph import TypeGraph
-from typegraph.graph.typegraph import TypegraphContext
-from typegraph.policies import Policy
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
-from typegraph.utils.attrs import always
-from typegraph.utils.attrs import asdict
-from typegraph.utils.attrs import SKIP
 from typing_extensions import Self
 
+from typegraph.graph.builder import Collector
+from typegraph.graph.nodes import Node, NodeProxy
+from typegraph.graph.typegraph import TypeGraph, TypegraphContext, find
+from typegraph.policies import Policy
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils.attrs import SKIP, always, asdict
 
 # if os.environ.get("DEBUG"):
 #     import debugpy
@@ -160,7 +154,7 @@ class typedef(Node):
 
     def within(self, runtime):
         if runtime is None:
-            raise Exception(f"cannot set runtime to None")
+            raise Exception("cannot set runtime to None")
 
         if self.runtime is not None and self.runtime != runtime:
             raise Exception(
@@ -329,7 +323,13 @@ def with_constraints(cls):
                 {key: getattr(self, name) for key, name in constraints.items()}
             )
 
+        def _constraints(self):
+            return remove_none_values(
+                {name[1:]: getattr(self, name) for name in constraints.values()}
+            )
+
         setattr(cls, "constraint_data", constraint_data)
+        setattr(cls, "_constraints", _constraints)
 
     return cls
 
@@ -462,7 +462,9 @@ def enum(variants: List[str]) -> string:
 def validate_struct_props(instance, attribute, props):
     for tpe in props.values():
         if not isinstance(tpe, typedef) and not isinstance(tpe, NodeProxy):
-            raise Exception(f"expected typedef or NodeProxy, got {type(tpe).__name__}")
+            raise Exception(
+                f"expected typedef or NodeProxy, got {type(tpe).__name__}: {props}"
+            )
 
 
 @with_constraints
@@ -635,3 +637,7 @@ def named(name: str, define: Callable[[], typedef]) -> TypeNode:
         return defined
     else:
         return define().named(name)
+
+
+def proxy(name: str) -> NodeProxy:
+    return NodeProxy(TypegraphContext.get_active(), name)

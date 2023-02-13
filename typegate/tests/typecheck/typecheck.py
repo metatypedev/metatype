@@ -1,10 +1,7 @@
 # Copyright Metatype under the Elastic License 2.0.
 
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.runtimes.deno import FunMat
-
+from typegraph import TypeGraph, effects, policies, t
+from typegraph.runtimes.deno import FunMat, PureFunMat
 
 with TypeGraph(
     "typecheck",
@@ -30,14 +27,16 @@ with TypeGraph(
 
     my_policy = policies.public()
 
-    posts = t.func(t.struct(), t.array(post).max(20), FunMat("() => []")).named("posts")
+    posts = t.func(t.struct(), t.array(post).max(20), PureFunMat("() => []")).named(
+        "posts"
+    )
     find_post = t.func(
-        t.struct({"id": t.uuid()}), post.optional(), FunMat("() => null")
+        t.struct({"id": t.uuid()}), post.optional(), PureFunMat("() => null")
     ).named("findPost")
 
     create_post_mat = FunMat(
         "() => ({ title: 'Hello Metatype', content: 'Greeting from Metatype', authorId: 123})",
-        serial=True,
+        effect=effects.create(),
     )
 
     create_post = t.func(

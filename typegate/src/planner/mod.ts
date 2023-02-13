@@ -364,7 +364,7 @@ export class Planner {
 
     const mat = this.tg.materializer(schema.materializer);
     const runtime = this.tg.runtimeReferences[mat.runtime];
-    if (this.operation.operation === "query" && mat.data.serial) {
+    if (this.operation.operation === "query" && mat.effect.effect != null) {
       throw new Error(
         `'${schema.title}' via '${mat.name}' can only be executed in mutation`,
       );

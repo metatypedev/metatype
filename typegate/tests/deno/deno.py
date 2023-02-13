@@ -1,10 +1,5 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.runtimes.deno import DenoRuntime
-from typegraph.runtimes.deno import FunMat
-from typegraph.runtimes.deno import ModuleMat
-
+from typegraph import TypeGraph, effects, policies, t
+from typegraph.runtimes.deno import DenoRuntime, ModuleMat, PureFunMat
 
 with TypeGraph("test-vars") as g:
     public = policies.public()
@@ -24,14 +19,18 @@ with TypeGraph("test-vars") as g:
         add=t.func(
             t.struct({"first": t.number(), "second": t.number()}),
             t.number(),
-            FunMat("({ first, second }) => first + second"),
+            PureFunMat("({ first, second }) => first + second"),
         ).add_policy(public),
         sum=t.func(
-            t.struct({"numbers": t.array(t.integer())}), t.integer(), mod.imp("sum")
+            t.struct({"numbers": t.array(t.integer())}),
+            t.integer(),
+            mod.imp("sum"),
         ).add_policy(public),
-        count=t.func(t.struct(), t.integer().min(0), mod.imp("counter")).add_policy(
-            public
-        ),
+        count=t.func(
+            t.struct(),
+            t.integer().min(0),
+            mod.imp("counter", effect=effects.update()),
+        ).add_policy(public),
         min0=t.func(min_input, t.number(), math0.imp("min")).add_policy(public),
         min1=t.func(min_input, t.number(), math1.imp("min")).add_policy(public),
         log=t.func(

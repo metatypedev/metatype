@@ -25,17 +25,14 @@ test("prisma migrations", async (t) => {
   await t.should("drop schema and remove migrations", async () => {
     await gql`
       mutation a {
-        executeRaw(
-          query: "DROP SCHEMA IF EXISTS test CASCADE"
-          parameters: "[]"
-        )
+        dropSchema
       }
     `
       .withHeaders({
         "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
       })
       .expectData({
-        executeRaw: 0,
+        dropSchema: 0,
       })
       .on(e);
 
@@ -191,14 +188,11 @@ test("prisma migrations", async (t) => {
     // TODO use reset mutation on prisma_migrations
     await gql`
         mutation a {
-          executeRaw(
-            query: "DROP SCHEMA IF EXISTS test CASCADE"
-            parameters: "[]"
-          )
+          dropSchema
         }
       `
       .expectData({
-        executeRaw: 0,
+        dropSchema: 0,
       })
       .on(e);
 

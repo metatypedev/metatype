@@ -3,7 +3,7 @@
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/rpc.rs
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/api.rs
 
-use anyhow::Result;
+use anyhow::{anyhow, Context, Result};
 use convert_case::{Case, Casing};
 use migration_core::json_rpc::types::{
     ApplyMigrationsInput, CreateMigrationInput, DiffParams, DiffTarget, EvaluateDataLossInput,
@@ -57,7 +57,7 @@ pub(super) async fn apply(inp: super::PrismaApplyInp) -> Result<super::PrismaApp
 
     let reset_reason: Option<String> = if let DevAction::Reset(reset) = res.action {
         if inp.reset_database {
-            api.reset().await.unwrap();
+            api.reset().await.context("Reset database")?;
             Some(reset.reason)
         } else {
             return Ok(super::PrismaApplyOut::ResetRequired {
@@ -88,7 +88,7 @@ pub(super) async fn create(input: super::PrismaCreateInp) -> Result<super::Prism
 
     let migrations = MigrationsFolder::from(input.migrations)?;
 
-    let api = migration_api(Some(input.datasource.clone()), None).unwrap();
+    let api = migration_api(Some(input.datasource.clone()), None).context("Get migration api")?;
 
     let res = api
         .create_migration(CreateMigrationInput {
@@ -98,9 +98,11 @@ pub(super) async fn create(input: super::PrismaCreateInp) -> Result<super::Prism
             prisma_schema: format!("{}{}", input.datasource, input.datamodel),
         })
         .await
-        .unwrap();
+        .context("Create migration")?;
 
-    let created_migration_name = res.generated_migration_name.unwrap();
+    let created_migration_name = res
+        .generated_migration_name
+        .ok_or_else(|| anyhow!("No migration generated"))?;
 
     let applied_migrations = if input.apply {
         let res = api
@@ -108,7 +110,7 @@ pub(super) async fn create(input: super::PrismaCreateInp) -> Result<super::Prism
                 migrations_directory_path: migrations.to_string(),
             })
             .await
-            .unwrap();
+            .context("Apply migrations")?;
 
         res.applied_migration_names
     } else {

@@ -2,27 +2,25 @@
 sidebar_position: 1
 ---
 
-import PaginatorNavLink from "@theme/PaginatorNavLink";
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
-import DocButton from "@site/src/components/DocButton";
 import Newsletter from "@site/src/components/Newsletter";
-import Metatype from "../../shared/metatype.mdx";
+import Metatype from "../../shared/metatype-intro.mdx";
 
 # Getting started
 
 <Metatype />
 
-:::info Looking first for some explanation?
+:::tip Looking first for some explanation?
 Head over to the [conceptual overview](/docs/concepts/overview) to understand the components.
 :::
 
 ## Introduction
 
 In this tutorial, you will write your first typegraph and deploy it on a typegate node using the Meta CLI.
-You will design some API blocks for a chat-based app where users can exchange messages and share products.
+You will design some API blocks for a chat-based app where users can exchange messages.
 
-Running the ecosystem requires Python >= 3.8 which should be available on most the recent OS.
+Running the ecosystem requires Python >= 3.8 which should be available on most of the recent OS.
 
 <Tabs>
   <TabItem value="linux" label="Debian-based Linux" default>
@@ -48,7 +46,7 @@ Download the [installer](https://www.python.org/downloads/windows/) from the off
 </Tabs>
 
 :::info No previous Python knowledge required.
-While the definition of typegraphs is currently done in Python, it doesn't require previous experience in Python.
+While the definition of typegraphs is currently done in Python, it doesn't require previous experience writing Python.
 The tutorial covers all the basics and doesn't use advanced features of the language.
 :::
 
@@ -88,14 +86,14 @@ python3 -c 'import typegraph; print(typegraph.version)'
 
 ### 3. `typegate` node
 
-Finally download and launch a docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
+Finally download and launch the docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/examples/docker-compose.yml -o docker-compose.yml
-docker compose up
+docker compose up --detach
 
 curl -X POST http://localhost:7890/typegate \
-  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQ=' \
+  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQ=' \ # base64 encoded "admin:password"
   --data '{"query":"query list { typegraphs { name  }}"}'
 ```
 

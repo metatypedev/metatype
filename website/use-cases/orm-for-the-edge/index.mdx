@@ -1,0 +1,29 @@
+import TGExample from "@site/src/components/TGExample";
+
+# ORM for the edge
+
+Edge computing platforms like [Deno Deploy](https://deno.com/deploy) and [Cloudflare Workers](https://workers.cloudflare.com) can provide a convenient and scalable way for developers to deploy their applications and APIs near the end-users, improving performance, reducing latency, and enhancing the user experience. Due to the resource constraints and compatibility issues - legacy libraries or specific drivers - of those platforms, running an Object-Relational Mapping (ORM) library might not be as easy as in normal deployments.
+
+## Study case
+
+<div className="float-right p-8">
+
+![](image.drawio.svg)
+
+</div>
+
+Suppose you are building a mobile app that allows users to order food from local restaurants. To provide a low-latency user experience, you want to run your server-side logic as close as possible to your users.
+
+You can utilize a functions as a service (FaaS) platform such as Deno Deploy or Cloudflare Workers, which allow you to run your functions on multiple edge servers distributed across multiple locations. For database interactions, you may need a relay or a compatible library to remains compatible with the platform and be able to use an efficient interface like ORMs provide.
+
+When a user makes a request to view the menu or place an order, the corresponding function running on the edge will make a request to the ORM to retrieve or modify the relevant data in the database. By running your server-side logic on edge servers, you can reduce the latency for your users and improve their overall experience.
+
+## Suggested solution
+
+Metatype can act as a lightweight relay, simplifying database interactions via HTTP/GraphQL requests, and allowing you to interact with a database - which could be in the cloud or on an edge device - in a database-agnostic manner similar to an ORM.
+
+<TGExample
+  typegraph="orm-for-the-edge"
+  python={require("./typegraph.py")}
+  query={require("./query.graphql")}
+/>

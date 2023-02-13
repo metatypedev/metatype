@@ -1,1 +1,350 @@
-{"$id":"https://metatype.dev/specs/0.0.1.json","types":[{"type":"object","title":"typegate","runtime":0,"policies":[],"config":{},"properties":{"typegraphs":1,"typegraph":7,"addTypegraph":15,"removeTypegraph":19},"required":[]},{"type":"function","title":"function_10","runtime":1,"policies":[0],"config":{},"input":2,"output":3,"materializer":1,"rate_weight":null,"rate_calls":true},{"type":"object","title":"object_8","runtime":1,"policies":[],"config":{},"properties":{},"required":[]},{"type":"array","title":"array_9","runtime":1,"policies":[],"config":{},"items":4},{"type":"object","title":"typegraph","runtime":1,"policies":[],"config":{},"properties":{"name":5,"url":6},"required":[]},{"type":"string","title":"string_4","runtime":1,"policies":[],"config":{}},{"type":"string","title":"string_5","runtime":1,"policies":[],"config":{},"format":"uri"},{"type":"function","title":"function_14","runtime":1,"policies":[0],"config":{},"input":8,"output":10,"materializer":3,"rate_weight":null,"rate_calls":true},{"type":"object","title":"object_12","runtime":1,"policies":[],"config":{},"properties":{"name":9},"required":[]},{"type":"string","title":"string_11","runtime":1,"policies":[],"config":{}},{"type":"optional","title":"optional_13","runtime":1,"policies":[],"config":{},"item":11,"default_value":null},{"type":"object","title":"typegraph","runtime":1,"policies":[],"config":{},"properties":{"name":5,"url":6,"serialized":12},"required":[]},{"type":"function","title":"function_3","runtime":1,"policies":[],"config":{},"input":13,"output":14,"materializer":2,"rate_weight":null,"rate_calls":false},{"type":"object","title":"object_2","runtime":1,"policies":[],"config":{},"properties":{},"required":[]},{"type":"string","title":"string_1","runtime":1,"policies":[],"config":{}},{"type":"function","title":"function_18","runtime":1,"policies":[0],"config":{},"input":16,"output":18,"materializer":4,"rate_weight":null,"rate_calls":true},{"type":"object","title":"object_16","runtime":1,"policies":[],"config":{},"properties":{"fromString":17},"required":[]},{"type":"string","title":"string_15","runtime":1,"policies":[],"config":{}},{"type":"optional","title":"optional_17","runtime":1,"policies":[],"config":{},"item":4,"default_value":null},{"type":"function","title":"function_22","runtime":1,"policies":[0],"config":{},"input":20,"output":22,"materializer":5,"rate_weight":null,"rate_calls":true},{"type":"object","title":"object_20","runtime":1,"policies":[],"config":{},"properties":{"name":21},"required":[]},{"type":"string","title":"string_19","runtime":1,"policies":[],"config":{}},{"type":"integer","title":"integer_21","runtime":1,"policies":[],"config":{}}],"materializers":[{"name":"function","runtime":0,"data":{"script":"var _my_lambda=(_args,{context})=>context.user===\"admin\";","serial":false}},{"name":"typegraphs","runtime":1,"data":{"serial":false}},{"name":"serializedTypegraph","runtime":1,"data":{"serial":false}},{"name":"typegraph","runtime":1,"data":{"serial":false}},{"name":"addTypegraph","runtime":1,"data":{"serial":true}},{"name":"removeTypegraph","runtime":1,"data":{"serial":true}}],"runtimes":[{"name":"deno","data":{"worker":"default","permissions":{}}},{"name":"typegate","data":{}}],"policies":[{"name":"admin_only","materializer":0}],"meta":{"secrets":[],"cors":{"allow_origin":["*"],"allow_headers":["*"],"expose_headers":[],"allow_methods":[],"allow_credentials":true,"max_age":null},"auths":[{"name":"basic","protocol":"basic","auth_data":{"users":["admin"]}}],"rate":{"window_limit":128,"window_sec":60,"query_limit":8,"context_identifier":"user","local_excess":5},"version":"0.0.1"}}
+{
+  "$id": "https://metatype.dev/specs/0.0.1.json",
+  "types": [
+    {
+      "type": "object",
+      "title": "typegate",
+      "runtime": 0,
+      "policies": [],
+      "config": {},
+      "properties": {
+        "typegraphs": 1,
+        "typegraph": 7,
+        "addTypegraph": 15,
+        "removeTypegraph": 19
+      },
+      "required": []
+    },
+    {
+      "type": "function",
+      "title": "function_10",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "input": 2,
+      "output": 3,
+      "materializer": 1,
+      "rate_weight": null,
+      "rate_calls": true
+    },
+    {
+      "type": "object",
+      "title": "object_8",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "properties": {},
+      "required": []
+    },
+    {
+      "type": "array",
+      "title": "array_9",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "items": 4
+    },
+    {
+      "type": "object",
+      "title": "typegraph",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "properties": {
+        "name": 5,
+        "url": 6
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_4",
+      "runtime": 1,
+      "policies": [],
+      "config": {}
+    },
+    {
+      "type": "string",
+      "title": "string_5",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "format": "uri"
+    },
+    {
+      "type": "function",
+      "title": "function_14",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "input": 8,
+      "output": 10,
+      "materializer": 3,
+      "rate_weight": null,
+      "rate_calls": true
+    },
+    {
+      "type": "object",
+      "title": "object_12",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "properties": {
+        "name": 9
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_11",
+      "runtime": 1,
+      "policies": [],
+      "config": {}
+    },
+    {
+      "type": "optional",
+      "title": "optional_13",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 11,
+      "default_value": null
+    },
+    {
+      "type": "object",
+      "title": "typegraph",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "properties": {
+        "name": 5,
+        "url": 6,
+        "serialized": 12
+      },
+      "required": []
+    },
+    {
+      "type": "function",
+      "title": "function_3",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "input": 13,
+      "output": 14,
+      "materializer": 2,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_2",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "properties": {},
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_1",
+      "runtime": 1,
+      "policies": [],
+      "config": {}
+    },
+    {
+      "type": "function",
+      "title": "function_18",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "input": 16,
+      "output": 18,
+      "materializer": 4,
+      "rate_weight": null,
+      "rate_calls": true
+    },
+    {
+      "type": "object",
+      "title": "object_16",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "properties": {
+        "fromString": 17
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_15",
+      "runtime": 1,
+      "policies": [],
+      "config": {}
+    },
+    {
+      "type": "optional",
+      "title": "optional_17",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "item": 4,
+      "default_value": null
+    },
+    {
+      "type": "function",
+      "title": "function_22",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "input": 20,
+      "output": 22,
+      "materializer": 5,
+      "rate_weight": null,
+      "rate_calls": true
+    },
+    {
+      "type": "object",
+      "title": "object_20",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "properties": {
+        "name": 21
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_19",
+      "runtime": 1,
+      "policies": [],
+      "config": {}
+    },
+    {
+      "type": "integer",
+      "title": "integer_21",
+      "runtime": 1,
+      "policies": [],
+      "config": {}
+    }
+  ],
+  "materializers": [
+    {
+      "name": "function",
+      "runtime": 0,
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {
+        "script": "var _my_lambda=(_args,{context})=>context.user===\"admin\";"
+      }
+    },
+    {
+      "name": "typegraphs",
+      "runtime": 1,
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
+    },
+    {
+      "name": "serializedTypegraph",
+      "runtime": 1,
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
+    },
+    {
+      "name": "typegraph",
+      "runtime": 1,
+      "effect": {
+        "effect": null,
+        "idempotent": true
+      },
+      "data": {}
+    },
+    {
+      "name": "addTypegraph",
+      "runtime": 1,
+      "effect": {
+        "effect": "create",
+        "idempotent": false
+      },
+      "data": {}
+    },
+    {
+      "name": "removeTypegraph",
+      "runtime": 1,
+      "effect": {
+        "effect": "delete",
+        "idempotent": true
+      },
+      "data": {}
+    }
+  ],
+  "runtimes": [
+    {
+      "name": "deno",
+      "data": {
+        "worker": "default",
+        "permissions": {}
+      }
+    },
+    {
+      "name": "typegate",
+      "data": {}
+    }
+  ],
+  "policies": [
+    {
+      "name": "admin_only",
+      "materializer": 0
+    }
+  ],
+  "meta": {
+    "secrets": [],
+    "cors": {
+      "allow_origin": [
+        "*"
+      ],
+      "allow_headers": [
+        "*"
+      ],
+      "expose_headers": [],
+      "allow_methods": [],
+      "allow_credentials": true,
+      "max_age": null
+    },
+    "auths": [
+      {
+        "name": "basic",
+        "protocol": "basic",
+        "auth_data": {
+          "users": [
+            "admin"
+          ]
+        }
+      }
+    ],
+    "rate": {
+      "window_limit": 128,
+      "window_sec": 60,
+      "query_limit": 8,
+      "context_identifier": "user",
+      "local_excess": 5
+    },
+    "version": "0.0.1"
+  }
+}

@@ -1,6 +1,4 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.runtimes.graphql import GraphQLRuntime
 
 with TypeGraph("graphql") as g:
@@ -26,10 +24,11 @@ with TypeGraph("graphql") as g:
                         "name": t.string().optional(),
                         "email": t.string().optional(),
                     }
-                ),  # TODO min_props: 1
+                ).min(1),
             }
         ),
         g("User"),
+        effect=effects.update(idempotent=True),
     ).add_policy(policies.public())
 
     g.expose(user=user_by_id, updateUser=update_user)

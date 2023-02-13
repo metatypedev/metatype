@@ -4,9 +4,9 @@ import inspect
 import re
 
 import black
-from box import Box
 import httpx
 import redbaron
+from box import Box
 
 
 def camel_to_snake(name):
@@ -19,7 +19,6 @@ def upper_first(s):
 
 
 def typify(cursor, filter_read_only=False, suffix="", opt=False):
-
     if (
         not opt
         and "description" in cursor
@@ -31,21 +30,21 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
         return f'g("{cursor["$ref"]}{suffix}")'
 
     if cursor.type == "string":
-        return f"t.string()"
+        return "t.string()"
 
     if cursor.type == "boolean":
-        return f"t.boolean()"
+        return "t.boolean()"
 
     if cursor.type == "integer":
         # cursor.format = 'int32'
-        return f"t.integer()"
+        return "t.integer()"
 
     if cursor.type == "number":
         # cursor.format = 'double'
-        return f"t.float()"
+        return "t.float()"
 
     if cursor.type == "any":
-        return f"t.any()"
+        return "t.any()"
 
     if cursor.type == "array":
         return f't.array({typify(cursor["items"], filter_read_only, suffix)})'
@@ -54,7 +53,7 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
         ret = "t.struct({"
 
         fields = []
-        for f, v in cursor.properties.items():
+        for f, v in cursor.get("properties", {}).items():
             if filter_read_only or "readOnly" not in v or not v.readOnly:
                 fields.append(f'"{f}": {typify(v, filter_read_only, suffix)}')
 
@@ -63,12 +62,28 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
             fields.append('"_": t.optional(t.any())')
 
         ret += ",".join(fields)
+        ret += "}})"
+        if "id" in cursor:
+            ref = f"{cursor.id}{suffix}"
+            ret += f'.named("{ref}")'
 
-        ref = f"{cursor.id}{suffix}"
-        ret += f'}}).named("{ref}")'
         return ret
 
     raise Exception(f"Unexpect type {cursor}")
+
+
+def get_effect(method):
+    if method == "GET":
+        return "effects.none()"
+    if method == "POST":
+        return "effects.create()"
+    if method == "PUT":
+        return "effects.upsert()"
+    if method == "DELETE":
+        return "effects.delete()"
+    if method == "PATCH":
+        return "effects.update()"
+    raise Exception(f"Unsupported HTTP method '{method}'")
 
 
 def flatten_calls(cursor, hierarchy="", url_prefix=""):
@@ -83,7 +98,9 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
 
             out = typify(method.response, suffix="Out")
 
-            ret += f'{hierarchy}{upper_first(methodName)}=t.func(t.struct({{{inp}}}),{out},googleapis.RestMat("{method.httpMethod}", "{url_prefix}{method.path}")).named("{method.id}"),\n'
+            effect = get_effect(method.httpMethod)
+            mat = f'googleapis.RestMat("{method.httpMethod}", "{url_prefix}{method.path}", effect={effect})'
+            ret += f'{hierarchy}{upper_first(methodName)}=t.func(t.struct({{{inp}}}), {out}, {mat}).named("{method.id}"),\n'
 
     if "resources" in cursor:
         for resourceName, resource in cursor.resources.items():
@@ -137,6 +154,7 @@ def import_googleapis(uri: str, gen: bool) -> None:
         ["typegraph.providers.google.runtimes", "googleapis"],
         ["typegraph", "t"],
         ["typegraph", "TypeGraph"],
+        ["typegraph", "effects"],
     ]
 
     importer = code.find(

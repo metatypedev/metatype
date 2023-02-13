@@ -1,10 +1,7 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.graphql import GraphQLRuntime
 
 with TypeGraph("mini") as g:
-
     remote = GraphQLRuntime("https://graphqlzero.almansi.me/api")
 
     post = t.struct(

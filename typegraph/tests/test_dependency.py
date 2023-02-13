@@ -1,15 +1,14 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import frozendict
-from typegraph import t
-from typegraph import TypeGraph
+
+from typegraph import TypeGraph, t
 from typegraph.graph.models import Cors
 from typegraph.runtimes import deno
 
 
 class TestDependency:
     def test_simple_dep(self, overridable) -> None:
-
         with TypeGraph("single_runtime") as g:
             a = t.integer().named("a")
             res = t.struct(
@@ -23,15 +22,17 @@ class TestDependency:
                             }
                         ).named("deps"),
                         t.integer(),
-                        deno.FunMat("x2"),
+                        deno.PureFunMat("x2"),
                     ).named("dep_a"),
                     "a": a,
                 }
             ).named("res")
             g.expose(
-                test=t.func(t.struct({}).named("no_arg"), res, deno.FunMat("x2")).named(
-                    "f"
-                )
+                test=t.func(
+                    t.struct({}).named("no_arg"),
+                    res,
+                    deno.PureFunMat("x2"),
+                ).named("f")
             )
 
         assert g.build() == overridable(
@@ -117,7 +118,8 @@ class TestDependency:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "data": {"script": "var _my_lambda = x2;", "serial": False},
+                        "effect": {"effect": None, "idempotent": True},
+                        "data": {"script": "var _my_lambda = x2;"},
                     }
                 ],
                 "policies": [],

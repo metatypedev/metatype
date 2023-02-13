@@ -6,6 +6,11 @@ import { FromVars, GraphQLRuntime } from "./graphql.ts";
 import { ResolverError } from "../errors.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { envOrFail, nativeResult } from "../utils.ts";
+import { ComputeStage } from "../engine.ts";
+import * as ast from "graphql/ast";
+import { ComputeArg } from "../planner/args.ts";
+import { buildRawQuery } from "./utils/graphql_inline_vars.ts";
+import { Materializer } from "../types/typegraph.ts";
 
 export const makeDatasource = (uri: string) => {
   const scheme = new URL(uri).protocol.slice(0, -1);
@@ -16,6 +21,18 @@ export const makeDatasource = (uri: string) => {
   }
   `;
 };
+
+interface PrismaOperationMat extends Materializer {
+  name: "prisma_operation";
+  data: {
+    operation: string;
+    table: string;
+  };
+}
+
+function isPrismaOperationMat(mat: Materializer): mat is PrismaOperationMat {
+  return mat.name === "prisma_operation";
+}
 
 export class PrismaRuntime extends GraphQLRuntime {
   datamodel: string;
@@ -109,5 +126,46 @@ export class PrismaRuntime extends GraphQLRuntime {
       }
       return path.reduce((r, field) => r[field], res.data);
     };
+  }
+
+  raw(
+    materializer: PrismaOperationMat,
+    args: Record<string, ComputeArg>,
+  ): Resolver {
+    const operationType = materializer?.effect.effect != null
+      ? ast.OperationTypeNode.MUTATION
+      : ast.OperationTypeNode.QUERY;
+    const query: FromVars<string> = (variables) =>
+      `${operationType} { ${
+        buildRawQuery(
+          materializer.data.operation as "queryRaw" | "executeRaw",
+          materializer.data.table,
+          args,
+          variables,
+        )
+      } }`;
+    return this.execute(query, [materializer.data.operation]);
+  }
+
+  materialize(
+    stage: ComputeStage,
+    waitlist: ComputeStage[],
+    verbose: boolean,
+  ): ComputeStage[] {
+    const { materializer: mat } = stage.props;
+
+    if (mat && isPrismaOperationMat(mat)) {
+      const { operation } = mat.data;
+      if (operation === "queryRaw" || operation === "executeRaw") {
+        return [stage.withResolver(
+          this.raw(
+            mat,
+            stage.props.args,
+          ),
+        )];
+      }
+    }
+
+    return super.materialize(stage, waitlist, verbose);
   }
 }

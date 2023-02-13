@@ -1,6 +1,4 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.graph.auth import oauth2
 from typegraph.runtimes.deno import ModuleMat
 from typegraph.runtimes.http import HTTPRuntime
@@ -22,7 +20,7 @@ def send_in_blue_send(subject, frm, to, api_key):
             }
         ),
         t.struct({"success": t.boolean(), "error": t.string().optional()}),
-        f.imp("default"),
+        f.imp("default", effect=effects.create()),
     ).rate(weight=2)
 
 
@@ -31,7 +29,6 @@ with TypeGraph(
     auths=[oauth2.github_auth],
     rate=TypeGraph.Rate(window_limit=2000, window_sec=60, query_limit=200),
 ) as g:
-
     all = policies.public()
     remote = HTTPRuntime("https://api.github.com")
 

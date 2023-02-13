@@ -61,20 +61,13 @@ test("Typename in random runtime", async (t) => {
 test("Typename in prisma runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py");
 
-  function sql(q: string, res: any = 0) {
-    return gql`
-      mutation a($sql: String) {
-        executeRaw(
-          query: $sql
-          parameters: "[]"
-        )
+  await gql`
+      mutation a {
+        dropSchema
       }
     `
-      .withVars({ sql: q })
-      .expectData({ executeRaw: res });
-  }
-
-  await sql("DROP SCHEMA IF EXISTS test CASCADE").on(e);
+    .expectData({ dropSchema: 0 })
+    .on(e);
   await recreateMigrations(e);
 
   await t.should("allow querying typename in an object", async () => {

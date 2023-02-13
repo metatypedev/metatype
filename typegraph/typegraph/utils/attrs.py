@@ -1,15 +1,17 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import attrs
-from attrs import Attribute
-from attrs import field
-
+from attrs import Attribute, field
 
 SKIP = "asdict_skip"
 
 
 def always(value):
     return field(default=value, init=False)
+
+
+def required():
+    return field(init=True, kw_only=True)
 
 
 def asdict(inst):

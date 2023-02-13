@@ -2,20 +2,11 @@
 
 import inspect
 from pathlib import Path
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
 
 from typegraph.graph.builder import Collector
-from typegraph.graph.models import Auth
-from typegraph.graph.models import Cors
-from typegraph.graph.models import Rate
-from typegraph.graph.nodes import Node
-from typegraph.graph.nodes import NodeProxy
+from typegraph.graph.models import Auth, Cors, Rate
+from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.runtimes.deno import DenoRuntime
 
 if TYPE_CHECKING:
@@ -82,22 +73,26 @@ class TypeGraph:
     def expose(self, **ops: Union["t.func", "t.struct"]):
         from typegraph import types as t
 
+        default_policy = ops.pop("default_policy", [])
+
         # allow to expose only functions or structures (namespaces)
         for name, op in ops.items():
-            if isinstance(op, t.func) or isinstance(op, t.struct):
-                continue
+            if not isinstance(op, t.func) and not isinstance(op, t.struct):
+                raise Exception(
+                    f"cannot expose type {op.title} under {name}, requires a function or structure (namespace), got a {op.type}"
+                )
 
-            raise Exception(
-                f"cannot expose type {op.title} under {name}, requires a function or structure (namespace), got a {op.type}"
-            )
+            if name in self.exposed:
+                raise Exception(f"operation {name} already exposed")
 
-        self.exposed.update(ops)
+            self.exposed[name] = op.add_policy(*default_policy)
+
         return self
 
     def root(self) -> "t.struct":
         from typegraph import types as t
 
-        def assert_non_serial_materializers(
+        def assert_no_effect_materializers(
             tpe: Union[t.typedef, NodeProxy], history: Set[t.typedef] = set()
         ):
             if isinstance(tpe, NodeProxy):
@@ -111,14 +106,14 @@ class TypeGraph:
                     continue
 
                 if isinstance(e, t.func):
-                    if e.mat.serial:
+                    if e.mat.effect.effect is not None:
                         raise Exception(
-                            f"expected materializer to be non-serial ({e.mat})"
+                            f"expected materializer to have no effect: ({e.mat})"
                         )
-                    assert_non_serial_materializers(e.out)
+                    assert_no_effect_materializers(e.out)
 
                 else:
-                    assert_non_serial_materializers(e)
+                    assert_no_effect_materializers(e)
 
         with self:
             root = t.struct(self.exposed).named(self.name)
@@ -139,6 +134,9 @@ class TypeGraph:
         return collector
 
     def build(self):
+        if self.name.startswith("__"):
+            raise Exception(f"cannot build typegraph with reserved name '{self.name}'")
+
         collector = self.collect_nodes()
 
         ret = {
@@ -174,7 +172,7 @@ class TypegraphContext:
             return None
 
     @classmethod
-    def get_active(cls) -> TypeGraph:
+    def get_active(cls) -> Optional[TypeGraph]:
         try:
             return cls.typegraphs[-1]
         except IndexError:

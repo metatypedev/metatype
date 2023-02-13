@@ -1,22 +1,21 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import inspect
+import json
+import pathlib
 import re
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
+from sys import stderr
+from typing import Callable, Dict, List, Optional, Tuple
 from urllib.parse import urljoin
 
-from attrs import define
-import black
-from box import Box
-from deepmerge import always_merger
 import httpx
-from redbaron import RedBaron
 import semver
 import yaml
+from box import Box
 
+from typegraph import t
+from typegraph.importers.base.importer import Importer
+from typegraph.importers.base.typify import TypifyMat
+from typegraph.utils.jsonschema import TypedefFromJsonSchema
 
 MIME_TYPES = Box(
     {
@@ -27,191 +26,223 @@ MIME_TYPES = Box(
 )
 
 
-def merge_all(items: List[dict]):
-    ret = {}
-    for item in items:
-        print(f"MERGE: {item} into {ret}")
-        always_merger.merge(ret, item)
-        print(f"MERGED: {ret}")
-    return ret
+def ref_to_name(ref: str) -> str:
+    match = re.match(r"^#/components/schemas/(\w+)$", ref)
+    if not match:
+        raise Exception(f"Could not resolve $ref '{ref}'")
+    return match.group(1)
 
 
-@define
-class Input:
-    type: str
-    kwargs: dict
+class OpenApiImporter(Importer):
+    base_url: str
+    specification: Box
+    additional_types: List[str]
+    typedef_from_jsonschema: TypedefFromJsonSchema
 
-
-class Document:
-    def __init__(self, uri):
-        self.uri = uri
-        self.root = Document.load(uri)
-        self.additional_types = []
-
-    def load(uri: str):
-        res = httpx.get(uri)
-        if res.headers.get("content-type").find("yaml") >= 0 or re.search(
-            r"\.yaml$", uri
-        ):
-            return Box(yaml.safe_load(res.text))
-        # suppose it is JSON
-        return Box(res.json())
-
-    def merge_schemas(self, schemas: List[Box]):
-        return Box(merge_all([self.resolve_ref(s) for s in schemas]))
-
-    def typify(
+    def __init__(
         self,
-        schema: Box,
-        name: Optional[str] = None,
-        write_name: bool = False,
-        opt: bool = False,
-        prop_of: Optional[Tuple[str, str]] = None,
+        name: str,
+        *,
+        url: Optional[str] = None,
+        file: Optional[str] = None,
+        base_url: Optional[str] = None,
+        renames: Dict[str, str] = {},
+        keep_names: List[str] = [],
     ):
-        if opt:
-            return f"t.optional({self.typify(schema, name, prop_of = prop_of)})"
+        """Requires either only `url` or `file` and `base_url`"""
 
-        if name is not None and write_name:
-            return f'{self.typify(schema, name)}.named("{name}")'
+        super().__init__(name, renames=renames, keep_names=keep_names)
 
-        if "$ref" in schema:
-            match = re.match(r"^#/components/schemas/(\w+)$", schema["$ref"])
-            if match:
-                return f'g("{match.group(1)}")'
-            else:  # unlikely??
-                return self.typify(self.resolve_ref(schema))
+        self.name = name
+        self.additiona_types = []
 
-        if "allOf" in schema:
-            return self.typify(self.merge_schemas(schema.allOf))
+        if url is not None:
+            assert file is None and base_url is None
 
-        if "type" not in schema:
-            print(f"SCHEMA: {schema}")
-            raise Exception("Unsupported schema")
+            res = httpx.get(url)
+            if res.headers.get("content-type").find("yaml") >= 0 or re.search(
+                r"\.yaml$", url
+            ):
+                self.specification = Box(yaml.safe_load(res.text))
+            else:  # suppose it is JSON
+                self.specification = Box(res.json())
 
-        if schema.type == "integer":
-            return "t.integer()"
+            self.base_url = url
 
-        if schema.type == "number":
-            # formats??
-            return "t.float()"
+        else:
+            assert file is not None and base_url is not None
+            self.base_url = base_url
 
-        if schema.type == "string":
-            # TODO: formats: byte, binary, date, date-time, password
-            return "t.string()"
+            path = pathlib.Path(file)
+            with open(path) as f:
+                if path.suffix == ".json":
+                    self.specification = Box(json.loads(f.read()))
+                elif path.suffix in [".yaml", ".yml"]:
+                    self.specification = Box(yaml.safe_load(f.read()))
+                else:
+                    raise Exception(
+                        f"Expected a JSON or a YAML file, but got a file with extension '{path.suffix}'"
+                    )
 
-        if schema.type == "boolean":
-            return "t.boolean()"
+        self.typedef_from_jsonschema = TypedefFromJsonSchema(
+            ref_to_name, lambda ref: self.resolve_ref(ref)
+        )
 
-        if schema.type == "array":
-            return f't.array({self.typify(schema["items"])})'
+        self.imports.add(("typegraph.runtimes.http", "HTTPRuntime"))
 
-        if schema.type == "object":
-            if prop_of is not None:
-                type_name = f"{prop_of[0]}__{prop_of[1]}"
-                self.additional_types.append((type_name, schema))
-                return f'g("{type_name}")'
+        if "servers" in self.specification:
+            server_url = self.specification.servers[0].url
+        else:
+            server_url = "/"
+        url = urljoin(self.base_url, server_url)
+        self.headers.append(f"{name} = HTTPRuntime({repr(url)})")
 
-            ret = "t.struct({"
-            required = schema.required if "required" in schema else []
-            if "properties" in schema:
-                for prop_name, prop_schema in schema.properties.items():
-                    ret += f'"{prop_name}": {self.typify(prop_schema, opt = not prop_name in required, prop_of = (name, prop_name))},'
-            ret += "})"
-            return ret
-
-        raise f'Type "{schema.type}" not supported'
-
-    def gen_schema_defs(self, schemas: Box):
-        cg = ""
-        for name, schema in schemas.items():
-            cg += f"    {self.typify(schema, name, write_name = True)}\n"
-            while len(self.additional_types) > 0:
-                name, schema = self.additional_types.pop(0)
-                cg += f"    {self.typify(schema, name, write_name = True)}\n"
-        return cg
-
-    def resolve_ref(self, obj: Box, export_name=False):
+    def resolve_ref(self, obj: Box):
         if "$ref" not in obj:
-            if export_name:
-                return obj, None
             return obj
 
         match = re.match(r"#/components/([^/]+)/([^/]+)$", obj["$ref"])
         if not match:
             raise Exception(f'Unsupported (external?) reference "{obj["$ref"]}"')
-        if export_name:
-            return (
-                self.root.components[match.group(1)][match.group(2)],
-                match.group(2) if match.group(1) == "schemas" else None,
-            )
-        return self.root.components[match.group(1)][match.group(2)]
+        return self.specification.components[match.group(1)][match.group(2)]
 
-    def gen_functions(self):
-        fns = []
-        for path in self.root.paths:
-            fns += Path(self, path).gen_functions()
-        return dict(fns)
-
-    def codegen(self):
-        ver = semver.VersionInfo.parse(self.root.openapi)
+    def generate(self):
+        ver = semver.VersionInfo.parse(self.specification.openapi)
         assert ver.major == 3
         assert ver.minor <= 0
 
-        self.root.info
-        self.root.paths
+        self.specification.info
+        self.specification.paths
 
-        if "servers" in self.root:
-            server_url = self.root.servers[0].url
-        else:
-            server_url = "/"
+        schemas = self.specification.get("components", {}).get("schemas", [])
+        for name, schema in schemas.items():
+            self.add_schema(name, schema)
 
-        url = urljoin(self.uri, server_url)
+        with self as imp:
+            for path in self.specification.paths:
+                for name, fn in self.gen_functions(path).items():
+                    imp.expose(name, fn)
 
-        cg = ""
-        cg += f'    remote = HTTPRuntime("{url}")\n'
-        if "components" in self.root:
-            if "schemas" in self.root.components:
-                cg += self.gen_schema_defs(self.root.components.schemas)
-        cg += f"    g.expose({as_kwargs(self.gen_functions())})"
-        return cg
+    def add_schema(self, name: str, schema: Box):
+        with self as imp:
+            imp(name, self.typedef_from_jsonschema(schema))
+
+    def gen_functions(self, path: str):
+        return Path(self, path).generate_functions()
+
+
+METHODS = (
+    "get",
+    "put",
+    "post",
+    "delete",
+    "options",
+    "head",
+    "patch",
+    "trace",
+)
+
+
+def get_success_code(responses: Box) -> Optional[str]:
+    if "200" in responses:
+        return "200"
+    for status in responses:
+        if re.match(r"^2\d\d$", status):
+            return status
+    # TODO what if there are more than one 2xx codes
+
+    if "default" in responses:
+        return "default"
+
+    return None
 
 
 class Path:
+    path: str
+    spec: Box
+    runtime: str
+    typedef_from_jsonschema: TypedefFromJsonSchema
+    resolve_ref: Callable[[str], str]
 
-    methods = (
-        "get",
-        "put",
-        "post",
-        "delete",
-        "options",
-        "head",
-        "patch",
-        "trace",
-    )
-
-    def __init__(self, doc: Document, path: str):
-        self.doc = doc
+    def __init__(self, importer: OpenApiImporter, path: str):
         self.path = path
-        self.path_obj = doc.resolve_ref(doc.root.paths[path])
+        self.spec = importer.resolve_ref(importer.specification.paths[path])
+        self.runtime = importer.name
+        self.typedef_from_jsonschema = importer.typedef_from_jsonschema
+        self.resolve_ref = lambda ref: importer.resolve_ref(ref)
 
-    def input_type(self, method: str) -> Input:
-        props = {}
+    def generate_functions(self):
+        ret = {}
+        for method in self.spec:
+            if method in METHODS:
+                try:
+                    name, fn = self.generate_function(method)
+                    ret[name] = fn
+                except Exception as e:
+                    name = self.spec[method].operationId
+                    print(
+                        f"Warning: Generation of function '{name}' skipped: {e}",
+                        file=stderr,
+                    )
+            else:
+                print(
+                    f"Warning: Unsupported method {method}: generation skipped",
+                    file=stderr,
+                )
+        return ret
+
+    def generate_function(self, method: str) -> Tuple[str, t.func]:
+        spec = self.spec[method]
+        inp_type, inp_config = self.gen_input_type(spec)
+        success_code = get_success_code(spec.responses)
+
+        if success_code is None:
+            out = t.struct()
+        elif success_code == "204":  # No Content
+            out = t.boolean()
+        else:
+            res = spec.responses[success_code]
+            if "content" in res:
+                content = res.content
+                if MIME_TYPES.json in content:
+                    out = self.typedef_from_jsonschema(content[MIME_TYPES.json].schema)
+                else:
+                    raise Exception(
+                        f"No supported content type for response: {', '.join(content)}"
+                    )
+            else:
+                out = t.struct()
+
+        # TODO what for other 4xx codes
+        if "404" in spec.responses:
+            out = out.optional()
+
+        return (
+            spec.operationId,
+            t.func(
+                inp_type,
+                out,
+                TypifyMat(
+                    lambda inp, out: f"{self.runtime}.{method}('{self.path}', {inp}, {out}, {as_kwargs(inp_config)})"
+                ),
+            ),
+        )
+
+    def gen_input_type(self, op_spec: Box) -> Tuple[t.typedef, Box]:
+        """Returns a tuple of t.typedef and a box of kwargs"""
+
+        params = [*self.spec.get("parameters", []), *op_spec.get("parameters", [])]
+
         kwargs = Box({})
-
-        op_obj = self.path_obj[method]
-        params = [*self.path_obj.get("parameters", []), *op_obj.get("parameters", [])]
+        props = {}
         for param in params:
-            # TODO: optional???
-            param = self.doc.resolve_ref(param)
+            param = self.resolve_ref(param)
             if "schema" not in param:
-                print(f"param: {param}")
-                raise Exception(f"Unsupported param def")
-            props[param.name] = self.doc.typify(
-                param.schema, opt=not ("required" in param and param.required)
-            )
+                raise Exception(f"Unsupported parameter definition '{param}'")
+            props[param.name] = self.typedef_from_jsonschema(param.schema)
 
-        if "requestBody" in op_obj:
-            body = op_obj.requestBody.content
+        if "requestBody" in op_spec:
+            body = op_spec.requestBody.content
             types = body.keys()
             if MIME_TYPES.json in types:
                 content_type = MIME_TYPES.json
@@ -220,72 +251,26 @@ class Path:
             elif MIME_TYPES.multipart in types:
                 content_type = MIME_TYPES.multipart
             else:
-                raise Exception(f'Unsupported content types "types"')
-            (body_schema, ref_name) = self.doc.resolve_ref(
-                body[content_type].schema, export_name=True
-            )
-            assert body_schema.type == "object"
-            for name, schema in body_schema.properties.items():
-                # TODO: handle name clash
-                props[name] = self.doc.typify(
-                    schema,
-                    opt=not (
-                        "required" in body_schema and name in body_schema.required
-                    ),
-                    prop_of=(ref_name, name) if ref_name is not None else None,
+                raise Exception(
+                    f"No supported content type for request: {', '.join(types)}"
                 )
 
+            schema = body[content_type].schema
+            schema = self.resolve_ref(schema)
+            if schema.type != "object":
+                raise Exception(f"Unsupported type for request body: {schema.type}")
+
+            for name, typ in self.typedef_from_jsonschema(schema).props.items():
+                if name in props:
+                    raise Exception(
+                        f"Name clash: '{name}' present in both query parameters and request body"
+                    )
+                props[name] = typ
+
             kwargs.content_type = repr(content_type)
-            kwargs.body_fields = repr(tuple(body_schema.properties.keys()))
+            kwargs.body_fields = repr(tuple(schema.properties.keys()))
 
-        type = "t.struct({"
-        for name, ty in props.items():
-            type += f'"{name}":{ty},'
-        type += "})"
-
-        return Input(type, kwargs)
-
-    def success_code(responses: Box) -> str:
-        if "200" in responses:
-            return "200"
-        for status in responses:
-            if re.match(r"^2\d\d", status):
-                return status
-        # ? what if there are more than one 2xx codes
-        if "default" in responses:
-            return "default"
-        raise Exception(f"No success response found in {responses}")
-
-    def gen_function(self, method: str) -> Tuple[str, str]:
-        op_obj = self.path_obj[method]
-        inp = self.input_type(method)
-        success_code = Path.success_code(op_obj.responses)
-        if success_code == "204":  # No Content
-            out = "t.boolean()"
-        else:
-            res = op_obj.responses[success_code]
-            if "content" in res:
-                res = res.content
-                if "application/json" in res:
-                    out = self.doc.typify(res["application/json"].schema)
-                else:
-                    raise Exception(f"Unsupported response types {res.keys()}")
-            else:  # no content ??
-                out = "t.struct()"
-        # ? or any 4xx ?
-        if "404" in op_obj.responses:
-            out = f"t.optional({out})"
-        return (
-            op_obj.operationId,
-            f'remote.{method}("{self.path}", {inp.type}, {out}, {as_kwargs(inp.kwargs)}).add_policy(public())',
-        )
-
-    def gen_functions(self):
-        return [
-            self.gen_function(method)
-            for method in self.methods
-            if method in self.path_obj
-        ]
+        return (t.struct(props), kwargs)
 
 
 def as_kwargs(kwargs: Dict[str, str]):
@@ -293,42 +278,3 @@ def as_kwargs(kwargs: Dict[str, str]):
     for key, val in kwargs.items():
         cg += f"{key}={val},"
     return cg
-
-
-def import_openapi(uri: str, gen: bool):
-    if not gen:
-        return
-
-    file = inspect.stack()[1].filename
-
-    with open(file) as f:
-        code = RedBaron(f.read())
-
-    imports = [
-        ["typegraph.runtimes.http", "HTTPRuntime"],
-        ["typegraph", "t"],
-        ["typegraph", "TypeGraph"],
-        ["typegraph.policies", "public"],
-    ]
-
-    importer = code.find(
-        "atomtrailers", value=lambda x: x.find("name", value="import_openapi")
-    ).find("name", value="True")
-    if importer:
-        importer.value = "False"
-
-    for frm, imp in imports:
-        if not code.find(
-            "from_import",
-            value=lambda x: x.dumps() == frm,
-            targets=lambda x: x.dumps() == imp,
-        ):
-            code.insert(0, f"from {frm} import {imp}\n")
-
-    wth = code.find("with")
-    wth.value = Document(uri).codegen()
-
-    new_code = black.format_str(code.dumps(), mode=black.FileMode())
-
-    with open(file, "w") as f:
-        f.write(new_code)

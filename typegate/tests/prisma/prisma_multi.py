@@ -1,11 +1,7 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
-
 with TypeGraph("prisma") as g:
-
     db = PrismaRuntime("prisma", "POSTGRES")
 
     public = policies.public()
@@ -48,10 +44,11 @@ with TypeGraph("prisma") as g:
     db.manage(users)
 
     g.expose(
+        dropSchema=db.executeRaw(
+            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
+        ).add_policy(public),
         **db.gen(
             {
-                "queryRaw": (t.struct(), "queryRaw", public),
-                "executeRaw": (t.struct(), "executeRaw", public),
                 "findManyRecords": (record, "findMany", public),
                 "createOneRecord": (record, "create", public),
                 "deleteOneRecord": (record, "delete", public),

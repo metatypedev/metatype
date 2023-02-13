@@ -1,7 +1,5 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.runtimes.deno import FunMat
+from typegraph import TypeGraph, policies, t
+from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph("test-vars") as g:
     g.expose(
@@ -13,18 +11,18 @@ with TypeGraph("test-vars") as g:
                 }
             ),
             t.integer(),
-            FunMat("({ first, second }) => first + second"),
+            PureFunMat("({ first, second }) => first + second"),
         ).add_policy(policies.public()),
         sum=t.func(
             t.struct({"numbers": t.array(t.integer())}),
             t.integer(),
-            FunMat("({ numbers }) => numbers.reduce((a, b) => a + b, 0)"),
+            PureFunMat("({ numbers }) => numbers.reduce((a, b) => a + b, 0)"),
         ).add_policy(policies.public()),
         level2=t.func(
             t.struct(
                 {"level1": t.struct({"level2": t.array(t.string())}).named("Level1")}
             ),
             t.string(),
-            FunMat("(arg) => arg.level1.level2[0]"),
+            PureFunMat("(arg) => arg.level1.level2[0]"),
         ).add_policy(policies.public()),
     )

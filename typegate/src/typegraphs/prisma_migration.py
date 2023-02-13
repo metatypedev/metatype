@@ -1,11 +1,12 @@
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, t
 from typegraph.policies import Policy
-from typegraph.providers.prisma.runtimes.prisma import PrismaApplyMat
-from typegraph.providers.prisma.runtimes.prisma import PrismaCreateMat
-from typegraph.providers.prisma.runtimes.prisma import PrismaDeployMat
-from typegraph.providers.prisma.runtimes.prisma import PrismaDiffMat
-from typegraph.runtimes.deno import FunMat
+from typegraph.providers.prisma.runtimes.prisma import (
+    PrismaApplyMat,
+    PrismaCreateMat,
+    PrismaDeployMat,
+    PrismaDiffMat,
+)
+from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph(
     "typegate/prisma_migration",
@@ -19,7 +20,7 @@ with TypeGraph(
     ),
 ) as g:
     admin_only = Policy(
-        FunMat("(_args, { context }) => context.user === 'admin'")
+        PureFunMat("(_args, { context }) => context.user === 'admin'")
     ).named("admin_only")
 
     base = t.struct(

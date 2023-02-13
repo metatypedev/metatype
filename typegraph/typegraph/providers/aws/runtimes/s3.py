@@ -1,9 +1,10 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from attrs import frozen
-from typegraph import types as t
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
+
+from typegraph import effects, t
+from typegraph.effects import Effect
+from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
 
 
@@ -51,6 +52,7 @@ class SignMat(Materializer):
     bucket: str
     content_type: str
     materializer_name: str = always("sign")
+    effect: Effect = always(effects.none())
 
 
 @frozen
@@ -58,3 +60,4 @@ class ListMat(Materializer):
     runtime: Runtime
     bucket: str
     materializer_name: str = always("list")
+    effect: Effect = always(effects.none())

@@ -1,6 +1,6 @@
 [package]
 name = "macros"
-version = "0.0.3-dev.1"
+version = "0.0.3-dev.3"
 edition = "2021"
 
 [lib]

@@ -4,16 +4,17 @@ pub mod clap;
 
 use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
+use pathdiff::diff_paths;
 use reqwest::{
     blocking::{Client, RequestBuilder},
     IntoUrl, Url,
 };
-use std::collections::HashMap;
 use std::env::{set_var, var};
 use std::fs;
 use std::hash::Hash;
 use std::path::Path;
 use std::time::Duration;
+use std::{collections::HashMap, path::PathBuf};
 
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if var("VIRTUAL_ENV").is_ok() {
@@ -67,7 +68,7 @@ impl BasicAuth {
         Ok(Self { username, password })
     }
 
-    pub fn as_user(username: String) -> Result<Self> {
+    pub fn prompt_as_user(username: String) -> Result<Self> {
         let password = Password::new()
             .with_prompt(format!("Password for user {username}"))
             .interact()?;
@@ -100,7 +101,10 @@ impl Node {
 pub mod graphql {
     use anyhow::{bail, Result};
     use colored::Colorize;
-    use reqwest::blocking::RequestBuilder;
+    use reqwest::{
+        blocking::{RequestBuilder, Response as HttpResponse},
+        header::CONTENT_TYPE,
+    };
     use serde::Deserialize;
     use serde_json;
     use std::fmt;
@@ -234,15 +238,7 @@ pub mod graphql {
                 Err(e) => Err(Error::EndpointNotReachable(format!(
                     "GraphQL endpoint unreachable: {e}"
                 ))),
-                Ok(res) if !res.status().is_success() => {
-                    let content = res.text().map_err(|e| {
-                        Error::InvalidResponse(format!("could not decode response: {e}"))
-                    })?;
-                    let errors = serde_json::from_str::<FailedQueryResponse>(&content)
-                        .map(|json| json.errors)
-                        .map_err(|err| Error::InvalidResponse(format!("{err}")))?;
-                    Err(Error::FailedQuery(errors))
-                }
+                Ok(res) if !res.status().is_success() => Err(handle_error(res).unwrap_err()),
                 Ok(res) => {
                     let content = res.text().map_err(|e| {
                         Error::InvalidResponse(format!("could not decode response: {e:?}"))
@@ -253,6 +249,32 @@ pub mod graphql {
                 }
             }
         }
+    }
+
+    fn handle_error(res: HttpResponse) -> Result<(), Error> {
+        let content_type = res.headers().get(CONTENT_TYPE).ok_or_else(|| {
+            Error::InvalidResponse("Response has not Content-Type header".to_owned())
+        })?;
+
+        let content_type = content_type.to_str().map_err(|e| {
+            Error::InvalidResponse(format!("Could not parse Content-Type header: {e:?}"))
+        })?;
+
+        if content_type != "application/json" {
+            return Err(Error::InvalidResponse(format!(
+                "Unsupported Content-Type from the typegate: {content_type}"
+            )));
+        }
+
+        let content = res
+            .text()
+            .map_err(|e| Error::InvalidResponse(format!("Could not decode response: {e}")))?;
+        let errors = serde_json::from_str::<FailedQueryResponse>(&content)
+            .map(|json| json.errors)
+            .map_err(|e| {
+                Error::InvalidResponse(format!("Response is not in graphql format: {e:?}"))
+            })?;
+        Err(Error::FailedQuery(errors))
     }
 }
 
@@ -276,4 +298,12 @@ where
     {
         self.into_iter().map(|(k, v)| (k, f(v))).collect()
     }
+}
+
+pub fn relative_path_display<P1: Into<PathBuf>, P2: Into<PathBuf>>(base: P1, path: P2) -> String {
+    let path: PathBuf = path.into();
+    diff_paths(&path, base.into())
+        .unwrap_or(path)
+        .display()
+        .to_string()
 }

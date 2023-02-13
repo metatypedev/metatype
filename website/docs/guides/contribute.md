@@ -1,13 +1,13 @@
 # How-to contribute
 
-## Prerequisite
+## Prerequisites
 
 Install:
 
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Python](https://www.python.org/downloads/)
 - [pipx](https://pypa.github.io/pipx/installation/)
-- [pNpm](https://pnpm.io/installation)
+- [PNPM](https://pnpm.io/installation)
 - [Deno](https://deno.land/manual@v1.29.1/getting_started/installation)
 - [Node](https://nodejs.org/en/download/)
 
@@ -68,10 +68,9 @@ whiz
 ## Tests
 
 ```
-docker compose -f dev/docker-compose.yml up -d
+deno run -A dev/env.ts all
 cargo test
 deno run -A dev/test.ts
 cd typegraph && pytest -s
-
-docker compose -f dev/docker-compose.yml down
+deno run -A dev/env.ts
 ```

@@ -1,8 +1,10 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from attrs import frozen
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
+
+from typegraph import effects
+from typegraph.effects import Effect
+from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
 
 
@@ -15,18 +17,21 @@ class TypeGraphRuntime(Runtime):
 class TypeMat(Materializer):
     runtime: Runtime = TypeGraphRuntime()
     materializer_name: str = always("getType")
+    effect: Effect = always(effects.none())
 
 
 @frozen
 class SchemaMat(Materializer):
     runtime: Runtime = TypeGraphRuntime()
     materializer_name: str = always("getSchema")
+    effect: Effect = always(effects.none())
 
 
 @frozen
 class ResolverMat(Materializer):
     runtime: Runtime = TypeGraphRuntime()
     materializer_name: str = always("resolver")
+    effect: Effect = always(effects.none())
 
 
 @frozen
@@ -38,35 +43,38 @@ class TypeGateRuntime(Runtime):
 class TypeGraphsMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = always("typegraphs")
+    effect: Effect = always(effects.none())
 
 
 @frozen
 class TypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = always("typegraph")
+    effect: Effect = always(effects.none())
 
 
 @frozen
 class AddTypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = always("addTypegraph")
-    serial: bool = always(True)
+    effect: Effect = always(effects.create())
 
 
 @frozen
 class RemoveTypeGraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = always("removeTypegraph")
-    serial: bool = always(True)
+    effect: Effect = always(effects.delete())
 
 
-@frozen
-class TypeNodeMat(Materializer):
-    runtime: Runtime = TypeGateRuntime()
-    materializer_name: str = always("typenode")
+# @frozen
+# class TypeNodeMat(Materializer):
+#     runtime: Runtime = TypeGateRuntime()
+#     materializer_name: str = always("typenode")
 
 
 @frozen
 class SerializedTypegraphMat(Materializer):
     runtime: Runtime = TypeGateRuntime()
     materializer_name: str = always("serializedTypegraph")
+    effect: Effect = always(effects.none())

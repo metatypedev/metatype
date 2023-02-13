@@ -39,8 +39,6 @@ export const encryptionKey = await crypto.subtle.importKey(
   ["encrypt", "decrypt"],
 );
 
-export const adminKey = await sha256(config.tg_secret);
-
 const ivLength = 16;
 
 export async function encrypt(message: string): Promise<string> {

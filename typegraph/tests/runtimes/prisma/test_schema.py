@@ -1,14 +1,12 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import subprocess
 from os import getcwd
 from pathlib import Path
-import subprocess
 from typing import Iterable
 
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
-from typegraph.providers.prisma.runtimes.prisma import PrismaSchema
+from typegraph import TypeGraph, t
+from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime, PrismaSchema
 
 # import debugpy
 

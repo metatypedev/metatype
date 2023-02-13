@@ -11,14 +11,11 @@ test("prisma", async (t) => {
   await t.should("drop schema and recreate", async () => {
     await gql`
       mutation a {
-        executeRaw(
-          query: "DROP SCHEMA IF EXISTS test CASCADE"
-          parameters: "[]"
-        )
+        dropSchema
       }
     `
       .expectData({
-        executeRaw: 0,
+        dropSchema: 0,
       })
       .on(e);
     await recreateMigrations(e);

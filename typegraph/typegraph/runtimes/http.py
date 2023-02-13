@@ -1,14 +1,14 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Optional
-from typing import Tuple
+from typing import Optional, Tuple
 
-from attrs import field
-from attrs import frozen
+from attrs import field, frozen
+
+from typegraph import effects
 from typegraph import types as t
-from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.base import Runtime
-from typegraph.utils.attrs import always
+from typegraph.effects import Effect
+from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils.attrs import always, required
 
 
 @frozen
@@ -40,20 +40,40 @@ class HTTPRuntime(Runtime):
             "basic_auth_secret": self.basic_auth_secret,
         }
 
-    def get(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "GET", path, **kwargs, serial=False))
+    def get(self, path: str, inp, out, effect: Effect = effects.none(), **kwargs):
+        return t.func(
+            inp,
+            out,
+            RESTMat(self, "GET", path, effect=effect, **kwargs),
+        )
 
-    def post(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "POST", path, **kwargs, serial=True))
+    def post(self, path: str, inp, out, effect: Effect = effects.create(), **kwargs):
+        return t.func(
+            inp,
+            out,
+            RESTMat(self, "POST", path, effect=effect, **kwargs),
+        )
 
-    def put(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "PUT", path, **kwargs, serial=True))
+    def put(self, path: str, inp, out, effect: Effect = effects.upsert(), **kwargs):
+        return t.func(
+            inp,
+            out,
+            RESTMat(self, "PUT", path, effect=effect, **kwargs),
+        )
 
-    def patch(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "PATCH", path, **kwargs, serial=True))
+    def patch(self, path: str, inp, out, effect: Effect = effects.update(), **kwargs):
+        return t.func(
+            inp,
+            out,
+            RESTMat(self, "PATCH", path, effect=effect, **kwargs),
+        )
 
-    def delete(self, path: str, inp, out, **kwargs):
-        return t.func(inp, out, RESTMat(self, "DELETE", path, **kwargs, serial=True))
+    def delete(self, path: str, inp, out, effect: Effect = effects.delete(), **kwargs):
+        return t.func(
+            inp,
+            out,
+            RESTMat(self, "DELETE", path, effect=effect, **kwargs),
+        )
 
 
 @frozen
@@ -68,4 +88,4 @@ class RESTMat(Materializer):
     body_fields: Optional[Tuple[str, ...]] = field(kw_only=True, default=None)
     auth_token_field: Optional[str] = field(kw_only=True, default=None)
     materializer_name: str = always("rest")
-    serial: bool = field(kw_only=True)
+    effect: Effect = required()

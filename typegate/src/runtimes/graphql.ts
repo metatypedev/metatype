@@ -57,15 +57,17 @@ export class GraphQLRuntime extends Runtime {
   ): ComputeStage[] {
     const stagesMat: ComputeStage[] = [];
 
-    const serial = stage.props.materializer?.data.serial;
+    const { materializer: mat } = stage.props;
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
     const fields = [stage, ...sameRuntime];
     const renames: Record<string, string> = {
       ql: "typegraph",
     };
+
+    const operationLevel = stage.props.path.length;
     for (const field of fields) {
-      const { node, materializer: mat } = field.props;
-      if (mat?.name == "prisma_operation") {
+      const { node, path } = field.props;
+      if (mat?.name == "prisma_operation" && path.length === operationLevel) {
         const { operation, table } = mat.data as {
           operation: string;
           table: string;
@@ -75,7 +77,7 @@ export class GraphQLRuntime extends Runtime {
     }
 
     const query = (() => {
-      const operationType = serial
+      const operationType = mat?.effect.effect != null
         ? OperationTypeNode.MUTATION
         : OperationTypeNode.QUERY;
       if (this.forwardVars) {

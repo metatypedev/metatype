@@ -21,6 +21,11 @@ async function getHostname() {
   }
 }
 
+const zbooleanstring = z.preprocess(
+  (a: unknown) => z.coerce.string().parse(a) === "true",
+  z.boolean(),
+);
+
 const defaults: Record<string, string | boolean | number> = {
   debug: "false",
   packaged: "true",
@@ -35,19 +40,18 @@ const defaults: Record<string, string | boolean | number> = {
   tg_port: "7890",
 };
 
-const sources = [
-  defaults,
-  mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
-  parse(Deno.args) as Record<string, unknown>,
-];
-
-const zbooleanstring = z.preprocess(
-  (a: unknown) => z.coerce.string().parse(a) === "true",
-  z.boolean(),
-);
-
 const schema = z.object({
   debug: zbooleanstring,
+  // log_level is accessed directly through Deno.env to avoid leaking config to workers
+  // config.log_level is only to validate the types and delete right after
+  log_level: z.enum([
+    "NOTSET",
+    "DEBUG",
+    "INFO",
+    "WARNING",
+    "ERROR",
+    "CRITICAL",
+  ]).optional(),
   // To be set to false when running from source.
   // If false, auto reload system typegraphs on change. Default: to true.
   packaged: zbooleanstring,
@@ -86,6 +90,12 @@ const schema = z.object({
   request_log: z.string().optional(),
 });
 
+const sources = [
+  defaults,
+  mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
+  parse(Deno.args) as Record<string, unknown>,
+];
+
 const parsing = await schema.safeParse(
   sources.reduce((a, b) => deepMerge(a, b), {}),
 );
@@ -96,6 +106,7 @@ if (!parsing.success) {
 }
 
 const { data: config } = parsing;
+delete config.log_level;
 
 export default config;
 
