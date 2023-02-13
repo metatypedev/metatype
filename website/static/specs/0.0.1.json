@@ -713,6 +713,77 @@
         {
           "type": "object",
           "required": [
+            "anyOf",
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "union"
+              ]
+            },
+            "anyOf": {
+              "description": "Array of indexes of the nodes that are used as subschemes in the anyOf field of JSON Schema.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "inject": true,
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
             "policies",
             "runtime",
             "title",

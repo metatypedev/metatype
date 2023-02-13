@@ -247,6 +247,9 @@ class typedef(Node):
         if hasattr(type(self), "constraint_data"):
             ret.update(self.constraint_data())
 
+        if self._enum is not None:
+            ret["enum"] = ret.pop("_enum")
+
         ret.pop("collector_target")
 
         return ret
@@ -544,15 +547,17 @@ class array(typedef):
 
 @frozen
 class union(typedef):
-    variants: List[TypeNode]
+    variants: Tuple[TypeNode]
 
     @property
     def edges(self) -> List[Node]:
-        return super().edges + self.variants
+        nodes = super().edges + list(self.variants)
+        return nodes
 
     def data(self, collector: Collector) -> dict:
         ret = super().data(collector)
         ret["anyOf"] = [collector.index(v) for v in ret.pop("variants")]
+        return ret
 
 
 def ipv4() -> string:

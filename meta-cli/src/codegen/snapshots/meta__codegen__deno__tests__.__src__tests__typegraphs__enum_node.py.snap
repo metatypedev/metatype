@@ -1,0 +1,15 @@
+---
+source: meta-cli/src/codegen/deno.rs
+expression: "&module_codes[0].code"
+---
+interface Get_rgbInput {
+  color: "red" | "green" | "blue" | "purple" | "yellow";
+}
+
+export function get_rgb({ color }: Get_rgbInput,
+  { context }: { context: Record<string, unknown> }
+): {
+  rgb: Array<number>;
+} {
+  return { rgb: [] };
+}

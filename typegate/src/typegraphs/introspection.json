@@ -79,6 +79,16 @@
       "title": "type_kind",
       "runtime": 1,
       "policies": [],
+      "enum": [
+        "SCALAR",
+        "OBJECT",
+        "INTERFACE",
+        "UNION",
+        "ENUM",
+        "INPUT_OBJECT",
+        "LIST",
+        "NON_NULL"
+      ],
       "config": {}
     },
     {
@@ -734,6 +744,27 @@
       "title": "directive_location",
       "runtime": 1,
       "policies": [],
+      "enum": [
+        "QUERY",
+        "MUTATION",
+        "SUBSCRIPTION",
+        "FIELD",
+        "FRAGMENT_DEFINITION",
+        "FRAGMENT_SPREAD",
+        "INLINE_FRAGMENT",
+        "VARIABLE_DEFINITION",
+        "SCHEMA",
+        "SCALAR",
+        "OBJECT",
+        "FIELD_DEFINITION",
+        "ARGUMENT_DEFINITION",
+        "INTERFACE",
+        "UNION",
+        "ENUM",
+        "ENUM_VALUE",
+        "INPUT_OBJECT",
+        "INPUT_FIELD_DEFINITION"
+      ],
       "config": {}
     },
     {

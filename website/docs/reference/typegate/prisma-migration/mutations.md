@@ -7,11 +7,13 @@ sidebar_position: 2
 
 ## apply
 
-**Type:** [object_22!](/docs/reference/typegate/prisma-migration/objects#object_22)
+**Type:**
+[object_22!](/docs/reference/typegate/prisma-migration/objects#object_22)
 
 apply field
 
 Policies:
+
 - admin_only
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
@@ -60,11 +62,13 @@ typegraph<br />
 
 ## create
 
-**Type:** [object_31!](/docs/reference/typegate/prisma-migration/objects#object_31)
+**Type:**
+[object_31!](/docs/reference/typegate/prisma-migration/objects#object_31)
 
 create field
 
 Policies:
+
 - admin_only
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
@@ -122,11 +126,13 @@ typegraph<br />
 
 ## deploy
 
-**Type:** [object_37!](/docs/reference/typegate/prisma-migration/objects#object_37)
+**Type:**
+[object_37!](/docs/reference/typegate/prisma-migration/objects#object_37)
 
 deploy field
 
 Policies:
+
 - admin_only
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
