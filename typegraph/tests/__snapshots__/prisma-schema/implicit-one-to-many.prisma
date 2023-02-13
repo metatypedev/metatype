@@ -1,0 +1,10 @@
+model User {
+  id    Int    @id @default(autoincrement())
+  posts Post[] @relation(name: "_Post_to_User")
+}
+
+model Post {
+  id       Int  @id @default(autoincrement())
+  author   User @relation(name: "_Post_to_User", fields: [authorId], references: [id])
+  authorId Int
+}

@@ -260,6 +260,18 @@ pub mod graphql {
             Error::InvalidResponse(format!("Could not parse Content-Type header: {e:?}"))
         })?;
 
+        if content_type == "text/plain" {
+            let status = res.status().as_u16();
+            let text = res
+                .text()
+                .map_err(|e| Error::InvalidResponse(format!("Could not decode response: {e}")))?;
+            return Err(Error::FailedQuery(vec![GraphqlError {
+                message: format!("Error {status}: {text}"),
+                locations: None,
+                path: None,
+            }]));
+        }
+
         if content_type != "application/json" {
             return Err(Error::InvalidResponse(format!(
                 "Unsupported Content-Type from the typegate: {content_type}"

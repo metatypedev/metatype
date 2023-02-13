@@ -13,7 +13,7 @@ def test_codegen(snapshot):
         base_url="http://example.com/api/",
     )
 
-    snapshot.snapshot_dir = "__snapshots__"
+    snapshot.snapshot_dir = "tests/__snapshots__/importers"
     snapshot.assert_match(
         importer.codegen(Codegen()).res, "openapi_importer_codegen.txt"
     )
