@@ -28,8 +28,14 @@ export const createUrl = (
   path: string,
   search_params?: URLSearchParams,
 ): string => {
+  if (!base.endsWith("/")) {
+    base = base + "/";
+  }
   // replace repeating / to a single /
-  const sanitized_path = path.replace(/[\/]+/g, "/");
+  let sanitized_path = path.replace(/[\/]+/g, "/");
+  if (sanitized_path.startsWith("/")) {
+    sanitized_path = "." + sanitized_path;
+  }
   const url = new URL(sanitized_path, base);
   if (search_params) {
     url.search = search_params.toString();
