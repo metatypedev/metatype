@@ -18,6 +18,13 @@
       "items": [
         {
           "items": [
+            {
+              "items": [
+                "docs/reference/typegraph/typegraph/providers/prisma/runtimes/prisma"
+              ],
+              "label": "typegraph.providers.prisma.runtimes",
+              "type": "category"
+            },
             "docs/reference/typegraph/typegraph/providers/prisma/relations"
           ],
           "label": "typegraph.providers.prisma",

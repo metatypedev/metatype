@@ -111,6 +111,123 @@ class PrismaOperationMat(Materializer):
 # https://github.com/prisma/prisma-engines/tree/main/query-engine/connector-test-kit-rs/query-engine-tests/tests/queries
 @frozen
 class PrismaRuntime(Runtime):
+    """
+    > A database ORM runtime.
+
+    Attributes:
+        `name`: Name of prisma runtime
+        `connection_string_secret`: Name of the secret that contains the connection string
+        that will be used to connect to the database
+
+    Example:
+    ```python
+    with TypeGraph("prisma-runtime-example") as g:
+        db = PrismaRuntime("main_db", "DB_CONNECTION")
+
+        user = t.struct(
+            {
+                "id": t.uuid().config("id", "auto"),
+                "email": t.email(),
+            }
+        )
+
+        g.expose(
+            createUser=db.create(user).add_policy(public)
+        )
+    ```
+
+    ### Models
+
+    Any `t.struct` that is passed to a generator of a `PrismaRuntime`
+    defines a model.
+    Models must have an ID field specified by the `"id"` config.
+
+    Here is the list of all the available configs for model fields:
+
+    | Config | Effect |
+    |---|---|
+    | `id` | defines the field ID for the model (a.k.a. primary key) |
+    | `auto` | the value of this field can be auto generated; supported for `t.integer()` (auto-increment) and `t.uuid()` |
+    | `unique` | make this field unique among all instances of the model |
+
+    ### Relationships
+
+    The `PrismaRuntime` supports two kinds of relationship between models.
+
+    | Relationship | Field type in Model1 | Field type in Model2 |
+    |---|---|---|
+    |One to one| `g("Model2")` | `g("Model1").optional()` |
+    |One to many| `g("Model2")` | `t.array(g("Model1"))` |
+
+    Relationship fields must be defined on both sides of the relationship.
+    A relationship is always defined for `t.struct` types and `t.optional` or
+    `t.array` of `t.struct`s.
+
+    Relatioships can also be defined implicitly using the `link` instance method
+    of `PrismaRuntime`.
+
+    Example:
+
+    ```python
+    runtime = PrismaRuntime("example", "POSTGRES")
+
+    user = t.struct(
+        {
+            "id": t.uuid().config("id", "auto"),
+            "email": t.email().config("unique"),
+            "posts": t.array(g("Post")),
+        }
+    ).named("User")
+
+    post = t.struct(
+        {
+            "id": t.uuid().config("id", "auto"),
+            "title": t.string(),
+            "author": g("User"),
+        }
+    ).named("Post")
+    ```
+
+    ### Generators
+
+    Generators are instance methods of `PrismaRuntime` that can be used
+    to generate a `t.func` that represents a specific operation on a specific
+    model of the runtime.
+    They match to the model queries defined for the
+    [prisma client API](https://www.prisma.io/docs/reference/api-reference/prisma-client-reference).
+    for the type of the input `t.struct` and the return type.
+
+    Example:
+
+    ```python
+    with TypeGraph("prisma-runtime-example") as g:
+        db = PrismaRuntime("main_db", "DB_CONNECTION")
+
+        user = t.struct(
+            {
+                "id": t.uuid().config("id", "auto"),
+                "email": t.email(),
+            }
+        )
+
+        g.expose(
+            createUser=db.create(user).add_policy(public),
+            findUser=db.find_unique(user).add_policy(public),
+            findManyUsers=db.find_many(user).add_policy(public),
+        )
+    ```
+
+    Here is a list of all available generators:
+    - `find_unique`
+    - `find_many`
+    - `create`
+    - `update`
+    - `delete`
+    - `delete_many`
+
+
+    """
+
     name: str
     connection_string_secret: str
     runtime_name: str = always("prisma")
@@ -122,6 +239,38 @@ class PrismaRuntime(Runtime):
     def link(
         self, typ: Union[t.TypeNode, str], name: str, field: Optional[str] = None
     ) -> t.TypeNode:
+        """
+        Explicitly declare a relationship between models. The return value of
+        this function shall be the type of a property of a `t.struct` that
+        defines a model.
+        If the other end of the relationship is also defined using `link`,
+        both links must have the same name.
+
+        Arguments:
+            name:     name of the relationship
+            field:    name of the target field on the target model
+
+        Example:
+        ```python
+        runtime = PrismaRuntime("example", "POSTGRES")
+
+        user = t.struct(
+            {
+                "id": t.uuid().config("id", "auto"),
+                "email": t.email().config("unique"),
+                "posts": runtime.link(t.array(g("Post")), "postAuthor"),
+            }
+        ).named("User")
+
+        post = t.struct(
+            {
+                "id": t.uuid().config("id", "auto"),
+                "title": t.string(),
+                "author": runtime.link(g("User"), "postAuthor"),
+            }
+        ).named("Post")
+        ```
+        """
         if isinstance(typ, t.typedef) or isinstance(typ, NodeProxy):
             g = typ.graph
             if isinstance(typ, t.typedef):
@@ -132,10 +281,11 @@ class PrismaRuntime(Runtime):
         return LinkProxy(g, typ, self, name, field)
 
     @property
-    def typegen(self):
+    def __typegen(self):
         return TypeGenerator(spec=self.spec)
 
     def queryRaw(self, query: str, *, effect: Effect) -> t.func:
+        """Generate a raw SQL query operation"""
         return t.func(
             t.struct(
                 {
@@ -147,6 +297,7 @@ class PrismaRuntime(Runtime):
         )
 
     def executeRaw(self, query: str, *, effect: Effect) -> t.func:
+        """Generate a raw SQL query operation without return"""
         return t.func(
             t.struct(
                 {
@@ -159,7 +310,7 @@ class PrismaRuntime(Runtime):
 
     def find_unique(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
-        typegen = self.typegen
+        typegen = self.__typegen
         return t.func(
             t.struct(
                 {"where": typegen.get_where_type(tpe).named(f"{tpe.name}WhereUnique")}
@@ -170,7 +321,7 @@ class PrismaRuntime(Runtime):
 
     def find_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
-        typegen = self.typegen
+        typegen = self.__typegen
         return t.func(
             t.struct(
                 {
@@ -185,7 +336,7 @@ class PrismaRuntime(Runtime):
 
     def create(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
-        typegen = self.typegen
+        typegen = self.__typegen
         return t.func(
             t.struct(
                 {
@@ -198,7 +349,7 @@ class PrismaRuntime(Runtime):
 
     def update(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
-        typegen = self.typegen
+        typegen = self.__typegen
         return t.func(
             t.struct(
                 {
@@ -218,7 +369,7 @@ class PrismaRuntime(Runtime):
 
     def delete(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
-        typegen = self.typegen
+        typegen = self.__typegen
         return t.func(
             t.struct(
                 {"where": typegen.get_where_type(tpe).named(f"{tpe.name}DeleteInput")},
@@ -229,7 +380,7 @@ class PrismaRuntime(Runtime):
 
     def delete_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
-        typegen = self.typegen
+        typegen = self.__typegen
         return t.func(
             t.struct(
                 {
@@ -246,7 +397,7 @@ class PrismaRuntime(Runtime):
         tpe._propagate_runtime(self)
         self.spec.manage(tpe)
 
-    def datamodel(self):
+    def __datamodel(self):
         models = [build_model(ty, self.spec) for ty in self.spec.types]
         return "\n\n".join(models)
         # return PrismaSchema(self.managed_types.values()).build()
@@ -254,7 +405,7 @@ class PrismaRuntime(Runtime):
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
         data["data"].update(
-            datamodel=self.datamodel(),
+            datamodel=self.__datamodel(),
             connection_string_secret=self.connection_string_secret,
             models=[collector.index(tp) for tp in self.spec.types.values()],
         )

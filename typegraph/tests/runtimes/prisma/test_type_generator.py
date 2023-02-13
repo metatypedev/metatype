@@ -46,6 +46,7 @@ class TestTypeGenerator:
     def test_simple(self, overridable):
         with TypeGraph("test_where_simple"):
             db = PrismaRuntime("test", "POSTGRES")
+            typegen = db._PrismaRuntime__typegen
 
             model = t.struct(
                 {
@@ -56,7 +57,7 @@ class TestTypeGenerator:
                 }
             ).named("Model")
 
-            assert tree(db.typegen.get_input_type(model)) == overridable(
+            assert tree(typegen.get_input_type(model)) == overridable(
                 {
                     "type": "object",
                     "name": "object_7",
@@ -75,7 +76,7 @@ class TestTypeGenerator:
                 }
             )
 
-            assert tree(db.typegen.get_where_type(model)) == overridable(
+            assert tree(typegen.get_where_type(model)) == overridable(
                 {
                     "type": "object",
                     "name": "object_12",
@@ -115,6 +116,7 @@ class TestTypeGenerator:
     def test_relations(self, overridable):
         with TypeGraph("test_relations") as g:
             db = PrismaRuntime("test", "POSTGRES")
+            typegen = db._PrismaRuntime__typegen
 
             user = t.struct(
                 {"id": t.integer().config("id"), "posts": t.array(g("Post"))}
@@ -124,7 +126,7 @@ class TestTypeGenerator:
                 {"id": t.integer().config("id"), "author": g("User")}
             ).named("Post")
 
-            assert tree(db.typegen.get_input_type(user)) == overridable(
+            assert tree(typegen.get_input_type(user)) == overridable(
                 {
                     "type": "object",
                     "name": "object_6",
@@ -140,7 +142,7 @@ class TestTypeGenerator:
                     },
                 }
             )
-            assert tree(db.typegen.get_input_type(post)) == overridable(
+            assert tree(typegen.get_input_type(post)) == overridable(
                 {
                     "type": "object",
                     "name": "object_7",
@@ -158,7 +160,7 @@ class TestTypeGenerator:
                 }
             )
 
-            assert tree(db.typegen.get_where_type(user)) == overridable(
+            assert tree(typegen.get_where_type(user)) == overridable(
                 {
                     "type": "object",
                     "name": "object_12",
@@ -195,7 +197,7 @@ class TestTypeGenerator:
                     },
                 }
             )
-            assert tree(db.typegen.get_where_type(post)) == overridable(
+            assert tree(typegen.get_where_type(post)) == overridable(
                 {
                     "type": "object",
                     "name": "object_17",
