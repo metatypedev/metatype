@@ -69,7 +69,7 @@ export function unzip<A, B>(arrays: ([A, B])[]): [A[], B[]] {
 }
 
 export function envOrFail(typegraph: string, name: string): string {
-  const envName = `TG_${typegraph}_${name}`.toUpperCase();
+  const envName = `TG_${typegraph}_${name}`.replaceAll("-", "_").toUpperCase();
   const value = Deno.env.get(envName);
   ensure(
     value != null,

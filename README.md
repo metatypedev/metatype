@@ -13,10 +13,12 @@ back :octocat: fixing a bug, improving clarity or adding new features.
 
 ### Browse the [documentation](https://metatype.dev) or start directly [building your first typegraph](https://metatype.dev/docs/tutorials/getting-started)!
 
-> Metatype is on its first release track and does not have all components
-> complete yet. However it is already successfully used in production in
-> open-source and commercial solutions. Enough features are available for you to
-> build a complete API composition even though the experience may not be as
-> smooth as desired. All interfaces changes will be outlined in the
-> [changelog](https://github.com/metatypedev/metatype/releases) (watch/subscribe
-> to this repository to be notified).
+> Metatype is on its track to get a stable release, yet missing some components
+> to be complete. The ecosystem is already successfully used in production by
+> some commercial projects.
+>
+> Enough features are available for you to build and compose API blocks even
+> though the experience may not be as smooth as desired. As such, it does _not_
+> follow semantic versioning yet, and all changes will be explicitly outlined in
+> the [changelog](https://github.com/metatypedev/metatype/releases)
+> (watch/subscribe to this repository to be notified).

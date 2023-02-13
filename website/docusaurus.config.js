@@ -10,12 +10,13 @@ const projectName = "metatype";
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Metatype",
-  tagline: "Free and open ecosystem for API composition.",
+  tagline:
+    "Free and open ecosystem for API composition. Deploy and connect all your systems (REST, GraphQL, SQL, S3, WASM, custom scripts, etc.) in a breeze.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
-  favicon: "img/favicon.ico",
+  favicon: "images/favicon.ico",
   organizationName,
   projectName,
   trailingSlash: false,
@@ -40,9 +41,19 @@ const config = {
             rules: [
               {
                 test: /\.py$/i,
-                loader: "raw-loader",
+                use: ["code-loader"],
+              },
+              {
+                test: /\.(graphql|gql)$/,
+                exclude: /node_modules/,
+                loader: "graphql-tag/loader",
               },
             ],
+          },
+          resolveLoader: {
+            alias: {
+              "code-loader": require.resolve("./packages/code-loader.js"),
+            },
           },
         };
       },
@@ -63,7 +74,7 @@ const config = {
         routeBasePath: "/docs/reference/typegate/prisma-migration",
       },
     ],
-    require("./plugins/changelog"),
+    require("./packages/changelog"),
     [
       "posthog-docusaurus",
       {
@@ -121,11 +132,15 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
+      colorMode: {
+        defaultMode: "light",
+        disableSwitch: true,
+      },
       navbar: {
         title: "Metatype",
         logo: {
           alt: "Metatype Logo",
-          src: "img/logo.svg",
+          src: "images/logo.svg",
         },
         items: [
           {
@@ -156,8 +171,16 @@ const config = {
             title: "Docs",
             items: [
               {
-                label: "Quickstart",
+                label: "Getting started",
                 to: "/docs/tutorials/getting-started",
+              },
+              {
+                label: "Concepts",
+                to: "/docs/concepts/overview",
+              },
+              {
+                label: "Changelog",
+                to: "/docs/reference/changelog",
               },
             ],
           },
@@ -186,12 +209,12 @@ const config = {
             title: "Company",
             items: [
               {
-                label: "Privacy policy",
-                href: "/legal/privacy-policy",
-              },
-              {
                 label: "Terms & conditions",
                 href: "/legal/terms",
+              },
+              {
+                label: "Privacy policy",
+                href: "/legal/privacy-policy",
               },
             ],
           },

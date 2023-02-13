@@ -4,12 +4,6 @@ env:
 meta:
     watch:
         - "meta-cli/src/**/*.rs"
-    command: "cargo run -p meta-cli -- --help"
-    depends_on:
-        - libs
-
-examples:
-    watch:
         - "examples/metatype.yaml"
         - "typegraph/typegraph/**/*.py"
     command: "cargo run --color always -p meta-cli -- -C examples dev"
@@ -17,15 +11,7 @@ examples:
         VIRTUAL_ENV: $PWD/examples/.venv
         PATH: $PWD/examples/.venv/bin:$PATH
     depends_on:
-        - meta
-
-system_graphs:
-    watch:
-        - typegate/src/typegraphs/*.py
-        - typegraph/**/*.py
-    command: "deno run -A dev/serialize.ts"
-    depends_on:
-        - meta
+        - libs
 
 typegate1:
     workdir: typegate
@@ -33,15 +19,16 @@ typegate1:
     env:
         TG_PORT: "7891"
         PACKAGED: "false"
-        REQUEST_LOG: "tg1"
+        LOG_LEVEL: "DEBUG"
     env_file:
         - ../examples/.env.sample
         - ../website/.env.sample
         - .env.sample
     command: "./run.sh"
     depends_on:
-        - clean_deno_bindgen_cache
         - typegate_native
+    pipe:
+        '^.+\[http\].*$': whiz://http
 
 typegate2:
     workdir: typegate
@@ -49,26 +36,37 @@ typegate2:
     env:
         TG_PORT: "7892"
         PACKAGED: "false"
-        REQUEST_LOG: "tg2"
+        LOG_LEVEL: "DEBUG"
     env_file:
         - ../examples/.env.sample
         - ../website/.env.sample
         - .env.sample
     command: "./run.sh"
     depends_on:
-        - clean_deno_bindgen_cache
         - typegate_native
+    pipe:
+        '^.+\[http\].*$': whiz://http
+
+http:
+    command: ""
+
+system_graphs:
+    watch:
+        - typegate/src/typegraphs/*.py
+        - typegraph/**/*.py
+    command: "deno run -A dev/serialize.ts"
+    depends_on:
+        - libs
 
 libs:
     workdir: libs
     watch:
         - common/**/*.rs
         - typescript/**/*.rs
-    command: "cargo build -p common -p typescript"
+        - macros/**/*.rs
+    command: "cargo build -p common -p typescript -p macros"
 
 codegen:
-    depends_on:
-        - libs
     workdir: .
     watch:
         - "libs/xtask/src/**/*.rs"
@@ -76,25 +74,19 @@ codegen:
         TG_JSONSCHEMA_OUT: website/static/specs/$TYPEGRAPH_VERSION.json
         TG_TYPESCRIPT_OUT: typegate/src/types/typegraph.ts
     command: "cargo run --package xtask -- codegen"
-
-clean_deno_bindgen_cache:
-    command: rm -rfv $(deno info --json | jq -r .denoDir)/plug/file
     depends_on:
-        - typegate_native
+        - libs
 
 typegate_native:
     watch:
         - "typegate/native/src/**/*.rs"
     env:
         OUT_DIR: "target"
-    command: "deno_bindgen -- -p native -F deno"
+    command: |
+        rm -rfv $(deno info --json | jq -r .denoDir)/plug/file native/bindings.json
+        deno_bindgen -- -p native -F deno
     depends_on:
         - libs
-
-website_deps:
-    workdir: website
-    watch: "package.json"
-    command: "pnpm install"
 
 website:
     workdir: website
@@ -102,13 +94,12 @@ website:
     env:
         TG_URL: http://localhost:7890
     depends_on:
-        - website_deps
+        - install_website
 
 website_meta:
     workdir: .
     watch:
         - "meta-cli/src/**/*.rs"
-        - "website/**/*.py"
         - "typegate/src/**/*.ts"
     command: "cargo run -p meta-cli -- -C website dev -u admin -p password --port 5001"
     env:
@@ -126,3 +117,16 @@ website_docgen:
         npx docusaurus docs:generate:changelog
     depends_on:
         - typegate1
+
+install_website:
+    workdir: website
+    watch: "package.json"
+    command: "pnpm install"
+
+install_typegraph:
+    workdir: .
+    watch:
+        - typegraph/pyproject.toml
+    command: |
+        [ -d .venv ] || python3 -m venv .venv
+        cd typegraph && poetry install

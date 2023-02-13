@@ -1,0 +1,10 @@
+mutation {
+  create_user(
+    data: {
+      firstname: "John" # fill me
+      email: "john@doe.com"
+    }
+  ) {
+    id
+  }
+}

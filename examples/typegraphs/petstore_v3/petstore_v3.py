@@ -1,5 +1,4 @@
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, t
 from typegraph.importers.base.importer import Import
 from typegraph.importers.openapi import OpenApiImporter
 from typegraph.runtimes.http import HTTPRuntime

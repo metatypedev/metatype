@@ -1,11 +1,5 @@
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
-from typegraph.runtimes.deno import DenoRuntime
-from typegraph.runtimes.deno import ModuleMat
-from typegraph.runtimes.deno import PureFunMat
-
+from typegraph import TypeGraph, effects, policies, t
+from typegraph.runtimes.deno import DenoRuntime, ModuleMat, PureFunMat
 
 with TypeGraph("test-vars") as g:
     public = policies.public()

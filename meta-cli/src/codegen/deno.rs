@@ -97,7 +97,6 @@ impl<'a> Codegen<'a> {
                 let code: String =
                     serde_json::from_value(mat.data.get("code").unwrap().clone()).unwrap();
                 if let Some(relpath) = code.strip_prefix("file:") {
-                    println!("module: {relpath}");
                     let path = {
                         let mut path = base_dir.clone();
                         path.push(relpath);

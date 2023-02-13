@@ -1,11 +1,7 @@
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, policies, t
 from typegraph.runtimes import deno
 
-
 with TypeGraph("injection") as g:
-
     req = t.struct(
         {
             "a": t.integer().named("A"),

@@ -1,15 +1,12 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Callable
-from typing import Dict
-from typing import List
+from typing import Callable, Dict, List
 
-from attrs import field
-from attrs import frozen
+from attrs import field, frozen
 from box import Box
 from deepmerge import always_merger
-from typegraph import t
 
+from typegraph import t
 
 # TODO support for boolean schemas
 

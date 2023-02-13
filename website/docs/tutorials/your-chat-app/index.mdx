@@ -1,0 +1,30 @@
+---
+sidebar_position: 7
+---
+
+import CodeBlock from "@theme/CodeBlock";
+import TGExample from "@site/src/components/TGExample";
+
+# Your chat app
+
+Back to your typegraph for the chat-based app. You learn all keys components and it's time to implement the business logic.
+
+## External typescript function
+
+The Deno runtime can register external files for longer functions. You can use the meta CLI to generate the types once the `ModuleMat` has been defined in your typegraph: `meta codegen deno -f typegraph.py`.
+
+<CodeBlock language="typescript">
+  {require("!!code-loader!./business-logic.ts")}
+</CodeBlock>
+
+## Connecting the pieces together
+
+Take the learning of the last sections and use at your advantage the internal policies allowing to made calls within the Deno runtime and keeping the same context.
+
+<TGExample
+  typegraph="business-logic"
+  python={require("./business-logic.py")}
+  query={require("./business-logic.graphql")}
+/>
+
+That's it, you just developed chat-based API block for your app - naive for sure, but covering most of the feature of Metatype.
