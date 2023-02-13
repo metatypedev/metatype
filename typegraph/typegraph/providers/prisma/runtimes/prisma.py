@@ -453,7 +453,7 @@ class PrismaRuntime(Runtime):
 
     def gen_aggregate(self, tpe: t.struct) -> t.func:
         _pref = get_name_generator("Aggregate", tpe)
-
+        tpe_nums = extract_number_types(tpe)
         return t.func(
             t.struct(
                 {"where": get_where_type(tpe).named(_pref("Where")).optional()}
@@ -465,12 +465,10 @@ class PrismaRuntime(Runtime):
                     .named(_pref("Count")),
                     "take": t.integer().named(_pref("Take")),
                     "skip": t.integer().named(_pref("Skip")),
-                    "_avg": promote_num_to_float(extract_number_types(tpe)).named(
-                        _pref("Avg")
-                    ),
-                    "_sum": extract_number_types(tpe).named(_pref("Sum")),
-                    "_min": extract_number_types(tpe).named(_pref("Min")),
-                    "_max": extract_number_types(tpe).named(_pref("Max")),
+                    "_avg": promote_num_to_float(tpe_nums).named(_pref("Avg")),
+                    "_sum": tpe_nums.named(_pref("Sum")),
+                    "_min": tpe_nums.named(_pref("Min")),
+                    "_max": tpe_nums.named(_pref("Max")),
                 }
             ).named(_pref("Output")),
             PrismaOperationMat(self, tpe.name, "aggregate", effect=effects.none()),
@@ -478,20 +476,29 @@ class PrismaRuntime(Runtime):
 
     def gen_group_by(self, tpe: t.struct) -> t.func:
         _pref = get_name_generator("GroupBy", tpe)
-        row_def = t.struct(
+        tpe_nums = extract_number_types(tpe)
+        aggreg_def = t.struct(
             {
                 "_count": t.struct({"_all": t.integer()})
                 .compose(tpe.props)
                 .named(_pref("Count"))
                 .optional(),
-                "_avg": promote_num_to_float(extract_number_types(tpe))
-                .named(_pref("Avg"))
-                .optional(),
-                "_sum": extract_number_types(tpe).named(_pref("Sum")).optional(),
-                "_min": extract_number_types(tpe).named(_pref("Min")).optional(),
-                "_max": extract_number_types(tpe).named(_pref("Max")).optional(),
+                "_avg": promote_num_to_float(tpe_nums).named(_pref("Avg")).optional(),
+                "_sum": tpe_nums.named(_pref("Sum")).optional(),
+                "_min": tpe_nums.named(_pref("Min")).optional(),
+                "_max": tpe_nums.named(_pref("Max")).optional(),
             }
-        ).compose(tpe.props)
+        )
+        row_def = aggreg_def.compose(tpe.props)
+        """
+        having_def = t.struct({
+            col: t.struct({ agg_name: t.float().optional() for agg_name in aggreg_def.props.keys() }).optional()
+            for col in tpe_nums.props.keys()
+        })
+        """
+        having_def = t.struct(
+            {"likes": t.struct({"_sum": t.struct({"equals": t.integer().optional()})})}
+        ).optional()
 
         return t.func(
             t.struct(
@@ -500,10 +507,10 @@ class PrismaRuntime(Runtime):
                     "take": t.integer().named(_pref("Take")).optional(),
                     "skip": t.integer().named(_pref("Skip")).optional(),
                     "where": get_where_type(row_def).named(_pref("Where")).optional(),
-                    # "orderBy": t.array(t.struct({"_sum": t.struct({"likes": t.string()})})).named(_pref("OrderBy")).optional(),
                     "orderBy": get_order_by_type(row_def)
                     .named(_pref("OrderBy"))
                     .optional(),
+                    "having": having_def.named(_pref("Having")).optional(),
                 }
             ).named(_pref("Input")),
             t.array(row_def).named(_pref("Output")),

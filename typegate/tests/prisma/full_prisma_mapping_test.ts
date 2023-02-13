@@ -109,6 +109,25 @@ test("prisma", async (t) => {
       .on(e);
   });
 
+  await t.should("do a groupBy with having", async () => {
+    await gql`
+        query {
+          groupByPost(
+            by: ["published"],
+            having: {likes: {_sum: {equals: 3}}}
+          )
+          {
+            published
+            _sum { likes }
+          }
+        }
+    `
+      .expectBody((body: any) => {
+        console.log("groupBy having output ::::", body);
+      })
+      .on(e);
+  });
+
   await t.should("do an aggregate", async () => {
     await gql`
         query {
