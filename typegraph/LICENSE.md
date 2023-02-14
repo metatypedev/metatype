@@ -6,7 +6,7 @@ Portions of this software are licensed as follows:
 
 - all third party components incorporated into the repository are licensed under
   the original license provided by the owner of the applicable component (see
-  relevant files header)
+  relevant file headers)
 - content outside of the above mentioned files or restrictions is available
   under the Elastic License 2.0 (ELv2) as defined below
 - alternatively, the Metatype Commercial Licensing can be substituted to the
