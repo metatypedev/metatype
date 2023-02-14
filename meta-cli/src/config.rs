@@ -177,12 +177,15 @@ impl Config {
             }
             _ => anyhow!(err.to_string()),
         })?;
+
         let mut config: Self = serde_yaml::from_reader(file)?;
+
         config.base_dir = {
             let mut path = path;
             path.pop();
             path
         };
+
         Ok(config)
     }
 

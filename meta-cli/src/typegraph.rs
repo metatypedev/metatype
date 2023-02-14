@@ -56,7 +56,7 @@ impl<'a> TypegraphLoader<'a> {
     }
 
     pub fn load_file<P: AsRef<Path>>(self, path: P) -> Result<Option<Vec<Typegraph>>> {
-        let path = path.as_ref().canonicalize()?;
+        let path = path.as_ref();
         let ext = path.extension().and_then(|ext| ext.to_str());
 
         let output = match ext {
@@ -151,7 +151,7 @@ impl<'a> TypegraphLoader<'a> {
                         "{}",
                         format!("Found typegraph definition module at {rel_path}").dimmed()
                     );
-                    Some(path)
+                    Some(relative)
                 } else {
                     None
                 }
@@ -177,10 +177,11 @@ impl<'a> TypegraphLoader<'a> {
         #[cfg(not(target_os = "windows"))]
         let program_name = Path::new("py-tg").to_path_buf();
 
+        let current_dir = utils::strip_unc_prefix(&self.config.base_dir);
         let p = Command::new(program_name.clone())
             .arg(path.as_ref().to_str().unwrap())
             // .args(args)
-            .current_dir(&self.config.base_dir)
+            .current_dir(current_dir)
             .envs(env::vars())
             .env("PYTHONUNBUFFERED", "1")
             .env("PYTHONDONTWRITEBYTECODE", "1")
@@ -257,6 +258,7 @@ mod utils {
     use indexmap::IndexMap;
     use serde::{de::DeserializeOwned, ser::Serialize};
     use serde_json::{from_value, to_value, Value};
+    use std::path::Path;
 
     pub fn object_from_map<T: DeserializeOwned>(map: IndexMap<String, Value>) -> Result<T> {
         let map = Value::Object(map.into_iter().collect());
@@ -269,6 +271,23 @@ mod utils {
             Ok(map.into_iter().collect())
         } else {
             bail!("value is not an object");
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub fn strip_unc_prefix(path: &Path) -> &Path {
+        path
+    }
+
+    #[cfg(target_os = "windows")]
+    pub fn strip_unc_prefix(path: &Path) -> &Path {
+        let path_str = path.to_str().unwrap();
+        let prefix = r"\\?\";
+        if path_str.starts_with(prefix) {
+            let path_str = &path_str[prefix.len()..];
+            &Path::new(path_str)
+        } else {
+            path
         }
     }
 }

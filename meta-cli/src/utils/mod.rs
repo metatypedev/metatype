@@ -49,7 +49,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct BasicAuth {
     username: String,
     password: String,
