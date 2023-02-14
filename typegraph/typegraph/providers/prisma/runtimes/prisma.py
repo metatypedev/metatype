@@ -317,10 +317,6 @@ class PrismaRuntime(Runtime):
     def __typegen(self):
         return TypeGenerator(spec=self.spec)
 
-    @property
-    def __typegen(self):
-        return TypeGenerator(spec=self.spec)
-
     def queryRaw(self, query: str, *, effect: Effect) -> t.func:
         """Generate a raw SQL query operation"""
         return t.func(
