@@ -9,16 +9,12 @@ from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 with TypeGraph(name="blog") as g:
     db = PrismaRuntime("blog", "POSTGRES")
 
-    postAuthor = db.one_to_many(g("User"), g("Post")).named("postAuthor")
-
-    userProfile = db.one_to_one(g("User"), g("Profile")).named("userProfile")
-
     users = t.struct(
         {
             "id": t.integer().config("id"),
             "name": t.string(),
-            "posts": postAuthor.owned(),
-            "profile": userProfile.owned(),
+            "posts": t.array(g("Post")),
+            "profile": g("Profile").optional(),
         }
     ).named("User")
 
@@ -26,7 +22,7 @@ with TypeGraph(name="blog") as g:
         {
             "id": t.integer().config("id"),
             "profilePic": t.string(),
-            "user": userProfile.owner(),
+            "user": g("User"),
         }
     ).named("Profile")
 
@@ -34,27 +30,19 @@ with TypeGraph(name="blog") as g:
         {
             "id": t.integer().config("id"),
             "content": t.string(),
-            "author": postAuthor.owner(),
+            "author": g("User"),
         }
     ).named("Post")
-
-    db.manage(users)
-    db.manage(posts)
-    db.manage(profiles)
 
     public = policies.public()
 
     g.expose(
-        **db.gen(
-            {
-                "createUser": (users, "create", public),
-                "findUniqueUser": (users, "findUnique", public),
-                "findManyUsers": (users, "findMany", public),
-                "updateUser": (users, "update", public),
-                "deleteUser": (users, "delete", public),
-                "createPost": (posts, "create", public),
-                "findUniquePost": (posts, "findUnique", public),
-                "findManyPosts": (posts, "findMany", public),
-            }
-        )
+        createUser=db.create(users).add_policy(public),
+        findUniqueUser=db.find_unique(users).add_policy(public),
+        findManyUsers=db.find_many(users).add_policy(public),
+        updateUser=db.update(users).add_policy(public),
+        deleteUser=db.delete(users).add_policy(public),
+        createPost=db.create(posts).add_policy(public),
+        findUniquePost=db.find_unique(posts).add_policy(public),
+        findManyPosts=db.find_many(posts).add_policy(public),
     )

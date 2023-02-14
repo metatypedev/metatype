@@ -3,9 +3,8 @@
 import { ComputeStage } from "./engine.ts";
 import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
+import { None, Option, Some } from "monads";
 
-// FIXME replace with monads
-export type Maybe<T> = null | undefined | T;
 export type JSONValue =
   | string
   | number
@@ -13,6 +12,36 @@ export type JSONValue =
   | null
   | JSONValue[]
   | { [key: string]: JSONValue };
+
+// Map undefined | null to None
+export const forceAnyToOption = (v: any): Option<any> => {
+  return v === undefined || v === null ? None : Some(v);
+};
+
+// Map None to undefined
+export const forceOptionToValue = <T>(m: Option<T>): T | undefined => {
+  return m.isSome() ? m.unwrap() : undefined;
+};
+
+export const createUrl = (
+  base: string,
+  path: string,
+  search_params?: URLSearchParams,
+): string => {
+  if (!base.endsWith("/")) {
+    base = base + "/";
+  }
+  // replace repeating / to a single /
+  let sanitized_path = path.replace(/[\/]+/g, "/");
+  if (sanitized_path.startsWith("/")) {
+    sanitized_path = "." + sanitized_path;
+  }
+  const url = new URL(sanitized_path, base);
+  if (search_params) {
+    url.search = search_params.toString();
+  }
+  return url.href;
+};
 
 export const ensure = (predicat: boolean, message: string | (() => string)) => {
   if (!predicat) {
@@ -28,16 +57,6 @@ export const collectFields = (
 };
 
 export const b = (value: any): string => JSON.stringify(value, null, 2);
-
-// FIXME remplace all instance
-export const mapo = <V1, V2>(
-  vs: Record<string, V1>,
-  map: (e: V1) => V2,
-): Record<string, V2> =>
-  Object.entries(vs).reduce((agg, [key, value]) => {
-    agg[key] = map(value);
-    return agg;
-  }, {} as Record<string, V2>);
 
 export const unparse = (loc: ast.Location): string => {
   return loc.source.body.slice(loc.start, loc.end);
@@ -56,16 +75,6 @@ export function iterParentStages(
     cb(stage, children);
     cursor += 1 + children.length;
   }
-}
-
-export function unzip<A, B>(arrays: ([A, B])[]): [A[], B[]] {
-  const as: A[] = [];
-  const bs: B[] = [];
-  arrays.forEach(([a, b]) => {
-    as.push(a);
-    bs.push(b);
-  });
-  return [as, bs];
 }
 
 export function envOrFail(typegraph: string, name: string): string {

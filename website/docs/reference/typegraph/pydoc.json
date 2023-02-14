@@ -27,6 +27,20 @@
           "items": [
             {
               "items": [
+                "docs/reference/typegraph/typegraph/providers/prisma/runtimes/prisma"
+              ],
+              "label": "typegraph.providers.prisma.runtimes",
+              "type": "category"
+            },
+            "docs/reference/typegraph/typegraph/providers/prisma/relations"
+          ],
+          "label": "typegraph.providers.prisma",
+          "type": "category"
+        },
+        {
+          "items": [
+            {
+              "items": [
                 "docs/reference/typegraph/typegraph/providers/temporal/runtimes/temporal"
               ],
               "label": "typegraph.providers.temporal.runtimes",

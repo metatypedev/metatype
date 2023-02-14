@@ -5,6 +5,7 @@ import { assert, assertThrows } from "std/testing/asserts.ts";
 import { TypeCheck, ValidationSchemaBuilder } from "../../src/typecheck.ts";
 import { findOperation } from "../../src/graphql.ts";
 import { parse } from "graphql";
+import { None } from "monads";
 
 test("typecheck", async (t) => {
   const e = await t.pythonFile("typecheck/typecheck.py");
@@ -14,13 +15,13 @@ test("typecheck", async (t) => {
   const graphql = String.raw;
 
   const typecheck = (query: string) => {
-    const [operation, fragments] = findOperation(parse(query), undefined);
-    if (operation == null) {
+    const [operation, fragments] = findOperation(parse(query), None);
+    if (operation.isNone()) {
       throw new Error("No operation found in the query");
     }
     const validationSchema = new ValidationSchemaBuilder(
       tg.tg.types,
-      operation,
+      operation.unwrap(),
       fragments,
     ).build();
 
@@ -92,13 +93,13 @@ test("typecheck", async (t) => {
     assertThrows(
       () => query1.validate({ posts: [post1] }),
       Error,
-      "required property 'author' at /posts/0",
+      "must have required property 'author' at /posts/0",
     );
 
     assertThrows(
       () => query1.validate({ posts: [post2] }),
       Error,
-      "required property 'username' at /posts/0/author",
+      "must have required property 'username' at /posts/0/author",
     );
 
     query1.validate({ posts: [post3] });
@@ -106,7 +107,7 @@ test("typecheck", async (t) => {
     assertThrows(
       () => query1.validate({ posts: [post3, post2] }),
       Error,
-      "required property 'username' at /posts/1/author",
+      "must have required property 'username' at /posts/1/author",
     );
 
     const query2 = typecheck(graphql`

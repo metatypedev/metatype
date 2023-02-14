@@ -12,6 +12,7 @@ import {
   isOptional,
   isQuantifier,
   isScalar,
+  isUnion,
   ObjectNode,
   Type,
   TypeNode,
@@ -304,6 +305,24 @@ export class TypeGraphRuntime extends Runtime {
           interfaces: () => [],
         };
       }
+    }
+
+    if (isUnion(type)) {
+      return {
+        ...common,
+        kind: () => TypeKind.UNION,
+        name: () => type.title,
+        description: () => `${type.title} type`,
+        possibleTypes: () => {
+          const variantNodes = type.anyOf.map((typeIndex) =>
+            this.tg.types[typeIndex]
+          );
+
+          return variantNodes.map((variant) =>
+            this.formatType(variant, false, false)
+          );
+        },
+      };
     }
 
     throw Error(`unexpected type format ${(type as any).type}`);

@@ -50,6 +50,7 @@ class Collector:
 
         collect = self.collects[c]
         prev_size = len(collect)
+
         collect.add(node)
         return len(collect) > prev_size
 
