@@ -8,7 +8,7 @@ import {
   TypeGraphDS,
   typegraphVersion,
 } from "./typegraph.ts";
-import { ensure, JSONValue, mapo, Maybe } from "./utils.ts";
+import { ensure, JSONValue } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
@@ -31,6 +31,8 @@ import { Planner } from "./planner/mod.ts";
 import { FromVars } from "./runtimes/graphql.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
+import { mapValues } from "std/collections/map_values.ts";
+import { Option } from "monads";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -312,7 +314,7 @@ export class Engine {
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...mapo(args, (e) => e(variables, parent, context)),
+            ...mapValues(args, (e: any) => e(variables, parent, context)),
             _: {
               parent: parent ?? {},
               context,
@@ -431,7 +433,7 @@ export class Engine {
 
   async execute(
     query: string,
-    operationName: Maybe<string>,
+    operationName: Option<string>,
     variables: Variables,
     context: Context,
     limit: RateLimit | null,
@@ -440,13 +442,20 @@ export class Engine {
       const document = parse(query);
 
       const [operation, fragments] = findOperation(document, operationName);
-      if (!operation) {
-        throw Error(`operation ${operationName} not found`);
+      if (operation.isNone()) {
+        throw Error(`operation ${operationName.unwrapOr("<none>")} not found`);
       }
+      const unwrappedOperation = operation.unwrap();
 
-      this.validateVariables(operation?.variableDefinitions ?? [], variables);
+      this.validateVariables(
+        unwrappedOperation.variableDefinitions ?? [],
+        variables,
+      );
 
-      const isIntrospection = isIntrospectionQuery(operation, fragments);
+      const isIntrospection = isIntrospectionQuery(
+        unwrappedOperation,
+        fragments,
+      );
       const verbose = !isIntrospection;
 
       if (verbose) {
@@ -456,7 +465,7 @@ export class Engine {
 
       const startTime = performance.now();
       const [plan, cacheHit] = await this.getPlan(
-        operation,
+        unwrappedOperation,
         fragments,
         true,
         verbose,

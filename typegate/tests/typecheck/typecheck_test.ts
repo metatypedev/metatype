@@ -5,6 +5,7 @@ import { assert, assertThrows } from "std/testing/asserts.ts";
 import { TypeCheck, ValidationSchemaBuilder } from "../../src/typecheck.ts";
 import { findOperation } from "../../src/graphql.ts";
 import { parse } from "graphql";
+import { None } from "monads";
 
 test("typecheck", async (t) => {
   const e = await t.pythonFile("typecheck/typecheck.py");
@@ -14,13 +15,13 @@ test("typecheck", async (t) => {
   const graphql = String.raw;
 
   const typecheck = (query: string) => {
-    const [operation, fragments] = findOperation(parse(query), undefined);
-    if (operation == null) {
+    const [operation, fragments] = findOperation(parse(query), None);
+    if (operation.isNone()) {
       throw new Error("No operation found in the query");
     }
     const validationSchema = new ValidationSchemaBuilder(
       tg.tg.types,
-      operation,
+      operation.unwrap(),
       fragments,
     ).build();
 
