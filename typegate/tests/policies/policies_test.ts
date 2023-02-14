@@ -154,11 +154,7 @@ test("Namespace policies", async (t) => {
         }
       }
     `
-      .expectData({
-        ns: {
-          select: { id: 12 },
-        },
-      })
+      .expectErrorContains("no authorization policy")
       .on(e);
   });
 });

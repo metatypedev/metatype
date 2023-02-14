@@ -222,6 +222,7 @@ export class Planner {
           args: {},
           policies,
           outType: TypeGraph.typenameType,
+          typeIdx: parent.typeIdx,
           runtime: DenoRuntime.getDefaultRuntime(this.tg.name),
           batcher: this.tg.nextBatcher(outType),
           node: name,
@@ -461,6 +462,7 @@ export class Planner {
         | "node"
         | "path"
         | "parent"
+        | "typeIdx"
       >
       & Partial<Pick<ComputeStageProps, "outType">>,
   ): ComputeStage {
@@ -471,6 +473,7 @@ export class Planner {
       node: node.name,
       path: node.path,
       parent: node.parentStage,
+      typeIdx: node.typeIdx,
       ...props,
     });
   }

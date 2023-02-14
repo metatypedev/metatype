@@ -31,6 +31,7 @@ import { Planner } from "./planner/mod.ts";
 import { FromVars } from "./runtimes/graphql.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
+import { Type } from "./type_node.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -268,7 +269,6 @@ export class Engine {
         node,
         rateCalls,
         rateWeight,
-        outType,
       } = stage.props;
 
       const decisions = await Promise.all(
@@ -285,9 +285,7 @@ export class Engine {
 
       if (
         node !== "__typename" &&
-        !(outType.type === "object" &&
-          outType.config?.["__namespace"] === true) &&
-        !parent &&
+        this.isRootFunc(stage) &&
         (decisions.some((d) => d === null) || decisions.length < 1)
       ) {
         // root level field inherit false
@@ -543,6 +541,22 @@ export class Engine {
         };
       }
     }
+  }
+
+  private isRootFunc(stage: ComputeStage) {
+    const typ = this.tg.type(stage.props.typeIdx);
+    if (typ.type !== Type.FUNCTION) {
+      return false;
+    }
+
+    const parentStage = stage.props.parent;
+    if (parentStage == undefined) {
+      return true;
+    }
+
+    const parentType = this.tg.type(parentStage.props.typeIdx);
+    return parentType.type === Type.OBJECT &&
+      parentType.config?.["__namespace"] === true;
   }
 
   validateVariables(
