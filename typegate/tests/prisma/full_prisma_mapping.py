@@ -1,7 +1,4 @@
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 with TypeGraph("prisma") as g:
@@ -12,9 +9,6 @@ with TypeGraph("prisma") as g:
     public = policies.public()
 
     user_post = db.one_to_many(g("User"), g("Post")).named("UserPost")
-    user_extended_profile = db.one_to_one(g("User"), g("ExtendedProfile")).named(
-        "UserExtendedProfile"
-    )
 
     user = t.struct(
         {
@@ -23,8 +17,10 @@ with TypeGraph("prisma") as g:
             "age": t.integer().optional(),
             "coinflips": t.array(t.boolean()),
             "city": t.string(),
-            "posts": user_post.owned(),
-            "extended_profile": user_extended_profile.owned(),
+            "posts": db.link(t.array(g("Post")), "userPost"),
+            "extended_profile": db.link(
+                g("ExtendedProfile").optional(), "userExtendedProfile"
+            ),
         },
     ).named("User")
 
@@ -35,7 +31,7 @@ with TypeGraph("prisma") as g:
             "views": t.integer(),
             "likes": t.integer(),
             "published": t.boolean(),
-            "author": user_post.owner(),
+            "author": db.link(g("User"), "userPost"),
         }
     ).named("Post")
 
@@ -43,7 +39,7 @@ with TypeGraph("prisma") as g:
         {
             "id": t.integer().config("id"),
             "bio": t.string(),
-            "User": user_extended_profile.owner(),
+            "User": db.link(g("User").optional(), "userExtendedProfile"),
         }
     ).named("ExtendedProfile")
 
@@ -55,18 +51,14 @@ with TypeGraph("prisma") as g:
         dropSchema=db.executeRaw(
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
-        **db.gen(
-            {
-                "findManyUsers": (user, "findMany", public),
-                "findUniqueUser": (user, "findUnique", public),
-                "createOneUser": (user, "create", public),
-                "findManyPosts": (post, "findMany", public),
-                "findUniquePost": (post, "findUnique", public),
-                "groupByPost": (post, "groupBy", public),
-                "aggregatePost": (post, "aggregate", public),
-                "createOnePost": (post, "create", public),
-                "findManyExtendedProfile": (extended_profile, "findMany", public),
-                "createOneExtendedProfile": (extended_profile, "create", public),
-            }
-        )
+        findManyUsers=db.find_many(user).add_policy(public),
+        findUniqueUser=db.find_unique(user).add_policy(public),
+        createOneUser=db.create(user).add_policy(public),
+        findManyPosts=db.find_many(post).add_policy(public),
+        findUniquePost=db.find_unique(post).add_policy(public),
+        groupByPost=db.group_by(post).add_policy(public),
+        aggregatePost=db.aggregate(post).add_policy(public),
+        createOnePost=db.create(post).add_policy(public),
+        findManyExtendedProfile=db.find_many(extended_profile).add_policy(public),
+        createOneExtendedProfile=db.create(extended_profile).add_policy(public),
     )
