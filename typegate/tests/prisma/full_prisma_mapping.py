@@ -8,8 +8,6 @@ with TypeGraph("prisma") as g:
     db = PrismaRuntime("prisma", "POSTGRES")
     public = policies.public()
 
-    user_post = db.one_to_many(g("User"), g("Post")).named("UserPost")
-
     user = t.struct(
         {
             "id": t.integer().config("id"),
@@ -42,10 +40,6 @@ with TypeGraph("prisma") as g:
             "User": db.link(g("User").optional(), "userExtendedProfile"),
         }
     ).named("ExtendedProfile")
-
-    db.manage(user)
-    db.manage(post)
-    db.manage(extended_profile)
 
     g.expose(
         dropSchema=db.executeRaw(
