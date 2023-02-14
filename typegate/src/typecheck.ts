@@ -3,7 +3,7 @@
 // deno-lint-ignore-file no-unused-vars
 import type * as jst from "json_schema_typed";
 import { Kind } from "graphql";
-import Ajv, { ValidateFunction } from "ajv";
+import Ajv, { ErrorObject, ValidateFunction } from "ajv";
 
 import addFormats from "ajv-formats";
 import {
@@ -23,11 +23,47 @@ import { isOptional, ObjectNode, TypeNode } from "./type_node.ts";
 // - optional
 // - func
 
-type JSONSchema = Exclude<jst.JSONSchema, boolean>;
+export type JSONSchema = Exclude<jst.JSONSchema, boolean>;
 
-function trimType(node: TypeNode): JSONSchema {
+export function trimType(node: TypeNode): JSONSchema {
   const { runtime, policies, config, injection, inject, ...ret } = node;
   return ret as unknown as JSONSchema;
+}
+
+class InvalidNodePathsError extends Error {
+  constructor(
+    public invalidNodePaths: string[],
+    public generatedSchema: JSONSchema,
+  ) {
+    const nodePaths = invalidNodePaths.join(", ");
+    const quantifier = invalidNodePaths.length <= 1 ? "is" : "are";
+
+    super(`${nodePaths} ${quantifier} undefined`);
+  }
+}
+
+export class SchemaValidatorError extends Error {
+  constructor(errors: ErrorObject[], separator: string) {
+    const errorMessages: string[] = [];
+
+    for (const error of errors) {
+      if (Object.entries(error.params).length > 0 && error.message) {
+        let errorMessage = error.message;
+        const allowedValues: string[] = error.params.allowedValues;
+
+        if (allowedValues?.length > 0) {
+          errorMessage += `: ${allowedValues.join(", ")}`;
+        }
+
+        if (error.instancePath.length > 0) {
+          errorMessage += ` at ${error.instancePath}`;
+        }
+
+        errorMessages.push(errorMessage);
+      }
+    }
+    super(errorMessages?.join(separator));
+  }
 }
 
 // Build a jsonschema for a query result
@@ -40,7 +76,7 @@ export class ValidationSchemaBuilder {
 
   public build(): JSONSchema {
     const { name, operation } = this.operation;
-    const rootPath = name?.value ?? (operation[0].toUpperCase());
+    const rootPath = name?.value ?? operation[0].toUpperCase();
     if (operation !== "query" && operation !== "mutation") {
       throw new Error(`unsupported operation type: ${operation}`);
     }
@@ -67,6 +103,10 @@ export class ValidationSchemaBuilder {
           throw new Error(`Path ${path} must be a field selection`);
         }
 
+        // variable helper to bundle all the errors found instead of throwing
+        // on the first error found
+        const invalidNodePaths: string[] = [];
+
         const addProperty = (node: SelectionNode) => {
           switch (node.kind) {
             case Kind.FIELD: {
@@ -88,7 +128,8 @@ export class ValidationSchemaBuilder {
                   selectionSet,
                 );
               } else {
-                throw new Error(`${path}.${name.value} is undefined`);
+                const nodePath = `${path}.${name.value}`;
+                invalidNodePaths.push(nodePath);
               }
               break;
             }
@@ -114,11 +155,73 @@ export class ValidationSchemaBuilder {
           addProperty(node);
         }
 
-        return {
+        const generatedSchema = {
           ...trimType(type),
           properties,
           required,
           additionalProperties: false,
+        };
+
+        if (invalidNodePaths.length > 0) {
+          throw new InvalidNodePathsError(invalidNodePaths, generatedSchema);
+        }
+
+        return generatedSchema;
+      }
+
+      case "union": {
+        const variants = type.anyOf.map((typeIndex) => this.types[typeIndex]);
+        const variantsSchema: JSONSchema[] = [];
+        const undefinedNodePaths = new Map<string, number>();
+
+        for (const variant of variants) {
+          try {
+            const variantSchema = this.get(path, variant, selectionSet);
+
+            variantsSchema.push(variantSchema);
+          } catch (error) {
+            if (error instanceof InvalidNodePathsError) {
+              for (const invalidPath of error.invalidNodePaths) {
+                let count = undefinedNodePaths.get(invalidPath) || 0;
+                count += 1;
+                undefinedNodePaths.set(invalidPath, count);
+              }
+
+              variantsSchema.push(error.generatedSchema);
+            } else {
+              throw error;
+            }
+          }
+        }
+
+        // only throw that a node path is undefined if it doesn't exist on any
+        // of the subschemes
+        const invalidPaths = [];
+        for (const [nodePath, count] of undefinedNodePaths.entries()) {
+          if (count === variants.length) {
+            invalidPaths.push(nodePath);
+          }
+        }
+        if (invalidPaths.length > 0) {
+          throw new InvalidNodePathsError(invalidPaths, {});
+        }
+
+        const trimmedType = trimType(type);
+        // remove `type` field as the type is ruled by the
+        // anyOf subschemes
+        const { type: _, ...untyped } = trimmedType;
+
+        const trimmedVariantsSchema = variantsSchema.map((variant) => {
+          // remove `additionalProperties = false` if present as each subschema
+          // in `allOf` is used to check the properties of a value, therefore
+          // without additionalProperties only one variant would be used to check
+          const { additionalProperties, ...trimmedVariant } = variant;
+          return trimmedVariant;
+        });
+
+        return {
+          ...untyped,
+          anyOf: trimmedVariantsSchema,
         };
       }
 
@@ -168,23 +271,29 @@ export class TypeCheck {
     operation: OperationDefinitionNode,
     fragments: FragmentDefs,
   ) {
-    const schema = new ValidationSchemaBuilder(types, operation, fragments)
-      .build();
+    const schema = new ValidationSchemaBuilder(
+      types,
+      operation,
+      fragments,
+    ).build();
     return new TypeCheck(schema);
   }
 
-  public check(value: any): boolean {
+  public check(value: unknown): boolean {
     return this.validator(value);
   }
 
-  public validate(value: any) {
-    if (!this.check(value)) {
+  public validate(value: unknown) {
+    this.check(value);
+
+    if (this.validator.errors) {
       console.error({ errors: this.validator.errors });
-      const errors = this.validator.errors!
-        .map((err) => `${err.message} at ${err.instancePath}`);
+      const schemaError = new SchemaValidatorError(this.validator.errors, ", ");
       throw new Error(
-        `errors: ${errors.join(", ")};\nvalue: ${
-          JSON.stringify(value)
+        `errors: ${schemaError.message};\nvalue: ${
+          JSON.stringify(
+            value,
+          )
         }\nschema: ${JSON.stringify(this.schema)}`,
       );
     }

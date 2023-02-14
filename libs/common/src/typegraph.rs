@@ -83,7 +83,7 @@ pub struct TypeNodeBase {
     #[serde(default, skip_serializing_if = "serde_json::Value::is_null")]
     pub inject: Value,
     #[serde(default, rename = "enum")]
-    pub enum_: Option<Vec<Value>>,
+    pub enumeration: Option<Vec<Value>>,
     #[serde(default)]
     pub config: IndexMap<String, serde_json::Value>,
 }
@@ -159,6 +159,14 @@ pub enum TypeNode {
         rate_weight: Option<u32>,
         rate_calls: bool,
     },
+    #[serde(rename_all = "camelCase")]
+    Union {
+        #[serde(flatten)]
+        base: TypeNodeBase,
+        /// Array of indexes of the nodes that are used as subschemes in the
+        /// anyOf field of JSON Schema.
+        any_of: Vec<u32>,
+    },
     Any {
         #[serde(flatten)]
         base: TypeNodeBase,
@@ -177,6 +185,7 @@ impl TypeNode {
             | Object { base, .. }
             | Array { base, .. }
             | Function { base, .. }
+            | Union { base, .. }
             | Any { base, .. } => base,
         }
     }
@@ -237,7 +246,7 @@ impl TypeNode {
         if let TypeNode::Object { properties, .. } = &self {
             Ok(properties.clone())
         } else {
-            bail!("node is not an object variant")
+            bail!("node is not an object variant, found: {self:#?}")
         }
     }
 }

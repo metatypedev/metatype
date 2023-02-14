@@ -13,7 +13,7 @@ def test_codegen(snapshot):
         file=path.join(path.dirname(__file__), "graphql_full_introspection.json"),
     )
 
-    snapshot.snapshot_dir = "__snapshots__"
+    snapshot.snapshot_dir = "tests/__snapshots__/importers"
     snapshot.assert_match(
         importer.codegen(Codegen()).res, "graphql_importer_codegen.txt"
     )

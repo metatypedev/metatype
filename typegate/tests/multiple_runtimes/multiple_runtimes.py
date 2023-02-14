@@ -19,9 +19,6 @@ with TypeGraph(name="prisma") as g:
         }
     ).named("test2_User")
 
-    db1.manage(user1)
-    db2.manage(user2)
-
     public = policies.public()
 
     g.expose(
@@ -33,18 +30,10 @@ with TypeGraph(name="prisma") as g:
             "DROP SCHEMA IF EXISTS test2 CASCADE",
             effect=effects.delete(idempotent=True),
         ).add_policy(public),
-        **db1.gen(
-            {
-                "createUser1": (user1, "create", public),
-                "findUniqueUser1": (user1, "findUnique", public),
-                "findManyUsers1": (user1, "findMany", public),
-            }
-        ),
-        **db2.gen(
-            {
-                "createUser2": (user2, "create", public),
-                "findUniqueUser2": (user2, "findUnique", public),
-                "findManyUsers2": (user2, "findMany", public),
-            }
-        )
+        createUser1=db1.create(user1).add_policy(public),
+        findUniqueUser1=db1.find_unique(user1).add_policy(public),
+        findManyUsers1=db1.find_many(user1).add_policy(public),
+        createUser2=db2.create(user2).add_policy(public),
+        findUniqueUser2=db2.find_unique(user2).add_policy(public),
+        findManyUsers2=db2.find_many(user2).add_policy(public),
     )

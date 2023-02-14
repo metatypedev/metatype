@@ -23,7 +23,7 @@ class Node:
 
 
 class NodeProxy(Node):
-    g: "TypeGraph"
+    graph: "TypeGraph"
     node: str
     after_apply: Optional[Callable[["t.typedef"], "t.typedef"]]
 
@@ -34,21 +34,23 @@ class NodeProxy(Node):
         after_apply: Optional[Callable[["t.typedef"], "t.typedef"]] = None,
     ):
         super().__init__()
-        self.g = g
+        self.graph = g
         self.node = node
         self.after_apply = after_apply
 
     def then(self, then_apply: Callable[["t.typedef"], "t.typedef"]):
-        return NodeProxy(self.g, self.node, lambda n: then_apply(self.after_apply(n)))
+        return NodeProxy(
+            self.graph, self.node, lambda n: then_apply(self.after_apply(n))
+        )
 
     def get(self) -> "t.typedef":
-        tpe = self.g.type_by_names.get(self.node)
+        tpe = self.graph.type_by_names.get(self.node)
         if tpe is None:
             raise Exception(f"No registered type named '{self.node}'")
         if self.after_apply is None:
             return tpe
         tpe = self.after_apply(tpe)
-        self.g.type_by_names[tpe.name] = tpe
+        self.graph.type_by_names[tpe.name] = tpe
         self.node, self.after_apply = tpe.name, None
         return tpe
 
