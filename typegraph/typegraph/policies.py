@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from re import sub as reg_sub
-from typing import List
+from typing import List, Optional
 
 from attrs import evolve, field, frozen
 
@@ -21,10 +21,17 @@ def policy_name_factory():
     return f"policy_{tg.next_type_id()}"
 
 
+EFFECTS = [eff.value for eff in EffectType]
+
+
 @frozen
 class Policy(Node):
     name: str = field(factory=policy_name_factory, kw_only=True)
-    mat: Materializer
+    mat: Materializer  # Should be a PureFunMat?
+    create: Optional[Materializer] = field(kw_only=True, default=None)
+    update: Optional[Materializer] = field(kw_only=True, default=None)
+    upsert: Optional[Materializer] = field(kw_only=True, default=None)
+    delete: Optional[Materializer] = field(kw_only=True, default=None)
     collector_target: str = always(Collector.policies)
 
     def named(self, name: str):
@@ -32,12 +39,21 @@ class Policy(Node):
 
     @property
     def edges(self) -> List[Node]:
-        return [self.mat]
+        return [self.mat] + [
+            getattr(self, eff) for eff in EFFECTS if getattr(self, eff) is not None
+        ]
 
     def data(self, collector):
+        effect_materializers = {
+            eff: collector.index(getattr(self, eff))
+            for eff in EFFECTS
+            if getattr(self, eff) is not None
+        }
+
         return {
             "name": self.name,
-            "materializer": collector.index(self.mat),
+            "materializer": collector.index(self.mat),  # default materializer
+            "effect_materializers": effect_materializers,
         }
 
     @classmethod
