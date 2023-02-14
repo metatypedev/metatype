@@ -25,20 +25,6 @@
       "items": [
         {
           "items": [
-            "docs/reference/typegraph/typegraph/importers/base/importer"
-          ],
-          "label": "typegraph.importers.base",
-          "type": "category"
-        },
-        "docs/reference/typegraph/typegraph/importers/openapi"
-      ],
-      "label": "typegraph.importers",
-      "type": "category"
-    },
-    {
-      "items": [
-        {
-          "items": [
             {
               "items": [
                 "docs/reference/typegraph/typegraph/providers/prisma/runtimes/prisma"

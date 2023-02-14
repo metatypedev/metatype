@@ -100,6 +100,11 @@ pub fn run() -> Result<()> {
 }
 
 fn print_module<W: Write>(cm: Lrc<SourceMap>, module: &Module, writer: W) -> Result<()> {
+    // ref: https://doc.rust-lang.org/std/env/consts/constant.OS.html
+    let new_line = match env::consts::OS {
+        "windows" => "\r\n", // windows := CR LF
+        _ => "\n",           // UNIX or MAC := LF
+    };
     let mut emitter = codegen::Emitter {
         cfg: codegen::Config {
             target: EsVersion::latest(),
@@ -109,8 +114,7 @@ fn print_module<W: Write>(cm: Lrc<SourceMap>, module: &Module, writer: W) -> Res
         },
         cm: cm.clone(),
         comments: None,
-        // TODO different new_line for OSes?
-        wr: codegen::text_writer::JsWriter::new(cm, "\n", writer, None),
+        wr: codegen::text_writer::JsWriter::new(cm, new_line, writer, None),
     };
 
     emitter.emit_module(module)?;
