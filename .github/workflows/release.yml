@@ -28,9 +28,8 @@ jobs:
           echo "Releasing v$VERSION"
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ github.ref }}
-          makeLatest: false
-          prerelease: true
+          tag: ${{ github.ref_name }}
+          makeLatest: true
           generateReleaseNotes: true
           discussionCategory: "Announcements"
 
@@ -47,19 +46,24 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             suffix: ""
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            suffix: ""
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            suffix: .exe
+            suffix: ".exe"
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}
       - name: Build
         uses: actions-rs/cargo@v1
         with:
-          use-cross: false
+          use-cross: true
           command: build
           args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
       - name: Compress
@@ -145,4 +149,5 @@ jobs:
           delete-branch: true
           commit-message: "chore: prepare release ${{ steps.bump.outputs.version }}"
           title: "chore: prepare release ${{ steps.bump.outputs.version }}"
-          base: "${{ github.head_ref }}"
+          body: "Automatic suggested bump"
+          base: main

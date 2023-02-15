@@ -17,10 +17,6 @@ updates:
     schedule:
       interval: daily
   - package-ecosystem: pip
-    directory: /website
-    schedule:
-      interval: daily
-  - package-ecosystem: pip
     directory: /examples
     schedule:
       interval: daily
