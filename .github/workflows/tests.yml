@@ -167,8 +167,8 @@ jobs:
         include:
           - os: macos-latest
             activate: "source .venv/bin/activate"
-          #- os: windows-latest
-          #  activate: '.venv\Scripts\activate.bat'
+          - os: windows-latest
+            activate: '.venv\Scripts\activate.bat'
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
