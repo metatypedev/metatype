@@ -177,6 +177,10 @@ impl<'a> TypegraphLoader<'a> {
         #[cfg(not(target_os = "windows"))]
         let program_name = Path::new("py-tg").to_path_buf();
 
+        dbg!(&program_name);
+        let program_metadata = program_name.metadata();
+        dbg!(&program_metadata);
+
         let current_dir = crate::utils::strip_unc_prefix(&self.config.base_dir);
         let p = Command::new(program_name.clone())
             .arg(path.as_ref().to_str().unwrap())
@@ -190,7 +194,7 @@ impl<'a> TypegraphLoader<'a> {
                 if self.skip_deno_modules { "1" } else { "" },
             )
             .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
+            .stderr(Stdio::inherit())
             .output()
             .with_context(|| {
                 format!(
@@ -203,8 +207,7 @@ impl<'a> TypegraphLoader<'a> {
         if p.status.success() {
             Ok(String::from_utf8(p.stdout)?)
         } else {
-            let stderr = String::from_utf8(p.stderr)?;
-            bail!("Python error:\n{}", stderr.red())
+            bail!("py-tg failed to serialize python typegraph module");
         }
     }
 }

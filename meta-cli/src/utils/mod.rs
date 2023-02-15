@@ -23,9 +23,8 @@ pub fn strip_unc_prefix(path: &Path) -> &Path {
 pub fn strip_unc_prefix(path: &Path) -> &Path {
     let path_str = path.to_str().unwrap();
     let prefix = r"\\?\";
-    if path_str.starts_with(prefix) {
-        let path_str = &path_str[prefix.len()..];
-        &Path::new(path_str)
+    if let Some(path_str) = path_str.strip_prefix(prefix) {
+        Path::new(path_str)
     } else {
         path
     }
