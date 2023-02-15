@@ -1,12 +1,10 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
-
-from typing import Optional
-from typing import Union
+from typing import Optional, Union
 
 from attrs import frozen
+
 from typegraph import t
-from typegraph.graph.typegraph import find
-from typegraph.graph.typegraph import resolve_proxy
+from typegraph.graph.typegraph import find, resolve_proxy
 from typegraph.providers.prisma.relations import RelationshipRegister
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
@@ -123,6 +121,46 @@ class TypeGenerator:
             return t.struct(fields)
         else:
             return t.struct(fields).named(name)
+
+    def deep_map(self, tpe: t.typedef, fn: callable) -> t.struct:
+        if isinstance(tpe, t.NodeProxy):
+            # circular references ?
+            return None
+
+        if isinstance(tpe, t.array) or isinstance(tpe, t.optional):
+            content = tpe.of
+            if isinstance(tpe, t.array):
+                return t.array(self.deep_map(content, fn))
+            else:
+                return self.deep_map(content, fn).optional()
+
+        if isinstance(tpe, t.struct):
+            props = {}
+            for k, v in tpe.props.items():
+                term_node = self.deep_map(v, fn)
+                if term_node is None:
+                    continue
+                props[k] = term_node
+            return t.struct(props)
+
+        return fn(tpe)
+
+    def promote_num_to_float(self, tpe: t.struct) -> t.struct:
+        return self.deep_map(
+            tpe, lambda term: t.float() if isinstance(term, t.number) else term
+        )
+
+    def extract_number_types(self, tpe: t.struct) -> t.struct:
+        fields = {}
+        for key, value in tpe.props.items():
+            if isinstance(value, t.number):
+                fields[key] = value
+        return t.struct(fields)
+
+    def get_order_by_type(self, tpe: t.struct) -> t.struct:
+        term_node_value = t.enum(["asc", "desc"]).optional()
+        remap_struct = self.deep_map(tpe, lambda _: term_node_value).optional()
+        return t.array(remap_struct)
 
 
 def unsupported_cardinality(c: str):

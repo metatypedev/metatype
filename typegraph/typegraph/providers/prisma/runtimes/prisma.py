@@ -96,42 +96,6 @@ def get_name_generator(op_label: str, tpe: t.struct):
     return lambda name: f"{tpe.name}{op_label}{name}"
 
 
-def promote_num_to_float(tpe: t.struct) -> t.struct:
-    return deep_map(tpe, lambda term: t.float() if isinstance(term, t.number) else term)
-
-
-def extract_number_types(tpe: t.struct) -> t.struct:
-    fields = {}
-    for key, value in tpe.props.items():
-        if isinstance(value, t.number):
-            fields[key] = value
-    return t.struct(fields)
-
-
-# apply fn to all terminal nodes
-def deep_map(tpe: t.typedef, fn: callable) -> t.struct:
-    if isinstance(tpe, t.NodeProxy):
-        return deep_map(tpe.get(), fn)
-
-    if isinstance(tpe, t.array) or isinstance(tpe, t.optional):
-        content = tpe.of
-        if isinstance(tpe, t.array):
-            return t.array(deep_map(content, fn))
-        else:
-            return deep_map(content, fn).optional()
-
-    if isinstance(tpe, t.struct):
-        return t.struct({k: deep_map(v, fn) for k, v in tpe.props.items()})
-
-    return fn(tpe)
-
-
-def get_order_by_type(tpe: t.struct) -> t.struct:
-    term_node_value = t.enum(["asc", "desc"]).optional()
-    remap_struct = deep_map(tpe, lambda _: term_node_value).optional()
-    return t.array(remap_struct)
-
-
 @frozen
 class PrismaOperationMat(Materializer):
     runtime: "PrismaRuntime"
@@ -374,7 +338,7 @@ class PrismaRuntime(Runtime):
                     "where": typegen.get_where_type(tpe)
                     .named(_pref("Where"))
                     .optional(),
-                    "orderBy": get_order_by_type(tpe)
+                    "orderBy": typegen.get_order_by_type(tpe)
                     .named(_pref("OrderBy"))
                     .optional(),
                     "take": t.integer().named(_pref("Take")).optional(),
@@ -392,7 +356,7 @@ class PrismaRuntime(Runtime):
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Aggregate", tpe)
-        tpe_nums = extract_number_types(tpe)
+        tpe_nums = typegen.extract_number_types(tpe)
         return t.func(
             t.struct(
                 {
@@ -408,7 +372,7 @@ class PrismaRuntime(Runtime):
                     "_count": t.struct({"_all": t.integer()})
                     .compose(tpe.props)
                     .named(_pref("Count")),
-                    "_avg": promote_num_to_float(tpe_nums).named(_pref("Avg")),
+                    "_avg": typegen.promote_num_to_float(tpe_nums).named(_pref("Avg")),
                     "_sum": tpe_nums.named(_pref("Sum")),
                     "_min": tpe_nums.named(_pref("Min")),
                     "_max": tpe_nums.named(_pref("Max")),
@@ -421,14 +385,16 @@ class PrismaRuntime(Runtime):
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("GroupBy", tpe)
-        tpe_nums = extract_number_types(tpe)
+        tpe_nums = typegen.extract_number_types(tpe)
         aggreg_def = t.struct(
             {
                 "_count": t.struct({"_all": t.integer()})
                 .compose(tpe.props)
                 .named(_pref("Count"))
                 .optional(),
-                "_avg": promote_num_to_float(tpe_nums).named(_pref("Avg")).optional(),
+                "_avg": typegen.promote_num_to_float(tpe_nums)
+                .named(_pref("Avg"))
+                .optional(),
                 "_sum": tpe_nums.named(_pref("Sum")).optional(),
                 "_min": tpe_nums.named(_pref("Min")).optional(),
                 "_max": tpe_nums.named(_pref("Max")).optional(),
@@ -454,7 +420,7 @@ class PrismaRuntime(Runtime):
                     "where": typegen.get_where_type(row_def)
                     .named(_pref("Where"))
                     .optional(),
-                    "orderBy": get_order_by_type(row_def)
+                    "orderBy": typegen.get_order_by_type(row_def)
                     .named(_pref("OrderBy"))
                     .optional(),
                     "having": having_def.named(_pref("Having")).optional(),
