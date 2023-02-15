@@ -61,7 +61,7 @@ impl<'a> TypegraphLoader<'a> {
 
         let output = match ext {
             Some(ext) if ext == "py" => self
-                .load_python_module(&path)
+                .load_python_module(path)
                 .with_context(|| format!("Loading python module {:?}", path))?,
             _ => {
                 if self.ignore_unknown_file_types {
@@ -145,7 +145,7 @@ impl<'a> TypegraphLoader<'a> {
                 let included = include_set.is_empty() || include_set.is_match(&relative);
                 let excluded = !exclude_set.is_empty() && exclude_set.is_match(&relative);
                 if included && !excluded {
-                    let rel_path = crate::utils::relative_path_display(dir.clone(), path.clone());
+                    let rel_path = crate::utils::relative_path_display(&dir, path);
 
                     println!(
                         "{}",

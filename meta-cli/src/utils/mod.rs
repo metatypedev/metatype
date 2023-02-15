@@ -54,7 +54,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         #[cfg(not(target_os = "windows"))]
         let path = format!(
             "{venv_bin}:{path}",
-            venv_bin = venv_dir.as_path().join("bin").to_str().unwrap()
+            venv_bin = venv_dir.join("bin").to_str().unwrap()
         );
 
         set_var("VIRTUAL_ENV", venv);
