@@ -8012,8 +8012,3 @@ dependencies = [
  "flate2",
  "time 0.3.17",
 ]
-
-[[patch.unused]]
-name = "tiberius"
-version = "0.11.3"
-source = "git+https://github.com/metatypedev/tiberius?branch=fix#74cffc7b747dbdde0fa713d3c0c313cc21a572fb"
