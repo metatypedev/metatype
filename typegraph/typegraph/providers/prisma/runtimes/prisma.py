@@ -13,6 +13,8 @@ from typegraph.graph.typegraph import TypegraphContext
 from typegraph.providers.prisma.relations import LinkProxy
 from typegraph.providers.prisma.schema import RelationshipRegister, build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
+
+# from typegraph.providers.prisma.utils import stdout_to_file
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always, required
 
@@ -400,7 +402,7 @@ class PrismaRuntime(Runtime):
                 "_max": tpe_nums.named(_pref("Max")).optional(),
             }
         )
-        row_def = aggreg_def.compose(tpe.props)
+        row_def = tpe.compose(aggreg_def.props)
         """
         having_def = t.struct({
             col: t.struct({ agg_name: t.float().optional() for agg_name in aggreg_def.props.keys() }).optional()

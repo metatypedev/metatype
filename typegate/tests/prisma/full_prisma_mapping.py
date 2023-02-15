@@ -37,7 +37,7 @@ with TypeGraph("prisma") as g:
         {
             "id": t.integer().config("id"),
             "bio": t.string(),
-            "User": db.link(g("User").optional(), "userExtendedProfile"),
+            "user": db.link(g("User"), "userExtendedProfile"),
         }
     ).named("ExtendedProfile")
 

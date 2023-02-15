@@ -53,7 +53,7 @@ test("prisma full mapping", async (t) => {
     })
       .on(e);
   });
-  /*
+
   await t.should("do a count with findManyPost", async () => {
     await gql`
         query {
@@ -78,7 +78,7 @@ test("prisma full mapping", async (t) => {
       console.log("body findManyPost :::", body);
     })
       .on(e);
-  });*/
+  });
 
   await t.should("paginate correctly with findManyPosts", async () => {
     await gql`
@@ -200,7 +200,7 @@ test("prisma full mapping", async (t) => {
       await gql`
         query {
           aggregatePost(
-            where: {author: {id: 1}}, 
+            where: {author: {id: 1}},
             skip: 1,
             take: 2
           ) {

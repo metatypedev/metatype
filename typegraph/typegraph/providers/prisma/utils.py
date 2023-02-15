@@ -62,3 +62,14 @@ def only_unique(tpe: t.Type):
 
 def optional_root(tpe: t.struct):
     return t.struct({k: v.optional() for k, v in tpe.of.items()})
+
+
+# temporary redirect stdout to a file
+def stdout_to_file(obj: any, filename="stdout.txt"):
+    import sys
+
+    original_stdout = sys.stdout
+    with open(filename, "w") as f:
+        sys.stdout = f
+        print(obj)
+        sys.stdout = original_stdout
