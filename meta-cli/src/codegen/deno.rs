@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use common::typegraph::{TypeNode, Typegraph};
+use pathdiff::diff_paths;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
@@ -44,6 +45,7 @@ where
     Ok(())
 }
 
+#[derive(Debug)]
 struct ModuleCode {
     path: PathBuf,
     code: String,
@@ -174,7 +176,12 @@ impl<'a> Codegen<'a> {
         self.generate(gen_list)
             .into_iter()
             .map(|(name, code)| -> Result<ModuleCode> {
-                let path = self.ts_modules.remove(&name).unwrap().path;
+                let name = diff_paths(name, &self.base_dir).unwrap();
+                let path = self
+                    .ts_modules
+                    .remove(name.as_path().to_str().unwrap())
+                    .ok_or_else(|| anyhow!("Could not find module '{name:?}'"))?
+                    .path;
                 let code = ts::format_text(&path, &code)
                     .context(format!("could not format code: {code:#?}"))?;
                 Ok(ModuleCode { path, code })
