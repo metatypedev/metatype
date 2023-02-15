@@ -504,7 +504,9 @@ class struct(typedef):
     def compose(self, props: Dict[str, typedef]):
         new_props = dict(self.props)
         new_props.update(props)
-        return self.replace(props=frozendict(new_props))
+        return self.replace(
+            props=frozendict(new_props), name=f"{self.type}_{self.graph.next_type_id()}"
+        )
 
     def __getattr__(self, attr):
         try:
