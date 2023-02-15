@@ -14,6 +14,23 @@ use std::path::Path;
 use std::time::Duration;
 use std::{collections::HashMap, path::PathBuf};
 
+#[cfg(not(target_os = "windows"))]
+pub fn strip_unc_prefix(path: &Path) -> &Path {
+    path
+}
+
+#[cfg(target_os = "windows")]
+pub fn strip_unc_prefix(path: &Path) -> &Path {
+    let path_str = path.to_str().unwrap();
+    let prefix = r"\\?\";
+    if path_str.starts_with(prefix) {
+        let path_str = &path_str[prefix.len()..];
+        &Path::new(path_str)
+    } else {
+        path
+    }
+}
+
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if var("VIRTUAL_ENV").is_ok() {
         return Ok(());
@@ -23,6 +40,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     let venv_dir = dir.join(".venv");
 
     if venv_dir.is_dir() {
+        let venv_dir = strip_unc_prefix(&venv_dir);
         let venv = venv_dir.to_str().unwrap();
 
         let path = var("PATH")?;
@@ -31,7 +49,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         #[cfg(target_os = "windows")]
         let path = format!(
             "{venv_bin};{path}",
-            venv_bin = venv_dir.as_path().join("Scripts").to_str().unwrap()
+            venv_bin = venv_dir.join("Scripts").to_str().unwrap()
         );
         #[cfg(not(target_os = "windows"))]
         let path = format!(

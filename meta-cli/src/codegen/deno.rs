@@ -453,6 +453,8 @@ impl IntoJson for HashMap<String, Value> {
 
 #[cfg(test)]
 mod tests {
+    use pathdiff::diff_paths;
+
     use super::*;
     use crate::config::Config;
     use crate::tests::utils::ensure_venv;
@@ -467,9 +469,11 @@ mod tests {
 
         for typegraph_test in tests {
             let typegraph_test = typegraph_test.unwrap().path();
+            let relative = diff_paths(&typegraph_test, test_folder).unwrap();
+            println!("test: {typegraph_test:?}");
             let tgs = TypegraphLoader::with_config(&config)
                 .skip_deno_modules()
-                .load_file(&typegraph_test)?
+                .load_file(&relative)?
                 .unwrap_or_else(|| vec![]);
             assert_eq!(tgs.len(), 1);
             let tg = tgs.into_iter().next().unwrap();

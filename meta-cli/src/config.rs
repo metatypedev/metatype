@@ -164,7 +164,7 @@ impl FromStr for Config {
 impl Config {
     pub fn default_in<P: AsRef<Path>>(base_dir: P) -> Self {
         Self {
-            base_dir: base_dir.as_ref().to_owned(),
+            base_dir: base_dir.as_ref().canonicalize().unwrap(),
             ..Default::default()
         }
     }
@@ -259,7 +259,10 @@ mod tests {
         let config = Config::load_or_find(None, &project_root.join("meta-cli/tests/graphs/nested"));
         assert!(config.is_ok(), "{:?}", config);
         let config = config.unwrap();
-        assert_eq!(config.base_dir, project_root.join("meta-cli/tests"));
+        assert_eq!(
+            config.base_dir,
+            fs::canonicalize(project_root.join("meta-cli/tests"))?
+        );
         Ok(())
     }
 }
