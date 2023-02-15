@@ -20,9 +20,10 @@
 use prisma_models::psl;
 use psl::diagnostics::Diagnostics;
 use query_connector::error::ConnectorError;
+use query_core::executor::TransactionOptions;
 use query_core::CoreError;
 use query_core::{executor, schema::QuerySchema, schema_builder, QueryExecutor, TxId};
-use request_handlers::{GraphQlBody, GraphQlHandler, PrismaResponse, TxInput};
+use request_handlers::{GraphQlBody, GraphQlHandler, PrismaResponse};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
@@ -148,13 +149,13 @@ impl QueryEngine {
             .to_result()
             .map_err(|err| ApiError::conversion(err, schema.db.source()))?;
 
-        if !ignore_env_var_errors {
-            config
-                .resolve_datasource_urls_from_env(&overrides, |key| {
-                    env.get(key).map(ToString::to_string)
-                })
-                .map_err(|err| ApiError::conversion(err, schema.db.source()))?;
-        }
+        config
+            .resolve_datasource_urls_query_engine(
+                &overrides,
+                |key| env.get(key).map(ToString::to_string),
+                ignore_env_var_errors,
+            )
+            .map_err(|err| ApiError::conversion(err, schema.db.source()))?;
 
         config
             .validate_that_one_datasource_is_provided()
@@ -245,17 +246,13 @@ impl QueryEngine {
 
     /// If connected, attempts to start a transaction in the core and returns its ID.
     #[allow(dead_code)]
-    pub async fn start_tx(&self, input: TxInput) -> Result<String> {
+    pub async fn start_tx(&self, input: String) -> Result<String> {
         match *self.inner.read().await {
             Inner::Connected(ref engine) => {
+                let tx_opts: TransactionOptions = serde_json::from_str(&input)?;
                 match engine
                     .executor()
-                    .start_tx(
-                        engine.query_schema().clone(),
-                        input.max_wait,
-                        input.timeout,
-                        None,
-                    )
+                    .start_tx(engine.query_schema().clone(), tx_opts)
                     .await
                 {
                     Ok(tx_id) => Ok(json!({ "id": tx_id.to_string() }).to_string()),
