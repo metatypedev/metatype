@@ -122,7 +122,7 @@ class TypeGenerator:
         else:
             return t.struct(fields).named(name)
 
-    def deep_map(self, tpe: t.typedef, fn: callable, seen=set()) -> t.struct:
+    def deep_map(self, tpe: t.typedef, fn: callable) -> t.struct:
         if isinstance(tpe, t.array) or isinstance(tpe, t.optional):
             content = resolve_entity_quantifier(tpe)
             if isinstance(tpe, t.array):
@@ -130,16 +130,10 @@ class TypeGenerator:
             else:
                 return self.deep_map(content, fn).optional()
 
-        if isinstance(tpe, t.number) or isinstance(tpe, t.string):
-            return fn(tpe)
-
         if isinstance(tpe, t.struct):
             return t.struct({k: self.deep_map(v, fn) for k, v in tpe.props.items()})
 
         return fn(resolve_proxy(tpe))
-
-    def optionalize_terminal_nodes(self, tpe: t.struct) -> t.struct:
-        return self.deep_map(tpe, lambda term: term.optional())
 
     def promote_num_to_float(self, tpe: t.struct) -> t.struct:
         return self.deep_map(

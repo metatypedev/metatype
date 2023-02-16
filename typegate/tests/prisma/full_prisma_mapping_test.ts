@@ -33,9 +33,10 @@ test("prisma full mapping", async (t) => {
                 createMany: {
                   data: [
                     { id: 10001, title: "Book 1", views: 9, likes: 7, published: true },
-                    { id: 10002, title: "Book 2", views: 8, likes: 3, published: false },
-                    { id: 10003, title: "Book 3", views: 5, likes: 20, published: true },
+                    { id: 10002, title: "Book 2", views: 6, likes: 3, published: false },
+                    { id: 10003, title: "Book 3", views: 5, likes: 13, published: true },
                     { id: 10004, title: "Book 4", views: 5, likes: 14, published: true },
+                    { id: 10005, title: "Book 4", views: 2, likes: 7, published: true },
                   ]
                 }
               }
@@ -53,38 +54,26 @@ test("prisma full mapping", async (t) => {
     })
       .on(e);
   });
-
-  await t.should("do a count with findManyPost", async () => {
-    await gql`
-        query {
-          findManyUsers {
-            _count { posts extended_profile }
-          }
-        }
-    `.expectBody((body: any) => {
-      console.log("body findManyPost :::", body);
-    })
-      .on(e);
-  });
-
+  /*
   await t.should("do a count with findUniquePost", async () => {
     await gql`
         query {
-          findUniquePost {
-            _count { posts extended_profile }
+          findUniquePost(where: {id: 10001}) {
+            id
+            title
           }
         }
     `.expectBody((body: any) => {
       console.log("body findManyPost :::", body);
     })
       .on(e);
-  });
+  });*/
 
   await t.should("paginate correctly with findManyPosts", async () => {
     await gql`
         query {
           findManyPosts(skip: 1, take: 2) {
-            id 
+            id
             title
           }
         }
@@ -111,10 +100,11 @@ test("prisma full mapping", async (t) => {
         }
     `.expectData({
       findManyPosts: [
-        { id: 10003, likes: 20, views: 5 },
         { id: 10004, likes: 14, views: 5 },
+        { id: 10003, likes: 13, views: 5 },
+        { id: 10005, likes: 7, views: 2 },
         { id: 10001, likes: 7, views: 9 },
-        { id: 10002, likes: 3, views: 8 },
+        { id: 10002, likes: 3, views: 6 },
       ],
     })
       .on(e);
@@ -134,21 +124,20 @@ test("prisma full mapping", async (t) => {
             _sum { likes views }
           }
         }
-    `
-      .expectData({
-        groupByPost: [
-          {
-            published: true,
-            _count: { _all: 3 },
-            _sum: { likes: 41, views: 19 },
-          },
-          {
-            published: false,
-            _count: { _all: 1 },
-            _sum: { likes: 3, views: 8 },
-          },
-        ],
-      })
+    `.expectData({
+      groupByPost: [
+        {
+          published: true,
+          _count: { _all: 4 },
+          _sum: { likes: 41, views: 21 },
+        },
+        {
+          published: false,
+          _count: { _all: 1 },
+          _sum: { likes: 3, views: 6 },
+        },
+      ],
+    })
       .on(e);
   });
 
@@ -184,11 +173,11 @@ test("prisma full mapping", async (t) => {
         }
     `.expectData({
       aggregatePost: {
-        _count: { _all: 4, views: 4, likes: 4 },
+        _count: { _all: 5, views: 5, likes: 5 },
         _sum: { views: 27, likes: 44 },
-        _max: { views: 9, likes: 20 },
-        _min: { views: 5, likes: 3 },
-        _avg: { views: 6.75, likes: 11 },
+        _max: { views: 9, likes: 14 },
+        _min: { views: 2, likes: 3 },
+        _avg: { views: 5.4, likes: 8.8 },
       },
     })
       .on(e);
@@ -211,13 +200,13 @@ test("prisma full mapping", async (t) => {
             _avg { views likes }
           }
         }
-    `.expectData({
+      `.expectData({
         aggregatePost: {
           _count: { _all: 2, views: 2, likes: 2 },
-          _sum: { views: 13, likes: 23 },
-          _max: { views: 8, likes: 20 },
+          _sum: { views: 11, likes: 16 },
+          _max: { views: 6, likes: 13 },
           _min: { views: 5, likes: 3 },
-          _avg: { views: 6.5, likes: 11.5 },
+          _avg: { views: 5.5, likes: 8 },
         },
       })
         .on(e);

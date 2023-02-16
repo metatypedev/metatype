@@ -316,11 +316,16 @@ class PrismaRuntime(Runtime):
         # count_ouptut = typegen.get_out_type(tpe)
         # IDEA : t.union([base_output, count_output])
         # output = either(base_output, count_output)
+
+        base_output = typegen.get_out_type(tpe)
+        count_output = t.struct({"count": typegen.deep_map(tpe, lambda _: t.integer())})
+        output = t.union((base_output, count_output))
+
         return t.func(
             t.struct(
                 {"where": typegen.get_where_type(tpe).named(_pref("Where")).optional()}
             ),
-            typegen.get_out_type(tpe).named(_pref("Output")).optional(),
+            output.named(_pref("Output")).optional(),
             PrismaOperationMat(self, tpe.name, "findUnique", effect=effects.none()),
         )
 
