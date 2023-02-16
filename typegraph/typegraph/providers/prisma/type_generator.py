@@ -122,6 +122,7 @@ class TypeGenerator:
         else:
             return t.struct(fields).named(name)
 
+    # visit a terminal node and apply fn
     def deep_map(self, tpe: t.typedef, fn: callable) -> t.struct:
         if isinstance(tpe, t.array) or isinstance(tpe, t.optional):
             content = resolve_entity_quantifier(tpe)
