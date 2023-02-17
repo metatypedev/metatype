@@ -228,4 +228,30 @@ test("prisma full mapping", async (t) => {
     })
       .on(e);
   });
+
+  await t.should(
+    "update matching rows and return the count affected",
+    async () => {
+      await gql`
+        mutation {
+          updateManyPosts(
+            where: {published: true},
+            data: {
+              views: {increment: 3},
+              likes: {set: 123},
+              published: {set: false},
+              title: {set: "TITLE_MODIFIED"}
+            }
+          ) {
+            count
+          }
+        }
+    `.expectData({
+        updateManyPosts: {
+          count: 4,
+        },
+      })
+        .on(e);
+    },
+  );
 });

@@ -318,14 +318,13 @@ class PrismaRuntime(Runtime):
         # output = either(base_output, count_output)
 
         base_output = typegen.get_out_type(tpe)
-        count_output = t.struct({"count": typegen.deep_map(tpe, lambda _: t.integer())})
-        output = t.union((base_output, count_output))
 
         return t.func(
             t.struct(
                 {"where": typegen.get_where_type(tpe).named(_pref("Where")).optional()}
             ),
-            output.named(_pref("Output")).optional(),
+            base_output.named(_pref("Output")).optional(),
+            # output.named(_pref("Output")).optional(),
             PrismaOperationMat(self, tpe.name, "findUnique", effect=effects.none()),
         )
 
@@ -468,6 +467,23 @@ class PrismaRuntime(Runtime):
             typegen.get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
             PrismaOperationMat(
                 self, tpe.name, "updateOne", effect=effects.update(True)
+            ),
+        )
+
+    def update_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+        self.__manage(tpe)
+        typegen = self.__typegen
+        _pref = get_name_generator("UpdateMany", tpe)
+        return t.func(
+            t.struct(
+                {
+                    "data": typegen.get_update_many_data(tpe).named(_pref("Data")),
+                    "where": typegen.get_where_type(tpe).named(_pref("Where")),
+                }
+            ),
+            t.struct({"count": t.integer()}).named(_pref("BatchPayload")),
+            PrismaOperationMat(
+                self, tpe.name, "updateMany", effect=effects.update(True)
             ),
         )
 

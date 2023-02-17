@@ -141,6 +141,34 @@ class TypeGenerator:
             tpe, lambda term: t.float() if isinstance(term, t.number) else term
         )
 
+    def generate_update_operation(self, terminal_node: t.typedef) -> t.struct:
+        # TODO  1 what are all available operations ?
+        #       2 should be a union as in Set | Add | Multiply | Divide
+        if isinstance(terminal_node, t.string):
+            return t.struct({"set": t.string()})
+        elif isinstance(terminal_node, t.boolean):
+            return t.struct({"set": t.boolean()})
+        elif isinstance(terminal_node, t.number):
+            return t.struct(
+                {
+                    "set": terminal_node.optional(),
+                    "multiply": terminal_node.optional(),
+                    "divide": terminal_node.optional(),
+                    "decrement": terminal_node.optional(),
+                    "increment": terminal_node.optional(),
+                }
+            )
+        # Note: t.struct is not a terminal node
+        return None
+
+    def get_update_many_data(self, tpe: t.typedef) -> t.struct:
+        data = {}
+        for k, v in tpe.props.items():
+            new_v = self.generate_update_operation(v)
+            if new_v is not None:
+                data[k] = new_v.optional()
+        return t.struct(data)
+
     def extract_number_types(self, tpe: t.struct) -> t.struct:
         fields = {}
         for key, value in tpe.props.items():
