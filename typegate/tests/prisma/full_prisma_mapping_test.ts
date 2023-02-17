@@ -254,4 +254,28 @@ test("prisma full mapping", async (t) => {
         .on(e);
     },
   );
+
+  await t.should(
+    "create many users",
+    async () => {
+      await gql`
+        mutation {
+          createManyUsers(
+            data: [
+              {id: 2, name: "Robert", age: 21, coinflips: [false, true], city: "SomeVille"},
+              {id: 3, name: "Kiki", age: 18, coinflips: [true], city: "AnotherBille"},
+              {id: 4, name: "George", age: 18, coinflips: [false], city: "YetAnotherVille"},
+            ]
+          ) {
+            count
+          }
+        }
+    `.expectData({
+        createManyUsers: {
+          count: 3,
+        },
+      })
+        .on(e);
+    },
+  );
 });

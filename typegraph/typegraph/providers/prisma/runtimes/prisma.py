@@ -450,6 +450,20 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "createOne", effect=effects.create()),
         )
 
+    def create_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+        self.__manage(tpe)
+        typegen = self.__typegen
+        _pref = get_name_generator("CreateMany", tpe)
+        return t.func(
+            t.struct(
+                {
+                    "data": t.array(typegen.get_input_type(tpe)).named(_pref("Input")),
+                }
+            ),
+            t.struct({"count": t.integer()}).named(_pref("BatchPayload")),
+            PrismaOperationMat(self, tpe.name, "createMany", effect=effects.create()),
+        )
+
     def update(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen

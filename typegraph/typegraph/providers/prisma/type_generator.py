@@ -142,13 +142,13 @@ class TypeGenerator:
         )
 
     def generate_update_operation(self, terminal_node: t.typedef) -> t.struct:
-        # TODO  1 what are all available operations ?
-        #       2 should be a union as in Set | Add | Multiply | Divide
         if isinstance(terminal_node, t.string):
             return t.struct({"set": t.string()})
         elif isinstance(terminal_node, t.boolean):
             return t.struct({"set": t.boolean()})
         elif isinstance(terminal_node, t.number):
+            # TODO should be a union as in:
+            # type UpdateOp = Set | Increment | Decrement | Multiply | Divide
             return t.struct(
                 {
                     "set": terminal_node.optional(),
