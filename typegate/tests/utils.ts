@@ -22,6 +22,7 @@ import { SystemTypegraph } from "../src/system_typegraphs.ts";
 import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
 import { copy } from "std/streams/copy.ts";
 import * as native from "native";
+import { None } from "monads";
 
 const thisDir = dirname(fromFileUrl(import.meta.url));
 const metaCli = resolve(thisDir, "../../target/debug/meta");
@@ -317,7 +318,7 @@ export class Q {
     if (testConfig.override || !(await exists(output))) {
       const { ...result } = await engine!.execute(
         await query,
-        null,
+        None,
         {},
         {},
         null,

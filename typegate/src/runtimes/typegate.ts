@@ -9,28 +9,6 @@ import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphDS } from "../typegraph.ts";
 import { typegraph_validate } from "native";
 
-interface StructField {
-  name: string;
-  typedef: string;
-}
-
-interface StructNode {
-  name: string;
-  typedef: "struct";
-  fields: Record<string, StructField>;
-}
-
-interface FuncNode {
-  name: string;
-  typedef: "func" | "gen";
-  fields: {
-    input: StructField;
-    output: StructField;
-  };
-}
-
-type Node = StructNode | FuncNode;
-
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
 

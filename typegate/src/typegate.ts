@@ -8,6 +8,7 @@ import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { getLogger } from "./log.ts";
+import { forceAnyToOption } from "./utils.ts";
 
 interface ParsedPath {
   lookup: string;
@@ -156,7 +157,7 @@ export const typegate =
       const { query, operationName, variables } = await request.json();
       const { status, ...res } = await engine.execute(
         query,
-        operationName,
+        forceAnyToOption(operationName),
         variables,
         context,
         limit,

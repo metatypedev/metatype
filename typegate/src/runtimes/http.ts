@@ -2,24 +2,23 @@
 
 import { ComputeStage } from "../engine.ts";
 import { Runtime } from "./Runtime.ts";
-import { envOrFail, JSONValue } from "../utils.ts";
+import { createUrl, envOrFail, JSONValue } from "../utils.ts";
 import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
-import { urlJoin } from "url_join";
 
-// FIXME better solution require
 const traverseLift = (obj: JSONValue): any => {
   if (Array.isArray(obj)) {
     return obj.map(traverseLift);
   }
   if (typeof obj === "object" && obj !== null) {
-    return Object.entries(obj).reduce(
-      (agg, [k, v]) => ({ ...agg, [k]: () => v }),
-      {},
-    );
+    const res: any = {};
+    for (const k in obj) {
+      res[k] = () => traverseLift(obj[k]);
+    }
+    return res;
   }
   return obj;
 };
@@ -139,16 +138,14 @@ export class HTTPRuntime extends Runtime {
           }
         }
       }
-      const query = searchParams.toString();
 
       const body = encodeRequestBody(
         bodyFields,
         options.content_type,
       );
 
-      // TODO : rewrite a fast url join, and removing trailling "?""
       const res = await fetch(
-        urlJoin(this.endpoint, pathname, `?${query}`),
+        createUrl(this.endpoint, pathname, searchParams),
         {
           method,
           headers,
