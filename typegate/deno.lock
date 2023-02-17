@@ -441,7 +441,7 @@
     "https://raw.githubusercontent.com/denodrivers/redis/master/protocol/reply.ts": "4b7432263924ca611f08af818436eafd9433eef07a835bc0338a08def5db1a30",
     "https://raw.githubusercontent.com/denodrivers/redis/master/protocol/types.ts": "6bf515b69712dfd4ab45caf1d0054b8fcdd6e1afb55b2bd9a221e9ecb066f658",
     "https://raw.githubusercontent.com/denodrivers/redis/master/pubsub.ts": "58b7431c1383fc20addfc7ab1272b28e35a4d101173ea59ade28612ad7fef573",
-    "https://raw.githubusercontent.com/denodrivers/redis/master/redis.ts": "bac44a54df4b19066c86f76fd130516bd89f15e1bdb4158998227fbc32ef1c52",
+    "https://raw.githubusercontent.com/denodrivers/redis/master/redis.ts": "dd1aed5b604f2514475dd7f78cc06b1f9f9dc17897f6f3ebda72ef3d5227b3be",
     "https://raw.githubusercontent.com/denodrivers/redis/master/stream.ts": "f116d73cfe04590ff9fa8a3c08be8ff85219d902ef2f6929b8c1e88d92a07810",
     "https://raw.githubusercontent.com/denodrivers/redis/master/vendor/https/deno.land/std/async/deferred.ts": "ef161b2d69f52e5f2d5250227afb5fcecfa038217a37555868152d3c47c8d61c",
     "https://raw.githubusercontent.com/denodrivers/redis/master/vendor/https/deno.land/std/async/delay.ts": "07bb8709c87bf457da6a7460668aa63afcda738719f5941237cb74ef795f49a8",
@@ -452,11 +452,11 @@
     "specifiers": {
       "@sentry/node@7.12.1": "@sentry/node@7.12.1",
       "chance@1.1.8": "chance@1.1.8",
-      "mathjs": "mathjs@11.5.1"
+      "mathjs": "mathjs@11.5.0"
     },
     "packages": {
-      "@babel/runtime@7.20.13": {
-        "integrity": "sha512-gt3PKXs0DBoL9xCvOIIZ2NEqAGZqHjAnmVbfQtB620V0uReIQutpel14KcneZuer7UioY8ALKZ7iocavvzTNFA==",
+      "@babel/runtime@7.20.7": {
+        "integrity": "sha512-UF0tvkUtxwAgZ5W/KrkHf0Rn0fdnLDU9ScxBrEVNUprE/MzirjK4MJUX1/BVDv00Sv8cljtukVK1aky++X1SjQ==",
         "dependencies": {
           "regenerator-runtime": "regenerator-runtime@0.13.11"
         }
@@ -553,10 +553,10 @@
         "integrity": "sha512-Pn9cox5CsMYngeDbmChANltQl+5pi6XmTrraMSzhPmMBbmgcxmqWry0U3PGapCU1yB4/LqCcom7qhHZiF/jGfQ==",
         "dependencies": {}
       },
-      "mathjs@11.5.1": {
-        "integrity": "sha512-9r35KHkpywim2hfYhJS3QHnKS7u61CODQcYPbJZ6Rov2jXDOAun07mM+8a7SRsJKfiMxtWWMJeiHQXTEnnHyoQ==",
+      "mathjs@11.5.0": {
+        "integrity": "sha512-vJ/+SqWtxjW6/aeDRt8xL3TlOVKqwN15BIyTGVqGbIWuiqgY4SxZ0yLuna82YH9CB757iFP7uJ4m3KvVBX7Qcg==",
         "dependencies": {
-          "@babel/runtime": "@babel/runtime@7.20.13",
+          "@babel/runtime": "@babel/runtime@7.20.7",
           "complex.js": "complex.js@2.1.1",
           "decimal.js": "decimal.js@10.4.3",
           "escape-latex": "escape-latex@1.2.0",

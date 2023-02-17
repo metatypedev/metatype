@@ -107,7 +107,7 @@ export class Planner {
   ): ComputeStage[] {
     const stageName = stage?.id() ?? "";
     if (!this.referencedTypes.get(stageName)?.includes(node.typeIdx)) {
-      throw new Error("not registered");
+      throw new Error(`not registered on ${stageName}: ${node.typeIdx}`);
     }
     const { name, selectionSet, args, typeIdx } = node;
     const typ = this.tg.type(typeIdx);
@@ -196,6 +196,7 @@ export class Planner {
       );
       const root = this.tg.introspection.type(0, Type.OBJECT);
 
+      introspection.referencedTypes.set("", [root.properties["query"]]);
       // traverse on the root node: parent, parentStage and node stage are undefined
       return introspection.traverse({
         name: parent.name,
@@ -302,6 +303,7 @@ export class Planner {
       // which is necessary to compute some introspection fields
       if (isArray(itemSchema)) {
         const nestedItemTypeIndex = getWrappedType(itemSchema);
+        this.referencedTypes.get(stage.id())!.push(nestedItemTypeIndex);
         const nestedItemNode = this.tg.type(nestedItemTypeIndex);
 
         if (isObject(nestedItemNode)) {

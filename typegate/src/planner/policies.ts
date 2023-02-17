@@ -43,7 +43,7 @@ export class OperationPolicies {
     for (const idx of policies) {
       if (this.tg.introspection) {
         // TODO
-        throw new Error("TODO: not supported yet");
+        // throw new Error("TODO: not supported yet");
       }
 
       const policy = this.tg.policy(idx);

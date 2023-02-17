@@ -216,7 +216,7 @@ export class Engine {
     context: Context,
     variables: Record<string, unknown>,
     limit: RateLimit | null,
-    // verbose: boolean,
+    _verbose: boolean,
   ): Promise<JSONValue> {
     const ret = {};
     const cache: Record<string, unknown> = {};
