@@ -2,7 +2,6 @@
 
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { ComputeStage } from "./engine.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";
 import { GoogleapisRuntime } from "./runtimes/googleapis.ts";
 import { GraphQLRuntime } from "./runtimes/graphql.ts";
@@ -26,14 +25,7 @@ import {
   isUnion,
   TypeNode,
 } from "./type_node.ts";
-import {
-  AuthorizationFactory,
-  Batcher,
-  Context,
-  OperationPolicies,
-  Resolver,
-  RuntimeInit,
-} from "./types.ts";
+import { Batcher, RuntimeInit } from "./types.ts";
 import { S3Runtime } from "./runtimes/s3.ts";
 
 import type {
@@ -61,9 +53,6 @@ const runtimeInit: RuntimeInit = {
   random: RandomRuntime.init,
   //typegraph: TypeGraphRuntime.init,
 };
-
-// a list of policies (policy indices) ruling a single entity
-type PolicyList = Array<number>;
 
 export const typegraphVersion = "0.0.1";
 
@@ -289,84 +278,6 @@ export class TypeGraph {
     );
   }
 
-  preparePolicies(types: Set<number>): OperationPolicies {
-    const policies = new Set<number>();
-    const policyLists: Array<PolicyList> = [];
-
-    for (const typeIdx of types) {
-      const type = this.type(typeIdx);
-      const policyList = type.policies;
-      if (policyList.length == 0) {
-        continue;
-      }
-      policyLists.push(policyList);
-      for (const policyIdx of policyList) {
-        policies.add(policyIdx);
-      }
-    }
-
-    const resolvers = new Map<number, Resolver>();
-    for (const idx of policies) {
-      if (this.introspection) {
-        // TODO
-        throw new Error("not supported yet");
-      }
-
-      const policy = this.policy(idx);
-
-      const mat = this.policyMaterializer(policy);
-      const runtime = this.runtimeReferences[mat.runtime] as DenoRuntime;
-      ensure(
-        runtime.constructor === DenoRuntime,
-        "Policies must run on a DenoRuntime",
-      );
-
-      resolvers.set(idx, runtime.delegate(mat, false));
-    }
-
-    return {
-      policyLists,
-      factory: (context: Context) => {
-        return async (policyList, args) => {
-          for (const idx of policyList) {
-            const resolver = resolvers.get(idx);
-            if (!resolver) {
-              throw new Error(
-                `Could not find resolver for the policy with index ${idx}`,
-              );
-            }
-            const res = await lazyResolver<boolean | null>(resolver)({
-              ...args,
-              _: {
-                parent: {},
-                context,
-                variables: {},
-              },
-            });
-            if (res == null) {
-              continue;
-            }
-            if (!res) {
-              console.debug("policies", this.tg.policies);
-              console.debug(
-                "mat",
-                this.materializer(this.policy(idx).materializer),
-              );
-              const policyName = this.policy(idx).name;
-              // TODO
-              throw new Error(
-                `Authorization failed for policy '${policyName}'`,
-              );
-            }
-            return res;
-          }
-          // TODO
-          throw new Error("No policy could decide access:");
-        };
-      },
-    };
-  }
-
   nextBatcher = (
     type: TypeNode,
   ): Batcher => {
@@ -485,17 +396,3 @@ export class TypeGraph {
     }
   }
 }
-
-const lazyResolver = <T>(
-  fn: Resolver,
-): Resolver => {
-  let memo: Promise<T> | undefined = undefined;
-  // deno-lint-ignore require-await
-  return async (args) => {
-    if (!memo) {
-      // no need to wait, the resolver executor will
-      memo = fn(args);
-    }
-    return memo;
-  };
-};

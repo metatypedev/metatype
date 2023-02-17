@@ -17,13 +17,7 @@ import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { RateLimit } from "./rate_limiter.ts";
-import {
-  ComputeStageProps,
-  Context,
-  OperationPolicies,
-  Resolver,
-  Variables,
-} from "./types.ts";
+import { ComputeStageProps, Context, Resolver, Variables } from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
@@ -31,6 +25,7 @@ import { FromVars } from "./runtimes/graphql.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
 import { Type } from "./type_node.ts";
+import { OperationPolicies } from "./planner/policies.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -219,16 +214,14 @@ export class Engine {
     context: Context,
     variables: Record<string, unknown>,
     limit: RateLimit | null,
-    verbose: boolean,
+    // verbose: boolean,
   ): Promise<JSONValue> {
     const ret = {};
     const cache: Record<string, unknown> = {};
     const lenses: Record<string, unknown> = {};
 
-    const authorize = policies.factory(context);
-    for (const policyList of policies.policyLists) {
-      await authorize(policyList, policyArgs);
-    }
+    await policies.authorize(context, policyArgs);
+    // TODO check ensure that any top-level function stage has at least one policy
 
     for await (const stage of plan) {
       const {
@@ -243,17 +236,17 @@ export class Engine {
         rateWeight,
       } = stage.props;
 
-      if (
-        node !== "__typename" &&
-        this.isRootFunc(stage) &&
-        false
-        // (decisions.some((d) => d === null) || decisions.length < 1)
-      ) {
-        // root level field inherit false
-        throw new Error(
-          `no authorization policy took a decision in root field '${stage.id()}'`,
-        );
-      }
+      // if (
+      //   node !== "__typename" &&
+      //   this.isRootFunc(stage) &&
+      //   false
+      //   // (decisions.some((d) => d === null) || decisions.length < 1)
+      // ) {
+      //   // root level field inherit false
+      //   throw new Error(
+      //     `no authorization policy took a decision in root field '${stage.id()}'`,
+      //   );
+      // }
 
       const deps = dependencies
         .filter((dep) => dep !== parent?.id())

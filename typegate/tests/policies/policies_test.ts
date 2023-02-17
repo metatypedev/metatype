@@ -144,7 +144,7 @@ test("Role jwt policy access", async (t) => {
 });
 
 test("Namespace policies", async (t) => {
-  const e = await t.pythonFile("policies/policies.py");
+  const _e = await t.pythonFile("policies/policies.py");
 
   // TODO fail
   // await t.should("fail when no policy", async () => {

@@ -5,7 +5,7 @@ import { Kind } from "graphql";
 import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
-import { ComputeStageProps, OperationPolicies } from "../types.ts";
+import { ComputeStageProps, StageId, TypeIdx } from "../types.ts";
 import {
   getWrappedType,
   isArray,
@@ -19,6 +19,7 @@ import { ArgumentCollector, ComputeArg } from "./args.ts";
 import { FromVars } from "../runtimes/graphql.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
+import { OperationPolicies } from "./policies.ts";
 
 interface Node {
   name: string;
@@ -51,7 +52,7 @@ export interface Plan {
  */
 export class Planner {
   rawArgs: Record<string, ComputeArg> = {};
-  referencedTypes: Set<number> = new Set();
+  referencedTypes: Map<StageId, TypeIdx[]> = new Map();
 
   constructor(
     readonly operation: ast.OperationDefinitionNode,
@@ -68,7 +69,7 @@ export class Planner {
       `operation '${this.operation.operation}' is not available`,
     );
 
-    this.referencedTypes.add(rootIdx);
+    this.referencedTypes.set("", [rootIdx]);
     // traverse on the root node: parent, parentStage and node stage are undefined
     const stages = this.traverse({
       name: this.operation.name?.value ?? "",
@@ -91,7 +92,7 @@ export class Planner {
       stage.varTypes = varTypes;
     }
 
-    const policies = this.tg.preparePolicies(this.referencedTypes);
+    const policies = new OperationPolicies(this.tg, this.referencedTypes);
     return { stages, policies, policyArgs: this.policyArgs(stages) };
   }
 
@@ -104,7 +105,8 @@ export class Planner {
     node: Node,
     stage?: ComputeStage,
   ): ComputeStage[] {
-    if (!this.referencedTypes.has(node.typeIdx)) {
+    const stageName = stage?.id() ?? "";
+    if (!this.referencedTypes.get(stageName)?.includes(node.typeIdx)) {
       throw new Error("not registered");
     }
     const { name, selectionSet, args, typeIdx } = node;
@@ -237,7 +239,6 @@ export class Planner {
     }
 
     const fieldType = this.tg.type(node.typeIdx);
-    this.referencedTypes.add(node.typeIdx);
 
     if (fieldType.type !== Type.FUNCTION) {
       return this.traverseValueField(node);
@@ -277,6 +278,7 @@ export class Planner {
       rateCalls: true,
       rateWeight: 0,
     });
+    this.referencedTypes.set(stage.id(), [node.typeIdx]);
 
     stages.push(stage);
 
@@ -289,6 +291,7 @@ export class Planner {
     // What nested quantifiers should be supported: t.optional(t.optional(...)), ...
     if (isQuantifier(schema)) {
       const itemTypeIdx = getWrappedType(schema);
+      this.referencedTypes.get(stage.id())!.push(itemTypeIdx);
       const itemSchema = this.tg.type(itemTypeIdx);
 
       if (itemSchema.type === Type.OBJECT) {
@@ -298,7 +301,6 @@ export class Planner {
       // support for nested quantifier `t.array(t.struct()).optional()`,
       // which is necessary to compute some introspection fields
       if (isArray(itemSchema)) {
-        this.referencedTypes.add(itemTypeIdx);
         const nestedItemTypeIndex = getWrappedType(itemSchema);
         const nestedItemNode = this.tg.type(nestedItemTypeIndex);
 
@@ -336,7 +338,6 @@ export class Planner {
     const { input: inputIdx, output: outputIdx, rate_calls, rate_weight } =
       schema;
     const outputType = this.tg.type(outputIdx);
-    this.referencedTypes.add(outputIdx);
 
     const args: Record<string, ComputeArg> = {};
     const argSchema = this.tg.type(inputIdx, Type.OBJECT);
@@ -400,6 +401,8 @@ export class Planner {
       rateWeight: rate_weight as number, // FIXME waht is the right type?
     });
     stages.push(stage);
+    // TODO add all nested types in inputIdx
+    this.referencedTypes.set(stage.id(), [node.typeIdx, outputIdx, inputIdx]);
 
     if (outputType.type === Type.OBJECT) {
       stages.push(
@@ -413,10 +416,11 @@ export class Planner {
 
     if (isQuantifier(outputType)) {
       let wrappedTypeIdx: number = getWrappedType(outputType);
+      this.referencedTypes.get(stage.id())!.push(wrappedTypeIdx);
       let wrappedType = this.tg.type(wrappedTypeIdx);
       while (isQuantifier(wrappedType)) {
-        this.referencedTypes.add(wrappedTypeIdx);
         wrappedTypeIdx = getWrappedType(wrappedType);
+        this.referencedTypes.get(stage.id())!.push(wrappedTypeIdx);
         wrappedType = this.tg.type(wrappedTypeIdx);
       }
 
