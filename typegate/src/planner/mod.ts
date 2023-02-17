@@ -93,7 +93,31 @@ export class Planner {
     }
 
     const policies = new OperationPolicies(this.tg, this.referencedTypes);
+
+    // ensure that root function stages have at least on policy
+    for (const stage of stages) {
+      if (this.isRootFunc(stage)) {
+        policies.ensureTypeHasPolicies(stage.id(), stage.props.typeIdx);
+      }
+    }
+
     return { stages, policies, policyArgs: this.policyArgs(stages) };
+  }
+
+  private isRootFunc(stage: ComputeStage) {
+    const typ = this.tg.type(stage.props.typeIdx);
+    if (typ.type !== Type.FUNCTION) {
+      return false;
+    }
+
+    const parentStage = stage.props.parent;
+    if (parentStage == undefined) {
+      return true;
+    }
+
+    const parentType = this.tg.type(parentStage.props.typeIdx);
+    return parentType.type === Type.OBJECT &&
+      parentType.config?.["__namespace"] === true;
   }
 
   /**

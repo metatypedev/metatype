@@ -112,4 +112,12 @@ export class OperationPolicies {
       }
     }
   }
+
+  public ensureTypeHasPolicies(stageId: StageId, typeIdx: TypeIdx) {
+    if (this.policyLists.get(stageId)?.get(typeIdx) == null) {
+      throw new Error(
+        "No authorization policy took a decision in top-level function at '${stageId}'",
+      );
+    }
+  }
 }

@@ -24,7 +24,6 @@ import { Planner } from "./planner/mod.ts";
 import { FromVars } from "./runtimes/graphql.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
-import { Type } from "./type_node.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { Option } from "monads";
@@ -223,7 +222,6 @@ export class Engine {
     const lenses: Record<string, unknown> = {};
 
     await policies.authorize(context, policyArgs);
-    // TODO check ensure that any top-level function stage has at least one policy
 
     for await (const stage of plan) {
       const {
@@ -237,18 +235,6 @@ export class Engine {
         rateCalls,
         rateWeight,
       } = stage.props;
-
-      // if (
-      //   node !== "__typename" &&
-      //   this.isRootFunc(stage) &&
-      //   false
-      //   // (decisions.some((d) => d === null) || decisions.length < 1)
-      // ) {
-      //   // root level field inherit false
-      //   throw new Error(
-      //     `no authorization policy took a decision in root field '${stage.id()}'`,
-      //   );
-      // }
 
       const deps = dependencies
         .filter((dep) => dep !== parent?.id())
@@ -504,22 +490,6 @@ export class Engine {
         };
       }
     }
-  }
-
-  private isRootFunc(stage: ComputeStage) {
-    const typ = this.tg.type(stage.props.typeIdx);
-    if (typ.type !== Type.FUNCTION) {
-      return false;
-    }
-
-    const parentStage = stage.props.parent;
-    if (parentStage == undefined) {
-      return true;
-    }
-
-    const parentType = this.tg.type(parentStage.props.typeIdx);
-    return parentType.type === Type.OBJECT &&
-      parentType.config?.["__namespace"] === true;
   }
 
   validateVariables(

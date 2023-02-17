@@ -144,18 +144,17 @@ test("Role jwt policy access", async (t) => {
 });
 
 test("Namespace policies", async (t) => {
-  const _e = await t.pythonFile("policies/policies.py");
+  const e = await t.pythonFile("policies/policies.py");
 
-  // TODO fail
-  // await t.should("fail when no policy", async () => {
-  //   await gql`
-  //     query {
-  //       ns {
-  //         select { id }
-  //       }
-  //     }
-  //   `
-  //     .expectErrorContains("no authorization policy")
-  //     .on(e);
-  // });
+  await t.should("fail when no policy", async () => {
+    await gql`
+      query {
+        ns {
+          select { id }
+        }
+      }
+    `
+      .expectErrorContains("No authorization policy")
+      .on(e);
+  });
 });
