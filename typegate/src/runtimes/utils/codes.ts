@@ -12,6 +12,7 @@ export interface TaskContext {
   parent?: Record<string, unknown>;
   context?: Context;
   secrets: Record<string, string>;
+  key: string;
 }
 
 export interface FunctionMaterializerData {
@@ -52,7 +53,11 @@ export interface PredefinedFuncTask extends TaskBase {
 export type Task = ImportFuncTask | FuncTask | PredefinedFuncTask;
 
 export interface TaskExec {
-  (args: Record<string, unknown>, context: TaskContext): unknown;
+  (
+    args: Record<string, unknown>,
+    context: TaskContext,
+    helpers: Record<string, unknown>,
+  ): unknown;
 }
 
 export const predefinedFuncs: Record<string, TaskExec> = {

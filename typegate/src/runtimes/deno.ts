@@ -157,11 +157,13 @@ export class DenoRuntime extends Runtime {
       (agg, secretName) => ({ ...agg, [secretName]: this.secrets[secretName] }),
       {},
     );
+
     return async ({ _: { context, parent }, ...args }) => {
       return await this.w.execTask({
         args,
         internals: {
           parent,
+          key: "param key",
           context,
           secrets,
         },

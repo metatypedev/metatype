@@ -19,6 +19,13 @@ type TaskModule = Record<string, TaskExec>;
 const fns: Map<number, TaskExec> = new Map();
 const mods: Map<number, TaskModule> = new Map();
 
+const make_internal = (internals) => {
+  //const { parent, key, context, secrets } = internals;
+
+  // perform checks with given key and context
+  console.log("Hello world", internals);
+};
+
 // TODO: get worker name from events, for better logging
 
 const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
@@ -40,7 +47,7 @@ const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
     verbose &&
       logger.info(`[${id}] exec func "${name}" from module ${moduleId}`);
     const mod = mods.get(moduleId)!;
-    return await mod[name](args, internals);
+    return await mod[name](args, internals, make_internal(internals));
   },
 
   func: async (task: Task) => {
@@ -56,13 +63,15 @@ const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
     }
 
     verbose && logger.info(`[${id}] exec func "${fnId}"`);
-    return await fns.get(fnId)!(args, internals);
+    return await fns.get(fnId)!(args, internals, make_internal(internals));
   },
 
   predefined_func: (task: Task) => {
     const { id, name, args, internals, verbose } = task as PredefinedFuncTask;
     verbose && logger.info(`[${id}] exec predefined func "${name}"`);
-    return Promise.resolve(predefinedFuncs[name](args, internals));
+    return Promise.resolve(
+      predefinedFuncs[name](args, internals, make_internal(internals)),
+    );
   },
 };
 
