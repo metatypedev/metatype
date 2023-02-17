@@ -20,8 +20,7 @@ import { RateLimit } from "./rate_limiter.ts";
 import {
   ComputeStageProps,
   Context,
-  PolicyStages,
-  PolicyStagesFactory,
+  OperationPolicies,
   Resolver,
   Variables,
 } from "./types.ts";
@@ -154,36 +153,6 @@ export class ComputeStage {
   }
 }
 
-const authorize = async (
-  stageId: string,
-  checks: string[],
-  policiesRegistry: PolicyStages,
-  verbose: boolean,
-  args: Record<string, unknown>,
-): Promise<true | null> => {
-  if (Object.values(checks).length < 1) {
-    // null = inherit
-    return null;
-  }
-
-  const [check, ...nextChecks] = checks;
-  const decision = await policiesRegistry[check](args);
-  verbose && console.log(stageId, decision);
-
-  if (decision === null) {
-    // next policy
-    return authorize(stageId, nextChecks, policiesRegistry, verbose, args);
-  }
-
-  if (!decision) {
-    // exception = reject
-    throw Error(`authorization failed for ${check} in ${stageId}`);
-  }
-
-  // true = pass
-  return true;
-};
-
 // typechecks for scalar types
 const typeChecks: Record<string, (value: unknown) => boolean> = {
   Int: (value) => typeof value === "number",
@@ -202,7 +171,7 @@ function isIntrospectionQuery(
 
 interface Plan {
   stages: ComputeStage[];
-  policies: PolicyStagesFactory;
+  policies: OperationPolicies;
   policyArgs: FromVars<Record<string, Record<string, unknown>>>;
   validator: TypeCheck;
 }
@@ -245,7 +214,7 @@ export class Engine {
 
   async compute(
     plan: ComputeStage[],
-    policesFactory: PolicyStagesFactory,
+    policies: OperationPolicies,
     policyArgs: Record<string, Record<string, unknown>>,
     context: Context,
     variables: Record<string, unknown>,
@@ -255,13 +224,16 @@ export class Engine {
     const ret = {};
     const cache: Record<string, unknown> = {};
     const lenses: Record<string, unknown> = {};
-    const policiesRegistry = policesFactory(context);
+
+    const authorize = policies.factory(context);
+    for (const policyList of policies.policyLists) {
+      await authorize(policyList, policyArgs);
+    }
 
     for await (const stage of plan) {
       const {
         dependencies,
         args,
-        policies,
         resolver,
         path,
         parent,
@@ -271,22 +243,11 @@ export class Engine {
         rateWeight,
       } = stage.props;
 
-      const decisions = await Promise.all(
-        Object.values(policies).map((checks) =>
-          authorize(
-            stage.id(),
-            checks,
-            policiesRegistry,
-            verbose,
-            policyArgs,
-          )
-        ),
-      );
-
       if (
         node !== "__typename" &&
         this.isRootFunc(stage) &&
-        (decisions.some((d) => d === null) || decisions.length < 1)
+        false
+        // (decisions.some((d) => d === null) || decisions.length < 1)
       ) {
         // root level field inherit false
         throw new Error(

@@ -53,7 +53,6 @@ export interface ComputeStageProps {
   dependencies: string[];
   parent?: ComputeStage;
   args: Record<string, ComputeArg>;
-  policies: Record<string, string[]>;
   resolver?: Resolver;
   argumentNodes?: ReadonlyArray<ast.ArgumentNode>;
   inpType?: ObjectNode;
@@ -68,10 +67,22 @@ export interface ComputeStageProps {
   rateWeight: number;
 }
 
-export type PolicyStage = (
+export interface OperationPolicies {
+  // the list of all `PolicyList`s for a single operation
+  policyLists: Array<PolicyList>;
+  factory: AuthorizationFactory;
+}
+
+export type PolicyList = Array<number>;
+
+// A function to ensure that a policy list is verified with the given args
+// under the context stored in the closure
+//
+// Throws if any policy fails to authorize the operation or no policy could decide
+export type AuthorizeFn = (
+  policyList: PolicyList,
   args: Record<string, unknown>,
-) => Promise<boolean | null>;
-export type PolicyStages = Record<string, PolicyStage>;
-export type PolicyStagesFactory = (
-  context: Context,
-) => PolicyStages;
+) => Promise<void>;
+
+// A function that generates an authorization function `AuthorizeFn` with the given context
+export type AuthorizationFactory = (context: Context) => AuthorizeFn;

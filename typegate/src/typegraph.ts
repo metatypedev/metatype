@@ -27,10 +27,10 @@ import {
   TypeNode,
 } from "./type_node.ts";
 import {
+  AuthorizationFactory,
   Batcher,
   Context,
-  PolicyStages,
-  PolicyStagesFactory,
+  OperationPolicies,
   Resolver,
   RuntimeInit,
 } from "./types.ts";
@@ -61,6 +61,9 @@ const runtimeInit: RuntimeInit = {
   random: RandomRuntime.init,
   //typegraph: TypeGraphRuntime.init,
 };
+
+// a list of policies (policy indices) ruling a single entity
+type PolicyList = Array<number>;
 
 export const typegraphVersion = "0.0.1";
 
@@ -286,62 +289,81 @@ export class TypeGraph {
     );
   }
 
-  preparePolicies(
-    stages: ComputeStage[],
-  ): PolicyStagesFactory {
-    const policies = Array.from(
-      new Set(
-        stages.flatMap((stage) => Object.values(stage.props.policies).flat()),
-      ),
-    ).map((policyName) => {
-      // bug-prone, lookup first for policies in introspection, then in current typegraph
+  preparePolicies(types: Set<number>): OperationPolicies {
+    const policies = new Set<number>();
+    const policyLists: Array<PolicyList> = [];
+
+    for (const typeIdx of types) {
+      const type = this.type(typeIdx);
+      const policyList = type.policies;
+      if (policyList.length == 0) {
+        continue;
+      }
+      policyLists.push(policyList);
+      for (const policyIdx of policyList) {
+        policies.add(policyIdx);
+      }
+    }
+
+    const resolvers = new Map<number, Resolver>();
+    for (const idx of policies) {
       if (this.introspection) {
-        const introPolicy = this.introspection.tg.policies.find(
-          (p) => p.name === policyName,
-        );
-
-        if (introPolicy) {
-          const mat = this.introspection.policyMaterializer(
-            introPolicy,
-          );
-          const rt = this.introspection
-            .runtimeReferences[mat.runtime] as DenoRuntime;
-          return [introPolicy.name, rt.delegate(mat, false)] as [
-            string,
-            Resolver,
-          ];
-        }
+        // TODO
+        throw new Error("not supported yet");
       }
 
-      const policy = this.tg.policies.find((p) => p.name === policyName);
-      if (!policy) {
-        throw Error(`cannot find policy ${policyName}`);
-      }
+      const policy = this.policy(idx);
 
       const mat = this.policyMaterializer(policy);
-      const rt = this.runtimeReferences[mat.runtime] as DenoRuntime;
+      const runtime = this.runtimeReferences[mat.runtime] as DenoRuntime;
       ensure(
-        rt.constructor === DenoRuntime,
-        "runtime for policy must be a DenoRuntime",
+        runtime.constructor === DenoRuntime,
+        "Policies must run on a DenoRuntime",
       );
-      return [policy.name, rt.delegate(mat, false)] as [string, Resolver];
-    });
 
-    return (context: Context) => {
-      const ret: PolicyStages = {};
-      for (const [policyName, resolver] of policies) {
-        // for policies, the context becomes the args
-        ret[policyName] = async (args: Record<string, unknown>) =>
-          await lazyResolver<boolean | null>(resolver)({
-            ...args,
-            _: {
-              parent: {},
-              context,
-              variables: {},
-            },
-          });
-      }
-      return ret;
+      resolvers.set(idx, runtime.delegate(mat, false));
+    }
+
+    return {
+      policyLists,
+      factory: (context: Context) => {
+        return async (policyList, args) => {
+          for (const idx of policyList) {
+            const resolver = resolvers.get(idx);
+            if (!resolver) {
+              throw new Error(
+                `Could not find resolver for the policy with index ${idx}`,
+              );
+            }
+            const res = await lazyResolver<boolean | null>(resolver)({
+              ...args,
+              _: {
+                parent: {},
+                context,
+                variables: {},
+              },
+            });
+            if (res == null) {
+              continue;
+            }
+            if (!res) {
+              console.debug("policies", this.tg.policies);
+              console.debug(
+                "mat",
+                this.materializer(this.policy(idx).materializer),
+              );
+              const policyName = this.policy(idx).name;
+              // TODO
+              throw new Error(
+                `Authorization failed for policy '${policyName}'`,
+              );
+            }
+            return res;
+          }
+          // TODO
+          throw new Error("No policy could decide access:");
+        };
+      },
     };
   }
 

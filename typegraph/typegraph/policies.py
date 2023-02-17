@@ -12,6 +12,7 @@ from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.deno import PureFunMat
 from typegraph.utils.attrs import always
 from typegraph.utils.sanitizers import sanitize_ts_string
+from typegraph.effects import EffectType
 
 
 def policy_name_factory():
