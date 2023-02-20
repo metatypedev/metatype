@@ -18,7 +18,7 @@ use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
 use swc_ecma_parser::parse_file_as_module;
 use swc_ecma_parser::parse_file_as_script;
 use swc_ecma_parser::Syntax;
-use swc_ecma_transforms::typescript::strip::strip;
+use swc_ecma_transforms_typescript::strip::strip;
 use swc_ecma_visit::{Fold, FoldWith};
 
 /// Creates a named import from the following elements:

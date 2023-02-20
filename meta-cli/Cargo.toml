@@ -24,14 +24,13 @@ name = "meta"
 path = "src/main.rs"
 
 [dependencies]
-self_update = { version = "0.35.0", features = [
+self_update = { version = "0.36.0", features = [
   "archive-tar",
   "archive-zip",
   "compression-flate2",
   "compression-zip-deflate",
   "compression-zip-bzip2",
 ] }
-datamodel-renderer = { git = "https://github.com/prisma/prisma-engines" }
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
 tokio = { version = "1.25.0", features = ["full"] }

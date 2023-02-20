@@ -5,12 +5,16 @@ use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::{env, fs};
-use swc_ecma_codegen::Config;
-use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
-use typescript::ast::*;
+use typescript::ast::{
+    Decl, ExportDecl, Expr, Ident, Module, ModuleDecl, ModuleItem, TsEntityName, TsLit, TsLitType,
+    TsPropertySignature, TsType, TsTypeAliasDecl, TsTypeElement, TsTypeRef,
+    TsUnionOrIntersectionType, TsUnionType,
+};
+use typescript::print_module;
+
 use typescript::parser::parse_module_source;
 use typescript::string_cache::Atom;
-use typescript::swc_common::{sync::Lrc, SourceMap, DUMMY_SP};
+use typescript::swc_common::DUMMY_SP;
 
 pub fn run() -> Result<()> {
     println!("Generating TypeScript type definitions for typegraph...");
@@ -96,29 +100,6 @@ pub fn run() -> Result<()> {
     )
     .with_context(|| format!("Writing to output file {path:?}"))?;
     println!("  > written at {:?}", path.canonicalize()?);
-
-    Ok(())
-}
-
-fn print_module<W: Write>(cm: Lrc<SourceMap>, module: &Module, writer: W) -> Result<()> {
-    // ref: https://doc.rust-lang.org/std/env/consts/constant.OS.html
-    let new_line = match env::consts::OS {
-        "windows" => "\r\n", // windows := CR LF
-        _ => "\n",           // UNIX or MAC := LF
-    };
-    let mut emitter = Emitter {
-        cfg: Config {
-            target: EsVersion::latest(),
-            ascii_only: true,
-            minify: false,
-            omit_last_semi: true,
-        },
-        cm: cm.clone(),
-        comments: None,
-        wr: JsWriter::new(cm, new_line, writer, None),
-    };
-
-    emitter.emit_module(module)?;
 
     Ok(())
 }
