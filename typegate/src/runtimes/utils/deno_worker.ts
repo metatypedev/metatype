@@ -7,6 +7,7 @@ import {
   predefinedFuncs,
   PredefinedFuncTask,
   Task,
+  TaskContext,
   TaskExec,
 } from "./codes.ts";
 
@@ -19,11 +20,12 @@ type TaskModule = Record<string, TaskExec>;
 const fns: Map<number, TaskExec> = new Map();
 const mods: Map<number, TaskModule> = new Map();
 
-const make_internal = (internals) => {
+const make_internal = (internals: TaskContext) => {
   //const { parent, key, context, secrets } = internals;
 
   // perform checks with given key and context
   console.log("Hello world", internals);
+  return { response: true };
 };
 
 // TODO: get worker name from events, for better logging

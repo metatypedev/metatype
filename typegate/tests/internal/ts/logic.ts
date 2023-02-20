@@ -2,11 +2,11 @@
 /* eslint-disable  no-unused-vars */
 export const sum = (
   { first, second }: any,
-  { key },
+  internals,
   make_internal,
 ): Promise<any> => {
-  make_internal();
-  console.log(key);
+  console.log(make_internal, internals);
+
   return first + second;
   // const {data} = await gql`
   // query A {
