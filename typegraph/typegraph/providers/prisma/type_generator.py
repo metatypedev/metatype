@@ -146,6 +146,8 @@ class TypeGenerator:
             return t.struct({"set": t.string()})
         elif isinstance(terminal_node, t.boolean):
             return t.struct({"set": t.boolean()})
+        elif isinstance(terminal_node, t.array):
+            return t.struct({"set": terminal_node})
         elif isinstance(terminal_node, t.number):
             # TODO should be a union as in:
             # type UpdateOp = Set | Increment | Decrement | Multiply | Divide
@@ -161,7 +163,7 @@ class TypeGenerator:
         # Note: t.struct is not a terminal node
         return None
 
-    def get_update_many_data(self, tpe: t.typedef) -> t.struct:
+    def get_update_data_type(self, tpe: t.typedef) -> t.struct:
         data = {}
         for k, v in tpe.props.items():
             new_v = self.generate_update_operation(v)
