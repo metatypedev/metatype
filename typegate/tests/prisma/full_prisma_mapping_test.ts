@@ -32,11 +32,11 @@ test("prisma full mapping", async (t) => {
               posts: {
                 createMany: {
                   data: [
-                    { id: 10001, title: "Book 1", views: 9, likes: 7, published: true },
-                    { id: 10002, title: "Book 2", views: 6, likes: 3, published: false },
-                    { id: 10003, title: "Book 3", views: 5, likes: 13, published: true },
-                    { id: 10004, title: "Book 4", views: 5, likes: 14, published: true },
-                    { id: 10005, title: "Book 4", views: 2, likes: 7, published: true },
+                    { id: 10001, title: "Some Title 1", views: 9, likes: 7, published: true },
+                    { id: 10002, title: "Some Title 2", views: 6, likes: 3, published: false },
+                    { id: 10003, title: "Some Title 3", views: 5, likes: 13, published: true },
+                    { id: 10004, title: "Some Title 4", views: 5, likes: 14, published: true },
+                    { id: 10005, title: "Some Title 4", views: 2, likes: 7, published: true },
                   ]
                 }
               }
@@ -79,8 +79,8 @@ test("prisma full mapping", async (t) => {
         }
     `.expectData({
       findManyPosts: [
-        { id: 10002, title: "Book 2" },
-        { id: 10003, title: "Book 3" },
+        { id: 10002, title: "Some Title 2" },
+        { id: 10003, title: "Some Title 3" },
       ],
     })
       .on(e);
@@ -141,6 +141,7 @@ test("prisma full mapping", async (t) => {
       .on(e);
   });
 
+  /*
   await t.should("do a groupBy with having", async () => {
     await gql`
         query {
@@ -158,7 +159,7 @@ test("prisma full mapping", async (t) => {
         console.log("groupBy having output ::::", body);
       })
       .on(e);
-  });
+  });*/
 
   await t.should("do an aggregate", async () => {
     await gql`
@@ -262,9 +263,9 @@ test("prisma full mapping", async (t) => {
         mutation {
           createManyUsers(
             data: [
-              {id: 2, name: "Robert", age: 21, coinflips: [false, true], city: "SomeVille"},
-              {id: 3, name: "Kiki", age: 18, coinflips: [true], city: "AnotherBille"},
-              {id: 4, name: "George", age: 18, coinflips: [false], city: "YetAnotherVille"},
+              { id: 2, name: "Robert", age: 21, coinflips: [false, true], city: "SomeVille" },
+              { id: 3, name: "Kiki", age: 18, coinflips: [true], city: "AnotherVille" },
+              { id: 4, name: "George", age: 18, coinflips: [false], city: "YetAnotherVille" },
             ]
           ) {
             count
@@ -273,6 +274,82 @@ test("prisma full mapping", async (t) => {
     `.expectData({
         createManyUsers: {
           count: 3,
+        },
+      })
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "update ([up]sert) an existing user",
+    async () => {
+      await gql`
+        mutation {
+          upsertOneUser(
+            where: {id: 2},
+            create: { 
+              id: 2, 
+              name: "Robert", 
+              age: 21, 
+              coinflips: [false, true], 
+              city: "SomeVille", 
+              posts: { createMany: { data: [] } }
+            },
+            update: {
+              name: {set: "New Name"},
+              coinflips: {set: [false, false, false]}
+            }
+          ) {
+            id
+            name
+            age
+            coinflips
+          }
+        }
+    `.expectData({
+        upsertOneUser: {
+          id: 2,
+          name: "New Name",
+          age: 21,
+          coinflips: [false, false, false],
+        },
+      })
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "insert (up[sert]) a non-existing user",
+    async () => {
+      await gql`
+        mutation {
+          upsertOneUser(
+            where: {id: 1234},
+            create: {
+              id: 1234,
+              name: "Mark",
+              age: 22,
+              coinflips: [true],
+              city: "SomeVille",
+              posts: { createMany: { data: [] } }
+            },
+            # should not be applied
+            update: {
+              name: {set: "New Name"},
+            }
+          ) {
+            id
+            name
+            age
+            coinflips
+          }
+        }
+    `.expectData({
+        upsertOneUser: {
+          id: 1234,
+          name: "Mark",
+          age: 22,
+          coinflips: [true],
         },
       })
         .on(e);

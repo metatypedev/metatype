@@ -491,7 +491,7 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "data": typegen.get_update_many_data(tpe).named(_pref("Data")),
+                    "data": typegen.get_update_data_type(tpe).named(_pref("Data")),
                     "where": typegen.get_where_type(tpe).named(_pref("Where")),
                 }
             ),
@@ -499,6 +499,22 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(
                 self, tpe.name, "updateMany", effect=effects.update(True)
             ),
+        )
+
+    def upsert(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+        self.__manage(tpe)
+        typegen = self.__typegen
+        _pref = get_name_generator("Upsert", tpe)
+        return t.func(
+            t.struct(
+                {
+                    "where": typegen.get_where_type(tpe).named(_pref("Where")),
+                    "create": typegen.get_input_type(tpe).named(_pref("Create")),
+                    "update": typegen.get_update_data_type(tpe).named(_pref("Update")),
+                }
+            ),
+            typegen.get_out_type(tpe).named(_pref("Output")),
+            PrismaOperationMat(self, tpe.name, "upsertOne", effect=effects.upsert()),
         )
 
     def delete(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:

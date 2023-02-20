@@ -49,6 +49,7 @@ with TypeGraph("prisma") as g:
         findUniqueUser=db.find_unique(user).add_policy(public),
         createOneUser=db.create(user).add_policy(public),
         createManyUsers=db.create_many(user).add_policy(public),
+        upsertOneUser=db.upsert(user).add_policy(public),
         findManyPosts=db.find_many(post).add_policy(public),
         findUniquePost=db.find_unique(post).add_policy(public),
         createManyPosts=db.create_many(post).add_policy(public),
