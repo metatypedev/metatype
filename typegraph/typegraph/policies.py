@@ -1,7 +1,10 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from re import sub as reg_sub
-from typing import List, Optional
+from typing import List, Optional, Iterator
+
+# from collections.abc import Iterator
+import itertools
 
 from attrs import evolve, field, frozen
 
@@ -35,14 +38,23 @@ class Policy(Node):
     delete: Optional[Materializer] = field(kw_only=True, default=None)
     collector_target: str = always(Collector.policies)
 
+    def __attrs_post_init__(self):
+        for mat in self.__materializers:
+            assert mat.effect.is_none(), "policy materializer cannot have effect"
+
     def named(self, name: str):
         return evolve(self, name=name)
 
     @property
+    def __materializers(self) -> Iterator[Materializer]:
+        return itertools.chain(
+            (self.mat,),
+            (getattr(self, eff) for eff in EFFECTS if getattr(self, eff) is not None),
+        )
+
+    @property
     def edges(self) -> List[Node]:
-        return [self.mat] + [
-            getattr(self, eff) for eff in EFFECTS if getattr(self, eff) is not None
-        ]
+        return list(self.__materializers)
 
     def data(self, collector):
         effect_materializers = {

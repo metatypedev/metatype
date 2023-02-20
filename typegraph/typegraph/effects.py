@@ -20,6 +20,9 @@ class Effect:
     # see: https://developer.mozilla.org/en-US/docs/Glossary/Idempotent
     idempotent: bool
 
+    def is_none(self) -> bool:
+        return self.effect is None
+
 
 def none():
     return Effect(None, True)
