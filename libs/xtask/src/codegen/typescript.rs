@@ -5,8 +5,9 @@ use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::{env, fs};
+use swc_ecma_codegen::Config;
+use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
 use typescript::ast::*;
-use typescript::codegen;
 use typescript::parser::parse_module_source;
 use typescript::string_cache::Atom;
 use typescript::swc_common::{sync::Lrc, SourceMap, DUMMY_SP};
@@ -105,8 +106,8 @@ fn print_module<W: Write>(cm: Lrc<SourceMap>, module: &Module, writer: W) -> Res
         "windows" => "\r\n", // windows := CR LF
         _ => "\n",           // UNIX or MAC := LF
     };
-    let mut emitter = codegen::Emitter {
-        cfg: codegen::Config {
+    let mut emitter = Emitter {
+        cfg: Config {
             target: EsVersion::latest(),
             ascii_only: true,
             minify: false,
@@ -114,7 +115,7 @@ fn print_module<W: Write>(cm: Lrc<SourceMap>, module: &Module, writer: W) -> Res
         },
         cm: cm.clone(),
         comments: None,
-        wr: codegen::text_writer::JsWriter::new(cm, new_line, writer, None),
+        wr: JsWriter::new(cm, new_line, writer, None),
     };
 
     emitter.emit_module(module)?;

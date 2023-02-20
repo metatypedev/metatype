@@ -6,7 +6,6 @@ pub use dprint_plugin_typescript as dprint_plugin;
 pub use string_cache;
 pub use swc_common;
 pub use swc_ecma_ast as ast;
-pub use swc_ecmascript::*;
 
 use anyhow::Result;
 use dprint_plugin::configuration::Configuration;

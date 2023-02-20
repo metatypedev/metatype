@@ -31,7 +31,6 @@ self_update = { version = "0.35.0", features = [
   "compression-zip-deflate",
   "compression-zip-bzip2",
 ] }
-swc = "0.232.52"
 datamodel-renderer = { git = "https://github.com/prisma/prisma-engines" }
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
@@ -63,5 +62,5 @@ openssl = { version = "0.10.45", features = ["vendored"] }
 indexmap = { version = "1.9.2", features = ["serde"] }
 
 [dev-dependencies]
-insta = "1.26.0"
+insta = "1.28.0"
 project-root = "0.2.2"
