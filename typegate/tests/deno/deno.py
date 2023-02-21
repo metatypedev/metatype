@@ -27,7 +27,7 @@ with TypeGraph("test-vars") as g:
             mod.imp("sum"),
         ).add_policy(public),
         count=t.func(
-            t.struct(),
+            t.struct({}),
             t.integer().min(0),
             mod.imp("counter", effect=effects.update()),
         ).add_policy(public),

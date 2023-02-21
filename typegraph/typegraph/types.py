@@ -9,6 +9,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     get_args,
     get_origin,
@@ -18,7 +19,7 @@ from attrs import evolve, field, frozen
 from frozendict import frozendict
 from typing_extensions import Self
 
-from typegraph.graph.builder import Collector
+from typegraph.graph.builder import Collector, Collectors
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypeGraph, TypegraphContext, find
 from typegraph.policies import Policy
@@ -45,12 +46,10 @@ def is_optional(tpe: Type):
     return get_origin(tpe) is Union and type(None) in get_args(tpe)
 
 
+@frozen
 class Secret(Node):
     secret: str
-
-    def __init__(self, secret: str):
-        super().__init__("secrets")
-        self.secret = secret
+    collector_target: Optional[Collectors] = always(Collectors.secrets)
 
     def data(self, collector: "Collector") -> dict:
         return self.secret  # this is a string
@@ -88,29 +87,25 @@ reserved_types = [
 ]
 
 
-@frozen
+@frozen(kw_only=True)
 class typedef(Node):
     graph: TypeGraph = field(
-        kw_only=True,
         factory=TypegraphContext.get_active,
         init=False,
         metadata={SKIP: True},
     )
-    name: str = field(kw_only=True, default="")
+    name: str = ""
     description: Optional[str] = optional_field()
     runtime: Optional["Runtime"] = optional_field()
     inject: Optional[Union[str, TypeNode]] = optional_field()
     injection: Optional[Any] = optional_field()
     policies: Tuple[Policy, ...] = field(kw_only=True, factory=tuple)
-    # runtime_config: Dict[str, Any] = field(
-    #     kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
-    # )
     runtime_config: Dict[str, Any] = field(
         kw_only=True, factory=frozendict, hash=False, metadata={SKIP: True}
     )
     _enum: Optional[Tuple[Any]] = optional_field()
 
-    collector_target: Optional[str] = always(Collector.types)
+    collector_target: Optional[Collectors] = always(Collectors.types)
 
     def __attrs_post_init__(self):
         if self.graph is None:
@@ -294,15 +289,21 @@ class typedef(Node):
 TYPE_CONSTRAINT = "__type_constraint_name"
 
 
-def constraint(name: Optional[str] = None):
+def constraint(name: str, rename: Optional[str] = None):
     # Additional constraint on type: Validation keyword.
     # Field to be manually set on the serialization.
     return field(
-        kw_only=True, default=None, metadata={SKIP: True, TYPE_CONSTRAINT: name or True}
+        kw_only=True,
+        default=None,
+        metadata={SKIP: True, TYPE_CONSTRAINT: rename or True},
+        alias=name,
     )
 
 
-def with_constraints(cls):
+TypeClass = TypeVar("TypeClass")
+
+
+def with_constraints(cls: Type[TypeClass]) -> Type[TypeClass]:
     if not hasattr(cls, "__attrs_attrs__"):
         raise Exception(
             "@with_constraints decorator requires class to have attribute '__attrs_attrs__'"
@@ -312,13 +313,7 @@ def with_constraints(cls):
 
     constraints = {}
 
-    def get_setter(name: str):
-        def setter(self, value):
-            return self.replace(**{name: value})
-
-        return setter
-
-    for f in cls.__attrs_attrs__:
+    for f in getattr(cls, "__attrs_attrs__"):
         if f.metadata is not None and TYPE_CONSTRAINT in f.metadata:
             if not f.name.startswith("_"):
                 raise Exception(
@@ -329,8 +324,6 @@ def with_constraints(cls):
             if isinstance(key, bool) and key:
                 key = name
             constraints[key] = f.name
-
-            setattr(cls, name, get_setter(name))
 
     if len(constraints) > 0:
 
@@ -396,11 +389,26 @@ class number(typedef):
         _multiple_of (float, optional): number must be a multiple of
     """
 
-    _min: Optional[float] = constraint("minimum")
-    _max: Optional[float] = constraint("maximum")
-    _x_min: Optional[float] = constraint("exclusiveMinimum")
-    _x_max: Optional[float] = constraint("exclusiveMaximum")
-    _multiple_of: Optional[float] = constraint("multipleOf")
+    _min: Optional[float] = constraint("_min", "minimum")
+    _max: Optional[float] = constraint("_max", "maximum")
+    _x_min: Optional[float] = constraint("_x_min", "exclusiveMinimum")
+    _x_max: Optional[float] = constraint("_x_max", "exclusiveMaximum")
+    _multiple_of: Optional[float] = constraint("_multiple_of", "multipleOf")
+
+    def min(self, value: float) -> Self:
+        return evolve(self, _min=value)
+
+    def max(self, value: float) -> Self:
+        return evolve(self, _max=value)
+
+    def x_min(self, value: float) -> Self:
+        return evolve(self, _x_min=value)
+
+    def x_max(self, value: float) -> Self:
+        return evolve(self, _x_max=value)
+
+    def multiple_of(self, value: float) -> Self:
+        return evolve(self, _multiple_of=value)
 
 
 def float() -> number:
@@ -417,24 +425,36 @@ class integer(number):
 @with_constraints
 @frozen
 class string(typedef):
-    _min: Optional[int] = constraint("minLength")
-    _max: Optional[int] = constraint("maxLength")
-    _pattern: Optional[str] = constraint()
-    _format: Optional[str] = constraint()
+    _min: Optional[int] = constraint("_min", "minLength")
+    _max: Optional[int] = constraint("_max", "maxLength")
+    _pattern: Optional[str] = constraint("_pattern")
+    _format: Optional[str] = constraint("_format")
 
-    def uuid(self) -> "string":
+    def min(self, value: int) -> Self:
+        return evolve(self, _min=value)
+
+    def max(self, value: int) -> Self:
+        return evolve(self, _max=value)
+
+    def pattern(self, value: str) -> Self:
+        return evolve(self, _pattern=value)
+
+    def format(self, value: str) -> Self:
+        return evolve(self, _format=value)
+
+    def uuid(self) -> Self:
         return self.format("uuid")
 
-    def email(self) -> "string":
+    def email(self) -> Self:
         return self.format("email")
 
-    def uri(self) -> "string":
+    def uri(self) -> Self:
         return self.format("uri")
 
-    def json(self) -> "string":
+    def json(self) -> Self:
         return self.format("json")
 
-    def hostname(self) -> "string":
+    def hostname(self) -> Self:
         return self.format("hostname")
 
 
@@ -491,12 +511,17 @@ def validate_struct_props(instance, attribute, props):
 @frozen
 class struct(typedef):
     props: Dict[str, TypeNode] = field(
-        validator=[validate_struct_props], factory=frozendict, converter=frozendict
+        validator=[validate_struct_props], converter=frozendict
     )
-    additional_props: Optional[Union[bool, TypeNode]] = None
-    _min: Optional[int] = constraint("minProperties")
-    _max: Optional[int] = constraint("maxProperties")
-    # _dependentRequired
+    additional_props: Optional[Union[bool, TypeNode]] = optional_field()
+    _min: Optional[int] = constraint("_min", "minProperties")
+    _max: Optional[int] = constraint("_max", "maxProperties")
+
+    def min(self, n: int) -> Self:
+        return evolve(self, _min=n)
+
+    def max(self, n: int) -> Self:
+        return evolve(self, _max=n)
 
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
@@ -542,7 +567,7 @@ class struct(typedef):
 
 
 def any_object() -> struct:
-    return struct().additional(True)
+    return struct({}).additional(True)
 
 
 @with_constraints
@@ -550,11 +575,20 @@ def any_object() -> struct:
 class array(typedef):
     of: TypeNode
 
-    _min: Optional[int] = constraint("minItems")
-    _max: Optional[int] = constraint("maxItems")
-    _unique_items: Optional[bool] = constraint("uniqueItems")
+    _min: Optional[int] = constraint("_min", "minItems")
+    _max: Optional[int] = constraint("_max", "maxItems")
+    _unique_items: Optional[bool] = constraint("_unique_items", "uniqueItems")
     # _min_contains: Optional[int] = None
     # _max_contains: Optional[int] = None
+
+    def min(self, n: int) -> Self:
+        return evolve(self, _min=n)
+
+    def max(self, n: int) -> Self:
+        return evolve(self, _max=n)
+
+    def unique(self) -> Self:
+        return evolve(self, _unique_items=True)
 
     @property
     def edges(self) -> List[Node]:
@@ -661,7 +695,7 @@ class func(typedef):
 
 
 def gen(out: typedef, mat: Materializer, **kwargs) -> func:
-    return func(struct(), out, mat, **kwargs)
+    return func(struct({}), out, mat, **kwargs)
 
 
 # single instance

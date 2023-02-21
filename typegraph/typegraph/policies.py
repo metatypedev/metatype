@@ -5,7 +5,7 @@ from typing import List
 
 from attrs import evolve, field, frozen
 
-from typegraph.graph.builder import Collector
+from typegraph.graph.builder import Collectors
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
@@ -25,7 +25,7 @@ def policy_name_factory():
 class Policy(Node):
     name: str = field(factory=policy_name_factory, kw_only=True)
     mat: Materializer
-    collector_target: str = always(Collector.policies)
+    collector_target: Collectors = always(Collectors.policies)
 
     def named(self, name: str):
         return evolve(self, name=name)

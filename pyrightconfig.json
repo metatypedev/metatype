@@ -1,0 +1,15 @@
+{
+  "include": ["**"],
+  "exclude": ["**/node_modules", "**/__pycache__", "**/.venv"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.8",
+  "pythonPlatform": "All",
+  "executionEnvironments": [
+    {
+      "root": "typegraph/typegraph"
+    }
+  ],
+  "typeCheckingMode": "basic",
+  "useLibraryCodeForTypes": true
+}

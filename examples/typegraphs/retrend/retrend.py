@@ -25,7 +25,7 @@ with TypeGraph(
             f.imp("default"),
         ).add_policy(all),
         getImage=t.func(
-            t.struct(),
+            t.struct({}),
             t.struct({"path": t.string().named("Path")}),
             PureFunMat('() => ({"path": "test.jpg"})'),
         )

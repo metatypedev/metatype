@@ -48,7 +48,6 @@ with TypeGraph(
             ),
         }
     ).named("message")
-    db.manage(message)  # soon removed
 
     # highlight-start
     g.expose(

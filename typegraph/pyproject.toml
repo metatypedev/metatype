@@ -39,6 +39,7 @@ pytest-snapshot = "^0.9.0"
 pydoc-markdown = { git = "https://github.com/metatypedev/pydoc-markdown", branch = "develop" }
 ruff = "^0.0.245"
 respx = "^0.20.1"
+pyright = "^1.1.294"
 
 [build-system]
 requires = ["poetry-core"]

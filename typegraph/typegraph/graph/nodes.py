@@ -2,17 +2,17 @@
 
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional
 
+from attrs import define, field
+
 if TYPE_CHECKING:
     from typegraph import types as t
     from typegraph.graph.builder import Collector
     from typegraph.graph.typegraph import TypeGraph
 
 
+@define(kw_only=True, eq=False)
 class Node:
-    collector_target: Optional[str]
-
-    def __init__(self, collector_target: Optional[str] = None):
-        self.collector_target = collector_target
+    collector_target: Optional[str] = field(init=False, default=None)
 
     @property
     def edges(self) -> List["Node"]:
@@ -22,21 +22,11 @@ class Node:
         return {}
 
 
+@define(eq=False)
 class NodeProxy(Node):
     graph: "TypeGraph"
     node: str
-    after_apply: Optional[Callable[["t.typedef"], "t.typedef"]]
-
-    def __init__(
-        self,
-        g: "TypeGraph",
-        node: str,
-        after_apply: Optional[Callable[["t.typedef"], "t.typedef"]] = None,
-    ):
-        super().__init__()
-        self.graph = g
-        self.node = node
-        self.after_apply = after_apply
+    after_apply: Optional[Callable[["t.typedef"], "t.typedef"]] = None
 
     def then(self, then_apply: Callable[["t.typedef"], "t.typedef"]):
         return NodeProxy(
@@ -51,7 +41,8 @@ class NodeProxy(Node):
             return tpe
         tpe = self.after_apply(tpe)
         self.graph.type_by_names[tpe.name] = tpe
-        self.node, self.after_apply = tpe.name, None
+        self.node = tpe.name
+        self.after_apply = None
         return tpe
 
     @property

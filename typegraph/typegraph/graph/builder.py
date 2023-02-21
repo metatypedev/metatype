@@ -1,5 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+from enum import Enum
 from typing import Dict, Union
 
 from ordered_set import OrderedSet
@@ -7,27 +8,20 @@ from ordered_set import OrderedSet
 from typegraph.graph.nodes import Node, NodeProxy
 
 
-class Collector:
+class Collectors(Enum):
     types = "types"
     runtimes = "runtimes"
     materializers = "materializers"
     policies = "policies"
     secrets = "secrets"
 
+
+class Collector:
     collects: Dict[str, OrderedSet]
     frozen = False
 
     def __init__(self):
-        self.collects = {
-            f: OrderedSet()
-            for f in [
-                Collector.types,
-                Collector.runtimes,
-                Collector.materializers,
-                Collector.policies,
-                Collector.secrets,
-            ]
-        }
+        self.collects = {c.value: OrderedSet() for c in Collectors}
 
     def freeze(self):
         self.frozen = True
@@ -44,7 +38,7 @@ class Collector:
         if isinstance(node, NodeProxy):
             node = node.get()
 
-        c = node.collector_target
+        c = node.collector_target.value
         if c is None:
             raise Exception("Attempting to collect non collectible node")
 
@@ -62,7 +56,7 @@ class Collector:
         if isinstance(node, NodeProxy):
             node = node.get()
 
-        c = node.collector_target
+        c = node.collector_target.value
         if c not in self.collects:
             raise Exception(f"Collector target '{c}' not found")
 

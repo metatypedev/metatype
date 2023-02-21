@@ -25,7 +25,7 @@ with TypeGraph(name="math") as g:
             fib.imp("default"),
         ).add_policy(restrict_referer),
         random=t.func(
-            t.struct(),
+            t.struct({}),
             t.float(),
             PureFunMat("() => Math.random()"),
         ).add_policy(public),

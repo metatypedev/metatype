@@ -26,8 +26,8 @@ class TestImporterTypify:
     def test_simple_types_with_constraints(self, overridable):
         tp = Typify(importer)
         with TypeGraph(""):
-            assert tp(t.number(x_min=0, x_max=10)) == overridable(
-                "t.number().x_min(0).x_max(10)"
+            assert tp(t.number(_min=0, _x_max=10)) == overridable(
+                "t.number().min(0).x_max(10)"
             )
             assert tp(t.uuid()) == overridable("t.string().format('uuid')")
 
@@ -35,7 +35,7 @@ class TestImporterTypify:
         tp = Typify(importer)
         with TypeGraph(""):
             assert tp(t.optional(t.number())) == overridable("t.number().optional()")
-            assert tp(t.string(min=12)) == overridable("t.string().min(12)")
+            assert tp(t.string(_min=12)) == overridable("t.string().min(12)")
 
     def test_struct(self, overridable):
         tp = Typify(importer)

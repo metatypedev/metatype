@@ -60,7 +60,7 @@ class Typify:
         ret = ""
         if not hasattr(typ, "_constraints"):
             return ret
-        for k, v in typ._constraints().items():
+        for k, v in getattr(typ, "_constraints")().items():
             ret += f".{k}({repr(v)})"
         return ret
 

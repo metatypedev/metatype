@@ -223,7 +223,7 @@ class PrismaRuntime(Runtime):
 
     name: str
     connection_string_secret: str
-    runtime_name: str = always("prisma")
+    runtime_name: str = field(kw_only=True, default="prisma", init=False)
     spec: RelationshipRegister = field(init=False, hash=False, metadata={SKIP: True})
 
     def __attrs_post_init__(self):

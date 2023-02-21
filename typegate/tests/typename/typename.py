@@ -16,7 +16,7 @@ with TypeGraph("prisma") as g:
     )
 
     denoUser = t.func(
-        t.struct(),
+        t.struct({}),
         userModel,
         PureFunMat("() => ({ id: 12 })"),
     ).add_policy(public)

@@ -22,6 +22,6 @@ with TypeGraph(
     # expose them with policies
     g.expose(
         # input → output via materializer
-        get_message=t.func(t.struct(), message, RandomMat(random)),
+        get_message=t.func(t.struct({}), message, RandomMat(random)),
         default_policy=[public],
     )

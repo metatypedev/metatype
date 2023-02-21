@@ -97,7 +97,7 @@ with TypeGraph("test") as g:
                         t.string().optional(),
                     ),
                     "remote": remote.query(
-                        t.struct(),
+                        t.struct({}),
                         t.struct(
                             {
                                 "integer": t.integer().named("reint"),

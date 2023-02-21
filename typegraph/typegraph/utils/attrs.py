@@ -1,5 +1,7 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+from typing import Optional
+
 import attrs
 from attrs import Attribute, field
 
@@ -7,11 +9,29 @@ SKIP = "asdict_skip"
 
 
 def always(value):
-    return field(default=value, init=False)
+    return field(kw_only=True, default=value, init=False)
+
+
+def optional_field():
+    return field(kw_only=True, default=None)
 
 
 def required():
-    return field(init=True, kw_only=True)
+    return field(kw_only=True, init=True)
+
+
+TYPE_CONSTRAINT = "__type_constraint_name"
+
+
+def constraint(name: Optional[str] = None):
+    # Additional constraint on type: Validation keyword.
+    # Field to be manually set on the serialization.
+    return field(
+        kw_only=True,
+        init=True,
+        default=None,
+        metadata={SKIP: True, TYPE_CONSTRAINT: name or True},
+    )
 
 
 def asdict(inst):

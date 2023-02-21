@@ -197,7 +197,7 @@ class Path:
         success_code = get_success_code(spec.responses)
 
         if success_code is None:
-            out = t.struct()
+            out = t.struct({})
         elif success_code == "204":  # No Content
             out = t.boolean()
         else:
@@ -211,7 +211,7 @@ class Path:
                         f"No supported content type for response: {', '.join(content)}"
                     )
             else:
-                out = t.struct()
+                out = t.struct({})
 
         # TODO what for other 4xx codes
         if "404" in spec.responses:

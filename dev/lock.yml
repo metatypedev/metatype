@@ -2,6 +2,8 @@ dev:
   rules:
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
+    pyrightconfig.json:
+      '(  "pythonVersion": ").+(",)': PYTHON_VERSION
     .github/*/*.yml:
       '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
       '(  POETRY_VERSION: ").+(")': POETRY_VERSION

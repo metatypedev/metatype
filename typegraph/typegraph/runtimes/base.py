@@ -2,10 +2,10 @@
 
 from typing import TYPE_CHECKING, Dict, List, Optional
 
-from attrs import frozen
+from attrs import field, frozen
 
 from typegraph.effects import Effect
-from typegraph.graph.builder import Collector
+from typegraph.graph.builder import Collector, Collectors
 from typegraph.graph.nodes import Node
 from typegraph.utils.attrs import always, asdict
 
@@ -13,10 +13,12 @@ if TYPE_CHECKING:
     from typegraph import types as t
 
 
-@frozen
+@frozen(kw_only=True)
 class Runtime(Node):
     runtime_name: str
-    collector_target: Optional[str] = always(Collector.runtimes)
+    collector_target: Optional[Collectors] = field(
+        init=False, default=Collectors.runtimes
+    )
 
     def data(self, collector: Collector) -> Dict:
         data = asdict(self)
@@ -31,7 +33,7 @@ class Runtime(Node):
 class Materializer(Node):
     runtime: Runtime
     effect: Effect
-    collector_target: Optional[str] = always(Collector.materializers)
+    collector_target: Optional[Collectors] = always(Collectors.materializers)
 
     @property
     def edges(self) -> List[Node]:

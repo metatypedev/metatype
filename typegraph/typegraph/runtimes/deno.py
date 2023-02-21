@@ -11,7 +11,7 @@ from frozendict import frozendict
 
 from typegraph import effects
 from typegraph.effects import Effect
-from typegraph.graph.builder import Collector
+from typegraph.graph.builder import Collector, Collectors
 from typegraph.graph.nodes import Node
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always
@@ -106,7 +106,7 @@ class ImportFunMat(Materializer):
         kw_only=True, factory=DenoRuntime
     )  # should be the same runtime as `mod`'s
     materializer_name: str = always("import_function")
-    collector_target = always(Collector.materializers)
+    collector_target = always(Collectors.materializers)
 
     @property
     def edges(self) -> List[Node]:

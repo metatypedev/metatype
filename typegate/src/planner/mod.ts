@@ -299,7 +299,7 @@ export class Planner {
         stages.push(...this.traverse({ ...node, typeIdx: itemTypeIdx }, stage));
       }
 
-      // support for nested quantifier `t.array(t.struct()).optional()`,
+      // support for nested quantifier `t.array(t.struct({})).optional()`,
       // which is necessary to compute some introspection fields
       if (isArray(itemSchema)) {
         const nestedItemTypeIndex = getWrappedType(itemSchema);

@@ -10,16 +10,19 @@ with TypeGraph(
 ) as g:
     public = policies.public()
     db = PrismaRuntime("legacy", "POSTGRES_CONN")
+    t.string()
 
-    user = t.struct(
-        {
-            "id": t.uuid().config("id", "auto"),
-            "email": t.email(),
-            "firstname": t.string().max(2000),
-        }
-    ).named("user")
-
-    db.manage(user)  # soon removed
+    user = (
+        t.struct(
+            {
+                "id": t.uuid().config("id", "auto"),
+                "email": t.email(),
+                "firstname": t.string().max(2000),
+            }
+        )
+        .min(2)
+        .named("user")
+    )
 
     g.expose(
         create_user=db.insert_one(user),

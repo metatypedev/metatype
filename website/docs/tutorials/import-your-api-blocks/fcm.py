@@ -36,7 +36,6 @@ with TypeGraph(
             ),
         }
     ).named("message")
-    db.manage(message)  # soon removed
 
     g.expose(
         create_message=db.insert_one(message),
