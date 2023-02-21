@@ -60,18 +60,15 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}
-      - name: Build
-        uses: actions-rs/cargo@v1
+      - uses: actions-rs/cargo@v1
         with:
           use-cross: true
           command: build
           args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
-      - name: Compress
-        run: |
+      - run: |
           cd target/${{ matrix.target }}/release          
           tar czvf ../../../meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
-      - name: Upload
-        uses: svenstaro/upload-release-action@v2
+      - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}
           file: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
@@ -91,16 +88,14 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - name: Build & publish
-        working-directory: typegraph
+      - working-directory: typegraph
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
         run: |
           poetry install --sync
           poetry build
           poetry publish
-      - name: Upload
-        uses: svenstaro/upload-release-action@v2
+      - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}
           file: "typegraph/dist/*"
@@ -138,8 +133,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
-      - name: Bump version
-        id: bump
+      - id: bump
         run: |
           deno run -A dev/lock.ts --bump prerelease
           echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT

@@ -68,8 +68,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - name: Install
-        working-directory: website
+      - working-directory: website
         run: |
           pnpm install --frozen-lockfile
       - uses: pre-commit/action@v3.0.0
@@ -88,8 +87,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
           cache-dependency-path: website/pnpm-lock.yaml
-      - name: Install and test build
-        working-directory: website
+      - working-directory: website
         run: |
           pnpm install --frozen-lockfile
           pnpm lint
@@ -116,12 +114,12 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: meta
-      - run: tar -xvf meta.tar
-      - name: Install and test build
-        working-directory: typegraph
+      - run: |
+          tar -xvf meta.tar
+          python3 -m venv .venv
+          source .venv/bin/activate
+      - working-directory: typegraph
         run: |
-          python3 -m venv ../.venv
-          source ../.venv/bin/activate
           poetry install --sync
           pytest -s tests
 
@@ -145,11 +143,13 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - name: Install and test build
-        run: |
+      - run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          poetry install --sync --directory ./typegraph
+      - working-directory: typegraph
+        run: |
+          poetry install --sync
+      - run: |
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
           tar -cvf meta.tar target/debug/meta
@@ -186,11 +186,13 @@ jobs:
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - name: Install and test build
-        run: |
+      - run: |
           python3 -m venv .venv
           ${{ runner.activate }}
-          poetry install --sync --directory ./typegraph
+      - working-directory: typegraph
+        run: |
+          poetry install --sync
+      - run: |
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
@@ -259,12 +261,14 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: meta
-      - run: tar -xvf meta.tar
-      - name: Install and test build
-        run: |
+      - run: |
+          tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          poetry install --sync --directory ./typegraph
+      - working-directory: typegraph
+        run: |
+          poetry install --sync
+      - run: |
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
           which py-tg
@@ -296,12 +300,14 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: meta
-      - run: tar -xvf meta.tar
-      - name: Install and test build
-        run: |
+      - run: |
+          tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          poetry install --sync --directory ./typegraph
+      - working-directory: typegraph
+        run: |
+          poetry install --sync
+      - run: |
           cargo test --locked --exclude meta-cli --exclude native --workspace
 
   test-docker:
