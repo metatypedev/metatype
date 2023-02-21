@@ -2,12 +2,38 @@
 
 import { assertRejects } from "std/testing/asserts.ts";
 import { copyFile, gql, MetaTest, Q, test } from "../utils.ts";
+import * as mf from "test/mock_fetch";
+
+mf.install();
+
+mf.mock("GET@/api/v3/pet/1", () => {
+  return new Response(JSON.stringify({ id: 1, name: "jorge", tags: [] }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+});
+
+mf.mock("POST@/graphql", () => {
+  return new Response(
+    JSON.stringify({
+      data: { mutationPrevalenceSubtypes: [{ name: "jorge" }] },
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    },
+  );
+});
 
 async function testImporter(t: MetaTest, name: string, testQuery?: Q) {
   const file = `importers/copy/${name}.py`;
 
   await t.should("copy source typegraph definition", async () => {
-    await copyFile(`importers/${name}.py`, file);
+    await copyFile(`importers/${name}_original.py`, file);
   });
 
   await t.should("run the importer", async () => {
