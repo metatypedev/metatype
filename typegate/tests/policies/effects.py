@@ -1,15 +1,65 @@
-from typegraph import t
+from typegraph import t, effects
 from typegraph import TypeGraph
 from typegraph import policies as p
-from typegraph.runtimes.deno import PureFunMat
+from typegraph.policies import Policy
+from typegraph.runtimes.deno import PureFunMat, ModuleMat, FunMat
 
 with TypeGraph("effect-policies") as g:
-    public = p.public()
-    current_user_only = PureFunMat("() => true")
-    restricted_field = t.struct(
-        {
-            "id": t.uuid(),
-            "email": t.email(),
-            "password_hash": t.string().add_policy(current_user_only),
-        }
-    ).add_policy(public)
+    # public = p.public().mat
+    public = PureFunMat("() => true")
+    # current_user_only = PureFunMat("() => true")
+    mod = ModuleMat("ts/effects.ts")
+    current_user_only = mod.imp("currentUserOnly")
+    user = (
+        t.struct(
+            {
+                "id": t.integer(),
+                "email": t.email(),
+                "password_hash": t.string().add_policy(current_user_only),
+            }
+        )
+        .named("User")
+        .add_policy(Policy(public, update=current_user_only, delete=current_user_only))
+    )
+
+    g.expose(
+        createUser=t.func(
+            t.struct({"email": t.email(), "password_hash": t.string()}),
+            user,
+            FunMat("(args) => ({ id: 12, ...args })", effect=effects.create()),
+        ),
+        updateUser=t.func(
+            t.struct(
+                {
+                    "id": t.integer(),
+                    "set": t.struct(
+                        {
+                            "email": t.email().optional(),
+                            "password": t.string().optional(),
+                        }
+                    ).min(1),
+                }
+            ),
+            user,
+            FunMat(
+                "({ id, set }) => ({ id, ...(set.email ? { email: set.email }: {}), ...(set.password ? { password_hash: 'xxx' }: {})})",
+                effect=effects.update(),
+            ),
+        ),
+        deleteUser=t.func(
+            t.struct({"id": t.integer()}),
+            user,
+            FunMat(
+                "({id}) => ({ id, email: 'john@example.com', password_hash: 'xxx'})",
+                effect=effects.delete(),
+            ),
+        ),
+        findUser=t.func(
+            t.struct({"id": t.integer()}),
+            user,
+            PureFunMat(
+                "({id}) => ({id, email: 'john@example.com', password_hash: 'xxx'})"
+            ),
+        ),
+        default_policy=[p.public()],
+    )

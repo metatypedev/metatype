@@ -225,10 +225,21 @@ pub struct TGRuntime {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EffectMaterializers {
+    create: Option<u32>,
+    update: Option<u32>,
+    upsert: Option<u32>,
+    delete: Option<u32>,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Policy {
     pub name: String,
     pub materializer: u32,
+    pub effect_materializers: EffectMaterializers,
 }
 
 impl Typegraph {

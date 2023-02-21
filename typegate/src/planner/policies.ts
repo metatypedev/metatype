@@ -2,29 +2,30 @@
 
 import { DenoRuntime } from "../runtimes/deno.ts";
 import { TypeGraph } from "../typegraph.ts";
-import {
-  Context,
-  PolicyIdx,
-  PolicyList,
-  Resolver,
-  StageId,
-  TypeIdx,
-} from "../types.ts";
+import { Context, PolicyIdx, PolicyList, Resolver, TypeIdx } from "../types.ts";
+import { Effect, EffectType } from "../types/typegraph.ts";
+import { Type } from "../type_node.ts";
 import { ensure } from "../utils.ts";
+import { Node, Tree } from "./utils.ts";
+import { mapValues } from "std/collections/map_values.ts";
+
+type StagePolicies = Map<TypeIdx, PolicyList>;
+interface TreeNodeValue {
+  policies: StagePolicies;
+  effect: Effect | null;
+}
 
 export class OperationPolicies {
-  private policyLists: Map<StageId, Map<TypeIdx, PolicyList>>;
-  private resolvers: Map<PolicyIdx, Resolver>;
+  private policyTree: Tree<TreeNodeValue, string>;
+  private resolvers: Map<PolicyIdx, Record<EffectType | "none", Resolver>>;
 
   constructor(
     private tg: TypeGraph,
-    referencedTypes: Map<StageId, TypeIdx[]>,
+    referencedTypes: Tree<TypeIdx[], string>,
   ) {
-    //
-    this.policyLists = new Map();
     const policies = new Set<PolicyIdx>();
 
-    for (const [stageId, types] of referencedTypes) {
+    this.policyTree = referencedTypes.map((types) => {
       const policyLists = new Map<TypeIdx, PolicyList>();
       for (const typeIdx of types) {
         const type = this.tg.type(typeIdx);
@@ -34,10 +35,18 @@ export class OperationPolicies {
           policyList.forEach((idx) => policies.add(idx));
         }
       }
-      if (policyLists.size > 0) {
-        this.policyLists.set(stageId, policyLists);
-      }
-    }
+
+      const firstType = this.tg.type(types[0]);
+      const effect = firstType.type === Type.FUNCTION
+        ? this.tg.materializer(firstType.materializer).effect
+        : null;
+      return {
+        policies: policyLists,
+        effect,
+      };
+    });
+
+    OperationPolicies.propagateEffect(this.policyTree.root);
 
     this.resolvers = new Map();
     for (const idx of policies) {
@@ -54,67 +63,116 @@ export class OperationPolicies {
         "Policies must run on a Deno Runtime",
       );
 
-      this.resolvers.set(idx, runtime.delegate(mat, false));
+      const materializers = {
+        none: this.tg.policyMaterializer(policy),
+        update: this.tg.policyMaterializer(policy, "update"),
+        upsert: this.tg.policyMaterializer(policy, "upsert"),
+        create: this.tg.policyMaterializer(policy, "create"),
+        delete: this.tg.policyMaterializer(policy, "delete"),
+      };
+      this.resolvers.set(
+        idx,
+        mapValues(
+          materializers,
+          (mat) => (args) => runtime.delegate(mat, false)(args),
+        ),
+      );
+    }
+  }
+
+  static propagateEffect(node: Node<TreeNodeValue, string>) {
+    const eff = node.value.effect;
+    for (const n of node.subtrees.values()) {
+      if (n.value.effect == null) {
+        n.value.effect = eff;
+      }
+      OperationPolicies.propagateEffect(n);
     }
   }
 
   public async authorize(context: Context, args: Record<string, unknown>) {
-    const authorizedTypes = new Set<TypeIdx>();
-    const cache = new Map<PolicyIdx, boolean | null>();
+    // TODO
+    const _authorizedTypes = new Set<TypeIdx>();
 
-    const getResolverResult = (
+    const cache = new Map<
+      PolicyIdx,
+      Partial<Record<EffectType | "none", boolean | null>>
+    >();
+
+    const getResolverResult = async (
       idx: PolicyIdx,
+      effect: EffectType | "none",
     ): Promise<boolean | null> => {
-      if (cache.has(idx)) {
-        return Promise.resolve(cache.get(idx) as boolean | null);
+      console.debug(
+        `checking policy '${
+          this.tg.policy(idx).name
+        }'[${idx}]; effect=${effect}`,
+      );
+      if (!cache.has(idx)) {
+        cache.set(idx, {});
+      }
+      const entries = cache.get(idx)!;
+      if (effect in entries) {
+        // return Promise.resolve(entries[effect] as boolean | null);
+        return entries[effect] as boolean | null;
       }
 
-      const resolver = this.resolvers.get(idx);
+      const resolver = this.resolvers.get(idx)![effect];
       ensure(
         resolver != null,
-        `Could not find resolver for the policy '${this.tg.policy(idx).name}'`,
+        `Could not find resolver for the policy '${
+          this.tg.policy(idx).name
+        }'; effect=${effect}`,
       );
-      return resolver!({
+      const res = await resolver!({
         ...args,
         _: {
           parent: {},
           context,
           variables: {},
+          effect: effect === "none" ? null : effect,
         },
-      }) as Promise<boolean | null>;
+      }) as boolean | null;
+      entries[effect] = res;
+      return res;
     };
 
-    for (const [stageId, policyLists] of this.policyLists) {
-      for (const [typeIdx, policyList] of policyLists) {
-        if (authorizedTypes.has(typeIdx)) {
-          continue;
-        }
-        authorizedTypes.add(typeIdx);
-
+    for (const [path, { policies, effect }] of this.policyTree.entries()) {
+      if (effect == null) {
+        // propagate effect should have set effect for all the nodes except for namespaces
+        continue;
+      }
+      // cache authorized types -- prevent multiple evaluations
+      for (const [typeIdx, policyList] of policies) {
         for (const idx of policyList) {
-          const res = await getResolverResult(idx);
+          const res = await getResolverResult(idx, effect.effect ?? "none");
           if (res == null) {
             continue;
           }
 
-          if (!res) {
-            // res === false
-            const policyName = this.tg.policy(idx).name;
-            const typeName = this.tg.type(typeIdx).title;
-            throw new Error(
-              `Authorization failed for policy '${policyName}' on '${typeName}' at '${stageId}'`,
-            );
+          if (res) {
+            break; // authorized
           }
 
-          // res === true
-          break;
+          const policyName = this.tg.policy(idx).name;
+          const typeName = this.tg.type(typeIdx).title;
+          const details = [
+            `policy '${policyName}'`,
+            `with effect '${effect ?? "none"}'`,
+            `on type '${typeName}'`,
+            `at '${["<root>", ...path].join(".")}'`,
+          ].join(" ");
+          throw new Error(
+            `Authorization failed for ${details}`,
+          );
         }
       }
+      //
     }
   }
 
-  public ensureTypeHasPolicies(stageId: StageId, typeIdx: TypeIdx) {
-    if (this.policyLists.get(stageId)?.get(typeIdx) == null) {
+  public ensureTypeHasPolicies(path: string[], typeIdx: TypeIdx) {
+    if (this.policyTree.getNode(path).value.policies.get(typeIdx) == null) {
       throw new Error(
         "No authorization policy took a decision in top-level function at '${stageId}'",
       );

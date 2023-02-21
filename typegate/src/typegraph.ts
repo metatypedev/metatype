@@ -30,6 +30,7 @@ import { S3Runtime } from "./runtimes/s3.ts";
 
 import type {
   Cors,
+  EffectType,
   Materializer as TypeMaterializer,
   Policy as TypePolicy,
   Rate,
@@ -242,8 +243,13 @@ export class TypeGraph {
     return this.tg.materializers[idx];
   }
 
-  policyMaterializer(policy: TypePolicy): TypeMaterializer {
-    const matIdx = policy.materializer;
+  policyMaterializer(
+    policy: TypePolicy,
+    effect: EffectType | null = null,
+  ): TypeMaterializer {
+    const defaultMatIdx = policy.materializer;
+    const matIdx = (effect && policy.effect_materializers[effect]) ??
+      defaultMatIdx;
     return this.materializer(matIdx);
   }
 

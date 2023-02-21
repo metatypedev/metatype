@@ -257,6 +257,7 @@ export class Engine {
               parent: parent ?? {},
               context,
               variables,
+              effect: null, // TODO
               ...deps,
             },
           })

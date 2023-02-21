@@ -204,6 +204,13 @@ export interface TGRuntime {
 export interface Policy {
   name: string;
   materializer: number;
+  effect_materializers: EffectMaterializers;
+}
+export interface EffectMaterializers {
+  create?: number | null;
+  update?: number | null;
+  upsert?: number | null;
+  delete?: number | null;
 }
 export interface TypeMeta {
   secrets: string[];

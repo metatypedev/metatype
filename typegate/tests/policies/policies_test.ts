@@ -158,3 +158,38 @@ test("Namespace policies", async (t) => {
       .on(e);
   });
 });
+
+test("Policies for effects", async (t) => {
+  const e = await t.pythonFile("policies/effects.py");
+
+  await t.should("succeeed", async () => {
+    await gql`
+      query {
+        findUser(id: 12) {
+          id
+          email
+        }
+      }
+    `
+      .expectData({
+        findUser: {
+          id: 12,
+          email: "john@example.com",
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("fail", async () => {
+    await gql`
+      mutation {
+        updateUser(id: 12, set: {email: "john.doe@example.com"}) {
+          id
+          email
+        }
+      }
+    `
+      .expectErrorContains("Authorization failed")
+      .on(e);
+  });
+});

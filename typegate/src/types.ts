@@ -6,6 +6,7 @@ import type { TypeGraphDS, TypeMaterializer } from "./typegraph.ts";
 import { ObjectNode, TypeNode } from "./type_node.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "./planner/args.ts";
+import { EffectType } from "./types/typegraph.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;
@@ -24,6 +25,7 @@ interface ResolverArgsBase {
     parent: Parents;
     variables: Variables;
     context: Context;
+    effect: EffectType | null;
     [dep: string]: unknown;
   };
 }
