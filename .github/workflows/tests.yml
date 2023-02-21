@@ -135,6 +135,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -146,7 +149,7 @@ jobs:
         run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          pip3 install ./typegraph
+          poetry install --sync --directory ./typegraph
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
           tar -cvf meta.tar target/debug/meta
@@ -173,6 +176,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -184,7 +190,7 @@ jobs:
         run: |
           python3 -m venv .venv
           ${{ runner.activate }}
-          pip3 install ./typegraph
+          poetry install --sync --directory ./typegraph
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
@@ -236,6 +242,9 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ hashFiles('**/deno.lock') }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -255,7 +264,7 @@ jobs:
         run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          pip3 install ./typegraph
+          poetry install --sync --directory ./typegraph
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
           which py-tg
@@ -274,6 +283,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -289,7 +301,7 @@ jobs:
         run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          pip3 install ./typegraph
+          poetry install --sync --directory ./typegraph
           cargo test --locked --exclude meta-cli --exclude native --workspace
 
   test-docker:
