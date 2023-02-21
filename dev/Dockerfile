@@ -1,4 +1,4 @@
-ARG RUST_VERSION=stable
+ARG RUST_VERSION=1.67.1
 ARG DENO_VERSION=1.30.3
 
 FROM lukemathwalker/cargo-chef:latest-rust-${RUST_VERSION} AS base
