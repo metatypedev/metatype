@@ -54,20 +54,6 @@ test("prisma full mapping", async (t) => {
     })
       .on(e);
   });
-  /*
-  await t.should("do a count with findUniquePost", async () => {
-    await gql`
-        query {
-          findUniquePost(where: {id: 10001}) {
-            id
-            title
-          }
-        }
-    `.expectBody((body: any) => {
-      console.log("body findManyPost :::", body);
-    })
-      .on(e);
-  });*/
 
   await t.should("paginate correctly with findManyPosts", async () => {
     await gql`
@@ -331,7 +317,14 @@ test("prisma full mapping", async (t) => {
               age: 22,
               coinflips: [true],
               city: "SomeVille",
-              posts: { createMany: { data: [] } }
+              posts: { 
+                createMany: {
+                  data: [
+                    { id: 10021, title: "Some Title 21", views: 1, likes: 0, published: true },
+                    { id: 10022, title: "Some Title 22", views: 5, likes: 3, published: true },
+                  ] 
+                } 
+              }
             },
             # should not be applied
             update: {
@@ -342,6 +335,10 @@ test("prisma full mapping", async (t) => {
             name
             age
             coinflips
+            posts {
+              id
+              title
+            }
           }
         }
     `.expectData({
@@ -350,9 +347,60 @@ test("prisma full mapping", async (t) => {
           name: "Mark",
           age: 22,
           coinflips: [true],
+          posts: [
+            { id: 10021, title: "Some Title 21" },
+            { id: 10022, title: "Some Title 22" },
+          ],
         },
       })
         .on(e);
     },
   );
+
+  await t.should("do a count with findUniqueUser", async () => {
+    await gql`
+        query {
+          findUniqueUser(where: {id: 1}) {
+            id
+            name
+            age
+            _count {
+              posts
+            }
+          }
+        }
+    `.expectData({
+      findUniqueUser: {
+        id: 1,
+        name: "Jack",
+        age: 20,
+        _count: { posts: 5 },
+      },
+    })
+      .on(e);
+  });
+
+  await t.should("do a count with findManyUsers", async () => {
+    await gql`
+        query {
+          findManyUsers {
+            id
+            name
+            age
+            _count {
+              posts
+            }
+          }
+        }
+    `.expectData({
+      findManyUsers: [
+        { id: 1, name: "Jack", age: 20, _count: { posts: 5 } },
+        { id: 3, name: "Kiki", age: 18, _count: { posts: 0 } },
+        { id: 4, name: "George", age: 18, _count: { posts: 0 } },
+        { id: 2, name: "New Name", age: 21, _count: { posts: 0 } },
+        { id: 1234, name: "Mark", age: 22, _count: { posts: 2 } },
+      ],
+    })
+      .on(e);
+  });
 });

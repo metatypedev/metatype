@@ -141,6 +141,21 @@ class TypeGenerator:
             tpe, lambda term: t.float() if isinstance(term, t.number) else term
         )
 
+    def add_nested_count(self, tpe: t.struct) -> t.struct:
+        new_props = {}
+
+        for k, v in tpe.props.items():
+            if isinstance(v, t.struct):
+                new_props[k] = self.add_nested_count(v)
+            else:
+                new_props[k] = v
+
+        new_props["_count"] = t.struct(
+            {k: t.integer().optional() for k in tpe.props.keys()}
+        ).optional()
+
+        return t.struct(new_props)
+
     def generate_update_operation(self, terminal_node: t.typedef) -> t.struct:
         if isinstance(terminal_node, t.string):
             return t.struct({"set": t.string()})

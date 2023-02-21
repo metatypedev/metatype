@@ -311,20 +311,14 @@ class PrismaRuntime(Runtime):
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Unique", tpe)
-        # TODO
-        # base_output = typegen.get_out_type(tpe)
-        # count_ouptut = typegen.get_out_type(tpe)
-        # IDEA : t.union([base_output, count_output])
-        # output = either(base_output, count_output)
-
         base_output = typegen.get_out_type(tpe)
+        output = typegen.add_nested_count(base_output)
 
         return t.func(
             t.struct(
                 {"where": typegen.get_where_type(tpe).named(_pref("Where")).optional()}
             ),
-            base_output.named(_pref("Output")).optional(),
-            # output.named(_pref("Output")).optional(),
+            output.named(_pref("Output")).optional(),
             PrismaOperationMat(self, tpe.name, "findUnique", effect=effects.none()),
         )
 
@@ -333,11 +327,8 @@ class PrismaRuntime(Runtime):
         typegen = self.__typegen
         _pref = get_name_generator("Many", tpe)
         rel_cols = tpe.props.keys()
-        # TODO
-        # array_output = t.array(typegen.get_out_type(tpe)))
-        # count_ouptut = typegen.get_out_type(tpe)
-        # IDEA : t.union([array_output, count_output])
-        # output = either(array_output, count_output)
+        base_output = typegen.get_out_type(tpe)
+        output = typegen.add_nested_count(base_output)
         return t.func(
             t.struct(
                 {
@@ -354,7 +345,7 @@ class PrismaRuntime(Runtime):
                     .optional(),
                 }
             ),
-            t.array(typegen.get_out_type(tpe).named(_pref("Output"))),
+            t.array(output.named(_pref("Output"))),
             PrismaOperationMat(self, tpe.name, "findMany", effect=effects.none()),
         )
 
