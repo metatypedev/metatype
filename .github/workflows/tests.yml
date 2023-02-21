@@ -101,12 +101,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/cache@v3
         with:
           path: .venv
@@ -118,8 +118,7 @@ jobs:
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-      - working-directory: typegraph
-        run: |
+          cd typegraph
           poetry install --sync
           pytest -s tests
 
@@ -133,12 +132,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/cache@v3
         with:
           path: .venv
@@ -146,10 +145,9 @@ jobs:
       - run: |
           python3 -m venv .venv
           source .venv/bin/activate
-      - working-directory: typegraph
-        run: |
+          cd typegraph
           poetry install --sync
-      - run: |
+          cd ..
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
           tar -cvf meta.tar target/debug/meta
@@ -176,12 +174,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/cache@v3
         with:
           path: .venv
@@ -189,10 +187,9 @@ jobs:
       - run: |
           python3 -m venv .venv
           ${{ runner.activate }}
-      - working-directory: typegraph
-        run: |
+          cd typegraph
           poetry install --sync
-      - run: |
+          cd ..
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
@@ -244,12 +241,12 @@ jobs:
         with:
           path: ${{ env.DENO_DIR }}
           key: deno-${{ hashFiles('**/deno.lock') }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: arduino/setup-protoc@v1
         with:
           version: ${{ env.PROTOC_VERSION }}
@@ -265,10 +262,9 @@ jobs:
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-      - working-directory: typegraph
-        run: |
+          cd typegraph
           poetry install --sync
-      - run: |
+          cd ..
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
           which py-tg
@@ -287,12 +283,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/cache@v3
         with:
           path: .venv
@@ -304,10 +300,9 @@ jobs:
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-      - working-directory: typegraph
-        run: |
+          cd typegraph
           poetry install --sync
-      - run: |
+          cd ..
           cargo test --locked --exclude meta-cli --exclude native --workspace
 
   test-docker:
