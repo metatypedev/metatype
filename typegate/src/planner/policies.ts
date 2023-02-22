@@ -8,6 +8,7 @@ import { Type } from "../type_node.ts";
 import { ensure } from "../utils.ts";
 import { Node, Tree } from "./utils.ts";
 import { mapValues } from "std/collections/map_values.ts";
+import { getLogger } from "../log.ts";
 
 type StagePolicies = Map<TypeIdx, PolicyList>;
 interface TreeNodeValue {
@@ -90,8 +91,13 @@ export class OperationPolicies {
     }
   }
 
-  public async authorize(context: Context, args: Record<string, unknown>) {
-    // TODO
+  public async authorize(
+    context: Context,
+    args: Record<string, unknown>,
+    verbose: boolean,
+  ) {
+    const logger = getLogger("policies");
+    // TODO cache authorized types
     const _authorizedTypes = new Set<TypeIdx>();
 
     const cache = new Map<
@@ -103,17 +109,18 @@ export class OperationPolicies {
       idx: PolicyIdx,
       effect: EffectType | "none",
     ): Promise<boolean | null> => {
-      console.debug(
-        `checking policy '${
-          this.tg.policy(idx).name
-        }'[${idx}]; effect=${effect}`,
-      );
+      verbose &&
+        logger.info(
+          `checking policy '${
+            this.tg.policy(idx).name
+          }'[${idx}] with effect '${effect}'...`,
+        );
       if (!cache.has(idx)) {
         cache.set(idx, {});
       }
       const entries = cache.get(idx)!;
       if (effect in entries) {
-        // return Promise.resolve(entries[effect] as boolean | null);
+        verbose && logger.info(`> authorize: ${entries[effect]} (from cache)`);
         return entries[effect] as boolean | null;
       }
 
@@ -134,6 +141,7 @@ export class OperationPolicies {
         },
       }) as boolean | null;
       entries[effect] = res;
+      verbose && logger.info(`> authorize: ${res}`);
       return res;
     };
 

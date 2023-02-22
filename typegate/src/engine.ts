@@ -215,13 +215,13 @@ export class Engine {
     context: Context,
     variables: Record<string, unknown>,
     limit: RateLimit | null,
-    _verbose: boolean,
+    verbose: boolean,
   ): Promise<JSONValue> {
     const ret = {};
     const cache: Record<string, unknown> = {};
     const lenses: Record<string, unknown> = {};
 
-    await policies.authorize(context, policyArgs);
+    await policies.authorize(context, policyArgs, verbose);
 
     for await (const stage of plan) {
       const {
