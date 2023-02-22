@@ -30,7 +30,7 @@ with TypeGraph("union") as g:
         .named("ColorName")
     )
 
-    color = t.union((rgb_array, rgb_struct, hex, colorName)).named("Color")
+    color = t.union([rgb_array, rgb_struct, hex, colorName]).named("Color")
 
     colorFormat = t.string().enum(["rgb_array", "rgb_struct", "hex", "colorName"])
 

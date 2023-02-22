@@ -572,7 +572,10 @@ class array(typedef):
 
 @frozen
 class union(typedef):
-    variants: Tuple[TypeNode]
+    variants: List[TypeNode] = list()
+
+    def __hash__(self):
+        return hash(tuple(self.variants))
 
     @property
     def edges(self) -> List[Node]:
@@ -587,7 +590,10 @@ class union(typedef):
 
 @frozen
 class either(typedef):
-    variants: Tuple[TypeNode]
+    variants: List[TypeNode] = list()
+
+    def __hash__(self):
+        return hash(tuple(self.variants))
 
     @property
     def edges(self) -> List[Node]:

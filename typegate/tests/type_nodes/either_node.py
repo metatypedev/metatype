@@ -18,7 +18,7 @@ with TypeGraph("either") as g:
         {"age": t.integer().min(25), "name": t.string(), "company": t.string()}
     ).named("Adult")
 
-    user = t.either((kid, teen, adult)).named("User")
+    user = t.either([kid, teen, adult]).named("User")
 
     # transaction models
 
@@ -26,7 +26,7 @@ with TypeGraph("either") as g:
 
     failed_transaction = t.struct({"reason": t.string()})
 
-    response = t.either((success_transaction, failed_transaction)).named("Response")
+    response = t.either([success_transaction, failed_transaction]).named("Response")
 
     user_register_materializer = ModuleMat("ts/either/user_register.ts")
 
