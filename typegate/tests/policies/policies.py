@@ -12,7 +12,7 @@ def make_policy(g, name, fn):
 
 
 with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
-    mod = ModuleMat("ts/effects.ts")
+    mod = ModuleMat("ts/policies.ts")
 
     secret_data = t.struct(
         {

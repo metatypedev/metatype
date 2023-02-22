@@ -158,7 +158,7 @@ export class OperationPolicies {
           const typeName = this.tg.type(typeIdx).title;
           const details = [
             `policy '${policyName}'`,
-            `with effect '${effect ?? "none"}'`,
+            `with effect '${effect.effect ?? "none"}'`,
             `on type '${typeName}'`,
             `at '${["<root>", ...path].join(".")}'`,
           ].join(" ");
