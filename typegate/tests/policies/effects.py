@@ -3,11 +3,11 @@ from typegraph import TypeGraph
 from typegraph import policies as p
 from typegraph.policies import Policy
 from typegraph.runtimes.deno import PureFunMat, ModuleMat, FunMat
+from typegraph.graph.models import Auth
 
-with TypeGraph("effect-policies") as g:
+with TypeGraph("effect-policies", auths=[Auth.jwk("native")]) as g:
     # public = p.public().mat
     public = PureFunMat("() => true")
-    # current_user_only = PureFunMat("() => true")
     mod = ModuleMat("ts/effects.ts")
     current_user_only = mod.imp("currentUserOnly")
     user = (

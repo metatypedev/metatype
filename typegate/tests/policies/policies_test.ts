@@ -180,7 +180,7 @@ test("Policies for effects", async (t) => {
       .on(e);
   });
 
-  await t.should("fail", async () => {
+  await t.should("fail without authorization", async () => {
     await gql`
       mutation {
         updateUser(id: 12, set: {email: "john.doe@example.com"}) {
@@ -190,6 +190,37 @@ test("Policies for effects", async (t) => {
       }
     `
       .expectErrorContains("Authorization failed")
+      .on(e);
+
+    await gql`
+      query {
+        findUser(id: 12) {
+          id
+          email
+          password_hash
+        }
+      }
+    `
+      .expectErrorContains("Authorization failed")
+      .on(e);
+  });
+
+  await t.should("should succeed with appropriate autorization", async () => {
+    await gql`
+      mutation {
+        updateUser(id: 12, set: {email: "john.doe@example.com"}) {
+          id
+          email
+        }
+      }
+    `
+      .expectData({
+        updateUser: {
+          id: 12,
+          email: "john.doe@example.com",
+        },
+      })
+      .withContext({ userId: 12 })
       .on(e);
   });
 });
