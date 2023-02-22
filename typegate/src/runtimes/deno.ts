@@ -16,11 +16,10 @@ import * as ast from "graphql/ast";
 const logger = getLogger(import.meta);
 
 const localDir = dirname(fromFileUrl(import.meta.url));
-
 const workerFile = toFileUrl(resolve(localDir, "utils/deno-worker.ts"));
 
 const defaultPermissions = {
-  env: false,
+  env: ["LOG_LEVEL"],
   hrtime: false,
   net: false,
   ffi: false,

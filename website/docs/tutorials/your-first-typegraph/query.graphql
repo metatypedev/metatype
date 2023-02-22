@@ -1,0 +1,11 @@
+query {
+  get_message {
+    id
+    title
+    # user_id
+  }
+
+  second_one: get_message {
+    body
+  }
+}

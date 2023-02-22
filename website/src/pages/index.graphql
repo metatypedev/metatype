@@ -1,0 +1,32 @@
+query A {
+  stargazers {
+    login
+  }
+}
+
+query B {
+  stargazers {
+    login
+    user {
+      name
+    }
+  }
+}
+
+mutation C($message: String!) {
+  send_feedback(
+    data: {
+      email: "" # fill me
+      message: $message
+    }
+  ) {
+    id
+  }
+}
+
+query D {
+  list_feedback {
+    email # delete me
+    message
+  }
+}

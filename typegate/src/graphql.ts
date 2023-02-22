@@ -2,33 +2,34 @@
 
 import * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { Maybe } from "./utils.ts";
+import { None, Option, Some } from "monads";
+import { forceOptionToValue } from "./utils.ts";
 
 export type FragmentDefs = Record<string, ast.FragmentDefinitionNode>;
 
 export const findOperation = (
   document: ast.DocumentNode,
-  operationName: Maybe<string>,
-): [Maybe<ast.OperationDefinitionNode>, FragmentDefs] => {
-  let def = null;
-  let lastDef = null;
+  operationName: Option<string>,
+): [Option<ast.OperationDefinitionNode>, FragmentDefs] => {
+  let def: Option<ast.OperationDefinitionNode> = None;
+  let lastDef: Option<ast.OperationDefinitionNode> = None;
   const fragments: FragmentDefs = {};
   for (const definition of document.definitions) {
     switch (definition.kind) {
       case Kind.OPERATION_DEFINITION:
-        lastDef = definition;
+        lastDef = Some(definition);
         if (
-          definition.name?.value === operationName &&
+          definition.name?.value === forceOptionToValue(operationName) &&
           (definition.operation == "query" ||
             definition.operation == "mutation")
         ) {
-          if (def !== null) {
+          if (def.isSome()) {
             throw Error(
               `multiple definition of same operation ${operationName}`,
             );
           }
 
-          def = definition;
+          def = Some(definition);
         }
         break;
       case Kind.FRAGMENT_DEFINITION:
@@ -37,7 +38,7 @@ export const findOperation = (
       default:
     }
   }
-  if (!operationName && lastDef) {
+  if (operationName.isNone() && lastDef.isSome()) {
     def = lastDef;
   }
 

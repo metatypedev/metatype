@@ -1,16 +1,12 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Dict
-from typing import Iterable
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import List, Optional, Tuple
+
+from attrs import evolve, frozen
 
 from typegraph import types as t
-from typegraph.graph.nodes import NodeProxy
 from typegraph.graph.typegraph import resolve_proxy
-
+from typegraph.providers.prisma.relations import RelationshipRegister
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
 prisma_types = {
@@ -24,6 +20,14 @@ prisma_types = {
     # 'Json',
     # 'Bytes'
 }
+
+
+def to_prisma_string(s: str) -> str:
+    return f'"{repr(s)[1:-1]}"'
+
+
+def to_prisma_list(lst: List[str]) -> str:
+    return f"[{', '.join(lst)}]"
 
 
 class PrismaField:
@@ -47,216 +51,163 @@ def get_ids(tpe: t.struct) -> Tuple[str, ...]:
     ]
 
 
-class PrismaModel:
+@frozen
+class SchemaField:
     name: str
-    fields: Dict[str, PrismaField]
-    entity: t.struct
+    typ: str
     tags: List[str]
+    fkeys: List["SchemaField"] = []  # foreign keys
+    fkeys_unique: bool = False
 
-    def __init__(self, entity: t.struct) -> None:
-        self.name = entity.name
-        self.entity = entity
-        self.fields = {}
-        self.tags = []
-        for field_name, field_type in entity.props.items():
-            f = PrismaField(field_name, field_type)
-            if field_type.runtime_config.get("id", False):
-                f.tags.append("@id")
-            if field_type.runtime_config.get("auto", False):
-                if isinstance(field_type, t.integer):
-                    f.tags.append("@default(autoincrement())")
-                elif isinstance(field_type, t.string) and field_type._format == "uuid":
-                    f.tags.append("@default(uuid())")
-                else:
-                    raise Exception(
-                        f"auto tag is not supported for type {field_type.type}"
-                    )
-            self.fields[field_name] = f
-
-    def link(self, schema: "PrismaSchema"):
-        for field_name, field in list(self.fields.items()):
-
-            if isinstance(field.tpe, NodeProxy):
-                field.tpe = field.tpe.get()
-
-            that_entity = field.tpe
-
-            from typegraph.providers.prisma.runtimes.prisma import PrismaRelation
-
-            if PrismaRelation.check(that_entity):
-                if not PrismaRelation.multi(that_entity):
-                    for ref_field, ref_type in that_entity.inp.props.items():
-                        ref_field = f"{field_name}{ref_field.title()}"
-                        self.fields[ref_field] = PrismaField(ref_field, ref_type)
-
-                # that_real_entity = resolve_entity_quantifier(that_entity.out)
-                # that_model = schema.models[that_real_entity.node]
-
-                # key = f"tg_{field_name}_{that_real_entity.node}"
-
-                # if PrismaRelation.multi(that_entity):
-                #     f = PrismaField(key, None)
-                #     f.prisma_type = f"{self.entity.node}"
-                #     these_keys = self.entity.ids().keys()
-                #     those_keys = that_real_entity.ids().keys()
-                #     f.tags.append(
-                #         f'@relation(name: "{field_name}_{that_real_entity.node}", fields: [{", ".join(these_keys)}], references: [{", ".join(those_keys)}])'
-                #     )
-                #     that_model.fields[key] = f
-                # elif PrismaRelation.optional(that_entity):
-                #     pass
-                # else:
-                #     f = PrismaField(key, None)
-                #     f.prisma_type = f"{self.entity.node}[]"
-                #     f.tags.append(
-                #         f'@relation(name: "{field_name}_{that_real_entity.node}")'
-                #     )
-                #     that_model.fields[key] = f
+    def build(self) -> str:
+        return f"{self.name} {self.typ} {' '.join(self.tags)}"
 
 
-class PrismaSchema:
-    models: Dict[str, PrismaModel]
+@frozen
+class FieldBuilder:
+    spec: RelationshipRegister
 
-    def __init__(self, models: Iterable[Union[t.struct, NodeProxy]]):
-        self.models = {}
-        for model in models:
-            self.models[model.name] = PrismaModel(model)
-
-    def build(self):
-        for model in self.models.values():
-            model.link(self)
-
-        from typegraph.providers.prisma.runtimes.prisma import PrismaRelation
-
-        for model in self.models.values():
-            additional_fields = {}
-            for field in model.fields.values():
-                if PrismaRelation.check(field.tpe):
-                    relation = field.tpe.mat.relation
-                    owner_type = resolve_proxy(relation.owner_type)
-                    if field.tpe.mat.owner:
-                        if len(relation.ids) == 0:
-                            relation.ids = get_ids(owner_type)
-                        for key in relation.ids:
-                            field_name = f"{field.name}{key.title()}"
-                            field_type = owner_type.props[key]
-                            additional_fields[field_name] = PrismaField(
-                                field_name, field_type
-                            )
-            model.fields.update(additional_fields)
-
-            for field in model.fields.values():
-                resolve(self, model, field)
-
-        schema = ""
-        for model in self.models.values():
-            schema += f"model {model.name} {{\n"
-
-            for field in model.fields.values():
-                schema += f"  {field.prisma_name} {field.prisma_type} {' '.join(field.tags)}\n"
-
-            for tag in model.tags:
-                schema += f"  {tag}\n"
-
-            schema += "}\n\n"
-        return schema
-
-
-def resolve(schema: PrismaSchema, model: PrismaModel, f: PrismaField):
-
-    if isinstance(f.tpe, NodeProxy):
-        f.tpe = f.tpe.get()
-        return resolve(schema, model, f)
-
-    if isinstance(f.tpe, t.optional):
-        nested = PrismaField(f.prisma_name, f.tpe.of)
-        resolve(schema, model, nested)
-        f.prisma_type = f"{nested.prisma_type}?"
-        return
-
-    type_name = f.tpe.type
-
-    if isinstance(f.tpe, t.string) and f.tpe._format == "uuid":
-        f.tags.append("@db.Uuid")
-        f.prisma_type = "String"
-        return
-
-    if type_name in prisma_types:
-        f.prisma_type = prisma_types[type_name]
-        return
-
-    if isinstance(f.tpe, t.struct):
-        f.prisma_type = "Json"
-        return
-
-    from typegraph.providers.prisma.runtimes.prisma import PrismaRelation
-
-    if PrismaRelation.check(f.tpe):
-        from typegraph.providers.prisma.runtimes.prisma import Relation
-
-        relation = f.tpe.mat.relation
-        if isinstance(relation, Relation):
-            if f.tpe.mat.owner:
-                f.prisma_type = relation.owner_type.node
-                fields = [f"{f.name}{key.title()}" for key in relation.ids]
-                f.tags.append(
-                    f'@relation(name: "{relation.relation}", fields: [{", ".join(fields)}], references: [{", ".join(relation.ids)}])'
-                )
-                if relation.cardinality == "one_to_one":
-                    model.tags.append(f'@@unique({", ".join(fields)})')
+    def additional_tags(self, typ: t.typedef) -> List[str]:
+        tags = []
+        if typ.runtime_config.get("id", False):
+            tags.append("@id")
+        if typ.runtime_config.get("unique", False):
+            tags.append("@unique")
+        if typ.runtime_config.get("auto", False):
+            if typ.type == "integer":
+                tags.append("@default(autoincrement())")
+            elif typ.type == "string" and typ._format == "uuid":
+                tags.append("@default(uuid())")
             else:
-                f.prisma_type = f"{relation.owned_type.node}"
-                if relation.cardinality == "one_to_many":
-                    f.prisma_type += "[]"
-                elif relation.cardinality == "one_to_one":
-                    f.prisma_type += "?"
-                else:
-                    raise Exception(
-                        f'Unsupported relation cardinality "{relation.cardinality}"'
-                    )
-                # TODO: relation.name
-                f.tags.append(f'@relation(name: "{relation.relation}")')
-            return
+                raise Exception(f"'auto' tag not supported for type '{typ.type}'")
+        return tags
+
+    def get_type_ids(self, typ: t.struct) -> List[str]:
+        return [
+            k
+            for k, ty in typ.props.items()
+            if resolve_proxy(ty).runtime_config.get("id", False)
+        ]
+
+    def relation(
+        self, field: str, typ: t.struct, rel_name: str
+    ) -> [str, List[SchemaField]]:
+        references = self.get_type_ids(typ)
+        fields = [f"{field}{ref.title()}" for ref in references]
+
+        fkeys = [
+            evolve(self.build(ref, typ.props[ref], typ), tags=[], name=f)
+            for f, ref in zip(fields, references)
+        ]
+
+        name = to_prisma_string(rel_name)
+        fields = to_prisma_list(fields)
+        references = to_prisma_list(references)
+
+        tag = f"@relation(name: {name}, fields: {fields}, references: {references})"
+
+        return [tag, fkeys]
+
+    def build(self, field: str, typ: t.typedef, parent_type: t.struct) -> SchemaField:
+        quant = ""
+        if typ.type == "optional":
+            quant = "?"
+            typ = resolve_proxy(typ.of)
+        if typ.type == "array":
+            quant = "[]"
+            typ = resolve_proxy(typ.of)
+
+        # TODO: default value
+
+        assert typ.type not in ["optional", "array"], "Nested quantifiers not supported"
+
+        tags = []
+        fkeys = []
+        fkeys_unique = False
+
+        if isinstance(typ, t.string):
+            # TODO: enum? json?
+            if typ._format == "uuid":
+                tags.append("@db.Uuid")  # postgres only
+            if typ._format == "date":
+                name = "DateTime"
+            else:
+                name = "String"
+
+        elif isinstance(typ, t.boolean):
+            name = "Boolean"
+
+        elif isinstance(typ, t.integer):
+            name = "Int"
+        elif isinstance(typ, t.number):
+            name = "Float"
+
         else:
-            raise Exception(f'Relation "{type(relation).__name__}" not supported')
+            assert typ.type == "object", f"Type f'{typ.type}' not supported"
+            name = typ.name
 
-        # those_keys = f.tpe.inp.of.keys()
-        # that = resolve_entity_quantifier(f.tpe.out)
+            proxy = self.spec.proxies[parent_type.name].get(field, None)
+            assert proxy is not None, f"No proxy for '{parent_type.name}' at '{field}'"
+            rel = self.spec.relations[proxy.link_name]
 
-        # these_keys = [f"{f.name}{nested_field.title()}" for nested_field in those_keys]
+            if isinstance(proxy.get(), t.struct):
+                # left side of the relation: the one that has the foreign key defined in
+                assert quant == ""
+                tag, fkeys = self.relation(field, typ, rel.name)
+                tags.append(tag)
+                fkeys = fkeys
+                fkeys_unique = rel.cardinality.is_one_to_one()
+            else:
+                # right side of the relation
+                tags.append(f"@relation(name: {to_prisma_string(rel.name)})")
+            # TODO add additional fields for the foreign keys
 
-        # if PrismaRelation.multi(f.tpe):
-        #     f.prisma_type = f"{that.node}[]"
-        #     relation_name = f.tpe.mat.relation or f"{f.name}_{that.node}"
-        #     f.tags.append(f'@relation(name: "{relation_name}")')
+        tags.extend(self.additional_tags(typ))
 
-        # elif PrismaRelation.optional(f.tpe):
-        #     f.prisma_type = f"{that.node}?"
+        return SchemaField(
+            name=field,
+            typ=f"{name}{quant}",
+            tags=tags,
+            fkeys=fkeys,
+            fkeys_unique=fkeys_unique,
+        )
 
-        # else:
-        #     f.prisma_type = f"{that.node}"
-        #     relation_name = f.tpe.mat.relation or f"{f.name}_{that.node}"
-        #     f.tags.append(
-        #         f'@relation(name: "{relation_name}", fields: [{", ".join(these_keys)}], references: [{", ".join(those_keys)}])'
-        #     )
-        return
 
-    if isinstance(f.tpe, t.array):
-        of = f.tpe.of
+def build_model(name: str, spec: RelationshipRegister) -> str:
+    fields = []
 
-        if isinstance(of, NodeProxy):
-            of = of.get()
-        nested = PrismaField(f.name, of)
-        resolve(schema, model, nested)
-        f.prisma_type = f"{nested.prisma_type}[]"
-        if PrismaRelation.check(nested.tpe):
-            relation_name = nested.tpe.mat.relation
-            if relation_name is None:
-                raise Exception("Relation name must be specified")
-            f.tags.append(f'@relation(name: "{relation_name}")')
-        return
+    # struct
+    s = spec.types[name]
 
-    if f.tpe is None:
-        return
+    field_builder = FieldBuilder(spec)
 
-    raise Exception(f"unhandled type {f.tpe}")
+    tags = []
+
+    for key, typ in s.props.items():
+        typ = resolve_proxy(typ)
+        if typ.runtime is not None and typ.runtime != s.runtime:
+            continue
+        field = field_builder.build(key, typ, s)
+        fields.append(field)
+        fields.extend(field.fkeys)
+        if field.fkeys_unique:
+            tags.append(f"@@unique({', '.join((f.name for f in field.fkeys))})")
+
+    # TODO support for multi-field ids and indexes -- to be defined as config on the struct!!
+
+    ids = [field.name for field in fields if "@id" in field.tags]
+    assert len(ids) > 0, f"No id field defined in '{name}'"
+
+    if len(ids) > 1:
+        # multi-field id
+        # ? should require declaration on the struct??
+        tags.append(f"@@id([{', '.join(ids)}]")
+        for field in fields:
+            field.tags.remove("@id")
+
+    # TODO process other struct-level config
+
+    formatted_fields = "".join((f"    {f.build()}\n" for f in fields))
+    formatted_tags = "".join(f"    {t}\n" for t in tags)
+
+    return f"""model {name} {{\n{formatted_fields}\n{formatted_tags}}}\n"""

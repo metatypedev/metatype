@@ -7,7 +7,8 @@ import { renderPlayground } from "./web/playground.ts";
 import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
-import { getRequestLogger } from "./log.ts";
+import { getLogger } from "./log.ts";
+import { forceAnyToOption } from "./utils.ts";
 
 interface ParsedPath {
   lookup: string;
@@ -15,9 +16,7 @@ interface ParsedPath {
   providerName?: string;
 }
 
-const requestLogger = config.request_log != undefined
-  ? getRequestLogger(config.request_log)
-  : null;
+const logger = getLogger("http");
 
 const parsePath = (pathname: string): ParsedPath | null => {
   const arr = pathname.split("/");
@@ -108,6 +107,7 @@ export const typegate =
           : url.origin;
         const playground = renderPlayground(
           `${targetUrl}/${lookup}`,
+          register.list().map((e) => e.name),
         );
         return new Response(playground, {
           headers: { "content-type": "text/html" },
@@ -157,15 +157,17 @@ export const typegate =
       const { query, operationName, variables } = await request.json();
       const { status, ...res } = await engine.execute(
         query,
-        operationName,
+        forceAnyToOption(operationName),
         variables,
         context,
         limit,
       );
 
-      if (requestLogger != null) {
-        requestLogger.info({ req: { query, operationName, variables } });
-        requestLogger.info({ res });
+      if (
+        lookup !== "typegate" && (!operationName ||
+          !operationName.toLowerCase().includes("introspection"))
+      ) {
+        logger.debug({ req: { query, operationName, variables }, res });
       }
 
       headers.set("content-type", "application/json");
@@ -180,7 +182,6 @@ export const typegate =
     } catch (e) {
       Sentry.captureException(e);
       console.error(e);
+      return new Response("ko", { status: 500 });
     }
-
-    return new Response("ko", { status: 500 });
   };

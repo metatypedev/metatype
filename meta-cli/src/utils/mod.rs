@@ -4,16 +4,17 @@ pub mod clap;
 
 use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
+use pathdiff::diff_paths;
 use reqwest::{
     blocking::{Client, RequestBuilder},
     IntoUrl, Url,
 };
-use std::collections::HashMap;
 use std::env::{set_var, var};
 use std::fs;
 use std::hash::Hash;
 use std::path::Path;
 use std::time::Duration;
+use std::{collections::HashMap, path::PathBuf};
 
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if var("VIRTUAL_ENV").is_ok() {
@@ -259,6 +260,18 @@ pub mod graphql {
             Error::InvalidResponse(format!("Could not parse Content-Type header: {e:?}"))
         })?;
 
+        if content_type == "text/plain" {
+            let status = res.status().as_u16();
+            let text = res
+                .text()
+                .map_err(|e| Error::InvalidResponse(format!("Could not decode response: {e}")))?;
+            return Err(Error::FailedQuery(vec![GraphqlError {
+                message: format!("Error {status}: {text}"),
+                locations: None,
+                path: None,
+            }]));
+        }
+
         if content_type != "application/json" {
             return Err(Error::InvalidResponse(format!(
                 "Unsupported Content-Type from the typegate: {content_type}"
@@ -297,4 +310,12 @@ where
     {
         self.into_iter().map(|(k, v)| (k, f(v))).collect()
     }
+}
+
+pub fn relative_path_display<P1: Into<PathBuf>, P2: Into<PathBuf>>(base: P1, path: P2) -> String {
+    let path: PathBuf = path.into();
+    diff_paths(&path, base.into())
+        .unwrap_or(path)
+        .display()
+        .to_string()
 }

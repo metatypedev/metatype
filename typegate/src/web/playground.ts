@@ -2,13 +2,12 @@
 
 export const renderPlayground = (
   url: string,
-  version?: string,
-  logoUrl?: string,
-  documentationUrl?: string,
-  typegraphList?: { name: string; url: string }[],
+  typegraphList: string[],
 ) => {
-  const strOptions = (typegraphList || []).map((tg) => `
-    <option key={${tg.url}} value={${tg.url}}>{${tg.name}}</option>)
+  const options = typegraphList.map((name) => `
+    <option key="${name}" value="${name}" ${
+    url.endsWith("/" + name) ? "selected" : ""
+  }>${name}</option>)
   `);
 
   return `
@@ -59,9 +58,6 @@ export const renderPlayground = (
             height: 100%;
             object-fit: contain;
           }
-          .graphiql-container .graphiql-logo .graphiql-logo-version {
-            font-size: 11px;
-          }
           .graphiql-container .graphiql-session-header-right {
             margin-top: 20px;
           }
@@ -75,22 +71,17 @@ export const renderPlayground = (
         <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
         <script src="https://unpkg.com/graphiql/graphiql.min.js" type="application/javascript"></script>
         <script data-plugins="transform-es2015-modules-umd" type="text/babel">
-          const fetcher =  GraphiQL.createFetcher({
+          const fetcher = GraphiQL.createFetcher({
             url: "${url}"
           });
-          const logoLink = "${logoUrl || "https://graphql.org/img/logo.svg"}"
-          const documentationLink = "${
-    documentationUrl || "https://github.com/graphql/graphiql"
-  }"
 
           ReactDOM.render(<GraphiQL fetcher={fetcher}>
             <GraphiQL.Logo>
               <select className="graphiql-ddl-typegraphs" onChange={(e => window.location = e.target.value)}>
-                ${strOptions}
+                ${options}
               </select>
-              <a href={documentationLink} target="_blank" rel="noreferrer">
-                <span className="graphiql-logo-link"><img src={logoLink} alt="logo" className="logo" /></span>
-                <span className="graphiql-logo-version">${version || ""}</span>
+              <a href="https://metatype.dev" target="_blank" rel="noreferrer">
+                <span className="graphiql-logo-link"><img src="https://metatype.dev/img/logo.svg" alt="logo" className="Metatype logo" /></span>
               </a>
             </GraphiQL.Logo>
           </GraphiQL>, document.getElementById('graphiql'));

@@ -2,20 +2,11 @@
 
 import inspect
 from pathlib import Path
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import TYPE_CHECKING
-from typing import Union
+from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
 
 from typegraph.graph.builder import Collector
-from typegraph.graph.models import Auth
-from typegraph.graph.models import Cors
-from typegraph.graph.models import Rate
-from typegraph.graph.nodes import Node
-from typegraph.graph.nodes import NodeProxy
+from typegraph.graph.models import Auth, Cors, Rate
+from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.runtimes.deno import DenoRuntime
 
 if TYPE_CHECKING:
@@ -82,16 +73,20 @@ class TypeGraph:
     def expose(self, **ops: Union["t.func", "t.struct"]):
         from typegraph import types as t
 
+        default_policy = ops.pop("default_policy", [])
+
         # allow to expose only functions or structures (namespaces)
         for name, op in ops.items():
-            if isinstance(op, t.func) or isinstance(op, t.struct):
-                continue
+            if not isinstance(op, t.func) and not isinstance(op, t.struct):
+                raise Exception(
+                    f"cannot expose type {op.title} under {name}, requires a function or structure (namespace), got a {op.type}"
+                )
 
-            raise Exception(
-                f"cannot expose type {op.title} under {name}, requires a function or structure (namespace), got a {op.type}"
-            )
+            if name in self.exposed:
+                raise Exception(f"operation {name} already exposed")
 
-        self.exposed.update(ops)
+            self.exposed[name] = op.add_policy(*default_policy)
+
         return self
 
     def root(self) -> "t.struct":
@@ -189,12 +184,12 @@ def get_absolute_path(relative: str) -> Path:
     return tg_path.parent / relative
 
 
-def find(node: str) -> Optional[NodeProxy]:
+def find(node: str) -> Optional["t.typedef"]:
     g = TypegraphContext.get_active()
     if g is None:
         raise Exception("No active TypegraphContext")
     if node in g.type_by_names:
-        return g(node)
+        return g.type_by_names[node]
     else:
         return None
 

@@ -1,0 +1,18 @@
+query A {
+  list_users {
+    data {
+      id
+      name
+    }
+  }
+}
+
+query B {
+  list_messages(take: 2) {
+    title
+    user {
+      # composition automatically happens here
+      name
+    }
+  }
+}

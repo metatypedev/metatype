@@ -1,7 +1,4 @@
-from typegraph import effects
-from typegraph import policies
-from typegraph import t
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.graph.auth import oauth2
 from typegraph.runtimes.deno import ModuleMat
 from typegraph.runtimes.http import HTTPRuntime
@@ -32,7 +29,6 @@ with TypeGraph(
     auths=[oauth2.github_auth],
     rate=TypeGraph.Rate(window_limit=2000, window_sec=60, query_limit=200),
 ) as g:
-
     all = policies.public()
     remote = HTTPRuntime("https://api.github.com")
 

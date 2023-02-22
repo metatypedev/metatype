@@ -8,7 +8,7 @@ use envconfig::Envconfig;
 use lazy_static::lazy_static;
 use log::info;
 use macros::deno;
-use std::{borrow::Cow, panic};
+use std::{borrow::Cow, env, fs, panic, path::PathBuf};
 use tokio::runtime::Runtime;
 
 lazy_static! {
@@ -17,7 +17,7 @@ lazy_static! {
         info!("Runtime created");
         Runtime::new().unwrap()
     };
-    static ref SENTRY: sentry::ClientInitGuard = {
+    static ref SENTRY_GUARD: sentry::ClientInitGuard = {
         sentry::init((
             CONFIG.sentry_dsn.clone(),
             sentry::ClientOptions {
@@ -33,6 +33,11 @@ lazy_static! {
             },
         ))
     };
+    pub static ref TMP_DIR: PathBuf = {
+        let dir = env::current_dir().expect("no current dir").join("tmp");
+        fs::create_dir_all(&dir).expect("failed to create tmp dir");
+        dir
+    };
 }
 
 #[deno]
@@ -41,7 +46,7 @@ fn init() {
     info!("init");
     let default_panic = std::panic::take_hook();
     panic::set_hook(Box::new(move |panic_info| {
-        println!("ERRROR");
+        println!("Panic: {}", panic_info);
         default_panic(panic_info);
     }));
 }

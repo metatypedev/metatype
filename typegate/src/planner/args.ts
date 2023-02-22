@@ -16,10 +16,11 @@ import {
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
-import Ajv from "ajv";
-import addFormats from "ajv-formats";
 import { JSONSchema, SchemaValidatorError, trimType } from "../typecheck.ts";
 import { EitherNode } from "../types/typegraph.ts";
+
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
 
 const ajv = new Ajv({ removeAdditional: true });
 addFormats(ajv);

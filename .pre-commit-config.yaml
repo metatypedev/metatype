@@ -14,20 +14,16 @@ repos:
       - id: check-symlinks
       - id: end-of-file-fixer
         exclude: typegate/deno.lock
-  - repo: https://github.com/sqlalchemyorg/zimports/
-    rev: v0.6.0
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: "v0.0.249"
     hooks:
-      - id: zimports
+      - id: ruff
   - repo: https://github.com/psf/black
-    rev: 22.12.0
+    rev: 23.1.0
     hooks:
       - id: black
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v2.40.0
+    rev: v2.42.0
     hooks:
       - id: commitizen
         stages: [commit-msg]
@@ -73,7 +69,7 @@ repos:
         entry: bash -c 'deno run -A dev/lock.ts'
         pass_filenames: false
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.4.1
+    rev: v1.4.2
     hooks:
       - id: insert-license
         name: "License header python"

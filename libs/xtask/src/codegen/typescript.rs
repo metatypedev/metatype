@@ -5,11 +5,16 @@ use std::io::Write;
 use std::path::Path;
 use std::process::{Command, Stdio};
 use std::{env, fs};
-use typescript::ast::*;
-use typescript::codegen;
+use typescript::ast::{
+    Decl, ExportDecl, Expr, Ident, Module, ModuleDecl, ModuleItem, TsEntityName, TsLit, TsLitType,
+    TsPropertySignature, TsType, TsTypeAliasDecl, TsTypeElement, TsTypeRef,
+    TsUnionOrIntersectionType, TsUnionType,
+};
+use typescript::print_module;
+
 use typescript::parser::parse_module_source;
 use typescript::string_cache::Atom;
-use typescript::swc_common::{sync::Lrc, SourceMap, DUMMY_SP};
+use typescript::swc_common::DUMMY_SP;
 
 pub fn run() -> Result<()> {
     println!("Generating TypeScript type definitions for typegraph...");
@@ -95,25 +100,6 @@ pub fn run() -> Result<()> {
     )
     .with_context(|| format!("Writing to output file {path:?}"))?;
     println!("  > written at {:?}", path.canonicalize()?);
-
-    Ok(())
-}
-
-fn print_module<W: Write>(cm: Lrc<SourceMap>, module: &Module, writer: W) -> Result<()> {
-    let mut emitter = codegen::Emitter {
-        cfg: codegen::Config {
-            target: EsVersion::latest(),
-            ascii_only: true,
-            minify: false,
-            omit_last_semi: true,
-        },
-        cm: cm.clone(),
-        comments: None,
-        // TODO different new_line for OSes?
-        wr: codegen::text_writer::JsWriter::new(cm, "\n", writer, None),
-    };
-
-    emitter.emit_module(module)?;
 
     Ok(())
 }

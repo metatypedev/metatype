@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.3.1"
-  DENO_VERSION: "1.30.0"
+  DENO_VERSION: "1.30.3"
 
 jobs:
   check-bump:
@@ -26,6 +26,12 @@ jobs:
             exit -1
           fi
           echo "Releasing v$VERSION"
+      - uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.ref_name }}
+          makeLatest: true
+          generateReleaseNotes: true
+          discussionCategory: "Announcements"
 
   meta-cli:
     needs:
@@ -40,27 +46,29 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             suffix: ""
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            suffix: ""
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            suffix: .exe
+            suffix: ".exe"
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}
-      - name: Build
-        uses: actions-rs/cargo@v1
+      - uses: actions-rs/cargo@v1
         with:
-          use-cross: false
+          use-cross: true
           command: build
           args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
-      - name: Compress
-        run: |
+      - run: |
           cd target/${{ matrix.target }}/release          
           tar czvf ../../../meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
-      - name: Upload
-        uses: svenstaro/upload-release-action@v2
+      - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}
           file: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
@@ -80,16 +88,14 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - name: Build & publish
-        working-directory: typegraph
+      - working-directory: typegraph
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
         run: |
           poetry install --sync
           poetry build
           poetry publish
-      - name: Upload
-        uses: svenstaro/upload-release-action@v2
+      - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}
           file: "typegraph/dist/*"
@@ -127,8 +133,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v${{ env.DENO_VERSION }}
-      - name: Bump version
-        id: bump
+      - id: bump
         run: |
           deno run -A dev/lock.ts --bump prerelease
           echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
@@ -138,3 +143,5 @@ jobs:
           delete-branch: true
           commit-message: "chore: prepare release ${{ steps.bump.outputs.version }}"
           title: "chore: prepare release ${{ steps.bump.outputs.version }}"
+          body: "Automatic suggested bump"
+          base: main

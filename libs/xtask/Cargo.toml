@@ -1,11 +1,11 @@
 [package]
 name = "xtask"
-version = "0.0.3-dev.2"
+version = "0.0.3-dev.4"
 edition = "2021"
 
 [dependencies]
 anyhow = "1.0.69"
-clap = { version = "4.1.4", features = ["derive"] }
+clap = { version = "4.1.6", features = ["derive"] }
 common = { path = "../common", features = ["codegen"] }
 typescript = { path = "../typescript" }
 schemars = { version = "0.8.11", features = [] }

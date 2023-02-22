@@ -1,5 +1,5 @@
-ARG RUST_VERSION=1.66.1
-ARG DENO_VERSION=1.30.0
+ARG RUST_VERSION=1.67.1
+ARG DENO_VERSION=1.30.3
 
 FROM lukemathwalker/cargo-chef:latest-rust-${RUST_VERSION} AS base
 
@@ -18,7 +18,7 @@ RUN rm -rf meta-cli \
 
 FROM base AS builder
 
-ARG DENO_VERSION=1.30.0
+ARG DENO_VERSION=1.30.3
 ARG DENO_BINDGEN_URL=https://github.com/denoland/deno_bindgen/raw/main/cli.ts
 
 ENV DENO_DIR /deno-dir/
@@ -41,7 +41,8 @@ RUN OUT_DIR=target deno_bindgen --release -- --locked --package native -F deno \
     && mv /target/release/libnative.so .
 
 WORKDIR /typegate
-RUN deno cache --config=deno.json --unstable src/main.ts
+RUN deno cache --config=deno.json --unstable src/main.ts \
+    && mkdir tmp
 
 #
 
@@ -63,6 +64,7 @@ COPY --from=builder /typegate/src ./src
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
 COPY --from=builder --chown=nonroot:nonroot /typegate/deno.lock ./
+COPY --from=builder --chown=nonroot:nonroot /typegate/tmp ./
 
 USER nonroot
 EXPOSE 7890

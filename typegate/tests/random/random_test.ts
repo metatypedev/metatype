@@ -58,4 +58,42 @@ test("Random", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("work for nested arrays", async () => {
+    await gql`
+      query {
+        randomList {
+          array_of_array_of_names
+        }
+      }
+    `.expectData(
+      {
+        randomList: {
+          array_of_array_of_names: [
+            [
+              "Clayton Tate",
+              "Martin Neal",
+              "Charlie Soto",
+              "Jared Ramirez",
+              "Hilda Bowers",
+              "Derek French",
+            ],
+            [
+              "Jessie Garza",
+              "Ricardo Maxwell",
+              "Phillip Curtis",
+              "Wesley Sparks",
+              "Russell Lucas",
+              "Tillie Cohen",
+              "Herman Burgess",
+              "Carolyn Potter",
+              "Howard Patton",
+              "Ethan Brady",
+            ],
+          ],
+        },
+      },
+    )
+      .on(e);
+  });
 });

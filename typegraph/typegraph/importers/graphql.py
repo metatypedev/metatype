@@ -1,18 +1,15 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import json
-from typing import Literal
-from typing import Optional
+from typing import Literal, Optional
 
+import httpx
 from box import Box
-from gql import Client
-from gql import gql
-from gql.transport.requests import RequestsHTTPTransport
 from graphql import get_introspection_query
+
 from typegraph import t
 from typegraph.importers.base.importer import Importer
 from typegraph.importers.base.typify import TypifyMat
-
 
 # map type kind to type key of fields
 OBJECT_TYPES = {
@@ -41,11 +38,8 @@ class GraphQLImporter(Importer):
         self.headers.append(f"{name}=GraphQLRuntime('{url}')")
 
         if file is None:
-            transport = RequestsHTTPTransport(url=url, verify=True)
-            client = Client(transport=transport, fetch_schema_from_transport=True)
-            query = gql(get_introspection_query())
-            schema = client.execute(query)
-            self.intros = Box(schema)
+            res = httpx.post(url, json={"query": get_introspection_query()})
+            self.intros = Box(res.json()).data
         else:
             with open(file) as f:
                 self.intros = Box(json.loads(f.read()))

@@ -3,11 +3,13 @@ on:
     types:
       - opened
       - edited
+      - synchronize
+      - ready_for_review
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: thehanimo/pr-title-checker@v1.3.6
+      - uses: thehanimo/pr-title-checker@v1.3.7
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
