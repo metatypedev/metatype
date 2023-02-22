@@ -278,7 +278,7 @@ export class ValidationSchemaBuilder {
       (variant) => Object.keys(variant.properties || {}).length > 0,
     );
 
-    // only return the schema if there is at last a variant,
+    // only return the schema if there is at least a variant,
     // since `anyOf` and `oneOf` fields cannot be empty arrays
     if (filteredVariantsSchema.length < 1) {
       return {};
