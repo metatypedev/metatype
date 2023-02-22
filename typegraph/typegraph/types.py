@@ -572,6 +572,12 @@ class array(typedef):
 
 @frozen
 class union(typedef):
+    """A `union` type represents a general union with the variants provided.
+
+    The `union` type is equivalent to the `anyOf` field in JSON Schema where
+    the given data must be valid against one or more of the given subschemas.
+    """
+
     variants: List[TypeNode] = list()
 
     def __hash__(self):
@@ -590,6 +596,12 @@ class union(typedef):
 
 @frozen
 class either(typedef):
+    """An `either` type represents a disjoint union with the variants provided.
+
+    The `either` type is equivalent to the `oneOf` field in JSON Schema where
+    the given data must be valid against exactly one of the given subschemas.
+    """
+
     variants: List[TypeNode] = list()
 
     def __hash__(self):
