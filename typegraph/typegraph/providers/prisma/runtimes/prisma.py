@@ -13,8 +13,6 @@ from typegraph.graph.typegraph import TypegraphContext
 from typegraph.providers.prisma.relations import LinkProxy
 from typegraph.providers.prisma.schema import RelationshipRegister, build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
-
-# from typegraph.providers.prisma.utils import stdout_to_file
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always, required
 
@@ -311,9 +309,8 @@ class PrismaRuntime(Runtime):
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Unique", tpe)
-        base_output = typegen.get_out_type(tpe)
-        output = typegen.add_nested_count(base_output)
-
+        # output = typegen.get_out_type(base_output)
+        output = typegen.add_nested_count(tpe)
         return t.func(
             t.struct(
                 {"where": typegen.get_where_type(tpe).named(_pref("Where")).optional()}
@@ -327,8 +324,8 @@ class PrismaRuntime(Runtime):
         typegen = self.__typegen
         _pref = get_name_generator("Many", tpe)
         rel_cols = tpe.props.keys()
-        base_output = typegen.get_out_type(tpe)
-        output = typegen.add_nested_count(base_output)
+        # output = typegen.get_out_type(base_output)
+        output = typegen.add_nested_count(tpe)
         return t.func(
             t.struct(
                 {

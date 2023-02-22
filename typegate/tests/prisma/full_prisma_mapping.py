@@ -30,8 +30,17 @@ with TypeGraph("prisma") as g:
             "likes": t.integer(),
             "published": t.boolean(),
             "author": db.link(g("User"), "userPost"),
+            "comments": db.link(t.array(g("Comment")), "postComment"),
         }
     ).named("Post")
+
+    comment = t.struct(
+        {
+            "id": t.integer().config("id"),
+            "content": t.string(),
+            "related_post": db.link(g("Post"), "postComment"),
+        }
+    ).named("Comment")
 
     extended_profile = t.struct(
         {
@@ -59,4 +68,5 @@ with TypeGraph("prisma") as g:
         createOnePost=db.create(post).add_policy(public),
         findManyExtendedProfile=db.find_many(extended_profile).add_policy(public),
         createOneExtendedProfile=db.create(extended_profile).add_policy(public),
+        createOneComment=db.create(comment).add_policy(public),
     )

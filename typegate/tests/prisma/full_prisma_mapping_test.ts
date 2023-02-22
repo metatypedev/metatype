@@ -357,8 +357,29 @@ test("prisma full mapping", async (t) => {
     },
   );
 
-  await t.should("do a count with findUniqueUser", async () => {
+  await t.should("create a single test comment", async () => {
     await gql`
+        mutation {
+          createOneComment(
+            data: { id: 50001, content: "good", related_post: {connect: {id: 10001}} }
+          ) {
+            id
+            content
+          }
+        }
+    `.expectData({
+      createOneComment: {
+        id: 50001,
+        content: "good",
+      },
+    })
+      .on(e);
+  });
+
+  await t.should(
+    "do a nested count with findUniqueUser",
+    async () => {
+      await gql`
         query {
           findUniqueUser(where: {id: 1}) {
             id
@@ -367,18 +388,30 @@ test("prisma full mapping", async (t) => {
             _count {
               posts
             }
+            posts {
+              id
+              _count { comments }      
+            }
           }
         }
     `.expectData({
-      findUniqueUser: {
-        id: 1,
-        name: "Jack",
-        age: 20,
-        _count: { posts: 5 },
-      },
-    })
-      .on(e);
-  });
+        findUniqueUser: {
+          id: 1,
+          name: "Jack",
+          age: 20,
+          _count: { posts: 5 },
+          posts: [
+            { id: 10001, _count: { comments: 1 } },
+            { id: 10002, _count: { comments: 0 } },
+            { id: 10005, _count: { comments: 0 } },
+            { id: 10003, _count: { comments: 0 } },
+            { id: 10004, _count: { comments: 0 } },
+          ],
+        },
+      })
+        .on(e);
+    },
+  );
 
   await t.should("do a count with findManyUsers", async () => {
     await gql`

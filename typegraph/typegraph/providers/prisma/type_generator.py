@@ -141,19 +141,39 @@ class TypeGenerator:
             tpe, lambda term: t.float() if isinstance(term, t.number) else term
         )
 
-    def add_nested_count(self, tpe: t.struct) -> t.struct:
+    def add_nested_count(self, tpe: t.typedef, seen=set()) -> t.struct:
+        tpe = resolve_proxy(tpe)
         new_props = {}
-
+        countable = {}
         for k, v in tpe.props.items():
-            if isinstance(v, t.struct):
-                new_props[k] = self.add_nested_count(v)
+            # Note:
+            # nested relations are not a represented as t.struct
+            # we need to resolve the correct type first
+            v = resolve_proxy(v)
+            proxy = self.spec.proxies[tpe.name].get(k)
+            relname = proxy.link_name if proxy is not None else None
+            if relname is not None:
+                if relname in seen:
+                    continue
+                # Ex:
+                # "comments": db.link(t.array(g("Comment")), "postComment")
+                # node `v` can refer to a t.array or t.optional
+                if isinstance(v, t.array) or isinstance(v, t.optional):
+                    nested = resolve_proxy(resolve_entity_quantifier(v))
+                    new_nested = self.add_nested_count(nested, seen=seen | {relname})
+                    assert isinstance(new_nested, t.struct)
+                    if isinstance(v, t.array):
+                        new_props[k] = t.array(new_nested)
+                    else:
+                        new_props[k] = new_nested.optional()
+
+                countable[k] = t.integer().optional()
             else:
                 new_props[k] = v
 
-        new_props["_count"] = t.struct(
-            {k: t.integer().optional() for k in tpe.props.keys()}
-        ).optional()
-
+        # only add _count properties to cols that are countable
+        if len(countable) > 0:
+            new_props["_count"] = t.struct(countable).optional()
         return t.struct(new_props)
 
     def generate_update_operation(self, terminal_node: t.typedef) -> t.struct:
