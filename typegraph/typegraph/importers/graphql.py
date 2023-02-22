@@ -3,9 +3,8 @@
 import json
 from typing import Literal, Optional
 
+import httpx
 from box import Box
-from gql import Client, gql
-from gql.transport.requests import RequestsHTTPTransport
 from graphql import get_introspection_query
 
 from typegraph import t
@@ -39,11 +38,8 @@ class GraphQLImporter(Importer):
         self.headers.append(f"{name}=GraphQLRuntime('{url}')")
 
         if file is None:
-            transport = RequestsHTTPTransport(url=url, verify=True)
-            client = Client(transport=transport, fetch_schema_from_transport=True)
-            query = gql(get_introspection_query())
-            schema = client.execute(query)
-            self.intros = Box(schema)
+            res = httpx.post(url, json={"query": get_introspection_query()})
+            self.intros = Box(res.json()).data
         else:
             with open(file) as f:
                 self.intros = Box(json.loads(f.read()))
