@@ -93,14 +93,16 @@ export class Planner {
       stage.varTypes = varTypes;
     }
 
-    const policies = new OperationPolicies(this.tg, this.referencedTypes);
+    const rootFuncs = new Map(
+      stages.filter((s) => this.isRootFunc(s))
+        .map((s) => [s.props.typeIdx, s.props.path]),
+    );
 
-    // ensure that root function stages have at least on policy
-    for (const stage of stages) {
-      if (this.isRootFunc(stage)) {
-        policies.ensureTypeHasPolicies(stage.props.path, stage.props.typeIdx);
-      }
-    }
+    const policies = new OperationPolicies(
+      this.tg,
+      this.referencedTypes,
+      rootFuncs,
+    );
 
     return { stages, policies, policyArgs: this.policyArgs(stages) };
   }

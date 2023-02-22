@@ -23,6 +23,7 @@ export class OperationPolicies {
   constructor(
     private tg: TypeGraph,
     referencedTypes: Tree<TypeIdx[], string>,
+    private rootFunctions: Map<TypeIdx, string[]>,
   ) {
     const policies = new Set<PolicyIdx>();
 
@@ -46,6 +47,10 @@ export class OperationPolicies {
         effect,
       };
     });
+    // root functions must have policies
+    for (const [typeIdx, path] of this.rootFunctions.entries()) {
+      this.ensureTypeHasPolicies(path, typeIdx);
+    }
 
     OperationPolicies.propagateEffect(this.policyTree.root);
 
@@ -152,8 +157,10 @@ export class OperationPolicies {
       }
       // cache authorized types -- prevent multiple evaluations
       for (const [typeIdx, policyList] of policies) {
+        let res: boolean | null = null;
         for (const idx of policyList) {
-          const res = await getResolverResult(idx, effect.effect ?? "none");
+          res = await getResolverResult(idx, effect.effect ?? "none");
+          console.log({ res });
           if (res == null) {
             continue;
           }
@@ -174,8 +181,23 @@ export class OperationPolicies {
             `Authorization failed for ${details}`,
           );
         }
+        if (res) {
+          // authorized
+          continue;
+        }
+        // all policies have `null` result
+
+        if (this.rootFunctions.has(typeIdx)) { // top-level function
+          const details = [
+            `top-level function '${this.tg.type(typeIdx).title}'`,
+            `at '${["<root>", ...path].join(".")}'`,
+          ].join(" ");
+          throw new Error(
+            `No authorization policy decided for ${details}`,
+          );
+        }
+        // inherit the authorization from the top-level function
       }
-      //
     }
   }
 
