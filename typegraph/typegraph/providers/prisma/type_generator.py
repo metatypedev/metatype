@@ -155,10 +155,11 @@ class TypeGenerator:
             if relname is not None:
                 if relname in seen:
                     continue
-                # Ex:
-                # "comments": db.link(t.array(g("Comment")), "postComment")
-                # node `v` can refer to a t.array or t.optional
                 if isinstance(v, t.array) or isinstance(v, t.optional):
+                    # one to many (countable)
+                    # Ex:
+                    # "comments": db.link(t.array(g("Comment")), "postComment")
+                    # node `v` can refer to a t.array or t.optional
                     nested = resolve_proxy(resolve_entity_quantifier(v))
                     new_nested = self.add_nested_count(nested, seen=seen | {relname})
                     assert isinstance(new_nested, t.struct)
@@ -166,9 +167,12 @@ class TypeGenerator:
                         new_props[k] = t.array(new_nested)
                     else:
                         new_props[k] = new_nested.optional()
-
-                countable[k] = t.integer().optional()
+                    countable[k] = t.integer().optional()
+                else:
+                    # one to one
+                    new_props[k] = v
             else:
+                # simple type
                 new_props[k] = v
 
         # only add _count properties to cols that are countable
