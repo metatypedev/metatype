@@ -22,7 +22,7 @@ with TypeGraph("either") as g:
 
     # transaction models
 
-    success_transaction = t.struct({"user_id": t.uuid(), "date": t.date()})
+    success_transaction = t.struct({"user_id": t.string(), "date": t.date()})
 
     failed_transaction = t.struct({"reason": t.string()})
 

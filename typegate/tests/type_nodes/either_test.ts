@@ -19,7 +19,7 @@ test(
         .expectData({
           regist_user: {
             user_id: "Bob",
-            date: "1/1/2023, 12:00:00 PM",
+            date: "2023-01-01",
           },
         })
         .on(e);
@@ -37,7 +37,7 @@ test(
         .expectData({
           regist_user: {
             user_id: "Dave",
-            date: "1/1/2023, 12:00:00 PM",
+            date: "2023-01-01",
           },
         })
         .on(e);
@@ -55,11 +55,32 @@ test(
         .expectData({
           regist_user: {
             user_id: "John",
-            date: "1/1/2023, 12:00:00 PM",
+            date: "2023-01-01",
           },
         })
         .on(e);
     });
+
+    await t.should(
+      "return only the selected fields when the returned value is an object",
+      async () => {
+        await gql`
+          query {
+            regist_user(
+              user: { age: 32, name: "John", company: "The company" }
+            ) {
+              date
+            }
+          }
+        `
+          .expectData({
+            regist_user: {
+              date: "2023-01-01",
+            },
+          })
+          .on(e);
+      },
+    );
 
     await t.should(
       "fail to query if the value does not match a variant type",

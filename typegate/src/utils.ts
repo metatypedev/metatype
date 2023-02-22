@@ -56,11 +56,17 @@ export const collectFields = (
   return fields.reduce((agg, f) => ({ ...agg, [f]: obj[f] }), {});
 };
 
-export const b = (value: any): string => JSON.stringify(value, null, 2);
-
 export const unparse = (loc: ast.Location): string => {
   return loc.source.body.slice(loc.start, loc.end);
 };
+
+/**
+ * Formats provided value with proper identation for a prettier printing of the
+ * value, useful for debugging or displaying errors.
+ */
+export function toPrettyJSON(value: unknown) {
+  return JSON.stringify(value, null, 2);
+}
 
 export function iterParentStages(
   stages: ComputeStage[],

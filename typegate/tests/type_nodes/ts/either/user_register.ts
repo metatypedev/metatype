@@ -27,7 +27,7 @@ export function regist_user(
 } {
   const success_transaction = {
     user_id: user.name,
-    date: "1/1/2023, 12:00:00 PM",
+    date: "2023-01-01",
   };
   return success_transaction;
 }
