@@ -270,9 +270,9 @@ export class ValidationSchemaBuilder {
     }
 
     const trimmedType = trimType(typeNode);
-    // remove `type` field as the type is ruled by the
-    // oneOf subschemes
-    const { type: _, ...untyped } = trimmedType;
+
+    // remove `type` field as is ruled by the subschemes
+    delete trimmedType.type;
 
     const filteredVariantsSchema = variantsSchema.filter(
       (variant) => Object.keys(variant.properties || {}).length > 0,
@@ -284,17 +284,17 @@ export class ValidationSchemaBuilder {
       return {};
     }
 
+    const schema = {
+      ...trimmedType,
+    };
+
     if (isUnion(typeNode)) {
-      return {
-        ...untyped,
-        anyOf: filteredVariantsSchema,
-      };
+      schema.anyOf = filteredVariantsSchema;
     } else {
-      return {
-        ...untyped,
-        oneOf: filteredVariantsSchema,
-      };
+      schema.oneOf = filteredVariantsSchema;
     }
+
+    return schema;
   }
 }
 
