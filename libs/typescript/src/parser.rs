@@ -13,15 +13,13 @@ use swc_common::SourceMap;
 use swc_common::DUMMY_SP;
 use swc_common::GLOBALS;
 use swc_ecma_ast::*;
-use swc_ecma_transforms::typescript::strip::strip;
-use swc_ecmascript::parser::parse_file_as_module;
-use swc_ecmascript::parser::parse_file_as_script;
-use swc_ecmascript::{
-    codegen,
-    codegen::{text_writer::JsWriter, Emitter},
-    parser::Syntax,
-    visit::{Fold, FoldWith},
-};
+use swc_ecma_codegen::Config;
+use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
+use swc_ecma_parser::parse_file_as_module;
+use swc_ecma_parser::parse_file_as_script;
+use swc_ecma_parser::Syntax;
+use swc_ecma_transforms_typescript::strip::strip;
+use swc_ecma_visit::{Fold, FoldWith};
 
 /// Creates a named import from the following elements:
 ///
@@ -338,7 +336,7 @@ where
 {
     let mut buf = vec![];
     let mut emitter = Emitter {
-        cfg: codegen::Config {
+        cfg: Config {
             target: EsVersion::latest(),
             ascii_only: false,
             minify: true,

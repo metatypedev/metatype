@@ -8,7 +8,7 @@ use envconfig::Envconfig;
 use lazy_static::lazy_static;
 use log::info;
 use macros::deno;
-use std::{borrow::Cow, panic};
+use std::{borrow::Cow, env, fs, panic, path::PathBuf};
 use tokio::runtime::Runtime;
 
 lazy_static! {
@@ -32,6 +32,11 @@ lazy_static! {
                 ..Default::default()
             },
         ))
+    };
+    pub static ref TMP_DIR: PathBuf = {
+        let dir = env::current_dir().expect("no current dir").join("tmp");
+        fs::create_dir_all(&dir).expect("failed to create tmp dir");
+        dir
     };
 }
 
