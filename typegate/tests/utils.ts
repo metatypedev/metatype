@@ -384,7 +384,7 @@ export class Q {
   }
 
   /**
-   * assert if the response body error matches the previous generated snapshot
+   * Asserts if the response body error matches the previous generated snapshot
    */
   matchErrorSnapshot(testContext: MetaTest): Q {
     return this.expectBody((body: ResponseBody) => {
@@ -399,7 +399,7 @@ export class Q {
   }
 
   /**
-   * assert if the response body matches the previous generated snapshot
+   * Asserts if the response body matches the previous generated snapshot
    */
   matchSnapshot(testContext: MetaTest): Q {
     return this.expectBody((body: ResponseBody) => {

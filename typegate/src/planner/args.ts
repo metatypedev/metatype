@@ -253,6 +253,12 @@ export class ArgumentCollector {
     }
   }
 
+  /**
+   * Returns the value of a given argument node.
+   *
+   * The value returned can be used to check that an argument meets all the
+   * requirements of a given JSON schema.
+   */
   private getArgumentValue(
     astNode: ast.ArgumentNode | ast.ObjectFieldNode,
   ): JSONValue {
@@ -288,6 +294,12 @@ export class ArgumentCollector {
     }
   }
 
+  /**
+   * Returns the JSON Schema of an argument type node.
+   *
+   * The JSON Schema returned is useful to check non-primitive values such as
+   * objects or unions.
+   */
   private getArgumentSchema(typenode: TypeNode): JSONSchema {
     switch (typenode.type) {
       case Type.ARRAY: {
