@@ -186,7 +186,7 @@ jobs:
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - run: |
           python3 -m venv .venv
-          ${{ runner.activate }}
+          ${{ matrix.activate }}
           cd typegraph
           poetry install --sync
           cd ..
