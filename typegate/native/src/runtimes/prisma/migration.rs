@@ -13,7 +13,9 @@ use migration_core::CoreError;
 use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-use tempfile::{tempdir, TempDir};
+use tempfile::{tempdir_in, NamedTempFile, TempDir};
+
+use crate::TMP_DIR;
 
 #[allow(dead_code)]
 pub async fn loss(
@@ -124,11 +126,7 @@ pub(super) async fn create(input: super::PrismaCreateInp) -> Result<super::Prism
     })
 }
 
-pub async fn diff(
-    datasource: String,
-    datamodel: String,
-    script: bool,
-) -> Result<Option<String>, CoreError> {
+pub async fn diff(datasource: String, datamodel: String, script: bool) -> Result<Option<String>> {
     let schema = format!("{datasource}{datamodel}");
     let buffer = Arc::new(Mutex::new(Some(String::default())));
     let api = migration_core::migration_api(
@@ -138,10 +136,11 @@ pub async fn diff(
         )))),
     )?;
 
-    let mut source_file = tempfile::NamedTempFile::new().unwrap();
+    let dir = tempdir_in(TMP_DIR.as_path())?;
+    let mut source_file = NamedTempFile::new_in(&dir)?;
     writeln!(source_file, "{datasource}").unwrap();
 
-    let mut model_file = tempfile::NamedTempFile::new().unwrap();
+    let mut model_file = NamedTempFile::new_in(&dir)?;
     writeln!(model_file, "{schema}").unwrap();
 
     let params = DiffParams {
@@ -197,7 +196,7 @@ struct MigrationsFolder {
 
 impl MigrationsFolder {
     pub fn from(serialized: Option<String>) -> Result<Self> {
-        let tempdir = tempdir()?;
+        let tempdir = tempdir_in(TMP_DIR.as_path())?;
         common::migrations::unpack(&tempdir, serialized)?;
         Ok(Self { dir: tempdir })
     }

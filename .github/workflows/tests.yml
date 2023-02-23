@@ -68,8 +68,7 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - name: Install
-        working-directory: website
+      - working-directory: website
         run: |
           pnpm install --frozen-lockfile
       - uses: pre-commit/action@v3.0.0
@@ -88,8 +87,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
           cache-dependency-path: website/pnpm-lock.yaml
-      - name: Install and test build
-        working-directory: website
+      - working-directory: website
         run: |
           pnpm install --frozen-lockfile
           pnpm lint
@@ -103,12 +101,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/cache@v3
         with:
           path: .venv
@@ -116,12 +114,11 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: meta
-      - run: tar -xvf meta.tar
-      - name: Install and test build
-        working-directory: typegraph
-        run: |
-          python3 -m venv ../.venv
-          source ../.venv/bin/activate
+      - run: |
+          tar -xvf meta.tar
+          python3 -m venv .venv
+          source .venv/bin/activate
+          cd typegraph
           poetry install --sync
           pytest -s tests
 
@@ -138,15 +135,19 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/cache@v3
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - name: Install and test build
-        run: |
+      - run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          pip3 install ./typegraph
+          cd typegraph
+          poetry install --sync
+          cd ..
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
           tar -cvf meta.tar target/debug/meta
@@ -176,15 +177,19 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/cache@v3
         with:
           path: .venv
           key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - name: Install and test build
-        run: |
+      - run: |
           python3 -m venv .venv
-          ${{ runner.activate }}
-          pip3 install ./typegraph
+          ${{ matrix.activate }}
+          cd typegraph
+          poetry install --sync
+          cd ..
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
@@ -239,6 +244,9 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: arduino/setup-protoc@v1
         with:
           version: ${{ env.PROTOC_VERSION }}
@@ -250,12 +258,13 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: meta
-      - run: tar -xvf meta.tar
-      - name: Install and test build
-        run: |
+      - run: |
+          tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          pip3 install ./typegraph
+          cd typegraph
+          poetry install --sync
+          cd ..
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
           which py-tg
@@ -277,6 +286,9 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: actions/cache@v3
         with:
           path: .venv
@@ -284,12 +296,13 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: meta
-      - run: tar -xvf meta.tar
-      - name: Install and test build
-        run: |
+      - run: |
+          tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          pip3 install ./typegraph
+          cd typegraph
+          poetry install --sync
+          cd ..
           cargo test --locked --exclude meta-cli --exclude native --workspace
 
   test-docker:
