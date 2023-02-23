@@ -24,9 +24,12 @@ import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
 import { copy } from "std/streams/copy.ts";
 import * as native from "native";
 import { None } from "monads";
+import { init_native } from "native";
 
 const thisDir = dirname(fromFileUrl(import.meta.url));
 const metaCli = resolve(thisDir, "../../target/debug/meta");
+
+init_native();
 
 interface ResponseBodyError {
   message: string;
@@ -488,11 +491,13 @@ export async function recreateMigrations(engine: Engine) {
   const migrationsBaseDir = join(thisDir, "prisma-migrations");
 
   for await (const runtime of runtimes) {
+    console.log(runtime);
     const prisma = new PrismaMigrate(engine, runtime, null);
     const { migrations } = await prisma.create({
       name: "init",
       apply: true,
     } as any);
+    console.log("aaa");
     const dest = join(migrationsBaseDir, engine.tg.name, runtime.data.name);
     const res = await native.unpack({ dest, migrations });
     if (res !== "Ok") {

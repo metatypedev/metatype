@@ -17,8 +17,11 @@ use tokio::runtime::Runtime;
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("failed to create Tokio runtime"));
 static CONFIG: Lazy<Config> =
     Lazy::new(|| Config::init_from_env().expect("failed to parse config"));
-static TMP_DIR: Lazy<PathBuf> =
-    Lazy::new(|| env::current_dir().expect("no current dir").join("tmp"));
+static TMP_DIR: Lazy<PathBuf> = Lazy::new(|| {
+    let path = env::current_dir().expect("no current dir").join("tmp");
+    fs::create_dir_all(&path).expect("failed to create tmp dir");
+    path
+});
 static SENTRY_GUARD: Lazy<ClientInitGuard> = Lazy::new(|| {
     let env = if CONFIG.debug {
         "development".to_string()
@@ -54,8 +57,6 @@ fn init_native() {
         })
         .init();
     info!("init native");
-    fs::create_dir_all(TMP_DIR.as_path()).expect("failed to create tmp dir");
-
     let default_panic = std::panic::take_hook();
     panic::set_hook(Box::new(move |panic_info| {
         error!("Panic: {}", panic_info);
