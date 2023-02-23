@@ -4,9 +4,10 @@ import * as ast from "graphql/ast";
 import { Kind } from "graphql";
 import { TypeGraph } from "../typegraph.ts";
 import { Context, Parents, Variables } from "../types.ts";
-import { ensure } from "../utils.ts";
+import { ensure, JSONValue } from "../utils.ts";
 import {
   ArrayNode,
+  getVariantTypesIndexes,
   ObjectNode,
   Type,
   TypeNode,
@@ -15,12 +16,28 @@ import {
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
+import { JSONSchema, SchemaValidatorError, trimType } from "../typecheck.ts";
+import { EitherNode } from "../types/typegraph.ts";
+
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
-import { JSONSchema, SchemaValidatorError, trimType } from "../typecheck.ts";
 
 const ajv = new Ajv({ removeAdditional: true });
 addFormats(ajv);
+
+class MandatoryArgumentError extends Error {
+  constructor(argName: string, typeNode: TypeNode) {
+    super(
+      `mandatory argument '${argName}' of type '${typeNode.type}' not found`,
+    );
+  }
+}
+
+interface ArgumentObjectSchema {
+  type: string;
+  properties: Record<string, JSONSchema>;
+  required?: string[];
+}
 
 export interface ComputeArg {
   (
@@ -100,9 +117,7 @@ export class ArgumentCollector {
         return this.collectDefaults(props);
       }
 
-      throw new Error(
-        `mandatory argument '${argName}' of type '${typ.type}' not found`,
-      );
+      throw new MandatoryArgumentError(argName, typ);
     }
 
     if (typ.type === Type.OPTIONAL) {
@@ -126,11 +141,26 @@ export class ArgumentCollector {
     }
 
     switch (typ.type) {
-      case Type.OBJECT:
+      case Type.OBJECT: {
+        if (argumentSchema !== undefined) {
+          const objectArgumentValue = this.getArgumentValue(astNode);
+          const validator = ajv.compile(argumentSchema);
+          validator(objectArgumentValue);
+
+          if (validator.errors) {
+            throw new SchemaValidatorError(
+              objectArgumentValue,
+              validator.errors,
+              argumentSchema,
+            );
+          }
+        }
+
         return this.merge(
           { policies },
           this.collectObjectArg(valueNode, typ, argName),
         );
+      }
 
       case Type.ARRAY:
         return this.merge(
@@ -192,7 +222,11 @@ export class ArgumentCollector {
           validator(valueNode.value);
 
           if (validator.errors) {
-            throw new SchemaValidatorError(validator.errors, " or ");
+            throw new SchemaValidatorError(
+              valueNode.value,
+              validator.errors,
+              argumentSchema,
+            );
           }
         }
 
@@ -203,7 +237,14 @@ export class ArgumentCollector {
       case Type.UNION: {
         return this.merge(
           { policies },
-          this.collectUnionArg(astNode, typ, parentProps, argName),
+          this.collectGeneralUnionArg(astNode, typ, parentProps, argName),
+        );
+      }
+
+      case Type.EITHER: {
+        return this.merge(
+          { policies },
+          this.collectGeneralUnionArg(astNode, typ, parentProps, argName),
         );
       }
 
@@ -212,6 +253,53 @@ export class ArgumentCollector {
     }
   }
 
+  /**
+   * Returns the value of a given argument node.
+   *
+   * The value returned can be used to check that an argument meets all the
+   * requirements of a given JSON schema.
+   */
+  private getArgumentValue(
+    astNode: ast.ArgumentNode | ast.ObjectFieldNode,
+  ): JSONValue {
+    const valueNode = astNode.value;
+
+    switch (valueNode.kind) {
+      case Kind.STRING:
+        return String(valueNode.value);
+
+      case Kind.BOOLEAN:
+        return Boolean(valueNode.value);
+
+      case Kind.INT:
+      case Kind.FLOAT:
+        return Number(valueNode.value);
+
+      case Kind.OBJECT: {
+        const fields = valueNode.fields;
+        const argumentObjectValue: Record<string, JSONValue> = {};
+        for (const field of fields) {
+          argumentObjectValue[field.name.value] = this.getArgumentValue(field);
+        }
+        return argumentObjectValue;
+      }
+
+      default:
+        throw new Error(
+          [
+            `unsupported node '${astNode.name}' of type '${astNode.kind}',`,
+            `cannot get the argument value from it`,
+          ].join(" "),
+        );
+    }
+  }
+
+  /**
+   * Returns the JSON Schema of an argument type node.
+   *
+   * The JSON Schema returned is useful to check non-primitive values such as
+   * objects or unions.
+   */
   private getArgumentSchema(typenode: TypeNode): JSONSchema {
     switch (typenode.type) {
       case Type.ARRAY: {
@@ -235,28 +323,76 @@ export class ArgumentCollector {
         return argumentSchema;
       }
 
-      default: {
+      case Type.EITHER: {
+        const schemes = typenode.oneOf
+          .map((variantTypeIndex) => this.tg.type(variantTypeIndex))
+          .map((variant) => this.getArgumentSchema(variant));
+
+        const argumentSchema = {
+          oneOf: schemes,
+        };
+
+        return argumentSchema;
+      }
+
+      case Type.STRING:
+      case Type.BOOLEAN:
+      case Type.NUMBER:
+      case Type.INTEGER: {
         const schema = trimType(typenode);
         return schema;
       }
+
+      case Type.OBJECT: {
+        const schema: ArgumentObjectSchema = {} as ArgumentObjectSchema;
+
+        schema.type = Type.OBJECT;
+        schema.required = [];
+        schema.properties = {};
+
+        for (
+          const [propertyName, propertyTypeIndex] of Object.entries(
+            typenode.properties,
+          )
+        ) {
+          const propertyNode = this.tg.type(propertyTypeIndex);
+          if (propertyNode.type !== "optional") {
+            schema.required.push(propertyName);
+          }
+          schema.properties[propertyName] = this.getArgumentSchema(
+            propertyNode,
+          );
+        }
+
+        return schema;
+      }
+
+      default:
+        throw new Error(
+          [
+            `unsupported type node '${typenode.type}'`,
+            `to generate its argument schema`,
+          ].join(" "),
+        );
     }
   }
 
   /**
-   * Collect the value of a parameter of type 'union'.
+   * Collect the value of a parameter of type 'union' or 'either'.
    */
-  private collectUnionArg(
+  private collectGeneralUnionArg(
     astNode: ast.ArgumentNode | ast.ObjectFieldNode,
-    typ: UnionNode,
+    typeNode: UnionNode | EitherNode,
     parentProps: Record<string, number>,
     argName: string,
   ): CollectedArg {
     const { value: valueNode } = astNode;
-    const argumentSchema = this.getArgumentSchema(typ);
+    const argumentSchema = this.getArgumentSchema(typeNode);
+    const variantTypesIndexes: number[] = getVariantTypesIndexes(typeNode);
 
     // throw type mismatch error only if the argument node of the query
     // does not match any of the subschemes (variant nodes).
-    for (const variantTypeIndex of typ.anyOf) {
+    for (const variantTypeIndex of variantTypesIndexes) {
       try {
         return this.collectArg(
           astNode,
@@ -266,15 +402,20 @@ export class ArgumentCollector {
           argumentSchema,
         );
       } catch (error) {
-        if (!(error instanceof TypeMismatchError)) {
-          throw error;
+        if (
+          error instanceof TypeMismatchError ||
+          error instanceof MandatoryArgumentError
+        ) {
+          continue;
         }
+
+        throw error;
       }
     }
 
     const expectedVariants: Set<string> = new Set();
 
-    typ.anyOf
+    variantTypesIndexes
       .map((variantTypeIndex) => this.tg.type(variantTypeIndex))
       .map((variantType) => variantType.type)
       .forEach((typeName) => expectedVariants.add(typeName.toUpperCase()));
@@ -283,7 +424,7 @@ export class ArgumentCollector {
       valueNode.kind,
       [...expectedVariants],
       argName,
-      typ.title,
+      typeNode.title,
     );
   }
 
@@ -538,8 +679,10 @@ class TypeMismatchError extends Error {
     const exp = (typeof expected == "string" ? [expected] : expected)
       .map((t) => `'${t}'`)
       .join(" or ");
-    const errorMessage =
-      `Type mismatch: got '${actual}' but expected ${exp} for argument '${argName}' named as '${title}'`;
+    const errorMessage = [
+      `Type mismatch: got '${actual}' but expected ${exp}`,
+      `for argument '${argName}' named as '${title}'`,
+    ].join(" ");
     super(errorMessage);
   }
 }

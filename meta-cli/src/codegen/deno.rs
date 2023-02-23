@@ -315,14 +315,24 @@ impl<'a> Codegen<'a> {
             TypeNode::Union { any_of, .. } => {
                 // a type cannot be all the variants, as they might be a
                 // disjoint union, therefore by returning the default value of
-                // one variant would be enought
+                // one variant would be enough
                 let variant_type_index = any_of
                     .clone()
                     .pop()
                     .expect("the union type should have at least one variant of type nodes");
                 self.gen_default_value(variant_type_index)
             }
-            _ => bail!("unsupported type: {tpe:#?}"),
+            TypeNode::Either { one_of, .. } => {
+                // a type cannot be all the variants, as they are a
+                // disjoint union, therefore by returning the default value of
+                // one variant would be enough
+                let variant_type_index = one_of
+                    .clone()
+                    .pop()
+                    .expect("the either type should have at least one variant of type nodes");
+                self.gen_default_value(variant_type_index)
+            }
+            _ => bail!("unsupported type to generate default value: {tpe:#?}"),
         }
     }
 
@@ -417,7 +427,8 @@ impl<'a> Codegen<'a> {
             }
             TypeNode::Object { .. } => self.gen_obj_type(tpe),
             TypeNode::Union { any_of, .. } => self.gen_union_type_definition(any_of),
-            _ => bail!("unsupported type: {tpe:#?}"),
+            TypeNode::Either { one_of, .. } => self.gen_union_type_definition(one_of),
+            _ => bail!("unsupported type to generate type specification: {tpe:#?}"),
         }
     }
 }

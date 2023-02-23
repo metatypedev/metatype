@@ -1,6 +1,253 @@
 export const snapshot = {};
 
 snapshot[`Union type 1`] = `
+[
+  'value: 100
+
+errors: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/0/type",
+    "keyword": "type",
+    "params": {
+      "type": "array"
+    },
+    "message": "must be array"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/1/type",
+    "keyword": "type",
+    "params": {
+      "type": "object"
+    },
+    "message": "must be object"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/2/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/3/type",
+    "keyword": "type",
+    "params": {
+      "type": "string"
+    },
+    "message": "must be string"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/3/enum",
+    "keyword": "enum",
+    "params": {
+      "allowedValues": [
+        "red",
+        "green",
+        "blue",
+        "black",
+        "white"
+      ]
+    },
+    "message": "must be equal to one of the allowed values"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf",
+    "keyword": "anyOf",
+    "params": {},
+    "message": "must match a schema in anyOf"
+  }
+]
+
+schema: {
+  "anyOf": [
+    {
+      "type": "array",
+      "title": "RGB_array",
+      "items": {
+        "type": "integer",
+        "title": "8BitsChannel",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "maxItems": 3,
+      "minItems": 3
+    },
+    {
+      "type": "object",
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
+      "properties": {
+        "r": {
+          "type": "integer",
+          "title": "8BitsChannel",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "g": {
+          "type": "integer",
+          "title": "8BitsChannel",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "b": {
+          "type": "integer",
+          "title": "8BitsChannel",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    {
+      "type": "string",
+      "title": "HEX",
+      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$"
+    },
+    {
+      "type": "string",
+      "title": "ColorName",
+      "enum": [
+        "red",
+        "green",
+        "blue",
+        "black",
+        "white"
+      ]
+    }
+  ]
+}',
+]
+`;
+
+snapshot[`Union type 2`] = `
+[
+  'value: "hello world"
+
+errors: [
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/0/type",
+    "keyword": "type",
+    "params": {
+      "type": "array"
+    },
+    "message": "must be array"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/1/type",
+    "keyword": "type",
+    "params": {
+      "type": "object"
+    },
+    "message": "must be object"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/2/pattern",
+    "keyword": "pattern",
+    "params": {
+      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$"
+    },
+    "message": "must match pattern \\\\"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$\\\\""
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf/3/enum",
+    "keyword": "enum",
+    "params": {
+      "allowedValues": [
+        "red",
+        "green",
+        "blue",
+        "black",
+        "white"
+      ]
+    },
+    "message": "must be equal to one of the allowed values"
+  },
+  {
+    "instancePath": "",
+    "schemaPath": "#/anyOf",
+    "keyword": "anyOf",
+    "params": {},
+    "message": "must match a schema in anyOf"
+  }
+]
+
+schema: {
+  "anyOf": [
+    {
+      "type": "array",
+      "title": "RGB_array",
+      "items": {
+        "type": "integer",
+        "title": "8BitsChannel",
+        "minimum": 0,
+        "maximum": 255
+      },
+      "maxItems": 3,
+      "minItems": 3
+    },
+    {
+      "type": "object",
+      "required": [
+        "r",
+        "g",
+        "b"
+      ],
+      "properties": {
+        "r": {
+          "type": "integer",
+          "title": "8BitsChannel",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "g": {
+          "type": "integer",
+          "title": "8BitsChannel",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "b": {
+          "type": "integer",
+          "title": "8BitsChannel",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    {
+      "type": "string",
+      "title": "HEX",
+      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$"
+    },
+    {
+      "type": "string",
+      "title": "ColorName",
+      "enum": [
+        "red",
+        "green",
+        "blue",
+        "black",
+        "white"
+      ]
+    }
+  ]
+}',
+]
+`;
+
+snapshot[`Union type 3`] = `
 {
   __schema: {
     types: [
@@ -23,6 +270,10 @@ snapshot[`Union type 1`] = `
             name: null,
           },
           {
+            kind: "OBJECT",
+            name: "RGB_struct",
+          },
+          {
             kind: "SCALAR",
             name: "String",
           },
@@ -39,6 +290,10 @@ snapshot[`Union type 1`] = `
           {
             kind: "LIST",
             name: null,
+          },
+          {
+            kind: "OBJECT",
+            name: "RGB_struct",
           },
           {
             kind: "SCALAR",
