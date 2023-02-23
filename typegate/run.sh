@@ -7,7 +7,6 @@ SCRIPT_PATH=$(dirname $(realpath -s $0))
 # remember to also update dev/Dockerfile
 cd ${SCRIPT_PATH} && \
     exec deno run \
-    --config=deno.json \
     --unstable \
     --allow-run=hostname \
     --allow-env \

@@ -12,7 +12,7 @@ services:
       TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
       TG_ADMIN_PASSWORD: password
     env_file:
-      - .env.example
+      - .env.sample
     depends_on:
       - redis
 
@@ -28,3 +28,5 @@ services:
       POSTGRES_DB: db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
