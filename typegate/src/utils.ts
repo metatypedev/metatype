@@ -33,12 +33,10 @@ export const createUrl = (
   }
 
   // replace repeating / to a single /
-  let [sanitized_path, param_section] = path.replace(/[\/]+/g, "/").split("?");
-  if (sanitized_path.startsWith("/")) {
-    sanitized_path = "." + sanitized_path;
-  }
+  const [path_section, param_section] = path.replace(/[\/]+/g, "/").split("?");
 
-  const url = new URL(sanitized_path, base);
+  const prefix = path_section.startsWith("/") ? "." : "";
+  const url = new URL(prefix + path_section, base);
 
   if (param_section) {
     const path_search_params = new URLSearchParams(param_section);
