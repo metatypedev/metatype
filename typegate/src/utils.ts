@@ -31,15 +31,28 @@ export const createUrl = (
   if (!base.endsWith("/")) {
     base = base + "/";
   }
+
   // replace repeating / to a single /
-  let sanitized_path = path.replace(/[\/]+/g, "/");
+  let [sanitized_path, param_section] = path.replace(/[\/]+/g, "/").split("?");
   if (sanitized_path.startsWith("/")) {
     sanitized_path = "." + sanitized_path;
   }
+
   const url = new URL(sanitized_path, base);
-  if (search_params) {
-    url.search = search_params.toString();
+
+  if (param_section) {
+    const path_search_params = new URLSearchParams(param_section);
+    for (const [key, value] of path_search_params.entries()) {
+      url.searchParams.append(key, value);
+    }
   }
+
+  if (search_params) {
+    for (const [key, value] of search_params.entries()) {
+      url.searchParams.append(key, value);
+    }
+  }
+
   return url.href;
 };
 
