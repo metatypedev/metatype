@@ -16,6 +16,7 @@ import { Auth, nextAuthorizationHeader } from "./auth/auth.ts";
 import {
   isArray,
   isBoolean,
+  isEither,
   isFunction,
   isInteger,
   isNumber,
@@ -311,7 +312,7 @@ export class TypeGraph {
     }
     ensure(
       isObject(type) || isInteger(type) || isNumber(type) || isBoolean(type) ||
-        isFunction(type) || isString(type) || isUnion(type),
+        isFunction(type) || isString(type) || isUnion(type) || isEither(type),
       `object expected but got ${type.type}`,
     );
     return (x: any) => ensureArray(x);

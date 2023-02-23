@@ -149,6 +149,20 @@ export type UnionNode = {
     [k: string]: unknown;
   };
 };
+export type EitherNode = {
+  type: "either";
+  oneOf: number[];
+  title: string;
+  runtime: number;
+  policies: number[];
+  description?: string | null;
+  injection?: string | null;
+  inject?: any;
+  enum?: any[] | null;
+  config?: {
+    [k: string]: unknown;
+  };
+};
 export type AnyNode = {
   type: "any";
   title: string;
@@ -172,6 +186,7 @@ export type TypeNode =
   | ArrayNode
   | FunctionNode
   | UnionNode
+  | EitherNode
   | AnyNode;
 export type EffectType = "create" | "update" | "upsert" | "delete";
 export type AuthProtocol = "oauth2" | "jwk" | "basic";
