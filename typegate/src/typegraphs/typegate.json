@@ -310,7 +310,8 @@
   "policies": [
     {
       "name": "admin_only",
-      "materializer": 0
+      "materializer": 0,
+      "effect_materializers": {}
     }
   ],
   "meta": {
