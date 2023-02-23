@@ -140,6 +140,11 @@ export class ArgumentCollector {
       };
     }
 
+    // optional values without a default value are 'null'
+    if (valueNode.kind === Kind.NULL) {
+      return { compute: () => null, policies, deps: [] };
+    }
+
     switch (typ.type) {
       case Type.OBJECT: {
         if (argumentSchema !== undefined) {

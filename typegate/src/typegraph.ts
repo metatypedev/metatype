@@ -117,12 +117,11 @@ export class TypeGraph {
     const typegraphName = typegraph.types[0].title;
     const { meta, runtimes } = typegraph;
 
-    const secrets: Record<string, string> = meta.secrets.sort().reduce(
-      (agg, secretName) => {
+    const secrets: Record<string, string> = meta.secrets
+      .sort()
+      .reduce((agg, secretName) => {
         return { ...agg, [secretName]: envOrFail(typegraphName, secretName) };
-      },
-      {},
-    );
+      }, {});
 
     const staticCors: Record<string, string> = {
       "Access-Control-Allow-Methods": "POST,OPTIONS",
@@ -131,9 +130,9 @@ export class TypeGraph {
         "Cache-Control",
         "Content-Language",
         "Content-Type",
-      ].concat(
-        meta.cors.allow_headers,
-      ).join(","),
+      ]
+        .concat(meta.cors.allow_headers)
+        .join(","),
       "Access-Control-Expose-Headers": meta.cors.expose_headers.join(","),
       "Access-Control-Allow-Credentials": meta.cors.allow_credentials
         .toString(),
@@ -159,10 +158,7 @@ export class TypeGraph {
 
     const auths = new Map<string, Auth>();
     for (const auth of meta.auths) {
-      auths.set(
-        auth.name,
-        await Auth.init(typegraphName, auth),
-      );
+      auths.set(auth.name, await Auth.init(typegraphName, auth));
     }
 
     const runtimeReferences = await Promise.all(
@@ -218,7 +214,9 @@ export class TypeGraph {
     }
 
     for await (
-      const runtime of Object.values(DenoRuntime.getInstancesIn(this.name))
+      const runtime of Object.values(
+        DenoRuntime.getInstancesIn(this.name),
+      )
     ) {
       await runtime.deinit();
     }
@@ -229,10 +227,7 @@ export class TypeGraph {
     idx: number,
     asType: T,
   ): TypeNode & { type: T };
-  type<T extends TypeNode["type"]>(
-    idx: number,
-    asType?: T,
-  ): TypeNode {
+  type<T extends TypeNode["type"]>(idx: number, asType?: T): TypeNode {
     ensure(
       typeof idx === "number" && idx < this.tg.types.length,
       `cannot find type with "${idx}" index`,
@@ -264,10 +259,7 @@ export class TypeGraph {
     return this.tg.policies[idx];
   }
 
-  parseSecret(
-    schema: TypeNode,
-    name: string,
-  ) {
+  parseSecret(schema: TypeNode, name: string) {
     const value = this.secrets[name];
     if (value == undefined) {
       if (isOptional(schema)) {
@@ -282,14 +274,10 @@ export class TypeGraph {
 
     if (isString(schema)) return value;
 
-    throw new Error(
-      `invalid type for secret injection: ${schema.type}`,
-    );
+    throw new Error(`invalid type for secret injection: ${schema.type}`);
   }
 
-  preparePolicies(
-    stages: ComputeStage[],
-  ): PolicyStagesFactory {
+  preparePolicies(stages: ComputeStage[]): PolicyStagesFactory {
     const policies = Array.from(
       new Set(
         stages.flatMap((stage) => Object.values(stage.props.policies).flat()),
@@ -302,11 +290,10 @@ export class TypeGraph {
         );
 
         if (introPolicy) {
-          const mat = this.introspection.policyMaterializer(
-            introPolicy,
-          );
-          const rt = this.introspection
-            .runtimeReferences[mat.runtime] as DenoRuntime;
+          const mat = this.introspection.policyMaterializer(introPolicy);
+          const rt = this.introspection.runtimeReferences[
+            mat.runtime
+          ] as DenoRuntime;
           return [introPolicy.name, rt.delegate(mat, false)] as [
             string,
             Resolver,
@@ -346,19 +333,16 @@ export class TypeGraph {
     };
   }
 
-  nextBatcher = (
-    type: TypeNode,
-  ): Batcher => {
+  nextBatcher = (type: TypeNode): Batcher => {
     // convenience check to be removed
     const ensureArray = (x: []) => {
-      ensure(Array.isArray(x), `${JSON.stringify(x)} not an array`);
+      ensure(Array.isArray(x), `expected array but got: ${JSON.stringify(x)}`);
       return x;
     };
 
     if (isArray(type)) {
       if (isOptional(this.type(type.items))) {
-        throw Error("D");
-        //return (x: any) => x.flat().filter((c: any) => !!c);
+        return (x: any) => ensureArray(x);
       }
       return (x: any) => ensureArray(x).flat();
     }
@@ -372,9 +356,15 @@ export class TypeGraph {
       return (x: any) => ensureArray(x).filter((c: any) => !!c);
     }
     ensure(
-      isObject(type) || isInteger(type) || isNumber(type) || isBoolean(type) ||
-        isFunction(type) || isString(type) || isUnion(type) || isEither(type),
-      `object expected but got ${type.type}`,
+      isObject(type) ||
+        isInteger(type) ||
+        isNumber(type) ||
+        isBoolean(type) ||
+        isFunction(type) ||
+        isString(type) ||
+        isUnion(type) ||
+        isEither(type),
+      `expected valid type node but got unknown type '${type.type}'`,
     );
     return (x: any) => ensureArray(x);
   };
@@ -416,26 +406,20 @@ export class TypeGraph {
         if (typeof value !== "object") {
           throw new Error(`variable ${label} must be an object`);
         }
-        Object.entries(tpe.properties).forEach(
-          ([key, typeIdx]) => {
-            this.validateValueType(
-              typeIdx,
-              (value as Record<string, unknown>)[key],
-              `${label}.${key}`,
-            );
-          },
-        );
+        Object.entries(tpe.properties).forEach(([key, typeIdx]) => {
+          this.validateValueType(
+            typeIdx,
+            (value as Record<string, unknown>)[key],
+            `${label}.${key}`,
+          );
+        });
         return;
       case "array":
         if (!Array.isArray(value)) {
           throw new Error(`variable ${label} must be an array`);
         }
         value.forEach((item, idx) => {
-          this.validateValueType(
-            tpe.items,
-            item,
-            `${label}[${idx}]`,
-          );
+          this.validateValueType(tpe.items, item, `${label}[${idx}]`);
         });
         return;
       case "integer":
@@ -465,9 +449,7 @@ export class TypeGraph {
   }
 }
 
-const lazyResolver = <T>(
-  fn: Resolver,
-): Resolver => {
+const lazyResolver = <T>(fn: Resolver): Resolver => {
   let memo: Promise<T> | undefined = undefined;
   // deno-lint-ignore require-await
   return async (args) => {

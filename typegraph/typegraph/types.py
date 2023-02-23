@@ -272,7 +272,7 @@ class typedef(Node):
             return self
 
         with self.graph:
-            return optional(self, default_value=default_value)
+            return optional(of=self, default_value=default_value)
 
     def __repr__(self) -> str:
         def pretty(v):
@@ -355,8 +355,21 @@ def with_constraints(cls):
 
 @frozen
 class optional(typedef):
-    of: TypeNode
+    of: TypeNode = field(default=None)
     default_value: Optional[str] = field(hash=False, default=None)
+
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+
+        of = self.of
+
+        if isinstance(of, NodeProxy):
+            of = of.get()
+
+        if of._enum is not None:
+            # an optional type with an enum requires the enum to have the value
+            # `null` as variant
+            object.__setattr__(self, "of", of.replace(enum=(*of._enum, None)))
 
     def default(self, value):
         if self.default_value is not None:
