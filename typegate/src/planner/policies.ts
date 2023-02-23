@@ -24,7 +24,8 @@ export interface FunctionSubtreeData {
 }
 
 export class OperationPolicies {
-  private functions: Map<StageId, SubtreeData>;
+  // should be private -- but would not be testable
+  functions: Map<StageId, SubtreeData>;
   private policyLists: Map<TypeIdx, PolicyList>;
   private resolvers: Map<PolicyIdx, Record<EffectType | "none", Resolver>>;
 
