@@ -12,7 +12,7 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: "blue", to: "rgb")
+            convert(color: "blue", to: "rgb_array")
           }
         `
           .expectData({
@@ -27,7 +27,7 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: "#ffffff", to: "rgb")
+            convert(color: "#ffffff", to: "rgb_array")
           }
         `
           .expectData({
@@ -53,16 +53,56 @@ test(
     );
 
     await t.should(
+      "allow query with variant RGB of type struct in union value Color",
+      async () => {
+        await gql`
+          query {
+            convert(color: { r: 155, g: 38, b: 182 }, to: "rgb_struct") {
+              r
+              g
+              b
+            }
+          }
+        `
+          .expectData({
+            convert: {
+              r: 155,
+              g: 38,
+              b: 182,
+            },
+          })
+          .on(e);
+      },
+    );
+
+    await t.should(
+      "return only the selected fields when the returned value is an object",
+      async () => {
+        await gql`
+          query {
+            convert(color: { r: 155, g: 38, b: 182 }, to: "rgb_struct") {
+              r
+            }
+          }
+        `
+          .expectData({
+            convert: {
+              r: 155,
+            },
+          })
+          .on(e);
+      },
+    );
+
+    await t.should(
       "fail to query with a type not present in union type Color",
       async () => {
         await gql`
           query {
-            convert(color: 100, to: "rgb")
+            convert(color: 100, to: "rgb_array")
           }
         `
-          .expectErrorContains(
-            "Type mismatch: got 'IntValue' but expected 'ARRAY' or 'STRING' for argument 'color' named as 'Color'",
-          )
+          .matchErrorSnapshot(t)
           .on(e);
       },
     );
@@ -72,16 +112,10 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: "hello world", to: "rgb")
+            convert(color: "hello world", to: "rgb_array")
           }
         `
-          .expectErrorContains(
-            [
-              `must be array`,
-              `must match pattern "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"`,
-              `must be equal to one of the allowed values: red, green, blue, black, white`,
-            ].join(" or "),
-          )
+          .matchErrorSnapshot(t)
           .on(e);
       },
     );
@@ -101,9 +135,7 @@ test(
           }
         }
       `
-        .expectBody((body: { data: string }) => {
-          t.assertSnapshot(body.data);
-        })
+        .matchSnapshot(t)
         .on(e);
     });
   },

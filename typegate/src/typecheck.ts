@@ -12,7 +12,15 @@ import {
   SelectionSetNode,
 } from "graphql/ast";
 import { FragmentDefs } from "./graphql.ts";
-import { isOptional, ObjectNode, TypeNode } from "./type_node.ts";
+import {
+  getVariantTypesIndexes,
+  isOptional,
+  isUnion,
+  ObjectNode,
+  TypeNode,
+} from "./type_node.ts";
+import { EitherNode, UnionNode } from "./types/typegraph.ts";
+import { toPrettyJSON } from "./utils.ts";
 
 // we will use this jsonschema jit compiler: https://github.com/sinclairzx81/typebox
 // and the types format will become a superset of the jsonschema https://json-schema.org/understanding-json-schema/reference/index.html
@@ -43,26 +51,23 @@ class InvalidNodePathsError extends Error {
 }
 
 export class SchemaValidatorError extends Error {
-  constructor(errors: ErrorObject[], separator: string) {
-    const errorMessages: string[] = [];
+  constructor(value: unknown, schemaErrors: ErrorObject[], schema: JSONSchema) {
+    let errorMessage = "";
 
-    for (const error of errors) {
-      if (Object.entries(error.params).length > 0 && error.message) {
-        let errorMessage = error.message;
-        const allowedValues: string[] = error.params.allowedValues;
-
-        if (allowedValues?.length > 0) {
-          errorMessage += `: ${allowedValues.join(", ")}`;
-        }
-
-        if (error.instancePath.length > 0) {
-          errorMessage += ` at ${error.instancePath}`;
-        }
-
-        errorMessages.push(errorMessage);
-      }
+    if (schemaErrors.length > 1) {
+      errorMessage = [
+        `value: ${toPrettyJSON(value)}`,
+        `errors: ${toPrettyJSON(schemaErrors)}`,
+        `schema: ${toPrettyJSON(schema)}`,
+      ].join("\n\n");
+    } else {
+      // if there is only one error, return it instead of the whole error,
+      // as it may be redundant
+      const error = schemaErrors[0];
+      errorMessage = `${error.message} at ${error.instancePath}`;
     }
-    super(errorMessages?.join(separator));
+
+    super(errorMessage);
   }
 }
 
@@ -170,59 +175,11 @@ export class ValidationSchemaBuilder {
       }
 
       case "union": {
-        const variants = type.anyOf.map((typeIndex) => this.types[typeIndex]);
-        const variantsSchema: JSONSchema[] = [];
-        const undefinedNodePaths = new Map<string, number>();
+        return this.getGeneralUnionSchema(type, path, selectionSet);
+      }
 
-        for (const variant of variants) {
-          try {
-            const variantSchema = this.get(path, variant, selectionSet);
-
-            variantsSchema.push(variantSchema);
-          } catch (error) {
-            if (error instanceof InvalidNodePathsError) {
-              for (const invalidPath of error.invalidNodePaths) {
-                let count = undefinedNodePaths.get(invalidPath) || 0;
-                count += 1;
-                undefinedNodePaths.set(invalidPath, count);
-              }
-
-              variantsSchema.push(error.generatedSchema);
-            } else {
-              throw error;
-            }
-          }
-        }
-
-        // only throw that a node path is undefined if it doesn't exist on any
-        // of the subschemes
-        const invalidPaths = [];
-        for (const [nodePath, count] of undefinedNodePaths.entries()) {
-          if (count === variants.length) {
-            invalidPaths.push(nodePath);
-          }
-        }
-        if (invalidPaths.length > 0) {
-          throw new InvalidNodePathsError(invalidPaths, {});
-        }
-
-        const trimmedType = trimType(type);
-        // remove `type` field as the type is ruled by the
-        // anyOf subschemes
-        const { type: _, ...untyped } = trimmedType;
-
-        const trimmedVariantsSchema = variantsSchema.map((variant) => {
-          // remove `additionalProperties = false` if present as each subschema
-          // in `allOf` is used to check the properties of a value, therefore
-          // without additionalProperties only one variant would be used to check
-          const { additionalProperties, ...trimmedVariant } = variant;
-          return trimmedVariant;
-        });
-
-        return {
-          ...untyped,
-          anyOf: trimmedVariantsSchema,
-        };
+      case "either": {
+        return this.getGeneralUnionSchema(type, path, selectionSet);
       }
 
       case "array": {
@@ -246,10 +203,98 @@ export class ValidationSchemaBuilder {
 
       default:
         if (selectionSet != undefined) {
-          throw new Error(`Path ${path} cannot be a field selection`);
+          throw new Error(
+            `Path ${path} cannot be a field selection on value of type ${type.type}`,
+          );
         }
         return trimType(type);
     }
+  }
+
+  /**
+   * Returns the JSON Schema for a node of type `union` or `either`.
+   */
+  private getGeneralUnionSchema(
+    typeNode: UnionNode | EitherNode,
+    path: string,
+    selectionSet?: SelectionSetNode,
+  ): JSONSchema {
+    const variantTypesIndexes: number[] = getVariantTypesIndexes(typeNode);
+
+    const variants = variantTypesIndexes.map(
+      (typeIndex) => this.types[typeIndex],
+    );
+    const variantsSchema: JSONSchema[] = [];
+    const undefinedNodePaths = new Map<string, number>();
+    const errorsCounter = new Map<string, number>();
+
+    for (const variant of variants) {
+      try {
+        const variantSchema = this.get(path, variant, selectionSet);
+
+        variantsSchema.push(variantSchema);
+      } catch (error) {
+        if (error instanceof InvalidNodePathsError) {
+          for (const invalidPath of error.invalidNodePaths) {
+            let count = undefinedNodePaths.get(invalidPath) || 0;
+            count += 1;
+            undefinedNodePaths.set(invalidPath, count);
+          }
+
+          variantsSchema.push(error.generatedSchema);
+        } else {
+          let count = errorsCounter.get(error.message) || 0;
+          count += 1;
+          errorsCounter.set(error.message, count);
+        }
+      }
+    }
+
+    // only throw that a node path is undefined if it doesn't exist on any
+    // of the subschemes
+    const invalidPaths = [];
+    for (const [nodePath, count] of undefinedNodePaths.entries()) {
+      if (count === variants.length) {
+        invalidPaths.push(nodePath);
+      }
+    }
+    if (invalidPaths.length > 0) {
+      throw new InvalidNodePathsError(invalidPaths, {});
+    }
+
+    // only throw errors that appear on all the subschemes
+    for (const [message, count] of errorsCounter) {
+      if (count === variants.length) {
+        throw new Error(message);
+      }
+    }
+
+    const trimmedType = trimType(typeNode);
+
+    // remove `type` field as is ruled by the subschemes
+    delete trimmedType.type;
+
+    const filteredVariantsSchema = variantsSchema.filter(
+      (variant) => Object.keys(variant.properties || {}).length > 0,
+    );
+
+    // only return the schema if there is at least a variant,
+    // since `anyOf` and `oneOf` fields cannot be empty arrays
+    if (filteredVariantsSchema.length < 1) {
+      return {};
+    }
+
+    const schema = {
+      ...trimmedType,
+    };
+
+    if (isUnion(typeNode)) {
+      schema.anyOf = filteredVariantsSchema;
+    } else {
+      schema.oneOf = filteredVariantsSchema;
+    }
+
+    return schema;
   }
 }
 
@@ -288,14 +333,7 @@ export class TypeCheck {
 
     if (this.validator.errors) {
       console.error({ errors: this.validator.errors });
-      const schemaError = new SchemaValidatorError(this.validator.errors, ", ");
-      throw new Error(
-        `errors: ${schemaError.message};\nvalue: ${
-          JSON.stringify(
-            value,
-          )
-        }\nschema: ${JSON.stringify(this.schema)}`,
-      );
+      throw new SchemaValidatorError(value, this.validator.errors, this.schema);
     }
   }
 }
