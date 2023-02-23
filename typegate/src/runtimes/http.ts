@@ -121,7 +121,7 @@ export class HTTPRuntime extends Runtime {
       const searchParams = new URLSearchParams();
       const hasBody = method !== "GET" && method !== "DELETE";
 
-      for (const [key, value] of Object.entries(args)) {
+      for (const [key, value] of Object.entries(input)) {
         if (options.header_prefix && key.startsWith(options.header_prefix)) {
           headers.set(key.slice(options.header_prefix.length), value);
         } else {
