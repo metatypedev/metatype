@@ -5,7 +5,7 @@ import { Kind } from "graphql";
 import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
-import { ComputeStageProps, TypeIdx } from "../types.ts";
+import { ComputeStageProps } from "../types.ts";
 import {
   getWrappedType,
   isArray,
@@ -19,8 +19,8 @@ import { ArgumentCollector, ComputeArg } from "./args.ts";
 import { FromVars } from "../runtimes/graphql.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
-import { OperationPolicies } from "./policies.ts";
-import { Tree } from "./utils.ts";
+import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
+import { getLogger } from "../log.ts";
 
 interface Node {
   name: string;
@@ -52,15 +52,18 @@ export interface Plan {
  * ```
  */
 export class Planner {
+  logger = getLogger("planner");
   rawArgs: Record<string, ComputeArg> = {};
-  referencedTypes: Tree<TypeIdx[], string> = new Tree([]);
+  policiesBuilder: OperationPoliciesBuilder;
 
   constructor(
     readonly operation: ast.OperationDefinitionNode,
     readonly fragments: FragmentDefs,
     private readonly tg: TypeGraph,
     private readonly verbose: boolean,
-  ) {}
+  ) {
+    this.policiesBuilder = new OperationPoliciesBuilder(tg);
+  }
 
   getPlan(): Plan {
     const rootIdx =
@@ -70,7 +73,6 @@ export class Planner {
       `operation '${this.operation.operation}' is not available`,
     );
 
-    this.referencedTypes.root.value.push(rootIdx);
     // traverse on the root node: parent, parentStage and node stage are undefined
     const stages = this.traverse({
       name: this.operation.name?.value ?? "",
@@ -93,34 +95,11 @@ export class Planner {
       stage.varTypes = varTypes;
     }
 
-    const rootFuncs = new Map(
-      stages.filter((s) => this.isRootFunc(s))
-        .map((s) => [s.props.typeIdx, s.props.path]),
-    );
-
-    const policies = new OperationPolicies(
-      this.tg,
-      this.referencedTypes,
-      rootFuncs,
-    );
-
-    return { stages, policies, policyArgs: this.policyArgs(stages) };
-  }
-
-  private isRootFunc(stage: ComputeStage) {
-    const typ = this.tg.type(stage.props.typeIdx);
-    if (typ.type !== Type.FUNCTION) {
-      return false;
-    }
-
-    const parentStage = stage.props.parent;
-    if (parentStage == undefined) {
-      return true;
-    }
-
-    const parentType = this.tg.type(parentStage.props.typeIdx);
-    return parentType.type === Type.OBJECT &&
-      parentType.config?.["__namespace"] === true;
+    return {
+      stages,
+      policies: this.policiesBuilder.build(),
+      policyArgs: this.policyArgs(stages),
+    };
   }
 
   /**
@@ -132,11 +111,6 @@ export class Planner {
     node: Node,
     stage?: ComputeStage,
   ): ComputeStage[] {
-    const stageName = stage?.id() ?? "";
-    const path = stage?.props.path ?? [];
-    if (!this.referencedTypes.getNode(path).value.includes(node.typeIdx)) {
-      throw new Error(`not registered on '${stageName}': ${node.typeIdx}`);
-    }
     const { name, selectionSet, args, typeIdx } = node;
     const typ = this.tg.type(typeIdx);
     const stages: ComputeStage[] = [];
@@ -224,7 +198,6 @@ export class Planner {
       );
       const root = this.tg.introspection.type(0, Type.OBJECT);
 
-      introspection.referencedTypes = new Tree([root.properties.query]);
       // traverse on the root node: parent, parentStage and node stage are undefined
       return introspection.traverse({
         name: parent.name,
@@ -307,8 +280,10 @@ export class Planner {
       rateCalls: true,
       rateWeight: 0,
     });
-    const types =
-      this.referencedTypes.append(stage.props.path, [node.typeIdx]).value;
+    const types = this.policiesBuilder.setReferencedTypes(
+      stage.id(),
+      node.typeIdx,
+    );
 
     stages.push(stage);
 
@@ -432,12 +407,15 @@ export class Planner {
       rateWeight: (rate_weight as number ?? 0), // `as number` does not promote null or undefined to a number
     });
     stages.push(stage);
+
     // TODO add all nested types in inputIdx
-    const types = this.referencedTypes.append(stage.props.path, [
+    this.policiesBuilder.push(stage.id(), node.typeIdx);
+    const types = this.policiesBuilder.setReferencedTypes(
+      stage.id(),
       node.typeIdx,
       outputIdx,
       inputIdx,
-    ]).value;
+    );
 
     if (outputType.type === Type.OBJECT) {
       stages.push(
@@ -446,6 +424,7 @@ export class Planner {
           stage,
         ),
       );
+      this.policiesBuilder.pop(stage.id());
       return stages;
     }
 
@@ -470,6 +449,7 @@ export class Planner {
       }
     }
 
+    this.policiesBuilder.pop(stage.id());
     return stages;
   }
 
