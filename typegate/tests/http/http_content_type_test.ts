@@ -28,6 +28,10 @@ function removeRandomBoundary(result: OutputResult): OutputResult {
   };
 }
 
+function celciusToFarenheit(celcius: number) {
+  return celcius * 1.8 + 32;
+}
+
 test("http custom content-type queries", async (t) => {
   const e = await t.pythonFile("http/http_content_type.py");
 
@@ -52,6 +56,27 @@ test("http custom content-type queries", async (t) => {
     });
   });
 
+  mf.mock("POST@/api/celcius_to_farenheit/:celcius", async (req, params) => {
+    const formData: FormData = await req.formData();
+    console.log(
+      "content-type assigned: ",
+      req.headers.get("content-type"),
+    );
+    console.info("> params", params);
+    console.info("> formData", formData);
+
+    const celcius = Number(formData.get("celcius") ?? 0);
+    const result = {
+      farenheit: celciusToFarenheit(celcius),
+    };
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  });
+
   await t.should("work with content-type = multipart/form-data", async () => {
     await gql`
       mutation {
@@ -67,6 +92,22 @@ test("http custom content-type queries", async (t) => {
           self_content_type: "multipart/form-data",
           total: 5050,
           steps: 101,
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("work without a nameclash", async () => {
+    await gql`
+      mutation {
+        celciusToFarenheit(celcius: 5) {
+          farenheit
+        }
+      }
+    `
+      .expectData({
+        celciusToFarenheit: {
+          farenheit: 41,
         },
       })
       .on(e);
