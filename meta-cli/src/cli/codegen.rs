@@ -33,7 +33,11 @@ pub struct Deno {
 impl Action for Deno {
     fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
-        let config = Config::load_or_find(config_path, dir)?;
+        // try to find config file, else use default config as the options
+        // used for code generation have default values.
+        let config =
+            Config::load_or_find(config_path, &dir).unwrap_or_else(|_| Config::default_in(&dir));
+
         let loaded = TypegraphLoader::with_config(&config)
             .skip_deno_modules()
             .load_file(&self.file)?;
