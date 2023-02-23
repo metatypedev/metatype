@@ -12,6 +12,7 @@ sidebar_position: 2
 addTypegraph field
 
 Policies:
+
 - admin_only
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
@@ -38,6 +39,7 @@ fromString<br />
 removeTypegraph field
 
 Policies:
+
 - admin_only
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
