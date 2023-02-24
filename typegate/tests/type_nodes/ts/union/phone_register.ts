@@ -28,6 +28,8 @@ export function registerPhone(
   { context: _ }: { context: Record<string, unknown> },
 ): ValidateOutput {
   return {
-    message: `${phone.name} registered`,
+    message: `${phone.name} (${
+      (<any> phone)?.os ? "Smartphone" : "Basic"
+    }) registered`,
   };
 }

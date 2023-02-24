@@ -1,8 +1,7 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.deno import ModuleMat
 
-with TypeGraph("either") as g:
-    # user models
+with TypeGraph("union") as g:
     smartphone = t.struct(
         {
             "name": t.string(),

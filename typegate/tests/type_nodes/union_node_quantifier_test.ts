@@ -7,21 +7,42 @@ test(
   async (t) => {
     const e = await t.pythonFile("type_nodes/union_node_quantifier.py");
 
-    await t.should("work with optional", async () => {
+    await t.should("work with optional field non-completed", async () => {
       await gql`
           query {
             registerPhone(
               phone: {
                 name: "LG",
-                camera: 50,
-                battery: 5000,
-                os: "Android",
+                battery: 5000
               }
             ) {
               message
             }
           }
         `
+        .expectData({
+          registerPhone: {
+            message: "LG (Basic) registered",
+          },
+        })
+        .on(e);
+    });
+
+    await t.should("work with optional field completed", async () => {
+      await gql`
+        query {
+          registerPhone(
+            phone: {
+              name: "LG",
+              camera: 57,
+              battery: 5000
+              os: "Android"
+            }
+          ) {
+            message
+          }
+        }
+      `
         .expectData({
           registerPhone: {
             message: "LG registered",
