@@ -1,9 +1,27 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { ComputeStage } from "./engine.ts";
+import type { ComputeStage } from "./engine.ts";
 import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
 import { None, Option, Some } from "monads";
+import { deepMerge } from "std/collections/deep_merge.ts";
+import { z } from "zod";
+
+export const configOrExit = async <T extends z.ZodRawShape>(
+  sources: Record<string, unknown>[],
+  schema: T,
+) => {
+  const parsing = await z.object(schema).safeParse(
+    sources.reduce((a, b) => deepMerge(a, b), {}),
+  );
+
+  if (!parsing.success) {
+    console.error(parsing.error);
+    Deno.exit(1);
+  }
+
+  return parsing.data;
+};
 
 export type JSONValue =
   | string

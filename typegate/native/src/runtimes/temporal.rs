@@ -3,8 +3,8 @@
 use crate::RT;
 use anyhow::Context;
 use dashmap::DashMap;
-use lazy_static::lazy_static;
 use macros::deno;
+use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::str::FromStr;
 use temporal_client::{Client, ClientOptionsBuilder, RetryClient};
@@ -13,9 +13,7 @@ use temporal_sdk_core_protos::temporal::api::common::v1::{Payload, Payloads};
 
 use url::Url;
 
-lazy_static! {
-    static ref CLIENTS: DashMap<String, RetryClient<Client>> = DashMap::new();
-}
+static CLIENTS: Lazy<DashMap<String, RetryClient<Client>>> = Lazy::new(DashMap::new);
 
 #[deno]
 struct TemporalRegisterInput {
