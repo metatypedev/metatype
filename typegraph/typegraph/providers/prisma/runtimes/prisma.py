@@ -313,7 +313,11 @@ class PrismaRuntime(Runtime):
         output = typegen.add_nested_count(tpe)
         return t.func(
             t.struct(
-                {"where": typegen.get_where_type(tpe).named(_pref("Where")).optional()}
+                {
+                    "where": typegen.gen_query_where_expr(tpe)
+                    .named(_pref("Where"))
+                    .optional()
+                }
             ),
             output.named(_pref("Output")).optional(),
             PrismaOperationMat(self, tpe.name, "findUnique", effect=effects.none()),
@@ -329,7 +333,7 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "where": typegen.get_where_type(tpe)
+                    "where": typegen.gen_query_where_expr(tpe)
                     .named(_pref("Where"))
                     .optional(),
                     "orderBy": typegen.get_order_by_type(tpe)
@@ -354,7 +358,7 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "where": typegen.get_where_type(tpe)
+                    "where": typegen.gen_query_where_expr(tpe)
                     .named(_pref("Where"))
                     .optional(),
                     "take": t.integer().named(_pref("Take")).optional(),
@@ -411,7 +415,7 @@ class PrismaRuntime(Runtime):
                     "by": t.array(t.string()).named(_pref("By")),
                     "take": t.integer().named(_pref("Take")).optional(),
                     "skip": t.integer().named(_pref("Skip")).optional(),
-                    "where": typegen.get_where_type(row_def)
+                    "where": typegen.gen_query_where_expr(row_def)
                     .named(_pref("Where"))
                     .optional(),
                     "orderBy": typegen.get_order_by_type(row_def)
@@ -461,7 +465,7 @@ class PrismaRuntime(Runtime):
                     "data": typegen.get_input_type(tpe, update=True).named(
                         f"{tpe.name}UpdateInput"
                     ),
-                    "where": typegen.get_where_type(tpe).named(
+                    "where": typegen.gen_query_where_expr(tpe).named(
                         f"{tpe.name}UpdateOneWhere"
                     ),
                 }
@@ -480,7 +484,7 @@ class PrismaRuntime(Runtime):
             t.struct(
                 {
                     "data": typegen.get_update_data_type(tpe).named(_pref("Data")),
-                    "where": typegen.get_where_type(tpe).named(_pref("Where")),
+                    "where": typegen.gen_query_where_expr(tpe).named(_pref("Where")),
                 }
             ),
             t.struct({"count": t.integer()}).named(_pref("BatchPayload")),
@@ -496,7 +500,7 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "where": typegen.get_where_type(tpe).named(_pref("Where")),
+                    "where": typegen.gen_query_where_expr(tpe).named(_pref("Where")),
                     "create": typegen.get_input_type(tpe).named(_pref("Create")),
                     "update": typegen.get_update_data_type(tpe).named(_pref("Update")),
                 }
@@ -511,7 +515,7 @@ class PrismaRuntime(Runtime):
         _pref = get_name_generator("Delete", tpe)
         return t.func(
             t.struct(
-                {"where": typegen.get_where_type(tpe).named(_pref("Input"))},
+                {"where": typegen.gen_query_where_expr(tpe).named(_pref("Input"))},
             ),
             typegen.get_out_type(tpe).named(_pref("Output")),
             PrismaOperationMat(self, tpe.name, "deleteOne", effect=effects.delete()),
@@ -523,7 +527,7 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "where": typegen.get_where_type(tpe).named(
+                    "where": typegen.gen_query_where_expr(tpe).named(
                         f"{tpe.name}DeleteManyWhereInput"
                     ),
                 }

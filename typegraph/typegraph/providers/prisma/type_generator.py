@@ -122,6 +122,49 @@ class TypeGenerator:
         else:
             return t.struct(fields).named(name)
 
+    # Idea :
+    # where: { name: { not: { equals: "John" } } }
+    # where: { NOT: [ { name: { contains: "e" } }, { unique: { equals: 1 } }]}
+    # where: { AND: [ { unique: { gt: 2 } }, { name: { startsWith: "P" }}]}
+    # what about recursive types ? (use t.proxy?)
+    # where: { NOT: { NOT: { name: { startsWith: "P" }} }}
+    def gen_query_where_expr(self, tpe: t.struct):
+        tpe = self.get_where_type(tpe)
+        any_type_opt = t.union(
+            [
+                t.integer(),
+                t.float(),
+                t.boolean(),
+                t.string(),
+                t.array(t.union([t.integer(), t.float(), t.boolean(), t.string()])),
+                tpe,
+            ]
+        ).optional()
+
+        # node level
+        term = tpe.compose(
+            {
+                "not": any_type_opt,
+                "equals": any_type_opt,
+                "is": any_type_opt,
+                "in": any_type_opt,
+                "notIn": any_type_opt,
+                "startsWith": t.string().optional(),
+                "endsWith": t.string().optional(),  # to test
+                "contains": t.string().optional(),
+                "gt": any_type_opt,
+                "lt": any_type_opt,  # to test
+            }
+        )
+
+        # root
+        add_props = {
+            "AND": t.array(term).optional(),
+            "OR": t.array(term).optional(),
+            "NOT": t.array(term).optional(),
+        }
+        return tpe.compose(add_props)
+
     # visit a terminal node and apply fn
     def deep_map(self, tpe: t.typedef, fn: callable) -> t.struct:
         if isinstance(tpe, t.array) or isinstance(tpe, t.optional):
