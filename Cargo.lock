@@ -721,7 +721,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -2714,7 +2714,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2797,7 +2797,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -3245,7 +3245,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "common",
@@ -6027,9 +6027,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "1.0.107"
+version = "1.0.108"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f4064b5b16e03ae50984a5a8ed5d4f8803e6bc1fd170a3cda91a1be4b18e3f5"
+checksum = "d56e159d99e6c2b93995d171050271edb50ecc5288fbc7cc17de8fdce4e58c14"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6689,7 +6689,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
  "cfg-if",
- "rand 0.7.3",
+ "rand 0.8.5",
  "static_assertions",
 ]
 
@@ -6718,7 +6718,7 @@ checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
 name = "typescript"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -7280,7 +7280,7 @@ checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
 
 [[package]]
 name = "xtask"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "clap",
