@@ -1,6 +1,6 @@
 [package]
 name = "typescript"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 edition = "2021"
 
 [dependencies]
@@ -13,6 +13,6 @@ dprint-plugin-typescript = "0.83.0"
 swc_common = { version = "=0.29.29", features = ["tty-emitter"] }
 swc_ecma_ast = "=0.96.3"
 swc_ecma_parser = "=0.124.5"
-swc_ecma_codegen = "=0.129.8"
+swc_ecma_codegen = "=0.129.10"
 swc_ecma_visit = "=0.82.3"
-swc_ecma_transforms_typescript = "=0.164.10"
+swc_ecma_transforms_typescript = "=0.164.11"

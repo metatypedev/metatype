@@ -10,6 +10,7 @@ export const Type = {
   ARRAY: "array",
   FUNCTION: "function",
   UNION: "union",
+  EITHER: "either",
   ANY: "any",
 } as const;
 
@@ -24,6 +25,7 @@ import type {
   AnyNode,
   ArrayNode,
   BooleanNode,
+  EitherNode,
   FunctionNode,
   IntegerNode,
   NumberNode,
@@ -48,11 +50,7 @@ export type {
   UnionNode,
 };
 
-export type ScalarNode =
-  | BooleanNode
-  | IntegerNode
-  | NumberNode
-  | StringNode;
+export type ScalarNode = BooleanNode | IntegerNode | NumberNode | StringNode;
 export type QuantifierNode = OptionalNode | ArrayNode;
 
 //
@@ -133,6 +131,24 @@ export function isUnion(t: TypeNode): t is UnionNode {
   return t.type === "union";
 }
 
+export function isEither(t: TypeNode): t is EitherNode {
+  return t.type === "either";
+}
+
 export function getWrappedType(t: QuantifierNode): number {
   return isOptional(t) ? t.item : t.items;
+}
+
+/**
+ * Returns the indexes of the variant types for a node of type `union`
+ * or `either`.
+ */
+export function getVariantTypesIndexes(
+  typeNode: UnionNode | EitherNode,
+): number[] {
+  if (typeNode.type === "union") {
+    return typeNode.anyOf;
+  } else {
+    return typeNode.oneOf;
+  }
 }
