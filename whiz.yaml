@@ -45,7 +45,7 @@ typegate2:
     depends_on:
         - typegate_native
     pipe:
-        '^.+\[http\].*$': whiz://http
+        "^.+http .*$": whiz://http
 
 http:
     command: ""
@@ -118,7 +118,7 @@ website_docgen:
         npx docusaurus docs:generate:graphql:prisma-migration
         npx docusaurus docs:generate:changelog
     depends_on:
-        - typegate1
+        - typegate_native
 
 install_website:
     workdir: website

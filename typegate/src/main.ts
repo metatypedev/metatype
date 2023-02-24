@@ -1,27 +1,18 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { serve } from "std/http/server.ts";
-import * as Sentry from "sentry";
-import { init } from "native";
+import { init_native } from "native";
 
 import { ReplicatedRegister } from "./register.ts";
 import config, { redisConfig } from "./config.ts";
-import { getLogger } from "./log.ts";
 import { typegate } from "./typegate.ts";
 import { RedisRateLimiter } from "./rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 
-if (config.sentry_dsn) {
-  Sentry.init({
-    dsn: config.sentry_dsn,
-    release: config.version,
-    environment: config.debug ? "development" : "production",
-    sampleRate: config.sentry_sample_rate,
-    tracesSampleRate: config.sentry_traces_sample_rate,
-  });
-}
+import { getLogger } from "./log.ts";
 
-init();
+// init rust native libs
+init_native();
 
 const register = await ReplicatedRegister.init(redisConfig);
 register.startSync();
