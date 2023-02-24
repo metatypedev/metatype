@@ -721,7 +721,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -2714,7 +2714,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2797,7 +2797,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -3245,7 +3245,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "common",
@@ -6094,7 +6094,7 @@ dependencies = [
 [[package]]
 name = "temporal-client"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#0d7908cd0f90433300ceffdb5e6faece0dd5485d"
+source = "git+https://github.com/temporalio/sdk-core#09a2e4fc2198a8906bdb3f5051531578d9c46973"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6121,7 +6121,7 @@ dependencies = [
 [[package]]
 name = "temporal-sdk-core-protos"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#0d7908cd0f90433300ceffdb5e6faece0dd5485d"
+source = "git+https://github.com/temporalio/sdk-core#09a2e4fc2198a8906bdb3f5051531578d9c46973"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -6718,7 +6718,7 @@ checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
 name = "typescript"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -7280,7 +7280,7 @@ checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
 
 [[package]]
 name = "xtask"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.5"
 dependencies = [
  "anyhow",
  "clap",
