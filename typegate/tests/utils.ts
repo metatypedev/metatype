@@ -497,7 +497,6 @@ export async function recreateMigrations(engine: Engine) {
       name: "init",
       apply: true,
     } as any);
-    console.log("aaa");
     const dest = join(migrationsBaseDir, engine.tg.name, runtime.data.name);
     const res = await native.unpack({ dest, migrations });
     if (res !== "Ok") {
