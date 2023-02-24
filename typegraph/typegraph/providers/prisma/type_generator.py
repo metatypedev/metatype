@@ -188,16 +188,13 @@ class TypeGenerator:
         elif isinstance(terminal_node, t.array):
             return t.struct({"set": terminal_node})
         elif isinstance(terminal_node, t.number):
-            # TODO should be a union as in:
-            # type UpdateOp = Set | Increment | Decrement | Multiply | Divide
-            return t.struct(
-                {
-                    "set": terminal_node.optional(),
-                    "multiply": terminal_node.optional(),
-                    "divide": terminal_node.optional(),
-                    "decrement": terminal_node.optional(),
-                    "increment": terminal_node.optional(),
-                }
+            return t.union(
+                [
+                    t.struct({"set": terminal_node}),
+                    t.struct({"multiply": terminal_node}),
+                    t.struct({"decrement": terminal_node}),
+                    t.struct({"increment": terminal_node}),
+                ]
             )
         # Note: t.struct is not a terminal node
         return None
