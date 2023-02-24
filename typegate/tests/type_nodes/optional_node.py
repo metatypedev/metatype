@@ -5,7 +5,7 @@ from typegraph.runtimes.deno import ModuleMat
 
 with TypeGraph("optional") as g:
     favoriteColor = t.enum(["red", "blue", "green", "purple"]).named("FavoriteColor")
-    countingNumber = t.integer().min(0).named("NonNegativeNumber")
+    countingNumber = t.integer().min(0).named("CountingNumber")
 
     pollMaterializer = ModuleMat("ts/optional/poll.ts")
 
