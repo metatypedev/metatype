@@ -217,6 +217,35 @@ test("prisma full mapping", async (t) => {
   });
 
   await t.should(
+    "filter with a complex query on findManyPosts",
+    async () => {
+      await gql`
+        query {
+          findManyPosts(
+            where: {
+              OR: [
+                {id: {equals: 10001}},
+                {id: {equals: 10002}}
+              ]
+            }
+          ) {
+            id
+            title
+            author {
+              id
+            }
+          }
+        }
+    `.expectBody((body: any) => {
+        // WIP
+        // request err: Error: unsupported type node 'optional' to generate its argument schema ??
+        console.info("> filter complex", body);
+      })
+        .on(e);
+    },
+  );
+
+  await t.should(
     "update matching rows and return the count affected",
     async () => {
       await gql`
@@ -273,12 +302,12 @@ test("prisma full mapping", async (t) => {
         mutation {
           upsertOneUser(
             where: {id: 2},
-            create: { 
-              id: 2, 
-              name: "Robert", 
-              age: 21, 
-              coinflips: [false, true], 
-              city: "SomeVille", 
+            create: {
+              id: 2,
+              name: "Robert",
+              age: 21,
+              coinflips: [false, true],
+              city: "SomeVille",
               posts: { createMany: { data: [] } }
             },
             update: {
@@ -317,13 +346,13 @@ test("prisma full mapping", async (t) => {
               age: 22,
               coinflips: [true],
               city: "SomeVille",
-              posts: { 
+              posts: {
                 createMany: {
                   data: [
                     { id: 10021, title: "Some Title 21", views: 1, likes: 0, published: true },
                     { id: 10022, title: "Some Title 22", views: 5, likes: 3, published: true },
-                  ] 
-                } 
+                  ]
+                }
               }
             },
             # should not be applied
@@ -390,7 +419,7 @@ test("prisma full mapping", async (t) => {
             }
             posts {
               id
-              _count { comments }      
+              _count { comments }
             }
           }
         }

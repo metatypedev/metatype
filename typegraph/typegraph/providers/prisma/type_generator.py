@@ -157,11 +157,13 @@ class TypeGenerator:
             }
         )
 
+        node = t.struct({k: term for k in tpe.props.keys()})
+
         # root
         add_props = {
-            "AND": t.array(term).optional(),
-            "OR": t.array(term).optional(),
-            "NOT": t.array(term).optional(),
+            "AND": t.array(node).optional(),
+            "OR": t.array(node).optional(),
+            "NOT": t.array(node).optional(),
         }
         return tpe.compose(add_props)
 
