@@ -140,7 +140,7 @@ export class ArgumentCollector {
       };
     }
 
-    // optional values without a default value are 'null'
+    // optional values without a default value are 'null' as fallback
     if (valueNode.kind === Kind.NULL) {
       return { compute: () => null, policies, deps: [] };
     }
