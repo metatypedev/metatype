@@ -37,7 +37,7 @@ dev:
     NODE_VERSION: 18.12.1
     PNPM_VERSION: 7.9.3
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.0.3-dev.5
+    METATYPE_VERSION: 0.0.3-dev.6
 released:
   rules:
     examples/docker-compose.yml:
@@ -54,4 +54,4 @@ released:
     NODE_VERSION: 18.12.1
     PNPM_VERSION: 7.9.3
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.0.3-dev.4
+    METATYPE_VERSION: 0.0.3-dev.5
