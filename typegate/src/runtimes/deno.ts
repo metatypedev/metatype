@@ -16,7 +16,7 @@ import * as ast from "graphql/ast";
 const logger = getLogger(import.meta);
 
 const localDir = dirname(fromFileUrl(import.meta.url));
-const workerFile = toFileUrl(resolve(localDir, "utils/deno-worker.ts"));
+const workerFile = toFileUrl(resolve(localDir, "utils/deno_worker.ts"));
 
 const defaultPermissions = {
   env: envSharedWithWorkers,
@@ -270,7 +270,7 @@ class OnDemandWorker {
 
   worker(): Worker {
     if (!this.lazyWorker) {
-      logger.info(`spawn worker ${this.name} for ${this.tg.types[0].title}`);
+      //logger.info(`spawn worker ${this.name} for ${this.tg.types[0].title}`);
       this.lazyWorker = new Worker(workerFile, {
         type: "module",
         deno: {
