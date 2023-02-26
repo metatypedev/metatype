@@ -74,18 +74,19 @@ COPY --from=debian /tini /tini
 COPY --from=deno-bin /deno /bin/deno
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
 COPY LICENSE.md .
-COPY --from=builder /app/bindings/bindings.ts /bindings/
-COPY --from=builder /app/libnative.so /target/release/
-COPY --from=builder /app/typegate/deno.json ./
-COPY --from=builder /app/typegate/src ./src
+COPY --from=builder /app/bindings/bindings.ts ./bindings/
+COPY --from=builder /app/libnative.so ./target/release/
+COPY --from=builder /app/typegate/deno.json ./typegate/
+COPY --from=builder /app/typegate/src ./typegate/src/
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
-COPY --from=builder --chown=nonroot:nonroot /app/typegate/deno.lock ./
+COPY --from=builder --chown=nonroot:nonroot /app/typegate/deno.lock ./typegate/
 COPY --from=builder --chown=nonroot:nonroot /app/typegate/tmp ./
 
 USER nonroot
 EXPOSE 7890
 
-ENTRYPOINT ["/tini", "--", "/bin/deno"]
-CMD ["run", "--unstable", "--allow-run=hostname", "--allow-env", "--allow-hrtime", "--allow-write", "--allow-ffi", "--allow-read", "--allow-net", "src/main.ts"]
+WORKDIR /app/typegate
+ENTRYPOINT ["/tini", "--"]
+CMD ["/bin/deno", "task", "run"]

@@ -46,6 +46,9 @@ const schema = {
   trust_proxy: zBooleanString,
   trust_header_ip: z.string(),
   request_log: z.string().optional(),
+  sentry_dsn: z.string().optional(),
+  sentry_sample_rate: z.coerce.number().positive().min(0).max(1),
+  sentry_traces_sample_rate: z.coerce.number().positive().min(0).max(1),
 };
 
 async function getHostname() {
