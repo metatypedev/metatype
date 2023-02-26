@@ -8,8 +8,34 @@ import config, { redisConfig } from "./config.ts";
 import { typegate } from "./typegate.ts";
 import { RedisRateLimiter } from "./rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
+import * as Sentry from "sentry";
 
 import { getLogger } from "./log.ts";
+
+const logger = getLogger(import.meta);
+
+Sentry.init({
+  dsn: config.sentry_dsn,
+  release: config.version,
+  environment: config.debug ? "development" : "production",
+  sampleRate: config.sentry_sample_rate,
+  tracesSampleRate: config.sentry_traces_sample_rate,
+  integrations: [
+    new Sentry.Integrations.Context({
+      app: true,
+      os: true,
+      device: false, // off due to buggy/unstable "TypeError: DenoOsUptime is not a function"
+      culture: true,
+    }),
+  ],
+  debug: true,
+});
+
+addEventListener("unhandledrejection", (e) => {
+  Sentry.captureException(e);
+  logger.error(e);
+  e.preventDefault();
+});
 
 // init rust native libs
 init_native();

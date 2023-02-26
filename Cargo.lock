@@ -72,6 +72,9 @@ name = "anyhow"
 version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "224afbd727c3d6e4b90103ece64b8d1b67fbb1973b1046c2281eed3f3803f800"
+dependencies = [
+ "backtrace",
+]
 
 [[package]]
 name = "arrayvec"
@@ -721,7 +724,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.3-dev.5"
+version = "0.0.3-dev.6"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -2714,7 +2717,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.0.3-dev.5"
+version = "0.0.3-dev.6"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2797,7 +2800,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.0.3-dev.5"
+version = "0.0.3-dev.6"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -3245,7 +3248,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.0.3-dev.5"
+version = "0.0.3-dev.6"
 dependencies = [
  "anyhow",
  "common",
@@ -5131,6 +5134,7 @@ dependencies = [
  "httpdate",
  "native-tls",
  "reqwest",
+ "sentry-anyhow",
  "sentry-backtrace",
  "sentry-contexts",
  "sentry-core",
@@ -5138,6 +5142,17 @@ dependencies = [
  "sentry-panic",
  "tokio",
  "ureq",
+]
+
+[[package]]
+name = "sentry-anyhow"
+version = "0.29.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a80510663e6b711de2eed521a95dc38435a0e5858397d1acec79185e4a44215b"
+dependencies = [
+ "anyhow",
+ "sentry-backtrace",
+ "sentry-core",
 ]
 
 [[package]]
@@ -6708,7 +6723,7 @@ checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
 name = "typescript"
-version = "0.0.3-dev.5"
+version = "0.0.3-dev.6"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -7270,7 +7285,7 @@ checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
 
 [[package]]
 name = "xtask"
-version = "0.0.3-dev.5"
+version = "0.0.3-dev.6"
 dependencies = [
  "anyhow",
  "clap",

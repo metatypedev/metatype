@@ -24,7 +24,7 @@ typegate1:
         - ../examples/.env.sample
         - ../website/.env.sample
         - .env.sample
-    command: "./run.sh"
+    command: "deno task run"
     depends_on:
         - typegate_native
     pipe:
@@ -41,7 +41,7 @@ typegate2:
         - ../examples/.env.sample
         - ../website/.env.sample
         - .env.sample
-    command: "./run.sh"
+    command: "deno task run"
     depends_on:
         - typegate_native
     pipe:

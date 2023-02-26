@@ -410,6 +410,7 @@
   "npm": {
     "specifiers": {
       "@sentry/node@7.12.1": "@sentry/node@7.12.1",
+      "@sentry/node@7.38.0": "@sentry/node@7.38.0",
       "chance@1.1.8": "chance@1.1.8",
       "mathjs": "mathjs@11.5.0"
     },
@@ -426,6 +427,14 @@
           "@sentry/hub": "@sentry/hub@7.12.1",
           "@sentry/types": "@sentry/types@7.12.1",
           "@sentry/utils": "@sentry/utils@7.12.1",
+          "tslib": "tslib@1.14.1"
+        }
+      },
+      "@sentry/core@7.38.0": {
+        "integrity": "sha512-+hXh/SO3Ie6WC2b+wi01xLhyVREdkRXS5QBmCiv3z2ks2HvYXp7PoKSXJvNKiwCP+pBD+enOnM1YEzM2yEy5yw==",
+        "dependencies": {
+          "@sentry/types": "@sentry/types@7.38.0",
+          "@sentry/utils": "@sentry/utils@7.38.0",
           "tslib": "tslib@1.14.1"
         }
       },
@@ -450,14 +459,37 @@
           "tslib": "tslib@1.14.1"
         }
       },
+      "@sentry/node@7.38.0": {
+        "integrity": "sha512-jNIN6NZvgzn/oms8RQzffjX8Z0LQDTN6N28nnhzqGCvnfmS1QtTt0FlU+pTuFXZNNSjfGy4XMXMYvLlbvhm2bg==",
+        "dependencies": {
+          "@sentry/core": "@sentry/core@7.38.0",
+          "@sentry/types": "@sentry/types@7.38.0",
+          "@sentry/utils": "@sentry/utils@7.38.0",
+          "cookie": "cookie@0.4.2",
+          "https-proxy-agent": "https-proxy-agent@5.0.1",
+          "lru_map": "lru_map@0.3.3",
+          "tslib": "tslib@1.14.1"
+        }
+      },
       "@sentry/types@7.12.1": {
         "integrity": "sha512-VGZs39SZgMcCGv7H0VyFy1LEFGsnFZH590JUopmz6nG63EpeYQ2xzhIoPNAiLKbyUvBEwukn+faCg3u3MGqhgQ==",
+        "dependencies": {}
+      },
+      "@sentry/types@7.38.0": {
+        "integrity": "sha512-NKOALR6pNUMzUrsk2m+dkPrO8uGNvNh1LD0BCPswKNjC2qHo1h1mDGCgBmF9+EWyii8ZoACTIsxvsda+MBf97Q==",
         "dependencies": {}
       },
       "@sentry/utils@7.12.1": {
         "integrity": "sha512-Dh8B13pC0u8uLM/zf+oZngyg808c6BDEO94F7H+h3IciCVVd92A0cOQwLGAEdf8srnJgpZJNAlSC8lFDhbFHzQ==",
         "dependencies": {
           "@sentry/types": "@sentry/types@7.12.1",
+          "tslib": "tslib@1.14.1"
+        }
+      },
+      "@sentry/utils@7.38.0": {
+        "integrity": "sha512-MgbI3YmYuyyhUtvcXkgGBqjOW+nuLLNGUdWCK+C4kObf8VbLt3dSE/7SEMT6TSHLYQmxs2BxFgx5Agn97m68kQ==",
+        "dependencies": {
+          "@sentry/types": "@sentry/types@7.38.0",
           "tslib": "tslib@1.14.1"
         }
       },

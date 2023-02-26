@@ -4,11 +4,10 @@ import { handlers, LevelName, Logger } from "std/log/mod.ts";
 import { basename, extname, fromFileUrl } from "std/path/mod.ts";
 import { z } from "zod";
 
-import * as Sentry from "sentry";
 import { configOrExit } from "./utils.ts";
 
 if (!Deno.env.has("VERSION")) {
-  // set version for config and workers, only running in main
+  // set version for config and workers, only running in main engine
   const { get_version } = await import("native");
   Deno.env.set("VERSION", get_version());
 }
@@ -30,15 +29,12 @@ const schema = {
     "CRITICAL",
   ]).optional(),
   rust_log: z.string().optional(),
-  sentry_dsn: z.string().optional(),
-  sentry_sample_rate: z.coerce.number().positive().min(0).max(1),
-  sentry_traces_sample_rate: z.coerce.number().positive().min(0).max(1),
   version: z.string(),
 };
 
-export const envSharedWithWorkers = Object.keys(schema).map((k) =>
-  k.toUpperCase()
-);
+export const envSharedWithWorkers = Object.keys(schema).map((
+  k,
+) => k.toUpperCase());
 
 const config = await configOrExit([
   {
@@ -52,16 +48,6 @@ const config = await configOrExit([
       .filter(([_, v]) => v !== undefined),
   ),
 ], schema);
-
-if (config.sentry_dsn) {
-  Sentry.init({
-    dsn: config.sentry_dsn,
-    release: config.version,
-    environment: config.debug ? "development" : "production",
-    sampleRate: config.sentry_sample_rate,
-    tracesSampleRate: config.sentry_traces_sample_rate,
-  });
-}
 
 // set rust log level is not explicit set
 if (!config.rust_log) {
