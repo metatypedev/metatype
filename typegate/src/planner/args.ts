@@ -254,44 +254,65 @@ export class ArgumentCollector {
   }
 
   /**
-   * Returns the value of a given argument node.
+   * Returns the JSONValue
    *
-   * The value returned can be used to check that an argument meets all the
-   * requirements of a given JSON schema.
+   * see: getArgumentValue(.)
    */
-  private getArgumentValue(
-    astNode: ast.ArgumentNode | ast.ObjectFieldNode,
-  ): JSONValue {
-    const valueNode = astNode.value;
-
-    switch (valueNode.kind) {
+  private getJsonValueFromRoot(node: ast.ValueNode): JSONValue {
+    switch (node.kind) {
       case Kind.STRING:
-        return String(valueNode.value);
+        return String(node.value);
 
       case Kind.BOOLEAN:
-        return Boolean(valueNode.value);
+        return Boolean(node.value);
 
       case Kind.INT:
       case Kind.FLOAT:
-        return Number(valueNode.value);
+        return Number(node.value);
 
       case Kind.OBJECT: {
-        const fields = valueNode.fields;
+        const fields = node.fields;
         const argumentObjectValue: Record<string, JSONValue> = {};
         for (const field of fields) {
-          argumentObjectValue[field.name.value] = this.getArgumentValue(field);
+          argumentObjectValue[field.name.value] = this.getJsonValueFromRoot(
+            field.value,
+          );
         }
         return argumentObjectValue;
+      }
+
+      case Kind.LIST: {
+        const nodeValues = node.values;
+        const values: JSONValue[] = [];
+        for (const node of nodeValues) {
+          values.push(this.getJsonValueFromRoot(node));
+        }
+        return values;
       }
 
       default:
         throw new Error(
           [
-            `unsupported node '${astNode.name}' of type '${astNode.kind}',`,
+            `unsupported node '${
+              "name" in node ? node.name : ""
+            }' of type '${node.kind}',`,
             `cannot get the argument value from it`,
           ].join(" "),
         );
     }
+  }
+
+  /**
+   * Returns the value of a given argument node.
+   *
+   * The value returned can be used to check that an argument meets all the
+   * requirements of a given JSON schema.
+   * see: getNodeValue
+   */
+  private getArgumentValue(
+    astNode: ast.ArgumentNode | ast.ObjectFieldNode,
+  ): JSONValue {
+    return this.getJsonValueFromRoot(astNode.value);
   }
 
   /**

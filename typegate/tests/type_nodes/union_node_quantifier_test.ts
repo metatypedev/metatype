@@ -7,22 +7,50 @@ test(
   async (t) => {
     const e = await t.pythonFile("type_nodes/union_node_quantifier.py");
 
-    await t.should("work with optional field non-completed", async () => {
+    await t.should("work with optionals and list arguments", async () => {
       await gql`
           query {
             registerPhone(
               phone: {
                 name: "LG",
-                battery: 5000
+                battery: 5000,
+                metadatas: [
+                  {label: "IMEI", content: "1234567891011", source: "Factory1234"},
+                  {label: "ref", content: "LG_1234"},
+                ]
               }
             ) {
               message
+              type
+              phone {
+                name
+                metadatas {
+                  label
+                  content
+                  source
+                }
+              }
             }
           }
         `
         .expectData({
           registerPhone: {
-            message: "LG (Basic) registered",
+            message: "LG registered",
+            type: "Basic",
+            phone: {
+              name: "LG",
+              metadatas: [
+                {
+                  label: "IMEI",
+                  content: "1234567891011",
+                  source: "Factory1234",
+                },
+                {
+                  label: "ref",
+                  content: "LG_1234",
+                },
+              ],
+            },
           },
         })
         .on(e);
@@ -33,19 +61,29 @@ test(
         query {
           registerPhone(
             phone: {
-              name: "LG",
-              camera: 57,
-              battery: 5000
+              name: "SAMSUNG",
+              camera: 50,
+              battery: 5000,
               os: "Android"
             }
           ) {
             message
+            type
+            phone {
+              name
+              os
+            }
           }
         }
       `
         .expectData({
           registerPhone: {
-            message: "LG registered",
+            message: "SAMSUNG registered",
+            type: "Smartphone",
+            phone: {
+              name: "SAMSUNG",
+              os: "Android",
+            },
           },
         })
         .on(e);
