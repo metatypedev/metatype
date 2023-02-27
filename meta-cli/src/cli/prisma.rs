@@ -10,10 +10,9 @@ use crate::{
     },
 };
 use anyhow::{bail, Context, Result};
-use base64::{engine::general_purpose::STANDARD, Engine};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use flate2::{write::GzEncoder, Compression};
+use common::archive::archive;
 use indoc::indoc;
 use prisma_models::psl;
 use question::{Answer, Question};
@@ -156,12 +155,7 @@ impl Action for Deploy {
             .join(&self.typegraph)
             .join(&self.runtime);
 
-        let enc = GzEncoder::new(Vec::new(), Compression::default());
-        let mut tar = tar::Builder::new(enc);
-        tar.append_dir_all("migrations", migrations_path.as_path())?;
-        let enc = tar.into_inner()?;
-        let migrations = enc.finish()?;
-        let migrations = STANDARD.encode(migrations);
+        let migrations = archive(migrations_path.as_path())?;
 
         let node_config = config.node("deploy");
         let node_url = node_config.url(self.gate.clone());
@@ -351,7 +345,7 @@ impl PrismaMigrate {
             runtime.as_deref(),
         )?;
         let migrations = if let Some(path) = migrations_path {
-            Some(common::migrations::archive(path)?)
+            Some(common::archive::archive(path)?)
         } else {
             None
         };
@@ -375,7 +369,7 @@ impl PrismaMigrate {
             .as_ref()
             .expect("migrations should have been updated"); // migrations should have been set
 
-        common::migrations::unpack(migrations_path, self.migrations)?;
+        common::archive::unpack(migrations_path, self.migrations)?;
         Ok(())
     }
 

@@ -7,13 +7,11 @@ sidebar_position: 1
 
 ## diff
 
-**Type:**
-[object_16!](/docs/reference/typegate/prisma-migration/objects#object_16)
+**Type:** [object_16!](/docs/reference/typegate/prisma-migration/objects#object_16)
 
 diff field
 
 Policies:
-
 - admin_only
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>

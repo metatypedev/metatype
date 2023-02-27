@@ -19,6 +19,9 @@ import { ArgumentCollector, ComputeArg } from "./args.ts";
 import { FromVars } from "../runtimes/graphql.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
+import { getLogger } from "../log.ts";
+
+const logger = getLogger(import.meta);
 
 interface Node {
   name: string;
@@ -111,9 +114,8 @@ export class Planner {
       : [];
     const props = (typ.type === Type.OBJECT && typ.properties) || {};
 
-    // TODO: use logger
     this.verbose &&
-      console.log(
+      logger.debug(
         this.tg.root.title,
         name,
         args.map((n) => n.name?.value),

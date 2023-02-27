@@ -12,7 +12,6 @@ sidebar_position: 1
 typegraph field
 
 Policies:
-
 - admin_only
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
@@ -39,5 +38,4 @@ name<br />
 typegraphs field
 
 Policies:
-
 - admin_only

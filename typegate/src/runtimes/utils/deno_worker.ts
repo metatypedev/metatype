@@ -11,7 +11,6 @@ import {
 } from "./codes.ts";
 
 let logger = getLogger("worker");
-logger.info("start webworker");
 
 let initData = null as unknown as { name: string };
 

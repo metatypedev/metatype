@@ -46,10 +46,13 @@ import type {
   Typegraph as TypeGraphDS,
 } from "./types/typegraph.ts";
 import { TemporalRuntime } from "./runtimes/temporal.ts";
+import { getLogger } from "./log.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
 export type RuntimeResolver = Record<string, Runtime>;
+
+const _logger = getLogger(import.meta);
 
 const runtimeInit: RuntimeInit = {
   s3: S3Runtime.init,
@@ -180,7 +183,7 @@ export class TypeGraph {
           }`,
         );
 
-        console.log(`init ${runtime.name} (${idx})`);
+        //logger.debug(`init ${runtime.name} (${idx})`);
         return runtimeInit[runtime.name]({
           typegraph,
           materializers: typegraph.materializers.filter(
@@ -206,11 +209,11 @@ export class TypeGraph {
 
   async deinit(): Promise<void> {
     for await (
-      const [idx, runtime] of this.runtimeReferences.map(
+      const [_idx, runtime] of this.runtimeReferences.map(
         (rt, i) => [i, rt] as const,
       )
     ) {
-      console.log(`deinit runtime ${idx}`);
+      //logger.debug(`deinit runtime ${idx}`);
       await runtime.deinit();
     }
     if (this.introspection) {

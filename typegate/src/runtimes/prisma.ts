@@ -11,6 +11,9 @@ import * as ast from "graphql/ast";
 import { ComputeArg } from "../planner/args.ts";
 import { buildRawQuery } from "./utils/graphql_inline_vars.ts";
 import { Materializer } from "../types/typegraph.ts";
+import { getLogger } from "../log.ts";
+
+const logger = getLogger(import.meta);
 
 export const makeDatasource = (uri: string) => {
   const scheme = new URL(uri).protocol.slice(0, -1);
@@ -54,7 +57,6 @@ export class PrismaRuntime extends GraphQLRuntime {
       args.connection_string_secret as string,
     ));
     const schema = `${datasource}${args.datamodel}`;
-    //console.log(schema);
     const instance = new PrismaRuntime(schema);
     await instance.registerEngine(typegraph.types[0].title);
     return instance;
@@ -100,7 +102,7 @@ export class PrismaRuntime extends GraphQLRuntime {
     return async ({ _: { variables } }) => {
       const startTime = performance.now();
       const q = typeof query === "function" ? query(variables) : query;
-      console.log(`remote graphql: ${q}`);
+      logger.debug(`remote graphql: ${q}`);
 
       const ret = nativeResult(
         await native.prisma_query({
@@ -113,7 +115,7 @@ export class PrismaRuntime extends GraphQLRuntime {
         }),
       );
       const endTime = performance.now();
-      console.log(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
+      logger.debug(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
       const res = JSON.parse(ret.res);
       if ("errors" in res) {
         throw new ResolverError(

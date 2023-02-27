@@ -163,13 +163,13 @@ const authorize = async (
   args: Record<string, unknown>,
 ): Promise<true | null> => {
   if (Object.values(checks).length < 1) {
-    // null = inherit
+    // null means inherited
     return null;
   }
 
   const [check, ...nextChecks] = checks;
   const decision = await policiesRegistry[check](args);
-  verbose && console.log(stageId, decision);
+  // verbose && console.log(stageId, decision);
 
   if (decision === null) {
     // next policy
