@@ -302,6 +302,19 @@ export class ArgumentCollector {
    */
   private getArgumentSchema(typenode: TypeNode): JSONSchema {
     switch (typenode.type) {
+      case Type.OPTIONAL: {
+        // Note:
+        // The field `item` does not exist in JSON Schema
+        // we must get its schema and make the type nullable
+        const itemTypeNode = this.tg.type(typenode.item);
+        const nullableType = [itemTypeNode.type, "null"];
+        const itemSchema = this.getArgumentSchema(itemTypeNode);
+        const schema = {
+          ...itemSchema,
+          type: nullableType,
+        };
+        return schema;
+      }
       case Type.ARRAY: {
         const itemsTypeNode = this.tg.type(typenode.items);
         const schema = {
