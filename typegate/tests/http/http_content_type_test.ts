@@ -57,10 +57,6 @@ test("http custom content-type queries", async (t) => {
   mf.mock("POST@/api/sum_range", async (req) => {
     const formData: FormData = await req.formData();
     // the boundary is expected to be randomized
-    console.log(
-      "content-type assigned: ",
-      req.headers.get("content-type"),
-    );
     const start = Number(formData.get("start") ?? 0);
     const end = Number(formData.get("end") ?? 1);
     const result = removeRandomBoundary({

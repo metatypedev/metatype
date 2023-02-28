@@ -5,7 +5,7 @@ import * as Sentry from "sentry";
 import { ComputeStage } from "../engine.ts";
 import type { TypeGraph, TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Runtime } from "./Runtime.ts";
-import { getLogger } from "../log.ts";
+import { envSharedWithWorkers, getLogger } from "../log.ts";
 import { FuncTask, ImportFuncTask, Task, TaskContext } from "./utils/codes.ts";
 import { ensure, envOrFail } from "../utils.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
@@ -16,10 +16,10 @@ import * as ast from "graphql/ast";
 const logger = getLogger(import.meta);
 
 const localDir = dirname(fromFileUrl(import.meta.url));
-const workerFile = toFileUrl(resolve(localDir, "utils/deno-worker.ts"));
+const workerFile = toFileUrl(resolve(localDir, "utils/deno_worker.ts"));
 
 const defaultPermissions = {
-  env: ["LOG_LEVEL"],
+  env: envSharedWithWorkers,
   hrtime: false,
   net: false,
   ffi: false,
@@ -270,7 +270,7 @@ class OnDemandWorker {
 
   worker(): Worker {
     if (!this.lazyWorker) {
-      logger.info(`spawn worker ${this.name} for ${this.tg.types[0].title}`);
+      //logger.info(`spawn worker ${this.name} for ${this.tg.types[0].title}`);
       this.lazyWorker = new Worker(workerFile, {
         type: "module",
         deno: {

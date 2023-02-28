@@ -7,6 +7,7 @@ import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import {
   isArray,
+  isEither,
   isFunction,
   isObject,
   isOptional,
@@ -315,6 +316,24 @@ export class TypeGraphRuntime extends Runtime {
         description: () => `${type.title} type`,
         possibleTypes: () => {
           const variantNodes = type.anyOf.map((typeIndex) =>
+            this.tg.types[typeIndex]
+          );
+
+          return variantNodes.map((variant) =>
+            this.formatType(variant, false, false)
+          );
+        },
+      };
+    }
+
+    if (isEither(type)) {
+      return {
+        ...common,
+        kind: () => TypeKind.UNION,
+        name: () => type.title,
+        description: () => `${type.title} type`,
+        possibleTypes: () => {
+          const variantNodes = type.oneOf.map((typeIndex) =>
             this.tg.types[typeIndex]
           );
 

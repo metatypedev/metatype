@@ -21,9 +21,10 @@ use prisma_models::psl;
 use psl::diagnostics::Diagnostics;
 use query_connector::error::ConnectorError;
 use query_core::executor::TransactionOptions;
+use query_core::protocol::EngineProtocol;
 use query_core::CoreError;
 use query_core::{executor, schema::QuerySchema, schema_builder, QueryExecutor, TxId};
-use request_handlers::{GraphQlBody, GraphQlHandler, PrismaResponse};
+use request_handlers::{PrismaResponse, RequestBody, RequestHandler};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
@@ -76,6 +77,7 @@ pub struct EngineBuilder {
     schema: Arc<psl::ValidatedSchema>,
     config_dir: PathBuf,
     env: HashMap<String, String>,
+    engine_protocol: EngineProtocol,
 }
 
 /// Internal structure for querying and reconnecting with the engine.
@@ -85,6 +87,7 @@ pub struct ConnectedEngine {
     executor: Executor,
     config_dir: PathBuf,
     env: HashMap<String, String>,
+    engine_protocol: EngineProtocol,
 }
 
 /// Returned from the `serverInfo` method in javascript.
@@ -97,14 +100,16 @@ pub struct ServerInfo {
 }
 
 impl ConnectedEngine {
-    /// The schema AST for Query Engine core.
     pub fn query_schema(&self) -> &Arc<QuerySchema> {
         &self.query_schema
     }
 
-    /// The query executor.
     pub fn executor(&self) -> &(dyn QueryExecutor + Send + Sync) {
         &*self.executor
+    }
+
+    pub fn engine_protocol(&self) -> EngineProtocol {
+        self.engine_protocol
     }
 }
 
@@ -165,6 +170,7 @@ impl QueryEngine {
             schema: Arc::new(schema),
             config_dir,
             env,
+            engine_protocol: EngineProtocol::Graphql,
         };
 
         Ok(Self {
@@ -208,6 +214,7 @@ impl QueryEngine {
                 executor,
                 config_dir: builder.config_dir.clone(),
                 env: builder.env.clone(),
+                engine_protocol: builder.engine_protocol,
             })
         }
         .await?;
@@ -226,6 +233,7 @@ impl QueryEngine {
             schema: engine.schema.clone(),
             config_dir: engine.config_dir.clone(),
             env: engine.env.clone(),
+            engine_protocol: engine.engine_protocol(),
         };
 
         *inner = Inner::Builder(builder);
@@ -234,10 +242,14 @@ impl QueryEngine {
     }
 
     /// If connected, sends a query to the core and returns the response.
-    pub async fn query(&self, query: GraphQlBody, tx_id: Option<String>) -> Result<PrismaResponse> {
+    pub async fn query(&self, query: RequestBody, tx_id: Option<String>) -> Result<PrismaResponse> {
         match *self.inner.read().await {
             Inner::Connected(ref engine) => {
-                let handler = GraphQlHandler::new(engine.executor(), engine.query_schema());
+                let handler = RequestHandler::new(
+                    engine.executor(),
+                    engine.query_schema(),
+                    engine.engine_protocol(),
+                );
                 Ok(handler.handle(query, tx_id.map(TxId::from), None).await)
             }
             Inner::Builder(_) => Err(ApiError::NotConnected),
@@ -252,7 +264,11 @@ impl QueryEngine {
                 let tx_opts: TransactionOptions = serde_json::from_str(&input)?;
                 match engine
                     .executor()
-                    .start_tx(engine.query_schema().clone(), tx_opts)
+                    .start_tx(
+                        engine.query_schema().clone(),
+                        engine.engine_protocol(),
+                        tx_opts,
+                    )
                     .await
                 {
                     Ok(tx_id) => Ok(json!({ "id": tx_id.to_string() }).to_string()),

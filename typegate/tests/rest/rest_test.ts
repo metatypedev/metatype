@@ -34,7 +34,6 @@ test("Rest queries", async (t) => {
 
   mf.mock("GET@/api/posts", (req) => {
     const tags = new URL(req.url).searchParams.getAll("tags");
-    console.log({ tags });
     const posts = tags.reduce((list, tag) => {
       switch (tag) {
         case "even":

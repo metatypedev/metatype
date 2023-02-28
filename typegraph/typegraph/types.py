@@ -572,7 +572,16 @@ class array(typedef):
 
 @frozen
 class union(typedef):
-    variants: Tuple[TypeNode]
+    """A `union` type represents a general union with the variants provided.
+
+    The `union` type is equivalent to the `anyOf` field in JSON Schema where
+    the given data must be valid against one or more of the given subschemas.
+    """
+
+    variants: List[TypeNode] = list()
+
+    def __hash__(self):
+        return hash(tuple(self.variants))
 
     @property
     def edges(self) -> List[Node]:
@@ -582,6 +591,30 @@ class union(typedef):
     def data(self, collector: Collector) -> dict:
         ret = super().data(collector)
         ret["anyOf"] = [collector.index(v) for v in ret.pop("variants")]
+        return ret
+
+
+@frozen
+class either(typedef):
+    """An `either` type represents a disjoint union with the variants provided.
+
+    The `either` type is equivalent to the `oneOf` field in JSON Schema where
+    the given data must be valid against exactly one of the given subschemas.
+    """
+
+    variants: List[TypeNode] = list()
+
+    def __hash__(self):
+        return hash(tuple(self.variants))
+
+    @property
+    def edges(self) -> List[Node]:
+        nodes = super().edges + list(self.variants)
+        return nodes
+
+    def data(self, collector: Collector) -> dict:
+        ret = super().data(collector)
+        ret["oneOf"] = [collector.index(v) for v in ret.pop("variants")]
         return ret
 
 
