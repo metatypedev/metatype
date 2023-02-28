@@ -9,7 +9,7 @@ import { configOrExit } from "./utils.ts";
 if (!Deno.env.has("VERSION")) {
   // set version for config and workers, only running in main engine
   const { get_version } = await import("native");
-  Deno.env.set("VERSION", get_version());
+  Deno.env.set("VERSION", await get_version());
 }
 
 export const zBooleanString = z.preprocess(

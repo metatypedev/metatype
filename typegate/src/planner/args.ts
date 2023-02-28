@@ -111,11 +111,13 @@ export class ArgumentCollector {
         throw new Error(`Unexpected argument ${this.stack[0].argName}`);
       }
       throw e;
-    }
-
-    const popped = this.stack.pop();
-    if (popped != context) {
-      throw new Error("Invalid state");
+    } finally {
+      const popped = this.stack.pop();
+      if (popped != context) {
+        // unreachable!
+        // deno-lint-ignore no-unsafe-finally
+        throw new Error("Invalid state");
+      }
     }
 
     return res;
