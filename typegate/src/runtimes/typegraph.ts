@@ -26,6 +26,7 @@ import {
 } from "../typegraph/visitor.ts";
 import { distinctBy } from "std/collections/distinct_by.ts";
 import { isInjected } from "../typegraph/utils.ts";
+import { PolicyIndices } from "../types/typegraph.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -351,7 +352,16 @@ export class TypeGraphRuntime extends Runtime {
   };
 
   policyDescription(type: TypeNode): string {
-    const policies = type.policies.map((p: number) => this.tg.policies[p].name);
+    const describeOne = (p: number) => this.tg.policies[p].name;
+    const describe = (p: PolicyIndices) => {
+      if (typeof p === "number") {
+        return describeOne(p);
+      }
+      return Object.entries(p).map(
+        ([eff, polIdx]) => `${eff}:${describeOne(polIdx)}`,
+      ).join("; ");
+    };
+    const policies = type.policies.map(describe);
 
     let ret = "\n\nPolicies:\n";
 

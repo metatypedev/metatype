@@ -78,9 +78,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -139,9 +137,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -235,9 +231,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -331,9 +325,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -418,9 +410,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -495,9 +485,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -584,9 +572,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -675,9 +661,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -746,9 +730,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -817,9 +799,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -878,9 +858,7 @@
             "policies": {
               "type": "array",
               "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
+                "$ref": "#/definitions/PolicyIndices"
               }
             },
             "description": {
@@ -914,6 +892,63 @@
           }
         }
       ]
+    },
+    "PolicyIndices": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        {
+          "$ref": "#/definitions/PolicyIndicesByEffect"
+        }
+      ]
+    },
+    "PolicyIndicesByEffect": {
+      "type": "object",
+      "properties": {
+        "none": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "create": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "delete": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "update": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "upsert": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
     },
     "Materializer": {
       "type": "object",
@@ -990,7 +1025,6 @@
     "Policy": {
       "type": "object",
       "required": [
-        "effect_materializers",
         "materializer",
         "name"
       ],
@@ -1000,46 +1034,6 @@
         },
         "materializer": {
           "type": "integer",
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "effect_materializers": {
-          "$ref": "#/definitions/EffectMaterializers"
-        }
-      }
-    },
-    "EffectMaterializers": {
-      "type": "object",
-      "properties": {
-        "create": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "update": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "upsert": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
-        },
-        "delete": {
-          "type": [
-            "integer",
-            "null"
-          ],
           "format": "uint32",
           "minimum": 0.0
         }

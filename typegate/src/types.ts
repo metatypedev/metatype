@@ -6,7 +6,7 @@ import type { TypeGraphDS, TypeMaterializer } from "./typegraph.ts";
 import { ObjectNode, TypeNode } from "./type_node.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "./planner/args.ts";
-import { EffectType } from "./types/typegraph.ts";
+import { EffectType, PolicyIndices } from "./types/typegraph.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;
@@ -70,5 +70,5 @@ export interface ComputeStageProps {
 
 export type StageId = string;
 export type PolicyIdx = number;
-export type PolicyList = Array<PolicyIdx>;
+export type PolicyList = Array<PolicyIndices>;
 export type TypeIdx = number;

@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from re import sub as reg_sub
-from typing import List, Optional, Iterator
+from typing import List, Optional, Union
 
 # from collections.abc import Iterator
 import itertools
@@ -13,7 +13,8 @@ from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.deno import PureFunMat
-from typegraph.utils.attrs import always
+from typegraph.utils import drop_nones
+from typegraph.utils.attrs import always, asdict
 from typegraph.utils.sanitizers import sanitize_ts_string
 from typegraph.effects import EffectType
 
@@ -31,51 +32,75 @@ EFFECTS = [eff.value for eff in EffectType]
 @frozen
 class Policy(Node):
     name: str = field(factory=policy_name_factory, kw_only=True)
-    mat: Materializer  # Should be a PureFunMat?
-    create: Optional[Materializer] = field(kw_only=True, default=None)
-    update: Optional[Materializer] = field(kw_only=True, default=None)
-    upsert: Optional[Materializer] = field(kw_only=True, default=None)
-    delete: Optional[Materializer] = field(kw_only=True, default=None)
+    mat: Materializer
     collector_target: str = always(Collector.policies)
-
-    def __attrs_post_init__(self):
-        for mat in self.__materializers:
-            assert mat.effect.is_none(), "policy materializer cannot have effect"
 
     def named(self, name: str):
         return evolve(self, name=name)
 
     @property
-    def __materializers(self) -> Iterator[Materializer]:
-        return itertools.chain(
-            (self.mat,),
-            (getattr(self, eff) for eff in EFFECTS if getattr(self, eff) is not None),
-        )
-
-    @property
     def edges(self) -> List[Node]:
-        return list(self.__materializers)
+        return [self.mat]
 
     def data(self, collector):
-        effect_materializers = {
-            eff: collector.index(getattr(self, eff))
-            for eff in EFFECTS
-            if getattr(self, eff) is not None
-        }
-
         return {
             "name": self.name,
-            "materializer": collector.index(self.mat),  # default materializer
-            "effect_materializers": effect_materializers,
+            "materializer": collector.index(self.mat),
         }
 
     @classmethod
-    def get_from(cls, p) -> "Policy":
+    def create_from(cls, p) -> Union["Policy", "EffectPolicies"]:
         if isinstance(p, Materializer):
             return cls(p)
         if isinstance(p, cls):
             return p
+        if isinstance(p, dict):
+            return EffectPolicies(**p)
         raise Exception(f"Cannot create Policy from a {type(p).__name__}")
+
+
+effect_values = ["none"] + [e.value for e in EffectType]
+
+
+class EffectPolicies(Node):
+    none: Optional[Policy]
+    update: Optional[Policy]
+    upsert: Optional[Policy]
+    create: Optional[Policy]
+    delete: Optional[Policy]
+
+    def __init__(self, **kwargs):
+        super().__init__(None)  # collector_target is none
+        count = 0
+        for eff in effect_values:
+            arg = kwargs.pop(eff, None)
+            if arg is None:
+                setattr(self, eff, None)
+                continue
+
+            p = Policy.create_from(arg)
+            if not isinstance(p, Policy):
+                raise Exception(f"Cannot create Policy from type '{type(p).__name__}'")
+            setattr(self, eff, p)
+            count += 1
+
+        if count == 0:
+            raise Exception("EffectPolicies: Must set at least one policy")
+
+        if len(kwargs) > 0:
+            args = ", ".join(map(lambda name: f"'{name}'", kwargs))
+            raise Exception(f"EffectPolicies: Unexpected keyword arguments: {args}")
+
+    @property
+    def edges(self) -> List[Node]:
+        return list(filter(None, map(lambda e: getattr(self, e), effect_values)))
+
+    def data(self, collector):
+        return {
+            eff: collector.index(getattr(self, eff))
+            for eff in effect_values
+            if getattr(self, eff) is not None
+        }
 
 
 def public(name: str = "__public"):

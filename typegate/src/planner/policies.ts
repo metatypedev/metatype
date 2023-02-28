@@ -10,9 +10,8 @@ import {
   StageId,
   TypeIdx,
 } from "../types.ts";
-import { EffectType } from "../types/typegraph.ts";
+import { EffectType, PolicyIndices } from "../types/typegraph.ts";
 import { ensure } from "../utils.ts";
-import { mapValues } from "std/collections/map_values.ts";
 import { getLogger } from "../log.ts";
 import { Type } from "../type_node.ts";
 
@@ -27,7 +26,7 @@ export class OperationPolicies {
   // should be private -- but would not be testable
   functions: Map<StageId, SubtreeData>;
   private policyLists: Map<TypeIdx, PolicyList>;
-  private resolvers: Map<PolicyIdx, Record<EffectType | "none", Resolver>>;
+  private resolvers: Map<PolicyIdx, Resolver>;
 
   constructor(
     private tg: TypeGraph,
@@ -44,6 +43,7 @@ export class OperationPolicies {
         "unexpected",
       );
       for (const types of referencedTypes.values()) {
+        // set policyLists
         for (const typeIdx of types) {
           if (this.policyLists.has(typeIdx)) {
             continue;
@@ -75,28 +75,17 @@ export class OperationPolicies {
         // throw new Error("TODO: not supported yet");
       }
 
-      const policy = this.tg.policy(idx);
-      const mat = this.tg.policyMaterializer(policy);
-      const runtime = this.tg.runtimeReferences[mat.runtime] as DenoRuntime;
-      ensure(
-        runtime.constructor === DenoRuntime,
-        "Policies must run on a Deno Runtime",
-      );
-
-      const materializers = {
-        none: this.tg.policyMaterializer(policy),
-        update: this.tg.policyMaterializer(policy, "update"),
-        upsert: this.tg.policyMaterializer(policy, "upsert"),
-        create: this.tg.policyMaterializer(policy, "create"),
-        delete: this.tg.policyMaterializer(policy, "delete"),
-      };
-      this.resolvers.set(
-        idx,
-        mapValues(
-          materializers,
-          (mat) => (args) => runtime.delegate(mat, false)(args),
-        ),
-      );
+      for (const polIdx of iterIndices(idx)) {
+        const mat = this.tg.policyMaterializer(this.tg.policy(polIdx));
+        const runtime = this.tg.runtimeReferences[mat.runtime] as DenoRuntime;
+        ensure(
+          runtime.constructor === DenoRuntime,
+          "Policies must run on a Deno Runtime",
+        );
+        if (!this.resolvers.has(polIdx)) {
+          this.resolvers.set(polIdx, runtime.delegate(mat, false));
+        }
+      }
     }
   }
 
@@ -114,10 +103,7 @@ export class OperationPolicies {
       "upsert": new Set(),
     };
 
-    const cache = new Map<
-      PolicyIdx,
-      Partial<Record<EffectType | "none", boolean | null>>
-    >();
+    const cache = new Map<PolicyIdx, boolean | null>();
 
     const getResolverResult = async (
       idx: PolicyIdx,
@@ -129,16 +115,11 @@ export class OperationPolicies {
             this.tg.policy(idx).name
           }'[${idx}] with effect '${effect}'...`,
         );
-      if (!cache.has(idx)) {
-        cache.set(idx, {});
-      }
-      const entries = cache.get(idx)!;
-      if (effect in entries) {
-        verbose && logger.info(`> authorize: ${entries[effect]} (from cache)`);
-        return entries[effect] as boolean | null;
+      if (cache.has(idx)) {
+        return cache.get(idx) as boolean | null;
       }
 
-      const resolver = this.resolvers.get(idx)![effect];
+      const resolver = this.resolvers.get(idx);
       ensure(
         resolver != null,
         `Could not find resolver for the policy '${
@@ -154,11 +135,12 @@ export class OperationPolicies {
           effect: effect === "none" ? null : effect,
         },
       }) as boolean | null;
-      entries[effect] = res;
+      cache.set(idx, res);
       verbose && logger.info(`> authorize: ${res}`);
       return res;
     };
 
+    // TODO refactor: too much indentation
     for (const [_stageId, subtree] of this.functions) {
       const effect = this.tg.materializer(
         this.tg.type(subtree.funcTypeIdx, Type.FUNCTION).materializer,
@@ -169,8 +151,10 @@ export class OperationPolicies {
             continue;
           }
           let res: boolean | null;
-          for (const idx of this.policyLists.get(typeIdx) ?? []) {
-            res = await getResolverResult(idx, effect);
+          for (const indices of this.policyLists.get(typeIdx) ?? []) {
+            const idx = typeof indices === "number" ? indices : indices[effect] ?? null;
+            // no policy for effect implies DENY
+            res = idx == null ? false : await getResolverResult(idx, effect);
             if (res == null) {
               continue;
             }
@@ -178,7 +162,7 @@ export class OperationPolicies {
               break;
             }
 
-            const policyName = this.tg.policy(idx).name;
+            const policyName = idx == null ? "__deny" : this.tg.policy(idx).name;
             const typeName = this.tg.type(typeIdx).title;
             const details = [
               `policy '${policyName}'`,
@@ -252,13 +236,12 @@ export class OperationPoliciesBuilder {
   }
 }
 
-interface TypePolicies {
-  list: PolicyList;
-  stages: StageId[];
-}
-
-interface FunctionPolicies {
-  funcTypeIdx: TypeIdx;
-  isRootFunc: boolean;
-  policies: Map<TypeIdx, TypePolicies>;
+function* iterIndices(indices: PolicyIndices): IterableIterator<number> {
+  if (typeof indices === "number") {
+    yield indices;
+  } else {
+    for (const idx of Object.values(indices) as number[]) {
+      yield idx;
+    }
+  }
 }

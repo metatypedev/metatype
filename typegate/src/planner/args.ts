@@ -17,7 +17,7 @@ import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
 import { JSONSchema, SchemaValidatorError, trimType } from "../typecheck.ts";
-import { EitherNode } from "../types/typegraph.ts";
+import { EffectType, EitherNode } from "../types/typegraph.ts";
 
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
@@ -30,6 +30,12 @@ class MandatoryArgumentError extends Error {
     super(
       `mandatory argument '${argName}' of type '${typeNode.type}' not found`,
     );
+  }
+}
+
+class ForbiddenArgumentError extends Error {
+  constructor() {
+    super(`Unexpected argument`);
   }
 }
 
@@ -53,6 +59,14 @@ interface CollectedArg {
   deps: string[];
 }
 
+interface CollectArgContext {
+  astNode: ast.ArgumentNode | ast.ObjectFieldNode | undefined;
+  typeIdx: number;
+  parentProps: Record<string, number>;
+  argName: string;
+  argumentSchema?: JSONSchema;
+}
+
 /**
  * Utility class to collect the arguments for fields.
  *
@@ -74,7 +88,9 @@ interface CollectedArg {
  * ```
  */
 export class ArgumentCollector {
-  constructor(private tg: TypeGraph) {}
+  stack: CollectArgContext[] = [];
+
+  constructor(private tg: TypeGraph, private effect: EffectType | "none") {}
 
   /** Collect the arguments for the node `astNode` corresponding to type at `typeIdx` */
   collectArg(
@@ -84,14 +100,36 @@ export class ArgumentCollector {
     argName: string,
     argumentSchema?: JSONSchema,
   ): CollectedArg {
-    const typ = this.tg.type(typeIdx);
-    if (typ == null) {
-      throw new Error(
-        `Schema for the argument type idx=${typeIdx} cannot be found`,
-      );
+    const context = { astNode, typeIdx, parentProps, argName, argumentSchema };
+    this.stack.push(context);
+
+    let res: CollectedArg;
+    try {
+      res = this.collectArgImpl(context);
+    } catch (e) {
+      if (e instanceof ForbiddenArgumentError) {
+        throw new Error(`Unexpected argument ${this.stack[0].argName}`);
+      }
+      throw e;
     }
 
+    const popped = this.stack.pop();
+    if (popped != context) {
+      throw new Error("Invalid state");
+    }
+
+    return res;
+  }
+
+  private collectArgImpl(context: CollectArgContext): CollectedArg {
+    const { astNode, typeIdx, parentProps, argName, argumentSchema } = context;
+
+    const typ = this.tg.type(typeIdx);
+
     const policies = this.getPolicies(typ);
+    if (policies == null) {
+      throw new Error(`Unexpected argument '${argName}'`);
+    }
 
     if ("injection" in typ) {
       ensure(astNode == null, `cannot set injected arg: '${typ.title}'`);
@@ -553,6 +591,7 @@ export class ArgumentCollector {
       throw new Error(`Expected a type at index '${typeIdx}'`);
     }
     const policies = this.getPolicies(typ);
+
     if ("injection" in typ) {
       const [compute, deps] = this.collectInjection(typ, parentProps);
       return { compute, deps, policies };
@@ -663,8 +702,18 @@ export class ArgumentCollector {
     if (typ.policies.length === 0) {
       return {};
     }
+
     return {
-      [typ.title]: typ.policies.map((p) => this.tg.policy(p).name),
+      [typ.title]: typ.policies.map((p) => {
+        if (typeof p === "number") {
+          return this.tg.policy(p).name;
+        }
+        const polIdx = p[this.effect];
+        if (polIdx == null) {
+          throw new ForbiddenArgumentError();
+        }
+        return this.tg.policy(polIdx).name;
+      }),
     };
   }
 }

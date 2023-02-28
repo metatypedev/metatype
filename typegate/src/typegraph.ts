@@ -244,13 +244,8 @@ export class TypeGraph {
     return this.tg.materializers[idx];
   }
 
-  policyMaterializer(
-    policy: TypePolicy,
-    effect: EffectType | null = null,
-  ): TypeMaterializer {
-    const defaultMatIdx = policy.materializer;
-    const matIdx = (effect && policy.effect_materializers[effect]) ??
-      defaultMatIdx;
+  policyMaterializer(policy: TypePolicy): TypeMaterializer {
+    const matIdx = policy.materializer;
     return this.materializer(matIdx);
   }
 

@@ -353,7 +353,10 @@ export class Planner {
         {} as Record<string, ast.ArgumentNode>,
       );
 
-    const argumentCollector = new ArgumentCollector(this.tg);
+    const argumentCollector = new ArgumentCollector(
+      this.tg,
+      this.tg.materializer(schema.materializer).effect.effect ?? "none",
+    );
     const nestedDepsUnion = [];
     for (
       const [argName, argIdx] of Object.entries(argSchema.properties ?? {})
