@@ -31,7 +31,6 @@ export const renderDebugAuth = async (
             let cookies = document.cookie.split(";");
             for (let i = 0; i < cookies.length; i += 1) {
                 var cookie = cookies[i];
-                console.log(cookie)
                 var idx = cookie.indexOf("=");
                 var name = idx > -1 ? cookie.substr(0, idx): cookie;
                 document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";

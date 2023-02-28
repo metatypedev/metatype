@@ -1,6 +1,6 @@
 [package]
 name = "xtask"
-version = "0.0.3-dev.4"
+version = "0.0.3-dev.6"
 edition = "2021"
 
 [dependencies]
@@ -8,6 +8,6 @@ anyhow = "1.0.69"
 clap = { version = "4.1.6", features = ["derive"] }
 common = { path = "../common", features = ["codegen"] }
 typescript = { path = "../typescript" }
-schemars = { version = "0.8.11", features = [] }
+schemars = { version = "0.8.12", features = [] }
 serde_json = "1.0.93"
 project-root = "0.2.2"

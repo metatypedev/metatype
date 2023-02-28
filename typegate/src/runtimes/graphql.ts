@@ -9,6 +9,9 @@ import { Kind } from "graphql";
 import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
 import * as ForwardVars from "./utils/graphql_forward_vars.ts";
 import * as InlineVars from "./utils/graphql_inline_vars.ts";
+import { getLogger } from "../log.ts";
+
+const logger = getLogger(import.meta);
 
 export interface FromVars<T> {
   (variables: Record<string, unknown>): T;
@@ -43,7 +46,7 @@ export class GraphQLRuntime extends Runtime {
       // TODO: filter variables - only include forwared variables
       const ret = await gq(this.endpoint, q, variables);
       if (ret.errors) {
-        console.error(ret.errors);
+        logger.error(ret.errors);
         throw new Error(`From remote graphql: ${ret.errors[0].message}`);
       }
       return path.reduce((r, field) => r[field], ret.data);
@@ -112,7 +115,7 @@ export class GraphQLRuntime extends Runtime {
     })();
 
     verbose &&
-      console.log(
+      logger.debug(
         "remote graphql:",
         typeof query === "string" ? query : " with inlined vars",
       );

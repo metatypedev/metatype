@@ -6,16 +6,14 @@ mod engine;
 mod engine_import;
 mod introspection;
 use introspection::Introspection;
+use once_cell::sync::Lazy;
 mod migration;
 use crate::RT;
 use dashmap::DashMap;
-use lazy_static::lazy_static;
 mod utils;
 use macros::deno;
 
-lazy_static! {
-    static ref ENGINES: DashMap<String, engine_import::QueryEngine> = DashMap::new();
-}
+static ENGINES: Lazy<DashMap<String, engine_import::QueryEngine>> = Lazy::new(DashMap::new);
 
 // introspection
 
@@ -256,7 +254,7 @@ enum UnpackResult {
 
 #[deno]
 fn unpack(input: UnpackInp) -> UnpackResult {
-    match common::migrations::unpack(&input.dest, Some(input.migrations)) {
+    match common::archive::unpack(&input.dest, Some(input.migrations)) {
         Ok(_) => UnpackResult::Ok,
         Err(e) => UnpackResult::Err {
             message: e.to_string(),
@@ -277,7 +275,7 @@ enum ArchiveResult {
 
 #[deno]
 fn archive(input: ArchiveInp) -> ArchiveResult {
-    match common::migrations::archive(input.path) {
+    match common::archive::archive(input.path) {
         Ok(b) => ArchiveResult::Ok { base64: b },
         Err(e) => ArchiveResult::Err {
             message: e.to_string(),

@@ -21,6 +21,7 @@ import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../log.ts";
+const logger = getLogger(import.meta);
 
 interface Node {
   name: string;
@@ -52,7 +53,6 @@ export interface Plan {
  * ```
  */
 export class Planner {
-  logger = getLogger("planner");
   rawArgs: Record<string, ComputeArg> = {};
   policiesBuilder: OperationPoliciesBuilder;
 
@@ -120,9 +120,8 @@ export class Planner {
       : [];
     const props = (typ.type === Type.OBJECT && typ.properties) || {};
 
-    // TODO: use logger
     this.verbose &&
-      console.log(
+      logger.debug(
         this.tg.root.title,
         name,
         args.map((n) => n.name?.value),
