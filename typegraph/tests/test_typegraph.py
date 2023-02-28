@@ -3,7 +3,6 @@
 import frozendict
 
 from typegraph import policies as p
-from typegraph.policies import Policy
 from typegraph import TypeGraph, t
 from typegraph.graph.models import Cors
 from typegraph.runtimes.deno import PureFunMat
@@ -238,15 +237,15 @@ class TestTypegraph:
 
     def test_policy_for_effects(self, overridable):
         with TypeGraph("policy_for_effects") as g:
-            public = p.public().mat
+            public = p.public()
 
             g.expose(
                 test=t.func(t.struct(), t.integer(), PureFunMat("() => 1")).add_policy(
-                    Policy(
-                        public,
-                        update=public,
-                        create=public,
-                    )
+                    {
+                        "none": public,
+                        "update": public,
+                        "create": public,
+                    }
                 )
             )
 
@@ -262,7 +261,7 @@ class TestTypegraph:
                     },
                     {
                         "runtime": 0,
-                        "policies": [0],
+                        "policies": [{"none": 0, "create": 0, "update": 0}],
                         "safe": True,
                         "rate_calls": False,
                         "type": "function",
@@ -308,13 +307,7 @@ class TestTypegraph:
                         "data": {"script": "var _my_lambda = () => 1;"},
                     },
                 ],
-                "policies": [
-                    {
-                        "name": "policy_5",
-                        "materializer": 0,
-                        "effect_materializers": {"create": 0, "update": 0},
-                    }
-                ],
+                "policies": [{"name": "__public", "materializer": 0}],
                 "meta": {
                     "secrets": [],
                     "auths": [],
