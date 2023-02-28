@@ -119,6 +119,9 @@ export class TypeGraphRuntime extends Runtime {
 
         const myVisitor: TypeVisitorMap = {
           [Type.FUNCTION]: ({ type }) => {
+            // TODO skip if policy check fails
+            // https://metatype.atlassian.net/browse/MET-119
+
             // the struct input of a function never generates a GrahpQL type
             // the actual inputs are the properties
             inputRootTypeIndices.add(type.input);

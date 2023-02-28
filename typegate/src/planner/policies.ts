@@ -70,11 +70,6 @@ export class OperationPolicies {
     this.resolvers = new Map();
     const policies = new Set([...this.policyLists.values()].flat());
     for (const idx of policies) {
-      if (this.tg.introspection) {
-        // TODO
-        // throw new Error("TODO: not supported yet");
-      }
-
       for (const polIdx of iterIndices(idx)) {
         const mat = this.tg.policyMaterializer(this.tg.policy(polIdx));
         const runtime = this.tg.runtimeReferences[mat.runtime] as DenoRuntime;
