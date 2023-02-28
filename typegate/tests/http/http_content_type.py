@@ -22,12 +22,48 @@ with TypeGraph("content-type") as g:
         content_type="multipart/form-data",
     ).add_policy(public)
 
+    qinfos = t.struct(
+        {
+            "queryUrl": t.string(),
+            "formData": t.struct(
+                {
+                    "celcius": t.float(),
+                    "rounded": t.boolean(),
+                }
+            ),
+        }
+    ).named("QInfos")
+
     # testing which `celcius` is populated first
     celcius_to_farenheit = remote.post(
-        "/celcius_to_farenheit/{celcius}?celcius=5678",
-        t.struct({"celcius": t.float()}).named("Celcius"),
-        t.struct({"farenheit": t.float()}).named("Farenheit"),
-        body_fields=("celcius"),
+        "/celcius_to_farenheit",
+        t.struct(
+            {
+                "temperature": t.float(),
+                "rounded": t.boolean().optional(),
+                "celcius_query_one": t.float(),
+                "celcius_query_two": t.float(),
+                "celcius_query_three": t.float(),
+            }
+        ).named("Celcius"),
+        t.struct({"farenheit": t.float(), "qinfos": qinfos}).named("Farenheit"),
+        body_fields=(
+            "celcius",
+            "rounded",
+        ),
+        query_fields=(
+            "celcius_query_one",
+            "celcius_query_two",
+            "celcius_query_three",
+        ),
+        rename_fields=(
+            # body
+            ("temperature", "celcius"),
+            # query params
+            ("celcius_query_one", "celcius"),
+            ("celcius_query_two", "celcius"),
+            ("celcius_query_three", "the_third"),
+        ),
         content_type="multipart/form-data",
     ).add_policy(public)
 

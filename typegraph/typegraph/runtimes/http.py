@@ -85,6 +85,7 @@ class RESTMat(Materializer):
     content_type: str = field(kw_only=True, default="application/json")
     header_prefix: Optional[str] = "header#"
     query_fields: Optional[Tuple[str, ...]] = field(kw_only=True, default=None)
+    rename_fields: Optional[Tuple[Tuple]] = field(kw_only=True, default=None)
     body_fields: Optional[Tuple[str, ...]] = field(kw_only=True, default=None)
     auth_token_field: Optional[str] = field(kw_only=True, default=None)
     materializer_name: str = always("rest")
