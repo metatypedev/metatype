@@ -1,7 +1,6 @@
 from typegraph import t, effects
 from typegraph import TypeGraph
 from typegraph import policies as p
-from typegraph.policies import Policy
 from typegraph.runtimes.deno import PureFunMat, ModuleMat, FunMat
 from typegraph.graph.models import Auth
 
@@ -19,7 +18,9 @@ with TypeGraph("effect-policies", auths=[Auth.jwk("native")]) as g:
             }
         )
         .named("User")
-        .add_policy({"none": public, "update": current_user_only, "delete": current_user_only})
+        .add_policy(
+            {"none": public, "update": current_user_only, "delete": current_user_only}
+        )
         # .add_policy(Policy(public, update=current_user_only, delete=current_user_only))
     )
 

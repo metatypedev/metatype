@@ -152,7 +152,9 @@ export class OperationPolicies {
           }
           let res: boolean | null;
           for (const indices of this.policyLists.get(typeIdx) ?? []) {
-            const idx = typeof indices === "number" ? indices : indices[effect] ?? null;
+            const idx = typeof indices === "number"
+              ? indices
+              : indices[effect] ?? null;
             // no policy for effect implies DENY
             res = idx == null ? false : await getResolverResult(idx, effect);
             if (res == null) {
@@ -162,7 +164,9 @@ export class OperationPolicies {
               break;
             }
 
-            const policyName = idx == null ? "__deny" : this.tg.policy(idx).name;
+            const policyName = idx == null
+              ? "__deny"
+              : this.tg.policy(idx).name;
             const typeName = this.tg.type(typeIdx).title;
             const details = [
               `policy '${policyName}'`,

@@ -31,7 +31,6 @@ import { S3Runtime } from "./runtimes/s3.ts";
 
 import type {
   Cors,
-  EffectType,
   Materializer as TypeMaterializer,
   Policy as TypePolicy,
   Rate,

@@ -247,7 +247,10 @@ class typedef(Node):
         ret["type"] = self.type
         ret["title"] = ret.pop("name")
         ret["runtime"] = collector.index(self.runtime)
-        ret["policies"] = [p.data(collector) if isinstance(p, EffectPolicies) else collector.index(p) for p in self.policies]
+        ret["policies"] = [
+            p.data(collector) if isinstance(p, EffectPolicies) else collector.index(p)
+            for p in self.policies
+        ]
         if self.injection == "parent":
             ret["inject"] = collector.index(self.inject)
         elif self.injection == "secret":
