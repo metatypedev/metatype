@@ -39,8 +39,8 @@ with TypeGraph("content-type") as g:
         "/celcius_to_farenheit",
         t.struct(
             {
-                "temperature": t.float(),
-                "rounded": t.boolean().optional(),
+                "celcius": t.float(),
+                "roundedTo": t.boolean().optional(),
                 "celcius_query_one": t.float(),
                 "celcius_query_two": t.float(),
                 "celcius_query_three": t.float(),
@@ -49,7 +49,7 @@ with TypeGraph("content-type") as g:
         t.struct({"farenheit": t.float(), "qinfos": qinfos}).named("Farenheit"),
         body_fields=(
             "celcius",
-            "rounded",
+            "roundedTo",
         ),
         query_fields=(
             "celcius_query_one",
@@ -58,7 +58,7 @@ with TypeGraph("content-type") as g:
         ),
         rename_fields=(
             # body
-            ("temperature", "celcius"),
+            ("roundedTo", "rounded"),
             # query params
             ("celcius_query_one", "celcius"),
             ("celcius_query_two", "celcius"),

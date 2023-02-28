@@ -93,7 +93,7 @@ test("http custom content-type queries", async (t) => {
         queryUrl: url.search,
         formData: {
           celcius,
-          rounded,
+          rounded: formData.has("rounded") ? rounded : null,
         },
       },
     } as OutputTempResult;
@@ -129,18 +129,18 @@ test("http custom content-type queries", async (t) => {
     await gql`
       mutation {
         celciusToFarenheit(
-          temperature: 3, # renamed as celcius in the body
-          rounded: true, 
+          celcius: 3,
+          roundedTo: true, # renamed as rounded in the body
           celcius_query_one: 1, # renamed as celcius in the query params
           celcius_query_two: 2, # renamed as celcius in the query params
           celcius_query_three: 3 # renamed as the_third in the query params
-          ) {
+        ) {
           farenheit
           qinfos {
             queryUrl
             formData {
-              celcius # proves that temperature has been renamed to celcius in the body
-              rounded
+              celcius
+              rounded # proves that roundedTo has been renamed to rounded in the body
             }
           }
         }
