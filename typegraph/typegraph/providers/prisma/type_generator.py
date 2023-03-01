@@ -128,6 +128,10 @@ class TypeGenerator:
     # where: { AND: [ { unique: { gt: 2 } }, { name: { startsWith: "P" }}]}
     # what about recursive types ? (use t.proxy?)
     # where: { NOT: { NOT: { name: { startsWith: "P" }} }}
+    # AND: [ { bInt: { notIn: ["1"] }}, { bInt: { not: null }} ]}) { id }}
+    # Have: Object({"not": Scalar(Null), "equals": Scalar(Null), "is": Scalar(Null), "in": Scalar(Null),
+    # "notIn": Scalar(Null), "startsWith": Scalar(Null),   "endsWith": Scalar(Null),
+    # "contains": Scalar(Null), "gt": Scalar(Null), "lt": Scalar(Null)}), want: String]`
     def gen_query_where_expr(self, tpe: t.struct):
         tpe = self.get_where_type(tpe)
         any_type_opt = t.union(
@@ -137,34 +141,40 @@ class TypeGenerator:
                 t.boolean(),
                 t.string(),
                 t.array(t.union([t.integer(), t.float(), t.boolean(), t.string()])),
-                tpe,
             ]
         ).optional()
-
+        # {"not": Scalar(Null), "equals": Scalar(Null), "is": Scalar(Null), "in": Scalar(Null), "notIn": Scalar(Null), "startsWith": Scalar(Null),   "endsWith": Scalar(Null), "contains": Scalar(Null), "gt": Scalar(Null), "lt": Scalar(Null)}), want: String]`
         # node level
-        term = tpe.compose(
+        term = t.struct(
             {
                 "not": any_type_opt,
-                "equals": any_type_opt,
-                "is": any_type_opt,
-                "in": any_type_opt,
-                "notIn": any_type_opt,
+                # "eq": any_type_opt,
+                # "in": any_type_opt,
+                # "notIn": any_type_opt,
                 "startsWith": t.string().optional(),
-                "endsWith": t.string().optional(),  # to test
+                "endsWith": t.string().optional(),
                 "contains": t.string().optional(),
                 "gt": any_type_opt,
-                "lt": any_type_opt,  # to test
+                "lt": any_type_opt,
+                "ge": any_type_opt,
+                "le": any_type_opt,
             }
         )
 
-        node = t.struct({k: term for k in tpe.props.keys()})
+        node_props = {k: term.optional() for k, v in tpe.props.items()}
+        node_props["AND"] = t.array(t.struct(node_props)).optional()
+        node_props["OR"] = t.array(t.struct(node_props)).optional()
+        node_props["NOT"] = t.struct(node_props).optional()
+
+        node = t.struct(node_props)
 
         # root
         add_props = {
             "AND": t.array(node).optional(),
             "OR": t.array(node).optional(),
-            "NOT": t.array(node).optional(),
+            "NOT": node.optional(),
         }
+
         return tpe.compose(add_props)
 
     # visit a terminal node and apply fn

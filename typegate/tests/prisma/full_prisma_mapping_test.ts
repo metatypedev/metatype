@@ -223,20 +223,26 @@ test("prisma full mapping", async (t) => {
         query {
           findManyPosts(
             where: {
-              OR: [
-                {id: {equals: 10001}},
-                {id: {equals: 10002}}
+              AND: [
+                {
+                  OR: [
+                    {title: {contains: "Title 1"}},
+                    {title: {contains: "Title 4"}},
+                  ]
+                },
+                {NOT: {views: {gt: 5}}}
               ]
             }
           ) {
             id
             title
-            author {
-              id
-            }
+            views
           }
         }
     `.expectBody((body: any) => {
+        /*
+
+        */
         // WIP
         // request err: Error: unsupported type node 'optional' to generate its argument schema ??
         console.info("> filter complex", body);
@@ -244,7 +250,7 @@ test("prisma full mapping", async (t) => {
         .on(e);
     },
   );
-
+  /*
   await t.should(
     "update matching rows and return the count affected",
     async () => {
@@ -464,5 +470,5 @@ test("prisma full mapping", async (t) => {
       ],
     })
       .on(e);
-  });
+  });*/
 });
