@@ -217,21 +217,36 @@ test("prisma full mapping", async (t) => {
   });
 
   await t.should(
-    "filter with a complex query on findManyPosts",
+    "filter with a complex nested query on findManyPosts",
     async () => {
       await gql`
         query {
           findManyPosts(
             where: {
-              AND: [
+              OR: [
+                # OR: operand 1
                 {
-                  OR: [
-                    {title: {contains: "Title 1"}},
-                    {title: {contains: "Title 4"}},
+                  AND: [
+                    {
+                      OR: [
+                        {title: {contains: "Title 1"}},
+                        {title: {contains: "Title 4"}},
+                        # although not affecting the result
+                        # not failing means they are accepted by prisma-engine
+                        {likes: {in: [6]}},
+                        {views: 9}
+                      ]
+                    },
+                    {NOT: {views: {gt: 5}}},
                   ]
                 },
-                {NOT: {views: {gt: 5}}}
-              ]
+
+                # OR: operand 2
+                {views: {lt: 3}},
+
+                # OR: operand 3
+                {views: {equals: 9}} # or {views: 9}
+              ],
             }
           ) {
             id
@@ -239,18 +254,17 @@ test("prisma full mapping", async (t) => {
             views
           }
         }
-    `.expectBody((body: any) => {
-        /*
-
-        */
-        // WIP
-        // request err: Error: unsupported type node 'optional' to generate its argument schema ??
-        console.info("> filter complex", body);
+    `.expectData({
+        findManyPosts: [
+          { id: 10001, title: "Some Title 1", views: 9 },
+          { id: 10004, title: "Some Title 4", views: 5 },
+          { id: 10005, title: "Some Title 4", views: 2 },
+        ],
       })
         .on(e);
     },
   );
-  /*
+
   await t.should(
     "update matching rows and return the count affected",
     async () => {
@@ -470,5 +484,5 @@ test("prisma full mapping", async (t) => {
       ],
     })
       .on(e);
-  });*/
+  });
 });

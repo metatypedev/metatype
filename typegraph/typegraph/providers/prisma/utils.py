@@ -12,6 +12,16 @@ def resolve_entity_quantifier(tpe: t.typedef):
     return tpe
 
 
+def undo_optional(tpe: t.typedef):
+    if isinstance(tpe, t.optional):
+        return tpe.of
+    return tpe
+
+
+def rename_with_idx(tpe: t.typedef, prefix: str):
+    return tpe.named(prefix + "_" + tpe.name)
+
+
 def clean_virtual_link(tpe: t.typedef):
     if isinstance(tpe, t.struct):
         ret = {}

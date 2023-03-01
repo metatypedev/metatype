@@ -6,7 +6,11 @@ from attrs import frozen
 from typegraph import t
 from typegraph.graph.typegraph import find, resolve_proxy
 from typegraph.providers.prisma.relations import RelationshipRegister
-from typegraph.providers.prisma.utils import resolve_entity_quantifier
+from typegraph.providers.prisma.utils import (
+    rename_with_idx,
+    resolve_entity_quantifier,
+    undo_optional,
+)
 
 
 @frozen
@@ -122,6 +126,42 @@ class TypeGenerator:
         else:
             return t.struct(fields).named(name)
 
+    # Example:
+    # t.X() => t.either([t.X(), struct_equals, struct_startsWith, ...])
+    def extend_terminal_nodes_props(self, tpe: t.struct) -> t.struct:
+        base_any_type = rename_with_idx(
+            t.union([t.integer(), t.float(), t.boolean(), t.string()]), "base_any_type"
+        )
+
+        any_type = t.union([base_any_type, t.array(t.proxy(base_any_type.name))])
+
+        # node level
+        term_list = [
+            t.struct({"not": any_type}),
+            t.struct({"equals": any_type}),
+            t.struct({"in": any_type}),
+            t.struct({"notIn": any_type}),
+            t.struct({"startsWith": t.string()}),
+            t.struct({"endsWith": t.string()}),
+            t.struct({"contains": t.string()}),
+            t.struct({"gt": any_type}),
+            t.struct({"lt": any_type}),
+        ]
+
+        # rename with a prefix
+        for i in range(len(term_list)):
+            term = term_list[i]
+            # name first key
+            prefix = next(iter(term.props))
+            term_list[i] = rename_with_idx(term, prefix)
+
+        node_props = {
+            k: t.either(term_list + [undo_optional(v)]).optional()
+            for k, v in tpe.props.items()
+        }
+
+        return t.struct(node_props)
+
     # Idea :
     # where: { name: { not: { equals: "John" } } }
     # where: { NOT: [ { name: { contains: "e" } }, { unique: { equals: 1 } }]}
@@ -129,53 +169,25 @@ class TypeGenerator:
     # what about recursive types ? (use t.proxy?)
     # where: { NOT: { NOT: { name: { startsWith: "P" }} }}
     # AND: [ { bInt: { notIn: ["1"] }}, { bInt: { not: null }} ]}) { id }}
-    # Have: Object({"not": Scalar(Null), "equals": Scalar(Null), "is": Scalar(Null), "in": Scalar(Null),
-    # "notIn": Scalar(Null), "startsWith": Scalar(Null),   "endsWith": Scalar(Null),
-    # "contains": Scalar(Null), "gt": Scalar(Null), "lt": Scalar(Null)}), want: String]`
     def gen_query_where_expr(self, tpe: t.struct):
         tpe = self.get_where_type(tpe)
-        any_type_opt = t.union(
-            [
-                t.integer(),
-                t.float(),
-                t.boolean(),
-                t.string(),
-                t.array(t.union([t.integer(), t.float(), t.boolean(), t.string()])),
-            ]
-        ).optional()
-        # {"not": Scalar(Null), "equals": Scalar(Null), "is": Scalar(Null), "in": Scalar(Null), "notIn": Scalar(Null), "startsWith": Scalar(Null),   "endsWith": Scalar(Null), "contains": Scalar(Null), "gt": Scalar(Null), "lt": Scalar(Null)}), want: String]`
-        # node level
-        term = t.struct(
-            {
-                "not": any_type_opt,
-                # "eq": any_type_opt,
-                # "in": any_type_opt,
-                # "notIn": any_type_opt,
-                "startsWith": t.string().optional(),
-                "endsWith": t.string().optional(),
-                "contains": t.string().optional(),
-                "gt": any_type_opt,
-                "lt": any_type_opt,
-                "ge": any_type_opt,
-                "le": any_type_opt,
-            }
-        )
+        extended_tpe = self.extend_terminal_nodes_props(tpe)
+        extended_tpe = rename_with_idx(extended_tpe, "extended_tpe")
 
-        node_props = {k: term.optional() for k, v in tpe.props.items()}
-        node_props["AND"] = t.array(t.struct(node_props)).optional()
-        node_props["OR"] = t.array(t.struct(node_props)).optional()
-        node_props["NOT"] = t.struct(node_props).optional()
+        # define the terminal expression
+        # the recursive type can
+        temp_props = {k: v.optional() for k, v in extended_tpe.props.items()}
+        intermediate = t.proxy(extended_tpe.name)
+        temp_props["AND"] = t.array(intermediate).optional()
+        temp_props["OR"] = t.array(intermediate).optional()
+        temp_props["NOT"] = intermediate.optional()
+        new_tpe = rename_with_idx(t.struct(temp_props), "inner_where_node")
 
-        node = t.struct(node_props)
+        # now mutate the reference
+        # this will allow us to extend the query recursively
+        intermediate.node = new_tpe.name
 
-        # root
-        add_props = {
-            "AND": t.array(node).optional(),
-            "OR": t.array(node).optional(),
-            "NOT": node.optional(),
-        }
-
-        return tpe.compose(add_props)
+        return new_tpe
 
     # visit a terminal node and apply fn
     def deep_map(self, tpe: t.typedef, fn: callable) -> t.struct:
