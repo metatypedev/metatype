@@ -151,7 +151,7 @@ class TypeGenerator:
         # rename with a prefix
         for i in range(len(term_list)):
             term = term_list[i]
-            # name first key
+            # use the first key
             prefix = next(iter(term.props))
             term_list[i] = rename_with_idx(term, prefix)
 
@@ -162,11 +162,10 @@ class TypeGenerator:
 
         return t.struct(node_props)
 
-    # Idea :
+    # Idea:
     # where: { name: { not: { equals: "John" } } }
     # where: { NOT: [ { name: { contains: "e" } }, { unique: { equals: 1 } }]}
     # where: { AND: [ { unique: { gt: 2 } }, { name: { startsWith: "P" }}]}
-    # what about recursive types ? (use t.proxy?)
     # where: { NOT: { NOT: { name: { startsWith: "P" }} }}
     # AND: [ { bInt: { notIn: ["1"] }}, { bInt: { not: null }} ]}) { id }}
     def gen_query_where_expr(self, tpe: t.struct):
@@ -175,7 +174,6 @@ class TypeGenerator:
         extended_tpe = rename_with_idx(extended_tpe, "extended_tpe")
 
         # define the terminal expression
-        # the recursive type can
         temp_props = {k: v.optional() for k, v in extended_tpe.props.items()}
         intermediate = t.proxy(extended_tpe.name)
         temp_props["AND"] = t.array(intermediate).optional()
@@ -184,7 +182,7 @@ class TypeGenerator:
         new_tpe = rename_with_idx(t.struct(temp_props), "inner_where_node")
 
         # now mutate the reference
-        # this will allow us to extend the query recursively
+        # this will allow us to extend to expand the query recursively
         intermediate.node = new_tpe.name
 
         return new_tpe
@@ -242,7 +240,7 @@ class TypeGenerator:
                 # simple type
                 new_props[k] = v
 
-        # only add _count properties to cols that are countable
+        # only add _count to cols that are countable
         if len(countable) > 0:
             new_props["_count"] = t.struct(countable).optional()
         return t.struct(new_props)
