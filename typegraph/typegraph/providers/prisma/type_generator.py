@@ -180,11 +180,13 @@ class TypeGenerator:
 
         # define the terminal expression
         temp_props = {k: v.optional() for k, v in extended_tpe.props.items()}
-        intermediate = t.proxy(extended_tpe.name)
+        intermediate = t.proxy("???")
         if not exclude_extra_fields:
             temp_props["AND"] = t.array(intermediate).optional()
             temp_props["OR"] = t.array(intermediate).optional()
             temp_props["NOT"] = intermediate.optional()
+
+        # renaming helps to register the orphan struct
         new_tpe = rename_with_idx(t.struct(temp_props), "inner_where_node")
 
         # now mutate the reference
@@ -198,10 +200,7 @@ class TypeGenerator:
     # having: { string: {in: ["group1", "group2"]} }
     # having: { int: 5 }
     def gen_having_expr(self, tpe: t.struct, aggreg_def: t.struct) -> t.struct:
-        # add
         tpe = self.extend_terminal_nodes_props(tpe)
-        # TODO
-        # what about "_all" ?
 
         new_props = {}
         for k, v in tpe.props.items():
@@ -213,16 +212,16 @@ class TypeGenerator:
             types.append(new_v)
             new_props[k] = t.union(types).optional()
 
-        # ARE AND, OR, NOT Valid ?
-        # return t.struct(new_props)
-        # return t.struct({
-        #     "views": t.struct({
-        #         "_max": t.struct({
-        #             "gt": t.integer()
-        #         })
-        #     })
-        # })
-        return t.struct(new_props)
+        intermediate = t.proxy("???")
+        new_props["AND"] = t.array(intermediate).optional()
+        new_props["OR"] = t.array(intermediate).optional()
+        new_props["NOT"] = intermediate.optional()
+
+        # renaming helps to register the orphan struct
+        new_tpe = rename_with_idx(t.struct(new_props), "inner_having_node")
+        intermediate.node = new_tpe.name
+
+        return new_tpe
 
     # visit a terminal node and apply fn
     def deep_map(self, tpe: t.typedef, fn: callable) -> t.struct:

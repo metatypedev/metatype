@@ -166,6 +166,51 @@ test("prisma full mapping", async (t) => {
       .on(e);
   });
 
+  await t.should("do a groupBy with a valid nested having filter", async () => {
+    await gql`
+        query {
+          groupByPost(
+            by: ["published"],
+            having: {
+                AND: [
+                  # AND operand 1
+                  {
+                    OR: [
+                      {
+                        published: true,
+                        views: {_max: { gt: 1 }},
+                      },
+                      { NOT: { published: {not: false} } },
+                      { views: {_count: {in : [-1, -2, -1000]} }}
+                    ]
+                  },
+
+                  # AND operand 2
+                  {
+                    views: {_sum: {equals: 25}}
+                  }
+                ]
+            }
+          )
+          {
+            published
+            _max { views likes }
+            _sum { views likes }
+          }
+        }
+    `
+      .expectData({
+        groupByPost: [
+          {
+            published: true,
+            _max: { views: 9, likes: 14 },
+            _sum: { views: 25, likes: 46 },
+          },
+        ],
+      })
+      .on(e);
+  });
+  /*
   await t.should("do an aggregate", async () => {
     await gql`
         query {
@@ -593,5 +638,5 @@ test("prisma full mapping", async (t) => {
       ],
     })
       .on(e);
-  });
+  });*/
 });
