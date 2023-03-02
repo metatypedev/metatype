@@ -442,8 +442,7 @@
   "policies": [
     {
       "name": "admin_only",
-      "materializer": 0,
-      "effect_materializers": {}
+      "materializer": 0
     }
   ],
   "meta": {

@@ -871,8 +871,7 @@
   "policies": [
     {
       "name": "__public",
-      "materializer": 0,
-      "effect_materializers": {}
+      "materializer": 0
     }
   ],
   "meta": {
