@@ -189,11 +189,17 @@ test("prisma full mapping", async (t) => {
                   {
                     views: {_sum: {equals: 25}}
                   }
+
+                  # AND operand 3
+                  {
+                    id: {_count: {gt: 0}}
+                  }
                 ]
             }
           )
           {
             published
+            _count { _all }
             _max { views likes }
             _sum { views likes }
           }
@@ -203,6 +209,7 @@ test("prisma full mapping", async (t) => {
         groupByPost: [
           {
             published: true,
+            _count: { _all: 6 },
             _max: { views: 9, likes: 14 },
             _sum: { views: 25, likes: 46 },
           },
@@ -210,7 +217,7 @@ test("prisma full mapping", async (t) => {
       })
       .on(e);
   });
-  /*
+
   await t.should("do an aggregate", async () => {
     await gql`
         query {
@@ -288,7 +295,7 @@ test("prisma full mapping", async (t) => {
           findManyPosts(
             where: {
               OR: [
-                # OR: operand 1
+                # OR operand 1
                 {
                   AND: [
                     {
@@ -305,10 +312,10 @@ test("prisma full mapping", async (t) => {
                   ]
                 },
 
-                # OR: operand 2
+                # OR operand 2
                 {views: {lt: 3}},
 
-                # OR: operand 3
+                # OR operand 3
                 {views: {equals: 9}} # or {views: 9}
               ],
             }
@@ -638,5 +645,5 @@ test("prisma full mapping", async (t) => {
       ],
     })
       .on(e);
-  });*/
+  });
 });

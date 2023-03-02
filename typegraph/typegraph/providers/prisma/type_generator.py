@@ -212,6 +212,13 @@ class TypeGenerator:
             types.append(new_v)
             new_props[k] = t.union(types).optional()
 
+        # special case
+        # _all or _count is not a field recognized by prisma engine at root level
+        # I am guessing this is because we can still use _count on other fields
+        # new_props["_all"] = self.extend_terminal_nodes_props(
+        #     t.struct({"_count": t.integer()})
+        # )
+
         intermediate = t.proxy("???")
         new_props["AND"] = t.array(intermediate).optional()
         new_props["OR"] = t.array(intermediate).optional()
