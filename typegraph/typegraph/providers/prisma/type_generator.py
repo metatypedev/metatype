@@ -126,21 +126,22 @@ class TypeGenerator:
         else:
             return t.struct(fields).named(name)
 
-    # Example:
-    # t.X() => t.either([t.X(), struct_equals, struct_startsWith, ...])
-    def extend_terminal_nodes_props(self, tpe: t.struct) -> t.struct:
+    def gen_any_type(self):
         base_any_type = rename_with_idx(
             t.union([t.integer(), t.float(), t.boolean(), t.string()]), "base_any_type"
         )
+        return t.union([base_any_type, t.array(t.proxy(base_any_type.name))])
 
-        any_type = t.union([base_any_type, t.array(t.proxy(base_any_type.name))])
+    # Example:
+    # t.X() => t.either([t.X(), struct_equals, struct_startsWith, ...])
+    def extend_terminal_nodes_props(self, tpe: t.struct) -> t.struct:
+        any_type = self.gen_any_type()
 
         # node level
         term_list = [
-            # t.struct({"not": any_type}),
             t.struct({"equals": any_type}),
-            t.struct({"in": any_type}),
-            t.struct({"notIn": any_type}),
+            t.struct({"in": any_type}),  # t.array(any_type) ??
+            t.struct({"notIn": any_type}),  # t.array(any_type) ??
             t.struct({"startsWith": t.string()}),
             t.struct({"endsWith": t.string()}),
             t.struct({"contains": t.string()}),
@@ -165,12 +166,11 @@ class TypeGenerator:
 
         return t.struct(node_props)
 
-    # Idea:
+    # Examples:
     # where: { name: { not: { equals: "John" } } }
-    # where: { NOT: [ { name: { contains: "e" } }, { unique: { equals: 1 } }]}
     # where: { AND: [ { unique: { gt: 2 } }, { name: { startsWith: "P" }}]}
     # where: { NOT: { NOT: { name: { startsWith: "P" }} }}
-    # AND: [ { bInt: { notIn: ["1"] }}, { bInt: { not: null }} ]}) { id }}
+    # where: { field1: 4, field2: {gt: 3}}
     def gen_query_where_expr(
         self, tpe: t.struct, exclude_extra_fields=False
     ) -> t.struct:
@@ -188,10 +188,41 @@ class TypeGenerator:
         new_tpe = rename_with_idx(t.struct(temp_props), "inner_where_node")
 
         # now mutate the reference
-        # this will allow us to extend to expand the query recursively
+        # this will allow us to extend the query recursively
         intermediate.node = new_tpe.name
 
         return new_tpe
+
+    # Examples:
+    # having: { field: {sum : {equals: 5}} }
+    # having: { string: {in: ["group1", "group2"]} }
+    # having: { int: 5 }
+    def gen_having_expr(self, tpe: t.struct, aggreg_def: t.struct) -> t.struct:
+        # add
+        tpe = self.extend_terminal_nodes_props(tpe)
+        # TODO
+        # what about "_all" ?
+
+        new_props = {}
+        for k, v in tpe.props.items():
+            new_v = rename_with_idx(undo_optional(v), "term")
+            types = [
+                rename_with_idx(t.struct({agg_key: new_v}), agg_key)
+                for agg_key in aggreg_def.props.keys()
+            ]
+            types.append(new_v)
+            new_props[k] = t.union(types).optional()
+
+        # ARE AND, OR, NOT Valid ?
+        # return t.struct(new_props)
+        # return t.struct({
+        #     "views": t.struct({
+        #         "_max": t.struct({
+        #             "gt": t.integer()
+        #         })
+        #     })
+        # })
+        return t.struct(new_props)
 
     # visit a terminal node and apply fn
     def deep_map(self, tpe: t.typedef, fn: callable) -> t.struct:
@@ -261,10 +292,14 @@ class TypeGenerator:
         elif isinstance(terminal_node, t.number):
             return t.union(
                 [
-                    t.struct({"set": terminal_node}),
-                    t.struct({"multiply": terminal_node}),
-                    t.struct({"decrement": terminal_node}),
-                    t.struct({"increment": terminal_node}),
+                    rename_with_idx(t.struct({"set": terminal_node}), "set"),
+                    rename_with_idx(t.struct({"multiply": terminal_node}), "multiply"),
+                    rename_with_idx(
+                        t.struct({"decrement": terminal_node}), "decrement"
+                    ),
+                    rename_with_idx(
+                        t.struct({"increment": terminal_node}), "increment"
+                    ),
                 ]
             )
         # Note: t.struct is not a terminal node

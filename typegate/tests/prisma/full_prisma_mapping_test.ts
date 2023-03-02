@@ -133,25 +133,38 @@ test("prisma full mapping", async (t) => {
       .on(e);
   });
 
-  /*
-  await t.should("do a groupBy with having", async () => {
+  await t.should("do a groupBy with a basic having filter", async () => {
     await gql`
         query {
           groupByPost(
             by: ["published"],
-            having: {likes: {_sum: {equals: 3}}}
+            having: {
+              published: true,
+              views: {_max: { gt: 1 }},
+
+              # does nothing, just proves that the validation works
+              # Note: fields does not have to be selected in the output
+              likes: {_count: {lte: 100000}}
+            }
           )
           {
             published
-            _sum { likes }
+            _max { views likes }
+            _sum { views likes }
           }
         }
     `
-      .expectBody((body: any) => {
-        console.log("groupBy having output ::::", body);
+      .expectData({
+        groupByPost: [
+          {
+            published: true,
+            _max: { views: 9, likes: 14 },
+            _sum: { views: 25, likes: 46 },
+          },
+        ],
       })
       .on(e);
-  });*/
+  });
 
   await t.should("do an aggregate", async () => {
     await gql`

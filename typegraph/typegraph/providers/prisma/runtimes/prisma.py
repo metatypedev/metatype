@@ -403,15 +403,7 @@ class PrismaRuntime(Runtime):
             }
         )
         row_def = tpe.compose(aggreg_def.props)
-        """
-        having_def = t.struct({
-            col: t.struct({ agg_name: t.float().optional() for agg_name in aggreg_def.props.keys() }).optional()
-            for col in tpe_nums.props.keys()
-        })
-        """
-        having_def = t.struct(
-            {"likes": t.struct({"_sum": t.struct({"equals": t.integer().optional()})})}
-        ).optional()
+        having_def = typegen.gen_having_expr(tpe, aggreg_def)
 
         return t.func(
             t.struct(
