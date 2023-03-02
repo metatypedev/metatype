@@ -18,7 +18,7 @@ test("prisma full mapping", async (t) => {
     await recreateMigrations(e);
   });
 
-  // adding test datas
+  // create test data
   await t.should("insert a record with nested object", async () => {
     await gql`
         mutation q {
@@ -37,6 +37,9 @@ test("prisma full mapping", async (t) => {
                     { id: 10003, title: "Some Title 3", views: 5, likes: 13, published: true },
                     { id: 10004, title: "Some Title 4", views: 5, likes: 14, published: true },
                     { id: 10005, title: "Some Title 4", views: 2, likes: 7, published: true },
+                    { id: 10006, title: "Some Title 5", views: 0, likes: 0, published: false },
+                    { id: 10007, title: "Some title", views: 0, likes: 4, published: true },
+                    { id: 10008, title: "Yet another", views: 4, likes: 1, published: true },
                   ]
                 }
               }
@@ -90,7 +93,10 @@ test("prisma full mapping", async (t) => {
         { id: 10003, likes: 13, views: 5 },
         { id: 10005, likes: 7, views: 2 },
         { id: 10001, likes: 7, views: 9 },
+        { id: 10007, likes: 4, views: 0 },
         { id: 10002, likes: 3, views: 6 },
+        { id: 10008, likes: 1, views: 4 },
+        { id: 10006, likes: 0, views: 0 },
       ],
     })
       .on(e);
@@ -114,12 +120,12 @@ test("prisma full mapping", async (t) => {
       groupByPost: [
         {
           published: true,
-          _count: { _all: 4 },
-          _sum: { likes: 41, views: 21 },
+          _count: { _all: 6 },
+          _sum: { likes: 46, views: 25 },
         },
         {
           published: false,
-          _count: { _all: 1 },
+          _count: { _all: 2 },
           _sum: { likes: 3, views: 6 },
         },
       ],
@@ -160,11 +166,11 @@ test("prisma full mapping", async (t) => {
         }
     `.expectData({
       aggregatePost: {
-        _count: { _all: 5, views: 5, likes: 5 },
-        _sum: { views: 27, likes: 44 },
+        _count: { _all: 8, views: 8, likes: 8 },
+        _sum: { views: 31, likes: 49 },
         _max: { views: 9, likes: 14 },
-        _min: { views: 2, likes: 3 },
-        _avg: { views: 5.4, likes: 8.8 },
+        _min: { views: 0, likes: 0 },
+        _avg: { views: 3.875, likes: 6.125 },
       },
     })
       .on(e);
@@ -259,6 +265,8 @@ test("prisma full mapping", async (t) => {
           { id: 10001, title: "Some Title 1", views: 9 },
           { id: 10004, title: "Some Title 4", views: 5 },
           { id: 10005, title: "Some Title 4", views: 2 },
+          { id: 10006, title: "Some Title 5", views: 0 },
+          { id: 10007, title: "Some title", views: 0 },
         ],
       })
         .on(e);
@@ -284,7 +292,7 @@ test("prisma full mapping", async (t) => {
         }
     `.expectData({
         updateManyPosts: {
-          count: 4,
+          count: 6,
         },
       })
         .on(e);
@@ -448,13 +456,16 @@ test("prisma full mapping", async (t) => {
           id: 1,
           name: "Jack",
           age: 20,
-          _count: { posts: 5 },
+          _count: { posts: 8 },
           posts: [
             { id: 10001, _count: { comments: 1 } },
             { id: 10002, _count: { comments: 0 } },
             { id: 10005, _count: { comments: 0 } },
+            { id: 10007, _count: { comments: 0 } },
             { id: 10003, _count: { comments: 0 } },
+            { id: 10008, _count: { comments: 0 } },
             { id: 10004, _count: { comments: 0 } },
+            { id: 10006, _count: { comments: 0 } },
           ],
         },
       })
@@ -476,7 +487,7 @@ test("prisma full mapping", async (t) => {
         }
     `.expectData({
       findManyUsers: [
-        { id: 1, name: "Jack", age: 20, _count: { posts: 5 } },
+        { id: 1, name: "Jack", age: 20, _count: { posts: 8 } },
         { id: 3, name: "Kiki", age: 18, _count: { posts: 0 } },
         { id: 4, name: "George", age: 18, _count: { posts: 0 } },
         { id: 2, name: "New Name", age: 21, _count: { posts: 0 } },

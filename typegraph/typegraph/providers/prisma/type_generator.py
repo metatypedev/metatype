@@ -137,7 +137,6 @@ class TypeGenerator:
 
         # node level
         term_list = [
-            t.struct({"not": any_type}),
             t.struct({"equals": any_type}),
             t.struct({"in": any_type}),
             t.struct({"notIn": any_type}),
@@ -146,6 +145,8 @@ class TypeGenerator:
             t.struct({"contains": t.string()}),
             t.struct({"gt": any_type}),
             t.struct({"lt": any_type}),
+            t.struct({"gte": any_type}),
+            t.struct({"lte": any_type}),
         ]
 
         # rename with a prefix
