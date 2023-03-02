@@ -21,7 +21,6 @@ import { ComputeStageProps, Context, Resolver, Variables } from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
-import { FromVars } from "./runtimes/graphql.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
@@ -168,7 +167,6 @@ function isIntrospectionQuery(
 interface Plan {
   stages: ComputeStage[];
   policies: OperationPolicies;
-  policyArgs: FromVars<Record<string, Record<string, unknown>>>;
   validator: TypeCheck;
 }
 
@@ -211,7 +209,6 @@ export class Engine {
   async compute(
     plan: ComputeStage[],
     policies: OperationPolicies,
-    policyArgs: Record<string, Record<string, unknown>>,
     context: Context,
     variables: Record<string, unknown>,
     limit: RateLimit | null,
@@ -221,7 +218,7 @@ export class Engine {
     const cache: Record<string, unknown> = {};
     const lenses: Record<string, unknown> = {};
 
-    await policies.authorize(context, policyArgs, verbose);
+    await policies.authorize(context, verbose);
 
     for await (const stage of plan) {
       const {
@@ -334,7 +331,7 @@ export class Engine {
 
     // what
     const planner = new Planner(operation, fragments, this.tg, verbose);
-    const { stages, policies, policyArgs } = planner.getPlan();
+    const { stages, policies } = planner.getPlan();
     /*
     this.logger.info(
       "stages:",
@@ -359,7 +356,6 @@ export class Engine {
     const plan: Plan = {
       stages: optimizedStages,
       policies,
-      policyArgs,
       validator,
     };
 
@@ -411,13 +407,12 @@ export class Engine {
       );
       const planTime = performance.now();
 
-      const { stages, policies, policyArgs, validator } = plan;
+      const { stages, policies, validator } = plan;
 
       //logger.info("dag:", stages);
       const res = await this.compute(
         stages,
         policies,
-        policyArgs(variables),
         context,
         variables,
         limit,

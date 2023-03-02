@@ -3,8 +3,15 @@
 import * as ast from "graphql/ast";
 import { Kind } from "graphql";
 import { TypeGraph } from "../typegraph.ts";
-import { Context, Parents, Variables } from "../types.ts";
-import { ensure, JSONValue } from "../utils.ts";
+import {
+  Context,
+  Parents,
+  PolicyIdx,
+  StageId,
+  TypeIdx,
+  Variables,
+} from "../types.ts";
+import { JSONValue } from "../utils.ts";
 import {
   ArrayNode,
   getVariantTypesIndexes,
@@ -21,21 +28,16 @@ import { EffectType, EitherNode } from "../types/typegraph.ts";
 
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
+import { getChildTypes, visitType, visitTypes } from "../typegraph/visitor.ts";
 
 const ajv = new Ajv({ removeAdditional: true });
 addFormats(ajv);
 
 class MandatoryArgumentError extends Error {
-  constructor(argName: string, typeNode: TypeNode) {
+  constructor(argDetails: string) {
     super(
-      `mandatory argument '${argName}' of type '${typeNode.type}' not found`,
+      `mandatory argument ${argDetails} not found`,
     );
-  }
-}
-
-class ForbiddenArgumentError extends Error {
-  constructor() {
-    super(`Unexpected argument`);
   }
 }
 
@@ -48,23 +50,24 @@ interface ArgumentObjectSchema {
 export interface ComputeArg {
   (
     variables: Variables,
-    parent: Parents | null,
-    context: Context | null,
+    parent: Parents,
+    context: Context,
   ): unknown;
 }
 
-interface CollectedArg {
-  compute: ComputeArg;
-  policies: Record<string, string[]>;
-  deps: string[];
+export interface ArgTypePolicies {
+  policyIndices: PolicyIdx[];
+  argDetails: string;
 }
 
-interface CollectArgContext {
+export type ArgPolicies = Map<TypeIdx, ArgTypePolicies>;
+
+interface CollectNode {
+  path: string[];
+  stageId: StageId;
   astNode: ast.ArgumentNode | ast.ObjectFieldNode | undefined;
   typeIdx: number;
-  parentProps: Record<string, number>;
-  argName: string;
-  argumentSchema?: JSONSchema;
+  parentProps: Record<string, number>; // parent context?
 }
 
 /**
@@ -88,32 +91,32 @@ interface CollectArgContext {
  * ```
  */
 export class ArgumentCollector {
-  stack: CollectArgContext[] = [];
+  stack: CollectNode[] = []; // temporary
+  policies: ArgPolicies = new Map();
+  deps: string[] = [];
 
   constructor(private tg: TypeGraph, private effect: EffectType | "none") {}
 
   /** Collect the arguments for the node `astNode` corresponding to type at `typeIdx` */
-  collectArg(
-    astNode: ast.ArgumentNode | ast.ObjectFieldNode | undefined,
-    typeIdx: number,
-    parentProps: Record<string, number>, // parent context?
-    argName: string,
-    argumentSchema?: JSONSchema,
-  ): CollectedArg {
-    const context = { astNode, typeIdx, parentProps, argName, argumentSchema };
-    this.stack.push(context);
+  collectArg(node: CollectNode): ComputeArg {
+    if (this.stack.length !== 0) {
+      throw new Error("Invalid state");
+    }
 
-    let res: CollectedArg;
+    return this.collectArgPrivate(node);
+  }
+
+  private collectArgPrivate(
+    node: CollectNode,
+  ): ComputeArg {
+    this.stack.push(node);
+
+    let res: ComputeArg;
     try {
-      res = this.collectArgImpl(context);
-    } catch (e) {
-      if (e instanceof ForbiddenArgumentError) {
-        throw new Error(`Unexpected argument ${this.stack[0].argName}`);
-      }
-      throw e;
+      res = this.collectArgImpl(node);
     } finally {
       const popped = this.stack.pop();
-      if (popped != context) {
+      if (popped != node) {
         // unreachable!
         // deno-lint-ignore no-unsafe-finally
         throw new Error("Invalid state");
@@ -123,33 +126,31 @@ export class ArgumentCollector {
     return res;
   }
 
-  private collectArgImpl(context: CollectArgContext): CollectedArg {
-    const { astNode, typeIdx, parentProps, argName, argumentSchema } = context;
+  private collectArgImpl(node: CollectNode): ComputeArg {
+    const { astNode, typeIdx, parentProps } = node;
 
     const typ = this.tg.type(typeIdx);
 
-    const policies = this.getPolicies(typ);
-    if (policies == null) {
-      throw new Error(`Unexpected argument '${argName}'`);
-    }
+    this.addPoliciesFrom(typeIdx);
 
     if ("injection" in typ) {
-      ensure(astNode == null, `cannot set injected arg: '${typ.title}'`);
-      const [compute, deps] = this.collectInjection(typ, parentProps);
-      return { compute, policies, deps };
+      if (astNode != null) {
+        throw new Error(
+          `Unexpected value for injected parameter ${this.currentNodeDetails}`,
+        );
+      }
+      const compute = this.collectInjection(typ, parentProps);
+      return compute;
     }
 
     // in case the argument node of the query is null,
     // try to get a default value for it, else throw an error
     if (astNode == null) {
       if (typ.type === Type.OPTIONAL) {
+        this.addPoliciesFrom(typ.item);
         const { default_value: defaultValue } = typ;
         const value = defaultValue ?? null;
-        return {
-          compute: () => value,
-          policies,
-          deps: [],
-        };
+        return () => value;
       }
 
       if (typ.type === Type.OBJECT) {
@@ -157,14 +158,11 @@ export class ArgumentCollector {
         return this.collectDefaults(props);
       }
 
-      throw new MandatoryArgumentError(argName, typ);
+      throw new MandatoryArgumentError(this.currentNodeDetails);
     }
 
     if (typ.type === Type.OPTIONAL) {
-      return this.merge(
-        { policies },
-        this.collectArg(astNode, typ.item, parentProps, argName),
-      );
+      return this.collectArgPrivate({ ...this.currentNode, typeIdx: typ.item });
     }
 
     const { value: valueNode } = astNode;
@@ -173,52 +171,39 @@ export class ArgumentCollector {
       const {
         name: { value: varName },
       } = valueNode;
-      return {
-        compute: (vars) => vars[varName],
-        policies,
-        deps: [],
-      };
+      return (vars) => vars[varName];
+    }
+
+    const argumentSchema = this.getArgumentSchema(typ);
+    const value = this.getArgumentValue(astNode);
+    const validator = ajv.compile(argumentSchema);
+    validator(value);
+
+    if (validator.errors) {
+      throw new SchemaValidatorError(
+        value,
+        validator.errors,
+        argumentSchema,
+      );
     }
 
     switch (typ.type) {
       case Type.OBJECT: {
-        if (argumentSchema !== undefined) {
-          const objectArgumentValue = this.getArgumentValue(astNode);
-          const validator = ajv.compile(argumentSchema);
-          validator(objectArgumentValue);
-
-          if (validator.errors) {
-            throw new SchemaValidatorError(
-              objectArgumentValue,
-              validator.errors,
-              argumentSchema,
-            );
-          }
-        }
-
-        return this.merge(
-          { policies },
-          this.collectObjectArg(valueNode, typ, argName),
-        );
+        return this.collectObjectArg(valueNode, typ);
       }
 
       case Type.ARRAY:
-        return this.merge(
-          { policies },
-          this.collectArrayArg(valueNode, typ, parentProps, argName),
-        );
+        return this.collectArrayArg(valueNode, typ);
 
       case Type.INTEGER: {
         if (valueNode.kind !== Kind.INT) {
           throw new TypeMismatchError(
             valueNode.kind,
             "INT",
-            argName,
-            typ.title,
+            this.currentNodeDetails,
           );
         }
-        const value = Number(valueNode.value);
-        return { compute: () => value, policies, deps: [] };
+        return () => value;
       }
 
       case Type.NUMBER: {
@@ -226,12 +211,10 @@ export class ArgumentCollector {
           throw new TypeMismatchError(
             valueNode.kind,
             ["FLOAT", "INT"],
-            argName,
-            typ.title,
+            this.currentNodeDetails,
           );
         }
-        const value = Number(valueNode.value);
-        return { compute: () => value, policies, deps: [] };
+        return () => value;
       }
 
       case Type.BOOLEAN: {
@@ -239,12 +222,10 @@ export class ArgumentCollector {
           throw new TypeMismatchError(
             valueNode.kind,
             "BOOLEAN",
-            argName,
-            typ.title,
+            this.currentNodeDetails,
           );
         }
-        const value = Boolean(valueNode.value);
-        return { compute: () => value, policies, deps: [] };
+        return () => value;
       }
 
       case Type.STRING: {
@@ -252,41 +233,18 @@ export class ArgumentCollector {
           throw new TypeMismatchError(
             valueNode.kind,
             "STRING",
-            argName,
-            typ.title,
+            this.currentNodeDetails,
           );
         }
 
-        if (argumentSchema !== undefined) {
-          const validator = ajv.compile(argumentSchema);
-          validator(valueNode.value);
-
-          if (validator.errors) {
-            throw new SchemaValidatorError(
-              valueNode.value,
-              validator.errors,
-              argumentSchema,
-            );
-          }
-        }
-
-        const value = String(valueNode.value);
-        return { compute: () => value, policies, deps: [] };
+        return () => value;
       }
 
-      case Type.UNION: {
-        return this.merge(
-          { policies },
-          this.collectGeneralUnionArg(astNode, typ, parentProps, argName),
-        );
-      }
+      case Type.UNION:
+        return this.collectGeneralUnionArg(astNode, typ);
 
-      case Type.EITHER: {
-        return this.merge(
-          { policies },
-          this.collectGeneralUnionArg(astNode, typ, parentProps, argName),
-        );
-      }
+      case Type.EITHER:
+        return this.collectGeneralUnionArg(astNode, typ);
 
       default:
         throw new Error(`unknown variable type '${typ.type}'`);
@@ -423,28 +381,24 @@ export class ArgumentCollector {
   private collectGeneralUnionArg(
     astNode: ast.ArgumentNode | ast.ObjectFieldNode,
     typeNode: UnionNode | EitherNode,
-    parentProps: Record<string, number>,
-    argName: string,
-  ): CollectedArg {
+  ): ComputeArg {
     const { value: valueNode } = astNode;
-    const argumentSchema = this.getArgumentSchema(typeNode);
     const variantTypesIndexes: number[] = getVariantTypesIndexes(typeNode);
 
     // throw type mismatch error only if the argument node of the query
     // does not match any of the subschemes (variant nodes).
     for (const variantTypeIndex of variantTypesIndexes) {
       try {
-        return this.collectArg(
-          astNode,
-          variantTypeIndex,
-          parentProps,
-          argName,
-          argumentSchema,
-        );
+        return this.collectArgPrivate({
+          ...this.currentNode,
+          typeIdx: variantTypeIndex,
+        });
       } catch (error) {
+        console.debug("error");
         if (
           error instanceof TypeMismatchError ||
-          error instanceof MandatoryArgumentError
+          error instanceof MandatoryArgumentError ||
+          error instanceof SchemaValidatorError
         ) {
           continue;
         }
@@ -463,8 +417,7 @@ export class ArgumentCollector {
     throw new TypeMismatchError(
       valueNode.kind,
       [...expectedVariants],
-      argName,
-      typeNode.title,
+      this.currentNodeDetails,
     );
   }
 
@@ -472,50 +425,42 @@ export class ArgumentCollector {
   private collectArrayArg(
     valueNode: ast.ValueNode,
     typ: ArrayNode,
-    parentProps: Record<string, number>,
-    argName: string,
-  ) {
+  ): ComputeArg {
     if (valueNode.kind !== Kind.LIST) {
-      throw new TypeMismatchError(valueNode.kind, "LIST", argName, typ.title);
+      throw new TypeMismatchError(
+        valueNode.kind,
+        "LIST",
+        this.currentNodeDetails,
+      );
     }
 
     const { values: valueNodes } = valueNode;
     const itemTypeIdx = typ.items;
 
-    const values: ComputeArg[] = [];
-    const deps: string[] = [];
-    const policies: Record<string, string[]> = {};
+    const computes: ComputeArg[] = [];
 
     // likely optimizabe as type should be shared
     for (const node of valueNodes) {
-      const nested = this.collectArg(
-        { value: node } as unknown as ast.ArgumentNode,
-        itemTypeIdx,
-        parentProps,
-        argName,
+      computes.push(
+        this.collectArgPrivate({
+          ...this.currentNode,
+          astNode: { value: node } as unknown as ast.ArgumentNode,
+          typeIdx: itemTypeIdx,
+        }),
       );
-      values.push(nested.compute);
-      deps.push(...nested.deps);
-      // FIXME policies would be shared
-      Object.assign(policies, nested.policies);
     }
 
-    return {
-      compute: (...params: Parameters<ComputeArg>) =>
-        values.map((c) => c(...params)),
-      deps,
-      policies,
-    };
+    return (...params) => computes.map((c) => c(...params));
   }
 
   /** Collect the value of an parameter of type 'object'. */
-  private collectObjectArg(
-    valueNode: ast.ValueNode,
-    typ: ObjectNode,
-    argName: string,
-  ) {
+  private collectObjectArg(valueNode: ast.ValueNode, typ: ObjectNode) {
     if (valueNode.kind !== Kind.OBJECT) {
-      throw new TypeMismatchError(valueNode.kind, "OBJECT", argName, typ.title);
+      throw new TypeMismatchError(
+        valueNode.kind,
+        "OBJECT",
+        this.currentNodeDetails,
+      );
     }
 
     const { fields } = valueNode;
@@ -526,134 +471,131 @@ export class ArgumentCollector {
     const props = typ.properties;
 
     const computes: Record<string, ComputeArg> = {};
-    const deps = [];
-    const policies: Record<string, string[]> = {};
 
     for (const [name, idx] of Object.entries(props)) {
-      const nested = this.collectArg(fieldByKeys[name], idx, props, name);
+      const parentNode = this.currentNode;
       // TODO: apply renames
-      computes[name] = nested.compute;
-      deps.push(...nested.deps);
-      Object.assign(policies, nested.policies);
+      computes[name] = this.collectArgPrivate({
+        ...parentNode,
+        path: [...parentNode.path, name],
+        astNode: fieldByKeys[name],
+        typeIdx: idx,
+      });
       delete fieldByKeys[name];
     }
 
-    for (const name of Object.keys(fieldByKeys)) {
-      throw new Error(`'${name}' input as field but unknown`);
+    const unexpectedProps = Object.keys(fieldByKeys);
+    if (unexpectedProps.length > 0) {
+      const details = [
+        unexpectedProps.map((name) => `'${name}'`).join(", "),
+        `for argument ${this.currentNodeDetails}`,
+      ].join(" ");
+      throw new Error(`Unexpected props ${details}`);
     }
 
-    return {
-      compute: (...params: Parameters<ComputeArg>) =>
-        filterValues(
-          mapValues(computes, (c) => c(...params)),
-          (v) => v != undefined,
-        ),
-      policies,
-      deps,
-    };
+    return (...params: Parameters<ComputeArg>) =>
+      filterValues(
+        mapValues(computes, (c) => c(...params)),
+        (v) => v != undefined,
+      );
   }
 
-  /** Merge the policies and the deps */
-  private merge(a: Partial<Omit<CollectedArg, "compute">>, b: CollectedArg) {
-    return {
-      compute: b.compute,
-      policies: { ...a.policies, ...b.policies },
-      deps: [...(a.deps ?? []), ...b.deps],
-    };
-  }
-
-  /** Collect the default value for a parameter of type 'object' */
-  private collectDefaults(props: Record<string, number>): CollectedArg {
+  /** Collect the default value for a parameter of type 'object';
+   * this requires that all the props have a default value.
+   */
+  private collectDefaults(props: Record<string, number>): ComputeArg {
     const computes: Record<string, ComputeArg> = {};
-    const deps = [];
-    const policies = {};
 
     for (const [name, idx] of Object.entries(props)) {
-      const nested = this.collectDefault(idx, props);
-      computes[name] = nested.compute;
-      deps.push(...nested.deps);
-      Object.assign(policies, nested.policies);
+      computes[name] = this.collectDefault(idx, props);
     }
 
-    return {
-      compute: (...params: Parameters<ComputeArg>) =>
-        mapValues(computes, (c) => c(...params)),
-      deps,
-      policies,
-    };
+    return (...params: Parameters<ComputeArg>) =>
+      mapValues(computes, (c) => c(...params));
   }
 
   /** Collect the value for a missing parameter. */
   private collectDefault(
     typeIdx: number,
     parentProps: Record<string, number>,
-  ): CollectedArg {
+  ): ComputeArg {
     const typ = this.tg.type(typeIdx);
     if (typ == null) {
       throw new Error(`Expected a type at index '${typeIdx}'`);
     }
-    const policies = this.getPolicies(typ);
+    this.addPoliciesFrom(typeIdx);
 
     if ("injection" in typ) {
-      const [compute, deps] = this.collectInjection(typ, parentProps);
-      return { compute, deps, policies };
+      return this.collectInjection(typ, parentProps);
     }
     if (typ.type != Type.OPTIONAL) {
-      throw new Error(`Expected value for non-optional type '${typ.title}'`);
+      throw new Error(
+        `Expected value for non-optional type argument ${this.currentNodeDetails}`,
+      );
+    } else {
+      this.addPoliciesFrom(typ.item);
     }
     const { default_value: defaultValue } = typ;
-    return {
-      compute: () => defaultValue,
-      deps: [],
-      policies,
-    };
+    return () => defaultValue;
   }
 
   /** Collect the value of an injected parameter. */
   private collectInjection(
     typ: TypeNode,
     parentProps: Record<string, number>,
-  ): [compute: ComputeArg, deps: string[]] {
+  ): ComputeArg {
     const { injection, inject } = typ;
 
     switch (injection) {
       case "raw": {
+        visitType(this.tg.tg, this.currentNode.typeIdx, (node) => {
+          this.addPoliciesFrom(node.idx);
+          return true;
+        });
         const value = JSON.parse(inject as string);
-        // TODO typecheck
-        return [() => value, []];
+        // TODO typecheck --> add to common predefined hooks (MET-113);
+        // and eventually in the CLI/typegraph
+        return () => value;
       }
 
       case "secret": {
+        visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
+          this.addPoliciesFrom(node.idx);
+          return true;
+        });
         const name = inject as string;
         const value = this.tg.parseSecret(typ, name);
 
-        return [() => value, []];
+        return () => value;
       }
 
       case "context": {
+        // TODO check on the typegraph validation hook (MET-113)
+        // and eventually in the CLI/typegraph
+        if (
+          typ.type !== Type.STRING &&
+          !(typ.type === Type.OPTIONAL &&
+            this.tg.type(typ.item).type === Type.STRING)
+        ) {
+          throw new Error(`Unexpected`); // unreachable
+        }
         const name = inject as string;
-        return [
-          (_vars, _parent, context) => {
-            if (context == null) {
-              // computing raw arguments -- without injection
-              return null;
-            }
-
-            const { [name]: value } = context;
-            if (value == null && typ.type != Type.OPTIONAL) {
-              throw new Error(`injection '${name}' was not found in context`);
-            }
-            return value;
-          },
-          [],
-        ];
+        return (_vars, _parent, context) => {
+          const { [name]: value } = context;
+          if (value == null && typ.type != Type.OPTIONAL) {
+            throw new Error(`injection '${name}' was not found in context`);
+          }
+          return value;
+        };
       }
 
       case "parent":
         return this.collectParentInjection(typ, parentProps);
 
       default:
-        throw new Error(`Unexpected injection type '${injection}'`);
+        throw new Error(
+          `Unexpected injection type '${injection}' for argument ${this.currentNodeDetails}`,
+        );
     }
   }
 
@@ -661,7 +603,7 @@ export class ArgumentCollector {
   private collectParentInjection(
     typ: TypeNode,
     parentProps: Record<string, number>,
-  ): [compute: ComputeArg, deps: string[]] {
+  ): ComputeArg {
     const ref = typ.inject as number;
     const name = Object.keys(parentProps).find(
       (name) => parentProps[name] === ref,
@@ -670,53 +612,67 @@ export class ArgumentCollector {
       throw new Error(`injection '${typ.title} (${name})' not found in parent`);
     }
 
-    return [
-      (_vars, parent) => {
-        if (parent == null) {
-          // computing raw arguments - without injection
-          return null;
+    this.deps.push(name);
+    visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
+      this.addPoliciesFrom(node.idx);
+      return true;
+    });
+
+    return (_vars, parent) => {
+      const { [name]: value } = parent;
+      if (value == null) {
+        if (typ.type === Type.OPTIONAL) {
+          return typ.default_value;
         }
 
-        const { [name]: value } = parent;
-        if (value == null) {
-          if (typ.type == Type.OPTIONAL) {
-            return typ.default_value;
-          }
+        const suggestions = `available fields from parent are: ${
+          Object.keys(
+            parent,
+          ).join(", ")
+        }`;
+        throw new Error(
+          `non-optional injection argument ${this.currentNodeDetails} is missing from parent: ${suggestions}`,
+        );
+      }
 
-          const suggestions = `available fields from parent are: ${
-            Object.keys(
-              parent,
-            ).join(", ")
-          }`;
-          throw new Error(
-            `non-optional injection '${typ.title} (${name}) is missing from parent: ${suggestions}`,
-          );
-        }
-
-        return value;
-      },
-      [name],
-    ];
+      return value;
+    };
   }
 
-  /** Get policies from a `TypeNode`. */
-  private getPolicies(typ: TypeNode): Record<string, string[]> {
-    if (typ.policies.length === 0) {
-      return {};
-    }
-
-    return {
-      [typ.title]: typ.policies.map((p) => {
+  private addPoliciesFrom(typeIdx: TypeIdx) {
+    const typ = this.tg.type(typeIdx);
+    this.policies.set(typeIdx, {
+      argDetails: this.currentNodeDetails,
+      policyIndices: typ.policies.map((p) => {
         if (typeof p === "number") {
-          return this.tg.policy(p).name;
+          return p;
         }
         const polIdx = p[this.effect];
         if (polIdx == null) {
-          throw new ForbiddenArgumentError();
+          // not authorized
+          throw new Error(`Unexpected argument ${this.currentNodeDetails}`);
         }
-        return this.tg.policy(polIdx).name;
+        return polIdx;
       }),
-    };
+    });
+  }
+
+  private get currentNode(): CollectNode {
+    const len = this.stack.length;
+    if (this.stack.length === 0) {
+      throw new Error("Invalid state");
+    }
+    return this.stack[len - 1];
+  }
+
+  get currentNodeDetails() {
+    const { path, stageId, typeIdx } = this.currentNode;
+    const typeNode = this.tg.type(typeIdx);
+    return [
+      `'${path.join(".")}'`,
+      `of type '${typeNode.type}' ('${typeNode.title}')`,
+      `at ${stageId}`,
+    ].join(" ");
   }
 }
 
@@ -724,15 +680,14 @@ class TypeMismatchError extends Error {
   constructor(
     actual: string,
     expected: string | string[],
-    argName: string,
-    title: string,
+    argDetails: string,
   ) {
     const exp = (typeof expected == "string" ? [expected] : expected)
       .map((t) => `'${t}'`)
       .join(" or ");
     const errorMessage = [
       `Type mismatch: got '${actual}' but expected ${exp}`,
-      `for argument '${argName}' named as '${title}'`,
+      `for argument ${argDetails}`,
     ].join(" ");
     super(errorMessage);
   }

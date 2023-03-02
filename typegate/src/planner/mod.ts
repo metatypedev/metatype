@@ -16,9 +16,6 @@ import {
 import { DenoRuntime } from "../runtimes/deno.ts";
 import { ensure, unparse } from "../utils.ts";
 import { ArgumentCollector, ComputeArg } from "./args.ts";
-import { FromVars } from "../runtimes/graphql.ts";
-import { mapValues } from "std/collections/map_values.ts";
-import { filterValues } from "std/collections/filter_values.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../log.ts";
 const logger = getLogger(import.meta);
@@ -36,7 +33,6 @@ interface Node {
 export interface Plan {
   stages: ComputeStage[];
   policies: OperationPolicies;
-  policyArgs: FromVars<Record<string, Record<string, unknown>>>;
 }
 
 /**
@@ -98,7 +94,6 @@ export class Planner {
     return {
       stages,
       policies: this.policiesBuilder.build(),
-      policyArgs: this.policyArgs(stages),
     };
   }
 
@@ -356,20 +351,17 @@ export class Planner {
       this.tg,
       this.tg.materializer(schema.materializer).effect.effect ?? "none",
     );
-    const nestedDepsUnion = [];
+
     for (
       const [argName, argIdx] of Object.entries(argSchema.properties ?? {})
     ) {
-      // TODO referencedTypes
-      const nested = argumentCollector.collectArg(
-        argNodes[argName],
-        argIdx,
+      args[argName] = argumentCollector.collectArg({
+        path: [argName],
+        stageId: node.path.join("."),
+        astNode: argNodes[argName],
+        typeIdx: argIdx,
         parentProps,
-        argName,
-      );
-
-      nestedDepsUnion.push(...nested.deps);
-      args[argName] = nested.compute;
+      });
     }
 
     // check that no unwanted arg is given
@@ -383,7 +375,7 @@ export class Planner {
     }
 
     deps.push(
-      ...Array.from(new Set(nestedDepsUnion)).map((dep) =>
+      ...Array.from(new Set(argumentCollector.deps)).map((dep) =>
         [...node.path, dep].join(".")
       ),
     );
@@ -410,8 +402,11 @@ export class Planner {
     });
     stages.push(stage);
 
-    // TODO add all nested types in inputIdx
-    this.policiesBuilder.push(stage.id(), node.typeIdx);
+    this.policiesBuilder.push(
+      stage.id(),
+      node.typeIdx,
+      argumentCollector.policies,
+    );
     const types = this.policiesBuilder.setReferencedTypes(
       stage.id(),
       node.typeIdx,
@@ -493,26 +488,5 @@ export class Planner {
 
   private formatPath(path: string[]) {
     return [this.operationName, ...path].join(".");
-  }
-
-  /** Create a function that will be used to compute the args for the policies. */
-  private policyArgs(
-    stages: ComputeStage[],
-  ): FromVars<Record<string, Record<string, unknown>>> {
-    const computes: Record<string, FromVars<Record<string, unknown>>> = {};
-    for (const stage of stages) {
-      const args = stage.props.args;
-      if (Object.keys(args).length === 0) {
-        continue;
-      }
-      const key = stage.props.path.join(".");
-      computes[key] = (vars) => mapValues(args, (c) => c(vars, null, null));
-    }
-
-    return (vars) =>
-      filterValues(
-        mapValues(computes, (c) => c(vars)),
-        (v) => v != undefined,
-      );
   }
 }

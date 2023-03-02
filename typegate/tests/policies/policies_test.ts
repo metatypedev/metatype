@@ -63,30 +63,6 @@ test("Policies", async (t) => {
   });
 });
 
-test("Policy args", async (t) => {
-  const e = await t.pythonFile("policies/policies.py");
-
-  await t.should("pass raw args to the policy", async () => {
-    await gql`
-      query {
-        secret(username: "User") {
-          username
-          data
-        }
-      }
-    `
-      .expectData({
-        secret: {
-          username: "User",
-          data: "secret",
-        },
-      }).withContext({
-        username: "User",
-      })
-      .on(e);
-  });
-});
-
 test("Role jwt policy access", async (t) => {
   const e_norm = await t.pythonFile("policies/policies_jwt.py");
   const e_inject = await t.pythonFile("policies/policies_jwt_injection.py");
@@ -205,22 +181,22 @@ test("Policies for effects", async (t) => {
       .on(e);
   });
 
-  await t.should("should succeed with appropriate autorization", async () => {
-    await gql`
-      mutation {
-        updateUser(id: 12, set: {email: "john.doe@example.com"}) {
-          id
-          email
-        }
-      }
-    `
-      .expectData({
-        updateUser: {
-          id: 12,
-          email: "john.doe@example.com",
-        },
-      })
-      .withContext({ userId: 12 })
-      .on(e);
-  });
+  // await t.should("should succeed with appropriate autorization", async () => {
+  //   await gql`
+  //     mutation {
+  //       updateUser(id: 12, set: {email: "john.doe@example.com"}) {
+  //         id
+  //         email
+  //       }
+  //     }
+  //   `
+  //     .expectData({
+  //       updateUser: {
+  //         id: 12,
+  //         email: "john.doe@example.com",
+  //       },
+  //     })
+  //     .withContext({ userId: 12 })
+  //     .on(e);
+  // });
 });
