@@ -243,7 +243,7 @@ test("prisma full mapping", async (t) => {
                         {views: 9}
                       ]
                     },
-                    {NOT: {views: {gt: 5}}},
+                    {NOT: {views: {not: {gt: 5}}}},
                   ]
                 },
 
@@ -263,10 +263,95 @@ test("prisma full mapping", async (t) => {
     `.expectData({
         findManyPosts: [
           { id: 10001, title: "Some Title 1", views: 9 },
-          { id: 10004, title: "Some Title 4", views: 5 },
           { id: 10005, title: "Some Title 4", views: 2 },
           { id: 10006, title: "Some Title 5", views: 0 },
           { id: 10007, title: "Some title", views: 0 },
+        ],
+      })
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "filter with simple nested query on findManyPosts",
+    async () => {
+      await gql`
+        query {
+          findManyPosts(
+            where: {
+              views: {not: {gte: 5}},
+              title: {startsWith: "Some"},
+              AND: [
+                # 0 < likes <= 7
+                {likes: {lte: 7}},
+                {likes: {gt: 0}}
+              ]
+            }
+          ) {
+            id
+            title
+            views
+            likes
+          }
+        }
+    `.expectData({
+        findManyPosts: [
+          { id: 10005, title: "Some Title 4", views: 2, likes: 7 },
+          { id: 10007, title: "Some title", views: 0, likes: 4 },
+        ],
+      })
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "not accept nested terminal `not` expressions (=/= `NOT` root expression)",
+    async () => {
+      await gql`
+        query {
+          findManyPosts(
+            where: {
+              # this is not Ok
+              # not (lowercase) is a terminal node
+              views: {not: {not: {equals: 5}}}
+            }
+          ) {
+            id
+            title
+          }
+        }
+    `.expectErrorContains("error")
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "accept nested root `NOT` expressions (=/= `not` terminal expression)",
+    async () => {
+      await gql`
+        query {
+          findManyPosts (
+            where: {
+              NOT: {
+                NOT: {
+                  NOT: {
+                    NOT: {
+                      NOT: {views: {not: 5}} # equiv. to equals
+                    }
+                  }
+                }
+              }
+            }
+          ) {
+            id
+            title
+            views
+          }
+        }
+    `.expectData({
+        findManyPosts: [
+          { id: 10003, title: "Some Title 3", views: 5 },
+          { id: 10004, title: "Some Title 4", views: 5 },
         ],
       })
         .on(e);

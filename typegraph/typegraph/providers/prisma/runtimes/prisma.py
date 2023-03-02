@@ -314,7 +314,11 @@ class PrismaRuntime(Runtime):
         return t.func(
             t.struct(
                 {
-                    "where": typegen.gen_query_where_expr(tpe)
+                    # findUnique's where expression
+                    # does not allow AND, OR, NOT
+                    "where": typegen.gen_query_where_expr(
+                        tpe, exclude_extra_fields=True
+                    )
                     .named(_pref("Where"))
                     .optional()
                 }

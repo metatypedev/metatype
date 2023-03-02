@@ -137,6 +137,7 @@ class TypeGenerator:
 
         # node level
         term_list = [
+            # t.struct({"not": any_type}),
             t.struct({"equals": any_type}),
             t.struct({"in": any_type}),
             t.struct({"notIn": any_type}),
@@ -156,10 +157,11 @@ class TypeGenerator:
             prefix = next(iter(term.props))
             term_list[i] = rename_with_idx(term, prefix)
 
-        node_props = {
-            k: t.either(term_list + [undo_optional(v)]).optional()
-            for k, v in tpe.props.items()
-        }
+        node_props = {}
+        for k, v in tpe.props.items():
+            term = t.either(term_list + [undo_optional(v)])
+            not_node = rename_with_idx(t.struct({"not": term}), "not")
+            node_props[k] = t.either([not_node, term]).optional()
 
         return t.struct(node_props)
 
@@ -169,7 +171,9 @@ class TypeGenerator:
     # where: { AND: [ { unique: { gt: 2 } }, { name: { startsWith: "P" }}]}
     # where: { NOT: { NOT: { name: { startsWith: "P" }} }}
     # AND: [ { bInt: { notIn: ["1"] }}, { bInt: { not: null }} ]}) { id }}
-    def gen_query_where_expr(self, tpe: t.struct):
+    def gen_query_where_expr(
+        self, tpe: t.struct, exclude_extra_fields=False
+    ) -> t.struct:
         tpe = self.get_where_type(tpe)
         extended_tpe = self.extend_terminal_nodes_props(tpe)
         extended_tpe = rename_with_idx(extended_tpe, "extended_tpe")
@@ -177,9 +181,10 @@ class TypeGenerator:
         # define the terminal expression
         temp_props = {k: v.optional() for k, v in extended_tpe.props.items()}
         intermediate = t.proxy(extended_tpe.name)
-        temp_props["AND"] = t.array(intermediate).optional()
-        temp_props["OR"] = t.array(intermediate).optional()
-        temp_props["NOT"] = intermediate.optional()
+        if not exclude_extra_fields:
+            temp_props["AND"] = t.array(intermediate).optional()
+            temp_props["OR"] = t.array(intermediate).optional()
+            temp_props["NOT"] = intermediate.optional()
         new_tpe = rename_with_idx(t.struct(temp_props), "inner_where_node")
 
         # now mutate the reference
