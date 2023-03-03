@@ -64,10 +64,8 @@ export type ArgPolicies = Map<TypeIdx, ArgTypePolicies>;
 
 interface CollectNode {
   path: string[];
-  stageId: StageId;
   astNode: ast.ArgumentNode | ast.ObjectFieldNode | undefined;
   typeIdx: number;
-  parentProps: Record<string, number>; // parent context?
 }
 
 /**
@@ -95,7 +93,12 @@ export class ArgumentCollector {
   policies: ArgPolicies = new Map();
   deps: string[] = [];
 
-  constructor(private tg: TypeGraph, private effect: EffectType | "none") {}
+  constructor(
+    private tg: TypeGraph,
+    private stageId: StageId,
+    private effect: EffectType | "none",
+    private parentProps: Record<string, number>,
+  ) {}
 
   /** Collect the arguments for the node `astNode` corresponding to type at `typeIdx` */
   collectArg(node: CollectNode): ComputeArg {
@@ -127,7 +130,7 @@ export class ArgumentCollector {
   }
 
   private collectArgImpl(node: CollectNode): ComputeArg {
-    const { astNode, typeIdx, parentProps } = node;
+    const { astNode, typeIdx } = node;
 
     const typ = this.tg.type(typeIdx);
 
@@ -139,7 +142,7 @@ export class ArgumentCollector {
           `Unexpected value for injected parameter ${this.currentNodeDetails}`,
         );
       }
-      const compute = this.collectInjection(typ, parentProps);
+      const compute = this.collectInjection(typ);
       return compute;
     }
 
@@ -174,19 +177,21 @@ export class ArgumentCollector {
       return (vars) => vars[varName];
     }
 
-    const argumentSchema = this.getArgumentSchema(typ);
-    const value = this.getArgumentValue(astNode);
-    const validator = ajv.compile(argumentSchema);
-    validator(value);
-
-    if (validator.errors) {
-      throw new SchemaValidatorError(
-        value,
-        validator.errors,
-        argumentSchema,
-      );
-    }
-
+    // const argumentSchema = this.getArgumentSchema(typ);
+    // const value = this.getArgumentValue(astNode);
+    // if (argumentSchema != null) {
+    //   const validator = ajv.compile(argumentSchema);
+    //   validator(value);
+    //
+    //   if (validator.errors) {
+    //     throw new SchemaValidatorError(
+    //       value,
+    //       validator.errors,
+    //       argumentSchema,
+    //     );
+    //   }
+    // }
+    //
     switch (typ.type) {
       case Type.OBJECT: {
         return this.collectObjectArg(valueNode, typ);
@@ -203,6 +208,7 @@ export class ArgumentCollector {
             this.currentNodeDetails,
           );
         }
+        const value = Number(valueNode.value);
         return () => value;
       }
 
@@ -214,6 +220,7 @@ export class ArgumentCollector {
             this.currentNodeDetails,
           );
         }
+        const value = Number(valueNode.value);
         return () => value;
       }
 
@@ -225,6 +232,7 @@ export class ArgumentCollector {
             this.currentNodeDetails,
           );
         }
+        const value = Boolean(valueNode.value);
         return () => value;
       }
 
@@ -236,7 +244,7 @@ export class ArgumentCollector {
             this.currentNodeDetails,
           );
         }
-
+        const value = String(valueNode.value);
         return () => value;
       }
 
@@ -282,10 +290,15 @@ export class ArgumentCollector {
         return argumentObjectValue;
       }
 
+      case Kind.LIST:
+        return valueNode.values.map((v) =>
+          this.getArgumentValue({ value: v } as ast.ArgumentNode)
+        );
+
       default:
         throw new Error(
           [
-            `unsupported node '${astNode.name}' of type '${astNode.kind}',`,
+            `unsupported node '${astNode.name.value}' of type '${valueNode.kind}',`,
             `cannot get the argument value from it`,
           ].join(" "),
         );
@@ -302,9 +315,10 @@ export class ArgumentCollector {
     switch (typenode.type) {
       case Type.ARRAY: {
         const itemsTypeNode = this.tg.type(typenode.items);
+        const itemsSchema = this.getArgumentSchema(itemsTypeNode);
         const schema = {
           ...trimType(typenode),
-          items: this.getArgumentSchema(itemsTypeNode),
+          items: itemsSchema,
         };
         return schema;
       }
@@ -315,7 +329,7 @@ export class ArgumentCollector {
           .map((variant) => this.getArgumentSchema(variant));
 
         const argumentSchema = {
-          anyOf: schemes,
+          anyOf: schemes as JSONSchema[],
         };
 
         return argumentSchema;
@@ -327,7 +341,7 @@ export class ArgumentCollector {
           .map((variant) => this.getArgumentSchema(variant));
 
         const argumentSchema = {
-          oneOf: schemes,
+          oneOf: schemes as JSONSchema[],
         };
 
         return argumentSchema;
@@ -354,12 +368,16 @@ export class ArgumentCollector {
           )
         ) {
           const propertyNode = this.tg.type(propertyTypeIndex);
-          if (propertyNode.type !== "optional") {
+          if (propertyNode.type !== Type.OPTIONAL) {
             schema.required.push(propertyName);
+            schema.properties[propertyName] = this.getArgumentSchema(
+              propertyNode,
+            );
+          } else {
+            schema.properties[propertyName] = this.getArgumentSchema(
+              this.tg.type(propertyNode.item),
+            );
           }
-          schema.properties[propertyName] = this.getArgumentSchema(
-            propertyNode,
-          );
         }
 
         return schema;
@@ -507,7 +525,7 @@ export class ArgumentCollector {
     const computes: Record<string, ComputeArg> = {};
 
     for (const [name, idx] of Object.entries(props)) {
-      computes[name] = this.collectDefault(idx, props);
+      computes[name] = this.collectDefault(idx);
     }
 
     return (...params: Parameters<ComputeArg>) =>
@@ -517,7 +535,6 @@ export class ArgumentCollector {
   /** Collect the value for a missing parameter. */
   private collectDefault(
     typeIdx: number,
-    parentProps: Record<string, number>,
   ): ComputeArg {
     const typ = this.tg.type(typeIdx);
     if (typ == null) {
@@ -526,7 +543,7 @@ export class ArgumentCollector {
     this.addPoliciesFrom(typeIdx);
 
     if ("injection" in typ) {
-      return this.collectInjection(typ, parentProps);
+      return this.collectInjection(typ);
     }
     if (typ.type != Type.OPTIONAL) {
       throw new Error(
@@ -542,7 +559,6 @@ export class ArgumentCollector {
   /** Collect the value of an injected parameter. */
   private collectInjection(
     typ: TypeNode,
-    parentProps: Record<string, number>,
   ): ComputeArg {
     const { injection, inject } = typ;
 
@@ -590,7 +606,7 @@ export class ArgumentCollector {
       }
 
       case "parent":
-        return this.collectParentInjection(typ, parentProps);
+        return this.collectParentInjection(typ);
 
       default:
         throw new Error(
@@ -602,11 +618,10 @@ export class ArgumentCollector {
   /** Collect the value of an injected parameter with 'parent' injection. */
   private collectParentInjection(
     typ: TypeNode,
-    parentProps: Record<string, number>,
   ): ComputeArg {
     const ref = typ.inject as number;
-    const name = Object.keys(parentProps).find(
-      (name) => parentProps[name] === ref,
+    const name = Object.keys(this.parentProps).find(
+      (name) => this.parentProps[name] === ref,
     );
     if (name == undefined) {
       throw new Error(`injection '${typ.title} (${name})' not found in parent`);
@@ -666,12 +681,12 @@ export class ArgumentCollector {
   }
 
   get currentNodeDetails() {
-    const { path, stageId, typeIdx } = this.currentNode;
+    const { path, typeIdx } = this.currentNode;
     const typeNode = this.tg.type(typeIdx);
     return [
       `'${path.join(".")}'`,
       `of type '${typeNode.type}' ('${typeNode.title}')`,
-      `at ${stageId}`,
+      `at ${this.stageId}`,
     ].join(" ");
   }
 }

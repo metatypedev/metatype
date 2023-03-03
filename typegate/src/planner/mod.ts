@@ -349,7 +349,9 @@ export class Planner {
 
     const argumentCollector = new ArgumentCollector(
       this.tg,
+      node.path.join("."),
       this.tg.materializer(schema.materializer).effect.effect ?? "none",
+      parentProps,
     );
 
     for (
@@ -357,10 +359,8 @@ export class Planner {
     ) {
       args[argName] = argumentCollector.collectArg({
         path: [argName],
-        stageId: node.path.join("."),
         astNode: argNodes[argName],
         typeIdx: argIdx,
-        parentProps,
       });
     }
 
