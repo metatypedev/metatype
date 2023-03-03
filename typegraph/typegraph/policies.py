@@ -3,9 +3,6 @@
 from re import sub as reg_sub
 from typing import List, Optional, Union
 
-# from collections.abc import Iterator
-import itertools
-
 from attrs import evolve, field, frozen
 
 from typegraph.graph.builder import Collector
@@ -13,8 +10,7 @@ from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
 from typegraph.runtimes.deno import PureFunMat
-from typegraph.utils import drop_nones
-from typegraph.utils.attrs import always, asdict
+from typegraph.utils.attrs import always
 from typegraph.utils.sanitizers import sanitize_ts_string
 from typegraph.effects import EffectType
 
