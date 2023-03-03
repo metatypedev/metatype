@@ -3,6 +3,7 @@
 from typing import Optional, Tuple
 
 from attrs import field, frozen
+from frozendict import frozendict
 
 from typegraph import effects
 from typegraph import types as t
@@ -85,7 +86,7 @@ class RESTMat(Materializer):
     content_type: str = field(kw_only=True, default="application/json")
     header_prefix: Optional[str] = "header#"
     query_fields: Optional[Tuple[str, ...]] = field(kw_only=True, default=None)
-    rename_fields: Optional[Tuple[Tuple]] = field(kw_only=True, default=None)
+    rename_fields: Optional[dict[str, str]] = field(converter=frozendict, default={})
     body_fields: Optional[Tuple[str, ...]] = field(kw_only=True, default=None)
     auth_token_field: Optional[str] = field(kw_only=True, default=None)
     materializer_name: str = always("rest")

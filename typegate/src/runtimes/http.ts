@@ -121,13 +121,14 @@ export class HTTPRuntime extends Runtime {
       const searchParams = new URLSearchParams();
       const hasBody = method !== "GET" && method !== "DELETE";
 
-      const rename_fields = options.rename_fields ?? [];
+      const { rename_fields } = options;
       for (const [key, value] of Object.entries(args)) {
         if (options.header_prefix && key.startsWith(options.header_prefix)) {
           headers.set(key.slice(options.header_prefix.length), value);
         } else {
           let correctKey = key;
-          for (const [placeholder, renameTo] of rename_fields) {
+          for (const placeholder in rename_fields) {
+            const renameTo = rename_fields[placeholder];
             if (placeholder == key) {
               correctKey = renameTo;
               break;

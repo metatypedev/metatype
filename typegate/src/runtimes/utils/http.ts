@@ -34,7 +34,7 @@ export interface MatOptions extends Record<string, any> {
     | "multipart/form-data";
   query_fields: string[] | null;
   body_fields: string[] | null;
-  rename_fields: string[][] | null;
+  rename_fields: Record<string, string>;
   auth_token_field: string | null;
   header_prefix: string | null;
 }

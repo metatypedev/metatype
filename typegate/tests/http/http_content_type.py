@@ -56,14 +56,14 @@ with TypeGraph("content-type") as g:
             "celcius_query_two",
             "celcius_query_three",
         ),
-        rename_fields=(
+        rename_fields={
             # body
-            ("roundedTo", "rounded"),
+            "roundedTo": "rounded",
             # query params
-            ("celcius_query_one", "celcius"),
-            ("celcius_query_two", "celcius"),
-            ("celcius_query_three", "the_third"),
-        ),
+            "celcius_query_one": "celcius",
+            "celcius_query_two": "celcius",
+            "celcius_query_three": "the_third",
+        },
         content_type="multipart/form-data",
     ).add_policy(public)
 
