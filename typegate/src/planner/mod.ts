@@ -15,7 +15,7 @@ import {
 } from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno.ts";
 import { ensure, unparse } from "../utils.ts";
-import { ArgumentCollector, ComputeArg } from "./args.ts";
+import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../log.ts";
 const logger = getLogger(import.meta);
@@ -221,7 +221,7 @@ export class Planner {
           operationName: this.operationName,
           dependencies: [],
           parent: parent.parentStage,
-          args: {},
+          args: null,
           outType: TypeGraph.typenameType,
           typeIdx: parent.typeIdx,
           runtime: DenoRuntime.getDefaultRuntime(this.tg.name),
@@ -268,7 +268,7 @@ export class Planner {
 
     const stage = this.createComputeStage(node, {
       dependencies: node.parentStage ? [node.parentStage.id()] : [],
-      args: {},
+      args: null,
       runtime,
       batcher: this.tg.nextBatcher(schema),
       rateCalls: true,
@@ -339,47 +339,6 @@ export class Planner {
       schema;
     const outputType = this.tg.type(outputIdx);
 
-    const args: Record<string, ComputeArg> = {};
-    const argSchema = this.tg.type(inputIdx, Type.OBJECT);
-    const argNodes = (node.args ?? [])
-      .reduce(
-        (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
-        {} as Record<string, ast.ArgumentNode>,
-      );
-
-    const argumentCollector = new ArgumentCollector(
-      this.tg,
-      node.path.join("."),
-      this.tg.materializer(schema.materializer).effect.effect ?? "none",
-      parentProps,
-    );
-
-    for (
-      const [argName, argIdx] of Object.entries(argSchema.properties ?? {})
-    ) {
-      args[argName] = argumentCollector.collectArg({
-        path: [argName],
-        astNode: argNodes[argName],
-        typeIdx: argIdx,
-      });
-    }
-
-    // check that no unwanted arg is given
-    for (const arg of node.args ?? []) {
-      const name = arg.name.value;
-      if (!(name in args)) {
-        throw Error(
-          `'${name}' unexpected input at '${this.formatPath(node.path)}'`,
-        );
-      }
-    }
-
-    deps.push(
-      ...Array.from(new Set(argumentCollector.deps)).map((dep) =>
-        [...node.path, dep].join(".")
-      ),
-    );
-
     const mat = this.tg.materializer(schema.materializer);
     const runtime = this.tg.runtimeReferences[mat.runtime];
     if (this.operation.operation === "query" && mat.effect.effect != null) {
@@ -388,9 +347,28 @@ export class Planner {
       );
     }
 
+    const argSchema = this.tg.type(inputIdx, Type.OBJECT);
+    const argNodes = (node.args ?? []).reduce(
+      (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
+      {} as Record<string, ast.ArgumentNode>,
+    );
+
+    const collected = collectArgs(
+      this.tg,
+      node.path.join("."),
+      mat.effect.effect ?? "none",
+      parentProps,
+      inputIdx,
+      argNodes,
+    );
+
+    deps.push(
+      ...collected.deps.map((dep) => [...node.path, dep].join(".")),
+    );
+
     const stage = this.createComputeStage(node, {
       dependencies: deps,
-      args,
+      args: collected.compute,
       argumentNodes: node.args,
       inpType: argSchema,
       outType: outputType,
@@ -405,7 +383,7 @@ export class Planner {
     this.policiesBuilder.push(
       stage.id(),
       node.typeIdx,
-      argumentCollector.policies,
+      collected.policies,
     );
     const types = this.policiesBuilder.setReferencedTypes(
       stage.id(),

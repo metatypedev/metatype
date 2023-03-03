@@ -24,7 +24,6 @@ import { Planner } from "./planner/mod.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
-import { mapValues } from "std/collections/map_values.ts";
 import { Option } from "monads";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
@@ -246,10 +245,12 @@ export class Engine {
         limit.consume(rateWeight ?? 1);
       }
 
+      const computeArgs = args ?? (() => ({}));
+
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...mapValues(args, (e: any) => e(variables, parent, context)),
+            ...computeArgs(variables, parent, context),
             _: {
               parent: parent ?? {},
               context,

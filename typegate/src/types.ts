@@ -53,7 +53,7 @@ export interface ComputeStageProps {
   operationType: ast.OperationTypeNode;
   dependencies: string[];
   parent?: ComputeStage;
-  args: Record<string, ComputeArg>;
+  args: ComputeArg<Record<string, unknown>> | null;
   resolver?: Resolver;
   argumentNodes?: ReadonlyArray<ast.ArgumentNode>;
   inpType?: ObjectNode;

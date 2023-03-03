@@ -30,7 +30,7 @@ import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import { getChildTypes, visitType, visitTypes } from "../typegraph/visitor.ts";
 
-const ajv = new Ajv({ removeAdditional: true });
+const ajv = new Ajv();
 addFormats(ajv);
 
 class MandatoryArgumentError extends Error {
@@ -47,12 +47,12 @@ interface ArgumentObjectSchema {
   required?: string[];
 }
 
-export interface ComputeArg {
+export interface ComputeArg<T = unknown> {
   (
     variables: Variables,
     parent: Parents,
     context: Context,
-  ): unknown;
+  ): T;
 }
 
 export interface ArgTypePolicies {
@@ -68,6 +68,12 @@ interface CollectNode {
   typeIdx: number;
 }
 
+interface CollectedArgs {
+  compute: ComputeArg<Record<string, unknown>>;
+  deps: string[]; // parent deps
+  policies: ArgPolicies;
+}
+
 export function collectArgs(
   typegraph: TypeGraph,
   stageId: StageId,
@@ -75,7 +81,7 @@ export function collectArgs(
   parentProps: Record<string, number>,
   typeIdx: TypeIdx,
   astNodes: Record<string, ast.ArgumentNode>,
-) {
+): CollectedArgs {
   const collector = new ArgumentCollector(
     typegraph,
     stageId,
@@ -83,18 +89,58 @@ export function collectArgs(
     parentProps,
   );
   const argTypeNode = typegraph.type(typeIdx, Type.OBJECT);
-  for (const [argName, astNode] of Object.entries(astNodes)) {
+  for (const argName of Object.keys(astNodes)) {
     if (!(argName in argTypeNode.properties)) {
-      throw new MandatoryArgumentError(collector.getNodeDetails({
-        path: [argName],
-        astNode,
-        typeIdx: -1,
-      }, false));
+      throw collector.unexpectedArgument([argName]);
     }
   }
-  return {
-    compute: null,
+
+  const compute: Record<string, ComputeArg> = {};
+  for (const [argName, argTypeIdx] of Object.entries(argTypeNode.properties)) {
+    compute[argName] = collector.collectArg({
+      path: [argName],
+      astNode: astNodes[argName],
+      typeIdx: argTypeIdx,
+    });
+  }
+
+  const jsonSchema = buildJsonSchema(argTypeNode, typegraph);
+  const validator = ajv.compile(jsonSchema);
+  const validate = (value: unknown) => {
+    if (!validator(value) && validator.errors) {
+      throw new SchemaValidatorError(value, validator.errors, jsonSchema);
+    }
   };
+
+  const policies = collector.policies;
+
+  if (!collector.hasDeps()) { // no deps
+    // pre-compute
+    const value = mapValues(compute, (c) => c({}, {}, {}));
+    // typecheck
+    validate(value);
+    return {
+      compute: () => value,
+      deps: [],
+      policies,
+    };
+  }
+
+  return {
+    compute: (...deps) => {
+      const value = mapValues(compute, (c) => c(...deps));
+      validate(value);
+      return value;
+    },
+    deps: Array.from(collector.deps.parent),
+    policies,
+  };
+}
+
+interface Dependencies {
+  context: Set<string>;
+  parent: Set<string>;
+  variables: Set<string>;
 }
 
 /**
@@ -120,15 +166,20 @@ export function collectArgs(
 class ArgumentCollector {
   stack: CollectNode[] = []; // temporary
   policies: ArgPolicies = new Map();
-  deps: string[] = []; // dependencies on parent
-  varDeps: string[] = []; // dependencies on variables
+  deps: Dependencies;
 
   constructor(
     private tg: TypeGraph,
     private stageId: StageId,
     private effect: EffectType | "none",
     private parentProps: Record<string, number>,
-  ) {}
+  ) {
+    this.deps = {
+      context: new Set(),
+      parent: new Set(),
+      variables: new Set(),
+    };
+  }
 
   /** Collect the arguments for the node `astNode` corresponding to type at `typeIdx` */
   collectArg(node: CollectNode): ComputeArg {
@@ -204,25 +255,10 @@ class ArgumentCollector {
       const {
         name: { value: varName },
       } = valueNode;
-      this.varDeps.push(varName);
+      this.deps.variables.add(varName);
       return (vars) => vars[varName];
     }
 
-    // const argumentSchema = this.getArgumentSchema(typ);
-    // const value = this.getArgumentValue(astNode);
-    // if (argumentSchema != null) {
-    //   const validator = ajv.compile(argumentSchema);
-    //   validator(value);
-    //
-    //   if (validator.errors) {
-    //     throw new SchemaValidatorError(
-    //       value,
-    //       validator.errors,
-    //       argumentSchema,
-    //     );
-    //   }
-    // }
-    //
     switch (typ.type) {
       case Type.OBJECT: {
         return this.collectObjectArg(valueNode, typ);
@@ -658,7 +694,7 @@ class ArgumentCollector {
       throw new Error(`injection '${typ.title} (${name})' not found in parent`);
     }
 
-    this.deps.push(name);
+    this.deps.parent.add(name);
     visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
       this.addPoliciesFrom(node.idx);
       return true;
@@ -728,6 +764,11 @@ class ArgumentCollector {
     ].join(" ");
     throw new Error(`Unexpected argument ${details}`);
   }
+
+  hasDeps() {
+    return this.deps.context.size + this.deps.parent.size +
+        this.deps.variables.size > 0;
+  }
 }
 
 class TypeMismatchError extends Error {
@@ -744,5 +785,94 @@ class TypeMismatchError extends Error {
       `for argument ${argDetails}`,
     ].join(" ");
     super(errorMessage);
+  }
+}
+
+function buildJsonSchema(typeNode: TypeNode, tg: TypeGraph) {
+  return new JsonSchemaBuilder(tg).build(typeNode);
+}
+
+class JsonSchemaBuilder {
+  types: TypeNode[];
+
+  constructor(tg: TypeGraph) {
+    this.types = tg.tg.types;
+  }
+
+  build(typeNode: TypeNode): JSONSchema {
+    switch (typeNode.type) {
+      case Type.OPTIONAL: {
+        const itemSchema = this.build(this.types[typeNode.item]);
+        const nullableType = Array.isArray(itemSchema.type)
+          ? [...itemSchema.type, "null"]
+          : [itemSchema.type, "null"];
+        return { ...itemSchema, type: nullableType };
+      }
+
+      case Type.OBJECT:
+        return this.buildObjectSchema(typeNode);
+
+      case Type.ARRAY:
+        return {
+          ...trimType(typeNode),
+          items: this.build(this.types[typeNode.items]),
+        };
+
+      case Type.UNION:
+        return this.buildGeneralUnionSchema(typeNode, "anyOf");
+
+      case Type.EITHER:
+        return this.buildGeneralUnionSchema(typeNode, "oneOf");
+
+      case Type.FUNCTION:
+        // unreachable: should have been checked in the typegraph validation hook
+        throw new Error("not supported");
+
+      case Type.INTEGER:
+      case Type.NUMBER:
+      case Type.STRING:
+      case Type.BOOLEAN:
+        // scalar types
+        return trimType(typeNode);
+
+      case Type.ANY:
+        return {};
+    }
+  }
+
+  buildObjectSchema(node: ObjectNode): JSONSchema {
+    const properties: Record<string, JSONSchema> = {};
+    const required: string[] = [];
+    for (const [propName, propTypeIdx] of Object.entries(node.properties)) {
+      const propType = this.types[propTypeIdx];
+      properties[propName] = this.build(propType);
+      if (propType.type !== Type.OPTIONAL) {
+        required.push(propName);
+      }
+    }
+    return {
+      ...trimType(node),
+      properties,
+      required,
+      // not necessary since they are already checked in the collector
+      // additionalProperties: false,
+    };
+  }
+
+  buildGeneralUnionSchema(node: UnionNode, variantsKey: "anyOf"): JSONSchema;
+  buildGeneralUnionSchema(node: EitherNode, variantsKey: "oneOf"): JSONSchema;
+  buildGeneralUnionSchema(
+    node: UnionNode | EitherNode,
+    variantsKey: "anyOf" | "oneOf",
+  ): JSONSchema {
+    const variantTypeIndices =
+      node[variantsKey as keyof typeof node] as number[];
+    const variantSchemas = variantTypeIndices.map((typeIdx) =>
+      this.build(this.types[typeIdx])
+    );
+    return {
+      // ...trimType(node),
+      [variantsKey]: variantSchemas,
+    };
   }
 }

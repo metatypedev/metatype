@@ -21,7 +21,6 @@ with TypeGraph("effect-policies", auths=[Auth.jwk("native")]) as g:
         .add_policy(
             {"none": public, "update": current_user_only, "delete": current_user_only}
         )
-        # .add_policy(Policy(public, update=current_user_only, delete=current_user_only))
     )
 
     g.expose(
