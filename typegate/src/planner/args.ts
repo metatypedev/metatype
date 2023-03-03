@@ -68,6 +68,35 @@ interface CollectNode {
   typeIdx: number;
 }
 
+export function collectArgs(
+  typegraph: TypeGraph,
+  stageId: StageId,
+  effect: EffectType | "none",
+  parentProps: Record<string, number>,
+  typeIdx: TypeIdx,
+  astNodes: Record<string, ast.ArgumentNode>,
+) {
+  const collector = new ArgumentCollector(
+    typegraph,
+    stageId,
+    effect,
+    parentProps,
+  );
+  const argTypeNode = typegraph.type(typeIdx, Type.OBJECT);
+  for (const [argName, astNode] of Object.entries(astNodes)) {
+    if (!(argName in argTypeNode.properties)) {
+      throw new MandatoryArgumentError(collector.getNodeDetails({
+        path: [argName],
+        astNode,
+        typeIdx: -1,
+      }, false));
+    }
+  }
+  return {
+    compute: null,
+  };
+}
+
 /**
  * Utility class to collect the arguments for fields.
  *
@@ -88,10 +117,11 @@ interface CollectNode {
  * }
  * ```
  */
-export class ArgumentCollector {
+class ArgumentCollector {
   stack: CollectNode[] = []; // temporary
   policies: ArgPolicies = new Map();
-  deps: string[] = [];
+  deps: string[] = []; // dependencies on parent
+  varDeps: string[] = []; // dependencies on variables
 
   constructor(
     private tg: TypeGraph,
@@ -174,6 +204,7 @@ export class ArgumentCollector {
       const {
         name: { value: varName },
       } = valueNode;
+      this.varDeps.push(varName);
       return (vars) => vars[varName];
     }
 
@@ -665,7 +696,7 @@ export class ArgumentCollector {
         const polIdx = p[this.effect];
         if (polIdx == null) {
           // not authorized
-          throw new Error(`Unexpected argument ${this.currentNodeDetails}`);
+          throw this.unexpectedArgument(this.currentNode.path);
         }
         return polIdx;
       }),
@@ -688,6 +719,14 @@ export class ArgumentCollector {
       `of type '${typeNode.type}' ('${typeNode.title}')`,
       `at ${this.stageId}`,
     ].join(" ");
+  }
+
+  unexpectedArgument(path: string[]) {
+    const details = [
+      `'${path.join(".")}'`,
+      `at ${this.stageId}`,
+    ].join(" ");
+    throw new Error(`Unexpected argument ${details}`);
   }
 }
 
