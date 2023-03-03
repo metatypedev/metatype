@@ -4,6 +4,9 @@ import { ComputeStage } from "../engine.ts";
 import { Runtime } from "./Runtime.ts";
 import { ObjectNode } from "../type_node.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
+import { getLogger } from "../log.ts";
+
+const logger = getLogger(import.meta);
 
 export class GoogleapisRuntime extends Runtime {
   constructor() {
@@ -39,10 +42,10 @@ export class GoogleapisRuntime extends Runtime {
         },
       };
 
-      console.log(input, opts);
+      logger.debug(input, opts);
       const ret = await fetch(input, opts);
       const res = await ret.json();
-      console.log(JSON.stringify(res));
+      logger.debug(JSON.stringify(res));
       return res;
     };
   }
@@ -87,9 +90,6 @@ export class GoogleapisRuntime extends Runtime {
     });
 
     stagesMat.push(queryStage);
-
-    console.log("===", stage.props);
-    console.log(sameRuntime);
 
     for (const field of sameRuntime) {
       if (field.props.parent?.id() === stage.props.parent?.id()) {

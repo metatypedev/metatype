@@ -5,6 +5,7 @@
 
 use anyhow::{anyhow, Context, Result};
 use convert_case::{Case, Casing};
+use log::info;
 use migration_core::json_rpc::types::{
     ApplyMigrationsInput, CreateMigrationInput, DiffParams, DiffTarget, EvaluateDataLossInput,
     ListMigrationDirectoriesInput, SchemaContainer,
@@ -180,6 +181,12 @@ pub async fn deploy(
         .await?;
     let migration_count = res.migrations.len();
 
+    info!(
+        "migrations in {}: {:?}",
+        migrations.to_string(),
+        res.migrations
+    );
+
     let res = api
         .apply_migrations(ApplyMigrationsInput {
             migrations_directory_path: migrations.to_string(),
@@ -197,12 +204,12 @@ struct MigrationsFolder {
 impl MigrationsFolder {
     pub fn from(serialized: Option<String>) -> Result<Self> {
         let tempdir = tempdir_in(TMP_DIR.as_path())?;
-        common::migrations::unpack(&tempdir, serialized)?;
+        common::archive::unpack(&tempdir, serialized)?;
         Ok(Self { dir: tempdir })
     }
 
     fn serialize(self) -> Result<String> {
-        common::migrations::archive(self)
+        common::archive::archive(self)
     }
 }
 

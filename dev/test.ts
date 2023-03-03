@@ -68,13 +68,11 @@ const failures = [];
 for await (const testFile of testFiles) {
   const status = await run([
     "deno",
+    "task",
     "test",
-    "--config=typegate/deno.json",
-    "--unstable",
-    "--allow-all",
     testFile,
     ...flags["--"],
-  ], projectDir);
+  ], resolve(projectDir, "typegate"));
 
   if (!status.success) {
     failures.push(testFile);

@@ -24,6 +24,5 @@ pub fn archive<P: AsRef<Path>>(folder: P) -> Result<String> {
     let mut tar = tar::Builder::new(encoder);
     tar.append_dir_all(".", &folder)?;
     let bytes = tar.into_inner()?.finish()?;
-
     Ok(STANDARD.encode(bytes))
 }

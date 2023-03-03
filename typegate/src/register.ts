@@ -5,8 +5,6 @@ import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 
-console.log("init replicated map");
-
 export abstract class Register {
   abstract set(payload: string): Promise<string>;
 

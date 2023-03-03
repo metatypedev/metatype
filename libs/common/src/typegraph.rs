@@ -167,6 +167,14 @@ pub enum TypeNode {
         /// anyOf field of JSON Schema.
         any_of: Vec<u32>,
     },
+    #[serde(rename_all = "camelCase")]
+    Either {
+        #[serde(flatten)]
+        base: TypeNodeBase,
+        /// Array of indexes of the nodes that are used as subschemes in the
+        /// oneOf field of JSON Schema.
+        one_of: Vec<u32>,
+    },
     Any {
         #[serde(flatten)]
         base: TypeNodeBase,
@@ -186,6 +194,7 @@ impl TypeNode {
             | Array { base, .. }
             | Function { base, .. }
             | Union { base, .. }
+            | Either { base, .. }
             | Any { base, .. } => base,
         }
     }

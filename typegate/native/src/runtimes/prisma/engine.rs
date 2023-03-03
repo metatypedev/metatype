@@ -3,6 +3,7 @@
 use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 
 use anyhow::{Context, Result};
+use request_handlers::GraphqlBody;
 
 pub async fn register_engine(datamodel: String, tg_name: String) -> Result<String> {
     let conf = super::engine_import::ConstructorOptions {
@@ -23,11 +24,11 @@ pub async fn register_engine(datamodel: String, tg_name: String) -> Result<Strin
 }
 
 pub async fn query(engine_key: String, query: serde_json::Value) -> Result<String> {
-    let body = serde_json::from_value(query)?;
+    let body = serde_json::from_value::<GraphqlBody>(query)?;
     let engine = super::ENGINES
         .get(&engine_key)
         .with_context(|| format!("Cound not find engine '{engine_key}"))?;
-    let res = engine.query(body, None).await?;
+    let res = engine.query(body.into(), None).await?;
     serde_json::to_string(&res)
         .context("Error while deserializing GraphQL response from the prisma engine")
 }

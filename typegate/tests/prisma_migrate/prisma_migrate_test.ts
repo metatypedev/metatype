@@ -65,7 +65,6 @@ test("prisma migrations", async (t) => {
         "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
       })
       .expectBody(async (body) => {
-        console.log({ body });
         const {
           createdMigrationName,
           appliedMigrations,
@@ -161,7 +160,6 @@ test("prisma migrations", async (t) => {
       })
       .expectBody((body) => {
         const { appliedMigrations, databaseReset } = body.data.apply;
-        console.log({ appliedMigrations, databaseReset });
         assert(databaseReset);
         assertArrayIncludes(
           appliedMigrations,
