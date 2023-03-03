@@ -23,15 +23,17 @@ import {
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
-import { JSONSchema, SchemaValidatorError, trimType } from "../typecheck.ts";
+import {
+  addJsonFormat,
+  JSONSchema,
+  SchemaValidatorError,
+  trimType,
+} from "../typecheck.ts";
 import { EffectType, EitherNode } from "../types/typegraph.ts";
 
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
 import { getChildTypes, visitType, visitTypes } from "../typegraph/visitor.ts";
-
-const ajv = new Ajv();
-addFormats(ajv);
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -479,7 +481,6 @@ class ArgumentCollector {
           typeIdx: variantTypeIndex,
         });
       } catch (error) {
-        console.debug("error");
         if (
           error instanceof TypeMismatchError ||
           error instanceof MandatoryArgumentError ||
@@ -662,7 +663,10 @@ class ArgumentCollector {
         ) {
           throw new Error(`Unexpected`); // unreachable
         }
+
         const name = inject as string;
+        this.deps.context.add(name);
+
         return (_vars, _parent, context) => {
           const { [name]: value } = context;
           if (value == null && typ.type != Type.OPTIONAL) {
@@ -787,6 +791,10 @@ class TypeMismatchError extends Error {
     super(errorMessage);
   }
 }
+
+const ajv = new Ajv();
+addFormats(ajv);
+addJsonFormat(ajv);
 
 function buildJsonSchema(typeNode: TypeNode, tg: TypeGraph) {
   return new JsonSchemaBuilder(tg).build(typeNode);
