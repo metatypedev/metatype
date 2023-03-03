@@ -9,7 +9,7 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.deno import PureFunMat
+from typegraph.runtimes.deno import PureFunMat, ImportFunMat
 from typegraph.utils.attrs import always
 from typegraph.utils.sanitizers import sanitize_ts_string
 from typegraph.effects import EffectType
@@ -47,6 +47,8 @@ class Policy(Node):
     @classmethod
     def create_from(cls, p) -> Union["Policy", "EffectPolicies"]:
         if isinstance(p, Materializer):
+            if isinstance(p, ImportFunMat):
+                return cls(p).named(p.name)
             return cls(p)
         if isinstance(p, cls):
             return p

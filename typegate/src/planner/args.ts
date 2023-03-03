@@ -333,7 +333,7 @@ class ArgumentCollector {
    *
    * see: getArgumentValue(.)
    */
-  private getJsonValueFromRoot(node: ast.ValueNode): JSONValue {
+  private getJsonValueFromRoot(node: ast.ValueNode, name: string): JSONValue {
     switch (node.kind) {
       case Kind.STRING:
         return String(node.value);
@@ -351,20 +351,21 @@ class ArgumentCollector {
         for (const field of fields) {
           argumentObjectValue[field.name.value] = this.getJsonValueFromRoot(
             field.value,
+            field.name.value,
           );
         }
         return argumentObjectValue;
       }
 
       case Kind.LIST:
-        return valueNode.values.map((v) =>
+        return node.values.map((v) =>
           this.getArgumentValue({ value: v } as ast.ArgumentNode)
         );
 
       default:
         throw new Error(
           [
-            `unsupported node '${astNode.name.value}' of type '${valueNode.kind}',`,
+            `unsupported node '${name}' of type '${node.kind}',`,
             `cannot get the argument value from it`,
           ].join(" "),
         );
@@ -381,7 +382,7 @@ class ArgumentCollector {
   private getArgumentValue(
     astNode: ast.ArgumentNode | ast.ObjectFieldNode,
   ): JSONValue {
-    return this.getJsonValueFromRoot(astNode.value);
+    return this.getJsonValueFromRoot(astNode.value, astNode.name.value);
   }
 
   /**

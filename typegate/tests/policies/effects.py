@@ -8,18 +8,22 @@ with TypeGraph("effect-policies", auths=[Auth.jwk("native")]) as g:
     # public = p.public().mat
     public = PureFunMat("() => true")
     mod = ModuleMat("ts/effects.ts")
-    current_user_only = mod.imp("currentUserOnly")
+    # current_user_only = mod.imp("currentUserOnly")
+    admin_only = p.jwt("role", "admin")
     user = (
         t.struct(
             {
                 "id": t.integer(),
                 "email": t.email(),
-                "password_hash": t.string().add_policy(current_user_only),
+                "password_hash": t.string().add_policy(
+                    FunMat("() => false")
+                ),  # deny all
             }
         )
         .named("User")
         .add_policy(
-            {"none": public, "update": current_user_only, "delete": current_user_only}
+            # {"none": public, "update": current_user_only, "delete": current_user_only}
+            {"none": public, "update": admin_only, "delete": admin_only}
         )
     )
 
