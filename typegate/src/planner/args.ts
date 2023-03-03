@@ -329,32 +329,29 @@ class ArgumentCollector {
   }
 
   /**
-   * Returns the value of a given argument node.
+   * Returns the JSONValue
    *
-   * The value returned can be used to check that an argument meets all the
-   * requirements of a given JSON schema.
+   * see: getArgumentValue(.)
    */
-  private getArgumentValue(
-    astNode: ast.ArgumentNode | ast.ObjectFieldNode,
-  ): JSONValue {
-    const valueNode = astNode.value;
-
-    switch (valueNode.kind) {
+  private getJsonValueFromRoot(node: ast.ValueNode): JSONValue {
+    switch (node.kind) {
       case Kind.STRING:
-        return String(valueNode.value);
+        return String(node.value);
 
       case Kind.BOOLEAN:
-        return Boolean(valueNode.value);
+        return Boolean(node.value);
 
       case Kind.INT:
       case Kind.FLOAT:
-        return Number(valueNode.value);
+        return Number(node.value);
 
       case Kind.OBJECT: {
-        const fields = valueNode.fields;
+        const fields = node.fields;
         const argumentObjectValue: Record<string, JSONValue> = {};
         for (const field of fields) {
-          argumentObjectValue[field.name.value] = this.getArgumentValue(field);
+          argumentObjectValue[field.name.value] = this.getJsonValueFromRoot(
+            field.value,
+          );
         }
         return argumentObjectValue;
       }
@@ -375,6 +372,19 @@ class ArgumentCollector {
   }
 
   /**
+   * Returns the value of a given argument node.
+   *
+   * The value returned can be used to check that an argument meets all the
+   * requirements of a given JSON schema.
+   * see: getNodeValue
+   */
+  private getArgumentValue(
+    astNode: ast.ArgumentNode | ast.ObjectFieldNode,
+  ): JSONValue {
+    return this.getJsonValueFromRoot(astNode.value);
+  }
+
+  /**
    * Returns the JSON Schema of an argument type node.
    *
    * The JSON Schema returned is useful to check non-primitive values such as
@@ -382,6 +392,19 @@ class ArgumentCollector {
    */
   private getArgumentSchema(typenode: TypeNode): JSONSchema {
     switch (typenode.type) {
+      case Type.OPTIONAL: {
+        // Note:
+        // The field `item` does not exist in JSON Schema
+        // we must get its schema and make the type nullable
+        const itemTypeNode = this.tg.type(typenode.item);
+        const nullableType = [itemTypeNode.type, "null"];
+        const itemSchema = this.getArgumentSchema(itemTypeNode);
+        const schema = {
+          ...itemSchema,
+          type: nullableType,
+        };
+        return schema;
+      }
       case Type.ARRAY: {
         const itemsTypeNode = this.tg.type(typenode.items);
         const itemsSchema = this.getArgumentSchema(itemsTypeNode);

@@ -33,10 +33,10 @@ self_update = { version = "0.36.0", features = [
 ] }
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
-tokio = { version = "1.25.0", features = ["full"] }
+tokio = { version = "1.26.0", features = ["full"] }
 log = "0.4.17"
-clap = { version = "4.1.6", features = ["derive"] }
-crossbeam-channel = "0.5.6"
+clap = { version = "4.1.8", features = ["derive"] }
+crossbeam-channel = "0.5.7"
 notify = "5.1.0"
 tiny_http = "0.12.0"
 ignore = "0.4.20"
