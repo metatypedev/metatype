@@ -305,41 +305,39 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, query, "executeRaw", effect=effect),
         )
 
-    def find_unique(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def find_unique(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Unique", tpe)
         # output = typegen.get_out_type(base_output)
         output = typegen.add_nested_count(tpe)
+        if where is None:
+            # findUnique's where expression
+            # does not allow AND, OR, NOT
+            where = (
+                typegen.gen_query_where_expr(tpe, exclude_extra_fields=True)
+                .named(_pref("Where"))
+                .optional()
+            )
         return t.func(
-            t.struct(
-                {
-                    # findUnique's where expression
-                    # does not allow AND, OR, NOT
-                    "where": typegen.gen_query_where_expr(
-                        tpe, exclude_extra_fields=True
-                    )
-                    .named(_pref("Where"))
-                    .optional()
-                }
-            ),
+            t.struct({"where": where}),
             output.named(_pref("Output")).optional(),
             PrismaOperationMat(self, tpe.name, "findUnique", effect=effects.none()),
         )
 
-    def find_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def find_many(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Many", tpe)
         rel_cols = tpe.props.keys()
         # output = typegen.get_out_type(base_output)
         output = typegen.add_nested_count(tpe)
+        if where is None:
+            where = typegen.gen_query_where_expr(tpe).named(_pref("Where")).optional()
         return t.func(
             t.struct(
                 {
-                    "where": typegen.gen_query_where_expr(tpe)
-                    .named(_pref("Where"))
-                    .optional(),
+                    "where": where,
                     "orderBy": typegen.get_order_by_type(tpe)
                     .named(_pref("OrderBy"))
                     .optional(),
@@ -354,17 +352,17 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "findMany", effect=effects.none()),
         )
 
-    def aggregate(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def aggregate(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Aggregate", tpe)
         tpe_nums = typegen.extract_number_types(tpe)
+        if where is None:
+            where = typegen.gen_query_where_expr(tpe).named(_pref("Where")).optional()
         return t.func(
             t.struct(
                 {
-                    "where": typegen.gen_query_where_expr(tpe)
-                    .named(_pref("Where"))
-                    .optional(),
+                    "where": where,
                     "take": t.integer().named(_pref("Take")).optional(),
                     "skip": t.integer().named(_pref("Skip")).optional(),
                 }
@@ -383,7 +381,9 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "aggregate", effect=effects.none()),
         )
 
-    def group_by(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def group_by(
+        self, tpe: Union[t.struct, t.NodeProxy], where=None, having=None
+    ) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("GroupBy", tpe)
@@ -403,21 +403,25 @@ class PrismaRuntime(Runtime):
             }
         )
         row_def = tpe.compose(aggreg_def.props)
-        having_def = typegen.gen_having_expr(tpe, aggreg_def)
-
+        if where is None:
+            where = typegen.gen_query_where_expr(tpe).named(_pref("Where")).optional()
+        if having is None:
+            having = (
+                typegen.gen_having_expr(tpe, aggreg_def)
+                .named(_pref("Having"))
+                .optional()
+            )
         return t.func(
             t.struct(
                 {
                     "by": t.array(t.string()).named(_pref("By")),
                     "take": t.integer().named(_pref("Take")).optional(),
                     "skip": t.integer().named(_pref("Skip")).optional(),
-                    "where": typegen.gen_query_where_expr(row_def)
-                    .named(_pref("Where"))
-                    .optional(),
+                    "where": where,
                     "orderBy": typegen.get_order_by_type(row_def)
                     .named(_pref("OrderBy"))
                     .optional(),
-                    "having": having_def.named(_pref("Having")).optional(),
+                    "having": having,
                 }
             ).named(_pref("Input")),
             t.array(row_def).named(_pref("Output")),
@@ -452,18 +456,18 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "createMany", effect=effects.create()),
         )
 
-    def update(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def update(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
+        if where is None:
+            where = typegen.gen_query_where_expr(tpe).named(f"{tpe.name}UpdateOneWhere")
         return t.func(
             t.struct(
                 {
                     "data": typegen.get_input_type(tpe, update=True).named(
                         f"{tpe.name}UpdateInput"
                     ),
-                    "where": typegen.gen_query_where_expr(tpe).named(
-                        f"{tpe.name}UpdateOneWhere"
-                    ),
+                    "where": where,
                 }
             ),
             typegen.get_out_type(tpe).named(f"{tpe.name}UpdateOutput"),
@@ -472,15 +476,17 @@ class PrismaRuntime(Runtime):
             ),
         )
 
-    def update_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def update_many(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("UpdateMany", tpe)
+        if where is None:
+            where = typegen.gen_query_where_expr(tpe).named(_pref("Where"))
         return t.func(
             t.struct(
                 {
                     "data": typegen.get_update_data_type(tpe).named(_pref("Data")),
-                    "where": typegen.gen_query_where_expr(tpe).named(_pref("Where")),
+                    "where": where,
                 }
             ),
             t.struct({"count": t.integer()}).named(_pref("BatchPayload")),
@@ -489,14 +495,16 @@ class PrismaRuntime(Runtime):
             ),
         )
 
-    def upsert(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def upsert(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Upsert", tpe)
+        if where is None:
+            where = typegen.gen_query_where_expr(tpe).named(_pref("Where"))
         return t.func(
             t.struct(
                 {
-                    "where": typegen.gen_query_where_expr(tpe).named(_pref("Where")),
+                    "where": where,
                     "create": typegen.get_input_type(tpe).named(_pref("Create")),
                     "update": typegen.get_update_data_type(tpe).named(_pref("Update")),
                 }
@@ -505,29 +513,27 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "upsertOne", effect=effects.upsert()),
         )
 
-    def delete(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def delete(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Delete", tpe)
+        if where is None:
+            where = typegen.gen_query_where_expr(tpe).named(_pref("Input"))
         return t.func(
-            t.struct(
-                {"where": typegen.gen_query_where_expr(tpe).named(_pref("Input"))},
-            ),
+            t.struct({"where": where}),
             typegen.get_out_type(tpe).named(_pref("Output")),
             PrismaOperationMat(self, tpe.name, "deleteOne", effect=effects.delete()),
         )
 
-    def delete_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def delete_many(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
+        if where is None:
+            where = typegen.gen_query_where_expr(tpe).named(
+                f"{tpe.name}DeleteManyWhereInput"
+            )
         return t.func(
-            t.struct(
-                {
-                    "where": typegen.gen_query_where_expr(tpe).named(
-                        f"{tpe.name}DeleteManyWhereInput"
-                    ),
-                }
-            ),
+            t.struct({"where": where}),
             t.struct({"count": t.integer()}).named(f"{tpe.name}BatchDeletePayload"),
             PrismaOperationMat(self, tpe.name, "deleteMany", effect=effects.delete()),
         )
