@@ -121,20 +121,29 @@ export class HTTPRuntime extends Runtime {
       const searchParams = new URLSearchParams();
       const hasBody = method !== "GET" && method !== "DELETE";
 
+      const { rename_fields } = options;
       for (const [key, value] of Object.entries(args)) {
         if (options.header_prefix && key.startsWith(options.header_prefix)) {
           headers.set(key.slice(options.header_prefix.length), value);
         } else {
+          let correctKey = key;
+          for (const placeholder in rename_fields) {
+            const renameTo = rename_fields[placeholder];
+            if (placeholder == key) {
+              correctKey = renameTo;
+              break;
+            }
+          }
           if (
             options.query_fields?.includes(key) || !hasBody
           ) {
             if (Array.isArray(value)) {
-              value.forEach((v) => searchParams.append(key, v));
+              value.forEach((v) => searchParams.append(correctKey, v));
             } else {
-              searchParams.append(key, value as string);
+              searchParams.append(correctKey, value as string);
             }
           } else {
-            bodyFields[key] = value;
+            bodyFields[correctKey] = value;
           }
         }
       }
