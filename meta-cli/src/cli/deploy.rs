@@ -6,6 +6,7 @@ use crate::typegraph::TypegraphLoader;
 use crate::utils::clap::UrlValueParser;
 use crate::utils::{ensure_venv, Node};
 use anyhow::Result;
+use async_trait::async_trait;
 use clap::Parser;
 use reqwest::Url;
 use std::collections::HashMap;
@@ -30,8 +31,9 @@ pub struct Deploy {
     password: Option<String>,
 }
 
+#[async_trait]
 impl Action for Deploy {
-    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
         let config = Config::load_or_find(config_path, &dir)?;
         let loader = TypegraphLoader::with_config(&config);
@@ -56,11 +58,13 @@ impl Action for Deploy {
         let node_config = config.node("deploy");
         let node_url = node_config.url(self.gate.clone());
 
-        let auth = node_config.basic_auth(self.username.clone(), self.password.clone())?;
+        let auth = node_config
+            .basic_auth(self.username.clone(), self.password.clone())
+            .await?;
 
         let node = Node::new(node_url, Some(auth))?;
 
-        push_loaded_typegraphs(dir, loaded, &node);
+        push_loaded_typegraphs(dir, loaded, &node).await;
 
         Ok(())
     }

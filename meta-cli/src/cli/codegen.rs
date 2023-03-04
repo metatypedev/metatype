@@ -4,6 +4,7 @@ use crate::config::Config;
 use crate::utils::ensure_venv;
 use crate::{codegen, typegraph::TypegraphLoader};
 use anyhow::{anyhow, Result};
+use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
 
@@ -30,8 +31,9 @@ pub struct Deno {
     typegraph: Option<String>,
 }
 
+#[async_trait]
 impl Action for Deno {
-    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
         // try to find config file, else use default config as the options
         // used for code generation have default values.

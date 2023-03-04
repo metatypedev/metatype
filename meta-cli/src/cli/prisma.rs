@@ -10,6 +10,8 @@ use crate::{
     },
 };
 use anyhow::{bail, Context, Result};
+use async_recursion::async_recursion;
+use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use common::archive::archive;
@@ -72,13 +74,14 @@ pub struct Dev {
     username: Option<String>,
 }
 
+#[async_trait]
 impl Action for Dev {
-    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         let config = Config::load_or_find(config_path, dir)?;
 
         let node_config = config.node("dev");
         let node_url = node_config.url(self.gate.clone());
-        let auth = node_config.basic_auth(self.username.clone(), None)?;
+        let auth = node_config.basic_auth(self.username.clone(), None).await?;
 
         let prisma_config = &config.typegraphs.materializers.prisma;
 
@@ -89,7 +92,7 @@ impl Action for Dev {
             prisma_config.migrations_path(),
         )?;
 
-        migrate.apply(false)?;
+        migrate.apply(false).await?;
         println!();
 
         let (rt_name, changes) = PrismaMigrate::diff(
@@ -97,7 +100,8 @@ impl Action for Dev {
             &migrate.node,
             &migrate.typegraph,
             migrate.runtime_name.as_deref(),
-        )?;
+        )
+        .await?;
 
         migrate.runtime_name.replace(rt_name);
 
@@ -108,7 +112,7 @@ impl Action for Dev {
                 .unwrap();
             if let Answer::RESPONSE(name) = ans {
                 if !name.is_empty() {
-                    migrate.create(name, !self.create_only)?;
+                    migrate.create(name, !self.create_only).await?;
                     migrate.end()?;
                 }
             }
@@ -140,8 +144,9 @@ pub struct Deploy {
     username: Option<String>,
 }
 
+#[async_trait]
 impl Action for Deploy {
-    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         let config = Config::load_or_find(config_path, dir)?;
         let prisma_config = &config.typegraphs.materializers.prisma;
         let migrations = self
@@ -159,11 +164,13 @@ impl Action for Deploy {
 
         let node_config = config.node("deploy");
         let node_url = node_config.url(self.gate.clone());
-        let auth = node_config.basic_auth(self.username.clone(), None)?;
+        let auth = node_config.basic_auth(self.username.clone(), None).await?;
         let node = Node::new(node_url, Some(auth))?;
 
-        let res = node.post(MIGRATION_ENDPOINT)?.gql(
-            indoc! {"
+        let res = node
+            .post(MIGRATION_ENDPOINT)?
+            .gql(
+                indoc! {"
                     mutation PrismaDeploy($tg: String!, $runtime: String!, $mig: String!) {
                         deploy(typegraph: $tg, runtime: $runtime, migrations: $mig) {
                             migrationCount
@@ -171,13 +178,14 @@ impl Action for Deploy {
                         }
                     }
                 "}
-            .to_string(),
-            Some(json!({
-                "tg": &self.typegraph,
-                "runtime": self.runtime,
-                "mig": migrations,
-            })),
-        )?;
+                .to_string(),
+                Some(json!({
+                    "tg": &self.typegraph,
+                    "runtime": self.runtime,
+                    "mig": migrations,
+                })),
+            )
+            .await?;
 
         #[derive(serde::Deserialize)]
         #[serde(rename_all = "camelCase")]
@@ -246,20 +254,22 @@ pub struct Format {
     output: Option<String>,
 }
 
+#[async_trait]
 impl Action for Diff {
-    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         // TODO runtime selection
         let config = Config::load_or_find(config_path, dir)?;
         let node_config = config.node("dev");
         let gate = node_config.url(self.gate.clone());
         let node = Node::new(gate, Some(BasicAuth::prompt()?))?;
-        PrismaMigrate::diff(self.script, &node, &self.typegraph, self.runtime.as_deref())?;
+        PrismaMigrate::diff(self.script, &node, &self.typegraph, self.runtime.as_deref()).await?;
         Ok(())
     }
 }
 
+#[async_trait]
 impl Action for Format {
-    fn run(&self, _dir: String, _config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, _dir: String, _config_path: Option<PathBuf>) -> Result<()> {
         let input = if let Some(file) = self.input.as_ref() {
             let mut file =
                 File::open(file).with_context(|| format!("could not open file \"{file}\""))?;
@@ -374,7 +384,8 @@ impl PrismaMigrate {
     }
 
     /// Apply pending migrations
-    fn apply(&self, reset_database: bool) -> Result<()> {
+    #[async_recursion]
+    async fn apply(&self, reset_database: bool) -> Result<()> {
         enum ApplyResponse {
             Ok(graphql::Response),
             ResetRequired(String),
@@ -400,6 +411,7 @@ impl PrismaMigrate {
                     "reset": reset_database,
                 })),
             )
+            .await
             .map_or_else(
                 |e| {
                     if let graphql::Error::FailedQuery(errors) = &e {
@@ -424,11 +436,14 @@ impl PrismaMigrate {
                 println!("{}", reason.dimmed());
 
                 let ans = Question::new("Do you want to reset the database?").confirm();
-                if let Answer::YES = ans {
-                    println!();
-                    return self.apply(true);
+                match ans {
+                    Answer::YES => {
+                        self.apply(true).await?;
+                    }
+                    _ => {
+                        bail!("Operation aborted.");
+                    }
                 }
-                bail!("Operation aborted.");
             }
 
             ApplyResponse::Ok(res) => {
@@ -464,7 +479,7 @@ impl PrismaMigrate {
     }
 
     /// Create and eventually apply a new migration
-    fn create(&mut self, name: String, apply: bool) -> Result<()> {
+    async fn create(&mut self, name: String, apply: bool) -> Result<()> {
         let res = self.node.post(MIGRATION_ENDPOINT)?.gql(
             indoc! {"
                     mutation PrismaCreate($tg: String!, $rt: String, $mig: String, $name: String!, $apply: Boolean!) {
@@ -484,7 +499,7 @@ impl PrismaMigrate {
                 "name": name,
                 "apply": apply
             })),
-        )?;
+        ).await?;
 
         res.display_errors();
 
@@ -535,14 +550,16 @@ impl PrismaMigrate {
         Ok(())
     }
 
-    pub fn diff(
+    pub async fn diff(
         script: bool,
         node: &Node,
         tg: &String,
         rt: Option<&str>,
     ) -> Result<(String, bool)> {
-        let res = node.post(MIGRATION_ENDPOINT)?.gql(
-            indoc! {"
+        let res = node
+            .post(MIGRATION_ENDPOINT)?
+            .gql(
+                indoc! {"
                     query PrismaDiff($tg: String!, $rt: String, $script: Boolean) {
                         diff(typegraph: $tg, runtime: $rt, script: $script) {
                             diff
@@ -550,13 +567,14 @@ impl PrismaMigrate {
                         }
                     }
                 "}
-            .to_string(),
-            Some(json!({
-                "tg": tg,
-                "rt": rt,
-                "script": script,
-            })),
-        )?;
+                .to_string(),
+                Some(json!({
+                    "tg": tg,
+                    "rt": rt,
+                    "script": script,
+                })),
+            )
+            .await?;
 
         res.display_errors();
 

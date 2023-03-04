@@ -45,7 +45,7 @@ anyhow = "1.0.69"
 indoc = "2.0.0"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_json = { version = "1.0.93", features = ["preserve_order"] }
-reqwest = { version = "0.11.14", features = ["blocking", "json"] }
+reqwest = { version = "0.11.14", features = ["json"] }
 colored = "2.0.0"
 question = "0.2.2"
 dialoguer = "0.10.3"
@@ -59,7 +59,11 @@ serde_yaml = "0.9.17"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.45", features = ["vendored"] }
 indexmap = { version = "1.9.2", features = ["serde"] }
+lade-sdk = "0.2.2"
+async-trait = "0.1.65"
+async-recursion = "1.0.2"
 
 [dev-dependencies]
+assert_cmd = "2.0.8"
 insta = "1.28.0"
 project-root = "0.2.2"
