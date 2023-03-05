@@ -3,15 +3,17 @@ export const snapshot = {};
 snapshot[`Either type 1`] = `
 [
   \`value: {
-  "age": 5,
-  "name": "John",
-  "company": "The company"
+  "user": {
+    "age": 5,
+    "name": "John",
+    "company": "The company"
+  }
 }
 
 errors: [
   {
-    "instancePath": "",
-    "schemaPath": "#/oneOf/0/required",
+    "instancePath": "/user",
+    "schemaPath": "#/properties/user/oneOf/0/required",
     "keyword": "required",
     "params": {
       "missingProperty": "school"
@@ -19,8 +21,8 @@ errors: [
     "message": "must have required property 'school'"
   },
   {
-    "instancePath": "",
-    "schemaPath": "#/oneOf/1/required",
+    "instancePath": "/user",
+    "schemaPath": "#/properties/user/oneOf/1/required",
     "keyword": "required",
     "params": {
       "missingProperty": "college"
@@ -28,8 +30,8 @@ errors: [
     "message": "must have required property 'college'"
   },
   {
-    "instancePath": "/age",
-    "schemaPath": "#/oneOf/2/properties/age/minimum",
+    "instancePath": "/user/age",
+    "schemaPath": "#/properties/user/oneOf/2/properties/age/minimum",
     "keyword": "minimum",
     "params": {
       "comparison": ">=",
@@ -38,8 +40,8 @@ errors: [
     "message": "must be >= 25"
   },
   {
-    "instancePath": "",
-    "schemaPath": "#/oneOf",
+    "instancePath": "/user",
+    "schemaPath": "#/properties/user/oneOf",
     "keyword": "oneOf",
     "params": {
       "passingSchemas": null
@@ -49,208 +51,96 @@ errors: [
 ]
 
 schema: {
-  "oneOf": [
-    {
-      "type": "object",
-      "required": [
-        "age",
-        "name",
-        "school"
-      ],
-      "properties": {
-        "age": {
-          "type": "integer",
-          "title": "integer_1",
-          "minimum": 5,
-          "maximum": 16
+  "type": "object",
+  "title": "object_21",
+  "properties": {
+    "user": {
+      "oneOf": [
+        {
+          "type": "object",
+          "title": "Kid",
+          "properties": {
+            "age": {
+              "type": "integer",
+              "title": "integer_1",
+              "minimum": 5,
+              "maximum": 16
+            },
+            "name": {
+              "type": "string",
+              "title": "string_2"
+            },
+            "school": {
+              "type": "string",
+              "title": "string_3"
+            }
+          },
+          "required": [
+            "age",
+            "name",
+            "school"
+          ]
         },
-        "name": {
-          "type": "string",
-          "title": "string_2"
+        {
+          "type": "object",
+          "title": "Teen",
+          "properties": {
+            "age": {
+              "type": "integer",
+              "title": "integer_5",
+              "minimum": 17,
+              "maximum": 24
+            },
+            "name": {
+              "type": "string",
+              "title": "string_6"
+            },
+            "college": {
+              "type": "string",
+              "title": "string_7"
+            }
+          },
+          "required": [
+            "age",
+            "name",
+            "college"
+          ]
         },
-        "school": {
-          "type": "string",
-          "title": "string_3"
+        {
+          "type": "object",
+          "title": "Adult",
+          "properties": {
+            "age": {
+              "type": "integer",
+              "title": "integer_9",
+              "minimum": 25
+            },
+            "name": {
+              "type": "string",
+              "title": "string_10"
+            },
+            "company": {
+              "type": "string",
+              "title": "string_11"
+            }
+          },
+          "required": [
+            "age",
+            "name",
+            "company"
+          ]
         }
-      }
-    },
-    {
-      "type": "object",
-      "required": [
-        "age",
-        "name",
-        "college"
-      ],
-      "properties": {
-        "age": {
-          "type": "integer",
-          "title": "integer_5",
-          "minimum": 17,
-          "maximum": 24
-        },
-        "name": {
-          "type": "string",
-          "title": "string_6"
-        },
-        "college": {
-          "type": "string",
-          "title": "string_7"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "required": [
-        "age",
-        "name",
-        "company"
-      ],
-      "properties": {
-        "age": {
-          "type": "integer",
-          "title": "integer_9",
-          "minimum": 25
-        },
-        "name": {
-          "type": "string",
-          "title": "string_10"
-        },
-        "company": {
-          "type": "string",
-          "title": "string_11"
-        }
-      }
+      ]
     }
+  },
+  "required": [
+    "user"
   ]
 }\`,
 ]
 `;
 
 snapshot[`Either type 2`] = `
-[
-  \`value: {
-  "age": 5,
-  "school": "The school"
-}
-
-errors: [
-  {
-    "instancePath": "",
-    "schemaPath": "#/oneOf/0/required",
-    "keyword": "required",
-    "params": {
-      "missingProperty": "name"
-    },
-    "message": "must have required property 'name'"
-  },
-  {
-    "instancePath": "",
-    "schemaPath": "#/oneOf/1/required",
-    "keyword": "required",
-    "params": {
-      "missingProperty": "name"
-    },
-    "message": "must have required property 'name'"
-  },
-  {
-    "instancePath": "",
-    "schemaPath": "#/oneOf/2/required",
-    "keyword": "required",
-    "params": {
-      "missingProperty": "name"
-    },
-    "message": "must have required property 'name'"
-  },
-  {
-    "instancePath": "",
-    "schemaPath": "#/oneOf",
-    "keyword": "oneOf",
-    "params": {
-      "passingSchemas": null
-    },
-    "message": "must match exactly one schema in oneOf"
-  }
-]
-
-schema: {
-  "oneOf": [
-    {
-      "type": "object",
-      "required": [
-        "age",
-        "name",
-        "school"
-      ],
-      "properties": {
-        "age": {
-          "type": "integer",
-          "title": "integer_1",
-          "minimum": 5,
-          "maximum": 16
-        },
-        "name": {
-          "type": "string",
-          "title": "string_2"
-        },
-        "school": {
-          "type": "string",
-          "title": "string_3"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "required": [
-        "age",
-        "name",
-        "college"
-      ],
-      "properties": {
-        "age": {
-          "type": "integer",
-          "title": "integer_5",
-          "minimum": 17,
-          "maximum": 24
-        },
-        "name": {
-          "type": "string",
-          "title": "string_6"
-        },
-        "college": {
-          "type": "string",
-          "title": "string_7"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "required": [
-        "age",
-        "name",
-        "company"
-      ],
-      "properties": {
-        "age": {
-          "type": "integer",
-          "title": "integer_9",
-          "minimum": 25
-        },
-        "name": {
-          "type": "string",
-          "title": "string_10"
-        },
-        "company": {
-          "type": "string",
-          "title": "string_11"
-        }
-      }
-    }
-  ]
-}\`,
-]
-`;
-
-snapshot[`Either type 3`] = `
 {
   __schema: {
     types: [

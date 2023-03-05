@@ -12,7 +12,6 @@ class EffectType(LowercaseStrEnum):
     UPDATE = auto()
     UPSERT = auto()
     DELETE = auto()
-    UNKNOWN = auto()
 
 
 @frozen
@@ -20,6 +19,9 @@ class Effect:
     effect: Optional[EffectType]
     # see: https://developer.mozilla.org/en-US/docs/Glossary/Idempotent
     idempotent: bool
+
+    def is_none(self) -> bool:
+        return self.effect is None
 
 
 def none():

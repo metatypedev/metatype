@@ -102,7 +102,7 @@ test(
             convert(color: 100, to: "rgb_array")
           }
         `
-          .matchErrorSnapshot(t)
+          .expectErrorContains("Type mismatch: got 'IntValue'")
           .on(e);
       },
     );

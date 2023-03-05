@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { Context } from "../../types.ts";
+import { EffectType } from "../../types/typegraph.ts";
 
 export interface Code {
   name: string;
@@ -12,6 +13,7 @@ export interface TaskContext {
   parent?: Record<string, unknown>;
   context?: Context;
   secrets: Record<string, string>;
+  effect: EffectType | null;
 }
 
 export interface FunctionMaterializerData {

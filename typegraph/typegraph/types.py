@@ -21,7 +21,7 @@ from typing_extensions import Self
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypeGraph, TypegraphContext, find
-from typegraph.policies import Policy
+from typegraph.policies import Policy, EffectPolicies
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always, asdict
 
@@ -226,7 +226,7 @@ class typedef(Node):
         *policies: List[Union[Policy, Materializer]],
     ):
         return self.replace(
-            policies=self.policies + tuple(Policy.get_from(p) for p in policies)
+            policies=self.policies + tuple(Policy.create_from(p) for p in policies)
         )
 
     def config(self, *flags: str, **kwargs: Any):
@@ -247,7 +247,10 @@ class typedef(Node):
         ret["type"] = self.type
         ret["title"] = ret.pop("name")
         ret["runtime"] = collector.index(self.runtime)
-        ret["policies"] = [collector.index(p) for p in self.policies]
+        ret["policies"] = [
+            p.data(collector) if isinstance(p, EffectPolicies) else collector.index(p)
+            for p in self.policies
+        ]
         if self.injection == "parent":
             ret["inject"] = collector.index(self.inject)
         elif self.injection == "secret":

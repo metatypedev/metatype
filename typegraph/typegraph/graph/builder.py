@@ -46,7 +46,7 @@ class Collector:
 
         c = node.collector_target
         if c is None:
-            raise Exception("Attempting to collect non collectible node")
+            return True
 
         collect = self.collects[c]
         prev_size = len(collect)
