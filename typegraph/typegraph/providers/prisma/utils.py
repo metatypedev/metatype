@@ -12,16 +12,6 @@ def resolve_entity_quantifier(tpe: t.typedef):
     return tpe
 
 
-def undo_optional(tpe: t.typedef):
-    if isinstance(tpe, t.optional):
-        return tpe.of
-    return tpe
-
-
-def rename_with_idx(tpe: t.typedef, prefix: str):
-    return tpe.named(prefix + "_" + tpe.name)
-
-
 def clean_virtual_link(tpe: t.typedef):
     if isinstance(tpe, t.struct):
         ret = {}
@@ -72,14 +62,3 @@ def only_unique(tpe: t.Type):
 
 def optional_root(tpe: t.struct):
     return t.struct({k: v.optional() for k, v in tpe.of.items()})
-
-
-# temporary redirect stdout to a file
-def stdout_to_file(obj: any, filename="stdout.txt"):
-    import sys
-
-    original_stdout = sys.stdout
-    with open(filename, "w") as f:
-        sys.stdout = f
-        print(obj)
-        sys.stdout = original_stdout
