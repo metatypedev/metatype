@@ -74,6 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
       - uses: pnpm/action-setup@v2.2.4
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -223,6 +224,7 @@ jobs:
       TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=test"
       TG_PRISMA_POSTGRES_2: "postgresql://postgres:password@localhost:5432/db?schema=test2"
       REDIS_URL: redis://localhost:6379/0
+      DYLD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH"
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable

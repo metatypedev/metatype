@@ -20,7 +20,11 @@ FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
 
 #
 
-FROM wasmedge/slim-runtime:0.11.2 as wasmedge
+FROM base as wasmedge
+
+RUN curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o install.sh \
+    && bash install.sh \
+    && rm -rf /root/.wasmedge/bin
 
 #
 
@@ -34,6 +38,7 @@ ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 ENV OUT_DIR target
 
 COPY --from=deno-bin /deno /bin/deno
+COPY --from=wasmedge /root/.wasmedge /root/.wasmedge
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -41,8 +46,6 @@ RUN apt-get update \
     libprotobuf-dev \
     && rm -rf /var/lib/apt/lists/* \
     && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
-
-COPY --from=wasmedge /usr/local/lib/* /usr/local/lib/
 
 COPY --from=plan /app/recipe.json recipe.json
 
@@ -73,10 +76,11 @@ RUN chmod +x /tini
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG}
 
 ENV DENO_DIR /deno-dir/
+ENV DYLD_LIBRARY_PATH "/root/.wasmedge/lib:$DYLD_LIBRARY_PATH"
 
 WORKDIR /app
 
-COPY --from=wasmedge /usr/local/lib/* /usr/local/lib/
+COPY --from=wasmedge /root/.wasmedge /root/.wasmedge
 COPY --from=debian /tini /tini
 COPY --from=deno-bin /deno /bin/deno
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
