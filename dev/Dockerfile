@@ -42,8 +42,11 @@ COPY --from=wasmedge /root/.wasmedge /root/.wasmedge
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+    # grpc
     protobuf-compiler \
     libprotobuf-dev \
+    # wasmedge
+    clang-14 \
     && rm -rf /var/lib/apt/lists/* \
     && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
 
