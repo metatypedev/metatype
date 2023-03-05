@@ -123,7 +123,7 @@ test(
             }
           }
         `
-          .matchErrorSnapshot(t)
+          .expectErrorContains("Type mismatch: got 'ObjectValue'")
           .on(e);
       },
     );

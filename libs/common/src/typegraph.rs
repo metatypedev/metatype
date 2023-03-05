@@ -75,7 +75,7 @@ pub struct TypeMeta {
 pub struct TypeNodeBase {
     pub title: String,
     pub runtime: u32,
-    pub policies: Vec<u32>,
+    pub policies: Vec<PolicyIndices>,
     #[serde(default)]
     pub description: Option<String>,
     #[serde(default)]
@@ -238,6 +238,26 @@ pub struct TGRuntime {
 pub struct Policy {
     pub name: String,
     pub materializer: u32,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PolicyIndicesByEffect {
+    pub none: Option<u32>,
+    pub create: Option<u32>,
+    pub delete: Option<u32>,
+    pub update: Option<u32>,
+    pub upsert: Option<u32>,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum PolicyIndices {
+    Policy(u32),
+    EffectPolicies(PolicyIndicesByEffect),
 }
 
 impl Typegraph {
