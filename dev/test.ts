@@ -64,8 +64,11 @@ if (flags._.length === 0) {
   }
 }
 
+const libPath = Deno.build.os === "darwin"
+  ? "DYLD_LIBRARY_PATH"
+  : "LD_LIBRARY_PATH";
 Deno.env.set(
-  "DYLD_LIBRARY_PATH",
+  libPath,
   `${Deno.env.get("HOME")}/.wasmedge/lib:${
     Deno.env.get("DYLD_LIBRARY_PATH") ?? ""
   }`,

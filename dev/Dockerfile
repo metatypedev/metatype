@@ -79,7 +79,7 @@ RUN chmod +x /tini
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG}
 
 ENV DENO_DIR /deno-dir/
-ENV DYLD_LIBRARY_PATH "/root/.wasmedge/lib:$DYLD_LIBRARY_PATH"
+ENV LD_LIBRARY_PATH "/root/.wasmedge/lib:$LD_LIBRARY_PATH"
 
 WORKDIR /app
 
