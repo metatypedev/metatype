@@ -1,0 +1,17 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = "z"
+lto = true
+
+[dependencies]
+wasmedge-bindgen = "0.4.1"
+wasmedge-bindgen-macro = "0.4.1"
+
+[workspace]

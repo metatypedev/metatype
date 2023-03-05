@@ -56,7 +56,8 @@
     },
     {
       "items": [
-        "docs/reference/typegraph/typegraph/runtimes/http"
+        "docs/reference/typegraph/typegraph/runtimes/http",
+        "docs/reference/typegraph/typegraph/runtimes/wasmedge"
       ],
       "label": "typegraph.runtimes",
       "type": "category"
