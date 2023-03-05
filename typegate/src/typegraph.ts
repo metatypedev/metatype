@@ -151,13 +151,14 @@ export class TypeGraph {
     };
 
     const auths = new Map<string, Auth>();
-    auths.set("internal", await InternalAuth.init(typegraphName));
     for (const auth of meta.auths) {
       auths.set(
         auth.name,
         await Auth.init(typegraphName, auth),
       );
     }
+    // override "internal" to enforce internal auth
+    auths.set("internal", await InternalAuth.init(typegraphName));
 
     const runtimeReferences = await Promise.all(
       runtimes.map((runtime, idx) => {

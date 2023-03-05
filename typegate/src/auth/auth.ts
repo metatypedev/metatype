@@ -7,7 +7,6 @@ import { OAuth2Auth } from "./protocols/oauth2.ts";
 import type { Auth as AuthDS } from "../types/typegraph.ts";
 export { AuthDS };
 
-// localhost:7890/biscuicuits/auth/github?redirect_uri=localhost:7890/biscuicuits
 export const nextAuthorizationHeader = "Next-Authorization";
 
 export abstract class Auth {

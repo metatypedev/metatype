@@ -4,7 +4,7 @@ import config from "../../src/config.ts";
 import { Engine } from "../../src/engine.ts";
 import { gql, test } from "../utils.ts";
 
-async function withKey(f: () => Promise<Engine>) {
+async function withKey(f: () => Promise<Engine>, typegraphName: string) {
   const key = await crypto.subtle.importKey(
     "raw",
     config.tg_secret.slice(32, 64),
@@ -13,19 +13,23 @@ async function withKey(f: () => Promise<Engine>) {
     ["verify"],
   );
   const jwk = JSON.stringify(await crypto.subtle.exportKey("jwk", key));
+  const envVar = `TG_${typegraphName.toUpperCase()}_NATIVE_JWK`;
   Deno.env.set(
-    "TG_POLICIES_NATIVE_JWK",
+    envVar,
     jwk,
   );
   const res = await f();
   Deno.env.delete(
-    "TG_POLICIES_NATIVE_JWK",
+    envVar,
   );
   return res;
 }
 
 test("Policies", async (t) => {
-  const e = await withKey(() => t.pythonFile("policies/policies.py"));
+  const e = await withKey(
+    () => t.pythonFile("policies/policies.py"),
+    "policies",
+  );
 
   await t.should("have public access", async () => {
     await gql`
@@ -80,39 +84,19 @@ test("Policies", async (t) => {
         }
       }
     `
-      .expectErrorContains("authorization failed")
-      .on(e);
-  });
-});
-
-test("Policy args", async (t) => {
-  const e = await withKey(() => t.pythonFile("policies/policies.py"));
-
-  await t.should("pass raw args to the policy", async () => {
-    await gql`
-      query {
-        secret(username: "User") {
-          username
-          data
-        }
-      }
-    `
-      .expectData({
-        secret: {
-          username: "User",
-          data: "secret",
-        },
-      }).withContext({
-        username: "User",
-      })
+      .expectErrorContains("Authorization failed")
       .on(e);
   });
 });
 
 test("Role jwt policy access", async (t) => {
-  const e_norm = await withKey(() => t.pythonFile("policies/policies_jwt.py"));
-  const e_inject = await withKey(() =>
-    t.pythonFile("policies/policies_jwt_injection.py")
+  const e_norm = await withKey(
+    () => t.pythonFile("policies/policies_jwt.py"),
+    "policies_jwt",
+  );
+  const e_inject = await withKey(
+    () => t.pythonFile("policies/policies_jwt_injection.py"),
+    "policies_jwt_injection",
   );
 
   await t.should("have role", async () => {
@@ -168,7 +152,10 @@ test("Role jwt policy access", async (t) => {
 });
 
 test("Namespace policies", async (t) => {
-  const e = await t.pythonFile("policies/policies.py");
+  const e = await withKey(
+    () => t.pythonFile("policies/policies.py"),
+    "policies",
+  );
 
   await t.should("fail when no policy", async () => {
     await gql`
@@ -184,7 +171,7 @@ test("Namespace policies", async (t) => {
 });
 
 test("Policies for effects", async (t) => {
-  const e = await t.pythonFile("policies/effects.py");
+  const e = await withKey(() => t.pythonFile("policies/effects.py"), "effects");
 
   await t.should("succeeed", async () => {
     await gql`

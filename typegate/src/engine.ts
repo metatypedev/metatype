@@ -31,6 +31,9 @@ import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { Option } from "monads";
+import { getLogger } from "./log.ts";
+
+const logger = getLogger(import.meta);
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -560,10 +563,6 @@ export class Engine {
     headers: Headers,
     url: URL,
   ): Promise<[Record<string, unknown>, Headers]> {
-    if (this.tg.auths.size === 0) {
-      return [{}, new Headers()];
-    }
-
     let [kind, token] = (headers.get("Authorization") ?? "").split(" ");
     if (!token) {
       const name = this.tg.root.title;
@@ -581,9 +580,13 @@ export class Engine {
     } else {
       try {
         const { provider } = await unsafeExtractJWT(token);
-        auth = this.tg.auths.get(provider as string);
+        if (!provider) {
+          logger.warning("no provider in jwt");
+        } else {
+          auth = this.tg.auths.get(provider as string);
+        }
       } catch {
-        // malformed jwt
+        logger.warning("no malformed jwt");
       }
     }
 

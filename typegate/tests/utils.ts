@@ -451,11 +451,10 @@ export class Q {
     const defaults: Record<string, string> = {};
 
     if (Object.keys(context).length > 0) {
-      const jwt = await signJWT(context, 5);
+      const jwt = await signJWT({ provider: "internal", ...context }, 5);
       defaults["Authorization"] = `Bearer ${jwt}`;
     }
 
-    console.log(host);
     const request = new Request(`${host}/${engine.name}`, {
       method: "POST",
       body: JSON.stringify({

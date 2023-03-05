@@ -3,7 +3,7 @@ from typegraph.graph.models import Auth
 from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph(
-    "policies",
+    "policies_jwt",
     auths=[Auth.jwk("native", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
 ) as g:
     some_policy = policies.jwt("user.name", "some role")

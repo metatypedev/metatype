@@ -188,7 +188,7 @@ test("Auth", async (t) => {
   });
 
   await t.should("use jwt from header", async () => {
-    const jwt = await signJWT({ user1: "zifeo" }, 10);
+    const jwt = await signJWT({ provider: "internal", user1: "zifeo" }, 10);
     await gql`
         query {
           private(x: 1) {
@@ -206,7 +206,7 @@ test("Auth", async (t) => {
   });
 
   await t.should("use jwt from cookie", async () => {
-    const jwt = await signJWT({ user1: "zifeo" }, 10);
+    const jwt = await signJWT({ provider: "internal", user1: "zifeo" }, 10);
     await gql`
         query {
           private(x: 1) {

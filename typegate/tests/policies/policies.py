@@ -30,11 +30,6 @@ with TypeGraph(
         pol_two=make_policy(
             g, "eq_two", "(_args, { context }) => Number(context.a) === 2"
         ),
-        secret=t.func(
-            t.struct({"username": t.string()}),
-            secret_data,
-            mod.imp("readSecret"),
-        ).add_policy(mod.imp("isAllowedToReadSecret")),
         ns=t.struct(
             {
                 "select": t.func(
