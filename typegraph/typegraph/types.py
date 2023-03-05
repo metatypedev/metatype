@@ -504,18 +504,10 @@ class struct(typedef):
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
 
-    # creates a duplicate type with no runtime
-    def detach(self):
-        return self.replace(
-            name=f"{self.type}_{self.graph.next_type_id()}", runtime=None
-        )
-
     def compose(self, props: Dict[str, typedef]):
         new_props = dict(self.props)
         new_props.update(props)
-        return self.replace(
-            props=frozendict(new_props), name=f"{self.type}_{self.graph.next_type_id()}"
-        )
+        return self.replace(props=frozendict(new_props))
 
     def __getattr__(self, attr):
         try:
