@@ -8,7 +8,7 @@ export type OptionalNode = {
   default_value?: any;
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -21,7 +21,7 @@ export type BooleanNode = {
   type: "boolean";
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -39,7 +39,7 @@ export type NumberNode = {
   multipleOf?: number | null;
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -57,7 +57,7 @@ export type IntegerNode = {
   multipleOf?: number | null;
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -74,7 +74,7 @@ export type StringNode = {
   format?: string | null;
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -91,7 +91,7 @@ export type ObjectNode = {
   required?: string[];
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -108,7 +108,7 @@ export type ArrayNode = {
   uniqueItems?: boolean | null;
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -126,7 +126,7 @@ export type FunctionNode = {
   rate_calls: boolean;
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -140,7 +140,7 @@ export type UnionNode = {
   anyOf: number[];
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -154,7 +154,7 @@ export type EitherNode = {
   oneOf: number[];
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -167,7 +167,7 @@ export type AnyNode = {
   type: "any";
   title: string;
   runtime: number;
-  policies: number[];
+  policies: PolicyIndices[];
   description?: string | null;
   injection?: string | null;
   inject?: any;
@@ -188,6 +188,7 @@ export type TypeNode =
   | UnionNode
   | EitherNode
   | AnyNode;
+export type PolicyIndices = number | PolicyIndicesByEffect;
 export type EffectType = "create" | "update" | "upsert" | "delete";
 export type AuthProtocol = "oauth2" | "jwk" | "basic";
 export interface Typegraph {
@@ -197,6 +198,13 @@ export interface Typegraph {
   runtimes: TGRuntime[];
   policies: Policy[];
   meta: TypeMeta;
+}
+export interface PolicyIndicesByEffect {
+  none?: number | null;
+  create?: number | null;
+  delete?: number | null;
+  update?: number | null;
+  upsert?: number | null;
 }
 export interface Materializer {
   name: string;

@@ -132,7 +132,7 @@ export class PrismaRuntime extends GraphQLRuntime {
 
   raw(
     materializer: PrismaOperationMat,
-    args: Record<string, ComputeArg>,
+    args: ComputeArg<Record<string, unknown>> | null,
   ): Resolver {
     const operationType = materializer?.effect.effect != null
       ? ast.OperationTypeNode.MUTATION

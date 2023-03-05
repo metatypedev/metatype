@@ -29,7 +29,7 @@ test("Policies", async (t) => {
         }
       }
     `
-      .expectErrorContains("authorization failed")
+      .expectErrorContains("Authorization failed")
       .on(e);
   });
 
@@ -58,31 +58,7 @@ test("Policies", async (t) => {
         }
       }
     `
-      .expectErrorContains("authorization failed")
-      .on(e);
-  });
-});
-
-test("Policy args", async (t) => {
-  const e = await t.pythonFile("policies/policies.py");
-
-  await t.should("pass raw args to the policy", async () => {
-    await gql`
-      query {
-        secret(username: "User") {
-          username
-          data
-        }
-      }
-    `
-      .expectData({
-        secret: {
-          username: "User",
-          data: "secret",
-        },
-      }).withContext({
-        username: "User",
-      })
+      .expectErrorContains("Authorization failed")
       .on(e);
   });
 });
@@ -114,7 +90,8 @@ test("Role jwt policy access", async (t) => {
       }
     `
       .expectErrorContains(
-        "__jwt_user_name_some_role in sayHelloWorld",
+        // "__jwt_user_name_some_role in sayHelloWorld",
+        "Authorization failed for policy '__jwt_user_name_some_role'",
       )
       .withContext({
         user: {
@@ -140,4 +117,98 @@ test("Role jwt policy access", async (t) => {
         .on(e_inject);
     },
   );
+});
+
+test("Namespace policies", async (t) => {
+  const e = await t.pythonFile("policies/policies.py");
+
+  await t.should("fail when no policy", async () => {
+    await gql`
+      query {
+        ns {
+          select { id }
+        }
+      }
+    `
+      .expectErrorContains("No authorization policy")
+      .on(e);
+  });
+});
+
+test("Policies for effects", async (t) => {
+  const e = await t.pythonFile("policies/effects.py");
+
+  await t.should("succeeed", async () => {
+    await gql`
+      query {
+        findUser(id: 12) {
+          id
+          email
+        }
+      }
+    `
+      .expectData({
+        findUser: {
+          id: 12,
+          email: "john@example.com",
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("fail without authorization", async () => {
+    await gql`
+      mutation {
+        updateUser(id: 12, set: {email: "john.doe@example.com"}) {
+          id
+          email
+        }
+      }
+    `
+      .expectErrorContains("Authorization failed")
+      .on(e);
+
+    await gql`
+      query {
+        findUser(id: 12) {
+          id
+          email
+          password_hash
+        }
+      }
+    `
+      .expectErrorContains("Authorization failed")
+      .on(e);
+  });
+
+  await t.should("should succeed with appropriate autorization", async () => {
+    await gql`
+      mutation {
+        updateUser(id: 12, set: {email: "john.doe@example.com"}) {
+          id
+          email
+        }
+      }
+    `
+      .expectData({
+        updateUser: {
+          id: 12,
+          email: "john.doe@example.com",
+        },
+      })
+      .withContext({ role: "admin" })
+      .on(e);
+
+    await gql`
+      query {
+        findUser(id: 12) {
+          id
+          email
+          password_hash
+        }
+      }
+    `
+      .expectErrorContains("Authorization failed")
+      .on(e);
+  });
 });

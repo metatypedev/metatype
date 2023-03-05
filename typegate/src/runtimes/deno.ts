@@ -166,6 +166,7 @@ export class DenoRuntime extends Runtime {
           key: "param key",
           context,
           secrets,
+          effect: mat.effect.effect ?? null,
         },
         mat,
       }, verbose);
