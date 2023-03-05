@@ -34,6 +34,9 @@ pipx install pre-commit
 pipx install poetry
 
 deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen/cli.ts
+
+# wasmedge
+curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
 ```
 
 ### Init workspace
