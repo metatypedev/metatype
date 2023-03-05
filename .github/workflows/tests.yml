@@ -51,23 +51,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - uses: pnpm/action-setup@v2.2.4
         with:
           version: ${{ env.PNPM_VERSION }}
+      - uses: arduino/setup-protoc@v1
+        with:
+          version: ${{ env.PROTOC_VERSION }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
-      - working-directory: website
-        run: |
+      - run: |
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
+          cd website
           pnpm install --frozen-lockfile
+          cd ..
       - uses: pre-commit/action@v3.0.0
-        env:
-          # the following is run by other jobs
-          SKIP: clippy,cargo-check
 
   test-website:
     needs: changes
@@ -256,7 +262,7 @@ jobs:
           name: meta
       - run: |
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
-          export DYLD_LIBRARY_PATH="$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH"
+          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
@@ -268,7 +274,6 @@ jobs:
           which py-tg
           deno run -A dev/test.ts
           cargo test --locked --workspace --package native
-          cargo clippy
 
   test-libs:
     needs:

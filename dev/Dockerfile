@@ -46,7 +46,7 @@ RUN apt-get update \
     protobuf-compiler \
     libprotobuf-dev \
     # wasmedge
-    clang-14 \
+    libclang-dev \
     && rm -rf /var/lib/apt/lists/* \
     && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
 
