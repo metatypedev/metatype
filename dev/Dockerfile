@@ -64,12 +64,17 @@ RUN chmod +x /tini
 
 #
 
+FROM wasmedge/slim-runtime:0.11.2 as wasmedge
+
+#
+
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG}
 
 ENV DENO_DIR /deno-dir/
 
 WORKDIR /app
 
+COPY --from=wasmedge /usr/local/lib/* /usr/local/lib/
 COPY --from=debian /tini /tini
 COPY --from=deno-bin /deno /bin/deno
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/

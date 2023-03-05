@@ -64,6 +64,13 @@ if (flags._.length === 0) {
   }
 }
 
+Deno.env.set(
+  "DYLD_LIBRARY_PATH",
+  `${Deno.env.get("HOME")}/.wasmedge/lib:${
+    Deno.env.get("DYLD_LIBRARY_PATH") ?? ""
+  }`,
+);
+
 const failures = [];
 for await (const testFile of testFiles) {
   const status = await run([

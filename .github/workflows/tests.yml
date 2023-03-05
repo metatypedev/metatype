@@ -259,6 +259,7 @@ jobs:
         with:
           name: meta
       - run: |
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate

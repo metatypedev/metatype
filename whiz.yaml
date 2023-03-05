@@ -13,13 +13,14 @@ meta:
     depends_on:
         - libs
 
-typegate1:
+typegate1: &tp
     workdir: typegate
     watch: "src/**/*.ts"
-    env:
+    env: &tpenv
         TG_PORT: "7891"
         PACKAGED: "false"
         LOG_LEVEL: "DEBUG"
+        DYLD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH"
     env_file:
         - ../examples/.env.sample
         - ../website/.env.sample
@@ -31,21 +32,10 @@ typegate1:
         '^.+\[http\].*$': whiz://http
 
 typegate2:
-    workdir: typegate
-    watch: "src/**/*.ts"
+    <<: *tp
     env:
+        <<: *tpenv
         TG_PORT: "7892"
-        PACKAGED: "false"
-        LOG_LEVEL: "DEBUG"
-    env_file:
-        - ../examples/.env.sample
-        - ../website/.env.sample
-        - .env.sample
-    command: "deno task run"
-    depends_on:
-        - typegate_native
-    pipe:
-        "^.+http .*$": whiz://http
 
 http:
     command: ""
