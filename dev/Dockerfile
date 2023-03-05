@@ -20,6 +20,10 @@ FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
 
 #
 
+FROM wasmedge/slim-runtime:0.11.2 as wasmedge
+
+#
+
 FROM base AS builder
 
 ARG DENO_BINDGEN_URL=https://github.com/denoland/deno_bindgen/raw/main/cli.ts
@@ -37,6 +41,8 @@ RUN apt-get update \
     libprotobuf-dev \
     && rm -rf /var/lib/apt/lists/* \
     && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
+
+COPY --from=wasmedge /usr/local/lib/* /usr/local/lib/
 
 COPY --from=plan /app/recipe.json recipe.json
 
@@ -61,10 +67,6 @@ ARG TINI_VERSION=v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 
 RUN chmod +x /tini
-
-#
-
-FROM wasmedge/slim-runtime:0.11.2 as wasmedge
 
 #
 
