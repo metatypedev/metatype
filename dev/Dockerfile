@@ -1,5 +1,5 @@
 ARG RUST_VERSION=1.67.1
-ARG DENO_VERSION=1.30.3
+ARG DENO_VERSION=1.31.1
 ARG DISTROLESS_TAG=nonroot
 
 FROM lukemathwalker/cargo-chef:latest-rust-${RUST_VERSION} AS base
@@ -22,7 +22,7 @@ FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
 
 FROM base AS builder
 
-ARG DENO_BINDGEN_URL=https://github.com/denoland/deno_bindgen/raw/main/cli.ts
+ARG DENO_BINDGEN_URL=https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts
 
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
