@@ -326,6 +326,7 @@ export class Q {
         None,
         {},
         {},
+        { headers: {}, url: new URL("") },
         null,
       );
       await Deno.writeTextFile(output, JSON.stringify(result, null, 2));
@@ -381,8 +382,15 @@ export class Q {
 
   expectBody(expect: (body: any) => Promise<void> | void) {
     return this.expect(async (res) => {
-      const json = await res.json();
-      await expect(json);
+      try {
+        const json = await res.json();
+        await expect(json);
+      } catch (error) {
+        console.error(
+          `cannot expect json body with status ${res.status}: ${error}`,
+        );
+        throw error;
+      }
     });
   }
 
@@ -437,7 +445,7 @@ export class Q {
     });
   }
 
-  async on(engine: Engine) {
+  async on(engine: Engine, host = "http://typegate.local") {
     const { query, variables, headers, context, expects } = this;
 
     const defaults: Record<string, string> = {};
@@ -447,7 +455,8 @@ export class Q {
       defaults["Authorization"] = `Bearer ${jwt}`;
     }
 
-    const request = new Request(`http://typegate.local/${engine.name}`, {
+    console.log(host);
+    const request = new Request(`${host}/${engine.name}`, {
       method: "POST",
       body: JSON.stringify({
         query,

@@ -1,20 +1,23 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
-/* eslint-disable  no-unused-vars */
+
+export const remoteSum = async (
+  { first, second }: any,
+  _context,
+  { gql },
+): Promise<any> => {
+  const { data } = await gql`
+    query q($first: Float!, $second: Float!) {
+      sum(first: $first, second: $second)
+    }
+  `.run({
+    first,
+    second,
+  });
+  return data.sum;
+};
+
 export const sum = (
   { first, second }: any,
-  internals,
-  make_internal,
 ): Promise<any> => {
-  console.log(make_internal, internals);
-
   return first + second;
-  // const {data} = await gql`
-  // query A {
-  //   ...
-  // }
-  // `.run({
-  //   variables: {
-
-  //   }
-  // })
 };

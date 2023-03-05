@@ -2,7 +2,10 @@ from typegraph import TypeGraph, policies, t
 from typegraph.graph.models import Auth
 from typegraph.runtimes.deno import PureFunMat
 
-with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
+with TypeGraph(
+    "policies",
+    auths=[Auth.jwk("native", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
+) as g:
     """
     This is expected to enforce the typescript generated code to return true
     no matter what the context is (see policies_test.ts)

@@ -27,7 +27,6 @@ const schema = {
       }
       return url;
     }),
-  tg_external_url: z.string().url(),
   tg_port: z.coerce.number().positive().max(65535),
   tg_secret: z.string().transform((s: string, ctx) => {
     const bytes = base64.decode(s);

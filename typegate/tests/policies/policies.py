@@ -11,7 +11,10 @@ def make_policy(g, name, fn):
     ).add_policy(PureFunMat(fn))
 
 
-with TypeGraph("policies", auths=[Auth.jwk("native")]) as g:
+with TypeGraph(
+    "policies",
+    auths=[Auth.jwk("native", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
+) as g:
     mod = ModuleMat("ts/policies.ts")
 
     secret_data = t.struct(

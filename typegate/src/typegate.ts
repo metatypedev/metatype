@@ -128,9 +128,10 @@ export const typegate =
         });
       }
 
-      const [context, headers] = await engine.ensureJWT(request.headers);
-      // may remove this
-      context.headers = Object.fromEntries(request.headers.entries());
+      const [context, headers] = await engine.ensureJWT(
+        request.headers,
+        url,
+      );
 
       const identifier = (
         engine.tg.tg.meta.rate?.context_identifier
@@ -155,11 +156,16 @@ export const typegate =
         : null;
 
       const { query, operationName, variables } = await request.json();
+      const info = {
+        url,
+        headers: Object.fromEntries(request.headers.entries()),
+      };
       const { status, ...res } = await engine.execute(
         query,
         forceAnyToOption(operationName),
         variables,
         context,
+        info,
         limit,
       );
 

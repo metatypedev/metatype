@@ -14,6 +14,10 @@ export interface TaskContext {
   context?: Context;
   secrets: Record<string, string>;
   effect: EffectType | null;
+  meta: {
+    url: string;
+    token: string;
+  };
 }
 
 export interface FunctionMaterializerData {

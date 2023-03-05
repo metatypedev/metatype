@@ -17,7 +17,13 @@ import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { RateLimit } from "./rate_limiter.ts";
-import { ComputeStageProps, Context, Resolver, Variables } from "./types.ts";
+import {
+  ComputeStageProps,
+  Context,
+  Info,
+  Resolver,
+  Variables,
+} from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
@@ -209,6 +215,7 @@ export class Engine {
     plan: ComputeStage[],
     policies: OperationPolicies,
     context: Context,
+    info: Info,
     variables: Record<string, unknown>,
     limit: RateLimit | null,
     verbose: boolean,
@@ -217,7 +224,7 @@ export class Engine {
     const cache: Record<string, unknown> = {};
     const lenses: Record<string, unknown> = {};
 
-    await policies.authorize(context, verbose);
+    await policies.authorize(context, info, verbose);
 
     for await (const stage of plan) {
       const {
@@ -254,6 +261,7 @@ export class Engine {
             _: {
               parent: parent ?? {},
               context,
+              info,
               variables,
               effect: null, // TODO
               ...deps,
@@ -372,6 +380,7 @@ export class Engine {
     operationName: Option<string>,
     variables: Variables,
     context: Context,
+    info: Info,
     limit: RateLimit | null,
   ): Promise<{ status: number; [key: string]: JSONValue }> {
     try {
@@ -415,6 +424,7 @@ export class Engine {
         stages,
         policies,
         context,
+        info,
         variables,
         limit,
         verbose,
@@ -548,6 +558,7 @@ export class Engine {
 
   async ensureJWT(
     headers: Headers,
+    url: URL,
   ): Promise<[Record<string, unknown>, Headers]> {
     if (this.tg.auths.size === 0) {
       return [{}, new Headers()];
@@ -567,8 +578,6 @@ export class Engine {
 
     if (kind === "basic") {
       auth = this.tg.auths.get("basic");
-    } else if (this.tg.auths.size === 1) {
-      auth = this.tg.auths.values().next().value;
     } else {
       try {
         const { provider } = await unsafeExtractJWT(token);
@@ -582,6 +591,6 @@ export class Engine {
       return [{}, new Headers()];
     }
 
-    return await auth.tokenMiddleware(token);
+    return await auth.tokenMiddleware(token, url);
   }
 }

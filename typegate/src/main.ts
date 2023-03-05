@@ -55,7 +55,7 @@ if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
   // deno-lint-ignore no-inner-declarations
   function reload(backoff = 1) {
     fetch(
-      `http://localhost:5000/dev?node=${encodeURI(config.tg_external_url)}`,
+      `http://localhost:5000/dev?node=${encodeURI("http://localhost:7890")}`,
     ).catch((e) => {
       getLogger().debug(e.message);
       if (backoff < 3) {
