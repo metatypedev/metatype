@@ -117,7 +117,7 @@ export function envOrFail(typegraph: string, name: string): string {
   const value = Deno.env.get(envName);
   ensure(
     value != null,
-    `cannot find env "${envName}"`,
+    `cannot find env "${envName}" for "${typegraph}"`,
   );
   return value as string;
 }

@@ -575,7 +575,7 @@ export class Engine {
 
     let auth = null;
 
-    if (kind === "basic") {
+    if (kind.toLowerCase() === "basic") {
       auth = this.tg.auths.get("basic");
     } else {
       try {
