@@ -39,6 +39,7 @@ import type {
 } from "./types/typegraph.ts";
 import { TemporalRuntime } from "./runtimes/temporal.ts";
 import { getLogger } from "./log.ts";
+import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -55,7 +56,7 @@ const runtimeInit: RuntimeInit = {
   googleapis: GoogleapisRuntime.init,
   temporal: TemporalRuntime.init,
   random: RandomRuntime.init,
-  //typegraph: TypeGraphRuntime.init,
+  wasmedge: WasmEdgeRuntime.init,
 };
 
 export const typegraphVersion = "0.0.1";
