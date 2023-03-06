@@ -30,7 +30,7 @@ temporal-client = { git = "https://github.com/temporalio/sdk-core" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core" }
 connection-string = "0.1.14"
 url = "2.3.1"
-thiserror = "1.0.38"
+thiserror = "1.0.39"
 tokio = { version = "1.26.0", features = ["full"] }
 log = "0.4.17"
 env_logger = "0.10.0"
