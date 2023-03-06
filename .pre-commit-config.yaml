@@ -56,7 +56,7 @@ repos:
       - id: es-lint
         name: Eslint
         language: system
-        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint || echo "eslint not installed, skipping"'
+        entry: bash -c 'cd website && [ -f node_modules/.bin/eslint ] && pnpm lint'
         pass_filenames: false
         types_or:
           - ts
