@@ -2,7 +2,6 @@
 
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { ComputeStage } from "./engine.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";
 import { GoogleapisRuntime } from "./runtimes/googleapis.ts";
 import { GraphQLRuntime } from "./runtimes/graphql.ts";
@@ -27,14 +26,7 @@ import {
   isUnion,
   TypeNode,
 } from "./type_node.ts";
-import {
-  Batcher,
-  Context,
-  PolicyStages,
-  PolicyStagesFactory,
-  Resolver,
-  RuntimeInit,
-} from "./types.ts";
+import { Batcher, RuntimeInit } from "./types.ts";
 import { S3Runtime } from "./runtimes/s3.ts";
 
 import type {
@@ -47,6 +39,7 @@ import type {
 } from "./types/typegraph.ts";
 import { TemporalRuntime } from "./runtimes/temporal.ts";
 import { getLogger } from "./log.ts";
+import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -63,7 +56,7 @@ const runtimeInit: RuntimeInit = {
   googleapis: GoogleapisRuntime.init,
   temporal: TemporalRuntime.init,
   random: RandomRuntime.init,
-  //typegraph: TypeGraphRuntime.init,
+  wasmedge: WasmEdgeRuntime.init,
 };
 
 export const typegraphVersion = "0.0.1";
@@ -290,65 +283,6 @@ export class TypeGraph {
     );
   }
 
-  preparePolicies(
-    stages: ComputeStage[],
-  ): PolicyStagesFactory {
-    const policies = Array.from(
-      new Set(
-        stages.flatMap((stage) => Object.values(stage.props.policies).flat()),
-      ),
-    ).map((policyName) => {
-      // bug-prone, lookup first for policies in introspection, then in current typegraph
-      if (this.introspection) {
-        const introPolicy = this.introspection.tg.policies.find(
-          (p) => p.name === policyName,
-        );
-
-        if (introPolicy) {
-          const mat = this.introspection.policyMaterializer(
-            introPolicy,
-          );
-          const rt = this.introspection
-            .runtimeReferences[mat.runtime] as DenoRuntime;
-          return [introPolicy.name, rt.delegate(mat, false)] as [
-            string,
-            Resolver,
-          ];
-        }
-      }
-
-      const policy = this.tg.policies.find((p) => p.name === policyName);
-      if (!policy) {
-        throw Error(`cannot find policy ${policyName}`);
-      }
-
-      const mat = this.policyMaterializer(policy);
-      const rt = this.runtimeReferences[mat.runtime] as DenoRuntime;
-      ensure(
-        rt.constructor === DenoRuntime,
-        "runtime for policy must be a DenoRuntime",
-      );
-      return [policy.name, rt.delegate(mat, false)] as [string, Resolver];
-    });
-
-    return (context: Context) => {
-      const ret: PolicyStages = {};
-      for (const [policyName, resolver] of policies) {
-        // for policies, the context becomes the args
-        ret[policyName] = async (args: Record<string, unknown>) =>
-          await lazyResolver<boolean | null>(resolver)({
-            ...args,
-            _: {
-              parent: {},
-              context,
-              variables: {},
-            },
-          });
-      }
-      return ret;
-    };
-  }
-
   nextBatcher = (
     type: TypeNode,
   ): Batcher => {
@@ -467,17 +401,3 @@ export class TypeGraph {
     }
   }
 }
-
-const lazyResolver = <T>(
-  fn: Resolver,
-): Resolver => {
-  let memo: Promise<T> | undefined = undefined;
-  // deno-lint-ignore require-await
-  return async (args) => {
-    if (!memo) {
-      // no need to wait, the resolver executor will
-      memo = fn(args);
-    }
-    return memo;
-  };
-};

@@ -45,7 +45,7 @@ test("Auth", async (t) => {
           }
         }
       `
-      .expectErrorContains("authorization failed")
+      .expectErrorContains("Authorization failed")
       .on(e);
   });
 
@@ -335,7 +335,7 @@ test("Auth", async (t) => {
         assertEquals(auth, "");
         assertEquals(auth, cook);
       })
-      .expectErrorContains("authorization failed")
+      .expectErrorContains("Authorization failed")
       .on(e);
   });
 });

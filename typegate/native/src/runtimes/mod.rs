@@ -3,3 +3,4 @@
 mod prisma;
 mod s3;
 mod temporal;
+mod wasmedge;

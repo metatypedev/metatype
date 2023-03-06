@@ -1,0 +1,175 @@
+export const snapshot = {};
+
+snapshot[`planner 1`] = `
+[
+  {
+    id: "one",
+    node: "one",
+    path: [
+      "one",
+    ],
+    type: {
+      title: "function_12",
+      type: "function",
+    },
+  },
+  {
+    id: "one.id",
+    node: "id",
+    path: [
+      "one",
+      "id",
+    ],
+    type: {
+      format: "uuid",
+      title: "string_1",
+      type: "string",
+    },
+  },
+  {
+    id: "one.email",
+    node: "email",
+    path: [
+      "one",
+      "email",
+    ],
+    type: {
+      format: "email",
+      title: "string_2",
+      type: "string",
+    },
+  },
+  {
+    id: "one.nested",
+    node: "nested",
+    path: [
+      "one",
+      "nested",
+    ],
+    type: {
+      title: "object_8",
+      type: "object",
+    },
+  },
+  {
+    id: "one.nested.first",
+    node: "first",
+    path: [
+      "one",
+      "nested",
+      "first",
+    ],
+    type: {
+      title: "string_3",
+      type: "string",
+    },
+  },
+  {
+    id: "one.nested.second",
+    node: "second",
+    path: [
+      "one",
+      "nested",
+      "second",
+    ],
+    type: {
+      title: "array_5",
+      type: "array",
+    },
+  },
+  {
+    id: "one.nested.third",
+    node: "third",
+    path: [
+      "one",
+      "nested",
+      "third",
+    ],
+    type: {
+      title: "optional_7",
+      type: "optional",
+    },
+  },
+]
+`;
+
+snapshot[`planner 2`] = `
+{
+  one: {
+    funcType: {
+      config: {},
+      input: 2,
+      materializer: 1,
+      output: 3,
+      policies: [
+        0,
+      ],
+      rate_calls: false,
+      rate_weight: null,
+      runtime: 0,
+      title: "function_12",
+      type: "function",
+    },
+    referencedTypes: {
+      one: [
+        {
+          title: "function_12",
+          type: "function",
+        },
+        {
+          title: "object_9",
+          type: "object",
+        },
+        {
+          title: "object_11",
+          type: "object",
+        },
+      ],
+      "one.email": [
+        {
+          title: "string_2",
+          type: "string",
+        },
+      ],
+      "one.id": [
+        {
+          title: "string_1",
+          type: "string",
+        },
+      ],
+      "one.nested": [
+        {
+          title: "object_8",
+          type: "object",
+        },
+      ],
+      "one.nested.first": [
+        {
+          title: "string_3",
+          type: "string",
+        },
+      ],
+      "one.nested.second": [
+        {
+          title: "array_5",
+          type: "array",
+        },
+        {
+          title: "number_4",
+          type: "number",
+        },
+      ],
+      "one.nested.third": [
+        {
+          title: "optional_7",
+          type: "optional",
+        },
+        {
+          title: "boolean_6",
+          type: "boolean",
+        },
+      ],
+    },
+  },
+}
+`;

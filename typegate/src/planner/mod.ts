@@ -5,7 +5,7 @@ import { Kind } from "graphql";
 import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
-import { ComputeStageProps, PolicyStagesFactory } from "../types.ts";
+import { ComputeStageProps } from "../types.ts";
 import {
   getWrappedType,
   isArray,
@@ -15,12 +15,9 @@ import {
 } from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno.ts";
 import { ensure, unparse } from "../utils.ts";
-import { ArgumentCollector, ComputeArg } from "./args.ts";
-import { FromVars } from "../runtimes/graphql.ts";
-import { mapValues } from "std/collections/map_values.ts";
-import { filterValues } from "std/collections/filter_values.ts";
+import { collectArgs, ComputeArg } from "./args.ts";
+import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../log.ts";
-
 const logger = getLogger(import.meta);
 
 interface Node {
@@ -35,8 +32,7 @@ interface Node {
 
 export interface Plan {
   stages: ComputeStage[];
-  policies: PolicyStagesFactory;
-  policyArgs: FromVars<Record<string, Record<string, unknown>>>;
+  policies: OperationPolicies;
 }
 
 /**
@@ -54,13 +50,16 @@ export interface Plan {
  */
 export class Planner {
   rawArgs: Record<string, ComputeArg> = {};
+  policiesBuilder: OperationPoliciesBuilder;
 
   constructor(
     readonly operation: ast.OperationDefinitionNode,
     readonly fragments: FragmentDefs,
     private readonly tg: TypeGraph,
     private readonly verbose: boolean,
-  ) {}
+  ) {
+    this.policiesBuilder = new OperationPoliciesBuilder(tg);
+  }
 
   getPlan(): Plan {
     const rootIdx =
@@ -92,8 +91,10 @@ export class Planner {
       stage.varTypes = varTypes;
     }
 
-    const policies = this.tg.preparePolicies(stages);
-    return { stages, policies, policyArgs: this.policyArgs(stages) };
+    return {
+      stages,
+      policies: this.policiesBuilder.build(),
+    };
   }
 
   /**
@@ -174,7 +175,6 @@ export class Planner {
     field: ast.FieldNode,
   ): ComputeStage[] {
     const { parent, path, name } = node;
-    const policies: Record<string, string[]> = {};
 
     if (parent == null) {
       throw new Error("Expected parent node to be non-null");
@@ -221,9 +221,9 @@ export class Planner {
           operationName: this.operationName,
           dependencies: [],
           parent: parent.parentStage,
-          args: {},
-          policies,
+          args: null,
           outType: TypeGraph.typenameType,
+          typeIdx: parent.typeIdx,
           runtime: DenoRuntime.getDefaultRuntime(this.tg.name),
           batcher: this.tg.nextBatcher(outType),
           node: name,
@@ -235,18 +235,13 @@ export class Planner {
     }
 
     const fieldType = this.tg.type(node.typeIdx);
-    const checksField = fieldType.policies.map((p) => this.tg.policy(p).name);
-    if (checksField.length > 0) {
-      policies[fieldType.title] = checksField;
-    }
 
     if (fieldType.type !== Type.FUNCTION) {
-      return this.traverseValueField(node, policies);
+      return this.traverseValueField(node);
     }
 
     return this.traverseFuncField(
       node,
-      policies,
       this.tg.type(parent.typeIdx, Type.OBJECT).properties,
     );
   }
@@ -257,10 +252,7 @@ export class Planner {
    * @param node
    * @param policies
    */
-  private traverseValueField(
-    node: Node,
-    policies: Record<string, any>,
-  ): ComputeStage[] {
+  private traverseValueField(node: Node): ComputeStage[] {
     const stages: ComputeStage[] = [];
     const schema = this.tg.type(node.typeIdx);
 
@@ -276,13 +268,16 @@ export class Planner {
 
     const stage = this.createComputeStage(node, {
       dependencies: node.parentStage ? [node.parentStage.id()] : [],
-      args: {},
-      policies,
+      args: null,
       runtime,
       batcher: this.tg.nextBatcher(schema),
       rateCalls: true,
       rateWeight: 0,
     });
+    const types = this.policiesBuilder.setReferencedTypes(
+      stage.id(),
+      node.typeIdx,
+    );
 
     stages.push(stage);
 
@@ -295,6 +290,7 @@ export class Planner {
     // What nested quantifiers should be supported: t.optional(t.optional(...)), ...
     if (isQuantifier(schema)) {
       const itemTypeIdx = getWrappedType(schema);
+      types.push(itemTypeIdx);
       const itemSchema = this.tg.type(itemTypeIdx);
 
       if (itemSchema.type === Type.OBJECT) {
@@ -305,6 +301,7 @@ export class Planner {
       // which is necessary to compute some introspection fields
       if (isArray(itemSchema)) {
         const nestedItemTypeIndex = getWrappedType(itemSchema);
+        types.push(nestedItemTypeIndex);
         const nestedItemNode = this.tg.type(nestedItemTypeIndex);
 
         if (isObject(nestedItemNode)) {
@@ -329,7 +326,6 @@ export class Planner {
    */
   private traverseFuncField(
     node: Node,
-    policies: Record<string, string[]>,
     parentProps: Record<string, number>,
   ): ComputeStage[] {
     const stages: ComputeStage[] = [];
@@ -342,51 +338,6 @@ export class Planner {
     const { input: inputIdx, output: outputIdx, rate_calls, rate_weight } =
       schema;
     const outputType = this.tg.type(outputIdx);
-    const checks = outputType.policies.map((p) => this.tg.policy(p).name);
-    if (checks.length > 0) {
-      policies[outputType.title] = checks;
-    }
-
-    const args: Record<string, ComputeArg> = {};
-    const argSchema = this.tg.type(inputIdx, Type.OBJECT);
-    const argNodes = (node.args ?? [])
-      .reduce(
-        (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
-        {} as Record<string, ast.ArgumentNode>,
-      );
-
-    const argumentCollector = new ArgumentCollector(this.tg);
-    const nestedDepsUnion = [];
-    for (
-      const [argName, argIdx] of Object.entries(argSchema.properties ?? {})
-    ) {
-      const nested = argumentCollector.collectArg(
-        argNodes[argName],
-        argIdx,
-        parentProps,
-        argName,
-      );
-
-      nestedDepsUnion.push(...nested.deps);
-      args[argName] = nested.compute;
-      Object.assign(policies, nested.policies);
-    }
-
-    // check that no unwanted arg is given
-    for (const arg of node.args ?? []) {
-      const name = arg.name.value;
-      if (!(name in args)) {
-        throw Error(
-          `'${name}' unexpected input at '${this.formatPath(node.path)}'`,
-        );
-      }
-    }
-
-    deps.push(
-      ...Array.from(new Set(nestedDepsUnion)).map((dep) =>
-        [...node.path, dep].join(".")
-      ),
-    );
 
     const mat = this.tg.materializer(schema.materializer);
     const runtime = this.tg.runtimeReferences[mat.runtime];
@@ -396,10 +347,28 @@ export class Planner {
       );
     }
 
+    const argSchema = this.tg.type(inputIdx, Type.OBJECT);
+    const argNodes = (node.args ?? []).reduce(
+      (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
+      {} as Record<string, ast.ArgumentNode>,
+    );
+
+    const collected = collectArgs(
+      this.tg,
+      node.path.join("."),
+      mat.effect.effect ?? "none",
+      parentProps,
+      inputIdx,
+      argNodes,
+    );
+
+    deps.push(
+      ...collected.deps.map((dep) => [...node.path, dep].join(".")),
+    );
+
     const stage = this.createComputeStage(node, {
       dependencies: deps,
-      args,
-      policies,
+      args: collected.compute,
       argumentNodes: node.args,
       inpType: argSchema,
       outType: outputType,
@@ -411,6 +380,18 @@ export class Planner {
     });
     stages.push(stage);
 
+    this.policiesBuilder.push(
+      stage.id(),
+      node.typeIdx,
+      collected.policies,
+    );
+    const types = this.policiesBuilder.setReferencedTypes(
+      stage.id(),
+      node.typeIdx,
+      outputIdx,
+      inputIdx,
+    );
+
     if (outputType.type === Type.OBJECT) {
       stages.push(
         ...this.traverse(
@@ -418,14 +399,17 @@ export class Planner {
           stage,
         ),
       );
+      this.policiesBuilder.pop(stage.id());
       return stages;
     }
 
     if (isQuantifier(outputType)) {
       let wrappedTypeIdx: number = getWrappedType(outputType);
+      types.push(wrappedTypeIdx);
       let wrappedType = this.tg.type(wrappedTypeIdx);
       while (isQuantifier(wrappedType)) {
         wrappedTypeIdx = getWrappedType(wrappedType);
+        types.push(wrappedTypeIdx);
         wrappedType = this.tg.type(wrappedTypeIdx);
       }
 
@@ -440,6 +424,7 @@ export class Planner {
       }
     }
 
+    this.policiesBuilder.pop(stage.id());
     return stages;
   }
 
@@ -463,6 +448,7 @@ export class Planner {
         | "node"
         | "path"
         | "parent"
+        | "typeIdx"
       >
       & Partial<Pick<ComputeStageProps, "outType">>,
   ): ComputeStage {
@@ -473,32 +459,12 @@ export class Planner {
       node: node.name,
       path: node.path,
       parent: node.parentStage,
+      typeIdx: node.typeIdx,
       ...props,
     });
   }
 
   private formatPath(path: string[]) {
     return [this.operationName, ...path].join(".");
-  }
-
-  /** Create a function that will be used to compute the args for the policies. */
-  private policyArgs(
-    stages: ComputeStage[],
-  ): FromVars<Record<string, Record<string, unknown>>> {
-    const computes: Record<string, FromVars<Record<string, unknown>>> = {};
-    for (const stage of stages) {
-      const args = stage.props.args;
-      if (Object.keys(args).length === 0) {
-        continue;
-      }
-      const key = stage.props.path.join(".");
-      computes[key] = (vars) => mapValues(args, (c) => c(vars, null, null));
-    }
-
-    return (vars) =>
-      filterValues(
-        mapValues(computes, (c) => c(vars)),
-        (v) => v != undefined,
-      );
   }
 }

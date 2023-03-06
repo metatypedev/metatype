@@ -17,21 +17,13 @@ import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { ResolverError } from "./errors.ts";
 import { getCookies } from "std/http/cookie.ts";
 import { RateLimit } from "./rate_limiter.ts";
-import {
-  ComputeStageProps,
-  Context,
-  PolicyStages,
-  PolicyStagesFactory,
-  Resolver,
-  Variables,
-} from "./types.ts";
+import { ComputeStageProps, Context, Resolver, Variables } from "./types.ts";
 import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
-import { FromVars } from "./runtimes/graphql.ts";
 import config from "./config.ts";
 import * as semver from "std/semver/mod.ts";
-import { mapValues } from "std/collections/map_values.ts";
+import { OperationPolicies } from "./planner/policies.ts";
 import { Option } from "monads";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
@@ -155,36 +147,6 @@ export class ComputeStage {
   }
 }
 
-const authorize = async (
-  stageId: string,
-  checks: string[],
-  policiesRegistry: PolicyStages,
-  verbose: boolean,
-  args: Record<string, unknown>,
-): Promise<true | null> => {
-  if (Object.values(checks).length < 1) {
-    // null means inherited
-    return null;
-  }
-
-  const [check, ...nextChecks] = checks;
-  const decision = await policiesRegistry[check](args);
-  // verbose && console.log(stageId, decision);
-
-  if (decision === null) {
-    // next policy
-    return authorize(stageId, nextChecks, policiesRegistry, verbose, args);
-  }
-
-  if (!decision) {
-    // exception = reject
-    throw Error(`authorization failed for ${check} in ${stageId}`);
-  }
-
-  // true = pass
-  return true;
-};
-
 // typechecks for scalar types
 const typeChecks: Record<string, (value: unknown) => boolean> = {
   Int: (value) => typeof value === "number",
@@ -203,8 +165,7 @@ function isIntrospectionQuery(
 
 interface Plan {
   stages: ComputeStage[];
-  policies: PolicyStagesFactory;
-  policyArgs: FromVars<Record<string, Record<string, unknown>>>;
+  policies: OperationPolicies;
   validator: TypeCheck;
 }
 
@@ -246,8 +207,7 @@ export class Engine {
 
   async compute(
     plan: ComputeStage[],
-    policesFactory: PolicyStagesFactory,
-    policyArgs: Record<string, Record<string, unknown>>,
+    policies: OperationPolicies,
     context: Context,
     variables: Record<string, unknown>,
     limit: RateLimit | null,
@@ -256,13 +216,13 @@ export class Engine {
     const ret = {};
     const cache: Record<string, unknown> = {};
     const lenses: Record<string, unknown> = {};
-    const policiesRegistry = policesFactory(context);
+
+    await policies.authorize(context, verbose);
 
     for await (const stage of plan) {
       const {
         dependencies,
         args,
-        policies,
         resolver,
         path,
         parent,
@@ -270,33 +230,7 @@ export class Engine {
         node,
         rateCalls,
         rateWeight,
-        outType,
       } = stage.props;
-
-      const decisions = await Promise.all(
-        Object.values(policies).map((checks) =>
-          authorize(
-            stage.id(),
-            checks,
-            policiesRegistry,
-            verbose,
-            policyArgs,
-          )
-        ),
-      );
-
-      if (
-        node !== "__typename" &&
-        !(outType.type === "object" &&
-          outType.config?.["__namespace"] === true) &&
-        !parent &&
-        (decisions.some((d) => d === null) || decisions.length < 1)
-      ) {
-        // root level field inherit false
-        throw new Error(
-          `no authorization policy took a decision in root field '${stage.id()}'`,
-        );
-      }
 
       const deps = dependencies
         .filter((dep) => dep !== parent?.id())
@@ -311,14 +245,17 @@ export class Engine {
         limit.consume(rateWeight ?? 1);
       }
 
+      const computeArgs = args ?? (() => ({}));
+
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...mapValues(args, (e: any) => e(variables, parent, context)),
+            ...computeArgs(variables, parent, context),
             _: {
               parent: parent ?? {},
               context,
               variables,
+              effect: null, // TODO
               ...deps,
             },
           })
@@ -395,7 +332,7 @@ export class Engine {
 
     // what
     const planner = new Planner(operation, fragments, this.tg, verbose);
-    const { stages, policies, policyArgs } = planner.getPlan();
+    const { stages, policies } = planner.getPlan();
     /*
     this.logger.info(
       "stages:",
@@ -420,7 +357,6 @@ export class Engine {
     const plan: Plan = {
       stages: optimizedStages,
       policies,
-      policyArgs,
       validator,
     };
 
@@ -472,13 +408,12 @@ export class Engine {
       );
       const planTime = performance.now();
 
-      const { stages, policies, policyArgs, validator } = plan;
+      const { stages, policies, validator } = plan;
 
       //logger.info("dag:", stages);
       const res = await this.compute(
         stages,
         policies,
-        policyArgs(variables),
         context,
         variables,
         limit,

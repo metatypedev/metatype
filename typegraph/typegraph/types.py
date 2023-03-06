@@ -21,7 +21,7 @@ from typing_extensions import Self
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypeGraph, TypegraphContext, find
-from typegraph.policies import Policy
+from typegraph.policies import Policy, EffectPolicies
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always, asdict
 
@@ -226,7 +226,7 @@ class typedef(Node):
         *policies: List[Union[Policy, Materializer]],
     ):
         return self.replace(
-            policies=self.policies + tuple(Policy.get_from(p) for p in policies)
+            policies=self.policies + tuple(Policy.create_from(p) for p in policies)
         )
 
     def config(self, *flags: str, **kwargs: Any):
@@ -247,7 +247,10 @@ class typedef(Node):
         ret["type"] = self.type
         ret["title"] = ret.pop("name")
         ret["runtime"] = collector.index(self.runtime)
-        ret["policies"] = [collector.index(p) for p in self.policies]
+        ret["policies"] = [
+            p.data(collector) if isinstance(p, EffectPolicies) else collector.index(p)
+            for p in self.policies
+        ]
         if self.injection == "parent":
             ret["inject"] = collector.index(self.inject)
         elif self.injection == "secret":
@@ -501,18 +504,10 @@ class struct(typedef):
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
 
-    # creates a duplicate type with no runtime
-    def detach(self):
-        return self.replace(
-            name=f"{self.type}_{self.graph.next_type_id()}", runtime=None
-        )
-
     def compose(self, props: Dict[str, typedef]):
         new_props = dict(self.props)
         new_props.update(props)
-        return self.replace(
-            props=frozendict(new_props), name=f"{self.type}_{self.graph.next_type_id()}"
-        )
+        return self.replace(props=frozendict(new_props))
 
     def __getattr__(self, attr):
         try:

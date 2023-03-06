@@ -58,7 +58,7 @@ test("Injected queries", async (t) => {
         }
       }
     `
-      .expectErrorContains("cannot set injected arg")
+      .expectErrorContains("Unexpected value for injected parameter 'b'")
       .on(e);
   });
 });
