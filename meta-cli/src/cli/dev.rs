@@ -8,6 +8,8 @@ use crate::utils;
 use crate::utils::clap::UrlValueParser;
 use crate::utils::{ensure_venv, Node};
 use anyhow::{bail, Context, Error, Result};
+use async_recursion::async_recursion;
+use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
 use common::typegraph::Typegraph;
@@ -27,6 +29,7 @@ use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
 use tiny_http::{Header, Response, Server};
+use tokio::runtime::Handle;
 
 #[derive(Parser, Debug)]
 pub struct Dev {
@@ -50,8 +53,9 @@ fn log_err(err: Error) {
     println!("{}", format!("{err:?}").red());
 }
 
+#[async_trait]
 impl Action for Dev {
-    fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
 
         // load config file or use default values if doesn't exist
@@ -63,7 +67,9 @@ impl Action for Dev {
         // TODO do not use node config from the config file when --gate is set
         let node_url = node_config.url(self.gate.clone());
 
-        let auth = node_config.basic_auth(self.username.clone(), self.password.clone())?;
+        let auth = node_config
+            .basic_auth(self.username.clone(), self.password.clone())
+            .await?;
 
         let node = Node::new(node_url, Some(auth.clone()))?;
 
@@ -79,7 +85,7 @@ impl Action for Dev {
                     println!("No typegraph found. Watching the directory for changes...");
                 } else {
                     println!();
-                    push_loaded_typegraphs(dir.clone(), loaded, &node);
+                    push_loaded_typegraphs(dir.clone(), loaded, &node).await;
                 }
             }
             Err(err) => log_err(err),
@@ -89,6 +95,7 @@ impl Action for Dev {
         let config_clone = config.clone();
         let watch_path = dir.clone();
 
+        let handle = Handle::current();
         let _watcher = watch(dir.clone(), move |paths| {
             let loaded = TypegraphLoader::with_config(&config)
                 .skip_deno_modules()
@@ -104,7 +111,7 @@ impl Action for Dev {
 
             let loaded = TypegraphLoader::with_config(&config).load_files(paths);
 
-            push_loaded_typegraphs(watch_path.clone(), loaded, &node);
+            handle.block_on(push_loaded_typegraphs(watch_path.clone(), loaded, &node));
         })
         .unwrap();
 
@@ -121,7 +128,7 @@ impl Action for Dev {
                     Some(node) => {
                         let tgs = TypegraphLoader::with_config(&config).load_folder(&dir)?;
                         let node = Node::new(node, Some(auth.clone()))?;
-                        push_loaded_typegraphs(dir.clone(), tgs, &node);
+                        push_loaded_typegraphs(dir.clone(), tgs, &node).await;
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
                                 "Content-Type: application/json".parse::<Header>().unwrap(),
@@ -206,7 +213,7 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
         .collect()
 }
 
-pub fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) {
+pub async fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) {
     let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
     for (path, res) in loaded.into_iter() {
         match res.with_context(|| format!("Error while loading typegraphs from {path}")) {
@@ -222,7 +229,7 @@ pub fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) {
                         "  → Pushing typegraph {name}...",
                         name = tg.name().unwrap().blue()
                     );
-                    match push_typegraph(tg, node, 3) {
+                    match push_typegraph(tg, node, 3).await {
                         Ok(_) => {
                             println!("  {}", "✓ Success!".to_owned().green());
                         }
@@ -241,55 +248,55 @@ pub fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) {
     println!();
 }
 
-pub fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<()> {
+#[async_recursion]
+pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<()> {
     use crate::utils::graphql::{Error as GqlError, GraphqlErrorMessages, Query};
-    let query = node.post("/typegate")?.gql(
-        indoc! {"
+    let query = node
+        .post("/typegate")?
+        .gql(
+            indoc! {"
             mutation InsertTypegraph {
                 addTypegraph(fromString: $tg) {
                     name
                 }
             }"}
-        .to_string(),
-        Some(json!({ "tg": serde_json::to_string(tg)? })),
-    );
+            .to_string(),
+            Some(json!({ "tg": serde_json::to_string(tg)? })),
+        )
+        .await;
 
-    query.map(|_| ()).or_else(|e| {
-        use GqlError::*;
-        match e {
-            EndpointNotReachable(e) => {
-                if backoff > 1 {
-                    #[cfg(debug_assertions)]
-                    eprintln!("Endpoint not reachable: {e}");
-                    println!("Retry: typegate not reachable");
-                    sleep(Duration::from_secs(5));
-                    push_typegraph(tg, node, backoff - 1)
-                } else {
-                    bail!("node unreachable: {e}")
-                }
+    use GqlError::*;
+    match query {
+        Err(EndpointNotReachable(e)) => {
+            if backoff <= 1 {
+                bail!("node unreachable: {e}")
             }
-            FailedQuery(e) => {
-                if backoff > 1 {
-                    #[cfg(debug_assertions)]
-                    eprintln!("Query failed:\n{}", e.error_messages());
-                    println!("Retry: Query failed");
-                    sleep(Duration::from_secs(5));
-                    push_typegraph(tg, node, backoff - 1)
-                } else {
-                    bail!("typegraph push error:\n{}", e.error_messages().dimmed())
-                }
-            }
-            InvalidResponse(e) => {
-                if backoff > 1 {
-                    #[cfg(debug_assertions)]
-                    eprintln!("Invalid response: {e:?}");
-                    println!("Retry: Invalid response");
-                    sleep(Duration::from_secs(5));
-                    push_typegraph(tg, node, backoff - 1)
-                } else {
-                    bail!("Invalid HTTP response: {e}")
-                }
-            }
+            #[cfg(debug_assertions)]
+            eprintln!("Endpoint not reachable: {e}");
+            println!("Retry: typegate not reachable");
+            sleep(Duration::from_secs(5));
+            push_typegraph(tg, node, backoff - 1).await
         }
-    })
+        Err(FailedQuery(e)) => {
+            if backoff <= 1 {
+                bail!("typegraph push error:\n{}", e.error_messages().dimmed())
+            }
+            #[cfg(debug_assertions)]
+            eprintln!("Query failed:\n{}", e.error_messages());
+            println!("Retry: Query failed");
+            sleep(Duration::from_secs(5));
+            push_typegraph(tg, node, backoff - 1).await
+        }
+        Err(InvalidResponse(e)) => {
+            if backoff <= 1 {
+                bail!("Invalid HTTP response: {e}")
+            }
+            #[cfg(debug_assertions)]
+            eprintln!("Invalid response: {e:?}");
+            println!("Retry: Invalid response");
+            sleep(Duration::from_secs(5));
+            push_typegraph(tg, node, backoff - 1).await
+        }
+        Ok(_) => Ok(()),
+    }
 }
