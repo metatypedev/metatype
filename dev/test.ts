@@ -69,7 +69,7 @@ const libPath = Deno.build.os === "darwin"
   : "LD_LIBRARY_PATH";
 const wasmEdgeLib = `${Deno.env.get("HOME")}/.wasmedge/lib`;
 
-if (Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
+if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
   Deno.env.set(libPath, `${wasmEdgeLib}:${Deno.env.get(libPath) ?? ""}`);
 }
 
