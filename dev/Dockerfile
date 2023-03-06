@@ -70,9 +70,11 @@ RUN chmod +x /tini
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG}
 
 ENV DENO_DIR /deno-dir/
+ENV LD_LIBRARY_PATH /nonroot/.wasmedge/lib
 
 WORKDIR /app
 
+COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
 COPY --from=debian /tini /tini
 COPY --from=deno-bin /deno /bin/deno
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
