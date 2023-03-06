@@ -20,6 +20,14 @@ FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
 
 #
 
+FROM base as wasmedge
+
+RUN curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o install.sh \
+    && bash install.sh \
+    && rm -rf /root/.wasmedge/bin
+
+#
+
 FROM base AS builder
 
 ARG DENO_BINDGEN_URL=https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts
@@ -30,11 +38,15 @@ ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 ENV OUT_DIR target
 
 COPY --from=deno-bin /deno /bin/deno
+COPY --from=wasmedge /root/.wasmedge /root/.wasmedge
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+    # grpc
     protobuf-compiler \
     libprotobuf-dev \
+    # wasmedge
+    libclang-dev \
     && rm -rf /var/lib/apt/lists/* \
     && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
 
@@ -67,9 +79,11 @@ RUN chmod +x /tini
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG}
 
 ENV DENO_DIR /deno-dir/
+ENV LD_LIBRARY_PATH "/root/.wasmedge/lib:$LD_LIBRARY_PATH"
 
 WORKDIR /app
 
+COPY --from=wasmedge /root/.wasmedge /root/.wasmedge
 COPY --from=debian /tini /tini
 COPY --from=deno-bin /deno /bin/deno
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/

@@ -55,7 +55,8 @@ enum Commands {
     Upgrade,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let args = match Args::try_parse() {
         Ok(args) => args,
         Err(e) => {
@@ -77,31 +78,31 @@ fn main() -> Result<()> {
     if let Some(command) = args.command {
         match command {
             Commands::Dev(dev) => {
-                dev.run(args.dir, config_path)?;
+                dev.run(args.dir, config_path).await?;
             }
             Commands::Serialize(serialize) => {
-                serialize.run(args.dir, config_path)?;
+                serialize.run(args.dir, config_path).await?;
             }
             Commands::Prisma(prisma) => match prisma.command {
                 PrismaCommands::Diff(diff) => {
-                    diff.run(args.dir, config_path)?;
+                    diff.run(args.dir, config_path).await?;
                 }
                 PrismaCommands::Format(format) => {
-                    format.run(args.dir, config_path)?;
+                    format.run(args.dir, config_path).await?;
                 }
                 PrismaCommands::Dev(dev) => {
-                    dev.run(args.dir, config_path)?;
+                    dev.run(args.dir, config_path).await?;
                 }
                 PrismaCommands::Deploy(deploy) => {
-                    deploy.run(args.dir, config_path)?;
+                    deploy.run(args.dir, config_path).await?;
                 }
             },
             Commands::Deploy(deploy) => {
-                deploy.run(args.dir, config_path)?;
+                deploy.run(args.dir, config_path).await?;
             }
             Commands::Codegen(codegen) => match codegen.command {
                 CodegenCommands::Deno(deno) => {
-                    deno.run(args.dir, config_path)?;
+                    deno.run(args.dir, config_path).await?;
                 }
             },
             Commands::Upgrade => {
@@ -125,4 +126,13 @@ fn main() -> Result<()> {
 fn verify_cli() {
     use clap::CommandFactory;
     Args::command().debug_assert()
+}
+
+#[test]
+fn end_to_end() {
+    // need build before running this test
+    use assert_cmd::Command;
+
+    let mut cmd = Command::cargo_bin("meta").unwrap();
+    cmd.assert().success();
 }
