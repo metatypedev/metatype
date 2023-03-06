@@ -10,7 +10,7 @@ flate2 = "1.0.25"
 indexmap = { version = "1.9.2", features = ["serde"] }
 schemars = { version = "0.8.12", features = ["derive", "preserve_order"], optional = true }
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = { version = "1.0.93", features = ["preserve_order"] }
+serde_json = { version = "1.0.94", features = ["preserve_order"] }
 serde_with = "2.2.0"
 tar = "0.4.38"
 
