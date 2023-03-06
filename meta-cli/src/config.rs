@@ -6,7 +6,6 @@ use lazy_static::lazy_static;
 use reqwest::Url;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::env;
 use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
@@ -43,7 +42,6 @@ pub struct NodeConfig {
     url: Url,
     username: Option<String>,
     password: Option<String>,
-    password_env: Option<String>,
 }
 
 impl Default for NodeConfig {
@@ -52,7 +50,6 @@ impl Default for NodeConfig {
             url: "http://localhost:7890".parse().unwrap(),
             username: None,
             password: None,
-            password_env: None,
         }
     }
 }
@@ -63,25 +60,27 @@ impl NodeConfig {
             .unwrap_or_else(|| "http://localhost:7890".parse().unwrap())
     }
 
-    pub fn username(&self, arg: Option<String>) -> Option<String> {
-        arg.or_else(|| self.username.clone())
+    pub async fn username(&self, arg: Option<String>) -> Option<String> {
+        match arg.or_else(|| self.username.clone()) {
+            Some(p) => Some(lade_sdk::hydrate_one(p).await.expect("lade failed")),
+            None => None,
+        }
     }
 
-    pub fn password(&self, arg: Option<String>) -> Option<String> {
-        arg.or_else(|| self.password.clone()).or_else(|| {
-            self.password_env
-                .as_ref()
-                .and_then(|key| env::var(key).ok())
-        })
+    pub async fn password(&self, arg: Option<String>) -> Option<String> {
+        match arg.or_else(|| self.password.clone()) {
+            Some(p) => Some(lade_sdk::hydrate_one(p).await.expect("lade failed")),
+            None => None,
+        }
     }
 
-    pub fn basic_auth(
+    pub async fn basic_auth(
         &self,
         username: Option<String>,
         password: Option<String>,
     ) -> Result<BasicAuth> {
-        let username = self.username(username);
-        let password = self.password(password);
+        let username = self.username(username).await;
+        let password = self.password(password).await;
 
         match (username, password) {
             (Some(username), Some(password)) => Ok(BasicAuth::new(username, password)),
