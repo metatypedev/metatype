@@ -64,15 +64,12 @@ if (flags._.length === 0) {
   }
 }
 
-const libPath = Deno.build.os === "darwin"
-  ? "DYLD_LIBRARY_PATH"
-  : "LD_LIBRARY_PATH";
-Deno.env.set(
-  libPath,
-  `${Deno.env.get("HOME")}/.wasmedge/lib:${
-    Deno.env.get("DYLD_LIBRARY_PATH") ?? ""
-  }`,
-);
+if (Deno.build.os === "darwin") {
+  Deno.env.set(
+    "DYLD_LIBRARY_PATH",
+    `${Deno.env.get("HOME")}/.wasmedge/lib:DYLD_LIBRARY_PATH`,
+  );
+}
 
 const failures = [];
 for await (const testFile of testFiles) {

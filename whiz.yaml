@@ -21,7 +21,6 @@ typegate1: &tp
         PACKAGED: "false"
         LOG_LEVEL: "DEBUG"
         DYLD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH"
-        LD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
     env_file:
         - ../examples/.env.sample
         - ../website/.env.sample
