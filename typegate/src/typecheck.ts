@@ -298,8 +298,20 @@ export class ValidationSchemaBuilder {
   }
 }
 
+export function addJsonFormat(ajv: Ajv) {
+  ajv.addFormat("json", (data: string) => {
+    try {
+      JSON.parse(data);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  });
+}
+
 const ajv = new Ajv({ removeAdditional: true });
 addFormats(ajv);
+addJsonFormat(ajv);
 
 // Validator of query response
 export class TypeCheck {

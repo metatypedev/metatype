@@ -2,6 +2,7 @@
 
 import frozendict
 
+from typegraph import policies as p
 from typegraph import TypeGraph, t
 from typegraph.graph.models import Cors
 from typegraph.runtimes.deno import PureFunMat
@@ -217,6 +218,96 @@ class TestTypegraph:
                     },
                 ],
                 "policies": [],
+                "meta": {
+                    "secrets": [],
+                    "auths": [],
+                    "rate": None,
+                    "cors": Cors(
+                        allow_origin=[],
+                        allow_headers=[],
+                        expose_headers=[],
+                        allow_credentials=True,
+                        max_age=None,
+                    ),
+                    "version": "0.0.1",
+                },
+                "$id": "https://metatype.dev/specs/0.0.1.json",
+            }
+        )
+
+    def test_policy_for_effects(self, overridable):
+        with TypeGraph("policy_for_effects") as g:
+            public = p.public()
+
+            g.expose(
+                test=t.func(t.struct(), t.integer(), PureFunMat("() => 1")).add_policy(
+                    {
+                        "none": public,
+                        "update": public,
+                        "create": public,
+                    }
+                )
+            )
+
+        assert g.build() == overridable(
+            {
+                "types": [
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "object",
+                        "title": "policy_for_effects",
+                        "properties": {"test": 1},
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [{"none": 0, "create": 0, "update": 0}],
+                        "safe": True,
+                        "rate_calls": False,
+                        "type": "function",
+                        "title": "function_4",
+                        "input": 2,
+                        "output": 3,
+                        "materializer": 1,
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "object",
+                        "title": "object_2",
+                        "properties": {},
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "integer",
+                        "title": "integer_3",
+                    },
+                ],
+                "runtimes": [
+                    {
+                        "name": "deno",
+                        "data": {
+                            "worker": "default",
+                            "permissions": frozendict.frozendict({}),
+                        },
+                    }
+                ],
+                "materializers": [
+                    {
+                        "name": "function",
+                        "runtime": 0,
+                        "effect": {"effect": None, "idempotent": True},
+                        "data": {"script": "var _my_lambda = () => true;"},
+                    },
+                    {
+                        "name": "function",
+                        "runtime": 0,
+                        "effect": {"effect": None, "idempotent": True},
+                        "data": {"script": "var _my_lambda = () => 1;"},
+                    },
+                ],
+                "policies": [{"name": "__public", "materializer": 0}],
                 "meta": {
                     "secrets": [],
                     "auths": [],

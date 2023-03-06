@@ -32,3 +32,5 @@ build
 website/vale/Google
 recipe.json
 *-debug.whiz.yaml
+
+tmp/

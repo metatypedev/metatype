@@ -6,6 +6,7 @@ import type { TypeGraphDS, TypeMaterializer } from "./typegraph.ts";
 import { ObjectNode, TypeNode } from "./type_node.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "./planner/args.ts";
+import { EffectType, PolicyIndices } from "./types/typegraph.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;
@@ -24,6 +25,7 @@ interface ResolverArgsBase {
     parent: Parents;
     variables: Variables;
     context: Context;
+    effect: EffectType | null;
     [dep: string]: unknown;
   };
 }
@@ -51,12 +53,12 @@ export interface ComputeStageProps {
   operationType: ast.OperationTypeNode;
   dependencies: string[];
   parent?: ComputeStage;
-  args: Record<string, ComputeArg>;
-  policies: Record<string, string[]>;
+  args: ComputeArg<Record<string, unknown>> | null;
   resolver?: Resolver;
   argumentNodes?: ReadonlyArray<ast.ArgumentNode>;
   inpType?: ObjectNode;
   outType: TypeNode; // only temp
+  typeIdx: number;
   runtime: Runtime;
   materializer?: TypeMaterializer;
   batcher: Batcher;
@@ -66,10 +68,7 @@ export interface ComputeStageProps {
   rateWeight: number;
 }
 
-export type PolicyStage = (
-  args: Record<string, unknown>,
-) => Promise<boolean | null>;
-export type PolicyStages = Record<string, PolicyStage>;
-export type PolicyStagesFactory = (
-  context: Context,
-) => PolicyStages;
+export type StageId = string;
+export type PolicyIdx = number;
+export type PolicyList = Array<PolicyIndices>;
+export type TypeIdx = number;

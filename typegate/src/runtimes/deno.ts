@@ -164,6 +164,7 @@ export class DenoRuntime extends Runtime {
           parent,
           context,
           secrets,
+          effect: mat.effect.effect ?? null,
         },
         mat,
       }, verbose);
