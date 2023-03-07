@@ -55,7 +55,7 @@ base64 = "0.21.0"
 common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
 walkdir = "2.3.2"
-serde_yaml = "0.9.17"
+serde_yaml = "0.9.19"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.45", features = ["vendored"] }
 indexmap = { version = "1.9.2", features = ["serde"] }
