@@ -3,10 +3,10 @@
 import { Auth, AuthDS, nextAuthorizationHeader } from "../auth.ts";
 import config from "../../config.ts";
 import { deleteCookie, setCookie } from "std/http/cookie.ts";
-import { OAuth2Client, Tokens } from "oauth2_client";
+import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
 import { signJWT, verifyJWT } from "../../crypto.ts";
 import { envOrFail } from "../../utils.ts";
-import { JWTClaims } from "./jwt.ts";
+import { JWTClaims } from "../auth.ts";
 
 export class OAuth2Auth implements Auth {
   static init(typegraphName: string, auth: AuthDS): Promise<Auth> {
@@ -16,22 +16,20 @@ export class OAuth2Auth implements Auth {
       `${auth.name}_CLIENT_SECRET`,
     );
     const { authorize_url, access_url, scopes, profile_url } = auth.auth_data;
-    const client = new OAuth2Client({
+    const clientData = {
       clientId,
       clientSecret,
       authorizationEndpointUri: authorize_url as string,
       tokenUri: access_url as string,
-      redirectUri:
-        `${config.tg_external_url}/${typegraphName}/auth/${auth.name}`,
       defaults: {
         scope: scopes as string,
       },
-    });
+    };
     return Promise.resolve(
       new OAuth2Auth(
         typegraphName,
-        auth,
-        client,
+        auth.name,
+        clientData,
         profile_url as string,
       ),
     );
@@ -39,23 +37,33 @@ export class OAuth2Auth implements Auth {
 
   private constructor(
     public typegraphName: string,
-    public auth: AuthDS,
-    private client: OAuth2Client,
+    private authName: string,
+    private clientData: Omit<OAuth2ClientConfig, "redirectUri">,
     private profileUrl: string,
   ) {}
 
   async authMiddleware(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    const client = new OAuth2Client({
+      ...this.clientData,
+      redirectUri:
+        `${url.protocol}//${url.host}/${this.typegraphName}/auth/${this.authName}`,
+    });
     const query = Object.fromEntries(url.searchParams.entries());
 
     if (query.code && query.state) {
       try {
-        const redirectUri = await this.verifyState(query.state);
-        const headers = await this.createJWTHeaders(
-          url,
+        const { redirectUri } = await verifyJWT(query.state);
+
+        const token = await client.code.getToken(url);
+        const jwt = await this.createJWT(token, config.cookies_max_age_sec);
+        const headers = this.createHeaders(
+          jwt,
           config.cookies_max_age_sec,
+          url.host,
         );
-        headers.set("location", redirectUri);
+
+        headers.set("location", redirectUri as string);
         return new Response(null, {
           status: 302,
           headers,
@@ -74,17 +82,27 @@ export class OAuth2Auth implements Auth {
       });
     }
 
+    const state = await signJWT({ redirectUri: query.redirect_uri }, 3600);
+    const location = client.code.getAuthorizationUri({ state }).toString();
+
     return new Response(null, {
       status: 302,
       headers: {
-        location: await this.getAuthorizationUri(query.redirect_uri),
+        location,
       },
     });
   }
 
   async tokenMiddleware(
     token: string,
+    url: URL,
   ): Promise<[Record<string, unknown>, Headers]> {
+    const client = new OAuth2Client({
+      ...this.clientData,
+      redirectUri:
+        `${url.protocol}//${url.host}/${this.typegraphName}/auth/${this.authName}`,
+    });
+
     const clearCookie = (): Headers => {
       const hs = new Headers();
       hs.set(nextAuthorizationHeader, "");
@@ -106,8 +124,10 @@ export class OAuth2Auth implements Auth {
 
       if (new Date().valueOf() / 1000 > claims.refreshAt) {
         const hs = await this.renewJWTCookie(
+          client,
           claims.refreshToken,
           config.cookies_max_age_sec,
+          url.host,
         );
         return [claims, hs];
       }
@@ -117,24 +137,6 @@ export class OAuth2Auth implements Auth {
       console.info(`invalid auth: ${e}`);
       return [{}, clearCookie()];
     }
-  }
-
-  private async getAuthorizationUri(redirectUri: string): Promise<string> {
-    const state = await signJWT({ redirectUri }, 3600);
-    return this.client.code.getAuthorizationUri({ state }).toString();
-  }
-
-  private async getToken(url: URL): Promise<Tokens> {
-    return await this.client.code.getToken(url);
-  }
-
-  private async verifyState(state: string): Promise<string> {
-    const payload = await verifyJWT(state);
-    return payload.redirectUri as string;
-  }
-
-  private async refreshToken(refreshToken: string): Promise<Tokens> {
-    return await this.client.refreshToken.refresh(refreshToken);
   }
 
   async getProfile(token: string): Promise<unknown> {
@@ -152,7 +154,7 @@ export class OAuth2Auth implements Auth {
 
   private async createJWT(token: Tokens, maxAge: number): Promise<string> {
     const payload: JWTClaims = {
-      provider: this.auth.name,
+      provider: this.authName,
       accessToken: token.accessToken,
       refreshToken: token.refreshToken as string,
       refreshAt: Math.floor(
@@ -163,14 +165,18 @@ export class OAuth2Auth implements Auth {
     return await signJWT(payload, maxAge);
   }
 
-  private createHeaders(jwt: string, maxAge: number): Headers {
+  private createHeaders(
+    jwt: string,
+    maxAge: number,
+    host: string,
+  ): Headers {
     const hs = new Headers();
     const name = this.typegraphName;
     setCookie(hs, {
       name,
       value: jwt,
       maxAge,
-      domain: new URL(config.tg_external_url).hostname,
+      domain: host,
       path: `/${name}`,
       secure: !config.debug,
       sameSite: "Lax",
@@ -179,30 +185,16 @@ export class OAuth2Auth implements Auth {
     return hs;
   }
 
-  private async createJWTHeaders(
-    urlWithToken: URL,
-    maxAge: number,
-  ): Promise<Headers> {
-    const token = await this.getToken(urlWithToken);
-    const jwt = await this.createJWT(token, maxAge);
-    return this.createHeaders(jwt, maxAge);
-  }
-
-  private async renewJWT(
-    refreshToken: string,
-    maxAge: number,
-  ): Promise<string | null> {
-    const token = await this.refreshToken(refreshToken);
-    return await this.createJWT(token, maxAge);
-  }
-
   private async renewJWTCookie(
+    client: OAuth2Client,
     refreshToken: string,
     maxAge: number,
+    host: string,
   ): Promise<Headers> {
-    const jwt = await this.renewJWT(refreshToken, maxAge);
+    const token = await client.refreshToken.refresh(refreshToken);
+    const jwt = await this.createJWT(token, maxAge);
     if (jwt) {
-      return this.createHeaders(jwt, maxAge);
+      return this.createHeaders(jwt, maxAge, host);
     }
     const hs = new Headers();
     const name = this.typegraphName;

@@ -2,22 +2,11 @@
 
 import { Auth, AuthDS } from "../auth.ts";
 import * as jwt from "jwt";
-import { signKey as nativeSignKey } from "../../crypto.ts";
 import { envOrFail } from "../../utils.ts";
-
-export type JWTClaims = {
-  provider: string;
-  accessToken: string;
-  refreshToken: string;
-  refreshAt: number;
-};
 
 export class JWKAuth implements Auth {
   static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
-    if (auth.name === "native") {
-      return new JWKAuth(typegraphName, auth, nativeSignKey);
-    }
-    const jwk = envOrFail(typegraphName, `${auth.name}_JWK`);
+    const jwk = JSON.parse(envOrFail(typegraphName, `${auth.name}_JWK`));
     const signKey = await crypto.subtle.importKey(
       "jwk",
       jwk as JsonWebKey,
@@ -29,12 +18,11 @@ export class JWKAuth implements Auth {
       false,
       ["verify"],
     );
-    return new JWKAuth(typegraphName, auth, signKey);
+    return new JWKAuth(typegraphName, signKey);
   }
 
   private constructor(
     public typegraphName: string,
-    public auth: AuthDS,
     private signKey: CryptoKey,
   ) {}
 
@@ -47,6 +35,7 @@ export class JWKAuth implements Auth {
 
   async tokenMiddleware(
     token: string,
+    _url: URL,
   ): Promise<[Record<string, unknown>, Headers]> {
     try {
       const claims = await jwt.verify(token, this.signKey);

@@ -7,6 +7,7 @@ import {
   predefinedFuncs,
   PredefinedFuncTask,
   Task,
+  TaskContext,
   TaskExec,
 } from "./codes.ts";
 
@@ -19,7 +20,39 @@ type TaskModule = Record<string, TaskExec>;
 const fns: Map<number, TaskExec> = new Map();
 const mods: Map<number, TaskModule> = new Map();
 
-// TODO: get worker name from events, for better logging
+const make_internal = ({ meta: { url, token } }: TaskContext) => {
+  const gql = (query: readonly string[], ...args: unknown[]) => {
+    if (args.length > 0) {
+      throw new Error("gql does not support arguments, use variables instead");
+    }
+    return {
+      run: async (
+        variables: Record<string, unknown>,
+      ): Promise<Record<string, unknown>> => {
+        const res = await fetch(
+          url,
+          {
+            method: "POST",
+            headers: {
+              accept: "application/json",
+              "content-type": "application/json",
+              "authorization": `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              query: query[0],
+              variables,
+            }),
+          },
+        );
+        if (!res.ok) {
+          throw new Error(`gql fetch on ${url} failed: ${await res.text()}`);
+        }
+        return res.json();
+      },
+    };
+  };
+  return { gql };
+};
 
 const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
   import_func: async (task: Task) => {
@@ -40,7 +73,7 @@ const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
     verbose &&
       logger.info(`[${id}] exec func "${name}" from module ${moduleId}`);
     const mod = mods.get(moduleId)!;
-    return await mod[name](args, internals);
+    return await mod[name](args, internals, make_internal(internals));
   },
 
   func: async (task: Task) => {
@@ -56,13 +89,15 @@ const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
     }
 
     verbose && logger.info(`[${id}] exec func "${fnId}"`);
-    return await fns.get(fnId)!(args, internals);
+    return await fns.get(fnId)!(args, internals, make_internal(internals));
   },
 
   predefined_func: (task: Task) => {
     const { id, name, args, internals, verbose } = task as PredefinedFuncTask;
     verbose && logger.info(`[${id}] exec predefined func "${name}"`);
-    return Promise.resolve(predefinedFuncs[name](args, internals));
+    return Promise.resolve(
+      predefinedFuncs[name](args, internals, make_internal(internals)),
+    );
   },
 };
 
@@ -87,6 +122,7 @@ self.onmessage = async (evt: MessageEvent<Task>) => {
     const value = await exec(evt.data);
     self.postMessage({ id, value });
   } catch (err) {
+    logger.error(err);
     self.postMessage({ id, error: err.message });
   }
 };

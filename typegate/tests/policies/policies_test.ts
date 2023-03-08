@@ -1,9 +1,35 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import config from "../../src/config.ts";
+import { Engine } from "../../src/engine.ts";
 import { gql, test } from "../utils.ts";
 
+async function withKey(f: () => Promise<Engine>, typegraphName: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    config.tg_secret.slice(32, 64),
+    { name: "HMAC", hash: { name: "SHA-256" } },
+    true,
+    ["verify"],
+  );
+  const jwk = JSON.stringify(await crypto.subtle.exportKey("jwk", key));
+  const envVar = `TG_${typegraphName.toUpperCase()}_NATIVE_JWK`;
+  Deno.env.set(
+    envVar,
+    jwk,
+  );
+  const res = await f();
+  Deno.env.delete(
+    envVar,
+  );
+  return res;
+}
+
 test("Policies", async (t) => {
-  const e = await t.pythonFile("policies/policies.py");
+  const e = await withKey(
+    () => t.pythonFile("policies/policies.py"),
+    "policies",
+  );
 
   await t.should("have public access", async () => {
     await gql`
@@ -64,8 +90,14 @@ test("Policies", async (t) => {
 });
 
 test("Role jwt policy access", async (t) => {
-  const e_norm = await t.pythonFile("policies/policies_jwt.py");
-  const e_inject = await t.pythonFile("policies/policies_jwt_injection.py");
+  const e_norm = await withKey(
+    () => t.pythonFile("policies/policies_jwt.py"),
+    "policies_jwt",
+  );
+  const e_inject = await withKey(
+    () => t.pythonFile("policies/policies_jwt_injection.py"),
+    "policies_jwt_injection",
+  );
 
   await t.should("have role", async () => {
     await gql`
@@ -120,7 +152,10 @@ test("Role jwt policy access", async (t) => {
 });
 
 test("Namespace policies", async (t) => {
-  const e = await t.pythonFile("policies/policies.py");
+  const e = await withKey(
+    () => t.pythonFile("policies/policies.py"),
+    "policies",
+  );
 
   await t.should("fail when no policy", async () => {
     await gql`
@@ -136,7 +171,7 @@ test("Namespace policies", async (t) => {
 });
 
 test("Policies for effects", async (t) => {
-  const e = await t.pythonFile("policies/effects.py");
+  const e = await withKey(() => t.pythonFile("policies/effects.py"), "effects");
 
   await t.should("succeeed", async () => {
     await gql`

@@ -12,10 +12,3 @@ export function readSecret(
 } {
   return { username, data: "secret" };
 }
-
-export function isAllowedToReadSecret(
-  args: Record<string, Record<string, unknown>>,
-  { context }: { context: Record<string, unknown> },
-): boolean {
-  return args.secret.username === context.username;
-}

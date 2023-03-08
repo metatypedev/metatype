@@ -4,6 +4,7 @@ import { DenoRuntime } from "../runtimes/deno.ts";
 import { TypeGraph } from "../typegraph.ts";
 import {
   Context,
+  Info,
   PolicyIdx,
   PolicyList,
   Resolver,
@@ -96,6 +97,7 @@ export class OperationPolicies {
 
   public async authorize(
     context: Context,
+    info: Info,
     verbose: boolean,
   ) {
     const logger = getLogger("policies");
@@ -130,10 +132,12 @@ export class OperationPolicies {
           this.tg.policy(idx).name
         }'; effect=${effect}`,
       );
+
       const res = await resolver!({
         _: {
           parent: {},
           context,
+          info,
           variables: {},
           effect: effect === "none" ? null : effect,
         },

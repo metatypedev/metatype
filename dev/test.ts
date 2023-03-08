@@ -67,12 +67,11 @@ if (flags._.length === 0) {
 const libPath = Deno.build.os === "darwin"
   ? "DYLD_LIBRARY_PATH"
   : "LD_LIBRARY_PATH";
-Deno.env.set(
-  libPath,
-  `${Deno.env.get("HOME")}/.wasmedge/lib:${
-    Deno.env.get("DYLD_LIBRARY_PATH") ?? ""
-  }`,
-);
+const wasmEdgeLib = `${Deno.env.get("HOME")}/.wasmedge/lib`;
+
+if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
+  Deno.env.set(libPath, `${wasmEdgeLib}:${Deno.env.get(libPath) ?? ""}`);
+}
 
 const failures = [];
 for await (const testFile of testFiles) {
