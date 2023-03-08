@@ -60,7 +60,7 @@ pathdiff = "0.2.1"
 openssl = { version = "0.10.45", features = ["vendored"] }
 indexmap = { version = "1.9.2", features = ["serde"] }
 lade-sdk = "0.3.1"
-async-trait = "0.1.65"
+async-trait = "0.1.66"
 async-recursion = "1.0.2"
 
 [dev-dependencies]
