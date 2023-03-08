@@ -13,9 +13,9 @@ back :octocat: fixing a bug, improving clarity or adding new features.
 
 ### Browse the [documentation](https://metatype.dev) or start directly [building your first typegraph](https://metatype.dev/docs/tutorials/getting-started)!
 
-> Metatype is on its track to get a stable release, yet missing some components
-> to be complete. The ecosystem is already successfully used in production by
-> some commercial projects.
+> Metatype is close to reach a stable release state, yet missing some more
+> components to be complete. The ecosystem is already successfully used in
+> production by some companies.
 >
 > Enough features are available for you to build and compose API blocks even
 > though the experience may not be as smooth as desired. As such, it does _not_
