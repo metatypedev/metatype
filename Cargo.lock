@@ -2672,9 +2672,9 @@ dependencies = [
 
 [[package]]
 name = "lade-sdk"
-version = "0.2.2"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28ba1adba4d85a0f5a73c45668ffb12bb281ab3c8ed991845e5ffa05319b0f11"
+checksum = "c9c7260e999741da3c918eab95e4d6146641f7639b1416a75e32832fa8378b1c"
 dependencies = [
  "anyhow",
  "async-process",
