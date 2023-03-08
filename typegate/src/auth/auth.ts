@@ -7,7 +7,6 @@ import { OAuth2Auth } from "./protocols/oauth2.ts";
 import type { Auth as AuthDS } from "../types/typegraph.ts";
 export { AuthDS };
 
-// localhost:7890/biscuicuits/auth/github?redirect_uri=localhost:7890/biscuicuits
 export const nextAuthorizationHeader = "Next-Authorization";
 
 export abstract class Auth {
@@ -24,11 +23,19 @@ export abstract class Auth {
     }
   }
 
-  protected constructor(public typegraphName: string, public auth: AuthDS) {}
+  protected constructor(public typegraphName: string) {}
 
   abstract authMiddleware(request: Request): Promise<Response>;
 
   abstract tokenMiddleware(
     token: string,
+    url: URL,
   ): Promise<[Record<string, unknown>, Headers]>;
 }
+
+export type JWTClaims = {
+  provider: string;
+  accessToken: string;
+  refreshToken: string;
+  refreshAt: number;
+};

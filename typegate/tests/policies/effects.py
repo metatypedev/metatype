@@ -1,10 +1,12 @@
-from typegraph import t, effects
-from typegraph import TypeGraph
+from typegraph import TypeGraph, effects, t
 from typegraph import policies as p
-from typegraph.runtimes.deno import PureFunMat, ModuleMat, FunMat
 from typegraph.graph.models import Auth
+from typegraph.runtimes.deno import FunMat, ModuleMat, PureFunMat
 
-with TypeGraph("effect-policies", auths=[Auth.jwk("native")]) as g:
+with TypeGraph(
+    "effects",
+    auths=[Auth.jwk("native", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
+) as g:
     # public = p.public().mat
     public = PureFunMat("() => true")
     mod = ModuleMat("ts/effects.ts")

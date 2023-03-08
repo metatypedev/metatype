@@ -6,7 +6,7 @@ import { execute, gql, sleep, test } from "../utils.ts";
 import * as mf from "test/mock_fetch";
 import { signJWT, unsafeExtractJWT, verifyJWT } from "../../src/crypto.ts";
 import { nextAuthorizationHeader } from "../../src/auth/auth.ts";
-import { JWTClaims } from "../../src/auth/protocols/jwt.ts";
+import { JWTClaims } from "../../src/auth/auth.ts";
 import { getSetCookies } from "std/http/cookie.ts";
 import { b64decode } from "../../src/utils.ts";
 
@@ -87,7 +87,7 @@ test("Auth", async (t) => {
       const redirect = new URL(res.headers.get("location")!);
       assertStringIncludes(
         redirect.href,
-        `https://github.com/login/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=http%3A%2F%2Flocalhost%3A7890%2Ftest_auth%2Fauth%2Fgithub&scope=openid+profile+email&state=`,
+        `https://github.com/login/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=http%3A%2F%2Ftypegate.local%2Ftest_auth%2Fauth%2Fgithub&scope=openid+profile+email&state=`,
       );
       const state = await unsafeExtractJWT(redirect.searchParams.get("state")!);
       assertEquals(state.redirectUri, redirectUri);
@@ -188,7 +188,7 @@ test("Auth", async (t) => {
   });
 
   await t.should("use jwt from header", async () => {
-    const jwt = await signJWT({ user1: "zifeo" }, 10);
+    const jwt = await signJWT({ provider: "internal", user1: "zifeo" }, 10);
     await gql`
         query {
           private(x: 1) {
@@ -206,7 +206,7 @@ test("Auth", async (t) => {
   });
 
   await t.should("use jwt from cookie", async () => {
-    const jwt = await signJWT({ user1: "zifeo" }, 10);
+    const jwt = await signJWT({ provider: "internal", user1: "zifeo" }, 10);
     await gql`
         query {
           private(x: 1) {

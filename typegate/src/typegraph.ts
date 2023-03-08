@@ -38,14 +38,12 @@ import type {
   Typegraph as TypeGraphDS,
 } from "./types/typegraph.ts";
 import { TemporalRuntime } from "./runtimes/temporal.ts";
-import { getLogger } from "./log.ts";
+import { InternalAuth } from "./auth/protocols/internal.ts";
 import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
 export type RuntimeResolver = Record<string, Runtime>;
-
-const _logger = getLogger(import.meta);
 
 const runtimeInit: RuntimeInit = {
   s3: S3Runtime.init,
@@ -160,6 +158,8 @@ export class TypeGraph {
         await Auth.init(typegraphName, auth),
       );
     }
+    // override "internal" to enforce internal auth
+    auths.set("internal", await InternalAuth.init(typegraphName));
 
     const runtimeReferences = await Promise.all(
       runtimes.map((runtime, idx) => {

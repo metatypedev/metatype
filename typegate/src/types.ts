@@ -20,12 +20,18 @@ export interface Context {
   [key: string]: unknown;
 }
 
+export interface Info {
+  url: URL;
+  headers: Record<string, string>;
+}
+
 interface ResolverArgsBase {
   _: {
     parent: Parents;
     variables: Variables;
     context: Context;
     effect: EffectType | null;
+    info: Info;
     [dep: string]: unknown;
   };
 }

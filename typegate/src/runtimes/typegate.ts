@@ -3,7 +3,6 @@
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { Register } from "../register.ts";
-import config from "../config.ts";
 import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphDS } from "../typegraph.ts";
@@ -65,23 +64,23 @@ export class TypeGateRuntime extends Runtime {
     ];
   }
 
-  typegraphs: Resolver = () => {
+  typegraphs: Resolver = ({ _: { info: { url } } }) => {
     return this.register.list().map((e) => {
       return {
         name: e.name,
-        url: () => `${config.tg_external_url}/${e.name}`,
+        url: () => `${url.protocol}//${url.host}/${e.name}`,
       };
     });
   };
 
-  typegraph: Resolver = ({ name }) => {
+  typegraph: Resolver = ({ name, _: { info: { url } } }) => {
     const tg = this.register.get(name);
     if (!tg) {
       return null;
     }
     return {
       name: tg.name,
-      url: `${config.tg_external_url}/${tg.name}`,
+      url: `${url.protocol}//${url.host}/${tg.name}`,
     };
   };
 

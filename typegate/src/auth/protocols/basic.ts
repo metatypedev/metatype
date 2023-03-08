@@ -16,12 +16,11 @@ export class BasicAuth implements Auth {
       const token = await bcrypt.hash(password);
       tokens.set(user, token);
     }
-    return Promise.resolve(new BasicAuth(typegraphName, auth, tokens));
+    return Promise.resolve(new BasicAuth(typegraphName, tokens));
   }
 
   private constructor(
     public typegraphName: string,
-    public auth: AuthDS,
     private hashes: Map<string, string>,
   ) {}
 
@@ -34,6 +33,7 @@ export class BasicAuth implements Auth {
 
   async tokenMiddleware(
     jwt: string,
+    _url: URL,
   ): Promise<[Record<string, unknown>, Headers]> {
     const [user, token] = b64decode(jwt).split(
       ":",
