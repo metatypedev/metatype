@@ -1,6 +1,6 @@
 services:
   typegate:
-    image: ghcr.io/metatypedev/typegate:v0.0.3-dev.5
+    image: ghcr.io/metatypedev/typegate:v0.0.3-dev.6
     platform: linux/amd64
     #build:
     #  context: ..

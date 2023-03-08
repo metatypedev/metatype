@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "examples"
-version = "0.0.3-dev.5"
+version = "0.0.3-dev.6"
 description = ""
 authors = []
 
