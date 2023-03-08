@@ -2,16 +2,17 @@ changelog:
   exclude:
     authors:
       - octocat
+      - dependabot
   categories:
     - title: Breaking changes 🛠
       labels:
         - breaking-change
-    - title: New features 🎉
-      labels:
-        - "*"
     - title: Documentation improvements 📖
       labels:
         - documentation
     - title: Bug fixes 🐛
       labels:
         - bug
+    - title: New features 🎉
+      labels:
+        - "*"
