@@ -388,12 +388,11 @@ class PrismaRuntime(Runtime):
         typegen = self.__typegen
         _pref = get_name_generator("GroupBy", tpe)
         tpe_nums = typegen.extract_number_types(tpe)
+        count_props = {k: t.integer() for k in tpe.props.keys()}
+        count_props["_all"] = t.integer()
         aggreg_def = t.struct(
             {
-                "_count": t.struct({"_all": t.integer()})
-                .compose(tpe.props)
-                .named(_pref("Count"))
-                .optional(),
+                "_count": t.struct(count_props).named(_pref("Count")).optional(),
                 "_avg": typegen.promote_num_to_float(tpe_nums)
                 .named(_pref("Avg"))
                 .optional(),
