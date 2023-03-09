@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Iterable
 
 from typegraph import TypeGraph, t
-from typegraph.providers.prisma.schema import Registry
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.providers.prisma.schema import build_model
 
@@ -42,7 +41,7 @@ class TestPrismaSchema:
         )
 
     def build_schema(self, runtime: PrismaRuntime, models: Iterable[t.struct]):
-        reg = Registry(runtime)
+        reg = runtime.reg
         for m in models:
             reg.manage(m)
         with reg:
@@ -83,6 +82,7 @@ class TestPrismaSchema:
             ).named("Post")
 
             self.assert_snapshot(db, [user, post], "one-to-many.prisma")
+            self.assert_snapshot(db, [post, user], "one-to-many-r.prisma")
 
     def test_implicit_one_to_many(self, snapshot):
         self.init_snapshot(snapshot)
@@ -98,6 +98,7 @@ class TestPrismaSchema:
             ).named("Post")
 
             self.assert_snapshot(db, [user, post], "implicit-one-to-many.prisma")
+            self.assert_snapshot(db, [post, user], "implicit-one-to-many-r.prisma")
 
     def test_optional_one_to_many(self, snapshot):
         self.init_snapshot(snapshot)
@@ -113,6 +114,7 @@ class TestPrismaSchema:
             ).named("Post")
 
             self.assert_snapshot(db, [user, post], "optional-one-to-many.prisma")
+            self.assert_snapshot(db, [post, user], "optional-one-to-many-r.prisma")
 
     def test_one_to_one(self, snapshot):
         self.init_snapshot(snapshot)
@@ -136,6 +138,7 @@ class TestPrismaSchema:
             ).named("Profile")
 
             self.assert_snapshot(db, [user, profile], "one-to-one.prisma")
+            self.assert_snapshot(db, [profile, user], "one-to-one-r.prisma")
 
     def test_implicit_one_to_one(self, snapshot):
         self.init_snapshot(snapshot)
@@ -155,6 +158,7 @@ class TestPrismaSchema:
             ).named("Profile")
 
             self.assert_snapshot(db, [user, profile], "implicit-one-to-one.prisma")
+            self.assert_snapshot(db, [profile, user], "implicit-one-to-one-r.prisma")
 
     def test_optional_one_to_one(self, snapshot):
         self.init_snapshot(snapshot)
@@ -177,6 +181,7 @@ class TestPrismaSchema:
             ).named("Profile")
 
             self.assert_snapshot(db, [user, profile], "optional-one-to-one.prisma")
+            self.assert_snapshot(db, [profile, user], "optional-one-to-one-r.prisma")
 
     def test_semi_implicit(self, snapshot):
         self.init_snapshot(snapshot)
@@ -196,6 +201,7 @@ class TestPrismaSchema:
             ).named("Profile")
 
             self.assert_snapshot(db, [user, profile], "one-to-one.prisma")
+            self.assert_snapshot(db, [profile, user], "one-to-one-r.prisma")
 
         with TypeGraph(name="test_semi_implicit_2") as g:
             db = PrismaRuntime("test", "POSTGRES")
@@ -215,3 +221,4 @@ class TestPrismaSchema:
             ).named("Profile")
 
             self.assert_snapshot(db, [user, profile], "one-to-one.prisma")
+            self.assert_snapshot(db, [profile, user], "one-to-one-r.prisma")

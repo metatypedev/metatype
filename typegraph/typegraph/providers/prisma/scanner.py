@@ -77,8 +77,20 @@ class Registry:
             self.manage(rel.other(model).typ)
 
     def _add(self, rel: "Relationship"):
-        self.models[rel.left.typ.name][rel.left.field] = rel
-        self.models[rel.right.typ.name][rel.right.field] = rel
+        left_model_relationships = self.models[rel.left.typ.name]
+        if rel.left.field in left_model_relationships:
+            raise Exception(
+                f"field '{rel.left.field}' on '{rel.left.typ.name}' already in a relationship"
+            )
+
+        right_model_relationships = self.models[rel.right.typ.name]
+        if rel.right.field in right_model_relationships:
+            raise Exception(
+                f"field '{rel.right.field}' on '{rel.right.typ.name}' already in a relationship"
+            )
+
+        left_model_relationships[rel.left.field] = rel
+        right_model_relationships[rel.right.field] = rel
         self.relationships[rel.name] = rel
 
     def _has(self, model_name: _ModelName, prop_name: _PropertyName) -> bool:
