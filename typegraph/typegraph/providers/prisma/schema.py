@@ -5,8 +5,8 @@ from typing import List, Optional, Tuple
 from attrs import evolve, frozen
 
 from typegraph import types as t
-from typegraph.graph.typegraph import resolve_proxy
-from typegraph.providers.prisma.relations import RelationshipRegister
+from typegraph.graph.typegraph import find, resolve_proxy
+from typegraph.providers.prisma.scanner import Registry
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
 prisma_types = {
@@ -46,9 +46,9 @@ class PrismaField:
 
 
 def get_ids(tpe: t.struct) -> Tuple[str, ...]:
-    return [
+    return tuple(
         k for k, v in tpe.props.items() if resolve_proxy(v).runtime_config.get("id")
-    ]
+    )
 
 
 @frozen
@@ -65,7 +65,7 @@ class SchemaField:
 
 @frozen
 class FieldBuilder:
-    spec: RelationshipRegister
+    reg: Registry
 
     def additional_tags(self, typ: t.typedef) -> List[str]:
         tags = []
@@ -91,7 +91,7 @@ class FieldBuilder:
 
     def relation(
         self, field: str, typ: t.struct, rel_name: str
-    ) -> [str, List[SchemaField]]:
+    ) -> Tuple[str, List[SchemaField]]:
         references = self.get_type_ids(typ)
         fields = [f"{field}{ref.title()}" for ref in references]
 
@@ -106,7 +106,7 @@ class FieldBuilder:
 
         tag = f"@relation(name: {name}, fields: {fields}, references: {references})"
 
-        return [tag, fkeys]
+        return (tag, fkeys)
 
     def build(self, field: str, typ: t.typedef, parent_type: t.struct) -> SchemaField:
         quant = ""
@@ -146,21 +146,18 @@ class FieldBuilder:
             assert typ.type == "object", f"Type f'{typ.type}' not supported"
             name = typ.name
 
-            proxy = self.spec.proxies[parent_type.name].get(field, None)
-            assert proxy is not None, f"No proxy for '{parent_type.name}' at '{field}'"
-            rel = self.spec.relations[proxy.link_name]
+            rel = self.reg.models[parent_type.name].get(field)
+            assert rel is not None
 
-            if isinstance(proxy.get(), t.struct):
-                # left side of the relation: the one that has the foreign key defined in
-                assert quant == ""
+            if rel.side_of(parent_type.name).is_left():
+                # parent_side: left; has the foreign key
                 tag, fkeys = self.relation(field, typ, rel.name)
                 tags.append(tag)
-                fkeys = fkeys
-                fkeys_unique = rel.cardinality.is_one_to_one()
+                fkeys = fkeys  # TODO what?
+                fkeys_unique = not rel.other(parent_type).cardinality.is_many()
             else:
-                # right side of the relation
+                # parent_side: right
                 tags.append(f"@relation(name: {to_prisma_string(rel.name)})")
-            # TODO add additional fields for the foreign keys
 
         tags.extend(self.additional_tags(typ))
 
@@ -173,13 +170,13 @@ class FieldBuilder:
         )
 
 
-def build_model(name: str, spec: RelationshipRegister) -> str:
+def build_model(name: str) -> str:
     fields = []
 
     # struct
-    s = spec.types[name]
+    s = find(name)
 
-    field_builder = FieldBuilder(spec)
+    field_builder = FieldBuilder(Registry._get_active())
 
     tags = []
 

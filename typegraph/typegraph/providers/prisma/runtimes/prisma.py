@@ -10,8 +10,8 @@ from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypegraphContext
-from typegraph.providers.prisma.relations import LinkProxy
-from typegraph.providers.prisma.schema import RelationshipRegister, build_model
+from typegraph.providers.prisma.scanner import LinkProxy, Registry
+from typegraph.providers.prisma.schema import build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always, required
@@ -224,13 +224,13 @@ class PrismaRuntime(Runtime):
     name: str
     connection_string_secret: str
     runtime_name: str = always("prisma")
-    spec: RelationshipRegister = field(init=False, hash=False, metadata={SKIP: True})
+    reg: Registry = field(init=False, hash=False, metadata={SKIP: True})
 
     def __attrs_post_init__(self):
-        object.__setattr__(self, "spec", RelationshipRegister(self))
+        object.__setattr__(self, "reg", Registry(self))
 
     def link(
-        self, typ: Union[t.TypeNode, str], name: str, field: Optional[str] = None
+        self, typ: Union[t.TypeNode, str], name: str, *, field: Optional[str] = None
     ) -> t.TypeNode:
         """
         Explicitly declare a relationship between models. The return value of
@@ -271,11 +271,11 @@ class PrismaRuntime(Runtime):
             typ = typ.name
         else:
             g = TypegraphContext.get_active()
-        return LinkProxy(g, typ, self, name, field)
+        return LinkProxy(g, typ, self, rel_name=name, field=field)
 
     @property
     def __typegen(self):
-        return TypeGenerator(spec=self.spec)
+        return TypeGenerator(reg=self.reg)
 
     def queryRaw(self, query: str, *, effect: Effect) -> t.func:
         """Generate a raw SQL query operation"""
@@ -388,7 +388,7 @@ class PrismaRuntime(Runtime):
 
     def __manage(self, tpe):
         tpe._propagate_runtime(self)
-        self.spec.manage(tpe)
+        self.reg.manage(tpe)
 
     def __datamodel(self):
         models = [build_model(ty, self.spec) for ty in self.spec.types]

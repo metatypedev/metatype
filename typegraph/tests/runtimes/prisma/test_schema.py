@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Iterable
 
 from typegraph import TypeGraph, t
-from typegraph.providers.prisma.relations import RelationshipRegister
+from typegraph.providers.prisma.schema import Registry
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.providers.prisma.schema import build_model
 
@@ -42,10 +42,11 @@ class TestPrismaSchema:
         )
 
     def build_schema(self, runtime: PrismaRuntime, models: Iterable[t.struct]):
-        spec = RelationshipRegister(runtime)
+        reg = Registry(runtime)
         for m in models:
-            spec.manage(m)
-        return reformat_schema("\n".join((build_model(m.name, spec) for m in models)))
+            reg.manage(m)
+        with reg:
+            return reformat_schema("\n".join((build_model(m.name) for m in models)))
 
     def test_simple_model(self, snapshot):
         self.init_snapshot(snapshot)

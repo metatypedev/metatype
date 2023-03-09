@@ -1,56 +1,53 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from typing import Optional
+from typing import Optional, Set
 from typing import Union
 
 from attrs import frozen
 from typegraph import t
 from typegraph.graph.typegraph import find
 from typegraph.graph.typegraph import resolve_proxy
-from typegraph.providers.prisma.relations import RelationshipRegister
+from typegraph.providers.prisma.scanner import Registry
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
 
 @frozen
 class TypeGenerator:
-    spec: RelationshipRegister
+    reg: Registry
 
     def get_input_type(
         self,
         tpe: t.struct,
-        skip=set(),  # set of relation names, indicates related models to skip
+        # set of relation names, indicates related models to skip
+        skip: Set[str] = set(),
         update=False,
         name: Optional[str] = None,
     ) -> Union[t.typedef, t.NodeProxy]:
-        proxy = name and find(name)
+        proxy = find(name) if name is not None else None
         if proxy is not None:
             return proxy
 
         fields = {}
         if not isinstance(tpe, t.struct):
             raise Exception(f'expected a struct, got: "{type(tpe).__name__}"')
+
         for key, field_type in tpe.props.items():
             field_type = resolve_proxy(field_type)
-            proxy = self.spec.proxies[tpe.name].get(key)
-            relname = proxy.link_name if proxy is not None else None
-            if relname is not None:
-                if relname in skip:
+            rel = self.reg.models[tpe.name].get(key)
+            if rel is not None:
+                if rel.name in skip:
                     continue
-                relation = self.spec.relations[relname]
                 nested = resolve_proxy(resolve_entity_quantifier(field_type))
 
                 entries = {
                     "create": self.get_input_type(
-                        nested, skip=skip | {relname}, name=f"Input{nested.name}Create"
+                        nested, skip=skip | {rel.name}, name=f"Input{nested.name}Create"
                     ).optional(),
                     "connect": self.get_where_type(
                         nested, name=f"Input{nested.name}"
                     ).optional(),
                 }
-                if (
-                    relation.side_of(tpe.name).is_left()
-                    and relation.cardinality.is_one_to_many()
-                ):
+                if rel.side_of(tpe.name).is_left() and rel.right.cardinality.is_many():
                     entries["createMany"] = t.struct(
                         {"data": t.array(entries["create"].of)}
                     ).optional()

@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 
-@frozen
 class LinkProxy(NodeProxy):
     rel_name: Optional[str]
     fkey: Optional[bool]
@@ -26,6 +25,7 @@ class LinkProxy(NodeProxy):
         self,
         g: TypeGraph,
         node: str,
+        _runtime: "PrismaRuntime",  # TODO: remove
         *,
         rel_name: Optional[str] = None,
         fkey: Optional[bool] = None,
@@ -65,14 +65,16 @@ class Registry:
         if model.name in self.managed:
             return
 
-        relationships = Relationship._scan_model(model)
+        with self:
+            relationships = Relationship._scan_model(model)
+
         for rel in relationships:
             self._add(rel)
 
         self.managed.add(model.name)
 
         for rel in relationships:
-            self.manage(rel.other(model))
+            self.manage(rel.other(model).typ)
 
     def _add(self, rel: "Relationship"):
         self.models[rel.left.typ.name][rel.left.field] = rel
@@ -91,7 +93,7 @@ class Registry:
             raise Exception("Cannot override active registry")
         Registry.active_registry = self
 
-    def __leave__(self):
+    def __exit__(self, _t, _v, _tb):
         assert Registry.active_registry == self
         Registry.active_registry = None
 
@@ -132,7 +134,7 @@ class Side(StrEnum):
 class RelationshipModel:
     typ: t.struct
     field: str  # field of this model pointing to the other side
-    cardinality: Cardinality  # cardinality of this model on the other model
+    cardinality: Cardinality  # cardinality of the field pointing to the other model
 
     def __has_fkey(self) -> Optional[bool]:
         target_type = self.typ.props[self.field]
@@ -161,7 +163,7 @@ class RelationshipModel:
     def __validate_on(
         cls, model: "RelationshipModel", other_model: "RelationshipModel"
     ):
-        card = other_model.cardinality
+        card = model.cardinality
 
         target_type = model.typ.props[model.field]
 
@@ -297,7 +299,7 @@ class Relationship:
                 target_model = resolve_proxy(prop_type.of)
                 if isinstance(target_model, t.struct):
                     source = RelationshipModel.many(model, prop_name)
-                    res.append(cls.__from_side_many(target_model, prop_name))
+                    res.append(cls.__from_side_many(target_model, source))
                 continue
 
         return res
@@ -311,11 +313,11 @@ class Relationship:
             f"Model '{model_name}' not found in either side of the relationship '{self.name}'"
         )
 
-    def other(self, model: t.struct):
-        if self.left.typ.name == model.name:
-            return self.right.typ
-        if self.right.typ.name == model.name:
-            return self.left.typ
+    def other(self, model_type: t.struct) -> RelationshipModel:
+        if self.left.typ.name == model_type.name:
+            return self.right
+        if self.right.typ.name == model_type.name:
+            return self.left
         raise Exception("Unexpected")
 
     @classmethod
@@ -376,14 +378,14 @@ class Relationship:
                 return cls._with_left(left, (source, other))
 
             if other.cardinality.is_one():
-                left = source
+                left = other
                 with_fkey = RelationshipModel._find_fkey(source, other)
                 if with_fkey is not None and with_fkey != left:
                     raise Exception(
                         "The foreign key must be onthe link to the non-optional model"
                     )
 
-                return cls(source, other)
+                return cls(other, source)
 
             # other.cardinality.is_many
             left = other
@@ -418,7 +420,7 @@ class Relationship:
                     "Many-to-many relationship not supported: please use an explicit joining struct"
                 )
 
-            left = source
+            left = other
             with_fkey = RelationshipModel._find_fkey(source, other)
             if with_fkey is not None and with_fkey != left:
                 raise Exception(
@@ -426,7 +428,7 @@ class Relationship:
                 )
 
             # optional-to-many/one-to-many
-            return cls(source, other)
+            return cls(other, source)
 
         # TODO: more precision needed
         raise Exception("Not implemented")
