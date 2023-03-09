@@ -230,7 +230,12 @@ class PrismaRuntime(Runtime):
         object.__setattr__(self, "reg", Registry(self))
 
     def link(
-        self, typ: Union[t.TypeNode, str], name: str, *, field: Optional[str] = None
+        self,
+        typ: Union[t.TypeNode, str],
+        name: Optional[str] = None,
+        *,
+        field: Optional[str] = None,
+        fkey: Optional[bool] = None,
     ) -> t.TypeNode:
         """
         Explicitly declare a relationship between models. The return value of
@@ -271,7 +276,7 @@ class PrismaRuntime(Runtime):
             typ = typ.name
         else:
             g = TypegraphContext.get_active()
-        return LinkProxy(g, typ, self, rel_name=name, field=field)
+        return LinkProxy(g, typ, self, rel_name=name, field=field, fkey=fkey)
 
     @property
     def __typegen(self):

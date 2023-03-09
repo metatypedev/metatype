@@ -99,6 +99,21 @@ class TestPrismaSchema:
 
             self.assert_snapshot(db, [user, post], "implicit-one-to-many.prisma")
 
+    def test_optional_one_to_many(self, snapshot):
+        self.init_snapshot(snapshot)
+        with TypeGraph(name="test_optional_one_to_many") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            user = t.struct(
+                {"id": t.integer().config("id", "auto"), "posts": t.array(g("Post"))}
+            ).named("User")
+
+            post = t.struct(
+                {"id": t.integer().config("id", "auto"), "author": g("User").optional()}
+            ).named("Post")
+
+            self.assert_snapshot(db, [user, post], "optional-one-to-many.prisma")
+
     def test_one_to_one(self, snapshot):
         self.init_snapshot(snapshot)
         # self.maxDiff = None
@@ -140,6 +155,28 @@ class TestPrismaSchema:
             ).named("Profile")
 
             self.assert_snapshot(db, [user, profile], "implicit-one-to-one.prisma")
+
+    def test_optional_one_to_one(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph(name="test_implicit_one_to_one") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            user = t.struct(
+                {
+                    "id": t.integer().config("id", "auto"),
+                    "profile": g("Profile").optional(),
+                }
+            ).named("User")
+
+            profile = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "user": db.link(g("User").optional(), fkey=True),
+                }
+            ).named("Profile")
+
+            self.assert_snapshot(db, [user, profile], "optional-one-to-one.prisma")
 
     def test_semi_implicit(self, snapshot):
         self.init_snapshot(snapshot)
