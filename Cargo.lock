@@ -6378,7 +6378,7 @@ dependencies = [
 [[package]]
 name = "temporal-client"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#606c41755091595d3aef8850bd16bb3560cdc808"
+source = "git+https://github.com/temporalio/sdk-core#9cc2ad5d28b3b054b97814d82efa5af1f57d38d3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6405,7 +6405,7 @@ dependencies = [
 [[package]]
 name = "temporal-sdk-core-protos"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#606c41755091595d3aef8850bd16bb3560cdc808"
+source = "git+https://github.com/temporalio/sdk-core#9cc2ad5d28b3b054b97814d82efa5af1f57d38d3"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -6970,7 +6970,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
  "cfg-if",
- "rand 0.8.5",
+ "rand 0.7.3",
  "static_assertions",
 ]
 
