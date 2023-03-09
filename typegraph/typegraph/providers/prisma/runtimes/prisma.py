@@ -391,7 +391,8 @@ class PrismaRuntime(Runtime):
         self.reg.manage(tpe)
 
     def __datamodel(self):
-        models = [build_model(ty, self.spec) for ty in self.spec.types]
+        with self.reg:
+            models = [build_model(ty) for ty in self.reg.managed.values()]
         return "\n\n".join(models)
         # return PrismaSchema(self.managed_types.values()).build()
 
@@ -400,16 +401,16 @@ class PrismaRuntime(Runtime):
         data["data"].update(
             datamodel=self.__datamodel(),
             connection_string_secret=self.connection_string_secret,
-            models=[collector.index(tp) for tp in self.spec.types.values()],
+            models=[collector.index(tp) for tp in self.reg.managed.values()],
         )
         return data
 
     @property
     def edges(self) -> List[Node]:
-        return super().edges + list(self.spec.types.values())
+        return super().edges + list(self.reg.managed.values())
 
     def insert_one(self, tpe):
-        return self.gen_create(tpe)
+        return self.create(tpe)
 
 
 @frozen

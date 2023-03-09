@@ -5,7 +5,7 @@ from collections import defaultdict
 from attr import field
 from typegraph import t, TypeGraph
 from attrs import frozen
-from typing import TYPE_CHECKING, Optional, Set, Tuple, List, Dict
+from typing import TYPE_CHECKING, Optional, Tuple, List, Dict
 from enum import auto
 from strenum import StrEnum
 from typegraph.graph.nodes import NodeProxy
@@ -49,7 +49,7 @@ class Registry:
     runtime: "PrismaRuntime"
     models: Dict[_ModelName, _ModelRelationships]
     relationships: Dict[_RelationshipName, "Relationship"]
-    managed: Set[_ModelName]
+    managed: Dict[_ModelName, t.struct]
     counter: int
 
     active_registry: Optional["Registry"] = None
@@ -58,7 +58,7 @@ class Registry:
         self.runtime = runtime
         self.models = defaultdict(dict)
         self.relationships = dict()
-        self.managed = set()
+        self.managed = {}
         self.counter = 0
 
     def manage(self, model: t.struct):
@@ -71,7 +71,7 @@ class Registry:
         for rel in relationships:
             self._add(rel)
 
-        self.managed.add(model.name)
+        self.managed[model.name] = model
 
         for rel in relationships:
             self.manage(rel.other(model).typ)
@@ -412,26 +412,64 @@ class Relationship:
         if len(alternatives) == 0:
             raise cls.__err_no_alternative(target_model, source)
 
-        if len(alternatives) == 1:
-            [other] = alternatives
+        if len(alternatives) > 1:
+            # alternatives = filter(alternatives, lambda model: model.cardinality.is_many())
+            alternatives = list(
+                filter(lambda model: not model.cardinality.is_many(), alternatives)
+            )
+            if len(alternatives) == 0:
+                raise Exception(
+                    "Many-to-many relationship not supported: please use an explicit joining struct"
+                )
 
+            other = cls.__find_unique_alternative(alternatives, source)
+            if other is None:  # unique alternative not found
+                choices = ", ".join([m.field for m in alternatives])
+                raise Exception(
+                    " ".join(["Ambiguous targets for '{target_model.name}':", choices])
+                )
+
+        else:
+            other = alternatives[0]
             if other.cardinality.is_many():
                 raise Exception(
                     "Many-to-many relationship not supported: please use an explicit joining struct"
                 )
 
-            left = other
-            with_fkey = RelationshipModel._find_fkey(source, other)
-            if with_fkey is not None and with_fkey != left:
-                raise Exception(
-                    "The foeign key must be on the link to the non-array model"
-                )
+        left = other
+        with_fkey = RelationshipModel._find_fkey(source, other)
+        if with_fkey is not None and with_fkey != left:
+            raise Exception(
+                "The foreign key must be on the link to the non-array model"
+            )
 
-            # optional-to-many/one-to-many
-            return cls(other, source)
+        # optional-to-many/one-to-many
+        return cls(other, source)
 
-        # TODO: more precision needed
-        raise Exception("Not implemented")
+    @classmethod
+    def __find_unique_alternative(
+        cls, alternatives: List[RelationshipModel], source: RelationshipModel
+    ) -> Optional[RelationshipModel]:
+        alternatives = list(
+            filter(lambda model: not model.cardinality.is_many(), alternatives)
+        )
+
+        if len(alternatives) <= 1:
+            return next(iter(alternatives), None)
+
+        rel_name = source._get_name()
+        if rel_name is not None:
+            unnamed_alternatives = []
+            for model in alternatives:
+                other_name = model._get_name()
+                if other_name is None:
+                    unnamed_alternatives.append(model)
+                elif rel_name == other_name:
+                    return model
+            if len(unnamed_alternatives) == 1:
+                return unnamed_alternatives[0]
+
+        return None
 
     @classmethod
     def __err_no_alternative(cls, model: t.struct, source: RelationshipModel):

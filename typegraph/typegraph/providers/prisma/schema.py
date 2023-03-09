@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple
 from attrs import evolve, frozen
 
 from typegraph import types as t
-from typegraph.graph.typegraph import find, resolve_proxy
+from typegraph.graph.typegraph import resolve_proxy
 from typegraph.providers.prisma.scanner import Registry
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
@@ -170,21 +170,19 @@ class FieldBuilder:
         )
 
 
-def build_model(name: str) -> str:
+def build_model(model_type: t.struct) -> str:
     fields = []
 
-    # struct
-    s = find(name)
-
-    field_builder = FieldBuilder(Registry._get_active())
+    reg = Registry._get_active()
+    field_builder = FieldBuilder(reg)
 
     tags = []
 
-    for key, typ in s.props.items():
+    for key, typ in model_type.props.items():
         typ = resolve_proxy(typ)
-        if typ.runtime is not None and typ.runtime != s.runtime:
+        if typ.runtime is not None and typ.runtime != model_type.runtime:
             continue
-        field = field_builder.build(key, typ, s)
+        field = field_builder.build(key, typ, model_type)
         fields.append(field)
         fields.extend(field.fkeys)
         if field.fkeys_unique:
@@ -193,7 +191,7 @@ def build_model(name: str) -> str:
     # TODO support for multi-field ids and indexes -- to be defined as config on the struct!!
 
     ids = [field.name for field in fields if "@id" in field.tags]
-    assert len(ids) > 0, f"No id field defined in '{name}'"
+    assert len(ids) > 0, f"No id field defined in '{model_type.name}'"
 
     if len(ids) > 1:
         # multi-field id
@@ -207,4 +205,4 @@ def build_model(name: str) -> str:
     formatted_fields = "".join((f"    {f.build()}\n" for f in fields))
     formatted_tags = "".join(f"    {t}\n" for t in tags)
 
-    return f"""model {name} {{\n{formatted_fields}\n{formatted_tags}}}\n"""
+    return f"""model {model_type.name} {{\n{formatted_fields}\n{formatted_tags}}}\n"""

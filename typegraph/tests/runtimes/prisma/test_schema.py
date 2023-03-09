@@ -46,7 +46,7 @@ class TestPrismaSchema:
         for m in models:
             reg.manage(m)
         with reg:
-            return reformat_schema("\n".join((build_model(m.name) for m in models)))
+            return reformat_schema("\n".join((build_model(m) for m in models)))
 
     def test_simple_model(self, snapshot):
         self.init_snapshot(snapshot)
