@@ -130,7 +130,7 @@ class TypeGenerator:
         base_any_type = rename_with_idx(
             t.union([t.integer(), t.float(), t.boolean(), t.string()]), "base_any_type"
         )
-        return t.union([base_any_type, t.array(t.proxy(base_any_type.name))])
+        return t.union([base_any_type, t.array(base_any_type)])
 
     # Example:
     # t.X() => t.either([t.X(), struct_equals, struct_startsWith, ...])

@@ -385,7 +385,7 @@ test("prisma full mapping", async (t) => {
             title
           }
         }
-    `.expectErrorContains("error")
+    `.expectErrorContains("mismatch")
         .on(e);
     },
   );
