@@ -205,14 +205,14 @@ class RelationshipModel:
                 return None
             if fkey_on_second:
                 return second
-            else:
+            else:  # fkey_on_second == False
                 return first
 
         # fkey_on_first is not None
         if fkey_on_second is None:
             if fkey_on_first:
                 return first
-            else:
+            else:  # fkey_on_first == False
                 return second
 
         # fkey_on_first is not None and fkey_on_second is not None
@@ -224,9 +224,9 @@ class RelationshipModel:
             return first
 
         # fkey_on_first == False
-        if not fkey_on_second:
+        if not fkey_on_second:  # fkey_on_second == False
             raise Exception(
-                "One side of a relationship must have the foreigh key: set `fkey=True` on one side"
+                "One side of a relationship must have the foreign key: set `fkey=True` on one side"
             )
         return second
 
@@ -287,9 +287,9 @@ class AmbiguousSide(Exception):
                             for m in (first, second)
                         ]
                     )
-                    + ".",
+                    + "?",
                     "Please set link(target_type, fkey=True)",
-                    "on the model that should have the foreign key.",
+                    "on the model/field that should have the foreign key.",
                 ]
             )
         )
