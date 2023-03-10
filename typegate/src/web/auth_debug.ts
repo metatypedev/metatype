@@ -15,7 +15,7 @@ export const renderDebugAuth = async (
   const jwt = (cookies[name] ?? "").split(".")[1];
   const claims = jwt ? JSON.parse(b64decode(jwt)) : {};
   const provider = engine.tg.auths.get(claims.provider);
-  const profile = provider && provider.auth.protocol === "oauth2"
+  const profile = provider && provider instanceof OAuth2Auth
     ? await (provider as OAuth2Auth).getProfile(claims.accessToken)
     : {};
   return `

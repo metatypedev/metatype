@@ -1,6 +1,6 @@
 services:
   typegate:
-    image: ghcr.io/metatypedev/typegate:v0.0.3-dev.5
+    image: ghcr.io/metatypedev/typegate:v0.0.3-dev.6
     platform: linux/amd64
     #build:
     #  context: ..
@@ -13,7 +13,6 @@ services:
     environment:
       DEBUG: "true"
       REDIS_URL: redis://:password@redis:6379/0
-      TG_EXTERNAL_URL: http://localhost:7890
       TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
       TG_ADMIN_PASSWORD: password
     env_file:

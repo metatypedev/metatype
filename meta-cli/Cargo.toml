@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.0.3-dev.6"
+version = "0.0.3-dev.7"
 edition = "2021"
 
 description = "Free and open ecosystem for API composition."
@@ -42,10 +42,10 @@ tiny_http = "0.12.0"
 ignore = "0.4.20"
 globset = "0.4.10"
 anyhow = "1.0.69"
-indoc = "2.0.0"
+indoc = "2.0.1"
 serde = { version = "1.0.152", features = ["derive"] }
-serde_json = { version = "1.0.93", features = ["preserve_order"] }
-reqwest = { version = "0.11.14", features = ["blocking", "json"] }
+serde_json = { version = "1.0.94", features = ["preserve_order"] }
+reqwest = { version = "0.11.14", features = ["json"] }
 colored = "2.0.0"
 question = "0.2.2"
 dialoguer = "0.10.3"
@@ -55,11 +55,15 @@ base64 = "0.21.0"
 common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
 walkdir = "2.3.2"
-serde_yaml = "0.9.17"
+serde_yaml = "0.9.19"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.45", features = ["vendored"] }
 indexmap = { version = "1.9.2", features = ["serde"] }
+lade-sdk = "0.3.1"
+async-trait = "0.1.66"
+async-recursion = "1.0.2"
 
 [dev-dependencies]
+assert_cmd = "2.0.8"
 insta = "1.28.0"
 project-root = "0.2.2"

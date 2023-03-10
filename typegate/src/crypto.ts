@@ -25,7 +25,7 @@ export const sha256 = (text: string | Uint8Array): Promise<string> => {
 
 export const signKey = await crypto.subtle.importKey(
   "raw",
-  config.tg_secret,
+  config.tg_secret.slice(32, 64),
   { name: "HMAC", hash: { name: "SHA-256" } },
   false,
   ["sign", "verify"],
@@ -75,13 +75,13 @@ export async function decrypt(payload: string): Promise<string> {
 
 export async function signJWT(
   payload: Record<string, unknown>,
-  duration: number,
+  durationSec: number,
 ): Promise<string> {
   return await jwt.create(
     { alg: "HS256", typ: "JWT" },
     {
       ...payload,
-      exp: jwt.getNumericDate(duration),
+      exp: jwt.getNumericDate(durationSec),
       iat: Math.floor(new Date().valueOf() / 1000),
     },
     signKey,

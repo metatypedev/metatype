@@ -5,14 +5,14 @@ from typing import List, Optional, Union
 
 from attrs import evolve, field, frozen
 
+from typegraph.effects import EffectType
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.deno import PureFunMat, ImportFunMat
+from typegraph.runtimes.deno import ImportFunMat, PureFunMat
 from typegraph.utils.attrs import always
 from typegraph.utils.sanitizers import sanitize_ts_string
-from typegraph.effects import EffectType
 
 
 def policy_name_factory():
@@ -126,5 +126,6 @@ def jwt(role_name: str, field: str = "role"):
 
 
 def internal():
-    # https://metatype.atlassian.net/browse/MET-107
-    return Policy(PureFunMat("() => false")).named("internal")
+    return Policy(
+        PureFunMat("(_, {context}) => context.provider === 'internal'")
+    ).named("internal")

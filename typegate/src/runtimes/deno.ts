@@ -12,6 +12,7 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import { DenoRuntimeData } from "../type_node.ts";
 import { dirname, fromFileUrl, resolve, toFileUrl } from "std/path/mod.ts";
 import * as ast from "graphql/ast";
+import { InternalAuth } from "../auth/protocols/internal.ts";
 
 const logger = getLogger(import.meta);
 
@@ -34,6 +35,7 @@ export class DenoRuntime extends Runtime {
   static runtimes: Map<string, Record<string, DenoRuntime>> = new Map();
 
   private constructor(
+    private typegraphName: string,
     private name: string,
     permissions: Deno.PermissionOptionsObject,
     lazy: boolean,
@@ -88,6 +90,7 @@ export class DenoRuntime extends Runtime {
     }
 
     const rt = new DenoRuntime(
+      typegraphName,
       name,
       (args.permissions ?? {}) as Deno.PermissionOptionsObject,
       false,
@@ -157,7 +160,9 @@ export class DenoRuntime extends Runtime {
       (agg, secretName) => ({ ...agg, [secretName]: this.secrets[secretName] }),
       {},
     );
-    return async ({ _: { context, parent }, ...args }) => {
+
+    return async ({ _: { context, parent, info: { url } }, ...args }) => {
+      const token = await InternalAuth.emit();
       return await this.w.execTask({
         args,
         internals: {
@@ -165,6 +170,10 @@ export class DenoRuntime extends Runtime {
           context,
           secrets,
           effect: mat.effect.effect ?? null,
+          meta: {
+            url: `${url.protocol}//${url.host}/${this.typegraphName}`,
+            token,
+          },
         },
         mat,
       }, verbose);

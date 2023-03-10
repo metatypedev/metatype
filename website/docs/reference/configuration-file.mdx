@@ -1,11 +1,11 @@
 # Configuration file
 
-## `metatype.yml` sample
+## `metatype.yml` Example file
 
 ```yaml
 typegates:
   dev:
-    url: "http://localhost:7890"
+    url: http://localhost:7890
     username: admin
     password: password
 
@@ -15,4 +15,18 @@ typegraphs:
   materializers:
     prisma:
       migrations_path: "migrations"
+```
+
+## Automatic secret loading support
+
+[Lade](https://github.com/zifeo/lade) is a secret loading tool that transparently inject environment variables from a variety of sources. It works with Fish, Bash or Zsh and currently supports Doppler, Infisical and 1Password as vault source.
+
+To use Lade with Metatype, you can use the `op://`, `infisical://` or `doppler://` prefixes in your configuration file. It will then use the CLI of the vault to securely load the required secrets. For example:
+
+```
+typegates:
+  dev:
+    url: http://localhost:7890
+    username: op://VAULT_NAME/SECRET_NAME/FIELD_NAME
+    password: infisical://app.infisical.com/PROJECT_NAME/ENV_NAME/SECRET_NAME
 ```
