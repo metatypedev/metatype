@@ -23,6 +23,14 @@ test("circular test", async (t) => {
                 title: "Some Award",
                 count: 2
               }
+              root: {
+                some_field: "Some value",
+                depth_one: {name: "Carl", parents: []},
+                depth_one_2: {name: "Bill", parents: []},
+                depth_two: {
+                  depth_three: {name: "Gates", parents: []}
+                }
+              }
             }
           )
           {

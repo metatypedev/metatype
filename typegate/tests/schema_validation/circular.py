@@ -18,7 +18,7 @@ with TypeGraph(name="circular") as g:
             "paper": t.struct({"title": t.string(), "author": g("User")})
             .named("Paper")
             .optional(),
-            # Edgecase #5: optional nested object that holds a multiple self-references
+            # Edgecase #5: optional nested object with multipple references
             "root": t.struct(
                 {
                     "some_field": t.string(),

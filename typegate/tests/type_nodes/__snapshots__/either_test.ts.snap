@@ -55,6 +55,9 @@ schema: {
   "title": "object_21",
   "properties": {
     "user": {
+      "type": [
+        "object"
+      ],
       "oneOf": [
         {
           "type": "object",
