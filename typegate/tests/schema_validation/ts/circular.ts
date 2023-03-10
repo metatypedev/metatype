@@ -12,6 +12,7 @@ type User = {
   parents: User[];
   friends: User[] | undefined;
   award: Award | undefined;
+  root: unknown | undefined; // test field for nested structs
 };
 
 type Input = {

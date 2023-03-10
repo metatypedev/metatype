@@ -19,7 +19,10 @@ test("circular test", async (t) => {
                {name: "Bob", parents: [], friends: [{name: "Marc", parents: []}]},
                {name: "Marc", parents: []}
               ],
-              award: 6
+              award: {
+                title: "Some Award",
+                count: 2
+              }
             }
           )
           {
@@ -38,6 +41,29 @@ test("circular test", async (t) => {
           },
         },
       })
+      .on(e);
+  });
+
+  await t.should("not validate missing field", async () => {
+    await gql`
+        query {
+          registerUser(
+            user: {
+              name: "John",
+              professor: {name: "Kramer", parents: []},
+              parents: [],
+              friends: [ { name: "Marc"} ]
+            }
+          )
+          {
+            message
+            user {
+              name
+            }
+          }
+        }
+      `
+      .expectErrorContains("mandatory argument 'user.friends.parents'")
       .on(e);
   });
 });
