@@ -109,29 +109,20 @@ export function collectArgs(
   const jsonSchema = buildJsonSchema(argTypeNode, typegraph);
   const validator = ajv.compile(jsonSchema);
   const validate = (value: unknown) => {
+    let isValid = false;
     try {
-      if (!validator(value) && validator.errors) {
-        throw new SchemaValidatorError(value, validator.errors, jsonSchema);
-      }
+      isValid = validator(value);
     } catch (error) {
-      if (error instanceof SchemaValidatorError) {
-        throw error;
-      } else {
-        // FIXME: ajv "Maximum call stack size exceeded" error
-        // not quite sure what to do about this
-        // but when the schema is large and has nested either/unions
-        // validate may throw a stackoverflow even if the schema / value are
-        // not circular
-        console.warn(
-          ">> ajv implementation error ?",
-          (error as Error)?.message ?? "",
-        );
-        // Deno.writeTextFileSync(
-        //   "_schemas/schema.json",
-        //   JSON.stringify(jsonSchema),
-        // );
-        throw error;
-      }
+      // FIXME: ajv "Maximum call stack size exceeded" error
+      // When the schema
+      // * is large, has multiple references
+      // * has nested either/union
+      // validator may stackoverflow even if the schema/value are
+      // not circular
+      throw error;
+    }
+    if (!isValid && validator.errors) {
+      throw new SchemaValidatorError(value, validator.errors, jsonSchema);
     }
   };
 
