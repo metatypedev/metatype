@@ -5,15 +5,12 @@ from collections import defaultdict
 from attr import field
 from typegraph import t, TypeGraph
 from attrs import define, frozen
-from typing import TYPE_CHECKING, Any, Optional, Tuple, List, Dict
+from typing import Any, Optional, Tuple, List, Dict
 from enum import auto
 from strenum import StrEnum
 from typegraph.graph.nodes import NodeProxy
 
 from typegraph.graph.typegraph import resolve_proxy
-
-if TYPE_CHECKING:
-    from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 
 class LinkProxy(NodeProxy):
@@ -45,20 +42,16 @@ _ModelRelationships = Dict[_PropertyName, "Relationship"]
 
 
 class Registry:
-    runtime: "PrismaRuntime"
     models: Dict[_ModelName, _ModelRelationships]
     relationships: Dict[_RelationshipName, "Relationship"]
     managed: Dict[_ModelName, t.struct]
-    counter: int
     discovery: "_RelationshipDiscovery"
 
-    def __init__(self, runtime: "PrismaRuntime"):
-        self.runtime = runtime
+    def __init__(self):
         self.models = defaultdict(dict)
         self.relationships = dict()
         self.managed = {}
         self.discovery = _RelationshipDiscovery(self)
-        self.counter = 0
 
     def manage(self, model: t.struct):
         if model.name in self.managed:
@@ -93,16 +86,6 @@ class Registry:
 
     def _has(self, model_name: _ModelName, prop_name: _PropertyName) -> bool:
         return model_name in self.models and prop_name in self.models[model_name]
-
-    def _next_id(self):
-        self.counter += 1
-        return self.counter
-
-    @classmethod
-    def _get_active(cls) -> "Registry":
-        if cls.active_registry is None:
-            raise Exception("No active registry")
-        return cls.active_registry
 
 
 class Cardinality(StrEnum):
