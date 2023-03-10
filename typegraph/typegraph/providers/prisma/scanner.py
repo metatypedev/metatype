@@ -4,8 +4,8 @@ from collections import defaultdict
 
 from attr import field
 from typegraph import t, TypeGraph
-from attrs import frozen
-from typing import TYPE_CHECKING, Optional, Tuple, List, Dict
+from attrs import define, frozen
+from typing import TYPE_CHECKING, Any, Optional, Tuple, List, Dict
 from enum import auto
 from strenum import StrEnum
 from typegraph.graph.nodes import NodeProxy
@@ -51,22 +51,21 @@ class Registry:
     relationships: Dict[_RelationshipName, "Relationship"]
     managed: Dict[_ModelName, t.struct]
     counter: int
-
-    active_registry: Optional["Registry"] = None
+    discovery: "_RelationshipDiscovery"
 
     def __init__(self, runtime: "PrismaRuntime"):
         self.runtime = runtime
         self.models = defaultdict(dict)
         self.relationships = dict()
         self.managed = {}
+        self.discovery = _RelationshipDiscovery(self)
         self.counter = 0
 
     def manage(self, model: t.struct):
         if model.name in self.managed:
             return
 
-        with self:
-            relationships = Relationship._scan_model(model)
+        relationships = self.discovery.scan_model(model)
 
         for rel in relationships:
             self._add(rel)
@@ -99,15 +98,6 @@ class Registry:
     def _next_id(self):
         self.counter += 1
         return self.counter
-
-    def __enter__(self):
-        if Registry.active_registry is not None:
-            raise Exception("Cannot override active registry")
-        Registry.active_registry = self
-
-    def __exit__(self, _t, _v, _tb):
-        assert Registry.active_registry == self
-        Registry.active_registry = None
 
     @classmethod
     def _get_active(cls) -> "Registry":
@@ -203,7 +193,7 @@ class RelationshipModel:
     @classmethod
     def _validate_pair(
         cls, first: "RelationshipModel", second: "RelationshipModel"
-    ) -> _RelationshipName:
+    ) -> Optional[_RelationshipName]:
         name = first._get_name()
         other_name = second._get_name()
         if other_name is not None:
@@ -264,57 +254,13 @@ class Relationship:
     right: RelationshipModel
     name: str = field(init=False, default="")
 
-    def __init__(self, left: RelationshipModel, right: RelationshipModel):
+    def __init__(
+        self, left: RelationshipModel, right: RelationshipModel, generated_name: str
+    ):
         name = RelationshipModel._validate_pair(left, right)
         self.left = left
         self.right = right
-        # TODO: relationship name
-        reg = Registry._get_active()
-        self.name = name or f"__rel_{left.typ.name}_{right.typ.name}_{reg._next_id()}"
-
-    @classmethod
-    def _with_left(
-        cls, left: RelationshipModel, pair: Tuple[RelationshipModel, RelationshipModel]
-    ):
-        if left == pair[0]:
-            return cls(left, pair[1])
-        if left == pair[1]:
-            return cls(left, pair[0])
-        raise Exception("Unexpected")
-
-    @classmethod
-    def _scan_model(cls, model: t.struct) -> List["Relationship"]:
-        assert isinstance(model, t.struct)
-
-        reg = Registry._get_active()
-
-        res: List[Relationship] = []
-
-        for [prop_name, prop_type] in model.props.items():
-            if reg._has(model.name, prop_name):
-                continue
-
-            prop_type = resolve_proxy(prop_type)
-
-            if isinstance(prop_type, t.struct):
-                source = RelationshipModel.one(model, prop_name)
-                res.append(cls.__from_side_one(prop_type, source))
-
-            elif isinstance(prop_type, t.optional):
-                target_model = resolve_proxy(prop_type.of)
-                if isinstance(target_model, t.struct):
-                    source = RelationshipModel.optional(model, prop_name)
-                    res.append(cls.__from_side_optional(target_model, source))
-                continue
-
-            elif isinstance(prop_type, t.array):
-                target_model = resolve_proxy(prop_type.of)
-                if isinstance(target_model, t.struct):
-                    source = RelationshipModel.many(model, prop_name)
-                    res.append(cls.__from_side_many(target_model, source))
-                continue
-
-        return res
+        self.name = name or generated_name
 
     def side_of(self, model_name: str) -> Side:
         if self.left.typ.name == model_name:
@@ -332,52 +278,109 @@ class Relationship:
             return self.left
         raise Exception("Unexpected")
 
-    @classmethod
-    def __from_side_one(
-        cls, target_model: t.struct, source: RelationshipModel
-    ) -> "Relationship":
-        assert source.cardinality.is_one()
 
-        alternatives = find_potential_models(target_model, source.typ.name)
+class NoRelationshipFound(Exception):
+    def __init__(self, target_model: t.struct, source: RelationshipModel):
+        super().__init__(
+            " ".join(
+                [
+                    "No matching target field found",
+                    f"on '{target_model.name}'",
+                    f"for relationship from '{source.typ.name}'",
+                    f"on field '{source.field}'",
+                ]
+            )
+        )
 
-        if len(alternatives) == 0:
-            raise cls.__err_no_alternative(target_model, source)
 
-        if len(alternatives) == 1:
-            other = alternatives[0]
+class AmbiguousSide(Exception):
+    def __init__(self, first: RelationshipModel, second: RelationshipModel):
+        super().__init__(
+            " ".join(
+                [
+                    "Cannot decide on which side of the relationship the foreign key should be:",
+                    " or ".join(
+                        [
+                            f"field '{m.field}' of '{m.typ.name}'"
+                            for m in (first, second)
+                        ]
+                    )
+                    + ".",
+                    "Please set link(target_type, fkey=True)",
+                    "on the model that should have the foreign key.",
+                ]
+            )
+        )
 
-            if other.cardinality.is_one():
-                # one_to_one must have an explicit fkey side
-                left = RelationshipModel._find_fkey(source, other)
-                if left is None:
-                    raise cls.__err_no_fkey(source, other)
-                return cls._with_left(left, (source, other))
 
-            left = other
-            with_fkey = RelationshipModel._find_fkey(source, other)
-            if with_fkey is not None and with_fkey != left:
-                non_fkey_target_type = (
-                    "optional" if other.cardinality.is_optional() else "array"
-                )
-                raise Exception(
-                    f"The foreign key must be on the link to the non-{non_fkey_target_type} model"
-                )
+class AmbiguousTargets(Exception):
+    def __init__(
+        self,
+        source_model: t.struct,
+        target_model: t.struct,
+        alternatives: List[RelationshipModel],
+        rel_name: Optional[str] = None,
+    ):
+        super().__init__(
+            " ".join(
+                [
+                    "Could not decide the target field of the relationship",
+                    f"from '{source_model.name}'",
+                    f"to '{target_model.name}':",
+                    ", ".join([m.field for m in alternatives]) + ".",
+                    f"Add an explicitly named link: '{rel_name}'."
+                    if rel_name is not None
+                    else "Add explicitly named links on both sides.",
+                ]
+            )
+        )
 
-            return cls._with_left(left, (source, other))
 
-        # TODO: precision needed
-        raise Exception("Not implemented")
+@define
+class _RelationshipDiscovery:
+    reg: Registry
+    counter: int = field(default=0)
 
-    @classmethod
-    def __from_side_optional(
-        cls, target_model: t.struct, source: RelationshipModel
+    def scan_model(self, model: t.struct) -> List["Relationship"]:
+        assert isinstance(model, t.struct)
+
+        res: List[Relationship] = []
+
+        for [prop_name, prop_type] in model.props.items():
+            if self.reg._has(model.name, prop_name):
+                continue
+
+            prop_type = resolve_proxy(prop_type)
+
+            if isinstance(prop_type, t.struct):
+                source = RelationshipModel.one(model, prop_name)
+                res.append(self.from_side_one(prop_type, source))
+
+            elif isinstance(prop_type, t.optional):
+                target_model = resolve_proxy(prop_type.of)
+                if isinstance(target_model, t.struct):
+                    source = RelationshipModel.optional(model, prop_name)
+                    res.append(self.from_side_optional(target_model, source))
+                continue
+
+            elif isinstance(prop_type, t.array):
+                target_model = resolve_proxy(prop_type.of)
+                if isinstance(target_model, t.struct):
+                    source = RelationshipModel.many(model, prop_name)
+                    res.append(self.from_side_many(target_model, source))
+                continue
+
+        return res
+
+    def from_side_optional(
+        self, target_model: t.struct, source: RelationshipModel
     ) -> "Relationship":
         assert source.cardinality.is_optional()
 
-        alternatives = find_potential_models(target_model, source.typ.name)
+        alternatives = find_relationship_models(target_model, source.typ.name)
 
         if len(alternatives) == 0:
-            raise cls.__err_no_alternative(target_model, source)
+            raise NoRelationshipFound(target_model, source)
 
         if len(alternatives) == 1:
             [other] = alternatives
@@ -386,8 +389,9 @@ class Relationship:
                 # optional-to-optional: required explicit fkey side
                 left = RelationshipModel._find_fkey(source, other)
                 if left is None:
-                    raise cls.__err_no_fkey(source, other)
-                return cls._with_left(left, (source, other))
+                    raise AmbiguousSide(source, other)
+                right = get_other((source, other), left)
+                return self.gen(left, right)
 
             if other.cardinality.is_one():
                 left = other
@@ -397,7 +401,7 @@ class Relationship:
                         "The foreign key must be onthe link to the non-optional model"
                     )
 
-                return cls(other, source)
+                return self.gen(other, source)
 
             # other.cardinality.is_many
             left = other
@@ -408,24 +412,59 @@ class Relationship:
                 )
 
             # optional-to-many
-            return cls(other, source)
+            return self.gen(other, source)
 
         # TODO: more precision needed
         raise Exception("Not implemented")
 
-    @classmethod
-    def __from_side_many(
-        cls, target_model: t.struct, source: RelationshipModel
+    def from_side_one(
+        self, target_model: t.struct, source: RelationshipModel
+    ) -> "Relationship":
+        assert source.cardinality.is_one()
+
+        alternatives = find_relationship_models(target_model, source.typ.name)
+
+        if len(alternatives) == 0:
+            raise NoRelationshipFound(target_model, source)
+
+        if len(alternatives) == 1:
+            other = alternatives[0]
+
+            if other.cardinality.is_one():
+                # one_to_one must have an explicit fkey side
+                left = RelationshipModel._find_fkey(source, other)
+                if left is None:
+                    raise AmbiguousSide(source, other)
+                right = get_other((source, other), left)
+                return self.gen(left, right)
+
+            left = other
+            right = source
+            with_fkey = RelationshipModel._find_fkey(source, other)
+            if with_fkey is not None and with_fkey != left:
+                non_fkey_target_type = (
+                    "optional" if other.cardinality.is_optional() else "array"
+                )
+                raise Exception(
+                    f"The foreign key must be on the link to the non-{non_fkey_target_type} model"
+                )
+
+            return self.gen(left, right)
+
+        # TODO: precision needed
+        raise Exception("Not implemented")
+
+    def from_side_many(
+        self, target_model: t.struct, source: RelationshipModel
     ) -> "Relationship":
         assert source.cardinality.is_many()
 
-        alternatives = find_potential_models(target_model, source.typ.name)
+        alternatives = find_relationship_models(target_model, source.typ.name)
 
         if len(alternatives) == 0:
-            raise cls.__err_no_alternative(target_model, source)
+            raise NoRelationshipFound(target_model, source)
 
         if len(alternatives) > 1:
-            # alternatives = filter(alternatives, lambda model: model.cardinality.is_many())
             alternatives = list(
                 filter(lambda model: not model.cardinality.is_many(), alternatives)
             )
@@ -434,12 +473,53 @@ class Relationship:
                     "Many-to-many relationship not supported: please use an explicit joining struct"
                 )
 
-            other = cls.__find_unique_alternative(alternatives, source)
-            if other is None:  # unique alternative not found
-                choices = ", ".join([m.field for m in alternatives])
-                raise Exception(
-                    " ".join(["Ambiguous targets for '{target_model.name}':", choices])
-                )
+            rel_name = source._get_name()
+            if len(alternatives) > 1:
+                # TODO extract a function for a better readability
+                other = None
+                if rel_name is not None:
+                    unnamed_alternatives = []
+                    other = None
+                    for model in alternatives:
+                        other_name = model._get_name()
+                        if other_name is None:
+                            unnamed_alternatives.append(model)
+                        elif rel_name == other_name:
+                            other = model
+                            break
+
+                    if other is None:
+                        if len(unnamed_alternatives) == 1:
+                            other = unnamed_alternatives[0]
+                        elif len(unnamed_alternatives) == 0:
+                            # all the alternatives are named, and none matches to the target
+                            raise NoRelationshipFound(target_model, source)
+                        else:
+                            # found more than one unnamed relationships to `source`
+                            raise AmbiguousTargets(
+                                source.typ, target_model, alternatives, rel_name
+                            )
+
+                    # > other is not None
+
+                else:  # rel_name is None
+                    # find the unique unnamed relationship
+                    alternatives = list(
+                        filter(lambda m: m._get_name() is None, alternatives)
+                    )
+                    if len(alternatives) == 1:
+                        other = alternatives[0]
+                    elif len(alternatives) == 0:
+                        # all the alternatives are named
+                        raise NoRelationshipFound(target_model, source)
+                    else:
+                        # found more than one unnamed relatioships to `source`
+                        raise AmbiguousTargets(source.typ, target_model, alternatives)
+
+                    # > other is not None
+
+            else:  # len(alternatives) == 1
+                other = alternatives[0]
 
         else:
             other = alternatives[0]
@@ -447,6 +527,8 @@ class Relationship:
                 raise Exception(
                     "Many-to-many relationship not supported: please use an explicit joining struct"
                 )
+
+        # > other is not None
 
         left = other
         with_fkey = RelationshipModel._find_fkey(source, other)
@@ -456,57 +538,15 @@ class Relationship:
             )
 
         # optional-to-many/one-to-many
-        return cls(other, source)
+        return self.gen(other, source)
 
-    @classmethod
-    def __find_unique_alternative(
-        cls, alternatives: List[RelationshipModel], source: RelationshipModel
-    ) -> Optional[RelationshipModel]:
-        alternatives = list(
-            filter(lambda model: not model.cardinality.is_many(), alternatives)
-        )
-
-        if len(alternatives) <= 1:
-            return next(iter(alternatives), None)
-
-        rel_name = source._get_name()
-        if rel_name is not None:
-            unnamed_alternatives = []
-            for model in alternatives:
-                other_name = model._get_name()
-                if other_name is None:
-                    unnamed_alternatives.append(model)
-                elif rel_name == other_name:
-                    return model
-            if len(unnamed_alternatives) == 1:
-                return unnamed_alternatives[0]
-
-        return None
-
-    @classmethod
-    def __err_no_alternative(cls, model: t.struct, source: RelationshipModel):
-        return Exception(
-            " ".join(
-                [
-                    "No matching target field found",
-                    f"on '{model.name}'",
-                    f"for relationship from '{source.typ.name}'",
-                    f"on field '{source.field}'",
-                ]
-            )
-        )
-
-    @classmethod
-    def __err_no_fkey(cls, first: RelationshipModel, second: RelationshipModel):
-        return Exception(
-            "Expected `fkey` on one model: "
-            + " or ".join(
-                [f"'{m.typ.name}' (field: '{m.field}')'" for m in (first, second)]
-            )
-        )
+    def gen(self, left: RelationshipModel, right: RelationshipModel) -> Relationship:
+        self.counter += 1
+        generated_name = f"__rel_{left.typ.name}_{right.typ.name}_{self.counter}"
+        return Relationship(left, right, generated_name)
 
 
-def find_potential_models(
+def find_relationship_models(
     from_model: t.struct, target_model_name: str
 ) -> List[RelationshipModel]:
     res: List[RelationshipModel] = []
@@ -534,3 +574,11 @@ def find_potential_models(
                 res.append(RelationshipModel.many(from_model, prop_name))
 
     return res
+
+
+def get_other(pair: Tuple[Any, Any], first: Any):
+    if first == pair[0]:
+        return pair[1]
+    if first == pair[1]:
+        return pair[0]
+    raise Exception("Unexpected")

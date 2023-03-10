@@ -170,10 +170,10 @@ class FieldBuilder:
         )
 
 
-def build_model(model_type: t.struct) -> str:
+# TODO: ModelBuilder
+def build_model(model_type: t.struct, reg: Registry) -> str:
     fields = []
 
-    reg = Registry._get_active()
     field_builder = FieldBuilder(reg)
 
     tags = []
