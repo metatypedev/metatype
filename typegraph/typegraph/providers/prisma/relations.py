@@ -25,7 +25,6 @@ class LinkProxy(NodeProxy):
         self,
         g: TypeGraph,
         node: str,
-        _runtime: "PrismaRuntime",  # TODO: remove
         *,
         rel_name: Optional[str] = None,
         fkey: Optional[bool] = None,
