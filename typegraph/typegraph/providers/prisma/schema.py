@@ -6,7 +6,7 @@ from attrs import evolve, frozen
 
 from typegraph import types as t
 from typegraph.graph.typegraph import resolve_proxy
-from typegraph.providers.prisma.scanner import Registry
+from typegraph.providers.prisma.relations import Registry
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
 prisma_types = {

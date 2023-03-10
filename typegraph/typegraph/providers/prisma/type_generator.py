@@ -7,7 +7,7 @@ from attrs import frozen
 from typegraph import t
 from typegraph.graph.typegraph import find
 from typegraph.graph.typegraph import resolve_proxy
-from typegraph.providers.prisma.scanner import Registry
+from typegraph.providers.prisma.relations import Registry
 from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
 

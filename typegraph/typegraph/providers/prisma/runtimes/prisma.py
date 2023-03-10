@@ -10,7 +10,7 @@ from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypegraphContext
-from typegraph.providers.prisma.scanner import LinkProxy, Registry
+from typegraph.providers.prisma.relations import LinkProxy, Registry
 from typegraph.providers.prisma.schema import build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
 from typegraph.runtimes.base import Materializer, Runtime
@@ -227,7 +227,7 @@ class PrismaRuntime(Runtime):
     reg: Registry = field(init=False, hash=False, metadata={SKIP: True})
 
     def __attrs_post_init__(self):
-        object.__setattr__(self, "reg", Registry(self))
+        object.__setattr__(self, "reg", Registry())
 
     def link(
         self,
