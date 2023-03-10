@@ -276,7 +276,7 @@ class PrismaRuntime(Runtime):
             typ = typ.name
         else:
             g = TypegraphContext.get_active()
-        return LinkProxy(g, typ, self, rel_name=name, field=field, fkey=fkey)
+        return LinkProxy(g, typ, rel_name=name, field=field, fkey=fkey)
 
     @property
     def __typegen(self):
