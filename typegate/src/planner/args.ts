@@ -119,6 +119,7 @@ export function collectArgs(
       // * has nested either/union
       // validator may stackoverflow even if the schema/value are
       // not circular
+      // https://github.com/ajv-validator/ajv/issues/1581
       throw error;
     }
     if (!isValid && validator.errors) {
@@ -843,7 +844,7 @@ function pathOf(typeNode: TypeNode): string {
 }
 
 function refOf(typeNode: TypeNode): JSONSchema {
-  return { "$ref": pathOf(typeNode) };
+  return { $ref: pathOf(typeNode) };
 }
 
 function addSchemaToAjv(schema: JSONSchema, path: string) {
@@ -1000,8 +1001,7 @@ class JsonSchemaBuilder {
     // remove duplicates
     const distinctTypes = new Set<string>(variantsTypes);
 
-    // either and union are not valid ajv types
-    // https://json-schema.org/understanding-json-schema/reference/type.html
+    // either and union are not valid JSON schema types
     distinctTypes.delete("either");
     distinctTypes.delete("union");
 
@@ -1019,13 +1019,12 @@ class JsonSchemaBuilder {
 
     const variantSchemas = variantTypeIndices.map((typeIdx) => {
       const currentNode = this.types[typeIdx];
-      if (visitedObject.has(currentNode.title)) {
-        return refOf(currentNode);
-      } else {
-        return this.build(currentNode);
-      }
+      return visitedObject.has(currentNode.title)
+        ? refOf(currentNode)
+        : this.build(currentNode);
     });
-
+    // Ref:
+    // https://json-schema.org/understanding-json-schema/reference/type.html
     return {
       type: this.listUnionEitherTypes(node, variantsKey),
       [variantsKey]: variantSchemas,

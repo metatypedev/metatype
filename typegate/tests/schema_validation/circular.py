@@ -18,13 +18,13 @@ with TypeGraph(name="circular") as g:
             "paper": t.struct({"title": t.string(), "author": g("User")})
             .named("Paper")
             .optional(),
-            # Edgecase #5: optional nested object with multipple references
+            # Edgecase #5: optional nested object with multiple references
             "root": t.struct(
                 {
                     "some_field": t.string(),
                     "depth_one": g("User").optional(),
                     "depth_one_2": g("User"),
-                    "depth_two": t.struct({"depth_three": g("User")}).named("Infos"),
+                    "depth_two": t.struct({"depth_three": g("User")}),
                 }
             )
             .named("Speciality")

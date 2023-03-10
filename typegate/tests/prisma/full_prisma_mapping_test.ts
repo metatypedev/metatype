@@ -24,11 +24,11 @@ test("prisma full mapping", async (t) => {
         mutation q {
           createOneUser (
             data: {
-              id: 1
-              name: "Jack"
-              age: 20
+              id: 1,
+              name: "Jack",
+              age: 20,
               coinflips: [false, true, true]
-              city: "Anyville"
+              city: "Anyville",
               posts: {
                 createMany: {
                   data: [
