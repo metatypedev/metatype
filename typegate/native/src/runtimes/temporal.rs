@@ -206,9 +206,9 @@ fn temporal_workflow_query(input: TemporalWorkflowQueryInput) -> TemporalWorkflo
                 .collect(),
         }
     } else {
-        return TemporalWorkflowQueryOutput::Err {
+        TemporalWorkflowQueryOutput::Err {
             message: format!("Query failed: {:?}", query),
-        };
+        }
     }
 }
 
