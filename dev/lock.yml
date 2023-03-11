@@ -31,7 +31,7 @@ dev:
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.3.1
     PROTOC_VERSION: 3.x
-    RUST_VERSION: 1.67.1
+    RUST_VERSION: 1.68.0
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
     DENO_VERSION: 1.31.1
     NODE_VERSION: 18.12.1

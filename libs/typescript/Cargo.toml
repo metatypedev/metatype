@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.69"
-string_cache = "0.8.6"
+string_cache = "0.8.7"
 lazy_static = "1.4.0"
 dprint-plugin-typescript = "0.83.0"
 
