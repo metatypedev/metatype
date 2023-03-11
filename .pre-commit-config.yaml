@@ -15,7 +15,7 @@ repos:
       - id: end-of-file-fixer
         exclude: typegate/deno.lock
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.249"
+    rev: "v0.0.254"
     hooks:
       - id: ruff
   - repo: https://github.com/psf/black
@@ -23,7 +23,7 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v2.42.0
+    rev: v2.42.1
     hooks:
       - id: commitizen
         stages: [commit-msg]
