@@ -90,14 +90,17 @@ class FieldBuilder:
         ]
 
     def relation(
-        self, field: str, typ: t.struct, rel_name: str
+        self, field: str, typ: t.struct, rel_name: str, optional: bool
     ) -> Tuple[str, List[SchemaField]]:
         references = self.get_type_ids(typ)
         fields = [f"{field}{ref.title()}" for ref in references]
 
         fkeys = []
         for f, ref in zip(fields, references):
-            fkey = self.build(ref, typ.props[ref], typ)
+            target_type = typ.props[ref]
+            if optional:
+                target_type = t.optional(target_type)
+            fkey = self.build(ref, target_type, typ)
             tags = [
                 tag
                 for tag in fkey.tags
@@ -159,7 +162,7 @@ class FieldBuilder:
                 side = rel.side_of_field(field)
             if side.is_left():
                 # parent_side: left; has the foreign key
-                tag, fkeys = self.relation(field, typ, rel.name)
+                tag, fkeys = self.relation(field, typ, rel.name, quant == "?")
                 tags.append(tag)
                 fkeys = fkeys  # TODO what?
                 fkeys_unique = not rel.other(parent_type).cardinality.is_many()

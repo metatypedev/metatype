@@ -382,7 +382,7 @@ class UniqueOnBothSides(Exception):
 class AmbiguousTargets(Exception):
     def __init__(
         self,
-        source_model: t.struct,
+        source: RelationshipModel,
         target_model: t.struct,
         alternatives: List[RelationshipModel],
         rel_name: Optional[str] = None,
@@ -391,8 +391,8 @@ class AmbiguousTargets(Exception):
             " ".join(
                 [
                     "Could not decide the target field of the relationship",
-                    f"from '{source_model.name}'",
-                    f"to '{target_model.name}':",
+                    f"from field '{source.field}' of model '{source.typ.name}'",
+                    f"to model '{target_model.name}':",
                     ", ".join([m.field for m in alternatives]) + ".",
                     f"Add an explicitly named link: '{rel_name}'."
                     if rel_name is not None
@@ -472,8 +472,12 @@ class _RelationshipDiscovery:
                 # match with target_field
                 target_field = source.get_target_field()
                 if target_field is None:
-                    raise AmbiguousTargets(source.typ, target_model, alternatives)
-                other = find_relationship_on_field(alternatives, source, target_field)
+                    # reverse target look-up
+                    other = find_relationship_to_target_field(alternatives, source)
+                else:
+                    other = find_relationship_on_field(
+                        alternatives, source, target_field
+                    )
 
             else:
                 # match with rel_name
@@ -533,7 +537,7 @@ class _RelationshipDiscovery:
                 # match target_field
                 target_field = source.get_target_field()
                 if target_field is None:
-                    raise AmbiguousTargets(source.typ, target_model, alternatives)
+                    raise AmbiguousTargets(source, target_model, alternatives)
                 other = find_relationship_on_field(alternatives, source, target_field)
 
             else:
@@ -639,7 +643,7 @@ class _RelationshipDiscovery:
                     # match with target_field
                     target_field = source.get_target_field()
                     if target_field is None:
-                        raise AmbiguousTargets(source.typ, target_model, alternatives)
+                        raise AmbiguousTargets(source, target_model, alternatives)
                     other = find_relationship_on_field(
                         alternatives, source, target_field
                     )
@@ -771,7 +775,7 @@ def find_named_relationship(
     if len(unnamed) == 1:
         return unnamed[0]
 
-    raise AmbiguousTargets(source.typ, target_model, unnamed, rel_name)
+    raise AmbiguousTargets(source, target_model, unnamed, rel_name)
 
 
 def find_relationship_on_field(
@@ -779,10 +783,22 @@ def find_relationship_on_field(
 ) -> RelationshipModel:
     found = [m for m in alternatives if m.field == field_name]
     if len(found) > 1:
-        raise AmbiguousTargets(source.typ, found[0].typ, found)
+        raise AmbiguousTargets(source, found[0].typ, found)
     if len(found) == 0:
         raise NoRelationshipFound(alternatives[0].typ, source)
-    # len(found) == 1
+    # > len(found) == 1
+    return found[0]
+
+
+def find_relationship_to_target_field(
+    alternatives: List[RelationshipModel], source: RelationshipModel
+) -> RelationshipModel:
+    found = [m for m in alternatives if m.get_target_field() == source.field]
+    if len(found) > 1:
+        raise AmbiguousTargets(source, found[0].typ, found)
+    if len(found) == 0:
+        raise NoRelationshipFound(alternatives[0].typ, source)
+    # > len(found) == 1
     return found[0]
 
 

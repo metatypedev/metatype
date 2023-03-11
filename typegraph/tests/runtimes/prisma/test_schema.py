@@ -5,7 +5,10 @@ from os import getcwd
 from pathlib import Path
 from typing import Iterable
 
+import pytest
+
 from typegraph import TypeGraph, t
+from typegraph.providers.prisma.relations import AmbiguousTargets
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.providers.prisma.schema import build_model
 
@@ -300,6 +303,91 @@ class TestPrismaSchema:
             ).named("ListNodeAlt")
 
             self.assert_snapshot(db, {list_node2}, "self-one-to-one-alt.prisma")
+
+    def test_multiple_relationships(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with pytest.raises(AmbiguousTargets):
+            with TypeGraph(name="test_multiple_relationships") as g:
+                db = PrismaRuntime("test", "POSTGRES")
+
+                user = t.struct(
+                    {
+                        "id": t.uuid().config("id", "auto"),
+                        "email": t.email().config("unique"),
+                        "posts": t.array(g("Post")),
+                        "favorite_post": t.optional(g("Post")).config("unique"),
+                        "published_posts": t.array(g("Post")),
+                    }
+                ).named("User")
+
+                post = t.struct(
+                    {
+                        "id": t.uuid().config("id", "auto"),
+                        "title": t.string().min(10).max(256),
+                        "content": t.string().min(1000),
+                        "author": g("User"),
+                        "publisher": g("User").optional(),
+                        "favorite_of": t.array(g("User")),
+                    }
+                ).named("Post")
+
+                self.assert_snapshot(db, (user, post), "multi.prisma")
+
+        with TypeGraph(name="test_multiple_relationships") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            user = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "email": t.email().config("unique"),
+                    "posts": db.link(t.array(g("Post")), field="author"),
+                    "favorite_post": t.optional(g("Post")).config("unique"),
+                }
+            ).named("User")
+
+            post = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "title": t.string().min(10).max(256),
+                    "content": t.string().min(1000),
+                    "author": g("User"),
+                    "favorite_of": db.link(t.array(g("User")), field="favorite_post"),
+                }
+            ).named("Post")
+
+            self.assert_snapshot(db, (user, post), "multi.prisma")
+            self.assert_snapshot(db, (post, user), "multi-r.prisma")
+
+        with TypeGraph(name="test_multiple_relationships") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            user = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "email": t.email().config("unique"),
+                    "posts": db.link(t.array(g("Post")), field="author"),
+                    "published_posts": db.link(
+                        t.array(g("Post")), name="PostPublisher"
+                    ),
+                    "favorite_post": t.optional(g("Post")).config("unique"),
+                }
+            ).named("User")
+
+            post = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "title": t.string().min(10).max(256),
+                    "content": t.string().min(1000),
+                    "author": g("User"),
+                    "publisher": db.link(g("User").optional(), name="PostPublisher"),
+                    "favorite_of": db.link(t.array(g("User")), field="favorite_post"),
+                    # "favorite_of": t.array(g("User")),
+                }
+            ).named("Post")
+
+            self.assert_snapshot(db, (user, post), "multi-2.prisma")
+            self.assert_snapshot(db, (post, user), "multi-2-r.prisma")
 
     # def test_multi_self_relationships(self, snapshot):
     #     self.init_snapshot(snapshot)
