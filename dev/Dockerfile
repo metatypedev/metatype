@@ -2,9 +2,11 @@ ARG RUST_VERSION=1.68.0
 ARG DENO_VERSION=1.31.1
 ARG DISTROLESS_TAG=nonroot
 
-FROM lukemathwalker/cargo-chef:latest-rust-${RUST_VERSION} AS base
+FROM rust:${RUST_VERSION} AS base
 
 WORKDIR /app
+
+RUN cargo install cargo-chef --locked
 
 # 
 
