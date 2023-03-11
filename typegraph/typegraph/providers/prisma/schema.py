@@ -95,10 +95,15 @@ class FieldBuilder:
         references = self.get_type_ids(typ)
         fields = [f"{field}{ref.title()}" for ref in references]
 
-        fkeys = [
-            evolve(self.build(ref, typ.props[ref], typ), tags=[], name=f)
-            for f, ref in zip(fields, references)
-        ]
+        fkeys = []
+        for f, ref in zip(fields, references):
+            fkey = self.build(ref, typ.props[ref], typ)
+            tags = [
+                tag
+                for tag in fkey.tags
+                if tag != "@id" and not tag.startswith("@default")
+            ]
+            fkeys.append(evolve(fkey, tags=tags, name=f))
 
         name = to_prisma_string(rel_name)
         fields = to_prisma_list(fields)
@@ -149,7 +154,10 @@ class FieldBuilder:
             rel = self.reg.models[parent_type.name].get(field)
             assert rel is not None
 
-            if rel.side_of(parent_type.name).is_left():
+            side = rel.side_of(parent_type.name)
+            if side is None:  # self relationship
+                side = rel.side_of_field(field)
+            if side.is_left():
                 # parent_side: left; has the foreign key
                 tag, fkeys = self.relation(field, typ, rel.name)
                 tags.append(tag)

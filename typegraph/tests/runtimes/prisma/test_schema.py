@@ -221,3 +221,102 @@ class TestPrismaSchema:
 
             self.assert_snapshot(db, [user, profile], "one-to-one.prisma")
             self.assert_snapshot(db, [profile, user], "one-to-one-r.prisma")
+
+    def test_one_to_many_self(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph(name="test_one_to_many_self") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            tree_node = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "parent": g("TreeNode"),
+                    "children": t.array(g("TreeNode")),
+                }
+            ).named("TreeNode")
+
+            self.assert_snapshot(db, {tree_node}, "self-one-to-many.prisma")
+
+        with TypeGraph(name="test_one_to_many_self_explicit") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            tree_node = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "parent": db.link(g("TreeNode"), field="children"),
+                    "children": db.link(t.array(g("TreeNode")), field="parent"),
+                }
+            ).named("TreeNode")
+
+            self.assert_snapshot(db, {tree_node}, "self-one-to-many.prisma")
+
+        with TypeGraph(name="test_one_to_many_self_1") as g:
+            tree_node = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "children": t.array(g("TreeNode")),
+                    "parent": g("TreeNode"),
+                }
+            ).named("TreeNode")
+
+            self.assert_snapshot(db, {tree_node}, "self-one-to-many-1.prisma")
+
+        with TypeGraph(name="test_one_to_many_self_1_explicit") as g:
+            tree_node = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "children": db.link(t.array(g("TreeNode")), field="parent"),
+                    "parent": db.link(g("TreeNode"), field="children"),
+                }
+            ).named("TreeNode")
+
+            self.assert_snapshot(db, {tree_node}, "self-one-to-many-1.prisma")
+
+    def test_one_to_one_self(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph(name="test_one_to_one_self") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            # single-link list node
+            list_node = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "next": g("ListNode").optional().config("unique"),
+                    "prev": g("ListNode").optional(),
+                }
+            ).named("ListNode")
+
+            self.assert_snapshot(db, {list_node}, "self-one-to-one.prisma")
+
+            # alternative order of fields
+            list_node2 = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "prev": g("ListNodeAlt").optional(),
+                    "next": g("ListNodeAlt").optional().config("unique"),
+                }
+            ).named("ListNodeAlt")
+
+            self.assert_snapshot(db, {list_node2}, "self-one-to-one-alt.prisma")
+
+    # def test_multi_self_relationships(self, snapshot):
+    #     self.init_snapshot(snapshot)
+    #
+    #     with TypeGraph(name="test_multiple_self_relationships") as g:
+    #         db = PrismaRuntime("test", "POSTGRES")
+    #
+    #         person = t.struct(
+    #             {
+    #                 "id": t.uuid().config("id", "auto"),
+    #                 "personal_hero": db.link(
+    #                     g("Person").optional().config("unique"), field="hero_of"
+    #                 ),
+    #                 "hero_of": g("Person").optional(),
+    #                 "mother": g("Person").optional(),
+    #                 "children": db.link(t.array(g("Person")), field="mother"),
+    #             }
+    #         ).named("Person")
+    #
+    #         self.assert_snapshot(db, {person}, "self-multi")
