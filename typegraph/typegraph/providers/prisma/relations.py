@@ -489,11 +489,10 @@ class _RelationshipDiscovery:
             other = alternatives[0]
 
         if other.cardinality.is_optional():
-            # optional-to-optional
-            # > same logic as mandatory one-to-one
+            # optional one-to-one
             fkey_idx = RelationshipModel._find_fkey_idx((source, other))
             if fkey_idx is None:
-                return self.__from_mandatory_one_to_one(source, other)
+                return self.__from_optional_one_to_one(source, other)
             left, right = map(
                 lambda idx: (source, other)[idx], (fkey_idx, 1 - fkey_idx)
             )
@@ -517,7 +516,7 @@ class _RelationshipDiscovery:
                 "The foreign key must be on the link to the non-array model"
             )
 
-        # optional-to-many
+        # optional one-to-many
         return self.gen(source, other)
 
     def from_side_one(
@@ -550,7 +549,7 @@ class _RelationshipDiscovery:
             other = alternatives[0]
 
         if other.cardinality.is_one():
-            return self.__from_mandatory_one_to_one(source, other)
+            return self.__from_optional_one_to_one(source, other)
 
         # left, right = source, other
         fkey_idx = RelationshipModel._find_fkey_idx((source, other))
@@ -564,8 +563,8 @@ class _RelationshipDiscovery:
 
         return self.gen(source, other)
 
-    # target_type on both sides are t.struct
-    def __from_mandatory_one_to_one(
+    # target_type on both sides of the relationship are optional
+    def __from_optional_one_to_one(
         self, first: "RelationshipModel", second: "RelationshipModel"
     ) -> "Relationship":
         fkey_on_first = first._has_fkey()
@@ -573,7 +572,7 @@ class _RelationshipDiscovery:
 
         if fkey_on_first is None:
             if fkey_on_second is None:
-                return self.__from_mandatory_one_to_one_without_fkey(first, second)
+                return self.__from_optional_one_to_one_without_fkey(first, second)
             if fkey_on_second:
                 return self.gen(second, first)
             else:  # fkey_on_second == False --> implies fkey on first
@@ -597,7 +596,7 @@ class _RelationshipDiscovery:
             raise SameFkeyOnBothSides(first, second, False)
         return self.gen(second, first)
 
-    def __from_mandatory_one_to_one_without_fkey(
+    def __from_optional_one_to_one_without_fkey(
         self, first: "RelationshipModel", second: "RelationshipModel"
     ) -> "Relationship":
         # foreign key will be on the field that has the unique attribute
@@ -613,7 +612,7 @@ class _RelationshipDiscovery:
             return self.gen(first, second)
 
         if not second_target_is_unique:
-            raise AmbiguousSide(first, second)
+            raise AmbiguousSide((first, second))
 
         return self.gen(second, first)
 
@@ -716,8 +715,7 @@ class _RelationshipDiscovery:
             if not other.cardinality.is_one():
                 # left = source
                 return self.gen(source, other)
-            # mandatory one-to-one
-            return self.__from_mandatory_one_to_one(source, other)
+            raise Exception("One side of a one-to-one relationship must be optional")
 
         # source.cardinality.is_optional():
         if other.cardinality.is_one():
@@ -728,9 +726,7 @@ class _RelationshipDiscovery:
             # left = source
             return self.gen(source, other)
 
-        # optional one-to-one
-        # same logic of mandatory one-to-one to find the fkey
-        return self.__from_mandatory_one_to_one(source, other)
+        return self.__from_optional_one_to_one(source, other)
 
     def gen(self, left: RelationshipModel, right: RelationshipModel) -> Relationship:
         self.counter += 1

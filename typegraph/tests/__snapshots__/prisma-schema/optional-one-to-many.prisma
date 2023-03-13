@@ -6,5 +6,5 @@ model User {
 model Post {
   id       Int   @id @default(autoincrement())
   author   User? @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
-  authorId Int
+  authorId Int?
 }

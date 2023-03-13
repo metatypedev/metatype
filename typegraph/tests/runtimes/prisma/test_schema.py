@@ -8,7 +8,7 @@ from typing import Iterable
 import pytest
 
 from typegraph import TypeGraph, t
-from typegraph.providers.prisma.relations import AmbiguousTargets
+from typegraph.providers.prisma.relations import AmbiguousSide, AmbiguousTargets
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.providers.prisma.schema import build_model
 
@@ -164,6 +164,26 @@ class TestPrismaSchema:
 
     def test_optional_one_to_one(self, snapshot):
         self.init_snapshot(snapshot)
+
+        with pytest.raises(AmbiguousSide):
+            with TypeGraph(name="test_implicit_one_to_one") as g:
+                db = PrismaRuntime("test", "POSTGRES")
+
+                user = t.struct(
+                    {
+                        "id": t.integer().config("id", "auto"),
+                        "profile": g("Profile").optional(),
+                    }
+                ).named("User")
+
+                profile = t.struct(
+                    {
+                        "id": t.uuid().config("id", "auto"),
+                        "user": g("User").optional(),
+                    }
+                ).named("Profile")
+
+                self.assert_snapshot(db, [user, profile], "optional-one-to-one.prisma")
 
         with TypeGraph(name="test_implicit_one_to_one") as g:
             db = PrismaRuntime("test", "POSTGRES")

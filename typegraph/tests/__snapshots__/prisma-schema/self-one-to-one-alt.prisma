@@ -2,7 +2,7 @@ model ListNodeAlt {
   id     String       @id @default(uuid()) @db.Uuid
   prev   ListNodeAlt? @relation(name: "__rel_ListNodeAlt_ListNodeAlt_4")
   next   ListNodeAlt? @relation(name: "__rel_ListNodeAlt_ListNodeAlt_4", fields: [nextId], references: [id])
-  nextId String       @db.Uuid
+  nextId String?      @db.Uuid
 
   @@unique(nextId)
 }
