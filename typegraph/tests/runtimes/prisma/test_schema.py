@@ -8,7 +8,11 @@ from typing import Iterable
 import pytest
 
 from typegraph import TypeGraph, t
-from typegraph.providers.prisma.relations import AmbiguousSide, AmbiguousTargets
+from typegraph.providers.prisma.relations import (
+    AmbiguousSide,
+    AmbiguousTargets,
+    NoRelationshipFound,
+)
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.providers.prisma.schema import build_model
 
@@ -183,7 +187,7 @@ class TestPrismaSchema:
                     }
                 ).named("Profile")
 
-                self.assert_snapshot(db, [user, profile], "optional-one-to-one.prisma")
+                self.build_schema(db, [user, profile])
 
         with TypeGraph(name="test_implicit_one_to_one") as g:
             db = PrismaRuntime("test", "POSTGRES")
@@ -352,7 +356,7 @@ class TestPrismaSchema:
                     }
                 ).named("Post")
 
-                self.assert_snapshot(db, (user, post), "multi.prisma")
+                self.build_schema(db, (user, post))
 
         with TypeGraph(name="test_multiple_relationships") as g:
             db = PrismaRuntime("test", "POSTGRES")
@@ -428,3 +432,25 @@ class TestPrismaSchema:
             ).named("Person")
 
             self.assert_snapshot(db, {person}, "self-multi.prisma")
+
+    def test_missing_target(self):
+        with pytest.raises(NoRelationshipFound):
+            with TypeGraph(name="test_missing_target") as g:
+                db = PrismaRuntime("test", "POSTGRES")
+
+                user = t.struct(
+                    {
+                        "id": t.uuid().config("id", "auto"),
+                        "email": t.email().config("unique"),
+                    }
+                ).named("User")
+
+                post = t.struct(
+                    {
+                        "id": t.uuid().config("id", "auto"),
+                        "title": t.string().min(5),
+                        "author": g("User"),
+                    }
+                ).named("Post")
+
+                self.build_schema(db, (user, post))
