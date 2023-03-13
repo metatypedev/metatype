@@ -435,8 +435,7 @@ class PrismaRuntime(Runtime):
         self.reg.manage(tpe)
 
     def __datamodel(self):
-        with self.reg:
-            models = [build_model(ty) for ty in self.reg.managed.values()]
+        models = [build_model(ty, self.reg) for ty in self.reg.managed.values()]
         return "\n\n".join(models)
         # return PrismaSchema(self.managed_types.values()).build()
 
