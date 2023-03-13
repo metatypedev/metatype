@@ -695,7 +695,12 @@ class _RelationshipDiscovery:
             if rel_name is None:
                 # match with target_field
                 target_field = source.get_target_field()
-                other = find_relationship_on_field(alternatives, source, target_field)
+                if target_field is not None:
+                    other = find_relationship_on_field(
+                        alternatives, source, target_field
+                    )
+                else:
+                    other = find_relationship_to_target_field(alternatives, source)
 
             else:
                 # match with rel_name

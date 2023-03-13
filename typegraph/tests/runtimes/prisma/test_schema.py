@@ -409,22 +409,22 @@ class TestPrismaSchema:
             self.assert_snapshot(db, (user, post), "multi-2.prisma")
             self.assert_snapshot(db, (post, user), "multi-2-r.prisma")
 
-    # def test_multi_self_relationships(self, snapshot):
-    #     self.init_snapshot(snapshot)
-    #
-    #     with TypeGraph(name="test_multiple_self_relationships") as g:
-    #         db = PrismaRuntime("test", "POSTGRES")
-    #
-    #         person = t.struct(
-    #             {
-    #                 "id": t.uuid().config("id", "auto"),
-    #                 "personal_hero": db.link(
-    #                     g("Person").optional().config("unique"), field="hero_of"
-    #                 ),
-    #                 "hero_of": g("Person").optional(),
-    #                 "mother": g("Person").optional(),
-    #                 "children": db.link(t.array(g("Person")), field="mother"),
-    #             }
-    #         ).named("Person")
-    #
-    #         self.assert_snapshot(db, {person}, "self-multi")
+    def test_multi_self_relationships(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph(name="test_multiple_self_relationships") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            person = t.struct(
+                {
+                    "id": t.uuid().config("id", "auto"),
+                    "personal_hero": db.link(
+                        g("Person").optional().config("unique"), field="hero_of"
+                    ),
+                    "hero_of": g("Person").optional(),
+                    "mother": g("Person").optional(),
+                    "children": db.link(t.array(g("Person")), field="mother"),
+                }
+            ).named("Person")
+
+            self.assert_snapshot(db, {person}, "self-multi.prisma")
