@@ -88,22 +88,18 @@ post = t.struct(
   
   #### One-to-one relationships
   
-  A one-to-one relationship must be in one of these three variants.
+  A one-to-one relationship must be in one of these two variants.
   
   | Cardinality | Field type in Model1 | Field type in Model2 |
   |---|---|---|
   | 1..1 ↔ 0..1 | `g("Model2")` | `g("Model1").optional()` |
   | 0..1 ↔ 0..1 | `g("Model2").optional()` | `g("Model1").optional()` |
-  | 1..1 ↔ 1..1 | `g("Model2")` | `g("Model1")` |
   
-  For the optional (0..1 ↔ 0..1) and mandatory (1..1 ↔ 1..1) one-to-one relationships,
-  you need to indicate on which field/model the foreign key will be.
-  If it should be on the field of `Model1` that points to a `Model2`,
-  you must wrap the type in a [`runtime.link(.)`](#link) with `fkey=True`:
-  `runtime.link(g("Model2").optional(), fkey=True)` or `runtime.link(g("Model2"), fkey=True)`.
-  
-  Alternatively for the optional relationship, you can just add `.config("unique")`:
-  `g("Model2").optional().config("unique")`
+  For the optional (0..1 ↔ 0..1) one-to-one relationship,
+  you need to indicate on which field/model the foreign key will be by:
+  - wrapping the type in a [`runtime.link(.)`](#link) with `fkey=True`:
+  `runtime.link(g("Model2").optional(), fkey=True)`;<br/>
+  - or adding `.config("unique")`: `g("Model2").optional().config("unique")`.
   
   
   #### One-to-many relationships
