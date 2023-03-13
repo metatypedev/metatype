@@ -109,20 +109,11 @@ export function collectArgs(
   const jsonSchema = buildJsonSchema(argTypeNode, typegraph);
   const validator = ajv.compile(jsonSchema);
   const validate = (value: unknown) => {
-    let isValid = false;
-    try {
-      isValid = validator(value);
-    } catch (error) {
-      // FIXME: ajv "Maximum call stack size exceeded" error
-      // When the schema
-      // * is large, has multiple references
-      // * has nested either/union
-      // validator may stackoverflow even if the schema/value are
-      // not circular
-      // https://github.com/ajv-validator/ajv/issues/1581
-      throw error;
-    }
-    if (!isValid && validator.errors) {
+    // FIXME: ajv "Maximum call stack size exceeded" error
+    // validator may stackoverflow even if the schema/value are
+    // not circular given that it is large
+    // https://github.com/ajv-validator/ajv/issues/1581
+    if (!validator(value) && validator.errors) {
       throw new SchemaValidatorError(value, validator.errors, jsonSchema);
     }
   };
@@ -849,10 +840,7 @@ function refOf(typeNode: TypeNode): JSONSchema {
 
 function addSchemaToAjv(schema: JSONSchema, path: string) {
   if (ajv.getSchema(path)) return;
-  try {
-    ajv.addSchema(schema, path);
-    ajv.compile(schema); // cache if possible
-  } catch (_err) { /* ref cannot be resolved yet */ }
+  ajv.addSchema(schema, path);
 }
 
 class JsonSchemaBuilder {
@@ -863,40 +851,38 @@ class JsonSchemaBuilder {
   }
 
   build(typeNode: TypeNode): JSONSchema {
-    let resultSchema: JSONSchema = {};
     switch (typeNode.type) {
       case Type.OPTIONAL: {
         const wrappedType = this.types[typeNode.item];
         if (visitedObject.has(wrappedType.title)) {
-          resultSchema = refOf(wrappedType);
+          const resultSchema = refOf(wrappedType);
           resultSchema.type = ["object", "null"];
+          return resultSchema;
         } else {
-          let itemSchema = this.build(wrappedType);
           if (
             wrappedType.type == Type.UNION ||
             wrappedType.type == Type.EITHER
           ) {
-            itemSchema = this.build(wrappedType);
-            (itemSchema.type as Array<string>)!.push("null");
-            resultSchema = itemSchema;
-          } else {
-            const nullableType = Array.isArray(itemSchema.type)
-              ? [...itemSchema.type, "null"]
-              : [itemSchema.type, "null"];
-            // Note: spread operator have lower precedence
-            resultSchema = { ...itemSchema, type: nullableType };
+            const resultSchema = this.build(wrappedType);
+            (resultSchema.type as Array<string>)!.push("null");
+            return resultSchema;
           }
+          const itemSchema = this.build(wrappedType);
+          const nullableType = Array.isArray(itemSchema.type)
+            ? [...itemSchema.type, "null"]
+            : [itemSchema.type, "null"];
+          // Note: spread operator have lower precedence
+          return { ...itemSchema, type: nullableType };
         }
-
-        break;
       }
 
-      case Type.OBJECT:
+      case Type.OBJECT: {
         visitedObject.add(typeNode.title);
-        resultSchema = this.buildObjectSchema(typeNode);
+        const resultSchema = this.buildObjectSchema(typeNode);
         addSchemaToAjv(resultSchema, pathOf(typeNode));
         visitedObject.delete(typeNode.title);
-        break;
+        return resultSchema;
+      }
 
       case Type.ARRAY: {
         const wrappedType = this.types[typeNode.items];
@@ -906,20 +892,17 @@ class JsonSchemaBuilder {
         } else {
           itemsSchema = this.build(wrappedType);
         }
-        resultSchema = {
+        return {
           ...trimType(typeNode),
           items: itemsSchema,
         };
-        break;
       }
 
       case Type.UNION:
-        resultSchema = this.buildGeneralUnionSchema(typeNode, "anyOf");
-        break;
+        return this.buildGeneralUnionSchema(typeNode, "anyOf");
 
       case Type.EITHER:
-        resultSchema = this.buildGeneralUnionSchema(typeNode, "oneOf");
-        break;
+        return this.buildGeneralUnionSchema(typeNode, "oneOf");
 
       case Type.FUNCTION:
         // unreachable: should have been checked in the typegraph validation hook
@@ -930,15 +913,11 @@ class JsonSchemaBuilder {
       case Type.STRING:
       case Type.BOOLEAN:
         // scalar types
-        resultSchema = trimType(typeNode);
-        break;
+        return trimType(typeNode);
 
       case Type.ANY:
-        resultSchema = {};
-        break;
+        return {};
     }
-
-    return resultSchema;
   }
 
   buildObjectSchema(node: ObjectNode): JSONSchema {
