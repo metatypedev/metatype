@@ -822,7 +822,7 @@ class TypeMismatchError extends Error {
 const visitedObject = new Set<string>();
 const ajv = new Ajv({
   allowUnionTypes: true, // allow multiple non-null types in "type"
-  inlineRefs: true, // inline schemas with no refs (less size)
+  inlineRefs: true, // inline schemas with no refs (reduced size)
 });
 addFormats(ajv);
 addJsonFormat(ajv);
