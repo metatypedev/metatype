@@ -145,18 +145,11 @@ class PrismaRuntime(Runtime):
 
     ### Relationships
 
-    The `PrismaRuntime` supports two kinds of relationship between models.
-
-    | Relationship | Field type in Model1 | Field type in Model2 |
-    |---|---|---|
-    |One to one| `g("Model2")` | `g("Model1").optional()` |
-    |One to many| `g("Model2")` | `t.array(g("Model1"))` |
-
     Relationship fields must be defined on both sides of the relationship.
     A relationship is always defined for `t.struct` types and `t.optional` or
     `t.array` of `t.struct`s.
 
-    Relatioships can also be defined implicitly using the `link` instance method
+    Relatioships can also be defined implicitly using the [`link`](#link) instance method
     of `PrismaRuntime`.
 
     Example:
@@ -180,6 +173,38 @@ class PrismaRuntime(Runtime):
         }
     ).named("Post")
     ```
+
+    The `PrismaRuntime` supports two kinds of relationship between models.
+
+    #### One-to-one relationships
+
+    A one-to-one relationship must be in one of these three variants.
+
+    | Cardinality | Field type in Model1 | Field type in Model2 |
+    |---|---|---|
+    | 1..1 ↔ 0..1 | `g("Model2")` | `g("Model1").optional()` |
+    | 0..1 ↔ 0..1 | `g("Model2").optional()` | `g("Model1").optional()` |
+    | 1..1 ↔ 1..1 | `g("Model2")` | `g("Model1")` |
+
+    For the optional (0..1 ↔ 0..1) and mandatory (1..1 ↔ 1..1) one-to-one relationships,
+    you need to indicate on which field/model the foreign key will be.
+    If it should be on the field of `Model1` that points to a `Model2`,
+    you must wrap the type in a [`runtime.link(.)`](#link) with `fkey=True`:
+    `runtime.link(g("Model2").optional(), fkey=True)` or `runtime.link(g("Model2"), fkey=True)`.
+
+    Alternatively for the optional relationship, you can just add `.config("unique")`:
+    `g("Model2").optional().config("unique")`
+
+
+    #### One-to-many relationships
+
+    A one-to-many relationship must be in one of these two variants.
+
+    | Cardinality | Field type in Model1 | Field type in Model2 |
+    |---|---|---|
+    | 1..1 ↔ 0..n | `g("Model2")` | `t.array(g("Model1"))` |
+    | 0..1 ↔ 0..n | `g("Model2").optional()` | `t.array(g("Model1"))` |
+
 
     ### Generators
 
@@ -282,20 +307,38 @@ class PrismaRuntime(Runtime):
     def __typegen(self):
         return TypeGenerator(reg=self.reg)
 
-    def queryRaw(self, query: str, *, effect: Effect) -> t.func:
-        """Generate a raw SQL query operation"""
+    def queryRaw(self, query: str, out: t.TypeNode, *, effect: Effect) -> t.func:
+        """Generate a raw SQL query operation on the runtime
+
+        Example:
+        ```python
+        db = PrismaRuntime("my-app", "POSTGRES")
+        g.expose(
+            countUsers=db.queryRaw("SELECT COUNT(*) FROM User", t.integer())
+        )
+        ```
+        """
         return t.func(
             t.struct(
                 {
                     "parameters": t.json(),
                 }
             ).named("QueryRawInp"),
-            t.array(t.json()),
+            out,
             PrismaOperationMat(self, query, "queryRaw", effect=effect),
         )
 
     def executeRaw(self, query: str, *, effect: Effect) -> t.func:
-        """Generate a raw SQL query operation without return"""
+        """Generate a raw SQL query operation without return
+
+        Example:
+        ```python
+        db = PrismaRuntime("my-app", "POSTGRES")
+        g.expose(
+            setActive=db.executeRaw("UPDATE User SET active = TRUE WHERE id=$1", effect=effects.update()),
+        )
+        ```
+        """
         return t.func(
             t.struct(
                 {
