@@ -99,7 +99,7 @@ class FieldBuilder:
         for f, ref in zip(fields, references):
             target_type = typ.props[ref]
             if optional:
-                target_type = t.optional(target_type)
+                target_type = target_type.optional()
             fkey = self.build(ref, target_type, typ)
             tags = [
                 tag

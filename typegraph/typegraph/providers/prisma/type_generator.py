@@ -47,7 +47,8 @@ class TypeGenerator:
                         nested, name=f"Input{nested.name}"
                     ).optional(),
                 }
-                if rel.side_of(tpe.name).is_right() and rel.right.cardinality.is_many():
+                side = rel.side_of(tpe.name) or rel.side_of_field(key)
+                if side.is_right() and rel.right.cardinality.is_many():
                     entries["createMany"] = t.struct(
                         {"data": t.array(entries["create"].of)}
                     ).optional()

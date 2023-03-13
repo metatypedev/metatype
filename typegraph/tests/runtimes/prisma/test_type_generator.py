@@ -234,3 +234,100 @@ class TestTypeGenerator:
                     },
                 }
             )
+
+    def test_self_relation(self, overridable):
+        with TypeGraph("test_self_relation") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+            typegen = db._PrismaRuntime__typegen
+
+            node = t.struct(
+                {
+                    "name": t.string().min(2).config("id"),
+                    "prev": g("ListNode").optional(),
+                    "next": g("ListNode").optional().config("unique"),
+                }
+            ).named("ListNode")
+
+            assert tree(typegen.get_input_type(node)) == overridable(
+                {
+                    "type": "object",
+                    "name": "object_5",
+                    "children": {
+                        "name": {"type": "string", "name": "string_1"},
+                        "prev": {
+                            "type": "optional",
+                            "name": "optional_2",
+                            "children": {
+                                "[item]": {"type": "NodeProxy", "name": "ListNode"}
+                            },
+                        },
+                        "next": {
+                            "type": "optional",
+                            "name": "optional_3",
+                            "children": {
+                                "[item]": {"type": "NodeProxy", "name": "ListNode"}
+                            },
+                        },
+                    },
+                }
+            )
+
+            assert tree(typegen.get_where_type(node)) == overridable(
+                {
+                    "type": "object",
+                    "name": "object_13",
+                    "children": {
+                        "name": {
+                            "type": "optional",
+                            "name": "optional_6",
+                            "children": {
+                                "[item]": {"type": "string", "name": "string_1"}
+                            },
+                        },
+                        "prev": {
+                            "type": "optional",
+                            "name": "optional_9",
+                            "children": {
+                                "[item]": {
+                                    "type": "object",
+                                    "name": "object_8",
+                                    "children": {
+                                        "name": {
+                                            "type": "optional",
+                                            "name": "optional_7",
+                                            "children": {
+                                                "[item]": {
+                                                    "type": "string",
+                                                    "name": "string_1",
+                                                }
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        },
+                        "next": {
+                            "type": "optional",
+                            "name": "optional_12",
+                            "children": {
+                                "[item]": {
+                                    "type": "object",
+                                    "name": "object_11",
+                                    "children": {
+                                        "name": {
+                                            "type": "optional",
+                                            "name": "optional_10",
+                                            "children": {
+                                                "[item]": {
+                                                    "type": "string",
+                                                    "name": "string_1",
+                                                }
+                                            },
+                                        }
+                                    },
+                                }
+                            },
+                        },
+                    },
+                }
+            )
