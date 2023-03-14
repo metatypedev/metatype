@@ -24,8 +24,8 @@ export class ReplicatedRegister extends Register {
     const replicatedMap = await RedisReplicatedMap.init<Engine>(
       "typegraph",
       redisConfig,
-      (engine) => JSON.stringify(engine.tg.tgRaw),
-      (payload) => initTypegraph(payload),
+      (engine) => JSON.stringify(engine.tg.tg),
+      (payload) => initTypegraph(payload, true),
     );
 
     return new ReplicatedRegister(replicatedMap);
@@ -38,6 +38,7 @@ export class ReplicatedRegister extends Register {
   async set(payload: string): Promise<string> {
     const engine = await initTypegraph(
       payload,
+      false,
       SystemTypegraph.getCustomRuntimes(this),
     );
     if (SystemTypegraph.check(engine.name)) {

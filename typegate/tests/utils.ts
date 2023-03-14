@@ -100,6 +100,7 @@ export class MemoryRegister extends Register {
   async set(payload: string): Promise<string> {
     const engine = await initTypegraph(
       payload,
+      false,
       SystemTypegraph.getCustomRuntimes(this),
       this.introspection ? undefined : null, // no need to have introspection for tests
     );

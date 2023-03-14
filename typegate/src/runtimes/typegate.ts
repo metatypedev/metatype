@@ -112,6 +112,7 @@ export class TypeGateRuntime extends Runtime {
     }
 
     await this.register.set(json);
+
     return { name };
   };
 
