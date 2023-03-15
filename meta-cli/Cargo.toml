@@ -43,7 +43,7 @@ ignore = "0.4.20"
 globset = "0.4.10"
 anyhow = "1.0.69"
 indoc = "2.0.1"
-serde = { version = "1.0.154", features = ["derive"] }
+serde = { version = "1.0.156", features = ["derive"] }
 serde_json = { version = "1.0.94", features = ["preserve_order"] }
 reqwest = { version = "0.11.14", features = ["json"] }
 colored = "2.0.0"
