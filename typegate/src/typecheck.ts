@@ -131,7 +131,7 @@ export class ValidationSchemaBuilder {
                 if (!isOptional(prop)) {
                   required.push(aliasValue);
                 }
-                properties[nameValue] = this.get(
+                properties[aliasValue] = this.get(
                   `${path}.${name.value}`,
                   prop,
                   selectionSet,
@@ -172,7 +172,7 @@ export class ValidationSchemaBuilder {
         };
 
         (generatedSchema.title == "Query") &&
-          logger.warning(generatedSchema, ":: Complete query");
+          console.log(generatedSchema, ":: Complete query");
 
         if (invalidNodePaths.length > 0) {
           throw new InvalidNodePathsError(invalidNodePaths, generatedSchema);
