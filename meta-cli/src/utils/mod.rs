@@ -125,3 +125,11 @@ pub fn relative_path_display<P1: Into<PathBuf>, P2: Into<PathBuf>>(base: P1, pat
         .display()
         .to_string()
 }
+
+pub fn plural_prefix(len: usize) -> &'static str {
+    if len == 1 {
+        ""
+    } else {
+        "s"
+    }
+}

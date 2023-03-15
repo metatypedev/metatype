@@ -222,7 +222,7 @@ pub async fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &No
                 println!(
                     "Loading {count} typegraph{s} from {path}:",
                     count = tgs.len(),
-                    s = if tgs.len() == 1 { "" } else { "s" }
+                    s = utils::plural_prefix(tgs.len()),
                 );
                 for tg in tgs.iter() {
                     println!(

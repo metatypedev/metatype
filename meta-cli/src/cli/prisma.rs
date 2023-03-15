@@ -304,7 +304,7 @@ impl Action for Format {
     }
 }
 
-struct PrismaMigrate {
+pub struct PrismaMigrate {
     typegraph: String,
     runtime_name: Option<String>,
     migrations: Option<String>,
@@ -320,8 +320,10 @@ impl PrismaMigrate {
     ) -> Result<Option<PathBuf>> {
         let tg_migrations_path = base_path.as_ref().join(typegraph);
         let Ok(true) = tg_migrations_path.try_exists() else {
-                fs::create_dir_all(tg_migrations_path)?;
-                return Ok(None);
+            fs::create_dir_all(tg_migrations_path.clone()).with_context(
+                || format!("Creating migrations directory at {tg_migrations_path:?}")
+            )?;
+            return Ok(None);
         };
         if let Some(runtime_name) = runtime {
             let path = tg_migrations_path.join(runtime_name);
@@ -330,7 +332,10 @@ impl PrismaMigrate {
             }
             return Ok(None);
         }
-        let subdirs = fs::read_dir(tg_migrations_path)?
+        let subdirs = fs::read_dir(tg_migrations_path.clone())
+            .with_context(|| {
+                format!("Reading from migrations directory at {tg_migrations_path:?}")
+            })?
             .filter_map(|entry| -> Option<PathBuf> {
                 entry.ok().map(|e| e.path()).filter(|p| p.is_dir())
             })
@@ -342,23 +347,30 @@ impl PrismaMigrate {
         }
     }
 
+    pub fn serialize_migrations<P: AsRef<Path>>(
+        base_path: P,
+        typegraph: &str,
+        runtime: Option<&str>,
+    ) -> Result<Option<String>> {
+        let migrations_path = Self::get_migrations_path(base_path, typegraph, runtime)?;
+        Ok(match migrations_path {
+            Some(p) => Some(common::archive::archive(p)?),
+            None => None,
+        })
+    }
+
     fn new<P: AsRef<Path>>(
         typegraph: String,
         runtime: Option<String>,
         node: Node,
         base_migration_path: P, // TODO read from metatype.yaml
     ) -> Result<Self> {
-        // get migration folder
-        let migrations_path = Self::get_migrations_path(
+        let migrations = Self::serialize_migrations(
             base_migration_path.as_ref(),
             &typegraph,
             runtime.as_deref(),
-        )?;
-        let migrations = if let Some(path) = migrations_path {
-            Some(common::archive::archive(path)?)
-        } else {
-            None
-        };
+        )
+        .context("Serializing migrations")?;
 
         Ok(Self {
             typegraph,

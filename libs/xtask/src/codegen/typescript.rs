@@ -34,6 +34,7 @@ pub fn run() -> Result<()> {
             jsonschema_path,
             "--no-additionalProperties",
             "--booleanSchemas",
+            "--unreachableDefinitions",
         ])
         .stderr(Stdio::inherit())
         .output()

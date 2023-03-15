@@ -18,13 +18,13 @@ import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { RateLimiter } from "../src/rate_limiter.ts";
-import { PrismaRuntimeDS, TypeRuntimeBase } from "../src/type_node.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";
 import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
 import { copy } from "std/streams/copy.ts";
 import * as native from "native";
 import { None } from "monads";
 import { init_native } from "native";
+import { PrismaRuntimeDS } from "../src/runtimes/prisma.ts";
 
 const thisDir = dirname(fromFileUrl(import.meta.url));
 const metaCli = resolve(thisDir, "../../target/debug/meta");
@@ -493,9 +493,9 @@ export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function recreateMigrations(engine: Engine) {
-  const runtimes = (engine.tg.tg.runtimes as TypeRuntimeBase[]).filter(
+  const runtimes = engine.tg.tg.runtimes.filter(
     (rt) => rt.name === "prisma",
-  ) as PrismaRuntimeDS[];
+  ) as unknown[] as PrismaRuntimeDS[];
 
   const migrationsBaseDir = join(thisDir, "prisma-migrations");
 

@@ -37,7 +37,7 @@ impl<T> Lift<T> {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct NodeConfig {
     url: Url,
     username: Option<String>,
@@ -90,7 +90,7 @@ impl NodeConfig {
     }
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug, Default, Clone)]
 pub struct TypegraphLoaderConfig {
     #[serde(default)]
     include: Lift<String>,
@@ -116,7 +116,7 @@ impl TypegraphLoaderConfig {
     }
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug, Default, Clone)]
 pub struct PrismaConfig {
     migrations_path: Option<PathBuf>,
 }
@@ -130,12 +130,12 @@ impl PrismaConfig {
     }
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug, Default, Clone)]
 pub struct Materializers {
     pub prisma: PrismaConfig,
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug, Default, Clone)]
 pub struct Typegraphs {
     #[serde(default)]
     pub python: TypegraphLoaderConfig,
@@ -143,7 +143,7 @@ pub struct Typegraphs {
     pub materializers: Materializers,
 }
 
-#[derive(Deserialize, Debug, Default)]
+#[derive(Deserialize, Debug, Default, Clone)]
 pub struct Config {
     #[serde(skip)]
     pub base_dir: PathBuf,

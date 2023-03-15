@@ -1,8 +1,11 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+mod postprocess;
+pub mod utils;
+
 use anyhow::{bail, Context, Result};
 use colored::Colorize;
-use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
+use common::typegraph::Typegraph;
 use pathdiff::diff_paths;
 use std::collections::HashMap;
 use std::env;
@@ -14,7 +17,7 @@ use walkdir::{DirEntry, WalkDir};
 
 use crate::config::Config;
 use crate::utils::ensure_venv;
-use typescript::parser::{transform_module, transform_script};
+use postprocess::postprocess;
 
 pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
 
@@ -22,22 +25,16 @@ pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
 pub struct TypegraphLoader<'a> {
     skip_deno_modules: bool,
     ignore_unknown_file_types: bool,
+    deploy: bool, // target is deployment
     config: &'a Config,
 }
 
 impl<'a> TypegraphLoader<'a> {
-    // pub fn new() -> Self {
-    //     Self {
-    //         skip_deno_modules: false,
-    //         ignore_unknown_file_types: false,
-    //         config: None,
-    //     }
-    // }
-
     pub fn with_config(config: &'a Config) -> Self {
         Self {
             skip_deno_modules: false,
             ignore_unknown_file_types: false,
+            deploy: false,
             config,
         }
     }
@@ -55,9 +52,17 @@ impl<'a> TypegraphLoader<'a> {
         self
     }
 
+    pub fn deploy(mut self, deploy: bool) -> Self {
+        self.deploy = deploy;
+        self
+    }
+
     pub fn load_file<P: AsRef<Path>>(self, path: P) -> Result<Option<Vec<Typegraph>>> {
         let path = path.as_ref().canonicalize()?;
         let ext = path.extension().and_then(|ext| ext.to_str());
+
+        let config = self.config.clone();
+        let deploy = self.deploy;
 
         let output = match ext {
             Some(ext) if ext == "py" => self
@@ -83,7 +88,7 @@ impl<'a> TypegraphLoader<'a> {
                 serde_json::from_str(&output).context("Parsing serialized typegraph")?;
             Ok(Some(
                 tgs.into_iter()
-                    .map(postprocess)
+                    .map(move |tg| postprocess(tg, &config, deploy))
                     .collect::<Result<Vec<_>>>()?,
             ))
         }
@@ -204,71 +209,6 @@ impl<'a> TypegraphLoader<'a> {
         } else {
             let stderr = String::from_utf8(p.stderr)?;
             bail!("Python error:\n{}", stderr.red())
-        }
-    }
-}
-
-type MaterializerPostprocessor = fn(Materializer, &Typegraph) -> Result<Materializer>;
-
-static MATERIALIZER_POSTPROCESSORS: &[MaterializerPostprocessor] =
-    &[postprocess_function_mat, postprocess_module_mat];
-
-/// Perform some postprocessing on the typegraph we got from Python
-fn postprocess(mut typegraph: Typegraph) -> Result<Typegraph> {
-    let materializers = std::mem::take(&mut typegraph.materializers);
-    let postprocessed_materializers: Vec<Materializer> = materializers
-        .into_iter()
-        .map(|mat| -> Result<Materializer> {
-            let mut current_value = mat;
-            for postprocess in MATERIALIZER_POSTPROCESSORS {
-                current_value = postprocess(current_value, &typegraph)?;
-            }
-            Ok(current_value)
-        })
-        .collect::<Result<Vec<Materializer>>>()?;
-    typegraph.materializers = postprocessed_materializers;
-    Ok(typegraph)
-}
-
-fn postprocess_function_mat(mut mat: Materializer, typegraph: &Typegraph) -> Result<Materializer> {
-    if &mat.name == "function" && typegraph.runtimes[mat.runtime as usize].name == "deno" {
-        let mut mat_data: FunctionMatData = utils::object_from_map(std::mem::take(&mut mat.data))?;
-        // TODO check variable `_my_lambda` exists and is a function expression/lambda
-        mat_data.script = transform_script(mat_data.script)?;
-        mat.data = utils::map_from_object(mat_data)?;
-    }
-    Ok(mat)
-}
-
-fn postprocess_module_mat(mut mat: Materializer, typegraph: &Typegraph) -> Result<Materializer> {
-    if mat.name == "module" && typegraph.runtimes[mat.runtime as usize].name == "deno" {
-        let mut mat_data: ModuleMatData = utils::object_from_map(std::mem::take(&mut mat.data))?;
-        if !mat_data.code.starts_with("file:") {
-            // TODO check imported functions exist
-            mat_data.code = transform_module(mat_data.code)?;
-        }
-        mat.data = utils::map_from_object(mat_data)?;
-    }
-    Ok(mat)
-}
-
-mod utils {
-    use anyhow::{bail, Result};
-    use indexmap::IndexMap;
-    use serde::{de::DeserializeOwned, ser::Serialize};
-    use serde_json::{from_value, to_value, Value};
-
-    pub fn object_from_map<T: DeserializeOwned>(map: IndexMap<String, Value>) -> Result<T> {
-        let map = Value::Object(map.into_iter().collect());
-        Ok(from_value(map)?)
-    }
-
-    pub fn map_from_object<T: Serialize>(obj: T) -> Result<IndexMap<String, Value>> {
-        let val = to_value(obj)?;
-        if let Value::Object(map) = val {
-            Ok(map.into_iter().collect())
-        } else {
-            bail!("value is not an object");
         }
     }
 }

@@ -257,3 +257,16 @@ export interface Rate {
   context_identifier?: string | null;
   local_excess: number;
 }
+export interface FunctionMatData {
+  script: string;
+}
+export interface ModuleMatData {
+  code: string;
+}
+export interface PrismaRuntimeData {
+  name: string;
+  datamodel: string;
+  connection_string_secret: string;
+  models: number[];
+  migrations?: string | null;
+}

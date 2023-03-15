@@ -34,6 +34,10 @@ pub struct Serialize {
 
     #[clap(long, default_value_t = false)]
     pretty: bool,
+
+    /// simulate serializing the typegraph for deployment
+    #[clap(long, default_value_t = false)]
+    deploy: bool,
 }
 
 #[async_trait]
@@ -49,7 +53,8 @@ impl Action for Serialize {
             Config::load_or_find(config_path, &dir)?
         };
 
-        let loader = TypegraphLoader::with_config(&config);
+        let loader = TypegraphLoader::with_config(&config).deploy(self.deploy);
+
         let files: Vec<_> = self.files.iter().map(|f| Path::new(f).to_owned()).collect();
         let loaded = if !self.files.is_empty() {
             loader.load_files(&files)

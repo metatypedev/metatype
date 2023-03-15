@@ -14,6 +14,7 @@ from typegraph.providers.prisma.relations import LinkProxy
 from typegraph.providers.prisma.schema import RelationshipRegister, build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils import eprint
 from typegraph.utils.attrs import SKIP, always, required
 
 
@@ -548,9 +549,9 @@ class PrismaRuntime(Runtime):
 
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
+        eprint(data)
         data["data"].update(
             datamodel=self.__datamodel(),
-            connection_string_secret=self.connection_string_secret,
             models=[collector.index(tp) for tp in self.spec.types.values()],
         )
         return data
