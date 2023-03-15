@@ -64,6 +64,11 @@ schema: {
   "title": "object_8",
   "properties": {
     "color": {
+      "type": [
+        "array",
+        "object",
+        "string"
+      ],
       "anyOf": [
         {
           "type": "array",
