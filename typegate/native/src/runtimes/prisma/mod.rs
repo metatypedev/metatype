@@ -44,19 +44,19 @@ fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut
 #[deno]
 struct PrismaRegisterEngineInp {
     datamodel: String,
-    typegraph: String,
+    engine_name: String,
 }
 
 #[deno]
 enum PrismaRegisterEngineOut {
-    Ok { engine_id: String },
+    Ok,
     Err { message: String },
 }
 
 #[deno]
 fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngineOut {
-    match RT.block_on(engine::register_engine(input.datamodel, input.typegraph)) {
-        Ok(engine_id) => PrismaRegisterEngineOut::Ok { engine_id },
+    match RT.block_on(engine::register_engine(input.datamodel, input.engine_name)) {
+        Ok(()) => PrismaRegisterEngineOut::Ok,
         Err(e) => PrismaRegisterEngineOut::Err {
             message: e.to_string(),
         },
@@ -67,22 +67,22 @@ fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngin
 
 #[deno]
 struct PrismaUnregisterEngineInp {
-    key: String,
+    engine_name: String,
 }
 
 #[deno]
 enum PrismaUnregisterEngineOut {
-    Ok { key: String },
+    Ok,
     Err { message: String },
 }
 
 #[deno]
 fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregisterEngineOut {
-    let Some((key, engine)) = ENGINES.remove(&input.key) else {
-        return PrismaUnregisterEngineOut::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.key})};
+    let Some((_, engine)) = ENGINES.remove(&input.engine_name) else {
+        return PrismaUnregisterEngineOut::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.engine_name})};
     };
     match RT.block_on(engine.disconnect()) {
-        Ok(_) => PrismaUnregisterEngineOut::Ok { key },
+        Ok(()) => PrismaUnregisterEngineOut::Ok,
         Err(e) => PrismaUnregisterEngineOut::Err {
             message: format!("{:?}", e),
         },
@@ -93,7 +93,7 @@ fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregiste
 
 #[deno]
 struct PrismaQueryInp {
-    key: String,
+    engine_name: String,
     query: serde_json::Value,
     datamodel: String,
 }
@@ -106,7 +106,7 @@ enum PrismaQueryOut {
 
 #[deno]
 fn prisma_query(input: PrismaQueryInp) -> PrismaQueryOut {
-    let fut = RT.block_on(engine::query(input.key, input.query));
+    let fut = RT.block_on(engine::query(input.engine_name, input.query));
     match fut {
         Ok(res) => PrismaQueryOut::Ok { res },
         Err(err) => PrismaQueryOut::Err {

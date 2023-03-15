@@ -5,7 +5,7 @@ import * as native from "native";
 import { FromVars, GraphQLRuntime } from "./graphql.ts";
 import { ResolverError } from "../errors.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { envOrFail, nativeResult } from "../utils.ts";
+import { envOrFail, nativeResult, nativeVoid } from "../utils.ts";
 import { ComputeStage } from "../engine.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "../planner/args.ts";
@@ -38,14 +38,9 @@ function isPrismaOperationMat(mat: Materializer): mat is PrismaOperationMat {
 }
 
 export class PrismaRuntime extends GraphQLRuntime {
-  datamodel: string;
-  key: string;
-
-  private constructor(datamodel: string) {
-    super("");
+  private constructor(private engine_name: string, private datamodel: string) {
+    super(""); // no endpoint
     this.disableVariables();
-    this.datamodel = datamodel;
-    this.key = "";
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
@@ -57,8 +52,9 @@ export class PrismaRuntime extends GraphQLRuntime {
       args.connection_string_secret as string,
     ));
     const schema = `${datasource}${args.datamodel}`;
-    const instance = new PrismaRuntime(schema);
-    await instance.registerEngine(typegraph.types[0].title);
+    const engine_name = `${typegraphName}_${args.name}`;
+    const instance = new PrismaRuntime(engine_name, schema);
+    await instance.registerEngine();
     return instance;
   }
 
@@ -75,27 +71,21 @@ export class PrismaRuntime extends GraphQLRuntime {
     return intro.introspection;
   }
 
-  async registerEngine(typegraphName: string): Promise<void> {
-    const conn = nativeResult(
+  async registerEngine(): Promise<void> {
+    nativeVoid(
       await native.prisma_register_engine({
+        engine_name: this.engine_name,
         datamodel: this.datamodel,
-        typegraph: typegraphName,
       }),
     );
-    this.key = conn.engine_id;
   }
 
   async unregisterEngine(): Promise<void> {
-    if (this.key === "") {
-      throw new Error("unregistering unregistered engine");
-    }
-    const ret = await native.prisma_unregister_engine({
-      key: this.key,
-    });
-    if ("Err" in ret) {
-      throw new Error(ret.Err.message);
-    }
-    this.key = "";
+    nativeVoid(
+      await native.prisma_unregister_engine({
+        engine_name: this.engine_name,
+      }),
+    );
   }
 
   execute(query: string | FromVars<string>, path: string[]): Resolver {
@@ -106,7 +96,7 @@ export class PrismaRuntime extends GraphQLRuntime {
 
       const ret = nativeResult(
         await native.prisma_query({
-          key: this.key,
+          engine_name: this.engine_name,
           query: {
             query: q,
             variables: {}, // TODO: remove this
