@@ -19,8 +19,6 @@ with TypeGraph(
         }
     ).named("user")
 
-    db.manage(user)  # soon removed
-
     g.expose(
         create_user=db.insert_one(user),
         default_policy=[public],

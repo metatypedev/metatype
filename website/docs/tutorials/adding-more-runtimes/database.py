@@ -23,7 +23,6 @@ with TypeGraph(
         }
         # highlight-next-line
     ).named("message")
-    db.manage(message)  # soon removed
 
     g.expose(
         # highlight-next-line

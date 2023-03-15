@@ -30,7 +30,7 @@ typegate1: &tp
     depends_on:
         - typegate_native
     pipe:
-        '^.+\[http\].*$': whiz://http
+        "^.+DEBUG http .*$": whiz://http
 
 typegate2:
     <<: *tp

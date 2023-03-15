@@ -37,12 +37,12 @@ with TypeGraph(name="blog") as g:
     public = policies.public()
 
     g.expose(
-        createUser=db.create(users).add_policy(public),
+        createUser=db.insert_one(users).add_policy(public),
         findUniqueUser=db.find_unique(users).add_policy(public),
         findManyUsers=db.find_many(users).add_policy(public),
         updateUser=db.update(users).add_policy(public),
         deleteUser=db.delete(users).add_policy(public),
-        createPost=db.create(posts).add_policy(public),
+        createPost=db.insert_one(posts).add_policy(public),
         findUniquePost=db.find_unique(posts).add_policy(public),
         findManyPosts=db.find_many(posts).add_policy(public),
     )

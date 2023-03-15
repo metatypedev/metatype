@@ -1115,7 +1115,7 @@
         "allow_credentials": {
           "type": "boolean"
         },
-        "max_age": {
+        "max_age_sec": {
           "type": [
             "integer",
             "null"

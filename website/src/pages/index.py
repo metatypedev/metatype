@@ -25,7 +25,6 @@ with TypeGraph(
             "message": t.string().max(2000),
         }
     ).named("feedback")
-    db.manage(feedback)  # soon removed
 
     stargazer = t.struct(
         {

@@ -36,10 +36,10 @@ with TypeGraph("prisma") as g:
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
         findManyRecors=db.find_many(record).add_policy(public),
-        createOneRecord=db.create(record).add_policy(public),
+        createOneRecord=db.insert_one(record).add_policy(public),
         deleteOneRecord=db.delete(record).add_policy(public),
         updateOneRecord=db.update(record).add_policy(public),
-        createUser=db.create(users).add_policy(public),
+        createUser=db.insert_one(users).add_policy(public),
         findUniqueUser=db.find_unique(users).add_policy(public),
         findMessages=db.find_many(messages).add_policy(public),
         updateUser=db.update(users).add_policy(public),

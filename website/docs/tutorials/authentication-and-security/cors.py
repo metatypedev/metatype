@@ -11,7 +11,7 @@ with TypeGraph(
         allow_headers=["authorization"],
         expose_headers=["header-1"],
         allow_credentials=True,
-        max_age=60,  # cache in seconds
+        max_age_sec=60,  # cache in seconds
     ),
     # hightlight-end
 ) as g:

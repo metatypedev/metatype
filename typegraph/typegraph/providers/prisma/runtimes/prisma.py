@@ -427,7 +427,7 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "groupBy", effect=effects.none()),
         )
 
-    def create(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def insert_one(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Create", tpe)
@@ -441,7 +441,7 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "createOne", effect=effects.create()),
         )
 
-    def create_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def insert_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("CreateMany", tpe)
@@ -558,9 +558,6 @@ class PrismaRuntime(Runtime):
     @property
     def edges(self) -> List[Node]:
         return super().edges + list(self.spec.types.values())
-
-    def insert_one(self, tpe):
-        return self.gen_create(tpe)
 
 
 @frozen
