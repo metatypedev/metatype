@@ -256,12 +256,13 @@ class TypeGenerator:
             # Note:
             # nested relations are not a represented as t.struct
             # we need to resolve the correct type first
-            v = resolve_proxy(v)
-            proxy = self.spec.proxies[tpe.name].get(k)
-            relname = proxy.link_name if proxy is not None else None
-            if relname is not None:
+
+            rel = self.reg.models[tpe.name].get(k)
+            if rel is not None:
+                relname = rel.name
                 if relname in seen:
                     continue
+                v = resolve_proxy(v)
                 if isinstance(v, t.array) or isinstance(v, t.optional):
                     # one to many (countable)
                     # Ex:
