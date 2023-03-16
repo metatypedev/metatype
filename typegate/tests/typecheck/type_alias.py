@@ -4,14 +4,22 @@ from typegraph.runtimes.random import RandomMat, RandomRuntime
 with TypeGraph(
     "type-alias",
 ) as g:
-    random = RandomRuntime()
+    random = RandomRuntime(seed=1)
     public = policies.public()
+
+    infos = t.struct(
+        {
+            "label": t.string(),
+            "content": t.string(),
+        }
+    )
 
     message = t.struct(
         {
             "id": t.integer(),
             "title": t.string(),
             "user_id": t.integer(),
+            "info": t.array(infos),
         }
     )
 
