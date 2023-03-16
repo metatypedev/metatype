@@ -50,10 +50,11 @@ def tree(
 
 
 class TestTypeGenerator:
-    def test_simple(self, overridable):
-        with TypeGraph("test_where_simple"):
+    def test_simple(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph("test_simple"):
             db = PrismaRuntime("test", "POSTGRES")
-            typegen = db._PrismaRuntime__typegen
 
             model = t.struct(
                 {
@@ -64,66 +65,15 @@ class TestTypeGenerator:
                 }
             ).named("Model")
 
-            assert tree(typegen.get_input_type(model)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_7",
-                    "children": {
-                        "id": {
-                            "type": "optional",
-                            "name": "optional_6",
-                            "children": {
-                                "[item]": {"type": "string", "name": "string_1"}
-                            },
-                        },
-                        "email": {"type": "string", "name": "string_2"},
-                        "age": {"type": "integer", "name": "integer_3"},
-                        "fullName": {"type": "string", "name": "string_4"},
-                    },
-                }
-            )
+            typegen = db._PrismaRuntime__typegen
+            self.assert_snapshot(typegen.get_input_type(model), "simple_input.json")
+            self.assert_snapshot(typegen.get_where_type(model), "simple_where.json")
 
-            assert tree(typegen.get_where_type(model)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_12",
-                    "children": {
-                        "id": {
-                            "type": "optional",
-                            "name": "optional_8",
-                            "children": {
-                                "[item]": {"type": "string", "name": "string_1"}
-                            },
-                        },
-                        "email": {
-                            "type": "optional",
-                            "name": "optional_9",
-                            "children": {
-                                "[item]": {"type": "string", "name": "string_2"}
-                            },
-                        },
-                        "age": {
-                            "type": "optional",
-                            "name": "optional_10",
-                            "children": {
-                                "[item]": {"type": "integer", "name": "integer_3"}
-                            },
-                        },
-                        "fullName": {
-                            "type": "optional",
-                            "name": "optional_11",
-                            "children": {
-                                "[item]": {"type": "string", "name": "string_4"}
-                            },
-                        },
-                    },
-                }
-            )
+    def test_relations(self, snapshot):
+        self.init_snapshot(snapshot)
 
-    def test_relations(self, overridable):
         with TypeGraph("test_relations") as g:
             db = PrismaRuntime("test", "POSTGRES")
-            typegen = db._PrismaRuntime__typegen
 
             user = t.struct(
                 {"id": t.integer().config("id"), "posts": t.array(g("Post"))}
@@ -133,119 +83,17 @@ class TestTypeGenerator:
                 {"id": t.integer().config("id"), "author": g("User")}
             ).named("Post")
 
-            assert tree(typegen.get_input_type(user)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_6",
-                    "children": {
-                        "id": {"type": "integer", "name": "integer_1"},
-                        "posts": {
-                            "type": "array",
-                            "name": "array_2",
-                            "children": {
-                                "[items]": {"type": "NodeProxy", "name": "Post"}
-                            },
-                        },
-                    },
-                }
-            )
-            assert tree(typegen.get_input_type(post)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_7",
-                    "children": {
-                        "id": {"type": "integer", "name": "integer_4"},
-                        "author": {
-                            "type": "object",
-                            "name": "User",
-                            "children": {
-                                "id": {"type": "integer", "name": "integer_1"},
-                                "posts": {"type": "array", "name": "array_2"},
-                            },
-                        },
-                    },
-                }
-            )
+            typegen = db._PrismaRuntime__typegen
+            self.assert_snapshot(typegen.get_input_type(user), "relations_input_1.json")
+            self.assert_snapshot(typegen.get_input_type(post), "relations_input_2.json")
+            self.assert_snapshot(typegen.get_where_type(user), "relations_where_1.json")
+            self.assert_snapshot(typegen.get_where_type(post), "relations_where_2.json")
 
-            assert tree(typegen.get_where_type(user)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_12",
-                    "children": {
-                        "id": {
-                            "type": "optional",
-                            "name": "optional_8",
-                            "children": {
-                                "[item]": {"type": "integer", "name": "integer_1"}
-                            },
-                        },
-                        "posts": {
-                            "type": "optional",
-                            "name": "optional_11",
-                            "children": {
-                                "[item]": {
-                                    "type": "object",
-                                    "name": "object_10",
-                                    "children": {
-                                        "id": {
-                                            "type": "optional",
-                                            "name": "optional_9",
-                                            "children": {
-                                                "[item]": {
-                                                    "type": "integer",
-                                                    "name": "integer_4",
-                                                }
-                                            },
-                                        }
-                                    },
-                                }
-                            },
-                        },
-                    },
-                }
-            )
-            assert tree(typegen.get_where_type(post)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_17",
-                    "children": {
-                        "id": {
-                            "type": "optional",
-                            "name": "optional_13",
-                            "children": {
-                                "[item]": {"type": "integer", "name": "integer_4"}
-                            },
-                        },
-                        "author": {
-                            "type": "optional",
-                            "name": "optional_16",
-                            "children": {
-                                "[item]": {
-                                    "type": "object",
-                                    "name": "object_15",
-                                    "children": {
-                                        "id": {
-                                            "type": "optional",
-                                            "name": "optional_14",
-                                            "children": {
-                                                "[item]": {
-                                                    "type": "integer",
-                                                    "name": "integer_1",
-                                                }
-                                            },
-                                        }
-                                    },
-                                }
-                            },
-                        },
-                    },
-                }
-            )
+    def test_self_relation(self, snapshot):
+        self.init_snapshot(snapshot)
 
-    def test_self_relation(self, overridable):
         with TypeGraph("test_self_relation") as g:
             db = PrismaRuntime("test", "POSTGRES")
-            typegen = db._PrismaRuntime__typegen
 
             node = t.struct(
                 {
@@ -255,88 +103,12 @@ class TestTypeGenerator:
                 }
             ).named("ListNode")
 
-            assert tree(typegen.get_input_type(node)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_5",
-                    "children": {
-                        "name": {"type": "string", "name": "string_1"},
-                        "prev": {
-                            "type": "optional",
-                            "name": "optional_2",
-                            "children": {
-                                "[item]": {"type": "NodeProxy", "name": "ListNode"}
-                            },
-                        },
-                        "next": {
-                            "type": "optional",
-                            "name": "optional_3",
-                            "children": {
-                                "[item]": {"type": "NodeProxy", "name": "ListNode"}
-                            },
-                        },
-                    },
-                }
+            typegen = db._PrismaRuntime__typegen
+            self.assert_snapshot(
+                typegen.get_input_type(node), "self_relation_input.json"
             )
-
-            assert tree(typegen.get_where_type(node)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_13",
-                    "children": {
-                        "name": {
-                            "type": "optional",
-                            "name": "optional_6",
-                            "children": {
-                                "[item]": {"type": "string", "name": "string_1"}
-                            },
-                        },
-                        "prev": {
-                            "type": "optional",
-                            "name": "optional_9",
-                            "children": {
-                                "[item]": {
-                                    "type": "object",
-                                    "name": "object_8",
-                                    "children": {
-                                        "name": {
-                                            "type": "optional",
-                                            "name": "optional_7",
-                                            "children": {
-                                                "[item]": {
-                                                    "type": "string",
-                                                    "name": "string_1",
-                                                }
-                                            },
-                                        }
-                                    },
-                                }
-                            },
-                        },
-                        "next": {
-                            "type": "optional",
-                            "name": "optional_12",
-                            "children": {
-                                "[item]": {
-                                    "type": "object",
-                                    "name": "object_11",
-                                    "children": {
-                                        "name": {
-                                            "type": "optional",
-                                            "name": "optional_10",
-                                            "children": {
-                                                "[item]": {
-                                                    "type": "string",
-                                                    "name": "string_1",
-                                                }
-                                            },
-                                        }
-                                    },
-                                }
-                            },
-                        },
-                    },
-                }
+            self.assert_snapshot(
+                typegen.get_where_type(node), "self_relation_where.json"
             )
 
     def test_nested_count(self, snapshot):
@@ -383,7 +155,7 @@ class TestTypeGenerator:
         import json
 
         return self.snapshot.assert_match(
-            json.dumps(tree(tpe, resolve_proxies=True), indent=4), snapshot_name
+            json.dumps(tree(tpe, resolve_proxies=True), indent=4) + "\n", snapshot_name
         )
 
 

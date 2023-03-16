@@ -1,0 +1,38 @@
+{
+    "type": "object",
+    "name": "object_17",
+    "children": {
+        "id": {
+            "type": "optional",
+            "name": "optional_13",
+            "children": {
+                "[item]": {
+                    "type": "integer",
+                    "name": "integer_4"
+                }
+            }
+        },
+        "author": {
+            "type": "optional",
+            "name": "optional_16",
+            "children": {
+                "[item]": {
+                    "type": "object",
+                    "name": "object_15",
+                    "children": {
+                        "id": {
+                            "type": "optional",
+                            "name": "optional_14",
+                            "children": {
+                                "[item]": {
+                                    "type": "integer",
+                                    "name": "integer_1"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
