@@ -109,6 +109,10 @@ export function collectArgs(
   const jsonSchema = buildJsonSchema(argTypeNode, typegraph);
   const validator = ajv.compile(jsonSchema);
   const validate = (value: unknown) => {
+    // FIXME: ajv "Maximum call stack size exceeded" error
+    // validator may stackoverflow even if the schema/value are
+    // not circular given that it is large
+    // https://github.com/ajv-validator/ajv/issues/1581
     if (!validator(value) && validator.errors) {
       throw new SchemaValidatorError(value, validator.errors, jsonSchema);
     }
@@ -377,7 +381,6 @@ class ArgumentCollector {
    *
    * The value returned can be used to check that an argument meets all the
    * requirements of a given JSON schema.
-   * see: getNodeValue
    */
   private getArgumentValue(
     astNode: ast.ArgumentNode | ast.ObjectFieldNode,
@@ -816,12 +819,29 @@ class TypeMismatchError extends Error {
   }
 }
 
-const ajv = new Ajv();
+const visitedObject = new Set<string>();
+const ajv = new Ajv({
+  allowUnionTypes: true, // allow multiple non-null types in "type"
+  inlineRefs: true, // inline schemas with no refs (reduced size)
+});
 addFormats(ajv);
 addJsonFormat(ajv);
 
 function buildJsonSchema(typeNode: TypeNode, tg: TypeGraph) {
   return new JsonSchemaBuilder(tg).build(typeNode);
+}
+
+function pathOf(typeNode: TypeNode): string {
+  return `#/schemas/temp/${typeNode.title}`;
+}
+
+function refOf(typeNode: TypeNode): JSONSchema {
+  return { $ref: pathOf(typeNode) };
+}
+
+function addSchemaToAjv(schema: JSONSchema, path: string) {
+  if (ajv.getSchema(path)) return;
+  ajv.addSchema(schema, path);
 }
 
 class JsonSchemaBuilder {
@@ -834,21 +854,50 @@ class JsonSchemaBuilder {
   build(typeNode: TypeNode): JSONSchema {
     switch (typeNode.type) {
       case Type.OPTIONAL: {
-        const itemSchema = this.build(this.types[typeNode.item]);
-        const nullableType = Array.isArray(itemSchema.type)
-          ? [...itemSchema.type, "null"]
-          : [itemSchema.type, "null"];
-        return { ...itemSchema, type: nullableType };
+        const wrappedType = this.types[typeNode.item];
+        if (visitedObject.has(wrappedType.title)) {
+          const resultSchema = refOf(wrappedType);
+          resultSchema.type = ["object", "null"];
+          return resultSchema;
+        } else {
+          if (
+            wrappedType.type == Type.UNION ||
+            wrappedType.type == Type.EITHER
+          ) {
+            const resultSchema = this.build(wrappedType);
+            (resultSchema.type as Array<string>)!.push("null");
+            return resultSchema;
+          }
+          const itemSchema = this.build(wrappedType);
+          const nullableType = Array.isArray(itemSchema.type)
+            ? [...itemSchema.type, "null"]
+            : [itemSchema.type, "null"];
+          // Note: spread operator have lower precedence
+          return { ...itemSchema, type: nullableType };
+        }
       }
 
-      case Type.OBJECT:
-        return this.buildObjectSchema(typeNode);
+      case Type.OBJECT: {
+        visitedObject.add(typeNode.title);
+        const resultSchema = this.buildObjectSchema(typeNode);
+        addSchemaToAjv(resultSchema, pathOf(typeNode));
+        visitedObject.delete(typeNode.title);
+        return resultSchema;
+      }
 
-      case Type.ARRAY:
+      case Type.ARRAY: {
+        const wrappedType = this.types[typeNode.items];
+        let itemsSchema = null;
+        if (visitedObject.has(wrappedType.title)) {
+          itemsSchema = refOf(wrappedType);
+        } else {
+          itemsSchema = this.build(wrappedType);
+        }
         return {
           ...trimType(typeNode),
-          items: this.build(this.types[typeNode.items]),
+          items: itemsSchema,
         };
+      }
 
       case Type.UNION:
         return this.buildGeneralUnionSchema(typeNode, "anyOf");
@@ -877,7 +926,11 @@ class JsonSchemaBuilder {
     const required: string[] = [];
     for (const [propName, propTypeIdx] of Object.entries(node.properties)) {
       const propType = this.types[propTypeIdx];
-      properties[propName] = this.build(propType);
+      if (visitedObject.has(propType.title)) {
+        properties[propName] = refOf(propType);
+      } else {
+        properties[propName] = this.build(propType);
+      }
       if (propType.type !== Type.OPTIONAL) {
         required.push(propName);
       }
@@ -891,6 +944,50 @@ class JsonSchemaBuilder {
     };
   }
 
+  listUnionEitherTypes(
+    node: UnionNode | EitherNode,
+    variantsKey: "anyOf" | "oneOf",
+  ): string[] {
+    const variantTypeIndices =
+      node[variantsKey as keyof typeof node] as number[];
+    let canHoldObject = false;
+    const variantsTypes = [];
+
+    for (const typeIdx of variantTypeIndices) {
+      const currentNode = this.types[typeIdx];
+      const type = this.types[typeIdx].type;
+      if (visitedObject.has(currentNode.title)) {
+        canHoldObject = true;
+      }
+      if (
+        currentNode.type == Type.EITHER ||
+        currentNode.type == Type.UNION
+      ) {
+        // parent either/union node must be
+        // aware of its children either/union node(s) types
+        const key = currentNode.type == Type.UNION ? "anyOf" : "oneOf";
+        const subTypes = this.listUnionEitherTypes(currentNode, key);
+        variantsTypes.push(...subTypes);
+      }
+      variantsTypes.push(type);
+    }
+
+    // Ref:
+    // https://json-schema.org/understanding-json-schema/reference/combining.html
+    if (canHoldObject && !variantsTypes.includes("object")) {
+      variantsTypes.push("object");
+    }
+
+    // remove duplicates
+    const distinctTypes = new Set<string>(variantsTypes);
+
+    // either and union are not valid JSON schema types
+    distinctTypes.delete("either");
+    distinctTypes.delete("union");
+
+    return Array.from(distinctTypes);
+  }
+
   buildGeneralUnionSchema(node: UnionNode, variantsKey: "anyOf"): JSONSchema;
   buildGeneralUnionSchema(node: EitherNode, variantsKey: "oneOf"): JSONSchema;
   buildGeneralUnionSchema(
@@ -899,11 +996,17 @@ class JsonSchemaBuilder {
   ): JSONSchema {
     const variantTypeIndices =
       node[variantsKey as keyof typeof node] as number[];
-    const variantSchemas = variantTypeIndices.map((typeIdx) =>
-      this.build(this.types[typeIdx])
-    );
+
+    const variantSchemas = variantTypeIndices.map((typeIdx) => {
+      const currentNode = this.types[typeIdx];
+      return visitedObject.has(currentNode.title)
+        ? refOf(currentNode)
+        : this.build(currentNode);
+    });
+    // Ref:
+    // https://json-schema.org/understanding-json-schema/reference/type.html
     return {
-      // ...trimType(node),
+      type: this.listUnionEitherTypes(node, variantsKey),
       [variantsKey]: variantSchemas,
     };
   }
