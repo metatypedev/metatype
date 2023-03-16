@@ -25,8 +25,10 @@ test("Random", async (t) => {
       .on(e);
   });
 
-  await t.should("validate and work with all types aliased", async () => {
-    await gql`
+  await t.should(
+    "validate and work when all nodes have an alias",
+    async () => {
+      await gql`
       query {
         one: get_message {
           two: id
@@ -35,17 +37,18 @@ test("Random", async (t) => {
         }
       }
     `
-      .expectData({
-        one: {
-          two: 442220385665024,
-          three: "G#qcNX^E",
-          four: -770929621729280,
-        },
-      })
-      .on(e);
-  });
+        .expectData({
+          one: {
+            two: 442220385665024,
+            three: "G#qcNX^E",
+            four: -770929621729280,
+          },
+        })
+        .on(e);
+    },
+  );
 
-  await t.should("validate and work with non-trivial alias", async () => {
+  await t.should("validate and work with non-trivial aliases", async () => {
     await gql`
       query {
         some_alias: get_message {

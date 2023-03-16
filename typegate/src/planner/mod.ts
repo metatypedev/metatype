@@ -138,7 +138,8 @@ export class Planner {
         alias: { value: alias } = {},
         arguments: args,
       } = field;
-      // name is the
+      // name: used to fetch the value
+      // canonicalName: field name on the expected output
       const canonicalName = alias ?? name;
       const path = [...node.path, canonicalName];
       const fieldIdx = props[name];
