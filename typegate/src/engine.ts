@@ -214,6 +214,14 @@ export class Engine {
     return await this.tg.deinit();
   }
 
+  /**
+   * Note:
+   * Each `ComputeStage` relates to a specific type generated from the graphql
+   * 1. plan.length should be of the same cardinality as the types enumerated in the graphql
+   * 2. values are computed depending on the Runtime
+   *
+   * See `planner/mod.ts` on how the graphql is processed to build the plan
+   */
   async compute(
     plan: ComputeStage[],
     policies: OperationPolicies,
@@ -434,6 +442,7 @@ export class Engine {
       );
       const computeTime = performance.now();
 
+      //console.log("value computed", res);
       validator.validate(res);
       const endTime = performance.now();
 

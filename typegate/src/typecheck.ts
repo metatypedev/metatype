@@ -118,20 +118,20 @@ export class ValidationSchemaBuilder {
           switch (node.kind) {
             case Kind.FIELD: {
               const { name, selectionSet, alias } = node;
-              const aliasValue = (alias ?? name).value;
+              const canonicalName = (alias ?? name).value;
               const nameValue = name.value;
 
               if (name.value === "__typename") {
-                properties[aliasValue] = { type: "string" };
+                properties[canonicalName] = { type: "string" };
                 return;
               }
 
               if (Object.hasOwnProperty.call(baseProperties, nameValue)) {
                 const prop = this.types[baseProperties[nameValue]];
                 if (!isOptional(prop)) {
-                  required.push(aliasValue);
+                  required.push(canonicalName);
                 }
-                properties[aliasValue] = this.get(
+                properties[canonicalName] = this.get(
                   `${path}.${name.value}`,
                   prop,
                   selectionSet,
@@ -170,9 +170,6 @@ export class ValidationSchemaBuilder {
           required,
           additionalProperties: false,
         };
-
-        (generatedSchema.title == "Query") &&
-          console.log(generatedSchema, ":: Complete query");
 
         if (invalidNodePaths.length > 0) {
           throw new InvalidNodePathsError(invalidNodePaths, generatedSchema);
