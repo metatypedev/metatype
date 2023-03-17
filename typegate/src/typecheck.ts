@@ -21,6 +21,8 @@ import {
 } from "./type_node.ts";
 import { EitherNode, UnionNode } from "./types/typegraph.ts";
 import { toPrettyJSON } from "./utils.ts";
+import { getLogger } from "./log.ts";
+const logger = getLogger("sync");
 
 // we will use this jsonschema jit compiler: https://github.com/sinclairzx81/typebox
 // and the types format will become a superset of the jsonschema https://json-schema.org/understanding-json-schema/reference/index.html
@@ -115,19 +117,21 @@ export class ValidationSchemaBuilder {
         const addProperty = (node: SelectionNode) => {
           switch (node.kind) {
             case Kind.FIELD: {
-              const { name, selectionSet } = node;
+              const { name, selectionSet, alias } = node;
+              const canonicalName = (alias ?? name).value;
+              const nameValue = name.value;
 
               if (name.value === "__typename") {
-                properties[name.value] = { type: "string" };
+                properties[canonicalName] = { type: "string" };
                 return;
               }
 
-              if (Object.hasOwnProperty.call(baseProperties, name.value)) {
-                const prop = this.types[baseProperties[name.value]];
+              if (Object.hasOwnProperty.call(baseProperties, nameValue)) {
+                const prop = this.types[baseProperties[nameValue]];
                 if (!isOptional(prop)) {
-                  required.push(name.value);
+                  required.push(canonicalName);
                 }
-                properties[name.value] = this.get(
+                properties[canonicalName] = this.get(
                   `${path}.${name.value}`,
                   prop,
                   selectionSet,

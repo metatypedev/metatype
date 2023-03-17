@@ -6,6 +6,6 @@ query {
   }
 
   second_one: get_message {
-    body
+    user_id
   }
 }

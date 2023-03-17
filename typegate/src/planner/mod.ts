@@ -138,7 +138,10 @@ export class Planner {
         alias: { value: alias } = {},
         arguments: args,
       } = field;
-      const path = [...node.path, name ?? alias];
+      // name: used to fetch the value
+      // canonicalName: field name on the expected output
+      const canonicalName = alias ?? name;
+      const path = [...node.path, canonicalName];
       const fieldIdx = props[name];
       if (
         fieldIdx == undefined &&
@@ -152,7 +155,7 @@ export class Planner {
       }
       const childNode = {
         parent: node,
-        name: name ?? alias,
+        name: canonicalName,
         path,
         selectionSet: field.selectionSet,
         args: args ?? [],
