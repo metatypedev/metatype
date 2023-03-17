@@ -327,9 +327,50 @@ class TypeGenerator:
         return t.struct(fields)
 
     def get_order_by_type(self, tpe: t.struct) -> t.struct:
-        term_node_value = t.enum(["asc", "desc"]).optional()
-        remap_struct = self.deep_map(tpe, lambda _: term_node_value).optional()
-        return t.array(remap_struct)
+        # TODO: global, named, only generated once per runtime
+        sort = t.enum(["asc", "desc"]).optional()
+        aggregate = t.struct(
+            {k: sort.optional() for k in ["_count", "_avg", "_sum", "_min", "_max"]}
+        ).optional()
+
+        # orderByNulls is a preview feature in prisma: see
+        # https://www.prisma.io/docs/concepts/components/prisma-client/filtering-and-sorting#sort-with-null-records-first-or-last
+        # sort_nulls = t.struct({"sort": sort, "nulls": t.enum(["first", "last"])})
+
+        def get_sorting_type(tpe: t.TypeNode):
+            tpe = resolve_proxy(tpe)
+
+            # optional = False
+            if isinstance(tpe, t.optional):
+                # optional = True
+                tpe = tpe.of
+
+            if isinstance(tpe, t.struct):
+                # relation
+                # TODO: eventual infinite recursion
+                return get_order_by(tpe).optional()
+
+            if isinstance(tpe, t.array):
+                nested_type = resolve_proxy(tpe.of)
+                if isinstance(nested_type, t.struct):
+                    return aggregate
+                else:
+                    # TODO: check prisma docs
+                    return sort
+
+            # scalar type
+            # ? are they all sortable??
+
+            # orderByNulls: preview feature in prisma
+            # if optional:
+            #     return t.either(sort, sort_nulls)
+
+            return sort
+
+        def get_order_by(tpe: t.struct):
+            return t.struct({k: get_sorting_type(v) for k, v in tpe.props.items()})
+
+        return t.array(get_order_by(tpe))
 
 
 def unsupported_cardinality(c: str):

@@ -1,34 +1,28 @@
 {
     "type": "array",
-    "name": "array_23",
+    "name": "array_24",
     "children": {
         "[items]": {
-            "type": "optional",
-            "name": "optional_22",
+            "type": "object",
+            "name": "object_23",
             "children": {
-                "[item]": {
-                    "type": "object",
-                    "name": "object_21",
+                "id": {
+                    "type": "optional",
+                    "name": "optional_20",
                     "children": {
-                        "id": {
-                            "type": "optional",
-                            "name": "optional_20",
-                            "children": {
-                                "[item]": {
-                                    "type": "string",
-                                    "name": "string_19"
-                                }
-                            }
-                        },
-                        "email": {
-                            "type": "optional",
-                            "name": "optional_20"
-                        },
-                        "profile": {
-                            "type": "optional",
-                            "name": "optional_20"
+                        "[item]": {
+                            "type": "string",
+                            "name": "string_19"
                         }
                     }
+                },
+                "email": {
+                    "type": "optional",
+                    "name": "optional_20"
+                },
+                "profile": {
+                    "type": "optional",
+                    "name": "optional_20"
                 }
             }
         }
