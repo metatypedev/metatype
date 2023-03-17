@@ -30,7 +30,6 @@ PUT
 PBAC
 CORS
 OAuth2
-Deno
 sandboxed
 Infisical
 Zsh

@@ -130,11 +130,18 @@ export const b64encode = (v: string): string => {
   return base64.encode(v);
 };
 
-export type NativeResult<R> = { Ok: R } | { Err: { message: string } };
-
-export function nativeResult<R>(res: NativeResult<R>): R {
+export function nativeResult<R>(
+  res: { Ok: R } | { Err: { message: string } },
+): R {
   if ("Err" in res) {
     throw new Error(res.Err.message);
   }
   return res.Ok;
+}
+
+export function nativeVoid(res: "Ok" | { Err: { message: string } }): void {
+  if (res !== "Ok") {
+    throw new Error(res.Err.message);
+  }
+  return;
 }

@@ -19,12 +19,12 @@ static CLIENTS: Lazy<DashMap<String, RetryClient<Client>>> = Lazy::new(DashMap::
 struct TemporalRegisterInput {
     url: String,
     namespace: String,
-    typegraph: String,
+    client_id: String,
 }
 
 #[deno]
 enum TemporalRegisterOutput {
-    Ok { client_id: String },
+    Ok,
     Err { message: String },
 }
 
@@ -39,11 +39,8 @@ fn temporal_register(input: TemporalRegisterInput) -> TemporalRegisterOutput {
         .unwrap();
     let connection = opts.connect("default", None, None);
     let client = RT.block_on(connection).unwrap();
-
-    let typegraph = input.typegraph;
-    let client_id = format!("{typegraph}_{}", CLIENTS.len() + 1);
-    CLIENTS.insert(client_id.clone(), client);
-    TemporalRegisterOutput::Ok { client_id }
+    CLIENTS.insert(input.client_id, client);
+    TemporalRegisterOutput::Ok
 }
 
 #[deno]
@@ -53,16 +50,16 @@ struct TemporalUnregisterInput {
 
 #[deno]
 enum TemporalUnregisterOutput {
-    Ok { client_id: String },
+    Ok,
     Err { message: String },
 }
 
 #[deno]
 fn temporal_unregister(input: TemporalUnregisterInput) -> TemporalUnregisterOutput {
-    let Some((client_id, _client)) = CLIENTS.remove(&input.client_id) else {
+    let Some((_, _client)) = CLIENTS.remove(&input.client_id) else {
         return TemporalUnregisterOutput::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.client_id})};
     };
-    TemporalUnregisterOutput::Ok { client_id }
+    TemporalUnregisterOutput::Ok
 }
 
 #[deno]

@@ -33,7 +33,7 @@ dev:
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.68.0
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
-    DENO_VERSION: 1.31.1
+    DENO_VERSION: 1.31.2
     NODE_VERSION: 18.12.1
     PNPM_VERSION: 7.9.3
     TYPEGRAPH_VERSION: 0.0.1

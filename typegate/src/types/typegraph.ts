@@ -241,7 +241,7 @@ export interface Cors {
   expose_headers: string[];
   allow_methods?: string[];
   allow_credentials: boolean;
-  max_age?: number | null;
+  max_age_sec?: number | null;
 }
 export interface Auth {
   name: string;

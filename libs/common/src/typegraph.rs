@@ -29,7 +29,7 @@ pub struct Cors {
     #[serde(default)]
     pub allow_methods: Vec<String>,
     pub allow_credentials: bool,
-    pub max_age: Option<u32>,
+    pub max_age_sec: Option<u32>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

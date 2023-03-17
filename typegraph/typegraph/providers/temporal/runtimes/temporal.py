@@ -15,6 +15,7 @@ class TemporalRuntime(Runtime):
     """
 
     host: str
+    name: str
     runtime_name: str = always("temporal")
 
     def data(self, collector):
