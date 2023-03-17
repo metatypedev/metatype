@@ -109,13 +109,16 @@ export const initTypegraph = async (
   return new Engine(tg);
 };
 
-/*
-..
-a(b: c) {
-  ..
-}
-..
-*/
+/**
+ * Processed graphql node to be evaluated against a Runtime
+ * ```
+ * node_1(node_2: ...) {
+ *   node_3
+ *   ..
+ * }
+ * ..
+ * ```
+ */
 export class ComputeStage {
   props: ComputeStageProps;
   varTypes: Record<string, string> = {};
@@ -214,6 +217,14 @@ export class Engine {
     return await this.tg.deinit();
   }
 
+  /**
+   * Note:
+   * Each `ComputeStage` relates to a specific type/node generated from the graphql
+   * 1. `plan: ComputeStage` should be of the same cardinality as the types enumerated in the graphql
+   * 2. values are computed depending on the Runtime
+   *
+   * See `planner/mod.ts` on how the graphql is processed to build the plan
+   */
   async compute(
     plan: ComputeStage[],
     policies: OperationPolicies,
@@ -434,6 +445,7 @@ export class Engine {
       );
       const computeTime = performance.now();
 
+      //console.log("value computed", res);
       validator.validate(res);
       const endTime = performance.now();
 

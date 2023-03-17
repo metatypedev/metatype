@@ -104,7 +104,7 @@ test("http custom content-type queries", async (t) => {
   await t.should("work with content-type = multipart/form-data", async () => {
     await gql`
       mutation {
-        sumRangeWithFormData(start: 0, end: 100) {
+        output: sumRangeWithFormData(start: 0, end: 100) {
           self_content_type
           total
           steps
@@ -112,7 +112,7 @@ test("http custom content-type queries", async (t) => {
       }
     `
       .expectData({
-        sumRangeWithFormData: {
+        output: {
           self_content_type: "multipart/form-data",
           total: 5050,
           steps: 101,
