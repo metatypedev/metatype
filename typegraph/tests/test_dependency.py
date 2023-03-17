@@ -132,7 +132,7 @@ class TestDependency:
                         allow_headers=[],
                         expose_headers=[],
                         allow_credentials=True,
-                        max_age=None,
+                        max_age_sec=None,
                     ),
                     "version": "0.0.1",
                 },

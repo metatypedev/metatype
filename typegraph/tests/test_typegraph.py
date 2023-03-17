@@ -2,8 +2,8 @@
 
 import frozendict
 
-from typegraph import policies as p
 from typegraph import TypeGraph, t
+from typegraph import policies as p
 from typegraph.graph.models import Cors
 from typegraph.runtimes.deno import PureFunMat
 
@@ -97,7 +97,7 @@ class TestTypegraph:
                         allow_headers=[],
                         expose_headers=[],
                         allow_credentials=True,
-                        max_age=None,
+                        max_age_sec=None,
                     ),
                     "version": "0.0.1",
                 },
@@ -227,7 +227,7 @@ class TestTypegraph:
                         allow_headers=[],
                         expose_headers=[],
                         allow_credentials=True,
-                        max_age=None,
+                        max_age_sec=None,
                     ),
                     "version": "0.0.1",
                 },
@@ -317,7 +317,7 @@ class TestTypegraph:
                         allow_headers=[],
                         expose_headers=[],
                         allow_credentials=True,
-                        max_age=None,
+                        max_age_sec=None,
                     ),
                     "version": "0.0.1",
                 },

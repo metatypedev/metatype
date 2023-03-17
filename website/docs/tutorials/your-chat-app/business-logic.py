@@ -43,12 +43,11 @@ with TypeGraph(
             "title": t.string(),
             "user_id": t.integer().named("uid"),
             "user": gql.query(  # 1
-                {"id": t.integer().from_parent(g("uid"))},  # 2
+                t.struct({"id": t.integer().from_parent(g("uid"))}),  # 2
                 t.optional(user),
             ),
         }
     ).named("message")
-    db.manage(message)  # soon removed
 
     # highlight-start
     g.expose(
@@ -75,6 +74,6 @@ with TypeGraph(
                 effect=effects.create(),
             ),
         ),
-        list_users=gql.query({}, t.struct({"data": t.array(user)})),
+        list_users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         default_policy=[internal],
     )

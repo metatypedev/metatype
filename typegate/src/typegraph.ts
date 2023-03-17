@@ -132,8 +132,8 @@ export class TypeGraph {
       "Access-Control-Allow-Credentials": meta.cors.allow_credentials
         .toString(),
     };
-    if (meta.cors.max_age) {
-      staticCors["Access-Control-Max-Age"] = meta.cors.max_age.toString();
+    if (meta.cors.max_age_sec) {
+      staticCors["Access-Control-Max-Age"] = meta.cors.max_age_sec.toString();
     }
     const exposeOrigins = new Set(meta.cors.expose_headers);
 

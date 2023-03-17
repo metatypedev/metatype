@@ -325,7 +325,7 @@
       "expose_headers": [],
       "allow_methods": [],
       "allow_credentials": true,
-      "max_age": null
+      "max_age_sec": null
     },
     "auths": [
       {

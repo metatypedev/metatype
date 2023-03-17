@@ -3,26 +3,24 @@
 import { Runtime } from "./Runtime.ts";
 import * as native from "native";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { nativeResult } from "../utils.ts";
+import { nativeResult, nativeVoid } from "../utils.ts";
 import { ComputeStage } from "../engine.ts";
 
 export class TemporalRuntime extends Runtime {
-  client_id: string;
-
-  private constructor(client_id: string) {
+  private constructor(private client_id: string) {
     super();
-    this.client_id = client_id;
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     const { typegraph, args } = params;
     const typegraphName = typegraph.types[0].title;
+    const client_id = `${typegraphName}_${args.name}`;
 
-    const { client_id } = nativeResult(
+    nativeVoid(
       await native.temporal_register({
         url: args.host as string,
         namespace: "default",
-        typegraph: typegraphName,
+        client_id,
       }),
     );
     return new TemporalRuntime(client_id);
@@ -30,7 +28,7 @@ export class TemporalRuntime extends Runtime {
 
   async deinit(): Promise<void> {
     const { client_id } = this;
-    nativeResult(
+    nativeVoid(
       await native.temporal_unregister({
         client_id,
       }),

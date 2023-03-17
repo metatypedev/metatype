@@ -26,19 +26,20 @@ with TypeGraph(
             "user_id": t.integer().named("uid"),
             # highlight-next-line
             "user": gql.query(
-                {
-                    # highlight-next-line
-                    "id": t.integer().from_parent(g("uid"))
-                },
+                t.struct(
+                    {
+                        # highlight-next-line
+                        "id": t.integer().from_parent(g("uid"))
+                    }
+                ),
                 t.optional(user),
             ),
         }
     ).named("message")
-    db.manage(message)  # soon removed
 
     g.expose(
         create_message=db.insert_one(message),
         list_messages=db.find_many(message),
-        list_users=gql.query({}, t.struct({"data": t.array(user)})),
+        list_users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         default_policy=[public],
     )

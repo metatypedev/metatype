@@ -41,7 +41,15 @@ class Auth:
     # deno eval 'await crypto.subtle.generateKey({name: "ECDSA", namedCurve: "P-384"}, true, ["sign", "verify"]).then(k => crypto.subtle.exportKey("jwk", k.publicKey)).then(JSON.stringify).then(console.log);'
     @classmethod
     def jwk(cls, name: str, args=None) -> "Auth":
-        return Auth(name, "jwk", args if args is not None else {})
+        """Import a JSON Web Key (JWK) for authentication.
+
+        Args:
+            name (str): Name of the authentication
+            args (Dict[str, str], optional): Arguments for the authentication. Defaults to None. See `algorithm` parameters in [SubtleCrypto.importKey()](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey) for more information.
+        """
+        if args is None:
+            args = {}
+        return Auth(name, "jwk", args)
 
     @classmethod
     def basic(cls, users: List[str]) -> "Auth":
@@ -58,7 +66,7 @@ class Cors:
     allow_headers: List[str] = field(factory=list)
     expose_headers: List[str] = field(factory=list)
     allow_credentials: bool = True
-    max_age: Optional[int] = None
+    max_age_sec: Optional[int] = None
 
 
 @define
