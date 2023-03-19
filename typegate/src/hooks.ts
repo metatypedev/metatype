@@ -5,11 +5,11 @@ import { TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { upgradeTypegraph } from "./typegraph/versions.ts";
 
 interface PushHandler {
-  (tg: TypeGraphDS, prev: TypeGraphDS | null): Promise<TypeGraphDS>;
+  (tg: TypeGraphDS): Promise<TypeGraphDS>;
 }
 
 interface InitHandler {
-  (tg: TypeGraph, prev: TypeGraph | null, sync: boolean): Promise<void>;
+  (tg: TypeGraph, sync: boolean): Promise<void>;
 }
 
 interface Hooks {
@@ -34,17 +34,13 @@ export function registerHook(
   (hooks[when] as unknown[]).push(handler);
 }
 
-const previousVersions: Map<string, TypeGraph> = new Map();
-
 export async function handleOnPushHooks(
   typegraph: TypeGraphDS,
 ): Promise<TypeGraphDS> {
-  const tgName = typegraph.types[0].title;
-  const prev = previousVersions.get(tgName)?.tg ?? null;
   let res = typegraph;
 
   for (const handler of hooks.onPush) {
-    res = await handler(res, prev);
+    res = await handler(res);
   }
 
   return res;
@@ -54,14 +50,7 @@ export async function handleOnInitHooks(
   typegraph: TypeGraph,
   sync: boolean,
 ): Promise<void> {
-  const tgName = typegraph.name;
-
-  // what if the typegraph got renamed
-  const prev = previousVersions.get(tgName) ?? null;
-
   await Promise.all(
-    hooks.onInit.map((handler) => handler(typegraph, prev, sync)),
+    hooks.onInit.map((handler) => handler(typegraph, sync)),
   );
-
-  previousVersions.set(tgName, typegraph);
 }
