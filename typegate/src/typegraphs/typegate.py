@@ -53,7 +53,18 @@ with TypeGraph(
         .add_policy(admin_only),
         addTypegraph=t.func(
             t.struct({"fromString": t.string()}),
-            typegraph.optional(),
+            typegraph.compose(
+                {
+                    "messages": t.array(
+                        t.struct(
+                            {
+                                "type": t.enum(["info", "warning", "error"]),
+                                "text": t.string(),
+                            }
+                        )
+                    )
+                }
+            ).optional(),
             AddTypeGraphMat(),
         )
         .rate(calls=True)

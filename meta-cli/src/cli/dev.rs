@@ -22,6 +22,7 @@ use notify::{
     recommended_watcher, Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
 };
 use reqwest::Url;
+use serde::Deserialize;
 use serde_json::{self, json};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -248,8 +249,29 @@ pub async fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &No
     println!();
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "snake_case")]
+pub enum MessageType {
+    Info,
+    Warning,
+    Error,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct MessageEntry {
+    #[serde(rename = "type")]
+    pub type_: MessageType,
+    pub text: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PushResult {
+    pub name: String,
+    pub messages: Vec<MessageEntry>,
+}
+
 #[async_recursion]
-pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<()> {
+pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<PushResult> {
     use crate::utils::graphql::{Error as GqlError, GraphqlErrorMessages, Query};
     let query = node
         .post("/typegate")?
@@ -258,6 +280,7 @@ pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result
             mutation InsertTypegraph {
                 addTypegraph(fromString: $tg) {
                     name
+                    messages { type text }
                 }
             }"}
             .to_string(),
@@ -297,6 +320,6 @@ pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result
             sleep(Duration::from_secs(5));
             push_typegraph(tg, node, backoff - 1).await
         }
-        Ok(_) => Ok(()),
+        Ok(res) => Ok(res.data("addTypegraph")?),
     }
 }

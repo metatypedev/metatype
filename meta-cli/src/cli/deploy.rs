@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use super::Action;
-use crate::cli::dev::push_typegraph;
+use crate::cli::dev::{push_typegraph, MessageType};
 use crate::config::Config;
 use crate::typegraph::{LoaderResult, TypegraphLoader};
 use crate::utils::clap::UrlValueParser;
@@ -89,8 +89,18 @@ async fn deploy_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node
                 name = tg.name().unwrap().blue()
             );
             match push_typegraph(tg, node, 0).await {
-                Ok(_) => {
+                Ok(res) => {
                     println!("  {}", "✓ Success!".to_owned().green());
+                    let name = res.name;
+                    for msg in res.messages.into_iter() {
+                        let type_ = match msg.type_ {
+                            MessageType::Info => "info".blue(),
+                            MessageType::Warning => "warn".yellow(),
+                            MessageType::Error => "error".red(),
+                        };
+                        let tg_name = name.green();
+                        println!("    [{tg_name} {type_}] {}", msg.text);
+                    }
                 }
                 Err(e) => {
                     println!("  {}", "✗ Failed!".to_owned().red());

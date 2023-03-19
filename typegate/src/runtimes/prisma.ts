@@ -46,39 +46,24 @@ export interface PrismaRuntimeDS extends Omit<TGRuntime, "data"> {
   data: PrismaRuntimeData;
 }
 
-registerHook("onPush", async (typegraph) => {
-  // TODO compare to previous version??
+registerHook("onPush", async (typegraph, logger) => {
   const runtimes = typegraph.runtimes.filter((rt) =>
     rt.name === "prisma"
   ) as unknown[] as PrismaRuntimeDS[];
-
-  if (runtimes.length === 0) {
-    return typegraph;
-  }
-
-  if (runtimes[0].data.migrations == null) {
-    if (runtimes.some((rt) => rt.data.migrations != null)) {
-      throw new Error(
-        "Migrations must be embedded for all the prisma runtimes",
-      );
-    }
-    return typegraph;
-  }
-
-  if (runtimes.some((rt) => rt.data.migrations == null)) {
-    throw new Error("Migrations must be embedded for all the prisma runtimes");
-  }
 
   const tgName = typegraph.types[0].title;
 
   for (const rt of runtimes) {
     const { connection_string_secret, datamodel, migrations } = rt.data;
+    if (migrations == null) {
+      continue;
+    }
 
     const datasource = makeDatasource(
       envOrFail(tgName, connection_string_secret),
     );
 
-    const res = nativeResult(
+    const { migration_count, applied_migrations } = nativeResult(
       await native.prisma_deploy({
         datasource,
         datamodel,
@@ -86,10 +71,23 @@ registerHook("onPush", async (typegraph) => {
       }),
     );
 
-    // TODO: log back to the user
-    console.log(
-      `On prisma runtime '${rt.data.name}': ${res.migration_count} migrations applied`,
-    );
+    if (migration_count === 0) {
+      logger.info(`[prisma runtime: '${rt.data.name}'] No migration found.`);
+    } else {
+      logger.info(
+        `[prisma runtime: '${rt.data.name}'] ${migration_count} migrations found.`,
+      );
+    }
+    if (applied_migrations.length === 0) {
+      logger.info(`[prisma runtime: '${rt.data.name}'] No migration applied.`);
+    } else {
+      logger.info(
+        `[prisma runtime: '${rt.data.name}'] ${applied_migrations.length} migrations applied:`,
+      );
+      for (const migrationName of applied_migrations) {
+        logger.info(`  - ${migrationName}`);
+      }
+    }
   }
 
   return typegraph;
