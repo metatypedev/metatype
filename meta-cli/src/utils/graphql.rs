@@ -162,7 +162,7 @@ async fn handle_error(res: HttpResponse) -> Result<(), Error> {
         Error::InvalidResponse(format!("Could not parse Content-Type header: {e:?}"))
     })?;
 
-    if content_type == "text/plain" {
+    if content_type == "text/plain" || content_type.starts_with("text/plain;") {
         let status = res.status().as_u16();
         let text = res
             .text()

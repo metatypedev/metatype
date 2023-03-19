@@ -241,6 +241,27 @@ fn prisma_create(input: PrismaCreateInp) -> PrismaCreateOut {
 }
 
 #[deno]
+pub struct PrismaResetInp {
+    datasource: String,
+}
+
+#[deno]
+pub enum PrismaResetOut {
+    Ok { reset: bool },
+    Err { message: String },
+}
+
+#[deno]
+fn prisma_reset(input: PrismaResetInp) -> PrismaResetOut {
+    match RT.block_on(migration::reset(input.datasource)) {
+        Ok(_) => PrismaResetOut::Ok { reset: true },
+        Err(e) => PrismaResetOut::Err {
+            message: e.to_string(),
+        },
+    }
+}
+
+#[deno]
 struct UnpackInp {
     dest: String,
     migrations: String,

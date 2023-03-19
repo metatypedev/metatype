@@ -20,6 +20,11 @@ type TaskModule = Record<string, TaskExec>;
 const fns: Map<number, TaskExec> = new Map();
 const mods: Map<number, TaskModule> = new Map();
 
+const isTest = Deno.env.get("DENO_TESTING") === "true";
+const additionalHeaders = isTest
+  ? { "connection": "close" }
+  : { "connection": "keep-alive" };
+
 const make_internal = ({ meta: { url, token } }: TaskContext) => {
   const gql = (query: readonly string[], ...args: unknown[]) => {
     if (args.length > 0) {
@@ -37,6 +42,7 @@ const make_internal = ({ meta: { url, token } }: TaskContext) => {
               accept: "application/json",
               "content-type": "application/json",
               "authorization": `Bearer ${token}`,
+              ...additionalHeaders,
             },
             body: JSON.stringify({
               query: query[0],

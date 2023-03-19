@@ -113,7 +113,7 @@ export class TypeGateRuntime extends Runtime {
     }
 
     const { typegraphName, messages } = await this.register.set(json);
-    ensure(name === typegraphName);
+    ensure(name === typegraphName, "unexpected");
 
     return { name, messages };
   };

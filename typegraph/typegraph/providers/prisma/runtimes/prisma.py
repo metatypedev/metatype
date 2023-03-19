@@ -592,3 +592,10 @@ class PrismaDiffMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("diff")
     effect: Effect = always(effects.none())
+
+
+@frozen
+class PrismaResetMat(Materializer):
+    runtime: Runtime = PrismaMigrationRuntime()
+    materializer_name: str = always("reset")
+    effect: Effect = always(effects.delete())

@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import "./load_test_env.ts";
+import { Server } from "std/http/server.ts";
 import {
   assert,
   assertEquals,
@@ -13,7 +14,7 @@ import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { dirname, fromFileUrl, join, resolve } from "std/path/mod.ts";
-import { Register } from "../src/register.ts";
+import { Register, RegistrationResult } from "../src/register.ts";
 import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
 import { ConnInfo } from "std/http/server.ts";
@@ -27,6 +28,7 @@ import { init_native } from "native";
 import { PrismaRuntimeDS } from "../src/runtimes/prisma.ts";
 
 const thisDir = dirname(fromFileUrl(import.meta.url));
+export const testDir = thisDir;
 const metaCli = resolve(thisDir, "../../target/debug/meta");
 
 init_native();
@@ -69,8 +71,8 @@ export class SingleRegister extends Register {
     super();
   }
 
-  set(_payload: string): Promise<string> {
-    return Promise.resolve(this.name);
+  set(_payload: string): Promise<RegistrationResult> {
+    return Promise.resolve({ typegraphName: this.name, messages: [] });
   }
 
   remove(_name: string): Promise<void> {
@@ -97,15 +99,19 @@ export class MemoryRegister extends Register {
     super();
   }
 
-  async set(payload: string): Promise<string> {
+  async set(payload: string): Promise<RegistrationResult> {
     const engine = await initTypegraph(
       payload,
       false,
+      null,
       SystemTypegraph.getCustomRuntimes(this),
       this.introspection ? undefined : null, // no need to have introspection for tests
     );
     this.map.set(engine.name, engine);
-    return engine.name;
+    return {
+      typegraphName: engine.name,
+      messages: [],
+    };
   }
   remove(name: string): Promise<void> {
     this.map.delete(name);
@@ -145,11 +151,74 @@ type AssertSnapshotParams<T> = typeof assertSnapshot extends (
 ) => Promise<void> ? R
   : never;
 
-export class MetaTest {
-  constructor(public t: Deno.TestContext, public register: Register) {}
+interface ParseOptions {
+  deploy?: boolean;
+  typegraph?: string;
+  // ports on which this typegraph will be exposed
+  ports?: number[];
+}
 
-  getTypegraph(name: string): Engine | undefined {
-    return this.register.get(name);
+function exposeOnPort(engine: Engine, port: number): () => void {
+  async function execute(
+    engine: Engine,
+    request: Request,
+  ): Promise<Response> {
+    const register = new SingleRegister(engine.name, engine);
+    const limiter = new NoLimiter();
+    const server = typegate(register, limiter);
+    return await server(request, {
+      remoteAddr: { hostname: "localhost" },
+    } as ConnInfo);
+  }
+
+  const server = new Server({
+    port,
+    hostname: "localhost",
+    handler: (req: Request) => execute(engine, req),
+  });
+  const listener = server.listenAndServe();
+  return async () => {
+    server.close();
+    await listener;
+  };
+}
+
+export class MetaTest {
+  private cleanups: (() => void)[] = [];
+
+  constructor(
+    public t: Deno.TestContext,
+    public register: Register,
+    port: number | null,
+  ) {
+    if (port != null) {
+      const handler = async (req: Request) => {
+        const server = typegate(register, new NoLimiter());
+        return await server(req, {
+          remoteAddr: { hostname: "localhost" },
+        } as ConnInfo);
+      };
+
+      const server = new Server({
+        port,
+        hostname: "localhost",
+        handler,
+      });
+
+      const listener = server.listenAndServe();
+      this.cleanups.push(async () => {
+        server.close();
+        await listener;
+      });
+    }
+  }
+
+  getTypegraph(name: string, ports: number[] = []): Engine | undefined {
+    const engine = this.register.get(name);
+    if (engine != null) {
+      this.cleanups.push(...ports.map((port) => exposeOnPort(engine, port)));
+    }
+    return engine;
   }
 
   async pythonCode(code: string): Promise<Engine> {
@@ -162,17 +231,38 @@ export class MetaTest {
     }
   }
 
-  async pythonFile(path: string): Promise<Engine> {
-    return await this.parseTypegraph(path);
+  async pythonFile(path: string, opts: ParseOptions = {}): Promise<Engine> {
+    return await this.parseTypegraph(path, opts);
   }
 
-  async parseTypegraph(path: string): Promise<Engine> {
-    const stdout = await shell([metaCli, "serialize", "-f", path, "-1"]);
+  async parseTypegraph(path: string, opts: ParseOptions = {}): Promise<Engine> {
+    const { deploy = false, typegraph = null } = opts;
+    const cmd = [metaCli, "serialize", "-f", path];
+
+    if (typegraph == null) {
+      cmd.push("-1");
+    } else {
+      cmd.push("--typegraph", typegraph);
+    }
+
+    if (deploy) {
+      cmd.push("--deploy");
+    }
+
+    const stdout = await shell(cmd);
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }
-    const engineName = await this.register.set(stdout);
-    return this.register.get(engineName)!;
+    const { typegraphName, messages } = await this.register.set(stdout);
+    for (const m of messages) {
+      console.info(m);
+    }
+    const engine = this.register.get(typegraphName)!;
+    this.cleanups.push(
+      ...(opts.ports ?? []).map((port) => exposeOnPort(engine, port)),
+    );
+
+    return engine;
   }
 
   async unregister(engine: Engine) {
@@ -190,7 +280,13 @@ export class MetaTest {
   }
 
   async terminate() {
+    await Promise.all(this.cleanups.map((c) => c()));
     await Promise.all(this.register.list().map((e) => e.terminate()));
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(undefined);
+      }, 1000);
+    });
   }
 
   async should(
@@ -212,6 +308,8 @@ export class MetaTest {
 interface TestConfig {
   systemTypegraphs?: boolean;
   introspection?: boolean;
+  // port on which the typegate instance will be exposed on expose the typegate instance
+  port?: number;
 }
 
 interface Test {
@@ -237,7 +335,7 @@ export const test = ((name, fn, opts = {}): void => {
       if (systemTypegraphs) {
         await SystemTypegraph.loadAll(reg);
       }
-      const mt = new MetaTest(t, reg);
+      const mt = new MetaTest(t, reg, opts.port ?? null);
       try {
         await fn(mt);
       } catch (error) {
@@ -382,7 +480,9 @@ export class Q {
   }
 
   expectBody(expect: (body: any) => Promise<void> | void) {
+    console.log(">> EXPECT-BODY")
     return this.expect(async (res) => {
+      console.log(":: EXPECT")
       try {
         const json = await res.json();
         await expect(json);
@@ -470,7 +570,7 @@ export class Q {
       },
     });
     const response = await execute(engine, request);
-
+    
     for (const expect of expects) {
       expect(response);
     }
