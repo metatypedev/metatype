@@ -1189,6 +1189,65 @@
           "minimum": 0.0
         }
       }
+    },
+    "FunctionMatData": {
+      "title": "FunctionMatData",
+      "type": "object",
+      "required": [
+        "script"
+      ],
+      "properties": {
+        "script": {
+          "type": "string"
+        }
+      }
+    },
+    "ModuleMatData": {
+      "title": "ModuleMatData",
+      "type": "object",
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        }
+      }
+    },
+    "PrismaRuntimeData": {
+      "title": "PrismaRuntimeData",
+      "type": "object",
+      "required": [
+        "connection_string_secret",
+        "datamodel",
+        "models",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "datamodel": {
+          "type": "string"
+        },
+        "connection_string_secret": {
+          "type": "string"
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          }
+        },
+        "migrations": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     }
   }
 }
