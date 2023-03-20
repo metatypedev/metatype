@@ -291,3 +291,14 @@ pub struct FunctionMatData {
 pub struct ModuleMatData {
     pub code: String,
 }
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PrismaRuntimeData {
+    pub name: String,
+    pub datamodel: String,
+    pub connection_string_secret: String,
+    pub models: Vec<u32>,
+    pub migrations: Option<String>,
+}

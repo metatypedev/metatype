@@ -73,13 +73,11 @@ export class TypeGraph {
     runtime: -1,
   };
 
-  tgRaw: TypeGraphDS;
   tg: TypeGraphDS;
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
 
   private constructor(
-    typegraphRaw: TypeGraphDS,
     typegraph: TypeGraphDS,
     public runtimeReferences: Runtime[],
     private secrets: Record<string, string>,
@@ -87,7 +85,6 @@ export class TypeGraph {
     public auths: Map<string, Auth>,
     public introspection: TypeGraph | null,
   ) {
-    this.tgRaw = typegraphRaw;
     this.tg = typegraph;
     this.root = this.type(0);
     // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
@@ -103,7 +100,6 @@ export class TypeGraph {
   }
 
   static async init(
-    typegraphRaw: TypeGraphDS,
     typegraph: TypeGraphDS,
     staticReference: RuntimeResolver,
     introspection: TypeGraph | null,
@@ -188,7 +184,6 @@ export class TypeGraph {
     );
 
     const tg = new TypeGraph(
-      typegraphRaw,
       typegraph,
       runtimeReferences,
       secrets,
@@ -231,7 +226,7 @@ export class TypeGraph {
   ): TypeNode {
     ensure(
       typeof idx === "number" && idx < this.tg.types.length,
-      `cannot find type with "${idx}" index`,
+      `cannot find type with index '${idx}'`,
     );
     const ret = this.tg.types[idx];
     if (asType != undefined) {

@@ -7,6 +7,7 @@ import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphDS } from "../typegraph.ts";
 import { typegraph_validate } from "native";
+import { ensure } from "../utils.ts";
 
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
@@ -111,8 +112,10 @@ export class TypeGateRuntime extends Runtime {
       throw new Error(`Typegraph name ${name} cannot be used`);
     }
 
-    await this.register.set(json);
-    return { name };
+    const { typegraphName, messages } = await this.register.set(json);
+    ensure(name === typegraphName, "unexpected");
+
+    return { name, messages };
   };
 
   removeTypegraph: Resolver = ({ name }) => {

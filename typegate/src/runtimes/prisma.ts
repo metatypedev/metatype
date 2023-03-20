@@ -10,8 +10,13 @@ import { ComputeStage } from "../engine.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "../planner/args.ts";
 import { buildRawQuery } from "./utils/graphql_inline_vars.ts";
-import { Materializer } from "../types/typegraph.ts";
+import {
+  Materializer,
+  PrismaRuntimeData,
+  TGRuntime,
+} from "../types/typegraph.ts";
 import { getLogger } from "../log.ts";
+import { registerHook } from "../hooks.ts";
 
 const logger = getLogger(import.meta);
 
@@ -36,6 +41,57 @@ interface PrismaOperationMat extends Materializer {
 function isPrismaOperationMat(mat: Materializer): mat is PrismaOperationMat {
   return mat.name === "prisma_operation";
 }
+
+export interface PrismaRuntimeDS extends Omit<TGRuntime, "data"> {
+  data: PrismaRuntimeData;
+}
+
+registerHook("onPush", async (typegraph, logger) => {
+  const runtimes = typegraph.runtimes.filter((rt) =>
+    rt.name === "prisma"
+  ) as unknown[] as PrismaRuntimeDS[];
+
+  const tgName = typegraph.types[0].title;
+
+  for (const rt of runtimes) {
+    const { connection_string_secret, datamodel, migrations } = rt.data;
+    if (migrations == null) {
+      continue;
+    }
+
+    const datasource = makeDatasource(
+      envOrFail(tgName, connection_string_secret),
+    );
+
+    const { migration_count, applied_migrations } = nativeResult(
+      await native.prisma_deploy({
+        datasource,
+        datamodel,
+        migrations: migrations!,
+      }),
+    );
+
+    if (migration_count === 0) {
+      logger.info(`[prisma runtime: '${rt.data.name}'] No migration found.`);
+    } else {
+      logger.info(
+        `[prisma runtime: '${rt.data.name}'] ${migration_count} migrations found.`,
+      );
+    }
+    if (applied_migrations.length === 0) {
+      logger.info(`[prisma runtime: '${rt.data.name}'] No migration applied.`);
+    } else {
+      logger.info(
+        `[prisma runtime: '${rt.data.name}'] ${applied_migrations.length} migrations applied:`,
+      );
+      for (const migrationName of applied_migrations) {
+        logger.info(`  - ${migrationName}`);
+      }
+    }
+  }
+
+  return typegraph;
+});
 
 export class PrismaRuntime extends GraphQLRuntime {
   private constructor(private engine_name: string, private datamodel: string) {

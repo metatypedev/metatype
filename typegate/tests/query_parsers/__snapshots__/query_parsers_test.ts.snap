@@ -250,7 +250,9 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
-    config: {},
+    config: {
+      __namespace: true,
+    },
     policies: [
     ],
     properties: {

@@ -11,7 +11,7 @@
         "typegraphs": 1,
         "typegraph": 7,
         "addTypegraph": 15,
-        "removeTypegraph": 19
+        "removeTypegraph": 24
       },
       "required": []
     },
@@ -75,7 +75,7 @@
     },
     {
       "type": "function",
-      "title": "function_15",
+      "title": "function_14",
       "runtime": 1,
       "policies": [
         0
@@ -107,7 +107,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_14",
+      "title": "optional_13",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -116,7 +116,7 @@
     },
     {
       "type": "object",
-      "title": "object_13",
+      "title": "typegraph",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -157,7 +157,7 @@
     },
     {
       "type": "function",
-      "title": "function_19",
+      "title": "function_22",
       "runtime": 1,
       "policies": [
         0
@@ -171,7 +171,7 @@
     },
     {
       "type": "object",
-      "title": "object_17",
+      "title": "object_16",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -182,55 +182,107 @@
     },
     {
       "type": "string",
-      "title": "string_16",
+      "title": "string_15",
       "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "optional",
-      "title": "optional_18",
+      "title": "optional_21",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "item": 4,
+      "item": 19,
       "default_value": null
     },
     {
+      "type": "object",
+      "title": "typegraph",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "properties": {
+        "name": 5,
+        "url": 6,
+        "messages": 20
+      },
+      "required": []
+    },
+    {
+      "type": "array",
+      "title": "array_20",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "items": 21
+    },
+    {
+      "type": "object",
+      "title": "object_19",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "properties": {
+        "type": 22,
+        "text": 23
+      },
+      "required": []
+    },
+    {
+      "type": "string",
+      "title": "string_17",
+      "runtime": 1,
+      "policies": [],
+      "enum": [
+        "info",
+        "warning",
+        "error"
+      ],
+      "config": {}
+    },
+    {
+      "type": "string",
+      "title": "string_18",
+      "runtime": 1,
+      "policies": [],
+      "config": {}
+    },
+    {
       "type": "function",
-      "title": "function_23",
+      "title": "function_26",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "input": 20,
-      "output": 22,
+      "input": 25,
+      "output": 27,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_21",
+      "title": "object_24",
       "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
-        "name": 21
+        "name": 26
       },
       "required": []
     },
     {
       "type": "string",
-      "title": "string_20",
+      "title": "string_23",
       "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "integer",
-      "title": "integer_22",
+      "title": "integer_25",
       "runtime": 1,
       "policies": [],
       "config": {}

@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
 use std::fs;
@@ -22,7 +22,8 @@ pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<String>) -> Result<()>
 pub fn archive<P: AsRef<Path>>(folder: P) -> Result<String> {
     let encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar = tar::Builder::new(encoder);
-    tar.append_dir_all(".", &folder)?;
+    tar.append_dir_all(".", &folder)
+        .context("Adding directory to tarball")?;
     let bytes = tar.into_inner()?.finish()?;
     Ok(STANDARD.encode(bytes))
 }

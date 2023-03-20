@@ -7,7 +7,7 @@ sidebar_position: 2
 
 ## apply
 
-**Type:** [object_23!](/docs/reference/typegate/prisma-migration/objects#object_23)
+**Type:** [object_22!](/docs/reference/typegate/prisma-migration/objects#object_22)
 
 apply field
 
@@ -60,7 +60,7 @@ typegraph<br />
 
 ## create
 
-**Type:** [object_33!](/docs/reference/typegate/prisma-migration/objects#object_33)
+**Type:** [object_31!](/docs/reference/typegate/prisma-migration/objects#object_31)
 
 create field
 
@@ -122,7 +122,7 @@ typegraph<br />
 
 ## deploy
 
-**Type:** [object_40!](/docs/reference/typegate/prisma-migration/objects#object_40)
+**Type:** [object_37!](/docs/reference/typegate/prisma-migration/objects#object_37)
 
 deploy field
 

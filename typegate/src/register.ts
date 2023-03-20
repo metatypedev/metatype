@@ -5,8 +5,18 @@ import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 
+export interface MessageEntry {
+  type: "info" | "warning" | "error";
+  text: string;
+}
+
+export interface RegistrationResult {
+  typegraphName: string;
+  messages: Array<MessageEntry>;
+}
+
 export abstract class Register {
-  abstract set(payload: string): Promise<string>;
+  abstract set(payload: string): Promise<RegistrationResult>;
 
   abstract remove(name: string): Promise<void>;
 
@@ -16,7 +26,6 @@ export abstract class Register {
 
   abstract has(name: string): boolean;
 }
-
 export class ReplicatedRegister extends Register {
   static async init(
     redisConfig: RedisConnectOptions,
@@ -24,8 +33,8 @@ export class ReplicatedRegister extends Register {
     const replicatedMap = await RedisReplicatedMap.init<Engine>(
       "typegraph",
       redisConfig,
-      (engine) => JSON.stringify(engine.tg.tgRaw),
-      (payload) => initTypegraph(payload),
+      (engine) => JSON.stringify(engine.tg.tg),
+      (payload) => initTypegraph(payload, true, null),
     );
 
     return new ReplicatedRegister(replicatedMap);
@@ -35,9 +44,12 @@ export class ReplicatedRegister extends Register {
     super();
   }
 
-  async set(payload: string): Promise<string> {
+  async set(payload: string): Promise<RegistrationResult> {
+    const messageOutput = [] as MessageEntry[];
     const engine = await initTypegraph(
       payload,
+      false,
+      messageOutput,
       SystemTypegraph.getCustomRuntimes(this),
     );
     if (SystemTypegraph.check(engine.name)) {
@@ -47,7 +59,10 @@ export class ReplicatedRegister extends Register {
       await this.replicatedMap.set(engine.name, engine);
     }
 
-    return engine.name;
+    return {
+      typegraphName: engine.name,
+      messages: messageOutput,
+    };
   }
 
   async remove(name: string): Promise<void> {

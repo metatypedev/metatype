@@ -60,13 +60,6 @@ export interface DenoRuntimeData {
   worker: string;
 }
 
-export interface PrismaRuntimeData {
-  name: string;
-  connection_string_secret: string;
-  managed_types: Array<number>;
-  datamodel: string;
-}
-
 export interface TypeRuntimeBase {
   name: string;
   data: unknown;
@@ -76,13 +69,6 @@ export interface DenoRuntimeDS extends TypeRuntimeBase {
   name: "deno";
   data: DenoRuntimeData;
 }
-
-export interface PrismaRuntimeDS extends TypeRuntimeBase {
-  name: "prisma";
-  data: PrismaRuntimeData;
-}
-
-export type TypeRuntime = DenoRuntimeDS | PrismaRuntimeDS;
 
 //
 // Type utils
