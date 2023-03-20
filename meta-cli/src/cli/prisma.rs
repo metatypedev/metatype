@@ -45,8 +45,6 @@ pub enum Commands {
     Diff(Diff),
     /// Reformat a prisma schema
     Format(Format),
-    /// Reset the database
-    Reset(Reset),
 }
 
 #[derive(Parser, Debug, Clone)]
@@ -232,26 +230,12 @@ pub struct Diff {
 #[async_trait]
 impl Action for Diff {
     async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
-        // TODO runtime selection
         let config = Config::load_or_find(config_path, dir)?;
         let node_config = config.node("dev").with_args(&self.node);
         let node = node_config.try_into()?;
         PrismaMigrate::new(&self.prisma, &config, node)?
             .diff(self.script)
             .await?;
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl Action for Diff {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
-        // TODO runtime selection
-        let config = Config::load_or_find(config_path, dir)?;
-        let node_config = config.node("dev");
-        let gate = node_config.url(self.gate.clone());
-        let node = Node::new(gate, Some(BasicAuth::prompt()?))?;
-        PrismaMigrate::diff(self.script, &node, &self.typegraph, self.runtime.as_deref()).await?;
         Ok(())
     }
 }
@@ -300,32 +284,6 @@ impl Action for Format {
         }
 
         Ok(())
-    }
-}
-
-#[derive(Parser, Debug)]
-pub struct Reset {
-    /// Name of the typegraph
-    typegraph: String,
-
-    /// Address of the typegate
-    #[clap(short, long, value_parser = UrlValueParser::new().http())]
-    gate: Option<Url>,
-
-    /// Name of the prisma runtime.
-    /// Default: the unique prisma runtime of the typegraph.
-    #[clap(long)]
-    runtime: Option<String>,
-}
-
-#[async_trait]
-impl Action for Reset {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
-        let config = Config::load_or_find(config_path, dir)?;
-        let node_config = config.node("dev");
-        let gate = node_config.url(self.gate.clone());
-        // TODO options: --username --password
-        let node = Node::new(gate, Some(BasicAuth::prompt()?))?;
     }
 }
 
@@ -583,6 +541,7 @@ impl PrismaMigrate {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn reset(node: &Node, tg: &String, rt: Option<&str>) -> Result<()> {
         let res = node
             .post(MIGRATION_ENDPOINT)?

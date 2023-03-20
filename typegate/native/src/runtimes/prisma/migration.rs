@@ -201,7 +201,7 @@ pub async fn reset(datasource: String) -> Result<bool> {
     let api = migration_core::migration_api(Some(datasource), None)?;
 
     api.reset().await?;
-    return Ok(true);
+    Ok(true)
 }
 
 struct MigrationsFolder {
