@@ -12,7 +12,7 @@
 import { basename, expandGlobSync, projectDir, runOrExit } from "./mod.ts";
 
 const dcs = [
-  ...expandGlobSync("dev/envs/docker-compose.*.yml", {
+  ...expandGlobSync("dev/envs/compose.*.yml", {
     root: projectDir,
     includeDirs: false,
   }),

@@ -33,3 +33,5 @@ OAuth2
 sandboxed
 Infisical
 Zsh
+WASI
+monorepos?
