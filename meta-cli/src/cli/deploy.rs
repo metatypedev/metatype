@@ -3,6 +3,7 @@
 use super::{Action, CommonArgs};
 use crate::cli::dev::{push_typegraph, MessageType};
 use crate::config::Config;
+use crate::typegraph::postprocess;
 use crate::typegraph::{LoaderResult, TypegraphLoader};
 use crate::utils::{self, ensure_venv, Node};
 use anyhow::{bail, Context, Result};
@@ -31,7 +32,12 @@ impl Action for Deploy {
     async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
         let config = Config::load_or_find(config_path, &dir)?;
-        let loader = TypegraphLoader::with_config(&config).deploy(!self.no_migrations);
+        let loader = TypegraphLoader::with_config(&config);
+        let loader = if self.no_migrations {
+            loader
+        } else {
+            loader.with_postprocessor(postprocess::prisma_rt::embed_prisma_migrations)
+        };
 
         let loaded = if let Some(file) = self.file.clone() {
             let mut ret = HashMap::default();

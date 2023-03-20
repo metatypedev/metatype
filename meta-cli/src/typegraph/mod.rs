@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-mod postprocess;
+pub mod postprocess;
 pub mod utils;
 
 use anyhow::{bail, Context, Result};
@@ -17,7 +17,9 @@ use walkdir::{DirEntry, WalkDir};
 
 use crate::config::Config;
 use crate::utils::ensure_venv;
-use postprocess::postprocess;
+use postprocess::PostProcess;
+
+use self::postprocess::PostProcessor;
 
 pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
 
@@ -25,8 +27,8 @@ pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
 pub struct TypegraphLoader<'a> {
     skip_deno_modules: bool,
     ignore_unknown_file_types: bool,
-    deploy: bool, // target is deployment
     config: &'a Config,
+    postprocessors: Vec<PostProcessor>,
 }
 
 impl<'a> TypegraphLoader<'a> {
@@ -34,7 +36,7 @@ impl<'a> TypegraphLoader<'a> {
         Self {
             skip_deno_modules: false,
             ignore_unknown_file_types: false,
-            deploy: false,
+            postprocessors: vec![postprocess::deno_rt::reformat_scripts],
             config,
         }
     }
@@ -52,17 +54,17 @@ impl<'a> TypegraphLoader<'a> {
         self
     }
 
-    pub fn deploy(mut self, deploy: bool) -> Self {
-        self.deploy = deploy;
+    pub fn with_postprocessor(mut self, postprocessor: PostProcessor) -> Self {
+        self.postprocessors.push(postprocessor);
         self
     }
 
-    pub fn load_file<P: AsRef<Path>>(self, path: P) -> Result<Option<Vec<Typegraph>>> {
+    pub fn load_file<P: AsRef<Path>>(mut self, path: P) -> Result<Option<Vec<Typegraph>>> {
         let path = path.as_ref().canonicalize()?;
         let ext = path.extension().and_then(|ext| ext.to_str());
 
         let config = self.config.clone();
-        let deploy = self.deploy;
+        let postprocessors = std::mem::take(&mut self.postprocessors);
 
         let output = match ext {
             Some(ext) if ext == "py" => self
@@ -84,13 +86,14 @@ impl<'a> TypegraphLoader<'a> {
             // an importer have written in the file
             Ok(None)
         } else {
-            let tgs: Vec<Typegraph> =
+            let mut tgs: Vec<Typegraph> =
                 serde_json::from_str(&output).context("Parsing serialized typegraph")?;
-            Ok(Some(
-                tgs.into_iter()
-                    .map(move |tg| postprocess(tg, &config, deploy))
-                    .collect::<Result<Vec<_>>>()?,
-            ))
+
+            for tg in tgs.iter_mut() {
+                tg.apply(&postprocessors, &config)?;
+            }
+
+            Ok(Some(tgs))
         }
     }
 

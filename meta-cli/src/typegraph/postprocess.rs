@@ -7,31 +7,25 @@ use anyhow::Result;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
 use typescript::parser::{transform_module, transform_script};
 
-pub type PostProcessor = fn(&mut Typegraph, &Config) -> Result<()>;
+pub type PostProcessor<T = Typegraph> = fn(&mut T, &Config) -> Result<()>;
 
-// postprocessors
-static DEFAULT: &[PostProcessor] = &[deno_rt::postprocess];
-static DEPLOY: &[PostProcessor] = &[prisma_rt::embed_prisma_migrations];
-
-/// Perform some postprocessing on the typegraph we got from Python
-pub fn postprocess(mut typegraph: Typegraph, config: &Config, deploy: bool) -> Result<Typegraph> {
-    for p in DEFAULT {
-        p(&mut typegraph, config)?;
-    }
-    if deploy {
-        for p in DEPLOY {
-            p(&mut typegraph, config)?;
+pub trait PostProcess {
+    fn apply(&mut self, postprocessors: &[PostProcessor<Self>], config: &Config) -> Result<()> {
+        for pp in postprocessors {
+            pp(self, config)?;
         }
+        Ok(())
     }
-    Ok(typegraph)
 }
 
-mod deno_rt {
+impl PostProcess for Typegraph {}
+
+pub mod deno_rt {
     use crate::typegraph::utils::{get_materializers, get_runtimes};
 
     use super::*;
 
-    fn insert_and_reformat_scripts(mat: &mut Materializer) -> Result<()> {
+    fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
         match mat.name.as_str() {
             "function" => {
                 let mut mat_data: FunctionMatData = object_from_map(std::mem::take(&mut mat.data))?;
@@ -52,18 +46,17 @@ mod deno_rt {
         Ok(())
     }
 
-    pub fn postprocess(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
+    pub fn reformat_scripts(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
         for rt_idx in get_runtimes(typegraph, "deno").into_iter() {
             for mat_idx in get_materializers(typegraph, rt_idx as u32) {
-                // insert_and_reformat_scripts(typegraph.materializers.get_mut(mat_idx).unwrap());
-                insert_and_reformat_scripts(&mut typegraph.materializers[mat_idx])?;
+                reformat_materializer_script(&mut typegraph.materializers[mat_idx])?;
             }
         }
         Ok(())
     }
 }
 
-mod prisma_rt {
+pub mod prisma_rt {
     use super::*;
     use anyhow::Context;
     use common::{archive, typegraph::PrismaRuntimeData};

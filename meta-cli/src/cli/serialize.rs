@@ -2,7 +2,7 @@
 
 use super::Action;
 use crate::config::Config;
-use crate::typegraph::TypegraphLoader;
+use crate::typegraph::{postprocess, TypegraphLoader};
 use crate::utils::ensure_venv;
 use anyhow::bail;
 use anyhow::{Context, Result};
@@ -53,7 +53,12 @@ impl Action for Serialize {
             Config::load_or_find(config_path, &dir)?
         };
 
-        let loader = TypegraphLoader::with_config(&config).deploy(self.deploy);
+        let loader = TypegraphLoader::with_config(&config);
+        let loader = if self.deploy {
+            loader.with_postprocessor(postprocess::prisma_rt::embed_prisma_migrations)
+        } else {
+            loader
+        };
 
         let files: Vec<_> = self.files.iter().map(|f| Path::new(f).to_owned()).collect();
         let loaded = if !self.files.is_empty() {
