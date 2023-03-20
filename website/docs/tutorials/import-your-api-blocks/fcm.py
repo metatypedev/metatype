@@ -43,7 +43,7 @@ with TypeGraph(
 
     remote = HTTPRuntime("https://fcm.googleapis.com/v1")
     g.expose(
-        create_message=db.insert_one(message),
+        create_message=db.create(message),
         list_messages=db.find_many(message),
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         user=gql.query(t.struct({"id": t.integer()}), user),

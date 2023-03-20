@@ -560,7 +560,7 @@ class PrismaRuntime(Runtime):
         return super().edges + list(self.spec.types.values())
 
     def insert_one(self, tpe):
-        return self.gen_create(tpe)
+        return self.create(tpe)
 
 
 @frozen
