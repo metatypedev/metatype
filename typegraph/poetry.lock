@@ -1061,14 +1061,14 @@ files = [
 
 [[package]]
 name = "strenum"
-version = "0.4.9"
+version = "0.4.10"
 description = "An Enum that inherits from str."
 category = "main"
 optional = false
 python-versions = "*"
 files = [
-    {file = "StrEnum-0.4.9-py3-none-any.whl", hash = "sha256:c3df653030837b8077b2eb929738283481f01b07c7ef73ab4db368449830cc46"},
-    {file = "StrEnum-0.4.9.tar.gz", hash = "sha256:1b15ccff9eb0e22e77b8f874366ea752754280adc9144e6e388705d14cc350e7"},
+    {file = "StrEnum-0.4.10-py3-none-any.whl", hash = "sha256:aebf04bba8e5af435937c452d69a86798b6f8d5ca5f20ba18561dbfad571ccdd"},
+    {file = "StrEnum-0.4.10.tar.gz", hash = "sha256:898cc0ebb5054ee07400341ac1d75fdfee489d76d6df3fbc1c2eaf95971e3916"},
 ]
 
 [package.extras]
