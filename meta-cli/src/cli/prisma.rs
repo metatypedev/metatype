@@ -68,8 +68,8 @@ pub struct PrismaArgs {
 impl PrismaArgs {
     pub fn fill(&self, config: &Config) -> Result<Option<PrismaArgsFull>> {
         let prisma_config = &config.typegraphs.materializers.prisma;
-        let migpath = prisma_config.base_migrations_path(self, config)?;
-        let runtime_name = utils::find_runtime_name(&migpath)?;
+        let migpath = prisma_config.base_migrations_path(self, config);
+        let runtime_name = utils::find_runtime_name(&migpath).context("Finding runtime name")?;
 
         runtime_name
             .map(|rt_name| -> Result<_> {
@@ -340,8 +340,9 @@ pub struct PrismaMigrate {
 impl PrismaMigrate {
     fn new(args: &PrismaArgs, config: &Config, node: Node) -> Result<Self> {
         let prisma_config = &config.typegraphs.materializers.prisma;
-        let base_migpath = prisma_config.base_migrations_path(args, config)?;
-        let runtime_name = utils::find_runtime_name(&base_migpath)?;
+        let base_migpath = prisma_config.base_migrations_path(args, config);
+        let runtime_name =
+            utils::find_runtime_name(&base_migpath).context("Finding runtime name")?;
         let migrations = runtime_name
             .as_ref()
             .map(|rt_name| archive::archive(base_migpath.join(rt_name)))
@@ -621,6 +622,9 @@ mod utils {
     };
 
     pub fn find_runtime_name(base_migrations_dir: impl AsRef<Path>) -> Result<Option<String>> {
+        if !base_migrations_dir.as_ref().try_exists()? {
+            return Ok(None);
+        }
         let subdirs = fs::read_dir(base_migrations_dir.as_ref())?
             .filter_map(|entry| -> Option<PathBuf> { entry.ok().map(|e| e.path()) })
             .filter(|p| p.is_dir())
@@ -628,7 +632,7 @@ mod utils {
 
         match subdirs.len() {
             0 => Ok(None),
-            1 => Ok(subdirs.into_iter().next().map(|p| p.to_str().unwrap().to_owned())),
+            1 => Ok(subdirs.into_iter().next().map(|p| p.file_name().unwrap().to_str().unwrap().to_owned())),
             _ => bail!("Runtime name required: more than one runtimes are defined in the migration directory"),
         }
     }

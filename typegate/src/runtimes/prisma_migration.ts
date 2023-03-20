@@ -104,15 +104,14 @@ export class PrismaMigrate {
     };
   };
 
-  reset: Resolver<boolean> = async({}) => {
-    const { datamodel, name } = this.runtime.data;
-    const res = nativeResult(
+  reset: Resolver<boolean> = async () => {
+    nativeResult(
       await native.prisma_reset({
         datasource: this.datasource,
       }),
     );
     return true;
-  }
+  };
 }
 
 interface CommonArgs {

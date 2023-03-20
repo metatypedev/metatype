@@ -115,12 +115,8 @@ pub struct PrismaConfig {
 }
 
 impl PrismaConfig {
-    pub fn base_migrations_path(
-        &self,
-        args: &PrismaArgs,
-        parent_config: &Config,
-    ) -> Result<PathBuf> {
-        Ok(parent_config
+    pub fn base_migrations_path(&self, args: &PrismaArgs, parent_config: &Config) -> PathBuf {
+        parent_config
             .base_dir
             .join(
                 args.migrations
@@ -129,7 +125,7 @@ impl PrismaConfig {
                     .as_deref()
                     .unwrap_or_else(|| Path::new("prisma/migrations")),
             )
-            .join(&args.typegraph))
+            .join(&args.typegraph)
     }
 }
 

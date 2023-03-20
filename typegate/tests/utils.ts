@@ -42,17 +42,43 @@ interface ResponseBody {
   errors?: ResponseBodyError[];
 }
 
-export async function meta(...input: string[]): Promise<void> {
-  console.log(await shell([metaCli, ...input]));
+export interface MetaOptions {
+  stdin?: string;
 }
 
-export async function shell(cmd: string[]): Promise<string> {
+export async function meta(...args: string[]): Promise<void>;
+export async function meta(
+  options: MetaOptions,
+  ...args: string[]
+): Promise<void>;
+export async function meta(
+  first: string | MetaOptions,
+  ...input: string[]
+): Promise<void> {
+  if (typeof first === "string") {
+    console.log(await shell([metaCli, first, ...input]));
+  } else {
+    console.log(await shell([metaCli, ...input], first));
+  }
+}
+
+export async function shell(
+  cmd: string[],
+  options: MetaOptions = {},
+): Promise<string> {
   const p = Deno.run({
     cwd: thisDir,
     cmd,
     stdout: "piped",
     stderr: "inherit",
+    stdin: "piped",
   });
+
+  const { stdin = null } = options;
+  if (stdin != null) {
+    await p.stdin.write(new TextEncoder().encode(stdin));
+  }
+  p.stdin.close();
 
   const [status, stdout] = await Promise.all([p.status(), p.output()]);
   p.close();
@@ -480,9 +506,7 @@ export class Q {
   }
 
   expectBody(expect: (body: any) => Promise<void> | void) {
-    console.log(">> EXPECT-BODY")
     return this.expect(async (res) => {
-      console.log(":: EXPECT")
       try {
         const json = await res.json();
         await expect(json);
@@ -570,7 +594,7 @@ export class Q {
       },
     });
     const response = await execute(engine, request);
-    
+
     for (const expect of expects) {
       expect(response);
     }
@@ -600,7 +624,6 @@ export async function recreateMigrations(engine: Engine) {
   const migrationsBaseDir = join(thisDir, "prisma-migrations");
 
   for await (const runtime of runtimes) {
-    console.log(runtime);
     const prisma = new PrismaMigrate(engine, runtime, null);
     const { migrations } = await prisma.create({
       name: "init",

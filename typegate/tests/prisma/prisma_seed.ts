@@ -1,3 +1,5 @@
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
 import { join } from "std/path/mod.ts";
 import { Engine } from "../../src/engine.ts";
 import { PrismaRuntimeDS } from "../../src/runtimes/prisma.ts";
@@ -5,7 +7,11 @@ import { PrismaMigrate } from "../../src/runtimes/prisma_migration.ts";
 import { gql, MetaTest, testDir } from "../utils.ts";
 import * as native from "native";
 
-export async function init(t: MetaTest, tgPath = "prisma/prisma.py", migrate = true): Promise<Engine> {
+export async function init(
+  t: MetaTest,
+  tgPath = "prisma/prisma.py",
+  migrate = true,
+): Promise<Engine> {
   const engine = await t.pythonFile(tgPath);
 
   await t.should("drop schema", async () => {
@@ -21,11 +27,10 @@ export async function init(t: MetaTest, tgPath = "prisma/prisma.py", migrate = t
         dropSchema: 0,
       })
       .on(engine);
-
-    });
+  });
 
   if (migrate) {
-    await t.should("recreate migrations", async() => {
+    await t.should("recreate migrations", async () => {
       const runtimes = engine.tg.tg.runtimes.filter(
         (rt) => rt.name === "prisma",
       ) as unknown[] as PrismaRuntimeDS[];
@@ -46,15 +51,13 @@ export async function init(t: MetaTest, tgPath = "prisma/prisma.py", migrate = t
         }
       }
     });
-  }
-  else {
+  } else {
     await t.should("remove migrations", async () => {
       await Deno.remove(join(testDir, "prisma-migrations", engine.name), {
         recursive: true,
       }).catch(() => {});
     });
   }
-    
 
   return engine;
 }

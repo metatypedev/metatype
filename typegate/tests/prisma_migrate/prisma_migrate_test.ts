@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { gql, removeMigrations, test } from "../utils.ts";
+import { gql, test } from "../utils.ts";
 import {
   assert,
   assertArrayIncludes,
@@ -23,7 +23,7 @@ test("prisma migrations", async (t) => {
   const createdMigrations: string[] = [];
 
   const e = await init(t, tgPath, false);
-  
+
   await t.should("should fail", async () => {
     await gql`
       query {
@@ -57,7 +57,6 @@ test("prisma migrations", async (t) => {
           migrations,
           runtimeName,
         } = body.data.create;
-        console.log({createdMigrations, createdMigrationName})
 
         createdMigrations.push(createdMigrationName);
 
@@ -92,7 +91,7 @@ test("prisma migrations", async (t) => {
         createOneRecord: { id },
       })
       .on(e);
-    
+
     await gql`
       query {
         findManyRecords{
@@ -115,9 +114,7 @@ test("prisma migrations", async (t) => {
   let mig: string;
 
   await t.should("require database reset on drift", async () => {
-    console.log({migrationDir, createdMigrations})
     const path = join(migrationDir, createdMigrations[0]);
-    console.error({path});
     await Deno.rename(path, `${path}_renamed`);
     mig = nativeResult(
       await native.archive({ path: migrationDir }),
@@ -135,7 +132,7 @@ test("prisma migrations", async (t) => {
       })
       .expectErrorContains("database reset required")
       .on(migrations);
-  
+
     await gql`
       mutation PrismaApply($mig: String!) {
         apply(migrations: $mig, typegraph: "prisma", resetDatabase: true) {
@@ -157,7 +154,7 @@ test("prisma migrations", async (t) => {
         );
       })
       .on(migrations);
-     
+
     // database is empty
     await gql`
         query {
@@ -183,7 +180,7 @@ test("prisma migrations", async (t) => {
         dropSchema: 0,
       })
       .on(e);
-  
+
     await gql`
         mutation PrismaApply($mig: String!) {
           apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
@@ -205,7 +202,7 @@ test("prisma migrations", async (t) => {
         );
       })
       .on(migrations);
-  
+
     await gql`
         query {
           findManyRecords{

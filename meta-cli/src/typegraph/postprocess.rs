@@ -88,7 +88,7 @@ mod prisma_rt {
                     migrations: None,
                 },
                 config,
-            )?;
+            );
             let path = base_path.join(rt_name);
             if path.try_exists()? {
                 rt_data.migrations = Some(archive::archive(base_path.join(rt_name))?);
