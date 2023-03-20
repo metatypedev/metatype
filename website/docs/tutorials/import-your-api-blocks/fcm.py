@@ -31,6 +31,7 @@ with TypeGraph(
         {
             "id": t.integer().config("id", "auto"),
             "title": t.string(),
+            # skip:start
             # AssertionError: Type f'function' not supported
             # "user": gql.query(
             #     # input
@@ -38,6 +39,7 @@ with TypeGraph(
             #     # output
             #     user.optional(),
             # ).optional(),
+            # skip:end
         }
     ).named("message")
 
@@ -52,8 +54,10 @@ with TypeGraph(
             t.struct(
                 {
                     "parent": t.string(),
-                }
-            ).compose(google.message_in.props),
+                },
+            ),
+            # skip:next-line
+            # .compose(google.message_in.props),
             google.message_out,
             effect=effects.create(),
         ).named("fcm.projects.messages.send"),
