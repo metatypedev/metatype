@@ -1,7 +1,6 @@
 # skip:start
-from typegraph import TypeGraph, effects, t
+from typegraph import TypeGraph, t
 from typegraph.importers.google_discovery import import_googleapis
-from typegraph.providers.google.runtimes import googleapis
 
 discovery = "https://fcm.googleapis.com/$discovery/rest?version=v1"
 import_googleapis(discovery, False)  # set to True to re-import the API
@@ -210,19 +209,3 @@ with TypeGraph(
     send_message_request_out = t.struct(
         {"message": g("MessageOut"), "validateOnly": t.boolean()}
     ).named("SendMessageRequestOut")
-
-    g.expose(
-        projectsMessagesSend=t.func(
-            t.struct(
-                {
-                    "parent": t.string(),
-                }
-            ),
-            g("MessageOut"),
-            googleapis.RestMat(
-                "POST",
-                "https://fcm.googleapis.com/v1/{+parent}/messages:send",
-                effect=effects.create(),
-            ),
-        ).named("fcm.projects.messages.send"),
-    )
