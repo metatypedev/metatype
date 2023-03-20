@@ -1,11 +1,8 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import ast
-import inspect
 import os
 from typing import Any, Dict, List, Optional, Tuple
 
-from astunparse import unparse
 from attrs import field, frozen
 from frozendict import frozendict
 
@@ -36,23 +33,6 @@ class DenoRuntime(Runtime):
         object.__setattr__(self, "permissions", frozendict(permissions))
 
 
-class LambdaCollector(ast.NodeTransformer):
-    @classmethod
-    def collect(cls, function):
-        source = inspect.getsource(function).lstrip()
-        tree = ast.parse(source)
-        ret = cls()
-        ret.visit(tree)
-        return ret.lambdas
-
-    def __init__(self):
-        super().__init__()
-        self.lambdas = []
-
-    def visit_Lambda(self, node):
-        self.lambdas.append(unparse(node).strip())
-
-
 # Inlined fuction
 @frozen
 class FunMat(Materializer):
@@ -63,12 +43,6 @@ class FunMat(Materializer):
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
     materializer_name: str = field(default="function", init=False)
     effect: Effect = field(kw_only=True, default=effects.none())
-
-    @classmethod
-    def from_lambda(cls, function, runtime=DenoRuntime()):
-        lambdas = LambdaCollector.collect(function)
-        assert len(lambdas) == 1
-        raise NotImplementedError
 
     def __attrs_post_init__(self):
         if self.fn_expr is None:

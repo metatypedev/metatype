@@ -13,6 +13,7 @@
   "lock": "deno.lock",
   "imports": {
     "std/": "https://deno.land/std@0.170.0/",
+    "compress": "https://deno.land/x/compress@v0.4.5/mod.ts",
     "graphql": "https://cdn.skypack.dev/graphql@16.6.0?dts",
     "graphql/ast": "https://cdn.skypack.dev/graphql@16.6.0/language/ast?dts",
     "sentry": "npm:@sentry/node@7.38.0",
