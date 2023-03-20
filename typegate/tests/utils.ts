@@ -191,29 +191,30 @@ interface ParseOptions {
   ports?: number[];
 }
 
-function exposeOnPort(engine: Engine, port: number): () => void {
-  async function execute(
-    engine: Engine,
-    request: Request,
-  ): Promise<Response> {
-    const register = new SingleRegister(engine.name, engine);
-    const limiter = new NoLimiter();
-    const server = typegate(register, limiter);
-    return await server(request, {
+function serve(register: Register, port: number): () => void {
+  const handler = async (req: Request) => {
+    const server = typegate(register, new NoLimiter());
+    return await server(req, {
       remoteAddr: { hostname: "localhost" },
     } as ConnInfo);
-  }
+  };
 
   const server = new Server({
     port,
     hostname: "localhost",
-    handler: (req: Request) => execute(engine, req),
+    handler,
   });
+
   const listener = server.listenAndServe();
   return async () => {
     server.close();
     await listener;
   };
+}
+
+function exposeOnPort(engine: Engine, port: number): () => void {
+  const register = new SingleRegister(engine.name, engine);
+  return serve(register, port);
 }
 
 export class MetaTest {
@@ -225,24 +226,7 @@ export class MetaTest {
     port: number | null,
   ) {
     if (port != null) {
-      const handler = async (req: Request) => {
-        const server = typegate(register, new NoLimiter());
-        return await server(req, {
-          remoteAddr: { hostname: "localhost" },
-        } as ConnInfo);
-      };
-
-      const server = new Server({
-        port,
-        hostname: "localhost",
-        handler,
-      });
-
-      const listener = server.listenAndServe();
-      this.cleanups.push(async () => {
-        server.close();
-        await listener;
-      });
+      this.cleanups.push(serve(register, port));
     }
   }
 
