@@ -66,10 +66,10 @@ mod deno_rt {
 mod prisma_rt {
     use super::*;
     use anyhow::Context;
-    use common::typegraph::PrismaRuntimeData;
+    use common::{archive, typegraph::PrismaRuntimeData};
 
     use crate::{
-        cli::prisma::PrismaMigrate,
+        cli::prisma::PrismaArgs,
         typegraph::utils::{map_from_object, object_from_map},
     };
 
@@ -80,11 +80,19 @@ mod prisma_rt {
         let mut runtimes = std::mem::take(&mut tg.runtimes);
         for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
             let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
-            rt_data.migrations = PrismaMigrate::serialize_migrations(
-                prisma_config.migrations_path(),
-                &tg_name,
-                Some(&rt_data.name),
+            let rt_name = &rt_data.name;
+            let base_path = prisma_config.base_migrations_path(
+                &PrismaArgs {
+                    typegraph: tg_name.clone(),
+                    runtime: Some(rt_data.name.clone()),
+                    migrations: None,
+                },
+                config,
             )?;
+            let path = base_path.join(rt_name);
+            if path.try_exists()? {
+                rt_data.migrations = Some(archive::archive(base_path.join(rt_name))?);
+            }
             rt.data = map_from_object(rt_data)?;
         }
 

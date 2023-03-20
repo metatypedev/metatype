@@ -12,6 +12,8 @@ use std::path::{Path, PathBuf};
 use std::slice;
 use std::str::FromStr;
 
+use crate::cli::prisma::PrismaArgs;
+use crate::cli::CommonArgs;
 use crate::utils::BasicAuth;
 
 lazy_static! {
@@ -39,7 +41,7 @@ impl<T> Lift<T> {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct NodeConfig {
-    url: Url,
+    pub url: Url,
     username: Option<String>,
     password: Option<String>,
 }
@@ -55,36 +57,27 @@ impl Default for NodeConfig {
 }
 
 impl NodeConfig {
-    pub fn url(&self, arg: Option<Url>) -> Url {
-        arg.or_else(|| Some(self.url.clone()))
-            .unwrap_or_else(|| "http://localhost:7890".parse().unwrap())
-    }
-
-    pub async fn username(&self, arg: Option<String>) -> Option<String> {
-        match arg.or_else(|| self.username.clone()) {
-            Some(p) => Some(lade_sdk::hydrate_one(p).await.expect("lade failed")),
-            None => None,
+    pub fn with_args(&self, args: &CommonArgs) -> Self {
+        let mut res = self.clone();
+        if let Some(gate) = &args.gate {
+            res.url = gate.clone();
+            // if gate is overridden, user credentials must be overridden
+            if let Some(username) = &args.username {
+                res.username = Some(username.clone());
+                res.password = args.password.clone();
+            }
         }
+        // if gate is not overridden, user credentions cannot be overridden
+
+        res
     }
 
-    pub async fn password(&self, arg: Option<String>) -> Option<String> {
-        match arg.or_else(|| self.password.clone()) {
-            Some(p) => Some(lade_sdk::hydrate_one(p).await.expect("lade failed")),
-            None => None,
-        }
-    }
-
-    pub async fn basic_auth(
-        &self,
-        username: Option<String>,
-        password: Option<String>,
-    ) -> Result<BasicAuth> {
-        let username = self.username(username).await;
-        let password = self.password(password).await;
-
-        match (username, password) {
-            (Some(username), Some(password)) => Ok(BasicAuth::new(username, password)),
-            (Some(username), None) => BasicAuth::prompt_as_user(username),
+    pub fn basic_auth(&self) -> Result<BasicAuth> {
+        match (&self.username, &self.password) {
+            (Some(username), Some(password)) => {
+                Ok(BasicAuth::new(username.clone(), password.clone()))
+            }
+            (Some(username), None) => BasicAuth::prompt_as_user(username.clone()),
             (None, _) => BasicAuth::prompt(),
         }
     }
@@ -122,11 +115,21 @@ pub struct PrismaConfig {
 }
 
 impl PrismaConfig {
-    pub fn migrations_path(&self) -> PathBuf {
-        self.migrations_path
-            .as_deref()
-            .unwrap_or_else(|| Path::new("prisma/migrations"))
-            .to_owned()
+    pub fn base_migrations_path(
+        &self,
+        args: &PrismaArgs,
+        parent_config: &Config,
+    ) -> Result<PathBuf> {
+        Ok(parent_config
+            .base_dir
+            .join(
+                args.migrations
+                    .clone()
+                    .or(self.migrations_path.clone())
+                    .as_deref()
+                    .unwrap_or_else(|| Path::new("prisma/migrations")),
+            )
+            .join(&args.typegraph))
     }
 }
 
@@ -253,7 +256,7 @@ mod tests {
     #[test]
     fn find_config_file() -> Result<()> {
         let project_root = get_project_root()?;
-        let config = Config::load_or_find(None, &project_root.join("meta-cli/tests/graphs/nested"));
+        let config = Config::load_or_find(None, project_root.join("meta-cli/tests/graphs/nested"));
         assert!(config.is_ok(), "{:?}", config);
         let config = config.unwrap();
         assert_eq!(config.base_dir, project_root.join("meta-cli/tests"));

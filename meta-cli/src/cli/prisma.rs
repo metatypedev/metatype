@@ -1,32 +1,28 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use super::Action;
+use super::{Action, CommonArgs};
 use crate::{
     config::Config,
     utils::{
-        clap::UrlValueParser,
         graphql::{self, Query},
-        BasicAuth, Node,
+        Node,
     },
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use async_recursion::async_recursion;
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use common::archive::archive;
+use common::archive::{self};
 use indoc::indoc;
 use prisma_models::psl;
 use question::{Answer, Question};
-use reqwest::Url;
+
 use serde::Deserialize;
 use serde_json::json;
+use std::fs::File;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
-use std::{
-    fs::{self, File},
-    path::Path,
-};
 
 static MIGRATION_ENDPOINT: &str = "/typegate/prisma_migration";
 
@@ -51,27 +47,58 @@ pub enum Commands {
     Format(Format),
 }
 
-#[derive(Parser, Debug)]
-pub struct Dev {
+#[derive(Parser, Debug, Clone)]
+pub struct PrismaArgs {
     /// Name of the typegraph.
     #[clap(value_parser)]
-    typegraph: String,
+    pub typegraph: String,
 
     /// Name of the prisma runtime.
     /// Default: the unique prisma runtime of the typegraph.
     #[clap(long)]
-    runtime: Option<String>,
+    pub runtime: Option<String>,
+
+    /// Path to the migrations directory.
+    #[clap(long)]
+    pub migrations: Option<PathBuf>,
+}
+
+impl PrismaArgs {
+    pub fn fill(&self, config: &Config) -> Result<Option<PrismaArgsFull>> {
+        let prisma_config = &config.typegraphs.materializers.prisma;
+        let migpath = prisma_config.base_migrations_path(self, config)?;
+        let runtime_name = utils::find_runtime_name(&migpath)?;
+
+        runtime_name
+            .map(|rt_name| -> Result<_> {
+                let migrations = archive::archive(migpath.join(&rt_name))?;
+                Ok(PrismaArgsFull {
+                    typegraph: self.typegraph.clone(),
+                    runtime: rt_name,
+                    migrations,
+                })
+            })
+            .transpose()
+    }
+}
+
+pub struct PrismaArgsFull {
+    pub typegraph: String,
+    pub runtime: String,
+    pub migrations: String,
+}
+
+#[derive(Parser, Debug)]
+pub struct Dev {
+    #[command(flatten)]
+    node: super::CommonArgs,
+
+    #[command(flatten)]
+    prisma: PrismaArgs,
 
     /// Creates a migration based on the changes but does not apply that migration.
     #[clap(long)]
     create_only: bool,
-
-    /// Address of the typegate.
-    #[clap(short, long, value_parser = UrlValueParser::new().http())]
-    gate: Option<Url>,
-
-    #[clap(short = 'U', long, value_parser)]
-    username: Option<String>,
 }
 
 #[async_trait]
@@ -79,29 +106,15 @@ impl Action for Dev {
     async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         let config = Config::load_or_find(config_path, dir)?;
 
-        let node_config = config.node("dev");
-        let node_url = node_config.url(self.gate.clone());
-        let auth = node_config.basic_auth(self.username.clone(), None).await?;
+        let node_config = config.node("dev").with_args(&self.node);
+        let node = node_config.try_into()?;
 
-        let prisma_config = &config.typegraphs.materializers.prisma;
-
-        let mut migrate = PrismaMigrate::new(
-            self.typegraph.clone(),
-            self.runtime.clone(),
-            Node::new(node_url, Some(auth))?,
-            prisma_config.migrations_path(),
-        )?;
+        let mut migrate = PrismaMigrate::new(&self.prisma, &config, node)?;
 
         migrate.apply(false).await?;
         println!();
 
-        let (rt_name, changes) = PrismaMigrate::diff(
-            false,
-            &migrate.node,
-            &migrate.typegraph,
-            migrate.runtime_name.as_deref(),
-        )
-        .await?;
+        let (rt_name, changes) = migrate.diff(false).await?;
 
         migrate.runtime_name.replace(rt_name);
 
@@ -124,48 +137,25 @@ impl Action for Dev {
 
 #[derive(Parser, Debug)]
 pub struct Deploy {
-    /// Name of the typegraph.
-    #[clap(value_parser)]
-    typegraph: String,
+    #[command(flatten)]
+    node: CommonArgs,
 
-    /// Name of the prisma runtime.
-    #[clap(long)]
-    runtime: String,
-
-    /// Migration folder base.
-    #[clap(long)]
-    migrations: Option<String>,
-
-    /// Address of the typegate.
-    #[clap(short, long, value_parser = UrlValueParser::new().http())]
-    gate: Option<Url>,
-
-    #[clap(short = 'U', long)]
-    username: Option<String>,
+    #[command(flatten)]
+    prisma: PrismaArgs,
 }
 
 #[async_trait]
 impl Action for Deploy {
     async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         let config = Config::load_or_find(config_path, dir)?;
-        let prisma_config = &config.typegraphs.materializers.prisma;
-        let migrations = self
-            .migrations
-            .as_ref()
-            .map(|m| Path::new(m).to_owned())
-            .unwrap_or_else(|| prisma_config.migrations_path());
-        let migrations_path = config
-            .base_dir
-            .join(migrations)
-            .join(&self.typegraph)
-            .join(&self.runtime);
-
-        let migrations = archive(migrations_path.as_path())?;
+        let prisma_args = self
+            .prisma
+            .fill(&config)?
+            .ok_or_else(|| anyhow!("No migrations in the migration directory"))?;
 
         let node_config = config.node("deploy");
-        let node_url = node_config.url(self.gate.clone());
-        let auth = node_config.basic_auth(self.username.clone(), None).await?;
-        let node = Node::new(node_url, Some(auth))?;
+
+        let node: Node = node_config.clone().try_into()?;
 
         let res = node
             .post(MIGRATION_ENDPOINT)?
@@ -180,9 +170,9 @@ impl Action for Deploy {
                 "}
                 .to_string(),
                 Some(json!({
-                    "tg": &self.typegraph,
-                    "runtime": self.runtime,
-                    "mig": migrations,
+                    "tg": &self.prisma.typegraph,
+                    "runtime": prisma_args.runtime,
+                    "mig": prisma_args.migrations,
                 })),
             )
             .await?;
@@ -226,22 +216,29 @@ impl Action for Deploy {
 
 #[derive(Parser, Debug)]
 pub struct Diff {
-    /// Name of the typegraph
-    #[clap(value_parser)]
-    typegraph: String,
+    #[command(flatten)]
+    node: CommonArgs,
+
+    #[command(flatten)]
+    prisma: PrismaArgs,
 
     /// Output a SQL script instead of the default human-readable summary
     #[clap(long)]
     script: bool,
+}
 
-    /// Address of the typegate
-    #[clap(short, long, value_parser = UrlValueParser::new().http())]
-    gate: Option<Url>,
-
-    /// Name of the prisma runtime.
-    /// Default: the unique prisma runtime of the typegraph.
-    #[clap(long)]
-    runtime: Option<String>,
+#[async_trait]
+impl Action for Diff {
+    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+        // TODO runtime selection
+        let config = Config::load_or_find(config_path, dir)?;
+        let node_config = config.node("dev").with_args(&self.node);
+        let node = node_config.try_into()?;
+        PrismaMigrate::new(&self.prisma, &config, node)?
+            .diff(self.script)
+            .await?;
+        Ok(())
+    }
 }
 
 #[derive(Parser, Debug)]
@@ -252,19 +249,6 @@ pub struct Format {
     /// Output file, default: stdout
     #[clap(short, value_parser)]
     output: Option<String>,
-}
-
-#[async_trait]
-impl Action for Diff {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
-        // TODO runtime selection
-        let config = Config::load_or_find(config_path, dir)?;
-        let node_config = config.node("dev");
-        let gate = node_config.url(self.gate.clone());
-        let node = Node::new(gate, Some(BasicAuth::prompt()?))?;
-        PrismaMigrate::diff(self.script, &node, &self.typegraph, self.runtime.as_deref()).await?;
-        Ok(())
-    }
 }
 
 #[async_trait]
@@ -313,71 +297,22 @@ pub struct PrismaMigrate {
 }
 
 impl PrismaMigrate {
-    fn get_migrations_path<P: AsRef<Path>>(
-        base_path: P,
-        typegraph: &str,
-        runtime: Option<&str>,
-    ) -> Result<Option<PathBuf>> {
-        let tg_migrations_path = base_path.as_ref().join(typegraph);
-        let Ok(true) = tg_migrations_path.try_exists() else {
-            fs::create_dir_all(tg_migrations_path.clone()).with_context(
-                || format!("Creating migrations directory at {tg_migrations_path:?}")
-            )?;
-            return Ok(None);
-        };
-        if let Some(runtime_name) = runtime {
-            let path = tg_migrations_path.join(runtime_name);
-            if let Ok(true) = path.try_exists() {
-                return Ok(Some(path));
-            }
-            return Ok(None);
-        }
-        let subdirs = fs::read_dir(tg_migrations_path.clone())
-            .with_context(|| {
-                format!("Reading from migrations directory at {tg_migrations_path:?}")
-            })?
-            .filter_map(|entry| -> Option<PathBuf> {
-                entry.ok().map(|e| e.path()).filter(|p| p.is_dir())
-            })
-            .collect::<Vec<PathBuf>>();
-        match subdirs.len() {
-            0 => Ok(None),
-            1 => Ok(subdirs.into_iter().next()),
-            _ => bail!("Runtime name required: more than one runtimes are defined in the migrations directory"),
-        }
-    }
-
-    pub fn serialize_migrations<P: AsRef<Path>>(
-        base_path: P,
-        typegraph: &str,
-        runtime: Option<&str>,
-    ) -> Result<Option<String>> {
-        let migrations_path = Self::get_migrations_path(base_path, typegraph, runtime)?;
-        Ok(match migrations_path {
-            Some(p) => Some(common::archive::archive(p)?),
-            None => None,
-        })
-    }
-
-    fn new<P: AsRef<Path>>(
-        typegraph: String,
-        runtime: Option<String>,
-        node: Node,
-        base_migration_path: P, // TODO read from metatype.yaml
-    ) -> Result<Self> {
-        let migrations = Self::serialize_migrations(
-            base_migration_path.as_ref(),
-            &typegraph,
-            runtime.as_deref(),
-        )
-        .context("Serializing migrations")?;
+    fn new(args: &PrismaArgs, config: &Config, node: Node) -> Result<Self> {
+        let prisma_config = &config.typegraphs.materializers.prisma;
+        let base_migpath = prisma_config.base_migrations_path(args, config)?;
+        let runtime_name = utils::find_runtime_name(&base_migpath)?;
+        let migrations = runtime_name
+            .as_ref()
+            .map(|rt_name| archive::archive(base_migpath.join(rt_name)))
+            .transpose()
+            .context("Archiving migrations")?;
 
         Ok(Self {
-            typegraph,
-            runtime_name: runtime,
+            typegraph: args.typegraph.clone(),
+            runtime_name,
             node,
             migrations,
-            base_migration_path: base_migration_path.as_ref().to_owned(),
+            base_migration_path: base_migpath,
         })
     }
 
@@ -562,13 +497,9 @@ impl PrismaMigrate {
         Ok(())
     }
 
-    pub async fn diff(
-        script: bool,
-        node: &Node,
-        tg: &String,
-        rt: Option<&str>,
-    ) -> Result<(String, bool)> {
-        let res = node
+    pub async fn diff(&self, script: bool) -> Result<(String, bool)> {
+        let res = self
+            .node
             .post(MIGRATION_ENDPOINT)?
             .gql(
                 indoc! {"
@@ -581,8 +512,8 @@ impl PrismaMigrate {
                 "}
                 .to_string(),
                 Some(json!({
-                    "tg": tg,
-                    "rt": rt,
+                    "tg": self.typegraph,
+                    "rt": self.runtime_name,
                     "script": script,
                 })),
             )
@@ -607,6 +538,27 @@ impl PrismaMigrate {
         } else {
             println!("{}", "No changes.".dimmed());
             Ok((res.runtime_name, false))
+        }
+    }
+}
+
+mod utils {
+    use anyhow::{bail, Result};
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+    };
+
+    pub fn find_runtime_name(base_migrations_dir: impl AsRef<Path>) -> Result<Option<String>> {
+        let subdirs = fs::read_dir(base_migrations_dir.as_ref())?
+            .filter_map(|entry| -> Option<PathBuf> { entry.ok().map(|e| e.path()) })
+            .filter(|p| p.is_dir())
+            .collect::<Vec<_>>();
+
+        match subdirs.len() {
+            0 => Ok(None),
+            1 => Ok(subdirs.into_iter().next().map(|p| p.to_str().unwrap().to_owned())),
+            _ => bail!("Runtime name required: more than one runtimes are defined in the migration directory"),
         }
     }
 }

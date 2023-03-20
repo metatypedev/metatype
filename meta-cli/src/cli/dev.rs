@@ -1,11 +1,12 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use super::Action;
+use super::CommonArgs;
 use crate::codegen;
 use crate::config;
 use crate::typegraph::{LoaderResult, TypegraphLoader};
 use crate::utils;
-use crate::utils::clap::UrlValueParser;
+
 use crate::utils::{ensure_venv, Node};
 use anyhow::{bail, Context, Error, Result};
 use async_recursion::async_recursion;
@@ -34,17 +35,8 @@ use tokio::runtime::Handle;
 
 #[derive(Parser, Debug)]
 pub struct Dev {
-    /// Address of the typegate
-    #[clap(short, long, value_parser = UrlValueParser::new().http())]
-    gate: Option<Url>,
-
-    /// Username, to override the one defined in metatype.yaml; default is "admin"
-    #[clap(short, long)]
-    username: Option<String>,
-
-    /// Password, overriding the one defined in metatype.yaml; prompted if missing
-    #[clap(short, long)]
-    password: Option<String>,
+    #[command(flatten)]
+    node: CommonArgs,
 
     #[clap(long, default_value_t = 5000)]
     port: u32,
@@ -63,16 +55,8 @@ impl Action for Dev {
         let config = config::Config::load_or_find(config_path, &dir)
             .unwrap_or_else(|_| config::Config::default_in(&dir));
 
-        let node_config = config.node("dev");
-
-        // TODO do not use node config from the config file when --gate is set
-        let node_url = node_config.url(self.gate.clone());
-
-        let auth = node_config
-            .basic_auth(self.username.clone(), self.password.clone())
-            .await?;
-
-        let node = Node::new(node_url, Some(auth.clone()))?;
+        let node_config = config.node("dev").with_args(&self.node);
+        let node = node_config.try_into()?;
 
         let loaded = TypegraphLoader::with_config(&config)
             .load_folder(&dir)
@@ -94,6 +78,7 @@ impl Action for Dev {
 
         let config = Arc::new(config);
         let config_clone = config.clone();
+        let node_clone = node.clone();
         let watch_path = dir.clone();
 
         let handle = Handle::current();
@@ -112,7 +97,11 @@ impl Action for Dev {
 
             let loaded = TypegraphLoader::with_config(&config).load_files(paths);
 
-            handle.block_on(push_loaded_typegraphs(watch_path.clone(), loaded, &node));
+            handle.block_on(push_loaded_typegraphs(
+                watch_path.clone(),
+                loaded,
+                &node_clone,
+            ));
         })
         .unwrap();
 
@@ -124,12 +113,15 @@ impl Action for Dev {
             let url = Url::parse(&format!("http://dummy{}", request.url()))?;
             let query: HashMap<String, String> = url.query_pairs().into_owned().collect();
 
+            let tg_node = node.clone();
             let response = match url.path() {
                 "/dev" => match query.get("node") {
                     Some(node) => {
                         let tgs = TypegraphLoader::with_config(&config).load_folder(&dir)?;
-                        let node = Node::new(node, Some(auth.clone()))?;
-                        push_loaded_typegraphs(dir.clone(), tgs, &node).await;
+                        let mut tg_node = tg_node;
+                        tg_node.base_url = node.parse()?;
+
+                        push_loaded_typegraphs(dir.clone(), tgs, &tg_node).await;
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
                                 "Content-Type: application/json".parse::<Header>().unwrap(),
