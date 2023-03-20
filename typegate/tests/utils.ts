@@ -46,6 +46,8 @@ export interface MetaOptions {
   stdin?: string;
 }
 
+let compiled = false;
+
 export async function meta(...args: string[]): Promise<void>;
 export async function meta(
   options: MetaOptions,
@@ -55,6 +57,11 @@ export async function meta(
   first: string | MetaOptions,
   ...input: string[]
 ): Promise<void> {
+  if (!compiled) {
+    await shell(["cargo", "build", "--package", "meta-cli"]);
+    compiled = true;
+  }
+
   if (typeof first === "string") {
     console.log(await shell([metaCli, first, ...input]));
   } else {
