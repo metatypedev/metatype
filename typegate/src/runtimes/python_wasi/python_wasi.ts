@@ -2,12 +2,12 @@
 
 import Context from "std/wasi/snapshot_preview1.ts";
 import { maxi32 } from "../../utils.ts";
-import { Memory } from "./memory.ts";
+import { Memory, RustResult } from "./memory.ts";
 import { gunzip, tar } from "compress";
 import { getLogger } from "../../log.ts";
 import { Deferred, deferred } from "std/async/deferred.ts";
 import { Runtime } from "../Runtime.ts";
-import { RuntimeInitParams, RustResult } from "../../types.ts";
+import { RuntimeInitParams } from "../../types.ts";
 import { ComputeStage } from "../../engine.ts";
 
 const logger = getLogger(import.meta);

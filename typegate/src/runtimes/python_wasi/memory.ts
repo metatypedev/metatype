@@ -1,6 +1,13 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { RustResult } from "../../types.ts";
+// no relative import as this file is used in https://github.com/metatypedev/python-wasi-reactor
+
+type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
+type XOR<T, U> = T | U extends Record<string, unknown>
+  ? (Without<T, U> & U) | (Without<U, T> & T)
+  : T | U;
+
+export type RustResult<O = unknown[]> = XOR<{ data: O }, { error: string }>;
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();

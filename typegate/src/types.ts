@@ -78,10 +78,3 @@ export type StageId = string;
 export type PolicyIdx = number;
 export type PolicyList = Array<PolicyIndices>;
 export type TypeIdx = number;
-
-export type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
-export type XOR<T, U> = T | U extends Record<string, unknown>
-  ? (Without<T, U> & U) | (Without<U, T> & T)
-  : T | U;
-
-export type RustResult<O = unknown[]> = XOR<{ data: O }, { error: string }>;
