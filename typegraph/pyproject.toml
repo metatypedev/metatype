@@ -37,7 +37,7 @@ python-box = "^7.0.0"
 pytest = "^7.2.1"
 pytest-snapshot = "^0.9.0"
 pydoc-markdown = { git = "https://github.com/metatypedev/pydoc-markdown", branch = "develop" }
-ruff = ">=0.0.245,<0.0.257"
+ruff = ">=0.0.245,<0.0.258"
 respx = "^0.20.1"
 
 [build-system]
