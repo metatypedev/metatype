@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import "./load_test_env.ts";
+import { Server } from "std/http/server.ts";
 import {
   assert,
   assertEquals,
@@ -13,20 +14,21 @@ import { JSONValue } from "../src/utils.ts";
 import { parse } from "std/flags/mod.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { dirname, fromFileUrl, join, resolve } from "std/path/mod.ts";
-import { Register } from "../src/register.ts";
+import { Register, RegistrationResult } from "../src/register.ts";
 import { typegate } from "../src/typegate.ts";
 import { signJWT } from "../src/crypto.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { RateLimiter } from "../src/rate_limiter.ts";
-import { PrismaRuntimeDS, TypeRuntimeBase } from "../src/type_node.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";
 import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
 import { copy } from "std/streams/copy.ts";
 import * as native from "native";
 import { None } from "monads";
 import { init_native } from "native";
+import { PrismaRuntimeDS } from "../src/runtimes/prisma.ts";
 
 const thisDir = dirname(fromFileUrl(import.meta.url));
+export const testDir = thisDir;
 const metaCli = resolve(thisDir, "../../target/debug/meta");
 
 init_native();
@@ -40,17 +42,50 @@ interface ResponseBody {
   errors?: ResponseBodyError[];
 }
 
-export async function meta(...input: string[]): Promise<void> {
-  console.log(await shell([metaCli, ...input]));
+export interface MetaOptions {
+  stdin?: string;
 }
 
-export async function shell(cmd: string[]): Promise<string> {
+let compiled = false;
+
+export async function meta(...args: string[]): Promise<void>;
+export async function meta(
+  options: MetaOptions,
+  ...args: string[]
+): Promise<void>;
+export async function meta(
+  first: string | MetaOptions,
+  ...input: string[]
+): Promise<void> {
+  if (!compiled) {
+    await shell(["cargo", "build", "--package", "meta-cli"]);
+    compiled = true;
+  }
+
+  if (typeof first === "string") {
+    console.log(await shell([metaCli, first, ...input]));
+  } else {
+    console.log(await shell([metaCli, ...input], first));
+  }
+}
+
+export async function shell(
+  cmd: string[],
+  options: MetaOptions = {},
+): Promise<string> {
   const p = Deno.run({
     cwd: thisDir,
     cmd,
     stdout: "piped",
     stderr: "inherit",
+    stdin: "piped",
   });
+
+  const { stdin = null } = options;
+  if (stdin != null) {
+    await p.stdin.write(new TextEncoder().encode(stdin));
+  }
+  p.stdin.close();
 
   const [status, stdout] = await Promise.all([p.status(), p.output()]);
   p.close();
@@ -69,8 +104,8 @@ export class SingleRegister extends Register {
     super();
   }
 
-  set(_payload: string): Promise<string> {
-    return Promise.resolve(this.name);
+  set(_payload: string): Promise<RegistrationResult> {
+    return Promise.resolve({ typegraphName: this.name, messages: [] });
   }
 
   remove(_name: string): Promise<void> {
@@ -97,14 +132,19 @@ export class MemoryRegister extends Register {
     super();
   }
 
-  async set(payload: string): Promise<string> {
+  async set(payload: string): Promise<RegistrationResult> {
     const engine = await initTypegraph(
       payload,
+      false,
+      null,
       SystemTypegraph.getCustomRuntimes(this),
       this.introspection ? undefined : null, // no need to have introspection for tests
     );
     this.map.set(engine.name, engine);
-    return engine.name;
+    return {
+      typegraphName: engine.name,
+      messages: [],
+    };
   }
   remove(name: string): Promise<void> {
     this.map.delete(name);
@@ -144,11 +184,58 @@ type AssertSnapshotParams<T> = typeof assertSnapshot extends (
 ) => Promise<void> ? R
   : never;
 
-export class MetaTest {
-  constructor(public t: Deno.TestContext, public register: Register) {}
+interface ParseOptions {
+  deploy?: boolean;
+  typegraph?: string;
+  // ports on which this typegraph will be exposed
+  ports?: number[];
+}
 
-  getTypegraph(name: string): Engine | undefined {
-    return this.register.get(name);
+function serve(register: Register, port: number): () => void {
+  const handler = async (req: Request) => {
+    const server = typegate(register, new NoLimiter());
+    return await server(req, {
+      remoteAddr: { hostname: "localhost" },
+    } as ConnInfo);
+  };
+
+  const server = new Server({
+    port,
+    hostname: "localhost",
+    handler,
+  });
+
+  const listener = server.listenAndServe();
+  return async () => {
+    server.close();
+    await listener;
+  };
+}
+
+function exposeOnPort(engine: Engine, port: number): () => void {
+  const register = new SingleRegister(engine.name, engine);
+  return serve(register, port);
+}
+
+export class MetaTest {
+  private cleanups: (() => void)[] = [];
+
+  constructor(
+    public t: Deno.TestContext,
+    public register: Register,
+    port: number | null,
+  ) {
+    if (port != null) {
+      this.cleanups.push(serve(register, port));
+    }
+  }
+
+  getTypegraph(name: string, ports: number[] = []): Engine | undefined {
+    const engine = this.register.get(name);
+    if (engine != null) {
+      this.cleanups.push(...ports.map((port) => exposeOnPort(engine, port)));
+    }
+    return engine;
   }
 
   async pythonCode(code: string): Promise<Engine> {
@@ -161,17 +248,38 @@ export class MetaTest {
     }
   }
 
-  async pythonFile(path: string): Promise<Engine> {
-    return await this.parseTypegraph(path);
+  async pythonFile(path: string, opts: ParseOptions = {}): Promise<Engine> {
+    return await this.parseTypegraph(path, opts);
   }
 
-  async parseTypegraph(path: string): Promise<Engine> {
-    const stdout = await shell([metaCli, "serialize", "-f", path, "-1"]);
+  async parseTypegraph(path: string, opts: ParseOptions = {}): Promise<Engine> {
+    const { deploy = false, typegraph = null } = opts;
+    const cmd = [metaCli, "serialize", "-f", path];
+
+    if (typegraph == null) {
+      cmd.push("-1");
+    } else {
+      cmd.push("--typegraph", typegraph);
+    }
+
+    if (deploy) {
+      cmd.push("--deploy");
+    }
+
+    const stdout = await shell(cmd);
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }
-    const engineName = await this.register.set(stdout);
-    return this.register.get(engineName)!;
+    const { typegraphName, messages } = await this.register.set(stdout);
+    for (const m of messages) {
+      console.info(m);
+    }
+    const engine = this.register.get(typegraphName)!;
+    this.cleanups.push(
+      ...(opts.ports ?? []).map((port) => exposeOnPort(engine, port)),
+    );
+
+    return engine;
   }
 
   async unregister(engine: Engine) {
@@ -189,7 +297,13 @@ export class MetaTest {
   }
 
   async terminate() {
+    await Promise.all(this.cleanups.map((c) => c()));
     await Promise.all(this.register.list().map((e) => e.terminate()));
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(undefined);
+      }, 1000);
+    });
   }
 
   async should(
@@ -211,6 +325,8 @@ export class MetaTest {
 interface TestConfig {
   systemTypegraphs?: boolean;
   introspection?: boolean;
+  // port on which the typegate instance will be exposed on expose the typegate instance
+  port?: number;
 }
 
 interface Test {
@@ -236,7 +352,7 @@ export const test = ((name, fn, opts = {}): void => {
       if (systemTypegraphs) {
         await SystemTypegraph.loadAll(reg);
       }
-      const mt = new MetaTest(t, reg);
+      const mt = new MetaTest(t, reg, opts.port ?? null);
       try {
         await fn(mt);
       } catch (error) {
@@ -492,14 +608,13 @@ export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function recreateMigrations(engine: Engine) {
-  const runtimes = (engine.tg.tg.runtimes as TypeRuntimeBase[]).filter(
+  const runtimes = engine.tg.tg.runtimes.filter(
     (rt) => rt.name === "prisma",
-  ) as PrismaRuntimeDS[];
+  ) as unknown[] as PrismaRuntimeDS[];
 
   const migrationsBaseDir = join(thisDir, "prisma-migrations");
 
   for await (const runtime of runtimes) {
-    console.log(runtime);
     const prisma = new PrismaMigrate(engine, runtime, null);
     const { migrations } = await prisma.create({
       name: "init",

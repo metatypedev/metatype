@@ -14,6 +14,8 @@ use std::path::Path;
 use std::time::Duration;
 use std::{collections::HashMap, path::PathBuf};
 
+use crate::config::NodeConfig;
+
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if var("VIRTUAL_ENV").is_ok() {
         return Ok(());
@@ -49,7 +51,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct BasicAuth {
     username: String,
     password: String,
@@ -74,8 +76,9 @@ impl BasicAuth {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Node {
-    base_url: Url,
+    pub base_url: Url,
     auth: Option<BasicAuth>,
 }
 
@@ -93,6 +96,14 @@ impl Node {
             b = b.basic_auth(&auth.username, Some(&auth.password));
         }
         Ok(b.timeout(Duration::from_secs(5)))
+    }
+}
+
+impl TryFrom<NodeConfig> for Node {
+    type Error = anyhow::Error;
+
+    fn try_from(config: NodeConfig) -> Result<Self, Self::Error> {
+        Self::new(config.url.clone(), Some(config.basic_auth()?))
     }
 }
 
@@ -124,4 +135,12 @@ pub fn relative_path_display<P1: Into<PathBuf>, P2: Into<PathBuf>>(base: P1, pat
         .unwrap_or(path)
         .display()
         .to_string()
+}
+
+pub fn plural_prefix(len: usize) -> &'static str {
+    if len == 1 {
+        ""
+    } else {
+        "s"
+    }
 }

@@ -30,6 +30,7 @@ const schema = {
   ]).optional(),
   rust_log: z.string().optional(),
   version: z.string(),
+  deno_testing: zBooleanString,
 };
 
 export const envSharedWithWorkers = Object.keys(schema).map((

@@ -78,10 +78,15 @@ function splitGraphQLOperations(
   return [queryProperties, mutationProperties];
 }
 
-export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
+export function parseGraphQLTypeGraph(tgOrig: TypeGraphDS): TypeGraphDS {
   // first type in the typegraph is always the root node and
   // its type is `object`
-  const rootNode = typegraph.types[0] as ObjectNode;
+  const rootNode = tgOrig.types[0] as ObjectNode;
+
+  const typegraph = {
+    ...tgOrig,
+    types: [...tgOrig.types],
+  };
 
   const [queryProperties, mutationProperties] = splitGraphQLOperations(
     typegraph,
@@ -98,6 +103,7 @@ export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
       ...rootNode,
       title: "Query",
       properties: queryProperties,
+      config: { ...(rootNode.config ?? {}), __namespace: true },
     });
     rootNode.properties.query = queryIndex;
   }
@@ -110,4 +116,6 @@ export function parseGraphQLTypeGraph(typegraph: TypeGraphDS) {
     });
     rootNode.properties.mutation = mutationIndex;
   }
+
+  return typegraph;
 }

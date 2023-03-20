@@ -2,12 +2,7 @@
 
 import { Kind, parse } from "graphql";
 import * as ast from "graphql/ast";
-import {
-  RuntimeResolver,
-  TypeGraph,
-  TypeGraphDS,
-  typegraphVersion,
-} from "./typegraph.ts";
+import { RuntimeResolver, TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { ensure, JSONValue } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
@@ -27,11 +22,11 @@ import {
 import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
-import config from "./config.ts";
-import * as semver from "std/semver/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { Option } from "monads";
 import { getLogger } from "./log.ts";
+import { handleOnInitHooks, handleOnPushHooks } from "./hooks.ts";
+import { MessageEntry } from "./register.ts";
 
 const logger = getLogger(import.meta);
 
@@ -40,43 +35,16 @@ const introspectionDefStatic = await Deno.readTextFile(
   join(localDir, "typegraphs/introspection.json"),
 );
 
-const typegraphChangelog: Record<
-  string,
-  { next: string; transform: (x: TypeGraphDS) => TypeGraphDS }
-> = {
-  "0.0.0": {
-    "next": "0.0.1",
-    "transform": (x) => x,
-  },
-};
-
-function upgradeTypegraph(typegraph: TypeGraphDS) {
-  const typegraphName = typegraph.types[0].title;
-  const { meta } = typegraph;
-
-  let currentVersion = meta.version;
-  while (semver.neq(typegraphVersion, currentVersion)) {
-    const migration = typegraphChangelog[currentVersion];
-    if (!migration) {
-      throw Error(
-        `typegate ${config.version} supports typegraph ${typegraphVersion} which is incompatible with ${typegraphName} ${meta.version} (max auto upgrade was ${currentVersion})`,
-      );
-    }
-    typegraph = migration.transform(typegraph);
-    currentVersion = migration.next;
-  }
-
-  return typegraph;
-}
-
 export const initTypegraph = async (
   payload: string,
+  sync: boolean, // redis synchronization?
+  messageOutput: MessageEntry[] | null,
   customRuntime: RuntimeResolver = {},
   introspectionDefPayload: string | null = introspectionDefStatic,
 ) => {
-  const typegraphDSRaw = upgradeTypegraph(JSON.parse(payload));
-  const typegraphDS = structuredClone(typegraphDSRaw);
-  parseGraphQLTypeGraph(typegraphDS);
+  const typegraphDS = sync
+    ? JSON.parse(payload)
+    : await handleOnPushHooks(JSON.parse(payload), messageOutput);
 
   let introspection = null;
 
@@ -84,10 +52,8 @@ export const initTypegraph = async (
     const introspectionDefRaw = JSON.parse(
       introspectionDefPayload,
     ) as TypeGraphDS;
-    const introspectionDef = structuredClone(introspectionDefRaw);
-    parseGraphQLTypeGraph(introspectionDef);
+    const introspectionDef = parseGraphQLTypeGraph(introspectionDefRaw);
     introspection = await TypeGraph.init(
-      introspectionDefRaw,
       introspectionDef,
       {
         typegraph: TypeGraphRuntime.init(
@@ -101,11 +67,13 @@ export const initTypegraph = async (
   }
 
   const tg = await TypeGraph.init(
-    typegraphDSRaw,
     typegraphDS,
     customRuntime,
     introspection,
   );
+
+  handleOnInitHooks(tg, sync);
+
   return new Engine(tg);
 };
 

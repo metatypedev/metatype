@@ -2,24 +2,11 @@
 
 import { v4 } from "std/uuid/mod.ts";
 import { assert } from "std/testing/asserts.ts";
-import { gql, recreateMigrations, test } from "../utils.ts";
+import { gql, test } from "../utils.ts";
+import { init } from "./prisma_seed.ts";
 
 test("prisma", async (t) => {
-  const tgPath = "prisma/prisma.py";
-  const e = await t.pythonFile(tgPath);
-
-  await t.should("drop schema and recreate", async () => {
-    await gql`
-      mutation a {
-        dropSchema
-      }
-    `
-      .expectData({
-        dropSchema: 0,
-      })
-      .on(e);
-    await recreateMigrations(e);
-  });
+  const e = await init(t);
 
   await t.should("return no data when empty", async () => {
     await gql`

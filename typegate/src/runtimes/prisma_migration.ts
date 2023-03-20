@@ -4,15 +4,14 @@ import { Runtime } from "./Runtime.ts";
 import { Resolver, ResolverArgs } from "../types.ts";
 import { ComputeStage, Engine } from "../engine.ts";
 import { Register } from "../register.ts";
-import { PrismaRuntimeDS } from "../type_node.ts";
 import * as native from "native";
 import { envOrFail, nativeResult } from "../utils.ts";
-import { makeDatasource } from "./prisma.ts";
+import { makeDatasource, PrismaRuntimeDS } from "./prisma.ts";
 
 function findPrismaRuntime(engine: Engine, name: string | null) {
   const prismaRuntimes = engine.tg.tg.runtimes.filter(
     (rt) => rt.name == "prisma",
-  ) as unknown as Array<PrismaRuntimeDS>;
+  ) as unknown[] as Array<PrismaRuntimeDS>;
 
   if (prismaRuntimes.length == 0) {
     throw new Error("no prisma runtime found in the selected typegraph");
@@ -103,6 +102,15 @@ export class PrismaMigrate {
       migrations: res.migrations,
       runtimeName: name,
     };
+  };
+
+  reset: Resolver<boolean> = async () => {
+    nativeResult(
+      await native.prisma_reset({
+        datasource: this.datasource,
+      }),
+    );
+    return true;
   };
 }
 

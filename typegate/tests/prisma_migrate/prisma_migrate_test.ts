@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { gql, removeMigrations, test } from "../utils.ts";
+import { gql, test } from "../utils.ts";
 import {
   assert,
   assertArrayIncludes,
@@ -10,35 +10,21 @@ import {
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import * as native from "native";
 import { nativeResult } from "../../src/utils.ts";
+import { init } from "../prisma/prisma_seed.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 
 test("prisma migrations", async (t) => {
   const tgPath = "prisma/prisma.py";
-  const e = await t.pythonFile(tgPath);
   const migrations = t.getTypegraph("typegate/prisma_migration")!;
   assertExists(migrations);
 
   const migrationDir = join(localDir, "../prisma-migrations/prisma/prisma");
   const createdMigrations: string[] = [];
 
-  await t.should("drop schema and remove migrations", async () => {
-    await gql`
-      mutation a {
-        dropSchema
-      }
-    `
-      .withHeaders({
-        "Authorization": "Basic YWRtaW46cGFzc3dvcmQ=",
-      })
-      .expectData({
-        dropSchema: 0,
-      })
-      .on(e);
+  const e = await init(t, tgPath, false);
 
-    await removeMigrations(e);
-
-    // queries should fail
+  await t.should("should fail", async () => {
     await gql`
       query {
         findManyRecords {
@@ -71,6 +57,7 @@ test("prisma migrations", async (t) => {
           migrations,
           runtimeName,
         } = body.data.create;
+
         createdMigrations.push(createdMigrationName);
 
         assertEquals(runtimeName, "prisma");

@@ -5,6 +5,7 @@ from typegraph.providers.prisma.runtimes.prisma import (
     PrismaCreateMat,
     PrismaDeployMat,
     PrismaDiffMat,
+    PrismaResetMat,
 )
 from typegraph.runtimes.deno import PureFunMat
 
@@ -89,6 +90,14 @@ with TypeGraph(
                 }
             ),
             PrismaDeployMat(),
+        )
+        .rate(calls=True)
+        .add_policy(admin_only),
+        # reset database -- dev
+        reset=t.func(
+            base,
+            t.boolean(),
+            PrismaResetMat(),
         )
         .rate(calls=True)
         .add_policy(admin_only),
