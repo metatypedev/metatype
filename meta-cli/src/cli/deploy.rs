@@ -20,6 +20,10 @@ pub struct Deploy {
     /// Load specific typegraph from a file
     #[clap(short, long)]
     file: Option<String>,
+
+    /// Do not run prisma migrations
+    #[clap(long, default_value_t = false)]
+    no_migrations: bool,
 }
 
 #[async_trait]
@@ -27,7 +31,7 @@ impl Action for Deploy {
     async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
         let config = Config::load_or_find(config_path, &dir)?;
-        let loader = TypegraphLoader::with_config(&config).deploy(true);
+        let loader = TypegraphLoader::with_config(&config).deploy(!self.no_migrations);
 
         let loaded = if let Some(file) = self.file.clone() {
             let mut ret = HashMap::default();
