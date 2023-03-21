@@ -1,6 +1,13 @@
-mutation {
+mutation SendNotification {
   send_notification(parent: "firebase-project-id") {
     name
     topic
+  }
+}
+
+query UserDetails {
+  user(id: 1) {
+    id
+    name
   }
 }

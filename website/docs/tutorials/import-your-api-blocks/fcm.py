@@ -25,7 +25,7 @@ with TypeGraph(
     gql = GraphQLRuntime("https://graphqlzero.almansi.me/api")
     public = policies.public()
 
-    user = t.struct({"id": t.integer(), "name": t.string()}).named("user")
+    user = t.struct({"id": t.string(), "name": t.string()}).named("user")
 
     message = t.struct(
         {
@@ -35,7 +35,7 @@ with TypeGraph(
             # AssertionError: Type f'function' not supported
             # "user": gql.query(
             #     # input
-            #     t.struct({"id": t.integer().from_parent(g("user"))}),
+            #     t.struct({"id": t.string().from_parent(g("user"))}),
             #     # output
             #     user.optional(),
             # ).optional(),
@@ -50,7 +50,7 @@ with TypeGraph(
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         user=gql.query(t.struct({"id": t.integer()}), user),
         send_notification=remote.post(
-            "/{+parent}/messages:send",
+            "/{parent}/messages:send",
             t.struct(
                 {
                     "parent": t.string(),
