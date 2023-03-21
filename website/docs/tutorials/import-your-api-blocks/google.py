@@ -1,6 +1,7 @@
 # skip:start
-from typegraph import TypeGraph, t
+from typegraph import TypeGraph, effects, t
 from typegraph.importers.google_discovery import import_googleapis
+from typegraph.runtimes.http import HTTPRuntime
 
 discovery = "https://fcm.googleapis.com/$discovery/rest?version=v1"
 import_googleapis(discovery, False)  # set to True to re-import the API
@@ -10,165 +11,59 @@ with TypeGraph(
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
     color_in = t.struct(
-        {"alpha": t.float(), "green": t.float(), "blue": t.float(), "red": t.float()}
+        {"alpha": t.float(), "blue": t.float(), "red": t.float(), "green": t.float()}
     ).named("ColorIn")
     color_out = t.struct(
-        {"alpha": t.float(), "green": t.float(), "blue": t.float(), "red": t.float()}
+        {"alpha": t.float(), "blue": t.float(), "red": t.float(), "green": t.float()}
     ).named("ColorOut")
+    webpush_fcm_options_in = t.struct(
+        {"analyticsLabel": t.string(), "link": t.string()}
+    ).named("WebpushFcmOptionsIn")
+    webpush_fcm_options_out = t.struct(
+        {"analyticsLabel": t.string(), "link": t.string()}
+    ).named("WebpushFcmOptionsOut")
     android_fcm_options_in = t.struct({"analyticsLabel": t.string()}).named(
         "AndroidFcmOptionsIn"
     )
     android_fcm_options_out = t.struct({"analyticsLabel": t.string()}).named(
         "AndroidFcmOptionsOut"
     )
+    webpush_config_in = t.struct(
+        {
+            "notification": t.struct({}),
+            "data": t.struct({}),
+            "fcmOptions": g("WebpushFcmOptionsIn"),
+            "headers": t.struct({}),
+        }
+    ).named("WebpushConfigIn")
+    webpush_config_out = t.struct(
+        {
+            "notification": t.struct({}),
+            "data": t.struct({}),
+            "fcmOptions": g("WebpushFcmOptionsOut"),
+            "headers": t.struct({}),
+        }
+    ).named("WebpushConfigOut")
     notification_in = t.struct(
         {"title": t.string(), "body": t.string(), "image": t.string()}
     ).named("NotificationIn")
     notification_out = t.struct(
         {"title": t.string(), "body": t.string(), "image": t.string()}
     ).named("NotificationOut")
-    android_notification_in = t.struct(
-        {
-            "vibrateTimings": t.array(t.string()),
-            "icon": t.string(),
-            "titleLocKey": t.string(),
-            "notificationCount": t.integer(),
-            "titleLocArgs": t.array(t.string()),
-            "clickAction": t.string(),
-            "tag": t.string(),
-            "visibility": t.string(),
-            "bypassProxyNotification": t.boolean(),
-            "bodyLocKey": t.string(),
-            "ticker": t.string(),
-            "lightSettings": g("LightSettingsIn"),
-            "bodyLocArgs": t.array(t.string()),
-            "notificationPriority": t.string(),
-            "eventTime": t.string(),
-            "image": t.string(),
-            "title": t.string(),
-            "body": t.string(),
-            "color": t.string(),
-            "sticky": t.boolean(),
-            "defaultSound": t.boolean(),
-            "sound": t.string(),
-            "defaultVibrateTimings": t.boolean(),
-            "localOnly": t.boolean(),
-            "channelId": t.string(),
-            "defaultLightSettings": t.boolean(),
-        }
-    ).named("AndroidNotificationIn")
-    android_notification_out = t.struct(
-        {
-            "vibrateTimings": t.array(t.string()),
-            "icon": t.string(),
-            "titleLocKey": t.string(),
-            "notificationCount": t.integer(),
-            "titleLocArgs": t.array(t.string()),
-            "clickAction": t.string(),
-            "tag": t.string(),
-            "visibility": t.string(),
-            "bypassProxyNotification": t.boolean(),
-            "bodyLocKey": t.string(),
-            "ticker": t.string(),
-            "lightSettings": g("LightSettingsOut"),
-            "bodyLocArgs": t.array(t.string()),
-            "notificationPriority": t.string(),
-            "eventTime": t.string(),
-            "image": t.string(),
-            "title": t.string(),
-            "body": t.string(),
-            "color": t.string(),
-            "sticky": t.boolean(),
-            "defaultSound": t.boolean(),
-            "sound": t.string(),
-            "defaultVibrateTimings": t.boolean(),
-            "localOnly": t.boolean(),
-            "channelId": t.string(),
-            "defaultLightSettings": t.boolean(),
-        }
-    ).named("AndroidNotificationOut")
-    webpush_fcm_options_in = t.struct(
-        {"link": t.string(), "analyticsLabel": t.string()}
-    ).named("WebpushFcmOptionsIn")
-    webpush_fcm_options_out = t.struct(
-        {"link": t.string(), "analyticsLabel": t.string()}
-    ).named("WebpushFcmOptionsOut")
-    light_settings_in = t.struct(
-        {
-            "lightOnDuration": t.string(),
-            "color": g("ColorIn"),
-            "lightOffDuration": t.string(),
-        }
-    ).named("LightSettingsIn")
-    light_settings_out = t.struct(
-        {
-            "lightOnDuration": t.string(),
-            "color": g("ColorOut"),
-            "lightOffDuration": t.string(),
-        }
-    ).named("LightSettingsOut")
-    webpush_config_in = t.struct(
-        {
-            "headers": t.struct({"_": t.optional(t.any())}),
-            "fcmOptions": g("WebpushFcmOptionsIn"),
-            "data": t.struct({"_": t.optional(t.any())}),
-            "notification": t.struct({"_": t.optional(t.any())}),
-        }
-    ).named("WebpushConfigIn")
-    webpush_config_out = t.struct(
-        {
-            "headers": t.struct({"_": t.optional(t.any())}),
-            "fcmOptions": g("WebpushFcmOptionsOut"),
-            "data": t.struct({"_": t.optional(t.any())}),
-            "notification": t.struct({"_": t.optional(t.any())}),
-        }
-    ).named("WebpushConfigOut")
-    apns_fcm_options_in = t.struct(
-        {"analyticsLabel": t.string(), "image": t.string()}
-    ).named("ApnsFcmOptionsIn")
-    apns_fcm_options_out = t.struct(
-        {"analyticsLabel": t.string(), "image": t.string()}
-    ).named("ApnsFcmOptionsOut")
-    fcm_options_in = t.struct({"analyticsLabel": t.string()}).named("FcmOptionsIn")
-    fcm_options_out = t.struct({"analyticsLabel": t.string()}).named("FcmOptionsOut")
     apns_config_in = t.struct(
         {
             "fcmOptions": g("ApnsFcmOptionsIn"),
-            "payload": t.struct({"_": t.optional(t.any())}),
-            "headers": t.struct({"_": t.optional(t.any())}),
+            "headers": t.struct({}),
+            "payload": t.struct({}),
         }
     ).named("ApnsConfigIn")
     apns_config_out = t.struct(
         {
             "fcmOptions": g("ApnsFcmOptionsOut"),
-            "payload": t.struct({"_": t.optional(t.any())}),
-            "headers": t.struct({"_": t.optional(t.any())}),
+            "headers": t.struct({}),
+            "payload": t.struct({}),
         }
     ).named("ApnsConfigOut")
-    android_config_in = t.struct(
-        {
-            "fcmOptions": g("AndroidFcmOptionsIn"),
-            "ttl": t.string(),
-            "restrictedPackageName": t.string(),
-            "directBootOk": t.boolean(),
-            "data": t.struct({"_": t.optional(t.any())}),
-            "collapseKey": t.string(),
-            "notification": g("AndroidNotificationIn"),
-            "priority": t.string(),
-        }
-    ).named("AndroidConfigIn")
-    android_config_out = t.struct(
-        {
-            "fcmOptions": g("AndroidFcmOptionsOut"),
-            "ttl": t.string(),
-            "restrictedPackageName": t.string(),
-            "directBootOk": t.boolean(),
-            "data": t.struct({"_": t.optional(t.any())}),
-            "collapseKey": t.string(),
-            "notification": g("AndroidNotificationOut"),
-            "priority": t.string(),
-        }
-    ).named("AndroidConfigOut")
 
     # skip:end
     # ...
@@ -191,21 +86,140 @@ with TypeGraph(
 
     message_out = t.struct(
         {
-            "notification": g("NotificationOut"),
-            "condition": t.string(),
-            "topic": t.string(),
-            "data": t.struct({"_": t.optional(t.any())}),
-            "android": g("AndroidConfigOut"),
-            "token": t.string(),
-            "apns": g("ApnsConfigOut"),
-            "fcmOptions": g("FcmOptionsOut"),
-            "name": t.string(),
             "webpush": g("WebpushConfigOut"),
+            "condition": t.string(),
+            "fcmOptions": g("FcmOptionsOut"),
+            "android": g("AndroidConfigOut"),
+            "apns": g("ApnsConfigOut"),
+            "name": t.string(),
+            "data": t.struct({}),
+            "topic": t.string(),
+            "token": t.string(),
+            "notification": g("NotificationOut"),
         }
     ).named("MessageOut")
+    android_notification_in = t.struct(
+        {
+            "visibility": t.string(),
+            "clickAction": t.string(),
+            "title": t.string(),
+            "defaultSound": t.boolean(),
+            "titleLocKey": t.string(),
+            "ticker": t.string(),
+            "notificationCount": t.integer(),
+            "titleLocArgs": t.array(t.string()),
+            "tag": t.string(),
+            "defaultVibrateTimings": t.boolean(),
+            "notificationPriority": t.string(),
+            "channelId": t.string(),
+            "sound": t.string(),
+            "eventTime": t.string(),
+            "bodyLocArgs": t.array(t.string()),
+            "image": t.string(),
+            "defaultLightSettings": t.boolean(),
+            "vibrateTimings": t.array(t.string()),
+            "color": t.string(),
+            "body": t.string(),
+            "localOnly": t.boolean(),
+            "bodyLocKey": t.string(),
+            "sticky": t.boolean(),
+            "lightSettings": g("LightSettingsIn"),
+            "icon": t.string(),
+            "bypassProxyNotification": t.boolean(),
+        }
+    ).named("AndroidNotificationIn")
+    android_notification_out = t.struct(
+        {
+            "visibility": t.string(),
+            "clickAction": t.string(),
+            "title": t.string(),
+            "defaultSound": t.boolean(),
+            "titleLocKey": t.string(),
+            "ticker": t.string(),
+            "notificationCount": t.integer(),
+            "titleLocArgs": t.array(t.string()),
+            "tag": t.string(),
+            "defaultVibrateTimings": t.boolean(),
+            "notificationPriority": t.string(),
+            "channelId": t.string(),
+            "sound": t.string(),
+            "eventTime": t.string(),
+            "bodyLocArgs": t.array(t.string()),
+            "image": t.string(),
+            "defaultLightSettings": t.boolean(),
+            "vibrateTimings": t.array(t.string()),
+            "color": t.string(),
+            "body": t.string(),
+            "localOnly": t.boolean(),
+            "bodyLocKey": t.string(),
+            "sticky": t.boolean(),
+            "lightSettings": g("LightSettingsOut"),
+            "icon": t.string(),
+            "bypassProxyNotification": t.boolean(),
+        }
+    ).named("AndroidNotificationOut")
     send_message_request_in = t.struct(
-        {"message": g("MessageIn"), "validateOnly": t.boolean()}
+        {"validateOnly": t.boolean(), "message": g("MessageIn")}
     ).named("SendMessageRequestIn")
     send_message_request_out = t.struct(
-        {"message": g("MessageOut"), "validateOnly": t.boolean()}
+        {"validateOnly": t.boolean(), "message": g("MessageOut")}
     ).named("SendMessageRequestOut")
+    fcm_options_in = t.struct({"analyticsLabel": t.string()}).named("FcmOptionsIn")
+    fcm_options_out = t.struct({"analyticsLabel": t.string()}).named("FcmOptionsOut")
+    apns_fcm_options_in = t.struct(
+        {"analyticsLabel": t.string(), "image": t.string()}
+    ).named("ApnsFcmOptionsIn")
+    apns_fcm_options_out = t.struct(
+        {"analyticsLabel": t.string(), "image": t.string()}
+    ).named("ApnsFcmOptionsOut")
+    light_settings_in = t.struct(
+        {
+            "lightOffDuration": t.string(),
+            "color": g("ColorIn"),
+            "lightOnDuration": t.string(),
+        }
+    ).named("LightSettingsIn")
+    light_settings_out = t.struct(
+        {
+            "lightOffDuration": t.string(),
+            "color": g("ColorOut"),
+            "lightOnDuration": t.string(),
+        }
+    ).named("LightSettingsOut")
+    android_config_in = t.struct(
+        {
+            "priority": t.string(),
+            "ttl": t.string(),
+            "notification": g("AndroidNotificationIn"),
+            "data": t.struct({}),
+            "collapseKey": t.string(),
+            "directBootOk": t.boolean(),
+            "restrictedPackageName": t.string(),
+            "fcmOptions": g("AndroidFcmOptionsIn"),
+        }
+    ).named("AndroidConfigIn")
+    android_config_out = t.struct(
+        {
+            "priority": t.string(),
+            "ttl": t.string(),
+            "notification": g("AndroidNotificationOut"),
+            "data": t.struct({}),
+            "collapseKey": t.string(),
+            "directBootOk": t.boolean(),
+            "restrictedPackageName": t.string(),
+            "fcmOptions": g("AndroidFcmOptionsOut"),
+        }
+    ).named("AndroidConfigOut")
+    googleapis = HTTPRuntime("https://fcm.googleapis.com/")
+    g.expose(
+        projectsMessagesSend=googleapis.post(
+            "/v1/{parent}/messages:send",
+            t.struct(
+                {
+                    "parent": t.string(),
+                }
+            ),
+            g("MessageOut"),
+            effect=effects.create(),
+        ).named("fcm.projects.messages.send"),
+    )

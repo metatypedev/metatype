@@ -63,7 +63,7 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
                 fields.append(f'"{f}": {typify(v, filter_read_only, suffix)}')
 
         ret += ",".join(fields)
-        ret += "}})"
+        ret += "})"
         if "id" in cursor:
             ref = f"{cursor.id}{suffix}"
             ret += f'.named("{ref}")'
@@ -133,23 +133,22 @@ def codegen(discovery):
     discovery.description
     discovery.documentationLink
 
-    cg = []
+    lines = []
 
     for schema in discovery.schemas.values():
         assert schema.type == "object"
-        cg.append(
+        lines.append(
             f'{camel_to_snake(schema.id)}_in = {typify(schema, filter_read_only=False, suffix="In")}'
         )
-        cg.append(
+        lines.append(
             f'{camel_to_snake(schema.id)}_out = {typify(schema, filter_read_only=True, suffix="Out")}'
         )
 
         schema.description
-    cg.append(f'googleapis = HTTPRuntime("{discovery.rootUrl}")')
-    cg.append(f"g.expose({flatten_calls(discovery, url_prefix=discovery.rootUrl)})")
+    lines.append(f'googleapis = HTTPRuntime("{discovery.rootUrl}")')
+    lines.append(f"g.expose({flatten_calls(discovery, url_prefix=discovery.rootUrl)})")
 
-    formatedLines = map(lambda line: f"    {line}\n", cg)
-    return "".join(formatedLines)
+    return "\n".join(lines)
 
 
 def import_googleapis(uri: str, gen: bool) -> None:
@@ -162,10 +161,10 @@ def import_googleapis(uri: str, gen: bool) -> None:
         code = redbaron.RedBaron(f.read())
 
     imports = [
-        ["typegraph.providers.google.runtimes", "googleapis"],
         ["typegraph", "t"],
         ["typegraph", "TypeGraph"],
         ["typegraph", "effects"],
+        ["typegraph.runtimes.http", "HTTPRuntime"],
     ]
 
     importer = code.find(
@@ -189,9 +188,5 @@ def import_googleapis(uri: str, gen: bool) -> None:
 
     new_code = black.format_str(code.dumps(), mode=black.FileMode())
 
-    # print(new_code)
     with open(file, "w") as f:
         f.write(new_code)
-
-
-# import_googleapis("https://fcm.googleapis.com/$discovery/rest?version=v1", True)

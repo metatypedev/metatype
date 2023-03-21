@@ -43,21 +43,24 @@ with TypeGraph(
         }
     ).named("message")
 
-    remote = HTTPRuntime("https://fcm.googleapis.com/v1")
+    googleapi = HTTPRuntime("https://fcm.googleapis.com/v1")
     g.expose(
         create_message=db.create(message),
         list_messages=db.find_many(message),
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         user=gql.query(t.struct({"id": t.integer()}), user),
-        send_notification=remote.post(
+        send_notification=googleapi.post(
             "/{parent}/messages:send",
             t.struct(
                 {
                     "parent": t.string(),
                 },
             ),
-            # skip:next-line
+            # skip:start
+            # FIXME wip: data, token fields seems to be optional (?)
+            # https://firebase.google.com/docs/cloud-messaging/send-message?hl=fr#rest
             # .compose(google.message_in.props),
+            # skip:end
             google.message_out,
             effect=effects.create(),
         ).named("fcm.projects.messages.send"),
