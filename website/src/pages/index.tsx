@@ -23,14 +23,13 @@ function Header() {
           <br />
           no matter where and how your (legacy) systems are.
         </p>
-        <div className="flex justify-center">
+        <div className="md:flex md:px-32 justify-center">
           <Link
             className="button button--primary button--lg m-2"
             to="/docs/tutorials/getting-started"
           >
             Getting started
           </Link>
-
           <Link
             className="button button--secondary button--lg m-2"
             to="/docs/concepts/overview"

@@ -5,15 +5,20 @@ from typegraph.runtimes.random import RandomRuntime
 # skip:end
 with TypeGraph(
     "rate",
-    # highlight-start
+    # highlight-next-line
     rate=TypeGraph.Rate(
+        # highlight-next-line
         window_limit=2000,
+        # highlight-next-line
         window_sec=15,
+        # highlight-next-line
         query_limit=200,
+        # highlight-next-line
         context_identifier=None,
+        # highlight-next-line
         local_excess=0,
+        # highlight-next-line
     ),
-    # hightlight-end
     # skip:next-line
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:

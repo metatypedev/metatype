@@ -7,23 +7,43 @@ from typegraph.runtimes.random import RandomRuntime
 
 with TypeGraph(
     "auth",
-    # hightlight-start
+    # highlight-next-line
     auths=[
-        # expects a secret `TG_[typegraph name]_[auth name]_CLIENT_ID`
-        # and `TG_[typegraph name]_[auth name]_CLIENT_SECRET`
+        # highlight-next-line
+        # expects 2 secrets in uppercase snake case:
+        # highlight-next-line
+        # `TG_[typegraph name]_[auth name]_CLIENT_ID`
+        # highlight-next-line
+        # `TG_[typegraph name]_[auth name]_CLIENT_SECRET`
+        # highlight-next-line
         Auth.oauth2(
+            # highlight-next-line
             "github",  # auth name
+            # highlight-next-line
             "https://github.com/login/oauth/authorize",
+            # highlight-next-line
             "https://github.com/login/oauth/access_token",
+            # highlight-next-line
             "openid profile email",
+            # highlight-next-line
             "https://api.github.com/user",
+            # highlight-next-line
         ),
+        # highlight-next-line
         # expects a secret `TG_[typegraph name]_BASIC_[user name]`
+        # highlight-next-line
         TypeGraph.Auth.basic(["admin"]),
+        # highlight-next-line
         # expects a secret `TG_[typegraph name]_[auth name]_JWK`
+        # highlight-next-line
         Auth.jwk(
-            "native", {"name": "ECDSA", "namedCurve": "P-384", "role": "superuser"}
+            # highlight-next-line
+            "native",
+            # highlight-next-line
+            {"name": "ECDSA", "namedCurve": "P-384", "role": "superuser"}
+            # highlight-next-line
         ),
+        # highlight-next-line
     ],
     # hightlight-end
     # skip:next-line

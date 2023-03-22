@@ -7,7 +7,7 @@ sidebar_position: 2
 
 ## apply
 
-**Type:** [object_22!](/docs/reference/typegate/prisma-migration/objects#object_22)
+**Type:** [object_23!](/docs/reference/typegate/prisma-migration/objects#object_23)
 
 apply field
 
@@ -60,7 +60,7 @@ typegraph<br />
 
 ## create
 
-**Type:** [object_31!](/docs/reference/typegate/prisma-migration/objects#object_31)
+**Type:** [object_33!](/docs/reference/typegate/prisma-migration/objects#object_33)
 
 create field
 
@@ -122,7 +122,7 @@ typegraph<br />
 
 ## deploy
 
-**Type:** [object_37!](/docs/reference/typegate/prisma-migration/objects#object_37)
+**Type:** [object_40!](/docs/reference/typegate/prisma-migration/objects#object_40)
 
 deploy field
 
@@ -138,6 +138,50 @@ Policies:
 <td>
 migrations<br />
 <a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>migrations input field</p>
+</td>
+</tr>
+<tr>
+<td>
+runtime<br />
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
+</td>
+<td>
+<p>runtime input field</p>
+</td>
+</tr>
+<tr>
+<td>
+typegraph<br />
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>typegraph input field</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## reset
+
+**Type:** [Boolean!](/docs/reference/typegate/prisma-migration/scalars#boolean)
+
+reset field
+
+Policies:
+- admin_only
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+migrations<br />
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>migrations input field</p>

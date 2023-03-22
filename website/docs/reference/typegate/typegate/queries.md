@@ -7,7 +7,7 @@ sidebar_position: 1
 
 ## typegraph
 
-**Type:** [typegraph](/docs/reference/typegate/typegate/objects#typegraph)
+**Type:** [object_13](/docs/reference/typegate/typegate/objects#object_13)
 
 typegraph field
 

@@ -5,15 +5,20 @@ from typegraph.runtimes.random import RandomRuntime
 # skip:end
 with TypeGraph(
     "cors",
-    # hightlight-start
+    # highlight-next-line
     cors=TypeGraph.Cors(
+        # highlight-next-line
         allow_origin=["https://not-this.domain"],
+        # highlight-next-line
         allow_headers=["authorization"],
+        # highlight-next-line
         expose_headers=["header-1"],
+        # highlight-next-line
         allow_credentials=True,
+        # highlight-next-line
         max_age_sec=60,  # cache in seconds
+        # highlight-next-line
     ),
-    # hightlight-end
 ) as g:
     random = RandomRuntime()
     public = policies.public()

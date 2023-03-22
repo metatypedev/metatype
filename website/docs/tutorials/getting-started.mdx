@@ -22,6 +22,9 @@ You will design some API blocks for a chat-based app where users can exchange me
 
 Running the ecosystem requires Python >= 3.8 which should be available on most of the recent OS.
 
+<details>
+  <summary>Python >=3.8 not yet installed? Follow these steps.</summary>
+
 <Tabs>
   <TabItem value="linux" label="Debian-based Linux" default>
 
@@ -40,10 +43,19 @@ brew install python3
   </TabItem>
   <TabItem value="windows" label="Windows">
 
-Download the [installer](https://www.python.org/downloads/windows/) from the official Python website and follow the steps.
+Download the [Python installer](https://www.python.org/downloads/windows/) from the official website and follow the installation steps.
 
   </TabItem>
 </Tabs>
+
+Then verify that you have a version higher than 3.8:
+
+```bash
+python --version # or python3 --version
+> Python 3.8.16
+```
+
+</details>
 
 :::info No previous Python knowledge required.
 While the definition of typegraphs is currently done in Python, it doesn't require previous experience writing Python.
@@ -57,6 +69,34 @@ This is the easiest way to get started, yet it's not publicly accessible. You ca
 <Newsletter />
 
 ## Quickstart with Docker
+
+<details>
+  <summary>Docker not yet installed? Follow these steps.</summary>
+
+<Tabs>
+  <TabItem value="linux" label="Debian-based Linux" default>
+
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+```
+
+  </TabItem>
+  <TabItem value="macos" label="MacOS">
+
+```bash
+softwareupdate --install-rosetta
+brew install docker
+```
+
+  </TabItem>
+  <TabItem value="windows" label="Windows">
+
+Download the [Docker installer](https://docs.docker.com/desktop/install/windows-install/) from the official website and follow the installation steps.
+
+  </TabItem>
+</Tabs>
+</details>
 
 ### 1. `meta` CLI
 

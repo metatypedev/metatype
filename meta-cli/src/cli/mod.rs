@@ -25,7 +25,7 @@ pub struct CommonArgs {
     pub gate: Option<Url>,
 
     /// Username to use to connect to the typegate (basic auth).
-    #[clap(short = 'U', long)]
+    #[clap(long)]
     pub username: Option<String>,
 
     /// Password to use to connect to the typegate (basic auth).
