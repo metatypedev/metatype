@@ -7,6 +7,8 @@ import { None, Option, Some } from "monads";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { z } from "zod";
 
+export const maxi32 = 2_147_483_647;
+
 export const configOrExit = async <T extends z.ZodRawShape>(
   sources: Record<string, unknown>[],
   schema: T,

@@ -40,6 +40,7 @@ import type {
 import { TemporalRuntime } from "./runtimes/temporal.ts";
 import { InternalAuth } from "./auth/protocols/internal.ts";
 import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
+import { PythonWasiRuntime } from "./runtimes/python_wasi/python_wasi.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -55,6 +56,7 @@ const runtimeInit: RuntimeInit = {
   temporal: TemporalRuntime.init,
   random: RandomRuntime.init,
   wasmedge: WasmEdgeRuntime.init,
+  python_wasi: PythonWasiRuntime.init,
 };
 
 export const typegraphVersion = "0.0.1";

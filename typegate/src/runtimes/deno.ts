@@ -3,11 +3,11 @@
 import { Deferred, deferred } from "std/async/deferred.ts";
 import * as Sentry from "sentry";
 import { ComputeStage } from "../engine.ts";
-import type { TypeGraph, TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
+import type { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
 import { Runtime } from "./Runtime.ts";
 import { envSharedWithWorkers, getLogger } from "../log.ts";
 import { FuncTask, ImportFuncTask, Task, TaskContext } from "./utils/codes.ts";
-import { ensure, envOrFail } from "../utils.ts";
+import { ensure, envOrFail, maxi32 } from "../utils.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { DenoRuntimeData } from "../type_node.ts";
 import { dirname, fromFileUrl, resolve, toFileUrl } from "std/path/mod.ts";
@@ -30,8 +30,7 @@ const defaultPermissions = {
 };
 
 export class DenoRuntime extends Runtime {
-  w: OnDemandWorker;
-  static defaultRuntimes: Map<TypeGraph, DenoRuntime> = new Map();
+  w: DenoWorker;
   static runtimes: Map<string, Record<string, DenoRuntime>> = new Map();
 
   private constructor(
@@ -43,7 +42,7 @@ export class DenoRuntime extends Runtime {
     private secrets: Record<string, string>,
   ) {
     super();
-    this.w = new OnDemandWorker(name, permissions, lazy, tg);
+    this.w = new DenoWorker(name, permissions, lazy, tg);
   }
 
   static getDefaultRuntime(tgName: string): Runtime {
@@ -204,11 +203,10 @@ interface ErrorMessage {
 
 type Message = SuccessMessage | ErrorMessage;
 
-const resetModulus = 1_000_000;
 const inactivityThreshold = 1;
 const inactivityIntervalMs = 15_000;
 
-class OnDemandWorker {
+class DenoWorker {
   lazyWorker?: Worker;
   name: string;
 
@@ -255,8 +253,8 @@ class OnDemandWorker {
       return;
     }
 
-    const activity = (this.counter - this.gcState + resetModulus) %
-      resetModulus;
+    const activity = (this.counter - this.gcState + maxi32) %
+      maxi32;
     this.gcState = this.counter;
 
     if (activity <= inactivityThreshold && this.tasks.size < 1) {
@@ -323,7 +321,7 @@ class OnDemandWorker {
 
   private nextId(): number {
     const n = this.counter++;
-    this.counter %= resetModulus;
+    this.counter %= maxi32;
     return n;
   }
 
