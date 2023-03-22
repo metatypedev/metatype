@@ -1,13 +1,11 @@
 # skip:start
-from typegraph import TypeGraph, effects, policies, t
+from typegraph import TypeGraph, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 # isort: off
 import sys
 from pathlib import Path
 from typegraph.runtimes.graphql import GraphQLRuntime
-
-from typegraph.runtimes.http import HTTPRuntime
 
 sys.path.append(str(Path(__file__).parent))
 # skip:end
@@ -43,26 +41,11 @@ with TypeGraph(
         }
     ).named("message")
 
-    googleapi = HTTPRuntime("https://fcm.googleapis.com/v1")
     g.expose(
         create_message=db.create(message),
         list_messages=db.find_many(message),
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         user=gql.query(t.struct({"id": t.integer()}), user),
-        send_notification=googleapi.post(
-            "/{parent}/messages:send",
-            t.struct(
-                {
-                    "parent": t.string(),
-                },
-            ),
-            # skip:start
-            # FIXME wip: data, token fields seems to be optional (?)
-            # https://firebase.google.com/docs/cloud-messaging/send-message?hl=fr#rest
-            # .compose(google.message_in.props),
-            # skip:end
-            google.message_out,
-            effect=effects.create(),
-        ).named("fcm.projects.messages.send"),
+        send_notification=google.projects_messages_send,
         default_policy=[public],
     )

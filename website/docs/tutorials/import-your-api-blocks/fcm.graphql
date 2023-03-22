@@ -1,7 +1,18 @@
 mutation SendNotification {
-  send_notification(parent: "firebase-project-id") {
+  send_notification(
+    parent: "projects/<firebase-project-id>",
+    # test with a fake message
+    validateOnly: true,
+    message: {
+      notification:{
+          title: "FCM Message",
+          body: "This is an FCM Message"
+      },
+      # recipient
+      token:"<token>",
+    }
+  ) {
     name
-    topic
   }
 }
 

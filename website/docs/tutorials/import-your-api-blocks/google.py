@@ -211,15 +211,20 @@ with TypeGraph(
         }
     ).named("AndroidConfigOut")
     googleapis = HTTPRuntime("https://fcm.googleapis.com/")
+
+    projects_messages_send = googleapis.post(
+        "/v1/{parent}/messages:send",
+        t.struct(
+            {
+                "parent": t.string(),
+                "message": g("MessageIn"),
+                "validateOnly": t.boolean(),
+            }
+        ),
+        g("MessageOut"),
+        effect=effects.create(),
+    ).named("fcm.projects.messages.send")
+
     g.expose(
-        projectsMessagesSend=googleapis.post(
-            "/v1/{parent}/messages:send",
-            t.struct(
-                {
-                    "parent": t.string(),
-                }
-            ),
-            g("MessageOut"),
-            effect=effects.create(),
-        ).named("fcm.projects.messages.send"),
+        projectsMessagesSend=projects_messages_send,
     )
