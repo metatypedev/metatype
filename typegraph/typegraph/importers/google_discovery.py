@@ -26,7 +26,7 @@ def reformat_params(path: str):
     return re.sub("{\+([A-Za-z0-9_]+)}", r"{\1}", path)
 
 
-def typify_object(cursor, filter_read_only=False, suffix="", opt=False):
+def typify_object(cursor, filter_read_only=False, suffix=""):
     ret = "t.struct({"
     fields = []
     for f, v in cursor.get("properties", {}).items():
@@ -41,13 +41,13 @@ def typify_object(cursor, filter_read_only=False, suffix="", opt=False):
     return ret
 
 
-def typify(cursor, filter_read_only=False, suffix="", opt=False):
+def typify(cursor, filter_read_only=False, suffix="", allow_opt=True):
     if (
-        not opt
+        allow_opt
         and "description" in cursor
-        and cursor.description.startswith("Optional")
+        and not cursor.description.startswith("Required")
     ):
-        return f"t.optional({typify(cursor, filter_read_only, suffix, True)})"
+        return f"t.optional({typify(cursor, filter_read_only, suffix, False)})"
 
     if "$ref" in cursor:
         return f'g("{cursor["$ref"]}{suffix}")'
@@ -70,10 +70,10 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
         return "t.any()"
 
     if cursor.type == "array":
-        return f't.array({typify(cursor["items"], filter_read_only, suffix)})'
+        return f't.array({typify(cursor["items"], filter_read_only, suffix, False)})'
 
     if cursor.type == "object":
-        return typify_object(cursor, filter_read_only, suffix, opt)
+        return typify_object(cursor, filter_read_only, suffix)
 
     raise Exception(f"Unexpect type {cursor}")
 
@@ -112,7 +112,7 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
                 inp_fields += generated_obj_fields.get(ref)
 
             inp = f"t.struct({{{inp_fields}}})"
-            out = typify(method.response, suffix="Out")
+            out = f't.either([t.struct({{"error": t.any()}}), {typify(method.response, suffix="Out")}])'
 
             effect = get_effect(method.httpMethod)
             path = reformat_params(method.path)
@@ -154,10 +154,10 @@ def codegen(discovery):
     for schema in discovery.schemas.values():
         assert schema.type == "object"
         lines.append(
-            f'{camel_to_snake(schema.id)}_in = {typify(schema, filter_read_only=False, suffix="In")}'
+            f'{camel_to_snake(schema.id)}_in = {typify(schema, filter_read_only=False, suffix="In", allow_opt=False)}'
         )
         lines.append(
-            f'{camel_to_snake(schema.id)}_out = {typify(schema, filter_read_only=True, suffix="Out")}'
+            f'{camel_to_snake(schema.id)}_out = {typify(schema, filter_read_only=True, suffix="Out", allow_opt=False)}'
         )
 
         schema.description
