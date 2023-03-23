@@ -9,6 +9,7 @@ import httpx
 import redbaron
 from box import Box
 
+# required for finding the directory containing THIS file
 from typegraph.importers import google_discovery
 
 generated_obj_fields: dict[str, str] = {}
@@ -117,7 +118,6 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
             inp = f"t.struct({{{inp_fields}}})"
             out = f't.either([t.struct({{}}), {typify(method.response, suffix="Out")}])'
 
-            effect = get_effect(method.httpMethod)
             path = reformat_params(method.path)
             ts_mat = deno_http_request_mat(path, method.httpMethod)
 
@@ -135,7 +135,7 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
                 }})
             """
 
-            func = f"t.func({req_inp}, {req_out}, {ts_mat}, effect={effect})"
+            func = f"t.func({req_inp}, {req_out}, {ts_mat})"
 
             func_key = f"{hierarchy}{upper_first(methodName)}"
             func_var = camel_to_snake(func_key)
@@ -167,7 +167,7 @@ def deno_http_request_mat(url: str, method: str):
     script_path = f"generated_{template_file}"
     with open(script_path, "w") as f:
         f.write(content)
-        return f'ModuleMat("{script_path}").imp("{method.lower()}")'
+        return f'ModuleMat("{script_path}").imp("{method.lower()}", effect={get_effect(method)})'
 
 
 def codegen(discovery):

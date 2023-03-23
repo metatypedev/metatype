@@ -1,15 +1,18 @@
 mutation A {
   send_notification(
-    parent: "projects/<firebase-project-id>",
     # test with a fake message
-    validateOnly: true,
-    message: {
-      notification:{
-          title: "FCM Message",
-          body: "This is an FCM Message"
-      },
-      # recipient
-      token:"<token>",
+    path: "projects/<firebase-project-id>/messages:send",
+    auth: "Bearer <auth-token>",
+    body: {
+      validateOnly: true,
+      message: {
+        notification:{
+            title: "FCM Message",
+            body: "This is an FCM Message"
+        },
+        # recipient
+        token:"<token>",
+      }
     }
   ) {
     name
