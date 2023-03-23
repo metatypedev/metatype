@@ -1,11 +1,11 @@
 # skip:start
-from typegraph import TypeGraph, effects, policies, t
+from typegraph import TypeGraph, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
-from typegraph.runtimes.graphql import GraphQLRuntime
 
 # isort: off
 import sys
 from pathlib import Path
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 sys.path.append(str(Path(__file__).parent))
 # skip:end
@@ -23,37 +23,29 @@ with TypeGraph(
     gql = GraphQLRuntime("https://graphqlzero.almansi.me/api")
     public = policies.public()
 
-    user = t.struct({"id": t.integer(), "name": t.string()})
+    user = t.struct({"id": t.string(), "name": t.string()}).named("user")
 
     message = t.struct(
         {
             "id": t.integer().config("id", "auto"),
             "title": t.string(),
-            "user_id": t.integer().named("uid"),
-            "user": gql.query(  # 1
-                t.struct({"id": t.integer().from_parent(g("uid"))}),  # 2
-                t.optional(user),
-            ),
+            # skip:start
+            # AssertionError: Type f'function' not supported
+            # "user": gql.query(
+            #     # input
+            #     t.struct({"id": t.string().from_parent(g("user"))}),
+            #     # output
+            #     user.optional(),
+            # ).optional(),
+            # skip:end
         }
     ).named("message")
 
     g.expose(
-        create_message=db.insert_one(message),
+        create_message=db.create(message),
         list_messages=db.find_many(message),
-        list_users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
-        send_notification=t.func(
-            t.struct(
-                {
-                    "parent": t.string(),
-                }
-            ).compose(google.MessageIn),
-            google.MessageOut,
-            google.RestMat(
-                "POST",
-                "https://fcm.googleapis.com/v1/{+parent}/messages:send",
-                # highlight-next-line
-                effect=effects.create(),
-            ),
-        ),
+        users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
+        user=gql.query(t.struct({"id": t.integer()}), user),
+        send_notification=google.projects_messages_send,
         default_policy=[public],
     )

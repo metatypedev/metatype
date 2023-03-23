@@ -8,6 +8,9 @@ import httpx
 import redbaron
 from box import Box
 
+generated_obj_fields: dict[str, str] = {}
+func_defs: dict[str, str] = {}
+
 
 def camel_to_snake(name):
     name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
@@ -18,13 +21,33 @@ def upper_first(s):
     return f"{s[0].upper()}{s[1:]}"
 
 
-def typify(cursor, filter_read_only=False, suffix="", opt=False):
+# {+some_param} => {some_param}
+def reformat_params(path: str):
+    return re.sub("{\+([A-Za-z0-9_]+)}", r"{\1}", path)
+
+
+def typify_object(cursor, filter_read_only=False, suffix=""):
+    ret = "t.struct({"
+    fields = []
+    for f, v in cursor.get("properties", {}).items():
+        if filter_read_only or "readOnly" not in v or not v.readOnly:
+            fields.append(f'"{f}": {typify(v, filter_read_only, suffix)}')
+    ret += ",".join(fields)
+    ret += "})"
+    if "id" in cursor:
+        ref = f"{cursor.id}{suffix}"
+        ret += f'.named("{ref}")'
+        generated_obj_fields[ref] = ",".join(fields)
+    return ret
+
+
+def typify(cursor, filter_read_only=False, suffix="", allow_opt=True):
     if (
-        not opt
+        allow_opt
         and "description" in cursor
-        and cursor.description.startswith("Optional")
+        and not cursor.description.startswith("Required")
     ):
-        return f"t.optional({typify(cursor, filter_read_only, suffix, True)})"
+        return f"t.optional({typify(cursor, filter_read_only, suffix, False)})"
 
     if "$ref" in cursor:
         return f'g("{cursor["$ref"]}{suffix}")'
@@ -47,42 +70,25 @@ def typify(cursor, filter_read_only=False, suffix="", opt=False):
         return "t.any()"
 
     if cursor.type == "array":
-        return f't.array({typify(cursor["items"], filter_read_only, suffix)})'
+        return f't.array({typify(cursor["items"], filter_read_only, suffix, False)})'
 
     if cursor.type == "object":
-        ret = "t.struct({"
-
-        fields = []
-        for f, v in cursor.get("properties", {}).items():
-            if filter_read_only or "readOnly" not in v or not v.readOnly:
-                fields.append(f'"{f}": {typify(v, filter_read_only, suffix)}')
-
-        if len(fields) == 0:
-            # FIXME : accept empty object?
-            fields.append('"_": t.optional(t.any())')
-
-        ret += ",".join(fields)
-        ret += "}})"
-        if "id" in cursor:
-            ref = f"{cursor.id}{suffix}"
-            ret += f'.named("{ref}")'
-
-        return ret
+        return typify_object(cursor, filter_read_only, suffix)
 
     raise Exception(f"Unexpect type {cursor}")
 
 
 def get_effect(method):
-    if method == "GET":
-        return "effects.none()"
-    if method == "POST":
-        return "effects.create()"
-    if method == "PUT":
-        return "effects.upsert()"
-    if method == "DELETE":
-        return "effects.delete()"
-    if method == "PATCH":
-        return "effects.update()"
+    effects = {
+        "GET": "effects.none()",
+        "POST": "effects.create()",
+        "PUT": "effects.upsert()",
+        "DELETE": "effects.delete()",
+        "PATCH": "effects.update()",
+    }
+    effect = effects.get(method)
+    if effect is not None:
+        return effect
     raise Exception(f"Unsupported HTTP method '{method}'")
 
 
@@ -91,16 +97,33 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
 
     if "methods" in cursor:
         for methodName, method in cursor.methods.items():
-            inp = ""
+            inp_fields = ""
+            # query params
             for parameterName, parameter in method.parameters.items():
                 if parameterName != "readMask":
-                    inp += f'"{parameterName}": {typify(parameter, suffix="In")},'
+                    inp_fields += (
+                        f'"{parameterName}": {typify(parameter, suffix="In")},'
+                    )
+            # body input
+            # flatten first depth fields and join with query params
+            if "$ref" in method.request:
+                # resolve first depth
+                ref = f"{method.request.get('$ref')}In"
+                inp_fields += generated_obj_fields.get(ref)
 
-            out = typify(method.response, suffix="Out")
+            inp = f"t.struct({{{inp_fields}}})"
+            out = f't.either([t.struct({{"error": t.any()}}), {typify(method.response, suffix="Out")}])'
 
             effect = get_effect(method.httpMethod)
-            mat = f'googleapis.RestMat("{method.httpMethod}", "{url_prefix}{method.path}", effect={effect})'
-            ret += f'{hierarchy}{upper_first(methodName)}=t.func(t.struct({{{inp}}}), {out}, {mat}).named("{method.id}"),\n'
+            path = reformat_params(method.path)
+            func = f'googleapis.{method.httpMethod.lower()}("/{path}", {inp}, {out}, effect={effect})'
+
+            func_key = f"{hierarchy}{upper_first(methodName)}"
+            func_var = camel_to_snake(func_key)
+            func_def = f'{func}.named("{method.id}")'
+            func_defs[func_var] = func_def
+            # for expose
+            ret += f"{func_key}={func_var},\n"
 
     if "resources" in cursor:
         for resourceName, resource in cursor.resources.items():
@@ -126,19 +149,28 @@ def codegen(discovery):
     discovery.description
     discovery.documentationLink
 
-    cg = ""
+    lines = []
 
     for schema in discovery.schemas.values():
         assert schema.type == "object"
-
-        cg += f'    {camel_to_snake(schema.id)}_in = {typify(schema, filter_read_only=False, suffix="In")}\n'
-        cg += f'    {camel_to_snake(schema.id)}_out = {typify(schema, filter_read_only=True, suffix="Out")}\n'
+        lines.append(
+            f'{camel_to_snake(schema.id)}_in = {typify(schema, filter_read_only=False, suffix="In", allow_opt=False)}'
+        )
+        lines.append(
+            f'{camel_to_snake(schema.id)}_out = {typify(schema, filter_read_only=True, suffix="Out", allow_opt=False)}'
+        )
 
         schema.description
+    lines.append(f'googleapis = HTTPRuntime("{discovery.rootUrl}")')
 
-    cg += f"    g.expose({flatten_calls(discovery, url_prefix=discovery.rootUrl)})"
+    expose_block = f"g.expose({flatten_calls(discovery, url_prefix=discovery.rootUrl)})"
 
-    return cg
+    for func_var, func_def in func_defs.items():
+        lines.append(f"{func_var}={func_def}")
+
+    lines.append(expose_block)
+
+    return "\n".join(lines)
 
 
 def import_googleapis(uri: str, gen: bool) -> None:
@@ -151,10 +183,10 @@ def import_googleapis(uri: str, gen: bool) -> None:
         code = redbaron.RedBaron(f.read())
 
     imports = [
-        ["typegraph.providers.google.runtimes", "googleapis"],
         ["typegraph", "t"],
         ["typegraph", "TypeGraph"],
         ["typegraph", "effects"],
+        ["typegraph.runtimes.http", "HTTPRuntime"],
     ]
 
     importer = code.find(
@@ -172,7 +204,6 @@ def import_googleapis(uri: str, gen: bool) -> None:
             code.insert(0, f"from {frm} import {imp}\n")
 
     discovery = Box(httpx.get(uri).json())
-
     wth = code.find("with")
     wth.contexts = f'TypeGraph(name="{discovery.name}") as g'
     wth.value = codegen(discovery)
