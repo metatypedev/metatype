@@ -1,12 +1,15 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import inspect
+import os
 import re
 
 import black
 import httpx
 import redbaron
 from box import Box
+
+from typegraph.importers import google_discovery
 
 generated_obj_fields: dict[str, str] = {}
 func_defs: dict[str, str] = {}
@@ -100,7 +103,7 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
             inp_fields = ""
             # query params
             for parameterName, parameter in method.parameters.items():
-                if parameterName != "readMask":
+                if parameterName != "readMask" and parameterName != "parent":
                     inp_fields += (
                         f'"{parameterName}": {typify(parameter, suffix="In")},'
                     )
@@ -112,11 +115,27 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
                 inp_fields += generated_obj_fields.get(ref)
 
             inp = f"t.struct({{{inp_fields}}})"
-            out = f't.either([t.struct({{"error": t.any()}}), {typify(method.response, suffix="Out")}])'
+            out = f't.either([t.struct({{}}), {typify(method.response, suffix="Out")}])'
 
             effect = get_effect(method.httpMethod)
             path = reformat_params(method.path)
-            func = f'googleapis.{method.httpMethod.lower()}("/{path}", {inp}, {out}, effect={effect})'
+            ts_mat = deno_http_request_mat(path, method.httpMethod)
+
+            req_inp = f"""
+                t.struct({{
+                    "path": t.string(),
+                    "auth": t.string(),
+                    "body": {inp}
+                }})
+            """
+            req_out = f"""
+                t.struct({{
+                    "success": t.boolean(),
+                    "response": {out},
+                }})
+            """
+
+            func = f"t.func({req_inp}, {req_out}, {ts_mat}, effect={effect})"
 
             func_key = f"{hierarchy}{upper_first(methodName)}"
             func_var = camel_to_snake(func_key)
@@ -136,6 +155,19 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
             )
 
     return ret
+
+
+def deno_http_request_mat(url: str, method: str):
+    # first read the file
+    template_file = "google_request.ts"
+    generator_dir = os.path.dirname(os.path.realpath(google_discovery.__file__))
+    template_path = os.path.join(generator_dir, "ts-templates", template_file)
+    content = open(template_path, "r").read()
+    # write to cwd
+    script_path = f"generated_{template_file}"
+    with open(script_path, "w") as f:
+        f.write(content)
+        return f'ModuleMat("{script_path}").imp("{method.lower()}")'
 
 
 def codegen(discovery):
@@ -161,7 +193,6 @@ def codegen(discovery):
         )
 
         schema.description
-    lines.append(f'googleapis = HTTPRuntime("{discovery.rootUrl}")')
 
     expose_block = f"g.expose({flatten_calls(discovery, url_prefix=discovery.rootUrl)})"
 
@@ -186,7 +217,7 @@ def import_googleapis(uri: str, gen: bool) -> None:
         ["typegraph", "t"],
         ["typegraph", "TypeGraph"],
         ["typegraph", "effects"],
-        ["typegraph.runtimes.http", "HTTPRuntime"],
+        ["typegraph.runtimes.deno", "ModuleMat"],
     ]
 
     importer = code.find(
