@@ -907,7 +907,9 @@ class JsonSchemaBuilder {
 
       case Type.FUNCTION:
         // unreachable: should have been checked in the typegraph validation hook
-        throw new Error("not supported");
+        throw new Error(
+          `${typeNode.title} (${typeNode.type}) is not supported`,
+        );
 
       case Type.INTEGER:
       case Type.NUMBER:
