@@ -31,12 +31,12 @@ with TypeGraph(
             "title": t.string(),
             # skip:start
             # AssertionError: Type f'function' not supported
-            # "user": gql.query(
-            #     # input
-            #     t.struct({"id": t.string().from_parent(g("user"))}),
-            #     # output
-            #     user.optional(),
-            # ).optional(),
+            "user": gql.query(
+                # input
+                t.struct({"id": t.string().from_parent(g("user"))}),
+                # output
+                user.optional(),
+            ).optional(),
             # skip:end
         }
     ).named("message")
@@ -46,6 +46,6 @@ with TypeGraph(
         list_messages=db.find_many(message),
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         user=gql.query(t.struct({"id": t.integer()}), user),
-        send_notification=google.projects_messages_send,
+        projectsMessagesSend=google.projects_messages_send,
         default_policy=[public],
     )

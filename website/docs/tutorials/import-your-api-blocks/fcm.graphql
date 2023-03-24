@@ -1,5 +1,5 @@
 mutation A {
-  send_notification(
+  projectsMessagesSend(
     # test with a fake message
     path: "projects/<firebase-project-id>/messages:send",
     auth: "Bearer <auth-token>",
@@ -15,7 +15,7 @@ mutation A {
       }
     }
   ) {
-    name
+    success
   }
 }
 

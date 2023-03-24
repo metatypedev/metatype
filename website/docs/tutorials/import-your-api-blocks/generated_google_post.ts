@@ -1,3 +1,5 @@
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
 interface GoogleRequest {
   path: string;
   method: string | undefined;
@@ -18,7 +20,7 @@ export default async function (
     const request = await fetch(baseUrl + path, {
       method,
       headers: {
-        method: "REQUEST_TYPE_PLACEHOLDER",
+        method: "POST",
         authorization: auth,
         accept: "application/json",
         "content-type": "application/json",
@@ -27,8 +29,10 @@ export default async function (
     });
     const response = await request.json();
     // request ok
+    console.log("got response", response);
     return { success: true, response };
   } catch (err) {
+    console.error("got error", err);
     return { success: false, response: (err as any).message ?? err };
   }
 }
