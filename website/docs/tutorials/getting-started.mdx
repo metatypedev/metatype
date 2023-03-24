@@ -126,10 +126,11 @@ python3 -c 'import typegraph; print(typegraph.version)'
 
 ### 3. `typegate` node
 
-Finally download and launch the docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
+Finally, download and launch the docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/examples/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/examples/.env.sample -o .env.sample
 docker compose up --detach
 
 curl -X POST http://localhost:7890/typegate \

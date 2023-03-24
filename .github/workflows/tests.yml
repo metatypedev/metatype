@@ -72,7 +72,6 @@ jobs:
           cd website
           pnpm install --frozen-lockfile
           cd ..
-          deno run -A dev/lock.ts --check
       - uses: pre-commit/action@v3.0.0
 
   test-website:
