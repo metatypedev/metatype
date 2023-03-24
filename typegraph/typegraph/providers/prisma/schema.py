@@ -142,7 +142,7 @@ class FieldBuilder:
         elif isinstance(typ, t.number):
             name = "Float"
 
-        elif isinstance(typ, t.func):
+        elif isinstance(typ, t.func) and typ.runtime != parent_type.runtime:
             return None
 
         else:
