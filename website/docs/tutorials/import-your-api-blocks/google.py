@@ -246,7 +246,7 @@ with TypeGraph(
                 "response": t.either([t.struct({}), g("MessageOut")]),
             }
         ),
-        ModuleMat("generated_google_request.ts").imp("post", effect=effects.create()),
+        ModuleMat("generated_google_post.ts").imp("default", effect=effects.create()),
     ).named("fcm.projects.messages.send")
     g.expose(
         projectsMessagesSend=projects_messages_send,

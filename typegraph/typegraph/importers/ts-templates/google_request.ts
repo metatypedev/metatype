@@ -10,7 +10,7 @@ interface GoogleResponse {
   response: any;
 }
 
-export async function doRequest(
+export default async function (
   { auth, body, method, path }: GoogleRequest,
 ): Promise<GoogleResponse> {
   try {
@@ -18,7 +18,7 @@ export async function doRequest(
     const request = await fetch(baseUrl + path, {
       method,
       headers: {
-        method: method ?? "GET",
+        method: "REQUEST_TYPE_PLACEHOLDER",
         authorization: auth,
         accept: "application/json",
         "content-type": "application/json",
@@ -31,24 +31,4 @@ export async function doRequest(
   } catch (err) {
     return { success: false, response: err };
   }
-}
-
-export async function get(req: GoogleRequest) {
-  req.method = "GET";
-  return await doRequest(req);
-}
-
-export async function post(req: GoogleRequest) {
-  req.method = "POST";
-  return await doRequest(req);
-}
-
-export async function put(req: GoogleRequest) {
-  req.method = "PUT";
-  return await doRequest(req);
-}
-
-export async function patch(req: GoogleRequest) {
-  req.method = "PATCH";
-  return await doRequest(req);
 }

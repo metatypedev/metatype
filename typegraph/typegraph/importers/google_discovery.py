@@ -163,11 +163,12 @@ def deno_http_request_mat(url: str, method: str):
     generator_dir = os.path.dirname(os.path.realpath(google_discovery.__file__))
     template_path = os.path.join(generator_dir, "ts-templates", template_file)
     content = open(template_path, "r").read()
+    content = re.sub("REQUEST_TYPE_PLACEHOLDER", method.upper(), content)
     # write to cwd
-    script_path = f"generated_{template_file}"
+    script_path = f"generated_google_{method.lower()}.ts"
     with open(script_path, "w") as f:
         f.write(content)
-        return f'ModuleMat("{script_path}").imp("{method.lower()}", effect={get_effect(method)})'
+        return f'ModuleMat("{script_path}").imp("default", effect={get_effect(method)})'
 
 
 def codegen(discovery):
