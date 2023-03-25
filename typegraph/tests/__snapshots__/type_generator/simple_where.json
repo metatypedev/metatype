@@ -1,0 +1,46 @@
+{
+    "type": "object",
+    "name": "object_12",
+    "children": {
+        "id": {
+            "type": "optional",
+            "name": "optional_8",
+            "children": {
+                "[item]": {
+                    "type": "string",
+                    "name": "string_1"
+                }
+            }
+        },
+        "email": {
+            "type": "optional",
+            "name": "optional_9",
+            "children": {
+                "[item]": {
+                    "type": "string",
+                    "name": "string_2"
+                }
+            }
+        },
+        "age": {
+            "type": "optional",
+            "name": "optional_10",
+            "children": {
+                "[item]": {
+                    "type": "integer",
+                    "name": "integer_3"
+                }
+            }
+        },
+        "fullName": {
+            "type": "optional",
+            "name": "optional_11",
+            "children": {
+                "[item]": {
+                    "type": "string",
+                    "name": "string_4"
+                }
+            }
+        }
+    }
+}

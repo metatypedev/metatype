@@ -1,11 +1,12 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
-from typing import Optional, Union
+
+from typing import Optional, Set, Union
 
 from attrs import frozen
 
 from typegraph import t
 from typegraph.graph.typegraph import find, resolve_proxy
-from typegraph.providers.prisma.relations import RelationshipRegister
+from typegraph.providers.prisma.relations import Registry
 from typegraph.providers.prisma.utils import (
     rename_with_idx,
     resolve_entity_quantifier,
@@ -15,44 +16,42 @@ from typegraph.providers.prisma.utils import (
 
 @frozen
 class TypeGenerator:
-    spec: RelationshipRegister
+    reg: Registry
 
     def get_input_type(
         self,
         tpe: t.struct,
-        skip=set(),  # set of relation names, indicates related models to skip
+        # set of relation names, indicates related models to skip
+        skip: Set[str] = set(),
         update=False,
         name: Optional[str] = None,
     ) -> Union[t.typedef, t.NodeProxy]:
-        proxy = name and find(name)
+        proxy = find(name) if name is not None else None
         if proxy is not None:
             return proxy
 
         fields = {}
         if not isinstance(tpe, t.struct):
             raise Exception(f'expected a struct, got: "{type(tpe).__name__}"')
+
         for key, field_type in tpe.props.items():
             field_type = resolve_proxy(field_type)
-            proxy = self.spec.proxies[tpe.name].get(key)
-            relname = proxy.link_name if proxy is not None else None
-            if relname is not None:
-                if relname in skip:
+            rel = self.reg.models[tpe.name].get(key)
+            if rel is not None:
+                if rel.name in skip:
                     continue
-                relation = self.spec.relations[relname]
                 nested = resolve_proxy(resolve_entity_quantifier(field_type))
 
                 entries = {
                     "create": self.get_input_type(
-                        nested, skip=skip | {relname}, name=f"Input{nested.name}Create"
+                        nested, skip=skip | {rel.name}, name=f"Input{nested.name}Create"
                     ).optional(),
                     "connect": self.get_where_type(
                         nested, name=f"Input{nested.name}"
                     ).optional(),
                 }
-                if (
-                    relation.side_of(tpe.name).is_left()
-                    and relation.cardinality.is_one_to_many()
-                ):
+                side = rel.side_of(tpe.name) or rel.side_of_field(key)
+                if side.is_right() and rel.right.cardinality.is_many():
                     entries["createMany"] = t.struct(
                         {"data": t.array(entries["create"].of)}
                     ).optional()
@@ -60,8 +59,7 @@ class TypeGenerator:
                 fields[key] = t.struct(entries).optional()
 
             elif isinstance(field_type, t.func):
-                # Note: already skiped in the Prisma model generator
-                fields[key] = field_type.out
+                raise Exception(f'Unsupported function field "{key}"')
             else:
                 if update:
                     fields[key] = field_type.optional()
@@ -258,12 +256,13 @@ class TypeGenerator:
             # Note:
             # nested relations are not a represented as t.struct
             # we need to resolve the correct type first
-            v = resolve_proxy(v)
-            proxy = self.spec.proxies[tpe.name].get(k)
-            relname = proxy.link_name if proxy is not None else None
-            if relname is not None:
+
+            rel = self.reg.models[tpe.name].get(k)
+            if rel is not None:
+                relname = rel.name
                 if relname in seen:
                     continue
+                v = resolve_proxy(v)
                 if isinstance(v, t.array) or isinstance(v, t.optional):
                     # one to many (countable)
                     # Ex:
@@ -328,9 +327,50 @@ class TypeGenerator:
         return t.struct(fields)
 
     def get_order_by_type(self, tpe: t.struct) -> t.struct:
-        term_node_value = t.enum(["asc", "desc"]).optional()
-        remap_struct = self.deep_map(tpe, lambda _: term_node_value).optional()
-        return t.array(remap_struct)
+        # TODO: global, named, only generated once per runtime
+        sort = t.enum(["asc", "desc"]).optional()
+        aggregate = t.struct(
+            {k: sort.optional() for k in ["_count", "_avg", "_sum", "_min", "_max"]}
+        ).optional()
+
+        # orderByNulls is a preview feature in prisma: see
+        # https://www.prisma.io/docs/concepts/components/prisma-client/filtering-and-sorting#sort-with-null-records-first-or-last
+        # sort_nulls = t.struct({"sort": sort, "nulls": t.enum(["first", "last"])})
+
+        def get_sorting_type(tpe: t.TypeNode):
+            tpe = resolve_proxy(tpe)
+
+            # optional = False
+            if isinstance(tpe, t.optional):
+                # optional = True
+                tpe = tpe.of
+
+            if isinstance(tpe, t.struct):
+                # relation
+                # TODO: eventual infinite recursion
+                return get_order_by(tpe).optional()
+
+            if isinstance(tpe, t.array):
+                nested_type = resolve_proxy(tpe.of)
+                if isinstance(nested_type, t.struct):
+                    return aggregate
+                else:
+                    # TODO: check prisma docs
+                    return sort
+
+            # scalar type
+            # ? are they all sortable??
+
+            # orderByNulls: preview feature in prisma
+            # if optional:
+            #     return t.either(sort, sort_nulls)
+
+            return sort
+
+        def get_order_by(tpe: t.struct):
+            return t.struct({k: get_sorting_type(v) for k, v in tpe.props.items()})
+
+        return t.array(get_order_by(tpe))
 
 
 def unsupported_cardinality(c: str):
