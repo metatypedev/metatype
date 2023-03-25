@@ -60,7 +60,8 @@ class TypeGenerator:
                 fields[key] = t.struct(entries).optional()
 
             elif isinstance(field_type, t.func):
-                raise Exception(f'Unsupported function field "{key}"')
+                # Note: already skiped in the Prisma model generator
+                fields[key] = field_type.out
             else:
                 if update:
                     fields[key] = field_type.optional()
