@@ -14,7 +14,9 @@ import { signJWT } from "../../src/crypto.ts";
 import { parse } from "std/flags/mod.ts";
 
 import { None } from "monads";
-import { execute, MetaTest, testDir } from "../utils.ts";
+import { execute, testDir } from "../utils.ts";
+
+import { MetaTest } from "./metatest.ts";
 
 const testConfig = parse(Deno.args);
 

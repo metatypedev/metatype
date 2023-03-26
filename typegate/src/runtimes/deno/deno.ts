@@ -110,7 +110,9 @@ export class DenoRuntime extends Runtime {
       ops,
     );
 
-    await w.disableLazyness();
+    if (Deno.env.get("DENO_TESTING") === "true") {
+      await w.disableLazyness();
+    }
 
     const rt = new DenoRuntime(
       w,
