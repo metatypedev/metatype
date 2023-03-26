@@ -4,7 +4,7 @@ import { Deferred } from "std/async/deferred.ts";
 
 export interface Message<T> {
   id: number;
-  op: number | null;
+  op: string | number | null;
   data: T;
 }
 

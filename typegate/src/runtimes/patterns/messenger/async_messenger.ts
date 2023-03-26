@@ -14,9 +14,9 @@ export type MessengerStart<Broker, A> = (
 export type MessengerSend<Broker, M> = (
   broker: Broker,
   data: Message<M>,
-) => Promise<void>;
+) => Promise<void> | void;
 
-export type MessengerStop<Broker> = (broker: Broker) => Promise<void>;
+export type MessengerStop<Broker> = (broker: Broker) => Promise<void> | void;
 
 export class AsyncMessenger<Broker, M, A> {
   protected broker: Broker;
@@ -42,7 +42,7 @@ export class AsyncMessenger<Broker, M, A> {
   }
 
   execute(
-    op: number | null,
+    op: string | number | null,
     data: M,
     hooks: Array<() => Promise<void>> = [],
   ): Promise<unknown> {

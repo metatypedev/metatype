@@ -8,7 +8,7 @@ import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { DenoRuntimeData } from "../../type_node.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../auth/protocols/internal.ts";
-import { DenoWorker } from "./deno_worker.ts";
+import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
@@ -20,7 +20,7 @@ export class DenoRuntime extends Runtime {
   static runtimes: Map<string, Record<string, DenoRuntime>> = new Map();
 
   private constructor(
-    private w: DenoWorker,
+    private w: DenoMessenger,
     private registry: Map<string, number>,
     private typegraphName: string,
     private name: string,
@@ -85,7 +85,7 @@ export class DenoRuntime extends Runtime {
           type: "register_func",
           fnCode: code,
           op: registryCount,
-          verbose: true,
+          verbose: false,
         });
         registry.set(code, registryCount);
         registryCount += 1;
@@ -96,14 +96,14 @@ export class DenoRuntime extends Runtime {
           type: "register_import_func",
           moduleCode: code,
           op: registryCount,
-          verbose: true,
+          verbose: false,
         });
         registry.set(code, registryCount);
         registryCount += 1;
       }
     }
 
-    const w = new DenoWorker(
+    const w = new DenoMessenger(
       name,
       (args.permissions ?? {}) as Deno.PermissionOptionsObject,
       false,

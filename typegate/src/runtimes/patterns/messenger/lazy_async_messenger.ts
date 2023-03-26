@@ -20,8 +20,8 @@ export class LazyAsyncMessenger<Broker, M, A>
   #gcInterval?: number;
   #start: MessengerStart<Broker, A>;
 
-  #ops: Map<number, M>;
-  #loadedOps: Set<number> = new Set();
+  #ops: Map<number | string, M>;
+  #loadedOps: Set<number | string> = new Set();
 
   constructor(
     start: MessengerStart<Broker, A>,

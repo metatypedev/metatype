@@ -9,7 +9,7 @@ import { LazyAsyncMessenger } from "../patterns/messenger/lazy_async_messenger.t
 const localDir = dirname(fromFileUrl(import.meta.url));
 const workerFile = toFileUrl(resolve(localDir, "./worker.ts"));
 
-export class DenoWorker extends LazyAsyncMessenger<Worker, Task, unknown> {
+export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
   constructor(
     name: string,
     permissions: Deno.PermissionOptionsObject,
@@ -58,11 +58,9 @@ export class DenoWorker extends LazyAsyncMessenger<Worker, Task, unknown> {
       ops,
       (broker, message) => {
         broker.postMessage(message);
-        return Promise.resolve();
       },
       (broker) => {
         broker.terminate();
-        return Promise.resolve();
       },
     );
     if (lazy) {
