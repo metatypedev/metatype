@@ -43,7 +43,7 @@ export class DenoRuntime extends Runtime {
     if (instances != null) {
       return instances;
     }
-    const ret = {};
+    const ret: Record<string, DenoRuntime> = {};
     DenoRuntime.runtimes.set(tgName, ret);
     return ret;
   }

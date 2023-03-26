@@ -199,9 +199,7 @@ export class TypeGraph {
 
   async deinit(): Promise<void> {
     for await (
-      const [_idx, runtime] of this.runtimeReferences.map(
-        (rt, i) => [i, rt] as const,
-      )
+      const runtime of this.runtimeReferences
     ) {
       //logger.debug(`deinit runtime ${idx}`);
       await runtime.deinit();
