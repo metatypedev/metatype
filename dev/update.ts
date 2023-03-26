@@ -5,13 +5,17 @@ import { expandGlobSync, projectDir, runOrExit, WalkEntry } from "./mod.ts";
 const tsFiles = [
   ...expandGlobSync("typegate/{src,tests}/**/*.ts", {
     root: projectDir,
+    globstar: true,
   }),
 ].map((f: WalkEntry) => f.path);
+
+const denoConfigPath = "typegate/deno.json";
+//const denoConfig = JSON.stringify(await Deno.readTextFile(denoConfigPath));
 
 await runOrExit([
   "deno",
   "cache",
-  "--config=typegate/deno.json",
+  `--config=${denoConfigPath}`,
   "--unstable",
   "--reload",
   "--lock-write",

@@ -2,7 +2,7 @@
 
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { DenoRuntime } from "./runtimes/deno.ts";
+import { DenoRuntime } from "./runtimes/deno/deno.ts";
 import { GoogleapisRuntime } from "./runtimes/googleapis.ts";
 import { GraphQLRuntime } from "./runtimes/graphql.ts";
 import { HTTPRuntime } from "./runtimes/http.ts";

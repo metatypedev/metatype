@@ -1,9 +1,17 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { expandGlobSync, parseFlags, semver, yaml } from "./mod.ts";
+import {
+  expandGlobSync,
+  parseFlags,
+  projectDir,
+  resolve,
+  semver,
+  yaml,
+} from "./mod.ts";
 
 interface Lockfile {
   [channel: string]: {
+    files: Record<string, string[]>;
     rules: Record<string, Record<string, string>>;
     lock: Record<string, string>;
   };
@@ -15,7 +23,7 @@ const args = parseFlags(Deno.args, {
   default: { version: false, check: false },
 });
 
-const lockfileUrl = new URL("lock.yml", import.meta.url);
+const lockfileUrl = resolve(projectDir, "dev/lock.yml");
 const lockfile = yaml.parse(
   Deno.readTextFileSync(lockfileUrl),
 ) as Lockfile;
@@ -55,12 +63,18 @@ Deno.writeTextFileSync(lockfileUrl, yaml.stringify(lockfile));
 
 let dirty = false;
 
-for (const [channel, { rules, lock }] of Object.entries(lockfile)) {
+for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
   console.log(`Updating channel ${channel}:`);
-  for (const [glob, lookups] of Object.entries(rules)) {
-    const url = new URL(`../${glob}`, import.meta.url);
 
-    for (const { path } of expandGlobSync(url, { includeDirs: false })) {
+  for (const [glob, lookups] of Object.entries(rules)) {
+    const url = resolve(projectDir, glob);
+
+    for (
+      const { path } of expandGlobSync(url, {
+        includeDirs: false,
+        globstar: true,
+      })
+    ) {
       const text = Deno.readTextFileSync(path);
       const rewrite = [...text.split("\n")];
 
@@ -76,11 +90,29 @@ for (const [channel, { rules, lock }] of Object.entries(lockfile)) {
 
       const newText = rewrite.join("\n");
       if (text != newText) {
-        console.log(`- Updated ${path}`);
+        console.log(`- Updated ${cleanPath(path)}`);
         Deno.writeTextFileSync(path, newText);
         dirty = true;
       } else {
-        console.log(`- No change ${path}`);
+        console.log(`- No change ${cleanPath(path)}`);
+      }
+    }
+  }
+
+  for (const [file, copies] of Object.entries(files)) {
+    const url = resolve(projectDir, file);
+    const text = Deno.readTextFileSync(url);
+
+    for (const copy of copies) {
+      const copyUrl = resolve(projectDir, copy);
+      const copyText = Deno.readTextFileSync(copyUrl);
+
+      if (copyText != text) {
+        console.log(`- Updated ${cleanPath(copyUrl)}`);
+        Deno.writeTextFileSync(copyUrl, text);
+        dirty = true;
+      } else {
+        console.log(`- No change ${cleanPath(copyUrl)}`);
       }
     }
   }
@@ -88,4 +120,12 @@ for (const [channel, { rules, lock }] of Object.entries(lockfile)) {
 
 if (args.check) {
   Deno.exit(dirty ? 1 : 0);
+}
+
+function cleanPath(path: string) {
+  let clean = path.replace(projectDir, "");
+  if (clean.startsWith("/")) {
+    clean = clean.slice(1);
+  }
+  return clean;
 }

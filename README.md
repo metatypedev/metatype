@@ -17,7 +17,7 @@ back :octocat: fixing a bug, improving clarity or adding new features.
 > production by small and large companies.
 >
 > Enough features are available for you to build and compose API blocks even
-> though the experience may not be as smooth as desired. As such, it does _not_
-> follow semantic versioning yet, and all changes will be explicitly outlined in
-> the [changelog](https://github.com/metatypedev/metatype/releases)
+> though the experience may not always be as smooth as desired. As such, it does
+> **not** follow semantic versioning yet, and all changes will be explicitly
+> outlined in the [changelog](https://github.com/metatypedev/metatype/releases)
 > (watch/subscribe to this repository to be notified).

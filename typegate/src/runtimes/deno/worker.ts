@@ -4,21 +4,19 @@ import { getLogger } from "../../log.ts";
 import {
   FuncTask,
   ImportFuncTask,
-  predefinedFuncs,
-  PredefinedFuncTask,
+  RegisterFuncTask,
+  RegisterImportFuncTask,
   Task,
   TaskContext,
   TaskExec,
-} from "./codes.ts";
+} from "./shared_types.ts";
 
 let logger = getLogger("worker");
 
 let initData = null as unknown as { name: string };
 
 type TaskModule = Record<string, TaskExec>;
-
-const fns: Map<number, TaskExec> = new Map();
-const mods: Map<number, TaskModule> = new Map();
+const registry: Map<number, TaskExec | TaskModule> = new Map();
 
 const isTest = Deno.env.get("DENO_TESTING") === "true";
 const additionalHeaders = isTest
@@ -60,73 +58,80 @@ const make_internal = ({ meta: { url, token } }: TaskContext) => {
   return { gql };
 };
 
-const execFunctions: Record<Task["type"], (task: Task) => Promise<unknown>> = {
-  import_func: async (task: Task) => {
-    const { id, moduleId, moduleCode, name, args, internals, verbose } =
-      task as ImportFuncTask;
-    if (!mods.has(moduleId)) {
-      if (moduleCode == null) {
-        throw new Error("module definition required for first reference");
+const taskList: Record<Task["type"], (task: Task) => Promise<unknown> | void> =
+  {
+    import_func: async (task: Task) => {
+      const { moduleId, name, args, internals, verbose } =
+        task as ImportFuncTask;
+      if (!registry.has(moduleId)) {
+        throw new Error(`no module registered with id ${moduleId}`);
       }
-      mods.set(
+
+      verbose &&
+        logger.info(`exec func "${name}" from module ${moduleId}`);
+      const mod = registry.get(moduleId)! as TaskModule;
+      return await mod[name](args, internals, make_internal(internals));
+    },
+
+    func: async (task: Task) => {
+      const { fnId, args, internals, verbose } = task as FuncTask;
+      if (!registry.has(fnId)) {
+        throw new Error(`no function registered with id ${fnId}`);
+      }
+
+      verbose && logger.info(`exec func "${fnId}"`);
+      const fn = registry.get(fnId)! as TaskExec;
+      return await fn(args, internals, make_internal(internals));
+    },
+
+    register_import_func: async (task: Task) => {
+      const { moduleId, moduleCode } = task as RegisterImportFuncTask;
+      logger.info(`register import func "${moduleId}"`);
+
+      registry.set(
         moduleId,
         await import(
           `data:text/javascript,${encodeURIComponent(moduleCode)}`
         ),
       );
-    }
+    },
 
-    verbose &&
-      logger.info(`[${id}] exec func "${name}" from module ${moduleId}`);
-    const mod = mods.get(moduleId)!;
-    return await mod[name](args, internals, make_internal(internals));
-  },
+    register_func: (task: Task) => {
+      const { fnId, fnCode } = task as RegisterFuncTask;
+      logger.info(`register func "${fnId}"`);
 
-  func: async (task: Task) => {
-    const { id, fnId, code, args, internals, verbose } = task as FuncTask;
-    if (!fns.has(fnId)) {
-      if (code == null) {
-        throw new Error("function definition required");
-      }
-      fns.set(
+      registry.set(
         fnId,
-        new Function(`"use strict"; ${code}; return _my_lambda;`)(),
+        new Function(`"use strict"; ${fnCode}; return _my_lambda;`)(),
       );
-    }
 
-    verbose && logger.info(`[${id}] exec func "${fnId}"`);
-    return await fns.get(fnId)!(args, internals, make_internal(internals));
-  },
+      return Promise.resolve();
+    },
+  };
 
-  predefined_func: (task: Task) => {
-    const { id, name, args, internals, verbose } = task as PredefinedFuncTask;
-    verbose && logger.info(`[${id}] exec predefined func "${name}"`);
-    return Promise.resolve(
-      predefinedFuncs[name](args, internals, make_internal(internals)),
-    );
-  },
-};
-
-self.onmessage = async (evt: MessageEvent<Task>) => {
+self.onmessage = async (event: MessageEvent<Task & { id: number }>) => {
   if (initData == null) {
-    initData = evt.data as typeof initData;
+    initData = event.data as typeof initData;
     logger = getLogger(`worker (${initData.name})`);
     return;
   }
 
-  const { id, type } = evt.data;
-  const exec = execFunctions[type];
+  const { id, type } = event.data;
+
+  const exec = taskList[type];
 
   if (exec == null) {
+    const error = `unsupported task type "${type}"`;
+    logger.error(error);
     self.postMessage({
       id,
-      error: `unsupported task type "${evt.data.type}"`,
+      error,
     });
   }
 
   try {
-    const value = await exec(evt.data);
-    self.postMessage({ id, value });
+    const data = await exec(event.data);
+    self.postMessage({ id, data });
   } catch (err) {
     logger.error(err);
     self.postMessage({ id, error: err.message });

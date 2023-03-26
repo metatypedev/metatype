@@ -1,4 +1,7 @@
 dev:
+  files:
+    LICENSE.md:
+      - typegraph/LICENSE.md
   rules:
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
@@ -33,12 +36,13 @@ dev:
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.68.0
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
-    DENO_VERSION: 1.31.2
+    DENO_VERSION: 1.31.3
     NODE_VERSION: 18.12.1
     PNPM_VERSION: 7.9.3
     TYPEGRAPH_VERSION: 0.0.1
     METATYPE_VERSION: 0.0.3-dev.7
 released:
+  files: {}
   rules:
     examples/docker-compose.yml:
       '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
