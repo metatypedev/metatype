@@ -4,6 +4,7 @@ import {
   expandGlobSync,
   parseFlags,
   projectDir,
+  relPath,
   resolve,
   semver,
   yaml,
@@ -90,11 +91,11 @@ for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
 
       const newText = rewrite.join("\n");
       if (text != newText) {
-        console.log(`- Updated ${cleanPath(path)}`);
+        console.log(`- Updated ${relPath(path)}`);
         Deno.writeTextFileSync(path, newText);
         dirty = true;
       } else {
-        console.log(`- No change ${cleanPath(path)}`);
+        console.log(`- No change ${relPath(path)}`);
       }
     }
   }
@@ -108,11 +109,11 @@ for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
       const copyText = Deno.readTextFileSync(copyUrl);
 
       if (copyText != text) {
-        console.log(`- Updated ${cleanPath(copyUrl)}`);
+        console.log(`- Updated ${relPath(copyUrl)}`);
         Deno.writeTextFileSync(copyUrl, text);
         dirty = true;
       } else {
-        console.log(`- No change ${cleanPath(copyUrl)}`);
+        console.log(`- No change ${relPath(copyUrl)}`);
       }
     }
   }
@@ -120,12 +121,4 @@ for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
 
 if (args.check) {
   Deno.exit(dirty ? 1 : 0);
-}
-
-function cleanPath(path: string) {
-  let clean = path.replace(projectDir, "");
-  if (clean.startsWith("/")) {
-    clean = clean.slice(1);
-  }
-  return clean;
 }

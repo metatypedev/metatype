@@ -18,7 +18,6 @@ export class DenoWorker extends LazyAsyncMessenger<Worker, Task, unknown> {
   ) {
     super(
       (receive) => {
-        console.log("new", name);
         const worker = new Worker(workerFile, {
           type: "module",
           deno: {
