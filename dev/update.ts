@@ -12,6 +12,7 @@ const tsFiles = [
 const denoConfigPath = "typegate/deno.json";
 //const denoConfig = JSON.stringify(await Deno.readTextFile(denoConfigPath));
 
+/*
 await runOrExit([
   "deno",
   "cache",
@@ -21,3 +22,4 @@ await runOrExit([
   "--lock-write",
   ...tsFiles,
 ], projectDir);
+*/

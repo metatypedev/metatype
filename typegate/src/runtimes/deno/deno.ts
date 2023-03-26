@@ -12,7 +12,8 @@ import { DenoWorker } from "./deno_worker.ts";
 import { Task } from "./shared_types.ts";
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
-  identity: (args) => args,
+  identity: ({ _, ...args }) => (args),
+  true: () => true,
 };
 
 export class DenoRuntime extends Runtime {
