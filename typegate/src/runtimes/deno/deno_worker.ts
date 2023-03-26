@@ -4,7 +4,7 @@ import * as Sentry from "sentry";
 import { envSharedWithWorkers } from "../../log.ts";
 import { Task } from "./shared_types.ts";
 import { dirname, fromFileUrl, resolve, toFileUrl } from "std/path/mod.ts";
-import { LazyAsyncMessenger } from "./lazy_async_messenger.ts";
+import { LazyAsyncMessenger } from "../patterns/messenger/lazy_async_messenger.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const workerFile = toFileUrl(resolve(localDir, "./worker.ts"));
@@ -56,8 +56,8 @@ export class DenoWorker extends LazyAsyncMessenger<Worker, Task, unknown> {
         return worker;
       },
       ops,
-      (broker, id, op, message) => {
-        broker.postMessage({ id, op, ...message });
+      (broker, message) => {
+        broker.postMessage(message);
         return Promise.resolve();
       },
       (broker) => {

@@ -1,21 +1,19 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { deferred } from "std/async/deferred.ts";
-import { getLogger } from "../../log.ts";
-import { Answer, Envelop, TaskData } from "./shared_types.ts";
-import { maxi32 } from "../../utils.ts";
+import { getLogger } from "../../../log.ts";
+import { Answer, Message, TaskData } from "./types.ts";
+import { maxi32 } from "../../../utils.ts";
 
 const logger = getLogger(import.meta);
 
 export type MessengerStart<Broker, A> = (
-  receive: (answer: Answer<A> & Envelop) => Promise<void>,
+  receive: (answer: Answer<A>) => Promise<void>,
 ) => Broker;
 
 export type MessengerSend<Broker, M> = (
   broker: Broker,
-  id: number,
-  op: number | null,
-  message: M,
+  data: Message<M>,
 ) => Promise<void>;
 
 export type MessengerStop<Broker> = (broker: Broker) => Promise<void>;
@@ -45,17 +43,17 @@ export class AsyncMessenger<Broker, M, A> {
 
   execute(
     op: number | null,
-    task: M,
+    data: M,
     hooks: Array<() => Promise<void>> = [],
   ): Promise<unknown> {
     const id = this.nextId();
     const promise = deferred<unknown>();
     this.#tasks.set(id, { promise, hooks });
-    void this.#send(this.broker, id, op, task);
+    void this.#send(this.broker, { id, op, data });
     return promise;
   }
 
-  async receive(answer: Answer<A> & Envelop): Promise<void> {
+  async receive(answer: Answer<A>): Promise<void> {
     const { id } = answer;
     const { promise, hooks } = this.#tasks.get(id)!;
     if (answer.error) {

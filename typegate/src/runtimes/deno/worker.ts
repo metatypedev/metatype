@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { getLogger } from "../../log.ts";
+import { Answer, Message } from "../patterns/messenger/types.ts";
 import {
   FuncTask,
   ImportFuncTask,
@@ -58,82 +59,86 @@ const make_internal = ({ meta: { url, token } }: TaskContext) => {
   return { gql };
 };
 
-const taskList: Record<Task["type"], (task: Task) => Promise<unknown> | void> =
-  {
-    import_func: async (task: Task) => {
-      const { moduleId, name, args, internals, verbose } =
-        task as ImportFuncTask;
-      if (!registry.has(moduleId)) {
-        throw new Error(`no module registered with id ${moduleId}`);
-      }
+async function import_func(op: number, task: ImportFuncTask) {
+  const { name, args, internals, verbose } = task;
 
-      verbose &&
-        logger.info(`exec func "${name}" from module ${moduleId}`);
-      const mod = registry.get(moduleId)! as TaskModule;
-      return await mod[name](args, internals, make_internal(internals));
-    },
+  if (!registry.has(op)) {
+    throw new Error(`no module registered with id ${op}`);
+  }
 
-    func: async (task: Task) => {
-      const { fnId, args, internals, verbose } = task as FuncTask;
-      if (!registry.has(fnId)) {
-        throw new Error(`no function registered with id ${fnId}`);
-      }
+  verbose &&
+    logger.info(`exec func "${name}" from module ${op}`);
+  const mod = registry.get(op)! as TaskModule;
+  return await mod[name](args, internals, make_internal(internals));
+}
 
-      verbose && logger.info(`exec func "${fnId}"`);
-      const fn = registry.get(fnId)! as TaskExec;
-      return await fn(args, internals, make_internal(internals));
-    },
+async function func(op: number, task: FuncTask) {
+  const { args, internals, verbose } = task;
 
-    register_import_func: async (task: Task) => {
-      const { moduleId, moduleCode } = task as RegisterImportFuncTask;
-      logger.info(`register import func "${moduleId}"`);
+  if (!registry.has(op)) {
+    throw new Error(`no function registered with id ${op}`);
+  }
 
-      registry.set(
-        moduleId,
-        await import(
-          `data:text/javascript,${encodeURIComponent(moduleCode)}`
-        ),
-      );
-    },
+  verbose && logger.info(`exec func "${op}"`);
+  const fn = registry.get(op)! as TaskExec;
+  return await fn(args, internals, make_internal(internals));
+}
 
-    register_func: (task: Task) => {
-      const { fnId, fnCode } = task as RegisterFuncTask;
-      logger.info(`register func "${fnId}"`);
+async function register_import_func(_: null, task: RegisterImportFuncTask) {
+  const { moduleCode, verbose, op } = task;
+  verbose && logger.info(`register import func "${op}"`);
 
-      registry.set(
-        fnId,
-        new Function(`"use strict"; ${fnCode}; return _my_lambda;`)(),
-      );
+  registry.set(
+    op,
+    await import(
+      `data:text/javascript,${encodeURIComponent(moduleCode)}`
+    ),
+  );
+}
 
-      return Promise.resolve();
-    },
-  };
+function register_func(_: null, task: RegisterFuncTask) {
+  const { fnCode, verbose, op } = task;
+  verbose && logger.info(`register func "${op}"`);
 
-self.onmessage = async (event: MessageEvent<Task & { id: number }>) => {
+  registry.set(
+    op,
+    new Function(`"use strict"; ${fnCode}; return _my_lambda;`)(),
+  );
+}
+
+const taskList: any = {
+  register_func,
+  register_import_func,
+  import_func,
+  func,
+};
+
+function answer<T>(res: Answer<T>) {
+  self.postMessage(res);
+}
+
+self.onmessage = async (event: MessageEvent<Message<Task>>) => {
   if (initData == null) {
     initData = event.data as typeof initData;
     logger = getLogger(`worker (${initData.name})`);
     return;
   }
 
-  const { id, type } = event.data;
-
-  const exec = taskList[type];
+  const { id, op, data: task } = event.data;
+  const exec = taskList[task.type];
 
   if (exec == null) {
-    const error = `unsupported task type "${type}"`;
+    console.log(">", task);
+    const error = `unsupported operation found "${op}"`;
     logger.error(error);
-    self.postMessage({
-      id,
-      error,
-    });
+    answer({ id, error });
   }
 
   try {
-    const data = await exec(event.data);
-    self.postMessage({ id, data });
+    const data = await exec(op, task);
+    answer({ id, data });
   } catch (err) {
     logger.error(err);
-    self.postMessage({ id, error: err.message });
+    answer({ id, error: String(err) });
   }
 };

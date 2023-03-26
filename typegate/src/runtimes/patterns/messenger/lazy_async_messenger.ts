@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { getLogger } from "../../log.ts";
-import { maxi32 } from "../../utils.ts";
+import { getLogger } from "../../../log.ts";
+import { maxi32 } from "../../../utils.ts";
 import {
   AsyncMessenger,
   MessengerSend,
@@ -31,8 +31,6 @@ export class LazyAsyncMessenger<Broker, M, A>
   ) {
     const lazySend: MessengerSend<Broker | null, M> = async (
       _,
-      id,
-      op,
       message,
     ) => {
       if (!this.broker) {
@@ -40,6 +38,7 @@ export class LazyAsyncMessenger<Broker, M, A>
           this.receive.bind(this),
         );
       }
+      const { op } = message;
       if (op !== null && !this.#loadedOps.has(op)) {
         const initOp = this.#ops.get(op);
         if (!initOp) {
@@ -48,7 +47,7 @@ export class LazyAsyncMessenger<Broker, M, A>
         await this.execute(null, initOp);
         this.#loadedOps.add(op);
       }
-      await send(this.broker, id, op, message);
+      await send(this.broker, message);
     };
 
     const lazyStop: MessengerStop<Broker | null> = async (_) => {

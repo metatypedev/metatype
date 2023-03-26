@@ -83,8 +83,9 @@ export class DenoRuntime extends Runtime {
 
         ops.set(registryCount, {
           type: "register_func",
-          fnId: registryCount,
           fnCode: code,
+          op: registryCount,
+          verbose: true,
         });
         registry.set(code, registryCount);
         registryCount += 1;
@@ -93,8 +94,9 @@ export class DenoRuntime extends Runtime {
 
         ops.set(registryCount, {
           type: "register_import_func",
-          moduleId: registryCount,
           moduleCode: code,
+          op: registryCount,
+          verbose: true,
         });
         registry.set(code, registryCount);
         registryCount += 1;
@@ -187,12 +189,12 @@ export class DenoRuntime extends Runtime {
 
     if (mat.name === "import_function") {
       const modMat = this.tg.materializers[mat.data.mod as number];
-      const moduleId = this.registry.get(modMat.data.code as string)!;
+      const op = this.registry.get(modMat.data.code as string)!;
 
       return async ({ _: { context, parent, info: { url } }, ...args }) => {
         const token = await InternalAuth.emit();
 
-        return this.w.execute(moduleId, {
+        return this.w.execute(op, {
           type: "import_func",
           args,
           internals: {
@@ -207,17 +209,16 @@ export class DenoRuntime extends Runtime {
           },
           name: mat.data.name as string,
           verbose,
-          moduleId,
         });
       };
     }
 
     if (mat.name === "function") {
-      const fnId = this.registry.get(mat.data.script as string)!;
+      const op = this.registry.get(mat.data.script as string)!;
       return async ({ _: { context, parent, info: { url } }, ...args }) => {
         const token = await InternalAuth.emit();
 
-        return this.w.execute(fnId, {
+        return this.w.execute(op, {
           type: "func",
           args,
           internals: {
@@ -231,7 +232,6 @@ export class DenoRuntime extends Runtime {
             },
           },
           verbose,
-          fnId,
         });
       };
     }
