@@ -61,7 +61,7 @@ openssl = { version = "0.10.48", features = ["vendored"] }
 indexmap = { version = "1.9.2", features = ["serde"] }
 lade-sdk = "0.4.0"
 async-trait = "0.1.66"
-async-recursion = "1.0.2"
+async-recursion = "1.0.4"
 
 [dev-dependencies]
 assert_cmd = "2.0.10"
