@@ -46,6 +46,14 @@ def tree(
             {k: tree(ty, visited, resolve_proxies) for k, ty in typ.props.items()}
         )
 
+    if isinstance(typ, t.either) or isinstance(typ, t.union):
+        return with_children(
+            {
+                f"[variant_{idx}]": tree(ty, visited, resolve_proxies)
+                for idx, ty in enumerate(typ.variants)
+            }
+        )
+
     return ret
 
 
@@ -141,11 +149,22 @@ class TestTypeGenerator:
             db = PrismaRuntime("test", "POSTGRES")
             models = tg_blog_2(g)
 
+            user = models["user"]
             post = models["post"]
+            extended_profile = models["extended_profile"]
 
             db._PrismaRuntime__manage(post)
             typegen = db._PrismaRuntime__typegen
-            self.assert_snapshot(typegen.get_order_by_type(post), "order_by_2.json")
+            self.assert_snapshot(
+                typegen.get_order_by_type(user), "order_by_2_user.json"
+            )
+            self.assert_snapshot(
+                typegen.get_order_by_type(post), "order_by_2_post.json"
+            )
+            self.assert_snapshot(
+                typegen.get_order_by_type(extended_profile),
+                "order_by_2_extended_profile.json",
+            )
 
     def init_snapshot(self, snapshot):
         snapshot.snapshot_dir = "tests/__snapshots__/type_generator"
@@ -200,7 +219,6 @@ def tg_blog_2(g: TypeGraph):
                 "coinflips": t.array(t.boolean()),
                 "city": t.string(),
                 "posts": t.array(g("Post")),
-                # "posts": db.link(t.array(g("Post")), "userPost"),
                 "extended_profile": g("ExtendedProfile").optional(),
             },
         ).named("User"),
@@ -211,9 +229,7 @@ def tg_blog_2(g: TypeGraph):
                 "views": t.integer(),
                 "likes": t.integer(),
                 "published": t.boolean(),
-                # "author": db.link(g("User"), "userPost"),
                 "author": g("User"),
-                # "comments": db.link(t.array(g("Comment")), "postComment"),
                 "comments": t.array(g("Comment")),
             }
         ).named("Post"),
@@ -221,7 +237,6 @@ def tg_blog_2(g: TypeGraph):
             {
                 "id": t.integer().config("id"),
                 "content": t.string(),
-                # "related_post": db.link(g("Post"), "postComment"),
                 "related_post": g("Post"),
             }
         ).named("Comment"),
