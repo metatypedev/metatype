@@ -7,7 +7,7 @@ discovery = "https://fcm.googleapis.com/$discovery/rest?version=v1"
 import_googleapis(discovery, False)  # set to True to re-import the API
 
 with TypeGraph(
-    "fcm",
+    "fcm-google",
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
     apns_fcm_options_in = t.struct(
@@ -236,12 +236,21 @@ with TypeGraph(
         "v1/{parent}/messages:send",
         t.struct(
             {
+                "parent": t.string(),
                 "validateOnly": t.optional(t.boolean()),
                 "message": g("MessageIn"),
-                "auth": t.string(),
+                "header_authorization": t.string(),
             }
         ),
-        t.either([t.struct({}), g("MessageOut")]),
+        # t.struct({"name": t.string()}),
+        # g("MessageOut"),
+        t.struct(
+            {
+                "error": t.struct(
+                    {"code": t.integer(), "message": t.string(), "status": t.string()}
+                )
+            }
+        ),
         content_type="application/json",
     ).named("fcm.projects.messages.send")
     g.expose(projectsMessagesSend=projects_messages_send)

@@ -100,7 +100,7 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
             inp_fields = ""
             # query params
             for parameterName, parameter in method.parameters.items():
-                if parameterName != "readMask" and parameterName != "parent":
+                if parameterName != "readMask":
                     inp_fields += (
                         f'"{parameterName}": {typify(parameter, suffix="In")},'
                     )
@@ -111,11 +111,10 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
                 ref = f"{method.request.get('$ref')}In"
                 inp_fields += generated_obj_fields.get(ref) + ","
 
-            # Note: use prefix header# for testing
-            inp_fields += '"auth": t.string(),'
+            inp_fields += '"header_authorization": t.string(),'
 
             inp = f"t.struct({{{inp_fields}}})"
-            out = f't.either([t.struct({{}}), {typify(method.response, suffix="Out")}])'
+            out = typify(method.response, suffix="Out")
 
             url_path = reformat_params(method.path)
             func_key = f"{hierarchy}{upper_first(methodName)}"
