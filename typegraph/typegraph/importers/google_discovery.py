@@ -1,16 +1,12 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import inspect
-import os
 import re
 
 import black
 import httpx
 import redbaron
 from box import Box
-
-# required for finding the directory containing THIS file
-from typegraph.importers import google_discovery
 
 generated_obj_fields: dict[str, str] = {}
 func_defs: dict[str, str] = {}
@@ -113,36 +109,22 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
             if "$ref" in method.request:
                 # resolve first depth
                 ref = f"{method.request.get('$ref')}In"
-                inp_fields += generated_obj_fields.get(ref)
+                inp_fields += generated_obj_fields.get(ref) + ","
+
+            # Note: use prefix header# for testing
+            inp_fields += '"auth": t.string(),'
 
             inp = f"t.struct({{{inp_fields}}})"
             out = f't.either([t.struct({{}}), {typify(method.response, suffix="Out")}])'
 
-            path = reformat_params(method.path)
-            ts_mat = deno_http_request_mat(path, method.httpMethod)
-
-            req_inp = f"""
-                t.struct({{
-                    "path": t.string(),
-                    "auth": t.string(),
-                    "body": {inp}
-                }})
-            """
-            req_out = f"""
-                t.struct({{
-                    "success": t.boolean(),
-                    "response": {out},
-                }})
-            """
-
-            func = f"t.func({req_inp}, {req_out}, {ts_mat})"
-
+            url_path = reformat_params(method.path)
             func_key = f"{hierarchy}{upper_first(methodName)}"
+            ctype = 'content_type="application/json"'
             func_var = camel_to_snake(func_key)
-            func_def = f'{func}.named("{method.id}")'
+            func_def = f'remote.{method.httpMethod.lower()}("{url_path}", {inp}, {out}, {ctype}).named("{method.id}")'
             func_defs[func_var] = func_def
             # for expose
-            ret += f"{func_key}={func_var},\n"
+            ret += f"{func_key}={func_def}\n"
 
     if "resources" in cursor:
         for resourceName, resource in cursor.resources.items():
@@ -155,20 +137,6 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
             )
 
     return ret
-
-
-def deno_http_request_mat(url: str, method: str):
-    # first read the file
-    template_file = "google_request.ts"
-    generator_dir = os.path.dirname(os.path.realpath(google_discovery.__file__))
-    template_path = os.path.join(generator_dir, "ts-templates", template_file)
-    content = open(template_path, "r").read()
-    content = re.sub("REQUEST_TYPE_PLACEHOLDER", method.upper(), content)
-    # write to cwd
-    script_path = f"generated_google_{method.lower()}.ts"
-    with open(script_path, "w") as f:
-        f.write(content)
-        return f'ModuleMat("{script_path}").imp("default", effect={get_effect(method)})'
 
 
 def codegen(discovery):
@@ -195,6 +163,7 @@ def codegen(discovery):
 
         schema.description
 
+    lines.append(f'remote = HTTPRuntime("{discovery.rootUrl}")')
     expose_block = f"g.expose({flatten_calls(discovery, url_prefix=discovery.rootUrl)})"
 
     for func_var, func_def in func_defs.items():
@@ -218,7 +187,7 @@ def import_googleapis(uri: str, gen: bool) -> None:
         ["typegraph", "t"],
         ["typegraph", "TypeGraph"],
         ["typegraph", "effects"],
-        ["typegraph.runtimes.deno", "ModuleMat"],
+        ["typegraph.runtimes.http", "HTTPRuntime"],
     ]
 
     importer = code.find(
