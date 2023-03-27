@@ -15,10 +15,8 @@ with TypeGraph("prisma") as g:
             "age": t.integer().optional(),
             "coinflips": t.array(t.boolean()),
             "city": t.string(),
-            "posts": db.link(t.array(g("Post")), "userPost"),
-            "extended_profile": db.link(
-                g("ExtendedProfile").optional(), "userExtendedProfile"
-            ),
+            "posts": t.array(g("Post")),
+            "extended_profile": g("ExtendedProfile").optional(),
         },
     ).named("User")
 
@@ -29,8 +27,8 @@ with TypeGraph("prisma") as g:
             "views": t.integer(),
             "likes": t.integer(),
             "published": t.boolean(),
-            "author": db.link(g("User"), "userPost"),
-            "comments": db.link(t.array(g("Comment")), "postComment"),
+            "author": g("User"),
+            "comments": t.array(g("Comment")),
         }
     ).named("Post")
 
@@ -38,7 +36,7 @@ with TypeGraph("prisma") as g:
         {
             "id": t.integer().config("id"),
             "content": t.string(),
-            "related_post": db.link(g("Post"), "postComment"),
+            "related_post": g("Post"),
         }
     ).named("Comment")
 
@@ -46,7 +44,7 @@ with TypeGraph("prisma") as g:
         {
             "id": t.integer().config("id"),
             "bio": t.string(),
-            "user": db.link(g("User"), "userExtendedProfile"),
+            "user": g("User"),
         }
     ).named("ExtendedProfile")
 

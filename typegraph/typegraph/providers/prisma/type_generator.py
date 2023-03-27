@@ -360,7 +360,6 @@ class TypeGenerator:
                     return sort
 
             # scalar type
-            # ? are they all sortable??
 
             # orderByNulls: preview feature in prisma
             # if optional:
