@@ -250,9 +250,11 @@ class PrismaRuntime(Runtime):
     connection_string_secret: str
     runtime_name: str = always("prisma")
     reg: Registry = field(init=False, hash=False, metadata={SKIP: True})
+    __typegen: TypeGenerator = field(init=False, hash=False, metadata={SKIP: True})
 
     def __attrs_post_init__(self):
         object.__setattr__(self, "reg", Registry())
+        object.__setattr__(self, "_PrismaRuntime__typegen", TypeGenerator(reg=self.reg))
 
     def link(
         self,
@@ -302,10 +304,6 @@ class PrismaRuntime(Runtime):
         else:
             g = TypegraphContext.get_active()
         return LinkProxy(g, typ, rel_name=name, field=field, fkey=fkey)
-
-    @property
-    def __typegen(self):
-        return TypeGenerator(reg=self.reg)
 
     def queryRaw(self, query: str, out: t.TypeNode, *, effect: Effect) -> t.func:
         """Generate a raw SQL query operation on the runtime
