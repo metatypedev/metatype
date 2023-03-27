@@ -124,7 +124,7 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
             func_def = f'remote.{method.httpMethod.lower()}("{url_path}", {inp}, {out}, {ctype}).named("{method.id}")'
             func_defs[func_var] = func_def
             # for expose
-            ret += f"{func_key}={func_def}\n"
+            ret += f"{func_key}={func_var}\n"
 
     if "resources" in cursor:
         for resourceName, resource in cursor.resources.items():

@@ -1,7 +1,7 @@
 # skip:start
-from typegraph import TypeGraph, effects, t
+from typegraph import TypeGraph, t
 from typegraph.importers.google_discovery import import_googleapis
-from typegraph.runtimes.deno import ModuleMat
+from typegraph.runtimes.http import HTTPRuntime
 
 discovery = "https://fcm.googleapis.com/$discovery/rest?version=v1"
 import_googleapis(discovery, False)  # set to True to re-import the API
@@ -230,24 +230,18 @@ with TypeGraph(
             "fcmOptions": t.optional(g("ApnsFcmOptionsOut")),
         }
     ).named("ApnsConfigOut")
-    projects_messages_send = t.func(
+
+    remote = HTTPRuntime("https://fcm.googleapis.com/")
+    projects_messages_send = remote.post(
+        "v1/{parent}/messages:send",
         t.struct(
             {
-                "path": t.string(),
+                "validateOnly": t.optional(t.boolean()),
+                "message": g("MessageIn"),
                 "auth": t.string(),
-                "body": t.struct(
-                    {"message": g("MessageIn"), "validateOnly": t.optional(t.boolean())}
-                ),
             }
         ),
-        t.struct(
-            {
-                "success": t.boolean(),
-                "response": t.either([t.struct({}), g("MessageOut")]),
-            }
-        ),
-        ModuleMat("generated_google_post.ts").imp("default", effect=effects.create()),
+        t.either([t.struct({}), g("MessageOut")]),
+        content_type="application/json",
     ).named("fcm.projects.messages.send")
-    g.expose(
-        projectsMessagesSend=projects_messages_send,
-    )
+    g.expose(projectsMessagesSend=projects_messages_send)
