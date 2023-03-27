@@ -59,7 +59,8 @@ class TypeGenerator:
                 fields[key] = t.struct(entries).optional()
 
             elif isinstance(field_type, t.func):
-                raise Exception(f'Unsupported function field "{key}"')
+                # skip - managed by another from another runtime
+                continue
             else:
                 if update:
                     fields[key] = field_type.optional()
