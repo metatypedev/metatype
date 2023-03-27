@@ -142,6 +142,9 @@ class FieldBuilder:
         elif isinstance(typ, t.number):
             name = "Float"
 
+        elif isinstance(typ, t.func) and typ.runtime != parent_type.runtime:
+            return None
+
         else:
             assert typ.type == "object", f"Type f'{typ.type}' not supported"
             name = typ.name
@@ -188,10 +191,11 @@ def build_model(name: str, spec: RelationshipRegister) -> str:
         if typ.runtime is not None and typ.runtime != s.runtime:
             continue
         field = field_builder.build(key, typ, s)
-        fields.append(field)
-        fields.extend(field.fkeys)
-        if field.fkeys_unique:
-            tags.append(f"@@unique({', '.join((f.name for f in field.fkeys))})")
+        if field is not None:
+            fields.append(field)
+            fields.extend(field.fkeys)
+            if field.fkeys_unique:
+                tags.append(f"@@unique({', '.join((f.name for f in field.fkeys))})")
 
     # TODO support for multi-field ids and indexes -- to be defined as config on the struct!!
 
