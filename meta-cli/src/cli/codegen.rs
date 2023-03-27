@@ -6,9 +6,9 @@ use crate::{codegen, typegraph::TypegraphLoader};
 use anyhow::{anyhow, Result};
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-use super::Action;
+use super::{Action, GenArgs};
 
 #[derive(Parser, Debug)]
 pub struct Codegen {
@@ -22,6 +22,18 @@ pub enum Commands {
     Deno(Deno),
 }
 
+#[async_trait]
+impl Action for Codegen {
+    async fn run(&self, args: GenArgs) -> Result<()> {
+        match &self.command {
+            Commands::Deno(deno) => {
+                deno.run(args).await?;
+            }
+        }
+        Ok(())
+    }
+}
+
 #[derive(Parser, Debug)]
 pub struct Deno {
     #[clap(short, long, value_parser)]
@@ -33,7 +45,9 @@ pub struct Deno {
 
 #[async_trait]
 impl Action for Deno {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, args: GenArgs) -> Result<()> {
+        let dir = args.dir;
+        let config_path = args.config;
         ensure_venv(&dir)?;
         // try to find config file, else use default config as the options
         // used for code generation have default values.

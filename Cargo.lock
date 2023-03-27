@@ -804,6 +804,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap-verbosity-flag"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23e2b6c3dcdb73299f48ae05b294da14e2f560b3ed2c09e742269eb1b22af231"
+dependencies = [
+ "clap",
+ "log",
+]
+
+[[package]]
+name = "clap_complete"
+version = "4.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "37686beaba5ac9f3ab01ee3172f792fc6ffdd685bfb9e63cfef02c0571a4e8e1"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "clap_derive"
 version = "4.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -870,7 +889,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.0.3-dev.7"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -1599,6 +1618,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "21cdad81446a7f7dc43f6a77409efeb9733d2fa65553efef6018ef257c959b73"
 dependencies = [
  "heck 0.4.1",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "enum_dispatch"
+version = "0.3.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11f36e95862220b211a6e2aa5eca09b4fa391b13cd52ceb8035a24bf65a79de2"
+dependencies = [
+ "once_cell",
  "proc-macro2",
  "quote",
  "syn",
@@ -2926,7 +2957,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.0.3-dev.7"
+version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3009,7 +3040,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.0.3-dev.7"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -3017,16 +3048,20 @@ dependencies = [
  "async-trait",
  "base64 0.21.0",
  "clap",
+ "clap-verbosity-flag",
+ "clap_complete",
  "colored",
  "common",
  "crossbeam-channel",
  "dialoguer",
+ "enum_dispatch",
  "flate2",
  "globset",
  "ignore",
  "indexmap",
  "indoc 2.0.1",
  "insta",
+ "itertools",
  "lade-sdk",
  "lazy_static",
  "log",
@@ -3462,7 +3497,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.0.3-dev.7"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -6989,7 +7024,7 @@ checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
 name = "typescript"
-version = "0.0.3-dev.7"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -7633,7 +7668,7 @@ checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
 
 [[package]]
 name = "xtask"
-version = "0.0.3-dev.7"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
