@@ -3,20 +3,20 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: cargo
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: docker
     directory: /
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: pip
     directory: /typegraph
     schedule:
-      interval: weekly
+      interval: monthly
   - package-ecosystem: pip
     directory: /examples
     schedule:
-      interval: weekly
+      interval: monthly
