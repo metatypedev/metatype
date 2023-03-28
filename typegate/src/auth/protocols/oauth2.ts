@@ -2,11 +2,20 @@
 
 import { Auth, AuthDS, nextAuthorizationHeader } from "../auth.ts";
 import config from "../../config.ts";
-import { deleteCookie, setCookie } from "std/http/cookie.ts";
+import { deleteCookie, getCookies, setCookie } from "std/http/cookie.ts";
 import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
-import { signJWT, verifyJWT } from "../../crypto.ts";
+import {
+  decrypt,
+  encrypt,
+  randomUUID,
+  signJWT,
+  verifyJWT,
+} from "../../crypto.ts";
 import { envOrFail } from "../../utils.ts";
 import { JWTClaims } from "../auth.ts";
+import { getLogger } from "../../log.ts";
+
+const logger = getLogger(import.meta.url);
 
 export class OAuth2Auth implements Auth {
   static init(typegraphName: string, auth: AuthDS): Promise<Auth> {
@@ -44,23 +53,42 @@ export class OAuth2Auth implements Auth {
 
   async authMiddleware(request: Request): Promise<Response> {
     const url = new URL(request.url);
+    const base = `${url.protocol}//${url.host}`;
+    const typegraphPath = `/${this.typegraphName}`;
+    const loginPath = `${typegraphPath}/auth/${this.authName}`;
     const client = new OAuth2Client({
       ...this.clientData,
-      redirectUri:
-        `${url.protocol}//${url.host}/${this.typegraphName}/auth/${this.authName}`,
+      redirectUri: `${base}${loginPath}`,
     });
     const query = Object.fromEntries(url.searchParams.entries());
 
+    if (query.clear !== undefined) {
+      const headers = this.clearCookie(url.hostname, typegraphPath);
+      if (query.redirect_uri) {
+        headers.set("location", query.redirect_uri ?? base);
+      }
+      return new Response(null, {
+        status: 302,
+        headers,
+      });
+    }
+
     if (query.code && query.state) {
       try {
-        const { redirectUri } = await verifyJWT(query.state);
+        const cookies = getCookies(request.headers);
+        const loginStateEncrypted = cookies[this.typegraphName];
+        if (!loginStateEncrypted) {
+          throw new Error("missing login state");
+        }
+        const loginState = await decrypt(loginStateEncrypted);
+        const { state, codeVerifier, redirectUri } = JSON.parse(loginState);
 
-        const token = await client.code.getToken(url);
+        const token = await client.code.getToken(url, { state, codeVerifier });
         const jwt = await this.createJWT(token, config.cookies_max_age_sec);
         const headers = this.createHeaders(
           jwt,
           config.cookies_max_age_sec,
-          url.host,
+          url.hostname,
         );
 
         headers.set("location", redirectUri as string);
@@ -69,57 +97,76 @@ export class OAuth2Auth implements Auth {
           headers,
         });
       } catch (e) {
-        console.info(e);
+        logger.warning(e);
         return new Response(`invalid oauth2: ${e}`, {
           status: 400,
         });
       }
     }
 
-    if (!query.redirect_uri) {
-      return new Response("missing redirect_uri query parameter", {
-        status: 400,
+    if (query.redirect_uri) {
+      const state = randomUUID();
+      const { codeVerifier, uri } = await client.code.getAuthorizationUri({
+        state,
+      });
+
+      const loginState = JSON.stringify({
+        state,
+        codeVerifier,
+        redirectUri: query.redirect_uri,
+      });
+      const loginStateEncrypted = await encrypt(loginState);
+
+      const headers = new Headers();
+      headers.set("location", uri.toString());
+      setCookie(headers, {
+        // no maxAge or expires, so cookie expires at end of session
+        name: this.typegraphName,
+        value: loginStateEncrypted,
+        domain: url.hostname,
+        path: typegraphPath,
+        secure: !config.debug,
+        sameSite: "Lax",
+        httpOnly: true,
+      });
+
+      return new Response(null, {
+        status: 302,
+        headers,
       });
     }
 
-    const state = await signJWT({ redirectUri: query.redirect_uri }, 3600);
-    const location = client.code.getAuthorizationUri({ state }).toString();
-
-    return new Response(null, {
-      status: 302,
-      headers: {
-        location,
-      },
+    return new Response("missing redirect_uri query parameter", {
+      status: 400,
     });
+  }
+
+  private clearCookie(domain: string, path: string): Headers {
+    const hs = new Headers();
+    hs.set(nextAuthorizationHeader, "");
+    deleteCookie(hs, this.typegraphName, { path, domain });
+    return hs;
   }
 
   async tokenMiddleware(
     token: string,
     url: URL,
   ): Promise<[Record<string, unknown>, Headers]> {
+    const typegraphPath = `/${this.typegraphName}`;
     const client = new OAuth2Client({
       ...this.clientData,
       redirectUri:
-        `${url.protocol}//${url.host}/${this.typegraphName}/auth/${this.authName}`,
+        `${url.protocol}//${url.host}${typegraphPath}/auth/${this.authName}`,
     });
 
-    const clearCookie = (): Headers => {
-      const hs = new Headers();
-      hs.set(nextAuthorizationHeader, "");
-      if (token) {
-        deleteCookie(hs, this.typegraphName);
-      }
-      return hs;
-    };
-
     if (!token) {
-      return [{}, clearCookie()];
+      return [{}, this.clearCookie(url.hostname, typegraphPath)];
     }
 
     try {
       const claims = await verifyJWT(token) as JWTClaims;
       if (!claims) {
-        return [{}, clearCookie()];
+        return [{}, this.clearCookie(url.hostname, typegraphPath)];
       }
 
       if (new Date().valueOf() / 1000 > claims.refreshAt) {
@@ -127,15 +174,15 @@ export class OAuth2Auth implements Auth {
           client,
           claims.refreshToken,
           config.cookies_max_age_sec,
-          url.host,
+          url.hostname,
         );
         return [claims, hs];
       }
 
       return [claims, new Headers()];
     } catch (e) {
-      console.info(`invalid auth: ${e}`);
-      return [{}, clearCookie()];
+      logger.info(`invalid auth: ${e}`);
+      return [{}, this.clearCookie(url.hostname, typegraphPath)];
     }
   }
 
@@ -168,7 +215,7 @@ export class OAuth2Auth implements Auth {
   private createHeaders(
     jwt: string,
     maxAge: number,
-    host: string,
+    hostname: string,
   ): Headers {
     const hs = new Headers();
     const name = this.typegraphName;
@@ -176,10 +223,11 @@ export class OAuth2Auth implements Auth {
       name,
       value: jwt,
       maxAge,
-      domain: host,
+      domain: hostname,
       path: `/${name}`,
       secure: !config.debug,
       sameSite: "Lax",
+      httpOnly: false, // jwt should be decodeable by the browser
     });
     hs.set(nextAuthorizationHeader, jwt);
     return hs;
@@ -189,12 +237,12 @@ export class OAuth2Auth implements Auth {
     client: OAuth2Client,
     refreshToken: string,
     maxAge: number,
-    host: string,
+    hostname: string,
   ): Promise<Headers> {
     const token = await client.refreshToken.refresh(refreshToken);
     const jwt = await this.createJWT(token, maxAge);
     if (jwt) {
-      return this.createHeaders(jwt, maxAge, host);
+      return this.createHeaders(jwt, maxAge, hostname);
     }
     const hs = new Headers();
     const name = this.typegraphName;

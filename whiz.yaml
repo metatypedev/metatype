@@ -26,7 +26,9 @@ typegate1: &tp
     - ../examples/.env.sample
     - ../website/.env.sample
     - .env.sample
-  command: "deno task run"
+  # https://github.com/denoland/deno/issues/18445
+  # command: "deno task run"
+  command: "deno run --config=deno.json --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=.  --allow-net --v8-flags=--stack_size=2000 src/main.ts"
   depends_on:
     - typegate_native
   pipe:

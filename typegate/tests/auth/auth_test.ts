@@ -4,7 +4,13 @@ import { assertEquals, assertStringIncludes } from "std/testing/asserts.ts";
 import { execute, gql, sleep, test } from "../utils.ts";
 
 import * as mf from "test/mock_fetch";
-import { signJWT, unsafeExtractJWT, verifyJWT } from "../../src/crypto.ts";
+import {
+  decrypt,
+  encrypt,
+  randomUUID,
+  signJWT,
+  verifyJWT,
+} from "../../src/crypto.ts";
 import { nextAuthorizationHeader } from "../../src/auth/auth.ts";
 import { JWTClaims } from "../../src/auth/auth.ts";
 import { getSetCookies } from "std/http/cookie.ts";
@@ -89,8 +95,13 @@ test("Auth", async (t) => {
         redirect.href,
         `https://github.com/login/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=http%3A%2F%2Ftypegate.local%2Ftest_auth%2Fauth%2Fgithub&scope=openid+profile+email&state=`,
       );
-      const state = await unsafeExtractJWT(redirect.searchParams.get("state")!);
-      assertEquals(state.redirectUri, redirectUri);
+      const cookies = getSetCookies(res.headers);
+      const loginState = await decrypt(cookies[0].value);
+      const { state, redirectUri: redirectUriInCookie } = JSON.parse(
+        loginState,
+      );
+      assertEquals(state, redirect.searchParams.get("state")!);
+      assertEquals(redirectUri, redirectUriInCookie);
     },
   );
 
@@ -106,7 +117,7 @@ test("Auth", async (t) => {
 
     const accessToken = "ghu_16C7e42F292c6912E7710c838347Ae178B4a";
     const refreshToken =
-      "ghr_1B4a2e77838347a7E420ce178F2E7c6912E169246c34E1ccbF66C46812d16D5B1A9Dc86A1498";
+      "ghr_1B4a2e77838347a7E420ce178F2E7c6912E169246c34E1ccbF66C46812c06D5B1A9Dc86A1498";
 
     mf.mock("POST@/login/oauth/access_token", async (req) => {
       mf.reset();
@@ -130,11 +141,16 @@ test("Auth", async (t) => {
       });
     });
 
-    const state = await signJWT({
+    const state = randomUUID();
+    const cookie = await encrypt(JSON.stringify({
       redirectUri,
-    }, 10);
+      state,
+    }));
+    const headers = new Headers();
+    headers.set("cookie", `test_auth=${cookie}`);
     const req = new Request(
       `http://typegate.local/test_auth/auth/github?code=${code}&state=${state}`,
+      { headers },
     );
     const res = await execute(e, req);
     assertEquals(res.status, 302);

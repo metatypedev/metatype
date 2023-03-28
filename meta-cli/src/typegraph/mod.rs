@@ -181,7 +181,7 @@ impl<'a> TypegraphLoader<'a> {
         // Search in PATH does not work on Windows
         // See: https://doc.rust-lang.org/std/process/struct.Command.html#method.new
         #[cfg(target_os = "windows")]
-        let program_name = Path::new(&env::var("VIRTUAL_ENV")?).join("Scripts/py-tg.cmd");
+        let program_name = Path::new(&env::var("VIRTUAL_ENV")?).join("Scripts/py-tg.exe");
         #[cfg(not(target_os = "windows"))]
         let program_name = Path::new("py-tg").to_path_buf();
 

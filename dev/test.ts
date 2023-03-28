@@ -38,6 +38,7 @@ if (flags._.length === 0) {
   for (
     const entry of expandGlobSync("typegate/tests/**/*_test.ts", {
       root: projectDir,
+      globstar: true,
     })
   ) {
     testFiles.push(entry.path);
@@ -48,7 +49,12 @@ if (flags._.length === 0) {
     const stat = await Deno.stat(path);
 
     if (stat.isDirectory) {
-      for (const entry of expandGlobSync("**/*_test.ts", { root: path })) {
+      for (
+        const entry of expandGlobSync("**/*_test.ts", {
+          root: path,
+          globstar: true,
+        })
+      ) {
         testFiles.push(entry.path);
       }
       continue;
