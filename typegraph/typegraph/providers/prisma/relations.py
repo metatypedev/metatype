@@ -1,501 +1,841 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-
 from collections import defaultdict
-from typing import Dict
-from typing import Optional
-from typing import TYPE_CHECKING
 
-from attrs import frozen
+from attr import field
+from typegraph import t, TypeGraph
+from attrs import define, frozen
+from typing import Any, Optional, Tuple, List, Dict
+from enum import auto
 from strenum import StrEnum
-from typegraph import types as t
 from typegraph.graph.nodes import NodeProxy
-from typegraph.graph.typegraph import resolve_proxy
-from typegraph.graph.typegraph import TypeGraph
-from typegraph.providers.prisma.utils import resolve_entity_quantifier
 
-if TYPE_CHECKING:
-    from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph.graph.typegraph import resolve_proxy
+from typegraph.types import TypeNode
 
 
 class LinkProxy(NodeProxy):
-    runtime: "PrismaRuntime"
-    link_name: str
+    rel_name: Optional[str]
+    fkey: Optional[bool]
     target_field: Optional[str]
 
     def __init__(
         self,
         g: TypeGraph,
         node: str,
-        runtime: "PrismaRuntime",
-        link_name: str,
-        target_field: Optional[str],
+        *,
+        rel_name: Optional[str] = None,
+        fkey: Optional[bool] = None,
+        field: Optional[str] = None,
     ):
         super().__init__(g, node)
-        self.runtime = runtime
-        self.link_name = link_name
-        self.target_field = target_field
+        self.rel_name = rel_name
+        self.fkey = fkey
+        self.target_field = field
+
+
+_ModelName = str
+_PropertyName = str
+_RelationshipName = str
+_ModelRelationships = Dict[_PropertyName, "Relationship"]
+""" Registry of the relationships on a model:
+    A dictionary mapping property name to relationship """
+
+
+class Registry:
+    models: Dict[_ModelName, _ModelRelationships]
+    relationships: Dict[_RelationshipName, "Relationship"]
+    managed: Dict[_ModelName, t.struct]
+    discovery: "_RelationshipDiscovery"
+
+    def __init__(self):
+        self.models = defaultdict(dict)
+        self.relationships = dict()
+        self.managed = {}
+        self.discovery = _RelationshipDiscovery(self)
+
+    def manage(self, model: t.struct):
+        if model.name in self.managed:
+            return
+
+        relationships = self.discovery.scan_model(model)
+
+        for rel in relationships:
+            self._add(rel)
+
+        self.managed[model.name] = model
+
+        for rel in relationships:
+            self.manage(rel.other(model).typ)
+
+    def _add(self, rel: "Relationship"):
+        left_model_relationships = self.models[rel.left.typ.name]
+        if rel.left.field in left_model_relationships:
+            raise Exception(
+                f"field '{rel.left.field}' on '{rel.left.typ.name}' already in a relationship"
+            )
+
+        right_model_relationships = self.models[rel.right.typ.name]
+        if rel.right.field in right_model_relationships:
+            raise Exception(
+                f"field '{rel.right.field}' on '{rel.right.typ.name}' already in a relationship"
+            )
+
+        left_model_relationships[rel.left.field] = rel
+        right_model_relationships[rel.right.field] = rel
+        self.relationships[rel.name] = rel
+
+    def _has(self, model_name: _ModelName, prop_name: _PropertyName) -> bool:
+        return model_name in self.models and prop_name in self.models[model_name]
 
 
 class Cardinality(StrEnum):
-    ONE = "one to one"
-    MANY = "one to many"
+    OPTIONAL = auto()
+    ONE = auto()
+    MANY = auto()
 
-    def is_one_to_one(self):
+    def is_one(self) -> bool:
         return self == Cardinality.ONE
 
-    def is_one_to_many(self):
+    def is_optional(self) -> bool:
+        return self == Cardinality.OPTIONAL
+
+    def is_many(self) -> bool:
         return self == Cardinality.MANY
 
 
 class Side(StrEnum):
-    """
-    A relationship is defined between two models:
-    - the "owner", on the "left" side of the relationship, has the foreign key
-    - the "ownee", on the "right" side of the relationship
-    """
+    LEFT = auto()
+    RIGHT = auto()
 
-    LEFT = "left"
-    RIGHT = "right"
-
-    def is_left(self):
+    def is_left(self) -> bool:
         return self == Side.LEFT
 
-    def is_right(self):
+    def is_right(self) -> bool:
         return self == Side.RIGHT
 
 
 @frozen
-class FieldRelation:
-    name: str
+class RelationshipModel:
     typ: t.struct
-    field: str
-    cardinality: Cardinality
-    side: Side
+    field: str  # field of this model pointing to the other side
+    cardinality: Cardinality  # cardinality of the field pointing to the other model
 
-
-@frozen
-class Relation:
-    left: FieldRelation
-    right: FieldRelation
-
-    def __attrs_post_init__(self):
-        assert (
-            self.left.name == self.right.name
-        ), "left and right sides of a relationship must have the same name"
-        assert (
-            self.left.cardinality == self.right.cardinality
-        ), "left and right sides of a relationship must have the same cardinality"
-
-    @property
-    def name(self):
-        return self.left.name
-
-    @property
-    def left_type_name(self):
-        return self.left.typ.name
-
-    @property
-    def right_type_name(self):
-        return self.right.typ.name
-
-    def side_of(self, type_name: str) -> Optional[Side]:
-        if self.left_type_name == type_name:
-            return Side.LEFT
-        if self.right_type_name == type_name:
-            return Side.RIGHT
+    def _has_fkey(self) -> Optional[bool]:
+        target_type = self.get_target_type()
+        if isinstance(target_type, LinkProxy):
+            return target_type.fkey
         return None
 
-    @property
-    def cardinality(self):
-        return self.right.cardinality
+    def _get_name(self) -> Optional[str]:
+        target_type = self.get_target_type()
+        if isinstance(target_type, LinkProxy):
+            return target_type.rel_name
+        return None
 
+    def get_target_type(self) -> TypeNode:
+        return self.typ.props[self.field]
 
-class RelationshipRegister:
-    """
-    Relationships are defined by `LinkProxy` NodeProxy types on the model types (`t.struct`).
-    """
+    def get_target_field(self) -> Optional[str]:
+        target_type = self.get_target_type()
+        if isinstance(target_type, LinkProxy):
+            return target_type.target_field
+        return None
 
-    runtime: "PrismaRuntime"
-    types: Dict[str, t.struct]
-    relations: Dict[str, Relation]
-    proxies: Dict[str, Dict[str, LinkProxy]]
-
-    def __init__(self, runtime):
-        self.runtime = runtime
-        self.types = {}
-        self.relations = {}
-        self.proxies = defaultdict(dict)
-
-    def get_left_proxy(self, left_field: str, right: LinkProxy) -> LinkProxy:
-        right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
-        prop_type = right_type.props[right.target_field]
-        if not isinstance(prop_type, LinkProxy):
-            prop_type = self.proxies[right_type.name][right.target_field]
-        left = prop_type
-        assert left.link_name == right.link_name
-        left_type = left.get()
-        assert left_type.type == "object", f"Expected object, got {left_type.type}"
-
-        if left.target_field is not None:
-            assert left.target_field == left_field
-        else:
-            left.target_field = left_field
-
-        return left
-
-    def get_right_proxy(self, right_field: str, left: LinkProxy) -> LinkProxy:
-        left_type = left.get()
-        prop_type = left_type.props[left.target_field]
-        if not isinstance(prop_type, LinkProxy):
-            prop_type = self.proxies[left_type.name][left.target_field]
-        right = prop_type
-        assert left.link_name == right.link_name
-        assert right.get().type in [
-            "optional",
-            "array",
-        ], f"Expected optional or array, got '{right.get().type}'"
-        if right.target_field is not None:
-            assert right.target_field == right_field
-        else:
-            right.target_field = right_field
-
-        return right
-
-    def get_link_from_proxy(
-        self, proxy: LinkProxy, target_type: t.struct, target_field: str
-    ):
-        typ = proxy.get()
-
-        if typ.type in ["optional", "array"]:
-            right = proxy
-            if right.target_field is None:
-                right_type = resolve_proxy(resolve_entity_quantifier(right.get()))
-                # TODO
-                # match by link name
-                fields = [
-                    f
-                    for f, ty in right_type.props.items()
-                    if isinstance(ty, LinkProxy) and ty.link_name == right.link_name
-                ]
-                if len(fields) == 0:
-                    print(
-                        f"proxies: {repr({k: f'{ln.link_name}, {ln.name}, {ln.target_field}' for k, ln in self.proxies[right_type.name].items()})}"
-                    )
-                    fields = [
-                        f
-                        for f, p in self.proxies[right_type.name].items()
-                        if p.link_name == right.link_name
-                    ]
-                print(f"right: link name={right.link_name}")
-                assert len(fields) == 1, f"got: {repr(fields)}"
-                right.target_field = fields[0]
-
-            left_field = target_field
-            left = self.get_left_proxy(left_field, right)
-            return left, right
-
-        assert typ.type == "object"
-        left = proxy
-        if left.target_field is None:
-            left_type = left.get()
-            fields = [
-                f
-                for f, ty in left_type.props.items()
-                if isinstance(ty, LinkProxy) and ty.link_name == left.link_name
-            ]
-            assert len(fields) == 1
-            left.target_field = fields[0]
-
-        right_field = target_field
-        right = self.get_right_proxy(right_field, left)
-        return left, right
-
-    def fill_proxy_target_field(self, proxy: LinkProxy, model: t.struct):
-        if proxy.target_field is not None:
-            return
-        typ = proxy.get()
-
-        if isinstance(typ, t.struct):
-            left_model = typ
-
-            fields = [
-                f
-                for f, ty in left_model.props.items()
-                if isinstance(ty, LinkProxy) and ty.link_name == proxy.link_name
-            ]
-            assert (
-                len(fields) <= 1
-            ), f"Relationship names must be unique: got multiple '{proxy.link_name}' on '{left_model.name}': {', '.join(fields)}"
-            if len(fields) == 1:
-                proxy.target_field = fields[0]
-                return
-
-            fields = [
-                f
-                for f, ty in left_model.props.items()
-                if isinstance(ty, t.optional)
-                or isinstance(ty, t.array)
-                and ty.of.name == model.name
-            ]
-            assert (
-                len(fields) <= 1
-            ), f"Ambiguous target field for '{proxy.link_name}' on '{left_model.name}': {' or '.join(fields)} ?"
-            assert (
-                len(fields) == 1
-            ), f"No target for '{proxy.link_name}' on '{left_model.name}'"
-            proxy.target_field = fields[0]
-            return
-
-        assert isinstance(typ, t.optional) or isinstance(typ, t.array)
-        right_model = resolve_proxy(typ.of)
-        assert isinstance(right_model, t.struct)
-
+    def __str__(self):
         fields = [
-            f
-            for f, ty in right_model.props.items()
-            if isinstance(ty, LinkProxy) and ty.link_name == proxy.link_name
+            f"type={repr(self.typ.name)}",
+            f"field={repr(self.field)}",
+            f"cardinality={self.cardinality}",
         ]
-        assert (
-            len(fields) <= 1
-        ), f"Relationship names must be unique: got multiple '{proxy.link_name}' on '{right_model.name}': {', '.join(fields)}"
-        if len(fields) == 1:
-            proxy.target_field = fields[0]
-            return
+        return f"RelationshipModel({', '.join(fields)})"
 
-        fields = [f for f, ty in right_model.props.items() if ty.name == model.name]
-        assert (
-            len(fields) <= 1
-        ), f"Ambiguous target field for '{proxy.link_name}' on '{right_model.name}': {' or '.join(fields)} ?"
-        assert (
-            len(fields) == 1
-        ), f"No target for '{proxy.link_name}' on '{right_model.name}'"
-        proxy.target_field = fields[0]
+    @classmethod
+    def optional(cls, model_type: t.struct, target_field: str) -> "RelationshipModel":
+        return cls(model_type, target_field, Cardinality.OPTIONAL)
 
-    # ensure that there is a proxy on the other side
-    # TODO: full validation??
-    def ensure_proxy_target(self, proxy: LinkProxy, field: str, model: t.struct):
-        typ = proxy.get()
-        self.fill_proxy_target_field(proxy, model)
+    @classmethod
+    def one(cls, model_type: t.struct, target_field: str) -> "RelationshipModel":
+        return cls(model_type, target_field, Cardinality.ONE)
 
-        if isinstance(typ, t.struct):
-            # TODO: find target field
-            left_model = typ
-            # assert proxy.target_field is not None
-            right_proxy = left_model.props.get(proxy.target_field)
+    @classmethod
+    def many(cls, model_type: t.struct, target_field: str) -> "RelationshipModel":
+        return cls(model_type, target_field, Cardinality.MANY)
 
+    @classmethod
+    def __validate_on(
+        cls, model: "RelationshipModel", other_model: "RelationshipModel"
+    ):
+        card = model.cardinality
+
+        target_type = model.typ.props[model.field]
+
+        # validate target_field
+        if isinstance(target_type, LinkProxy):
+            target_field = target_type.target_field
+            assert target_field is None or target_field == other_model.field
+
+        # validate cardinality
+        if card.is_one():
+            assert model.typ.props[model.field].name == other_model.typ.name
+        elif card.is_optional():
+            target_type = resolve_proxy(target_type)
             assert (
-                right_proxy is not None
-            ), f"Expected field '{proxy.target_field}' on '{left_model.name}'"
+                isinstance(target_type, t.optional)
+                and target_type.of.name == other_model.typ.name
+            )
+        elif card.is_many():
+            target_type = resolve_proxy(target_type)
+            assert (
+                isinstance(target_type, t.array)
+                and target_type.of.name == other_model.typ.name
+            )
 
-            if isinstance(right_proxy, LinkProxy):
-                assert right_proxy.link_name == proxy.link_name
-                if right_proxy.target_field is None:
-                    right_proxy.target_field = field
-                else:
-                    assert right_proxy.target_field == field
-                registered_proxy = self.proxies[typ.name][proxy.target_field]
-                if registered_proxy is None:
-                    self.proxies[typ.name][proxy.target_field] = right_proxy
-                else:
-                    assert registered_proxy == right_proxy
+    @classmethod
+    def _validate_pair(
+        cls, first: "RelationshipModel", second: "RelationshipModel"
+    ) -> Optional[_RelationshipName]:
+        name = first._get_name()
+        other_name = second._get_name()
+        if other_name is not None:
+            if name is None:
+                name = other_name
+            elif other_name != name:
+                raise Exception("Two sides of a relationship must have the same name")
 
-            else:
-                # wrap type in a proxy
-                self.proxies[left_model.name][proxy.target_field] = self.runtime.link(
-                    right_proxy, proxy.link_name, field
-                )
+        cls.__validate_on(first, second)
+        cls.__validate_on(second, first)
 
+        if first.cardinality.is_many() and second.cardinality.is_many():
+            # unreachable
+            raise Exception(
+                "Many-to-many relationship not supported: please use a explicit joining struct"
+            )
+
+        return name
+
+    @classmethod
+    def _find_fkey_idx(
+        cls, rels: Tuple["RelationshipModel", "RelationshipModel"]
+    ) -> Optional[int]:
+        has_fkey = tuple(r._has_fkey() for r in rels)
+
+        if has_fkey[0] is None:
+            if has_fkey[1] is None:
+                return None
+            if has_fkey[1]:
+                return 1
+            else:  # has_fkey[1] == False
+                return 0
+
+        # > has_fkey[0] is not None
+        if has_fkey[1] is None:
+            if has_fkey[0]:
+                return 0
+            else:  # has_fkey[0] == False
+                return 1
+
+        # > has_fkey[0] is not None and has_fkey[1] is not None
+        if has_fkey[0]:
+            if has_fkey[1]:
+                raise AmbiguousSide(rels, True)
+            # > has_fkey[1] == False
+            return 0
+
+        # > has_fkey[0] == False
+        if not has_fkey[1]:  # has_fkey[1] == Falses
+            raise AmbiguousSide(rels, False)
+
+
+class Relationship:
+    left: RelationshipModel
+    right: RelationshipModel
+    name: str = field(init=False, default="")
+
+    def __init__(
+        self, left: RelationshipModel, right: RelationshipModel, generated_name: str
+    ):
+        name = RelationshipModel._validate_pair(left, right)
+        self.left = left
+        self.right = right
+        self.name = name or generated_name
+
+    def side_of(self, model_name: str) -> Optional[Side]:
+        left = self.left.typ.name
+        right = self.right.typ.name
+        if left == right:  # self relationship
+            if left == model_name:
+                return None
         else:
-            assert isinstance(typ, t.optional) or isinstance(
-                typ, t.array
-            ), "LinkProxy can only wrap a struct, optional or array"
-            right_model = resolve_proxy(typ.of)
-            assert isinstance(
-                right_model, t.struct
-            ), f"Expected an struct for a model, got '{right_model.type}'"
+            if left == model_name:
+                return Side.LEFT
+            if right == model_name:
+                return Side.RIGHT
+        raise Exception(
+            f"Model '{model_name}' not found in either side of the relationship '{self.name}'"
+        )
 
-            left_proxy = right_model.props.get(proxy.target_field)
-            assert (
-                left_proxy is not None
-            ), f"Expected field '{proxy.target_field}' on '{right_model.name}'"
+    # for self relationships
+    def side_of_field(self, field: str) -> Side:
+        assert self.left.typ.name == self.right.typ.name
+        if self.left.field == field:
+            return Side.LEFT
+        if self.right.field == field:
+            return Side.RIGHT
+        raise Exception(
+            " ".join(
+                [
+                    f"Field '{field}' is not found in either side",
+                    f"of the self relationship '{self.name}'",
+                    f"on '{self.left.typ.name}'",
+                ]
+            )
+        )
 
-            if isinstance(left_proxy, LinkProxy):
-                assert left_proxy.link_name == proxy.link_name
-                if left_proxy.target_field is None:
-                    left_proxy.target_field = field
-                else:
-                    assert left_proxy.target_field == field
+    def other(self, model_type: t.struct) -> RelationshipModel:
+        if self.left.typ.name == model_type.name:
+            return self.right
+        if self.right.typ.name == model_type.name:
+            return self.left
+        raise Exception("Unexpected")
 
-                registered_proxy = self.proxies[right_model.name].get(
-                    proxy.target_field, None
-                )
-                if registered_proxy is None:
-                    self.proxies[right_model.name][proxy.target_field] = left_proxy
-                else:
-                    assert registered_proxy == left_proxy
+    def __str__(self):
+        lines = [
+            f"Relationship(name={repr(self.name)})",
+            f"> left: {self.left}",
+            f"> right: {self.right}",
+        ]
+        return "\n".join(lines)
 
-            else:
-                # wrap type in a proxy
-                self.proxies[right_model.name][proxy.target_field] = self.runtime.link(
-                    left_proxy, proxy.link_name, field
-                )
 
-    def register_type(self, typ: t.struct):
-        self.types[typ.name] = typ
-        # TODO set runtime, propagate runtime
-        proxies = self.proxies[typ.name]
-        for prop_name, prop_type in typ.props.items():
-            if isinstance(prop_type, LinkProxy):
-                proxies[prop_name] = prop_type
-                self.ensure_proxy_target(prop_type, prop_name, typ)
+class NoRelationshipFound(Exception):
+    def __init__(self, target_model: t.struct, source: RelationshipModel):
+        super().__init__(
+            " ".join(
+                [
+                    "No matching target field found",
+                    f"on '{target_model.name}'",
+                    f"for relationship from '{source.typ.name}'",
+                    f"on field '{source.field}'",
+                ]
+            )
+        )
+
+
+def describe_field(rel_model: RelationshipModel):
+    return f"field '{rel_model.field}' of type '{rel_model.typ.name}'"
+
+
+class AmbiguousSide(Exception):
+    def __init__(
+        self,
+        rels: Tuple[RelationshipModel, RelationshipModel],
+        both_has_fkey: Optional[bool] = None,
+    ):
+        if both_has_fkey is None:
+            suggestion = [
+                "Please set `fkey=True`",
+                "on the model/field that should have the foreign key",
+            ]
+        else:
+            suggestion = [
+                f"Please set `fkey={repr(not both_has_fkey)}`",
+                "on the model/field that should{' not' if both_has_fkey else ''} have the fkey",
+            ]
+
+        message_parts = [
+            "Cannot decide on which side of the relationship the foreign key should be:",
+            " or ".join([describe_field(m) for m in rels]) + "?",
+        ] + suggestion
+
+        super().__init__(" ".join(message_parts))
+
+
+class SameFkeyOnBothSides(Exception):
+    def __init__(
+        self, first: RelationshipModel, second: RelationshipModel, value: bool
+    ):
+        super().__init__(
+            " ".join(
+                [
+                    "Only one side of a relationship can have the foreign key:",
+                    f"set `fkey={repr(not value)}` on either",
+                    " or ".join([describe_field(m) for m in (first, second)]),
+                ]
+            )
+        )
+
+
+class UniqueOnBothSides(Exception):
+    def __init__(self, first: RelationshipModel, second: RelationshipModel):
+        super().__init__(
+            " ".join(
+                [
+                    "Only one side of a one-to-one relationship can have the 'unique' config:",
+                    'set `.config("unique")` on either',
+                    " or ".join([describe_field(m) for m in (first, second)]),
+                ]
+            )
+        )
+
+
+class AmbiguousTargets(Exception):
+    def __init__(
+        self,
+        source: RelationshipModel,
+        target_model: t.struct,
+        alternatives: List[RelationshipModel],
+        rel_name: Optional[str] = None,
+    ):
+        super().__init__(
+            " ".join(
+                [
+                    "Could not decide the target field of the relationship",
+                    f"from field '{source.field}' of model '{source.typ.name}'",
+                    f"to model '{target_model.name}':",
+                    ", ".join([m.field for m in alternatives]) + ".",
+                    f"Add an explicitly named link: '{rel_name}'."
+                    if rel_name is not None
+                    else "Add explicitly named links on both sides or set target_field on one or both side.",
+                ]
+            )
+        )
+
+
+@define
+class _RelationshipDiscovery:
+    reg: Registry
+    counter: int = field(default=0)
+
+    def scan_model(self, model: t.struct) -> List["Relationship"]:
+        assert isinstance(model, t.struct)
+
+        res: List[Relationship] = []
+        self_relationship_fields = set()
+
+        def add_self_relationship(source: RelationshipModel):
+            rel = self.self_relationship(source)
+            for m in (rel.left, rel.right):
+                self_relationship_fields.add(m.field)
+            res.append(self.self_relationship(source))
+
+        for [prop_name, prop_type] in model.props.items():
+            if self.reg._has(model.name, prop_name):
                 continue
-            if prop_name in proxies:
+
+            if prop_name in self_relationship_fields:
                 continue
 
             prop_type = resolve_proxy(prop_type)
+
             if isinstance(prop_type, t.struct):
-                # find all props of `prop_type` that define a relationship to `typ` (RIGHT proxy)
-                fields = [
-                    f
-                    for f, ty in prop_type.props.items()
-                    if isinstance(ty, LinkProxy)
-                    and resolve_entity_quantifier(ty.get()).name == typ.name
-                ]
+                source = RelationshipModel.one(model, prop_name)
+                if model.name == prop_type.name:  # self relationship
+                    add_self_relationship(source)
+                else:
+                    res.append(self.from_side_one(prop_type, source))
 
-                # todo: assert link_name
-                assert (
-                    len(fields) <= 1
-                ), f"Link must be explicitly specified when there are more than one links targetting the same model: on '{prop_type.name}': {' or '.join(fields)}"
+            elif isinstance(prop_type, t.optional):
+                target_model = resolve_proxy(prop_type.of)
+                if isinstance(target_model, t.struct):
+                    source = RelationshipModel.optional(model, prop_name)
+                    if model.name == target_model.name:
+                        add_self_relationship(source)
+                    else:
+                        res.append(self.from_side_optional(target_model, source))
 
-                if len(fields) == 1:
-                    link_name = prop_type.props[fields[0]].link_name
-                    proxies[prop_name] = self.runtime.link(
-                        prop_type, link_name, fields[0]
+            elif isinstance(prop_type, t.array):
+                target_model = resolve_proxy(prop_type.of)
+                if isinstance(target_model, t.struct):
+                    source = RelationshipModel.many(model, prop_name)
+                    if model.name == target_model.name:
+                        add_self_relationship(source)
+                    else:
+                        res.append(self.from_side_many(target_model, source))
+
+        return res
+
+    def from_side_optional(
+        self, target_model: t.struct, source: RelationshipModel
+    ) -> "Relationship":
+        assert source.cardinality.is_optional()
+
+        alternatives = find_relationship_models(target_model, source.typ.name)
+
+        if len(alternatives) == 0:
+            raise NoRelationshipFound(target_model, source)
+
+        if len(alternatives) > 1:
+            rel_name = source._get_name()
+
+            if rel_name is None:
+                # match with target_field
+                target_field = source.get_target_field()
+                if target_field is None:
+                    # reverse target look-up
+                    other = find_relationship_to_target_field(alternatives, source)
+                else:
+                    other = find_relationship_on_field(
+                        alternatives, source, target_field
                     )
-                    continue
 
-                # len(fields) == 0
-                # find all props of `prop_type` of type optional/array of `typ`
-                fields = [
-                    f
-                    for f, ty in prop_type.props.items()
-                    if (isinstance(ty, t.optional) or isinstance(ty, t.array))
-                    and resolve_entity_quantifier(ty).name == typ.name
-                ]
-
-                assert (
-                    len(fields) <= 1
-                ), f"Link must be explicitly specified when there are more than one implicit links targetting the same model: on '{prop_type.name}'"
-                assert (
-                    len(fields) == 1
-                ), f"No field match to a relationship to '{typ.name}' on '{prop_type.name}'"
-                # TODO handle eventual name clash
-                link_name = f"_{typ.name}_to_{prop_type.name}"
-                proxies[prop_name] = self.runtime.link(prop_type, link_name, fields[0])
-                self.proxies[prop_type.name][fields[0]] = self.runtime.link(
-                    prop_type.props[fields[0]], link_name, prop_name
-                )
-                self.ensure_proxy_target(proxies[prop_name], prop_name, typ)
-                continue
-
-            if isinstance(prop_type, t.optional) or isinstance(prop_type, t.array):
-                model = resolve_proxy(prop_type.of)
-                if not isinstance(model, t.struct):
-                    continue
-
-                # find all props of `model` that define a relationship to `typ` (LEFT proxy)
-                fields = [
-                    f
-                    for f, ty in model.props.items()
-                    if isinstance(ty, LinkProxy) and ty.name == typ.name
-                ]
-
-                assert (
-                    len(fields) <= 1
-                ), f"Ambiguous link targetting '{typ.name}' on '{model.name}': {' or '.join(fields)}?"
-
-                if len(fields) == 1:
-                    link_name = model.props[fields[0]].link_name
-                    proxies[prop_name] = self.runtime.link(
-                        prop_type, link_name, fields[0]
-                    )
-                    continue
-
-                # len(fields) == 0
-                # find all props of `model` of `typ`
-                fields = [
-                    f
-                    for f, ty in model.props.items()
-                    if ty.name == typ.name
-                    # if isinstance(resolve_proxy(ty))
-                ]
-                assert len(fields) <= 1
-                assert len(fields) == 1
-                # TODO handle eventual name clash
-                # generate link_name
-                link_name = f"_{model.name}_to_{typ.name}"
-                proxies[prop_name] = self.runtime.link(prop_type, link_name, fields[0])
-                self.proxies[model.name][fields[0]] = self.runtime.link(
-                    model.props[fields[0]], link_name, prop_name
+            else:
+                # match with rel_name
+                other = find_named_relationship(
+                    alternatives, source, target_model, rel_name
                 )
 
-    def manage(self, typ: t.struct):
-        if typ.name in self.types:
-            return
+        else:  # > len(alternatives) == 1
+            other = alternatives[0]
 
-        assert typ.type == "object", f"Prisma cannot manage '{typ.type}' types"
-        self.register_type(typ)
+        if other.cardinality.is_optional():
+            # optional one-to-one
+            fkey_idx = RelationshipModel._find_fkey_idx((source, other))
+            if fkey_idx is None:
+                return self.__from_optional_one_to_one(source, other)
+            left, right = map(
+                lambda idx: (source, other)[idx], (fkey_idx, 1 - fkey_idx)
+            )
+            return self.gen(left, right)
 
-        deps = []
+        if other.cardinality.is_one():
+            # >> left, right = other, source
+            fkey_idx = RelationshipModel._find_fkey_idx((source, other))
+            if fkey_idx is not None and fkey_idx != 1:
+                raise Exception(
+                    "The foreign key must be on the link to the non-optional model"
+                )
 
-        for prop_name, proxy in self.proxies[typ.name].items():
-            left_proxy, right_proxy = self.get_link_from_proxy(proxy, typ, prop_name)
+            return self.gen(other, source)
 
-            rel = create_relationship(left_proxy, right_proxy)
-            self.relations[rel.name] = rel
-            deps.append(rel.left.typ)
-            deps.append(rel.right.typ)
+        # other.cardinality.is_many
+        # >> left, right = source, other
+        fkey_idx = RelationshipModel._find_fkey_idx((source, other))
+        if fkey_idx is not None and fkey_idx != 0:
+            raise Exception(
+                "The foreign key must be on the link to the non-array model"
+            )
 
-        for ty in deps:
-            self.manage(ty)
+        # optional one-to-many
+        return self.gen(source, other)
+
+    def from_side_one(
+        self, target_model: t.struct, source: RelationshipModel
+    ) -> "Relationship":
+        assert source.cardinality.is_one()
+
+        alternatives = find_relationship_models(target_model, source.typ.name)
+
+        if len(alternatives) == 0:
+            raise NoRelationshipFound(target_model, source)
+
+        if len(alternatives) > 1:
+            rel_name = source._get_name()
+
+            if rel_name is None:
+                # match target_field
+                target_field = source.get_target_field()
+                if target_field is None:
+                    raise AmbiguousTargets(source, target_model, alternatives)
+                other = find_relationship_on_field(alternatives, source, target_field)
+
+            else:
+                # match with rel_name
+                other = find_named_relationship(
+                    alternatives, source, target_model, rel_name
+                )
+
+        else:  # len(alternatives) == 1
+            other = alternatives[0]
+
+        if other.cardinality.is_one():
+            return self.__from_optional_one_to_one(source, other)
+
+        # left, right = source, other
+        fkey_idx = RelationshipModel._find_fkey_idx((source, other))
+        if fkey_idx is not None and fkey_idx != 0:
+            non_fkey_target_type = (
+                "optional" if other.cardinality.is_optional() else "array"
+            )
+            raise Exception(
+                f"The foreign key must be on the link to the non-{non_fkey_target_type} model"
+            )
+
+        return self.gen(source, other)
+
+    # target_type on both sides of the relationship are optional
+    def __from_optional_one_to_one(
+        self, first: "RelationshipModel", second: "RelationshipModel"
+    ) -> "Relationship":
+        fkey_on_first = first._has_fkey()
+        fkey_on_second = second._has_fkey()
+
+        if fkey_on_first is None:
+            if fkey_on_second is None:
+                return self.__from_optional_one_to_one_without_fkey(first, second)
+            if fkey_on_second:
+                return self.gen(second, first)
+            else:  # fkey_on_second == False --> implies fkey on first
+                return self.gen(first, second)
+
+        # fkey_on_first is not None
+        if fkey_on_second is None:
+            if fkey_on_first:
+                return self.gen(first, second)
+            else:  # fkey_on_first == False --> implise fkey on second
+                return self.gen(second, first)
+
+        # both not None
+        if fkey_on_first:
+            if fkey_on_second:
+                raise SameFkeyOnBothSides(first, second, True)
+            return self.gen(first, second)
+
+        # fkey_on_first == False
+        if not fkey_on_second:  # fkey_on_second == False
+            raise SameFkeyOnBothSides(first, second, False)
+        return self.gen(second, first)
+
+    def __from_optional_one_to_one_without_fkey(
+        self, first: "RelationshipModel", second: "RelationshipModel"
+    ) -> "Relationship":
+        # foreign key will be on the field that has the unique attribute
+        first_target_type = resolve_proxy(first.get_target_type())
+        first_target_is_unique = first_target_type.runtime_config.get("unique", False)
+        second_target_type = resolve_proxy(second.get_target_type())
+        second_target_is_unique = second_target_type.runtime_config.get("unique", False)
+
+        if first_target_is_unique:
+            if second_target_is_unique:
+                raise UniqueOnBothSides(first, second)
+            # left = first
+            return self.gen(first, second)
+
+        if not second_target_is_unique:
+            raise AmbiguousSide((first, second))
+
+        return self.gen(second, first)
+
+    def from_side_many(
+        self, target_model: t.struct, source: RelationshipModel
+    ) -> "Relationship":
+        assert source.cardinality.is_many()
+
+        alternatives = find_relationship_models(target_model, source.typ.name)
+
+        if len(alternatives) == 0:
+            raise NoRelationshipFound(target_model, source)
+
+        if len(alternatives) > 1:
+            alternatives = list(
+                filter(lambda model: not model.cardinality.is_many(), alternatives)
+            )
+            if len(alternatives) == 0:
+                raise Exception(
+                    "Many-to-many relationship not supported: please use an explicit joining struct"
+                )
+
+            if len(alternatives) > 1:
+                rel_name = source._get_name()
+
+                if rel_name is None:
+                    # match with target_field
+                    target_field = source.get_target_field()
+                    if target_field is None:
+                        raise AmbiguousTargets(source, target_model, alternatives)
+                    other = find_relationship_on_field(
+                        alternatives, source, target_field
+                    )
+
+                else:
+                    # match with rel_name
+                    other = find_named_relationship(
+                        alternatives, source, target_model, rel_name
+                    )
+
+            else:  # len(alternatives) == 1
+                other = alternatives[0]
+
+        else:
+            other = alternatives[0]
+            if other.cardinality.is_many():
+                raise Exception(
+                    "Many-to-many relationship not supported: please use an explicit joining struct"
+                )
+
+        # > other is not None
+
+        # left, right = other, source
+        fkey_idx = RelationshipModel._find_fkey_idx((source, other))
+        if fkey_idx is not None and fkey_idx != 1:
+            raise Exception(
+                "The foreign key must be on the link to the non-array model"
+            )
+
+        # optional-to-many/one-to-many
+        return self.gen(other, source)
+
+    def self_relationship(self, source: RelationshipModel) -> "Relationship":
+        alternatives = find_relationship_models(source.typ, source.typ.name)
+        alternatives = [m for m in alternatives if m.field != source.field]
+
+        if source.cardinality.is_many():
+            alternatives = [m for m in alternatives if not m.cardinality.is_many()]
+            if len(alternatives) == 0:
+                raise Exception(
+                    "Many-to-many relationship not supported: please use an explicit joining struct"
+                )
+
+        if len(alternatives) == 0:
+            raise NoRelationshipFound(source.typ, source)
+
+        if len(alternatives) > 1:
+            rel_name = source._get_name()
+
+            if rel_name is None:
+                # match with target_field
+                target_field = source.get_target_field()
+                if target_field is not None:
+                    other = find_relationship_on_field(
+                        alternatives, source, target_field
+                    )
+                else:
+                    other = find_relationship_to_target_field(alternatives, source)
+
+            else:
+                # match with rel_name
+                other = find_named_relationship(
+                    alternatives, source, source.typ, rel_name
+                )
+
+        else:
+            other = alternatives[0]
+
+        if source.cardinality.is_many():
+            assert not other.cardinality.is_many()
+            # left = other
+            return self.gen(other, source)
+
+        if source.cardinality.is_one():
+            if not other.cardinality.is_one():
+                # left = source
+                return self.gen(source, other)
+            raise Exception("One side of a one-to-one relationship must be optional")
+
+        # source.cardinality.is_optional():
+        if other.cardinality.is_one():
+            # left = other
+            return self.gen(other, source)
+
+        if other.cardinality.is_many():
+            # left = source
+            return self.gen(source, other)
+
+        return self.__from_optional_one_to_one(source, other)
+
+    def gen(self, left: RelationshipModel, right: RelationshipModel) -> Relationship:
+        self.counter += 1
+        generated_name = f"__rel_{left.typ.name}_{right.typ.name}_{self.counter}"
+        return Relationship(left, right, generated_name)
 
 
-def create_relationship(left_proxy: LinkProxy, right_proxy: LinkProxy) -> Relation:
-    left_type = left_proxy.get()
-    left_model = left_type
-    right_type = right_proxy.get()
-    right_model = resolve_proxy(resolve_entity_quantifier(right_type))
-    assert left_model.type == "object", "Relationships can only be defined on objects"
-    assert (
-        right_type.type in ["optional", "array"] and right_model.type == "object"
-    ), "Right side of a relationship must be an array or optional"
+def find_named_relationship(
+    alternatives: List[RelationshipModel],
+    source: RelationshipModel,
+    target_model: t.struct,
+    rel_name: str,
+) -> RelationshipModel:
+    unnamed = []
+    named = []
 
-    left_field = left_proxy.target_field
-    right_field = right_proxy.target_field
-    assert left_model.props[left_field].name == right_type.name
-    assert right_model.props[right_field].name == left_type.name
+    for rel in alternatives:
+        other_name = rel._get_name()
+        if other_name is None:
+            unnamed.append(rel)
+        elif rel_name == other_name:
+            named.append(rel)
+        # else: named differently: unacceptable
 
-    cardinality, q = (
-        (Cardinality.ONE, "?")
-        if right_type.type == "optional"
-        else (Cardinality.MANY, "[]")
-    )
-    relname = left_proxy.link_name
+    if len(named) > 1:
+        raise Exception(
+            " ".join(
+                [
+                    f"Found more than one relationships named '{rel_name}'",
+                    f"on model '{target_model.name}':",
+                    ", ".join([m.field for m in named]),
+                ]
+            )
+        )
 
-    return Relation(
-        left=FieldRelation(
-            name=relname,
-            typ=left_model,
-            field=right_proxy.target_field,  # what??
-            cardinality=cardinality,
-            side=Side.LEFT,
-        ),
-        right=FieldRelation(
-            name=relname,
-            typ=right_model,
-            field=left_proxy.target_field,  # what??
-            cardinality=cardinality,
-            side=Side.RIGHT,
-        ),
-    )
+    if len(named) == 1:
+        return named[0]
+
+    if len(unnamed) == 0:
+        raise NoRelationshipFound(target_model, source)
+
+    if len(unnamed) == 1:
+        return unnamed[0]
+
+    raise AmbiguousTargets(source, target_model, unnamed, rel_name)
+
+
+def find_relationship_on_field(
+    alternatives: List[RelationshipModel], source: RelationshipModel, field_name: str
+) -> RelationshipModel:
+    found = [m for m in alternatives if m.field == field_name]
+    if len(found) > 1:
+        raise AmbiguousTargets(source, found[0].typ, found)
+    if len(found) == 0:
+        raise NoRelationshipFound(alternatives[0].typ, source)
+    # > len(found) == 1
+    return found[0]
+
+
+def find_relationship_to_target_field(
+    alternatives: List[RelationshipModel], source: RelationshipModel
+) -> RelationshipModel:
+    found = [m for m in alternatives if m.get_target_field() == source.field]
+    if len(found) > 1:
+        raise AmbiguousTargets(source, found[0].typ, found)
+    if len(found) == 0:
+        raise NoRelationshipFound(alternatives[0].typ, source)
+    # > len(found) == 1
+    return found[0]
+
+
+def find_relationship_models(
+    from_model: t.struct, target_model_name: str
+) -> List[RelationshipModel]:
+    res: List[RelationshipModel] = []
+
+    for [prop_name, prop_type] in from_model.props.items():
+        prop_type = resolve_proxy(prop_type)
+
+        if isinstance(prop_type, t.struct) and prop_type.name == target_model_name:
+            res.append(RelationshipModel.one(from_model, prop_name))
+
+        elif isinstance(prop_type, t.optional):
+            target_model = resolve_proxy(prop_type.of)
+            if (
+                isinstance(target_model, t.struct)
+                and target_model.name == target_model_name
+            ):
+                res.append(RelationshipModel.optional(from_model, prop_name))
+
+        elif isinstance(prop_type, t.array):
+            target_model = resolve_proxy(prop_type.of)
+            if (
+                isinstance(target_model, t.struct)
+                and target_model.name == target_model_name
+            ):
+                res.append(RelationshipModel.many(from_model, prop_name))
+
+    return res
+
+
+def get_other(pair: Tuple[Any, Any], first: Any):
+    if first == pair[0]:
+        return pair[1]
+    if first == pair[1]:
+        return pair[0]
+    raise Exception("Unexpected")

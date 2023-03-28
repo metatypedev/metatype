@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { DenoRuntime } from "../runtimes/deno.ts";
+import { DenoRuntime } from "../runtimes/deno/deno.ts";
 import { TypeGraph } from "../typegraph.ts";
 import {
   Context,

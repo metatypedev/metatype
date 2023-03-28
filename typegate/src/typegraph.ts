@@ -2,7 +2,7 @@
 
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { DenoRuntime } from "./runtimes/deno.ts";
+import { DenoRuntime } from "./runtimes/deno/deno.ts";
 import { GoogleapisRuntime } from "./runtimes/googleapis.ts";
 import { GraphQLRuntime } from "./runtimes/graphql.ts";
 import { HTTPRuntime } from "./runtimes/http.ts";
@@ -199,9 +199,7 @@ export class TypeGraph {
 
   async deinit(): Promise<void> {
     for await (
-      const [_idx, runtime] of this.runtimeReferences.map(
-        (rt, i) => [i, rt] as const,
-      )
+      const runtime of this.runtimeReferences
     ) {
       //logger.debug(`deinit runtime ${idx}`);
       await runtime.deinit();

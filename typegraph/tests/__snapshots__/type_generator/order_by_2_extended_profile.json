@@ -1,0 +1,94 @@
+{
+    "type": "array",
+    "name": "array_45",
+    "children": {
+        "[items]": {
+            "type": "object",
+            "name": "object_44",
+            "children": {
+                "id": {
+                    "type": "optional",
+                    "name": "optional_39",
+                    "children": {
+                        "[item]": {
+                            "type": "string",
+                            "name": "string_38"
+                        }
+                    }
+                },
+                "bio": {
+                    "type": "optional",
+                    "name": "optional_39"
+                },
+                "user": {
+                    "type": "optional",
+                    "name": "optional_43",
+                    "children": {
+                        "[item]": {
+                            "type": "object",
+                            "name": "object_42",
+                            "children": {
+                                "id": {
+                                    "type": "optional",
+                                    "name": "optional_39"
+                                },
+                                "name": {
+                                    "type": "optional",
+                                    "name": "optional_39"
+                                },
+                                "age": {
+                                    "type": "optional",
+                                    "name": "optional_39"
+                                },
+                                "coinflips": {
+                                    "type": "optional",
+                                    "name": "optional_39"
+                                },
+                                "city": {
+                                    "type": "optional",
+                                    "name": "optional_39"
+                                },
+                                "posts": {
+                                    "type": "optional",
+                                    "name": "optional_41",
+                                    "children": {
+                                        "[item]": {
+                                            "type": "object",
+                                            "name": "object_40",
+                                            "children": {
+                                                "_count": {
+                                                    "type": "optional",
+                                                    "name": "optional_39"
+                                                },
+                                                "_avg": {
+                                                    "type": "optional",
+                                                    "name": "optional_39"
+                                                },
+                                                "_sum": {
+                                                    "type": "optional",
+                                                    "name": "optional_39"
+                                                },
+                                                "_min": {
+                                                    "type": "optional",
+                                                    "name": "optional_39"
+                                                },
+                                                "_max": {
+                                                    "type": "optional",
+                                                    "name": "optional_39"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "extended_profile": {
+                                    "type": "optional",
+                                    "name": "optional_39"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

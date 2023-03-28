@@ -1,0 +1,89 @@
+// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+
+import Context from "std/wasi/snapshot_preview1.ts";
+import { Memory, RustResult } from "./memory.ts";
+import { gunzip, tar } from "compress";
+import { AsyncMessenger } from "../patterns/messenger/async_messenger.ts";
+
+const pythonWasiReactorUrl =
+  "https://github.com/metatypedev/python-wasi-reactor/releases/download/v0.1.0/python3.11.1-wasi-reactor.wasm.tar.gz";
+
+const cachePath = "./tmp/python3.11.1-wasi-reactor.wasm";
+
+export class PythonWasmMessenger extends AsyncMessenger<
+  [WebAssembly.Instance, Memory],
+  unknown,
+  unknown
+> {
+  instance: WebAssembly.Instance;
+  memory: Memory;
+
+  private constructor(
+    module: WebAssembly.Module,
+  ) {
+    const context = new Context({
+      env: {},
+      args: [],
+      preopens: {},
+    });
+    const instance = new WebAssembly.Instance(module, {
+      wasi_snapshot_preview1: {
+        sock_accept(fd: any, _flags: any) {
+          return fd;
+        },
+        ...context.exports,
+      },
+      host: {
+        callback: (id: number, ptr: number) => {
+          const res = memory.decode(ptr);
+          this.receive({ id, ...res });
+        },
+      },
+    });
+    const memory = new Memory(instance.exports);
+
+    context.initialize(instance);
+    const { init } = instance.exports as Record<
+      string,
+      CallableFunction
+    >;
+    init();
+
+    super(
+      [instance, memory],
+      ([instance, memory], { id, op, data }) => {
+        const apply = instance.exports.apply as CallableFunction;
+        apply(...memory.encode(id, op, data));
+      },
+      () => {},
+    );
+    this.instance = instance;
+    this.memory = memory;
+  }
+
+  static async init(): Promise<PythonWasmMessenger> {
+    if (!await Deno.stat(cachePath).then((f) => f.isFile).catch(() => false)) {
+      const res = await fetch(pythonWasiReactorUrl);
+      const archivePath = await Deno.makeTempFile({
+        dir: "./tmp",
+      });
+      const buffer = await res.arrayBuffer();
+      const archive = await gunzip(new Uint8Array(buffer));
+      await Deno.writeFile(archivePath, archive);
+      await tar.uncompress(archivePath, "./tmp");
+    }
+
+    const binary = await Deno.readFile(cachePath);
+    const module = await WebAssembly.compile(binary);
+
+    return new PythonWasmMessenger(module);
+  }
+
+  executeSync(exportName: string, ...args: unknown[]): RustResult {
+    const fn = this.instance.exports[exportName] as CallableFunction | null;
+    if (!fn) {
+      throw new Error(`export ${exportName} not found`);
+    }
+    return this.memory.decode(fn(...this.memory.encode(...args)));
+  }
+}

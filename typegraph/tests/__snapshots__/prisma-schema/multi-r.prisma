@@ -1,0 +1,16 @@
+model Post {
+  id          String @id @default(uuid()) @db.Uuid
+  title       String
+  content     String
+  author      User   @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
+  authorId    String @db.Uuid
+  favorite_of User[] @relation(name: "__rel_User_Post_2")
+}
+
+model User {
+  id              String  @id @default(uuid()) @db.Uuid
+  email           String  @unique
+  posts           Post[]  @relation(name: "__rel_Post_User_1")
+  favorite_post   Post?   @relation(name: "__rel_User_Post_2", fields: [favorite_postId], references: [id])
+  favorite_postId String? @db.Uuid
+}
