@@ -36,7 +36,7 @@ impl<'a> TypegraphLoader<'a> {
         Self {
             skip_deno_modules: false,
             ignore_unknown_file_types: false,
-            postprocessors: vec![postprocess::deno_rt::reformat_scripts],
+            postprocessors: vec![postprocess::deno_rt::reformat_scripts()],
             config,
         }
     }

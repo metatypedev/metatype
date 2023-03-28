@@ -1,5 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+use std::sync::{Arc, RwLock};
+
 use crate::config::Config;
 
 use super::utils::{map_from_object, object_from_map};
@@ -7,12 +9,13 @@ use anyhow::Result;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
 use typescript::parser::{transform_module, transform_script};
 
-pub type PostProcessor<T = Typegraph> = fn(&mut T, &Config) -> Result<()>;
+pub type PostProcessor<T = Typegraph> =
+    Arc<RwLock<dyn Fn(&mut T, &Config) -> Result<()> + Sync + Send>>;
 
 pub trait PostProcess {
     fn apply(&mut self, postprocessors: &[PostProcessor<Self>], config: &Config) -> Result<()> {
         for pp in postprocessors {
-            pp(self, config)?;
+            pp.read().unwrap()(self, config)?;
         }
         Ok(())
     }
@@ -46,13 +49,17 @@ pub mod deno_rt {
         Ok(())
     }
 
-    pub fn reformat_scripts(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
+    fn reformat_scripts_fn(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
         for rt_idx in get_runtimes(typegraph, "deno").into_iter() {
             for mat_idx in get_materializers(typegraph, rt_idx as u32) {
                 reformat_materializer_script(&mut typegraph.materializers[mat_idx])?;
             }
         }
         Ok(())
+    }
+
+    pub fn reformat_scripts() -> PostProcessor {
+        Arc::new(RwLock::new(reformat_scripts_fn))
     }
 }
 
@@ -66,7 +73,11 @@ pub mod prisma_rt {
         typegraph::utils::{map_from_object, object_from_map},
     };
 
-    pub fn embed_prisma_migrations(tg: &mut Typegraph, config: &Config) -> Result<()> {
+    pub fn embed_prisma_migrations() -> PostProcessor {
+        Arc::new(RwLock::new(embed_prisma_migrations_fn))
+    }
+
+    fn embed_prisma_migrations_fn(tg: &mut Typegraph, config: &Config) -> Result<()> {
         let prisma_config = &config.typegraphs.materializers.prisma;
         let tg_name = tg.name().context("Getting typegraph name")?;
 
