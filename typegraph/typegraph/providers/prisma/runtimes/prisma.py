@@ -10,11 +10,10 @@ from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypegraphContext
-from typegraph.providers.prisma.relations import LinkProxy
-from typegraph.providers.prisma.schema import RelationshipRegister, build_model
+from typegraph.providers.prisma.relations import LinkProxy, Registry
+from typegraph.providers.prisma.schema import build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils import eprint
 from typegraph.utils.attrs import SKIP, always, required
 
 
@@ -150,18 +149,11 @@ class PrismaRuntime(Runtime):
 
     ### Relationships
 
-    The `PrismaRuntime` supports two kinds of relationship between models.
-
-    | Relationship | Field type in Model1 | Field type in Model2 |
-    |---|---|---|
-    |One to one| `g("Model2")` | `g("Model1").optional()` |
-    |One to many| `g("Model2")` | `t.array(g("Model1"))` |
-
     Relationship fields must be defined on both sides of the relationship.
     A relationship is always defined for `t.struct` types and `t.optional` or
     `t.array` of `t.struct`s.
 
-    Relatioships can also be defined implicitly using the `link` instance method
+    Relatioships can also be defined implicitly using the [`link`](#link) instance method
     of `PrismaRuntime`.
 
     Example:
@@ -185,6 +177,34 @@ class PrismaRuntime(Runtime):
         }
     ).named("Post")
     ```
+
+    The `PrismaRuntime` supports two kinds of relationship between models.
+
+    #### One-to-one relationships
+
+    A one-to-one relationship must be in one of these two variants.
+
+    | Cardinality | Field type in Model1 | Field type in Model2 |
+    |---|---|---|
+    | 1..1 ↔ 0..1 | `g("Model2")` | `g("Model1").optional()` |
+    | 0..1 ↔ 0..1 | `g("Model2").optional()` | `g("Model1").optional()` |
+
+    For the optional (0..1 ↔ 0..1) one-to-one relationship,
+    you need to indicate on which field/model the foreign key will be by:
+    - wrapping the type in a [`runtime.link(.)`](#link) with `fkey=True`:
+    `runtime.link(g("Model2").optional(), fkey=True)`;<br/>
+    - or adding `.config("unique")`: `g("Model2").optional().config("unique")`.
+
+
+    #### One-to-many relationships
+
+    A one-to-many relationship must be in one of these two variants.
+
+    | Cardinality | Field type in Model1 | Field type in Model2 |
+    |---|---|---|
+    | 1..1 ↔ 0..n | `g("Model2")` | `t.array(g("Model1"))` |
+    | 0..1 ↔ 0..n | `g("Model2").optional()` | `t.array(g("Model1"))` |
+
 
     ### Generators
 
@@ -229,13 +249,20 @@ class PrismaRuntime(Runtime):
     name: str
     connection_string_secret: str
     runtime_name: str = always("prisma")
-    spec: RelationshipRegister = field(init=False, hash=False, metadata={SKIP: True})
+    reg: Registry = field(init=False, hash=False, metadata={SKIP: True})
+    __typegen: TypeGenerator = field(init=False, hash=False, metadata={SKIP: True})
 
     def __attrs_post_init__(self):
-        object.__setattr__(self, "spec", RelationshipRegister(self))
+        object.__setattr__(self, "reg", Registry())
+        object.__setattr__(self, "_PrismaRuntime__typegen", TypeGenerator(reg=self.reg))
 
     def link(
-        self, typ: Union[t.TypeNode, str], name: str, field: Optional[str] = None
+        self,
+        typ: Union[t.TypeNode, str],
+        name: Optional[str] = None,
+        *,
+        field: Optional[str] = None,
+        fkey: Optional[bool] = None,
     ) -> t.TypeNode:
         """
         Explicitly declare a relationship between models. The return value of
@@ -276,26 +303,40 @@ class PrismaRuntime(Runtime):
             typ = typ.name
         else:
             g = TypegraphContext.get_active()
-        return LinkProxy(g, typ, self, name, field)
+        return LinkProxy(g, typ, rel_name=name, field=field, fkey=fkey)
 
-    @property
-    def __typegen(self):
-        return TypeGenerator(spec=self.spec)
+    def queryRaw(self, query: str, out: t.TypeNode, *, effect: Effect) -> t.func:
+        """Generate a raw SQL query operation on the runtime
 
-    def queryRaw(self, query: str, *, effect: Effect) -> t.func:
-        """Generate a raw SQL query operation"""
+        Example:
+        ```python
+        db = PrismaRuntime("my-app", "POSTGRES")
+        g.expose(
+            countUsers=db.queryRaw("SELECT COUNT(*) FROM User", t.integer())
+        )
+        ```
+        """
         return t.func(
             t.struct(
                 {
                     "parameters": t.json(),
                 }
             ).named("QueryRawInp"),
-            t.array(t.json()),
+            out,
             PrismaOperationMat(self, query, "queryRaw", effect=effect),
         )
 
     def executeRaw(self, query: str, *, effect: Effect) -> t.func:
-        """Generate a raw SQL query operation without return"""
+        """Generate a raw SQL query operation without return
+
+        Example:
+        ```python
+        db = PrismaRuntime("my-app", "POSTGRES")
+        g.expose(
+            setActive=db.executeRaw("UPDATE User SET active = TRUE WHERE id=$1", effect=effects.update()),
+        )
+        ```
+        """
         return t.func(
             t.struct(
                 {
@@ -428,7 +469,7 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "groupBy", effect=effects.none()),
         )
 
-    def insert_one(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def create(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Create", tpe)
@@ -442,7 +483,7 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "createOne", effect=effects.create()),
         )
 
-    def insert_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
+    def create_many(self, tpe: Union[t.struct, t.NodeProxy]) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("CreateMany", tpe)
@@ -540,25 +581,28 @@ class PrismaRuntime(Runtime):
 
     def __manage(self, tpe):
         tpe._propagate_runtime(self)
-        self.spec.manage(tpe)
+        self.reg.manage(tpe)
 
     def __datamodel(self):
-        models = [build_model(ty, self.spec) for ty in self.spec.types]
+        models = [build_model(ty, self.reg) for ty in self.reg.managed.values()]
         return "\n\n".join(models)
         # return PrismaSchema(self.managed_types.values()).build()
 
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
-        eprint(data)
         data["data"].update(
             datamodel=self.__datamodel(),
-            models=[collector.index(tp) for tp in self.spec.types.values()],
+            connection_string_secret=self.connection_string_secret,
+            models=[collector.index(tp) for tp in self.reg.managed.values()],
         )
         return data
 
     @property
     def edges(self) -> List[Node]:
-        return super().edges + list(self.spec.types.values())
+        return super().edges + list(self.reg.managed.values())
+
+    def insert_one(self, tpe):
+        return self.create(tpe)
 
 
 @frozen
@@ -592,10 +636,3 @@ class PrismaDiffMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("diff")
     effect: Effect = always(effects.none())
-
-
-@frozen
-class PrismaResetMat(Materializer):
-    runtime: Runtime = PrismaMigrationRuntime()
-    materializer_name: str = always("reset")
-    effect: Effect = always(effects.delete())

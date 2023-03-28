@@ -10,12 +10,17 @@ from typegraph.graph.nodes import NodeProxy
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 
-def tree(typ: t.TypeNode, visited: Set[t.TypeNode] = set()) -> Dict[str, Any]:
+def tree(
+    typ: t.TypeNode, visited: Set[t.TypeNode] = set(), resolve_proxies=False
+) -> Dict[str, Any]:
     if isinstance(typ, NodeProxy):
-        return {
-            "type": "NodeProxy",
-            "name": typ.name,
-        }
+        if resolve_proxies:
+            typ = typ.get()
+        else:
+            return {
+                "type": "NodeProxy",
+                "name": typ.name,
+            }
 
     ret = {
         "type": typ.type,
@@ -31,22 +36,33 @@ def tree(typ: t.TypeNode, visited: Set[t.TypeNode] = set()) -> Dict[str, Any]:
         return ret
 
     if isinstance(typ, t.optional):
-        return with_children({"[item]": tree(typ.of, visited)})
+        return with_children({"[item]": tree(typ.of, visited, resolve_proxies)})
 
     if isinstance(typ, t.array):
-        return with_children({"[items]": tree(typ.of, visited)})
+        return with_children({"[items]": tree(typ.of, visited, resolve_proxies)})
 
     if isinstance(typ, t.struct):
-        return with_children({k: tree(ty, visited) for k, ty in typ.props.items()})
+        return with_children(
+            {k: tree(ty, visited, resolve_proxies) for k, ty in typ.props.items()}
+        )
+
+    if isinstance(typ, t.either) or isinstance(typ, t.union):
+        return with_children(
+            {
+                f"[variant_{idx}]": tree(ty, visited, resolve_proxies)
+                for idx, ty in enumerate(typ.variants)
+            }
+        )
 
     return ret
 
 
 class TestTypeGenerator:
-    def test_simple(self, overridable):
-        with TypeGraph("test_where_simple"):
+    def test_simple(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph("test_simple"):
             db = PrismaRuntime("test", "POSTGRES")
-            typegen = db._PrismaRuntime__typegen
 
             model = t.struct(
                 {
@@ -57,66 +73,15 @@ class TestTypeGenerator:
                 }
             ).named("Model")
 
-            assert tree(typegen.get_input_type(model)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_7",
-                    "children": {
-                        "id": {
-                            "type": "optional",
-                            "name": "optional_6",
-                            "children": {
-                                "[item]": {"type": "string", "name": "string_1"}
-                            },
-                        },
-                        "email": {"type": "string", "name": "string_2"},
-                        "age": {"type": "integer", "name": "integer_3"},
-                        "fullName": {"type": "string", "name": "string_4"},
-                    },
-                }
-            )
+            typegen = db._PrismaRuntime__typegen
+            self.assert_snapshot(typegen.get_input_type(model), "simple_input.json")
+            self.assert_snapshot(typegen.get_where_type(model), "simple_where.json")
 
-            assert tree(typegen.get_where_type(model)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_12",
-                    "children": {
-                        "id": {
-                            "type": "optional",
-                            "name": "optional_8",
-                            "children": {
-                                "[item]": {"type": "string", "name": "string_1"}
-                            },
-                        },
-                        "email": {
-                            "type": "optional",
-                            "name": "optional_9",
-                            "children": {
-                                "[item]": {"type": "string", "name": "string_2"}
-                            },
-                        },
-                        "age": {
-                            "type": "optional",
-                            "name": "optional_10",
-                            "children": {
-                                "[item]": {"type": "integer", "name": "integer_3"}
-                            },
-                        },
-                        "fullName": {
-                            "type": "optional",
-                            "name": "optional_11",
-                            "children": {
-                                "[item]": {"type": "string", "name": "string_4"}
-                            },
-                        },
-                    },
-                }
-            )
+    def test_relations(self, snapshot):
+        self.init_snapshot(snapshot)
 
-    def test_relations(self, overridable):
         with TypeGraph("test_relations") as g:
             db = PrismaRuntime("test", "POSTGRES")
-            typegen = db._PrismaRuntime__typegen
 
             user = t.struct(
                 {"id": t.integer().config("id"), "posts": t.array(g("Post"))}
@@ -126,111 +91,160 @@ class TestTypeGenerator:
                 {"id": t.integer().config("id"), "author": g("User")}
             ).named("Post")
 
-            assert tree(typegen.get_input_type(user)) == overridable(
+            typegen = db._PrismaRuntime__typegen
+            self.assert_snapshot(typegen.get_input_type(user), "relations_input_1.json")
+            self.assert_snapshot(typegen.get_input_type(post), "relations_input_2.json")
+            self.assert_snapshot(typegen.get_where_type(user), "relations_where_1.json")
+            self.assert_snapshot(typegen.get_where_type(post), "relations_where_2.json")
+
+    def test_self_relation(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph("test_self_relation") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+
+            node = t.struct(
                 {
-                    "type": "object",
-                    "name": "object_6",
-                    "children": {
-                        "id": {"type": "integer", "name": "integer_1"},
-                        "posts": {
-                            "type": "array",
-                            "name": "array_2",
-                            "children": {
-                                "[items]": {"type": "NodeProxy", "name": "Post"}
-                            },
-                        },
-                    },
+                    "name": t.string().min(2).config("id"),
+                    "prev": g("ListNode").optional(),
+                    "next": g("ListNode").optional().config("unique"),
                 }
+            ).named("ListNode")
+
+            typegen = db._PrismaRuntime__typegen
+            self.assert_snapshot(
+                typegen.get_input_type(node), "self_relation_input.json"
             )
-            assert tree(typegen.get_input_type(post)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_7",
-                    "children": {
-                        "id": {"type": "integer", "name": "integer_4"},
-                        "author": {
-                            "type": "object",
-                            "name": "User",
-                            "children": {
-                                "id": {"type": "integer", "name": "integer_1"},
-                                "posts": {"type": "array", "name": "array_2"},
-                            },
-                        },
-                    },
-                }
+            self.assert_snapshot(
+                typegen.get_where_type(node), "self_relation_where.json"
             )
 
-            assert tree(typegen.get_where_type(user)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_12",
-                    "children": {
-                        "id": {
-                            "type": "optional",
-                            "name": "optional_8",
-                            "children": {
-                                "[item]": {"type": "integer", "name": "integer_1"}
-                            },
-                        },
-                        "posts": {
-                            "type": "optional",
-                            "name": "optional_11",
-                            "children": {
-                                "[item]": {
-                                    "type": "object",
-                                    "name": "object_10",
-                                    "children": {
-                                        "id": {
-                                            "type": "optional",
-                                            "name": "optional_9",
-                                            "children": {
-                                                "[item]": {
-                                                    "type": "integer",
-                                                    "name": "integer_4",
-                                                }
-                                            },
-                                        }
-                                    },
-                                }
-                            },
-                        },
-                    },
-                }
+    def test_nested_count(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph("test_nested_count") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+            typegen = db._PrismaRuntime__typegen
+            models = tg_blog(g)
+
+            user = models["user"]
+
+            db._PrismaRuntime__manage(user)
+            self.assert_snapshot(typegen.add_nested_count(user), "nested_count.json")
+
+    def test_order_by(self, snapshot):
+        self.init_snapshot(snapshot)
+
+        with TypeGraph("test_order_by") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+            models = tg_blog(g)
+
+            user = models["user"]
+
+            db._PrismaRuntime__manage(user)
+            typegen = db._PrismaRuntime__typegen
+            self.assert_snapshot(typegen.get_order_by_type(user), "order_by.json")
+
+        with TypeGraph("test_order_by_2") as g:
+            db = PrismaRuntime("test", "POSTGRES")
+            models = tg_blog_2(g)
+
+            user = models["user"]
+            post = models["post"]
+            extended_profile = models["extended_profile"]
+
+            db._PrismaRuntime__manage(post)
+            typegen = db._PrismaRuntime__typegen
+            self.assert_snapshot(
+                typegen.get_order_by_type(user), "order_by_2_user.json"
             )
-            assert tree(typegen.get_where_type(post)) == overridable(
-                {
-                    "type": "object",
-                    "name": "object_17",
-                    "children": {
-                        "id": {
-                            "type": "optional",
-                            "name": "optional_13",
-                            "children": {
-                                "[item]": {"type": "integer", "name": "integer_4"}
-                            },
-                        },
-                        "author": {
-                            "type": "optional",
-                            "name": "optional_16",
-                            "children": {
-                                "[item]": {
-                                    "type": "object",
-                                    "name": "object_15",
-                                    "children": {
-                                        "id": {
-                                            "type": "optional",
-                                            "name": "optional_14",
-                                            "children": {
-                                                "[item]": {
-                                                    "type": "integer",
-                                                    "name": "integer_1",
-                                                }
-                                            },
-                                        }
-                                    },
-                                }
-                            },
-                        },
-                    },
-                }
+            self.assert_snapshot(
+                typegen.get_order_by_type(post), "order_by_2_post.json"
             )
+            self.assert_snapshot(
+                typegen.get_order_by_type(extended_profile),
+                "order_by_2_extended_profile.json",
+            )
+
+    def init_snapshot(self, snapshot):
+        snapshot.snapshot_dir = "tests/__snapshots__/type_generator"
+        self.snapshot = snapshot
+
+    def assert_snapshot(self, tpe: t.typedef, snapshot_name: str):
+        import json
+
+        return self.snapshot.assert_match(
+            json.dumps(tree(tpe, resolve_proxies=True), indent=4) + "\n", snapshot_name
+        )
+
+
+def tg_blog(g: TypeGraph):
+    return {
+        "picture": t.struct(
+            {
+                "id": t.uuid().config("id", "auto"),
+                "url": t.uri(),
+                "date_posted": t.date(),
+                "text": t.string().optional(),
+                "profile_pic_of": g("Profile").optional(),
+            }
+        ).named("Picture"),
+        "profile": t.struct(
+            {
+                "id": t.uuid().config("id", "auto"),
+                "display_name": t.string(),
+                "first_name": t.string().optional(),
+                "last_name": t.string(),
+                "profile_pic": g("Picture").optional().config("unique"),
+                "user": g("User"),
+            }
+        ).named("Profile"),
+        "user": t.struct(
+            {
+                "id": t.uuid().config("id", "auto"),
+                "email": t.email().config("unique"),
+                "profile": g("Profile").optional(),
+            }
+        ).named("User"),
+    }
+
+
+def tg_blog_2(g: TypeGraph):
+    return {
+        "user": t.struct(
+            {
+                "id": t.integer().config("id"),
+                "name": t.string(),
+                "age": t.integer().optional(),
+                "coinflips": t.array(t.boolean()),
+                "city": t.string(),
+                "posts": t.array(g("Post")),
+                "extended_profile": g("ExtendedProfile").optional(),
+            },
+        ).named("User"),
+        "post": t.struct(
+            {
+                "id": t.integer().config("id"),
+                "title": t.string(),
+                "views": t.integer(),
+                "likes": t.integer(),
+                "published": t.boolean(),
+                "author": g("User"),
+                "comments": t.array(g("Comment")),
+            }
+        ).named("Post"),
+        "comment": t.struct(
+            {
+                "id": t.integer().config("id"),
+                "content": t.string(),
+                "related_post": g("Post"),
+            }
+        ).named("Comment"),
+        "extended_profile": t.struct(
+            {
+                "id": t.integer().config("id"),
+                "bio": t.string(),
+                "user": g("User"),
+            }
+        ).named("ExtendedProfile"),
+    }

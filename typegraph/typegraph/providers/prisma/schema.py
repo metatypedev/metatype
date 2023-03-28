@@ -6,7 +6,7 @@ from attrs import evolve, frozen
 
 from typegraph import types as t
 from typegraph.graph.typegraph import resolve_proxy
-from typegraph.providers.prisma.relations import RelationshipRegister
+from typegraph.providers.prisma.relations import Registry
 
 # https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#model-fields
 prisma_types = {
@@ -46,9 +46,9 @@ class PrismaField:
 
 
 def get_ids(tpe: t.struct) -> Tuple[str, ...]:
-    return [
+    return tuple(
         k for k, v in tpe.props.items() if resolve_proxy(v).runtime_config.get("id")
-    ]
+    )
 
 
 @frozen
@@ -65,7 +65,7 @@ class SchemaField:
 
 @frozen
 class FieldBuilder:
-    spec: RelationshipRegister
+    reg: Registry
 
     def additional_tags(self, typ: t.typedef) -> List[str]:
         tags = []
@@ -90,15 +90,23 @@ class FieldBuilder:
         ]
 
     def relation(
-        self, field: str, typ: t.struct, rel_name: str
-    ) -> [str, List[SchemaField]]:
+        self, field: str, typ: t.struct, rel_name: str, optional: bool
+    ) -> Tuple[str, List[SchemaField]]:
         references = self.get_type_ids(typ)
         fields = [f"{field}{ref.title()}" for ref in references]
 
-        fkeys = [
-            evolve(self.build(ref, typ.props[ref], typ), tags=[], name=f)
-            for f, ref in zip(fields, references)
-        ]
+        fkeys = []
+        for f, ref in zip(fields, references):
+            target_type = typ.props[ref]
+            if optional:
+                target_type = target_type.optional()
+            fkey = self.build(ref, target_type, typ)
+            tags = [
+                tag
+                for tag in fkey.tags
+                if tag != "@id" and not tag.startswith("@default")
+            ]
+            fkeys.append(evolve(fkey, tags=tags, name=f))
 
         name = to_prisma_string(rel_name)
         fields = to_prisma_list(fields)
@@ -106,7 +114,7 @@ class FieldBuilder:
 
         tag = f"@relation(name: {name}, fields: {fields}, references: {references})"
 
-        return [tag, fkeys]
+        return (tag, fkeys)
 
     def build(self, field: str, typ: t.typedef, parent_type: t.struct) -> SchemaField:
         quant = ""
@@ -142,28 +150,25 @@ class FieldBuilder:
         elif isinstance(typ, t.number):
             name = "Float"
 
-        elif isinstance(typ, t.func) and typ.runtime != parent_type.runtime:
-            return None
-
         else:
             assert typ.type == "object", f"Type f'{typ.type}' not supported"
             name = typ.name
 
-            proxy = self.spec.proxies[parent_type.name].get(field, None)
-            assert proxy is not None, f"No proxy for '{parent_type.name}' at '{field}'"
-            rel = self.spec.relations[proxy.link_name]
+            rel = self.reg.models[parent_type.name].get(field)
+            assert rel is not None
 
-            if isinstance(proxy.get(), t.struct):
-                # left side of the relation: the one that has the foreign key defined in
-                assert quant == ""
-                tag, fkeys = self.relation(field, typ, rel.name)
+            side = rel.side_of(parent_type.name)
+            if side is None:  # self relationship
+                side = rel.side_of_field(field)
+            if side.is_left():
+                # parent_side: left; has the foreign key
+                tag, fkeys = self.relation(field, typ, rel.name, quant == "?")
                 tags.append(tag)
-                fkeys = fkeys
-                fkeys_unique = rel.cardinality.is_one_to_one()
+                fkeys = fkeys  # TODO what?
+                fkeys_unique = not rel.other(parent_type).cardinality.is_many()
             else:
-                # right side of the relation
+                # parent_side: right
                 tags.append(f"@relation(name: {to_prisma_string(rel.name)})")
-            # TODO add additional fields for the foreign keys
 
         tags.extend(self.additional_tags(typ))
 
@@ -176,31 +181,28 @@ class FieldBuilder:
         )
 
 
-def build_model(name: str, spec: RelationshipRegister) -> str:
+# TODO: ModelBuilder
+def build_model(model_type: t.struct, reg: Registry) -> str:
     fields = []
 
-    # struct
-    s = spec.types[name]
-
-    field_builder = FieldBuilder(spec)
+    field_builder = FieldBuilder(reg)
 
     tags = []
 
-    for key, typ in s.props.items():
+    for key, typ in model_type.props.items():
         typ = resolve_proxy(typ)
-        if typ.runtime is not None and typ.runtime != s.runtime:
+        if typ.runtime is not None and typ.runtime != model_type.runtime:
             continue
-        field = field_builder.build(key, typ, s)
-        if field is not None:
-            fields.append(field)
-            fields.extend(field.fkeys)
-            if field.fkeys_unique:
-                tags.append(f"@@unique({', '.join((f.name for f in field.fkeys))})")
+        field = field_builder.build(key, typ, model_type)
+        fields.append(field)
+        fields.extend(field.fkeys)
+        if field.fkeys_unique:
+            tags.append(f"@@unique({', '.join((f.name for f in field.fkeys))})")
 
     # TODO support for multi-field ids and indexes -- to be defined as config on the struct!!
 
     ids = [field.name for field in fields if "@id" in field.tags]
-    assert len(ids) > 0, f"No id field defined in '{name}'"
+    assert len(ids) > 0, f"No id field defined in '{model_type.name}'"
 
     if len(ids) > 1:
         # multi-field id
@@ -214,4 +216,4 @@ def build_model(name: str, spec: RelationshipRegister) -> str:
     formatted_fields = "".join((f"    {f.build()}\n" for f in fields))
     formatted_tags = "".join(f"    {t}\n" for t in tags)
 
-    return f"""model {name} {{\n{formatted_fields}\n{formatted_tags}}}\n"""
+    return f"""model {model_type.name} {{\n{formatted_fields}\n{formatted_tags}}}\n"""
