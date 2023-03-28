@@ -10,7 +10,7 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.runtimes.base import Materializer
-from typegraph.runtimes.deno import ImportFunMat, PureFunMat
+from typegraph.runtimes.deno import ImportFunMat, PredefinedFunMat, PureFunMat
 from typegraph.utils.attrs import always
 from typegraph.utils.sanitizers import sanitize_ts_string
 
@@ -102,7 +102,7 @@ class EffectPolicies(Node):
 
 
 def public(name: str = "__public"):
-    return Policy(PureFunMat("() => true")).named(name)
+    return Policy(PredefinedFunMat("true")).named(name)
 
 
 def jwt(role_name: str, field: str = "role"):

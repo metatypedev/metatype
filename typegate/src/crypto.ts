@@ -101,3 +101,7 @@ export async function unsafeExtractJWT(
   const [, payload] = await jwt.decode(token);
   return payload as Record<string, unknown>;
 }
+
+export function randomUUID(): string {
+  return crypto.randomUUID();
+}

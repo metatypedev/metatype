@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use super::Action;
+use super::{Action, GenArgs};
 use crate::config::Config;
 use crate::typegraph::{postprocess, TypegraphLoader};
 use crate::utils::ensure_venv;
@@ -10,7 +10,7 @@ use async_trait::async_trait;
 use clap::Parser;
 use core::fmt::Debug;
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use tokio::io::AsyncWriteExt;
 
 #[derive(Parser, Debug)]
@@ -42,7 +42,9 @@ pub struct Serialize {
 
 #[async_trait]
 impl Action for Serialize {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, args: GenArgs) -> Result<()> {
+        let dir = args.dir;
+        let config_path = args.config;
         ensure_venv(&dir)?;
 
         // config file is not used when `TypeGraph` files
