@@ -1,7 +1,7 @@
 mutation A {
   projectsMessagesSend(
-    parent: "projects/<id>",
-    header_authorization: "Bearer <auth-token>",
+    parent: "projects/<project-id>",
+    auth: "<bearer_token>",
     # test with a fake message
     validateOnly: true,
     message: {
@@ -10,12 +10,11 @@ mutation A {
           body: "This is an FCM Message"
       },
       # recipient
-      token:"<token>" 
+      token: "<token>" 
     }
   ) {
-    error {
-      message
-    }
+    name
+    error { code message }
   }
 }
 

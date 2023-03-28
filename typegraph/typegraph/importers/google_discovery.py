@@ -26,12 +26,18 @@ def reformat_params(path: str):
     return re.sub("{\+([A-Za-z0-9_]+)}", r"{\1}", path)
 
 
-def typify_object(cursor, filter_read_only=False, suffix=""):
+def error_struct() -> str:
+    return 't.struct({"code":t.integer(),"message":t.string(),"status":t.string()}).named("ErrorResponse")'
+
+
+def typify_object(cursor, has_error=False, filter_read_only=False, suffix=""):
     ret = "t.struct({"
     fields = []
     for f, v in cursor.get("properties", {}).items():
         if filter_read_only or "readOnly" not in v or not v.readOnly:
-            fields.append(f'"{f}": {typify(v, filter_read_only, suffix)}')
+            fields.append(f'"{f}": {typify(v, False, filter_read_only, suffix)}')
+    if has_error:
+        fields.append('"error": t.optional(g("ErrorResponse"))')
     ret += ",".join(fields)
     ret += "})"
     if "id" in cursor:
@@ -41,13 +47,13 @@ def typify_object(cursor, filter_read_only=False, suffix=""):
     return ret
 
 
-def typify(cursor, filter_read_only=False, suffix="", allow_opt=True):
+def typify(cursor, has_error=False, filter_read_only=False, suffix="", allow_opt=True):
     if (
         allow_opt
         and "description" in cursor
         and not cursor.description.startswith("Required")
     ):
-        return f"t.optional({typify(cursor, filter_read_only, suffix, False)})"
+        return f"t.optional({typify(cursor, False, filter_read_only, suffix, False)})"
 
     if "$ref" in cursor:
         return f'g("{cursor["$ref"]}{suffix}")'
@@ -70,10 +76,10 @@ def typify(cursor, filter_read_only=False, suffix="", allow_opt=True):
         return "t.any()"
 
     if cursor.type == "array":
-        return f't.array({typify(cursor["items"], filter_read_only, suffix, False)})'
+        return f't.array({typify(cursor["items"], has_error, filter_read_only, suffix, False)})'
 
     if cursor.type == "object":
-        return typify_object(cursor, filter_read_only, suffix)
+        return typify_object(cursor, has_error, filter_read_only, suffix)
 
     raise Exception(f"Unexpect type {cursor}")
 
@@ -111,8 +117,11 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
                 ref = f"{method.request.get('$ref')}In"
                 inp_fields += generated_obj_fields.get(ref) + ","
 
-            inp_fields += '"header_authorization": t.string(),'
+            # Bearer token
+            inp_fields += '"auth": t.string(),'
+            afield = 'auth_token_field="auth"'
 
+            # In/Out
             inp = f"t.struct({{{inp_fields}}})"
             out = typify(method.response, suffix="Out")
 
@@ -120,7 +129,7 @@ def flatten_calls(cursor, hierarchy="", url_prefix=""):
             func_key = f"{hierarchy}{upper_first(methodName)}"
             ctype = 'content_type="application/json"'
             func_var = camel_to_snake(func_key)
-            func_def = f'remote.{method.httpMethod.lower()}("{url_path}", {inp}, {out}, {ctype}).named("{method.id}")'
+            func_def = f'remote.{method.httpMethod.lower()}("{url_path}", {inp}, {out}, {afield}, {ctype}).named("{method.id}")'
             func_defs[func_var] = func_def
             # for expose
             ret += f"{func_key}={func_var}\n"
@@ -151,13 +160,15 @@ def codegen(discovery):
 
     lines = []
 
+    lines.append(f"error_response = {error_struct()}")
+
     for schema in discovery.schemas.values():
         assert schema.type == "object"
         lines.append(
-            f'{camel_to_snake(schema.id)}_in = {typify(schema, filter_read_only=False, suffix="In", allow_opt=False)}'
+            f'{camel_to_snake(schema.id)}_in = {typify(schema, has_error=False, filter_read_only=False, suffix="In", allow_opt=False)}'
         )
         lines.append(
-            f'{camel_to_snake(schema.id)}_out = {typify(schema, filter_read_only=True, suffix="Out", allow_opt=False)}'
+            f'{camel_to_snake(schema.id)}_out = {typify(schema, has_error=True, filter_read_only=True, suffix="Out", allow_opt=False)}'
         )
 
         schema.description
@@ -169,7 +180,6 @@ def codegen(discovery):
         lines.append(f"{func_var}={func_def}")
 
     lines.append(expose_block)
-
     return "\n".join(lines)
 
 
