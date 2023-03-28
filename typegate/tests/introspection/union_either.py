@@ -10,7 +10,7 @@ with TypeGraph("introspect-union-either") as g:
     toy = t.either([rubix_cube, toygun, gunpla])
 
     user = t.struct(
-        {"name": t.string().named("Username"), "favorite": rubix_cube}
+        {"name": t.string().named("Username"), "favorite": toy.named("FavoriteToy")}
     ).named("User")
 
     g.expose(

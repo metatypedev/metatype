@@ -312,6 +312,10 @@ export class TypeGraphRuntime extends Runtime {
       }
     }
 
+    // FIX in progress
+    // Current graphql spec does to not support UNION as Input field
+    // https://spec.graphql.org/draft/#sec-Input-Values
+    // Ideas: https://github.com/graphql/graphql-spec/pull/825
     if (isUnion(type)) {
       return {
         ...common,
