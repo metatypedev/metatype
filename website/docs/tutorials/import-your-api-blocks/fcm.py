@@ -46,9 +46,9 @@ with TypeGraph(
                 {
                     "parent": t.string(),
                 }
-            ).compose(google.MessageIn),
-            google.MessageOut,
-            google.RestMat(
+            ).compose(google.message_in.props),
+            google.message_out,
+            google.googleapis.RestMat(
                 "POST",
                 "https://fcm.googleapis.com/v1/{+parent}/messages:send",
                 # highlight-next-line
