@@ -36,7 +36,7 @@ impl<'a> TypegraphLoader<'a> {
         Self {
             skip_deno_modules: false,
             ignore_unknown_file_types: false,
-            postprocessors: vec![postprocess::deno_rt::reformat_scripts()],
+            postprocessors: vec![postprocess::deno_rt::ReformatScripts.into()],
             config,
         }
     }
@@ -54,8 +54,8 @@ impl<'a> TypegraphLoader<'a> {
         self
     }
 
-    pub fn with_postprocessor(mut self, postprocessor: PostProcessor) -> Self {
-        self.postprocessors.push(postprocessor);
+    pub fn with_postprocessor(mut self, postprocessor: impl Into<PostProcessor>) -> Self {
+        self.postprocessors.push(postprocessor.into());
         self
     }
 

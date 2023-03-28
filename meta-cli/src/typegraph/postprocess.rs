@@ -9,13 +9,32 @@ use anyhow::Result;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
 use typescript::parser::{transform_module, transform_script};
 
-pub type PostProcessor<T = Typegraph> =
-    Arc<RwLock<dyn Fn(&mut T, &Config) -> Result<()> + Sync + Send>>;
+type PostProcessorInner<T> = Arc<RwLock<dyn Fn(&mut T, &Config) -> Result<()> + Send + Sync>>;
+
+pub struct PostProcessor<T = Typegraph>(PostProcessorInner<T>);
+
+impl Clone for PostProcessor {
+    fn clone(&self) -> Self {
+        Self(Arc::clone(&self.0))
+    }
+}
+
+impl<T> PostProcessor<T>
+where
+    T: 'static,
+{
+    pub fn from_fn(func: fn(&mut T, &Config) -> Result<()>) -> Self {
+        PostProcessor(Arc::new(RwLock::new(func)))
+    }
+}
 
 pub trait PostProcess {
-    fn apply(&mut self, postprocessors: &[PostProcessor<Self>], config: &Config) -> Result<()> {
+    fn apply(&mut self, postprocessors: &[PostProcessor<Self>], config: &Config) -> Result<()>
+    where
+        Self: Sized,
+    {
         for pp in postprocessors {
-            pp.read().unwrap()(self, config)?;
+            pp.0.read().unwrap()(self, config)?;
         }
         Ok(())
     }
@@ -27,6 +46,14 @@ pub mod deno_rt {
     use crate::typegraph::utils::{get_materializers, get_runtimes};
 
     use super::*;
+
+    pub struct ReformatScripts;
+
+    impl From<ReformatScripts> for PostProcessor {
+        fn from(_val: ReformatScripts) -> Self {
+            PostProcessor::from_fn(reformat_scripts)
+        }
+    }
 
     fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
         match mat.name.as_str() {
@@ -49,17 +76,13 @@ pub mod deno_rt {
         Ok(())
     }
 
-    fn reformat_scripts_fn(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
+    fn reformat_scripts(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
         for rt_idx in get_runtimes(typegraph, "deno").into_iter() {
             for mat_idx in get_materializers(typegraph, rt_idx as u32) {
                 reformat_materializer_script(&mut typegraph.materializers[mat_idx])?;
             }
         }
         Ok(())
-    }
-
-    pub fn reformat_scripts() -> PostProcessor {
-        Arc::new(RwLock::new(reformat_scripts_fn))
     }
 }
 
@@ -73,11 +96,15 @@ pub mod prisma_rt {
         typegraph::utils::{map_from_object, object_from_map},
     };
 
-    pub fn embed_prisma_migrations() -> PostProcessor {
-        Arc::new(RwLock::new(embed_prisma_migrations_fn))
+    pub struct EmbedPrismaMigrations;
+
+    impl From<EmbedPrismaMigrations> for PostProcessor {
+        fn from(_val: EmbedPrismaMigrations) -> Self {
+            PostProcessor::from_fn(embed_prisma_migrations)
+        }
     }
 
-    fn embed_prisma_migrations_fn(tg: &mut Typegraph, config: &Config) -> Result<()> {
+    fn embed_prisma_migrations(tg: &mut Typegraph, config: &Config) -> Result<()> {
         let prisma_config = &config.typegraphs.materializers.prisma;
         let tg_name = tg.name().context("Getting typegraph name")?;
 
