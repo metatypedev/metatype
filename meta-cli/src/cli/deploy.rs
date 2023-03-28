@@ -36,7 +36,7 @@ impl Action for Deploy {
         let loader = if self.no_migrations {
             loader
         } else {
-            loader.with_postprocessor(postprocess::prisma_rt::EmbedPrismaMigrations)
+            loader.with_postprocessor(postprocess::prisma_rt::EmbedPrismaMigrations::default())
         };
 
         let loaded = if let Some(file) = self.file.clone() {

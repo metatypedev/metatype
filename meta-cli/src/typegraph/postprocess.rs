@@ -9,38 +9,46 @@ use anyhow::Result;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
 use typescript::parser::{transform_module, transform_script};
 
-type PostProcessorInner<T> = Arc<RwLock<dyn Fn(&mut T, &Config) -> Result<()> + Send + Sync>>;
-
-pub struct PostProcessor<T = Typegraph>(PostProcessorInner<T>);
-
-impl Clone for PostProcessor {
-    fn clone(&self) -> Self {
-        Self(Arc::clone(&self.0))
-    }
+pub trait PostProcessor {
+    fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()>;
 }
 
-impl<T> PostProcessor<T>
+struct GenericPostProcessor<F: Fn(&mut Typegraph, &Config) -> Result<()> + Sync + Send>(F);
+
+impl<F> PostProcessor for GenericPostProcessor<F>
 where
-    T: 'static,
+    F: Fn(&mut Typegraph, &Config) -> Result<()> + Sync + Send,
 {
-    pub fn from_fn(func: fn(&mut T, &Config) -> Result<()>) -> Self {
-        PostProcessor(Arc::new(RwLock::new(func)))
+    fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()> {
+        self.0(tg, config)
     }
 }
 
-pub trait PostProcess {
-    fn apply(&mut self, postprocessors: &[PostProcessor<Self>], config: &Config) -> Result<()>
-    where
-        Self: Sized,
-    {
-        for pp in postprocessors {
-            pp.0.read().unwrap()(self, config)?;
-        }
-        Ok(())
+#[derive(Clone)]
+pub struct PostProcessorWrapper(Arc<RwLock<Box<dyn PostProcessor + Sync + Send>>>);
+
+impl PostProcessorWrapper {
+    pub fn from(pp: impl PostProcessor + Send + Sync + 'static) -> Self {
+        PostProcessorWrapper(Arc::new(RwLock::new(Box::new(pp))))
+    }
+
+    pub fn generic(
+        pp: impl Fn(&mut Typegraph, &Config) -> Result<()> + Sync + Send + 'static,
+    ) -> Self {
+        PostProcessorWrapper::from(GenericPostProcessor(pp))
     }
 }
 
-impl PostProcess for Typegraph {}
+pub fn apply_all<'a>(
+    postprocessors: impl Iterator<Item = &'a PostProcessorWrapper>,
+    tg: &mut Typegraph,
+    config: &Config,
+) -> Result<()> {
+    for pp in postprocessors {
+        pp.0.read().unwrap().postprocess(tg, config)?;
+    }
+    Ok(())
+}
 
 pub mod deno_rt {
     use crate::typegraph::utils::{get_materializers, get_runtimes};
@@ -49,9 +57,9 @@ pub mod deno_rt {
 
     pub struct ReformatScripts;
 
-    impl From<ReformatScripts> for PostProcessor {
+    impl From<ReformatScripts> for PostProcessorWrapper {
         fn from(_val: ReformatScripts) -> Self {
-            PostProcessor::from_fn(reformat_scripts)
+            PostProcessorWrapper::generic(reformat_scripts)
         }
     }
 
@@ -96,11 +104,21 @@ pub mod prisma_rt {
         typegraph::utils::{map_from_object, object_from_map},
     };
 
-    pub struct EmbedPrismaMigrations;
+    #[derive(Default)]
+    pub struct EmbedPrismaMigrations {
+        allow_dirty: bool,
+    }
 
-    impl From<EmbedPrismaMigrations> for PostProcessor {
+    impl EmbedPrismaMigrations {
+        pub fn allow_dirty(mut self) -> Self {
+            self.allow_dirty = true;
+            self
+        }
+    }
+
+    impl From<EmbedPrismaMigrations> for PostProcessorWrapper {
         fn from(_val: EmbedPrismaMigrations) -> Self {
-            PostProcessor::from_fn(embed_prisma_migrations)
+            PostProcessorWrapper::generic(embed_prisma_migrations)
         }
     }
 

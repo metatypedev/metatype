@@ -17,9 +17,9 @@ use walkdir::{DirEntry, WalkDir};
 
 use crate::config::Config;
 use crate::utils::ensure_venv;
-use postprocess::PostProcess;
+use postprocess::apply_all;
 
-use self::postprocess::PostProcessor;
+use self::postprocess::PostProcessorWrapper;
 
 pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
 
@@ -28,7 +28,7 @@ pub struct TypegraphLoader<'a> {
     skip_deno_modules: bool,
     ignore_unknown_file_types: bool,
     config: &'a Config,
-    postprocessors: Vec<PostProcessor>,
+    postprocessors: Vec<PostProcessorWrapper>,
 }
 
 impl<'a> TypegraphLoader<'a> {
@@ -54,7 +54,7 @@ impl<'a> TypegraphLoader<'a> {
         self
     }
 
-    pub fn with_postprocessor(mut self, postprocessor: impl Into<PostProcessor>) -> Self {
+    pub fn with_postprocessor(mut self, postprocessor: impl Into<PostProcessorWrapper>) -> Self {
         self.postprocessors.push(postprocessor.into());
         self
     }
@@ -90,7 +90,7 @@ impl<'a> TypegraphLoader<'a> {
                 serde_json::from_str(&output).context("Parsing serialized typegraph")?;
 
             for tg in tgs.iter_mut() {
-                tg.apply(&postprocessors, &config)?;
+                apply_all(postprocessors.iter(), tg, &config)?;
             }
 
             Ok(Some(tgs))

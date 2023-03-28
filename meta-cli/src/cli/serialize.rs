@@ -55,7 +55,9 @@ impl Action for Serialize {
 
         let loader = TypegraphLoader::with_config(&config);
         let loader = if self.deploy {
-            loader.with_postprocessor(postprocess::prisma_rt::EmbedPrismaMigrations)
+            loader.with_postprocessor(
+                postprocess::prisma_rt::EmbedPrismaMigrations::default().allow_dirty(),
+            )
         } else {
             loader
         };
