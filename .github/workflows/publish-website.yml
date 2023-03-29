@@ -4,7 +4,7 @@ on:
       - main
 
 env:
-  PNPM_VERSION: "7.9.3"
+  PNPM_VERSION: "8.0.0"
   NODE_VERSION: "18.12.1"
   PYTHON_VERSION: "3.8"
   TG_URL: https://demo.metatype.dev

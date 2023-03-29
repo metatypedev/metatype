@@ -38,7 +38,7 @@ dev:
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
     DENO_VERSION: 1.32.1
     NODE_VERSION: 18.12.1
-    PNPM_VERSION: 7.9.3
+    PNPM_VERSION: 8.0.0
     TYPEGRAPH_VERSION: 0.0.1
     METATYPE_VERSION: 0.1.2
 released:
