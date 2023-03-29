@@ -561,7 +561,8 @@ export class Engine {
       try {
         const { provider } = await unsafeExtractJWT(token);
         if (!provider) {
-          logger.warning("no provider in jwt");
+          // defaulting to first auth
+          auth = this.tg.auths.values().next().value;
         } else {
           auth = this.tg.auths.get(provider as string);
         }

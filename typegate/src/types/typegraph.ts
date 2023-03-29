@@ -190,7 +190,7 @@ export type TypeNode =
   | AnyNode;
 export type PolicyIndices = number | PolicyIndicesByEffect;
 export type EffectType = "create" | "update" | "upsert" | "delete";
-export type AuthProtocol = "oauth2" | "jwk" | "basic";
+export type AuthProtocol = "oauth2" | "jwt" | "basic";
 export interface Typegraph {
   $id: string;
   types: TypeNode[];

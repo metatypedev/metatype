@@ -20,7 +20,7 @@ Head over to the [conceptual overview](/docs/concepts/overview) to understand th
 In this tutorial, you will write your first typegraph and deploy it on a typegate node using the Meta CLI.
 You will design some API blocks for a chat-based app where users can exchange messages.
 
-Running the ecosystem requires Python >= 3.8 which should be available on most of the recent OS.
+Running the ecosystem requires Python >=3.8 which should be available on most of the recent OS.
 
 <details>
   <summary>Python >=3.8 not yet installed? Follow these steps.</summary>
@@ -129,7 +129,7 @@ python3 -c 'import typegraph; print(typegraph.version)'
 Finally, download and launch the docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/examples/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/examples/compose.yml -o compose.yml
 curl -fsSL https://raw.githubusercontent.com/metatypedev/metatype/main/examples/.env.sample -o .env.sample
 docker compose up --detach
 

@@ -34,15 +34,21 @@ with TypeGraph(
         # highlight-next-line
         TypeGraph.Auth.basic(["admin"]),
         # highlight-next-line
-        # expects a secret `TG_[typegraph name]_[auth name]_JWK`
+        # expects a secret `TG_[typegraph name]_[auth name]_JWT`
         # highlight-next-line
-        Auth.jwk(
+        Auth.jwt(
             # highlight-next-line
-            "native",
+            "keycloak",
+            # highlight-next-line
+            "jwk",
             # highlight-next-line
             {"name": "ECDSA", "namedCurve": "P-384", "role": "superuser"}
             # highlight-next-line
         ),
+        # highlight-next-line
+        # Shortcut for jwt with HMAC SHA-256 and raw format
+        # highlight-next-line
+        Auth.hmac256("custom"),
         # highlight-next-line
     ],
     # hightlight-end
@@ -55,7 +61,7 @@ with TypeGraph(
     context = t.struct(
         {
             "basic": t.string().optional().from_context("user"),
-            "jwk": t.string().optional().from_context("role_field"),
+            "jwt": t.string().optional().from_context("role_field"),
             "github": t.string().optional().from_context("username"),
         }
     )
