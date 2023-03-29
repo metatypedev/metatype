@@ -40,7 +40,7 @@ dev:
     NODE_VERSION: 18.12.1
     PNPM_VERSION: 7.9.3
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.1.0
+    METATYPE_VERSION: 0.1.1
 released:
   files: {}
   rules:
@@ -58,4 +58,4 @@ released:
     NODE_VERSION: 18.12.1
     PNPM_VERSION: 7.9.3
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.0.3-dev.7
+    METATYPE_VERSION: 0.1.0
