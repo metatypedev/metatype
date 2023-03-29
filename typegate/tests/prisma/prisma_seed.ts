@@ -4,8 +4,10 @@ import { join } from "std/path/mod.ts";
 import { Engine } from "../../src/engine.ts";
 import { PrismaRuntimeDS } from "../../src/runtimes/prisma.ts";
 import { PrismaMigrate } from "../../src/runtimes/prisma_migration.ts";
-import { gql, MetaTest, testDir } from "../utils.ts";
+import { gql, testDir } from "../utils.ts";
 import * as native from "native";
+import { MetaTest } from "../utils/metatest.ts";
+import { TGRuntime } from "../../src/types/typegraph.ts";
 
 export async function init(
   t: MetaTest,
@@ -32,7 +34,7 @@ export async function init(
   if (migrate) {
     await t.should("recreate migrations", async () => {
       const runtimes = engine.tg.tg.runtimes.filter(
-        (rt) => rt.name === "prisma",
+        (rt: TGRuntime) => rt.name === "prisma",
       ) as unknown[] as PrismaRuntimeDS[];
 
       const migrationsBaseDir = join(testDir, "prisma-migrations");

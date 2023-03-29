@@ -1,10 +1,10 @@
 [package]
 name = "typescript"
-version = "0.0.3-dev.7"
+version = "0.1.2"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.69"
+anyhow = "1.0.70"
 string_cache = "0.8.7"
 lazy_static = "1.4.0"
 dprint-plugin-typescript = "0.83.0"

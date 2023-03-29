@@ -13,7 +13,7 @@ import {
   isQuantifier,
   Type,
 } from "../type_node.ts";
-import { DenoRuntime } from "../runtimes/deno.ts";
+import { DenoRuntime } from "../runtimes/deno/deno.ts";
 import { ensure, unparse } from "../utils.ts";
 import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";

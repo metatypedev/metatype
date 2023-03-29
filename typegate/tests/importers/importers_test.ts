@@ -1,8 +1,10 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { assertRejects } from "std/testing/asserts.ts";
-import { copyFile, gql, MetaTest, Q, test } from "../utils.ts";
+import { copyFile, gql, test } from "../utils.ts";
 import * as mf from "test/mock_fetch";
+import { MetaTest } from "../utils/metatest.ts";
+import { Q } from "../utils/q.ts";
 
 mf.install();
 

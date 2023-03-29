@@ -15,6 +15,7 @@ const dcs = [
   ...expandGlobSync("dev/envs/compose.*.yml", {
     root: projectDir,
     includeDirs: false,
+    globstar: true,
   }),
 ];
 const envs = Object.fromEntries(

@@ -295,10 +295,10 @@ class TestTypegraph:
                 ],
                 "materializers": [
                     {
-                        "name": "function",
+                        "name": "predefined_function",
                         "runtime": 0,
                         "effect": {"effect": None, "idempotent": True},
-                        "data": {"script": "var _my_lambda = () => true;"},
+                        "data": {"name": "true"},
                     },
                     {
                         "name": "function",

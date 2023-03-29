@@ -3,17 +3,21 @@ from typegraph.graph.models import Auth
 from typegraph.runtimes.deno import ModuleMat, PredefinedFunMat, PureFunMat
 
 
-def make_policy(g, name, fn):
-    return t.func(
-        t.struct({"a": t.integer()}),
-        t.struct({"a": t.integer()}),
-        PredefinedFunMat("identity"),
-    ).add_policy(PureFunMat(fn))
+def make_policy(name, fn):
+    return (
+        t.func(
+            t.struct({"a": t.integer()}),
+            t.struct({"a": t.integer()}),
+            PredefinedFunMat("identity"),
+        )
+        .named(name)
+        .add_policy(PureFunMat(fn))
+    )
 
 
 with TypeGraph(
     "policies",
-    auths=[Auth.jwk("native", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
+    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
 ) as g:
     mod = ModuleMat("ts/policies.ts")
 
@@ -25,10 +29,10 @@ with TypeGraph(
     ).named("SecretData")
 
     g.expose(
-        pol_true=make_policy(g, "true", "() => true"),
-        pol_false=make_policy(g, "false", "() => false"),
+        pol_true=make_policy("true", "() => true"),
+        pol_false=make_policy("false", "() => false"),
         pol_two=make_policy(
-            g, "eq_two", "(_args, { context }) => Number(context.a) === 2"
+            "eq_two", "(_args, { context }) => Number(context.a) === 2"
         ),
         ns=t.struct(
             {

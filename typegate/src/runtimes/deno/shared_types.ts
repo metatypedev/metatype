@@ -29,33 +29,40 @@ export interface ImportFuncMaterializerData {
   name: string;
 }
 
-interface TaskBase {
-  type: "func" | "import_func" | "predefined_func";
-  id: number;
+interface TaskApply {
   args: Record<string, unknown>;
   internals: TaskContext;
   verbose: boolean;
 }
 
-export interface ImportFuncTask extends TaskBase {
+export interface ImportFuncTask extends TaskApply {
   type: "import_func";
-  moduleId: number;
-  moduleCode?: string;
   name: string;
 }
 
-export interface FuncTask extends TaskBase {
+export interface FuncTask extends TaskApply {
   type: "func";
-  fnId: number;
-  code?: string;
 }
 
-export interface PredefinedFuncTask extends TaskBase {
-  type: "predefined_func";
-  name: string;
+export interface RegisterImportFuncTask {
+  type: "register_import_func";
+  moduleCode: string;
+  op: number;
+  verbose: boolean;
 }
 
-export type Task = ImportFuncTask | FuncTask | PredefinedFuncTask;
+export interface RegisterFuncTask {
+  type: "register_func";
+  fnCode: string;
+  op: number;
+  verbose: boolean;
+}
+
+export type Task =
+  | ImportFuncTask
+  | FuncTask
+  | RegisterImportFuncTask
+  | RegisterFuncTask;
 
 export interface TaskExec {
   (
@@ -64,7 +71,3 @@ export interface TaskExec {
     helpers: Record<string, unknown>,
   ): unknown;
 }
-
-export const predefinedFuncs: Record<string, TaskExec> = {
-  identity: (args) => args,
-};

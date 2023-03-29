@@ -35,7 +35,7 @@ Types can also describe functions and **materializers** define how the input typ
 
 ## Runtimes
 
-Every types and materializers has a runtime associated to it. This runtime describes where the type or materializer are physically located. It can be another API, a database, or any other services the typegate can connect to. The typegates uses that information to optimize the execution of the queries and minimize the amount of data moved.
+Every type and materializer have a runtime associated to it. This runtime describes where the type or materializer are physically located. It can be another API, a database, or any other services the typegate can connect to. The typegates uses that information to optimize the execution of the queries and minimize the amount of data moved.
 
 In practice, materializers are often not explicitly used and the usage of runtime sugar syntax is preferred.
 
@@ -59,7 +59,7 @@ The policy decision can be:
 
 ## Triggers
 
-Triggers are events launching the execution of one or multiple functions. They fires when a GraphQL request is received for the specific typegraph.
+Triggers are events launching the execution of one or multiple functions. They fire when a GraphQL request is received for the specific typegraph.
 
 <CodeBlock language="python">{require("./triggers.py")}</CodeBlock>
 

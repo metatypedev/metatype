@@ -38,18 +38,37 @@ class Auth:
             ),
         )
 
-    # deno eval 'await crypto.subtle.generateKey({name: "ECDSA", namedCurve: "P-384"}, true, ["sign", "verify"]).then(k => crypto.subtle.exportKey("jwk", k.publicKey)).then(JSON.stringify).then(console.log);'
     @classmethod
-    def jwk(cls, name: str, args=None) -> "Auth":
-        """Import a JSON Web Key (JWK) for authentication.
+    def jwt(cls, name: str, format: str, algorithm: None) -> "Auth":
+        """Import a JSON Web Token for authentication.
 
         Args:
             name (str): Name of the authentication
-            args (Dict[str, str], optional): Arguments for the authentication. Defaults to None. See `algorithm` parameters in [SubtleCrypto.importKey()](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey) for more information.
+            format (str): Format of the key. Can be "jwk", "raw", "pkcs8" or "spki".
+            algorithm (Dict[str, str], optional): Arguments for the authentication. Defaults to None. See `algorithm` parameters in [SubtleCrypto.importKey()](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey) for more information.
+
+        Example:
+            Generate a private/public ECDSA key pair using Deno:
+                deno eval '
+                    const keys = await crypto.subtle.generateKey({name: "ECDSA", namedCurve: "P-384"}, true, ["sign", "verify"]);
+                    const publicKey = await crypto.subtle.exportKey("jwk", keys.publicKey);
+                    // save keys.privateKey for later use
+                    console.log(JSON.stringify(publicKey));
+                    // Auth.jwt("keycloak", "jwk", {"name": "ECDSA", "namedCurve": "P-384"})
+                '
         """
-        if args is None:
-            args = {}
-        return Auth(name, "jwk", args)
+        if algorithm is None:
+            algorithm = {}
+        return Auth(name, "jwt", dict(format=format, algorithm=algorithm))
+
+    @classmethod
+    def hmac256(cls, name: str) -> "Auth":
+        """Import a HMAC SHA-256 for authentication.
+
+        Args:
+            name (str): Name of the authentication
+        """
+        return Auth.jwt(name, "raw", {"name": "HMAC", "hash": {"name": "SHA-256"}})
 
     @classmethod
     def basic(cls, users: List[str]) -> "Auth":

@@ -17,7 +17,7 @@ if c < 0 then
     return {0, l}
 end
 return {c, l}
-`;
+`.trim();
 
 // keys: tokens, latest
 // args: now, delta, window budget, window sec
@@ -41,7 +41,7 @@ if c == -1 then
   redis.call('EXPIRE', KEYS[2], ARGV[4])
 end
 return {c, l}
-`;
+`.trim();
 
 export abstract class RateLimiter {
   abstract decr(

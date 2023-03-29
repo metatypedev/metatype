@@ -5,7 +5,7 @@ from typegraph.runtimes.deno import FunMat, ModuleMat, PureFunMat
 
 with TypeGraph(
     "effects",
-    auths=[Auth.jwk("native", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
+    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
 ) as g:
     # public = p.public().mat
     public = PureFunMat("() => true")

@@ -2,6 +2,7 @@
 
 use super::Action;
 use super::CommonArgs;
+use super::GenArgs;
 use crate::codegen;
 use crate::config;
 use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
@@ -27,7 +28,8 @@ use reqwest::Url;
 use serde::Deserialize;
 use serde_json::{self, json};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread::sleep;
 use std::time::Duration;
@@ -49,7 +51,9 @@ fn log_err(err: Error) {
 
 #[async_trait]
 impl Action for Dev {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, args: GenArgs) -> Result<()> {
+        let dir = args.dir;
+        let config_path = args.config;
         ensure_venv(&dir)?;
 
         // load config file or use default values if doesn't exist

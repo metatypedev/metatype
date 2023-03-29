@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use super::{Action, CommonArgs};
+use super::{Action, CommonArgs, GenArgs};
 use crate::{
     config::Config,
     utils::{
@@ -45,6 +45,27 @@ pub enum Commands {
     Diff(Diff),
     /// Reformat a prisma schema
     Format(Format),
+}
+
+#[async_trait]
+impl Action for Prisma {
+    async fn run(&self, args: GenArgs) -> Result<()> {
+        match &self.command {
+            Commands::Diff(diff) => {
+                diff.run(args).await?;
+            }
+            Commands::Format(format) => {
+                format.run(args).await?;
+            }
+            Commands::Dev(dev) => {
+                dev.run(args).await?;
+            }
+            Commands::Deploy(deploy) => {
+                deploy.run(args).await?;
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Parser, Debug, Clone)]
@@ -103,7 +124,9 @@ pub struct Dev {
 
 #[async_trait]
 impl Action for Dev {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, args: GenArgs) -> Result<()> {
+        let dir = args.dir;
+        let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
 
         let node_config = config.node("dev").with_args(&self.node);
@@ -146,7 +169,9 @@ pub struct Deploy {
 
 #[async_trait]
 impl Action for Deploy {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, args: GenArgs) -> Result<()> {
+        let dir = args.dir;
+        let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
         let prisma_args = self
             .prisma
@@ -229,7 +254,9 @@ pub struct Diff {
 
 #[async_trait]
 impl Action for Diff {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, args: GenArgs) -> Result<()> {
+        let dir = args.dir;
+        let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
         let node_config = config.node("dev").with_args(&self.node);
         let node = node_config.try_into()?;
@@ -252,7 +279,7 @@ pub struct Format {
 
 #[async_trait]
 impl Action for Format {
-    async fn run(&self, _dir: String, _config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, _args: GenArgs) -> Result<()> {
         let input = if let Some(file) = self.input.as_ref() {
             let mut file =
                 File::open(file).with_context(|| format!("could not open file \"{file}\""))?;

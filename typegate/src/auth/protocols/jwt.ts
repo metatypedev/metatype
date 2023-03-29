@@ -4,13 +4,20 @@ import { Auth, AuthDS } from "../auth.ts";
 import * as jwt from "jwt";
 import { envOrFail } from "../../utils.ts";
 
-export class JWKAuth implements Auth {
+const encoder = new TextEncoder();
+
+export class JWTAuth implements Auth {
   static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
-    const jwk = JSON.parse(envOrFail(typegraphName, `${auth.name}_JWK`));
+    const { format, algorithm } = auth.auth_data;
+    const sourceEnv = envOrFail(typegraphName, `${auth.name}_JWT`);
+    const key = format === "jwk"
+      ? JSON.parse(sourceEnv)
+      : encoder.encode(sourceEnv);
+
     const signKey = await crypto.subtle.importKey(
-      "jwk",
-      jwk as JsonWebKey,
-      auth.auth_data as unknown as
+      format as any,
+      key,
+      algorithm as unknown as
         | AlgorithmIdentifier
         | HmacImportParams
         | RsaHashedImportParams
@@ -18,7 +25,7 @@ export class JWKAuth implements Auth {
       false,
       ["verify"],
     );
-    return new JWKAuth(typegraphName, signKey);
+    return new JWTAuth(typegraphName, signKey);
   }
 
   private constructor(

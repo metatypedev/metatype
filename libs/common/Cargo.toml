@@ -1,16 +1,16 @@
 [package]
 name = "common"
-version = "0.0.3-dev.7"
+version = "0.1.2"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.69"
+anyhow = "1.0.70"
 base64 = "0.21.0"
 flate2 = "1.0.25"
-indexmap = { version = "1.9.2", features = ["serde"] }
+indexmap = { version = "1.9.3", features = ["serde"] }
 schemars = { version = "0.8.12", features = ["derive", "preserve_order"], optional = true }
-serde = { version = "1.0.154", features = ["derive"] }
-serde_json = { version = "1.0.94", features = ["preserve_order"] }
+serde = { version = "1.0.159", features = ["derive"] }
+serde_json = { version = "1.0.95", features = ["preserve_order"] }
 serde_with = "2.3.1"
 tar = "0.4.38"
 

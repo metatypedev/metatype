@@ -9,3 +9,7 @@ interface MinInput {
 export function min({ numbers }: MinInput): number {
   return Number(MathLib.min(numbers));
 }
+
+export function maxAsync({ numbers }: MinInput): Promise<number> {
+  return Promise.resolve(Number(MathLib.max(numbers)));
+}

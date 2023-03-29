@@ -6,6 +6,7 @@ const typegraphs = Array.from(
   expandGlobSync("typegate/src/typegraphs/**/*.py", {
     root: projectDir,
     includeDirs: false,
+    globstar: true,
   }),
 );
 

@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use super::{Action, CommonArgs};
+use super::{Action, CommonArgs, GenArgs};
 use crate::cli::dev::{push_typegraph, MessageType};
 use crate::config::Config;
 use crate::typegraph::postprocess;
@@ -11,7 +11,7 @@ use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[derive(Parser, Debug)]
 pub struct Deploy {
@@ -34,7 +34,9 @@ pub struct Deploy {
 
 #[async_trait]
 impl Action for Deploy {
-    async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
+    async fn run(&self, args: GenArgs) -> Result<()> {
+        let dir = args.dir;
+        let config_path = args.config;
         ensure_venv(&dir)?;
         let config = Config::load_or_find(config_path, &dir)?;
 

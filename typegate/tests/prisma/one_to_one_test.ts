@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { Engine } from "../../src/engine.ts";
-import { gql, MetaTest, recreateMigrations, test } from "../utils.ts";
+import { gql, recreateMigrations, test } from "../utils.ts";
+import { MetaTest } from "../utils/metatest.ts";
 
 async function runCommonTestSteps(t: MetaTest, e: Engine) {
   await t.should("drop schema and recreate", async () => {
