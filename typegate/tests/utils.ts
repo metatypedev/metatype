@@ -117,12 +117,12 @@ export const test = ((name, fn, opts = {}): void => {
 
       try {
         if (cleanGitRepo) {
-          // await Deno.remove(join(thisDir, ".git"), { recursive: true });
+          // await Deno.remove(join(testDir, ".git"), { recursive: true });
           await shell(["git", "init"]);
           await shell(["git", "add", "."]);
           await shell(["git", "commit", "-m", "Initial commit"]);
           mt.addCleanup(() =>
-            Deno.remove(join(thisDir, ".git"), { recursive: true })
+            Deno.remove(join(testDir, ".git"), { recursive: true })
           );
         }
 

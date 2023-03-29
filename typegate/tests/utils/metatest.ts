@@ -50,8 +50,10 @@ function exposeOnPort(engine: Engine, port: number): () => void {
   return serve(register, port);
 }
 
+type MetaTestCleanupFn = () => void | Promise<void>;
+
 export class MetaTest {
-  private cleanups: (() => void)[] = [];
+  private cleanups: MetaTestCleanupFn[] = [];
 
   constructor(
     public t: Deno.TestContext,
@@ -61,6 +63,10 @@ export class MetaTest {
     if (port != null) {
       this.cleanups.push(serve(register, port));
     }
+  }
+
+  addCleanup(fn: MetaTestCleanupFn) {
+    this.cleanups.push(fn);
   }
 
   getTypegraph(name: string, ports: number[] = []): Engine | undefined {
