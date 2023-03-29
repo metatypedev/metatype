@@ -119,6 +119,8 @@ export const test = ((name, fn, opts = {}): void => {
         if (cleanGitRepo) {
           // await Deno.remove(join(testDir, ".git"), { recursive: true });
           await shell(["git", "init"]);
+          await shell(["git", "config", "user.name", "user"]);
+          await shell(["git", "config", "user.email", "user@example.com"]);
           await shell(["git", "add", "."]);
           await shell(["git", "commit", "-m", "Initial commit"]);
           mt.addCleanup(() =>
