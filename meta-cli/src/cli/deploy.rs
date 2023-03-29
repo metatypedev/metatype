@@ -25,6 +25,11 @@ pub struct Deploy {
     /// Do not run prisma migrations
     #[clap(long, default_value_t = false)]
     no_migrations: bool,
+
+    // TODO incompatible with --no-migrations
+    /// Allow deployment on dirty (git) repository
+    #[clap(long, default_value_t = false)]
+    allow_dirty: bool,
 }
 
 #[async_trait]
@@ -32,11 +37,15 @@ impl Action for Deploy {
     async fn run(&self, dir: String, config_path: Option<PathBuf>) -> Result<()> {
         ensure_venv(&dir)?;
         let config = Config::load_or_find(config_path, &dir)?;
+
         let loader = TypegraphLoader::with_config(&config);
         let loader = if self.no_migrations {
             loader
         } else {
-            loader.with_postprocessor(postprocess::prisma_rt::EmbedPrismaMigrations::default())
+            loader.with_postprocessor(
+                postprocess::prisma_rt::EmbedPrismaMigrations::default()
+                    .allow_dirty(self.allow_dirty),
+            )
         };
 
         let loaded = if let Some(file) = self.file.clone() {
@@ -56,6 +65,10 @@ impl Action for Deploy {
             loader.load_folder(&dir)?
         };
 
+        if loaded.is_empty() {
+            bail!("No typegraph found!");
+        }
+
         let node_config = config.node("deploy").with_args(&self.node);
 
         let node = node_config.clone().try_into()?;
@@ -69,7 +82,7 @@ async fn deploy_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node
     let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
 
     for (path, res) in loaded.into_iter() {
-        let tgs = res.with_context(|| format!("Error while loading typegrpahs from {path}"))?;
+        let tgs = res.with_context(|| format!("Error while loading typegraphs from {path}"))?;
         let path = utils::relative_path_display(diff_base.clone(), path);
         println!(
             "Loading {count} typegraphs{s} from {path}:",

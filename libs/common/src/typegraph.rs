@@ -301,4 +301,6 @@ pub struct PrismaRuntimeData {
     pub connection_string_secret: String,
     pub models: Vec<u32>,
     pub migrations: Option<String>,
+    #[serde(default)]
+    pub create_migration: bool,
 }

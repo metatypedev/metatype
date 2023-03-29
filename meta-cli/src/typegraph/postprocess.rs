@@ -28,14 +28,19 @@ where
 pub struct PostProcessorWrapper(Arc<RwLock<Box<dyn PostProcessor + Sync + Send>>>);
 
 impl PostProcessorWrapper {
-    pub fn from(pp: impl PostProcessor + Send + Sync + 'static) -> Self {
-        PostProcessorWrapper(Arc::new(RwLock::new(Box::new(pp))))
-    }
-
     pub fn generic(
         pp: impl Fn(&mut Typegraph, &Config) -> Result<()> + Sync + Send + 'static,
     ) -> Self {
         PostProcessorWrapper::from(GenericPostProcessor(pp))
+    }
+}
+
+impl<T> From<T> for PostProcessorWrapper
+where
+    T: PostProcessor + Send + Sync + 'static,
+{
+    fn from(pp: T) -> Self {
+        PostProcessorWrapper(Arc::new(RwLock::new(Box::new(pp))))
     }
 }
 
@@ -96,8 +101,9 @@ pub mod deno_rt {
 
 pub mod prisma_rt {
     use super::*;
-    use anyhow::Context;
+    use anyhow::{bail, Context};
     use common::{archive, typegraph::PrismaRuntimeData};
+    use log::warn;
 
     use crate::{
         cli::prisma::PrismaArgs,
@@ -106,47 +112,67 @@ pub mod prisma_rt {
 
     #[derive(Default)]
     pub struct EmbedPrismaMigrations {
+        create_migration: bool,
         allow_dirty: bool,
     }
 
     impl EmbedPrismaMigrations {
-        pub fn allow_dirty(mut self) -> Self {
-            self.allow_dirty = true;
+        pub fn allow_dirty(mut self, allow: bool) -> Self {
+            self.allow_dirty = allow;
+            self
+        }
+
+        pub fn create_migration(mut self, create: bool) -> Self {
+            self.create_migration = create;
             self
         }
     }
 
-    impl From<EmbedPrismaMigrations> for PostProcessorWrapper {
-        fn from(_val: EmbedPrismaMigrations) -> Self {
-            PostProcessorWrapper::generic(embed_prisma_migrations)
-        }
-    }
+    impl PostProcessor for EmbedPrismaMigrations {
+        fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()> {
+            if !self.allow_dirty {
+                let repo = git2::Repository::discover(&config.base_dir).ok();
 
-    fn embed_prisma_migrations(tg: &mut Typegraph, config: &Config) -> Result<()> {
-        let prisma_config = &config.typegraphs.materializers.prisma;
-        let tg_name = tg.name().context("Getting typegraph name")?;
-
-        let mut runtimes = std::mem::take(&mut tg.runtimes);
-        for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
-            let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
-            let rt_name = &rt_data.name;
-            let base_path = prisma_config.base_migrations_path(
-                &PrismaArgs {
-                    typegraph: tg_name.clone(),
-                    runtime: Some(rt_data.name.clone()),
-                    migrations: None,
-                },
-                config,
-            );
-            let path = base_path.join(rt_name);
-            if path.try_exists()? {
-                rt_data.migrations = Some(archive::archive(base_path.join(rt_name))?);
+                if let Some(repo) = repo {
+                    let dirty = repo.statuses(None)?.iter().any(|s| {
+                        // git2::Status::CURRENT.bits() == 0
+                        // https://github.com/libgit2/libgit2/blob/2f20fe8869d7a1df7c9b7a9e2939c1a20533c6dc/include/git2/status.h#L35
+                        !s.status().is_empty() && !s.status().contains(git2::Status::IGNORED)
+                    });
+                    if dirty {
+                        bail!("Dirty repository not allowed");
+                    }
+                } else {
+                    warn!("Not in a git repository.");
+                }
             }
-            rt.data = map_from_object(rt_data)?;
+
+            let prisma_config = &config.typegraphs.materializers.prisma;
+            let tg_name = tg.name().context("Getting typegraph name")?;
+
+            let mut runtimes = std::mem::take(&mut tg.runtimes);
+            for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
+                let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
+                let rt_name = &rt_data.name;
+                let base_path = prisma_config.base_migrations_path(
+                    &PrismaArgs {
+                        typegraph: tg_name.clone(),
+                        runtime: Some(rt_data.name.clone()),
+                        migrations: None,
+                    },
+                    config,
+                );
+                let path = base_path.join(rt_name);
+                if path.try_exists()? {
+                    rt_data.migrations = Some(archive::archive(path)?);
+                    rt_data.create_migration = self.create_migration;
+                }
+                rt.data = map_from_object(rt_data)?;
+            }
+
+            tg.runtimes = runtimes;
+
+            Ok(())
         }
-
-        tg.runtimes = runtimes;
-
-        Ok(())
     }
 }

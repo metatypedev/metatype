@@ -4,6 +4,7 @@ use super::Action;
 use super::CommonArgs;
 use crate::codegen;
 use crate::config;
+use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
 use crate::typegraph::{LoaderResult, TypegraphLoader};
 use crate::utils;
 
@@ -59,6 +60,11 @@ impl Action for Dev {
         let node = node_config.try_into()?;
 
         let loaded = TypegraphLoader::with_config(&config)
+            .with_postprocessor(
+                EmbedPrismaMigrations::default()
+                    .allow_dirty(true)
+                    .create_migration(true),
+            )
             .load_folder(&dir)
             .context("Error while loading typegraphs from folder");
 

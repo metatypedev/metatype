@@ -73,6 +73,7 @@ export async function shell(
   cmd: string[],
   options: MetaOptions = {},
 ): Promise<string> {
+  const { stdin = null } = options;
   const p = Deno.run({
     cwd: thisDir,
     cmd,
@@ -81,7 +82,6 @@ export async function shell(
     stdin: "piped",
   });
 
-  const { stdin = null } = options;
   if (stdin != null) {
     await p.stdin.write(new TextEncoder().encode(stdin));
   }
@@ -93,6 +93,7 @@ export async function shell(
   const out = new TextDecoder().decode(stdout).trim();
 
   if (!status.success) {
+    console.log(out);
     throw new Error(`Command failed: ${cmd.join(" ")}`);
   }
 
@@ -217,8 +218,10 @@ function exposeOnPort(engine: Engine, port: number): () => void {
   return serve(register, port);
 }
 
+type MetaTestCleanupFn = () => void | Promise<void>;
+
 export class MetaTest {
-  private cleanups: (() => void)[] = [];
+  private cleanups: MetaTestCleanupFn[] = [];
 
   constructor(
     public t: Deno.TestContext,
@@ -228,6 +231,10 @@ export class MetaTest {
     if (port != null) {
       this.cleanups.push(serve(register, port));
     }
+  }
+
+  addCleanup(fn: MetaTestCleanupFn) {
+    this.cleanups.push(fn);
   }
 
   getTypegraph(name: string, ports: number[] = []): Engine | undefined {
@@ -327,6 +334,8 @@ interface TestConfig {
   introspection?: boolean;
   // port on which the typegate instance will be exposed on expose the typegate instance
   port?: number;
+  // create a temporary clean git repo for the tests
+  cleanGitRepo?: boolean;
 }
 
 interface Test {
@@ -348,12 +357,24 @@ export const test = ((name, fn, opts = {}): void => {
     async fn(t) {
       // const reg = opts.customRegister ?? new MemoryRegister();
       const reg = new MemoryRegister(opts.introspection);
-      const { systemTypegraphs = false } = opts;
+      const { systemTypegraphs = false, cleanGitRepo = false } = opts;
       if (systemTypegraphs) {
         await SystemTypegraph.loadAll(reg);
       }
+
       const mt = new MetaTest(t, reg, opts.port ?? null);
+
       try {
+        if (cleanGitRepo) {
+          // await Deno.remove(join(thisDir, ".git"), { recursive: true });
+          await shell(["git", "init"]);
+          await shell(["git", "add", "."]);
+          await shell(["git", "commit", "-m", "Initial commit"]);
+          mt.addCleanup(() =>
+            Deno.remove(join(thisDir, ".git"), { recursive: true })
+          );
+        }
+
         await fn(mt);
       } catch (error) {
         console.error(error);

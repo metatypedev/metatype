@@ -1,11 +1,12 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { gql, meta, test } from "../utils.ts";
+import { gql, meta, shell, test } from "../utils.ts";
 import { init } from "../prisma/prisma_seed.ts";
+import { assertRejects } from "std/testing/asserts.ts";
 
 const port = 7895;
 
-test("cli:deploy - automatic migrations", async (t) => {
+test("cli:deploy", async (t) => {
   const e = await init(t, "prisma/prisma.py", false);
 
   const nodeConfigs = [
@@ -42,11 +43,23 @@ test("cli:deploy - automatic migrations", async (t) => {
       "dev",
       ...nodeConfigs,
       ...prismaConfigs,
+      "--create-only",
     );
   });
 
+  await t.should("fail on dirty repo", async () => {
+    await assertRejects(() =>
+      meta("deploy", ...nodeConfigs, "-f", "prisma/prisma.py")
+    );
+  });
+
+  await t.should("commit changes", async () => {
+    await shell(["git", "add", "."]);
+    await shell(["git", "commit", "-m", "create migrations"]);
+  });
+
   await t.should("run migrations with `meta deploy`", async () => {
-    await meta("deploy", ...nodeConfigs);
+    await meta("deploy", ...nodeConfigs, "-f", "prisma/prisma.py");
   });
 
   await t.should("succeed to query database", async () => {
@@ -63,4 +76,4 @@ test("cli:deploy - automatic migrations", async (t) => {
       })
       .on(e);
   });
-}, { systemTypegraphs: true, port });
+}, { systemTypegraphs: true, port, cleanGitRepo: true });
