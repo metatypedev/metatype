@@ -5885,7 +5885,7 @@ packages:
 
   /docusaurus-theme-frontmatter@1.3.0(@docusaurus/plugin-content-docs@2.4.0):
     resolution: {integrity: sha512-T/p4immO1mRdP9ok+7f8fRK+Eee2Hqv7sndgmt1mtnWKAHWbHg5N5SAG2oON27/nzv5y3Mo6GpbRkXbQC86zdw==}
-    engines: {node: '>=14', npm: please-use-yarn, yarn: '>=1.22.0'}
+    engines: {node: '>=14'}
     peerDependencies:
       '@docusaurus/plugin-content-docs': ^2.0.0-beta.22
       '@docusaurus/plugin-content-pages': ^2.0.0-beta.22
