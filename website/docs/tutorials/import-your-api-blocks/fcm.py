@@ -29,15 +29,6 @@ with TypeGraph(
         {
             "id": t.integer().config("id", "auto"),
             "title": t.string(),
-            # skip:start
-            # AssertionError: Type f'function' not supported
-            "user": gql.query(
-                # input
-                t.struct({"id": t.string().from_parent(g("user"))}),
-                # output
-                user.optional(),
-            ).optional(),
-            # skip:end
         }
     ).named("message")
 
