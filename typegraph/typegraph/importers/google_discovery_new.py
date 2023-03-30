@@ -1,10 +1,9 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 from typegraph import t
-from ast import Dict, List
+from typing import Dict, List, Optional
 import json
 import re
-from typing import Optional
 
 import httpx
 from box import Box
@@ -27,7 +26,7 @@ def reformat_params(path: str):
 
 
 class GoogleDiscoveryImporter(Importer):
-    generated_obj_fields: dict[str, Dict[str, str]] = {}
+    generated_obj_fields: Dict[str, Dict[str, str]] = {}
 
     def __init__(
         self,
@@ -47,7 +46,7 @@ class GoogleDiscoveryImporter(Importer):
         }
 
         if file is None:
-            self.specification = Box(httpx.get(url))
+            self.specification = Box(httpx.get(url).json())
         else:
             with open(file) as f:
                 self.specification = Box(json.loads(f.read()))
@@ -106,10 +105,10 @@ class GoogleDiscoveryImporter(Importer):
         ret = t.struct(fields)
         if "id" in cursor:
             ref = f"{cursor.id}{suffix}"
-            ret = ret.named("{ref}")
+            self.renames[ref] = ref
             self.generated_obj_fields[ref] = fields
 
-        return t.struct(fields).named(ref)
+        return ret
 
     def typify(
         self, cursor, has_error=False, filter_read_only=False, suffix="", allow_opt=True
