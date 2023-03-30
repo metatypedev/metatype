@@ -98,8 +98,6 @@ website_meta:
   env:
     VIRTUAL_ENV: $PWD/examples/.venv
     PATH: $PWD/examples/.venv/bin:$PATH
-  depends_on:
-    - meta
 
 website_docgen:
   workdir: website

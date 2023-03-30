@@ -13,7 +13,7 @@ async function withKey(f: () => Promise<Engine>, typegraphName: string) {
     ["verify"],
   );
   const jwk = JSON.stringify(await crypto.subtle.exportKey("jwk", key));
-  const envVar = `TG_${typegraphName.toUpperCase()}_NATIVE_JWK`;
+  const envVar = `TG_${typegraphName.toUpperCase()}_NATIVE_JWT`;
   Deno.env.set(
     envVar,
     jwk,

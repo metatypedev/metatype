@@ -23,6 +23,12 @@ const testConfig = parse(Deno.args);
 type Expect = (res: Response) => Promise<void> | void;
 type Variables = Record<string, JSONValue>;
 type Context = Record<string, unknown>;
+type ContextEncoder = (context: Context) => Promise<string>;
+
+const defaultContextEncoder: ContextEncoder = async (context) => {
+  const jwt = await signJWT({ provider: "internal", ...context }, 5);
+  return `Bearer ${jwt}`;
+};
 
 interface ResponseBodyError {
   message: string;
@@ -36,6 +42,7 @@ interface ResponseBody {
 export class Q {
   query: string;
   context: Context;
+  contextEncoder: ContextEncoder;
   variables: Variables;
   headers: Record<string, string>;
   expects: Expect[];
@@ -46,9 +53,11 @@ export class Q {
     variables: Variables,
     headers: Record<string, string>,
     expects: Expect[],
+    contextEncoder: ContextEncoder = defaultContextEncoder,
   ) {
     this.query = query;
     this.context = context;
+    this.contextEncoder = contextEncoder;
     this.variables = variables;
     this.headers = headers;
     this.expects = expects;
@@ -78,13 +87,14 @@ export class Q {
       .on(engine);
   }
 
-  withContext(context: Context) {
+  withContext(context: Context, contextEncoder?: ContextEncoder) {
     return new Q(
       this.query,
       deepMerge(this.context, context),
       this.variables,
       this.headers,
       this.expects,
+      contextEncoder || this.contextEncoder,
     );
   }
 
@@ -95,6 +105,7 @@ export class Q {
       deepMerge(this.variables, variables),
       this.headers,
       this.expects,
+      this.contextEncoder,
     );
   }
 
@@ -105,14 +116,22 @@ export class Q {
       this.variables,
       deepMerge(this.headers, headers),
       this.expects,
+      this.contextEncoder,
     );
   }
 
   expect(expect: Expect) {
-    return new Q(this.query, this.context, this.variables, this.headers, [
-      ...this.expects,
-      expect,
-    ]);
+    return new Q(
+      this.query,
+      this.context,
+      this.variables,
+      this.headers,
+      [
+        ...this.expects,
+        expect,
+      ],
+      this.contextEncoder,
+    );
   }
 
   expectStatus(status: number) {
@@ -192,8 +211,7 @@ export class Q {
     const defaults: Record<string, string> = {};
 
     if (Object.keys(context).length > 0) {
-      const jwt = await signJWT({ provider: "internal", ...context }, 5);
-      defaults["Authorization"] = `Bearer ${jwt}`;
+      defaults["Authorization"] = await this.contextEncoder(context);
     }
 
     const request = new Request(`${host}/${engine.name}`, {

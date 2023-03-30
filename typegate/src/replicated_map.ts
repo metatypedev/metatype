@@ -12,6 +12,20 @@ type SyncContext = {
   cancel: () => Promise<void>;
 };
 
+const ADD = "add";
+const RM = "rm";
+
+// Deno Redis driver library does not support well txs (MULTI), prefer Lua scripts to avoid bugs
+const addCmd = `
+redis.call('HSET', KEYS[1], ARGV[1], ARGV[3])
+redis.call('XADD', KEYS[2], 'MAXLEN', '~', '10000', '*', 'name', ARGV[1], 'event', '${ADD}', 'instance', ARGV[2])
+`.trim();
+
+const rmCmd = `
+redis.call('HDEL', KEYS[1], ARGV[1])
+redis.call('XADD', KEYS[2], 'MAXLEN', '~', '10000', '*', 'name', ARGV[1], 'event', '${RM}', 'instance', ARGV[2])
+`.trim();
+
 export class RedisReplicatedMap<T> {
   instance: string;
   redis: Redis;
@@ -85,7 +99,7 @@ export class RedisReplicatedMap<T> {
       if (this.instance == instance) {
         continue;
       }
-      if (event === "+") {
+      if (event === ADD) {
         const payload = await redis.hget(key, name);
         if (!payload) {
           throw Error(`added message without payload ${name}`);
@@ -93,7 +107,7 @@ export class RedisReplicatedMap<T> {
         logger.info(`received addition: ${name}`);
 
         memory.set(name, await deserializer(payload));
-      } else if (event === "-") {
+      } else if (event === RM) {
         logger.info(`received removal: ${name}`);
         memory.delete(name);
       } else {
@@ -145,20 +159,16 @@ export class RedisReplicatedMap<T> {
   }
 
   async set(name: string, elem: T) {
-    const { key, ekey, redis, serializer } = this;
+    const { key, ekey, serializer } = this;
 
     this.memory.set(name, elem);
     logger.info(`sent addition: ${name}`);
 
-    const tx = redis.tx();
-    tx.hset(key, name, await serializer(elem));
-    tx.xadd(
-      ekey,
-      "*",
-      { name, event: "+", instance: this.instance },
-      { approx: true, elements: 10000 },
+    await this.redis.eval(
+      addCmd,
+      [key, ekey],
+      [name, this.instance, await serializer(elem)],
     );
-    await tx.flush();
   }
 
   get(name: string): T | undefined {
@@ -170,19 +180,15 @@ export class RedisReplicatedMap<T> {
   }
 
   async delete(name: string): Promise<void> {
-    const { key, ekey, redis, instance } = this;
+    const { key, ekey } = this;
 
     this.memory.delete(name);
     logger.info(`sent removal: ${name}`);
 
-    const tx = redis.tx();
-    tx.hdel(key, name);
-    tx.xadd(
-      ekey,
-      "*",
-      { name, event: "-", instance },
-      { approx: true, elements: 10000 },
+    await this.redis.eval(
+      rmCmd,
+      [key, ekey],
+      [name, this.instance],
     );
-    await tx.flush();
   }
 }

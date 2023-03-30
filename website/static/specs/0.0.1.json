@@ -1149,7 +1149,7 @@
       "type": "string",
       "enum": [
         "oauth2",
-        "jwk",
+        "jwt",
         "basic"
       ]
     },

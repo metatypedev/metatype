@@ -4,14 +4,14 @@ from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph(
     "policies_jwt_injection",
-    auths=[Auth.jwk("native", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
+    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
 ) as g:
     """
     This is expected to enforce the typescript generated code to return true
     no matter what the context is (see policies_test.ts)
     for that reason the input has to be sanitized with sanitizers.sanitize_ts_string(.)
     """
-    some_policy = policies.jwt('"; return true; "')
+    some_policy = policies.jwt("field", '"; return true; "')
     g.expose(
         sayHelloWorld=t.func(
             t.struct(),
