@@ -1,17 +1,18 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use super::{Action, CommonArgs, GenArgs};
-use crate::cli::dev::{push_typegraph, MessageType};
 use crate::config::Config;
 use crate::typegraph::postprocess;
-use crate::typegraph::{LoaderResult, TypegraphLoader};
-use crate::utils::{self, ensure_venv, Node};
+use crate::typegraph::push::{PushOptions, PushQueueEntry};
+use crate::typegraph::TypegraphLoader;
+use crate::utils::ensure_venv;
 use anyhow::{bail, Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
-use colored::Colorize;
+use log::error;
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::PathBuf;
+use tokio::runtime::Handle;
 
 #[derive(Parser, Debug)]
 pub struct Deploy {
@@ -30,6 +31,7 @@ pub struct Deploy {
     /// Allow deployment on dirty (git) repository
     #[clap(long, default_value_t = false)]
     allow_dirty: bool,
+    // TODO exit_on_error
 }
 
 #[async_trait]
@@ -52,16 +54,14 @@ impl Action for Deploy {
 
         let loaded = if let Some(file) = self.file.clone() {
             let mut ret = HashMap::default();
-            let res = loader.load_file(&file);
-            match res {
-                Ok(Some(tgs)) => {
-                    ret.insert(file, Ok(tgs));
-                }
-                Ok(None) => (),
-                Err(err) => {
-                    ret.insert(file, Err(err));
-                }
+            let file: PathBuf = file.into();
+            let res = loader
+                .load_file(&file)
+                .with_context(|| format!("Error while loading typegraphs from {file:?}"))?;
+            if let Some(tgs) = res {
+                ret.insert(file, Ok(tgs));
             }
+            // TODO: else what??
             ret
         } else {
             loader.load_folder(&dir)?
@@ -74,49 +74,71 @@ impl Action for Deploy {
         let node_config = config.node("deploy").with_args(&self.node);
 
         let node = node_config.clone().try_into()?;
-        deploy_loaded_typegraphs(dir, loaded, &node).await?;
+
+        PushOptions::on(node)
+            .exit(true)
+            .start_with(
+                loaded
+                    .into_iter()
+                    .filter_map(|(path, typegraphs)| match typegraphs {
+                        Err(err) => {
+                            #[cfg(debug_assertions)]
+                            error!("{err:?}");
+                            error!("Could not load typegraphs from {:?}", path);
+                            None
+                        }
+                        Ok(tgs) => Some(
+                            tgs.into_iter()
+                                .map(move |tg| PushQueueEntry::new(path.clone(), tg)),
+                        ),
+                    })
+                    .flatten(),
+            )
+            .await?
+            .join()
+            .await?;
 
         Ok(())
     }
 }
-
-async fn deploy_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) -> Result<()> {
-    let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
-
-    for (path, res) in loaded.into_iter() {
-        let tgs = res.with_context(|| format!("Error while loading typegraphs from {path}"))?;
-        let path = utils::relative_path_display(diff_base.clone(), path);
-        println!(
-            "Loading {count} typegraphs{s} from {path}:",
-            count = tgs.len(),
-            s = utils::plural_prefix(tgs.len())
-        );
-        for tg in tgs.iter() {
-            println!(
-                "  → Pushing typegraph {name}...",
-                name = tg.name().unwrap().blue()
-            );
-            match push_typegraph(tg, node, 0).await {
-                Ok(res) => {
-                    println!("  {}", "✓ Success!".to_owned().green());
-                    let name = res.name;
-                    for msg in res.messages.into_iter() {
-                        let type_ = match msg.type_ {
-                            MessageType::Info => "info".blue(),
-                            MessageType::Warning => "warn".yellow(),
-                            MessageType::Error => "error".red(),
-                        };
-                        let tg_name = name.green();
-                        println!("    [{tg_name} {type_}] {}", msg.text);
-                    }
-                }
-                Err(e) => {
-                    println!("  {}", "✗ Failed!".to_owned().red());
-                    bail!(e);
-                }
-            }
-        }
-    }
-
-    Ok(())
-}
+//
+// async fn deploy_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) -> Result<()> {
+//     let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
+//
+//     for (path, res) in loaded.into_iter() {
+//         let tgs = res.with_context(|| format!("Error while loading typegraphs from {path:?}"))?;
+//         let path = utils::relative_path_display(diff_base.clone(), path);
+//         println!(
+//             "Loading {count} typegraphs{s} from {path}:",
+//             count = tgs.len(),
+//             s = utils::plural_prefix(tgs.len())
+//         );
+//         for tg in tgs.iter() {
+//             println!(
+//                 "  → Pushing typegraph {name}...",
+//                 name = tg.name().unwrap().blue()
+//             );
+//             match push_typegraph(tg, node, 0).await {
+//                 Ok(res) => {
+//                     println!("  {}", "✓ Success!".to_owned().green());
+//                     let name = res.name;
+//                     for msg in res.messages.into_iter() {
+//                         let type_ = match msg.type_ {
+//                             MessageType::Info => "info".blue(),
+//                             MessageType::Warning => "warn".yellow(),
+//                             MessageType::Error => "error".red(),
+//                         };
+//                         let tg_name = name.green();
+//                         println!("    [{tg_name} {type_}] {}", msg.text);
+//                     }
+//                 }
+//                 Err(e) => {
+//                     println!("  {}", "✗ Failed!".to_owned().red());
+//                     bail!(e);
+//                 }
+//             }
+//         }
+//     }
+//
+//     Ok(())
+// }

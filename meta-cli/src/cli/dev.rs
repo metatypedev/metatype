@@ -61,7 +61,7 @@ impl Action for Dev {
             .unwrap_or_else(|_| config::Config::default_in(&dir));
 
         let node_config = config.node("dev").with_args(&self.node);
-        let node = node_config.try_into()?;
+        let node: Node = node_config.try_into()?;
 
         let loaded = TypegraphLoader::with_config(&config)
             .with_postprocessor(
@@ -80,7 +80,7 @@ impl Action for Dev {
                     println!("No typegraph found. Watching the directory for changes...");
                 } else {
                     println!();
-                    push_loaded_typegraphs(dir.clone(), loaded, &node).await;
+                    // push_loaded_typegraphs(dir.clone(), loaded, &node).await;
                 }
             }
             Err(err) => log_err(err),
@@ -107,11 +107,11 @@ impl Action for Dev {
 
             let loaded = TypegraphLoader::with_config(&config).load_files(paths);
 
-            handle.block_on(push_loaded_typegraphs(
-                watch_path.clone(),
-                loaded,
-                &node_clone,
-            ));
+            // handle.block_on(push_loaded_typegraphs(
+            //     watch_path.clone(),
+            //     loaded,
+            //     &node_clone,
+            // ));
         })
         .unwrap();
 
@@ -131,7 +131,7 @@ impl Action for Dev {
                         let mut tg_node = tg_node;
                         tg_node.base_url = node.parse()?;
 
-                        push_loaded_typegraphs(dir.clone(), tgs, &tg_node).await;
+                        // push_loaded_typegraphs(dir.clone(), tgs, &tg_node).await;
                         Response::from_string(json!({"message": "reloaded"}).to_string())
                             .with_header(
                                 "Content-Type: application/json".parse::<Header>().unwrap(),
@@ -216,112 +216,106 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
         .collect()
 }
 
-pub async fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) {
-    let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
-    for (path, res) in loaded.into_iter() {
-        match res.with_context(|| format!("Error while loading typegraphs from {path}")) {
-            Result::Ok(tgs) => {
-                let path = utils::relative_path_display(diff_base.clone(), path);
-                println!(
-                    "Loading {count} typegraph{s} from {path}:",
-                    count = tgs.len(),
-                    s = utils::plural_prefix(tgs.len()),
-                );
-                for tg in tgs.iter() {
-                    println!(
-                        "  → Pushing typegraph {name}...",
-                        name = tg.name().unwrap().blue()
-                    );
-                    match push_typegraph(tg, node, 3).await {
-                        Ok(_) => {
-                            println!("  {}", "✓ Success!".to_owned().green());
-                        }
-                        Err(e) => {
-                            println!("  {}", "✗ Failed!".to_owned().red());
-                            println!("Could not push typegraph:\n{e:?}");
-                        }
-                    }
-                }
-            }
-            Result::Err(err) => {
-                log_err(err);
-            }
-        }
-    }
-    println!();
-}
+// pub async fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) {
+//     let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
+//     for (path, res) in loaded.into_iter() {
+//         match res.with_context(|| format!("Error while loading typegraphs from {path:?}")) {
+//             Result::Ok(tgs) => {
+//                 let path = utils::relative_path_display(diff_base.clone(), path);
+//                 println!(
+//                     "Loading {count} typegraph{s} from {path}:",
+//                     count = tgs.len(),
+//                     s = utils::plural_prefix(tgs.len()),
+//                 );
+//                 for tg in tgs.iter() {
+//                     println!(
+//                         "  → Pushing typegraph {name}...",
+//                         name = tg.name().unwrap().blue()
+//                     );
+//                     match push_typegraph(tg, node, 3).await {
+//                         Ok(_) => {
+//                             println!("  {}", "✓ Success!".to_owned().green());
+//                         }
+//                         Err(e) => {
+//                             println!("  {}", "✗ Failed!".to_owned().red());
+//                             println!("Could not push typegraph:\n{e:?}");
+//                         }
+//                     }
+//                 }
+//             }
+//             Result::Err(err) => {
+//                 log_err(err);
+//             }
+//         }
+//     }
+//     println!();
+// }
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "snake_case")]
-pub enum MessageType {
-    Info,
-    Warning,
-    Error,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct MessageEntry {
-    #[serde(rename = "type")]
-    pub type_: MessageType,
-    pub text: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct PushResult {
-    pub name: String,
-    pub messages: Vec<MessageEntry>,
-}
-
-#[async_recursion]
-pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<PushResult> {
-    use crate::utils::graphql::{Error as GqlError, GraphqlErrorMessages, Query};
-    let query = node
-        .post("/typegate")?
-        .gql(
-            indoc! {"
-            mutation InsertTypegraph {
-                addTypegraph(fromString: $tg) {
-                    name
-                    messages { type text }
-                }
-            }"}
-            .to_string(),
-            Some(json!({ "tg": serde_json::to_string(tg)? })),
-        )
-        .await;
-
-    use GqlError::*;
-    match query {
-        Err(EndpointNotReachable(e)) => {
-            if backoff <= 1 {
-                bail!("node unreachable: {e}")
-            }
-            #[cfg(debug_assertions)]
-            eprintln!("Endpoint not reachable: {e}");
-            println!("Retry: typegate not reachable");
-            sleep(Duration::from_secs(5));
-            push_typegraph(tg, node, backoff - 1).await
-        }
-        Err(FailedQuery(e)) => {
-            if backoff <= 1 {
-                bail!("typegraph push error:\n{}", e.error_messages().dimmed())
-            }
-            #[cfg(debug_assertions)]
-            eprintln!("Query failed:\n{}", e.error_messages());
-            println!("Retry: Query failed");
-            sleep(Duration::from_secs(5));
-            push_typegraph(tg, node, backoff - 1).await
-        }
-        Err(InvalidResponse(e)) => {
-            if backoff <= 1 {
-                bail!("Invalid HTTP response: {e}")
-            }
-            #[cfg(debug_assertions)]
-            eprintln!("Invalid response: {e:?}");
-            println!("Retry: Invalid response");
-            sleep(Duration::from_secs(5));
-            push_typegraph(tg, node, backoff - 1).await
-        }
-        Ok(res) => Ok(res.data("addTypegraph")?),
-    }
-}
+// #[derive(Deserialize, Debug)]
+// #[serde(rename_all = "snake_case")]
+// pub enum MessageType {
+//     Info,
+//     Warning,
+//     Error,
+// }
+//
+// #[derive(Deserialize, Debug)]
+// pub struct MessageEntry {
+//     #[serde(rename = "type")]
+//     pub type_: MessageType,
+//     pub text: String,
+// }
+//
+// #[async_recursion]
+// pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<PushResult> {
+//     use crate::utils::graphql::{Error as GqlError, GraphqlErrorMessages, Query};
+//     let query = node
+//         .post("/typegate")?
+//         .gql(
+//             indoc! {"
+//             mutation InsertTypegraph {
+//                 addTypegraph(fromString: $tg) {
+//                     name
+//                     messages { type text }
+//                 }
+//             }"}
+//             .to_string(),
+//             Some(json!({ "tg": serde_json::to_string(tg)? })),
+//         )
+//         .await;
+//
+//     use GqlError::*;
+//     match query {
+//         Err(EndpointNotReachable(e)) => {
+//             if backoff <= 1 {
+//                 bail!("node unreachable: {e}")
+//             }
+//             #[cfg(debug_assertions)]
+//             eprintln!("Endpoint not reachable: {e}");
+//             println!("Retry: typegate not reachable");
+//             sleep(Duration::from_secs(5));
+//             push_typegraph(tg, node, backoff - 1).await
+//         }
+//         Err(FailedQuery(e)) => {
+//             if backoff <= 1 {
+//                 bail!("typegraph push error:\n{}", e.error_messages().dimmed())
+//             }
+//             #[cfg(debug_assertions)]
+//             eprintln!("Query failed:\n{}", e.error_messages());
+//             println!("Retry: Query failed");
+//             sleep(Duration::from_secs(5));
+//             push_typegraph(tg, node, backoff - 1).await
+//         }
+//         Err(InvalidResponse(e)) => {
+//             if backoff <= 1 {
+//                 bail!("Invalid HTTP response: {e}")
+//             }
+//             #[cfg(debug_assertions)]
+//             eprintln!("Invalid response: {e:?}");
+//             println!("Retry: Invalid response");
+//             sleep(Duration::from_secs(5));
+//             push_typegraph(tg, node, backoff - 1).await
+//         }
+//         Ok(res) => Ok(res.data("addTypegraph")?),
+//     }
+// }

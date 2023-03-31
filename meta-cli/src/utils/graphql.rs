@@ -8,7 +8,7 @@ use serde::Deserialize;
 use serde_json;
 use std::fmt;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Response {
     data: serde_json::Value,
     errors: Option<Vec<GraphqlError>>,
@@ -28,6 +28,7 @@ impl Response {
     where
         T: serde::de::DeserializeOwned,
     {
+        println!("Reading data field");
         let value = &self.data[field];
         if value.is_null() {
             bail!("value for {field} is not found in the response");
@@ -45,12 +46,13 @@ pub trait Query {
     ) -> Result<Response, Error>;
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ErrorLocation {
     pub line: u32,
     pub column: u32,
 }
 
+#[derive(Debug)]
 pub enum PathSegment {
     Field(String),
     Index(u64),
@@ -71,7 +73,7 @@ impl<'de> serde::de::Deserialize<'de> for PathSegment {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct GraphqlError {
     pub message: String,
     pub locations: Option<Vec<ErrorLocation>>,

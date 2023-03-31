@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 pub mod postprocess;
+pub mod push;
 pub mod utils;
 
 use anyhow::{bail, Context, Result};
@@ -21,7 +22,7 @@ use postprocess::apply_all;
 
 use self::postprocess::PostProcessorWrapper;
 
-pub type LoaderResult = HashMap<String, Result<Vec<Typegraph>>>;
+pub type LoaderResult = HashMap<PathBuf, Result<Vec<Typegraph>>>;
 
 #[derive(Clone)]
 pub struct TypegraphLoader<'a> {
@@ -105,7 +106,7 @@ impl<'a> TypegraphLoader<'a> {
                     Ok(path) => path,
                     Err(e) => {
                         return Some((
-                            file.to_str().unwrap().to_owned(),
+                            file.clone(),
                             Err(e).with_context(|| {
                                 format!("could not canonicalize path: {:?}", file)
                             }),
@@ -114,8 +115,8 @@ impl<'a> TypegraphLoader<'a> {
                 };
                 match self.clone().load_file(path) {
                     Ok(None) => None, // unreachable case
-                    Ok(Some(tgs)) => Some((file.to_str().unwrap().to_owned(), Ok(tgs))),
-                    Err(e) => Some((file.to_str().unwrap().to_owned(), Err(e))),
+                    Ok(Some(tgs)) => Some((file.clone(), Ok(tgs))),
+                    Err(e) => Some((file.clone(), Err(e))),
                 }
             })
             .collect()
@@ -166,8 +167,8 @@ impl<'a> TypegraphLoader<'a> {
             })
             .filter_map(|file| match loader.clone().load_file(&file) {
                 Ok(None) => None,
-                Ok(Some(tgs)) => Some((file.to_str().unwrap().to_owned(), Ok(tgs))),
-                Err(e) => Some((file.to_str().unwrap().to_owned(), Err(e))),
+                Ok(Some(tgs)) => Some((file, Ok(tgs))),
+                Err(e) => Some((file, Err(e))),
             })
             .collect())
     }

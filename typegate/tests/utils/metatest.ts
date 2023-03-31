@@ -149,11 +149,16 @@ export class MetaTest {
     fact: string,
     fn: (t: Deno.TestContext) => void | Promise<void>,
   ): Promise<boolean> {
-    return await this.t.step({
+    const res = await this.t.step({
       name: `should ${fact}`,
       fn,
       //sanitizeOps: false,
     });
+    if (!res) {
+      Deno.exit(1);
+    }
+
+    return true;
   }
 
   assertSnapshot(...params: AssertSnapshotParams): Promise<void> {
