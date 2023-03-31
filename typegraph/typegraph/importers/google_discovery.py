@@ -137,7 +137,7 @@ class GoogleDiscoveryImporter(Importer):
             "boolean": t.boolean(),
             "integer": t.integer(),
             "number": t.float(),
-            "any": t.any(),
+            "any": t.struct({}),
         }
 
         tpe = simple_type.get(cursor.type)
@@ -167,14 +167,14 @@ class GoogleDiscoveryImporter(Importer):
                         )
 
                 # flatten first depth fields
-                if "$ref" in method.request:
+                if "request" in method and "$ref" in method.request:
                     # resolve first depth
                     ref = f"{method.request.get('$ref')}In"
                     assert self.obj_fields_cache.get(ref) is not None
                     for k, v in self.obj_fields_cache.get(ref).items():
                         inp_fields[k] = v
                 # Bearer token
-                inp_fields["auth"] = t.string()
+                inp_fields["auth"] = t.string().optional()
 
                 # In/Out
                 inp = t.struct(inp_fields)
