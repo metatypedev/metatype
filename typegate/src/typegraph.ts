@@ -3,7 +3,6 @@
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
 import { DenoRuntime } from "./runtimes/deno/deno.ts";
-import { GoogleapisRuntime } from "./runtimes/googleapis.ts";
 import { GraphQLRuntime } from "./runtimes/graphql.ts";
 import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
@@ -52,7 +51,6 @@ const runtimeInit: RuntimeInit = {
   prisma: PrismaRuntime.init,
   http: HTTPRuntime.init,
   deno: DenoRuntime.init,
-  googleapis: GoogleapisRuntime.init,
   temporal: TemporalRuntime.init,
   random: RandomRuntime.init,
   wasmedge: WasmEdgeRuntime.init,
