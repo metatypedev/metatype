@@ -1063,4 +1063,4 @@ def import_googleapi():
 with TypeGraph(name="mybusinessbusinessinformation") as g:
     googleapi = import_googleapi()
     public = policies.public()
-    g.expose(**{name: f.add_policy(public) for name, f in googleapi.functions})
+    g.expose(**{name: f.add_policy(public) for name, f in googleapi.functions.items()})

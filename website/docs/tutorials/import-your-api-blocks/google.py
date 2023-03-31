@@ -19,158 +19,192 @@ def import_googleapi():
 
     renames = {
         "ErrorResponse": "_googleapi_1_ErrorResponse",
-        "SendMessageRequestIn": "_googleapi_2_SendMessageRequestIn",
-        "SendMessageRequestOut": "_googleapi_3_SendMessageRequestOut",
-        "WebpushConfigIn": "_googleapi_4_WebpushConfigIn",
-        "WebpushConfigOut": "_googleapi_5_WebpushConfigOut",
-        "ColorIn": "_googleapi_6_ColorIn",
-        "ColorOut": "_googleapi_7_ColorOut",
-        "AndroidConfigIn": "_googleapi_8_AndroidConfigIn",
-        "AndroidConfigOut": "_googleapi_9_AndroidConfigOut",
-        "NotificationIn": "_googleapi_10_NotificationIn",
-        "NotificationOut": "_googleapi_11_NotificationOut",
-        "MessageIn": "_googleapi_12_MessageIn",
-        "MessageOut": "_googleapi_13_MessageOut",
-        "FcmOptionsIn": "_googleapi_14_FcmOptionsIn",
-        "FcmOptionsOut": "_googleapi_15_FcmOptionsOut",
-        "WebpushFcmOptionsIn": "_googleapi_16_WebpushFcmOptionsIn",
-        "WebpushFcmOptionsOut": "_googleapi_17_WebpushFcmOptionsOut",
-        "ApnsConfigIn": "_googleapi_18_ApnsConfigIn",
-        "ApnsConfigOut": "_googleapi_19_ApnsConfigOut",
-        "AndroidFcmOptionsIn": "_googleapi_20_AndroidFcmOptionsIn",
-        "AndroidFcmOptionsOut": "_googleapi_21_AndroidFcmOptionsOut",
-        "ApnsFcmOptionsIn": "_googleapi_22_ApnsFcmOptionsIn",
-        "ApnsFcmOptionsOut": "_googleapi_23_ApnsFcmOptionsOut",
-        "LightSettingsIn": "_googleapi_24_LightSettingsIn",
-        "LightSettingsOut": "_googleapi_25_LightSettingsOut",
-        "AndroidNotificationIn": "_googleapi_26_AndroidNotificationIn",
-        "AndroidNotificationOut": "_googleapi_27_AndroidNotificationOut",
+        "ColorIn": "_googleapi_2_ColorIn",
+        "ColorOut": "_googleapi_3_ColorOut",
+        "NotificationIn": "_googleapi_4_NotificationIn",
+        "NotificationOut": "_googleapi_5_NotificationOut",
+        "AndroidFcmOptionsIn": "_googleapi_6_AndroidFcmOptionsIn",
+        "AndroidFcmOptionsOut": "_googleapi_7_AndroidFcmOptionsOut",
+        "MessageIn": "_googleapi_8_MessageIn",
+        "MessageOut": "_googleapi_9_MessageOut",
+        "ApnsFcmOptionsIn": "_googleapi_10_ApnsFcmOptionsIn",
+        "ApnsFcmOptionsOut": "_googleapi_11_ApnsFcmOptionsOut",
+        "SendMessageRequestIn": "_googleapi_12_SendMessageRequestIn",
+        "SendMessageRequestOut": "_googleapi_13_SendMessageRequestOut",
+        "AndroidConfigIn": "_googleapi_14_AndroidConfigIn",
+        "AndroidConfigOut": "_googleapi_15_AndroidConfigOut",
+        "WebpushConfigIn": "_googleapi_16_WebpushConfigIn",
+        "WebpushConfigOut": "_googleapi_17_WebpushConfigOut",
+        "LightSettingsIn": "_googleapi_18_LightSettingsIn",
+        "LightSettingsOut": "_googleapi_19_LightSettingsOut",
+        "FcmOptionsIn": "_googleapi_20_FcmOptionsIn",
+        "FcmOptionsOut": "_googleapi_21_FcmOptionsOut",
+        "ApnsConfigIn": "_googleapi_22_ApnsConfigIn",
+        "ApnsConfigOut": "_googleapi_23_ApnsConfigOut",
+        "AndroidNotificationIn": "_googleapi_24_AndroidNotificationIn",
+        "AndroidNotificationOut": "_googleapi_25_AndroidNotificationOut",
+        "WebpushFcmOptionsIn": "_googleapi_26_WebpushFcmOptionsIn",
+        "WebpushFcmOptionsOut": "_googleapi_27_WebpushFcmOptionsOut",
     }
 
     types = {}
     types["ErrorResponse"] = t.struct(
         {"code": t.integer(), "message": t.string(), "status": t.string()}
     ).named(renames["ErrorResponse"])
-    types["SendMessageRequestIn"] = t.struct(
-        {
-            "message": t.proxy(renames["MessageIn"]),
-            "validateOnly": t.boolean().optional(),
-        }
-    ).named(renames["SendMessageRequestIn"])
-    types["SendMessageRequestOut"] = t.struct(
-        {
-            "message": t.proxy(renames["MessageOut"]),
-            "validateOnly": t.boolean().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["SendMessageRequestOut"])
-    types["WebpushConfigIn"] = t.struct(
-        {
-            "headers": t.struct({}).optional(),
-            "fcmOptions": t.proxy(renames["WebpushFcmOptionsIn"]).optional(),
-            "notification": t.struct({}).optional(),
-            "data": t.struct({}).optional(),
-        }
-    ).named(renames["WebpushConfigIn"])
-    types["WebpushConfigOut"] = t.struct(
-        {
-            "headers": t.struct({}).optional(),
-            "fcmOptions": t.proxy(renames["WebpushFcmOptionsOut"]).optional(),
-            "notification": t.struct({}).optional(),
-            "data": t.struct({}).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["WebpushConfigOut"])
     types["ColorIn"] = t.struct(
         {
-            "red": t.number().optional(),
             "alpha": t.number().optional(),
+            "red": t.number().optional(),
             "green": t.number().optional(),
             "blue": t.number().optional(),
         }
     ).named(renames["ColorIn"])
     types["ColorOut"] = t.struct(
         {
-            "red": t.number().optional(),
             "alpha": t.number().optional(),
+            "red": t.number().optional(),
             "green": t.number().optional(),
             "blue": t.number().optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["ColorOut"])
-    types["AndroidConfigIn"] = t.struct(
-        {
-            "priority": t.string().optional(),
-            "ttl": t.string().optional(),
-            "data": t.struct({}).optional(),
-            "collapseKey": t.string().optional(),
-            "restrictedPackageName": t.string().optional(),
-            "fcmOptions": t.proxy(renames["AndroidFcmOptionsIn"]).optional(),
-            "notification": t.proxy(renames["AndroidNotificationIn"]).optional(),
-            "directBootOk": t.boolean().optional(),
-        }
-    ).named(renames["AndroidConfigIn"])
-    types["AndroidConfigOut"] = t.struct(
-        {
-            "priority": t.string().optional(),
-            "ttl": t.string().optional(),
-            "data": t.struct({}).optional(),
-            "collapseKey": t.string().optional(),
-            "restrictedPackageName": t.string().optional(),
-            "fcmOptions": t.proxy(renames["AndroidFcmOptionsOut"]).optional(),
-            "notification": t.proxy(renames["AndroidNotificationOut"]).optional(),
-            "directBootOk": t.boolean().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["AndroidConfigOut"])
     types["NotificationIn"] = t.struct(
         {
             "image": t.string().optional(),
-            "title": t.string().optional(),
             "body": t.string().optional(),
+            "title": t.string().optional(),
         }
     ).named(renames["NotificationIn"])
     types["NotificationOut"] = t.struct(
         {
             "image": t.string().optional(),
-            "title": t.string().optional(),
             "body": t.string().optional(),
+            "title": t.string().optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["NotificationOut"])
+    types["AndroidFcmOptionsIn"] = t.struct(
+        {"analyticsLabel": t.string().optional()}
+    ).named(renames["AndroidFcmOptionsIn"])
+    types["AndroidFcmOptionsOut"] = t.struct(
+        {
+            "analyticsLabel": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["AndroidFcmOptionsOut"])
     # skip:end
     # ...
     types["MessageIn"] = t.struct(
         {
-            "android": t.proxy(renames["AndroidConfigIn"]).optional(),
-            "name": t.string().optional(),
-            "webpush": t.proxy(renames["WebpushConfigIn"]).optional(),
-            "token": t.string().optional(),
-            "apns": t.proxy(renames["ApnsConfigIn"]).optional(),
             "notification": t.proxy(renames["NotificationIn"]).optional(),
-            "fcmOptions": t.proxy(renames["FcmOptionsIn"]).optional(),
             "condition": t.string().optional(),
+            "webpush": t.proxy(renames["WebpushConfigIn"]).optional(),
+            "name": t.string().optional(),
             "topic": t.string().optional(),
+            "android": t.proxy(renames["AndroidConfigIn"]).optional(),
+            "token": t.string().optional(),
+            "fcmOptions": t.proxy(renames["FcmOptionsIn"]).optional(),
             "data": t.struct({}).optional(),
+            "apns": t.proxy(renames["ApnsConfigIn"]).optional(),
         }
     ).named(renames["MessageIn"])
     # ...
     # skip:start
     types["MessageOut"] = t.struct(
         {
-            "android": t.proxy(renames["AndroidConfigOut"]).optional(),
-            "name": t.string().optional(),
-            "webpush": t.proxy(renames["WebpushConfigOut"]).optional(),
-            "token": t.string().optional(),
-            "apns": t.proxy(renames["ApnsConfigOut"]).optional(),
             "notification": t.proxy(renames["NotificationOut"]).optional(),
-            "fcmOptions": t.proxy(renames["FcmOptionsOut"]).optional(),
             "condition": t.string().optional(),
+            "webpush": t.proxy(renames["WebpushConfigOut"]).optional(),
+            "name": t.string().optional(),
             "topic": t.string().optional(),
+            "android": t.proxy(renames["AndroidConfigOut"]).optional(),
+            "token": t.string().optional(),
+            "fcmOptions": t.proxy(renames["FcmOptionsOut"]).optional(),
             "data": t.struct({}).optional(),
+            "apns": t.proxy(renames["ApnsConfigOut"]).optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["MessageOut"])
+    types["ApnsFcmOptionsIn"] = t.struct(
+        {"image": t.string().optional(), "analyticsLabel": t.string().optional()}
+    ).named(renames["ApnsFcmOptionsIn"])
+    types["ApnsFcmOptionsOut"] = t.struct(
+        {
+            "image": t.string().optional(),
+            "analyticsLabel": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["ApnsFcmOptionsOut"])
+    types["SendMessageRequestIn"] = t.struct(
+        {
+            "validateOnly": t.boolean().optional(),
+            "message": t.proxy(renames["MessageIn"]),
+        }
+    ).named(renames["SendMessageRequestIn"])
+    types["SendMessageRequestOut"] = t.struct(
+        {
+            "validateOnly": t.boolean().optional(),
+            "message": t.proxy(renames["MessageOut"]),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["SendMessageRequestOut"])
+    types["AndroidConfigIn"] = t.struct(
+        {
+            "ttl": t.string().optional(),
+            "data": t.struct({}).optional(),
+            "priority": t.string().optional(),
+            "restrictedPackageName": t.string().optional(),
+            "fcmOptions": t.proxy(renames["AndroidFcmOptionsIn"]).optional(),
+            "directBootOk": t.boolean().optional(),
+            "notification": t.proxy(renames["AndroidNotificationIn"]).optional(),
+            "collapseKey": t.string().optional(),
+        }
+    ).named(renames["AndroidConfigIn"])
+    types["AndroidConfigOut"] = t.struct(
+        {
+            "ttl": t.string().optional(),
+            "data": t.struct({}).optional(),
+            "priority": t.string().optional(),
+            "restrictedPackageName": t.string().optional(),
+            "fcmOptions": t.proxy(renames["AndroidFcmOptionsOut"]).optional(),
+            "directBootOk": t.boolean().optional(),
+            "notification": t.proxy(renames["AndroidNotificationOut"]).optional(),
+            "collapseKey": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["AndroidConfigOut"])
+    types["WebpushConfigIn"] = t.struct(
+        {
+            "data": t.struct({}).optional(),
+            "headers": t.struct({}).optional(),
+            "fcmOptions": t.proxy(renames["WebpushFcmOptionsIn"]).optional(),
+            "notification": t.struct({}).optional(),
+        }
+    ).named(renames["WebpushConfigIn"])
+    types["WebpushConfigOut"] = t.struct(
+        {
+            "data": t.struct({}).optional(),
+            "headers": t.struct({}).optional(),
+            "fcmOptions": t.proxy(renames["WebpushFcmOptionsOut"]).optional(),
+            "notification": t.struct({}).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["WebpushConfigOut"])
+    types["LightSettingsIn"] = t.struct(
+        {
+            "lightOnDuration": t.string(),
+            "color": t.proxy(renames["ColorIn"]),
+            "lightOffDuration": t.string(),
+        }
+    ).named(renames["LightSettingsIn"])
+    types["LightSettingsOut"] = t.struct(
+        {
+            "lightOnDuration": t.string(),
+            "color": t.proxy(renames["ColorOut"]),
+            "lightOffDuration": t.string(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["LightSettingsOut"])
     types["FcmOptionsIn"] = t.struct({"analyticsLabel": t.string().optional()}).named(
         renames["FcmOptionsIn"]
     )
@@ -180,16 +214,6 @@ def import_googleapi():
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["FcmOptionsOut"])
-    types["WebpushFcmOptionsIn"] = t.struct(
-        {"analyticsLabel": t.string().optional(), "link": t.string().optional()}
-    ).named(renames["WebpushFcmOptionsIn"])
-    types["WebpushFcmOptionsOut"] = t.struct(
-        {
-            "analyticsLabel": t.string().optional(),
-            "link": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["WebpushFcmOptionsOut"])
     types["ApnsConfigIn"] = t.struct(
         {
             "headers": t.struct({}).optional(),
@@ -205,101 +229,77 @@ def import_googleapi():
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["ApnsConfigOut"])
-    types["AndroidFcmOptionsIn"] = t.struct(
-        {"analyticsLabel": t.string().optional()}
-    ).named(renames["AndroidFcmOptionsIn"])
-    types["AndroidFcmOptionsOut"] = t.struct(
-        {
-            "analyticsLabel": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["AndroidFcmOptionsOut"])
-    types["ApnsFcmOptionsIn"] = t.struct(
-        {"analyticsLabel": t.string().optional(), "image": t.string().optional()}
-    ).named(renames["ApnsFcmOptionsIn"])
-    types["ApnsFcmOptionsOut"] = t.struct(
-        {
-            "analyticsLabel": t.string().optional(),
-            "image": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["ApnsFcmOptionsOut"])
-    types["LightSettingsIn"] = t.struct(
-        {
-            "color": t.proxy(renames["ColorIn"]),
-            "lightOffDuration": t.string(),
-            "lightOnDuration": t.string(),
-        }
-    ).named(renames["LightSettingsIn"])
-    types["LightSettingsOut"] = t.struct(
-        {
-            "color": t.proxy(renames["ColorOut"]),
-            "lightOffDuration": t.string(),
-            "lightOnDuration": t.string(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["LightSettingsOut"])
     types["AndroidNotificationIn"] = t.struct(
         {
+            "titleLocKey": t.string().optional(),
+            "clickAction": t.string().optional(),
+            "icon": t.string().optional(),
+            "localOnly": t.boolean().optional(),
             "image": t.string().optional(),
+            "notificationPriority": t.string().optional(),
+            "defaultLightSettings": t.boolean().optional(),
+            "vibrateTimings": t.array(t.string()).optional(),
             "titleLocArgs": t.array(t.string()).optional(),
             "color": t.string().optional(),
-            "ticker": t.string().optional(),
             "visibility": t.string().optional(),
-            "body": t.string().optional(),
-            "defaultVibrateTimings": t.boolean().optional(),
-            "vibrateTimings": t.array(t.string()).optional(),
             "sticky": t.boolean().optional(),
-            "clickAction": t.string().optional(),
-            "bodyLocKey": t.string().optional(),
-            "bodyLocArgs": t.array(t.string()).optional(),
-            "sound": t.string().optional(),
-            "channelId": t.string().optional(),
-            "title": t.string().optional(),
-            "localOnly": t.boolean().optional(),
-            "bypassProxyNotification": t.boolean().optional(),
-            "tag": t.string().optional(),
-            "defaultLightSettings": t.boolean().optional(),
-            "titleLocKey": t.string().optional(),
             "eventTime": t.string().optional(),
             "defaultSound": t.boolean().optional(),
-            "notificationPriority": t.string().optional(),
-            "icon": t.string().optional(),
             "notificationCount": t.integer().optional(),
+            "defaultVibrateTimings": t.boolean().optional(),
             "lightSettings": t.proxy(renames["LightSettingsIn"]).optional(),
+            "title": t.string().optional(),
+            "bypassProxyNotification": t.boolean().optional(),
+            "ticker": t.string().optional(),
+            "channelId": t.string().optional(),
+            "bodyLocKey": t.string().optional(),
+            "tag": t.string().optional(),
+            "bodyLocArgs": t.array(t.string()).optional(),
+            "sound": t.string().optional(),
+            "body": t.string().optional(),
         }
     ).named(renames["AndroidNotificationIn"])
     types["AndroidNotificationOut"] = t.struct(
         {
+            "titleLocKey": t.string().optional(),
+            "clickAction": t.string().optional(),
+            "icon": t.string().optional(),
+            "localOnly": t.boolean().optional(),
             "image": t.string().optional(),
+            "notificationPriority": t.string().optional(),
+            "defaultLightSettings": t.boolean().optional(),
+            "vibrateTimings": t.array(t.string()).optional(),
             "titleLocArgs": t.array(t.string()).optional(),
             "color": t.string().optional(),
-            "ticker": t.string().optional(),
             "visibility": t.string().optional(),
-            "body": t.string().optional(),
-            "defaultVibrateTimings": t.boolean().optional(),
-            "vibrateTimings": t.array(t.string()).optional(),
             "sticky": t.boolean().optional(),
-            "clickAction": t.string().optional(),
-            "bodyLocKey": t.string().optional(),
-            "bodyLocArgs": t.array(t.string()).optional(),
-            "sound": t.string().optional(),
-            "channelId": t.string().optional(),
-            "title": t.string().optional(),
-            "localOnly": t.boolean().optional(),
-            "bypassProxyNotification": t.boolean().optional(),
-            "tag": t.string().optional(),
-            "defaultLightSettings": t.boolean().optional(),
-            "titleLocKey": t.string().optional(),
             "eventTime": t.string().optional(),
             "defaultSound": t.boolean().optional(),
-            "notificationPriority": t.string().optional(),
-            "icon": t.string().optional(),
             "notificationCount": t.integer().optional(),
+            "defaultVibrateTimings": t.boolean().optional(),
             "lightSettings": t.proxy(renames["LightSettingsOut"]).optional(),
+            "title": t.string().optional(),
+            "bypassProxyNotification": t.boolean().optional(),
+            "ticker": t.string().optional(),
+            "channelId": t.string().optional(),
+            "bodyLocKey": t.string().optional(),
+            "tag": t.string().optional(),
+            "bodyLocArgs": t.array(t.string()).optional(),
+            "sound": t.string().optional(),
+            "body": t.string().optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["AndroidNotificationOut"])
+    types["WebpushFcmOptionsIn"] = t.struct(
+        {"link": t.string().optional(), "analyticsLabel": t.string().optional()}
+    ).named(renames["WebpushFcmOptionsIn"])
+    types["WebpushFcmOptionsOut"] = t.struct(
+        {
+            "link": t.string().optional(),
+            "analyticsLabel": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["WebpushFcmOptionsOut"])
 
     functions = {}
     functions["projectsMessagesSend"] = googleapi.post(
@@ -307,9 +307,9 @@ def import_googleapi():
         t.struct(
             {
                 "parent": t.string(),
-                "message": t.proxy(renames["MessageIn"]),
                 "validateOnly": t.boolean().optional(),
-                "auth": t.string(),
+                "message": t.proxy(renames["MessageIn"]),
+                "auth": t.string().optional(),
             }
         ),
         t.proxy(renames["MessageOut"]),
