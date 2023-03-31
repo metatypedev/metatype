@@ -64,17 +64,20 @@ class GoogleDiscoveryImporter(Importer):
         self.specification.description
         self.specification.documentationLink
         with self:
-            self.types["error_response"] = self.error_struct()
+            # self.renames["ErrorResponse"] = "error_response"
+            self.types["ErrorResponse"] = self.error_struct()
             for schema in self.specification.schemas.values():
                 assert schema.type == "object"
-                self.types[f"{camel_to_snake(schema.id)}_in"] = self.typify(
+                # self.renames[f"{schema.id}In"] = f"{camel_to_snake(schema.id)}_in"
+                # self.renames[f"{schema.id}Out"] = f"{camel_to_snake(schema.id)}_out"
+                self.types[f"{schema.id}In"] = self.typify(
                     schema,
                     has_error=False,
                     filter_read_only=False,
                     suffix="In",
                     allow_opt=False,
                 )
-                self.types[f"{camel_to_snake(schema.id)}_out"] = self.typify(
+                self.types[f"{schema.id}Out"] = self.typify(
                     schema,
                     has_error=True,
                     filter_read_only=True,
@@ -90,7 +93,7 @@ class GoogleDiscoveryImporter(Importer):
     def error_struct(self) -> t.typedef:
         return t.struct(
             {"code": t.integer(), "message": t.string(), "status": t.string()}
-        ).named("ErrorResponse")
+        )
 
     def typify_object(self, cursor, has_error=False, filter_read_only=False, suffix=""):
         fields: Dict[str, t.typedef] = {}
@@ -127,7 +130,7 @@ class GoogleDiscoveryImporter(Importer):
             ).optional()
 
         if "$ref" in cursor:
-            return t.proxy(f'"{cursor["$ref"]}{suffix}"')
+            return t.proxy(f'{cursor["$ref"]}{suffix}')
 
         simple_type = {
             "string": t.string(),
