@@ -8,7 +8,7 @@ import re
 import httpx
 from box import Box
 from typegraph.importers.base.importer import Importer
-from typegraph.importers.base.typify import Typify
+from typegraph.importers.base.typify import Typify, TypifyMat
 
 
 def camel_to_snake(name):
@@ -26,7 +26,7 @@ def reformat_params(path: str):
 
 
 class GoogleDiscoveryImporter(Importer):
-    generated_obj_fields: Dict[str, Dict[str, str]] = {}
+    obj_fields_cache: Dict[str, Dict[str, str]] = {}
 
     def __init__(
         self,
@@ -63,31 +63,31 @@ class GoogleDiscoveryImporter(Importer):
         self.specification.canonicalName
         self.specification.description
         self.specification.documentationLink
+        with self:
+            self.types["error_response"] = self.error_struct()
+            for schema in self.specification.schemas.values():
+                assert schema.type == "object"
+                self.types[f"{camel_to_snake(schema.id)}_in"] = self.typify(
+                    schema,
+                    has_error=False,
+                    filter_read_only=False,
+                    suffix="In",
+                    allow_opt=False,
+                )
+                self.types[f"{camel_to_snake(schema.id)}_out"] = self.typify(
+                    schema,
+                    has_error=True,
+                    filter_read_only=True,
+                    suffix="Out",
+                    allow_opt=False,
+                )
 
-        self.types["error_response"] = self.error_struct()
-        for schema in self.specification.schemas.values():
-            assert schema.type == "object"
-            self.types[f"{camel_to_snake(schema.id)}_in"] = self.typify(
-                schema,
-                has_error=False,
-                filter_read_only=False,
-                suffix="In",
-                allow_opt=False,
+            self.prepare_expose(
+                self.specification,
+                url_prefix=self.specification.rootUrl,
             )
-            self.types[f"{camel_to_snake(schema.id)}_out"] = self.typify(
-                schema,
-                has_error=True,
-                filter_read_only=True,
-                suffix="Out",
-                allow_opt=False,
-            )
 
-        self.prepare_expose(
-            self.specification,
-            url_prefix=self.specification.rootUrl,
-        )
-
-    def error_struct(self) -> t.struct:
+    def error_struct(self) -> t.typedef:
         return t.struct(
             {"code": t.integer(), "message": t.string(), "status": t.string()}
         ).named("ErrorResponse")
@@ -105,8 +105,8 @@ class GoogleDiscoveryImporter(Importer):
         ret = t.struct(fields)
         if "id" in cursor:
             ref = f"{cursor.id}{suffix}"
-            self.renames[ref] = ref
-            self.generated_obj_fields[ref] = fields
+            # self.renames[ref] = ref
+            self.obj_fields_cache[ref] = fields
 
         return ret
 
@@ -153,39 +153,56 @@ class GoogleDiscoveryImporter(Importer):
         raise Exception(f"Unexpect type {cursor}")
 
     def prepare_expose(self, cursor, hierarchy="", url_prefix=""):
-        if "methods" not in cursor:
-            return
-        for methodName, method in cursor.methods.items():
-            inp_fields: Dict[str, t.typedef] = {}
-            # query params
-            for parameterName, parameter in method.parameters.items():
-                if parameterName != "readMask":
-                    inp_fields[parameterName] = self.typify(parameter, suffix="In")
+        if "methods" in cursor:
+            for methodName, method in cursor.methods.items():
+                inp_fields: Dict[str, t.typedef] = {}
+                # query params
+                for parameterName, parameter in method.parameters.items():
+                    if parameterName != "readMask":
+                        inp_fields[parameterName] = self.typify(parameter, suffix="In")
 
-            # flatten first depth fields
-            if "$ref" in method.request:
-                # resolve first depth
-                ref = f"{method.request.get('$ref')}In"
-                for k, v in self.generated_obj_fields.get(ref):
-                    inp_fields[k] = v
-            inp_fields["auth"] = t.string()
+                # flatten first depth fields
+                if "$ref" in method.request:
+                    # resolve first depth
+                    ref = f"{method.request.get('$ref')}In"
+                    assert self.obj_fields_cache.get(ref) is not None
+                    for k, v in self.obj_fields_cache.get(ref).items():
+                        inp_fields[k] = v
+                # Bearer token
+                inp_fields["auth"] = t.string()
 
-            # In/Out
-            inp = t.struct(inp_fields)
-            out = self.typify(method.response, suffix="Out")
+                # In/Out
+                inp = t.struct(inp_fields)
+                out = self.typify(method.response, suffix="Out")
 
-            # kwargs
-            fparams = {
-                "auth_token_field": "auth",  # Bearer token
-                "content_type": "application/json",
-            }
-            kwargs = ", ".join([f'"{k}": {v}' for k, v in fparams.items()])
+                # kwargs
+                fparams = {
+                    "auth_token_field": repr("auth"),  # Bearer token
+                    "content_type": repr("application/json"),
+                }
+                kwargs = ", ".join([f"{k}={v}" for k, v in fparams.items()])
 
-            all_finputs = ", ".join(
-                [repr(reformat_params(method.path)), inp, out, kwargs]
-            )
+                typify = Typify(self, "t")
+                all_finputs = ", ".join(
+                    [
+                        repr(reformat_params(method.path)),
+                        typify(inp),
+                        typify(out),
+                        kwargs,
+                    ]
+                )
 
-            func_key = f"{hierarchy}{upper_first(methodName)}"
-            func_def = f'{self.name}.{method.httpMethod.lower}({all_finputs}).named("{method.id}")'
-
-            self.exposed[func_key] = t.func(inp, out, Typify(lambda i, o: func_def))
+                func_key = f"{hierarchy}{upper_first(methodName)}"
+                func_def = f"{self.name}.{method.httpMethod.lower()}({all_finputs})"
+                self.exposed[func_key] = t.func(
+                    inp, out, TypifyMat(lambda i, o: func_def)
+                )
+        if "resources" in cursor:
+            for resourceName, resource in cursor.resources.items():
+                self.prepare_expose(
+                    resource,
+                    resourceName
+                    if hierarchy == ""
+                    else f"{hierarchy}{upper_first(resourceName)}",
+                    url_prefix=url_prefix,
+                )
