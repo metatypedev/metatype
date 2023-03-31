@@ -10,7 +10,7 @@ from typegraph.runtimes.graphql import GraphQLRuntime
 sys.path.append(str(Path(__file__).parent))
 # skip:end
 # highlight-next-line
-import google  # noqa: E402
+from google import import_googleapi  # noqa: E402
 
 # skip:next-line
 # isort: on
@@ -32,11 +32,13 @@ with TypeGraph(
         }
     ).named("message")
 
+    googleapi = import_googleapi()
+
     g.expose(
         create_message=db.insert_one(message),
         list_messages=db.find_many(message),
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         user=gql.query(t.struct({"id": t.integer()}), user),
-        projectsMessagesSend=google.projects_messages_send,
+        **googleapi.functions,
         default_policy=[public],
     )
