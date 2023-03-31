@@ -1,15 +1,14 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import inspect
+from typegraph import t
+from typing import Dict, List, Optional
+import json
 import re
 
-import black
 import httpx
-import redbaron
 from box import Box
-
-generated_obj_fields: dict[str, str] = {}
-func_defs: dict[str, str] = {}
+from typegraph.importers.base.importer import Importer
+from typegraph.importers.base.typify import Typify, TypifyMat
 
 
 def camel_to_snake(name):
@@ -26,199 +25,189 @@ def reformat_params(path: str):
     return re.sub("{\+([A-Za-z0-9_]+)}", r"{\1}", path)
 
 
-def error_struct() -> str:
-    return 't.struct({"code":t.integer(),"message":t.string(),"status":t.string()}).named("ErrorResponse")'
+class GoogleDiscoveryImporter(Importer):
+    obj_fields_cache: Dict[str, Dict[str, str]] = {}
 
-
-def typify_object(cursor, has_error=False, filter_read_only=False, suffix=""):
-    ret = "t.struct({"
-    fields = []
-    for f, v in cursor.get("properties", {}).items():
-        if filter_read_only or "readOnly" not in v or not v.readOnly:
-            fields.append(f'"{f}": {typify(v, False, filter_read_only, suffix)}')
-    if has_error:
-        fields.append('"error": t.optional(g("ErrorResponse"))')
-    ret += ",".join(fields)
-    ret += "})"
-    if "id" in cursor:
-        ref = f"{cursor.id}{suffix}"
-        ret += f'.named("{ref}")'
-        generated_obj_fields[ref] = ",".join(fields)
-    return ret
-
-
-def typify(cursor, has_error=False, filter_read_only=False, suffix="", allow_opt=True):
-    if (
-        allow_opt
-        and "description" in cursor
-        and not cursor.description.startswith("Required")
+    def __init__(
+        self,
+        name: str,
+        *,
+        url: Optional[str] = None,
+        file: Optional[str] = None,
+        renames: Dict[str, str] = {},
+        keep_names: List[str] = [],
     ):
-        return f"t.optional({typify(cursor, False, filter_read_only, suffix, False)})"
+        super().__init__(name, renames=renames, keep_names=keep_names)
+        self.imports = {
+            ("typegraph", "t"),
+            ("typegraph", "TypeGraph"),
+            ("typegraph", "effects"),
+            ("typegraph.runtimes.http", "HTTPRuntime"),
+        }
 
-    if "$ref" in cursor:
-        return f'g("{cursor["$ref"]}{suffix}")'
+        if file is None:
+            self.specification = Box(httpx.get(url).json())
+        else:
+            with open(file) as f:
+                self.specification = Box(json.loads(f.read()))
 
-    if cursor.type == "string":
-        return "t.string()"
+        self.headers.append(f"{name} = HTTPRuntime({repr(self.specification.rootUrl)})")
 
-    if cursor.type == "boolean":
-        return "t.boolean()"
+    def generate(self):
+        assert self.specification.discoveryVersion == "v1"
+        assert self.specification.protocol == "rest"
 
-    if cursor.type == "integer":
-        # cursor.format = 'int32'
-        return "t.integer()"
+        self.specification.revision
+        self.specification.version
 
-    if cursor.type == "number":
-        # cursor.format = 'double'
-        return "t.float()"
+        self.specification.canonicalName
+        self.specification.description
+        self.specification.documentationLink
+        with self:
+            # self.renames["ErrorResponse"] = "error_response"
+            self.types["ErrorResponse"] = self.error_struct()
+            for schema in self.specification.schemas.values():
+                assert schema.type == "object"
+                # self.renames[f"{schema.id}In"] = f"{camel_to_snake(schema.id)}_in"
+                # self.renames[f"{schema.id}Out"] = f"{camel_to_snake(schema.id)}_out"
+                self.types[f"{schema.id}In"] = self.gen_type(
+                    schema,
+                    has_error=False,
+                    filter_read_only=False,
+                    suffix="In",
+                    allow_opt=False,
+                )
+                self.types[f"{schema.id}Out"] = self.gen_type(
+                    schema,
+                    has_error=True,
+                    filter_read_only=True,
+                    suffix="Out",
+                    allow_opt=False,
+                )
 
-    if cursor.type == "any":
-        return "t.any()"
-
-    if cursor.type == "array":
-        return f't.array({typify(cursor["items"], has_error, filter_read_only, suffix, False)})'
-
-    if cursor.type == "object":
-        return typify_object(cursor, has_error, filter_read_only, suffix)
-
-    raise Exception(f"Unexpect type {cursor}")
-
-
-def get_effect(method):
-    effects = {
-        "GET": "effects.none()",
-        "POST": "effects.create()",
-        "PUT": "effects.upsert()",
-        "DELETE": "effects.delete()",
-        "PATCH": "effects.update()",
-    }
-    effect = effects.get(method)
-    if effect is not None:
-        return effect
-    raise Exception(f"Unsupported HTTP method '{method}'")
-
-
-def flatten_calls(cursor, hierarchy="", url_prefix=""):
-    ret = ""
-
-    if "methods" in cursor:
-        for methodName, method in cursor.methods.items():
-            inp_fields = ""
-            # query params
-            for parameterName, parameter in method.parameters.items():
-                if parameterName != "readMask":
-                    inp_fields += (
-                        f'"{parameterName}": {typify(parameter, suffix="In")},'
-                    )
-            # body input
-            # flatten first depth fields and join with query params
-            if "$ref" in method.request:
-                # resolve first depth
-                ref = f"{method.request.get('$ref')}In"
-                inp_fields += generated_obj_fields.get(ref) + ","
-
-            # Bearer token
-            inp_fields += '"auth": t.string(),'
-            afield = 'auth_token_field="auth"'
-
-            # In/Out
-            inp = f"t.struct({{{inp_fields}}})"
-            out = typify(method.response, suffix="Out")
-
-            url_path = reformat_params(method.path)
-            func_key = f"{hierarchy}{upper_first(methodName)}"
-            ctype = 'content_type="application/json"'
-            func_var = camel_to_snake(func_key)
-            func_def = f'remote.{method.httpMethod.lower()}("{url_path}", {inp}, {out}, {afield}, {ctype}).named("{method.id}")'
-            func_defs[func_var] = func_def
-            # for expose
-            ret += f"{func_key}={func_var}\n"
-
-    if "resources" in cursor:
-        for resourceName, resource in cursor.resources.items():
-            ret += flatten_calls(
-                resource,
-                resourceName
-                if hierarchy == ""
-                else f"{hierarchy}{upper_first(resourceName)}",
-                url_prefix=url_prefix,
+            self.prepare_expose(
+                self.specification,
+                url_prefix=self.specification.rootUrl,
             )
 
-    return ret
-
-
-def codegen(discovery):
-    assert discovery.discoveryVersion == "v1"
-    assert discovery.protocol == "rest"
-
-    discovery.revision
-    discovery.version
-
-    discovery.canonicalName
-    discovery.description
-    discovery.documentationLink
-
-    lines = []
-
-    lines.append(f"error_response = {error_struct()}")
-
-    for schema in discovery.schemas.values():
-        assert schema.type == "object"
-        lines.append(
-            f'{camel_to_snake(schema.id)}_in = {typify(schema, has_error=False, filter_read_only=False, suffix="In", allow_opt=False)}'
-        )
-        lines.append(
-            f'{camel_to_snake(schema.id)}_out = {typify(schema, has_error=True, filter_read_only=True, suffix="Out", allow_opt=False)}'
+    def error_struct(self) -> t.typedef:
+        return t.struct(
+            {"code": t.integer(), "message": t.string(), "status": t.string()}
         )
 
-        schema.description
+    def gen_object(self, cursor, has_error=False, filter_read_only=False, suffix=""):
+        fields: Dict[str, t.typedef] = {}
 
-    lines.append(f'remote = HTTPRuntime("{discovery.rootUrl}")')
-    expose_block = f"g.expose({flatten_calls(discovery, url_prefix=discovery.rootUrl)})"
+        for f, v in cursor.get("properties", {}).items():
+            if filter_read_only or "readOnly" not in v or not v.readOnly:
+                fields[f] = self.gen_type(v, False, filter_read_only, suffix)
 
-    for func_var, func_def in func_defs.items():
-        lines.append(f"{func_var}={func_def}")
+        if has_error:
+            fields["error"] = t.optional(t.proxy("ErrorResponse"))
 
-    lines.append(expose_block)
-    return "\n".join(lines)
+        ret = t.struct(fields)
+        if "id" in cursor:
+            ref = f"{cursor.id}{suffix}"
+            # self.renames[ref] = ref
+            self.obj_fields_cache[ref] = fields
 
+        return ret
 
-def import_googleapis(uri: str, gen: bool) -> None:
-    if not gen:
-        return
-
-    file = inspect.stack()[1].filename
-
-    with open(file, "r") as f:
-        code = redbaron.RedBaron(f.read())
-
-    imports = [
-        ["typegraph", "t"],
-        ["typegraph", "TypeGraph"],
-        ["typegraph", "effects"],
-        ["typegraph.runtimes.http", "HTTPRuntime"],
-    ]
-
-    importer = code.find(
-        "atomtrailers", value=lambda x: x.find("name", value="import_googleapis")
-    ).find("name", value="True")
-    if importer:
-        importer.value = "False"
-
-    for frm, imp in imports:
-        if not code.find(
-            "from_import",
-            value=lambda x: x.dumps() == frm,
-            targets=lambda x: x.dumps() == imp,
+    def gen_type(
+        self, cursor, has_error=False, filter_read_only=False, suffix="", allow_opt=True
+    ):
+        if (
+            allow_opt
+            and "description" in cursor
+            and not cursor.description.startswith("Required")
         ):
-            code.insert(0, f"from {frm} import {imp}\n")
+            return self.gen_type(
+                cursor=cursor,
+                has_error=False,
+                filter_read_only=filter_read_only,
+                suffix=suffix,
+                allow_opt=False,
+            ).optional()
 
-    discovery = Box(httpx.get(uri).json())
-    wth = code.find("with")
-    wth.contexts = f'TypeGraph(name="{discovery.name}") as g'
-    wth.value = codegen(discovery)
+        if "$ref" in cursor:
+            return t.proxy(f'{cursor["$ref"]}{suffix}')
 
-    new_code = black.format_str(code.dumps(), mode=black.FileMode())
+        simple_type = {
+            "string": t.string(),
+            "boolean": t.boolean(),
+            "integer": t.integer(),
+            "number": t.float(),
+            "any": t.any(),
+        }
 
-    with open(file, "w") as f:
-        f.write(new_code)
+        tpe = simple_type.get(cursor.type)
+        if tpe is not None:
+            return tpe
+
+        if cursor.type == "array":
+            inner_type = self.gen_type(
+                cursor["items"], has_error, filter_read_only, suffix, False
+            )
+            return t.array(inner_type)
+
+        if cursor.type == "object":
+            return self.gen_object(cursor, has_error, filter_read_only, suffix)
+
+        raise Exception(f"Unexpect type {cursor}")
+
+    def prepare_expose(self, cursor, hierarchy="", url_prefix=""):
+        if "methods" in cursor:
+            for methodName, method in cursor.methods.items():
+                inp_fields: Dict[str, t.typedef] = {}
+                # query params
+                for parameterName, parameter in method.parameters.items():
+                    if parameterName != "readMask":
+                        inp_fields[parameterName] = self.gen_type(
+                            parameter, suffix="In"
+                        )
+
+                # flatten first depth fields
+                if "$ref" in method.request:
+                    # resolve first depth
+                    ref = f"{method.request.get('$ref')}In"
+                    assert self.obj_fields_cache.get(ref) is not None
+                    for k, v in self.obj_fields_cache.get(ref).items():
+                        inp_fields[k] = v
+                # Bearer token
+                inp_fields["auth"] = t.string()
+
+                # In/Out
+                inp = t.struct(inp_fields)
+                out = self.gen_type(method.response, suffix="Out")
+
+                # kwargs
+                fparams = {
+                    "auth_token_field": repr("auth"),  # Bearer token
+                    "content_type": repr("application/json"),
+                }
+                kwargs = ", ".join([f"{k}={v}" for k, v in fparams.items()])
+
+                typify = Typify(self, "t")
+                all_finputs = ", ".join(
+                    [
+                        repr(reformat_params(method.path)),
+                        typify(inp),
+                        typify(out),
+                        kwargs,
+                    ]
+                )
+
+                func_key = f"{hierarchy}{upper_first(methodName)}"
+                func_def = f"{self.name}.{method.httpMethod.lower()}({all_finputs})"
+                self.exposed[func_key] = t.func(
+                    inp, out, TypifyMat(lambda i, o: func_def)
+                )
+        if "resources" in cursor:
+            for resourceName, resource in cursor.resources.items():
+                self.prepare_expose(
+                    resource,
+                    resourceName
+                    if hierarchy == ""
+                    else f"{hierarchy}{upper_first(resourceName)}",
+                    url_prefix=url_prefix,
+                )
