@@ -83,13 +83,13 @@ struct Retry {
     interval: Duration,
 }
 
-pub struct PushOptions {
+pub struct PushLoopBuilder {
     exit: bool, // exit when the queue is empty
     retry: Option<Retry>,
     node: Node,
 }
 
-impl PushOptions {
+impl PushLoopBuilder {
     pub fn on(node: Node) -> Self {
         Self {
             exit: false,
@@ -114,7 +114,7 @@ impl PushOptions {
     pub async fn start_with(
         self,
         push_entries: impl Iterator<Item = PushQueueEntry>,
-    ) -> Result<Push> {
+    ) -> Result<PushLoop> {
         let (sender, receiver) = unbounded_channel();
 
         for entry in push_entries {
@@ -123,9 +123,8 @@ impl PushOptions {
 
         let options = self;
         let sender_1 = sender.clone();
-        println!("...");
         let join_handle = Handle::current().spawn(async move {
-            PushLoop {
+            PushLoopInternal {
                 receiver,
                 sender: sender_1,
                 pending_retries: 0,
@@ -135,21 +134,21 @@ impl PushOptions {
             .await
         });
 
-        Ok(Push {
+        Ok(PushLoop {
             join_handle,
             sender,
         })
     }
 }
 
-struct PushLoop {
+struct PushLoopInternal {
     receiver: UnboundedReceiver<PushQueueEntry>,
     sender: UnboundedSender<PushQueueEntry>,
     pending_retries: u32, // number of entry that will be pushed for retry
-    options: PushOptions,
+    options: PushLoopBuilder,
 }
 
-impl PushLoop {
+impl PushLoopInternal {
     async fn start(&mut self) -> Result<()> {
         loop {
             let Some(entry) = self.next().await? else {
@@ -221,12 +220,12 @@ impl PushLoop {
     }
 }
 
-pub struct Push {
+pub struct PushLoop {
     join_handle: JoinHandle<Result<()>>,
     sender: UnboundedSender<PushQueueEntry>,
 }
 
-impl Push {
+impl PushLoop {
     pub async fn join(self) -> Result<()> {
         self.join_handle.await?
     }

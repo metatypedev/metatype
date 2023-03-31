@@ -3,7 +3,7 @@
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
 use crate::typegraph::postprocess;
-use crate::typegraph::push::{PushOptions, PushQueueEntry};
+use crate::typegraph::push::{PushLoopBuilder, PushQueueEntry};
 use crate::typegraph::TypegraphLoader;
 use crate::utils::ensure_venv;
 use anyhow::{bail, Context, Result};
@@ -12,7 +12,6 @@ use clap::Parser;
 use log::error;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use tokio::runtime::Handle;
 
 #[derive(Parser, Debug)]
 pub struct Deploy {
@@ -75,7 +74,7 @@ impl Action for Deploy {
 
         let node = node_config.clone().try_into()?;
 
-        PushOptions::on(node)
+        let push_loop = PushLoopBuilder::on(node)
             .exit(true)
             .start_with(
                 loaded
@@ -94,9 +93,8 @@ impl Action for Deploy {
                     })
                     .flatten(),
             )
-            .await?
-            .join()
             .await?;
+        push_loop.join().await?;
 
         Ok(())
     }
