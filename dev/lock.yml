@@ -33,7 +33,7 @@ dev:
   lock:
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.4.1
-    PROTOC_VERSION: 22.x
+    PROTOC_VERSION: 3.x
     RUST_VERSION: 1.68.0
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
     DENO_VERSION: 1.32.1
