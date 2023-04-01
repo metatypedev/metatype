@@ -2,16 +2,13 @@
 
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
-use crate::typegraph::postprocess;
+use crate::typegraph::loader::{Loader, LoaderError, LoaderOptions, LoaderOutput};
+use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
 use crate::typegraph::push::{PushLoopBuilder, PushQueueEntry};
-use crate::typegraph::TypegraphLoader;
 use crate::utils::ensure_venv;
-use anyhow::{bail, Context, Result};
+use anyhow::{bail, Result};
 use async_trait::async_trait;
 use clap::Parser;
-use log::error;
-use std::collections::HashMap;
-use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 pub struct Deploy {
@@ -41,32 +38,55 @@ impl Action for Deploy {
         ensure_venv(&dir)?;
         let config = Config::load_or_find(config_path, &dir)?;
 
-        let loader = TypegraphLoader::with_config(&config);
-        let loader = if self.no_migrations {
-            loader
+        let mut loader_options = LoaderOptions::with_config(&config);
+        if !self.no_migrations {
+            loader_options
+                .with_postprocessor(EmbedPrismaMigrations::default().allow_dirty(self.allow_dirty));
+        }
+        if let Some(file) = self.file.clone() {
+            loader_options.file(&file);
         } else {
-            loader.with_postprocessor(
-                postprocess::prisma_rt::EmbedPrismaMigrations::default()
-                    .allow_dirty(self.allow_dirty),
-            )
-        };
+            loader_options.dir(&dir);
+        }
+        let mut loader: Loader = loader_options.into();
+        let mut push_queue_init = vec![];
 
-        let loaded = if let Some(file) = self.file.clone() {
-            let mut ret = HashMap::default();
-            let file: PathBuf = file.into();
-            let res = loader
-                .load_file(&file)
-                .with_context(|| format!("Error while loading typegraphs from {file:?}"))?;
-            if let Some(tgs) = res {
-                ret.insert(file, Ok(tgs));
+        while let Some(output) = loader.next().await {
+            match output {
+                LoaderOutput::Typegraph { path, typegraph } => {
+                    push_queue_init.push(PushQueueEntry::new(path, typegraph))
+                }
+                LoaderOutput::Rewritten(path) => {
+                    println!("Typegraph definition module at {path:?} has been rewritten by an importer.");
+                }
+                LoaderOutput::Error(LoaderError::PostProcessingError {
+                    path,
+                    typegraph_name,
+                    error,
+                }) => {
+                    bail!("Error while post processing typegraph {typegraph_name:?} from {path:?}: {error:?}");
+                    // bail!(error.with_context(|| format!(
+                    //     "Postprocessing typegraph {typegraph_name:?} from {path:?}"
+                    // )));
+                }
+                LoaderOutput::Error(LoaderError::UnknownFileType(path)) => {
+                    // TODO command option
+                    println!("Unknown file type: {path:?}");
+                }
+                LoaderOutput::Error(LoaderError::SerdeJson { path, error }) => {
+                    bail!("Error while parsing raw string format of the typegraph from {path:?}: {error:?}");
+                    // bail!(anyhow!(error).with_context(|| format!(
+                    //     "Parsing raw string format of the typegraph from {path:?}"
+                    // )));
+                }
+                LoaderOutput::Error(LoaderError::Unknown { path, error }) => {
+                    bail!("Error while loading typegraphs from {path:?}");
+                    // bail!(error.with_context(|| format!("Loading typegraphs from {path:?}")));
+                }
             }
-            // TODO: else what??
-            ret
-        } else {
-            loader.load_folder(&dir)?
-        };
+        }
 
-        if loaded.is_empty() {
+        if push_queue_init.is_empty() {
             bail!("No typegraph found!");
         }
 
@@ -76,23 +96,7 @@ impl Action for Deploy {
 
         let push_loop = PushLoopBuilder::on(node)
             .exit(true)
-            .start_with(
-                loaded
-                    .into_iter()
-                    .filter_map(|(path, typegraphs)| match typegraphs {
-                        Err(err) => {
-                            #[cfg(debug_assertions)]
-                            error!("{err:?}");
-                            error!("Could not load typegraphs from {:?}", path);
-                            None
-                        }
-                        Ok(tgs) => Some(
-                            tgs.into_iter()
-                                .map(move |tg| PushQueueEntry::new(path.clone(), tg)),
-                        ),
-                    })
-                    .flatten(),
-            )
+            .start_with(push_queue_init.into_iter())
             .await?;
         push_loop.join().await?;
 
