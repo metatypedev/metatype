@@ -6,12 +6,12 @@ on:
 
 env:
   PYTHON_VERSION: "3.8"
-  PROTOC_VERSION: "3.x"
-  POETRY_VERSION: "1.3.1"
+  PROTOC_VERSION: "22.x"
+  POETRY_VERSION: "1.4.1"
   DENO_BINDGEN_URL: https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts
   DENO_VERSION: "1.32.1"
-  PNPM_VERSION: "7.9.3"
-  NODE_VERSION: "18.12.1"
+  PNPM_VERSION: "8.1.0"
+  NODE_VERSION: "19.8.1"
 
 jobs:
   changes:
