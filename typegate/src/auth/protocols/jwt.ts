@@ -3,7 +3,9 @@
 import { Auth, AuthDS } from "../auth.ts";
 import * as jwt from "jwt";
 import { envOrFail } from "../../utils.ts";
+import { getLogger } from "../../log.ts";
 
+const logger = getLogger(import.meta.url);
 const encoder = new TextEncoder();
 
 export class JWTAuth implements Auth {
@@ -47,7 +49,8 @@ export class JWTAuth implements Auth {
     try {
       const claims = await jwt.verify(token, this.signKey);
       return [claims, new Headers()];
-    } catch {
+    } catch (e) {
+      logger.warning(`jwt auth failed: ${e}`);
       return [{}, new Headers()];
     }
   }
