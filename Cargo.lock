@@ -657,7 +657,7 @@ name = "builtin-psl-connectors"
 version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines#ab90bafc40f69d7f47fcce877f448abf36ab73a6"
 dependencies = [
- "connection-string",
+ "connection-string 0.1.14",
  "either",
  "enumflags2",
  "indoc 1.0.9",
@@ -919,6 +919,12 @@ dependencies = [
  "js-sys",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "connection-string"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "510ca239cf13b7f8d16a2b48f263de7b4f8c566f0af58d901031473c76afb1e3"
 
 [[package]]
 name = "console"
@@ -3501,7 +3507,7 @@ dependencies = [
  "anyhow",
  "base64 0.21.0",
  "common",
- "connection-string",
+ "connection-string 0.2.0",
  "convert_case 0.6.0",
  "dashmap",
  "datamodel-renderer",
@@ -4572,7 +4578,7 @@ dependencies = [
  "byteorder",
  "bytes",
  "chrono",
- "connection-string",
+ "connection-string 0.1.14",
  "either",
  "futures",
  "hex",
@@ -4645,7 +4651,7 @@ dependencies = [
  "base64 0.12.3",
  "bigdecimal",
  "chrono",
- "connection-string",
+ "connection-string 0.1.14",
  "crossbeam-channel",
  "crossbeam-queue",
  "cuid",
@@ -4901,7 +4907,7 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines#ab90bafc40f69d7f47fcce877f448abf36ab73a6"
 dependencies = [
  "bigdecimal",
- "connection-string",
+ "connection-string 0.1.14",
  "dmmf",
  "futures",
  "graphql-parser",
@@ -5862,7 +5868,7 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines#ab90bafc40f69d7f47fcce877f448abf36ab73a6"
 dependencies = [
  "chrono",
- "connection-string",
+ "connection-string 0.1.14",
  "either",
  "enumflags2",
  "indoc 1.0.9",
@@ -6512,7 +6518,7 @@ dependencies = [
  "byteorder",
  "bytes",
  "chrono",
- "connection-string",
+ "connection-string 0.1.14",
  "encoding",
  "enumflags2",
  "futures",
