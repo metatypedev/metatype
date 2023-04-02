@@ -207,7 +207,7 @@ checksum = "0e97ce7de6cf12de5d7226c73f5ba9811622f4db3a5b91b55c53e987e5f91cba"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.11",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -246,7 +246,7 @@ checksum = "b9ccdd8f2a161be9bd5c023df56f1b2a0bd1d83872ae53b71a84a12c9bf6e842"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.11",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -657,7 +657,7 @@ name = "builtin-psl-connectors"
 version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines#ab90bafc40f69d7f47fcce877f448abf36ab73a6"
 dependencies = [
- "connection-string",
+ "connection-string 0.1.14",
  "either",
  "enumflags2",
  "indoc 1.0.9",
@@ -795,9 +795,9 @@ dependencies = [
 
 [[package]]
 name = "clap-verbosity-flag"
-version = "2.0.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23e2b6c3dcdb73299f48ae05b294da14e2f560b3ed2c09e742269eb1b22af231"
+checksum = "1eef05769009513df2eb1c3b4613e7fad873a14c600ff025b08f250f59fee7de"
 dependencies = [
  "clap",
  "log",
@@ -834,7 +834,7 @@ dependencies = [
  "heck 0.4.1",
  "proc-macro2",
  "quote",
- "syn 2.0.11",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -919,6 +919,12 @@ dependencies = [
  "js-sys",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "connection-string"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "510ca239cf13b7f8d16a2b48f263de7b4f8c566f0af58d901031473c76afb1e3"
 
 [[package]]
 name = "console"
@@ -2960,7 +2966,7 @@ version = "0.1.2"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.11",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -3501,7 +3507,7 @@ dependencies = [
  "anyhow",
  "base64 0.21.0",
  "common",
- "connection-string",
+ "connection-string 0.2.0",
  "convert_case 0.6.0",
  "dashmap",
  "datamodel-renderer",
@@ -4375,9 +4381,9 @@ checksum = "dc375e1527247fe1a97d8b7156678dfe7c1af2fc075c9a4db3690ecd2a148068"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.52"
+version = "1.0.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d0e1ae9e836cc3beddd63db0df682593d7e2d3d891ae8c9083d2113e1744224"
+checksum = "1d0dd4be24fcdcfeaa12a432d588dc59bbad6cad3510c67e74a2b6b2fc950564"
 dependencies = [
  "unicode-ident",
 ]
@@ -4572,7 +4578,7 @@ dependencies = [
  "byteorder",
  "bytes",
  "chrono",
- "connection-string",
+ "connection-string 0.1.14",
  "either",
  "futures",
  "hex",
@@ -4645,7 +4651,7 @@ dependencies = [
  "base64 0.12.3",
  "bigdecimal",
  "chrono",
- "connection-string",
+ "connection-string 0.1.14",
  "crossbeam-channel",
  "crossbeam-queue",
  "cuid",
@@ -4901,7 +4907,7 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines#ab90bafc40f69d7f47fcce877f448abf36ab73a6"
 dependencies = [
  "bigdecimal",
- "connection-string",
+ "connection-string 0.1.14",
  "dmmf",
  "futures",
  "graphql-parser",
@@ -5538,7 +5544,7 @@ checksum = "4c614d17805b093df4b147b51339e7e44bf05ef59fba1e45d83500bcfb4d8585"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.11",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -5862,7 +5868,7 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines#ab90bafc40f69d7f47fcce877f448abf36ab73a6"
 dependencies = [
  "chrono",
- "connection-string",
+ "connection-string 0.1.14",
  "either",
  "enumflags2",
  "indoc 1.0.9",
@@ -6336,9 +6342,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.11"
+version = "2.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21e3787bb71465627110e7d87ed4faaa36c1f61042ee67badb9e2ef173accc40"
+checksum = "4c9da457c5285ac1f936ebd076af6dac17a61cfe7826f2076b4d015cf47bc8ec"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6402,7 +6408,7 @@ dependencies = [
 [[package]]
 name = "temporal-client"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#edb8f4eb9e4ffbc0ec052659e37231460c4429e1"
+source = "git+https://github.com/temporalio/sdk-core#2e3ab26fd82bdda530433af54aa6a54fce0e5caf"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -6429,7 +6435,7 @@ dependencies = [
 [[package]]
 name = "temporal-sdk-core-protos"
 version = "0.1.0"
-source = "git+https://github.com/temporalio/sdk-core#edb8f4eb9e4ffbc0ec052659e37231460c4429e1"
+source = "git+https://github.com/temporalio/sdk-core#2e3ab26fd82bdda530433af54aa6a54fce0e5caf"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -6486,7 +6492,7 @@ checksum = "f9456a42c5b0d803c8cd86e73dd7cc9edd429499f37a3550d286d5e86720569f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.11",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -6512,7 +6518,7 @@ dependencies = [
  "byteorder",
  "bytes",
  "chrono",
- "connection-string",
+ "connection-string 0.1.14",
  "encoding",
  "enumflags2",
  "futures",
@@ -6632,7 +6638,7 @@ checksum = "61a573bdc87985e9d6ddeed1b3d864e8a302c847e40d647746df2f1de209d1ce"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.11",
+ "syn 2.0.13",
 ]
 
 [[package]]
