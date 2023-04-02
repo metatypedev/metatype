@@ -75,13 +75,9 @@ impl Action for Deploy {
                 }
                 LoaderOutput::Error(LoaderError::SerdeJson { path, error }) => {
                     bail!("Error while parsing raw string format of the typegraph from {path:?}: {error:?}");
-                    // bail!(anyhow!(error).with_context(|| format!(
-                    //     "Parsing raw string format of the typegraph from {path:?}"
-                    // )));
                 }
                 LoaderOutput::Error(LoaderError::Unknown { path, error }) => {
                     bail!("Error while loading typegraphs from {path:?}");
-                    // bail!(error.with_context(|| format!("Loading typegraphs from {path:?}")));
                 }
             }
         }
@@ -96,8 +92,7 @@ impl Action for Deploy {
 
         let push_loop = PushLoopBuilder::on(node)
             .exit(true)
-            .start_with(push_queue_init.into_iter())
-            .await?;
+            .start_with(push_queue_init.into_iter())?;
         push_loop.join().await?;
 
         Ok(())

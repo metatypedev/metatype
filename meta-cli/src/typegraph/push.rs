@@ -111,7 +111,7 @@ impl PushLoopBuilder {
         self
     }
 
-    pub async fn start_with(
+    pub fn start_with(
         self,
         push_entries: impl Iterator<Item = PushQueueEntry>,
     ) -> Result<PushLoop> {
@@ -138,6 +138,10 @@ impl PushLoopBuilder {
             join_handle,
             sender,
         })
+    }
+
+    pub fn start(self) -> Result<PushLoop> {
+        self.start_with(std::iter::empty())
     }
 }
 
@@ -228,5 +232,9 @@ pub struct PushLoop {
 impl PushLoop {
     pub async fn join(self) -> Result<()> {
         self.join_handle.await?
+    }
+
+    pub fn push(&mut self, entry: PushQueueEntry) -> Result<()> {
+        Ok(self.sender.send(entry)?)
     }
 }
