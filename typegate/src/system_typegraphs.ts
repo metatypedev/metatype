@@ -41,7 +41,7 @@ export class SystemTypegraph {
     const reload = async (paths: string[]) => {
       for await (const path of paths) {
         logger.info(`Reloading system graph ${basename(path)}`);
-        await register.set(await Deno.readTextFile(path));
+        await register.set(await Deno.readTextFile(path), {});
       }
     };
 
