@@ -14,13 +14,8 @@ test("Basic introspection", async (t) => {
           types {
             name
             kind
-            possibleTypes {
+            fields {
               name
-              kind
-              possibleTypes {
-                name
-                kind
-              }
             }
           }
         }

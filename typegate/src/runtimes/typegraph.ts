@@ -312,43 +312,35 @@ export class TypeGraphRuntime extends Runtime {
       }
     }
 
-    // FIX in progress
-    // Current graphql spec does to not support UNION as Input field
-    // https://spec.graphql.org/draft/#sec-Input-Values
-    // Ideas: https://github.com/graphql/graphql-spec/pull/825
-    if (isUnion(type)) {
+    if (isEither(type) || isUnion(type)) {
+      const variants = isUnion(type) ? type.anyOf : type.oneOf;
+      const variantsAsObject = {
+        title: type.title,
+        type: "object",
+        properties: {},
+      } as ObjectNode;
+      for (let i = 0; i < variants.length; i++) {
+        const id = `${type.type}_${i}`;
+        variantsAsObject.properties[id] = variants[i];
+      }
+      // quick fix
+      // return {
+      //   ...common,
+      //   kind: () => TypeKind.SCALAR,
+      //   name: () => type.title,
+      //   description: () => `${type.type} type`,
+      // };
       return {
         ...common,
-        kind: () => TypeKind.UNION,
-        name: () => type.title,
-        description: () => `${type.title} type`,
-        possibleTypes: () => {
-          const variantNodes = type.anyOf.map((typeIndex) =>
-            this.tg.types[typeIndex]
-          );
-
-          return variantNodes.map((variant) =>
-            this.formatType(variant, false, false)
+        kind: () => TypeKind.INPUT_OBJECT,
+        name: () => `${type.title}Inp`,
+        description: () => `${type.title} input type`,
+        inputFields: () => {
+          return Object.entries(variantsAsObject.properties).map(
+            this.formatField(true),
           );
         },
-      };
-    }
-
-    if (isEither(type)) {
-      return {
-        ...common,
-        kind: () => TypeKind.UNION,
-        name: () => type.title,
-        description: () => `${type.title} type`,
-        possibleTypes: () => {
-          const variantNodes = type.oneOf.map((typeIndex) =>
-            this.tg.types[typeIndex]
-          );
-
-          return variantNodes.map((variant) =>
-            this.formatType(variant, false, false)
-          );
-        },
+        interfaces: () => [],
       };
     }
 
