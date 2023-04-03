@@ -1,5 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+use std::path::PathBuf;
+
 use anyhow::{bail, Result};
 use indexmap::IndexMap;
 #[cfg(feature = "codegen")]
@@ -18,6 +20,8 @@ pub struct Typegraph {
     pub runtimes: Vec<TGRuntime>,
     pub policies: Vec<Policy>,
     pub meta: TypeMeta,
+    #[serde(skip)]
+    pub path: Option<PathBuf>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -287,7 +291,7 @@ pub struct FunctionMatData {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ModuleMatData {
     pub code: String,
 }

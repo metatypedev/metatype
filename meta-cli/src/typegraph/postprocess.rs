@@ -55,8 +55,15 @@ pub fn apply_all<'a>(
     Ok(())
 }
 
+pub use deno_rt::Codegen;
+pub use deno_rt::ReformatScripts;
+pub use prisma_rt::EmbedPrismaMigrations;
+
 pub mod deno_rt {
+    use std::path::Path;
+
     use crate::typegraph::utils::{get_materializers, get_runtimes};
+    use anyhow::{anyhow, Context};
 
     use super::*;
 
@@ -96,6 +103,27 @@ pub mod deno_rt {
             }
         }
         Ok(())
+    }
+
+    pub struct Codegen;
+    impl PostProcessor for Codegen {
+        fn postprocess(&self, tg: &mut Typegraph, _config: &Config) -> Result<()> {
+            crate::codegen::deno::codegen(tg, tg.path.as_ref().unwrap())?;
+            for mat in tg.materializers.iter_mut().filter(|m| m.name == "module") {
+                let mut mat_data: ModuleMatData = object_from_map(std::mem::take(&mut mat.data))?;
+                eprintln!("mata data: {mat_data:?}");
+                let path = mat_data
+                    .code
+                    .strip_prefix("file:")
+                    .ok_or_else(|| anyhow!("ModuleMatData::code is invalid"))
+                    .context("PostProcessor for Codegen")?;
+                let path = Path::new(path).to_owned();
+                let code = std::fs::read_to_string(path)?;
+                mat_data.code = transform_module(code)?;
+                mat.data = map_from_object(mat_data)?;
+            }
+            Ok(())
+        }
     }
 }
 

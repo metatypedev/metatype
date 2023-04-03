@@ -24,11 +24,12 @@ struct ModuleMatData {
     code: String,
 }
 
-pub fn codegen<P>(tg: Typegraph, base_dir: P) -> Result<()>
+// TODO implement as a processor
+pub fn codegen<P>(tg: &Typegraph, base_dir: P) -> Result<()>
 where
     P: AsRef<Path>,
 {
-    let cg = Codegen::new(&tg, base_dir);
+    let cg = Codegen::new(tg, base_dir);
     let codes = cg.codegen()?;
     for code in codes.into_iter() {
         let parent_folder = Path::new(&code.path).parent().unwrap();
@@ -99,6 +100,7 @@ impl<'a> Codegen<'a> {
                 if let Some(relpath) = code.strip_prefix("file:") {
                     let path = {
                         let mut path = base_dir.clone();
+                        // TODO is this necessary?? py-tg yields absolute path!!
                         path.push(relpath);
                         path
                     };

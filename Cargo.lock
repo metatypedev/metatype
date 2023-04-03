@@ -3103,7 +3103,7 @@ dependencies = [
  "lade-sdk",
  "lazy_static",
  "log",
- "notify",
+ "notify-debouncer-mini",
  "openssl",
  "pathdiff",
  "prisma-models",
@@ -3635,6 +3635,15 @@ dependencies = [
  "mio",
  "walkdir",
  "windows-sys 0.42.0",
+]
+
+[[package]]
+name = "notify-debouncer-mini"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e23e9fa24f094b143c1eb61f90ac6457de87be6987bc70746e0179f7dbc9007b"
+dependencies = [
+ "notify",
 ]
 
 [[package]]

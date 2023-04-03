@@ -16,6 +16,7 @@ use notify::{
     event::ModifyKind, recommended_watcher, Event, EventKind, RecommendedWatcher, RecursiveMode,
     Watcher,
 };
+use notify_debouncer_mini::{new_debouncer, notify, DebounceEventResult, Debouncer};
 use pathdiff::diff_paths;
 use tokio::{
     fs::DirEntry,
@@ -123,6 +124,16 @@ impl LoaderOptions {
     }
 }
 
+struct LoaderWatcher {
+    rx: UnboundedReceiver<Vec<PathBuf>>,
+    debouncer: Debouncer<RecommendedWatcher>,
+}
+
+impl LoaderWatcher {
+    async fn next(&mut self) -> Option<Vec<PathBuf>> {
+        self.rx.recv().await
+    }
+}
 #[derive(Clone)]
 struct LoaderInternal {
     sender: UnboundedSender<LoaderOutput>,
@@ -131,24 +142,12 @@ struct LoaderInternal {
 
 impl LoaderInternal {
     async fn start(&self) -> Result<()> {
-        let watch_rx = if self.options.watch {
-            let (tx, rx) = unbounded_channel();
-            let mut watcher = self.create_watcher(tx)?;
-            for input in self.options.inputs.iter() {
-                match input {
-                    LoaderInput::File(path) | LoaderInput::Directory(path) => {
-                        watcher
-                            .watch(path, RecursiveMode::Recursive)
-                            .with_context(|| format!("Watching {path:?}"))
-                            .unwrap();
-                    }
-                    LoaderInput::Glob(_) => bail!("watch is not supported for globs"),
-                }
-            }
-            Some(rx)
-        } else {
-            None
-        };
+        // start watching early to catch all the modifications
+        let watcher = self
+            .options
+            .watch
+            .then(|| self.create_watcher(&self.options.inputs))
+            .transpose()?;
 
         let mut count = 0;
         for input in self.options.inputs.iter() {
@@ -170,38 +169,34 @@ impl LoaderInternal {
             println!("No typegraph definition module found.");
         }
 
-        if let Some(mut rx) = watch_rx {
-            println!("Entering watch mode...");
-            let self_1 = self.clone();
-            tokio::spawn(async move {
-                while let Some(paths) = rx.recv().await {
-                    for path in paths {
-                        let metadata = path.metadata().unwrap();
+        if let Some(mut watcher) = watcher {
+            while let Some(paths) = watcher.next().await {
+                for path in paths {
+                    if let Ok(metadata) = path.metadata() {
                         if metadata.is_file() {
-                            self_1.load_file(path, None, true);
+                            self.load_file(path, None, true);
                         }
                     }
                 }
-            });
+            }
         }
 
         Ok(())
     }
 
-    fn create_watcher(&self, sender: UnboundedSender<Vec<PathBuf>>) -> Result<RecommendedWatcher> {
-        let mut watcher = recommended_watcher(move |res: Result<Event, notify::Error>| {
-            let event = res.unwrap();
-            match event.kind {
-                EventKind::Create(_)
-                | EventKind::Remove(_)
-                | EventKind::Modify(ModifyKind::Data(_))
-                | EventKind::Modify(ModifyKind::Name(_)) => {
-                    sender.send(event.paths).unwrap();
-                }
-                _ => {}
-            }
-        })?;
+    fn create_watcher(&self, inputs: &[LoaderInput]) -> Result<LoaderWatcher> {
+        let (tx, rx) = unbounded_channel();
+        let mut debouncer = new_debouncer(
+            Duration::from_secs(1),
+            None,
+            move |res: DebounceEventResult| {
+                let events = res.unwrap();
+                let paths = events.into_iter().map(|e| e.path).collect::<Vec<_>>();
+                tx.send(paths).unwrap();
+            },
+        )?;
 
+        let watcher = debouncer.watcher();
         watcher
             .configure(
                 notify::Config::default()
@@ -210,7 +205,20 @@ impl LoaderInternal {
             )
             .unwrap();
 
-        Ok(watcher)
+        for input in inputs {
+            match input {
+                LoaderInput::File(path) | LoaderInput::Directory(path) => {
+                    println!("Watching {path:?}");
+                    watcher
+                        .watch(path, RecursiveMode::Recursive)
+                        .with_context(|| format!("Watching {path:?}"))
+                        .unwrap();
+                }
+                LoaderInput::Glob(_) => bail!("watch is not supported for globs"),
+            }
+        }
+
+        Ok(LoaderWatcher { rx, debouncer })
     }
 
     fn load_file(&self, path: PathBuf, input_dir: Option<PathBuf>, watch: bool) {
@@ -277,6 +285,7 @@ impl LoaderInternal {
                 error: e,
             })?;
         for tg in tgs.iter_mut() {
+            tg.path = Some(path.to_owned());
             apply_all(options.postprocessors.iter(), tg, &options.config).map_err(|e| {
                 LoaderError::PostProcessingError {
                     path: path.to_owned(),

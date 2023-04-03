@@ -63,13 +63,13 @@ impl Action for Deno {
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
-                codegen::deno::codegen(tg, file)?;
+                codegen::deno::codegen(&tg, file)?;
             } else {
                 panic!("typegraph not found: {tg_name}")
             }
         } else {
             for tg in tgs {
-                codegen::deno::codegen(tg, file)?;
+                codegen::deno::codegen(&tg, file)?;
             }
         }
 

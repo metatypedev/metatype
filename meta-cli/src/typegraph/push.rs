@@ -32,13 +32,6 @@ pub enum MessageEntry {
     Error(String),
 }
 
-// #[derive(Deserialize, Debug)]
-// pub struct MessageEntry {
-//     #[serde(rename = "type")]
-//     pub type_: MessageType,
-//     pub text: String,
-// }
-
 #[derive(Deserialize, Debug)]
 pub struct PushResult {
     name: String,

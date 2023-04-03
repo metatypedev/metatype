@@ -3,45 +3,23 @@
 use super::Action;
 use super::CommonArgs;
 use super::GenArgs;
-use crate::codegen;
 use crate::config;
 use crate::typegraph::loader::Loader;
 use crate::typegraph::loader::LoaderError;
 use crate::typegraph::loader::LoaderOptions;
 use crate::typegraph::loader::LoaderOutput;
+use crate::typegraph::postprocess;
 use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
 use crate::typegraph::push::PushLoopBuilder;
 use crate::typegraph::push::PushQueueEntry;
-use crate::typegraph::push::PushResult;
-use crate::typegraph::{LoaderResult, TypegraphLoader};
-use crate::utils;
 
 use crate::utils::{ensure_venv, Node};
 use anyhow::{bail, Context, Error, Result};
-use async_recursion::async_recursion;
 use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
-use common::typegraph::Typegraph;
-use globset::Glob;
-use ignore::gitignore::Gitignore;
-use ignore::Match;
-use indoc::indoc;
-use notify::event::ModifyKind;
-use notify::{
-    recommended_watcher, Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher,
-};
-use reqwest::Url;
-use serde::Deserialize;
-use serde_json::{self, json};
-use std::collections::HashMap;
 use std::path::Path;
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::thread::sleep;
 use std::time::Duration;
-use tiny_http::{Header, Response, Server};
-use tokio::runtime::Handle;
 
 #[derive(Parser, Debug)]
 pub struct Dev {
@@ -79,7 +57,8 @@ impl Action for Dev {
             )
             .dir(&dir)
             .watch(true)
-            .codegen(true);
+            .skip_deno_modules(true)
+            .with_postprocessor(postprocess::Codegen);
 
         let mut loader: Loader = loader_options.into();
 
