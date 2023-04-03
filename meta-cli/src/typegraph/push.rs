@@ -5,7 +5,7 @@ use colored::Colorize;
 use indoc::indoc;
 use serde::Deserialize;
 use serde_json::json;
-use std::{path::PathBuf, time::Duration};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use common::typegraph::Typegraph;
 use tokio::{
@@ -25,17 +25,44 @@ pub enum MessageType {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct MessageEntry {
-    #[serde(rename = "type")]
-    pub type_: MessageType,
-    pub text: String,
+#[serde(rename_all = "snake_case", tag = "type", content = "text")]
+pub enum MessageEntry {
+    Info(String),
+    Warning(String),
+    Error(String),
 }
+
+// #[derive(Deserialize, Debug)]
+// pub struct MessageEntry {
+//     #[serde(rename = "type")]
+//     pub type_: MessageType,
+//     pub text: String,
+// }
 
 #[derive(Deserialize, Debug)]
 pub struct PushResult {
     name: String,
     // data: HashMap<String, serde_json::Value>,
     messages: Vec<MessageEntry>,
+}
+
+impl PushResult {
+    pub fn print_messages(&self) {
+        let name = self.name.blue();
+        for msg in self.messages.iter() {
+            match msg {
+                MessageEntry::Info(txt) => {
+                    println!("[{type} {name}] {txt}", type = "info".green());
+                }
+                MessageEntry::Warning(txt) => {
+                    println!("[{type} {name}] {txt}", type = "warning".yellow());
+                }
+                MessageEntry::Error(txt) => {
+                    println!("[{type} {name}] {txt}", type = "error".red())
+                }
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -71,33 +98,54 @@ impl PushQueueEntry {
                 Some(json!({ "tg": serde_json::to_string(tg)? })),
             )
             .await?;
-        eprintln!("Res: {res:?}");
 
         res.data("addTypegraph")
             .context("addTypegraph field in the response")
     }
 }
 
+#[derive(Clone, Debug)]
 struct Retry {
     max: u32,
     interval: Duration,
 }
 
-pub struct PushLoopBuilder {
+pub struct DefaultPushResultConsumer;
+
+pub struct PushLoopBuilder<C = DefaultPushResultConsumer>
+where
+    C: Send + Sized + 'static,
+{
     exit: bool, // exit when the queue is empty
     retry: Option<Retry>,
     node: Node,
+    on_pushed: C,
 }
 
-impl PushLoopBuilder {
+impl PushLoopBuilder<DefaultPushResultConsumer> {
     pub fn on(node: Node) -> Self {
         Self {
             exit: false,
             retry: None,
             node,
+            on_pushed: DefaultPushResultConsumer,
         }
     }
 
+    pub fn on_pushed<C: Fn(PushResult) + Send + 'static>(self, handler: C) -> PushLoopBuilder<C> {
+        PushLoopBuilder {
+            exit: self.exit,
+            retry: self.retry,
+            node: self.node,
+            on_pushed: handler,
+        }
+    }
+}
+
+impl<C> PushLoopBuilder<C>
+where
+    C: Send + Sync + Sized + 'static,
+{
     pub fn exit(mut self, exit: bool) -> Self {
         self.exit = exit;
         self
@@ -111,19 +159,20 @@ impl PushLoopBuilder {
         self
     }
 
-    pub fn start_with(
-        self,
-        push_entries: impl Iterator<Item = PushQueueEntry>,
-    ) -> Result<PushLoop> {
+    pub fn start_with(self, push_entries: impl Iterator<Item = PushQueueEntry>) -> Result<PushLoop>
+    where
+        PushLoopInternal<C>: HandlePushResult,
+    {
         let (sender, receiver) = unbounded_channel();
 
         for entry in push_entries {
             sender.send(entry)?;
         }
 
-        let options = self;
+        let options = Arc::new(self);
         let sender_1 = sender.clone();
-        let join_handle = Handle::current().spawn(async move {
+
+        let join_handle = tokio::spawn(async move {
             PushLoopInternal {
                 receiver,
                 sender: sender_1,
@@ -140,20 +189,49 @@ impl PushLoopBuilder {
         })
     }
 
-    pub fn start(self) -> Result<PushLoop> {
+    pub fn start(self) -> Result<PushLoop>
+    where
+        PushLoopInternal<C>: HandlePushResult,
+    {
         self.start_with(std::iter::empty())
     }
 }
 
-struct PushLoopInternal {
+pub trait HandlePushResult {
+    fn handle_push_result(&self, res: PushResult);
+}
+
+impl HandlePushResult for PushLoopInternal<DefaultPushResultConsumer> {
+    fn handle_push_result(&self, res: PushResult) {
+        res.print_messages();
+    }
+}
+
+impl<C> HandlePushResult for PushLoopInternal<C>
+where
+    C: Fn(PushResult) + Sync + Send + 'static,
+{
+    fn handle_push_result(&self, res: PushResult) {
+        (self.options.on_pushed)(res);
+    }
+}
+
+pub struct PushLoopInternal<C: Send + Sync + 'static> {
     receiver: UnboundedReceiver<PushQueueEntry>,
     sender: UnboundedSender<PushQueueEntry>,
     pending_retries: u32, // number of entry that will be pushed for retry
-    options: PushLoopBuilder,
+    options: Arc<PushLoopBuilder<C>>,
 }
 
-impl PushLoopInternal {
-    async fn start(&mut self) -> Result<()> {
+impl<C> PushLoopInternal<C>
+where
+    C: Send + Sync + 'static,
+    PushLoopInternal<C>: HandlePushResult,
+{
+    async fn start(&mut self) -> Result<()>
+    where
+        Self: HandlePushResult,
+    {
         loop {
             let Some(entry) = self.next().await? else {
                 // exit loop
@@ -165,7 +243,8 @@ impl PushLoopInternal {
             }
 
             let tg_name = entry.typegraph.name().unwrap().blue();
-            println!("Pushing typegraph {tg_name} from {:?}...", entry.path,);
+            println!("Pushing typegraph {tg_name} from {:?}...", entry.path);
+            let options = Arc::clone(&self.options);
             match entry.push(&self.options.node).await {
                 Err(e) => {
                     println!(
@@ -173,17 +252,19 @@ impl PushLoopInternal {
                         "✗".to_owned().red(),
                         e
                     );
-                    if let Some(opt_retry) = self.options.retry.as_ref() {
+                    if let Some(opt_retry) = options.retry.as_ref() {
                         if entry.retry_no < opt_retry.max {
                             self.retry(entry).await;
                         }
                     }
                 }
-                Ok(_) => {
+                Ok(res) => {
                     println!(
                         "{} Successfully pushed typegraph {tg_name}.",
                         "✓".to_owned().green()
                     );
+
+                    self.handle_push_result(res);
                 }
             }
         }

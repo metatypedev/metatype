@@ -1246,6 +1246,10 @@
             "string",
             "null"
           ]
+        },
+        "create_migration": {
+          "default": false,
+          "type": "boolean"
         }
       }
     }

@@ -27,6 +27,7 @@ use crate::{config::Config, utils::ensure_venv};
 
 use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
+#[derive(Debug)]
 enum LoaderInput {
     File(PathBuf),
     Directory(PathBuf),
@@ -136,7 +137,10 @@ impl LoaderInternal {
             for input in self.options.inputs.iter() {
                 match input {
                     LoaderInput::File(path) | LoaderInput::Directory(path) => {
-                        watcher.watch(&path, RecursiveMode::Recursive).unwrap()
+                        watcher
+                            .watch(path, RecursiveMode::Recursive)
+                            .with_context(|| format!("Watching {path:?}"))
+                            .unwrap();
                     }
                     LoaderInput::Glob(_) => bail!("watch is not supported for globs"),
                 }
@@ -154,7 +158,7 @@ impl LoaderInternal {
                     count += 1;
                 }
                 LoaderInput::Directory(path) => {
-                    self.load_directory(path.clone());
+                    count += self.load_directory(path.clone()).await?;
                 }
                 LoaderInput::Glob(_glob) => {
                     todo!();
@@ -185,7 +189,6 @@ impl LoaderInternal {
     }
 
     fn create_watcher(&self, sender: UnboundedSender<Vec<PathBuf>>) -> Result<RecommendedWatcher> {
-        let base_dir = &self.options.config.base_dir;
         let mut watcher = recommended_watcher(move |res: Result<Event, notify::Error>| {
             let event = res.unwrap();
             match event.kind {
@@ -193,7 +196,7 @@ impl LoaderInternal {
                 | EventKind::Remove(_)
                 | EventKind::Modify(ModifyKind::Data(_))
                 | EventKind::Modify(ModifyKind::Name(_)) => {
-                    sender.send(event.paths);
+                    sender.send(event.paths).unwrap();
                 }
                 _ => {}
             }
@@ -388,7 +391,7 @@ impl From<LoaderOptions> for Loader {
         };
 
         tokio::spawn(async move {
-            internal.start().await;
+            internal.start().await.unwrap();
         });
 
         Loader { receiver: rx }

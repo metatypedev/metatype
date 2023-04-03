@@ -12,6 +12,7 @@ use crate::typegraph::loader::LoaderOutput;
 use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
 use crate::typegraph::push::PushLoopBuilder;
 use crate::typegraph::push::PushQueueEntry;
+use crate::typegraph::push::PushResult;
 use crate::typegraph::{LoaderResult, TypegraphLoader};
 use crate::utils;
 
@@ -58,7 +59,7 @@ fn log_err(err: Error) {
 #[async_trait]
 impl Action for Dev {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
+        let dir = Path::new(&args.dir).canonicalize()?;
         let config_path = args.config;
         ensure_venv(&dir)?;
 
@@ -82,12 +83,18 @@ impl Action for Dev {
 
         let mut loader: Loader = loader_options.into();
 
-        let mut push_loop = PushLoopBuilder::on(node).exit(false).start()?;
+        let mut push_loop = PushLoopBuilder::on(node)
+            .exit(false)
+            .retry(3, Duration::from_secs(5))
+            .on_pushed(|res| {
+                res.print_messages();
+            })
+            .start()?;
 
         while let Some(output) = loader.next().await {
             match output {
                 LoaderOutput::Typegraph { path, typegraph } => {
-                    push_loop.push(PushQueueEntry::new(path, typegraph));
+                    push_loop.push(PushQueueEntry::new(path, typegraph))?;
                 }
                 LoaderOutput::Rewritten(path) => {
                     println!("Typegraph definition module at {path:?} has been rewritten by an importer.");
@@ -99,15 +106,17 @@ impl Action for Dev {
                 }) => {
                     println!("Error: error while post-processing typegraph {name} from {path:?}: {error:?}", name = typegraph_name.blue());
                 }
-                LoaderOutput::Error(LoaderError::UnknownFileType(path)) => {}
+                LoaderOutput::Error(LoaderError::UnknownFileType(_)) => {}
                 LoaderOutput::Error(LoaderError::SerdeJson { path, error }) => {
                     println!("Error: an unexpected error occurred while parsing raw string format of the typegraph(s) from {path:?}: {error:?}");
                 }
                 LoaderOutput::Error(LoaderError::Unknown { path, error }) => {
-                    println!("Error: an unexpected error occurred while loading typegraphs from {path:?}");
+                    println!("Error: an unexpected error occurred while loading typegraphs from {path:?}: {error:?}");
                 }
             }
         }
+
+        push_loop.join().await?;
 
         // let server = Server::http(format!("0.0.0.0:{}", self.port)).unwrap();
         //
