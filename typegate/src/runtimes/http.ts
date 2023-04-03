@@ -2,7 +2,7 @@
 
 import { ComputeStage } from "../engine.ts";
 import { Runtime } from "./Runtime.ts";
-import { createUrl, envOrFail, JSONValue } from "../utils.ts";
+import { createUrl, JSONValue } from "../utils.ts";
 import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import * as base64 from "std/encoding/base64.ts";
@@ -60,11 +60,10 @@ export class HTTPRuntime extends Runtime {
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { typegraph, args } = params;
-    const typegraphName = typegraph.types[0].title;
+    const { args, secretManager } = params;
 
     const caCerts = args.cert_secret
-      ? [envOrFail(typegraphName, args.cert_secret as string)]
+      ? [secretManager.secretOrFail(args.cert_secret as string)]
       : [];
 
     const client = Deno.createHttpClient({ caCerts });
@@ -75,7 +74,7 @@ export class HTTPRuntime extends Runtime {
         "authorization",
         `basic ${
           base64.encode(
-            envOrFail(typegraphName, args.basic_auth_secret as string),
+            secretManager.secretOrFail(args.basic_auth_secret as string),
           )
         }`,
       );

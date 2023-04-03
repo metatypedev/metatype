@@ -3,7 +3,12 @@
 import { gql, recreateMigrations, test } from "../utils.ts";
 
 test("Typename", async (t) => {
-  const e = await t.pythonFile("typename/typename.py");
+  const e = await t.pythonFile("typename/typename.py", {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
 
   await t.should("allow querying typename at root level", async () => {
     await gql`
@@ -19,7 +24,12 @@ test("Typename", async (t) => {
 });
 
 test("Typename in deno runtime", async (t) => {
-  const e = await t.pythonFile("typename/typename.py");
+  const e = await t.pythonFile("typename/typename.py", {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
 
   await t.should("allow querying typename in an object", async () => {
     await gql`
@@ -39,7 +49,12 @@ test("Typename in deno runtime", async (t) => {
 });
 
 test("Typename in random runtime", async (t) => {
-  const e = await t.pythonFile("typename/typename.py");
+  const e = await t.pythonFile("typename/typename.py", {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
 
   await t.should("allow querying typename in an object", async () => {
     await gql`
@@ -59,7 +74,12 @@ test("Typename in random runtime", async (t) => {
 });
 
 test("Typename in prisma runtime", async (t) => {
-  const e = await t.pythonFile("typename/typename.py");
+  const e = await t.pythonFile("typename/typename.py", {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
 
   await gql`
       mutation a {

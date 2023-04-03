@@ -49,7 +49,7 @@ class Secret(Node):
     secret: str
 
     def __init__(self, secret: str):
-        super().__init__("secrets")
+        super().__init__(Collector.secrets)
         self.secret = secret
 
     def data(self, collector: "Collector") -> dict:

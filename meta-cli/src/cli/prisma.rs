@@ -130,7 +130,7 @@ impl Action for Dev {
         let config = Config::load_or_find(config_path, dir)?;
 
         let node_config = config.node("dev").with_args(&self.node);
-        let node = node_config.try_into()?;
+        let node = node_config.build()?;
 
         let mut migrate = PrismaMigrate::new(&self.prisma, &config, node)?;
 
@@ -180,7 +180,7 @@ impl Action for Deploy {
 
         let node_config = config.node("deploy");
 
-        let node: Node = node_config.clone().try_into()?;
+        let node: Node = node_config.build()?;
 
         let res = node
             .post(MIGRATION_ENDPOINT)?
@@ -259,7 +259,7 @@ impl Action for Diff {
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
         let node_config = config.node("dev").with_args(&self.node);
-        let node = node_config.try_into()?;
+        let node = node_config.build()?;
         PrismaMigrate::new(&self.prisma, &config, node)?
             .diff(self.script)
             .await?;

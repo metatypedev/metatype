@@ -14,8 +14,6 @@ use std::path::Path;
 use std::time::Duration;
 use std::{collections::HashMap, path::PathBuf};
 
-use crate::config::NodeConfig;
-
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if var("VIRTUAL_ENV").is_ok() {
         return Ok(());
@@ -80,13 +78,19 @@ impl BasicAuth {
 pub struct Node {
     pub base_url: Url,
     auth: Option<BasicAuth>,
+    pub env: HashMap<String, String>,
 }
 
 impl Node {
-    pub fn new<U: IntoUrl>(url: U, auth: Option<BasicAuth>) -> Result<Self> {
+    pub fn new<U: IntoUrl>(
+        url: U,
+        auth: Option<BasicAuth>,
+        env: HashMap<String, String>,
+    ) -> Result<Self> {
         Ok(Self {
             base_url: url.into_url()?,
             auth,
+            env,
         })
     }
 
@@ -96,14 +100,6 @@ impl Node {
             b = b.basic_auth(&auth.username, Some(&auth.password));
         }
         Ok(b.timeout(Duration::from_secs(5)))
-    }
-}
-
-impl TryFrom<NodeConfig> for Node {
-    type Error = anyhow::Error;
-
-    fn try_from(config: NodeConfig) -> Result<Self, Self::Error> {
-        Self::new(config.url.clone(), Some(config.basic_auth()?))
     }
 }
 

@@ -11,9 +11,9 @@ test("Missing env var", async (t) => {
 });
 
 test("Injected queries", async (t) => {
-  Deno.env.set("TG_INJECTION_TEST_VAR", "3");
-  const e = await t.pythonFile("injection/injection.py");
-  Deno.env.delete("TG_INJECTION_TEST_VAR");
+  const e = await t.pythonFile("injection/injection.py", {
+    secrets: { TG_INJECTION_TEST_VAR: "3" },
+  });
 
   await t.should("inject values", async () => {
     await gql`

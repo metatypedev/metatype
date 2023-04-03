@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import config from "../../src/config.ts";
-import { Engine } from "../../src/engine.ts";
 import { gql, test } from "../utils.ts";
 
-async function withKey(f: () => Promise<Engine>, typegraphName: string) {
+async function genSecretKey(
+  typegraphName: string,
+): Promise<Record<string, string>> {
   const key = await crypto.subtle.importKey(
     "raw",
     config.tg_secret.slice(32, 64),
@@ -14,22 +15,13 @@ async function withKey(f: () => Promise<Engine>, typegraphName: string) {
   );
   const jwk = JSON.stringify(await crypto.subtle.exportKey("jwk", key));
   const envVar = `TG_${typegraphName.toUpperCase()}_NATIVE_JWT`;
-  Deno.env.set(
-    envVar,
-    jwk,
-  );
-  const res = await f();
-  Deno.env.delete(
-    envVar,
-  );
-  return res;
+  return { [envVar]: jwk };
 }
 
 test("Policies", async (t) => {
-  const e = await withKey(
-    () => t.pythonFile("policies/policies.py"),
-    "policies",
-  );
+  const e = await t.pythonFile("policies/policies.py", {
+    secrets: await genSecretKey("policies"),
+  });
 
   await t.should("have public access", async () => {
     await gql`
@@ -90,14 +82,12 @@ test("Policies", async (t) => {
 });
 
 test("Role jwt policy access", async (t) => {
-  const e_norm = await withKey(
-    () => t.pythonFile("policies/policies_jwt.py"),
-    "policies_jwt",
-  );
-  const e_inject = await withKey(
-    () => t.pythonFile("policies/policies_jwt_injection.py"),
-    "policies_jwt_injection",
-  );
+  const e_norm = await t.pythonFile("policies/policies_jwt.py", {
+    secrets: await genSecretKey("policies_jwt"),
+  });
+  const e_inject = await t.pythonFile("policies/policies_jwt_injection.py", {
+    secrets: await genSecretKey("policies_jwt_injection"),
+  });
 
   await t.should("have role", async () => {
     await gql`
@@ -152,10 +142,9 @@ test("Role jwt policy access", async (t) => {
 });
 
 test("Namespace policies", async (t) => {
-  const e = await withKey(
-    () => t.pythonFile("policies/policies.py"),
-    "policies",
-  );
+  const e = await t.pythonFile("policies/policies.py", {
+    secrets: await genSecretKey("policies"),
+  });
 
   await t.should("fail when no policy", async () => {
     await gql`
@@ -171,7 +160,9 @@ test("Namespace policies", async (t) => {
 });
 
 test("Policies for effects", async (t) => {
-  const e = await withKey(() => t.pythonFile("policies/effects.py"), "effects");
+  const e = await t.pythonFile("policies/effects.py", {
+    secrets: await genSecretKey("effects"),
+  });
 
   await t.should("succeeed", async () => {
     await gql`

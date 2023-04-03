@@ -4,11 +4,12 @@ import { gql, test } from "../utils.ts";
 import * as jwt from "jwt";
 
 test("JWT with various formats", async (t) => {
-  const envVar = "TG_POLICIES_JWT_FORMAT_NATIVE_JWT";
   const secret = "mysupersecretkey";
-  Deno.env.set(envVar, secret);
-  const e = await t.pythonFile("policies/policies_jwt_format.py");
-  Deno.env.delete(envVar);
+  const e = await t.pythonFile("policies/policies_jwt_format.py", {
+    secrets: {
+      TG_POLICIES_JWT_FORMAT_NATIVE_JWT: secret,
+    },
+  });
 
   const contextEncoder = async (context: Record<string, unknown>) => {
     const key = await crypto.subtle.importKey(

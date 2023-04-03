@@ -6,7 +6,12 @@ import { gql, test } from "../utils.ts";
 import { init } from "./prisma_seed.ts";
 
 test("prisma", async (t) => {
-  const e = await init(t);
+  const e = await init(t, "prisma/prisma.py", true, {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
 
   await t.should("return no data when empty", async () => {
     await gql`
