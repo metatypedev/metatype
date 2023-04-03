@@ -5,19 +5,24 @@ import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
 import type { Auth as AuthDS } from "../types/typegraph.ts";
+import { SecretManager } from "../typegraph.ts";
 export { AuthDS };
 
 export const nextAuthorizationHeader = "Next-Authorization";
 
 export abstract class Auth {
-  static init(typegraphName: string, auth: AuthDS): Promise<Auth> {
+  static init(
+    typegraphName: string,
+    auth: AuthDS,
+    secretManager: SecretManager,
+  ): Promise<Auth> {
     switch (auth.protocol) {
       case "oauth2":
-        return OAuth2Auth.init(typegraphName, auth);
+        return OAuth2Auth.init(typegraphName, auth, secretManager);
       case "basic":
-        return BasicAuth.init(typegraphName, auth);
+        return BasicAuth.init(typegraphName, auth, secretManager);
       case "jwt":
-        return JWTAuth.init(typegraphName, auth);
+        return JWTAuth.init(typegraphName, auth, secretManager);
       default:
         throw new Error(`${auth.protocol} not yet supported`);
     }

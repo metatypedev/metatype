@@ -60,7 +60,7 @@ impl Action for Dev {
             .unwrap_or_else(|_| config::Config::default_in(&dir));
 
         let node_config = config.node("dev").with_args(&self.node);
-        let node = node_config.try_into()?;
+        let node = node_config.build()?;
 
         let loaded = TypegraphLoader::with_config(&config)
             .load_folder(&dir)
@@ -269,18 +269,19 @@ pub struct PushResult {
 #[async_recursion]
 pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<PushResult> {
     use crate::utils::graphql::{Error as GqlError, GraphqlErrorMessages, Query};
+    let secrets = lade_sdk::hydrate(node.env.clone()).await?;
     let query = node
         .post("/typegate")?
         .gql(
             indoc! {"
-            mutation InsertTypegraph {
-                addTypegraph(fromString: $tg) {
+            mutation InsertTypegraph($tg: String!, $secrets: String!) {
+                addTypegraph(fromString: $tg, secrets: $secrets) {
                     name
                     messages { type text }
                 }
             }"}
             .to_string(),
-            Some(json!({ "tg": serde_json::to_string(tg)? })),
+            Some(json!({ "tg": serde_json::to_string(tg)?, "secrets": serde_json::to_string(&secrets)? })),
         )
         .await;
 

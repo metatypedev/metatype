@@ -4,7 +4,14 @@ import { gql, recreateMigrations, removeMigrations, test } from "../utils.ts";
 
 test("prisma", async (t) => {
   const tgPath = "multiple_runtimes/multiple_runtimes.py";
-  const e = await t.pythonFile(tgPath);
+  const e = await t.pythonFile(tgPath, {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+      TG_PRISMA_POSTGRES_2:
+        "postgresql://postgres:password@localhost:5432/db?schema=test2",
+    },
+  });
 
   await t.should("drop schemas and recreate", async () => {
     await gql`mutation { dropSchema1 }`

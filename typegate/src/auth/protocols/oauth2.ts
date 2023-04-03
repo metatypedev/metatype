@@ -11,17 +11,20 @@ import {
   signJWT,
   verifyJWT,
 } from "../../crypto.ts";
-import { envOrFail } from "../../utils.ts";
 import { JWTClaims } from "../auth.ts";
 import { getLogger } from "../../log.ts";
+import { SecretManager } from "../../typegraph.ts";
 
 const logger = getLogger(import.meta.url);
 
 export class OAuth2Auth implements Auth {
-  static init(typegraphName: string, auth: AuthDS): Promise<Auth> {
-    const clientId = envOrFail(typegraphName, `${auth.name}_CLIENT_ID`);
-    const clientSecret = envOrFail(
-      typegraphName,
+  static init(
+    typegraphName: string,
+    auth: AuthDS,
+    secretManager: SecretManager,
+  ): Promise<Auth> {
+    const clientId = secretManager.secretOrFail(`${auth.name}_CLIENT_ID`);
+    const clientSecret = secretManager.secretOrFail(
       `${auth.name}_CLIENT_SECRET`,
     );
     const { authorize_url, access_url, scopes, profile_url } = auth.auth_data;

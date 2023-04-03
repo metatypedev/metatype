@@ -7,7 +7,7 @@ sidebar_position: 2
 
 ## addTypegraph
 
-**Type:** [object_22](/docs/reference/typegate/typegate/objects#object_22)
+**Type:** [object_23](/docs/reference/typegate/typegate/objects#object_23)
 
 addTypegraph field
 
@@ -19,6 +19,15 @@ Policies:
 <table>
 <thead><tr><th>Name</th><th>Description</th></tr></thead>
 <tbody>
+<tr>
+<td>
+secrets<br />
+<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>secrets input field</p>
+</td>
+</tr>
 <tr>
 <td>
 fromString<br />

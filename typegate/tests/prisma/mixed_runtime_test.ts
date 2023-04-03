@@ -3,7 +3,12 @@
 import { gql, recreateMigrations, test } from "../utils.ts";
 
 test("prisma mixed runtime", async (t) => {
-  const e = await t.pythonFile("prisma/mixed_runtime.py");
+  const e = await t.pythonFile("prisma/mixed_runtime.py", {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
   await t.should("drop schema and recreate", async () => {
     await gql`
         mutation a {

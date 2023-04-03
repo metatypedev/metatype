@@ -2,7 +2,11 @@
 
 import { ComputeStage } from "./engine.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
-import type { TypeGraphDS, TypeMaterializer } from "./typegraph.ts";
+import type {
+  SecretManager,
+  TypeGraphDS,
+  TypeMaterializer,
+} from "./typegraph.ts";
 import { ObjectNode, TypeNode } from "./type_node.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "./planner/args.ts";
@@ -48,6 +52,7 @@ export interface RuntimeInitParams {
   typegraph: TypeGraphDS;
   materializers: TypeMaterializer[];
   args: Record<string, unknown>;
+  secretManager: SecretManager;
 }
 export type RuntimeInit = Record<
   string,

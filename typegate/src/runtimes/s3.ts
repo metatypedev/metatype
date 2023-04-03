@@ -3,12 +3,7 @@
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import {
-  envOrFail,
-  iterParentStages,
-  JSONValue,
-  nativeResult,
-} from "../utils.ts";
+import { iterParentStages, JSONValue, nativeResult } from "../utils.ts";
 import * as native from "native";
 
 const fieldSelectorResolver = (stage: ComputeStage) => {
@@ -59,18 +54,15 @@ export class S3Runtime extends Runtime {
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { args, typegraph } = params;
-    const typegraphName = typegraph.types[0].title;
+    const { args, secretManager } = params;
 
     const { host, region } = args;
     const client: native.S3Client = {
       region: region as string,
-      access_key: envOrFail(
-        typegraphName,
+      access_key: secretManager.secretOrFail(
         args.access_key_secret as string,
       ),
-      secret_key: envOrFail(
-        typegraphName,
+      secret_key: secretManager.secretOrFail(
         args.secret_key_secret as string,
       ),
       endpoint: host as string,

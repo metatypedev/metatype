@@ -114,16 +114,6 @@ export function iterParentStages(
   }
 }
 
-export function envOrFail(typegraph: string, name: string): string {
-  const envName = `TG_${typegraph}_${name}`.replaceAll("-", "_").toUpperCase();
-  const value = Deno.env.get(envName);
-  ensure(
-    value != null,
-    `cannot find env "${envName}" for "${typegraph}"`,
-  );
-  return value as string;
-}
-
 export const b64decode = (v: string): string => {
   return new TextDecoder().decode(base64.decode(v));
 };

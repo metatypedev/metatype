@@ -22,7 +22,12 @@ test("prisma migrations", async (t) => {
   const migrationDir = join(localDir, "../prisma-migrations/prisma/prisma");
   const createdMigrations: string[] = [];
 
-  const e = await init(t, tgPath, false);
+  const e = await init(t, tgPath, false, {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
 
   await t.should("should fail", async () => {
     await gql`

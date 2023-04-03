@@ -39,6 +39,7 @@ const schema = {
     }
     return bytes;
   }),
+  tg_admin_password: z.string(),
   cookies_max_age_sec: z.coerce.number().positive().min(30),
   cookies_min_refresh_sec: z.coerce.number().positive().min(60),
   version: z.string(),

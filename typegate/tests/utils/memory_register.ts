@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { Engine, initTypegraph } from "../../src/engine.ts";
+import { Engine } from "../../src/engine.ts";
 import { Register, RegistrationResult } from "../../src/register.ts";
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
 
@@ -11,9 +11,13 @@ export class MemoryRegister extends Register {
     super();
   }
 
-  async set(payload: string): Promise<RegistrationResult> {
-    const engine = await initTypegraph(
+  async set(
+    payload: string,
+    secrets: Record<string, string>,
+  ): Promise<RegistrationResult> {
+    const engine = await Engine.init(
       payload,
+      secrets,
       false,
       null,
       SystemTypegraph.getCustomRuntimes(this),
