@@ -41,18 +41,16 @@ with TypeGraph(
     ).named("admin_only")
 
     g.expose(
-        typegraphs=t.func(t.struct({}), t.array(typegraph), TypeGraphsMat())
-        .rate(calls=True)
-        .add_policy(admin_only),
+        typegraphs=t.func(t.struct({}), t.array(typegraph), TypeGraphsMat()).rate(
+            calls=True
+        ),
         typegraph=t.func(
             t.struct({"name": t.string()}),
             t.optional(typegraph.compose({"serialized": serialized})),
             TypeGraphMat(),
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
+        ).rate(calls=True),
         addTypegraph=t.func(
-            t.struct({"fromString": t.string()}),
+            t.struct({"fromString": t.string(), "secrets": t.string()}),
             typegraph.compose(
                 {
                     "messages": t.array(
@@ -66,12 +64,9 @@ with TypeGraph(
                 }
             ).optional(),
             AddTypeGraphMat(),
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
+        ).rate(calls=True),
         removeTypegraph=t.func(
             t.struct({"name": t.string()}), t.integer(), RemoveTypeGraphMat()
-        )
-        .rate(calls=True)
-        .add_policy(admin_only),
+        ).rate(calls=True),
+        default_policy=admin_only,
     )

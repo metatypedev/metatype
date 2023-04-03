@@ -6,7 +6,12 @@ import { init } from "../prisma/prisma_seed.ts";
 const port = 7895;
 
 test("cli:deploy - automatic migrations", async (t) => {
-  const e = await init(t, "prisma/prisma.py", false);
+  const e = await init(t, "prisma/prisma.py", false, {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
 
   const nodeConfigs = [
     "--gate",

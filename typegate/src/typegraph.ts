@@ -8,7 +8,7 @@ import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
-import { ensure, envOrFail } from "./utils.ts";
+import { ensure } from "./utils.ts";
 
 import { Auth, nextAuthorizationHeader } from "./auth/auth.ts";
 
@@ -59,6 +59,36 @@ const runtimeInit: RuntimeInit = {
 
 export const typegraphVersion = "0.0.1";
 
+export class SecretManager {
+  constructor(
+    private typegraph: string,
+    public secrets: Record<string, string>,
+  ) {}
+
+  private secretName(name: string): string {
+    return `TG_${this.typegraph}_${name}`.replaceAll("-", "_").toUpperCase();
+  }
+
+  secretOrFail(
+    name: string,
+  ): string {
+    const secretName = this.secretName(name);
+    const value = this.secrets[secretName];
+    ensure(
+      value != null,
+      `cannot find env "${secretName}" for "${this.typegraph}"`,
+    );
+    return value as string;
+  }
+
+  secretOrNull(
+    name: string,
+  ): string | null {
+    const secretName = this.secretName(name);
+    return this.secrets[secretName] ?? null;
+  }
+}
+
 export class TypeGraph {
   static readonly emptyArgs: ast.ArgumentNode[] = [];
   static emptyFields: ast.SelectionSetNode = {
@@ -73,23 +103,21 @@ export class TypeGraph {
     runtime: -1,
   };
 
-  tg: TypeGraphDS;
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
 
   private constructor(
-    typegraph: TypeGraphDS,
+    public tg: TypeGraphDS,
+    public secretManager: SecretManager,
     public runtimeReferences: Runtime[],
-    private secrets: Record<string, string>,
     public cors: (req: Request) => Record<string, string>,
     public auths: Map<string, Auth>,
     public introspection: TypeGraph | null,
   ) {
-    this.tg = typegraph;
     this.root = this.type(0);
     // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
     const typeByName: Record<string, TypeNode> = {};
-    typegraph.types.forEach((tpe) => {
+    tg.types.forEach((tpe) => {
       typeByName[tpe.title] = tpe;
     });
     this.typeByName = typeByName;
@@ -101,18 +129,15 @@ export class TypeGraph {
 
   static async init(
     typegraph: TypeGraphDS,
+    secretManager: SecretManager,
     staticReference: RuntimeResolver,
     introspection: TypeGraph | null,
   ): Promise<TypeGraph> {
     const typegraphName = typegraph.types[0].title;
     const { meta, runtimes } = typegraph;
 
-    const secrets: Record<string, string> = meta.secrets.sort().reduce(
-      (agg, secretName) => {
-        return { ...agg, [secretName]: envOrFail(typegraphName, secretName) };
-      },
-      {},
-    );
+    // check mandatory secrets for injection
+    meta.secrets.forEach((s) => secretManager.secretOrFail(s));
 
     const staticCors: Record<string, string> = {
       "Access-Control-Allow-Methods": "POST,OPTIONS",
@@ -151,7 +176,7 @@ export class TypeGraph {
     for (const auth of meta.auths) {
       auths.set(
         auth.name,
-        await Auth.init(typegraphName, auth),
+        await Auth.init(typegraphName, auth, secretManager),
       );
     }
     // override "internal" to enforce internal auth
@@ -179,14 +204,15 @@ export class TypeGraph {
             (mat) => mat.runtime === idx,
           ),
           args: runtime.data,
+          secretManager,
         });
       }),
     );
 
     const tg = new TypeGraph(
       typegraph,
+      secretManager,
       runtimeReferences,
-      secrets,
       cors,
       auths,
       introspection,
@@ -257,7 +283,7 @@ export class TypeGraph {
     schema: TypeNode,
     name: string,
   ) {
-    const value = this.secrets[name];
+    const value = this.secretManager.secretOrNull(name);
     if (value == undefined) {
       if (isOptional(schema)) {
         return null;

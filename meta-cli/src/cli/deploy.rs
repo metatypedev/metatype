@@ -59,8 +59,7 @@ impl Action for Deploy {
         };
 
         let node_config = config.node("deploy").with_args(&self.node);
-
-        let node = node_config.clone().try_into()?;
+        let node = node_config.clone().build()?;
         deploy_loaded_typegraphs(dir, loaded, &node).await?;
 
         Ok(())
@@ -83,6 +82,7 @@ async fn deploy_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node
                 "  → Pushing typegraph {name}...",
                 name = tg.name().unwrap().blue()
             );
+
             match push_typegraph(tg, node, 0).await {
                 Ok(res) => {
                     println!("  {}", "✓ Success!".to_owned().green());

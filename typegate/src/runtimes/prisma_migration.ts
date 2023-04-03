@@ -5,7 +5,7 @@ import { Resolver, ResolverArgs } from "../types.ts";
 import { ComputeStage, Engine } from "../engine.ts";
 import { Register } from "../register.ts";
 import * as native from "native";
-import { envOrFail, nativeResult } from "../utils.ts";
+import { nativeResult } from "../utils.ts";
 import { makeDatasource, PrismaRuntimeDS } from "./prisma.ts";
 
 function findPrismaRuntime(engine: Engine, name: string | null) {
@@ -47,10 +47,8 @@ export class PrismaMigrate {
     private runtime: PrismaRuntimeDS,
     private migrations: string | null,
   ) {
-    const typegraphName = engine.tg.tg.types[0].title;
     const { connection_string_secret } = runtime.data;
-    this.datasource = makeDatasource(envOrFail(
-      typegraphName,
+    this.datasource = makeDatasource(engine.tg.secretManager.secretOrFail(
       connection_string_secret as string,
     ));
   }
@@ -179,12 +177,13 @@ export class PrismaMigrationRuntime extends Runtime {
           args: ResolverArgsEx<{ migrations: never; script: boolean }>,
         ) => {
           const { typegraph: tgName, runtime: rt, script } = args;
-          const [_, runtime] = this.getMigrationTarget(tgName, rt);
+          const [engine, runtime] = this.getMigrationTarget(tgName, rt);
           const { connection_string_secret, datamodel, name } = runtime.data;
-          const datasource = makeDatasource(envOrFail(
-            tgName,
-            connection_string_secret as string,
-          ));
+          const datasource = makeDatasource(
+            engine.tg.secretManager.secretOrFail(
+              connection_string_secret as string,
+            ),
+          );
 
           return {
             runtimeName: name,
@@ -204,10 +203,11 @@ export class PrismaMigrationRuntime extends Runtime {
           }
           const runtime = findPrismaRuntime(engine, rtName ?? null);
           const { connection_string_secret, datamodel } = runtime.data;
-          const datasource = makeDatasource(envOrFail(
-            tgName,
-            connection_string_secret as string,
-          ));
+          const datasource = makeDatasource(
+            engine.tg.secretManager.secretOrFail(
+              connection_string_secret as string,
+            ),
+          );
 
           const res = nativeResult(
             await native.prisma_deploy({
