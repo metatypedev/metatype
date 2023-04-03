@@ -9,7 +9,7 @@ with TypeGraph(name="math") as g:
 
     restrict_referer = Policy(
         PureFunMat(
-            '(context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
+            '(_, context) => context["headers"]["referer"] && new URL(context["headers"]["referer"]).pathname === "/math"',
             runtime=worker,
         ),
     ).named("restrict_referer_policy")

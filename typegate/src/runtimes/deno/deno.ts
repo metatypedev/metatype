@@ -193,7 +193,9 @@ export class DenoRuntime extends Runtime {
       const modMat = this.tg.materializers[mat.data.mod as number];
       const op = this.registry.get(modMat.data.code as string)!;
 
-      return async ({ _: { context, parent, info: { url } }, ...args }) => {
+      return async (
+        { _: { context, parent, info: { url, headers } }, ...args },
+      ) => {
         const token = await InternalAuth.emit();
 
         return this.w.execute(op, {
@@ -208,6 +210,7 @@ export class DenoRuntime extends Runtime {
               url: `${url.protocol}//${url.host}/${this.typegraphName}`,
               token,
             },
+            headers,
           },
           name: mat.data.name as string,
           verbose,
@@ -217,7 +220,9 @@ export class DenoRuntime extends Runtime {
 
     if (mat.name === "function") {
       const op = this.registry.get(mat.data.script as string)!;
-      return async ({ _: { context, parent, info: { url } }, ...args }) => {
+      return async (
+        { _: { context, parent, info: { url, headers } }, ...args },
+      ) => {
         const token = await InternalAuth.emit();
 
         return this.w.execute(op, {
@@ -232,6 +237,7 @@ export class DenoRuntime extends Runtime {
               url: `${url.protocol}//${url.host}/${this.typegraphName}`,
               token,
             },
+            headers,
           },
           verbose,
         });

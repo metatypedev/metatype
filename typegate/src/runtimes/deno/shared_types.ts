@@ -18,6 +18,7 @@ export interface TaskContext {
     url: string;
     token: string;
   };
+  headers: Record<string, string>;
 }
 
 export interface FunctionMaterializerData {

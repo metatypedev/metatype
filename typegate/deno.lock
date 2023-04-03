@@ -522,7 +522,7 @@
     "specifiers": {
       "@sentry/node@7.45.0": "@sentry/node@7.45.0",
       "chance@1.1.11": "chance@1.1.11",
-      "mathjs": "mathjs@11.7.0"
+      "mathjs": "mathjs@11.8.0"
     },
     "packages": {
       "@babel/runtime@7.21.0": {
@@ -623,8 +623,8 @@
         "integrity": "sha512-Pn9cox5CsMYngeDbmChANltQl+5pi6XmTrraMSzhPmMBbmgcxmqWry0U3PGapCU1yB4/LqCcom7qhHZiF/jGfQ==",
         "dependencies": {}
       },
-      "mathjs@11.7.0": {
-        "integrity": "sha512-RCXtrP5xGIbl9PUc5+7QL81rBCUjzoIZ0ugNqKsarOUxg+x7deY0BzfNai+bGfUL/T+1uYq1xs5w2xVdL3lp0g==",
+      "mathjs@11.8.0": {
+        "integrity": "sha512-I7r8HCoqUGyEiHQdeOCF2m2k9N+tcOHO3cZQ3tyJkMMBQMFqMR7dMQEboBMJAiFW2Um3PEItGPwcOc4P6KRqwg==",
         "dependencies": {
           "@babel/runtime": "@babel/runtime@7.21.0",
           "complex.js": "complex.js@2.1.1",

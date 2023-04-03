@@ -111,12 +111,10 @@ pub mod deno_rt {
             crate::codegen::deno::codegen(tg, tg.path.as_ref().unwrap())?;
             for mat in tg.materializers.iter_mut().filter(|m| m.name == "module") {
                 let mut mat_data: ModuleMatData = object_from_map(std::mem::take(&mut mat.data))?;
-                eprintln!("mata data: {mat_data:?}");
-                let path = mat_data
-                    .code
-                    .strip_prefix("file:")
-                    .ok_or_else(|| anyhow!("ModuleMatData::code is invalid"))
-                    .context("PostProcessor for Codegen")?;
+                let Some(path) = mat_data.code.strip_prefix("file:") else {
+                    continue;
+                };
+
                 let path = Path::new(path).to_owned();
                 let code = std::fs::read_to_string(path)?;
                 mat_data.code = transform_module(code)?;
