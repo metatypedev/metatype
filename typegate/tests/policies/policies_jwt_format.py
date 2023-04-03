@@ -3,10 +3,10 @@ from typegraph.graph.models import Auth
 from typegraph.runtimes.deno import PureFunMat
 
 with TypeGraph(
-    "policies_jwt",
-    auths=[Auth.jwt("native", "jwk", {"name": "HMAC", "hash": {"name": "SHA-256"}})],
+    "policies_jwt_format",
+    auths=[Auth.hmac256("native")],
 ) as g:
-    some_policy = policies.jwt("user.name", "some role")
+    some_policy = policies.jwt("role", "myrole")
     g.expose(
         sayHelloWorld=t.func(
             t.struct(),

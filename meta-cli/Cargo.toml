@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
 
 description = "Free and open ecosystem for API composition."
@@ -62,7 +62,7 @@ indexmap = { version = "1.9.3", features = ["serde"] }
 lade-sdk = "0.4.0"
 async-trait = "0.1.68"
 async-recursion = "1.0.4"
-clap-verbosity-flag = "2.0.0"
+clap-verbosity-flag = "2.0.1"
 clap_complete = "4.1.6"
 itertools = "0.10.5"
 enum_dispatch = "0.3.11"

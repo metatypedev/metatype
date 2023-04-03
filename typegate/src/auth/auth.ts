@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { JWKAuth } from "./protocols/jwt.ts";
+import { JWTAuth } from "./protocols/jwt.ts";
 import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
@@ -16,8 +16,8 @@ export abstract class Auth {
         return OAuth2Auth.init(typegraphName, auth);
       case "basic":
         return BasicAuth.init(typegraphName, auth);
-      case "jwk":
-        return JWKAuth.init(typegraphName, auth);
+      case "jwt":
+        return JWTAuth.init(typegraphName, auth);
       default:
         throw new Error(`${auth.protocol} not yet supported`);
     }

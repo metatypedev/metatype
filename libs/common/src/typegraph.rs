@@ -37,7 +37,7 @@ pub struct Cors {
 #[serde(rename_all = "lowercase")]
 pub enum AuthProtocol {
     OAuth2,
-    Jwk,
+    Jwt,
     Basic,
 }
 

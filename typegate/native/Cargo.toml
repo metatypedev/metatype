@@ -1,6 +1,6 @@
 [package]
 name = "native"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
 
 [lib]
@@ -28,7 +28,7 @@ migration-core = { git = "https://github.com/prisma/prisma-engines" }
 migration-connector = { git = "https://github.com/prisma/prisma-engines" }
 temporal-client = { git = "https://github.com/temporalio/sdk-core" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core" }
-connection-string = "0.1.14"
+connection-string = "0.2.0"
 url = "2.3.1"
 thiserror = "1.0.40"
 tokio = { version = "1.27.0", features = ["full"] }

@@ -105,21 +105,22 @@ def public(name: str = "__public"):
     return Policy(PredefinedFunMat("true")).named(name)
 
 
-def jwt(role_name: str, field: str = "role"):
+def jwt(dotaccess: str, value: str):
     # join role_name, field with '__jwt' as prefix
     separator, pattern = "_", r"[^a-zA-Z0-9_]+"
     prefix = "__jwt"
-    jwt_name = reg_sub(pattern, separator, separator.join([prefix, role_name, field]))
+    jwt_name = reg_sub(pattern, separator, separator.join([prefix, dotaccess, value]))
     # build the policy
-    role_name = sanitize_ts_string(role_name)
-    field = sanitize_ts_string(field)
+    dotaccess = sanitize_ts_string(dotaccess)
+    value = sanitize_ts_string(value)
     src = f"""
             (_, {{ context }}) => {{
-                const role_chunks = "{role_name}".split(".");
+                const role_chunks = "{dotaccess}".split(".");
                 let value = context?.[role_chunks.shift()];
-                for (const chunk of role_chunks)
+                for (const chunk of role_chunks) {{
                     value = value?.[chunk];
-                return value === "{field}";
+                }}
+                return value === "{value}";
             }}
         """
     return Policy(PureFunMat(src)).named(jwt_name)
