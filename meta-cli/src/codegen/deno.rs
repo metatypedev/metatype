@@ -386,10 +386,11 @@ impl<'a> Codegen<'a> {
         };
 
         let code = format!(
-            "{}\n{}\nexport function {}({}: {}, {{ context }}: {{ context: Record<string, unknown> }}): {} {{\n  return {};\n}}",
+            "{}\n{}\nexport {}function {}({}: {}, {{ context }}: {{ context: Record<string, unknown> }}): {} {{\n  return {};\n}}",
             inp_typedef,
 			output_type_definition.unwrap_or_default(),
-            name,
+            if name == "default" { "default " } else {""},
+            if name == "default" { "" } else { name },
             self.destructure_object(input)?,
             inp_type_name,
             out_typespec,
