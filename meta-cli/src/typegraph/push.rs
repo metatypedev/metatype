@@ -3,6 +3,7 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use indoc::indoc;
+use pathdiff::diff_paths;
 use serde::Deserialize;
 use serde_json::json;
 use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
@@ -248,7 +249,8 @@ where
             }
 
             let tg_name = entry.typegraph.name().unwrap().blue();
-            println!("Pushing typegraph {tg_name} from {:?}...", entry.path);
+            // ? display path relative to current dir or to the metatype.yaml dir??
+            println!("Pushing typegraph {tg_name} from {:?}...", diff_paths(&entry.path, std::env::current_dir().unwrap()).unwrap());
             let options = Arc::clone(&self.options);
             match entry.push(&self.options.node).await {
                 Err(e) => {
