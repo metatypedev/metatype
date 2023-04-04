@@ -10,7 +10,6 @@ use crate::typegraph::loader::LoaderError;
 use crate::typegraph::loader::LoaderOptions;
 use crate::typegraph::loader::LoaderOutput;
 use crate::typegraph::postprocess;
-use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
 use crate::typegraph::push::PushLoopBuilder;
 use crate::typegraph::push::PushQueueEntry;
 
@@ -53,14 +52,13 @@ impl Action for Dev {
         let mut loader_options = LoaderOptions::with_config(&config);
         loader_options
             .with_postprocessor(
-                EmbedPrismaMigrations::default()
+                postprocess::EmbedPrismaMigrations::default()
                     .allow_dirty(true)
                     .create_migration(true),
             )
             .dir(&dir)
             .watch(true)
-            .skip_deno_modules(true)
-            .with_postprocessor(postprocess::Codegen);
+            .codegen();
 
         let mut loader: Loader = loader_options.into();
 

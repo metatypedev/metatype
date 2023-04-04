@@ -40,7 +40,6 @@ pub struct LoaderOptions {
     skip_deno_modules: bool,
     config: Config,
     watch: bool,
-    codegen: bool, // TODO
     postprocessors: Vec<PostProcessorWrapper>,
     inputs: Vec<LoaderInput>,
     exclude_gitignored: bool,
@@ -77,7 +76,6 @@ impl LoaderOptions {
             skip_deno_modules: false,
             config: config.clone(),
             watch: false,
-            codegen: false,
             postprocessors: vec![postprocess::deno_rt::ReformatScripts.into()],
             inputs: vec![],
             exclude_gitignored: true,
@@ -124,9 +122,9 @@ impl LoaderOptions {
         self
     }
 
-    pub fn codegen(&mut self, codegen: bool) -> &mut Self {
-        self.codegen = codegen;
-        self
+    pub fn codegen(&mut self) -> &mut Self {
+        self.skip_deno_modules(true)
+            .with_postprocessor(postprocess::DenoModules::default().codegen(true))
     }
 }
 

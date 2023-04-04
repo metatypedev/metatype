@@ -28,7 +28,6 @@ impl Response {
     where
         T: serde::de::DeserializeOwned,
     {
-        println!("Reading data field");
         let value = &self.data[field];
         if value.is_null() {
             bail!("value for {field} is not found in the response");

@@ -55,7 +55,7 @@ pub fn apply_all<'a>(
     Ok(())
 }
 
-pub use deno_rt::Codegen;
+pub use deno_rt::DenoModules;
 pub use deno_rt::ReformatScripts;
 pub use prisma_rt::EmbedPrismaMigrations;
 
@@ -105,10 +105,23 @@ pub mod deno_rt {
         Ok(())
     }
 
-    pub struct Codegen;
-    impl PostProcessor for Codegen {
+    #[derive(Default)]
+    pub struct DenoModules {
+        codegen: bool,
+    }
+
+    impl DenoModules {
+        pub fn codegen(mut self, codegen: bool) -> Self {
+            self.codegen = codegen;
+            self
+        }
+    }
+
+    impl PostProcessor for DenoModules {
         fn postprocess(&self, tg: &mut Typegraph, _config: &Config) -> Result<()> {
-            crate::codegen::deno::codegen(tg, tg.path.as_ref().unwrap())?;
+            if self.codegen {
+                crate::codegen::deno::codegen(tg, tg.path.as_ref().unwrap())?;
+            }
             for mat in tg.materializers.iter_mut().filter(|m| m.name == "module") {
                 let mut mat_data: ModuleMatData = object_from_map(std::mem::take(&mut mat.data))?;
                 let Some(path) = mat_data.code.strip_prefix("file:") else {
