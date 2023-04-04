@@ -327,7 +327,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1be164cb32cc9dd28dc0f6a8576c164c74516137ddc62dfe9eef584c81ee9488"
 dependencies = [
  "attohttpc",
- "dirs",
+ "dirs 4.0.0",
  "log",
  "rust-ini",
  "serde",
@@ -1429,7 +1429,16 @@ version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca3aa72a6f96ea37bbc5aa912f6788242832f75369bdfdadcb0e38423f100059"
 dependencies = [
- "dirs-sys",
+ "dirs-sys 0.3.7",
+]
+
+[[package]]
+name = "dirs"
+version = "5.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dece029acd3353e3a58ac2e3eb3c8d6c35827a892edc6cc4138ef9c33df46ecd"
+dependencies = [
+ "dirs-sys 0.4.0",
 ]
 
 [[package]]
@@ -1441,6 +1450,17 @@ dependencies = [
  "libc",
  "redox_users",
  "winapi",
+]
+
+[[package]]
+name = "dirs-sys"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04414300db88f70d74c5ff54e50f9e1d1737d9a5b90f53fcf2e95ca2a9ab554b"
+dependencies = [
+ "libc",
+ "redox_users",
+ "windows-sys 0.45.0",
 ]
 
 [[package]]
@@ -2740,14 +2760,15 @@ dependencies = [
 
 [[package]]
 name = "lade-sdk"
-version = "0.5.0"
+version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6df2cb15bcdcb6f7efe0b56a74b8e805a5705d51e9d0f2ab03f262c5a4b42ec"
+checksum = "467b941482dd418d7346ba6b119a752538966ac1ec30104d8e4eabca087a9911"
 dependencies = [
  "access-json",
  "anyhow",
  "async-process",
  "async-trait",
+ "dirs 5.0.0",
  "futures",
  "itertools",
  "log",

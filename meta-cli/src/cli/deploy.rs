@@ -67,11 +67,11 @@ impl Action for Deploy {
 }
 
 async fn deploy_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) -> Result<()> {
-    let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
+    let base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
 
     for (path, res) in loaded.into_iter() {
         let tgs = res.with_context(|| format!("Error while loading typegrpahs from {path}"))?;
-        let path = utils::relative_path_display(diff_base.clone(), path);
+        let path = utils::relative_path_display(base.clone(), path);
         println!(
             "Loading {count} typegraphs{s} from {path}:",
             count = tgs.len(),
@@ -83,7 +83,7 @@ async fn deploy_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node
                 name = tg.name().unwrap().blue()
             );
 
-            match push_typegraph(tg, node, 0).await {
+            match push_typegraph(&base, tg, node, 0).await {
                 Ok(res) => {
                     println!("  {}", "✓ Success!".to_owned().green());
                     let name = res.name;

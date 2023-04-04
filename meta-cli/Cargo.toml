@@ -59,7 +59,7 @@ serde_yaml = "0.9.19"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.48", features = ["vendored"] }
 indexmap = { version = "1.9.3", features = ["serde"] }
-lade-sdk = "0.5.0"
+lade-sdk = "0.5.2"
 async-trait = "0.1.68"
 async-recursion = "1.0.4"
 clap-verbosity-flag = "2.0.1"
