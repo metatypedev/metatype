@@ -330,18 +330,7 @@ export class TypeGraphRuntime extends Runtime {
       //   name: () => type.title,
       //   description: () => `${type.type} type`,
       // };
-      return {
-        ...common,
-        kind: () => TypeKind.INPUT_OBJECT,
-        name: () => `${type.title}Inp`,
-        description: () => `${type.title} input type`,
-        inputFields: () => {
-          return Object.entries(variantsAsObject.properties).map(
-            this.formatField(true),
-          );
-        },
-        interfaces: () => [],
-      };
+      return this.formatType(variantsAsObject, required, asInput);
     }
 
     throw Error(`unexpected type format ${(type as any).type}`);

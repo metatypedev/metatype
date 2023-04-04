@@ -16,6 +16,7 @@ test("Basic introspection", async (t) => {
             kind
             fields {
               name
+              description
             }
           }
         }
