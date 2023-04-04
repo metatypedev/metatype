@@ -5,11 +5,10 @@ use colored::Colorize;
 use indoc::indoc;
 use serde::Deserialize;
 use serde_json::json;
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
 
 use common::typegraph::Typegraph;
 use tokio::{
-    runtime::Handle,
     sync::mpsc::{error::TryRecvError, unbounded_channel, UnboundedReceiver, UnboundedSender},
     task::JoinHandle,
 };
@@ -33,10 +32,13 @@ pub enum MessageEntry {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct PushResult {
     name: String,
-    // data: HashMap<String, serde_json::Value>,
+    custom_data: String,
     messages: Vec<MessageEntry>,
+    #[serde(skip)]
+    pub path: Option<PathBuf>,
 }
 
 impl PushResult {
@@ -55,6 +57,15 @@ impl PushResult {
                 }
             }
         }
+    }
+
+    pub fn tg_name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn iter_custom_data(&self) -> Result<impl Iterator<Item = (String, serde_json::Value)>> {
+        let map: HashMap<String, serde_json::Value> = serde_json::from_str(&self.custom_data)?;
+        Ok(map.into_iter().map(|(k, v)| (k, v)))
     }
 }
 
@@ -85,6 +96,7 @@ impl PushQueueEntry {
                     addTypegraph(fromString: $tg) {
                         name
                         messages { type text }
+                        customData
                     }
                 }"}
                 .to_string(),
@@ -251,12 +263,12 @@ where
                         }
                     }
                 }
-                Ok(res) => {
+                Ok(mut res) => {
                     println!(
                         "{} Successfully pushed typegraph {tg_name}.",
                         "✓".to_owned().green()
                     );
-
+                    res.path = entry.typegraph.path.clone();
                     self.handle_push_result(res);
                 }
             }

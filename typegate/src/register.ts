@@ -4,6 +4,8 @@ import { Engine, initTypegraph } from "./engine.ts";
 import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
+import { PushResponse } from "./hooks.ts";
+import { JSONValue } from "./utils.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -13,6 +15,7 @@ export interface MessageEntry {
 export interface RegistrationResult {
   typegraphName: string;
   messages: Array<MessageEntry>;
+  customData: Record<string, JSONValue>;
 }
 
 export abstract class Register {
@@ -45,11 +48,11 @@ export class ReplicatedRegister extends Register {
   }
 
   async set(payload: string): Promise<RegistrationResult> {
-    const messageOutput = [] as MessageEntry[];
+    const response = new PushResponse();
     const engine = await initTypegraph(
       payload,
       false,
-      messageOutput,
+      response,
       SystemTypegraph.getCustomRuntimes(this),
     );
     if (SystemTypegraph.check(engine.name)) {
@@ -61,7 +64,8 @@ export class ReplicatedRegister extends Register {
 
     return {
       typegraphName: engine.name,
-      messages: messageOutput,
+      messages: response.messages,
+      customData: response.customData,
     };
   }
 

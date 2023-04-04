@@ -11,7 +11,7 @@
         "typegraphs": 1,
         "typegraph": 7,
         "addTypegraph": 15,
-        "removeTypegraph": 24
+        "removeTypegraph": 25
       },
       "required": []
     },
@@ -157,7 +157,7 @@
     },
     {
       "type": "function",
-      "title": "function_24",
+      "title": "function_25",
       "runtime": 1,
       "policies": [
         0
@@ -189,7 +189,7 @@
     },
     {
       "type": "optional",
-      "title": "optional_23",
+      "title": "optional_24",
       "runtime": 1,
       "policies": [],
       "config": {},
@@ -198,14 +198,15 @@
     },
     {
       "type": "object",
-      "title": "object_22",
+      "title": "object_23",
       "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
         "name": 5,
         "url": 6,
-        "messages": 20
+        "messages": 20,
+        "customData": 24
       },
       "required": []
     },
@@ -249,40 +250,48 @@
       "config": {}
     },
     {
+      "type": "string",
+      "title": "string_22",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "format": "json"
+    },
+    {
       "type": "function",
-      "title": "function_28",
+      "title": "function_29",
       "runtime": 1,
       "policies": [
         0
       ],
       "config": {},
-      "input": 25,
-      "output": 27,
+      "input": 26,
+      "output": 28,
       "materializer": 5,
       "rate_weight": null,
       "rate_calls": true
     },
     {
       "type": "object",
-      "title": "object_26",
+      "title": "object_27",
       "runtime": 1,
       "policies": [],
       "config": {},
       "properties": {
-        "name": 26
+        "name": 27
       },
       "required": []
     },
     {
       "type": "string",
-      "title": "string_25",
+      "title": "string_26",
       "runtime": 1,
       "policies": [],
       "config": {}
     },
     {
       "type": "integer",
-      "title": "integer_27",
+      "title": "integer_28",
       "runtime": 1,
       "policies": [],
       "config": {}

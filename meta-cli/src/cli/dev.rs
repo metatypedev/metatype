@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+use super::prisma::PrismaArgs;
 use super::Action;
 use super::CommonArgs;
 use super::GenArgs;
@@ -14,10 +15,11 @@ use crate::typegraph::push::PushLoopBuilder;
 use crate::typegraph::push::PushQueueEntry;
 
 use crate::utils::{ensure_venv, Node};
-use anyhow::{bail, Context, Error, Result};
+use anyhow::{Error, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
+use common::archive::unpack;
 use std::path::Path;
 use std::time::Duration;
 
@@ -65,8 +67,42 @@ impl Action for Dev {
         let mut push_loop = PushLoopBuilder::on(node)
             .exit(false)
             .retry(3, Duration::from_secs(5))
-            .on_pushed(|res| {
+            .on_pushed(move |res| {
                 res.print_messages();
+                // -> .inspect_err()
+                let custom_data = res
+                    .iter_custom_data()
+                    .map_err(|err| {
+                        eprintln!("Error while parsing custom data: {err:?}");
+                        err
+                    })
+                    .ok()
+                    .into_iter()
+                    .flatten();
+                for (k, v) in custom_data {
+                    if let Some(rt_name) = k.strip_prefix("migrations:") {
+                        let prisma_args = PrismaArgs {
+                            typegraph: res.tg_name().to_owned(),
+                            runtime: Some(rt_name.to_owned()),
+                            migrations: None,
+                        };
+
+                        let base_dir = config
+                            .typegraphs
+                            .materializers
+                            .prisma
+                            .base_migrations_path(&prisma_args, &config);
+                        let path = base_dir.join(rt_name);
+                        let serde_json::Value::String(migrations) = v else {
+                            eprintln!("Invalid data format: expected string for migrations");
+                            break;
+                        };
+                        let res = unpack(&path, Some(migrations));
+                        if let Err(err) = res {
+                            eprintln!("Error while unpacking migrations into {path:?}: {err:?}");
+                        }
+                    }
+                }
             })
             .start()?;
 

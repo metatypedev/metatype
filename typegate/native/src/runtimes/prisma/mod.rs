@@ -221,7 +221,7 @@ pub struct PrismaCreateInp {
 #[deno]
 pub enum PrismaCreateOut {
     Ok {
-        created_migration_name: String,
+        created_migration_name: Option<String>,
         applied_migrations: Vec<String>,
         migrations: String,
     },

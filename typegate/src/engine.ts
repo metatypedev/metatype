@@ -25,8 +25,7 @@ import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { Option } from "monads";
 import { getLogger } from "./log.ts";
-import { handleOnInitHooks, handleOnPushHooks } from "./hooks.ts";
-import { MessageEntry } from "./register.ts";
+import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
 
 const logger = getLogger(import.meta);
 
@@ -38,13 +37,13 @@ const introspectionDefStatic = await Deno.readTextFile(
 export const initTypegraph = async (
   payload: string,
   sync: boolean, // redis synchronization?
-  messageOutput: MessageEntry[] | null,
+  response: PushResponse,
   customRuntime: RuntimeResolver = {},
   introspectionDefPayload: string | null = introspectionDefStatic,
 ) => {
   const typegraphDS = sync
     ? JSON.parse(payload)
-    : await handleOnPushHooks(JSON.parse(payload), messageOutput);
+    : await handleOnPushHooks(JSON.parse(payload), response);
 
   let introspection = null;
 

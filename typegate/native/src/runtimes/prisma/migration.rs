@@ -103,9 +103,7 @@ pub(super) async fn create(input: super::PrismaCreateInp) -> Result<super::Prism
         .await
         .context("Create migration")?;
 
-    let created_migration_name = res
-        .generated_migration_name
-        .ok_or_else(|| anyhow!("No migration generated"))?;
+    let created_migration_name = res.generated_migration_name;
 
     let applied_migrations = if input.apply {
         let res = api
@@ -113,7 +111,7 @@ pub(super) async fn create(input: super::PrismaCreateInp) -> Result<super::Prism
                 migrations_directory_path: migrations.to_string(),
             })
             .await
-            .context("Apply migrations")?;
+            .map_err(|e| anyhow!("Error while applying migrations: {e}"))?;
 
         res.applied_migration_names
     } else {

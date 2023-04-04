@@ -4,30 +4,37 @@ import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { MessageEntry } from "./register.ts";
 import { TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { upgradeTypegraph } from "./typegraph/versions.ts";
+import { JSONValue } from "./utils.ts";
 
-const Log = {
+const Message = {
   INFO: "info",
   WARNING: "warning",
   ERROR: "error",
 } as const;
 
-type LogType = typeof Log extends Record<string, infer R> ? R : never;
+// type LogType = typeof Log extends Record<string, infer R> ? R : never;
 
-class Logger {
-  constructor(private output: MessageEntry[]) {}
+export class PushResponse {
+  messages: MessageEntry[] = [];
+  customData: Record<string, JSONValue> = {};
+
+  constructor() {}
   info(text: string) {
-    this.output.push({ type: Log.INFO, text });
+    this.messages.push({ type: Message.INFO, text });
   }
   warn(text: string) {
-    this.output.push({ type: Log.WARNING, text });
+    this.messages.push({ type: Message.WARNING, text });
   }
   error(text: string) {
-    this.output.push({ type: Log.ERROR, text });
+    this.messages.push({ type: Message.ERROR, text });
+  }
+  data(key: string, value: JSONValue) {
+    this.customData[key] = value;
   }
 }
 
 interface PushHandler {
-  (tg: TypeGraphDS, logger: Logger): Promise<TypeGraphDS>;
+  (tg: TypeGraphDS, response: PushResponse): Promise<TypeGraphDS>;
 }
 
 interface InitHandler {
@@ -58,13 +65,12 @@ export function registerHook(
 
 export async function handleOnPushHooks(
   typegraph: TypeGraphDS,
-  messageOutput: MessageEntry[] | null,
+  response: PushResponse,
 ): Promise<TypeGraphDS> {
-  const logger = new Logger(messageOutput ?? []);
   let res = typegraph;
 
   for (const handler of hooks.onPush) {
-    res = await handler(res, logger);
+    res = await handler(res, response);
   }
 
   return res;

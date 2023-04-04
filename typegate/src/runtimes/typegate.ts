@@ -112,10 +112,12 @@ export class TypeGateRuntime extends Runtime {
       throw new Error(`Typegraph name ${name} cannot be used`);
     }
 
-    const { typegraphName, messages } = await this.register.set(json);
+    const { typegraphName, messages, customData } = await this.register.set(
+      json,
+    );
     ensure(name === typegraphName, "unexpected");
 
-    return { name, messages };
+    return { name, messages, customData: JSON.stringify(customData) };
   };
 
   removeTypegraph: Resolver = ({ name }) => {
