@@ -12,11 +12,12 @@ use std::{
 use anyhow::{bail, Context, Error, Result};
 use colored::Colorize;
 use common::typegraph::Typegraph;
-use notify::{
-    event::ModifyKind, recommended_watcher, Event, EventKind, RecommendedWatcher, RecursiveMode,
-    Watcher,
+use ignore::{gitignore::Gitignore, Match};
+use notify_debouncer_mini::{
+    new_debouncer,
+    notify::{self, RecommendedWatcher, RecursiveMode},
+    DebounceEventResult, Debouncer,
 };
-use notify_debouncer_mini::{new_debouncer, notify, DebounceEventResult, Debouncer};
 use pathdiff::diff_paths;
 use tokio::{
     fs::DirEntry,
@@ -42,7 +43,7 @@ pub struct LoaderOptions {
     codegen: bool, // TODO
     postprocessors: Vec<PostProcessorWrapper>,
     inputs: Vec<LoaderInput>,
-    gitignore: bool, // TODO apply filters from .gitignore files
+    exclude_gitignored: bool,
 }
 
 #[derive(Debug)]
@@ -79,7 +80,7 @@ impl LoaderOptions {
             codegen: false,
             postprocessors: vec![postprocess::deno_rt::ReformatScripts.into()],
             inputs: vec![],
-            gitignore: false,
+            exclude_gitignored: true,
         }
     }
 
@@ -118,6 +119,11 @@ impl LoaderOptions {
         self
     }
 
+    pub fn exclude_gitignored(&mut self, exclude: bool) -> &mut Self {
+        self.exclude_gitignored = exclude;
+        self
+    }
+
     pub fn codegen(&mut self, codegen: bool) -> &mut Self {
         self.codegen = codegen;
         self
@@ -138,6 +144,7 @@ impl LoaderWatcher {
 struct LoaderInternal {
     sender: UnboundedSender<LoaderOutput>,
     options: Arc<LoaderOptions>,
+    gi: Gitignore,
 }
 
 impl LoaderInternal {
@@ -223,13 +230,18 @@ impl LoaderInternal {
 
     fn load_file(&self, path: PathBuf, input_dir: Option<PathBuf>, watch: bool) {
         let tx = self.sender.clone();
+
+        if let Match::Ignore(_) = self.gi.matched(&path, false) {
+            return;
+        }
+
         let options = Arc::clone(&self.options);
         tokio::spawn(async move {
             let ext = path.extension().and_then(|ext| ext.to_str());
             match ext {
                 Some(ext) if ext == "py" => {
                     if watch {
-                        println!("File changed modified: {path:?}");
+                        println!("Reloading typegraph definition module: {path:?}");
                     } else if let Some(input_dir) = input_dir {
                         let rel_path = diff_paths(&path, &input_dir).unwrap();
                         println!("[input dir: {input_dir:?}] Found python typegraph definition module at {rel_path:?}");
@@ -393,10 +405,16 @@ impl LoaderInternal {
 impl From<LoaderOptions> for Loader {
     fn from(options: LoaderOptions) -> Self {
         let (tx, rx) = unbounded_channel();
+        let gi = if options.exclude_gitignored {
+            Gitignore::new(options.config.base_dir.join(".gitignore")).0
+        } else {
+            Gitignore::empty()
+        };
 
         let internal = LoaderInternal {
             options: Arc::new(options),
             sender: tx,
+            gi,
         };
 
         tokio::spawn(async move {
