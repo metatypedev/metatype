@@ -2,7 +2,7 @@
 
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { MessageEntry } from "./register.ts";
-import { TypeGraph, TypeGraphDS } from "./typegraph.ts";
+import { SecretManager, TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { upgradeTypegraph } from "./typegraph/versions.ts";
 
 const Log = {
@@ -10,8 +10,6 @@ const Log = {
   WARNING: "warning",
   ERROR: "error",
 } as const;
-
-type LogType = typeof Log extends Record<string, infer R> ? R : never;
 
 class Logger {
   constructor(private output: MessageEntry[]) {}
@@ -27,11 +25,15 @@ class Logger {
 }
 
 interface PushHandler {
-  (tg: TypeGraphDS, logger: Logger): Promise<TypeGraphDS>;
+  (
+    tg: TypeGraphDS,
+    secretManager: SecretManager,
+    logger: Logger,
+  ): Promise<TypeGraphDS>;
 }
 
 interface InitHandler {
-  (tg: TypeGraph, sync: boolean): Promise<void>;
+  (tg: TypeGraph, secretManager: SecretManager, sync: boolean): Promise<void>;
 }
 
 interface Hooks {
@@ -58,13 +60,14 @@ export function registerHook(
 
 export async function handleOnPushHooks(
   typegraph: TypeGraphDS,
+  secretManager: SecretManager,
   messageOutput: MessageEntry[] | null,
 ): Promise<TypeGraphDS> {
   const logger = new Logger(messageOutput ?? []);
   let res = typegraph;
 
   for (const handler of hooks.onPush) {
-    res = await handler(res, logger);
+    res = await handler(res, secretManager, logger);
   }
 
   return res;
@@ -72,9 +75,10 @@ export async function handleOnPushHooks(
 
 export async function handleOnInitHooks(
   typegraph: TypeGraph,
+  secretManager: SecretManager,
   sync: boolean,
 ): Promise<void> {
   await Promise.all(
-    hooks.onInit.map((handler) => handler(typegraph, sync)),
+    hooks.onInit.map((handler) => handler(typegraph, secretManager, sync)),
   );
 }

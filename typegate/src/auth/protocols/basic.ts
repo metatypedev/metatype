@@ -4,15 +4,21 @@ import { Auth, AuthDS } from "../auth.ts";
 import * as bcrypt from "bcrypt";
 import * as _bcrypt from "_bcrypt"; // https://github.com/JamesBroadberry/deno-bcrypt/issues/31
 import { SystemTypegraph } from "../../system_typegraphs.ts";
-import { b64decode, envOrFail } from "../../utils.ts";
+import { b64decode } from "../../utils.ts";
+import { SecretManager } from "../../typegraph.ts";
+import config from "../../config.ts";
 
 export class BasicAuth implements Auth {
-  static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
+  static async init(
+    typegraphName: string,
+    auth: AuthDS,
+    secretManager: SecretManager,
+  ): Promise<Auth> {
     const tokens = new Map();
     for (const user of auth.auth_data.users as string[]) {
       const password = SystemTypegraph.check(typegraphName)
-        ? envOrFail(user, "password")
-        : envOrFail(typegraphName, `${auth.name}_${user}`);
+        ? config.tg_admin_password
+        : secretManager.secretOrFail(`${auth.name}_${user}`);
       const token = await bcrypt.hash(password);
       tokens.set(user, token);
     }

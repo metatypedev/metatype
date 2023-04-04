@@ -74,6 +74,8 @@ class TypeGraph:
         from typegraph import types as t
 
         default_policy = ops.pop("default_policy", [])
+        if not isinstance(default_policy, list):
+            default_policy = [default_policy]
 
         # allow to expose only functions or structures (namespaces)
         for name, op in ops.items():

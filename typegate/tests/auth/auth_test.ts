@@ -21,11 +21,12 @@ mf.install();
 test("Auth", async (t) => {
   const clientId = "client_id_1";
   const clientSecret = "client_secret_1";
-  Deno.env.set("TG_TEST_AUTH_GITHUB_CLIENT_ID", clientId);
-  Deno.env.set("TG_TEST_AUTH_GITHUB_CLIENT_SECRET", clientSecret);
-  const e = await t.pythonFile("auth/auth.py");
-  Deno.env.delete("TG_AUTH_GITHUB_CLIENT_ID");
-  Deno.env.delete("TG_AUTH_GITHUB_CLIENT_SECRET");
+  const e = await t.pythonFile("auth/auth.py", {
+    secrets: {
+      TG_TEST_AUTH_GITHUB_CLIENT_ID: clientId,
+      TG_TEST_AUTH_GITHUB_CLIENT_SECRET: clientSecret,
+    },
+  });
 
   await t.should("allow public call", async () => {
     await gql`
