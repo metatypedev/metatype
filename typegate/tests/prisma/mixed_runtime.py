@@ -7,19 +7,19 @@ with TypeGraph("prisma") as g:
     gql = GraphQLRuntime("https://graphqlzero.almansi.me/api")
 
     public = policies.public()
-    country = t.struct(
+    post = t.struct(
         {
-            "code": t.string(),
-            "name": t.integer(),
+            "id": t.string(),
+            "title": t.string(),
         },
-    ).named("Country")
+    ).named("Post")
     record = t.struct(
         {
             "id": t.integer().config("id", "auto"),
             "description": t.string(),
-            "country": gql.query(
-                t.struct({"code": t.string()}),
-                t.optional(country),
+            "post": gql.query(
+                t.struct({"id": t.string()}),
+                t.optional(post),
             ),
         },
     ).named("Record")
