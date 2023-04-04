@@ -20,12 +20,14 @@ use notify_debouncer_mini::{
 };
 use pathdiff::diff_paths;
 use tokio::{
-    fs::DirEntry,
     process::Command,
     sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
 };
 
-use crate::{config::Config, utils::ensure_venv};
+use crate::{
+    config::Config,
+    utils::{ensure_venv, fs::is_hidden},
+};
 
 use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
@@ -49,6 +51,7 @@ pub struct LoaderOptions {
     postprocessors: Vec<PostProcessorWrapper>,
     inputs: Vec<LoaderInput>,
     exclude_gitignored: bool,
+    exclude_hidden_files: bool,
 }
 
 #[derive(Debug)]
@@ -85,6 +88,7 @@ impl LoaderOptions {
             postprocessors: vec![postprocess::deno_rt::ReformatScripts.into()],
             inputs: vec![],
             exclude_gitignored: true,
+            exclude_hidden_files: true,
         }
     }
 
@@ -136,6 +140,12 @@ impl LoaderOptions {
     #[allow(dead_code)]
     pub fn exclude_gitignored(&mut self, exclude: bool) -> &mut Self {
         self.exclude_gitignored = exclude;
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn exclude_hidden_files(&mut self, exclude: bool) -> &mut Self {
+        self.exclude_hidden_files = exclude;
         self
     }
 
@@ -250,6 +260,10 @@ impl LoaderInternal {
         watch: bool,
     ) {
         let tx = self.sender.clone();
+
+        if self.options.exclude_hidden_files && is_hidden(&path) {
+            return;
+        }
 
         if let Match::Ignore(_) = self.gi.matched(&path, false) {
             return;
@@ -368,7 +382,7 @@ impl LoaderInternal {
                 }
 
                 // filter
-                if is_hidden(&entry) {
+                if is_hidden(entry.path()) {
                     continue;
                 }
                 let relative = diff_paths(&file_name, &self.options.config.base_dir).unwrap();
@@ -457,12 +471,4 @@ impl Loader {
     pub async fn next(&mut self) -> Option<LoaderOutput> {
         self.receiver.recv().await
     }
-}
-
-fn is_hidden(entry: &DirEntry) -> bool {
-    entry
-        .file_name()
-        .to_str()
-        .map(|s| s.starts_with('.'))
-        .unwrap_or(false)
 }

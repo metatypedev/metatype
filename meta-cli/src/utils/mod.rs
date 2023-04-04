@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 pub mod clap;
+pub mod fs;
 pub mod graphql;
 
 use anyhow::{bail, Result};
@@ -8,7 +9,6 @@ use dialoguer::{Input, Password};
 use reqwest::{Client, IntoUrl, RequestBuilder, Url};
 use std::collections::HashMap;
 use std::env::{set_var, var};
-use std::fs;
 use std::hash::Hash;
 use std::path::Path;
 use std::time::Duration;
@@ -20,7 +20,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         return Ok(());
     }
 
-    let dir = fs::canonicalize(dir)?;
+    let dir = dir.as_ref().canonicalize()?;
     let venv_dir = dir.join(".venv");
 
     if venv_dir.is_dir() {
