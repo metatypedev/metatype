@@ -53,8 +53,8 @@ impl Action for Deploy {
 
         while let Some(output) = loader.next().await {
             match output {
-                LoaderOutput::Typegraph { path, typegraph } => {
-                    push_queue_init.push(PushQueueEntry::new(path, typegraph))
+                LoaderOutput::Typegraph(typegraph) => {
+                    push_queue_init.push(PushQueueEntry::new(typegraph))
                 }
                 LoaderOutput::Rewritten(path) => {
                     println!("Typegraph definition module at {path:?} has been rewritten by an importer.");
@@ -77,7 +77,7 @@ impl Action for Deploy {
                     bail!("Error while parsing raw string format of the typegraph from {path:?}: {error:?}");
                 }
                 LoaderOutput::Error(LoaderError::Unknown { path, error }) => {
-                    bail!("Error while loading typegraphs from {path:?}");
+                    bail!("Error while loading typegraphs from {path:?}: {error:?}");
                 }
             }
         }
@@ -98,44 +98,3 @@ impl Action for Deploy {
         Ok(())
     }
 }
-//
-// async fn deploy_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) -> Result<()> {
-//     let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
-//
-//     for (path, res) in loaded.into_iter() {
-//         let tgs = res.with_context(|| format!("Error while loading typegraphs from {path:?}"))?;
-//         let path = utils::relative_path_display(diff_base.clone(), path);
-//         println!(
-//             "Loading {count} typegraphs{s} from {path}:",
-//             count = tgs.len(),
-//             s = utils::plural_prefix(tgs.len())
-//         );
-//         for tg in tgs.iter() {
-//             println!(
-//                 "  → Pushing typegraph {name}...",
-//                 name = tg.name().unwrap().blue()
-//             );
-//             match push_typegraph(tg, node, 0).await {
-//                 Ok(res) => {
-//                     println!("  {}", "✓ Success!".to_owned().green());
-//                     let name = res.name;
-//                     for msg in res.messages.into_iter() {
-//                         let type_ = match msg.type_ {
-//                             MessageType::Info => "info".blue(),
-//                             MessageType::Warning => "warn".yellow(),
-//                             MessageType::Error => "error".red(),
-//                         };
-//                         let tg_name = name.green();
-//                         println!("    [{tg_name} {type_}] {}", msg.text);
-//                     }
-//                 }
-//                 Err(e) => {
-//                     println!("  {}", "✗ Failed!".to_owned().red());
-//                     bail!(e);
-//                 }
-//             }
-//         }
-//     }
-//
-//     Ok(())
-// }

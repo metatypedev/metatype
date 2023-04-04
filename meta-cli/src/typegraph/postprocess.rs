@@ -63,7 +63,6 @@ pub mod deno_rt {
     use std::path::Path;
 
     use crate::typegraph::utils::{get_materializers, get_runtimes};
-    use anyhow::{anyhow, Context};
 
     use super::*;
 

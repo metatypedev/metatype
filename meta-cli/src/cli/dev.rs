@@ -14,7 +14,7 @@ use crate::typegraph::push::PushLoopBuilder;
 use crate::typegraph::push::PushQueueEntry;
 
 use crate::utils::{ensure_venv, Node};
-use anyhow::{Error, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
@@ -29,10 +29,6 @@ pub struct Dev {
 
     #[clap(long, default_value_t = 5000)]
     port: u32,
-}
-
-fn log_err(err: Error) {
-    println!("{}", format!("{err:?}").red());
 }
 
 #[async_trait]
@@ -106,8 +102,8 @@ impl Action for Dev {
 
         while let Some(output) = loader.next().await {
             match output {
-                LoaderOutput::Typegraph { path, typegraph } => {
-                    push_loop.push(PushQueueEntry::new(path, typegraph))?;
+                LoaderOutput::Typegraph(tg) => {
+                    push_loop.push(PushQueueEntry::new(tg))?;
                 }
                 LoaderOutput::Rewritten(path) => {
                     println!("Typegraph definition module at {path:?} has been rewritten by an importer.");

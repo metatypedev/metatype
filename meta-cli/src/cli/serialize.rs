@@ -2,7 +2,8 @@
 
 use super::{Action, GenArgs};
 use crate::config::Config;
-use crate::typegraph::{postprocess, TypegraphLoader};
+use crate::typegraph::loader::{Loader, LoaderOptions, LoaderOutput};
+use crate::typegraph::postprocess;
 use crate::utils::ensure_venv;
 use anyhow::bail;
 use anyhow::{Context, Result};
@@ -10,7 +11,6 @@ use async_trait::async_trait;
 use clap::Parser;
 use core::fmt::Debug;
 use std::io::{self, Write};
-use std::path::Path;
 use tokio::io::AsyncWriteExt;
 
 #[derive(Parser, Debug)]
@@ -55,26 +55,25 @@ impl Action for Serialize {
             Config::load_or_find(config_path, &dir)?
         };
 
-        let loader = TypegraphLoader::with_config(&config);
-        let loader = if self.deploy {
-            loader.with_postprocessor(postprocess::prisma_rt::EmbedPrismaMigrations::default())
+        let mut loader_options = LoaderOptions::with_config(&config);
+        if self.deploy {
+            loader_options.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
+        }
+        if self.files.is_empty() {
+            loader_options.dir(&dir);
         } else {
-            loader
-        };
+            for file in self.files.iter() {
+                loader_options.file(file);
+            }
+        }
 
-        let files: Vec<_> = self.files.iter().map(|f| Path::new(f).to_owned()).collect();
-        let loaded = if !self.files.is_empty() {
-            loader.load_files(&files)
-        } else {
-            loader.load_folder(&dir)?
-        };
-
-        let tgs: Vec<_> = loaded
-            .into_values()
-            .collect::<Result<Vec<_>>>()?
-            .into_iter()
-            .flatten()
-            .collect();
+        let mut loader = Loader::from(loader_options);
+        let mut tgs = vec![];
+        while let Some(output) = loader.next().await {
+            if let LoaderOutput::Typegraph(tg) = output {
+                tgs.push(tg);
+            }
+        }
 
         if tgs.is_empty() {
             eprintln!("No typegraph!");

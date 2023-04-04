@@ -1,12 +1,11 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use crate::config::Config;
+use crate::typegraph::loader::Loader;
 use crate::utils::ensure_venv;
-use crate::{codegen, typegraph::TypegraphLoader};
-use anyhow::{anyhow, Result};
+use crate::{config::Config, typegraph::loader::LoaderOptions};
+use anyhow::Result;
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
-use std::path::Path;
 
 use super::{Action, GenArgs};
 
@@ -54,23 +53,17 @@ impl Action for Deno {
         let config =
             Config::load_or_find(config_path, &dir).unwrap_or_else(|_| Config::default_in(&dir));
 
-        let loaded = TypegraphLoader::with_config(&config)
-            .skip_deno_modules()
-            .load_file(&self.file)?;
-        let file = Path::new(&self.file);
-
-        let tgs = loaded.ok_or_else(|| anyhow!("unexpected"))?;
-
+        let mut loader_options = LoaderOptions::with_config(&config);
+        loader_options.codegen();
         if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
-                codegen::deno::codegen(&tg, file)?;
-            } else {
-                panic!("typegraph not found: {tg_name}")
-            }
+            loader_options.typegraph(&self.file, tg_name);
         } else {
-            for tg in tgs {
-                codegen::deno::codegen(&tg, file)?;
-            }
+            loader_options.file(&self.file);
+        }
+
+        let mut loader = Loader::from(loader_options);
+        while loader.next().await.is_some() {
+            // no-op
         }
 
         Ok(())

@@ -72,15 +72,13 @@ impl PushResult {
 
 #[derive(Debug)]
 pub struct PushQueueEntry {
-    path: PathBuf,
     typegraph: Typegraph,
     retry_no: u32, //
 }
 
 impl PushQueueEntry {
-    pub fn new(path: PathBuf, typegraph: Typegraph) -> Self {
+    pub fn new(typegraph: Typegraph) -> Self {
         Self {
-            path,
             typegraph,
             retry_no: 0,
         }
@@ -249,8 +247,12 @@ where
             }
 
             let tg_name = entry.typegraph.name().unwrap().blue();
+            let path = entry.typegraph.path.as_ref().unwrap();
             // ? display path relative to current dir or to the metatype.yaml dir??
-            println!("Pushing typegraph {tg_name} from {:?}...", diff_paths(&entry.path, std::env::current_dir().unwrap()).unwrap());
+            println!(
+                "Pushing typegraph {tg_name} from {:?}...",
+                diff_paths(path, std::env::current_dir().unwrap()).unwrap()
+            );
             let options = Arc::clone(&self.options);
             match entry.push(&self.options.node).await {
                 Err(e) => {

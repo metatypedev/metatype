@@ -29,11 +29,17 @@ use crate::{config::Config, utils::ensure_venv};
 
 use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
+#[derive(Debug, Clone)]
+enum FilterTypegraph {
+    All,
+    One(String),
+}
+
 #[derive(Debug)]
 enum LoaderInput {
-    File(PathBuf),
+    File(PathBuf, FilterTypegraph),
     Directory(PathBuf),
-    Glob(String),
+    // Glob(String),
 }
 
 pub struct LoaderOptions {
@@ -65,7 +71,7 @@ pub enum LoaderError {
 
 #[derive(Debug)]
 pub enum LoaderOutput {
-    Typegraph { path: PathBuf, typegraph: Typegraph },
+    Typegraph(Typegraph),
     Error(LoaderError),
     Rewritten(PathBuf),
 }
@@ -95,9 +101,19 @@ impl LoaderOptions {
         self
     }
 
+    pub fn typegraph(&mut self, tdm: impl AsRef<Path>, tg_name: &str) -> &mut Self {
+        let path = self.config.base_dir.join(tdm);
+        self.inputs.push(LoaderInput::File(
+            path,
+            FilterTypegraph::One(tg_name.to_owned()),
+        ));
+        self
+    }
+
     pub fn file(&mut self, path: impl AsRef<Path>) -> &mut Self {
         let path = self.config.base_dir.join(path);
-        self.inputs.push(LoaderInput::File(path));
+        self.inputs
+            .push(LoaderInput::File(path, FilterTypegraph::All));
         self
     }
 
@@ -107,16 +123,17 @@ impl LoaderOptions {
         self
     }
 
-    pub fn glob(&mut self, glob: String) -> &mut Self {
-        self.inputs.push(LoaderInput::Glob(glob));
-        self
-    }
+    // pub fn glob(&mut self, glob: String) -> &mut Self {
+    //     self.inputs.push(LoaderInput::Glob(glob));
+    //     self
+    // }
 
     pub fn watch(&mut self, watch: bool) -> &mut Self {
         self.watch = watch;
         self
     }
 
+    #[allow(dead_code)]
     pub fn exclude_gitignored(&mut self, exclude: bool) -> &mut Self {
         self.exclude_gitignored = exclude;
         self
@@ -130,6 +147,7 @@ impl LoaderOptions {
 
 struct LoaderWatcher {
     rx: UnboundedReceiver<Vec<PathBuf>>,
+    #[allow(dead_code)]
     debouncer: Debouncer<RecommendedWatcher>,
 }
 
@@ -157,16 +175,15 @@ impl LoaderInternal {
         let mut count = 0;
         for input in self.options.inputs.iter() {
             match input {
-                LoaderInput::File(path) => {
-                    self.load_file(path.clone(), None, false);
+                LoaderInput::File(path, filter) => {
+                    self.load_file(path.clone(), filter.clone(), None, false);
                     count += 1;
                 }
                 LoaderInput::Directory(path) => {
                     count += self.load_directory(path.clone()).await?;
-                }
-                LoaderInput::Glob(_glob) => {
-                    todo!();
-                }
+                } // LoaderInput::Glob(_glob) => {
+                  //     todo!();
+                  // }
             }
         }
 
@@ -179,7 +196,7 @@ impl LoaderInternal {
                 for path in paths {
                     if let Ok(metadata) = path.metadata() {
                         if metadata.is_file() {
-                            self.load_file(path, None, true);
+                            self.load_file(path, FilterTypegraph::All, None, true);
                         }
                     }
                 }
@@ -212,21 +229,26 @@ impl LoaderInternal {
 
         for input in inputs {
             match input {
-                LoaderInput::File(path) | LoaderInput::Directory(path) => {
+                LoaderInput::File(path, _) | LoaderInput::Directory(path) => {
                     println!("Watching {path:?}");
                     watcher
                         .watch(path, RecursiveMode::Recursive)
                         .with_context(|| format!("Watching {path:?}"))
                         .unwrap();
-                }
-                LoaderInput::Glob(_) => bail!("watch is not supported for globs"),
+                } // LoaderInput::Glob(_) => bail!("watch is not supported for globs"),
             }
         }
 
         Ok(LoaderWatcher { rx, debouncer })
     }
 
-    fn load_file(&self, path: PathBuf, input_dir: Option<PathBuf>, watch: bool) {
+    fn load_file(
+        &self,
+        path: PathBuf,
+        filter: FilterTypegraph,
+        input_dir: Option<PathBuf>,
+        watch: bool,
+    ) {
         let tx = self.sender.clone();
 
         if let Match::Ignore(_) = self.gi.matched(&path, false) {
@@ -254,17 +276,13 @@ impl LoaderInternal {
                                 // rewritten by an importer
                                 tx.send(LoaderOutput::Rewritten(path)).unwrap();
                             } else {
-                                match Self::load_string(&path, output, &options) {
+                                match Self::load_string(&path, filter, output, &options) {
                                     Err(err) => {
                                         tx.send(LoaderOutput::Error(err)).unwrap();
                                     }
                                     Ok(tgs) => {
                                         for tg in tgs.into_iter() {
-                                            tx.send(LoaderOutput::Typegraph {
-                                                path: path.clone(),
-                                                typegraph: tg,
-                                            })
-                                            .unwrap();
+                                            tx.send(LoaderOutput::Typegraph(tg)).unwrap();
                                         }
                                     }
                                 }
@@ -286,6 +304,7 @@ impl LoaderInternal {
 
     fn load_string(
         path: &Path,
+        filter: FilterTypegraph,
         json: String,
         options: &LoaderOptions,
     ) -> Result<Vec<Typegraph>, LoaderError> {
@@ -294,6 +313,13 @@ impl LoaderInternal {
                 path: path.to_owned(),
                 error: e,
             })?;
+        tgs = match filter {
+            FilterTypegraph::All => tgs,
+            FilterTypegraph::One(tg_name) => tgs
+                .into_iter()
+                .filter(|tg| tg.name().unwrap() == tg_name)
+                .collect(),
+        };
         for tg in tgs.iter_mut() {
             tg.path = Some(path.to_owned());
             apply_all(options.postprocessors.iter(), tg, &options.config).map_err(|e| {
@@ -352,7 +378,7 @@ impl LoaderInternal {
                     continue;
                 }
 
-                self.load_file(file_name, Some(path.clone()), false);
+                self.load_file(file_name, FilterTypegraph::All, Some(path.clone()), false);
                 count += 1;
             }
         }
