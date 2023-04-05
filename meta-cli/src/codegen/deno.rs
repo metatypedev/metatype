@@ -461,7 +461,7 @@ mod tests {
     use crate::tests::utils::ensure_venv;
     use crate::typegraph::loader::{Loader, LoaderOptions, LoaderOutput};
 
-    #[tokio::test]
+    #[tokio::test(flavor = "multi_thread")]
     async fn codegen() -> Result<()> {
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs");
@@ -469,7 +469,6 @@ mod tests {
         let config = Config::default_in(test_folder);
 
         for typegraph_test in tests {
-            eprintln!("typegraph_test: {typegraph_test:?}");
             let typegraph_test = typegraph_test.unwrap().path();
             let mut loader_options = LoaderOptions::with_config(&config);
             loader_options

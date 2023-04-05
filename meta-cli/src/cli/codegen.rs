@@ -52,6 +52,7 @@ impl Action for Deno {
         // used for code generation have default values.
         let config =
             Config::load_or_find(config_path, &dir).unwrap_or_else(|_| Config::default_in(&dir));
+        eprintln!("loaded config file");
 
         let mut loader_options = LoaderOptions::with_config(&config);
         loader_options.codegen();
@@ -62,8 +63,10 @@ impl Action for Deno {
         }
 
         let mut loader = Loader::from(loader_options);
+        eprintln!("entering loop");
         while loader.next().await.is_some() {
             // no-op
+            eprintln!("got an item from the loader");
         }
 
         Ok(())
