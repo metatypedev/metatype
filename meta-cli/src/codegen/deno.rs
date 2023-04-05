@@ -459,23 +459,28 @@ mod tests {
     use super::*;
     use crate::config::Config;
     use crate::tests::utils::ensure_venv;
-    use crate::typegraph::TypegraphLoader;
+    use crate::typegraph::loader::{Loader, LoaderOptions, LoaderOutput};
 
-    #[test]
-    fn codegen() -> Result<()> {
+    #[tokio::test]
+    async fn codegen() -> Result<()> {
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs");
         let tests = fs::read_dir(test_folder).unwrap();
         let config = Config::default_in(test_folder);
 
         for typegraph_test in tests {
+            eprintln!("typegraph_test: {typegraph_test:?}");
             let typegraph_test = typegraph_test.unwrap().path();
-            let tgs = TypegraphLoader::with_config(&config)
-                .skip_deno_modules()
-                .load_file(&typegraph_test)?
-                .unwrap_or_else(|| vec![]);
-            assert_eq!(tgs.len(), 1);
-            let tg = tgs.into_iter().next().unwrap();
+            let mut loader_options = LoaderOptions::with_config(&config);
+            loader_options
+                .skip_deno_modules(true)
+                .file(&typegraph_test.canonicalize()?);
+            let mut loader = Loader::from(loader_options);
+
+            let LoaderOutput::Typegraph(tg) = loader.next().await.unwrap() else {
+                bail!("Unexpected");
+            };
+
             let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
             assert_eq!(module_codes.len(), 1);
 
