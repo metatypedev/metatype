@@ -105,6 +105,9 @@ class GoogleDiscoveryImporter(Importer):
         if has_error:
             fields["error"] = t.optional(t.proxy("ErrorResponse"))
 
+        if len(fields) == 0:
+            fields["_"] = t.string().optional()
+
         ret = t.struct(fields)
         if "id" in cursor:
             ref = f"{cursor.id}{suffix}"
@@ -126,7 +129,7 @@ class GoogleDiscoveryImporter(Importer):
                 has_error=False,
                 filter_read_only=filter_read_only,
                 suffix=suffix,
-                allow_opt=False,
+                allow_opt=not allow_opt,
             ).optional()
 
         if "$ref" in cursor:
@@ -137,7 +140,7 @@ class GoogleDiscoveryImporter(Importer):
             "boolean": t.boolean(),
             "integer": t.integer(),
             "number": t.float(),
-            "any": t.struct({}),
+            "any": t.struct({"_": t.string().optional()}),
         }
 
         tpe = simple_type.get(cursor.type)
