@@ -68,6 +68,15 @@ export function getEdges(type: TypeNode): Record<string, number> {
       return { [Edge.OPTIONAL_ITEM]: type.item };
     case Type.ARRAY:
       return { [Edge.ARRAY_ITEMS]: type.items };
+    case Type.UNION:
+    case Type.EITHER: {
+      const variants = type.type == Type.UNION ? type.anyOf : type.oneOf;
+      const rec = {} as Record<string, number>;
+      for (let i = 0; i < variants.length; i++) {
+        rec[`[u${i}]`] = variants[i];
+      }
+      return rec;
+    }
     case Type.OBJECT:
       return { ...type.properties };
     case Type.FUNCTION:

@@ -1,5 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+use std::path::Path;
+
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
 use crate::typegraph::loader::{Loader, LoaderError, LoaderOptions, LoaderOutput};
@@ -36,7 +38,7 @@ pub struct Deploy {
 #[async_trait]
 impl Action for Deploy {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
+        let dir = Path::new(&args.dir).canonicalize()?;
         let config_path = args.config;
         ensure_venv(&dir)?;
         let config = Config::load_or_find(config_path, &dir)?;
@@ -95,7 +97,7 @@ impl Action for Deploy {
         let node_config = config.node("deploy").with_args(&self.node);
         let node = node_config.clone().build()?;
 
-        let push_loop = PushLoopBuilder::on(node)
+        let push_loop = PushLoopBuilder::on(node, dir.clone())
             .exit(true)
             .start_with(push_queue_init.into_iter())?;
         push_loop.join().await?;

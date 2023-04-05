@@ -16,202 +16,112 @@ def import_googleapi():
 
     renames = {
         "ErrorResponse": "_googleapi_1_ErrorResponse",
-        "PlaceInfoIn": "_googleapi_2_PlaceInfoIn",
-        "PlaceInfoOut": "_googleapi_3_PlaceInfoOut",
-        "AttributeIn": "_googleapi_4_AttributeIn",
-        "AttributeOut": "_googleapi_5_AttributeOut",
-        "AdWordsLocationExtensionsIn": "_googleapi_6_AdWordsLocationExtensionsIn",
-        "AdWordsLocationExtensionsOut": "_googleapi_7_AdWordsLocationExtensionsOut",
-        "MetadataIn": "_googleapi_8_MetadataIn",
-        "MetadataOut": "_googleapi_9_MetadataOut",
-        "ListLocationsResponseIn": "_googleapi_10_ListLocationsResponseIn",
-        "ListLocationsResponseOut": "_googleapi_11_ListLocationsResponseOut",
-        "ListAttributeMetadataResponseIn": "_googleapi_12_ListAttributeMetadataResponseIn",
-        "ListAttributeMetadataResponseOut": "_googleapi_13_ListAttributeMetadataResponseOut",
-        "SearchChainsResponseIn": "_googleapi_14_SearchChainsResponseIn",
-        "SearchChainsResponseOut": "_googleapi_15_SearchChainsResponseOut",
-        "SearchGoogleLocationsRequestIn": "_googleapi_16_SearchGoogleLocationsRequestIn",
-        "SearchGoogleLocationsRequestOut": "_googleapi_17_SearchGoogleLocationsRequestOut",
-        "CategoriesIn": "_googleapi_18_CategoriesIn",
-        "CategoriesOut": "_googleapi_19_CategoriesOut",
-        "PostalAddressIn": "_googleapi_20_PostalAddressIn",
-        "PostalAddressOut": "_googleapi_21_PostalAddressOut",
-        "ServiceTypeIn": "_googleapi_22_ServiceTypeIn",
-        "ServiceTypeOut": "_googleapi_23_ServiceTypeOut",
-        "GoogleLocationIn": "_googleapi_24_GoogleLocationIn",
-        "GoogleLocationOut": "_googleapi_25_GoogleLocationOut",
-        "MoneyIn": "_googleapi_26_MoneyIn",
-        "MoneyOut": "_googleapi_27_MoneyOut",
-        "AttributeValueMetadataIn": "_googleapi_28_AttributeValueMetadataIn",
-        "AttributeValueMetadataOut": "_googleapi_29_AttributeValueMetadataOut",
-        "TimePeriodIn": "_googleapi_30_TimePeriodIn",
-        "TimePeriodOut": "_googleapi_31_TimePeriodOut",
-        "FreeFormServiceItemIn": "_googleapi_32_FreeFormServiceItemIn",
-        "FreeFormServiceItemOut": "_googleapi_33_FreeFormServiceItemOut",
-        "UriAttributeValueIn": "_googleapi_34_UriAttributeValueIn",
-        "UriAttributeValueOut": "_googleapi_35_UriAttributeValueOut",
-        "MoreHoursTypeIn": "_googleapi_36_MoreHoursTypeIn",
-        "MoreHoursTypeOut": "_googleapi_37_MoreHoursTypeOut",
-        "GoogleUpdatedLocationIn": "_googleapi_38_GoogleUpdatedLocationIn",
-        "GoogleUpdatedLocationOut": "_googleapi_39_GoogleUpdatedLocationOut",
-        "ListCategoriesResponseIn": "_googleapi_40_ListCategoriesResponseIn",
-        "ListCategoriesResponseOut": "_googleapi_41_ListCategoriesResponseOut",
-        "PlacesIn": "_googleapi_42_PlacesIn",
-        "PlacesOut": "_googleapi_43_PlacesOut",
-        "ClearLocationAssociationRequestIn": "_googleapi_44_ClearLocationAssociationRequestIn",
-        "ClearLocationAssociationRequestOut": "_googleapi_45_ClearLocationAssociationRequestOut",
-        "CategoryIn": "_googleapi_46_CategoryIn",
-        "CategoryOut": "_googleapi_47_CategoryOut",
-        "ServiceItemIn": "_googleapi_48_ServiceItemIn",
-        "ServiceItemOut": "_googleapi_49_ServiceItemOut",
-        "SpecialHourPeriodIn": "_googleapi_50_SpecialHourPeriodIn",
-        "SpecialHourPeriodOut": "_googleapi_51_SpecialHourPeriodOut",
-        "BusinessHoursIn": "_googleapi_52_BusinessHoursIn",
-        "BusinessHoursOut": "_googleapi_53_BusinessHoursOut",
-        "AttributesIn": "_googleapi_54_AttributesIn",
-        "AttributesOut": "_googleapi_55_AttributesOut",
-        "StructuredServiceItemIn": "_googleapi_56_StructuredServiceItemIn",
-        "StructuredServiceItemOut": "_googleapi_57_StructuredServiceItemOut",
+        "SearchChainsResponseIn": "_googleapi_2_SearchChainsResponseIn",
+        "SearchChainsResponseOut": "_googleapi_3_SearchChainsResponseOut",
+        "RepeatedEnumAttributeValueIn": "_googleapi_4_RepeatedEnumAttributeValueIn",
+        "RepeatedEnumAttributeValueOut": "_googleapi_5_RepeatedEnumAttributeValueOut",
+        "BatchGetCategoriesResponseIn": "_googleapi_6_BatchGetCategoriesResponseIn",
+        "BatchGetCategoriesResponseOut": "_googleapi_7_BatchGetCategoriesResponseOut",
+        "ProfileIn": "_googleapi_8_ProfileIn",
+        "ProfileOut": "_googleapi_9_ProfileOut",
+        "LocationIn": "_googleapi_10_LocationIn",
+        "LocationOut": "_googleapi_11_LocationOut",
+        "MoneyIn": "_googleapi_12_MoneyIn",
+        "MoneyOut": "_googleapi_13_MoneyOut",
+        "MoreHoursIn": "_googleapi_14_MoreHoursIn",
+        "MoreHoursOut": "_googleapi_15_MoreHoursOut",
+        "MetadataIn": "_googleapi_16_MetadataIn",
+        "MetadataOut": "_googleapi_17_MetadataOut",
+        "TimePeriodIn": "_googleapi_18_TimePeriodIn",
+        "TimePeriodOut": "_googleapi_19_TimePeriodOut",
+        "CategoryIn": "_googleapi_20_CategoryIn",
+        "CategoryOut": "_googleapi_21_CategoryOut",
+        "UriAttributeValueIn": "_googleapi_22_UriAttributeValueIn",
+        "UriAttributeValueOut": "_googleapi_23_UriAttributeValueOut",
+        "RelationshipDataIn": "_googleapi_24_RelationshipDataIn",
+        "RelationshipDataOut": "_googleapi_25_RelationshipDataOut",
+        "ServiceItemIn": "_googleapi_26_ServiceItemIn",
+        "ServiceItemOut": "_googleapi_27_ServiceItemOut",
+        "ServiceTypeIn": "_googleapi_28_ServiceTypeIn",
+        "ServiceTypeOut": "_googleapi_29_ServiceTypeOut",
+        "ListAttributeMetadataResponseIn": "_googleapi_30_ListAttributeMetadataResponseIn",
+        "ListAttributeMetadataResponseOut": "_googleapi_31_ListAttributeMetadataResponseOut",
+        "ChainIn": "_googleapi_32_ChainIn",
+        "ChainOut": "_googleapi_33_ChainOut",
+        "AttributesIn": "_googleapi_34_AttributesIn",
+        "AttributesOut": "_googleapi_35_AttributesOut",
+        "FreeFormServiceItemIn": "_googleapi_36_FreeFormServiceItemIn",
+        "FreeFormServiceItemOut": "_googleapi_37_FreeFormServiceItemOut",
+        "SpecialHourPeriodIn": "_googleapi_38_SpecialHourPeriodIn",
+        "SpecialHourPeriodOut": "_googleapi_39_SpecialHourPeriodOut",
+        "AssociateLocationRequestIn": "_googleapi_40_AssociateLocationRequestIn",
+        "AssociateLocationRequestOut": "_googleapi_41_AssociateLocationRequestOut",
+        "ServiceAreaBusinessIn": "_googleapi_42_ServiceAreaBusinessIn",
+        "ServiceAreaBusinessOut": "_googleapi_43_ServiceAreaBusinessOut",
+        "GoogleLocationIn": "_googleapi_44_GoogleLocationIn",
+        "GoogleLocationOut": "_googleapi_45_GoogleLocationOut",
+        "PlaceInfoIn": "_googleapi_46_PlaceInfoIn",
+        "PlaceInfoOut": "_googleapi_47_PlaceInfoOut",
+        "AttributeValueMetadataIn": "_googleapi_48_AttributeValueMetadataIn",
+        "AttributeValueMetadataOut": "_googleapi_49_AttributeValueMetadataOut",
+        "SpecialHoursIn": "_googleapi_50_SpecialHoursIn",
+        "SpecialHoursOut": "_googleapi_51_SpecialHoursOut",
+        "SearchGoogleLocationsRequestIn": "_googleapi_52_SearchGoogleLocationsRequestIn",
+        "SearchGoogleLocationsRequestOut": "_googleapi_53_SearchGoogleLocationsRequestOut",
+        "TimeOfDayIn": "_googleapi_54_TimeOfDayIn",
+        "TimeOfDayOut": "_googleapi_55_TimeOfDayOut",
+        "ClearLocationAssociationRequestIn": "_googleapi_56_ClearLocationAssociationRequestIn",
+        "ClearLocationAssociationRequestOut": "_googleapi_57_ClearLocationAssociationRequestOut",
         "OpenInfoIn": "_googleapi_58_OpenInfoIn",
         "OpenInfoOut": "_googleapi_59_OpenInfoOut",
-        "PhoneNumbersIn": "_googleapi_60_PhoneNumbersIn",
-        "PhoneNumbersOut": "_googleapi_61_PhoneNumbersOut",
-        "EmptyIn": "_googleapi_62_EmptyIn",
-        "EmptyOut": "_googleapi_63_EmptyOut",
-        "AssociateLocationRequestIn": "_googleapi_64_AssociateLocationRequestIn",
-        "AssociateLocationRequestOut": "_googleapi_65_AssociateLocationRequestOut",
-        "ProfileIn": "_googleapi_66_ProfileIn",
-        "ProfileOut": "_googleapi_67_ProfileOut",
-        "SpecialHoursIn": "_googleapi_68_SpecialHoursIn",
-        "SpecialHoursOut": "_googleapi_69_SpecialHoursOut",
-        "LocationIn": "_googleapi_70_LocationIn",
-        "LocationOut": "_googleapi_71_LocationOut",
-        "LatLngIn": "_googleapi_72_LatLngIn",
-        "LatLngOut": "_googleapi_73_LatLngOut",
-        "LabelIn": "_googleapi_74_LabelIn",
-        "LabelOut": "_googleapi_75_LabelOut",
-        "DateIn": "_googleapi_76_DateIn",
-        "DateOut": "_googleapi_77_DateOut",
-        "ChainIn": "_googleapi_78_ChainIn",
-        "ChainOut": "_googleapi_79_ChainOut",
-        "RepeatedEnumAttributeValueIn": "_googleapi_80_RepeatedEnumAttributeValueIn",
-        "RepeatedEnumAttributeValueOut": "_googleapi_81_RepeatedEnumAttributeValueOut",
-        "SearchGoogleLocationsResponseIn": "_googleapi_82_SearchGoogleLocationsResponseIn",
-        "SearchGoogleLocationsResponseOut": "_googleapi_83_SearchGoogleLocationsResponseOut",
-        "RelationshipDataIn": "_googleapi_84_RelationshipDataIn",
-        "RelationshipDataOut": "_googleapi_85_RelationshipDataOut",
-        "ChainNameIn": "_googleapi_86_ChainNameIn",
-        "ChainNameOut": "_googleapi_87_ChainNameOut",
-        "ServiceAreaBusinessIn": "_googleapi_88_ServiceAreaBusinessIn",
-        "ServiceAreaBusinessOut": "_googleapi_89_ServiceAreaBusinessOut",
-        "MoreHoursIn": "_googleapi_90_MoreHoursIn",
-        "MoreHoursOut": "_googleapi_91_MoreHoursOut",
-        "RelevantLocationIn": "_googleapi_92_RelevantLocationIn",
-        "RelevantLocationOut": "_googleapi_93_RelevantLocationOut",
-        "ChainUriIn": "_googleapi_94_ChainUriIn",
-        "ChainUriOut": "_googleapi_95_ChainUriOut",
-        "TimeOfDayIn": "_googleapi_96_TimeOfDayIn",
-        "TimeOfDayOut": "_googleapi_97_TimeOfDayOut",
-        "AttributeMetadataIn": "_googleapi_98_AttributeMetadataIn",
-        "AttributeMetadataOut": "_googleapi_99_AttributeMetadataOut",
-        "BatchGetCategoriesResponseIn": "_googleapi_100_BatchGetCategoriesResponseIn",
-        "BatchGetCategoriesResponseOut": "_googleapi_101_BatchGetCategoriesResponseOut",
+        "ListLocationsResponseIn": "_googleapi_60_ListLocationsResponseIn",
+        "ListLocationsResponseOut": "_googleapi_61_ListLocationsResponseOut",
+        "GoogleUpdatedLocationIn": "_googleapi_62_GoogleUpdatedLocationIn",
+        "GoogleUpdatedLocationOut": "_googleapi_63_GoogleUpdatedLocationOut",
+        "ListCategoriesResponseIn": "_googleapi_64_ListCategoriesResponseIn",
+        "ListCategoriesResponseOut": "_googleapi_65_ListCategoriesResponseOut",
+        "CategoriesIn": "_googleapi_66_CategoriesIn",
+        "CategoriesOut": "_googleapi_67_CategoriesOut",
+        "ChainNameIn": "_googleapi_68_ChainNameIn",
+        "ChainNameOut": "_googleapi_69_ChainNameOut",
+        "ChainUriIn": "_googleapi_70_ChainUriIn",
+        "ChainUriOut": "_googleapi_71_ChainUriOut",
+        "MoreHoursTypeIn": "_googleapi_72_MoreHoursTypeIn",
+        "MoreHoursTypeOut": "_googleapi_73_MoreHoursTypeOut",
+        "StructuredServiceItemIn": "_googleapi_74_StructuredServiceItemIn",
+        "StructuredServiceItemOut": "_googleapi_75_StructuredServiceItemOut",
+        "SearchGoogleLocationsResponseIn": "_googleapi_76_SearchGoogleLocationsResponseIn",
+        "SearchGoogleLocationsResponseOut": "_googleapi_77_SearchGoogleLocationsResponseOut",
+        "LatLngIn": "_googleapi_78_LatLngIn",
+        "LatLngOut": "_googleapi_79_LatLngOut",
+        "EmptyIn": "_googleapi_80_EmptyIn",
+        "EmptyOut": "_googleapi_81_EmptyOut",
+        "PostalAddressIn": "_googleapi_82_PostalAddressIn",
+        "PostalAddressOut": "_googleapi_83_PostalAddressOut",
+        "DateIn": "_googleapi_84_DateIn",
+        "DateOut": "_googleapi_85_DateOut",
+        "LabelIn": "_googleapi_86_LabelIn",
+        "LabelOut": "_googleapi_87_LabelOut",
+        "AttributeIn": "_googleapi_88_AttributeIn",
+        "AttributeOut": "_googleapi_89_AttributeOut",
+        "AdWordsLocationExtensionsIn": "_googleapi_90_AdWordsLocationExtensionsIn",
+        "AdWordsLocationExtensionsOut": "_googleapi_91_AdWordsLocationExtensionsOut",
+        "AttributeMetadataIn": "_googleapi_92_AttributeMetadataIn",
+        "AttributeMetadataOut": "_googleapi_93_AttributeMetadataOut",
+        "PhoneNumbersIn": "_googleapi_94_PhoneNumbersIn",
+        "PhoneNumbersOut": "_googleapi_95_PhoneNumbersOut",
+        "BusinessHoursIn": "_googleapi_96_BusinessHoursIn",
+        "BusinessHoursOut": "_googleapi_97_BusinessHoursOut",
+        "PlacesIn": "_googleapi_98_PlacesIn",
+        "PlacesOut": "_googleapi_99_PlacesOut",
+        "RelevantLocationIn": "_googleapi_100_RelevantLocationIn",
+        "RelevantLocationOut": "_googleapi_101_RelevantLocationOut",
     }
 
     types = {}
     types["ErrorResponse"] = t.struct(
         {"code": t.integer(), "message": t.string(), "status": t.string()}
     ).named(renames["ErrorResponse"])
-    types["PlaceInfoIn"] = t.struct(
-        {"placeName": t.string(), "placeId": t.string()}
-    ).named(renames["PlaceInfoIn"])
-    types["PlaceInfoOut"] = t.struct(
-        {
-            "placeName": t.string(),
-            "placeId": t.string(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["PlaceInfoOut"])
-    types["AttributeIn"] = t.struct(
-        {
-            "repeatedEnumValue": t.proxy(
-                renames["RepeatedEnumAttributeValueIn"]
-            ).optional(),
-            "values": t.array(t.struct({})).optional(),
-            "name": t.string(),
-            "uriValues": t.array(t.proxy(renames["UriAttributeValueIn"])).optional(),
-        }
-    ).named(renames["AttributeIn"])
-    types["AttributeOut"] = t.struct(
-        {
-            "repeatedEnumValue": t.proxy(
-                renames["RepeatedEnumAttributeValueOut"]
-            ).optional(),
-            "values": t.array(t.struct({})).optional(),
-            "valueType": t.string().optional(),
-            "name": t.string(),
-            "uriValues": t.array(t.proxy(renames["UriAttributeValueOut"])).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["AttributeOut"])
-    types["AdWordsLocationExtensionsIn"] = t.struct({"adPhone": t.string()}).named(
-        renames["AdWordsLocationExtensionsIn"]
-    )
-    types["AdWordsLocationExtensionsOut"] = t.struct(
-        {"adPhone": t.string(), "error": t.proxy(renames["ErrorResponse"]).optional()}
-    ).named(renames["AdWordsLocationExtensionsOut"])
-    types["MetadataIn"] = t.struct({}).named(renames["MetadataIn"])
-    types["MetadataOut"] = t.struct(
-        {
-            "hasVoiceOfMerchant": t.boolean().optional(),
-            "newReviewUri": t.string().optional(),
-            "canHaveFoodMenus": t.boolean().optional(),
-            "mapsUri": t.string().optional(),
-            "hasPendingEdits": t.boolean().optional(),
-            "canOperateLodgingData": t.boolean().optional(),
-            "canOperateHealthData": t.boolean().optional(),
-            "canDelete": t.boolean().optional(),
-            "canHaveBusinessCalls": t.boolean().optional(),
-            "canModifyServiceList": t.boolean().optional(),
-            "placeId": t.string().optional(),
-            "canOperateLocalPost": t.boolean().optional(),
-            "hasGoogleUpdated": t.boolean().optional(),
-            "duplicateLocation": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["MetadataOut"])
-    types["ListLocationsResponseIn"] = t.struct(
-        {
-            "locations": t.array(t.proxy(renames["LocationIn"])).optional(),
-            "nextPageToken": t.string().optional(),
-            "totalSize": t.integer().optional(),
-        }
-    ).named(renames["ListLocationsResponseIn"])
-    types["ListLocationsResponseOut"] = t.struct(
-        {
-            "locations": t.array(t.proxy(renames["LocationOut"])).optional(),
-            "nextPageToken": t.string().optional(),
-            "totalSize": t.integer().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["ListLocationsResponseOut"])
-    types["ListAttributeMetadataResponseIn"] = t.struct(
-        {
-            "attributeMetadata": t.array(
-                t.proxy(renames["AttributeMetadataIn"])
-            ).optional(),
-            "nextPageToken": t.string().optional(),
-        }
-    ).named(renames["ListAttributeMetadataResponseIn"])
-    types["ListAttributeMetadataResponseOut"] = t.struct(
-        {
-            "attributeMetadata": t.array(
-                t.proxy(renames["AttributeMetadataOut"])
-            ).optional(),
-            "nextPageToken": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["ListAttributeMetadataResponseOut"])
     types["SearchChainsResponseIn"] = t.struct(
         {"chains": t.array(t.proxy(renames["ChainIn"])).optional()}
     ).named(renames["SearchChainsResponseIn"])
@@ -221,314 +131,28 @@ def import_googleapi():
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["SearchChainsResponseOut"])
-    types["SearchGoogleLocationsRequestIn"] = t.struct(
+    types["RepeatedEnumAttributeValueIn"] = t.struct(
         {
-            "location": t.proxy(renames["LocationIn"]).optional(),
-            "query": t.string().optional(),
-            "pageSize": t.integer().optional(),
+            "unsetValues": t.array(t.string()).optional(),
+            "setValues": t.array(t.string()).optional(),
         }
-    ).named(renames["SearchGoogleLocationsRequestIn"])
-    types["SearchGoogleLocationsRequestOut"] = t.struct(
+    ).named(renames["RepeatedEnumAttributeValueIn"])
+    types["RepeatedEnumAttributeValueOut"] = t.struct(
         {
-            "location": t.proxy(renames["LocationOut"]).optional(),
-            "query": t.string().optional(),
-            "pageSize": t.integer().optional(),
+            "unsetValues": t.array(t.string()).optional(),
+            "setValues": t.array(t.string()).optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
-    ).named(renames["SearchGoogleLocationsRequestOut"])
-    types["CategoriesIn"] = t.struct(
-        {
-            "additionalCategories": t.array(t.proxy(renames["CategoryIn"])).optional(),
-            "primaryCategory": t.proxy(renames["CategoryIn"]),
-        }
-    ).named(renames["CategoriesIn"])
-    types["CategoriesOut"] = t.struct(
-        {
-            "additionalCategories": t.array(t.proxy(renames["CategoryOut"])).optional(),
-            "primaryCategory": t.proxy(renames["CategoryOut"]),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["CategoriesOut"])
-    types["PostalAddressIn"] = t.struct(
-        {
-            "organization": t.string().optional(),
-            "recipients": t.array(t.string()).optional(),
-            "postalCode": t.string().optional(),
-            "languageCode": t.string().optional(),
-            "revision": t.integer().optional(),
-            "sortingCode": t.string().optional(),
-            "administrativeArea": t.string().optional(),
-            "sublocality": t.string().optional(),
-            "regionCode": t.string(),
-            "locality": t.string().optional(),
-            "addressLines": t.array(t.string()).optional(),
-        }
-    ).named(renames["PostalAddressIn"])
-    types["PostalAddressOut"] = t.struct(
-        {
-            "organization": t.string().optional(),
-            "recipients": t.array(t.string()).optional(),
-            "postalCode": t.string().optional(),
-            "languageCode": t.string().optional(),
-            "revision": t.integer().optional(),
-            "sortingCode": t.string().optional(),
-            "administrativeArea": t.string().optional(),
-            "sublocality": t.string().optional(),
-            "regionCode": t.string(),
-            "locality": t.string().optional(),
-            "addressLines": t.array(t.string()).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["PostalAddressOut"])
-    types["ServiceTypeIn"] = t.struct({}).named(renames["ServiceTypeIn"])
-    types["ServiceTypeOut"] = t.struct(
-        {
-            "serviceTypeId": t.string().optional(),
-            "displayName": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["ServiceTypeOut"])
-    types["GoogleLocationIn"] = t.struct(
-        {
-            "requestAdminRightsUri": t.string().optional(),
-            "name": t.string().optional(),
-            "location": t.proxy(renames["LocationIn"]).optional(),
-        }
-    ).named(renames["GoogleLocationIn"])
-    types["GoogleLocationOut"] = t.struct(
-        {
-            "requestAdminRightsUri": t.string().optional(),
-            "name": t.string().optional(),
-            "location": t.proxy(renames["LocationOut"]).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["GoogleLocationOut"])
-    types["MoneyIn"] = t.struct(
-        {
-            "currencyCode": t.string().optional(),
-            "units": t.string().optional(),
-            "nanos": t.integer().optional(),
-        }
-    ).named(renames["MoneyIn"])
-    types["MoneyOut"] = t.struct(
-        {
-            "currencyCode": t.string().optional(),
-            "units": t.string().optional(),
-            "nanos": t.integer().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["MoneyOut"])
-    types["AttributeValueMetadataIn"] = t.struct(
-        {"value": t.struct({}).optional(), "displayName": t.string().optional()}
-    ).named(renames["AttributeValueMetadataIn"])
-    types["AttributeValueMetadataOut"] = t.struct(
-        {
-            "value": t.struct({}).optional(),
-            "displayName": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["AttributeValueMetadataOut"])
-    types["TimePeriodIn"] = t.struct(
-        {
-            "closeDay": t.string(),
-            "openDay": t.string(),
-            "closeTime": t.proxy(renames["TimeOfDayIn"]),
-            "openTime": t.proxy(renames["TimeOfDayIn"]),
-        }
-    ).named(renames["TimePeriodIn"])
-    types["TimePeriodOut"] = t.struct(
-        {
-            "closeDay": t.string(),
-            "openDay": t.string(),
-            "closeTime": t.proxy(renames["TimeOfDayOut"]),
-            "openTime": t.proxy(renames["TimeOfDayOut"]),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["TimePeriodOut"])
-    types["FreeFormServiceItemIn"] = t.struct(
-        {"label": t.proxy(renames["LabelIn"]), "category": t.string()}
-    ).named(renames["FreeFormServiceItemIn"])
-    types["FreeFormServiceItemOut"] = t.struct(
-        {
-            "label": t.proxy(renames["LabelOut"]),
-            "category": t.string(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["FreeFormServiceItemOut"])
-    types["UriAttributeValueIn"] = t.struct({"uri": t.string()}).named(
-        renames["UriAttributeValueIn"]
-    )
-    types["UriAttributeValueOut"] = t.struct(
-        {"uri": t.string(), "error": t.proxy(renames["ErrorResponse"]).optional()}
-    ).named(renames["UriAttributeValueOut"])
-    types["MoreHoursTypeIn"] = t.struct({}).named(renames["MoreHoursTypeIn"])
-    types["MoreHoursTypeOut"] = t.struct(
-        {
-            "localizedDisplayName": t.string().optional(),
-            "hoursTypeId": t.string().optional(),
-            "displayName": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["MoreHoursTypeOut"])
-    types["GoogleUpdatedLocationIn"] = t.struct(
-        {
-            "location": t.proxy(renames["LocationIn"]).optional(),
-            "pendingMask": t.string().optional(),
-            "diffMask": t.string().optional(),
-        }
-    ).named(renames["GoogleUpdatedLocationIn"])
-    types["GoogleUpdatedLocationOut"] = t.struct(
-        {
-            "location": t.proxy(renames["LocationOut"]).optional(),
-            "pendingMask": t.string().optional(),
-            "diffMask": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["GoogleUpdatedLocationOut"])
-    types["ListCategoriesResponseIn"] = t.struct(
-        {
-            "categories": t.array(t.proxy(renames["CategoryIn"])).optional(),
-            "nextPageToken": t.string().optional(),
-        }
-    ).named(renames["ListCategoriesResponseIn"])
-    types["ListCategoriesResponseOut"] = t.struct(
+    ).named(renames["RepeatedEnumAttributeValueOut"])
+    types["BatchGetCategoriesResponseIn"] = t.struct(
+        {"categories": t.array(t.proxy(renames["CategoryIn"])).optional()}
+    ).named(renames["BatchGetCategoriesResponseIn"])
+    types["BatchGetCategoriesResponseOut"] = t.struct(
         {
             "categories": t.array(t.proxy(renames["CategoryOut"])).optional(),
-            "nextPageToken": t.string().optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
-    ).named(renames["ListCategoriesResponseOut"])
-    types["PlacesIn"] = t.struct(
-        {"placeInfos": t.array(t.proxy(renames["PlaceInfoIn"])).optional()}
-    ).named(renames["PlacesIn"])
-    types["PlacesOut"] = t.struct(
-        {
-            "placeInfos": t.array(t.proxy(renames["PlaceInfoOut"])).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["PlacesOut"])
-    types["ClearLocationAssociationRequestIn"] = t.struct({}).named(
-        renames["ClearLocationAssociationRequestIn"]
-    )
-    types["ClearLocationAssociationRequestOut"] = t.struct(
-        {"error": t.proxy(renames["ErrorResponse"]).optional()}
-    ).named(renames["ClearLocationAssociationRequestOut"])
-    types["CategoryIn"] = t.struct({"name": t.string()}).named(renames["CategoryIn"])
-    types["CategoryOut"] = t.struct(
-        {
-            "displayName": t.string().optional(),
-            "name": t.string(),
-            "moreHoursTypes": t.array(t.proxy(renames["MoreHoursTypeOut"])).optional(),
-            "serviceTypes": t.array(t.proxy(renames["ServiceTypeOut"])).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["CategoryOut"])
-    types["ServiceItemIn"] = t.struct(
-        {
-            "freeFormServiceItem": t.proxy(renames["FreeFormServiceItemIn"]).optional(),
-            "price": t.proxy(renames["MoneyIn"]).optional(),
-            "structuredServiceItem": t.proxy(
-                renames["StructuredServiceItemIn"]
-            ).optional(),
-        }
-    ).named(renames["ServiceItemIn"])
-    types["ServiceItemOut"] = t.struct(
-        {
-            "freeFormServiceItem": t.proxy(
-                renames["FreeFormServiceItemOut"]
-            ).optional(),
-            "price": t.proxy(renames["MoneyOut"]).optional(),
-            "structuredServiceItem": t.proxy(
-                renames["StructuredServiceItemOut"]
-            ).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["ServiceItemOut"])
-    types["SpecialHourPeriodIn"] = t.struct(
-        {
-            "openTime": t.proxy(renames["TimeOfDayIn"]).optional(),
-            "startDate": t.proxy(renames["DateIn"]),
-            "endDate": t.proxy(renames["DateIn"]).optional(),
-            "closed": t.boolean().optional(),
-            "closeTime": t.proxy(renames["TimeOfDayIn"]).optional(),
-        }
-    ).named(renames["SpecialHourPeriodIn"])
-    types["SpecialHourPeriodOut"] = t.struct(
-        {
-            "openTime": t.proxy(renames["TimeOfDayOut"]).optional(),
-            "startDate": t.proxy(renames["DateOut"]),
-            "endDate": t.proxy(renames["DateOut"]).optional(),
-            "closed": t.boolean().optional(),
-            "closeTime": t.proxy(renames["TimeOfDayOut"]).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["SpecialHourPeriodOut"])
-    types["BusinessHoursIn"] = t.struct(
-        {"periods": t.array(t.proxy(renames["TimePeriodIn"]))}
-    ).named(renames["BusinessHoursIn"])
-    types["BusinessHoursOut"] = t.struct(
-        {
-            "periods": t.array(t.proxy(renames["TimePeriodOut"])),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["BusinessHoursOut"])
-    types["AttributesIn"] = t.struct(
-        {
-            "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
-            "name": t.string(),
-        }
-    ).named(renames["AttributesIn"])
-    types["AttributesOut"] = t.struct(
-        {
-            "attributes": t.array(t.proxy(renames["AttributeOut"])).optional(),
-            "name": t.string(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["AttributesOut"])
-    types["StructuredServiceItemIn"] = t.struct(
-        {"description": t.string().optional(), "serviceTypeId": t.string()}
-    ).named(renames["StructuredServiceItemIn"])
-    types["StructuredServiceItemOut"] = t.struct(
-        {
-            "description": t.string().optional(),
-            "serviceTypeId": t.string(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["StructuredServiceItemOut"])
-    types["OpenInfoIn"] = t.struct(
-        {"openingDate": t.proxy(renames["DateIn"]).optional(), "status": t.string()}
-    ).named(renames["OpenInfoIn"])
-    types["OpenInfoOut"] = t.struct(
-        {
-            "canReopen": t.boolean().optional(),
-            "openingDate": t.proxy(renames["DateOut"]).optional(),
-            "status": t.string(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["OpenInfoOut"])
-    types["PhoneNumbersIn"] = t.struct(
-        {"additionalPhones": t.array(t.string()).optional(), "primaryPhone": t.string()}
-    ).named(renames["PhoneNumbersIn"])
-    types["PhoneNumbersOut"] = t.struct(
-        {
-            "additionalPhones": t.array(t.string()).optional(),
-            "primaryPhone": t.string(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["PhoneNumbersOut"])
-    types["EmptyIn"] = t.struct({}).named(renames["EmptyIn"])
-    types["EmptyOut"] = t.struct(
-        {"error": t.proxy(renames["ErrorResponse"]).optional()}
-    ).named(renames["EmptyOut"])
-    types["AssociateLocationRequestIn"] = t.struct(
-        {"placeId": t.string().optional()}
-    ).named(renames["AssociateLocationRequestIn"])
-    types["AssociateLocationRequestOut"] = t.struct(
-        {
-            "placeId": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["AssociateLocationRequestOut"])
+    ).named(renames["BatchGetCategoriesResponseOut"])
     types["ProfileIn"] = t.struct({"description": t.string()}).named(
         renames["ProfileIn"]
     )
@@ -538,148 +162,141 @@ def import_googleapi():
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["ProfileOut"])
-    types["SpecialHoursIn"] = t.struct(
-        {"specialHourPeriods": t.array(t.proxy(renames["SpecialHourPeriodIn"]))}
-    ).named(renames["SpecialHoursIn"])
-    types["SpecialHoursOut"] = t.struct(
-        {
-            "specialHourPeriods": t.array(t.proxy(renames["SpecialHourPeriodOut"])),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["SpecialHoursOut"])
     types["LocationIn"] = t.struct(
         {
-            "profile": t.proxy(renames["ProfileIn"]).optional(),
-            "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
-            "languageCode": t.string().optional(),
-            "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
-            "latlng": t.proxy(renames["LatLngIn"]).optional(),
-            "categories": t.proxy(renames["CategoriesIn"]).optional(),
-            "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
-            "name": t.string().optional(),
-            "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
-            "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
-            "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
-            "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
             "storeCode": t.string().optional(),
+            "latlng": t.proxy(renames["LatLngIn"]).optional(),
+            "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
+            "title": t.string(),
+            "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
+            "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
+            "profile": t.proxy(renames["ProfileIn"]).optional(),
+            "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
+            "websiteUri": t.string().optional(),
+            "categories": t.proxy(renames["CategoriesIn"]).optional(),
             "serviceArea": t.proxy(renames["ServiceAreaBusinessIn"]).optional(),
             "labels": t.array(t.string()).optional(),
-            "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
-            "title": t.string(),
-            "websiteUri": t.string().optional(),
+            "languageCode": t.string().optional(),
+            "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
             "adWordsLocationExtensions": t.proxy(
                 renames["AdWordsLocationExtensionsIn"]
             ).optional(),
+            "name": t.string().optional(),
+            "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
+            "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
+            "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
         }
     ).named(renames["LocationIn"])
     types["LocationOut"] = t.struct(
         {
-            "profile": t.proxy(renames["ProfileOut"]).optional(),
-            "relationshipData": t.proxy(renames["RelationshipDataOut"]).optional(),
-            "languageCode": t.string().optional(),
-            "moreHours": t.array(t.proxy(renames["MoreHoursOut"])).optional(),
-            "latlng": t.proxy(renames["LatLngOut"]).optional(),
-            "categories": t.proxy(renames["CategoriesOut"]).optional(),
-            "metadata": t.proxy(renames["MetadataOut"]).optional(),
-            "regularHours": t.proxy(renames["BusinessHoursOut"]).optional(),
-            "name": t.string().optional(),
-            "phoneNumbers": t.proxy(renames["PhoneNumbersOut"]).optional(),
-            "serviceItems": t.array(t.proxy(renames["ServiceItemOut"])).optional(),
-            "specialHours": t.proxy(renames["SpecialHoursOut"]).optional(),
-            "openInfo": t.proxy(renames["OpenInfoOut"]).optional(),
             "storeCode": t.string().optional(),
+            "latlng": t.proxy(renames["LatLngOut"]).optional(),
+            "phoneNumbers": t.proxy(renames["PhoneNumbersOut"]).optional(),
+            "title": t.string(),
+            "regularHours": t.proxy(renames["BusinessHoursOut"]).optional(),
+            "storefrontAddress": t.proxy(renames["PostalAddressOut"]).optional(),
+            "profile": t.proxy(renames["ProfileOut"]).optional(),
+            "serviceItems": t.array(t.proxy(renames["ServiceItemOut"])).optional(),
+            "websiteUri": t.string().optional(),
+            "categories": t.proxy(renames["CategoriesOut"]).optional(),
             "serviceArea": t.proxy(renames["ServiceAreaBusinessOut"]).optional(),
             "labels": t.array(t.string()).optional(),
-            "storefrontAddress": t.proxy(renames["PostalAddressOut"]).optional(),
-            "title": t.string(),
-            "websiteUri": t.string().optional(),
+            "languageCode": t.string().optional(),
+            "specialHours": t.proxy(renames["SpecialHoursOut"]).optional(),
             "adWordsLocationExtensions": t.proxy(
                 renames["AdWordsLocationExtensionsOut"]
             ).optional(),
+            "name": t.string().optional(),
+            "moreHours": t.array(t.proxy(renames["MoreHoursOut"])).optional(),
+            "metadata": t.proxy(renames["MetadataOut"]).optional(),
+            "relationshipData": t.proxy(renames["RelationshipDataOut"]).optional(),
+            "openInfo": t.proxy(renames["OpenInfoOut"]).optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["LocationOut"])
-    types["LatLngIn"] = t.struct(
-        {"latitude": t.number().optional(), "longitude": t.number().optional()}
-    ).named(renames["LatLngIn"])
-    types["LatLngOut"] = t.struct(
+    types["MoneyIn"] = t.struct(
         {
-            "latitude": t.number().optional(),
-            "longitude": t.number().optional(),
+            "units": t.string().optional(),
+            "currencyCode": t.string().optional(),
+            "nanos": t.integer().optional(),
+        }
+    ).named(renames["MoneyIn"])
+    types["MoneyOut"] = t.struct(
+        {
+            "units": t.string().optional(),
+            "currencyCode": t.string().optional(),
+            "nanos": t.integer().optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
-    ).named(renames["LatLngOut"])
-    types["LabelIn"] = t.struct(
+    ).named(renames["MoneyOut"])
+    types["MoreHoursIn"] = t.struct(
         {
-            "languageCode": t.string().optional(),
-            "description": t.string().optional(),
-            "displayName": t.string(),
+            "periods": t.array(t.proxy(renames["TimePeriodIn"])),
+            "hoursTypeId": t.string(),
         }
-    ).named(renames["LabelIn"])
-    types["LabelOut"] = t.struct(
+    ).named(renames["MoreHoursIn"])
+    types["MoreHoursOut"] = t.struct(
         {
-            "languageCode": t.string().optional(),
-            "description": t.string().optional(),
-            "displayName": t.string(),
+            "periods": t.array(t.proxy(renames["TimePeriodOut"])),
+            "hoursTypeId": t.string(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
-    ).named(renames["LabelOut"])
-    types["DateIn"] = t.struct(
+    ).named(renames["MoreHoursOut"])
+    types["MetadataIn"] = t.struct({"_": t.string().optional()}).named(
+        renames["MetadataIn"]
+    )
+    types["MetadataOut"] = t.struct(
         {
-            "day": t.integer().optional(),
-            "year": t.integer().optional(),
-            "month": t.integer().optional(),
-        }
-    ).named(renames["DateIn"])
-    types["DateOut"] = t.struct(
-        {
-            "day": t.integer().optional(),
-            "year": t.integer().optional(),
-            "month": t.integer().optional(),
+            "mapsUri": t.string().optional(),
+            "canOperateLocalPost": t.boolean().optional(),
+            "canOperateHealthData": t.boolean().optional(),
+            "hasVoiceOfMerchant": t.boolean().optional(),
+            "canHaveBusinessCalls": t.boolean().optional(),
+            "duplicateLocation": t.string().optional(),
+            "newReviewUri": t.string().optional(),
+            "canModifyServiceList": t.boolean().optional(),
+            "hasPendingEdits": t.boolean().optional(),
+            "hasGoogleUpdated": t.boolean().optional(),
+            "placeId": t.string().optional(),
+            "canOperateLodgingData": t.boolean().optional(),
+            "canDelete": t.boolean().optional(),
+            "canHaveFoodMenus": t.boolean().optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
-    ).named(renames["DateOut"])
-    types["ChainIn"] = t.struct(
+    ).named(renames["MetadataOut"])
+    types["TimePeriodIn"] = t.struct(
         {
-            "locationCount": t.integer().optional(),
-            "websites": t.array(t.proxy(renames["ChainUriIn"])).optional(),
-            "chainNames": t.array(t.proxy(renames["ChainNameIn"])).optional(),
+            "openTime": t.proxy(renames["TimeOfDayIn"]),
+            "openDay": t.string(),
+            "closeDay": t.string(),
+            "closeTime": t.proxy(renames["TimeOfDayIn"]),
+        }
+    ).named(renames["TimePeriodIn"])
+    types["TimePeriodOut"] = t.struct(
+        {
+            "openTime": t.proxy(renames["TimeOfDayOut"]),
+            "openDay": t.string(),
+            "closeDay": t.string(),
+            "closeTime": t.proxy(renames["TimeOfDayOut"]),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["TimePeriodOut"])
+    types["CategoryIn"] = t.struct({"name": t.string()}).named(renames["CategoryIn"])
+    types["CategoryOut"] = t.struct(
+        {
+            "serviceTypes": t.array(t.proxy(renames["ServiceTypeOut"])).optional(),
+            "displayName": t.string().optional(),
+            "moreHoursTypes": t.array(t.proxy(renames["MoreHoursTypeOut"])).optional(),
             "name": t.string(),
-        }
-    ).named(renames["ChainIn"])
-    types["ChainOut"] = t.struct(
-        {
-            "locationCount": t.integer().optional(),
-            "websites": t.array(t.proxy(renames["ChainUriOut"])).optional(),
-            "chainNames": t.array(t.proxy(renames["ChainNameOut"])).optional(),
-            "name": t.string(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
-    ).named(renames["ChainOut"])
-    types["RepeatedEnumAttributeValueIn"] = t.struct(
-        {
-            "setValues": t.array(t.string()).optional(),
-            "unsetValues": t.array(t.string()).optional(),
-        }
-    ).named(renames["RepeatedEnumAttributeValueIn"])
-    types["RepeatedEnumAttributeValueOut"] = t.struct(
-        {
-            "setValues": t.array(t.string()).optional(),
-            "unsetValues": t.array(t.string()).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["RepeatedEnumAttributeValueOut"])
-    types["SearchGoogleLocationsResponseIn"] = t.struct(
-        {"googleLocations": t.array(t.proxy(renames["GoogleLocationIn"])).optional()}
-    ).named(renames["SearchGoogleLocationsResponseIn"])
-    types["SearchGoogleLocationsResponseOut"] = t.struct(
-        {
-            "googleLocations": t.array(
-                t.proxy(renames["GoogleLocationOut"])
-            ).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["SearchGoogleLocationsResponseOut"])
+    ).named(renames["CategoryOut"])
+    types["UriAttributeValueIn"] = t.struct({"uri": t.string()}).named(
+        renames["UriAttributeValueIn"]
+    )
+    types["UriAttributeValueOut"] = t.struct(
+        {"uri": t.string(), "error": t.proxy(renames["ErrorResponse"]).optional()}
+    ).named(renames["UriAttributeValueOut"])
     types["RelationshipDataIn"] = t.struct(
         {
             "parentLocation": t.proxy(renames["RelevantLocationIn"]).optional(),
@@ -699,44 +316,498 @@ def import_googleapi():
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["RelationshipDataOut"])
-    types["ChainNameIn"] = t.struct(
-        {"displayName": t.string().optional(), "languageCode": t.string().optional()}
-    ).named(renames["ChainNameIn"])
-    types["ChainNameOut"] = t.struct(
+    types["ServiceItemIn"] = t.struct(
         {
-            "displayName": t.string().optional(),
-            "languageCode": t.string().optional(),
+            "price": t.proxy(renames["MoneyIn"]).optional(),
+            "freeFormServiceItem": t.proxy(renames["FreeFormServiceItemIn"]).optional(),
+            "structuredServiceItem": t.proxy(
+                renames["StructuredServiceItemIn"]
+            ).optional(),
+        }
+    ).named(renames["ServiceItemIn"])
+    types["ServiceItemOut"] = t.struct(
+        {
+            "price": t.proxy(renames["MoneyOut"]).optional(),
+            "freeFormServiceItem": t.proxy(
+                renames["FreeFormServiceItemOut"]
+            ).optional(),
+            "structuredServiceItem": t.proxy(
+                renames["StructuredServiceItemOut"]
+            ).optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
-    ).named(renames["ChainNameOut"])
+    ).named(renames["ServiceItemOut"])
+    types["ServiceTypeIn"] = t.struct({"_": t.string().optional()}).named(
+        renames["ServiceTypeIn"]
+    )
+    types["ServiceTypeOut"] = t.struct(
+        {
+            "serviceTypeId": t.string().optional(),
+            "displayName": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["ServiceTypeOut"])
+    types["ListAttributeMetadataResponseIn"] = t.struct(
+        {
+            "nextPageToken": t.string().optional(),
+            "attributeMetadata": t.array(
+                t.proxy(renames["AttributeMetadataIn"])
+            ).optional(),
+        }
+    ).named(renames["ListAttributeMetadataResponseIn"])
+    types["ListAttributeMetadataResponseOut"] = t.struct(
+        {
+            "nextPageToken": t.string().optional(),
+            "attributeMetadata": t.array(
+                t.proxy(renames["AttributeMetadataOut"])
+            ).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["ListAttributeMetadataResponseOut"])
+    types["ChainIn"] = t.struct(
+        {
+            "name": t.string(),
+            "locationCount": t.integer().optional(),
+            "websites": t.array(t.proxy(renames["ChainUriIn"])).optional(),
+            "chainNames": t.array(t.proxy(renames["ChainNameIn"])).optional(),
+        }
+    ).named(renames["ChainIn"])
+    types["ChainOut"] = t.struct(
+        {
+            "name": t.string(),
+            "locationCount": t.integer().optional(),
+            "websites": t.array(t.proxy(renames["ChainUriOut"])).optional(),
+            "chainNames": t.array(t.proxy(renames["ChainNameOut"])).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["ChainOut"])
+    types["AttributesIn"] = t.struct(
+        {
+            "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
+            "name": t.string(),
+        }
+    ).named(renames["AttributesIn"])
+    types["AttributesOut"] = t.struct(
+        {
+            "attributes": t.array(t.proxy(renames["AttributeOut"])).optional(),
+            "name": t.string(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["AttributesOut"])
+    types["FreeFormServiceItemIn"] = t.struct(
+        {"category": t.string(), "label": t.proxy(renames["LabelIn"])}
+    ).named(renames["FreeFormServiceItemIn"])
+    types["FreeFormServiceItemOut"] = t.struct(
+        {
+            "category": t.string(),
+            "label": t.proxy(renames["LabelOut"]),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["FreeFormServiceItemOut"])
+    types["SpecialHourPeriodIn"] = t.struct(
+        {
+            "openTime": t.proxy(renames["TimeOfDayIn"]).optional(),
+            "endDate": t.proxy(renames["DateIn"]).optional(),
+            "startDate": t.proxy(renames["DateIn"]),
+            "closeTime": t.proxy(renames["TimeOfDayIn"]).optional(),
+            "closed": t.boolean().optional(),
+        }
+    ).named(renames["SpecialHourPeriodIn"])
+    types["SpecialHourPeriodOut"] = t.struct(
+        {
+            "openTime": t.proxy(renames["TimeOfDayOut"]).optional(),
+            "endDate": t.proxy(renames["DateOut"]).optional(),
+            "startDate": t.proxy(renames["DateOut"]),
+            "closeTime": t.proxy(renames["TimeOfDayOut"]).optional(),
+            "closed": t.boolean().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["SpecialHourPeriodOut"])
+    types["AssociateLocationRequestIn"] = t.struct(
+        {"placeId": t.string().optional()}
+    ).named(renames["AssociateLocationRequestIn"])
+    types["AssociateLocationRequestOut"] = t.struct(
+        {
+            "placeId": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["AssociateLocationRequestOut"])
     types["ServiceAreaBusinessIn"] = t.struct(
         {
-            "businessType": t.string(),
-            "places": t.proxy(renames["PlacesIn"]).optional(),
             "regionCode": t.string().optional(),
+            "places": t.proxy(renames["PlacesIn"]).optional(),
+            "businessType": t.string(),
         }
     ).named(renames["ServiceAreaBusinessIn"])
     types["ServiceAreaBusinessOut"] = t.struct(
         {
-            "businessType": t.string(),
-            "places": t.proxy(renames["PlacesOut"]).optional(),
             "regionCode": t.string().optional(),
+            "places": t.proxy(renames["PlacesOut"]).optional(),
+            "businessType": t.string(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["ServiceAreaBusinessOut"])
-    types["MoreHoursIn"] = t.struct(
+    types["GoogleLocationIn"] = t.struct(
         {
-            "periods": t.array(t.proxy(renames["TimePeriodIn"])),
-            "hoursTypeId": t.string(),
+            "name": t.string().optional(),
+            "location": t.proxy(renames["LocationIn"]).optional(),
+            "requestAdminRightsUri": t.string().optional(),
         }
-    ).named(renames["MoreHoursIn"])
-    types["MoreHoursOut"] = t.struct(
+    ).named(renames["GoogleLocationIn"])
+    types["GoogleLocationOut"] = t.struct(
         {
-            "periods": t.array(t.proxy(renames["TimePeriodOut"])),
-            "hoursTypeId": t.string(),
+            "name": t.string().optional(),
+            "location": t.proxy(renames["LocationOut"]).optional(),
+            "requestAdminRightsUri": t.string().optional(),
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
-    ).named(renames["MoreHoursOut"])
+    ).named(renames["GoogleLocationOut"])
+    types["PlaceInfoIn"] = t.struct(
+        {"placeName": t.string(), "placeId": t.string()}
+    ).named(renames["PlaceInfoIn"])
+    types["PlaceInfoOut"] = t.struct(
+        {
+            "placeName": t.string(),
+            "placeId": t.string(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["PlaceInfoOut"])
+    types["AttributeValueMetadataIn"] = t.struct(
+        {
+            "displayName": t.string().optional(),
+            "value": t.struct({"_": t.string().optional()}).optional(),
+        }
+    ).named(renames["AttributeValueMetadataIn"])
+    types["AttributeValueMetadataOut"] = t.struct(
+        {
+            "displayName": t.string().optional(),
+            "value": t.struct({"_": t.string().optional()}).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["AttributeValueMetadataOut"])
+    types["SpecialHoursIn"] = t.struct(
+        {"specialHourPeriods": t.array(t.proxy(renames["SpecialHourPeriodIn"]))}
+    ).named(renames["SpecialHoursIn"])
+    types["SpecialHoursOut"] = t.struct(
+        {
+            "specialHourPeriods": t.array(t.proxy(renames["SpecialHourPeriodOut"])),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["SpecialHoursOut"])
+    types["SearchGoogleLocationsRequestIn"] = t.struct(
+        {
+            "pageSize": t.integer().optional(),
+            "location": t.proxy(renames["LocationIn"]).optional(),
+            "query": t.string().optional(),
+        }
+    ).named(renames["SearchGoogleLocationsRequestIn"])
+    types["SearchGoogleLocationsRequestOut"] = t.struct(
+        {
+            "pageSize": t.integer().optional(),
+            "location": t.proxy(renames["LocationOut"]).optional(),
+            "query": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["SearchGoogleLocationsRequestOut"])
+    types["TimeOfDayIn"] = t.struct(
+        {
+            "minutes": t.integer().optional(),
+            "hours": t.integer().optional(),
+            "seconds": t.integer().optional(),
+            "nanos": t.integer().optional(),
+        }
+    ).named(renames["TimeOfDayIn"])
+    types["TimeOfDayOut"] = t.struct(
+        {
+            "minutes": t.integer().optional(),
+            "hours": t.integer().optional(),
+            "seconds": t.integer().optional(),
+            "nanos": t.integer().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["TimeOfDayOut"])
+    types["ClearLocationAssociationRequestIn"] = t.struct(
+        {"_": t.string().optional()}
+    ).named(renames["ClearLocationAssociationRequestIn"])
+    types["ClearLocationAssociationRequestOut"] = t.struct(
+        {"error": t.proxy(renames["ErrorResponse"]).optional()}
+    ).named(renames["ClearLocationAssociationRequestOut"])
+    types["OpenInfoIn"] = t.struct(
+        {"status": t.string(), "openingDate": t.proxy(renames["DateIn"]).optional()}
+    ).named(renames["OpenInfoIn"])
+    types["OpenInfoOut"] = t.struct(
+        {
+            "canReopen": t.boolean().optional(),
+            "status": t.string(),
+            "openingDate": t.proxy(renames["DateOut"]).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["OpenInfoOut"])
+    types["ListLocationsResponseIn"] = t.struct(
+        {
+            "nextPageToken": t.string().optional(),
+            "locations": t.array(t.proxy(renames["LocationIn"])).optional(),
+            "totalSize": t.integer().optional(),
+        }
+    ).named(renames["ListLocationsResponseIn"])
+    types["ListLocationsResponseOut"] = t.struct(
+        {
+            "nextPageToken": t.string().optional(),
+            "locations": t.array(t.proxy(renames["LocationOut"])).optional(),
+            "totalSize": t.integer().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["ListLocationsResponseOut"])
+    types["GoogleUpdatedLocationIn"] = t.struct(
+        {
+            "pendingMask": t.string().optional(),
+            "diffMask": t.string().optional(),
+            "location": t.proxy(renames["LocationIn"]).optional(),
+        }
+    ).named(renames["GoogleUpdatedLocationIn"])
+    types["GoogleUpdatedLocationOut"] = t.struct(
+        {
+            "pendingMask": t.string().optional(),
+            "diffMask": t.string().optional(),
+            "location": t.proxy(renames["LocationOut"]).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["GoogleUpdatedLocationOut"])
+    types["ListCategoriesResponseIn"] = t.struct(
+        {
+            "categories": t.array(t.proxy(renames["CategoryIn"])).optional(),
+            "nextPageToken": t.string().optional(),
+        }
+    ).named(renames["ListCategoriesResponseIn"])
+    types["ListCategoriesResponseOut"] = t.struct(
+        {
+            "categories": t.array(t.proxy(renames["CategoryOut"])).optional(),
+            "nextPageToken": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["ListCategoriesResponseOut"])
+    types["CategoriesIn"] = t.struct(
+        {
+            "primaryCategory": t.proxy(renames["CategoryIn"]),
+            "additionalCategories": t.array(t.proxy(renames["CategoryIn"])).optional(),
+        }
+    ).named(renames["CategoriesIn"])
+    types["CategoriesOut"] = t.struct(
+        {
+            "primaryCategory": t.proxy(renames["CategoryOut"]),
+            "additionalCategories": t.array(t.proxy(renames["CategoryOut"])).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["CategoriesOut"])
+    types["ChainNameIn"] = t.struct(
+        {"languageCode": t.string().optional(), "displayName": t.string().optional()}
+    ).named(renames["ChainNameIn"])
+    types["ChainNameOut"] = t.struct(
+        {
+            "languageCode": t.string().optional(),
+            "displayName": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["ChainNameOut"])
+    types["ChainUriIn"] = t.struct({"uri": t.string().optional()}).named(
+        renames["ChainUriIn"]
+    )
+    types["ChainUriOut"] = t.struct(
+        {
+            "uri": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["ChainUriOut"])
+    types["MoreHoursTypeIn"] = t.struct({"_": t.string().optional()}).named(
+        renames["MoreHoursTypeIn"]
+    )
+    types["MoreHoursTypeOut"] = t.struct(
+        {
+            "hoursTypeId": t.string().optional(),
+            "displayName": t.string().optional(),
+            "localizedDisplayName": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["MoreHoursTypeOut"])
+    types["StructuredServiceItemIn"] = t.struct(
+        {"description": t.string().optional(), "serviceTypeId": t.string()}
+    ).named(renames["StructuredServiceItemIn"])
+    types["StructuredServiceItemOut"] = t.struct(
+        {
+            "description": t.string().optional(),
+            "serviceTypeId": t.string(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["StructuredServiceItemOut"])
+    types["SearchGoogleLocationsResponseIn"] = t.struct(
+        {"googleLocations": t.array(t.proxy(renames["GoogleLocationIn"])).optional()}
+    ).named(renames["SearchGoogleLocationsResponseIn"])
+    types["SearchGoogleLocationsResponseOut"] = t.struct(
+        {
+            "googleLocations": t.array(
+                t.proxy(renames["GoogleLocationOut"])
+            ).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["SearchGoogleLocationsResponseOut"])
+    types["LatLngIn"] = t.struct(
+        {"longitude": t.number().optional(), "latitude": t.number().optional()}
+    ).named(renames["LatLngIn"])
+    types["LatLngOut"] = t.struct(
+        {
+            "longitude": t.number().optional(),
+            "latitude": t.number().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["LatLngOut"])
+    types["EmptyIn"] = t.struct({"_": t.string().optional()}).named(renames["EmptyIn"])
+    types["EmptyOut"] = t.struct(
+        {"error": t.proxy(renames["ErrorResponse"]).optional()}
+    ).named(renames["EmptyOut"])
+    types["PostalAddressIn"] = t.struct(
+        {
+            "administrativeArea": t.string().optional(),
+            "addressLines": t.array(t.string()).optional(),
+            "locality": t.string().optional(),
+            "postalCode": t.string().optional(),
+            "regionCode": t.string(),
+            "recipients": t.array(t.string()).optional(),
+            "sublocality": t.string().optional(),
+            "revision": t.integer().optional(),
+            "sortingCode": t.string().optional(),
+            "languageCode": t.string().optional(),
+            "organization": t.string().optional(),
+        }
+    ).named(renames["PostalAddressIn"])
+    types["PostalAddressOut"] = t.struct(
+        {
+            "administrativeArea": t.string().optional(),
+            "addressLines": t.array(t.string()).optional(),
+            "locality": t.string().optional(),
+            "postalCode": t.string().optional(),
+            "regionCode": t.string(),
+            "recipients": t.array(t.string()).optional(),
+            "sublocality": t.string().optional(),
+            "revision": t.integer().optional(),
+            "sortingCode": t.string().optional(),
+            "languageCode": t.string().optional(),
+            "organization": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["PostalAddressOut"])
+    types["DateIn"] = t.struct(
+        {
+            "year": t.integer().optional(),
+            "month": t.integer().optional(),
+            "day": t.integer().optional(),
+        }
+    ).named(renames["DateIn"])
+    types["DateOut"] = t.struct(
+        {
+            "year": t.integer().optional(),
+            "month": t.integer().optional(),
+            "day": t.integer().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["DateOut"])
+    types["LabelIn"] = t.struct(
+        {
+            "languageCode": t.string().optional(),
+            "displayName": t.string(),
+            "description": t.string().optional(),
+        }
+    ).named(renames["LabelIn"])
+    types["LabelOut"] = t.struct(
+        {
+            "languageCode": t.string().optional(),
+            "displayName": t.string(),
+            "description": t.string().optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["LabelOut"])
+    types["AttributeIn"] = t.struct(
+        {
+            "uriValues": t.array(t.proxy(renames["UriAttributeValueIn"])).optional(),
+            "values": t.array(t.struct({"_": t.string().optional()})).optional(),
+            "repeatedEnumValue": t.proxy(
+                renames["RepeatedEnumAttributeValueIn"]
+            ).optional(),
+            "name": t.string(),
+        }
+    ).named(renames["AttributeIn"])
+    types["AttributeOut"] = t.struct(
+        {
+            "uriValues": t.array(t.proxy(renames["UriAttributeValueOut"])).optional(),
+            "values": t.array(t.struct({"_": t.string().optional()})).optional(),
+            "valueType": t.string().optional(),
+            "repeatedEnumValue": t.proxy(
+                renames["RepeatedEnumAttributeValueOut"]
+            ).optional(),
+            "name": t.string(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["AttributeOut"])
+    types["AdWordsLocationExtensionsIn"] = t.struct({"adPhone": t.string()}).named(
+        renames["AdWordsLocationExtensionsIn"]
+    )
+    types["AdWordsLocationExtensionsOut"] = t.struct(
+        {"adPhone": t.string(), "error": t.proxy(renames["ErrorResponse"]).optional()}
+    ).named(renames["AdWordsLocationExtensionsOut"])
+    types["AttributeMetadataIn"] = t.struct(
+        {
+            "deprecated": t.boolean().optional(),
+            "groupDisplayName": t.string().optional(),
+            "valueType": t.string().optional(),
+            "repeatable": t.boolean().optional(),
+            "displayName": t.string().optional(),
+            "parent": t.string().optional(),
+            "valueMetadata": t.array(
+                t.proxy(renames["AttributeValueMetadataIn"])
+            ).optional(),
+        }
+    ).named(renames["AttributeMetadataIn"])
+    types["AttributeMetadataOut"] = t.struct(
+        {
+            "deprecated": t.boolean().optional(),
+            "groupDisplayName": t.string().optional(),
+            "valueType": t.string().optional(),
+            "repeatable": t.boolean().optional(),
+            "displayName": t.string().optional(),
+            "parent": t.string().optional(),
+            "valueMetadata": t.array(
+                t.proxy(renames["AttributeValueMetadataOut"])
+            ).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["AttributeMetadataOut"])
+    types["PhoneNumbersIn"] = t.struct(
+        {"additionalPhones": t.array(t.string()).optional(), "primaryPhone": t.string()}
+    ).named(renames["PhoneNumbersIn"])
+    types["PhoneNumbersOut"] = t.struct(
+        {
+            "additionalPhones": t.array(t.string()).optional(),
+            "primaryPhone": t.string(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["PhoneNumbersOut"])
+    types["BusinessHoursIn"] = t.struct(
+        {"periods": t.array(t.proxy(renames["TimePeriodIn"]))}
+    ).named(renames["BusinessHoursIn"])
+    types["BusinessHoursOut"] = t.struct(
+        {
+            "periods": t.array(t.proxy(renames["TimePeriodOut"])),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["BusinessHoursOut"])
+    types["PlacesIn"] = t.struct(
+        {"placeInfos": t.array(t.proxy(renames["PlaceInfoIn"])).optional()}
+    ).named(renames["PlacesIn"])
+    types["PlacesOut"] = t.struct(
+        {
+            "placeInfos": t.array(t.proxy(renames["PlaceInfoOut"])).optional(),
+            "error": t.proxy(renames["ErrorResponse"]).optional(),
+        }
+    ).named(renames["PlacesOut"])
     types["RelevantLocationIn"] = t.struct(
         {"relationType": t.string(), "placeId": t.string()}
     ).named(renames["RelevantLocationIn"])
@@ -747,159 +818,284 @@ def import_googleapi():
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["RelevantLocationOut"])
-    types["ChainUriIn"] = t.struct({"uri": t.string().optional()}).named(
-        renames["ChainUriIn"]
-    )
-    types["ChainUriOut"] = t.struct(
-        {
-            "uri": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["ChainUriOut"])
-    types["TimeOfDayIn"] = t.struct(
-        {
-            "minutes": t.integer().optional(),
-            "seconds": t.integer().optional(),
-            "hours": t.integer().optional(),
-            "nanos": t.integer().optional(),
-        }
-    ).named(renames["TimeOfDayIn"])
-    types["TimeOfDayOut"] = t.struct(
-        {
-            "minutes": t.integer().optional(),
-            "seconds": t.integer().optional(),
-            "hours": t.integer().optional(),
-            "nanos": t.integer().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["TimeOfDayOut"])
-    types["AttributeMetadataIn"] = t.struct(
-        {
-            "deprecated": t.boolean().optional(),
-            "groupDisplayName": t.string().optional(),
-            "parent": t.string().optional(),
-            "valueMetadata": t.array(
-                t.proxy(renames["AttributeValueMetadataIn"])
-            ).optional(),
-            "displayName": t.string().optional(),
-            "repeatable": t.boolean().optional(),
-            "valueType": t.string().optional(),
-        }
-    ).named(renames["AttributeMetadataIn"])
-    types["AttributeMetadataOut"] = t.struct(
-        {
-            "deprecated": t.boolean().optional(),
-            "groupDisplayName": t.string().optional(),
-            "parent": t.string().optional(),
-            "valueMetadata": t.array(
-                t.proxy(renames["AttributeValueMetadataOut"])
-            ).optional(),
-            "displayName": t.string().optional(),
-            "repeatable": t.boolean().optional(),
-            "valueType": t.string().optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["AttributeMetadataOut"])
-    types["BatchGetCategoriesResponseIn"] = t.struct(
-        {"categories": t.array(t.proxy(renames["CategoryIn"])).optional()}
-    ).named(renames["BatchGetCategoriesResponseIn"])
-    types["BatchGetCategoriesResponseOut"] = t.struct(
-        {
-            "categories": t.array(t.proxy(renames["CategoryOut"])).optional(),
-            "error": t.proxy(renames["ErrorResponse"]).optional(),
-        }
-    ).named(renames["BatchGetCategoriesResponseOut"])
 
     functions = {}
-    functions["attributesList"] = googleapi.get(
-        "v1/attributes",
+    functions["locationsUpdateAttributes"] = googleapi.patch(
+        "v1/{name}",
         t.struct(
             {
+                "name": t.string().optional(),
+                "updateMask": t.string(),
+                "validateOnly": t.boolean().optional(),
+                "storeCode": t.string().optional(),
+                "latlng": t.proxy(renames["LatLngIn"]).optional(),
+                "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
+                "title": t.string(),
+                "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
+                "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
+                "profile": t.proxy(renames["ProfileIn"]).optional(),
+                "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
+                "websiteUri": t.string().optional(),
+                "categories": t.proxy(renames["CategoriesIn"]).optional(),
+                "serviceArea": t.proxy(renames["ServiceAreaBusinessIn"]).optional(),
+                "labels": t.array(t.string()).optional(),
                 "languageCode": t.string().optional(),
-                "parent": t.string().optional(),
-                "regionCode": t.string().optional(),
-                "showAll": t.boolean().optional(),
-                "categoryName": t.string().optional(),
-                "pageToken": t.string().optional(),
-                "pageSize": t.integer().optional(),
+                "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
+                "adWordsLocationExtensions": t.proxy(
+                    renames["AdWordsLocationExtensionsIn"]
+                ).optional(),
+                "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
+                "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
+                "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["ListAttributeMetadataResponseOut"]),
+        t.proxy(renames["LocationOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["googleLocationsSearch"] = googleapi.post(
-        "v1/googleLocations:search",
+    functions["locationsClearLocationAssociation"] = googleapi.patch(
+        "v1/{name}",
         t.struct(
             {
-                "location": t.proxy(renames["LocationIn"]).optional(),
-                "query": t.string().optional(),
-                "pageSize": t.integer().optional(),
+                "name": t.string().optional(),
+                "updateMask": t.string(),
+                "validateOnly": t.boolean().optional(),
+                "storeCode": t.string().optional(),
+                "latlng": t.proxy(renames["LatLngIn"]).optional(),
+                "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
+                "title": t.string(),
+                "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
+                "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
+                "profile": t.proxy(renames["ProfileIn"]).optional(),
+                "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
+                "websiteUri": t.string().optional(),
+                "categories": t.proxy(renames["CategoriesIn"]).optional(),
+                "serviceArea": t.proxy(renames["ServiceAreaBusinessIn"]).optional(),
+                "labels": t.array(t.string()).optional(),
+                "languageCode": t.string().optional(),
+                "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
+                "adWordsLocationExtensions": t.proxy(
+                    renames["AdWordsLocationExtensionsIn"]
+                ).optional(),
+                "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
+                "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
+                "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["SearchGoogleLocationsResponseOut"]),
+        t.proxy(renames["LocationOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["chainsGet"] = googleapi.get(
-        "v1/chains:search",
+    functions["locationsGetAttributes"] = googleapi.patch(
+        "v1/{name}",
         t.struct(
             {
-                "chainName": t.string(),
-                "pageSize": t.integer().optional(),
+                "name": t.string().optional(),
+                "updateMask": t.string(),
+                "validateOnly": t.boolean().optional(),
+                "storeCode": t.string().optional(),
+                "latlng": t.proxy(renames["LatLngIn"]).optional(),
+                "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
+                "title": t.string(),
+                "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
+                "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
+                "profile": t.proxy(renames["ProfileIn"]).optional(),
+                "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
+                "websiteUri": t.string().optional(),
+                "categories": t.proxy(renames["CategoriesIn"]).optional(),
+                "serviceArea": t.proxy(renames["ServiceAreaBusinessIn"]).optional(),
+                "labels": t.array(t.string()).optional(),
+                "languageCode": t.string().optional(),
+                "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
+                "adWordsLocationExtensions": t.proxy(
+                    renames["AdWordsLocationExtensionsIn"]
+                ).optional(),
+                "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
+                "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
+                "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["SearchChainsResponseOut"]),
+        t.proxy(renames["LocationOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["chainsSearch"] = googleapi.get(
-        "v1/chains:search",
+    functions["locationsGet"] = googleapi.patch(
+        "v1/{name}",
         t.struct(
             {
-                "chainName": t.string(),
-                "pageSize": t.integer().optional(),
+                "name": t.string().optional(),
+                "updateMask": t.string(),
+                "validateOnly": t.boolean().optional(),
+                "storeCode": t.string().optional(),
+                "latlng": t.proxy(renames["LatLngIn"]).optional(),
+                "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
+                "title": t.string(),
+                "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
+                "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
+                "profile": t.proxy(renames["ProfileIn"]).optional(),
+                "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
+                "websiteUri": t.string().optional(),
+                "categories": t.proxy(renames["CategoriesIn"]).optional(),
+                "serviceArea": t.proxy(renames["ServiceAreaBusinessIn"]).optional(),
+                "labels": t.array(t.string()).optional(),
+                "languageCode": t.string().optional(),
+                "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
+                "adWordsLocationExtensions": t.proxy(
+                    renames["AdWordsLocationExtensionsIn"]
+                ).optional(),
+                "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
+                "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
+                "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["SearchChainsResponseOut"]),
+        t.proxy(renames["LocationOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["categoriesBatchGet"] = googleapi.get(
-        "v1/categories",
+    functions["locationsGetGoogleUpdated"] = googleapi.patch(
+        "v1/{name}",
         t.struct(
             {
-                "filter": t.string().optional(),
-                "pageToken": t.string().optional(),
-                "view": t.string(),
-                "regionCode": t.string(),
-                "pageSize": t.integer().optional(),
-                "languageCode": t.string(),
+                "name": t.string().optional(),
+                "updateMask": t.string(),
+                "validateOnly": t.boolean().optional(),
+                "storeCode": t.string().optional(),
+                "latlng": t.proxy(renames["LatLngIn"]).optional(),
+                "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
+                "title": t.string(),
+                "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
+                "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
+                "profile": t.proxy(renames["ProfileIn"]).optional(),
+                "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
+                "websiteUri": t.string().optional(),
+                "categories": t.proxy(renames["CategoriesIn"]).optional(),
+                "serviceArea": t.proxy(renames["ServiceAreaBusinessIn"]).optional(),
+                "labels": t.array(t.string()).optional(),
+                "languageCode": t.string().optional(),
+                "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
+                "adWordsLocationExtensions": t.proxy(
+                    renames["AdWordsLocationExtensionsIn"]
+                ).optional(),
+                "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
+                "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
+                "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["ListCategoriesResponseOut"]),
+        t.proxy(renames["LocationOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["categoriesList"] = googleapi.get(
-        "v1/categories",
+    functions["locationsAssociate"] = googleapi.patch(
+        "v1/{name}",
         t.struct(
             {
-                "filter": t.string().optional(),
-                "pageToken": t.string().optional(),
-                "view": t.string(),
-                "regionCode": t.string(),
-                "pageSize": t.integer().optional(),
-                "languageCode": t.string(),
+                "name": t.string().optional(),
+                "updateMask": t.string(),
+                "validateOnly": t.boolean().optional(),
+                "storeCode": t.string().optional(),
+                "latlng": t.proxy(renames["LatLngIn"]).optional(),
+                "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
+                "title": t.string(),
+                "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
+                "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
+                "profile": t.proxy(renames["ProfileIn"]).optional(),
+                "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
+                "websiteUri": t.string().optional(),
+                "categories": t.proxy(renames["CategoriesIn"]).optional(),
+                "serviceArea": t.proxy(renames["ServiceAreaBusinessIn"]).optional(),
+                "labels": t.array(t.string()).optional(),
+                "languageCode": t.string().optional(),
+                "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
+                "adWordsLocationExtensions": t.proxy(
+                    renames["AdWordsLocationExtensionsIn"]
+                ).optional(),
+                "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
+                "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
+                "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["ListCategoriesResponseOut"]),
+        t.proxy(renames["LocationOut"]),
+        auth_token_field="auth",
+        content_type="application/json",
+    )
+    functions["locationsDelete"] = googleapi.patch(
+        "v1/{name}",
+        t.struct(
+            {
+                "name": t.string().optional(),
+                "updateMask": t.string(),
+                "validateOnly": t.boolean().optional(),
+                "storeCode": t.string().optional(),
+                "latlng": t.proxy(renames["LatLngIn"]).optional(),
+                "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
+                "title": t.string(),
+                "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
+                "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
+                "profile": t.proxy(renames["ProfileIn"]).optional(),
+                "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
+                "websiteUri": t.string().optional(),
+                "categories": t.proxy(renames["CategoriesIn"]).optional(),
+                "serviceArea": t.proxy(renames["ServiceAreaBusinessIn"]).optional(),
+                "labels": t.array(t.string()).optional(),
+                "languageCode": t.string().optional(),
+                "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
+                "adWordsLocationExtensions": t.proxy(
+                    renames["AdWordsLocationExtensionsIn"]
+                ).optional(),
+                "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
+                "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
+                "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
+                "auth": t.string().optional(),
+            }
+        ),
+        t.proxy(renames["LocationOut"]),
+        auth_token_field="auth",
+        content_type="application/json",
+    )
+    functions["locationsPatch"] = googleapi.patch(
+        "v1/{name}",
+        t.struct(
+            {
+                "name": t.string().optional(),
+                "updateMask": t.string(),
+                "validateOnly": t.boolean().optional(),
+                "storeCode": t.string().optional(),
+                "latlng": t.proxy(renames["LatLngIn"]).optional(),
+                "phoneNumbers": t.proxy(renames["PhoneNumbersIn"]).optional(),
+                "title": t.string(),
+                "regularHours": t.proxy(renames["BusinessHoursIn"]).optional(),
+                "storefrontAddress": t.proxy(renames["PostalAddressIn"]).optional(),
+                "profile": t.proxy(renames["ProfileIn"]).optional(),
+                "serviceItems": t.array(t.proxy(renames["ServiceItemIn"])).optional(),
+                "websiteUri": t.string().optional(),
+                "categories": t.proxy(renames["CategoriesIn"]).optional(),
+                "serviceArea": t.proxy(renames["ServiceAreaBusinessIn"]).optional(),
+                "labels": t.array(t.string()).optional(),
+                "languageCode": t.string().optional(),
+                "specialHours": t.proxy(renames["SpecialHoursIn"]).optional(),
+                "adWordsLocationExtensions": t.proxy(
+                    renames["AdWordsLocationExtensionsIn"]
+                ).optional(),
+                "moreHours": t.array(t.proxy(renames["MoreHoursIn"])).optional(),
+                "relationshipData": t.proxy(renames["RelationshipDataIn"]).optional(),
+                "openInfo": t.proxy(renames["OpenInfoIn"]).optional(),
+                "auth": t.string().optional(),
+            }
+        ),
+        t.proxy(renames["LocationOut"]),
+        auth_token_field="auth",
+        content_type="application/json",
+    )
+    functions["locationsAttributesGetGoogleUpdated"] = googleapi.get(
+        "v1/{name}:getGoogleUpdated",
+        t.struct({"name": t.string(), "auth": t.string().optional()}),
+        t.proxy(renames["AttributesOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
@@ -910,8 +1106,8 @@ def import_googleapi():
                 "pageToken": t.string().optional(),
                 "parent": t.string(),
                 "filter": t.string().optional(),
-                "orderBy": t.string().optional(),
                 "pageSize": t.integer().optional(),
+                "orderBy": t.string().optional(),
                 "auth": t.string().optional(),
             }
         ),
@@ -926,8 +1122,8 @@ def import_googleapi():
                 "pageToken": t.string().optional(),
                 "parent": t.string(),
                 "filter": t.string().optional(),
-                "orderBy": t.string().optional(),
                 "pageSize": t.integer().optional(),
+                "orderBy": t.string().optional(),
                 "auth": t.string().optional(),
             }
         ),
@@ -935,122 +1131,83 @@ def import_googleapi():
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["locationsGet"] = googleapi.patch(
-        "v1/{name}",
+    functions["attributesList"] = googleapi.get(
+        "v1/attributes",
         t.struct(
             {
-                "attributeMask": t.string(),
-                "name": t.string(),
-                "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
+                "regionCode": t.string().optional(),
+                "categoryName": t.string().optional(),
+                "pageToken": t.string().optional(),
+                "languageCode": t.string().optional(),
+                "showAll": t.boolean().optional(),
+                "pageSize": t.integer().optional(),
+                "parent": t.string().optional(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["AttributesOut"]),
+        t.proxy(renames["ListAttributeMetadataResponseOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["locationsClearLocationAssociation"] = googleapi.patch(
-        "v1/{name}",
+    functions["googleLocationsSearch"] = googleapi.post(
+        "v1/googleLocations:search",
         t.struct(
             {
-                "attributeMask": t.string(),
-                "name": t.string(),
-                "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
+                "pageSize": t.integer().optional(),
+                "location": t.proxy(renames["LocationIn"]).optional(),
+                "query": t.string().optional(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["AttributesOut"]),
+        t.proxy(renames["SearchGoogleLocationsResponseOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["locationsAssociate"] = googleapi.patch(
-        "v1/{name}",
+    functions["categoriesBatchGet"] = googleapi.get(
+        "v1/categories",
         t.struct(
             {
-                "attributeMask": t.string(),
-                "name": t.string(),
-                "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
+                "filter": t.string().optional(),
+                "pageToken": t.string().optional(),
+                "languageCode": t.string(),
+                "regionCode": t.string(),
+                "pageSize": t.integer().optional(),
+                "view": t.string(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["AttributesOut"]),
+        t.proxy(renames["ListCategoriesResponseOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["locationsPatch"] = googleapi.patch(
-        "v1/{name}",
+    functions["categoriesList"] = googleapi.get(
+        "v1/categories",
         t.struct(
             {
-                "attributeMask": t.string(),
-                "name": t.string(),
-                "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
+                "filter": t.string().optional(),
+                "pageToken": t.string().optional(),
+                "languageCode": t.string(),
+                "regionCode": t.string(),
+                "pageSize": t.integer().optional(),
+                "view": t.string(),
                 "auth": t.string().optional(),
             }
         ),
-        t.proxy(renames["AttributesOut"]),
+        t.proxy(renames["ListCategoriesResponseOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )
-    functions["locationsGetAttributes"] = googleapi.patch(
+    functions["chainsSearch"] = googleapi.get(
         "v1/{name}",
-        t.struct(
-            {
-                "attributeMask": t.string(),
-                "name": t.string(),
-                "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
-                "auth": t.string().optional(),
-            }
-        ),
-        t.proxy(renames["AttributesOut"]),
-        auth_token_field="auth",
-        content_type="application/json",
-    )
-    functions["locationsDelete"] = googleapi.patch(
-        "v1/{name}",
-        t.struct(
-            {
-                "attributeMask": t.string(),
-                "name": t.string(),
-                "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
-                "auth": t.string().optional(),
-            }
-        ),
-        t.proxy(renames["AttributesOut"]),
-        auth_token_field="auth",
-        content_type="application/json",
-    )
-    functions["locationsGetGoogleUpdated"] = googleapi.patch(
-        "v1/{name}",
-        t.struct(
-            {
-                "attributeMask": t.string(),
-                "name": t.string(),
-                "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
-                "auth": t.string().optional(),
-            }
-        ),
-        t.proxy(renames["AttributesOut"]),
-        auth_token_field="auth",
-        content_type="application/json",
-    )
-    functions["locationsUpdateAttributes"] = googleapi.patch(
-        "v1/{name}",
-        t.struct(
-            {
-                "attributeMask": t.string(),
-                "name": t.string(),
-                "attributes": t.array(t.proxy(renames["AttributeIn"])).optional(),
-                "auth": t.string().optional(),
-            }
-        ),
-        t.proxy(renames["AttributesOut"]),
-        auth_token_field="auth",
-        content_type="application/json",
-    )
-    functions["locationsAttributesGetGoogleUpdated"] = googleapi.get(
-        "v1/{name}:getGoogleUpdated",
         t.struct({"name": t.string(), "auth": t.string().optional()}),
-        t.proxy(renames["AttributesOut"]),
+        t.proxy(renames["ChainOut"]),
+        auth_token_field="auth",
+        content_type="application/json",
+    )
+    functions["chainsGet"] = googleapi.get(
+        "v1/{name}",
+        t.struct({"name": t.string(), "auth": t.string().optional()}),
+        t.proxy(renames["ChainOut"]),
         auth_token_field="auth",
         content_type="application/json",
     )

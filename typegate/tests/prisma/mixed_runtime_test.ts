@@ -9,12 +9,13 @@ test("prisma mixed runtime", async (t) => {
         "postgresql://postgres:password@localhost:5432/db?schema=test",
     },
   });
+
   await t.should("drop schema and recreate", async () => {
     await gql`
-        mutation a {
-          dropSchema
-        }
-      `
+      mutation a {
+        dropSchema
+      }
+    `
       .expectData({
         dropSchema: 0,
       })
@@ -26,19 +27,19 @@ test("prisma mixed runtime", async (t) => {
     "insert a record without considering fields owned by other runtimes",
     async () => {
       await gql`
-          mutation {
-            createOneRecord (
-              data: {
-                id: 1,
-                description: "Some description"
-              }
-            )
-          {
-            id
-            description
-          }
+        mutation {
+          createOneRecord (
+            data: {
+              id: 1,
+              description: "Some description"
+            }
+          )
+        {
+          id
+          description
         }
-      `.expectData({
+      }
+    `.expectData({
         createOneRecord: {
           id: 1,
           description: "Some description",
@@ -48,38 +49,67 @@ test("prisma mixed runtime", async (t) => {
     },
   );
 
-  // At this point, mixed runtime should work fine
+  await t.should("work with different runtimes", async () => {
+    await gql`
+        query {
+          findUniqueRecord(where: {
+            id: 1
+          }) {
+            id
+            description
+            post(id: "1") {
+              id
+              title
+            }
+          }
+        }
+    `.expectData({
+      findUniqueRecord: {
+        id: 1,
+        description: "Some description",
+        post: {
+          id: "1",
+          title:
+            "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+        },
+      },
+    })
+      .on(e);
+  });
 
-  // graphql runtime bug ?
-  // generated sub-query:
-  // query Q {
-  //   country {
-  //     code
-  //     name
-  //   }
-  // }
-  // request err: Error: From remote graphql: Cannot query field "country" on type "Query".
-  //   await t.should("find unique and work with graphql runtime", async () => {
-  //     await gql`
-  //           query {
-  //             findUniqueRecord(where: {
-  //               id: 1
-  //             }) {
-  //               id
-  //               description
-  //               country(code: "MC") {
-  //                 code
-  //                 name
-  //               }
-  //             }
-  //           }
-  //       `.expectData({
-  //       findUniqueRecord: {
-  //         id: 1,
-  //         description: "Some description",
-  //         country: { code: "MC", name: "Monaco" },
-  //       },
-  //     })
-  //       .on(e);
-  //   });
+  await t.should(
+    "work with more than two runtimes",
+    async () => {
+      await gql`
+        query {
+          findUniqueRecord(where: {
+            id: 1
+          }) {
+            id
+            description
+            post(id: "1") {
+              id
+              title
+            }
+            user {
+              name
+              age
+            }
+          }
+        }
+    `.expectData({
+        findUniqueRecord: {
+          id: 1,
+          description: "Some description",
+          post: {
+            id: "1",
+            title:
+              "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+          },
+          user: { name: "Landon Glover", age: 62 },
+        },
+      })
+        .on(e);
+    },
+  );
 });

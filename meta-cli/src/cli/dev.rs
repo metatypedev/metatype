@@ -66,7 +66,7 @@ impl Action for Dev {
 
         let mut loader: Loader = loader_options.into();
 
-        let mut push_loop = PushLoopBuilder::on(node)
+        let mut push_loop = PushLoopBuilder::on(node, dir.clone())
             .exit(false)
             .retry(3, Duration::from_secs(5))
             .on_pushed(move |res| {

@@ -101,9 +101,9 @@ impl PushQueueEntry {
         }
     }
 
-    async fn push(&self, node: &Node) -> Result<PushResult> {
+    async fn push(&self, node: &Node, base: PathBuf) -> Result<PushResult> {
         let tg = &self.typegraph;
-        let secrets = lade_sdk::hydrate(node.env.clone()).await?;
+        let secrets = lade_sdk::hydrate(node.env.clone(), base).await?;
         let res = node
             .post("/typegate")?
             .gql(
@@ -140,15 +140,17 @@ where
     exit: bool, // exit when the queue is empty
     retry: Option<Retry>,
     node: Node,
+    base_dir: PathBuf,
     on_pushed: C,
 }
 
 impl PushLoopBuilder<DefaultPushResultConsumer> {
-    pub fn on(node: Node) -> Self {
+    pub fn on(node: Node, base_dir: PathBuf) -> Self {
         Self {
             exit: false,
             retry: None,
             node,
+            base_dir,
             on_pushed: DefaultPushResultConsumer,
         }
     }
@@ -158,6 +160,7 @@ impl PushLoopBuilder<DefaultPushResultConsumer> {
             exit: self.exit,
             retry: self.retry,
             node: self.node,
+            base_dir: self.base_dir,
             on_pushed: handler,
         }
     }
@@ -271,7 +274,10 @@ where
                 diff_paths(path, std::env::current_dir().unwrap()).unwrap()
             );
             let options = Arc::clone(&self.options);
-            match entry.push(&self.options.node).await {
+            match entry
+                .push(&self.options.node, self.options.base_dir.clone())
+                .await
+            {
                 Err(e) => {
                     println!(
                         "{} Failed to push typegraph {tg_name}: {:?}",

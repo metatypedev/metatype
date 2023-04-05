@@ -83,7 +83,7 @@ class TypeGenerator:
             return proxy
 
         if isinstance(tpe, t.func):
-            return self.get_out_type(tpe.out)
+            return tpe.out
 
         if not isinstance(tpe, t.struct):
             return tpe
