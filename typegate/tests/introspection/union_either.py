@@ -12,11 +12,7 @@ with TypeGraph("introspect-union-either") as g:
     user = t.struct(
         {"name": t.string().named("Username"), "favorite": toy.named("FavoriteToy")}
     ).named("User")
-    # user = t.struct(
-    #     {"name": t.string().named("Username"), "favorite": t.struct({
-    #         "one": toygun, "two": rubix_cube
-    #     })}
-    # ).named("User")
+
     g.expose(
         test=t.func(
             user.named("Input"),
