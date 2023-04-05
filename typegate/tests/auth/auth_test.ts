@@ -18,10 +18,7 @@ import { b64decode } from "../../src/utils.ts";
 
 mf.install();
 
-console.log("> auth test");
-
 test("Auth", async (t) => {
-  console.log("> auth test: start");
   const clientId = "client_id_1";
   const clientSecret = "client_secret_1";
   const e = await t.pythonFile("auth/auth.py", {
@@ -30,8 +27,6 @@ test("Auth", async (t) => {
       TG_TEST_AUTH_GITHUB_CLIENT_SECRET: clientSecret,
     },
   });
-
-  console.log("> loaded typegraph");
 
   await t.should("allow public call", async () => {
     await gql`

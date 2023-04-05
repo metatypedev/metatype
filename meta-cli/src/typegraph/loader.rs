@@ -240,7 +240,6 @@ impl LoaderInternal {
             .unwrap();
 
         let _watcher = if self.options.watch {
-            eprintln!("> watch: true");
             // start watching early to catch all the modifications
             Some(self.create_watcher(&self.options.inputs, tx, Arc::clone(&self.deps))?)
         } else {
@@ -249,7 +248,6 @@ impl LoaderInternal {
         };
 
         while let Some(event) = rx.recv().await {
-            eprintln!("Received: {event:?}");
             match event {
                 LoaderEvent::ReloadAll(reason) => {
                     let mut count = 0;
@@ -264,9 +262,7 @@ impl LoaderInternal {
                                 }
                             }
                             LoaderInput::Directory(path) => {
-                                eprintln!("Directory: {path:?}");
                                 count += self.load_directory(path.clone(), reason.clone()).await?;
-                                eprintln!("> Directory");
                             } // LoaderInput::Glob(_glob) => {
                               //     todo!();
                               // }
@@ -291,13 +287,10 @@ impl LoaderInternal {
                     }
                 }
                 LoaderEvent::Terminate => {
-                    eprintln!("> terminate");
                     break;
                 }
             }
-            eprintln!("> event processing: done");
         }
-        eprintln!("End of loop");
 
         Ok(())
     }
