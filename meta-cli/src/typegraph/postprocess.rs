@@ -128,9 +128,10 @@ pub mod deno_rt {
                 };
 
                 let path = Path::new(path).to_owned();
-                let code = std::fs::read_to_string(path)?;
+                let code = std::fs::read_to_string(&path)?;
                 mat_data.code = transform_module(code)?;
                 mat.data = map_from_object(mat_data)?;
+                tg.deps.push(path);
             }
             Ok(())
         }

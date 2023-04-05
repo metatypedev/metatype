@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     env,
     path::{Path, PathBuf},
     process::Stdio,
-    sync::Arc,
+    sync::{Arc, Mutex},
     time::Duration,
 };
 
@@ -166,11 +166,65 @@ impl LoaderWatcher {
         self.rx.recv().await
     }
 }
+
+// TODO use Rc<PathBuf>
+#[derive(Default)]
+struct DependencyGraph {
+    deps: HashMap<PathBuf, HashSet<PathBuf>>, // typegraph -> deno modules
+    reverse_deps: HashMap<PathBuf, HashSet<PathBuf>>, // deno module -> typegraphs
+}
+
+impl DependencyGraph {
+    /// return the list of removed dependencies and added dependencies
+    fn update_typegraph(&mut self, tg: &Typegraph) {
+        let path = tg.path.clone().unwrap();
+        if !self.deps.contains_key(&path) {
+            self.deps.insert(path.clone(), HashSet::default());
+        }
+
+        let deps = self.deps.get_mut(&path).unwrap();
+        let old_deps = std::mem::replace(deps, tg.deps.iter().cloned().collect());
+        let removed_deps = old_deps.difference(deps);
+        let added_deps = deps.difference(&old_deps);
+
+        for removed in removed_deps {
+            let rdeps = self.reverse_deps.get_mut(removed).unwrap();
+            rdeps.take(&path).unwrap();
+            if rdeps.is_empty() {
+                self.reverse_deps.remove(removed);
+            }
+        }
+
+        for added in added_deps {
+            if let Some(set) = self.reverse_deps.get_mut(added) {
+                set.insert(path.clone());
+            } else {
+                self.reverse_deps
+                    .insert(added.clone(), HashSet::from_iter(Some(path.clone())));
+            }
+        }
+    }
+
+    fn remove_typegraph_at(&mut self, path: &Path) {
+        let deps = self.deps.remove(path);
+        if let Some(deps) = deps {
+            for dep in deps.iter() {
+                let rdeps = self.reverse_deps.get_mut(dep).unwrap();
+                rdeps.take(path).unwrap();
+                if rdeps.is_empty() {
+                    self.reverse_deps.remove(dep);
+                }
+            }
+        }
+    }
+}
+
 #[derive(Clone)]
 struct LoaderInternal {
     sender: UnboundedSender<LoaderOutput>,
     options: Arc<LoaderOptions>,
     gi: Gitignore,
+    deps: Arc<Mutex<DependencyGraph>>,
 }
 
 impl LoaderInternal {
@@ -186,8 +240,12 @@ impl LoaderInternal {
         for input in self.options.inputs.iter() {
             match input {
                 LoaderInput::File(path, filter) => {
-                    self.load_file(path.clone(), filter.clone(), None, false);
-                    count += 1;
+                    let res = self
+                        .load_file(path.clone(), filter.clone(), None, false)
+                        .await;
+                    if res {
+                        count += 1;
+                    }
                 }
                 LoaderInput::Directory(path) => {
                     count += self.load_directory(path.clone()).await?;
@@ -203,10 +261,36 @@ impl LoaderInternal {
 
         if let Some(mut watcher) = watcher {
             while let Some(paths) = watcher.next().await {
+                let mut additional_paths = HashSet::new();
                 for path in paths {
+                    let rdeps = self.deps.lock().unwrap().reverse_deps.get(&path).cloned();
+                    if let Some(rdeps) = rdeps {
+                        let path = diff_paths(path, std::env::current_dir().unwrap());
+                        eprintln!("Dependecy modified: {path:?}");
+                        additional_paths.extend(rdeps);
+                        continue;
+                    }
+
                     if let Ok(metadata) = path.metadata() {
                         if metadata.is_file() {
-                            self.load_file(path, FilterTypegraph::All, None, true);
+                            self.load_file(path, FilterTypegraph::All, None, true).await;
+                        }
+                    } else {
+                        // file removed??
+                        self.deps.lock().unwrap().remove_typegraph_at(&path);
+                    }
+                }
+
+                for path in additional_paths {
+                    if let Ok(metadata) = path.metadata() {
+                        if metadata.is_file() {
+                            self.load_file(
+                                path,
+                                FilterTypegraph::All,
+                                None,
+                                false, // Reload::DepModified dep
+                            )
+                            .await;
                         }
                     }
                 }
@@ -252,68 +336,74 @@ impl LoaderInternal {
         Ok(LoaderWatcher { rx, debouncer })
     }
 
-    fn load_file(
+    // return false if the file was skipped
+    async fn load_file(
         &self,
         path: PathBuf,
         filter: FilterTypegraph,
         input_dir: Option<PathBuf>,
-        watch: bool,
-    ) {
+        watch: bool, // triggered by watcher?
+    ) -> bool {
         let tx = self.sender.clone();
 
         if self.options.exclude_hidden_files && is_hidden(&path) {
-            return;
+            return false;
         }
 
         if let Match::Ignore(_) = self.gi.matched(&path, false) {
-            return;
+            return false;
         }
 
         let options = Arc::clone(&self.options);
-        tokio::spawn(async move {
-            let ext = path.extension().and_then(|ext| ext.to_str());
-            match ext {
-                Some(ext) if ext == "py" => {
-                    if watch {
-                        println!("Reloading typegraph definition module: {path:?}");
-                    } else if let Some(input_dir) = input_dir {
-                        let rel_path = diff_paths(&path, &input_dir).unwrap();
-                        println!("[input dir: {input_dir:?}] Found python typegraph definition module at {rel_path:?}");
-                    }
+        let ext = path.extension().and_then(|ext| ext.to_str());
+        match ext {
+            Some(ext) if ext == "py" => {
+                if watch {
+                    let rel_path = diff_paths(&path, std::env::current_dir().unwrap());
+                    println!("Reloading typegraph definition module: {rel_path:?}");
+                } else if let Some(input_dir) = input_dir {
+                    let rel_path = diff_paths(&path, &input_dir).unwrap();
+                    println!("[in: {input_dir:?}] Found python typegraph definition module at {rel_path:?}");
+                }
 
-                    let output = Self::load_python_module(&path, &options)
-                        .await
-                        .with_context(|| format!("Loading python module {:?}", path));
-                    match output {
-                        Ok(output) => {
-                            if output.is_empty() {
-                                // rewritten by an importer
-                                tx.send(LoaderOutput::Rewritten(path)).unwrap();
-                            } else {
-                                match Self::load_string(&path, filter, output, &options) {
-                                    Err(err) => {
-                                        tx.send(LoaderOutput::Error(err)).unwrap();
+                let output = Self::load_python_module(&path, &options)
+                    .await
+                    .with_context(|| format!("Loading python module {:?}", path));
+                match output {
+                    Ok(output) => {
+                        if output.is_empty() {
+                            // rewritten by an importer
+                            tx.send(LoaderOutput::Rewritten(path)).unwrap();
+                            false
+                        } else {
+                            match Self::load_string(&path, filter, output, &options) {
+                                Err(err) => {
+                                    tx.send(LoaderOutput::Error(err)).unwrap();
+                                    false
+                                }
+                                Ok(tgs) => {
+                                    for tg in tgs.into_iter() {
+                                        self.deps.lock().unwrap().update_typegraph(&tg);
+                                        tx.send(LoaderOutput::Typegraph(tg)).unwrap();
                                     }
-                                    Ok(tgs) => {
-                                        for tg in tgs.into_iter() {
-                                            tx.send(LoaderOutput::Typegraph(tg)).unwrap();
-                                        }
-                                    }
+                                    true
                                 }
                             }
                         }
-                        Err(error) => {
-                            tx.send(LoaderOutput::Error(LoaderError::Unknown { path, error }))
-                                .unwrap();
-                        }
+                    }
+                    Err(error) => {
+                        tx.send(LoaderOutput::Error(LoaderError::Unknown { path, error }))
+                            .unwrap();
+                        false
                     }
                 }
-                _ => {
-                    tx.send(LoaderOutput::Error(LoaderError::UnknownFileType(path)))
-                        .unwrap();
-                }
             }
-        });
+            _ => {
+                tx.send(LoaderOutput::Error(LoaderError::UnknownFileType(path)))
+                    .unwrap();
+                false
+            }
+        }
     }
 
     fn load_string(
@@ -392,8 +482,12 @@ impl LoaderInternal {
                     continue;
                 }
 
-                self.load_file(file_name, FilterTypegraph::All, Some(path.clone()), false);
-                count += 1;
+                let res = self
+                    .load_file(file_name, FilterTypegraph::All, Some(path.clone()), false)
+                    .await;
+                if res {
+                    count += 1;
+                }
             }
         }
         Ok(count)
@@ -453,6 +547,7 @@ impl From<LoaderOptions> for Loader {
             options: Arc::new(options),
             sender: tx,
             gi,
+            deps: Arc::new(Mutex::new(DependencyGraph::default())),
         };
 
         tokio::spawn(async move {

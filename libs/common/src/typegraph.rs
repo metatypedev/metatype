@@ -22,6 +22,8 @@ pub struct Typegraph {
     pub meta: TypeMeta,
     #[serde(skip)]
     pub path: Option<PathBuf>,
+    #[serde(skip)]
+    pub deps: Vec<PathBuf>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
