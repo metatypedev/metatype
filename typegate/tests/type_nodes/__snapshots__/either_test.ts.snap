@@ -148,41 +148,94 @@ snapshot[`Either type 2`] = `
   __schema: {
     types: [
       {
+        fields: null,
+        kind: "SCALAR",
+        name: "Int",
+      },
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "String",
+      },
+      {
+        fields: [
+          {
+            name: "regist_user",
+            type: {
+              kind: "NON_NULL",
+            },
+          },
+        ],
         kind: "OBJECT",
         name: "Query",
-        possibleTypes: null,
       },
       {
-        kind: "UNION",
+        fields: [
+          {
+            name: "either_1",
+            type: {
+              kind: "NON_NULL",
+            },
+          },
+          {
+            name: "either_0",
+            type: {
+              kind: "NON_NULL",
+            },
+          },
+        ],
+        kind: "OBJECT",
         name: "Response",
-        possibleTypes: [
-          {
-            kind: "OBJECT",
-            name: "object_16",
-          },
-          {
-            kind: "OBJECT",
-            name: "object_18",
-          },
-        ],
       },
       {
-        kind: "UNION",
-        name: "User",
-        possibleTypes: [
+        fields: [
           {
-            kind: "OBJECT",
-            name: "Kid",
+            name: "date",
+            type: {
+              kind: "NON_NULL",
+            },
           },
           {
-            kind: "OBJECT",
-            name: "Teen",
-          },
-          {
-            kind: "OBJECT",
-            name: "Adult",
+            name: "user_id",
+            type: {
+              kind: "NON_NULL",
+            },
           },
         ],
+        kind: "OBJECT",
+        name: "object_16",
+      },
+      {
+        fields: [
+          {
+            name: "reason",
+            type: {
+              kind: "NON_NULL",
+            },
+          },
+        ],
+        kind: "OBJECT",
+        name: "object_18",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "UserInp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "KidInp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "TeenInp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "AdultInp",
       },
     ],
   },

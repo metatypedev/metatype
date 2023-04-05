@@ -153,58 +153,90 @@ snapshot[`Union type 2`] = `
   __schema: {
     types: [
       {
+        fields: null,
+        kind: "SCALAR",
+        name: "Int",
+      },
+      {
+        fields: null,
         kind: "SCALAR",
         name: "String",
-        possibleTypes: null,
       },
       {
+        fields: [
+          {
+            name: "convert",
+            type: {
+              kind: "NON_NULL",
+            },
+          },
+        ],
         kind: "OBJECT",
         name: "Query",
-        possibleTypes: null,
       },
       {
-        kind: "UNION",
-        name: "Color",
-        possibleTypes: [
+        fields: [
           {
-            kind: "LIST",
-            name: null,
+            name: "union_3",
+            type: {
+              kind: "NON_NULL",
+            },
           },
           {
-            kind: "OBJECT",
-            name: "RGB_struct",
+            name: "union_2",
+            type: {
+              kind: "NON_NULL",
+            },
           },
           {
-            kind: "SCALAR",
-            name: "String",
+            name: "union_1",
+            type: {
+              kind: "NON_NULL",
+            },
           },
           {
-            kind: "SCALAR",
-            name: "String",
+            name: "union_0",
+            type: {
+              kind: "NON_NULL",
+            },
           },
         ],
+        kind: "OBJECT",
+        name: "Color",
       },
       {
-        kind: "UNION",
-        name: "Color",
-        possibleTypes: [
+        fields: [
           {
-            kind: "LIST",
-            name: null,
+            name: "r",
+            type: {
+              kind: "NON_NULL",
+            },
           },
           {
-            kind: "OBJECT",
-            name: "RGB_struct",
+            name: "g",
+            type: {
+              kind: "NON_NULL",
+            },
           },
           {
-            kind: "SCALAR",
-            name: "String",
-          },
-          {
-            kind: "SCALAR",
-            name: "String",
+            name: "b",
+            type: {
+              kind: "NON_NULL",
+            },
           },
         ],
+        kind: "OBJECT",
+        name: "RGB_struct",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "ColorInp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "RGB_structInp",
       },
     ],
   },
