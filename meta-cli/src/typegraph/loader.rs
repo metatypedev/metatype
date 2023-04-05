@@ -363,7 +363,7 @@ impl LoaderInternal {
                     println!("Reloading typegraph definition module: {rel_path:?}");
                 } else if let Some(input_dir) = input_dir {
                     let rel_path = diff_paths(&path, &input_dir).unwrap();
-                    println!("[in: {input_dir:?}] Found python typegraph definition module at {rel_path:?}");
+                    println!("Found python typegraph definition module at {rel_path:?}");
                 }
 
                 let output = Self::load_python_module(&path, &options)

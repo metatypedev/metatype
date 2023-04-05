@@ -31,6 +31,10 @@ export class PushResponse {
   data(key: string, value: JSONValue) {
     this.customData[key] = value;
   }
+
+  hasError() {
+    return this.messages.some((e) => e.type === Message.ERROR);
+  }
 }
 
 interface PushHandler {

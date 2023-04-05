@@ -64,9 +64,26 @@ impl PushResult {
         &self.name
     }
 
+    pub fn should_retry(&self) -> bool {
+        let res = serde_json::from_str::<HashMap<String, serde_json::Value>>(&self.custom_data);
+        res.map(|data| {
+            data.get("retry")
+                .map(|v| matches!(v, serde_json::Value::Bool(true)))
+                .unwrap_or(false)
+        })
+        .unwrap_or(false)
+    }
+
     pub fn iter_custom_data(&self) -> Result<impl Iterator<Item = (String, serde_json::Value)>> {
         let map: HashMap<String, serde_json::Value> = serde_json::from_str(&self.custom_data)?;
         Ok(map.into_iter().map(|(k, v)| (k, v)))
+    }
+
+    pub fn has_error(&self) -> bool {
+        return self
+            .messages
+            .iter()
+            .any(|m| matches!(m, MessageEntry::Error(_)));
     }
 }
 
@@ -268,12 +285,26 @@ where
                     }
                 }
                 Ok(mut res) => {
-                    println!(
-                        "{} Successfully pushed typegraph {tg_name}.",
-                        "✓".to_owned().green()
-                    );
-                    res.path = entry.typegraph.path.clone();
-                    self.handle_push_result(res);
+                    if res.has_error() {
+                        println!(
+                            "{} Failed to push typegraph {tg_name}",
+                            "✗".to_owned().red(),
+                        );
+                        let should_retry = res.should_retry();
+                        self.handle_push_result(res);
+                        if let Some(opt_retry) = options.retry.as_ref() {
+                            if should_retry && entry.retry_no < opt_retry.max {
+                                self.retry(entry).await;
+                            }
+                        }
+                    } else {
+                        println!(
+                            "{} Successfully pushed typegraph {tg_name}.",
+                            "✓".to_owned().green()
+                        );
+                        res.path = entry.typegraph.path.clone();
+                        self.handle_push_result(res);
+                    }
                 }
             }
         }

@@ -66,33 +66,73 @@ registerHook("onPush", async (typegraph, response) => {
     const prefix = `[prisma runtime: '${rt.data.name}']`;
 
     if (rt.data.create_migration) {
-      const res = nativeResult(
-        await native.prisma_create({
-          datasource,
-          datamodel,
-          migrations: migrations!,
-          migration_name: "generated",
-          apply: true,
-        }),
-      );
-
-      const { created_migration_name, applied_migrations } = res;
-      if (created_migration_name != null) {
-        response.info(
-          `${prefix} Created migration: '${created_migration_name}'`,
-        );
-        response.data(`migrations:${rt.data.name}`, res.migrations);
-        rt.data.migrations = res.migrations;
+      const applyRes = await native.prisma_apply({
+        datasource,
+        datamodel,
+        migrations: migrations!,
+        reset_database: false,
+      });
+      if ("Err" in applyRes) {
+        throw new Error(applyRes.Err.message);
       }
-      if (applied_migrations.length === 0) {
-        response.info(`${prefix} No migration applied.`);
-      } else {
-        const count = applied_migrations.length;
-        response.info(
-          `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
+      if ("ResetRequired" in applyRes) {
+        throw new Error(
+          `Database reset required: ${applyRes.ResetRequired.reset_reason}`,
         );
-        for (const migrationName of applied_migrations) {
-          response.info(`  - ${migrationName}`);
+      } else {
+        const { applied_migrations } = applyRes.MigrationsApplied!;
+        if (applied_migrations.length === 0) {
+          response.info(`${prefix} No migration applied.`);
+        } else {
+          const count = applied_migrations.length;
+          response.info(
+            `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
+          );
+          for (const migrationName of applied_migrations) {
+            response.info(`  - ${migrationName}`);
+          }
+        }
+
+        // diff
+        const res = nativeResult(
+          await native.prisma_diff({
+            datasource,
+            datamodel,
+            script: false,
+          }),
+        );
+
+        if (res.diff != null) {
+          // create
+          const res = nativeResult(
+            await native.prisma_create({
+              datasource,
+              datamodel,
+              migrations: migrations!,
+              migration_name: "generated",
+              apply: true,
+            }),
+          );
+
+          const { created_migration_name, applied_migrations } = res;
+          if (created_migration_name != null) {
+            response.info(
+              `${prefix} Created migration: '${created_migration_name}'`,
+            );
+            response.data(`migrations:${rt.data.name}`, res.migrations);
+            rt.data.migrations = res.migrations;
+          }
+          if (applied_migrations.length === 0) {
+            response.info(`${prefix} No migration applied.`);
+          } else {
+            const count = applied_migrations.length;
+            response.info(
+              `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
+            );
+            for (const migrationName of applied_migrations) {
+              response.info(`  - ${migrationName}`);
+            }
+          }
         }
       }
     } else {

@@ -13,7 +13,7 @@ export interface MessageEntry {
 }
 
 export interface RegistrationResult {
-  typegraphName: string;
+  typegraphName: string | null;
   messages: Array<MessageEntry>;
   customData: Record<string, JSONValue>;
 }
@@ -49,21 +49,34 @@ export class ReplicatedRegister extends Register {
 
   async set(payload: string): Promise<RegistrationResult> {
     const response = new PushResponse();
-    const engine = await initTypegraph(
-      payload,
-      false,
-      response,
-      SystemTypegraph.getCustomRuntimes(this),
-    );
-    if (SystemTypegraph.check(engine.name)) {
-      // no need for a sync
-      this.replicatedMap.memory.set(engine.name, engine);
-    } else {
-      await this.replicatedMap.set(engine.name, engine);
+
+    let engine = null;
+    try {
+      engine = await initTypegraph(
+        payload,
+        false,
+        response,
+        SystemTypegraph.getCustomRuntimes(this),
+      );
+    } catch (err) {
+      response.error(err.message);
+    }
+    if (engine != null && !response.hasError()) {
+      if (SystemTypegraph.check(engine.name)) {
+        // no need for a sync
+        this.replicatedMap.memory.set(engine.name, engine);
+      } else {
+        await this.replicatedMap.set(engine.name, engine);
+      }
+      return {
+        typegraphName: engine.name,
+        messages: response.messages,
+        customData: response.customData,
+      };
     }
 
     return {
-      typegraphName: engine.name,
+      typegraphName: null,
       messages: response.messages,
       customData: response.customData,
     };
