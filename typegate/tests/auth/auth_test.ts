@@ -18,7 +18,10 @@ import { b64decode } from "../../src/utils.ts";
 
 mf.install();
 
+console.log("> auth test");
+
 test("Auth", async (t) => {
+  console.log("> auth test: start");
   const clientId = "client_id_1";
   const clientSecret = "client_secret_1";
   const e = await t.pythonFile("auth/auth.py", {
