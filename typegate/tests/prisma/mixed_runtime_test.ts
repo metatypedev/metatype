@@ -49,7 +49,7 @@ test("prisma mixed runtime", async (t) => {
     },
   );
 
-  await t.should("work with different runtimes: prisma, graphql", async () => {
+  await t.should("work with different runtimes", async () => {
     await gql`
         query {
           findUniqueRecord(where: {
@@ -76,4 +76,40 @@ test("prisma mixed runtime", async (t) => {
     })
       .on(e);
   });
+
+  await t.should(
+    "work with more than two runtimes",
+    async () => {
+      await gql`
+        query {
+          findUniqueRecord(where: {
+            id: 1
+          }) {
+            id
+            description
+            post(id: "1") {
+              id
+              title
+            }
+            user {
+              name
+              age
+            }
+          }
+        }
+    `.expectData({
+        findUniqueRecord: {
+          id: 1,
+          description: "Some description",
+          post: {
+            id: "1",
+            title:
+              "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+          },
+          user: { name: "Landon Glover", age: 62 },
+        },
+      })
+        .on(e);
+    },
+  );
 });
