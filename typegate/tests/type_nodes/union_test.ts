@@ -120,6 +120,10 @@ test(
       },
     );
 
+    // Note:
+    // Due to Input compatitbility issues with the current graphql spec
+    // Either/Union are seen as `object`
+    // when introspected
     await t.should("allow to introspect the union type", async () => {
       await gql`
         query IntrospectionQuery {
@@ -127,9 +131,11 @@ test(
             types {
               name
               kind
-              possibleTypes {
+              fields {
                 name
-                kind
+                type {
+                  kind
+                }
               }
             }
           }

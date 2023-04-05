@@ -11,19 +11,6 @@ export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
     const edge = cyan(`${path.edges[path.edges.length - 1] ?? "[root]"}`);
     const idxStr = green(`${idx}`);
     console.log(`${indent}${edge} → ${idxStr} ${type.type}:${type.title}`);
-    if (type.type == "union") {
-      console.log(`${indent}anyOf → ids [${type.anyOf.join(", ")}]`);
-      for (const id of type.anyOf) {
-        const type = tg.types[id];
-        console.log(`${indent} * ${type.type}:${type.title}`);
-      }
-    } else if (type.type == "either") {
-      console.log(`${indent}oneOf → ids [${type.oneOf.join(", ")}]`);
-      for (const id of type.oneOf) {
-        const type = tg.types[id];
-        console.log(`${indent} * ${type.type}:${type.title}`);
-      }
-    }
     return path.edges.length < depth;
   }, { allowCircular: true });
 }

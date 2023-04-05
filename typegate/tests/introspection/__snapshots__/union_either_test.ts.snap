@@ -1,0 +1,132 @@
+export const snapshot = {};
+
+snapshot[`Basic introspection 1`] = `
+{
+  __schema: {
+    types: [
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "String",
+      },
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "Int",
+      },
+      {
+        fields: [
+          {
+            name: "test",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Query",
+      },
+      {
+        fields: [
+          {
+            name: "favorite",
+          },
+          {
+            name: "name",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Output",
+      },
+      {
+        fields: [
+          {
+            name: "ref",
+          },
+          {
+            name: "model",
+          },
+          {
+            name: "color",
+          },
+          {
+            name: "size",
+          },
+          {
+            name: "name",
+          },
+        ],
+        kind: "OBJECT",
+        name: "FavoriteToy",
+      },
+      {
+        fields: [
+          {
+            name: "size",
+          },
+          {
+            name: "name",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Rubix",
+      },
+      {
+        fields: [
+          {
+            name: "color",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Toygun",
+      },
+      {
+        fields: [
+          {
+            name: "ref",
+          },
+          {
+            name: "model",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Gunpla",
+      },
+      {
+        fields: [
+          {
+            name: "union_1",
+          },
+          {
+            name: "union_0",
+          },
+        ],
+        kind: "OBJECT",
+        name: "union_9",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "FavoriteToyInp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "RubixInp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "ToygunInp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "GunplaInp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "union_9Inp",
+      },
+    ],
+  },
+}
+`;
