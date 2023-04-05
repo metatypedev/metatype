@@ -281,6 +281,9 @@ def import_googleapi():
             "webpush": t.proxy(renames["WebpushConfigIn"]).optional(),
         }
     ).named(renames["MessageIn"])
+
+    # skip:end
+    # ...
     types["MessageOut"] = t.struct(
         {
             "apns": t.proxy(renames["ApnsConfigOut"]).optional(),
@@ -296,7 +299,8 @@ def import_googleapi():
             "error": t.proxy(renames["ErrorResponse"]).optional(),
         }
     ).named(renames["MessageOut"])
-
+    # ...
+    # skip:start
     functions = {}
     functions["projectsMessagesSend"] = googleapi.post(
         "v1/{parent}/messages:send",
