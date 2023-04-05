@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { Engine } from "../../src/engine.ts";
+import { PushResponse } from "../../src/hooks.ts";
 import { Register, RegistrationResult } from "../../src/register.ts";
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
 
@@ -19,7 +20,7 @@ export class MemoryRegister extends Register {
       payload,
       secrets,
       false,
-      null,
+      new PushResponse(),
       SystemTypegraph.getCustomRuntimes(this),
       this.introspection ? undefined : null, // no need to have introspection for tests
     );
@@ -27,6 +28,7 @@ export class MemoryRegister extends Register {
     return {
       typegraphName: engine.name,
       messages: [],
+      customData: {},
     };
   }
   remove(name: string): Promise<void> {

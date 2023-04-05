@@ -49,7 +49,12 @@ export class ReplicatedRegister extends Register {
       async (json: string) => {
         const [payload, encryptedSecrets] = JSON.parse(json);
         const secrets = JSON.parse(await decrypt(encryptedSecrets));
-        return Engine.init(JSON.stringify(payload), secrets, true, null);
+        return Engine.init(
+          JSON.stringify(payload),
+          secrets,
+          true,
+          new PushResponse(),
+        );
       },
     );
 

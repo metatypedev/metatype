@@ -114,6 +114,9 @@ export class MetaTest {
       stdout,
       opts.secrets ?? {},
     );
+    if (typegraphName == null) {
+      throw new Error("Could not register typegraph");
+    }
     for (const m of messages) {
       console.info(m);
     }

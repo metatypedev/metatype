@@ -29,6 +29,9 @@ pub struct Dev {
 
     #[clap(long, default_value_t = 5000)]
     port: u32,
+
+    #[clap(long, default_value_t = false)]
+    run_destructive_migrations: bool,
 }
 
 #[async_trait]
@@ -50,7 +53,8 @@ impl Action for Dev {
             .with_postprocessor(
                 postprocess::EmbedPrismaMigrations::default()
                     .allow_dirty(true)
-                    .create_migration(true),
+                    .create_migration(true)
+                    .reset_on_drift(self.run_destructive_migrations),
             )
             .dir(&dir)
             .watch(true)
