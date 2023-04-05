@@ -43,6 +43,7 @@ pub struct Serialize {
 #[async_trait]
 impl Action for Serialize {
     async fn run(&self, args: GenArgs) -> Result<()> {
+        eprintln!("> meta serialize");
         let dir = args.dir;
         let config_path = args.config;
         ensure_venv(&dir)?;
@@ -69,7 +70,9 @@ impl Action for Serialize {
 
         let mut loader = Loader::from(loader_options);
         let mut tgs = vec![];
+        eprintln!("> entering loop");
         while let Some(output) = loader.next().await {
+            eprintln!("> output");
             if let LoaderOutput::Typegraph(tg) = output {
                 tgs.push(tg);
             }

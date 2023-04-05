@@ -31,6 +31,8 @@ test("Auth", async (t) => {
     },
   });
 
+  console.log("> loaded typegraph");
+
   await t.should("allow public call", async () => {
     await gql`
         query {

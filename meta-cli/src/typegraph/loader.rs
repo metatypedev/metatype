@@ -167,6 +167,7 @@ enum ReloadReason {
 enum LoaderEvent {
     ReloadAll(ReloadReason),
     ReloadFiles(Vec<PathBuf>, ReloadReason),
+    Terminate,
 }
 
 // TODO use Rc<PathBuf>
@@ -238,14 +239,17 @@ impl LoaderInternal {
         tx.send(LoaderEvent::ReloadAll(ReloadReason::Discovery))
             .unwrap();
 
-        // start watching early to catch all the modifications
-        let _watcher = self
-            .options
-            .watch
-            .then(|| self.create_watcher(&self.options.inputs, tx, Arc::clone(&self.deps)))
-            .transpose()?;
+        let _watcher = if self.options.watch {
+            eprintln!("> watch: true");
+            // start watching early to catch all the modifications
+            Some(self.create_watcher(&self.options.inputs, tx, Arc::clone(&self.deps))?)
+        } else {
+            tx.send(LoaderEvent::Terminate).unwrap();
+            None
+        };
 
         while let Some(event) = rx.recv().await {
+            eprintln!("Received: {event:?}");
             match event {
                 LoaderEvent::ReloadAll(reason) => {
                     let mut count = 0;
@@ -260,7 +264,9 @@ impl LoaderInternal {
                                 }
                             }
                             LoaderInput::Directory(path) => {
+                                eprintln!("Directory: {path:?}");
                                 count += self.load_directory(path.clone(), reason.clone()).await?;
+                                eprintln!("> Directory");
                             } // LoaderInput::Glob(_glob) => {
                               //     todo!();
                               // }
@@ -284,8 +290,14 @@ impl LoaderInternal {
                         }
                     }
                 }
+                LoaderEvent::Terminate => {
+                    eprintln!("> terminate");
+                    break;
+                }
             }
+            eprintln!("> event processing: done");
         }
+        eprintln!("End of loop");
 
         Ok(())
     }
@@ -366,17 +378,17 @@ impl LoaderInternal {
                 let rel_path = diff_paths(&path, &current_dir);
                 match reason {
                     ReloadReason::Modified => {
-                        println!("Reloading typegraph definition module (modified): {rel_path:?}");
+                        eprintln!("Reloading typegraph definition module (modified): {rel_path:?}");
                     }
                     ReloadReason::DependencyModified(dep_path) => {
                         let dep_rel_path = diff_paths(&dep_path, current_dir);
-                        println!("Reloading typegraph definition module (dependency modified {dep_rel_path:?}): {rel_path:?}");
+                        eprintln!("Reloading typegraph definition module (dependency modified {dep_rel_path:?}): {rel_path:?}");
                     }
                     ReloadReason::Discovery => {
-                        println!("Found python typegraph definition module at {rel_path:?}");
+                        eprintln!("Found python typegraph definition module at {rel_path:?}");
                     }
                     ReloadReason::User => {
-                        println!("Reloading typegraph definition module (manual): {rel_path:?}");
+                        eprintln!("Reloading typegraph definition module (manual): {rel_path:?}");
                     }
                 }
 
