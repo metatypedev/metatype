@@ -27,6 +27,9 @@ pub struct Deploy {
     /// Allow deployment on dirty (git) repository
     #[clap(long, default_value_t = false)]
     allow_dirty: bool,
+
+    #[clap(long, default_value_t = false)]
+    run_destructive_migrations: bool,
     // TODO exit_on_error
 }
 
@@ -40,8 +43,11 @@ impl Action for Deploy {
 
         let mut loader_options = LoaderOptions::with_config(&config);
         if !self.no_migrations {
-            loader_options
-                .with_postprocessor(EmbedPrismaMigrations::default().allow_dirty(self.allow_dirty));
+            loader_options.with_postprocessor(
+                EmbedPrismaMigrations::default()
+                    .allow_dirty(self.allow_dirty)
+                    .reset_on_drift(self.run_destructive_migrations),
+            );
         }
         if let Some(file) = self.file.clone() {
             loader_options.file(&file);

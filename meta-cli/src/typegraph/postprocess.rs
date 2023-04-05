@@ -152,6 +152,7 @@ pub mod prisma_rt {
     #[derive(Default)]
     pub struct EmbedPrismaMigrations {
         create_migration: bool,
+        reset_on_drift: bool,
         allow_dirty: bool,
     }
 
@@ -163,6 +164,11 @@ pub mod prisma_rt {
 
         pub fn create_migration(mut self, create: bool) -> Self {
             self.create_migration = create;
+            self
+        }
+
+        pub fn reset_on_drift(mut self, reset: bool) -> Self {
+            self.reset_on_drift = reset;
             self
         }
     }
@@ -205,6 +211,7 @@ pub mod prisma_rt {
                 if path.try_exists()? {
                     rt_data.migrations = Some(archive::archive(path)?);
                     rt_data.create_migration = self.create_migration;
+                    rt_data.reset_on_drift = self.reset_on_drift;
                 }
                 rt.data = map_from_object(rt_data)?;
             }

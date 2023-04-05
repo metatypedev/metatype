@@ -270,4 +270,5 @@ export interface PrismaRuntimeData {
   models: number[];
   migrations?: string | null;
   create_migration?: boolean;
+  reset_on_drift?: boolean;
 }

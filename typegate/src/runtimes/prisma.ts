@@ -70,7 +70,7 @@ registerHook("onPush", async (typegraph, response) => {
         datasource,
         datamodel,
         migrations: migrations!,
-        reset_database: false,
+        reset_database: rt.data.reset_on_drift ?? false,
       });
       if ("Err" in applyRes) {
         throw new Error(applyRes.Err.message);

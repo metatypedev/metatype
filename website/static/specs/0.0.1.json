@@ -1250,6 +1250,10 @@
         "create_migration": {
           "default": false,
           "type": "boolean"
+        },
+        "reset_on_drift": {
+          "default": false,
+          "type": "boolean"
         }
       }
     }

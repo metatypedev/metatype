@@ -309,4 +309,6 @@ pub struct PrismaRuntimeData {
     pub migrations: Option<String>,
     #[serde(default)]
     pub create_migration: bool,
+    #[serde(default)]
+    pub reset_on_drift: bool,
 }
