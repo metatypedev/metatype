@@ -155,16 +155,18 @@ impl LoaderOptions {
     }
 }
 
-struct LoaderWatcher {
-    rx: UnboundedReceiver<Vec<PathBuf>>,
-    #[allow(dead_code)]
-    debouncer: Debouncer<RecommendedWatcher>,
+#[derive(Debug, Clone)]
+enum ReloadReason {
+    Discovery,
+    User,
+    Modified,
+    DependencyModified(PathBuf),
 }
 
-impl LoaderWatcher {
-    async fn next(&mut self) -> Option<Vec<PathBuf>> {
-        self.rx.recv().await
-    }
+#[derive(Debug)]
+enum LoaderEvent {
+    ReloadAll(ReloadReason),
+    ReloadFiles(Vec<PathBuf>, ReloadReason),
 }
 
 // TODO use Rc<PathBuf>
@@ -228,69 +230,57 @@ struct LoaderInternal {
 }
 
 impl LoaderInternal {
-    async fn start(&self) -> Result<()> {
+    async fn start(
+        &self,
+        tx: UnboundedSender<LoaderEvent>,
+        mut rx: UnboundedReceiver<LoaderEvent>,
+    ) -> Result<()> {
+        tx.send(LoaderEvent::ReloadAll(ReloadReason::Discovery))
+            .unwrap();
+
         // start watching early to catch all the modifications
-        let watcher = self
+        let _watcher = self
             .options
             .watch
-            .then(|| self.create_watcher(&self.options.inputs))
+            .then(|| self.create_watcher(&self.options.inputs, tx, Arc::clone(&self.deps)))
             .transpose()?;
 
-        let mut count = 0;
-        for input in self.options.inputs.iter() {
-            match input {
-                LoaderInput::File(path, filter) => {
-                    let res = self
-                        .load_file(path.clone(), filter.clone(), None, false)
-                        .await;
-                    if res {
-                        count += 1;
-                    }
-                }
-                LoaderInput::Directory(path) => {
-                    count += self.load_directory(path.clone()).await?;
-                } // LoaderInput::Glob(_glob) => {
-                  //     todo!();
-                  // }
-            }
-        }
-
-        if count == 0 {
-            println!("No typegraph definition module found.");
-        }
-
-        if let Some(mut watcher) = watcher {
-            while let Some(paths) = watcher.next().await {
-                let mut additional_paths = HashSet::new();
-                for path in paths {
-                    let rdeps = self.deps.lock().unwrap().reverse_deps.get(&path).cloned();
-                    if let Some(rdeps) = rdeps {
-                        let path = diff_paths(path, std::env::current_dir().unwrap());
-                        eprintln!("Dependecy modified: {path:?}");
-                        additional_paths.extend(rdeps);
-                        continue;
-                    }
-
-                    if let Ok(metadata) = path.metadata() {
-                        if metadata.is_file() {
-                            self.load_file(path, FilterTypegraph::All, None, true).await;
+        while let Some(event) = rx.recv().await {
+            match event {
+                LoaderEvent::ReloadAll(reason) => {
+                    let mut count = 0;
+                    for input in self.options.inputs.iter() {
+                        match input {
+                            LoaderInput::File(path, filter) => {
+                                let res = self
+                                    .load_file(path.clone(), filter.clone(), reason.clone())
+                                    .await;
+                                if res {
+                                    count += 1;
+                                }
+                            }
+                            LoaderInput::Directory(path) => {
+                                count += self.load_directory(path.clone(), reason.clone()).await?;
+                            } // LoaderInput::Glob(_glob) => {
+                              //     todo!();
+                              // }
                         }
-                    } else {
-                        // file removed??
-                        self.deps.lock().unwrap().remove_typegraph_at(&path);
+                    }
+
+                    if count == 0 {
+                        println!("No typegraph definition module found.");
                     }
                 }
-
-                for path in additional_paths {
-                    if let Ok(metadata) = path.metadata() {
-                        if metadata.is_file() {
-                            self.load_file(
-                                path,
-                                FilterTypegraph::All,
-                                None,
-                                false, // Reload::DepModified dep
-                            )
-                            .await;
+                LoaderEvent::ReloadFiles(paths, reason) => {
+                    for path in paths {
+                        if let Ok(metadata) = path.metadata() {
+                            if metadata.is_file() {
+                                self.load_file(path, FilterTypegraph::All, reason.clone())
+                                    .await;
+                            }
+                        } else {
+                            // file removed??
+                            self.deps.lock().unwrap().remove_typegraph_at(&path);
                         }
                     }
                 }
@@ -300,15 +290,30 @@ impl LoaderInternal {
         Ok(())
     }
 
-    fn create_watcher(&self, inputs: &[LoaderInput]) -> Result<LoaderWatcher> {
-        let (tx, rx) = unbounded_channel();
+    fn create_watcher(
+        &self,
+        inputs: &[LoaderInput],
+        tx: UnboundedSender<LoaderEvent>,
+        deps: Arc<Mutex<DependencyGraph>>,
+    ) -> Result<Debouncer<RecommendedWatcher>> {
         let mut debouncer = new_debouncer(
             Duration::from_secs(1),
             None,
             move |res: DebounceEventResult| {
                 let events = res.unwrap();
-                let paths = events.into_iter().map(|e| e.path).collect::<Vec<_>>();
-                tx.send(paths).unwrap();
+                for path in events.into_iter().map(|e| e.path) {
+                    let rdeps = deps.lock().unwrap().reverse_deps.get(&path).cloned();
+                    if let Some(rdeps) = rdeps {
+                        tx.send(LoaderEvent::ReloadFiles(
+                            rdeps.into_iter().collect(),
+                            ReloadReason::DependencyModified(path),
+                        ))
+                        .unwrap();
+                    } else {
+                        tx.send(LoaderEvent::ReloadFiles(vec![path], ReloadReason::Modified))
+                            .unwrap();
+                    }
+                }
             },
         )?;
 
@@ -333,7 +338,7 @@ impl LoaderInternal {
             }
         }
 
-        Ok(LoaderWatcher { rx, debouncer })
+        Ok(debouncer)
     }
 
     // return false if the file was skipped
@@ -341,8 +346,7 @@ impl LoaderInternal {
         &self,
         path: PathBuf,
         filter: FilterTypegraph,
-        input_dir: Option<PathBuf>,
-        watch: bool, // triggered by watcher?
+        reason: ReloadReason,
     ) -> bool {
         let tx = self.sender.clone();
 
@@ -358,12 +362,22 @@ impl LoaderInternal {
         let ext = path.extension().and_then(|ext| ext.to_str());
         match ext {
             Some(ext) if ext == "py" => {
-                if watch {
-                    let rel_path = diff_paths(&path, std::env::current_dir().unwrap());
-                    println!("Reloading typegraph definition module: {rel_path:?}");
-                } else if let Some(input_dir) = input_dir {
-                    let rel_path = diff_paths(&path, &input_dir).unwrap();
-                    println!("Found python typegraph definition module at {rel_path:?}");
+                let current_dir = std::env::current_dir().unwrap();
+                let rel_path = diff_paths(&path, &current_dir);
+                match reason {
+                    ReloadReason::Modified => {
+                        println!("Reloading typegraph definition module (modified): {rel_path:?}");
+                    }
+                    ReloadReason::DependencyModified(dep_path) => {
+                        let dep_rel_path = diff_paths(&dep_path, current_dir);
+                        println!("Reloading typegraph definition module (dependency modified {dep_rel_path:?}): {rel_path:?}");
+                    }
+                    ReloadReason::Discovery => {
+                        println!("Found python typegraph definition module at {rel_path:?}");
+                    }
+                    ReloadReason::User => {
+                        println!("Reloading typegraph definition module (manual): {rel_path:?}");
+                    }
                 }
 
                 let output = Self::load_python_module(&path, &options)
@@ -437,7 +451,7 @@ impl LoaderInternal {
         Ok(tgs)
     }
 
-    pub async fn load_directory(&self, path: PathBuf) -> anyhow::Result<u32> {
+    pub async fn load_directory(&self, path: PathBuf, reason: ReloadReason) -> anyhow::Result<u32> {
         let mut queue: VecDeque<PathBuf> = VecDeque::new();
         queue.push_back(path.clone());
 
@@ -483,7 +497,7 @@ impl LoaderInternal {
                 }
 
                 let res = self
-                    .load_file(file_name, FilterTypegraph::All, Some(path.clone()), false)
+                    .load_file(file_name, FilterTypegraph::All, reason.clone())
                     .await;
                 if res {
                     count += 1;
@@ -550,20 +564,33 @@ impl From<LoaderOptions> for Loader {
             deps: Arc::new(Mutex::new(DependencyGraph::default())),
         };
 
+        let (event_tx, event_rx) = unbounded_channel();
+
+        let event_tx_1 = event_tx.clone();
         tokio::spawn(async move {
-            internal.start().await.unwrap();
+            internal.start(event_tx_1, event_rx).await.unwrap();
         });
 
-        Loader { receiver: rx }
+        Loader {
+            receiver: rx,
+            event_sender: event_tx,
+        }
     }
 }
 
 pub struct Loader {
     receiver: UnboundedReceiver<LoaderOutput>,
+    event_sender: UnboundedSender<LoaderEvent>,
 }
 
 impl Loader {
     pub async fn next(&mut self) -> Option<LoaderOutput> {
         self.receiver.recv().await
+    }
+
+    pub fn reload_all(&self) -> Result<()> {
+        self.event_sender
+            .send(LoaderEvent::ReloadAll(ReloadReason::User))?;
+        Ok(())
     }
 }

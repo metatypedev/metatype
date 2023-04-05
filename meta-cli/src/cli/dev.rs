@@ -19,8 +19,12 @@ use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
 use common::archive::unpack;
+use reqwest::Url;
+use serde_json::json;
+use std::collections::HashMap;
 use std::path::Path;
 use std::time::Duration;
+use tiny_http::{Header, Response, Server};
 
 #[derive(Parser, Debug)]
 pub struct Dev {
@@ -129,39 +133,40 @@ impl Action for Dev {
             }
         }
 
-        push_loop.join().await?;
+        let port = self.port;
+        tokio::task::spawn_blocking(move || {
+            let server = Server::http(format!("0.0.0.0:{}", port)).unwrap();
 
-        // let server = Server::http(format!("0.0.0.0:{}", self.port)).unwrap();
-        //
-        // for request in server.incoming_requests() {
-        //     let url = Url::parse(&format!("http://dummy{}", request.url()))?;
-        //     let query: HashMap<String, String> = url.query_pairs().into_owned().collect();
-        //
-        //     let tg_node = node.clone();
-        //     let response = match url.path() {
-        //         "/dev" => match query.get("node") {
-        //             Some(node) => {
-        //                 let tgs = TypegraphLoader::with_config(&config).load_folder(&dir)?;
-        //                 let mut tg_node = tg_node;
-        //                 tg_node.base_url = node.parse()?;
-        //
-        //                 // push_loaded_typegraphs(dir.clone(), tgs, &tg_node).await;
-        //                 Response::from_string(json!({"message": "reloaded"}).to_string())
-        //                     .with_header(
-        //                         "Content-Type: application/json".parse::<Header>().unwrap(),
-        //                     )
-        //             }
-        //             _ => Response::from_string(json!({"error": "missing query 'node"}).to_string())
-        //                 .with_status_code(400)
-        //                 .with_header("Content-Type: application/json".parse::<Header>().unwrap()),
-        //         },
-        //         _ => Response::from_string(json!({"error": "not found"}).to_string())
-        //             .with_status_code(404)
-        //             .with_header("Content-Type: application/json".parse::<Header>().unwrap()),
-        //     };
-        //
-        //     request.respond(response)?;
-        // }
+            for request in server.incoming_requests() {
+                let url = Url::parse(&format!("http://dummy{}", request.url())).unwrap();
+                let query: HashMap<String, String> = url.query_pairs().into_owned().collect();
+
+                // let tg_node = node.clone();
+                let response = match url.path() {
+                    "/dev" => match query.get("node") {
+                        Some(_node) => {
+                            loader.reload_all().unwrap();
+                            Response::from_string(json!({"message": "reloaded"}).to_string())
+                                .with_header(
+                                    "Content-Type: application/json".parse::<Header>().unwrap(),
+                                )
+                        }
+                        _ => Response::from_string(
+                            json!({"error": "missing query 'node"}).to_string(),
+                        )
+                        .with_status_code(400)
+                        .with_header("Content-Type: application/json".parse::<Header>().unwrap()),
+                    },
+                    _ => Response::from_string(json!({"error": "not found"}).to_string())
+                        .with_status_code(404)
+                        .with_header("Content-Type: application/json".parse::<Header>().unwrap()),
+                };
+
+                request.respond(response).unwrap();
+            }
+        });
+
+        push_loop.join().await?;
 
         Ok(())
     }
