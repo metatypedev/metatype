@@ -13,7 +13,7 @@ use crate::typegraph::postprocess;
 use crate::typegraph::push::PushLoopBuilder;
 use crate::typegraph::push::PushQueueEntry;
 
-use crate::utils::{ensure_venv, Node};
+use crate::utils::ensure_venv;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
@@ -43,7 +43,7 @@ impl Action for Dev {
             .unwrap_or_else(|_| config::Config::default_in(&dir));
 
         let node_config = config.node("dev").with_args(&self.node);
-        let node: Node = node_config.try_into()?;
+        let node = node_config.build()?;
 
         let mut loader_options = LoaderOptions::with_config(&config);
         loader_options

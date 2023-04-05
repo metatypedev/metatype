@@ -6,15 +6,16 @@ import { PrismaRuntimeDS } from "../../src/runtimes/prisma.ts";
 import { PrismaMigrate } from "../../src/runtimes/prisma_migration.ts";
 import { gql, testDir } from "../utils.ts";
 import * as native from "native";
-import { MetaTest } from "../utils/metatest.ts";
+import { MetaTest, ParseOptions } from "../utils/metatest.ts";
 import { TGRuntime } from "../../src/types/typegraph.ts";
 
 export async function init(
   t: MetaTest,
-  tgPath = "prisma/prisma.py",
+  tgPath: string,
   migrate = true,
+  opts: ParseOptions = {},
 ): Promise<Engine> {
-  const engine = await t.pythonFile(tgPath);
+  const engine = await t.pythonFile(tgPath, opts);
 
   await t.should("drop schema", async () => {
     await gql`

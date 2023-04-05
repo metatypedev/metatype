@@ -2,14 +2,20 @@
 
 import { Auth, AuthDS } from "../auth.ts";
 import * as jwt from "jwt";
-import { envOrFail } from "../../utils.ts";
+import { getLogger } from "../../log.ts";
+import { SecretManager } from "../../typegraph.ts";
 
+const logger = getLogger(import.meta.url);
 const encoder = new TextEncoder();
 
 export class JWTAuth implements Auth {
-  static async init(typegraphName: string, auth: AuthDS): Promise<Auth> {
+  static async init(
+    typegraphName: string,
+    auth: AuthDS,
+    secretManager: SecretManager,
+  ): Promise<Auth> {
     const { format, algorithm } = auth.auth_data;
-    const sourceEnv = envOrFail(typegraphName, `${auth.name}_JWT`);
+    const sourceEnv = secretManager.secretOrFail(`${auth.name}_JWT`);
     const key = format === "jwk"
       ? JSON.parse(sourceEnv)
       : encoder.encode(sourceEnv);
@@ -47,7 +53,8 @@ export class JWTAuth implements Auth {
     try {
       const claims = await jwt.verify(token, this.signKey);
       return [claims, new Headers()];
-    } catch {
+    } catch (e) {
+      logger.warning(`jwt auth failed: ${e}`);
       return [{}, new Headers()];
     }
   }

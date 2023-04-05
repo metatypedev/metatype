@@ -14,7 +14,7 @@ use std::str::FromStr;
 
 use crate::cli::prisma::PrismaArgs;
 use crate::cli::CommonArgs;
-use crate::utils::BasicAuth;
+use crate::utils::{BasicAuth, Node};
 
 lazy_static! {
     static ref DEFAULT_NODE_CONFIG: NodeConfig = Default::default();
@@ -44,6 +44,8 @@ pub struct NodeConfig {
     pub url: Url,
     username: Option<String>,
     password: Option<String>,
+    #[serde(default)]
+    env: HashMap<String, String>,
 }
 
 impl Default for NodeConfig {
@@ -52,6 +54,7 @@ impl Default for NodeConfig {
             url: "http://localhost:7890".parse().unwrap(),
             username: None,
             password: None,
+            env: HashMap::default(),
         }
     }
 }
@@ -80,6 +83,10 @@ impl NodeConfig {
             (Some(username), None) => BasicAuth::prompt_as_user(username.clone()),
             (None, _) => BasicAuth::prompt(),
         }
+    }
+
+    pub fn build(&self) -> Result<Node> {
+        Node::new(self.url.clone(), Some(self.basic_auth()?), self.env.clone())
     }
 }
 

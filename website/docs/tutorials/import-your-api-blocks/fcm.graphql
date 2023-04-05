@@ -1,8 +1,26 @@
-mutation {
-  send_notification(parent: "firebase-project-id") {
-    message {
-      id
-      message
+mutation A {
+  projectsMessagesSend(
+    parent: "projects/<project-id>",
+    auth: "<bearer_token>",
+    # test with a fake message
+    validateOnly: true,
+    message: {
+      notification: {
+          title: "FCM Message",
+          body: "This is an FCM Message"
+      },
+      # recipient
+      token: "<token>" 
     }
+  ) {
+    name
+    error { code message }
+  }
+}
+
+query B {
+  user(id: 1) {
+    id
+    name
   }
 }

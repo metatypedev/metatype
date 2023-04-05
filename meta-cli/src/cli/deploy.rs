@@ -93,8 +93,7 @@ impl Action for Deploy {
         }
 
         let node_config = config.node("deploy").with_args(&self.node);
-
-        let node = node_config.clone().try_into()?;
+        let node = node_config.clone().build()?;
 
         let push_loop = PushLoopBuilder::on(node)
             .exit(true)

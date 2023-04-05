@@ -8,6 +8,9 @@ import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphDS } from "../typegraph.ts";
 import { typegraph_validate } from "native";
 import { ensure } from "../utils.ts";
+import { getLogger } from "../log.ts";
+
+const logger = getLogger(import.meta);
 
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
@@ -96,7 +99,7 @@ export class TypeGateRuntime extends Runtime {
     return JSON.stringify(tg.tg.tg);
   };
 
-  addTypegraph: Resolver = async ({ fromString }) => {
+  addTypegraph: Resolver = async ({ fromString, secrets }) => {
     const json = await typegraph_validate({ json: fromString }).then((res) => {
       if ("Valid" in res) {
         return res.Valid.json;
@@ -114,7 +117,9 @@ export class TypeGateRuntime extends Runtime {
 
     const { typegraphName, messages, customData } = await this.register.set(
       json,
+      JSON.parse(secrets),
     );
+    logger.info(`Typegraph ${typegraphName} registered`);
     ensure(typegraphName == null || name === typegraphName, "unexpected");
 
     return { name, messages, customData: JSON.stringify(customData) };

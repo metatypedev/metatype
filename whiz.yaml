@@ -23,8 +23,6 @@ typegate1: &tp
     DYLD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$DYLD_LIBRARY_PATH"
     LD_LIBRARY_PATH: "$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
   env_file:
-    - ../examples/.env.sample
-    - ../website/.env.sample
     - .env.sample
   # https://github.com/denoland/deno/issues/18445
   # command: "deno task run"

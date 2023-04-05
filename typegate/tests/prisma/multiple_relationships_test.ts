@@ -4,7 +4,12 @@ import { gql, recreateMigrations, test } from "../utils.ts";
 
 test("multiple relationships", async (t) => {
   const tgPath = "prisma/prisma_multi.py";
-  const e = await t.pythonFile(tgPath);
+  const e = await t.pythonFile(tgPath, {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
 
   await t.should("drop schema and recreate", async () => {
     await gql`

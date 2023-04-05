@@ -1,4 +1,9 @@
-from typegraph.importers.google_discovery import import_googleapis
+from typegraph.graph.typegraph import TypeGraph
+from typegraph.importers.google_discovery import GoogleDiscoveryImporter
 
-discovery = "https://fcm.googleapis.com/$discovery/rest?version=v1"
-import_googleapis(discovery, False)  # set to True to re-import the API
+GoogleDiscoveryImporter(
+    "googleapi", url="https://fcm.googleapis.com/$discovery/rest?version=v1"
+).imp(False)
+
+with TypeGraph(name="google-test"):
+    pass

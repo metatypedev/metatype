@@ -5,7 +5,7 @@ import * as native from "native";
 import { FromVars, GraphQLRuntime } from "./graphql.ts";
 import { ResolverError } from "../errors.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { envOrFail, nativeResult, nativeVoid, pluralSuffix } from "../utils.ts";
+import { nativeResult, nativeVoid, pluralSuffix } from "../utils.ts";
 import { ComputeStage } from "../engine.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "../planner/args.ts";
@@ -46,12 +46,10 @@ export interface PrismaRuntimeDS extends Omit<TGRuntime, "data"> {
   data: PrismaRuntimeData;
 }
 
-registerHook("onPush", async (typegraph, response) => {
+registerHook("onPush", async (typegraph, secretManager, response) => {
   const runtimes = typegraph.runtimes.filter((rt) =>
     rt.name === "prisma"
   ) as unknown[] as PrismaRuntimeDS[];
-
-  const tgName = typegraph.types[0].title;
 
   for (const rt of runtimes) {
     const { connection_string_secret, datamodel, migrations } = rt.data;
@@ -60,7 +58,7 @@ registerHook("onPush", async (typegraph, response) => {
     }
 
     const datasource = makeDatasource(
-      envOrFail(tgName, connection_string_secret),
+      secretManager.secretOrFail(connection_string_secret),
     );
 
     const prefix = `[prisma runtime: '${rt.data.name}']`;
@@ -177,11 +175,10 @@ export class PrismaRuntime extends GraphQLRuntime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { typegraph, args } = params;
+    const { typegraph, args, secretManager } = params;
     const typegraphName = typegraph.types[0].title;
 
-    const datasource = makeDatasource(envOrFail(
-      typegraphName,
+    const datasource = makeDatasource(secretManager.secretOrFail(
       args.connection_string_secret as string,
     ));
     const schema = `${datasource}${args.datamodel}`;

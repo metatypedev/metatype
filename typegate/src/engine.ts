@@ -2,7 +2,12 @@
 
 import { Kind, parse } from "graphql";
 import * as ast from "graphql/ast";
-import { RuntimeResolver, TypeGraph, TypeGraphDS } from "./typegraph.ts";
+import {
+  RuntimeResolver,
+  SecretManager,
+  TypeGraph,
+  TypeGraphDS,
+} from "./typegraph.ts";
 import { ensure, JSONValue } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
@@ -33,48 +38,6 @@ const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
   join(localDir, "typegraphs/introspection.json"),
 );
-
-export const initTypegraph = async (
-  payload: string,
-  sync: boolean, // redis synchronization?
-  response: PushResponse,
-  customRuntime: RuntimeResolver = {},
-  introspectionDefPayload: string | null = introspectionDefStatic,
-) => {
-  const typegraphDS = sync
-    ? JSON.parse(payload)
-    : await handleOnPushHooks(JSON.parse(payload), response);
-
-  let introspection = null;
-
-  if (introspectionDefPayload) {
-    const introspectionDefRaw = JSON.parse(
-      introspectionDefPayload,
-    ) as TypeGraphDS;
-    const introspectionDef = parseGraphQLTypeGraph(introspectionDefRaw);
-    introspection = await TypeGraph.init(
-      introspectionDef,
-      {
-        typegraph: TypeGraphRuntime.init(
-          typegraphDS,
-          [],
-          {},
-        ),
-      },
-      null,
-    );
-  }
-
-  const tg = await TypeGraph.init(
-    typegraphDS,
-    customRuntime,
-    introspection,
-  );
-
-  handleOnInitHooks(tg, sync);
-
-  return new Engine(tg);
-};
 
 /**
  * Processed graphql node to be evaluated against a Runtime
@@ -168,16 +131,69 @@ class QueryCache {
 }
 
 export class Engine {
-  tg: TypeGraph;
   name: string;
   queryCache: QueryCache;
   logger: log.Logger;
 
-  constructor(tg: TypeGraph) {
+  private constructor(
+    public tg: TypeGraph,
+  ) {
     this.tg = tg;
     this.name = tg.name;
     this.queryCache = new QueryCache();
     this.logger = log.getLogger("engine");
+  }
+
+  static async init(
+    payload: string,
+    secrets: Record<string, string>,
+    sync: boolean, // redis synchronization?
+    response: PushResponse,
+    customRuntime: RuntimeResolver = {},
+    introspectionDefPayload: string | null = introspectionDefStatic,
+  ) {
+    const typegraph = JSON.parse(payload);
+    const typegraphName = typegraph.types[0].title;
+
+    const secretManager = new SecretManager(typegraphName, secrets);
+
+    const typegraphDS = sync ? typegraph : await handleOnPushHooks(
+      typegraph,
+      secretManager,
+      response,
+    );
+
+    let introspection = null;
+
+    if (introspectionDefPayload) {
+      const introspectionDefRaw = JSON.parse(
+        introspectionDefPayload,
+      ) as TypeGraphDS;
+      const introspectionDef = parseGraphQLTypeGraph(introspectionDefRaw);
+      introspection = await TypeGraph.init(
+        introspectionDef,
+        new SecretManager(introspectionDef.types[0].title, {}),
+        {
+          typegraph: TypeGraphRuntime.init(
+            typegraphDS,
+            [],
+            {},
+          ),
+        },
+        null,
+      );
+    }
+
+    const tg = await TypeGraph.init(
+      typegraphDS,
+      secretManager,
+      customRuntime,
+      introspection,
+    );
+
+    handleOnInitHooks(tg, secretManager, sync);
+
+    return new Engine(tg);
   }
 
   async terminate() {

@@ -56,9 +56,9 @@ name<br />
 </tbody>
 </table>
 
-## object_20
+## object_21
 
-object_20 type
+object_21 type
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -94,9 +94,9 @@ type<br />
 </tbody>
 </table>
 
-## object_22
+## object_24
 
-object_22 type
+object_24 type
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -105,8 +105,21 @@ object_22 type
 <tbody>
 <tr>
 <td>
+customData<br />
+<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>customData field</p>
+<p>Policies:</p>
+<ul>
+<li>inherit</li>
+</ul>
+</td>
+</tr>
+<tr>
+<td>
 messages<br />
-<a href="/docs/reference/typegate/typegate/objects#object_20"><code>[object_20!]!</code></a>
+<a href="/docs/reference/typegate/typegate/objects#object_21"><code>[object_21!]!</code></a>
 </td>
 <td>
 <p>messages field</p>

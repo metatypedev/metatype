@@ -3,7 +3,6 @@
 import { ComputeStage } from "../../engine.ts";
 import type { TypeGraphDS, TypeMaterializer } from "../../typegraph.ts";
 import { Runtime } from "../Runtime.ts";
-import { envOrFail } from "../../utils.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { DenoRuntimeData } from "../../type_node.ts";
 import * as ast from "graphql/ast";
@@ -49,7 +48,7 @@ export class DenoRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { typegraph: tg, args, materializers } = params;
+    const { typegraph: tg, args, materializers, secretManager } = params;
     const typegraphName = tg.types[0].title;
 
     const { worker: name } = args as unknown as DenoRuntimeData;
@@ -69,7 +68,7 @@ export class DenoRuntime extends Runtime {
     const secrets: Record<string, string> = {};
     for (const m of materializers) {
       for (const secretName of m.data.secrets as [] ?? []) {
-        secrets[secretName] = envOrFail(typegraphName, secretName);
+        secrets[secretName] = secretManager.secretOrFail(secretName);
       }
     }
 

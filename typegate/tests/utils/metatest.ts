@@ -17,11 +17,12 @@ type AssertSnapshotParams = typeof assertSnapshot extends (
 ) => Promise<void> ? R
   : never;
 
-interface ParseOptions {
+export interface ParseOptions {
   deploy?: boolean;
   typegraph?: string;
   // ports on which this typegraph will be exposed
   ports?: number[];
+  secrets?: Record<string, string>;
 }
 
 function serve(register: Register, port: number): () => void {
@@ -109,7 +110,10 @@ export class MetaTest {
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }
-    const { typegraphName, messages } = await this.register.set(stdout);
+    const { typegraphName, messages } = await this.register.set(
+      stdout,
+      opts.secrets ?? {},
+    );
     for (const m of messages) {
       console.info(m);
     }

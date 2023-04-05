@@ -2,7 +2,7 @@
 
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { MessageEntry } from "./register.ts";
-import { TypeGraph, TypeGraphDS } from "./typegraph.ts";
+import { SecretManager, TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { upgradeTypegraph } from "./typegraph/versions.ts";
 import { JSONValue } from "./utils.ts";
 
@@ -11,8 +11,6 @@ const Message = {
   WARNING: "warning",
   ERROR: "error",
 } as const;
-
-// type LogType = typeof Log extends Record<string, infer R> ? R : never;
 
 export class PushResponse {
   messages: MessageEntry[] = [];
@@ -38,11 +36,15 @@ export class PushResponse {
 }
 
 interface PushHandler {
-  (tg: TypeGraphDS, response: PushResponse): Promise<TypeGraphDS>;
+  (
+    tg: TypeGraphDS,
+    secretManager: SecretManager,
+    response: PushResponse,
+  ): Promise<TypeGraphDS>;
 }
 
 interface InitHandler {
-  (tg: TypeGraph, sync: boolean): Promise<void>;
+  (tg: TypeGraph, secretManager: SecretManager, sync: boolean): Promise<void>;
 }
 
 interface Hooks {
@@ -69,12 +71,13 @@ export function registerHook(
 
 export async function handleOnPushHooks(
   typegraph: TypeGraphDS,
+  secretManager: SecretManager,
   response: PushResponse,
 ): Promise<TypeGraphDS> {
   let res = typegraph;
 
   for (const handler of hooks.onPush) {
-    res = await handler(res, response);
+    res = await handler(res, secretManager, response);
   }
 
   return res;
@@ -82,9 +85,10 @@ export async function handleOnPushHooks(
 
 export async function handleOnInitHooks(
   typegraph: TypeGraph,
+  secretManager: SecretManager,
   sync: boolean,
 ): Promise<void> {
   await Promise.all(
-    hooks.onInit.map((handler) => handler(typegraph, sync)),
+    hooks.onInit.map((handler) => handler(typegraph, secretManager, sync)),
   );
 }

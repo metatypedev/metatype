@@ -103,20 +103,20 @@ impl PushQueueEntry {
 
     async fn push(&self, node: &Node) -> Result<PushResult> {
         let tg = &self.typegraph;
-
+        let secrets = lade_sdk::hydrate(node.env.clone()).await?;
         let res = node
             .post("/typegate")?
             .gql(
                 indoc! {"
-                mutation InsertTypegraph {
-                    addTypegraph(fromString: $tg) {
+                mutation InsertTypegraph($tg: String!, $secrets: String!) {
+                    addTypegraph(fromString: $tg, secrets: $secrets) {
                         name
                         messages { type text }
                         customData
                     }
                 }"}
                 .to_string(),
-                Some(json!({ "tg": serde_json::to_string(tg)? })),
+                Some(json!({ "tg": serde_json::to_string(tg)?, "secrets": serde_json::to_string(&secrets)? })),
             )
             .await?;
 

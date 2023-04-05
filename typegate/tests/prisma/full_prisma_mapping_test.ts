@@ -3,7 +3,12 @@
 import { gql, recreateMigrations, test } from "../utils.ts";
 
 test("prisma full mapping", async (t) => {
-  const e = await t.pythonFile("prisma/full_prisma_mapping.py");
+  const e = await t.pythonFile("prisma/full_prisma_mapping.py", {
+    secrets: {
+      TG_PRISMA_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=test",
+    },
+  });
 
   await t.should("drop schema and recreate", async () => {
     await gql`

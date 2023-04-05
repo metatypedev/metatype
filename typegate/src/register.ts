@@ -1,9 +1,10 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { Engine, initTypegraph } from "./engine.ts";
+import { Engine } from "./engine.ts";
 import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
+import { decrypt, encrypt } from "./crypto.ts";
 import { PushResponse } from "./hooks.ts";
 import { JSONValue } from "./utils.ts";
 
@@ -19,7 +20,10 @@ export interface RegistrationResult {
 }
 
 export abstract class Register {
-  abstract set(payload: string): Promise<RegistrationResult>;
+  abstract set(
+    payload: string,
+    secrets: Record<string, string>,
+  ): Promise<RegistrationResult>;
 
   abstract remove(name: string): Promise<void>;
 
@@ -36,8 +40,17 @@ export class ReplicatedRegister extends Register {
     const replicatedMap = await RedisReplicatedMap.init<Engine>(
       "typegraph",
       redisConfig,
-      (engine) => JSON.stringify(engine.tg.tg),
-      (payload) => initTypegraph(payload, true, null),
+      async (engine: Engine) => {
+        const encryptedSecrets = await encrypt(
+          JSON.stringify(engine.tg.secretManager.secrets),
+        );
+        return JSON.stringify([engine.tg.tg, encryptedSecrets]);
+      },
+      async (json: string) => {
+        const [payload, encryptedSecrets] = JSON.parse(json);
+        const secrets = JSON.parse(await decrypt(encryptedSecrets));
+        return Engine.init(JSON.stringify(payload), secrets, true, null);
+      },
     );
 
     return new ReplicatedRegister(replicatedMap);
@@ -47,13 +60,17 @@ export class ReplicatedRegister extends Register {
     super();
   }
 
-  async set(payload: string): Promise<RegistrationResult> {
+  async set(
+    payload: string,
+    secrets: Record<string, string>,
+  ): Promise<RegistrationResult> {
     const response = new PushResponse();
 
     let engine = null;
     try {
-      engine = await initTypegraph(
+      engine = await Engine.init(
         payload,
+        secrets,
         false,
         response,
         SystemTypegraph.getCustomRuntimes(this),
