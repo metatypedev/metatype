@@ -2,6 +2,7 @@
 
 from typegraph.graph.models import Auth
 
+# soon to be deprecated, see __init__.py
 github_auth = Auth.oauth2(
     "github",
     "https://github.com/login/oauth/authorize",

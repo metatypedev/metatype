@@ -15,8 +15,6 @@ services:
       REDIS_URL: redis://:password@redis:6379/0
       TG_SECRET: "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw=="
       TG_ADMIN_PASSWORD: password
-    env_file:
-      - .env.sample
     depends_on:
       - redis
 

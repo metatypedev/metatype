@@ -211,11 +211,11 @@ fn get_paths(event: &Event) -> Vec<PathBuf> {
 }
 
 pub async fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &Node) {
-    let diff_base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
+    let base = Path::new(&dir).to_path_buf().canonicalize().unwrap();
     for (path, res) in loaded.into_iter() {
         match res.with_context(|| format!("Error while loading typegraphs from {path}")) {
             Result::Ok(tgs) => {
-                let path = utils::relative_path_display(diff_base.clone(), path);
+                let path = utils::relative_path_display(base.clone(), path);
                 println!(
                     "Loading {count} typegraph{s} from {path}:",
                     count = tgs.len(),
@@ -226,7 +226,7 @@ pub async fn push_loaded_typegraphs(dir: String, loaded: LoaderResult, node: &No
                         "  → Pushing typegraph {name}...",
                         name = tg.name().unwrap().blue()
                     );
-                    match push_typegraph(tg, node, 3).await {
+                    match push_typegraph(&base, tg, node, 3).await {
                         Ok(_) => {
                             println!("  {}", "✓ Success!".to_owned().green());
                         }
@@ -267,9 +267,14 @@ pub struct PushResult {
 }
 
 #[async_recursion]
-pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result<PushResult> {
+pub async fn push_typegraph(
+    base: &PathBuf,
+    tg: &Typegraph,
+    node: &Node,
+    backoff: u32,
+) -> Result<PushResult> {
     use crate::utils::graphql::{Error as GqlError, GraphqlErrorMessages, Query};
-    let secrets = lade_sdk::hydrate(node.env.clone()).await?;
+    let secrets = lade_sdk::hydrate(node.env.clone(), base.clone()).await?;
     let query = node
         .post("/typegate")?
         .gql(
@@ -295,7 +300,7 @@ pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result
             eprintln!("Endpoint not reachable: {e}");
             println!("Retry: typegate not reachable");
             sleep(Duration::from_secs(5));
-            push_typegraph(tg, node, backoff - 1).await
+            push_typegraph(base, tg, node, backoff - 1).await
         }
         Err(FailedQuery(e)) => {
             if backoff <= 1 {
@@ -305,7 +310,7 @@ pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result
             eprintln!("Query failed:\n{}", e.error_messages());
             println!("Retry: Query failed");
             sleep(Duration::from_secs(5));
-            push_typegraph(tg, node, backoff - 1).await
+            push_typegraph(base, tg, node, backoff - 1).await
         }
         Err(InvalidResponse(e)) => {
             if backoff <= 1 {
@@ -315,7 +320,7 @@ pub async fn push_typegraph(tg: &Typegraph, node: &Node, backoff: u32) -> Result
             eprintln!("Invalid response: {e:?}");
             println!("Retry: Invalid response");
             sleep(Duration::from_secs(5));
-            push_typegraph(tg, node, backoff - 1).await
+            push_typegraph(base, tg, node, backoff - 1).await
         }
         Ok(res) => Ok(res.data("addTypegraph")?),
     }
