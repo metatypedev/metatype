@@ -172,13 +172,19 @@ snapshot[`Either type 2`] = `
       {
         fields: [
           {
-            name: "either_1",
+            name: "reason",
             type: {
               kind: "NON_NULL",
             },
           },
           {
-            name: "either_0",
+            name: "date",
+            type: {
+              kind: "NON_NULL",
+            },
+          },
+          {
+            name: "user_id",
             type: {
               kind: "NON_NULL",
             },

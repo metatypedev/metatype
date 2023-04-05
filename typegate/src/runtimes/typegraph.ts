@@ -26,7 +26,7 @@ import {
 } from "../typegraph/visitor.ts";
 import { distinctBy } from "std/collections/distinct_by.ts";
 import { isInjected } from "../typegraph/utils.ts";
-import { PolicyIndices } from "../types/typegraph.ts";
+import { EitherNode, PolicyIndices, UnionNode } from "../types/typegraph.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -313,15 +313,37 @@ export class TypeGraphRuntime extends Runtime {
     }
 
     if (isEither(type) || isUnion(type)) {
-      const variants = isUnion(type) ? type.anyOf : type.oneOf;
+      const getVariants = (type: UnionNode | EitherNode) =>
+        isUnion(type) ? type.anyOf : type.oneOf;
+
+      const variants = getVariants(type);
       const variantsAsObject = {
         title: type.title,
         type: "object",
         properties: {},
       } as ObjectNode;
+      let count = 0;
+      const objects = new Set<[string, number]>();
+      const remaining = new Set<[string, number]>();
       for (let i = 0; i < variants.length; i++) {
-        const id = `${type.type}_${i}`;
-        variantsAsObject.properties[id] = variants[i];
+        const idx = variants[i];
+        const node = this.tg.types[idx];
+        if (isObject(node)) {
+          for (const [field, idx] of Object.entries(node.properties)) {
+            objects.add([field, idx]);
+          }
+        } else {
+          // name for scalars and nested union/either
+          const field = `${type.type}_${count++}`;
+          remaining.add([field, idx]);
+        }
+      }
+
+      for (const [field, idx] of objects) {
+        variantsAsObject.properties[field] = idx;
+      }
+      for (const [field, idx] of remaining) {
+        variantsAsObject.properties[field] = idx;
       }
       // quick fix
       // return {

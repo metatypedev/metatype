@@ -177,12 +177,6 @@ snapshot[`Union type 2`] = `
       {
         fields: [
           {
-            name: "union_3",
-            type: {
-              kind: "NON_NULL",
-            },
-          },
-          {
             name: "union_2",
             type: {
               kind: "NON_NULL",
@@ -190,6 +184,24 @@ snapshot[`Union type 2`] = `
           },
           {
             name: "union_1",
+            type: {
+              kind: "NON_NULL",
+            },
+          },
+          {
+            name: "r",
+            type: {
+              kind: "NON_NULL",
+            },
+          },
+          {
+            name: "g",
+            type: {
+              kind: "NON_NULL",
+            },
+          },
+          {
+            name: "b",
             type: {
               kind: "NON_NULL",
             },

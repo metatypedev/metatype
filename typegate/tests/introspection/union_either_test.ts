@@ -21,48 +21,7 @@ test("Basic introspection", async (t) => {
         }
       }
     `
-      .expectData({
-        __schema: {
-          types: [
-            { name: "String", fields: null, kind: "SCALAR" },
-            { name: "Int", fields: null, kind: "SCALAR" },
-            { name: "Query", fields: [{ name: "test" }], kind: "OBJECT" },
-            {
-              name: "Output",
-              fields: [{ name: "favorite" }, { name: "name" }],
-              kind: "OBJECT",
-            },
-            {
-              name: "FavoriteToy",
-              fields: [{ name: "either_2" }, { name: "either_1" }, {
-                name: "either_0",
-              }],
-              kind: "OBJECT",
-            },
-            {
-              name: "Rubix",
-              fields: [{ name: "size" }, { name: "name" }],
-              kind: "OBJECT",
-            },
-            { name: "Toygun", fields: [{ name: "color" }], kind: "OBJECT" },
-            {
-              name: "Gunpla",
-              fields: [{ name: "ref" }, { name: "model" }],
-              kind: "OBJECT",
-            },
-            {
-              name: "union_9",
-              fields: [{ name: "union_1" }, { name: "union_0" }],
-              kind: "OBJECT",
-            },
-            { name: "FavoriteToyInp", fields: null, kind: "INPUT_OBJECT" },
-            { name: "RubixInp", fields: null, kind: "INPUT_OBJECT" },
-            { name: "ToygunInp", fields: null, kind: "INPUT_OBJECT" },
-            { name: "GunplaInp", fields: null, kind: "INPUT_OBJECT" },
-            { name: "union_9Inp", fields: null, kind: "INPUT_OBJECT" },
-          ],
-        },
-      })
+      .matchSnapshot(t)
       .on(e);
   });
 }, { introspection: true });
