@@ -71,10 +71,9 @@ export function getEdges(type: TypeNode): Record<string, number> {
     case Type.UNION:
     case Type.EITHER: {
       const variants = type.type == Type.UNION ? type.anyOf : type.oneOf;
-      const prefix = type.type == Type.UNION ? "union_" : "either_";
       const rec = {} as Record<string, number>;
       for (let i = 0; i < variants.length; i++) {
-        rec[prefix + i] = variants[i];
+        rec[`[u${i}]`] = variants[i];
       }
       return rec;
     }
