@@ -30,8 +30,7 @@ import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { Option } from "monads";
 import { getLogger } from "./log.ts";
-import { handleOnInitHooks, handleOnPushHooks } from "./hooks.ts";
-import { MessageEntry } from "./register.ts";
+import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
 
 const logger = getLogger(import.meta);
 
@@ -149,7 +148,7 @@ export class Engine {
     payload: string,
     secrets: Record<string, string>,
     sync: boolean, // redis synchronization?
-    messageOutput: MessageEntry[] | null,
+    response: PushResponse,
     customRuntime: RuntimeResolver = {},
     introspectionDefPayload: string | null = introspectionDefStatic,
   ) {
@@ -161,7 +160,7 @@ export class Engine {
     const typegraphDS = sync ? typegraph : await handleOnPushHooks(
       typegraph,
       secretManager,
-      messageOutput,
+      response,
     );
 
     let introspection = null;

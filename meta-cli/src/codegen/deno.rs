@@ -24,11 +24,12 @@ struct ModuleMatData {
     code: String,
 }
 
-pub fn codegen<P>(tg: Typegraph, base_dir: P) -> Result<()>
+// TODO implement as a processor
+pub fn codegen<P>(tg: &Typegraph, base_dir: P) -> Result<()>
 where
     P: AsRef<Path>,
 {
-    let cg = Codegen::new(&tg, base_dir);
+    let cg = Codegen::new(tg, base_dir);
     let codes = cg.codegen()?;
     for code in codes.into_iter() {
         let parent_folder = Path::new(&code.path).parent().unwrap();
@@ -99,6 +100,7 @@ impl<'a> Codegen<'a> {
                 if let Some(relpath) = code.strip_prefix("file:") {
                     let path = {
                         let mut path = base_dir.clone();
+                        // TODO is this necessary?? py-tg yields absolute path!!
                         path.push(relpath);
                         path
                     };
@@ -384,10 +386,11 @@ impl<'a> Codegen<'a> {
         };
 
         let code = format!(
-            "{}\n{}\nexport function {}({}: {}, {{ context }}: {{ context: Record<string, unknown> }}): {} {{\n  return {};\n}}",
+            "{}\n{}\nexport {}function {}({}: {}, {{ context }}: {{ context: Record<string, unknown> }}): {} {{\n  return {};\n}}",
             inp_typedef,
 			output_type_definition.unwrap_or_default(),
-            name,
+            if name == "default" { "default " } else {""},
+            if name == "default" { "" } else { name },
             self.destructure_object(input)?,
             inp_type_name,
             out_typespec,
@@ -456,10 +459,10 @@ mod tests {
     use super::*;
     use crate::config::Config;
     use crate::tests::utils::ensure_venv;
-    use crate::typegraph::TypegraphLoader;
+    use crate::typegraph::loader::{Loader, LoaderOptions, LoaderOutput};
 
-    #[test]
-    fn codegen() -> Result<()> {
+    #[tokio::test(flavor = "multi_thread")]
+    async fn codegen() -> Result<()> {
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs");
         let tests = fs::read_dir(test_folder).unwrap();
@@ -467,12 +470,16 @@ mod tests {
 
         for typegraph_test in tests {
             let typegraph_test = typegraph_test.unwrap().path();
-            let tgs = TypegraphLoader::with_config(&config)
-                .skip_deno_modules()
-                .load_file(&typegraph_test)?
-                .unwrap_or_else(|| vec![]);
-            assert_eq!(tgs.len(), 1);
-            let tg = tgs.into_iter().next().unwrap();
+            let mut loader_options = LoaderOptions::with_config(&config);
+            loader_options
+                .skip_deno_modules(true)
+                .file(&typegraph_test.canonicalize()?);
+            let mut loader = Loader::from(loader_options);
+
+            let LoaderOutput::Typegraph(tg) = loader.next().await.unwrap() else {
+                bail!("Unexpected");
+            };
+
             let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
             assert_eq!(module_codes.len(), 1);
 

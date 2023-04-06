@@ -4,23 +4,34 @@ import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { MessageEntry } from "./register.ts";
 import { SecretManager, TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { upgradeTypegraph } from "./typegraph/versions.ts";
+import { JSONValue } from "./utils.ts";
 
-const Log = {
+const Message = {
   INFO: "info",
   WARNING: "warning",
   ERROR: "error",
 } as const;
 
-class Logger {
-  constructor(private output: MessageEntry[]) {}
+export class PushResponse {
+  messages: MessageEntry[] = [];
+  customData: Record<string, JSONValue> = {};
+
+  constructor() {}
   info(text: string) {
-    this.output.push({ type: Log.INFO, text });
+    this.messages.push({ type: Message.INFO, text });
   }
   warn(text: string) {
-    this.output.push({ type: Log.WARNING, text });
+    this.messages.push({ type: Message.WARNING, text });
   }
   error(text: string) {
-    this.output.push({ type: Log.ERROR, text });
+    this.messages.push({ type: Message.ERROR, text });
+  }
+  data(key: string, value: JSONValue) {
+    this.customData[key] = value;
+  }
+
+  hasError() {
+    return this.messages.some((e) => e.type === Message.ERROR);
   }
 }
 
@@ -28,7 +39,7 @@ interface PushHandler {
   (
     tg: TypeGraphDS,
     secretManager: SecretManager,
-    logger: Logger,
+    response: PushResponse,
   ): Promise<TypeGraphDS>;
 }
 
@@ -61,13 +72,12 @@ export function registerHook(
 export async function handleOnPushHooks(
   typegraph: TypeGraphDS,
   secretManager: SecretManager,
-  messageOutput: MessageEntry[] | null,
+  response: PushResponse,
 ): Promise<TypeGraphDS> {
-  const logger = new Logger(messageOutput ?? []);
   let res = typegraph;
 
   for (const handler of hooks.onPush) {
-    res = await handler(res, secretManager, logger);
+    res = await handler(res, secretManager, response);
   }
 
   return res;

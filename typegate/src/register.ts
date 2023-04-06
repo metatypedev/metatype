@@ -5,6 +5,8 @@ import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import { decrypt, encrypt } from "./crypto.ts";
+import { PushResponse } from "./hooks.ts";
+import { JSONValue } from "./utils.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -12,8 +14,9 @@ export interface MessageEntry {
 }
 
 export interface RegistrationResult {
-  typegraphName: string;
+  typegraphName: string | null;
   messages: Array<MessageEntry>;
+  customData: Record<string, JSONValue>;
 }
 
 export abstract class Register {
@@ -46,7 +49,12 @@ export class ReplicatedRegister extends Register {
       async (json: string) => {
         const [payload, encryptedSecrets] = JSON.parse(json);
         const secrets = JSON.parse(await decrypt(encryptedSecrets));
-        return Engine.init(JSON.stringify(payload), secrets, true, null);
+        return Engine.init(
+          JSON.stringify(payload),
+          secrets,
+          true,
+          new PushResponse(),
+        );
       },
     );
 
@@ -61,24 +69,38 @@ export class ReplicatedRegister extends Register {
     payload: string,
     secrets: Record<string, string>,
   ): Promise<RegistrationResult> {
-    const messageOutput = [] as MessageEntry[];
-    const engine = await Engine.init(
-      payload,
-      secrets,
-      false,
-      messageOutput,
-      SystemTypegraph.getCustomRuntimes(this),
-    );
-    if (SystemTypegraph.check(engine.name)) {
-      // no need for a sync
-      this.replicatedMap.memory.set(engine.name, engine);
-    } else {
-      await this.replicatedMap.set(engine.name, engine);
+    const response = new PushResponse();
+
+    let engine = null;
+    try {
+      engine = await Engine.init(
+        payload,
+        secrets,
+        false,
+        response,
+        SystemTypegraph.getCustomRuntimes(this),
+      );
+    } catch (err) {
+      response.error(err.message);
+    }
+    if (engine != null && !response.hasError()) {
+      if (SystemTypegraph.check(engine.name)) {
+        // no need for a sync
+        this.replicatedMap.memory.set(engine.name, engine);
+      } else {
+        await this.replicatedMap.set(engine.name, engine);
+      }
+      return {
+        typegraphName: engine.name,
+        messages: response.messages,
+        customData: response.customData,
+      };
     }
 
     return {
-      typegraphName: engine.name,
-      messages: messageOutput,
+      typegraphName: null,
+      messages: response.messages,
+      customData: response.customData,
     };
   }
 

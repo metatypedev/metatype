@@ -51,8 +51,10 @@ function exposeOnPort(engine: Engine, port: number): () => void {
   return serve(register, port);
 }
 
+type MetaTestCleanupFn = () => void | Promise<void>;
+
 export class MetaTest {
-  private cleanups: (() => void)[] = [];
+  private cleanups: MetaTestCleanupFn[] = [];
 
   constructor(
     public t: Deno.TestContext,
@@ -62,6 +64,10 @@ export class MetaTest {
     if (port != null) {
       this.cleanups.push(serve(register, port));
     }
+  }
+
+  addCleanup(fn: MetaTestCleanupFn) {
+    this.cleanups.push(fn);
   }
 
   getTypegraph(name: string, ports: number[] = []): Engine | undefined {
@@ -108,6 +114,9 @@ export class MetaTest {
       stdout,
       opts.secrets ?? {},
     );
+    if (typegraphName == null) {
+      throw new Error("Could not register typegraph");
+    }
     for (const m of messages) {
       console.info(m);
     }
@@ -147,11 +156,16 @@ export class MetaTest {
     fact: string,
     fn: (t: Deno.TestContext) => void | Promise<void>,
   ): Promise<boolean> {
-    return await this.t.step({
+    const res = await this.t.step({
       name: `should ${fact}`,
       fn,
       //sanitizeOps: false,
     });
+    if (!res) {
+      Deno.exit(1);
+    }
+
+    return true;
   }
 
   assertSnapshot(...params: AssertSnapshotParams): Promise<void> {

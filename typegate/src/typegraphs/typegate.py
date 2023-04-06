@@ -60,7 +60,8 @@ with TypeGraph(
                                 "text": t.string(),
                             }
                         )
-                    )
+                    ),
+                    "customData": t.json(),
                 }
             ).optional(),
             AddTypeGraphMat(),

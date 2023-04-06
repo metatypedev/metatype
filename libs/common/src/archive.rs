@@ -15,7 +15,7 @@ pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<String>) -> Result<()>
     let bytes = STANDARD.decode(migrations)?;
     let decoder = GzDecoder::new(bytes.as_slice());
     let mut archive = Archive::new(decoder);
-    archive.unpack(dest)?;
+    archive.unpack(dest.as_ref())?;
     Ok(())
 }
 

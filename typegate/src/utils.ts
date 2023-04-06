@@ -137,3 +137,7 @@ export function nativeVoid(res: "Ok" | { Err: { message: string } }): void {
   }
   return;
 }
+
+export function pluralSuffix(count: number) {
+  return count === 1 ? "" : "s";
+}

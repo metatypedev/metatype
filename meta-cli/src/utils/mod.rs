@@ -1,25 +1,24 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 pub mod clap;
+pub mod fs;
 pub mod graphql;
 
 use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
-use pathdiff::diff_paths;
 use reqwest::{Client, IntoUrl, RequestBuilder, Url};
+use std::collections::HashMap;
 use std::env::{set_var, var};
-use std::fs;
 use std::hash::Hash;
 use std::path::Path;
 use std::time::Duration;
-use std::{collections::HashMap, path::PathBuf};
 
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if var("VIRTUAL_ENV").is_ok() {
         return Ok(());
     }
 
-    let dir = fs::canonicalize(dir)?;
+    let dir = dir.as_ref().canonicalize()?;
     let venv_dir = dir.join(".venv");
 
     if venv_dir.is_dir() {
@@ -122,21 +121,5 @@ where
         M: Fn(V) -> W,
     {
         self.into_iter().map(|(k, v)| (k, f(v))).collect()
-    }
-}
-
-pub fn relative_path_display<P1: Into<PathBuf>, P2: Into<PathBuf>>(base: P1, path: P2) -> String {
-    let path: PathBuf = path.into();
-    diff_paths(&path, base.into())
-        .unwrap_or(path)
-        .display()
-        .to_string()
-}
-
-pub fn plural_prefix(len: usize) -> &'static str {
-    if len == 1 {
-        ""
-    } else {
-        "s"
     }
 }

@@ -1,6 +1,14 @@
+typegates:
+  deploy:
+    url: "http://localhost:7895"
+    username: admin
+    password: password
+    env:
+      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=test"
+
 typegraphs:
   python:
-    include: "typegraphs/*.py"
+    include: "**/*.py"
   materializers:
     prisma:
       migrations_path: "prisma-migrations"

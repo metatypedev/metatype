@@ -37,7 +37,7 @@ tokio = { version = "1.27.0", features = ["full"] }
 log = "0.4.17"
 clap = { version = "4.1.14", features = ["derive", "env"] }
 crossbeam-channel = "0.5.7"
-notify = "5.1.0"
+notify-debouncer-mini = { version = "0.2.0", default-features = false }
 tiny_http = "0.12.0"
 ignore = "0.4.20"
 globset = "0.4.10"
@@ -66,6 +66,7 @@ clap-verbosity-flag = "2.0.1"
 clap_complete = "4.1.6"
 itertools = "0.10.5"
 enum_dispatch = "0.3.11"
+git2 = { version = "0.16.1", features = ["vendored-libgit2"], default-features = false }
 
 [dev-dependencies]
 assert_cmd = "2.0.10"

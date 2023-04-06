@@ -9,7 +9,11 @@ export class SingleRegister extends Register {
   }
 
   set(_payload: string): Promise<RegistrationResult> {
-    return Promise.resolve({ typegraphName: this.name, messages: [] });
+    return Promise.resolve({
+      typegraphName: this.name,
+      messages: [],
+      customData: {},
+    });
   }
 
   remove(_name: string): Promise<void> {

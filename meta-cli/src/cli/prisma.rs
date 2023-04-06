@@ -344,7 +344,7 @@ impl PrismaMigrate {
     }
 
     fn end(self) -> Result<()> {
-        let migrations_path = self.base_migration_path.join(&self.typegraph).join(
+        let migrations_path = self.base_migration_path.join(
             self.runtime_name
                 .expect("runtime name should have been set"), // runtime_name should have been set
         );

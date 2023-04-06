@@ -94,15 +94,28 @@ type<br />
 </tbody>
 </table>
 
-## object_23
+## object_24
 
-object_23 type
+object_24 type
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
 <thead><tr><th>Name</th><th>Description</th></tr></thead>
 <tbody>
+<tr>
+<td>
+customData<br />
+<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>customData field</p>
+<p>Policies:</p>
+<ul>
+<li>inherit</li>
+</ul>
+</td>
+</tr>
 <tr>
 <td>
 messages<br />

@@ -5,7 +5,7 @@ import * as native from "native";
 import { FromVars, GraphQLRuntime } from "./graphql.ts";
 import { ResolverError } from "../errors.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
-import { nativeResult, nativeVoid } from "../utils.ts";
+import { nativeResult, nativeVoid, pluralSuffix } from "../utils.ts";
 import { ComputeStage } from "../engine.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "../planner/args.ts";
@@ -46,7 +46,7 @@ export interface PrismaRuntimeDS extends Omit<TGRuntime, "data"> {
   data: PrismaRuntimeData;
 }
 
-registerHook("onPush", async (typegraph, secretManager, logger) => {
+registerHook("onPush", async (typegraph, secretManager, response) => {
   const runtimes = typegraph.runtimes.filter((rt) =>
     rt.name === "prisma"
   ) as unknown[] as PrismaRuntimeDS[];
@@ -61,29 +61,106 @@ registerHook("onPush", async (typegraph, secretManager, logger) => {
       secretManager.secretOrFail(connection_string_secret),
     );
 
-    const { migration_count, applied_migrations } = nativeResult(
-      await native.prisma_deploy({
+    const prefix = `[prisma runtime: '${rt.data.name}']`;
+
+    if (rt.data.create_migration) {
+      const applyRes = await native.prisma_apply({
         datasource,
         datamodel,
         migrations: migrations!,
-      }),
-    );
+        reset_database: rt.data.reset_on_drift ?? false,
+      });
+      if ("Err" in applyRes) {
+        throw new Error(applyRes.Err.message);
+      }
+      if ("ResetRequired" in applyRes) {
+        throw new Error(
+          `Database reset required: ${applyRes.ResetRequired.reset_reason}`,
+        );
+      } else {
+        const { applied_migrations } = applyRes.MigrationsApplied!;
+        if (applied_migrations.length === 0) {
+          response.info(`${prefix} No migration applied.`);
+        } else {
+          const count = applied_migrations.length;
+          response.info(
+            `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
+          );
+          for (const migrationName of applied_migrations) {
+            response.info(`  - ${migrationName}`);
+          }
+        }
 
-    if (migration_count === 0) {
-      logger.info(`[prisma runtime: '${rt.data.name}'] No migration found.`);
+        // diff
+        const res = nativeResult(
+          await native.prisma_diff({
+            datasource,
+            datamodel,
+            script: false,
+          }),
+        );
+
+        if (res.diff != null) {
+          // create
+          const res = nativeResult(
+            await native.prisma_create({
+              datasource,
+              datamodel,
+              migrations: migrations!,
+              migration_name: "generated",
+              apply: true,
+            }),
+          );
+
+          const { created_migration_name, applied_migrations } = res;
+          if (created_migration_name != null) {
+            response.info(
+              `${prefix} Created migration: '${created_migration_name}'`,
+            );
+            response.data(`migrations:${rt.data.name}`, res.migrations);
+            rt.data.migrations = res.migrations;
+          }
+          if (applied_migrations.length === 0) {
+            response.info(`${prefix} No migration applied.`);
+          } else {
+            const count = applied_migrations.length;
+            response.info(
+              `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
+            );
+            for (const migrationName of applied_migrations) {
+              response.info(`  - ${migrationName}`);
+            }
+          }
+        }
+      }
     } else {
-      logger.info(
-        `[prisma runtime: '${rt.data.name}'] ${migration_count} migrations found.`,
+      const { migration_count, applied_migrations } = nativeResult(
+        await native.prisma_deploy({
+          datasource,
+          datamodel,
+          migrations: migrations!,
+        }),
       );
-    }
-    if (applied_migrations.length === 0) {
-      logger.info(`[prisma runtime: '${rt.data.name}'] No migration applied.`);
-    } else {
-      logger.info(
-        `[prisma runtime: '${rt.data.name}'] ${applied_migrations.length} migrations applied:`,
-      );
-      for (const migrationName of applied_migrations) {
-        logger.info(`  - ${migrationName}`);
+
+      if (migration_count === 0) {
+        response.info(`${prefix} No migration found.`);
+      } else {
+        response.info(
+          `${prefix} ${migration_count} migration${
+            pluralSuffix(migration_count)
+          } found.`,
+        );
+      }
+      if (applied_migrations.length === 0) {
+        response.info(`${prefix} No migration applied.`);
+      } else {
+        const count = applied_migrations.length;
+        response.info(
+          `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
+        );
+        for (const migrationName of applied_migrations) {
+          response.info(`  - ${migrationName}`);
+        }
       }
     }
   }
