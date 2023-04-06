@@ -208,7 +208,6 @@ export class TypeGraphRuntime extends Runtime {
           ...regularTypes,
           ...inputTypes,
         ];
-        console.log(customScalarTypes.map((c) => c.name()));
         return types;
       },
       queryType: () => {
