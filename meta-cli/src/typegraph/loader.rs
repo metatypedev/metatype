@@ -13,6 +13,7 @@ use anyhow::{bail, Context, Error, Result};
 use colored::Colorize;
 use common::typegraph::Typegraph;
 use ignore::{gitignore::Gitignore, Match};
+use log::{info, warn};
 use notify_debouncer_mini::{
     new_debouncer,
     notify::{self, RecommendedWatcher, RecursiveMode},
@@ -270,7 +271,7 @@ impl LoaderInternal {
                     }
 
                     if count == 0 {
-                        println!("No typegraph definition module found.");
+                        warn!("No typegraph definition module found.");
                     }
                 }
                 LoaderEvent::ReloadFiles(paths, reason) => {
@@ -334,7 +335,7 @@ impl LoaderInternal {
         for input in inputs {
             match input {
                 LoaderInput::File(path, _) | LoaderInput::Directory(path) => {
-                    println!("Watching {path:?}");
+                    info!("Watching {path:?}");
                     watcher
                         .watch(path, RecursiveMode::Recursive)
                         .with_context(|| format!("Watching {path:?}"))
@@ -371,18 +372,18 @@ impl LoaderInternal {
                 let rel_path = diff_paths(&path, &current_dir);
                 match reason {
                     ReloadReason::Modified => {
-                        eprintln!("Reloading typegraph definition module (modified): {rel_path:?}");
+                        info!("Reloading typegraph definition module (modified): {rel_path:?}");
                     }
                     ReloadReason::DependencyModified(dep_path) => {
                         let dep_rel_path = diff_paths(&dep_path, current_dir);
-                        eprintln!("Reloading typegraph definition module (dependency modified {dep_rel_path:?}): {rel_path:?}");
+                        info!("Reloading typegraph definition module (dependency modified {dep_rel_path:?}): {rel_path:?}");
                     }
                     ReloadReason::Discovery(Some(_)) => {
-                        eprintln!("Found python typegraph definition module at {rel_path:?}");
+                        info!("Found python typegraph definition module at {rel_path:?}");
                     }
                     ReloadReason::Discovery(None) => {}
                     ReloadReason::User => {
-                        eprintln!("Reloading typegraph definition module (manual): {rel_path:?}");
+                        info!("Reloading typegraph definition module (manual): {rel_path:?}");
                     }
                 }
 

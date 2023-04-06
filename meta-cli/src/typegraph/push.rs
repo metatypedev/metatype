@@ -3,6 +3,7 @@
 use anyhow::{Context, Result};
 use colored::Colorize;
 use indoc::indoc;
+use log::{error, info, warn};
 use pathdiff::diff_paths;
 use serde::Deserialize;
 use serde_json::json;
@@ -48,13 +49,13 @@ impl PushResult {
         for msg in self.messages.iter() {
             match msg {
                 MessageEntry::Info(txt) => {
-                    println!("[{type} {name}] {txt}", type = "info".green());
+                    info!("[{name}] {txt}");
                 }
                 MessageEntry::Warning(txt) => {
-                    println!("[{type} {name}] {txt}", type = "warning".yellow());
+                    warn!("[{name}] {txt}");
                 }
                 MessageEntry::Error(txt) => {
-                    println!("[{type} {name}] {txt}", type = "error".red())
+                    error!("[{name}] {txt}");
                 }
             }
         }
@@ -269,7 +270,7 @@ where
             let tg_name = entry.typegraph.name().unwrap().blue();
             let path = entry.typegraph.path.as_ref().unwrap();
             // ? display path relative to current dir or to the metatype.yaml dir??
-            println!(
+            info!(
                 "Pushing typegraph {tg_name} from {:?}...",
                 diff_paths(path, std::env::current_dir().unwrap()).unwrap()
             );
@@ -279,7 +280,7 @@ where
                 .await
             {
                 Err(e) => {
-                    println!(
+                    error!(
                         "{} Failed to push typegraph {tg_name}: {:?}",
                         "✗".to_owned().red(),
                         e
@@ -292,7 +293,7 @@ where
                 }
                 Ok(mut res) => {
                     if res.has_error() {
-                        println!(
+                        error!(
                             "{} Failed to push typegraph {tg_name}",
                             "✗".to_owned().red(),
                         );
@@ -304,7 +305,7 @@ where
                             }
                         }
                     } else {
-                        println!(
+                        info!(
                             "{} Successfully pushed typegraph {tg_name}.",
                             "✓".to_owned().green()
                         );
@@ -318,7 +319,7 @@ where
 
     async fn retry(&mut self, entry: PushQueueEntry) {
         let interval = self.options.retry.as_ref().unwrap().interval;
-        println!(
+        info!(
             "  Retrying to push in {} seconds...",
             interval.as_secs_f32()
         );

@@ -13,9 +13,37 @@ use clap::error::ErrorKind;
 use clap::Parser;
 use cli::Action;
 use cli::Args;
+use colored::Colorize;
+use log::Level;
+use std::io::Write;
+
+fn init_logger() {
+    if std::env::var("RUST_LOG").is_err() {
+        #[cfg(debug_assertions)]
+        std::env::set_var("RUST_LOG", "debug");
+        #[cfg(not(debug_assertions))]
+        std::env::set_var("RUST_LOG", "info");
+    }
+    let mut builder = env_logger::Builder::from_default_env();
+    builder
+        .format(|buf, rec| {
+            let level = rec.level();
+            let level = match level {
+                Level::Error => format!("[{level}]").red(),
+                Level::Warn => format!("[{level}]").yellow(),
+                Level::Info => format!("[{level}]").blue(),
+                Level::Debug => format!("[{level}]").dimmed(),
+                Level::Trace => format!("[{level}]").dimmed(),
+            };
+            writeln!(buf, "{level} {}", rec.args())
+        })
+        .init();
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    init_logger();
+
     let args = match Args::try_parse() {
         Ok(args) => args,
         Err(e) => {

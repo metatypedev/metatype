@@ -3153,6 +3153,7 @@ dependencies = [
  "crossbeam-channel",
  "dialoguer",
  "enum_dispatch",
+ "env_logger",
  "flate2",
  "git2",
  "globset",
