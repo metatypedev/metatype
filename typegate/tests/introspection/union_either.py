@@ -10,15 +10,35 @@ with TypeGraph("introspect-union-either") as g:
     toy = t.either([rubix_cube, toygun, gunpla])
 
     user = t.struct(
-        {"name": t.string().named("Username"), "favorite": toy.named("FavoriteToy")}
+        {
+            "name": t.string().named("Username"),
+            "favorite": toy.named("FavoriteToy"),
+        }
     ).named("User")
 
     g.expose(
-        test=t.func(
-            user.named("Input"),
-            user.named("Output"),
+        identity=t.func(
+            user.named("UserInput1"),
+            user.named("UserOutput1"),
             PredefinedFunMat("identity"),
         )
-        .named("f")
+        .named("f1")
+        .add_policy(policies.public()),
+        identityDiff=t.func(
+            t.struct(
+                {
+                    "name": t.string().named("Username2"),
+                    "favorite": toy.named("FavoriteToy2"),
+                }
+            ).named("UserInput2"),
+            t.struct(
+                {
+                    "name": t.string().named("Username3"),
+                    "favorite": toy.named("FavoriteToy3"),
+                }
+            ).named("UserOutput2"),
+            PredefinedFunMat("identity"),
+        )
+        .named("f2")
         .add_policy(policies.public()),
     )

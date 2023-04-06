@@ -17,7 +17,10 @@ snapshot[`Basic introspection 1`] = `
       {
         fields: [
           {
-            name: "test",
+            name: "identityDiff",
+          },
+          {
+            name: "identity",
           },
         ],
         kind: "OBJECT",
@@ -33,7 +36,7 @@ snapshot[`Basic introspection 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "Output",
+        name: "UserOutput1",
       },
       {
         fields: [
@@ -102,9 +105,42 @@ snapshot[`Basic introspection 1`] = `
         name: "union_9",
       },
       {
+        fields: [
+          {
+            name: "favorite",
+          },
+          {
+            name: "name",
+          },
+        ],
+        kind: "OBJECT",
+        name: "UserOutput2",
+      },
+      {
+        fields: [
+          {
+            name: "ref",
+          },
+          {
+            name: "model",
+          },
+          {
+            name: "color",
+          },
+          {
+            name: "size",
+          },
+          {
+            name: "name",
+          },
+        ],
+        kind: "OBJECT",
+        name: "FavoriteToy3",
+      },
+      {
         fields: null,
-        kind: "INPUT_OBJECT",
-        name: "FavoriteToyInp",
+        kind: "SCALAR",
+        name: "FavoriteToy",
       },
       {
         fields: null,
@@ -123,8 +159,13 @@ snapshot[`Basic introspection 1`] = `
       },
       {
         fields: null,
-        kind: "INPUT_OBJECT",
-        name: "union_9Inp",
+        kind: "SCALAR",
+        name: "union_9",
+      },
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "FavoriteToy2",
       },
     ],
   },
