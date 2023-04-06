@@ -10,6 +10,7 @@ meta:
   env:
     VIRTUAL_ENV: $PWD/examples/.venv
     PATH: $PWD/examples/.venv/bin:$PATH
+    CLICOLOR_FORCE: "1"
   depends_on:
     - libs
 

@@ -157,7 +157,7 @@ impl LoaderOptions {
 
 #[derive(Debug, Clone)]
 enum ReloadReason {
-    Discovery,
+    Discovery(Option<PathBuf>),
     User,
     Modified,
     DependencyModified(PathBuf),
@@ -236,7 +236,7 @@ impl LoaderInternal {
         tx: UnboundedSender<LoaderEvent>,
         mut rx: UnboundedReceiver<LoaderEvent>,
     ) -> Result<()> {
-        tx.send(LoaderEvent::ReloadAll(ReloadReason::Discovery))
+        tx.send(LoaderEvent::ReloadAll(ReloadReason::Discovery(None)))
             .unwrap();
 
         let _watcher = if self.options.watch {
@@ -377,9 +377,10 @@ impl LoaderInternal {
                         let dep_rel_path = diff_paths(&dep_path, current_dir);
                         eprintln!("Reloading typegraph definition module (dependency modified {dep_rel_path:?}): {rel_path:?}");
                     }
-                    ReloadReason::Discovery => {
+                    ReloadReason::Discovery(Some(_)) => {
                         eprintln!("Found python typegraph definition module at {rel_path:?}");
                     }
+                    ReloadReason::Discovery(None) => {}
                     ReloadReason::User => {
                         eprintln!("Reloading typegraph definition module (manual): {rel_path:?}");
                     }
