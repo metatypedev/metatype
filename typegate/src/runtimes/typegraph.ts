@@ -37,8 +37,20 @@ const SCALAR_TYPE_MAP = {
   "string": "String",
 };
 
+function generateCustomScalarName(type: TypeNode) {
+  if (isScalar(type)) {
+    const id = type.type;
+    // We get "Expected {name} to be a GraphQL Object type."
+    // without the "_" prefix
+    return "_" + id[0].toUpperCase() + id.slice(1);
+  }
+  throw `"${type.title}" of type "${type.type}" is not a scalar`;
+}
+
 export class TypeGraphRuntime extends Runtime {
   tg: TypeGraphDS;
+  private scalarIndex = new Map<string, number>();
+  private customScalars = new Map<string, ObjectNode>();
 
   private constructor(tg: TypeGraphDS) {
     super();
@@ -158,11 +170,29 @@ export class TypeGraphRuntime extends Runtime {
         };
 
         visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
-
-        const scalarTypes = distinctBy(
-          [...scalarTypeIndices].map((idx) => this.tg.types[idx]),
+        const distinctScalars = distinctBy(
+          [...scalarTypeIndices].map((idx) => {
+            const node = this.tg.types[idx];
+            this.scalarIndex.set(node.type, idx);
+            return node;
+          }),
           (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
-        ).map((type) => this.formatType(type, false, false));
+        );
+        const scalarTypes = distinctScalars.map((type) =>
+          this.formatType(type, false, false)
+        );
+        const customScalarTypes = distinctScalars.map((node) => {
+          const key = generateCustomScalarName(node);
+          const custom = {
+            title: key,
+            type: "object",
+            properties: {
+              [node.type]: this.scalarIndex.get(node.type),
+            },
+          } as ObjectNode;
+          this.customScalars.set(key, custom);
+          return this.formatType(custom, false, false);
+        });
         const regularTypes = distinctBy(
           [...regularTypeIndices].map((idx) => this.tg.types[idx]),
           (t) => t.title,
@@ -172,7 +202,13 @@ export class TypeGraphRuntime extends Runtime {
           (t) => t.title,
         ).map((type) => this.formatType(type, false, true));
 
-        const types = [...scalarTypes, ...regularTypes, ...inputTypes];
+        const types = [
+          ...scalarTypes,
+          ...customScalarTypes,
+          ...regularTypes,
+          ...inputTypes,
+        ];
+        console.log(customScalarTypes.map((c) => c.name()));
         return types;
       },
       queryType: () => {
@@ -329,41 +365,56 @@ export class TypeGraphRuntime extends Runtime {
           description: () => description,
         };
       } else {
-        // return {
-        //   ...common,
-        //   kind: () => TypeKind.SCALAR,
-        //   name: () => type.title,
-        //   description: () => "OUTPUT!!!",
-        // };
-        const variantsAsObject = {
-          title: type.title,
-          type: "object",
-          properties: {},
-        } as ObjectNode;
-        let count = 0;
-        const objects = new Set<[string, number]>();
-        const remaining = new Set<[string, number]>();
-        for (let i = 0; i < variants.length; i++) {
-          const idx = variants[i];
-          const node = this.tg.types[idx];
-          if (isObject(node)) {
-            for (const [field, idx] of Object.entries(node.properties)) {
-              objects.add([field, idx]);
-            }
-          } else {
-            // name for scalars and nested union/either
-            const field = `${type.type}_${count++}`;
-            remaining.add([field, idx]);
-          }
-        }
+        return {
+          ...common,
+          kind: () => TypeKind.UNION,
+          name: () => type.title,
+          description: () => `${type.title} type`,
+          possibleTypes: () => {
+            return variants.map((idx) => {
+              const variant = this.tg.types[idx];
+              if (isScalar(variant)) {
+                const key = generateCustomScalarName(variant);
+                const variantsAsObject = this.customScalars.get(key);
+                if (variantsAsObject) {
+                  return this.formatType(variantsAsObject, false, false);
+                } else {
+                  throw Error(`custom scalar "${key}" does not exist`);
+                }
+              }
+              return this.formatType(variant, false, false);
+            });
+          },
+        };
+        // const variantsAsObject = {
+        //   title: type.title,
+        //   type: "object",
+        //   properties: {},
+        // } as ObjectNode;
+        // let count = 0;
+        // const objects = new Set<[string, number]>();
+        // const remaining = new Set<[string, number]>();
+        // for (let i = 0; i < variants.length; i++) {
+        //   const idx = variants[i];
+        //   const node = this.tg.types[idx];
+        //   if (isObject(node)) {
+        //     for (const [field, idx] of Object.entries(node.properties)) {
+        //       objects.add([field, idx]);
+        //     }
+        //   } else {
+        //     // name for scalars and nested union/either
+        //     const field = `${type.type}_${count++}`;
+        //     remaining.add([field, idx]);
+        //   }
+        // }
 
-        for (const [field, idx] of objects) {
-          variantsAsObject.properties[field] = idx;
-        }
-        for (const [field, idx] of remaining) {
-          variantsAsObject.properties[field] = idx;
-        }
-        return this.formatType(variantsAsObject, required, asInput);
+        // for (const [field, idx] of objects) {
+        //   variantsAsObject.properties[field] = idx;
+        // }
+        // for (const [field, idx] of remaining) {
+        //   variantsAsObject.properties[field] = idx;
+        // }
+        // return this.formatType(variantsAsObject, required, asInput);
       }
     }
 
