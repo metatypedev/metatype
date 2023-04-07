@@ -7,7 +7,7 @@ with TypeGraph("introspect-union-either") as g:
     gunpla = t.struct(
         {"model": t.string(), "ref": t.union([t.string(), t.integer()])}
     ).named("Gunpla")
-    toy = t.either([rubix_cube, toygun, gunpla])
+    toy = t.either([rubix_cube, toygun, gunpla, t.string()])
 
     user = t.struct(
         {
@@ -18,27 +18,10 @@ with TypeGraph("introspect-union-either") as g:
 
     g.expose(
         identity=t.func(
-            user.named("UserInput1"),
-            user.named("UserOutput1"),
+            user.named("UserInput"),
+            user.named("UserOutput"),
             PredefinedFunMat("identity"),
         )
-        .named("f1")
-        .add_policy(policies.public()),
-        identityDiff=t.func(
-            t.struct(
-                {
-                    "name": t.string().named("Username2"),
-                    "favorite": toy.named("FavoriteToy2"),
-                }
-            ).named("UserInput2"),
-            t.struct(
-                {
-                    "name": t.string().named("Username3"),
-                    "favorite": toy.named("FavoriteToy3"),
-                }
-            ).named("UserOutput2"),
-            PredefinedFunMat("identity"),
-        )
-        .named("f2")
-        .add_policy(policies.public()),
+        .named("f")
+        .add_policy(policies.public())
     )

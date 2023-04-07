@@ -6,7 +6,6 @@ import { gql, test } from "../utils.ts";
 
 test("Basic introspection", async (t) => {
   const e = await t.pythonFile("introspection/union_either.py");
-
   await t.should("allow querying the schema for query type", async () => {
     await gql`
       query IntrospectionQuery {
@@ -14,6 +13,10 @@ test("Basic introspection", async (t) => {
           types {
             name
             kind
+            possibleTypes {
+              name
+              kind
+            }
             fields {
               name
             }
