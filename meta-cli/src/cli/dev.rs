@@ -19,6 +19,8 @@ use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
 use common::archive::unpack;
+use log::error;
+use log::warn;
 use reqwest::Url;
 use serde_json::json;
 use std::collections::HashMap;
@@ -75,7 +77,7 @@ impl Action for Dev {
                 let custom_data = res
                     .iter_custom_data()
                     .map_err(|err| {
-                        eprintln!("Error while parsing custom data: {err:?}");
+                        error!("Error while parsing custom data: {err:?}");
                         err
                     })
                     .ok()
@@ -96,12 +98,12 @@ impl Action for Dev {
                             .base_migrations_path(&prisma_args, &config);
                         let path = base_dir.join(rt_name);
                         let serde_json::Value::String(migrations) = v else {
-                            eprintln!("Invalid data format: expected string for migrations");
+                            error!("Invalid data format: expected string for migrations");
                             break;
                         };
                         let res = unpack(&path, Some(migrations));
                         if let Err(err) = res {
-                            eprintln!("Error while unpacking migrations into {path:?}: {err:?}");
+                            error!("Error while unpacking migrations into {path:?}: {err:?}");
                         }
                     }
                 }
@@ -114,21 +116,21 @@ impl Action for Dev {
                     push_loop.push(PushQueueEntry::new(tg))?;
                 }
                 LoaderOutput::Rewritten(path) => {
-                    println!("Typegraph definition module at {path:?} has been rewritten by an importer.");
+                    warn!("Typegraph definition module at {path:?} has been rewritten by an importer.");
                 }
                 LoaderOutput::Error(LoaderError::PostProcessingError {
                     path,
                     typegraph_name,
                     error,
                 }) => {
-                    println!("Error: error while post-processing typegraph {name} from {path:?}: {error:?}", name = typegraph_name.blue());
+                    error!("Error: error while post-processing typegraph {name} from {path:?}: {error:?}", name = typegraph_name.blue());
                 }
                 LoaderOutput::Error(LoaderError::UnknownFileType(_)) => {}
                 LoaderOutput::Error(LoaderError::SerdeJson { path, error }) => {
-                    println!("Error: an unexpected error occurred while parsing raw string format of the typegraph(s) from {path:?}: {error:?}");
+                    error!("Error: an unexpected error occurred while parsing raw string format of the typegraph(s) from {path:?}: {error:?}");
                 }
                 LoaderOutput::Error(LoaderError::Unknown { path, error }) => {
-                    println!("Error: an unexpected error occurred while loading typegraphs from {path:?}: {error:?}");
+                    error!("Error: an unexpected error occurred while loading typegraphs from {path:?}: {error:?}");
                 }
             }
         }
