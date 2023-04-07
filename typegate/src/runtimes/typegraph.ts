@@ -360,23 +360,23 @@ export class TypeGraphRuntime extends Runtime {
         return {
           ...common,
           kind: () => TypeKind.SCALAR,
-          name: () => type.title,
+          name: () => type.title + "In",
           description: () => description,
         };
       } else {
         return {
           ...common,
           kind: () => TypeKind.UNION,
-          name: () => type.title,
+          name: () => type.title + "Out",
           description: () => `${type.title} type`,
           possibleTypes: () => {
             return variants.map((idx) => {
               const variant = this.tg.types[idx];
               if (isScalar(variant)) {
                 const key = generateCustomScalarName(variant);
-                const variantsAsObject = this.customScalars.get(key);
-                if (variantsAsObject) {
-                  return this.formatType(variantsAsObject, false, false);
+                const scalarAsObject = this.customScalars.get(key);
+                if (scalarAsObject) {
+                  return this.formatType(scalarAsObject, false, false);
                 } else {
                   throw Error(`custom scalar "${key}" does not exist`);
                 }
@@ -385,35 +385,6 @@ export class TypeGraphRuntime extends Runtime {
             });
           },
         };
-        // const variantsAsObject = {
-        //   title: type.title,
-        //   type: "object",
-        //   properties: {},
-        // } as ObjectNode;
-        // let count = 0;
-        // const objects = new Set<[string, number]>();
-        // const remaining = new Set<[string, number]>();
-        // for (let i = 0; i < variants.length; i++) {
-        //   const idx = variants[i];
-        //   const node = this.tg.types[idx];
-        //   if (isObject(node)) {
-        //     for (const [field, idx] of Object.entries(node.properties)) {
-        //       objects.add([field, idx]);
-        //     }
-        //   } else {
-        //     // name for scalars and nested union/either
-        //     const field = `${type.type}_${count++}`;
-        //     remaining.add([field, idx]);
-        //   }
-        // }
-
-        // for (const [field, idx] of objects) {
-        //   variantsAsObject.properties[field] = idx;
-        // }
-        // for (const [field, idx] of remaining) {
-        //   variantsAsObject.properties[field] = idx;
-        // }
-        // return this.formatType(variantsAsObject, required, asInput);
       }
     }
 
