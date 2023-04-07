@@ -8,23 +8,43 @@ snapshot[`Basic introspection 1`] = `
         fields: null,
         kind: "SCALAR",
         name: "String",
+        possibleTypes: null,
       },
       {
         fields: null,
         kind: "SCALAR",
         name: "Int",
+        possibleTypes: null,
       },
       {
         fields: [
           {
-            name: "identityDiff",
+            name: "string",
           },
+        ],
+        kind: "OBJECT",
+        name: "_String",
+        possibleTypes: null,
+      },
+      {
+        fields: [
+          {
+            name: "integer",
+          },
+        ],
+        kind: "OBJECT",
+        name: "_Integer",
+        possibleTypes: null,
+      },
+      {
+        fields: [
           {
             name: "identity",
           },
         ],
         kind: "OBJECT",
         name: "Query",
+        possibleTypes: null,
       },
       {
         fields: [
@@ -36,28 +56,31 @@ snapshot[`Basic introspection 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "UserOutput1",
+        name: "UserOutput",
+        possibleTypes: null,
       },
       {
-        fields: [
+        fields: null,
+        kind: "UNION",
+        name: "FavoriteToyOut",
+        possibleTypes: [
           {
-            name: "ref",
+            kind: "OBJECT",
+            name: "Rubix",
           },
           {
-            name: "model",
+            kind: "OBJECT",
+            name: "Toygun",
           },
           {
-            name: "color",
+            kind: "OBJECT",
+            name: "Gunpla",
           },
           {
-            name: "size",
-          },
-          {
-            name: "name",
+            kind: "OBJECT",
+            name: "_String",
           },
         ],
-        kind: "OBJECT",
-        name: "FavoriteToy",
       },
       {
         fields: [
@@ -70,6 +93,7 @@ snapshot[`Basic introspection 1`] = `
         ],
         kind: "OBJECT",
         name: "Rubix",
+        possibleTypes: null,
       },
       {
         fields: [
@@ -79,6 +103,7 @@ snapshot[`Basic introspection 1`] = `
         ],
         kind: "OBJECT",
         name: "Toygun",
+        possibleTypes: null,
       },
       {
         fields: [
@@ -91,81 +116,52 @@ snapshot[`Basic introspection 1`] = `
         ],
         kind: "OBJECT",
         name: "Gunpla",
+        possibleTypes: null,
       },
       {
-        fields: [
+        fields: null,
+        kind: "UNION",
+        name: "union_9Out",
+        possibleTypes: [
           {
-            name: "union_1",
+            kind: "OBJECT",
+            name: "_String",
           },
           {
-            name: "union_0",
-          },
-        ],
-        kind: "OBJECT",
-        name: "union_9",
-      },
-      {
-        fields: [
-          {
-            name: "favorite",
-          },
-          {
-            name: "name",
+            kind: "OBJECT",
+            name: "_Integer",
           },
         ],
-        kind: "OBJECT",
-        name: "UserOutput2",
-      },
-      {
-        fields: [
-          {
-            name: "ref",
-          },
-          {
-            name: "model",
-          },
-          {
-            name: "color",
-          },
-          {
-            name: "size",
-          },
-          {
-            name: "name",
-          },
-        ],
-        kind: "OBJECT",
-        name: "FavoriteToy3",
       },
       {
         fields: null,
         kind: "SCALAR",
-        name: "FavoriteToy",
+        name: "FavoriteToyIn",
+        possibleTypes: null,
       },
       {
         fields: null,
         kind: "INPUT_OBJECT",
         name: "RubixInp",
+        possibleTypes: null,
       },
       {
         fields: null,
         kind: "INPUT_OBJECT",
         name: "ToygunInp",
+        possibleTypes: null,
       },
       {
         fields: null,
         kind: "INPUT_OBJECT",
         name: "GunplaInp",
+        possibleTypes: null,
       },
       {
         fields: null,
         kind: "SCALAR",
-        name: "union_9",
-      },
-      {
-        fields: null,
-        kind: "SCALAR",
-        name: "FavoriteToy2",
+        name: "union_9In",
+        possibleTypes: null,
       },
     ],
   },
