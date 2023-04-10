@@ -14,6 +14,7 @@ pub(crate) mod codegen;
 pub(crate) mod completion;
 pub(crate) mod deploy;
 pub(crate) mod dev;
+pub(crate) mod doctor;
 pub(crate) mod prisma;
 pub(crate) mod serialize;
 pub(crate) mod upgrade;
@@ -62,6 +63,8 @@ pub(crate) enum Commands {
     Upgrade(upgrade::Upgrade),
     /// Generate shell completion
     Completion(completion::Completion),
+    /// Troubleshoot the installation
+    Doctor(doctor::Doctor),
 }
 
 #[async_trait]

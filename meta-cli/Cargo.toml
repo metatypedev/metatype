@@ -67,6 +67,7 @@ clap_complete = "4.1.6"
 itertools = "0.10.5"
 enum_dispatch = "0.3.11"
 git2 = { version = "0.16.1", features = ["vendored-libgit2"], default-features = false }
+normpath = "1.1.1"
 
 [dev-dependencies]
 assert_cmd = "2.0.10"

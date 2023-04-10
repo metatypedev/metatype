@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 pub mod clap;
-pub mod fs;
 pub mod graphql;
 
 use anyhow::{bail, Result};
@@ -13,17 +12,15 @@ use std::hash::Hash;
 use std::path::Path;
 use std::time::Duration;
 
+use crate::config::VENV_FOLDERS;
+use crate::fs::find_in_parents;
+
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     if var("VIRTUAL_ENV").is_ok() {
         return Ok(());
     }
 
-    let dir = dir.as_ref().canonicalize()?;
-    let venv_dir = dir.join(".venv");
-
-    if venv_dir.is_dir() {
-        let venv = venv_dir.to_str().unwrap();
-
+    if let Some(venv_dir) = find_in_parents(dir.as_ref().to_path_buf(), VENV_FOLDERS.to_vec())? {
         let path = var("PATH")?;
 
         // https://github.com/pypa/virtualenv/commit/993ba1316a83b760370f5a3872b3f5ef4dd904c1
@@ -38,11 +35,9 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
             venv_bin = venv_dir.as_path().join("bin").to_str().unwrap()
         );
 
-        set_var("VIRTUAL_ENV", venv);
+        set_var("VIRTUAL_ENV", venv_dir.to_str().unwrap());
         set_var("PATH", path);
         Ok(())
-    } else if let Some(dir) = dir.parent() {
-        ensure_venv(dir)
     } else {
         bail!("Python venv required")
     }
