@@ -201,9 +201,7 @@ impl Config {
 
     /// Load config file: recursively search from `start_dir` to parent directories...
     pub fn find<P: AsRef<Path>>(start_dir: P) -> Result<Option<Config>> {
-        if let Some(path) =
-            find_in_parents(start_dir.as_ref().to_path_buf(), METATYPE_FILES.to_vec())?
-        {
+        if let Some(path) = find_in_parents(start_dir, METATYPE_FILES)? {
             Ok(Some(Self::from_file(path)?))
         } else {
             Ok(None)

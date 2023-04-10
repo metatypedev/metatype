@@ -7,6 +7,7 @@ use clap::Parser;
 use clap::Subcommand;
 use clap_verbosity_flag::Verbosity;
 use enum_dispatch::enum_dispatch;
+use normpath::PathExt;
 use reqwest::Url;
 use std::path::PathBuf;
 
@@ -39,11 +40,17 @@ pub(crate) struct Args {
 #[clap(author, version, about, long_about = None, disable_version_flag = true)]
 pub struct GenArgs {
     #[clap(short = 'C', long, value_parser, default_value_t = String::from("."))]
-    pub dir: String,
+    dir: String,
 
     /// path to the config file
     #[clap(long, value_parser)]
     pub config: Option<PathBuf>,
+}
+
+impl GenArgs {
+    pub fn dir(&self) -> Result<PathBuf> {
+        Ok(PathBuf::from(&self.dir).normalize()?.into_path_buf())
+    }
 }
 
 #[derive(Subcommand, Debug)]

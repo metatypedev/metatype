@@ -22,7 +22,6 @@ use common::archive::unpack;
 use reqwest::Url;
 use serde_json::json;
 use std::collections::HashMap;
-use std::path::Path;
 use std::time::Duration;
 use tiny_http::{Header, Response, Server};
 
@@ -41,13 +40,13 @@ pub struct Dev {
 #[async_trait]
 impl Action for Dev {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = Path::new(&args.dir).canonicalize()?;
+        let dir = &args.dir()?;
         let config_path = args.config;
-        ensure_venv(&dir)?;
+        ensure_venv(dir)?;
 
         // load config file or use default values if doesn't exist
-        let config = config::Config::load_or_find(config_path, &dir)
-            .unwrap_or_else(|_| config::Config::default_in(&dir));
+        let config = config::Config::load_or_find(config_path, dir)
+            .unwrap_or_else(|_| config::Config::default_in(dir));
 
         let node_config = config.node("dev").with_args(&self.node);
         let node = node_config.build()?;
@@ -60,7 +59,7 @@ impl Action for Dev {
                     .create_migration(true)
                     .reset_on_drift(self.run_destructive_migrations),
             )
-            .dir(&dir)
+            .dir(dir)
             .watch(true)
             .codegen();
 

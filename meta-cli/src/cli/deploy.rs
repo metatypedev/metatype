@@ -1,7 +1,5 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use std::path::Path;
-
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
 use crate::typegraph::loader::{Loader, LoaderError, LoaderOptions, LoaderOutput};
@@ -38,10 +36,10 @@ pub struct Deploy {
 #[async_trait]
 impl Action for Deploy {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = Path::new(&args.dir).canonicalize()?;
+        let dir = &args.dir()?;
         let config_path = args.config;
-        ensure_venv(&dir)?;
-        let config = Config::load_or_find(config_path, &dir)?;
+        ensure_venv(dir)?;
+        let config = Config::load_or_find(config_path, dir)?;
 
         let mut loader_options = LoaderOptions::with_config(&config);
         if !self.no_migrations {
@@ -54,7 +52,7 @@ impl Action for Deploy {
         if let Some(file) = self.file.clone() {
             loader_options.file(&file);
         } else {
-            loader_options.dir(&dir);
+            loader_options.dir(dir);
         }
         let mut loader: Loader = loader_options.into();
         let mut push_queue_init = vec![];

@@ -20,7 +20,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         return Ok(());
     }
 
-    if let Some(venv_dir) = find_in_parents(dir.as_ref().to_path_buf(), VENV_FOLDERS.to_vec())? {
+    if let Some(venv_dir) = find_in_parents(dir, VENV_FOLDERS)? {
         let path = var("PATH")?;
 
         // https://github.com/pypa/virtualenv/commit/993ba1316a83b760370f5a3872b3f5ef4dd904c1
