@@ -74,6 +74,7 @@ for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
       const { path } of expandGlobSync(url, {
         includeDirs: false,
         globstar: true,
+        followSymlinks: false,
       })
     ) {
       const text = Deno.readTextFileSync(path);

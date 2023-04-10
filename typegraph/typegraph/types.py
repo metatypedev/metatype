@@ -698,7 +698,7 @@ class func(typedef):
     # def compose(self, other: "func") -> "func":
     #     assert self.out == other.inp
     #     # what if other == gen?
-    #     return func(self, other, IdentityMat())
+    #     return func(self, other, PredefinedFunMat("identity"))
 
     # def __mul__(self, other: "func") -> "func":
     #     return self.compose(other)

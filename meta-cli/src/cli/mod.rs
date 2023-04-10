@@ -19,7 +19,7 @@ pub(crate) mod serialize;
 pub(crate) mod upgrade;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None, disable_version_flag = true)]
+#[clap(name="meta", about, long_about = None, disable_version_flag = true)]
 pub(crate) struct Args {
     #[clap(long, value_parser)]
     pub version: bool,

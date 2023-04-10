@@ -10,8 +10,8 @@ const projectName = "metatype";
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: "Metatype",
-  tagline:
-    "Free and open ecosystem for API composition. Deploy and connect all your systems (REST, GraphQL, SQL, S3, WASM, custom scripts, etc.) in a breeze.",
+  // prettier-ignore
+  tagline: "Compose your data, anywhere, and build iterative API blocks with zero-trust and serverless deployment, no matter where and how your (legacy) systems are.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -25,8 +25,7 @@ const config = {
   },
   stylesheets: [
     {
-      href:
-        "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
+      href: "https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap",
       type: "text/css",
     },
   ],

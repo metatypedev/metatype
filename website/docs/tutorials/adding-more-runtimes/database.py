@@ -19,7 +19,7 @@ with TypeGraph(
             # highlight-next-line
             "id": t.integer().config("id", "auto"),
             "title": t.string(),
-            "user_id": t.integer(),
+            "body": t.string(),
         }
         # highlight-next-line
     ).named("message")
