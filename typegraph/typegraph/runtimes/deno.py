@@ -26,7 +26,14 @@ class DenoRuntime(Runtime):
 
     @classmethod
     def static(cls, out: t.Type, value: Any) -> "StaticMat":
-        return t.func(t.struct({}), out, StaticMat(value))
+        def prepare(x):
+            if isinstance(x, dict):
+                return frozendict({k: prepare(v) for k, v in x.items()})
+            if isinstance(x, list):
+                return tuple(prepare(v) for v in x)
+            return x
+
+        return t.func(t.struct({}), out, StaticMat(prepare(value)))
 
     def __attrs_post_init__(self):
         permissions = {}

@@ -397,6 +397,7 @@ impl LoaderInternal {
                         } else {
                             match Self::load_string(&path, filter, output, &options) {
                                 Err(err) => {
+                                    eprintln!("Error loading python typegraph definition module: {path:?} {err:?}");
                                     tx.send(LoaderOutput::Error(err)).unwrap();
                                     false
                                 }

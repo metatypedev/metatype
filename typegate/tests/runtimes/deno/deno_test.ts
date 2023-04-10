@@ -63,6 +63,22 @@ test("Deno runtime", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("work with static materializer", async () => {
+    await gql`
+      query {
+        static {
+          x
+        }
+      }
+    `
+      .expectData({
+        static: {
+          x: [1],
+        },
+      })
+      .on(e);
+  });
 });
 
 test("Deno runtime: permissions", async (t) => {
