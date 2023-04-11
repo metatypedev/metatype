@@ -50,7 +50,6 @@ RUN cargo chef cook --recipe-path recipe.json --release --package native --featu
 COPY . .
 
 RUN deno_bindgen --release -- --locked --package native --features deno \
-    && deno run -A dev/serialize.ts \
     && mv /app/target/release/libnative.so .
 
 WORKDIR /app/typegate
