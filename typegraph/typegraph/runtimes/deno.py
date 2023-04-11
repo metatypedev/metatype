@@ -7,6 +7,7 @@ from attrs import field, frozen
 from frozendict import frozendict
 
 from typegraph import effects
+from typegraph import types as t
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
@@ -22,6 +23,17 @@ class DenoRuntime(Runtime):
     )
     permissions: Dict[str, Any] = field(factory=frozendict, init=False)
     runtime_name: str = always("deno")
+
+    @classmethod
+    def static(cls, out: t.Type, value: Any) -> "StaticMat":
+        def prepare(x):
+            if isinstance(x, dict):
+                return frozendict({k: prepare(v) for k, v in x.items()})
+            if isinstance(x, list):
+                return tuple(prepare(v) for v in x)
+            return x
+
+        return t.func(t.struct({}), out, StaticMat(prepare(value)))
 
     def __attrs_post_init__(self):
         permissions = {}
@@ -134,6 +146,8 @@ class ModuleMat(Materializer):
 
 
 @frozen
-class IdentityMat(PredefinedFunMat):
-    name: str = always("identity")
+class StaticMat(Materializer):
+    value: Any = field()
     effect: Effect = always(effects.none())
+    runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
+    materializer_name: str = always("static")

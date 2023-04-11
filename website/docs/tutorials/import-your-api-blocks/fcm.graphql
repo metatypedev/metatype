@@ -1,20 +1,20 @@
 mutation A {
-  projectsMessagesSend(
-    parent: "projects/<project-id>",
-    auth: "<bearer_token>",
+  send_notification(
+    parent: "projects/<project-id>"
+    auth: "<bearer_token>"
     # test with a fake message
-    validateOnly: true,
+    validateOnly: true
     message: {
-      notification: {
-          title: "FCM Message",
-          body: "This is an FCM Message"
-      },
+      notification: { title: "FCM Message", body: "This is an FCM Message" }
       # recipient
-      token: "<token>" 
+      token: "<token>"
     }
   ) {
     name
-    error { code message }
+    error {
+      code
+      message
+    }
   }
 }
 

@@ -96,17 +96,15 @@ export function parseGraphQLTypeGraph(tgOrig: TypeGraphDS): TypeGraphDS {
   // clear previous properties
   rootNode.properties = {};
 
-  // don't append `query` or `mutation` if they don't have
-  // at least one property
-  if (Object.keys(queryProperties).length > 0) {
-    const queryIndex = addNode(typegraph, {
-      ...rootNode,
-      title: "Query",
-      properties: queryProperties,
-      config: { ...(rootNode.config ?? {}), __namespace: true },
-    });
-    rootNode.properties.query = queryIndex;
-  }
+  // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
+  const queryIndex = addNode(typegraph, {
+    ...rootNode,
+    title: "Query",
+    properties: queryProperties,
+    config: { ...(rootNode.config ?? {}), __namespace: true },
+  });
+  rootNode.properties.query = queryIndex;
+
   if (Object.keys(mutationProperties).length > 0) {
     const mutationIndex = addNode(typegraph, {
       ...rootNode,

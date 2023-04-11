@@ -21,6 +21,8 @@ with TypeGraph(
 ) as g:
     db = PrismaRuntime("database", "POSTGRES_CONN")
     gql = GraphQLRuntime("https://graphqlzero.almansi.me/api")
+    # highlight-next-line
+    googleapi = import_googleapi()
     public = policies.public()
 
     user = t.struct({"id": t.string(), "name": t.string()}).named("user")
@@ -32,13 +34,12 @@ with TypeGraph(
         }
     ).named("message")
 
-    googleapi = import_googleapi()
-
     g.expose(
         create_message=db.insert_one(message),
         list_messages=db.find_many(message),
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         user=gql.query(t.struct({"id": t.integer()}), user),
-        **googleapi.functions,
+        # highlight-next-line
+        send_notification=googleapi.functions["projectsMessagesSend"],
         default_policy=[public],
     )

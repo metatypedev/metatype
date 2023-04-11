@@ -17,7 +17,7 @@ export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
 
 export function isInjected(tg: TypeGraphDS, t: TypeNode): boolean {
   return t.injection != null ||
-    (isObject(t) &&
+    (isObject(t) && (t.properties.length > 0 &&
       Object.values(t.properties).map((propIdx) => tg.types[propIdx])
-        .every((nested) => isInjected(tg, nested)));
+        .every((nested) => isInjected(tg, nested))));
 }
