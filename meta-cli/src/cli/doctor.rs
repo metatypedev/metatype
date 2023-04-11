@@ -28,6 +28,18 @@ fn str_or_not_found(dir: &PathBuf, path: &Option<PathBuf>) -> Result<String> {
 impl Action for Doctor {
     async fn run(&self, args: GenArgs) -> Result<()> {
         let dir = &args.dir()?;
+
+        println!("Current directory: {}", dir.display());
+
+        /*
+        - docker-compose
+        - container running
+        - typegate targets reacheable
+        - secrets access
+        - runtime healtcheck
+        - gitignore ignore correct folder
+        */
+
         let version_cli = get_version();
         let metatype_file = find_in_parents(dir, METATYPE_FILES)?;
         let venv_folder = find_in_parents(dir, VENV_FOLDERS)?;

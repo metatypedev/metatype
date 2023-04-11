@@ -289,7 +289,7 @@ export class TypeGraphRuntime extends Runtime {
         return {
           ...common,
           kind: () => TypeKind.OBJECT,
-          name: () => "Querty",
+          name: () => "Query",
           description: () => `${type.title} type`,
           fields: () => [{
             name: () => "_",
