@@ -20,9 +20,8 @@ function Header() {
           <img src="images/logo.svg" alt="Metatype logo" />
         </div>
         <h1 className="hero__title">Compose your data, anywhere.</h1>
-        <p className="hero__subtitle">
+        <p className="hero__subtitle mx-auto" style={{ maxWidth: "800px" }}>
           Build iterative API blocks with zero-trust and serverless deployment,
-          <br />
           no matter where and how your (legacy) systems are.
         </p>
         <div className="md:flex md:px-32 justify-center">

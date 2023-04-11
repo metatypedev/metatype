@@ -28,7 +28,6 @@ fn str_or_not_found(dir: &PathBuf, path: &Option<PathBuf>) -> Result<String> {
 impl Action for Doctor {
     async fn run(&self, args: GenArgs) -> Result<()> {
         let dir = &args.dir()?;
-
         println!("Current directory: {}", dir.display());
 
         /*
