@@ -9,6 +9,8 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import styles from "./index.module.scss";
 import TGExample from "../components/TGExample";
+import LiteYouTubeEmbed from "react-lite-youtube-embed";
+import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
 
 function Header() {
   return (
@@ -17,7 +19,7 @@ function Header() {
         <div className="rounded-full bg-white w-40 h-40 flex px-6 m-auto mb-10">
           <img src="images/logo.svg" alt="Metatype logo" />
         </div>
-        <h1 className="hero__title">Compose your data, anywere.</h1>
+        <h1 className="hero__title">Compose your data, anywhere.</h1>
         <p className="hero__subtitle">
           Build iterative API blocks with zero-trust and serverless deployment,
           <br />
@@ -93,8 +95,8 @@ const featureList = [
     description: (
       <>
         Enforce Policy Based Access Control (PBAC). By default no access, unless
-        you provide one explicitly. Metatype comes with many authentication and
-        delegation standards.
+        you provide one explicitly. Metatype also comes with many authentication
+        and delegation standards.
       </>
     ),
   },
@@ -103,8 +105,8 @@ const featureList = [
     svg: require("@site/static/icons/commercial-support.svg").default,
     description: (
       <>
-        Get expert advices. Metatype expert team is here to help you with your
-        products and objectives. We offer training, consulting, managed services
+        Get expert advices. Metatype team is here to help you with your products
+        and business objectives. We offer training, consulting, managed services
         and support options.
       </>
     ),
@@ -138,17 +140,18 @@ function Features(): JSX.Element {
 
 function Example(): JSX.Element {
   return (
-    <section className="flex items-center m-8">
-      <div className="container">
-        <div className="row flex justify-center">
-          <TGExample
-            python={require("./index.py")}
-            typegraph="homepage"
-            variables={{ message: "Great tool!" }}
-            tab="variables"
-            query={require("./index.graphql")}
-          />
-        </div>
+    <section className="container">
+      <h2 className="inline-block mt-12 text-3xl">
+        Iterate fast and with ease
+      </h2>
+      <div className="">
+        <TGExample
+          python={require("./index.py")}
+          typegraph="homepage"
+          variables={{ message: "Great tool!" }}
+          tab="variables"
+          query={require("./index.graphql")}
+        />
       </div>
     </section>
   );
@@ -191,30 +194,59 @@ const runtimeList = [
     name: "MariaDB",
     logo: "/images/runtimes/mariadb.svg",
   },
+  {
+    name: "Python",
+    logo: "/images/runtimes/python.svg",
+  },
+  {
+    name: "WasmEdge",
+    logo: "/images/runtimes/wasmedge.svg",
+  },
+  {
+    name: "Temporal",
+    logo: "/images/runtimes/temporal.svg",
+  },
+  {
+    name: "S3",
+    logo: "/images/runtimes/s3.svg",
+  },
 ];
 
 function Runtimes(): JSX.Element {
   return (
-    <section className={styles.features}>
-      <div className="container p-8">
-        <div className="text-center w-full">
-          <h2 className="">Supported runtimes</h2>
-        </div>
-        <div className="flex flex-wrap gap-8 m-4">
-          {runtimeList.map((props, idx) => (
-            <img
-              key={idx}
-              src={props.logo}
-              alt={`${props.name} logo. All rights reserved to ${props.name}.`}
-              style={{ maxWidth: "150px", maxHeight: "80px" }}
-              className="p-4 flex-1"
-            />
-          ))}
-        </div>
-        <div className="text-center w-full mb-16">
-          <strong>
-            And many <a href="/docs/reference">more</a>.
-          </strong>
+    <section className="container mb-12">
+      <h2 className="mt-12 text-3xl">Supported runtimes</h2>
+      <div className="flex flex-wrap gap-8 m-4">
+        {runtimeList.map((props, idx) => (
+          <img
+            key={idx}
+            src={props.logo}
+            alt={`${props.name} logo. All rights reserved to ${props.name}.`}
+            style={{ maxWidth: "150px", maxHeight: "80px" }}
+            className="p-4 flex-1"
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function DemoVideo(): JSX.Element {
+  return (
+    <section className="container">
+      <h2 className="mt-6 text-3xl">
+        Replace backends with low-code API composition
+      </h2>
+      <div className="flex justify-center mt-8">
+        <div
+          className="flex-1 rounded-lg border-2 border-black"
+          style={{ maxWidth: "800px" }}
+        >
+          <LiteYouTubeEmbed
+            id="D-n9BbGfqxE"
+            title="Metatype early preview in 3 minutes"
+            thumbnail="/images/demo-thumbnail.png"
+          />
         </div>
       </div>
     </section>
@@ -228,6 +260,7 @@ export default function Home(): JSX.Element {
       <Header />
       <main>
         <Features />
+        <DemoVideo />
         <Example />
         <Runtimes />
       </main>

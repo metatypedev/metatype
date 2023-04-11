@@ -177,7 +177,8 @@ export class TypeGraphRuntime extends Runtime {
       },
       queryType: () => {
         if (!queries || Object.values(queries.properties).length === 0) {
-          return null;
+          // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
+          return this.formatType(queries, false, false);
         }
         return this.formatType(queries, false, false);
       },
@@ -283,6 +284,31 @@ export class TypeGraphRuntime extends Runtime {
     }
 
     if (isObject(type)) {
+      if (type.title === "Query" && Object.keys(type.properties).length === 0) {
+        // https://github.com/graphql/graphiql/issues/2308 (3x) enforce to keep empty Query type
+        return {
+          ...common,
+          kind: () => TypeKind.OBJECT,
+          name: () => "Querty",
+          description: () => `${type.title} type`,
+          fields: () => [{
+            name: () => "_",
+            args: () => [],
+            type: () =>
+              this.formatType(
+                this.tg
+                  .types[(this.tg.types[0] as ObjectNode).properties["query"]], // itself
+                false,
+                false,
+              ),
+            isDeprecated: () => true,
+            deprecationReason: () =>
+              "Dummy value due to https://github.com/graphql/graphiql/issues/2308",
+          }],
+          interfaces: () => [],
+        };
+      }
+
       if (asInput) {
         return {
           ...common,

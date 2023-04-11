@@ -45,13 +45,13 @@ pub struct Deno {
 #[async_trait]
 impl Action for Deno {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
+        let dir = &args.dir()?;
         let config_path = args.config;
-        ensure_venv(&dir)?;
+        ensure_venv(dir)?;
         // try to find config file, else use default config as the options
         // used for code generation have default values.
         let config =
-            Config::load_or_find(config_path, &dir).unwrap_or_else(|_| Config::default_in(&dir));
+            Config::load_or_find(config_path, dir).unwrap_or_else(|_| Config::default_in(dir));
 
         let mut loader_options = LoaderOptions::with_config(&config);
         loader_options.codegen();

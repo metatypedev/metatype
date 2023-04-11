@@ -14,7 +14,7 @@ Lets summarize how far you progress made towards the chat-based app. The APIs sh
 - retrieve the user from a message ✅
 - send a notification to all users when there is a new message 🕣
 - authentication and rate-limit the call 🕣
-- add access control 🕣
+- add access control management 🕣
 - some business logic 🕣
 
 For the notifications, Google offer a [Firebase Cloud Messaging](https://firebase.google.com/docs/reference/fcm/rest) (FCM) API which supports push on iOS, Android and web. Sadly as most of Google service, they don't provide an OpenAPI specification or a friendly GraphQL API. Rather they developed their own API definition files called API Discovery Service which maps incoming REST request onto their internal GRPC implementation, but this is a digression.
@@ -24,14 +24,14 @@ For the notifications, Google offer a [Firebase Cloud Messaging](https://firebas
 The typegraph module comes with some handy importers to avoid having to rewrite manually all types and materializers. Currently, it supports importers for OpenAPI, GraphQL API and Google APIs.
 
 :::caution Beta/unstable feature
-Importers are quite recent and may require some different shapes depending on your needs. Your voice and use cases matter a lot, let Metatype community know what suits you the best in this [discussion](https://github.com/metatypedev/metatype/discussions/104).
+Importers are quite recent and likely to evolve as feedback is received. Your voice and use cases matter a lot, let Metatype community know what suits you the best in this [discussion](https://github.com/metatypedev/metatype/discussions/104).
 :::
 
 Importers are function call with a boolean re-writing the source code file where they live. As they can generate quite long type definition, the best practice is to separate them into a dedicated file that can be imported into your main typegraph. Lets create `google.py` and run `python google.py` to generate the types.
 
 <CodeBlock language="python">{require("./importer.py")}</CodeBlock>
 
-This should generate something like this:
+This should generate code similar to this:
 
 <CodeBlock language="python">{require("./google.py")}</CodeBlock>
 

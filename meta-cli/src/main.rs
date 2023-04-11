@@ -3,6 +3,7 @@
 mod cli;
 mod codegen;
 mod config;
+mod fs;
 #[cfg(test)]
 mod tests;
 mod typegraph;

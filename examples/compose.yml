@@ -23,6 +23,8 @@ services:
     restart: always
     command: --requirepass password
 
+  # for prisma runtime with postgres
+  # postgresql://postgres:password@localhost:5432/db
   postgres:
     image: postgres:15
     restart: always
@@ -34,6 +36,20 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+  
+  # for prisma runtime with mongo
+  # postgresql://postgres:password@localhost:5432/db
+  mongo:
+    image: mongo:6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
 
 volumes:
-  pgdata: 
+  pgdata:
+  mongodata:

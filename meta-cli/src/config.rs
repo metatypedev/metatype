@@ -14,7 +14,14 @@ use std::str::FromStr;
 
 use crate::cli::prisma::PrismaArgs;
 use crate::cli::CommonArgs;
+use crate::fs::find_in_parents;
 use crate::utils::{BasicAuth, Node};
+
+pub const METATYPE_FILES: &[&str] = &["metatype.yml", "metatype.yaml"];
+pub const VENV_FOLDERS: &[&str] = &[".venv"];
+pub const PYPROJECT_FILES: &[&str] = &["pyproject.toml"];
+pub const PIPFILE_FILES: &[&str] = &["Pipfile"];
+pub const REQUIREMENTS_FILES: &[&str] = &["requirements.txt"];
 
 lazy_static! {
     static ref DEFAULT_NODE_CONFIG: NodeConfig = Default::default();
@@ -194,24 +201,11 @@ impl Config {
 
     /// Load config file: recursively search from `start_dir` to parent directories...
     pub fn find<P: AsRef<Path>>(start_dir: P) -> Result<Option<Config>> {
-        let mut current_dir = fs::canonicalize(start_dir)?;
-
-        let path = loop {
-            let path = current_dir.join("metatype.yml");
-            if path.try_exists()? {
-                break path;
-            }
-            let path = current_dir.join("metatype.yaml");
-            if path.try_exists()? {
-                break path;
-            }
-
-            if !current_dir.pop() {
-                return Ok(None);
-            }
-        };
-
-        Ok(Some(Self::from_file(path)?))
+        if let Some(path) = find_in_parents(start_dir, METATYPE_FILES)? {
+            Ok(Some(Self::from_file(path)?))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Load config file:

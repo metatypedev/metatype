@@ -81,7 +81,7 @@ export const renderPlayground = (
                 ${options}
               </select>
               <a href="https://metatype.dev" target="_blank" rel="noreferrer">
-                <span className="graphiql-logo-link"><img src="https://metatype.dev/img/logo.svg" alt="logo" className="Metatype logo" /></span>
+                <span className="graphiql-logo-link"><img src="https://metatype.dev/images/logo.svg" alt="logo" className="Metatype logo" /></span>
               </a>
             </GraphiQL.Logo>
           </GraphiQL>, document.getElementById('graphiql'));
