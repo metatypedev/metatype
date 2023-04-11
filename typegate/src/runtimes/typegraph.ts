@@ -131,7 +131,7 @@ export class TypeGraphRuntime extends Runtime {
         const regularTypeIndices = new Set<number>();
 
         const inputRootTypeIndices = new Set<number>();
-        // decides wether or not custom object should be generated
+        // decides whether or not custom object should be generated
         let hasUnion = false;
 
         const myVisitor: TypeVisitorMap = {
