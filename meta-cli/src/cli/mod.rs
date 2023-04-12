@@ -91,7 +91,6 @@ pub struct CommonArgs {
     pub username: Option<String>,
 
     /// Password to use to connect to the typegate (basic auth).
-    /// Ignored if --username is missing.
     #[clap(long)]
     pub password: Option<String>,
 }

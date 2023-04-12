@@ -71,14 +71,9 @@ impl NodeConfig {
         let mut res = self.clone();
         if let Some(gate) = &args.gate {
             res.url = gate.clone();
-            // if gate is overridden, user credentials must be overridden
-            if let Some(username) = &args.username {
-                res.username = Some(username.clone());
-                res.password = args.password.clone();
-            }
         }
-        // if gate is not overridden, user credentions cannot be overridden
-
+        res.username = args.username.clone().or(res.username);
+        res.password = args.password.clone().or(res.password);
         res
     }
 
