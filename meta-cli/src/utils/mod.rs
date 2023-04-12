@@ -29,7 +29,7 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     let venv_dir = dir.join(".venv");
 
     if venv_dir.is_dir() {
-        info!("Found venv at {venv_dir:?}");
+        info!("Detected venv at {venv_dir:?}");
         let venv = venv_dir.to_str().unwrap();
 
         let path = var("PATH")?;

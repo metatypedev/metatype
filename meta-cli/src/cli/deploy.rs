@@ -93,12 +93,15 @@ impl Action for Deploy {
 
         let loader = loader;
 
-        // only if self.file is None
-        let discovered = Discovery::new(Arc::clone(&config), dir.clone())
-            .get_all()
-            .await?;
+        let paths = if let Some(path) = &self.file {
+            vec![PathBuf::from(path)]
+        } else {
+            Discovery::new(Arc::clone(&config), dir.clone())
+                .get_all()
+                .await?
+        };
 
-        if discovered.is_empty() {
+        if paths.is_empty() {
             warn!("No typegraph definition module found.");
         }
 
@@ -109,9 +112,9 @@ impl Action for Deploy {
 
         if self.options.watch {
             info!("Entering watch mode...");
-            self.enter_watch_mode(discovered, loader, push_config).await;
+            self.enter_watch_mode(paths, loader, push_config).await;
         } else {
-            for path in discovered.into_iter() {
+            for path in paths.into_iter() {
                 let _ = self
                     .load_and_push(&path, &loader, &push_config, OnRewrite::Reload)
                     .await;

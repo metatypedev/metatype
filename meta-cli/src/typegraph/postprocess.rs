@@ -140,7 +140,7 @@ pub mod deno_rt {
 
 pub mod prisma_rt {
     use super::*;
-    use anyhow::{bail, Context};
+    use anyhow::{anyhow, bail, Context};
     use common::{archive, typegraph::PrismaRuntimeData};
     use log::warn;
 
@@ -175,7 +175,7 @@ pub mod prisma_rt {
 
     impl PostProcessor for EmbedPrismaMigrations {
         fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()> {
-            if !self.allow_dirty {
+            let error = if !self.allow_dirty {
                 let repo = git2::Repository::discover(&config.base_dir).ok();
 
                 if let Some(repo) = repo {
@@ -185,18 +185,27 @@ pub mod prisma_rt {
                         !s.status().is_empty() && !s.status().contains(git2::Status::IGNORED)
                     });
                     if dirty {
-                        bail!("Dirty repository not allowed");
+                        // TODO only check migration directory for the current typegraph
+                        Some(anyhow!("Dirty repository not allowed"))
+                    } else {
+                        None
                     }
                 } else {
                     warn!("Not in a git repository.");
+                    None
                 }
-            }
+            } else {
+                None
+            };
 
             let prisma_config = &config.typegraphs.materializers.prisma;
             let tg_name = tg.name().context("Getting typegraph name")?;
 
             let mut runtimes = std::mem::take(&mut tg.runtimes);
             for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
+                if let Some(error) = error {
+                    bail!(error);
+                }
                 let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
                 let rt_name = &rt_data.name;
                 let base_path = prisma_config.base_migrations_path(
