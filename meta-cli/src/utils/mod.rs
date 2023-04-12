@@ -56,6 +56,14 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
     }
 }
 
+pub fn plural_suffix(count: usize) -> &'static str {
+    if count == 1 {
+        ""
+    } else {
+        "s"
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct BasicAuth {
     username: String,

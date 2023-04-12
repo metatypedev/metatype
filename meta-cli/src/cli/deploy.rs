@@ -1,6 +1,5 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -8,18 +7,18 @@ use std::time::Duration;
 use super::{Action, CommonArgs, GenArgs};
 use crate::config::Config;
 use crate::typegraph::loader::queue::Queue;
+use crate::typegraph::loader::Loader;
 use crate::typegraph::loader::{Discovery, LoaderResult};
-use crate::typegraph::loader::{Loader, LoaderError};
 use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
 use crate::typegraph::push::{DelayedPushQueue, PushConfig};
-use crate::utils::{ensure_venv, Node};
-use anyhow::Result;
+use crate::utils::{ensure_venv, plural_suffix};
+use anyhow::{anyhow, Result};
 use async_recursion::async_recursion;
 use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
 use common::typegraph::Typegraph;
-use log::{debug, error, info, trace, warn};
+use log::{error, info, warn};
 use tokio::select;
 
 #[derive(Parser, Debug)]
@@ -59,7 +58,7 @@ pub struct DeployOptions {
     pub watch: bool,
 
     /// Target typegate profile (in metatype.yaml)
-    #[clap(long, default_value_t = String::from("dev"))]
+    #[clap(long, default_value_t = String::from("deploy"))]
     pub target: String,
 }
 
@@ -115,9 +114,22 @@ impl Action for Deploy {
             self.enter_watch_mode(paths, loader, push_config).await;
         } else {
             for path in paths.into_iter() {
-                let _ = self
-                    .load_and_push(&path, &loader, &push_config, OnRewrite::Reload)
-                    .await;
+                self.load_and_push(&path, &loader, &push_config, OnRewrite::Reload)
+                    .await
+                    .map_err(|e| match e {
+                        LoadAndPushError::LoaderError => {
+                            anyhow!("Error while loading the typegraph")
+                        }
+                        LoadAndPushError::PushError(tgs) => anyhow!(
+                            "Error when pushing typegraph{s}: {tg_names}",
+                            s = plural_suffix(tgs.len()),
+                            tg_names = tgs
+                                .into_iter()
+                                .map(|tg| tg.name().unwrap())
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ),
+                    })?;
             }
         }
 
@@ -172,7 +184,7 @@ impl Deploy {
                     Err(LoadAndPushError::PushError(failed))
                 }
             }
-            LoaderResult::Rewritten(p) => {
+            LoaderResult::Rewritten(_) => {
                 info!("Typegraph definition at {path:?} has been rewritten.");
                 match on_rewrite {
                     OnRewrite::Skip => Ok(()),

@@ -4,23 +4,21 @@ use anyhow::{Context, Result};
 use colored::Colorize;
 use indoc::indoc;
 use log::{error, info, warn};
-use pathdiff::diff_paths;
 use serde::Deserialize;
 use serde_json::json;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     path::{Path, PathBuf},
-    sync::{atomic::AtomicBool, Arc},
+    sync::Arc,
     time::Duration,
 };
 
 use common::typegraph::Typegraph;
 use tokio::{
     sync::{
-        mpsc::{self, error::TryRecvError, unbounded_channel, UnboundedReceiver, UnboundedSender},
+        mpsc::{self, UnboundedReceiver, UnboundedSender},
         Mutex,
     },
-    task::JoinHandle,
     time::sleep,
 };
 
@@ -94,55 +92,6 @@ impl PushResult {
             .messages
             .iter()
             .any(|m| matches!(m, MessageEntry::Error(_)));
-    }
-}
-
-#[derive(Debug)]
-pub struct PushQueueEntry {
-    typegraph: Typegraph,
-    retry_no: u32, //
-}
-
-impl PushQueueEntry {
-    pub fn new(typegraph: Typegraph) -> Self {
-        Self {
-            typegraph,
-            retry_no: 0,
-        }
-    }
-
-    pub async fn push(&self, node: &Node, base: PathBuf) -> Result<PushResult> {
-        let tg = &self.typegraph;
-        let secrets = lade_sdk::hydrate(node.env.clone(), base).await?;
-        let res = node
-            .post("/typegate")?
-            .gql(
-                indoc! {"
-                mutation InsertTypegraph($tg: String!, $secrets: String!) {
-                    addTypegraph(fromString: $tg, secrets: $secrets) {
-                        name
-                        messages { type text }
-                        customData
-                    }
-                }"}
-                .to_string(),
-                Some(json!({ "tg": serde_json::to_string(tg)?, "secrets": serde_json::to_string(&secrets)? })),
-            )
-            .await?;
-
-        res.data("addTypegraph")
-            .context("addTypegraph field in the response")
-    }
-
-    pub fn name(&self) -> String {
-        self.typegraph.name().unwrap()
-    }
-
-    pub fn retry(self) -> Self {
-        Self {
-            typegraph: self.typegraph,
-            retry_no: self.retry_no + 1,
-        }
     }
 }
 
