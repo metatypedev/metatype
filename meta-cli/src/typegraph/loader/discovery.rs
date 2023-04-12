@@ -7,6 +7,7 @@ use crate::{
 use anyhow::Result;
 use globset::GlobSet;
 use ignore::{gitignore::Gitignore, Match};
+use log::{debug, info, trace};
 use pathdiff::diff_paths;
 use std::{
     collections::{HashMap, VecDeque},
@@ -54,7 +55,7 @@ impl Discovery {
         queue.push_back(self.dir.clone());
 
         while let Some(dir) = queue.pop_front() {
-            let mut read_dir = fs::read_dir(&self.dir).await?;
+            let mut read_dir = fs::read_dir(&dir).await?;
             while let Some(entry) = read_dir.next_entry().await? {
                 let mut file_name = dir.join(entry.file_name());
                 let mut file_type = entry.file_type().await?;
@@ -72,6 +73,8 @@ impl Discovery {
                     queue.push_back(file_name);
                 } else {
                     if !self.filter.is_excluded(&file_name) {
+                        let rel_path = diff_paths(&file_name, &self.dir).unwrap();
+                        info!("Found typegraph definition module at {rel_path:?}");
                         res.push(file_name);
                     }
                 }
@@ -144,7 +147,7 @@ impl FileFilter {
         let rel_path = diff_paths(path, &self.base_dir).unwrap();
 
         match path.extension() {
-            Some(ext) if ext == ".py" => {
+            Some(ext) if ext == "py" => {
                 let globs = self.globs.get(&ModuleType::Python).unwrap();
                 if !globs.include_set.is_empty() && !globs.include_set.is_match(&rel_path) {
                     return true;
@@ -154,9 +157,12 @@ impl FileFilter {
                     return true;
                 }
 
+                // TODO regex check file content
+
                 return false;
             }
             _ => {
+                // trace!("File excluded: unknown extension: {path:?}");
                 return true;
             }
         }

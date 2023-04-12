@@ -70,7 +70,7 @@ pub trait Action {
     async fn run(&self, args: GenArgs) -> Result<()>;
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct CommonArgs {
     /// Address of the typegate.
     #[clap(short, long, value_parser = UrlValueParser::new().http())]

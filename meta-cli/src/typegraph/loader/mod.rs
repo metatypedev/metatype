@@ -90,8 +90,6 @@ impl Loader {
     }
 
     pub async fn load_python_module(&self, path: &Path) -> Result<String> {
-        ensure_venv(&self.config.base_dir)?;
-
         // Search in PATH does not work on Windows
         // See: https://doc.rust-lang.org/std/process/struct.Command.html#method.new
         #[cfg(target_os = "windows")]

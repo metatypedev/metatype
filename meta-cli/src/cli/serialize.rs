@@ -2,7 +2,7 @@
 
 use super::{Action, GenArgs};
 use crate::config::Config;
-use crate::typegraph::loader::Loader;
+use crate::typegraph::loader::{Discovery, Loader, LoaderResult};
 use crate::typegraph::postprocess;
 use crate::utils::ensure_venv;
 use anyhow::bail;
@@ -10,7 +10,10 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use core::fmt::Debug;
+use log::warn;
 use std::io::{self, Write};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 
 #[derive(Parser, Debug)]
@@ -43,59 +46,73 @@ pub struct Serialize {
 #[async_trait]
 impl Action for Serialize {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        // let dir = args.dir;
-        // let config_path = args.config;
-        // ensure_venv(&dir)?;
-        //
-        // // config file is not used when `TypeGraph` files
-        // // are provided in the CLI by flags
-        // let config = if !self.files.is_empty() {
-        //     Config::default_in(&dir)
-        // } else {
-        //     Config::load_or_find(config_path, &dir)?
-        // };
-        //
-        // let mut loader_options = LoaderOptions::with_config(&config);
-        // if self.deploy {
-        //     loader_options.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
-        // }
-        // if self.files.is_empty() {
-        //     loader_options.dir(&dir);
-        // } else {
-        //     for file in self.files.iter() {
-        //         loader_options.file(file);
-        //     }
-        // }
-        //
-        // let mut loader = Loader::from(loader_options);
-        // let mut tgs = vec![];
-        // while let Some(output) = loader.next().await {
-        //     if let LoaderOutput::Typegraph(tg) = output {
-        //         tgs.push(tg);
-        //     }
-        // }
-        //
-        // if tgs.is_empty() {
-        //     eprintln!("No typegraph!");
-        //     return Ok(());
-        // }
-        //
-        // if let Some(tg_name) = self.typegraph.as_ref() {
-        //     if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
-        //         self.write(&self.to_string(&tg)?).await?;
-        //     } else {
-        //         bail!("typegraph \"{}\" not found", tg_name);
-        //     }
-        // } else if self.unique {
-        //     if tgs.len() == 1 {
-        //         self.write(&self.to_string(&tgs[0])?).await?;
-        //     } else {
-        //         eprintln!("expected only one typegraph, got {}", tgs.len());
-        //         std::process::exit(1);
-        //     }
-        // } else {
-        //     self.write(&self.to_string(&tgs)?).await?;
-        // }
+        let dir = Path::new(&args.dir).canonicalize()?;
+        let config_path = args.config;
+        ensure_venv(&dir)?;
+
+        // config file is not used when `TypeGraph` files
+        // are provided in the CLI by flags
+        let config = if !self.files.is_empty() {
+            Config::default_in(&dir)
+        } else {
+            Config::load_or_find(config_path, &dir)?
+        };
+        let config = Arc::new(config);
+
+        let mut loader = Loader::new(Arc::clone(&config));
+        if self.deploy {
+            loader = loader.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
+        }
+        let loader = loader;
+
+        let paths = if self.files.is_empty() {
+            Discovery::new(Arc::clone(&config), dir.clone())
+                .get_all()
+                .await?
+        } else {
+            self.files.iter().map(|f| PathBuf::from(f)).collect()
+        };
+
+        if paths.is_empty() {
+            warn!("No typegraph definition module found.");
+            bail!("No typegraph definition module found.");
+        }
+
+        let mut loaded = vec![];
+        for path in paths {
+            match loader.load_file(&path).await {
+                LoaderResult::Loaded(tgs) => {
+                    for tg in tgs.into_iter() {
+                        loaded.push(tg);
+                    }
+                }
+                LoaderResult::Rewritten(_) => {
+                    // ? reload?
+                    warn!("Typegraph definition at {path:?} has been rewritten.");
+                }
+                LoaderResult::Error(e) => {
+                    bail!("{}", e.to_string());
+                }
+            }
+        }
+
+        let tgs = loaded;
+
+        if let Some(tg_name) = self.typegraph.as_ref() {
+            if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
+                self.write(&self.to_string(&tg)?).await?;
+            } else {
+                bail!("typegraph \"{}\" not found", tg_name);
+            }
+        } else if self.unique {
+            if tgs.len() == 1 {
+                self.write(&self.to_string(&tgs[0])?).await?;
+            } else {
+                bail!("expected only one typegraph, got {}", tgs.len());
+            }
+        } else {
+            self.write(&self.to_string(&tgs)?).await?;
+        }
 
         Ok(())
     }

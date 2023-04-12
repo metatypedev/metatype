@@ -6,6 +6,7 @@ pub mod graphql;
 
 use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
+use log::{info, trace};
 use reqwest::{Client, IntoUrl, RequestBuilder, Url};
 use std::collections::HashMap;
 use std::env::{set_var, var};
@@ -14,14 +15,21 @@ use std::path::Path;
 use std::time::Duration;
 
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
-    if var("VIRTUAL_ENV").is_ok() {
-        return Ok(());
+    if let Ok(active_venv) = var("VIRTUAL_ENV") {
+        let active_venv = Path::new(&active_venv);
+        trace!("Detected active venv at {active_venv:?}.");
+        if active_venv.is_dir() {
+            return Ok(());
+        } else {
+            bail!("Active venv at {active_venv:?} not found.");
+        }
     }
 
     let dir = dir.as_ref().canonicalize()?;
     let venv_dir = dir.join(".venv");
 
     if venv_dir.is_dir() {
+        info!("Found venv at {venv_dir:?}");
         let venv = venv_dir.to_str().unwrap();
 
         let path = var("PATH")?;

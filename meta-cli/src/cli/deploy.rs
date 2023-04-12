@@ -19,8 +19,7 @@ use async_trait::async_trait;
 use clap::Parser;
 use colored::Colorize;
 use common::typegraph::Typegraph;
-use indexmap::IndexSet;
-use log::{error, info, warn};
+use log::{debug, error, info, trace, warn};
 use tokio::select;
 
 #[derive(Parser, Debug)]
@@ -32,20 +31,46 @@ pub struct Deploy {
     #[clap(short, long)]
     file: Option<String>,
 
+    #[command(flatten)]
+    options: DeployOptions,
+}
+
+#[derive(Parser, Default, Debug)]
+pub struct DeployOptions {
+    /// Generate type/function definitions for external modules (Deno)
+    #[clap(long, default_value_t = false)]
+    pub codegen: bool,
+
     /// Do not run prisma migrations
     #[clap(long, default_value_t = false)]
-    no_migrations: bool,
+    pub no_migration: bool,
 
-    // TODO incompatible with --no-migrations
     /// Allow deployment on dirty (git) repository
     #[clap(long, default_value_t = false)]
-    allow_dirty: bool,
+    pub allow_dirty: bool,
 
+    // TODO: on_destructive_migrations -> enum { Prompt, Run, Skip }
+    /// Do no prompt on before running migrations
     #[clap(long, default_value_t = false)]
-    run_destructive_migrations: bool,
-    // TODO exit_on_error
+    pub run_destructive_migrations: bool,
+
+    /// Run in watch mode
     #[clap(long, default_value_t = false)]
-    watch: bool,
+    pub watch: bool,
+
+    /// Target typegate profile (in metatype.yaml)
+    #[clap(long, default_value_t = String::from("dev"))]
+    pub target: String,
+}
+
+impl Deploy {
+    pub fn new(node: CommonArgs, options: DeployOptions, file: Option<String>) -> Self {
+        Self {
+            node,
+            file,
+            options,
+        }
+    }
 }
 
 #[async_trait]
@@ -58,11 +83,11 @@ impl Action for Deploy {
         let config = Arc::new(config);
 
         let mut loader = Loader::new(Arc::clone(&config));
-        if !self.no_migrations {
+        if !self.options.no_migration {
             loader = loader.with_postprocessor(
                 EmbedPrismaMigrations::default()
-                    .allow_dirty(self.allow_dirty)
-                    .reset_on_drift(self.run_destructive_migrations),
+                    .allow_dirty(self.options.allow_dirty)
+                    .reset_on_drift(self.options.run_destructive_migrations),
             );
         }
 
@@ -73,11 +98,17 @@ impl Action for Deploy {
             .get_all()
             .await?;
 
-        let node_config = config.node("deploy").with_args(&self.node);
+        if discovered.is_empty() {
+            warn!("No typegraph definition module found.");
+        }
+
+        let node_config = config.node(&self.options.target).with_args(&self.node);
+
         let node = node_config.clone().build()?;
         let push_config = PushConfig::new(node, config.base_dir.clone());
 
-        if self.watch {
+        if self.options.watch {
+            info!("Entering watch mode...");
             self.enter_watch_mode(discovered, loader, push_config).await;
         } else {
             for path in discovered.into_iter() {
@@ -113,13 +144,13 @@ impl Deploy {
         match loader.load_file(&path).await {
             LoaderResult::Loaded(tgs) => {
                 let mut failed = vec![];
+
                 for tg in tgs.into_iter() {
-                    info!(
-                        "Pushing typegraph {name}...",
-                        name = tg.name().unwrap().blue()
-                    );
+                    let name = tg.name().unwrap().blue();
+                    info!("Pushing typegraph {name}...",);
                     match push_config.push(&tg).await {
                         Ok(res) => {
+                            info!("{} Successfully pushed typegraph {name}", "✓".green());
                             res.print_messages();
                             // TODO unpack migrations
                         }
@@ -183,10 +214,11 @@ impl Deploy {
                         Err(LoadAndPushError::PushError(failed)) => {
                             for tg in failed.into_iter() {
                                 warn!("Retrying to push {name} in {interval} seconds...", name = tg.name().unwrap().blue(), interval = retry_interval.as_secs());
-                                retries.delayed_push(tg, 1, retry_interval);
+                                retries.delayed_push(tg, 1, retry_interval).await;
                             }
                         }
                     }
+                    guard.unblock().await;
                 }
                 _ = queue.wait() => {
                     continue;

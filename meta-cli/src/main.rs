@@ -20,7 +20,7 @@ use std::io::Write;
 fn init_logger() {
     if std::env::var("RUST_LOG").is_err() {
         #[cfg(debug_assertions)]
-        std::env::set_var("RUST_LOG", "debug");
+        std::env::set_var("RUST_LOG", "info,meta=trace");
         #[cfg(not(debug_assertions))]
         std::env::set_var("RUST_LOG", "info");
     }
@@ -28,12 +28,13 @@ fn init_logger() {
     builder
         .format(|buf, rec| {
             let level = rec.level();
+            let module_path = rec.module_path().unwrap_or("");
             let level = match level {
                 Level::Error => format!("[{level}]").red(),
                 Level::Warn => format!("[{level}]").yellow(),
                 Level::Info => format!("[{level}]").blue(),
-                Level::Debug => format!("[{level}]").dimmed(),
-                Level::Trace => format!("[{level}]").dimmed(),
+                Level::Debug => format!("[{level} {module_path}]").dimmed(),
+                Level::Trace => format!("[{level} {module_path}]").dimmed(),
             };
             writeln!(buf, "{level} {}", rec.args())
         })
