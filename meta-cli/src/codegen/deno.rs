@@ -456,35 +456,46 @@ impl IntoJson for HashMap<String, Value> {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
     use super::*;
     use crate::config::Config;
     use crate::tests::utils::ensure_venv;
-    use crate::typegraph::loader::{Loader, LoaderOptions, LoaderOutput};
+    use crate::typegraph::loader::{Loader, LoaderResult};
 
     #[tokio::test(flavor = "multi_thread")]
     async fn codegen() -> Result<()> {
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs");
         let tests = fs::read_dir(test_folder).unwrap();
-        let config = Config::default_in(test_folder);
+        let config = Config::default_in(".");
+        let config = Arc::new(config);
 
         for typegraph_test in tests {
             let typegraph_test = typegraph_test.unwrap().path();
-            let mut loader_options = LoaderOptions::with_config(&config);
-            loader_options
-                .skip_deno_modules(true)
-                .file(&typegraph_test.canonicalize()?);
-            let mut loader = Loader::from(loader_options);
+            let loader = Loader::new(Arc::clone(&config)).skip_deno_modules(true);
 
-            let LoaderOutput::Typegraph(tg) = loader.next().await.unwrap() else {
-                bail!("Unexpected");
-            };
+            match loader.load_file(&typegraph_test).await {
+                LoaderResult::Loaded(tgs) => {
+                    assert_eq!(tgs.len(), 1);
+                    let tg = &tgs[0];
 
-            let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
-            assert_eq!(module_codes.len(), 1);
+                    let module_codes = Codegen::new(tg, &typegraph_test).codegen()?;
+                    assert_eq!(module_codes.len(), 1);
 
-            let test_name = typegraph_test.to_string_lossy().to_string();
-            insta::assert_snapshot!(test_name, &module_codes[0].code);
+                    let test_name = typegraph_test.to_string_lossy().to_string();
+                    insta::assert_snapshot!(test_name, &module_codes[0].code);
+                }
+                LoaderResult::Error(e) => {
+                    bail!(
+                        "Error while loading typegraph from {typegraph_test:?}: {e}",
+                        e = e.to_string()
+                    );
+                }
+                LoaderResult::Rewritten(_) => {
+                    bail!("Unexpected: typegraph definition module has been rewritten");
+                }
+            }
         }
 
         Ok(())
