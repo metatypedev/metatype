@@ -349,6 +349,15 @@ export class TypeGraphRuntime extends Runtime {
       }
     }
 
+    // Issue:
+    // Translate union (anyOf) / either (oneOf) to Graphql types that behave the same way
+    // - Current graphql spec does not allow UNION types on the input (yet)
+    // - UNION types does not support scalars, only objects
+    // Current solution:
+    // - input: translate either/union nodes to a custom scalar
+    // - output: translate either/union nodes to graphql UNION
+    //  * caveat: since UNION does not allow scalar variants, we have to translate them
+    //    to custom graphql objects
     if (isEither(type) || isUnion(type)) {
       const variants = isUnion(type) ? type.anyOf : type.oneOf;
       if (asInput) {
