@@ -7,6 +7,7 @@ use clap::Parser;
 use clap::Subcommand;
 use clap_verbosity_flag::Verbosity;
 use enum_dispatch::enum_dispatch;
+use normpath::PathExt;
 use reqwest::Url;
 use std::path::PathBuf;
 
@@ -14,12 +15,13 @@ pub(crate) mod codegen;
 pub(crate) mod completion;
 pub(crate) mod deploy;
 pub(crate) mod dev;
+pub(crate) mod doctor;
 pub(crate) mod prisma;
 pub(crate) mod serialize;
 pub(crate) mod upgrade;
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = None, disable_version_flag = true)]
+#[clap(name="meta", about, long_about = None, disable_version_flag = true)]
 pub(crate) struct Args {
     #[clap(long, value_parser)]
     pub version: bool,
@@ -38,11 +40,17 @@ pub(crate) struct Args {
 #[clap(author, version, about, long_about = None, disable_version_flag = true)]
 pub struct GenArgs {
     #[clap(short = 'C', long, value_parser, default_value_t = String::from("."))]
-    pub dir: String,
+    dir: String,
 
     /// path to the config file
     #[clap(long, value_parser)]
     pub config: Option<PathBuf>,
+}
+
+impl GenArgs {
+    pub fn dir(&self) -> Result<PathBuf> {
+        Ok(PathBuf::from(&self.dir).normalize()?.into_path_buf())
+    }
 }
 
 #[derive(Subcommand, Debug)]
@@ -62,6 +70,8 @@ pub(crate) enum Commands {
     Upgrade(upgrade::Upgrade),
     /// Generate shell completion
     Completion(completion::Completion),
+    /// Troubleshoot the installation
+    Doctor(doctor::Doctor),
 }
 
 #[async_trait]
@@ -81,7 +91,6 @@ pub struct CommonArgs {
     pub username: Option<String>,
 
     /// Password to use to connect to the typegate (basic auth).
-    /// Ignored if --username is missing.
     #[clap(long)]
     pub password: Option<String>,
 }

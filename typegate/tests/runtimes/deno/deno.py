@@ -39,5 +39,6 @@ with TypeGraph("deno") as g:
             t.number(),
             math_npm.imp("log"),
         ),
+        static=DenoRuntime.static(t.struct({"x": t.array(t.integer())}), {"x": [1]}),
         default_policy=[public],
     )

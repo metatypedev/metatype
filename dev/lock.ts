@@ -24,6 +24,10 @@ const args = parseFlags(Deno.args, {
   default: { version: false, check: false },
 });
 
+const ignores = Deno.readTextFileSync(resolve(projectDir, ".gitignore")).split(
+  "\n",
+).map((l) => l.trim()).filter((line) => line.length > 0);
+
 const lockfileUrl = resolve(projectDir, "dev/lock.yml");
 const lockfile = yaml.parse(
   Deno.readTextFileSync(lockfileUrl),
@@ -74,6 +78,7 @@ for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
       const { path } of expandGlobSync(url, {
         includeDirs: false,
         globstar: true,
+        exclude: ignores,
       })
     ) {
       const text = Deno.readTextFileSync(path);

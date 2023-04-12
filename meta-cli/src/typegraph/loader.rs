@@ -24,10 +24,7 @@ use tokio::{
     sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
 };
 
-use crate::{
-    config::Config,
-    utils::{ensure_venv, fs::is_hidden},
-};
+use crate::{config::Config, fs::is_hidden, utils::ensure_venv};
 
 use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
@@ -397,6 +394,7 @@ impl LoaderInternal {
                         } else {
                             match Self::load_string(&path, filter, output, &options) {
                                 Err(err) => {
+                                    eprintln!("Error loading python typegraph definition module: {path:?} {err:?}");
                                     tx.send(LoaderOutput::Error(err)).unwrap();
                                     false
                                 }

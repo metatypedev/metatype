@@ -128,7 +128,6 @@ self.onmessage = async (event: MessageEvent<Message<Task>>) => {
   const exec = taskList[task.type];
 
   if (exec == null) {
-    console.log(">", task);
     const error = `unsupported operation found "${op}"`;
     logger.error(error);
     answer({ id, error });

@@ -183,6 +183,10 @@ export class DenoRuntime extends Runtime {
       return func;
     }
 
+    if (mat.name === "static") {
+      return () => mat.data.value;
+    }
+
     const secrets = (mat.data.secrets as [] ?? []).reduce(
       (agg, secretName) => ({ ...agg, [secretName]: this.secrets[secretName] }),
       {},

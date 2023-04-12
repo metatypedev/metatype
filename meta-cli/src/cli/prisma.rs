@@ -125,7 +125,7 @@ pub struct Dev {
 #[async_trait]
 impl Action for Dev {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
+        let dir = args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
 
@@ -170,7 +170,7 @@ pub struct Deploy {
 #[async_trait]
 impl Action for Deploy {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
+        let dir = args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
         let prisma_args = self
@@ -255,7 +255,7 @@ pub struct Diff {
 #[async_trait]
 impl Action for Diff {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
+        let dir = args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
         let node_config = config.node("dev").with_args(&self.node);

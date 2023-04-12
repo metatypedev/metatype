@@ -17,9 +17,11 @@ dev:
     typegraph/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/pyproject.toml:
+      (description = ").+("): TAGLINE
       (version = ").+("): METATYPE_VERSION
     '**/*/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
+      (description = ").+("): TAGLINE
     dev/Dockerfile:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG DENO_BINDGEN_URL=).*(): DENO_BINDGEN_URL
@@ -30,23 +32,30 @@ dev:
       (typegraph_version = ").*("): TYPEGRAPH_VERSION
     whiz.yaml:
       '(  TYPEGRAPH_VERSION: ").+(")': TYPEGRAPH_VERSION
+    website/docusaurus.config.js:
+      '(  tagline: ").+(",)': TAGLINE
   lock:
     PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.4.1
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.68.0
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
-    DENO_VERSION: 1.32.1
+    DENO_VERSION: 1.32.3
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.1.0
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.1.4-dev.0
+    METATYPE_VERSION: 0.1.5-dev.0
+    TAGLINE: >-
+      Compose your data, anywhere, and build iterative API blocks with
+      zero-trust and serverless deployment, no matter where and how your
+      (legacy) systems are.
 released:
   files: {}
   rules:
     examples/docker-compose.yml:
       '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
     examples/pyproject.toml:
+      (description = ").+("): TAGLINE
       (version = ").+("): METATYPE_VERSION
   lock:
     PYTHON_VERSION: '3.8'
@@ -54,8 +63,12 @@ released:
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.68.0
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
-    DENO_VERSION: 1.32.1
+    DENO_VERSION: 1.32.3
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.1.0
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.1.3
+    METATYPE_VERSION: 0.1.4
+    TAGLINE: >-
+      Compose your data, anywhere, and build iterative API blocks with
+      zero-trust and serverless deployment, no matter where and how your
+      (legacy) systems are.
