@@ -3,6 +3,7 @@
 import type { ComputeStage } from "./engine.ts";
 import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
+import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
 import { deepMerge } from "std/collections/deep_merge.ts";
 import { z } from "zod";
@@ -140,4 +141,21 @@ export function nativeVoid(res: "Ok" | { Err: { message: string } }): void {
 
 export function pluralSuffix(count: number) {
   return count === 1 ? "" : "s";
+}
+
+export function closestWord(
+  str: string,
+  list: string[],
+  maxDistance = 2,
+) {
+  const [top] = list
+    .map((word) => {
+      return { word, score: levenshtein(str, word) };
+    })
+    .sort((a, b) => a.score - b.score);
+
+  if (top.score > maxDistance) {
+    return null;
+  }
+  return top;
 }
