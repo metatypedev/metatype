@@ -37,12 +37,18 @@ pub(crate) struct Args {
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None, disable_version_flag = true)]
 pub struct GenArgs {
-    #[clap(short = 'C', long, value_parser, default_value_t = String::from("."))]
-    pub dir: String,
+    #[clap(short = 'C', long, value_parser, default_value = ".")]
+    pub dir: PathBuf,
 
     /// path to the config file
     #[clap(long, value_parser)]
     pub config: Option<PathBuf>,
+}
+
+impl GenArgs {
+    pub fn dir(&self) -> Result<PathBuf> {
+        Ok(self.dir.canonicalize()?)
+    }
 }
 
 #[derive(Subcommand, Debug)]

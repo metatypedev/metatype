@@ -1,7 +1,10 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use anyhow::{bail, Context, Result};
+use colored::Colorize;
 use common::typegraph::{TypeNode, Typegraph};
+use log::info;
+use pathdiff::diff_paths;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
@@ -24,13 +27,21 @@ struct ModuleMatData {
     code: String,
 }
 
-// TODO implement as a processor
-pub fn codegen<P>(tg: &Typegraph, base_dir: P) -> Result<()>
+// TODO implement as a post-processor
+/// Generate codes for missing deno function referenced from the typegraph.
+/// Returns false if no function is to be generated.
+pub fn codegen<P>(tg: &Typegraph, base_dir: P) -> Result<bool>
 where
     P: AsRef<Path>,
 {
     let cg = Codegen::new(tg, base_dir);
     let codes = cg.codegen()?;
+    if codes.is_empty() {
+        info!("Everything is up-to-date: No code is to be generated.");
+        return Ok(false);
+    }
+
+    let current_dir = std::env::current_dir().unwrap();
     for code in codes.into_iter() {
         let parent_folder = Path::new(&code.path).parent().unwrap();
         fs::create_dir_all(parent_folder).unwrap();
@@ -41,8 +52,14 @@ where
             .open(&code.path)
             .context(format!("could not open output file: {:?}", code.path))?;
         write!(file, "\n{code}\n", code = code.code)?;
+        let rel_path = diff_paths(&code.path, &current_dir).unwrap();
+        info!(
+            "{} Successfully added new function(s) in {:?}.",
+            "✓".green(),
+            rel_path
+        );
     }
-    Ok(())
+    Ok(true)
 }
 
 struct ModuleCode {
@@ -186,6 +203,7 @@ impl<'a> Codegen<'a> {
 
     fn generate(&self, gen_list: Vec<GenItem>) -> HashMap<String, String> {
         let mut map: HashMap<String, Vec<Result<String>>> = HashMap::default();
+        let current_dir = std::env::current_dir().unwrap();
         for GenItem {
             input,
             output,
@@ -193,6 +211,12 @@ impl<'a> Codegen<'a> {
             name,
         } in gen_list.into_iter()
         {
+            let rel_path = diff_paths(&path, &current_dir).unwrap();
+            info!(
+                "Generating missing function {} for {:?}",
+                name.blue(),
+                rel_path
+            );
             let functions = map.entry(path).or_default();
             functions.push(self.gen_func(input, output, &name));
         }
