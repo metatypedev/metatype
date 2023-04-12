@@ -146,16 +146,19 @@ export function pluralSuffix(count: number) {
 export function closestWord(
   str: string,
   list: string[],
-  maxDistance = 2,
+  ignoreCase = true,
+  maxDistance = 3,
 ) {
   const [top] = list
     .map((word) => {
-      return { word, score: levenshtein(str, word) };
+      const s = ignoreCase ? str.toLowerCase() : str;
+      const t = ignoreCase ? word.toLowerCase() : word;
+      return { word, score: levenshtein(s, t) };
     })
     .sort((a, b) => a.score - b.score);
 
   if (top.score > maxDistance) {
     return null;
   }
-  return top;
+  return top.word;
 }

@@ -14,7 +14,7 @@ import {
   Type,
 } from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { ensure, unparse } from "../utils.ts";
+import { closestWord, ensure, unparse } from "../utils.ts";
 import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../log.ts";
@@ -140,6 +140,9 @@ export class Planner {
       } = field;
       // name: used to fetch the value
       // canonicalName: field name on the expected output
+
+      // list nodes by path
+      // propose closest suggestion first
       const canonicalName = alias ?? name;
       const path = [...node.path, canonicalName];
       const fieldIdx = props[name];
@@ -147,11 +150,19 @@ export class Planner {
         fieldIdx == undefined &&
         !(name === "__schema" || name === "__type" || name === "__typename")
       ) {
-        const suggestions = Object.keys(props).join(", ");
+        const allProps = Object.keys(props);
+        const proposition = closestWord(name, allProps);
         const formattedPath = this.formatPath(node.path);
-        throw new Error(
-          `'${name}' not found at '${formattedPath}', available names are: ${suggestions}`,
-        );
+        if (proposition) {
+          throw new Error(
+            `'${name}' not found at '${formattedPath}', did you mean '${proposition}' ?`,
+          );
+        } else {
+          const suggestions = allProps.join(", ");
+          throw new Error(
+            `'${name}' not found at '${formattedPath}', available names are: ${suggestions}`,
+          );
+        }
       }
       const childNode = {
         parent: node,
