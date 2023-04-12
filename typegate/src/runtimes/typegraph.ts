@@ -384,6 +384,8 @@ export class TypeGraphRuntime extends Runtime {
     // - output: translate either/union nodes to graphql UNION
     //  * caveat: since UNION does not allow scalar variants, we have to translate them
     //    to custom graphql objects
+    // Alternative ?
+    // https://github.com/graphql/graphql-spec/pull/825
     if (isEither(type) || isUnion(type)) {
       const variants = isUnion(type) ? type.anyOf : type.oneOf;
       if (asInput) {
