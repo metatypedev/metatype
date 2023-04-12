@@ -1,8 +1,15 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+pub mod discovery;
+pub mod queue;
+
+pub use discovery::Discovery;
+
+use futures::{future::BoxFuture, FutureExt};
 use std::{
     collections::{HashMap, HashSet, VecDeque},
     env,
+    future::Future,
     path::{Path, PathBuf},
     process::Stdio,
     sync::{Arc, Mutex},
@@ -43,6 +50,138 @@ enum LoaderInput {
     File(PathBuf, FilterTypegraph),
     Directory(PathBuf),
     // Glob(String),
+}
+
+#[derive(Clone)]
+pub struct Loader {
+    config: Arc<Config>,
+    skip_deno_modules: bool,
+    postprocessors: Vec<PostProcessorWrapper>,
+}
+
+enum LoaderResult {
+    Loaded(Vec<Typegraph>),
+    Rewritten(PathBuf),
+    Error(LoaderError),
+    Excluded(PathBuf),
+}
+
+impl Loader {
+    pub fn new(config: Arc<Config>) -> Self {
+        Self {
+            config,
+            skip_deno_modules: false,
+            postprocessors: vec![postprocess::ReformatScripts.into()],
+        }
+    }
+
+    pub fn skip_deno_modules(mut self, skip: bool) -> Self {
+        self.skip_deno_modules = skip;
+        self
+    }
+
+    pub fn with_postprocessor(mut self, postprocessor: impl Into<PostProcessorWrapper>) -> Self {
+        self.postprocessors.push(postprocessor.into());
+        self
+    }
+
+    pub fn load_all(&self, paths: Vec<PathBuf>) -> Vec<BoxFuture<LoaderResult>> {
+        paths
+            .into_iter()
+            .map(|path| {
+                let loader = self.clone();
+                loader.load_file(path, FilterTypegraph::All).boxed()
+            })
+            .collect()
+    }
+
+    pub async fn load_file(&self, path: PathBuf, filter: FilterTypegraph) -> LoaderResult {
+        let ext = path.extension().and_then(|ext| ext.to_str());
+
+        match ext {
+            Some(ext) if ext == "py" => {
+                let tg_json = match self.load_python_module(&path).await {
+                    Ok(json) => json,
+                    Err(err) => {
+                        return LoaderResult::Error(LoaderError::Unknown { path, error: err })
+                    }
+                };
+                match self.load_string(&path, filter, tg_json) {
+                    Err(err) => LoaderResult::Error(err),
+                    Ok(tgs) => LoaderResult::Loaded(tgs),
+                }
+            }
+            _ => LoaderResult::Error(LoaderError::UnknownFileType(path)),
+        }
+    }
+
+    fn load_string(
+        &self,
+        path: &Path,
+        filter: FilterTypegraph,
+        json: String,
+    ) -> Result<Vec<Typegraph>, LoaderError> {
+        let mut tgs =
+            serde_json::from_str::<Vec<Typegraph>>(&json).map_err(|e| LoaderError::SerdeJson {
+                path: path.to_owned(),
+                error: e,
+            })?;
+        tgs = match filter {
+            FilterTypegraph::All => tgs,
+            FilterTypegraph::One(tg_name) => tgs
+                .into_iter()
+                .filter(|tg| tg.name().unwrap() == tg_name)
+                .collect(),
+        };
+        for tg in tgs.iter_mut() {
+            tg.path = Some(path.to_owned());
+            apply_all(self.postprocessors.iter(), tg, &self.config).map_err(|e| {
+                LoaderError::PostProcessingError {
+                    path: path.to_owned(),
+                    typegraph_name: "".to_owned(),
+                    error: e,
+                }
+            })?;
+        }
+        Ok(tgs)
+    }
+
+    pub async fn load_python_module(&self, path: &Path) -> Result<String> {
+        ensure_venv(&self.config.base_dir)?;
+
+        // Search in PATH does not work on Windows
+        // See: https://doc.rust-lang.org/std/process/struct.Command.html#method.new
+        #[cfg(target_os = "windows")]
+        let program_name = Path::new(&env::var("VIRTUAL_ENV")?).join("Scripts/py-tg.exe");
+        #[cfg(not(target_os = "windows"))]
+        let program_name = Path::new("py-tg").to_path_buf();
+
+        let vars: HashMap<_, _> = env::vars().collect();
+
+        let p = Command::new(program_name.clone())
+            .arg(path.to_str().unwrap())
+            // .args(args)
+            .current_dir(&self.config.base_dir)
+            .envs(vars)
+            .env("PYTHONUNBUFFERED", "1")
+            .env("PYTHONDONTWRITEBYTECODE", "1")
+            .env(
+                "DONT_READ_EXTERNAL_TS_FILES",
+                if self.skip_deno_modules { "1" } else { "" },
+            )
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .await
+            .with_context(|| format!("Running the command '{:?} {:?}'", program_name, path))?;
+
+        if p.status.success() {
+            Ok(String::from_utf8(p.stdout)?)
+        } else {
+            let stderr = String::from_utf8(p.stderr)?;
+            bail!("Python error:\n{}", stderr.red())
+        }
+    }
 }
 
 pub struct LoaderOptions {
@@ -555,49 +694,49 @@ impl LoaderInternal {
     }
 }
 
-impl From<LoaderOptions> for Loader {
-    fn from(options: LoaderOptions) -> Self {
-        let (tx, rx) = unbounded_channel();
-        let gi = if options.exclude_gitignored {
-            Gitignore::new(options.config.base_dir.join(".gitignore")).0
-        } else {
-            Gitignore::empty()
-        };
+// impl From<LoaderOptions> for Loader {
+//     fn from(options: LoaderOptions) -> Self {
+//         let (tx, rx) = unbounded_channel();
+//         let gi = if options.exclude_gitignored {
+//             Gitignore::new(options.config.base_dir.join(".gitignore")).0
+//         } else {
+//             Gitignore::empty()
+//         };
+//
+//         let internal = LoaderInternal {
+//             options: Arc::new(options),
+//             sender: tx,
+//             gi,
+//             deps: Arc::new(Mutex::new(DependencyGraph::default())),
+//         };
+//
+//         let (event_tx, event_rx) = unbounded_channel();
+//
+//         let event_tx_1 = event_tx.clone();
+//         tokio::spawn(async move {
+//             internal.start(event_tx_1, event_rx).await.unwrap();
+//         });
+//
+//         Loader {
+//             receiver: rx,
+//             event_sender: event_tx,
+//         }
+//     }
+// }
 
-        let internal = LoaderInternal {
-            options: Arc::new(options),
-            sender: tx,
-            gi,
-            deps: Arc::new(Mutex::new(DependencyGraph::default())),
-        };
-
-        let (event_tx, event_rx) = unbounded_channel();
-
-        let event_tx_1 = event_tx.clone();
-        tokio::spawn(async move {
-            internal.start(event_tx_1, event_rx).await.unwrap();
-        });
-
-        Loader {
-            receiver: rx,
-            event_sender: event_tx,
-        }
-    }
-}
-
-pub struct Loader {
-    receiver: UnboundedReceiver<LoaderOutput>,
-    event_sender: UnboundedSender<LoaderEvent>,
-}
-
-impl Loader {
-    pub async fn next(&mut self) -> Option<LoaderOutput> {
-        self.receiver.recv().await
-    }
-
-    pub fn reload_all(&self) -> Result<()> {
-        self.event_sender
-            .send(LoaderEvent::ReloadAll(ReloadReason::User))?;
-        Ok(())
-    }
-}
+// pub struct Loader {
+//     receiver: UnboundedReceiver<LoaderOutput>,
+//     event_sender: UnboundedSender<LoaderEvent>,
+// }
+//
+// impl Loader {
+//     pub async fn next(&mut self) -> Option<LoaderOutput> {
+//         self.receiver.recv().await
+//     }
+//
+//     pub fn reload_all(&self) -> Result<()> {
+//         self.event_sender
+//             .send(LoaderEvent::ReloadAll(ReloadReason::User))?;
+//         Ok(())
+//     }
+// }

@@ -18,6 +18,7 @@ use crate::utils::{BasicAuth, Node};
 
 lazy_static! {
     static ref DEFAULT_NODE_CONFIG: NodeConfig = Default::default();
+    static ref DEFAULT_LOADER_CONFIG: TypegraphLoaderConfig = Default::default();
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
@@ -141,10 +142,16 @@ pub struct Materializers {
     pub prisma: PrismaConfig,
 }
 
+#[derive(Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ModuleType {
+    Python,
+}
+
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct Typegraphs {
-    #[serde(default)]
-    pub python: TypegraphLoaderConfig,
+    #[serde(flatten)]
+    pub loaders: HashMap<ModuleType, TypegraphLoaderConfig>,
     #[serde(default)]
     pub materializers: Materializers,
 }
@@ -232,11 +239,11 @@ impl Config {
         self.typegates.get(profile).unwrap_or(&DEFAULT_NODE_CONFIG)
     }
 
-    pub fn loader(&self, lang: &str) -> Option<&TypegraphLoaderConfig> {
-        match lang {
-            "python" => Some(&self.typegraphs.python),
-            _ => None,
-        }
+    pub fn loader(&self, module_type: ModuleType) -> &TypegraphLoaderConfig {
+        self.typegraphs
+            .loaders
+            .get(&module_type)
+            .unwrap_or(&DEFAULT_LOADER_CONFIG)
     }
 }
 

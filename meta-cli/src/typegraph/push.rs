@@ -7,12 +7,21 @@ use log::{error, info, warn};
 use pathdiff::diff_paths;
 use serde::Deserialize;
 use serde_json::json;
-use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
+use std::{
+    collections::{HashMap, HashSet},
+    path::{Path, PathBuf},
+    sync::{atomic::AtomicBool, Arc},
+    time::Duration,
+};
 
 use common::typegraph::Typegraph;
 use tokio::{
-    sync::mpsc::{error::TryRecvError, unbounded_channel, UnboundedReceiver, UnboundedSender},
+    sync::{
+        mpsc::{self, error::TryRecvError, unbounded_channel, UnboundedReceiver, UnboundedSender},
+        Mutex,
+    },
     task::JoinHandle,
+    time::sleep,
 };
 
 use crate::utils::{graphql::Query, Node};
@@ -102,7 +111,7 @@ impl PushQueueEntry {
         }
     }
 
-    async fn push(&self, node: &Node, base: PathBuf) -> Result<PushResult> {
+    pub async fn push(&self, node: &Node, base: PathBuf) -> Result<PushResult> {
         let tg = &self.typegraph;
         let secrets = lade_sdk::hydrate(node.env.clone(), base).await?;
         let res = node
@@ -124,245 +133,126 @@ impl PushQueueEntry {
         res.data("addTypegraph")
             .context("addTypegraph field in the response")
     }
+
+    pub fn name(&self) -> String {
+        self.typegraph.name().unwrap()
+    }
+
+    pub fn retry(self) -> Self {
+        Self {
+            typegraph: self.typegraph,
+            retry_no: self.retry_no + 1,
+        }
+    }
 }
 
-#[derive(Clone, Debug)]
-struct Retry {
-    max: u32,
-    interval: Duration,
-}
-
-pub struct DefaultPushResultConsumer;
-
-pub struct PushLoopBuilder<C = DefaultPushResultConsumer>
-where
-    C: Send + Sized + 'static,
-{
-    exit: bool, // exit when the queue is empty
-    retry: Option<Retry>,
+pub struct PushConfig {
     node: Node,
     base_dir: PathBuf,
-    on_pushed: C,
 }
 
-impl PushLoopBuilder<DefaultPushResultConsumer> {
-    pub fn on(node: Node, base_dir: PathBuf) -> Self {
+impl PushConfig {
+    pub fn new(node: Node, base_dir: PathBuf) -> Self {
+        Self { node, base_dir }
+    }
+
+    pub async fn push(&self, tg: &Typegraph) -> Result<PushResult> {
+        let secrets = lade_sdk::hydrate(self.node.env.clone(), self.base_dir.clone()).await?;
+        let res = self.node
+            .post("/typegate")?
+            .gql(
+                indoc! {"
+                mutation InsertTypegraph($tg: String!, $secrets: String!) {
+                    addTypegraph(fromString: $tg, secrets: $secrets) {
+                        name
+                        messages { type text }
+                        customData
+                    }
+                }"}
+                .to_string(),
+                Some(json!({ "tg": serde_json::to_string(tg)?, "secrets": serde_json::to_string(&secrets)? })),
+            )
+            .await?;
+
+        res.data("addTypegraph")
+            .context("addTypegraph field in the response")
+    }
+}
+
+#[derive(Default)]
+struct CancelStates {
+    ids: HashMap<PathBuf, Vec<usize>>,
+    states: HashMap<usize, bool>,
+    next_id: usize,
+}
+
+impl CancelStates {
+    fn add(&mut self, path: &Path) -> usize {
+        let id = self.next_id;
+        self.next_id += 1;
+        let ids = if let Some(ids) = self.ids.get_mut(path) {
+            ids
+        } else {
+            self.ids.insert(path.to_owned(), vec![]);
+            self.ids.get_mut(path).unwrap()
+        };
+        ids.push(id);
+        self.states.insert(id, false);
+        id
+    }
+
+    fn cancel(&mut self, path: &Path) {
+        for id in self.ids.get(path).map(|v| v.iter()).into_iter().flatten() {
+            self.states.insert(*id, true);
+        }
+    }
+
+    fn remove(&mut self, id: usize, path: &Path) -> bool {
+        let ids = self.ids.get_mut(path).unwrap();
+        if ids.len() == 1 {
+            assert!(ids[0] == id);
+            self.ids.remove(path).unwrap();
+        } else {
+            let idx = ids.iter().position(|i| i == &id).unwrap();
+            ids.remove(idx);
+        };
+        self.states.remove(&id).unwrap()
+    }
+}
+
+pub struct DelayedPushQueue {
+    cancel_states: Arc<Mutex<CancelStates>>,
+    next_cancellation_id: usize,
+    tx: UnboundedSender<(Typegraph, u32)>,
+    rx: UnboundedReceiver<(Typegraph, u32)>,
+}
+
+impl DelayedPushQueue {
+    pub fn new() -> Self {
+        let (tx, rx) = mpsc::unbounded_channel();
         Self {
-            exit: false,
-            retry: None,
-            node,
-            base_dir,
-            on_pushed: DefaultPushResultConsumer,
+            cancel_states: Arc::new(Mutex::new(Default::default())),
+            next_cancellation_id: 0,
+            tx,
+            rx,
         }
     }
 
-    pub fn on_pushed<C: Fn(PushResult) + Send + 'static>(self, handler: C) -> PushLoopBuilder<C> {
-        PushLoopBuilder {
-            exit: self.exit,
-            retry: self.retry,
-            node: self.node,
-            base_dir: self.base_dir,
-            on_pushed: handler,
-        }
-    }
-}
-
-impl<C> PushLoopBuilder<C>
-where
-    C: Send + Sync + Sized + 'static,
-{
-    pub fn exit(mut self, exit: bool) -> Self {
-        self.exit = exit;
-        self
-    }
-
-    pub fn retry(mut self, max_retries: u32, interval: Duration) -> Self {
-        self.retry = Some(Retry {
-            max: max_retries,
-            interval,
-        });
-        self
-    }
-
-    pub fn start_with(self, push_entries: impl Iterator<Item = PushQueueEntry>) -> Result<PushLoop>
-    where
-        PushLoopInternal<C>: HandlePushResult,
-    {
-        let (sender, receiver) = unbounded_channel();
-
-        for entry in push_entries {
-            sender.send(entry)?;
-        }
-
-        let options = Arc::new(self);
-        let sender_1 = sender.clone();
-
-        let join_handle = tokio::spawn(async move {
-            PushLoopInternal {
-                receiver,
-                sender: sender_1,
-                pending_retries: 0,
-                options,
+    pub async fn delayed_push(&mut self, typegraph: Typegraph, retry_no: u32, delay: Duration) {
+        let path = typegraph.path.as_ref().unwrap().to_owned();
+        let cancellation_id = self.cancel_states.lock().await.add(&path);
+        let cancel_states = Arc::clone(&self.cancel_states);
+        let tx = self.tx.clone();
+        tokio::task::spawn(async move {
+            sleep(delay).await;
+            if !cancel_states.lock().await.remove(cancellation_id, &path) {
+                // not cancelled
+                tx.send((typegraph, retry_no));
             }
-            .start()
-            .await
-        });
-
-        Ok(PushLoop {
-            join_handle,
-            sender,
-        })
-    }
-
-    pub fn start(self) -> Result<PushLoop>
-    where
-        PushLoopInternal<C>: HandlePushResult,
-    {
-        self.start_with(std::iter::empty())
-    }
-}
-
-pub trait HandlePushResult {
-    fn handle_push_result(&self, res: PushResult);
-}
-
-impl HandlePushResult for PushLoopInternal<DefaultPushResultConsumer> {
-    fn handle_push_result(&self, res: PushResult) {
-        res.print_messages();
-    }
-}
-
-impl<C> HandlePushResult for PushLoopInternal<C>
-where
-    C: Fn(PushResult) + Sync + Send + 'static,
-{
-    fn handle_push_result(&self, res: PushResult) {
-        (self.options.on_pushed)(res);
-    }
-}
-
-pub struct PushLoopInternal<C: Send + Sync + 'static> {
-    receiver: UnboundedReceiver<PushQueueEntry>,
-    sender: UnboundedSender<PushQueueEntry>,
-    pending_retries: u32, // number of entry that will be pushed for retry
-    options: Arc<PushLoopBuilder<C>>,
-}
-
-impl<C> PushLoopInternal<C>
-where
-    C: Send + Sync + 'static,
-    PushLoopInternal<C>: HandlePushResult,
-{
-    async fn start(&mut self) -> Result<()>
-    where
-        Self: HandlePushResult,
-    {
-        loop {
-            let Some(entry) = self.next().await? else {
-                // exit loop
-                break Ok(());
-            };
-
-            if entry.retry_no > 0 {
-                self.pending_retries -= 1;
-            }
-
-            let tg_name = entry.typegraph.name().unwrap().blue();
-            let path = entry.typegraph.path.as_ref().unwrap();
-            // ? display path relative to current dir or to the metatype.yaml dir??
-            info!(
-                "Pushing typegraph {tg_name} from {:?}...",
-                diff_paths(path, std::env::current_dir().unwrap()).unwrap()
-            );
-            let options = Arc::clone(&self.options);
-            match entry
-                .push(&self.options.node, self.options.base_dir.clone())
-                .await
-            {
-                Err(e) => {
-                    error!(
-                        "{} Failed to push typegraph {tg_name}: {:?}",
-                        "✗".to_owned().red(),
-                        e
-                    );
-                    if let Some(opt_retry) = options.retry.as_ref() {
-                        if entry.retry_no < opt_retry.max {
-                            self.retry(entry).await;
-                        }
-                    }
-                }
-                Ok(mut res) => {
-                    if res.has_error() {
-                        error!(
-                            "{} Failed to push typegraph {tg_name}",
-                            "✗".to_owned().red(),
-                        );
-                        let should_retry = res.should_retry();
-                        self.handle_push_result(res);
-                        if let Some(opt_retry) = options.retry.as_ref() {
-                            if should_retry && entry.retry_no < opt_retry.max {
-                                self.retry(entry).await;
-                            }
-                        }
-                    } else {
-                        info!(
-                            "{} Successfully pushed typegraph {tg_name}.",
-                            "✓".to_owned().green()
-                        );
-                        res.path = entry.typegraph.path.clone();
-                        self.handle_push_result(res);
-                    }
-                }
-            }
-        }
-    }
-
-    async fn retry(&mut self, entry: PushQueueEntry) {
-        let interval = self.options.retry.as_ref().unwrap().interval;
-        info!(
-            "  Retrying to push in {} seconds...",
-            interval.as_secs_f32()
-        );
-        let mut entry = entry;
-        entry.retry_no += 1;
-
-        let sender = self.sender.clone();
-        self.pending_retries += 1;
-        tokio::spawn(async move {
-            tokio::time::sleep(interval).await;
-            sender.send(entry).unwrap();
         });
     }
 
-    async fn next(&mut self) -> Result<Option<PushQueueEntry>> {
-        match self.receiver.try_recv() {
-            Err(TryRecvError::Empty) => {
-                if self.pending_retries == 0 && self.options.exit {
-                    Ok(None)
-                } else {
-                    Ok(self.receiver.recv().await)
-                }
-            }
-            Err(TryRecvError::Disconnected) => {
-                // unreachable since self has a sender
-                Ok(None)
-            }
-            Ok(entry) => Ok(Some(entry)),
-        }
-    }
-}
-
-pub struct PushLoop {
-    join_handle: JoinHandle<Result<()>>,
-    sender: UnboundedSender<PushQueueEntry>,
-}
-
-impl PushLoop {
-    pub async fn join(self) -> Result<()> {
-        self.join_handle.await?
-    }
-
-    pub fn push(&mut self, entry: PushQueueEntry) -> Result<()> {
-        Ok(self.sender.send(entry)?)
+    pub async fn next(&mut self) -> Option<(Typegraph, u32)> {
+        self.rx.recv().await
     }
 }

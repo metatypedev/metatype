@@ -2,7 +2,7 @@
 
 use super::{Action, GenArgs};
 use crate::config::Config;
-use crate::typegraph::loader::{Loader, LoaderOptions, LoaderOutput};
+use crate::typegraph::loader::Loader;
 use crate::typegraph::postprocess;
 use crate::utils::ensure_venv;
 use anyhow::bail;
@@ -43,59 +43,59 @@ pub struct Serialize {
 #[async_trait]
 impl Action for Serialize {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
-        let config_path = args.config;
-        ensure_venv(&dir)?;
-
-        // config file is not used when `TypeGraph` files
-        // are provided in the CLI by flags
-        let config = if !self.files.is_empty() {
-            Config::default_in(&dir)
-        } else {
-            Config::load_or_find(config_path, &dir)?
-        };
-
-        let mut loader_options = LoaderOptions::with_config(&config);
-        if self.deploy {
-            loader_options.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
-        }
-        if self.files.is_empty() {
-            loader_options.dir(&dir);
-        } else {
-            for file in self.files.iter() {
-                loader_options.file(file);
-            }
-        }
-
-        let mut loader = Loader::from(loader_options);
-        let mut tgs = vec![];
-        while let Some(output) = loader.next().await {
-            if let LoaderOutput::Typegraph(tg) = output {
-                tgs.push(tg);
-            }
-        }
-
-        if tgs.is_empty() {
-            eprintln!("No typegraph!");
-            return Ok(());
-        }
-
-        if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
-                self.write(&self.to_string(&tg)?).await?;
-            } else {
-                bail!("typegraph \"{}\" not found", tg_name);
-            }
-        } else if self.unique {
-            if tgs.len() == 1 {
-                self.write(&self.to_string(&tgs[0])?).await?;
-            } else {
-                eprintln!("expected only one typegraph, got {}", tgs.len());
-                std::process::exit(1);
-            }
-        } else {
-            self.write(&self.to_string(&tgs)?).await?;
-        }
+        // let dir = args.dir;
+        // let config_path = args.config;
+        // ensure_venv(&dir)?;
+        //
+        // // config file is not used when `TypeGraph` files
+        // // are provided in the CLI by flags
+        // let config = if !self.files.is_empty() {
+        //     Config::default_in(&dir)
+        // } else {
+        //     Config::load_or_find(config_path, &dir)?
+        // };
+        //
+        // let mut loader_options = LoaderOptions::with_config(&config);
+        // if self.deploy {
+        //     loader_options.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
+        // }
+        // if self.files.is_empty() {
+        //     loader_options.dir(&dir);
+        // } else {
+        //     for file in self.files.iter() {
+        //         loader_options.file(file);
+        //     }
+        // }
+        //
+        // let mut loader = Loader::from(loader_options);
+        // let mut tgs = vec![];
+        // while let Some(output) = loader.next().await {
+        //     if let LoaderOutput::Typegraph(tg) = output {
+        //         tgs.push(tg);
+        //     }
+        // }
+        //
+        // if tgs.is_empty() {
+        //     eprintln!("No typegraph!");
+        //     return Ok(());
+        // }
+        //
+        // if let Some(tg_name) = self.typegraph.as_ref() {
+        //     if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
+        //         self.write(&self.to_string(&tg)?).await?;
+        //     } else {
+        //         bail!("typegraph \"{}\" not found", tg_name);
+        //     }
+        // } else if self.unique {
+        //     if tgs.len() == 1 {
+        //         self.write(&self.to_string(&tgs[0])?).await?;
+        //     } else {
+        //         eprintln!("expected only one typegraph, got {}", tgs.len());
+        //         std::process::exit(1);
+        //     }
+        // } else {
+        //     self.write(&self.to_string(&tgs)?).await?;
+        // }
 
         Ok(())
     }
