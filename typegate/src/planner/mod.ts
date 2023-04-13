@@ -164,7 +164,7 @@ export class Planner {
             }
           }
         }
-        // if the above fails, tell the user if they made a typo
+        // if the above fails, tell the user in case they made a typo
         const proposition = closestWord(name, allProps);
         if (proposition) {
           throw new Error(
@@ -497,7 +497,7 @@ export class Planner {
   /**
    * Idea:
    * query: [a1, a2, ..], mutation: [b1, a1, b2, ..]
-   * => a1: [query Q, mutation M], a2: [query Q], ..., b1: [mutation M] ...
+   * => a1: [query, mutation], a2: [query], ..., b1: [mutation] ...
    */
   private getReverseMapNameToQuery() {
     const indices = ["query", "mutation"].map((label) =>

@@ -11,7 +11,7 @@ Deno.test("createUrl behavior", async (t) => {
     );
   });
 
-  await t.step("append path add query parameters", () => {
+  await t.step("append path and add query parameters", () => {
     const base = "https://example.com";
     const params = new URLSearchParams();
     params.append("a", "one");
