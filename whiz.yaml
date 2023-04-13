@@ -4,7 +4,6 @@ env:
 meta:
   watch:
     - "meta-cli/src/**/*.rs"
-    - "examples/metatype.yaml"
     - "typegraph/typegraph/**/*.py"
   command: "cargo run --color always -p meta-cli -- -C examples dev"
   env:

@@ -132,7 +132,7 @@ impl Action for Deploy {
         };
 
         if paths.is_empty() {
-            warn!("No typegraph definition module found.");
+            bail!("No typegraph definition module found.");
         }
 
         for path in paths.into_iter() {
@@ -248,15 +248,20 @@ impl<'a> WatchMode<'a> {
         let discovered = Discovery::new(Arc::clone(&self.config), self.base_dir.clone())
             .get_all()
             .await?;
+        if discovered.is_empty() {
+            warn!("No typegraph definition module found.");
+        }
 
         let mut queue = Queue::default();
         for path in discovered.into_iter() {
             queue.push(path);
         }
 
+        let config_path = self.config.path.as_ref().unwrap();
+
         let mut watcher = Watcher::new().context("Could not start watcher")?;
         watcher.watch(&self.base_dir)?;
-        // TODO watch metatype.yaml
+        watcher.watch(config_path)?;
 
         let (retry_tx, mut retry_rx) = unbounded_channel::<Retry>();
         let mut retry_manager = RetryManager::default();
@@ -273,6 +278,12 @@ impl<'a> WatchMode<'a> {
                 biased;
 
                 Some(path) = watcher.next() => {
+                    if &path == config_path {
+                        warn!("Metatype config file has been modified.");
+                        warn!("Reloading everything...");
+                        // reload everything
+                        return Ok(());
+                    }
                     if !file_filter.is_excluded(&path) {
                         let rel_path = diff_paths(&path, &self.base_dir).unwrap();
                         info!("Reloading: file modified {:?}...", rel_path);

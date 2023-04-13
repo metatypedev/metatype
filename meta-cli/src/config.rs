@@ -159,6 +159,8 @@ pub struct Typegraphs {
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct Config {
     #[serde(skip)]
+    pub path: Option<PathBuf>,
+    #[serde(skip)]
     pub base_dir: PathBuf,
     #[serde(default)]
     typegates: HashMap<String, NodeConfig>,
@@ -191,6 +193,7 @@ impl Config {
             _ => anyhow!(err.to_string()),
         })?;
         let mut config: Self = serde_yaml::from_reader(file)?;
+        config.path = Some(path.clone());
         config.base_dir = {
             let mut path = path;
             path.pop();
