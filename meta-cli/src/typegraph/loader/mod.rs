@@ -56,9 +56,9 @@ impl Loader {
     }
 
     pub async fn load_file(&self, path: &Path) -> LoaderResult {
-        match self.load_python_module(&path).await {
+        match self.load_python_module(path).await {
             Ok(json) if json.is_empty() => LoaderResult::Rewritten(path.to_path_buf()),
-            Ok(json) => match self.load_string(&path, json) {
+            Ok(json) => match self.load_string(path, json) {
                 Err(err) => LoaderResult::Error(err),
                 Ok(tgs) => LoaderResult::Loaded(tgs),
             },

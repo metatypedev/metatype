@@ -70,7 +70,7 @@ impl Action for Serialize {
                 .get_all()
                 .await?
         } else {
-            self.files.iter().map(|f| PathBuf::from(f)).collect()
+            self.files.iter().map(PathBuf::from).collect()
         };
 
         if paths.is_empty() {

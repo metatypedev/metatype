@@ -178,7 +178,7 @@ impl Deploy {
         push_config: &PushConfig,
         on_rewrite: OnRewrite,
     ) -> Result<(), LoadAndPushError> {
-        match loader.load_file(&path).await {
+        match loader.load_file(path).await {
             LoaderResult::Loaded(tgs) => {
                 let mut failed = vec![];
 
@@ -293,7 +293,7 @@ impl<'a> WatchMode<'a> {
                 }
 
                 Some(Retry { tg, retry_no, id }) = retry_rx.recv() => {
-                    let state = retry_manager.remove(id, tg.path.as_ref().unwrap()).context(format!("Inconsistent stage: retry not found"))?;
+                    let state = retry_manager.remove(id, tg.path.as_ref().unwrap()).context("Inconsistent stage: retry not found".to_string())?;
 
                     if let RetryState::Cancelled = state {
                         let rel_path = diff_paths(tg.path.as_ref().unwrap(), &self.base_dir).unwrap();

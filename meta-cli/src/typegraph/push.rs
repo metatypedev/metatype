@@ -9,18 +9,9 @@ use serde_json::json;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
-    sync::Arc,
-    time::Duration,
 };
 
 use common::typegraph::Typegraph;
-use tokio::{
-    sync::{
-        mpsc::{self, UnboundedReceiver, UnboundedSender},
-        Mutex,
-    },
-    time::sleep,
-};
 
 use crate::utils::{graphql::Query, Node};
 
@@ -161,8 +152,7 @@ impl RetryManager {
         let same_path = self.retry_paths.get_mut(path);
         if let Some(pos) = same_path
             .as_ref()
-            .map(|ids| ids.iter().position(|i| i == &id))
-            .flatten()
+            .and_then(|ids| ids.iter().position(|i| i == &id))
         {
             same_path.unwrap().swap_remove(pos);
             Some(RetryState::Valid)

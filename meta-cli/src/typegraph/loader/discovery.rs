@@ -7,7 +7,7 @@ use crate::{
 use anyhow::Result;
 use globset::GlobSet;
 use ignore::{gitignore::Gitignore, Match};
-use log::{debug, info, trace};
+use log::info;
 use pathdiff::diff_paths;
 use std::{
     collections::{HashMap, VecDeque},
@@ -71,12 +71,10 @@ impl Discovery {
 
                 if file_type.is_dir() {
                     queue.push_back(file_name);
-                } else {
-                    if !self.filter.is_excluded(&file_name) {
-                        let rel_path = diff_paths(&file_name, &self.dir).unwrap();
-                        info!("Found typegraph definition module at {rel_path:?}");
-                        res.push(file_name);
-                    }
+                } else if !self.filter.is_excluded(&file_name) {
+                    let rel_path = diff_paths(&file_name, &self.dir).unwrap();
+                    info!("Found typegraph definition module at {rel_path:?}");
+                    res.push(file_name);
                 }
             }
         }
@@ -159,11 +157,11 @@ impl FileFilter {
 
                 // TODO regex check file content
 
-                return false;
+                false
             }
             _ => {
                 // trace!("File excluded: unknown extension: {path:?}");
-                return true;
+                true
             }
         }
     }

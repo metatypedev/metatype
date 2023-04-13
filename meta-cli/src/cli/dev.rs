@@ -2,29 +2,12 @@
 
 use super::deploy::Deploy;
 use super::deploy::DeployOptions;
-use super::prisma::PrismaArgs;
 use super::Action;
 use super::CommonArgs;
 use super::GenArgs;
-use crate::config;
-use crate::typegraph::loader::Loader;
-use crate::typegraph::loader::LoaderError;
-use crate::typegraph::postprocess;
-
-use crate::utils::ensure_venv;
 use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
-use colored::Colorize;
-use common::archive::unpack;
-use log::error;
-use log::warn;
-use reqwest::Url;
-use serde_json::json;
-use std::collections::HashMap;
-use std::path::Path;
-use std::time::Duration;
-use tiny_http::{Header, Response, Server};
 
 #[derive(Parser, Debug)]
 pub struct Dev {
@@ -41,12 +24,14 @@ pub struct Dev {
 #[async_trait]
 impl Action for Dev {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let mut options = DeployOptions::default();
-        options.codegen = true;
-        options.allow_dirty = true;
-        options.run_destructive_migrations = self.run_destructive_migrations;
-        options.watch = true;
-        options.target = "dev".to_owned();
+        let options = DeployOptions {
+            codegen: true,
+            allow_dirty: true,
+            run_destructive_migrations: self.run_destructive_migrations,
+            watch: true,
+            target: "dev".to_owned(),
+            no_migration: false,
+        };
 
         let deploy = Deploy::new(self.node.clone(), options, None);
         deploy.run(args).await
