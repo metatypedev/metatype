@@ -265,8 +265,8 @@ impl<'a> WatchMode<'a> {
 
         let (retry_tx, mut retry_rx) = unbounded_channel::<Retry>();
         let mut retry_manager = RetryManager::default();
-        let retry_max = 3;
-        let retry_interval = Duration::from_secs(5);
+        let retry_max = 3; // TODO configurable
+        let retry_interval = Duration::from_secs(5); // TODO configurable
 
         let file_filter = FileFilter::new(&self.config)?;
 
@@ -293,7 +293,7 @@ impl<'a> WatchMode<'a> {
                 }
 
                 Some(Retry { tg, retry_no, id }) = retry_rx.recv() => {
-                    let state = retry_manager.remove(id, tg.path.as_ref().unwrap()).context("Inconsistent stage: retry not found".to_string())?;
+                    let state = retry_manager.remove(id, tg.path.as_ref().unwrap()).context("Inconsistent state: retry not found".to_string())?;
 
                     if let RetryState::Cancelled = state {
                         let rel_path = diff_paths(tg.path.as_ref().unwrap(), &self.base_dir).unwrap();
