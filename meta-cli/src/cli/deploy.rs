@@ -110,43 +110,38 @@ impl Action for Deploy {
             let mut watch_mode = WatchMode::new(self, config, dir, loader, push_config)?;
 
             info!("Entering watch mode...");
-
-            // reload everything each time WatchMode::start returns successfully
-            loop {
-                watch_mode.start().await?;
-                watch_mode.reset()?;
-            }
-        }
-
-        let paths = if let Some(path) = &self.file {
-            vec![path.canonicalize()?]
+            watch_mode.start().await?;
         } else {
-            Discovery::new(Arc::clone(&config), dir.clone())
-                .get_all()
-                .await?
-        };
+            let paths = if let Some(path) = &self.file {
+                vec![path.canonicalize()?]
+            } else {
+                Discovery::new(Arc::clone(&config), dir.clone())
+                    .get_all()
+                    .await?
+            };
 
-        if paths.is_empty() {
-            bail!("No typegraph definition module found.");
-        }
+            if paths.is_empty() {
+                bail!("No typegraph definition module found.");
+            }
 
-        for path in paths.into_iter() {
-            self.load_and_push(&path, &dir, &loader, &push_config, OnRewrite::Reload)
-                .await
-                .map_err(|e| match e {
-                    LoadAndPushError::LoaderError => {
-                        anyhow!("Error while loading the typegraph")
-                    }
-                    LoadAndPushError::PushError(tgs) => anyhow!(
-                        "Error when pushing typegraph{s}: {tg_names}",
-                        s = plural_suffix(tgs.len()),
-                        tg_names = tgs
-                            .into_iter()
-                            .map(|tg| tg.name().unwrap())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    ),
-                })?;
+            for path in paths.into_iter() {
+                self.load_and_push(&path, &dir, &loader, &push_config, OnRewrite::Reload)
+                    .await
+                    .map_err(|e| match e {
+                        LoadAndPushError::LoaderError => {
+                            anyhow!("Error while loading the typegraph")
+                        }
+                        LoadAndPushError::PushError(tgs) => anyhow!(
+                            "Error when pushing typegraph{s}: {tg_names}",
+                            s = plural_suffix(tgs.len()),
+                            tg_names = tgs
+                                .into_iter()
+                                .map(|tg| tg.name().unwrap())
+                                .collect::<Vec<_>>()
+                                .join(", ")
+                        ),
+                    })?;
+            }
         }
 
         Ok(())
@@ -246,6 +241,16 @@ pub struct Retry {
     pub retry_no: u32,
 }
 
+impl Retry {
+    fn next(self) -> Self {
+        Self {
+            id: self.id,
+            tg: self.tg,
+            retry_no: self.retry_no + 1,
+        }
+    }
+}
+
 impl<'a> WatchMode<'a> {
     fn new(
         deploy: &'a Deploy,
@@ -277,6 +282,20 @@ impl<'a> WatchMode<'a> {
         })
     }
 
+    async fn discovery(&mut self) -> Result<()> {
+        let discovered = Discovery::new(Arc::clone(&self.config), self.base_dir.clone())
+            .get_all()
+            .await?;
+        if discovered.is_empty() {
+            warn!("No typegraph definition module found.");
+        }
+
+        for path in discovered.into_iter() {
+            self.queue.push(path);
+        }
+        Ok(())
+    }
+
     fn reset(&mut self) -> Result<()> {
         self.queue = Queue::default();
         self.watcher = Watcher::new().context("Could not restart watcher")?;
@@ -289,19 +308,107 @@ impl<'a> WatchMode<'a> {
         Ok(())
     }
 
-    async fn start(&mut self) -> Result<()> {
-        let discovered = Discovery::new(Arc::clone(&self.config), self.base_dir.clone())
-            .get_all()
-            .await?;
-        if discovered.is_empty() {
-            warn!("No typegraph definition module found.");
-        }
-
-        for path in discovered.into_iter() {
+    async fn reloaded(&mut self, path: PathBuf) -> Result<()> {
+        if &path == self.config.path.as_ref().unwrap() {
+            warn!("Metatype config file has been modified.");
+            warn!("Reloading everything...");
+            // reload everything
+            self.reset()?;
+            self.discovery().await?;
+        } else if !self.file_filter.is_excluded(&path) {
+            let rel_path = diff_paths(&path, &self.base_dir).unwrap();
+            info!("Reloading: file modified {:?}...", rel_path);
+            self.retry_manager.cancell_all(&path);
             self.queue.push(path);
         }
+        Ok(())
+    }
 
-        let config_path = self.config.path.as_ref().unwrap();
+    async fn retry(&mut self, retry: Retry) -> Result<()> {
+        let state = self
+            .retry_manager
+            .remove(retry.id, retry.tg.path.as_ref().unwrap())
+            .context("Inconsistent state: retry not found".to_string())?;
+
+        let tg_name = retry.tg.name().unwrap().cyan();
+        let tg_path = retry.tg.path.as_ref().unwrap();
+
+        if let RetryState::Cancelled = state {
+            let rel_path = diff_paths(tg_path, &self.base_dir).unwrap();
+            trace!(
+                "Retry #{} has been cancelled for typegraph {} at {:?}",
+                retry.id.as_u32(),
+                tg_name,
+                rel_path,
+            );
+        } else {
+            info!(
+                "Pushing typegraph {tg_name} {}...",
+                format!("(retry {}/{})", retry.retry_no, self.retry_max).dimmed()
+            );
+            match self.push_config.push(&retry.tg).await {
+                Ok(res) => {
+                    self.deploy.handle_successful_push(res);
+                }
+                Err(e) => {
+                    error!("Error while pushing typegraph {tg_name}: {e:?}");
+                    if retry.retry_no < self.retry_max {
+                        warn!("Retrying in {} seconds...", self.retry_interval.as_secs());
+                        let retry_tx = self.retry_tx.clone();
+                        let retry_interval = self.retry_interval;
+                        tokio::task::spawn(async move {
+                            sleep(retry_interval).await;
+                            retry_tx.send(retry.next()).unwrap();
+                        });
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    async fn load_and_push(&mut self, path: PathBuf) -> Result<()> {
+        match self
+            .deploy
+            .load_and_push(
+                &path,
+                &self.base_dir,
+                &self.loader,
+                &self.push_config,
+                OnRewrite::Skip,
+            )
+            .await
+        {
+            Ok(()) => {}
+            Err(LoadAndPushError::LoaderError) => {}
+            Err(LoadAndPushError::PushError(failed)) => {
+                for tg in failed.into_iter() {
+                    warn!(
+                        "Retrying to push {name} in {interval} seconds...",
+                        name = tg.name().unwrap().cyan(),
+                        interval = self.retry_interval.as_secs()
+                    );
+                    let retry_id = self.retry_manager.add(tg.path.clone().unwrap());
+                    let retry_tx = self.retry_tx.clone();
+                    let retry_interval = self.retry_interval;
+                    tokio::task::spawn(async move {
+                        sleep(retry_interval).await;
+                        retry_tx
+                            .send(Retry {
+                                id: retry_id,
+                                tg,
+                                retry_no: 1,
+                            })
+                            .unwrap();
+                    });
+                }
+            }
+        }
+        Ok(())
+    }
+
+    async fn start(&mut self) -> Result<()> {
+        self.discovery().await?;
 
         // All the operations are sequential
         // Typegraph reload cancels any queued reload or pending push (retry)
@@ -311,78 +418,15 @@ impl<'a> WatchMode<'a> {
                 biased;
 
                 Some(path) = self.watcher.next() => {
-                    if &path == config_path {
-                        warn!("Metatype config file has been modified.");
-                        warn!("Reloading everything...");
-                        // reload everything
-                        return Ok(());
-                    }
-                    if !self.file_filter.is_excluded(&path) {
-                        let rel_path = diff_paths(&path, &self.base_dir).unwrap();
-                        info!("Reloading: file modified {:?}...", rel_path);
-                        self.retry_manager.cancell_all(&path);
-                        self.queue.push(path);
-                    }
+                    self.reloaded(path).await?;
                 }
 
-                Some(Retry { tg, retry_no, id }) = self.retry_rx.recv() => {
-                    let state = self.retry_manager
-                        .remove(id, tg.path.as_ref().unwrap())
-                        .context("Inconsistent state: retry not found".to_string())?;
-
-                    if let RetryState::Cancelled = state {
-                        let rel_path = diff_paths(tg.path.as_ref().unwrap(), &self.base_dir).unwrap();
-                        trace!(
-                            "Retry #{} has been cancelled for typegraph {} at {:?}",
-                            id.as_u32(),
-                            tg.name().unwrap().cyan(),
-                            rel_path
-                        );
-                    } else {
-                        let retry = format!("(retry {retry_no}/{})", self.retry_max).dimmed();
-                        info!("Pushing typegraph {name} {retry}...", name = tg.name().unwrap().cyan());
-                        match self.push_config.push(&tg).await {
-                            Ok(res) => {
-                                self.deploy.handle_successful_push(res);
-                            }
-                            Err(e) => {
-                                error!("Error while pushing typegraph {name}: {e:?}", name = tg.name().unwrap().cyan());
-                                if retry_no < self.retry_max {
-                                    warn!("Retrying in {} seconds...", self.retry_interval.as_secs());
-                                    let retry_id = self.retry_manager.add(tg.path.clone().unwrap());
-                                    let retry_tx = self.retry_tx.clone();
-                                    let retry_interval = self.retry_interval;
-                                    tokio::task::spawn(async move {
-                                        sleep(retry_interval).await;
-                                        retry_tx.send(Retry { id: retry_id, tg, retry_no: retry_no + 1  }).unwrap();
-                                    });
-                                }
-                            }
-                        }
-                    }
+                Some(retry) = self.retry_rx.recv() => {
+                    self.retry(retry).await?;
                 }
 
                 Some(path) = self.queue.next() => {
-                    match self.deploy.load_and_push(&path, &self.base_dir, &self.loader, &self.push_config, OnRewrite::Skip).await {
-                        Ok(()) => {},
-                        Err(LoadAndPushError::LoaderError) => { },
-                        Err(LoadAndPushError::PushError(failed)) => {
-                            for tg in failed.into_iter() {
-                                warn!(
-                                    "Retrying to push {name} in {interval} seconds...",
-                                    name = tg.name().unwrap().cyan(),
-                                    interval = self.retry_interval.as_secs()
-                                );
-                                let retry_id = self.retry_manager.add(tg.path.clone().unwrap());
-                                let retry_tx = self.retry_tx.clone();
-                                let retry_interval = self.retry_interval;
-                                tokio::task::spawn(async move {
-                                    sleep(retry_interval).await;
-                                    retry_tx.send(Retry { id: retry_id, tg, retry_no: 1  }).unwrap();
-                                });
-                            }
-                        }
-                    }
+                    self.load_and_push(path).await?;
                 }
 
             }
