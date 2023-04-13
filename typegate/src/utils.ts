@@ -149,6 +149,9 @@ export function closestWord(
   ignoreCase = true,
   maxDistance = 3,
 ) {
+  if (list.length == 0) {
+    return null;
+  }
   const [top] = list
     .map((word) => {
       const s = ignoreCase ? str.toLowerCase() : str;
@@ -156,7 +159,6 @@ export function closestWord(
       return { word, score: levenshtein(s, t) };
     })
     .sort((a, b) => a.score - b.score);
-
   if (top.score > maxDistance) {
     return null;
   }
