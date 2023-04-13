@@ -12,6 +12,7 @@ use crate::typegraph::loader::queue::Queue;
 use crate::typegraph::loader::watch::Watcher;
 use crate::typegraph::loader::Loader;
 use crate::typegraph::loader::{Discovery, LoaderResult};
+use crate::typegraph::postprocess;
 use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
 use crate::typegraph::push::{PushConfig, PushResult, RetryId, RetryManager, RetryState};
 use crate::utils::{ensure_venv, plural_suffix};
@@ -87,7 +88,9 @@ impl Action for Deploy {
         let config = Config::load_or_find(config_path, &dir)?;
         let config = Arc::new(config);
 
-        let mut loader = Loader::new(Arc::clone(&config));
+        let mut loader = Loader::new(Arc::clone(&config))
+            .skip_deno_modules(true)
+            .with_postprocessor(postprocess::DenoModules::default().codegen(self.options.codegen));
         if !self.options.no_migration {
             loader = loader.with_postprocessor(
                 EmbedPrismaMigrations::default()
@@ -310,7 +313,11 @@ impl<'a> WatchMode<'a> {
 
         let rdeps = self.dependency_graph.get_rdeps(&path);
         if !rdeps.is_empty() {
+            let rel_path = diff_paths(&path, &self.base_dir).unwrap();
+            info!("File modified: {rel_path:?}");
             for path in rdeps.into_iter() {
+                let rel_path = diff_paths(&path, &self.base_dir).unwrap();
+                info!("- Reloading dependency: {rel_path:?}");
                 self.queue.push(path);
             }
             return Ok(());
@@ -416,6 +423,7 @@ impl<'a> WatchMode<'a> {
                         .load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Skip)
                         .await;
                     for tg in tgs.into_iter() {
+                        self.dependency_graph.update_typegraph(&tg);
                         self.push_typegraph(tg, 0).await;
                     }
                 }

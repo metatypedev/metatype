@@ -30,6 +30,7 @@ struct ModuleMatData {
 // TODO implement as a post-processor
 /// Generate codes for missing deno function referenced from the typegraph.
 /// Returns false if no function is to be generated.
+/// Parameter `meta_codegen` is true if the codegen in run from the `meta codegen` subcommand.
 pub fn codegen<P>(tg: &Typegraph, base_dir: P) -> Result<bool>
 where
     P: AsRef<Path>,
@@ -37,7 +38,6 @@ where
     let cg = Codegen::new(tg, base_dir);
     let codes = cg.codegen()?;
     if codes.is_empty() {
-        info!("Everything is up-to-date: No code is to be generated.");
         return Ok(false);
     }
 
