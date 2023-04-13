@@ -2,6 +2,7 @@
 
 pub mod discovery;
 pub mod queue;
+pub mod watch;
 
 pub use discovery::Discovery;
 use tokio::process::Command;
@@ -18,7 +19,7 @@ use anyhow::{bail, Context, Error, Result};
 use colored::Colorize;
 use common::typegraph::Typegraph;
 
-use crate::{config::Config, utils::ensure_venv};
+use crate::config::Config;
 
 use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
@@ -55,18 +56,16 @@ impl Loader {
     }
 
     pub async fn load_file(&self, path: &Path) -> LoaderResult {
-        let tg_json = match self.load_python_module(&path).await {
-            Ok(json) => json,
-            Err(err) => {
-                return LoaderResult::Error(LoaderError::Unknown {
-                    path: path.to_owned(),
-                    error: err,
-                })
-            }
-        };
-        match self.load_string(&path, tg_json) {
-            Err(err) => LoaderResult::Error(err),
-            Ok(tgs) => LoaderResult::Loaded(tgs),
+        match self.load_python_module(&path).await {
+            Ok(json) if json.is_empty() => LoaderResult::Rewritten(path.to_path_buf()),
+            Ok(json) => match self.load_string(&path, json) {
+                Err(err) => LoaderResult::Error(err),
+                Ok(tgs) => LoaderResult::Loaded(tgs),
+            },
+            Err(err) => LoaderResult::Error(LoaderError::Unknown {
+                path: path.to_owned(),
+                error: err,
+            }),
         }
     }
 

@@ -128,80 +128,57 @@ impl PushConfig {
     }
 }
 
-#[derive(Default)]
-struct CancelStates {
-    ids: HashMap<PathBuf, Vec<usize>>,
-    states: HashMap<usize, bool>,
-    next_id: usize,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct RetryId(u32);
+
+impl RetryId {
+    pub fn as_u32(&self) -> u32 {
+        self.0
+    }
 }
 
-impl CancelStates {
-    fn add(&mut self, path: &Path) -> usize {
-        let id = self.next_id;
-        self.next_id += 1;
-        let ids = if let Some(ids) = self.ids.get_mut(path) {
-            ids
-        } else {
-            self.ids.insert(path.to_owned(), vec![]);
-            self.ids.get_mut(path).unwrap()
-        };
-        ids.push(id);
-        self.states.insert(id, false);
+#[derive(Default)]
+pub struct RetryManager {
+    latest_id: u32,
+    cancelled_retries: Vec<RetryId>,
+    retry_paths: HashMap<PathBuf, Vec<RetryId>>,
+}
+
+pub enum RetryState {
+    Cancelled,
+    Valid,
+}
+
+impl RetryManager {
+    pub fn add(&mut self, path: PathBuf) -> RetryId {
+        self.latest_id += 1;
+        let id = RetryId(self.latest_id);
+        self.retry_paths.entry(path).or_default().push(id);
         id
     }
 
-    fn cancel(&mut self, path: &Path) {
-        for id in self.ids.get(path).map(|v| v.iter()).into_iter().flatten() {
-            self.states.insert(*id, true);
-        }
-    }
-
-    fn remove(&mut self, id: usize, path: &Path) -> bool {
-        let ids = self.ids.get_mut(path).unwrap();
-        if ids.len() == 1 {
-            assert!(ids[0] == id);
-            self.ids.remove(path).unwrap();
+    pub fn remove(&mut self, id: RetryId, path: &Path) -> Option<RetryState> {
+        let same_path = self.retry_paths.get_mut(path);
+        if let Some(pos) = same_path
+            .as_ref()
+            .map(|ids| ids.iter().position(|i| i == &id))
+            .flatten()
+        {
+            same_path.unwrap().swap_remove(pos);
+            Some(RetryState::Valid)
+        } else if let Some(pos) = self.cancelled_retries.iter().position(|i| i == &id) {
+            self.cancelled_retries.swap_remove(pos);
+            Some(RetryState::Cancelled)
         } else {
-            let idx = ids.iter().position(|i| i == &id).unwrap();
-            ids.remove(idx);
-        };
-        self.states.remove(&id).unwrap()
-    }
-}
-
-pub struct DelayedPushQueue {
-    cancel_states: Arc<Mutex<CancelStates>>,
-    next_cancellation_id: usize,
-    tx: UnboundedSender<(Typegraph, u32)>,
-    rx: UnboundedReceiver<(Typegraph, u32)>,
-}
-
-impl DelayedPushQueue {
-    pub fn new() -> Self {
-        let (tx, rx) = mpsc::unbounded_channel();
-        Self {
-            cancel_states: Arc::new(Mutex::new(Default::default())),
-            next_cancellation_id: 0,
-            tx,
-            rx,
+            None
         }
     }
 
-    pub async fn delayed_push(&mut self, typegraph: Typegraph, retry_no: u32, delay: Duration) {
-        let path = typegraph.path.as_ref().unwrap().to_owned();
-        let cancellation_id = self.cancel_states.lock().await.add(&path);
-        let cancel_states = Arc::clone(&self.cancel_states);
-        let tx = self.tx.clone();
-        tokio::task::spawn(async move {
-            sleep(delay).await;
-            if !cancel_states.lock().await.remove(cancellation_id, &path) {
-                // not cancelled
-                tx.send((typegraph, retry_no));
+    pub fn cancell_all(&mut self, path: &Path) {
+        if let Some(ids) = self.retry_paths.remove(path) {
+            for id in ids {
+                self.cancelled_retries.push(id)
             }
-        });
-    }
-
-    pub async fn next(&mut self) -> Option<(Typegraph, u32)> {
-        self.rx.recv().await
+        }
     }
 }
