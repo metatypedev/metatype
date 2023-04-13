@@ -148,100 +148,73 @@ snapshot[`Either type 2`] = `
   __schema: {
     types: [
       {
-        fields: null,
         kind: "SCALAR",
         name: "Int",
+        possibleTypes: null,
       },
       {
-        fields: null,
         kind: "SCALAR",
         name: "String",
+        possibleTypes: null,
       },
       {
-        fields: [
-          {
-            name: "regist_user",
-            type: {
-              kind: "NON_NULL",
-            },
-          },
-        ],
+        kind: "OBJECT",
+        name: "_Integer",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "_String",
+        possibleTypes: null,
+      },
+      {
         kind: "OBJECT",
         name: "Query",
+        possibleTypes: null,
       },
       {
-        fields: [
+        kind: "UNION",
+        name: "ResponseOut",
+        possibleTypes: [
           {
-            name: "reason",
-            type: {
-              kind: "NON_NULL",
-            },
+            kind: "OBJECT",
+            name: "object_16",
           },
           {
-            name: "date",
-            type: {
-              kind: "NON_NULL",
-            },
-          },
-          {
-            name: "user_id",
-            type: {
-              kind: "NON_NULL",
-            },
+            kind: "OBJECT",
+            name: "object_18",
           },
         ],
-        kind: "OBJECT",
-        name: "Response",
       },
       {
-        fields: [
-          {
-            name: "date",
-            type: {
-              kind: "NON_NULL",
-            },
-          },
-          {
-            name: "user_id",
-            type: {
-              kind: "NON_NULL",
-            },
-          },
-        ],
         kind: "OBJECT",
         name: "object_16",
+        possibleTypes: null,
       },
       {
-        fields: [
-          {
-            name: "reason",
-            type: {
-              kind: "NON_NULL",
-            },
-          },
-        ],
         kind: "OBJECT",
         name: "object_18",
+        possibleTypes: null,
       },
       {
-        fields: null,
-        kind: "INPUT_OBJECT",
-        name: "UserInp",
+        kind: "SCALAR",
+        name: "UserIn",
+        possibleTypes: null,
       },
       {
-        fields: null,
         kind: "INPUT_OBJECT",
         name: "KidInp",
+        possibleTypes: null,
       },
       {
-        fields: null,
         kind: "INPUT_OBJECT",
         name: "TeenInp",
+        possibleTypes: null,
       },
       {
-        fields: null,
         kind: "INPUT_OBJECT",
         name: "AdultInp",
+        possibleTypes: null,
       },
     ],
   },

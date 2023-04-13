@@ -26,7 +26,7 @@ import {
 } from "../typegraph/visitor.ts";
 import { distinctBy } from "std/collections/distinct_by.ts";
 import { isInjected } from "../typegraph/utils.ts";
-import { EitherNode, PolicyIndices, UnionNode } from "../types/typegraph.ts";
+import { PolicyIndices } from "../types/typegraph.ts";
 
 type DeprecatedArg = { includeDeprecated?: boolean };
 
@@ -37,8 +37,23 @@ const SCALAR_TYPE_MAP = {
   "string": "String",
 };
 
+function generateCustomScalar(type: TypeNode, idx: number) {
+  if (isScalar(type)) {
+    const id = type.type;
+    return {
+      title: `_${id[0].toUpperCase()}${id.slice(1)}`,
+      type: "object",
+      properties: {
+        [id]: idx,
+      },
+    } as ObjectNode;
+  }
+  throw `"${type.title}" of type "${type.type}" is not a scalar`;
+}
+
 export class TypeGraphRuntime extends Runtime {
   tg: TypeGraphDS;
+  private scalarIndex = new Map<string, number>();
 
   private constructor(tg: TypeGraphDS) {
     super();
@@ -116,6 +131,8 @@ export class TypeGraphRuntime extends Runtime {
         const regularTypeIndices = new Set<number>();
 
         const inputRootTypeIndices = new Set<number>();
+        // decides whether or not custom object should be generated
+        let hasUnion = false;
 
         const myVisitor: TypeVisitorMap = {
           [Type.FUNCTION]: ({ type }) => {
@@ -129,8 +146,10 @@ export class TypeGraphRuntime extends Runtime {
               this.tg,
               getChildTypes(this.tg.types[type.input]),
               ({ type, idx }) => {
+                hasUnion ||= isUnion(type) || isEither(type);
                 if (isScalar(type)) {
                   scalarTypeIndices.add(idx);
+                  this.scalarIndex.set(type.type, idx);
                   return false;
                 }
                 if (filter(type)) {
@@ -146,8 +165,10 @@ export class TypeGraphRuntime extends Runtime {
             if (inputRootTypeIndices.has(idx)) {
               return false;
             }
+            hasUnion ||= isUnion(type) || isEither(type);
             if (isScalar(type)) {
               scalarTypeIndices.add(idx);
+              this.scalarIndex.set(type.type, idx);
               return false;
             }
             if (filter(type)) {
@@ -158,11 +179,20 @@ export class TypeGraphRuntime extends Runtime {
         };
 
         visitTypes(this.tg, getChildTypes(this.tg.types[0]), myVisitor);
-
-        const scalarTypes = distinctBy(
+        const distinctScalars = distinctBy(
           [...scalarTypeIndices].map((idx) => this.tg.types[idx]),
           (t) => t.type, // for scalars: one GraphQL type per `type` not `title`
-        ).map((type) => this.formatType(type, false, false));
+        );
+        const scalarTypes = distinctScalars.map((type) =>
+          this.formatType(type, false, false)
+        );
+        const customScalarTypes = hasUnion
+          ? distinctScalars.map((node) => {
+            const idx = this.scalarIndex.get(node.type)!;
+            const asObject = generateCustomScalar(node, idx);
+            return this.formatType(asObject, false, false);
+          })
+          : [];
         const regularTypes = distinctBy(
           [...regularTypeIndices].map((idx) => this.tg.types[idx]),
           (t) => t.title,
@@ -172,7 +202,14 @@ export class TypeGraphRuntime extends Runtime {
           (t) => t.title,
         ).map((type) => this.formatType(type, false, true));
 
-        const types = [...scalarTypes, ...regularTypes, ...inputTypes];
+        const types = [
+          ...scalarTypes,
+          ...customScalarTypes,
+          ...regularTypes,
+          ...inputTypes,
+        ];
+
+        this.scalarIndex.clear();
         return types;
       },
       queryType: () => {
@@ -338,47 +375,53 @@ export class TypeGraphRuntime extends Runtime {
       }
     }
 
+    // Issue:
+    // Translate union (anyOf) / either (oneOf) to Graphql types that behave the same way
+    // - Current graphql spec does not allow UNION types on the input (yet)
+    // - UNION types does not support scalars, only objects
+    // Current solution:
+    // - input: translate either/union nodes to a custom scalar
+    // - output: translate either/union nodes to graphql UNION
+    //  * caveat: since UNION does not allow scalar variants, we have to translate them
+    //    to custom graphql objects
+    // Alternative ?
+    // https://github.com/graphql/graphql-spec/pull/825
     if (isEither(type) || isUnion(type)) {
-      const getVariants = (type: UnionNode | EitherNode) =>
-        isUnion(type) ? type.anyOf : type.oneOf;
+      const variants = isUnion(type) ? type.anyOf : type.oneOf;
+      if (asInput) {
+        const titles = new Set<string>(
+          variants.map((idx) => this.tg.types[idx].title),
+        );
+        const description = `${type.type} type\n${
+          Array.from(titles).join(", ")
+        }`;
 
-      const variants = getVariants(type);
-      const variantsAsObject = {
-        title: type.title,
-        type: "object",
-        properties: {},
-      } as ObjectNode;
-      let count = 0;
-      const objects = new Set<[string, number]>();
-      const remaining = new Set<[string, number]>();
-      for (let i = 0; i < variants.length; i++) {
-        const idx = variants[i];
-        const node = this.tg.types[idx];
-        if (isObject(node)) {
-          for (const [field, idx] of Object.entries(node.properties)) {
-            objects.add([field, idx]);
-          }
-        } else {
-          // name for scalars and nested union/either
-          const field = `${type.type}_${count++}`;
-          remaining.add([field, idx]);
-        }
+        return {
+          ...common,
+          kind: () => TypeKind.SCALAR,
+          name: () => `${type.title}In`,
+          description: () => description,
+        };
+      } else {
+        return {
+          ...common,
+          kind: () => TypeKind.UNION,
+          name: () => `${type.title}Out`,
+          description: () => `${type.title} type`,
+          possibleTypes: () => {
+            return variants.map((idx) => {
+              const variant = this.tg.types[idx];
+              if (isScalar(variant)) {
+                const idx = this.scalarIndex.get(variant.type)!;
+                const asObject = generateCustomScalar(variant, idx);
+                return this.formatType(asObject, false, false);
+              } else {
+                return this.formatType(variant, false, false);
+              }
+            });
+          },
+        };
       }
-
-      for (const [field, idx] of objects) {
-        variantsAsObject.properties[field] = idx;
-      }
-      for (const [field, idx] of remaining) {
-        variantsAsObject.properties[field] = idx;
-      }
-      // quick fix
-      // return {
-      //   ...common,
-      //   kind: () => TypeKind.SCALAR,
-      //   name: () => type.title,
-      //   description: () => `${type.type} type`,
-      // };
-      return this.formatType(variantsAsObject, required, asInput);
     }
 
     throw Error(`unexpected type format ${(type as any).type}`);
