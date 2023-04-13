@@ -141,8 +141,6 @@ export class Planner {
       // name: used to fetch the value
       // canonicalName: field name on the expected output
 
-      // list nodes by path
-      // propose closest suggestion first
       const canonicalName = alias ?? name;
       const path = [...node.path, canonicalName];
       const fieldIdx = props[name];
@@ -151,18 +149,32 @@ export class Planner {
         !(name === "__schema" || name === "__type" || name === "__typename")
       ) {
         const allProps = Object.keys(props);
-        const proposition = closestWord(name, allProps);
         const formattedPath = this.formatPath(node.path);
+        if (typ.title === "Mutation" || typ.title === "Query") {
+          // propose which root type has that name
+          const nameToPaths = this.getReverseMapNameToQuery();
+          if (nameToPaths.has(name)) {
+            const rootPaths = [...nameToPaths.get(name)!];
+            // Mutation or Query but never both
+            if (rootPaths.length == 1) {
+              const [proposition] = rootPaths;
+              throw new Error(
+                `'${name}' not found at '${formattedPath}', did you mean using '${name}' from '${proposition}' ?`,
+              );
+            }
+          }
+        }
+        // if the above fails, tell the user if they made a typo
+        const proposition = closestWord(name, allProps);
         if (proposition) {
           throw new Error(
             `'${name}' not found at '${formattedPath}', did you mean '${proposition}' ?`,
           );
-        } else {
-          const suggestions = allProps.join(", ");
-          throw new Error(
-            `'${name}' not found at '${formattedPath}', available names are: ${suggestions}`,
-          );
         }
+        const suggestions = allProps.join(", ");
+        throw new Error(
+          `'${name}' not found at '${formattedPath}', available names are: ${suggestions}`,
+        );
       }
       const childNode = {
         parent: node,
@@ -480,5 +492,36 @@ export class Planner {
 
   private formatPath(path: string[]) {
     return [this.operationName, ...path].join(".");
+  }
+
+  /**
+   * Idea:
+   * query: [a1, a2, ..], mutation: [b1, a1, b2, ..]
+   * => a1: [query Q, mutation M], a2: [query Q], ..., b1: [mutation M] ...
+   */
+  private getReverseMapNameToQuery() {
+    const indices = ["query", "mutation"].map((label) =>
+      this.tg.type(0, Type.OBJECT).properties?.[label]
+    );
+    const res = new Map<string, Set<string>>();
+    for (const idx of indices) {
+      const { fields, title } = this.collectFieldNames(idx);
+      for (const name of fields) {
+        if (res.has(name)) {
+          res.get(name)!.add(title);
+        } else {
+          res.set(name, new Set<string>([title]));
+        }
+      }
+    }
+    return res;
+  }
+
+  private collectFieldNames(typeIdx: number) {
+    const typ = this.tg.type(typeIdx);
+    if (typ && typ.type === Type.OBJECT) {
+      return { title: typ.title, fields: Object.keys(typ.properties ?? {}) };
+    }
+    return { title: typ?.title, fields: [] };
   }
 }

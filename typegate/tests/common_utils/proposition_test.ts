@@ -24,7 +24,7 @@ Deno.test("closest word proposition", async (t) => {
     );
     // strictly equal
     assertEquals(
-      closestWord("any", ["ANY", "any"], false, 0),
+      closestWord("any", ["aNy", "ANY", "any"], false, 0),
       "any",
     );
   });
