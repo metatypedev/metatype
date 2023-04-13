@@ -1,54 +1,20 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-pub mod discovery;
-pub mod queue;
-
-pub use discovery::Discovery;
-
-use futures::{future::BoxFuture, FutureExt};
 use std::{
-    collections::{HashMap, HashSet, VecDeque},
-    env,
-    future::Future,
+    collections::{HashMap, HashSet},
     path::{Path, PathBuf},
-    process::Stdio,
-    sync::{Arc, Mutex},
-    time::Duration,
 };
 
-use anyhow::{bail, Context, Error, Result};
-use colored::Colorize;
 use common::typegraph::Typegraph;
-use ignore::{gitignore::Gitignore, Match};
-use log::{info, warn};
-use notify_debouncer_mini::{
-    new_debouncer,
-    notify::{self, RecommendedWatcher, RecursiveMode},
-    DebounceEventResult, Debouncer,
-};
-use pathdiff::diff_paths;
-use tokio::{
-    process::Command,
-    sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
-};
 
-use crate::{
-    config::Config,
-    utils::{ensure_venv, fs::is_hidden},
-};
-
-use super::postprocess::{self, apply_all, PostProcessorWrapper};
-
-// TODO use Rc<PathBuf>
 #[derive(Default)]
-struct DependencyGraph {
+pub struct DependencyGraph {
     deps: HashMap<PathBuf, HashSet<PathBuf>>, // typegraph -> deno modules
     reverse_deps: HashMap<PathBuf, HashSet<PathBuf>>, // deno module -> typegraphs
 }
 
 impl DependencyGraph {
-    /// return the list of removed dependencies and added dependencies
-    fn update_typegraph(&mut self, tg: &Typegraph) {
+    pub fn update_typegraph(&mut self, tg: &Typegraph) {
         let path = tg.path.clone().unwrap();
         if !self.deps.contains_key(&path) {
             self.deps.insert(path.clone(), HashSet::default());
@@ -77,7 +43,7 @@ impl DependencyGraph {
         }
     }
 
-    fn remove_typegraph_at(&mut self, path: &Path) {
+    pub fn remove_typegraph_at(&mut self, path: &Path) {
         let deps = self.deps.remove(path);
         if let Some(deps) = deps {
             for dep in deps.iter() {
@@ -88,5 +54,15 @@ impl DependencyGraph {
                 }
             }
         }
+    }
+
+    /// Get paths of reverse dependencies (dependent typegraphs)
+    pub fn get_rdeps(&self, path: &Path) -> Vec<PathBuf> {
+        self.reverse_deps
+            .get(path)
+            .map(|deps| deps.iter().cloned())
+            .into_iter()
+            .flatten()
+            .collect()
     }
 }
