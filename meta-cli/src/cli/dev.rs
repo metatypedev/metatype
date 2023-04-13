@@ -27,7 +27,7 @@ impl Action for Dev {
         let options = DeployOptions {
             codegen: true,
             allow_dirty: true,
-            run_destructive_migrations: self.run_destructive_migrations,
+            allow_destructive: self.run_destructive_migrations,
             watch: true,
             target: "dev".to_owned(),
             no_migration: false,

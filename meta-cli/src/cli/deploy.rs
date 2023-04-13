@@ -45,6 +45,7 @@ pub struct DeployOptions {
     #[clap(long, default_value_t = false)]
     pub codegen: bool,
 
+    // TODO incompatible with allow_dirty and allow_destructive
     /// Do not run prisma migrations
     #[clap(long, default_value_t = false)]
     pub no_migration: bool,
@@ -53,10 +54,9 @@ pub struct DeployOptions {
     #[clap(long, default_value_t = false)]
     pub allow_dirty: bool,
 
-    // TODO: on_destructive_migrations -> enum { Prompt, Run, Skip }
-    /// Do no prompt on before running migrations
+    /// Do no ask for confirmation before running destructive migrations
     #[clap(long, default_value_t = false)]
-    pub run_destructive_migrations: bool,
+    pub allow_destructive: bool,
 
     /// Run in watch mode
     #[clap(long, default_value_t = false)]
@@ -91,7 +91,7 @@ impl Action for Deploy {
             loader = loader.with_postprocessor(
                 EmbedPrismaMigrations::default()
                     .allow_dirty(self.options.allow_dirty)
-                    .reset_on_drift(self.options.run_destructive_migrations),
+                    .reset_on_drift(self.options.allow_destructive),
             );
         }
         let loader = loader;
