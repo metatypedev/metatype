@@ -8,20 +8,43 @@ snapshot[`Basic introspection 1`] = `
         fields: null,
         kind: "SCALAR",
         name: "String",
+        possibleTypes: null,
       },
       {
         fields: null,
         kind: "SCALAR",
         name: "Int",
+        possibleTypes: null,
       },
       {
         fields: [
           {
-            name: "test",
+            name: "string",
+          },
+        ],
+        kind: "OBJECT",
+        name: "_String",
+        possibleTypes: null,
+      },
+      {
+        fields: [
+          {
+            name: "integer",
+          },
+        ],
+        kind: "OBJECT",
+        name: "_Integer",
+        possibleTypes: null,
+      },
+      {
+        fields: [
+          {
+            name: "identity",
           },
         ],
         kind: "OBJECT",
         name: "Query",
+        possibleTypes: null,
       },
       {
         fields: [
@@ -33,28 +56,31 @@ snapshot[`Basic introspection 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "Output",
+        name: "UserOutput",
+        possibleTypes: null,
       },
       {
-        fields: [
+        fields: null,
+        kind: "UNION",
+        name: "FavoriteToyOut",
+        possibleTypes: [
           {
-            name: "ref",
+            kind: "OBJECT",
+            name: "Rubix",
           },
           {
-            name: "model",
+            kind: "OBJECT",
+            name: "Toygun",
           },
           {
-            name: "color",
+            kind: "OBJECT",
+            name: "Gunpla",
           },
           {
-            name: "size",
-          },
-          {
-            name: "name",
+            kind: "OBJECT",
+            name: "_String",
           },
         ],
-        kind: "OBJECT",
-        name: "FavoriteToy",
       },
       {
         fields: [
@@ -67,6 +93,7 @@ snapshot[`Basic introspection 1`] = `
         ],
         kind: "OBJECT",
         name: "Rubix",
+        possibleTypes: null,
       },
       {
         fields: [
@@ -76,6 +103,7 @@ snapshot[`Basic introspection 1`] = `
         ],
         kind: "OBJECT",
         name: "Toygun",
+        possibleTypes: null,
       },
       {
         fields: [
@@ -88,43 +116,52 @@ snapshot[`Basic introspection 1`] = `
         ],
         kind: "OBJECT",
         name: "Gunpla",
-      },
-      {
-        fields: [
-          {
-            name: "union_1",
-          },
-          {
-            name: "union_0",
-          },
-        ],
-        kind: "OBJECT",
-        name: "union_9",
+        possibleTypes: null,
       },
       {
         fields: null,
-        kind: "INPUT_OBJECT",
-        name: "FavoriteToyInp",
+        kind: "UNION",
+        name: "union_9Out",
+        possibleTypes: [
+          {
+            kind: "OBJECT",
+            name: "_String",
+          },
+          {
+            kind: "OBJECT",
+            name: "_Integer",
+          },
+        ],
+      },
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "FavoriteToyIn",
+        possibleTypes: null,
       },
       {
         fields: null,
         kind: "INPUT_OBJECT",
         name: "RubixInp",
+        possibleTypes: null,
       },
       {
         fields: null,
         kind: "INPUT_OBJECT",
         name: "ToygunInp",
+        possibleTypes: null,
       },
       {
         fields: null,
         kind: "INPUT_OBJECT",
         name: "GunplaInp",
+        possibleTypes: null,
       },
       {
         fields: null,
-        kind: "INPUT_OBJECT",
-        name: "union_9Inp",
+        kind: "SCALAR",
+        name: "union_9In",
+        possibleTypes: null,
       },
     ],
   },
