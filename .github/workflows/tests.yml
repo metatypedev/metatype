@@ -272,7 +272,7 @@ jobs:
           which py-tg
           deno run -A dev/test.ts -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
-          cargo test --locked --workspace --package native
+          cargo test --locked --package native
       - uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
