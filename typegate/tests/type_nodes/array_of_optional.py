@@ -4,9 +4,13 @@ from typegraph import TypeGraph
 from typegraph.runtimes.deno import PredefinedFunMat
 
 with TypeGraph("array_optional") as g:
+    nested = t.struct(
+        {"a": t.string(), "b": t.integer(), "c": t.struct({"c1": t.string()})}
+    )
+
     rec = t.struct(
         {
-            "struct_array": t.array(t.struct({"_": t.string()}).optional()).optional(),
+            "struct_array": t.array(nested.optional()).optional(),
             "string_array": t.array(t.string().optional()).optional(),
             "integer_array": t.array(t.integer().optional()).optional(),
             "enum_array": t.array(t.enum(["A", "B"]).optional()).optional(),

@@ -37,19 +37,32 @@ test("array of optional", async (t) => {
     await gql`
         query {
           test(
-            struct_array: [{_: "one"}, {_: "two"}],
+            struct_array: [
+              {a: "one", b: 1, c: {c1: "any1"}}, 
+              {a: "two", b: 2, c: {c1: "any2"}}
+            ],
           ) {
-            struct_array { _ }
+            struct_array {
+              b
+              c { c1 }
+            }
           }
         }
       `
-      .expectBody((body) => {
-        console.log(body);
+      .expectData({
+        test: {
+          struct_array: [
+            {
+              b: 1,
+              c: { c1: "any1" },
+            },
+            {
+              b: 2,
+              c: { c1: "any2" },
+            },
+          ],
+        },
       })
-      // .expectData({
-      //   struct_array: [{ _: "one" }, { _: "two" }],
-      //   scalar_array: ["one", "two"],
-      // })
       .on(e);
   });
 }, { introspection: true });
