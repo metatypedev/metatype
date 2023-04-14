@@ -13,7 +13,7 @@ import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
 
 const logger = getLogger(import.meta);
-logger.info(`Starting typegate ${config.version}`);
+logger.info(`Typegate v${config.version} starting`);
 
 Sentry.init({
   dsn: config.sentry_dsn,
@@ -67,6 +67,6 @@ if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
   setTimeout(reload, 200);
 }
 
-getLogger().info(`Ready to accept request on ${config.tg_port}`);
+getLogger().info(`Typegate ready on ${config.tg_port}`);
 
 await server;

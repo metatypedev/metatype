@@ -76,6 +76,7 @@ export default function GraphiQLInterface(
   useEffect(() => {
     if (queryEditor) {
       queryEditor.setOption("lineNumbers", false);
+      // allow the user to use @
       queryEditor.setOption(`keyMap`, queryEditor.getOption("extraKeys"));
       queryEditor.setOption("gutters", []);
       queryEditor.on("change", autoHeight);
