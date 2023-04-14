@@ -6,6 +6,7 @@ import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
 import { ComputeStageProps } from "../types.ts";
+import { getReverseMapNameToQuery } from "../utils.ts";
 import {
   getWrappedType,
   isArray,
@@ -152,7 +153,10 @@ export class Planner {
         const formattedPath = this.formatPath(node.path);
         if (typ.title === "Mutation" || typ.title === "Query") {
           // propose which root type has that name
-          const nameToPaths = this.getReverseMapNameToQuery();
+          const nameToPaths = getReverseMapNameToQuery(this.tg, [
+            "mutation",
+            "query",
+          ]);
           if (nameToPaths.has(name)) {
             const rootPaths = [...nameToPaths.get(name)!];
             // Mutation or Query but never both
@@ -492,36 +496,5 @@ export class Planner {
 
   private formatPath(path: string[]) {
     return [this.operationName, ...path].join(".");
-  }
-
-  /**
-   * Idea:
-   * query: [a1, a2, ..], mutation: [b1, a1, b2, ..]
-   * => a1: [query, mutation], a2: [query], ..., b1: [mutation] ...
-   */
-  private getReverseMapNameToQuery() {
-    const indices = ["query", "mutation"].map((label) =>
-      this.tg.type(0, Type.OBJECT).properties?.[label]
-    );
-    const res = new Map<string, Set<string>>();
-    for (const idx of indices) {
-      const { fields, title } = this.collectFieldNames(idx);
-      for (const name of fields) {
-        if (res.has(name)) {
-          res.get(name)!.add(title);
-        } else {
-          res.set(name, new Set<string>([title]));
-        }
-      }
-    }
-    return res;
-  }
-
-  private collectFieldNames(typeIdx: number) {
-    const typ = this.tg.type(typeIdx);
-    if (typ && typ.type === Type.OBJECT) {
-      return { title: typ.title, fields: Object.keys(typ.properties ?? {}) };
-    }
-    return { title: typ?.title, fields: [] };
   }
 }
