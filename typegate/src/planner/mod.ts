@@ -161,18 +161,18 @@ export class Planner {
             const rootPaths = [...nameToPaths.get(name)!];
             // Mutation or Query but never both
             if (rootPaths.length == 1) {
-              const [proposition] = rootPaths;
+              const [suggestion] = rootPaths;
               throw new Error(
-                `'${name}' not found at '${formattedPath}', did you mean using '${name}' from '${proposition}' ?`,
+                `'${name}' not found at '${formattedPath}', did you mean using '${name}' from '${suggestion}'?`,
               );
             }
           }
         }
         // if the above fails, tell the user in case they made a typo
-        const proposition = closestWord(name, allProps);
-        if (proposition) {
+        const suggestion = closestWord(name, allProps);
+        if (suggestion) {
           throw new Error(
-            `'${name}' not found at '${formattedPath}', did you mean '${proposition}' ?`,
+            `'${name}' not found at '${formattedPath}', did you mean '${suggestion}'?`,
           );
         }
         const suggestions = allProps.join(", ");
