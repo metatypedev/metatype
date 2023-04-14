@@ -16,21 +16,18 @@ test("array of optional", async (t) => {
             integer_array
             string_array
             enum_array
-            union_array
+            # union_array # TODO
           }
         }
       `
-      .expectBody((body) => {
-        console.log(body);
+      .expectData({
+        test: {
+          string_array: ["one", "two"],
+          integer_array: [1, 2],
+          enum_array: ["A", "B", "A"],
+          // union_array: [1, "two", 3],
+        },
       })
-      // .expectData({
-      //   test: {
-      //     string_array: ["one", "two"],
-      //     integer_array: [1, 2],
-      //     enum_array: ["A", "B", "A"],
-      //     union_array: [1, "two", 3],
-      //   },
-      // })
       .on(e);
   });
   await t.should("work with array of objects", async () => {
