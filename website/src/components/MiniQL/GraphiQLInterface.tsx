@@ -42,7 +42,7 @@ import {
 import styles from "./styles.module.scss";
 import { GraphiQLInterfaceProps } from "graphiql";
 
-const autoHeight = (codeMirror) => {
+const autoHeight = (codeMirror: any) => {
   const target = codeMirror.getWrapperElement().closest(".graphiql-editor");
   target.style.height = `${codeMirror.doc.height}px`;
 };
@@ -50,7 +50,7 @@ const autoHeight = (codeMirror) => {
 export type Tab = "variables" | "headers" | "";
 
 export default function GraphiQLInterface(
-  props: GraphiQLInterfaceProps & { defaultTab: Tab },
+  props: GraphiQLInterfaceProps & { defaultTab: Tab }
 ) {
   const { queryEditor, variableEditor, headerEditor } = useEditorContext({
     nonNull: true,
@@ -76,6 +76,7 @@ export default function GraphiQLInterface(
   useEffect(() => {
     if (queryEditor) {
       queryEditor.setOption("lineNumbers", false);
+      queryEditor.setOption(`keyMap`, queryEditor.getOption("extraKeys"));
       queryEditor.setOption("gutters", []);
       queryEditor.on("change", autoHeight);
       autoHeight(queryEditor);

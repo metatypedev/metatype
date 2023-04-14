@@ -125,12 +125,12 @@ pub struct Dev {
 #[async_trait]
 impl Action for Dev {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir()?;
+        let dir = &args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
 
         let node_config = config.node("dev").with_args(&self.node);
-        let node = node_config.build()?;
+        let node = node_config.build(dir).await?;
 
         let mut migrate = PrismaMigrate::new(&self.prisma, &config, node)?;
 
@@ -170,7 +170,7 @@ pub struct Deploy {
 #[async_trait]
 impl Action for Deploy {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir()?;
+        let dir = &args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
         let prisma_args = self
@@ -180,7 +180,7 @@ impl Action for Deploy {
 
         let node_config = config.node("deploy");
 
-        let node: Node = node_config.build()?;
+        let node: Node = node_config.build(dir).await?;
 
         let res = node
             .post(MIGRATION_ENDPOINT)?
@@ -255,11 +255,11 @@ pub struct Diff {
 #[async_trait]
 impl Action for Diff {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir()?;
+        let dir = &args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
         let node_config = config.node("dev").with_args(&self.node);
-        let node = node_config.build()?;
+        let node = node_config.build(dir).await?;
         PrismaMigrate::new(&self.prisma, &config, node)?
             .diff(self.script)
             .await?;

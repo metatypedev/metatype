@@ -34,3 +34,4 @@ recipe.json
 *-debug.whiz.yaml
 
 tmp/
+.coverage

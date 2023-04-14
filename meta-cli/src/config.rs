@@ -77,18 +77,23 @@ impl NodeConfig {
         res
     }
 
-    pub fn basic_auth(&self) -> Result<BasicAuth> {
+    async fn basic_auth<P: AsRef<Path>>(&self, dir: P) -> Result<BasicAuth> {
         match (&self.username, &self.password) {
-            (Some(username), Some(password)) => {
-                Ok(BasicAuth::new(username.clone(), password.clone()))
-            }
+            (Some(username), Some(password)) => Ok(BasicAuth::new(
+                lade_sdk::hydrate_one(username.clone(), dir.as_ref()).await?,
+                lade_sdk::hydrate_one(password.clone(), dir.as_ref()).await?,
+            )),
             (Some(username), None) => BasicAuth::prompt_as_user(username.clone()),
             (None, _) => BasicAuth::prompt(),
         }
     }
 
-    pub fn build(&self) -> Result<Node> {
-        Node::new(self.url.clone(), Some(self.basic_auth()?), self.env.clone())
+    pub async fn build<P: AsRef<Path>>(&self, dir: P) -> Result<Node> {
+        Node::new(
+            self.url.clone(),
+            Some(self.basic_auth(dir).await?),
+            self.env.clone(),
+        )
     }
 }
 
