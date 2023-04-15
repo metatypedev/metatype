@@ -2,7 +2,8 @@
   "items": [
     {
       "items": [
-        "docs/reference/typegraph/typegraph/graph/models"
+        "docs/reference/typegraph/typegraph/graph/models",
+        "docs/reference/typegraph/typegraph/graph/typegraph"
       ],
       "label": "typegraph.graph",
       "type": "category"
@@ -31,7 +32,9 @@
               ],
               "label": "typegraph.providers.prisma.runtimes",
               "type": "category"
-            }
+            },
+            "docs/reference/typegraph/typegraph/providers/prisma/relations",
+            "docs/reference/typegraph/typegraph/providers/prisma/schema"
           ],
           "label": "typegraph.providers.prisma",
           "type": "category"
@@ -55,6 +58,7 @@
     },
     {
       "items": [
+        "docs/reference/typegraph/typegraph/runtimes/deno",
         "docs/reference/typegraph/typegraph/runtimes/http",
         "docs/reference/typegraph/typegraph/runtimes/wasmedge"
       ],
