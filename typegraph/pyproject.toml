@@ -32,6 +32,7 @@ astunparse = "^1.6.3"
 black = ">=22.12,<24.0"
 strenum = "^0.4.9"
 python-box = "^7.0.0"
+coverage = "^7.2.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"

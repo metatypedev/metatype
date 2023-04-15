@@ -49,7 +49,7 @@ impl Action for Dev {
             .unwrap_or_else(|_| config::Config::default_in(dir));
 
         let node_config = config.node("dev").with_args(&self.node);
-        let node = node_config.build()?;
+        let node = node_config.build(dir).await?;
 
         let mut loader_options = LoaderOptions::with_config(&config);
         loader_options
