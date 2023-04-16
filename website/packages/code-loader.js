@@ -11,7 +11,7 @@ const postTransformations = {
   ts: (source) => source,
 };
 
-function loader(source) {
+module.exports = function (source) {
   const ext = this.resourcePath.split(".").pop();
   const prefix = commentsPrefix[ext];
 
@@ -50,6 +50,4 @@ function loader(source) {
 
   const exp = transformation(deindent(ret.join("\n"))).trim();
   return `module.exports = ${JSON.stringify(exp)};`;
-}
-
-module.exports = loader;
+};

@@ -6,38 +6,34 @@ import Metatype from "../../../shared/metatype-intro.mdx";
 
 # Overview
 
-This page gives a high-level views of Metatype's principles.
+This page gives a high-level view of Metatype's foundations.
 
 :::tip Looking to build?
-For a hands-on introduction, head over to the [quickstart](/docs/tutorials/getting-started) and start build your first typegraph.
+For a hands-on introduction, head over to the [quick-start](/docs/tutorials/getting-started) and start build your first typegraph.
 :::
 
-## Why does Metatype exists?
+## Why does Metatype exist?
 
-> "Product" refers here indistinctly to a project, a product, a start-up idea or a company.
+As products/projects evolve and grow, the technological stack becomes a challenging hot spot where initiatives collides and efficiency becomes a struggle. While deploying new features, all developer teams spend a non-negligible amount of time on low-value added tasks like CRUD generation, data validation, interoperability with (legacy) systems, authentication or authorization. This leaves little time under business constraints for designing great interfaces and experimenting to find the best technical solution, increasing time to delivery and weakening innovation.
 
-As products evolve and grow, the technological stack becomes a challenging place where initiatives collides and efficiency become a struggle. Especially, a lot of time is spent on organizing, prioritizing, kick-starting, integrating, and deploying new features. This usually affect the speed of delivery and the innovation drive of teams.
+Metatype's vision is to enable everyone to compose their data, anywhere. By helping developer the re-use of data and existing systems, it enables teams to focus on what matters: their expert knowledge in business logic, modelling and technologies. Metatype handle the complex layers for them and orchestrate systems into modular API blocks, making it easy to understand and remaining innovative for the next iterations.
 
-Metatype's vision is to enable everyone to compose their data, anywhere. By increasing the re-use of data and logic, it enables teams to focus on what matters: their added value and expert knowledge. Metatype handle the complex layers for them and orchestrate systems into modular API blocks, making it easy to understand and innovative ready for your next iteration.
+In short, Metatype promotes standardized and composable solutions to the following challenges:
 
-It aims at providing a new paradigm and tackle with agility the following challenges:
-
-- onboard quickly new team members independently of their experience level
-- make system interfaces accessible and easy to understand for everyone
-- embrace iterative approaches and cut time to deployment in half
-- build strong foundations for APIs with type safety and expressiveness
-- transform - some of - technical debts into an asset thanks to interoperability
-- empower teams to innovate with new technology and architectures
+- make system interfaces accessible and easy to understand for everyone (discoverability)
+- embrace iterative approaches and cut time to deployment in half (autonomy)
+- build strong foundations for APIs with type safety and bounded context (modularity)
+- empower teams to innovate with new technologies and interoperability (orchestration)
 
 ## How does Metatype work?
 
-Metatype work changing your design and development approach. Take the example of a new feature to add in your product - defined by "the change" in the next lines. The classical approach is to define what data will be at play, how to transform them, where the execution shall take place and who should be authorized. Instead, Metatype define an abstraction for each of those steps and put the emphasis on composing already defined API blocks, or define re-usable modular ones when there is no existing solution.
+When developing a feature, the classical approach is to define what data will be at play, how to transform them, where the execution shall take place and who should be authorized. Instead, Metatype define an abstraction for each of those steps and put the emphasis on composing pre-defined API blocks or defining re-usable ones when there is no existing solution.
 
 |                       | Classical approach                       | Metatype's approach                                                                       |
 | --------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
-| What (data flows)     | fixed response defined by the controller | API clients selects what they need from [types](/docs/concepts/typegraph#types)           |
-| How (transformations) | static code logic                        | compose data with interchangeable [materializers](/docs/concepts/typegraph#materializers) |
-| Where (execution)     | 1 code base + 1 database                 | orchestrate the request among multiple [runtimes](/docs/concepts/typegraph#runtimes)      |
+| What (data)           | fixed response defined by the controller | API clients selects what they need from [types](/docs/concepts/typegraph#types)           |
+| How (transformations) | ad-hoc code logic                        | compose data with interchangeable [materializers](/docs/concepts/typegraph#materializers) |
+| Where (execution)     | 1 code base + 1 database                 | orchestrate the request across multiple [runtimes](/docs/concepts/typegraph#runtimes)     |
 | Who (authentication)  | hard-coded rules or system               | request context based and controlled by [policies](/docs/concepts/typegraph#policies)     |
 | When (event)          | request arrival                          | based on [triggers](/docs/concepts/typegraph#triggers)                                    |
 
@@ -45,9 +41,9 @@ Metatype work changing your design and development approach. Take the example of
 
 <Metatype />
 
-### Architectural zoom
+### Architectural overview
 
-Metatype is designed for cloud environments and comes with minimal components. The only requirement to scale horizontally is to share some memory between replicas of the typegate via Redis. You can use Metatype [helm chart](https://github.com/metatypedev/charts) to deploy typegates on your Kubernetes cluster.
+Metatype is designed for cloud environments and comes with minimal components. The only requirement to scale horizontally is to share some memory between replicas via Redis. You can use Metatype [helm chart](https://github.com/metatypedev/charts) to directly deploy typegates on your Kubernetes cluster.
 
 <div className="text-center">
 

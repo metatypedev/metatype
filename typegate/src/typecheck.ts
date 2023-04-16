@@ -60,7 +60,6 @@ export class SchemaValidatorError extends Error {
       errorMessage = [
         `value: ${toPrettyJSON(value)}`,
         `errors: ${toPrettyJSON(schemaErrors)}`,
-        `schema: ${toPrettyJSON(schema)}`,
       ].join("\n\n");
     } else {
       // if there is only one error, return it instead of the whole error,

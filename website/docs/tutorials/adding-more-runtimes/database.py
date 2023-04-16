@@ -26,7 +26,7 @@ with TypeGraph(
 
     g.expose(
         # highlight-next-line
-        create_message=db.insert_one(message),
+        create_message=db.create(message),
         list_messages=db.find_many(message),
         default_policy=[public],
     )

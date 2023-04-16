@@ -1,4 +1,4 @@
-<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="251px" height="321px" viewBox="-0.5 -0.5 251 321" content="&lt;mxfile&gt;&lt;diagram id=&quot;tAxyJCeEVR5oWe2X6Dbk&quot; name=&quot;Page-1&quot;&gt;xVZNc9owEP01HMv4A5zkGkjTA0zSckhzFPZiayJLHlnGuL++a1vyRwzB6VByAe3TrqV9b1fSxF3Eh0dJkmgtAmATxwoOE3c5cZzbmYW/JVDUwJ11VwOhpEEN2S2woX9AgzouzGgAac9RCcEUTfqgLzgHX/UwIqXI+247wfqrJiSEAbDxCRuiLzRQkU7LuWnxH0DDyKxsezq/mBhnnUkakUDkHch9mLgLKYSqR/FhAazkzvBSx30/MdtsTAJXYwL0jveEZTo3vS9VmGQhwNy1yQXHv/tIxQwtG4dwoOo3jq3pXFuvnZllqbhljMIYXMmiDnLmxn7tTrZxlWUCh9nphFORSV/vV2egiAxBe3k1VGbSCdOMPIKIAVdBB12f36ypjRurYiQwoui+LzzR9RM2oc3XngXFvbUuYrdLcRsdDXDQWbSFKmWOq+QcUcljmNz9FgdhOVgCF+iyhISJwszidxuHJkIa5EVIFuTYSWWaGVc0hoH4UmQ8gEDzn0dUwSYhFdU5tna/Fk7Kswep4DCGetfVjaFPBtc0St72mW2wqNNjnnVamh7zH9HsXbf4P1X7lfUMElVSIHsN8a6uz3aIN+wQ2z0uy+jyH8uxd76UV6Wqea2tYz39Wo8r5zUooork62t4ZvVreDa7Yg3XQvYI3vxcTZzFEcIED0U1Y4HypwPe8G5KyqFfMIoESvc8e9ua6tW2AYj/FlYCPGUKPwMaT+s73Z5fiPJ3x8bcG1LuHWH89hKnxpWvzJv/cGWaR9Q/3JkXPyEa9T84IhZMZMGOYVboiPfYG8h03CmxAYllxSBNy4dfxn1FBU+//szwrnfvodk+MOvXSPtKdx/+Ag==&lt;/diagram&gt;&lt;/mxfile&gt;">
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="251px" height="321px" viewBox="-0.5 -0.5 251 321" content="&lt;mxfile&gt;&lt;diagram id=&quot;tAxyJCeEVR5oWe2X6Dbk&quot; name=&quot;Page-1&quot;&gt;xVZNc5swEP01PtbDh03cq+00PdiTtD6kOcqwBk2ExAhhTH99F5D4KHZCOq5zQvu0i7Tv7UqauKv49CBJEm1FAGziWMFp4q4njmNbCw8/JVIYxLVrJJQ00FgL7OhvMI4azWgAac9RCcEUTfqgLzgHX/UwIqXI+24HwfqrJiSEAbDzCRuizzRQUY0unLsW/w40jMzKtve1nomJcdaZpBEJRN6B3PuJu5JCqHoUn1bASvYML3XctwuzzcYkcDUmQO/4SFimc9P7UoVJFgLMXZtccPwsIxUztGwcwomqXzi2pnNtvXRm1qXmljEKY3AlizrImRv7pTvZxlWWCRxmpxNORSZ9vV+dgSIyBO2l663MpBOmGXkAEQOugg66Qr9YUxs3VsVIYETRY194ousnbEKbvz0JintrXcThkOI2OhrgoLNoC1XKnFfJOaOSxzC55R4HYTlYAxfosoaEicLM4n8bhyZCGuRZSBbk2EllmhlXNIaB+FJkPIBA859HVMEuIRXVOTZ3vxYuynMEqeA0hnrX1Y2hjwbXNEre9pltsKjTY551WZoe82/R7N22+D9U+5X1BBJVUiA/0hDesCFsd2RHjC7/sRx775fyplQ1r7V1rMef23HlvAVFVJF8fg3PrH4Nz2Y3rGGjbIfg3Y/NxFmdIUzwUKyX1ZwFyp8OmMPbKSmHfsEoUijd9/nb12Rv9g1A/NewkuAxU/gb0Hha3+r2/Eqk/3VwzL0h6d4ZzhfXODdufGne/YdL0zyj/uHWvPoZ0aj/xiGxYiILDgyzQke8yV5BpuPOiR1ILCsGaVo+/TLuKyp4+vmnhne7mw/N9olZv0fal7p7/wc=&lt;/diagram&gt;&lt;/mxfile&gt;">
     <defs/>
     <g>
         <path d="M 60 60 L 96.47 114.7" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="stroke"/>
@@ -57,7 +57,7 @@
                             <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: all; white-space: normal; overflow-wrap: normal;">
                                 SQL,
                                 <br/>
-                                Mongo, etc.
+                                MongoDB, etc.
                             </div>
                         </div>
                     </div>

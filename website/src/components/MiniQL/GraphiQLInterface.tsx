@@ -76,8 +76,12 @@ export default function GraphiQLInterface(
   useEffect(() => {
     if (queryEditor) {
       queryEditor.setOption("lineNumbers", false);
-      // allow the user to use @
-      queryEditor.setOption(`keyMap`, queryEditor.getOption("extraKeys"));
+      // allow the user to use @, which is overridden on macOs
+      queryEditor.setOption(`extraKeys`, {
+        "Alt-G": () => {
+          queryEditor.replaceSelection("@");
+        },
+      });
       queryEditor.setOption("gutters", []);
       queryEditor.on("change", autoHeight);
       autoHeight(queryEditor);
