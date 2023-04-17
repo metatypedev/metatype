@@ -26,6 +26,7 @@ use common::archive::unpack;
 use common::typegraph::Typegraph;
 use dialoguer::Confirm;
 use log::{error, info, trace, warn};
+use normpath::PathExt;
 use pathdiff::diff_paths;
 use tokio::select;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
@@ -168,7 +169,7 @@ impl Deploy<DefaultModeData> {
 
     async fn run(self, file: Option<&PathBuf>) -> Result<()> {
         let paths = if let Some(path) = file {
-            vec![path.canonicalize()?]
+            vec![path.normalize()?.into_path_buf()]
         } else {
             self.discovery().await?
         };
