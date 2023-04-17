@@ -73,7 +73,7 @@ export function getEdges(type: TypeNode): Record<string, number> {
       const variants = type.type == Type.UNION ? type.anyOf : type.oneOf;
       const rec = {} as Record<string, number>;
       for (let i = 0; i < variants.length; i++) {
-        rec[`[u${i}]`] = variants[i];
+        rec[`[v${i}]`] = variants[i];
       }
       return rec;
     }
