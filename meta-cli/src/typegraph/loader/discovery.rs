@@ -19,6 +19,7 @@ use tokio::fs;
 pub struct Discovery {
     dir: PathBuf,
     filter: FileFilter,
+    #[allow(dead_code)]
     follow_symlinks: bool,
 }
 
@@ -32,16 +33,19 @@ impl Discovery {
         }
     }
 
+    #[allow(dead_code)]
     pub fn exclude_gitignored(mut self, exclude: bool) -> Self {
         self.filter.exclude_gitignored(exclude);
         self
     }
 
+    #[allow(dead_code)]
     pub fn exclude_hidden_files(mut self, exclude: bool) -> Self {
         self.filter.exclude_hidden(exclude);
         self
     }
 
+    #[allow(dead_code)]
     pub fn follow_symlinks(mut self, follow: bool) -> Self {
         self.follow_symlinks = follow;
         self

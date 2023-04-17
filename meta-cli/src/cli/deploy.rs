@@ -25,7 +25,7 @@ use colored::Colorize;
 use common::archive::unpack;
 use common::typegraph::Typegraph;
 use dialoguer::Confirm;
-use log::{debug, error, info, trace, warn};
+use log::{error, info, trace, warn};
 use pathdiff::diff_paths;
 use tokio::select;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
@@ -107,7 +107,7 @@ impl WatchModeData {
         watcher.watch(base_dir)?;
         watcher.watch(config_path)?;
         let (retry_tx, retry_rx) = unbounded_channel();
-        let file_filter = FileFilter::new(&config)?;
+        let file_filter = FileFilter::new(config)?;
         Ok(Self {
             retry_max: 3,                           // TODO configurable
             retry_interval: Duration::from_secs(5), // TODO configurable
@@ -153,7 +153,7 @@ impl Deploy<DefaultModeData> {
         }
 
         let node_config = config.node(&options.target).with_args(&deploy.node);
-        let node = node_config.clone().build()?;
+        let node = node_config.build()?;
         let push_config = PushConfig::new(node, config.base_dir.clone());
 
         Ok(Self {
@@ -185,9 +185,8 @@ impl Deploy<DefaultModeData> {
                 "Loading typegraphs from {rel_path:?}.",
                 rel_path = diff_paths(&path, &self.base_dir).unwrap()
             );
-            let tgs = self
-                .load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Reload)
-                .await;
+            let tgs =
+                Self::load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Reload).await;
             let tgs = match tgs {
                 Err(e) => {
                     error!("{e:?}");
@@ -234,8 +233,6 @@ impl Deploy<DefaultModeData> {
                     }
                 }
             }
-
-            for tg in tgs {}
         }
 
         if err_count > 0 {
@@ -278,7 +275,6 @@ where
 
     #[async_recursion]
     async fn load_typegraphs(
-        &self,
         path: &Path,
         base_dir: &Path,
         loader: &Loader,
@@ -292,8 +288,7 @@ where
                 match on_rewrite {
                     OnRewrite::Skip => Ok(vec![]),
                     OnRewrite::Reload => {
-                        self.load_typegraphs(path, base_dir, loader, OnRewrite::Fail)
-                            .await
+                        Self::load_typegraphs(path, base_dir, loader, OnRewrite::Fail).await
                     }
                     OnRewrite::Fail => {
                         bail!("Typegraph definition module at {rel_path:?} has been rewritten unexpectedly");
@@ -320,7 +315,7 @@ where
         let prisma_config = &self.config.typegraphs.materializers.prisma;
         let migdir = tg_migrations_dir(
             &self.base_dir,
-            prisma_config.migrations_path.as_ref().map(|p| p.as_path()),
+            prisma_config.migrations_path.as_deref(),
             &name,
         );
         for migrations in res.take_migrations() {
@@ -340,8 +335,8 @@ where
         }
 
         let resets = res.reset_required();
-        if resets.len() > 0 {
-            if Confirm::new()
+        if !resets.is_empty()
+            && Confirm::new()
                 .with_prompt(format!(
                     "{} Do you want to reset the database{s} for {runtimes} on {name}?",
                     "[confirm]".yellow(),
@@ -351,11 +346,10 @@ where
                 ))
                 .interact()
                 .unwrap()
-            {
-                return HandlePushResult::PushAgain {
-                    reset_database: resets.to_vec(),
-                };
-            }
+        {
+            return HandlePushResult::PushAgain {
+                reset_database: resets.to_vec(),
+            };
         }
         if res.success() {
             HandlePushResult::Success
@@ -368,7 +362,7 @@ where
 #[async_trait]
 impl Action for DeploySubcommand {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let deploy = Deploy::new(&self, args)?;
+        let deploy = Deploy::new(self, args)?;
         if deploy.options.watch {
             deploy.watch_mode()?.run(self.file.as_ref()).await?;
         } else {
@@ -559,9 +553,7 @@ impl Deploy<WatchModeData> {
                 }
 
                 Some(path) = self.mode_data.queue.next() => {
-                    let tgs = self
-                        .load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Skip)
-                        .await;
+                    let tgs = Self::load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Skip).await;
                     match tgs {
                         Err(e) => error!("{e:?}"),
                         Ok(tgs) => {

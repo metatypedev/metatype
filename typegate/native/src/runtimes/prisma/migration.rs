@@ -195,11 +195,9 @@ impl MigrationContext {
             })
             .await
         {
-            Err(e) => {
-                return PrismaCreateResult::Err {
-                    message: err_to_string(e),
-                }
-            }
+            Err(e) => PrismaCreateResult::Err {
+                message: err_to_string(e),
+            },
             Ok(res) => {
                 let Some(generated_migration_name) = res.generated_migration_name else {
                     return PrismaCreateResult::Ok {
@@ -366,11 +364,6 @@ struct MigrationsFolder {
 }
 
 impl MigrationsFolder {
-    pub fn update(&self, data: impl AsRef<[u8]>) -> Result<()> {
-        common::archive::unpack(&self.dir, Some(data))?;
-        Ok(())
-    }
-
     pub fn from(serialized: Option<impl AsRef<[u8]>>) -> Result<Self> {
         let tempdir = tempdir_in(TMP_DIR.as_path())?;
         common::archive::unpack(&tempdir, serialized)?;
