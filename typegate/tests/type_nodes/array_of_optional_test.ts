@@ -16,7 +16,7 @@ test("array of optional", async (t) => {
             integer_array
             string_array
             enum_array
-            # union_array # TODO
+            union_array
           }
         }
       `
@@ -25,7 +25,7 @@ test("array of optional", async (t) => {
           string_array: ["one", "two"],
           integer_array: [1, 2],
           enum_array: ["A", "B", "A"],
-          // union_array: [1, "two", 3],
+          union_array: [1, "two", 3],
         },
       })
       .on(e);

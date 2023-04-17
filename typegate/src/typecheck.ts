@@ -14,6 +14,7 @@ import {
 import { FragmentDefs } from "./graphql.ts";
 import {
   getVariantTypesIndexes,
+  isEither,
   isOptional,
   isUnion,
   ObjectNode,
@@ -187,9 +188,28 @@ export class ValidationSchemaBuilder {
       }
 
       case "array": {
+        const currentType = this.types[type.items];
+        if (isOptional(currentType)) {
+          const item = this.types[currentType.item];
+          if (isEither(item) || isUnion(item)) {
+            // optional requires a list of all variant types ([undefined, "null"] does not work)
+            // TODO:
+            // 1. enumerate all types properly for union/either
+            // (see: args.ts: JsonSchemaBuilder.listUnionEitherTypes)
+            // 2. Or.. make it so that `array` ignores the optional wrapper
+            //  array(optional(x)) => array(x)
+
+            // this fix partially implements 2
+            return {
+              ...trimType(type),
+              items: this.get(path, item, selectionSet),
+            };
+          }
+        }
+
         return {
           ...trimType(type),
-          items: this.get(path, this.types[type.items], selectionSet),
+          items: this.get(path, currentType, selectionSet),
         };
       }
 
