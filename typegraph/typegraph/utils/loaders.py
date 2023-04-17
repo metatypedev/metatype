@@ -86,3 +86,7 @@ def cmd():
     opt = dict(indent=2) if args.pretty else {}
     output = json.dumps([tg.build() for tg in tgs], cls=JSONEncoder, **opt)
     print(output)
+
+
+if __name__ == "__main__":
+    cmd()
