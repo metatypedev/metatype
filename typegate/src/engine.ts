@@ -8,7 +8,7 @@ import {
   TypeGraph,
   TypeGraphDS,
 } from "./typegraph.ts";
-import { ensure, JSONValue } from "./utils.ts";
+import { JSONValue } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
@@ -275,10 +275,15 @@ export class Engine {
       // or no cache if no further usage
       cache[stage.id()] = batcher(res);
 
-      ensure(
-        lens.length === res.length,
-        `cannot align array results ${lens.length} != ${res.length}`,
-      );
+      if (
+        lens.length !== res.length
+      ) {
+        throw new Error(
+          `cannot align array results ${lens.length} != ${res.length} at stage ${stage.id()}: ${
+            JSON.stringify(lens)
+          }, ${JSON.stringify(res)}`,
+        );
+      }
       const field = path[path.length - 1] as any;
       if (node !== "") {
         lens.forEach((l: any, i: number) => {

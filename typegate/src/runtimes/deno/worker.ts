@@ -69,7 +69,10 @@ async function import_func(op: number, task: ImportFuncTask) {
   verbose &&
     logger.info(`exec func "${name}" from module ${op}`);
   const mod = registry.get(op)! as TaskModule;
-  return await mod[name](args, internals, make_internal(internals));
+  if (name in mod && typeof mod[name] === "function") {
+    return await mod[name](args, internals, make_internal(internals));
+  }
+  throw new Error(`"${name}" is not a valid method`);
 }
 
 async function func(op: number, task: FuncTask) {
@@ -128,7 +131,6 @@ self.onmessage = async (event: MessageEvent<Message<Task>>) => {
   const exec = taskList[task.type];
 
   if (exec == null) {
-    console.log(">", task);
     const error = `unsupported operation found "${op}"`;
     logger.error(error);
     answer({ id, error });

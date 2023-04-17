@@ -267,7 +267,7 @@
       "config": {},
       "properties": {
         "createdMigrationName": 28,
-        "appliedMigrations": 29,
+        "applyError": 29,
         "migrations": 31,
         "runtimeName": 32
       },
@@ -281,12 +281,13 @@
       "config": {}
     },
     {
-      "type": "array",
-      "title": "array_30",
+      "type": "optional",
+      "title": "optional_30",
       "runtime": 1,
       "policies": [],
       "config": {},
-      "items": 30
+      "item": 30,
+      "default_value": null
     },
     {
       "type": "string",

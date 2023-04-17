@@ -1,6 +1,5 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { green } from "std/fmt/colors.ts";
 import { Runtime } from "./Runtime.ts";
 import * as native from "native";
 import { FromVars, GraphQLRuntime } from "./graphql.ts";

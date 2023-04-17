@@ -14,7 +14,14 @@ use std::str::FromStr;
 
 use crate::cli::prisma::PrismaArgs;
 use crate::cli::CommonArgs;
+use crate::fs::find_in_parents;
 use crate::utils::{BasicAuth, Node};
+
+pub const METATYPE_FILES: &[&str] = &["metatype.yml", "metatype.yaml"];
+pub const VENV_FOLDERS: &[&str] = &[".venv"];
+pub const PYPROJECT_FILES: &[&str] = &["pyproject.toml"];
+pub const PIPFILE_FILES: &[&str] = &["Pipfile"];
+pub const REQUIREMENTS_FILES: &[&str] = &["requirements.txt"];
 
 lazy_static! {
     static ref DEFAULT_NODE_CONFIG: NodeConfig = Default::default();
@@ -65,29 +72,29 @@ impl NodeConfig {
         let mut res = self.clone();
         if let Some(gate) = &args.gate {
             res.url = gate.clone();
-            // if gate is overridden, user credentials must be overridden
-            if let Some(username) = &args.username {
-                res.username = Some(username.clone());
-                res.password = args.password.clone();
-            }
         }
-        // if gate is not overridden, user credentions cannot be overridden
-
+        res.username = args.username.clone().or(res.username);
+        res.password = args.password.clone().or(res.password);
         res
     }
 
-    pub fn basic_auth(&self) -> Result<BasicAuth> {
+    async fn basic_auth<P: AsRef<Path>>(&self, dir: P) -> Result<BasicAuth> {
         match (&self.username, &self.password) {
-            (Some(username), Some(password)) => {
-                Ok(BasicAuth::new(username.clone(), password.clone()))
-            }
+            (Some(username), Some(password)) => Ok(BasicAuth::new(
+                lade_sdk::hydrate_one(username.clone(), dir.as_ref()).await?,
+                lade_sdk::hydrate_one(password.clone(), dir.as_ref()).await?,
+            )),
             (Some(username), None) => BasicAuth::prompt_as_user(username.clone()),
             (None, _) => BasicAuth::prompt(),
         }
     }
 
-    pub fn build(&self) -> Result<Node> {
-        Node::new(self.url.clone(), Some(self.basic_auth()?), self.env.clone())
+    pub async fn build<P: AsRef<Path>>(&self, dir: P) -> Result<Node> {
+        Node::new(
+            self.url.clone(),
+            Some(self.basic_auth(dir).await?),
+            self.env.clone(),
+        )
     }
 }
 
@@ -214,24 +221,11 @@ impl Config {
 
     /// Load config file: recursively search from `start_dir` to parent directories...
     pub fn find<P: AsRef<Path>>(start_dir: P) -> Result<Option<Config>> {
-        let mut current_dir = fs::canonicalize(start_dir)?;
-
-        let path = loop {
-            let path = current_dir.join("metatype.yml");
-            if path.try_exists()? {
-                break path;
-            }
-            let path = current_dir.join("metatype.yaml");
-            if path.try_exists()? {
-                break path;
-            }
-
-            if !current_dir.pop() {
-                return Ok(None);
-            }
-        };
-
-        Ok(Some(Self::from_file(path)?))
+        if let Some(path) = find_in_parents(start_dir, METATYPE_FILES)? {
+            Ok(Some(Self::from_file(path)?))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Load config file:

@@ -7,13 +7,13 @@ from typegraph.runtimes.http import HTTPRuntime
 # skip:end
 with TypeGraph(
     "homepage",
-    auths=[oauth2.github_auth],
+    auths=[oauth2.github("openid profile email")],
     rate=TypeGraph.Rate(window_limit=2000, window_sec=60, query_limit=200),
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
     public = policies.public()
     meta_only = policies.jwt("email", ".+@metatype.dev")
-    public_read_only = meta_only  # {effects.create: public, effects.none: meta_only}
+    public_read_only = {"create": public, "none": meta_only}
 
     github = HTTPRuntime("https://api.github.com")
     db = PrismaRuntime("demo", "POSTGRES_CONN")

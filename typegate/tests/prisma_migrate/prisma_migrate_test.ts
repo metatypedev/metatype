@@ -46,7 +46,7 @@ test("prisma migrations", async (t) => {
       mutation PrismaCreate {
         create(typegraph: "prisma", name: "initial migration", apply: true) {
           createdMigrationName
-          appliedMigrations
+          applyError
           migrations
           runtimeName
         }
@@ -58,7 +58,7 @@ test("prisma migrations", async (t) => {
       .expectBody(async (body) => {
         const {
           createdMigrationName,
-          appliedMigrations,
+          applyError,
           migrations,
           runtimeName,
         } = body.data.create;
@@ -78,7 +78,7 @@ test("prisma migrations", async (t) => {
           join(migrationDir, createdMigrationName, "migration.sql"),
         );
         assert(stat2.isFile);
-        assertEquals(appliedMigrations.length, 1);
+        assert(applyError == null);
       })
       .on(migrations);
 

@@ -15,6 +15,7 @@ use clap::{Parser, Subcommand};
 use colored::Colorize;
 use common::archive::{self};
 use indoc::indoc;
+use log::{error, info};
 use prisma_models::psl;
 use question::{Answer, Question};
 
@@ -125,12 +126,12 @@ pub struct Dev {
 #[async_trait]
 impl Action for Dev {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
+        let dir = &args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
 
         let node_config = config.node("dev").with_args(&self.node);
-        let node = node_config.build()?;
+        let node = node_config.build(dir).await?;
 
         let mut migrate = PrismaMigrate::new(&self.prisma, &config, node)?;
 
@@ -170,7 +171,7 @@ pub struct Deploy {
 #[async_trait]
 impl Action for Deploy {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
+        let dir = &args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
         let prisma_args = self
@@ -180,7 +181,7 @@ impl Action for Deploy {
 
         let node_config = config.node("deploy");
 
-        let node: Node = node_config.build()?;
+        let node: Node = node_config.build(dir).await?;
 
         let res = node
             .post(MIGRATION_ENDPOINT)?
@@ -255,11 +256,11 @@ pub struct Diff {
 #[async_trait]
 impl Action for Diff {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = args.dir;
+        let dir = &args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
         let node_config = config.node("dev").with_args(&self.node);
-        let node = node_config.build()?;
+        let node = node_config.build(dir).await?;
         PrismaMigrate::new(&self.prisma, &config, node)?
             .diff(self.script)
             .await?;
@@ -460,7 +461,7 @@ impl PrismaMigrate {
                     mutation PrismaCreate($tg: String!, $rt: String, $mig: String, $name: String!, $apply: Boolean!) {
                         create(typegraph: $tg, runtime: $rt, migrations: $mig, name: $name, apply: $apply) {
                             createdMigrationName
-                            appliedMigrations
+                            applyError
                             migrations
                             runtimeName
                         }
@@ -482,41 +483,28 @@ impl PrismaMigrate {
         #[serde(rename_all = "camelCase")]
         struct Res {
             created_migration_name: String,
-            applied_migrations: Vec<String>,
+            apply_err: Option<String>,
             migrations: String,
             runtime_name: String,
         }
         let res: Res = res.data("create")?;
 
-        let applied = if let Some((last, others)) = res.applied_migrations.split_last() {
-            if last != &res.created_migration_name {
-                bail!("The new migration was not the latest applied migration");
-            }
-            others
-        } else {
-            &res.applied_migrations
-        };
-
-        if !applied.is_empty() {
-            let plural = applied.len() > 1;
-            println!(
-                "The following migration{s} {have} been applied:",
-                s = if plural { "s" } else { "" },
-                have = if plural { "have" } else { "has" }
+        if let Some(apply_err) = res.apply_err {
+            info!(
+                "The following migration has been created: {}",
+                res.created_migration_name.green()
             );
-            for mig in applied {
-                println!("{}", format!("- {mig}").blue())
-            }
+            error!(
+                "The migration {} failed to be applied: {apply_err}",
+                res.created_migration_name
+            );
+        } else {
         }
 
-        println!();
-        println!(
-            "The following migration has been created{}:",
-            if apply { " and applied" } else { "" }
-        );
-        println!(
-            "{}",
-            format!(" - {mig}", mig = res.created_migration_name).green()
+        info!(
+            "The following migration has been created{}: {}.",
+            if apply { " and applied" } else { "" },
+            res.created_migration_name.green(),
         );
 
         self.runtime_name.replace(res.runtime_name);

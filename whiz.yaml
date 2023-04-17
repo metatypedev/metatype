@@ -92,7 +92,8 @@ website_meta:
   watch:
     - "meta-cli/src/**/*.rs"
     - "typegate/src/**/*.ts"
-  command: "cargo run -p meta-cli -- -C website deploy --gate http://localhost:7890 --username admin --password password"
+  command: "cargo run --color always -p meta-cli -- -C website dev"
+  #command: "cargo run -p meta-cli -- -C website deploy --allow-dirty --gate http://localhost:7890 --username admin --password password"
   env:
     VIRTUAL_ENV: $PWD/examples/.venv
     PATH: $PWD/examples/.venv/bin:$PATH

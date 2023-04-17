@@ -94,13 +94,9 @@ export class PrismaMigrate {
       }),
     );
 
-    const appliedMigrations = (res.applied && "Ok" in res.applied)
-      ? res.applied.Ok.applied_migrations
-      : [];
-
     return {
       createdMigrationName: res.created_migration_name,
-      appliedMigrations,
+      applyError: res.apply_err,
       migrations: res.migrations,
       runtimeName: name,
     };

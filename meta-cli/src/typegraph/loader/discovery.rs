@@ -2,7 +2,7 @@
 
 use crate::{
     config::{Config, ModuleType},
-    utils::fs::is_hidden,
+    fs::is_hidden,
 };
 use anyhow::Result;
 use globset::GlobSet;

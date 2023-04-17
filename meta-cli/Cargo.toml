@@ -1,9 +1,9 @@
 [package]
 name = "meta-cli"
-version = "0.1.3"
+version = "0.1.5-dev.0"
 edition = "2021"
 
-description = "Free and open ecosystem for API composition."
+description = "Compose your data, anywhere, and build iterative API blocks with zero-trust and serverless deployment, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license-file = "../LICENSE.md"
 homepage = "https://metatype.dev"
@@ -61,7 +61,7 @@ serde_yaml = "0.9.19"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.48", features = ["vendored"] }
 indexmap = { version = "1.9.3", features = ["serde"] }
-lade-sdk = "0.5.2"
+lade-sdk = "0.5.3"
 async-trait = "0.1.68"
 async-recursion = "1.0.4"
 clap-verbosity-flag = "2.0.1"
@@ -69,6 +69,7 @@ clap_complete = "4.1.6"
 itertools = "0.10.5"
 enum_dispatch = "0.3.11"
 git2 = { version = "0.16.1", features = ["vendored-libgit2"], default-features = false }
+normpath = "1.1.1"
 
 [dev-dependencies]
 assert_cmd = "2.0.10"

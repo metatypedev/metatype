@@ -132,7 +132,7 @@ pub struct Deploy<T = DefaultModeData> {
 }
 
 impl Deploy<DefaultModeData> {
-    pub fn new(deploy: &DeploySubcommand, args: GenArgs) -> Result<Self> {
+    pub async fn new(deploy: &DeploySubcommand, args: GenArgs) -> Result<Self> {
         let dir = args.dir()?;
         ensure_venv(&dir)?;
         let config_path = args.config;
@@ -153,7 +153,7 @@ impl Deploy<DefaultModeData> {
         }
 
         let node_config = config.node(&options.target).with_args(&deploy.node);
-        let node = node_config.build()?;
+        let node = node_config.build(&dir).await?;
         let push_config = PushConfig::new(node, config.base_dir.clone());
 
         Ok(Self {
@@ -362,7 +362,7 @@ where
 #[async_trait]
 impl Action for DeploySubcommand {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let deploy = Deploy::new(self, args)?;
+        let deploy = Deploy::new(self, args).await?;
         if deploy.options.watch {
             deploy.watch_mode()?.run(self.file.as_ref()).await?;
         } else {

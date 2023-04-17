@@ -1,6 +1,6 @@
 # skip:start
 
-from typegraph import TypeGraph, effects, policies, t
+from typegraph import TypeGraph, policies, t
 from typegraph.graph.auth.oauth2 import github_auth
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.deno import ModuleMat
@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent.joinpath("import-your-api-blocks")))
-import google  # noqa: E402
+from google import import_googleapi  # noqa: E402
 
 # isort: on
 
@@ -29,6 +29,7 @@ with TypeGraph(
 ) as g:
     db = PrismaRuntime("database", "POSTGRES_CONN")
     gql = GraphQLRuntime("https://graphqlzero.almansi.me/api")
+    googleapi = import_googleapi()
 
     public = policies.public()
     gh_user = policies.jwt("user", "type")
@@ -61,19 +62,7 @@ with TypeGraph(
 
     g.expose(
         create_message=db.insert_one(message),
-        send_notification=t.func(
-            t.struct(
-                {
-                    "parent": t.string(),
-                }
-            ).compose(google.message_in.props),
-            google.message_out,
-            google.googleapis.RestMat(
-                "POST",
-                "https://fcm.googleapis.com/v1/{+parent}/messages:send",
-                effect=effects.create(),
-            ),
-        ),
+        send_notification=googleapi.functions["projectsMessagesSend"],
         list_users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         default_policy=[internal],
     )

@@ -51,6 +51,8 @@ pub struct Deno {
 impl Action for Deno {
     async fn run(&self, args: GenArgs) -> Result<()> {
         let dir = args.dir()?;
+        // try to find config file, else use default config as the options
+        // used for code generation have default values.
         let config = Arc::new(
             Config::load_or_find(args.config, &dir).unwrap_or_else(|_| Config::default_in(&dir)),
         );

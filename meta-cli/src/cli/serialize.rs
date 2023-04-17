@@ -12,7 +12,7 @@ use clap::Parser;
 use core::fmt::Debug;
 use log::warn;
 use std::io::{self, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 
@@ -46,16 +46,16 @@ pub struct Serialize {
 #[async_trait]
 impl Action for Serialize {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let dir = Path::new(&args.dir).canonicalize()?;
+        let dir = &args.dir()?;
         let config_path = args.config;
-        ensure_venv(&dir)?;
+        ensure_venv(dir)?;
 
         // config file is not used when `TypeGraph` files
         // are provided in the CLI by flags
         let config = if !self.files.is_empty() {
-            Config::default_in(&dir)
+            Config::default_in(dir)
         } else {
-            Config::load_or_find(config_path, &dir)?
+            Config::load_or_find(config_path, dir)?
         };
         let config = Arc::new(config);
 
