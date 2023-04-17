@@ -3,7 +3,7 @@
 use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use common::typegraph::{TypeNode, Typegraph};
-use log::info;
+use log::{info, trace};
 use pathdiff::diff_paths;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -211,6 +211,7 @@ impl<'a> Codegen<'a> {
             name,
         } in gen_list.into_iter()
         {
+            trace!("Codegen::generate: path={path:?}, current-dir={current_dir:?}");
             let rel_path = diff_paths(&path, &current_dir).unwrap();
             info!(
                 "Generating missing function {} for {:?}",
