@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-use super::deploy::Deploy;
 use super::deploy::DeployOptions;
+use super::deploy::DeploySubcommand;
 use super::Action;
 use super::CommonArgs;
 use super::GenArgs;
@@ -31,9 +31,10 @@ impl Action for Dev {
             watch: true,
             target: "dev".to_owned(),
             no_migration: false,
+            create_migration: true,
         };
 
-        let deploy = Deploy::new(self.node.clone(), options, None);
+        let deploy = DeploySubcommand::new(self.node.clone(), options, None);
         deploy.run(args).await
 
         // let port = self.port;

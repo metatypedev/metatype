@@ -106,7 +106,7 @@ impl PrismaArgs {
 pub struct PrismaArgsFull {
     pub typegraph: String,
     pub runtime: String,
-    pub migrations: String,
+    pub migrations: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -332,7 +332,8 @@ impl PrismaMigrate {
             .as_ref()
             .map(|rt_name| archive::archive(base_migpath.join(rt_name)))
             .transpose()
-            .context("Archiving migrations")?;
+            .context("Archiving migrations")?
+            .flatten();
 
         Ok(Self {
             typegraph: args.typegraph.clone(),

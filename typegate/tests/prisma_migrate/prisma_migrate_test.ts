@@ -123,7 +123,7 @@ test("prisma migrations", async (t) => {
     await Deno.rename(path, `${path}_renamed`);
     mig = nativeResult(
       await native.archive({ path: migrationDir }),
-    ).base64;
+    ).base64!;
     await gql`
       mutation PrismaApply($mig: String!) {
         apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {

@@ -17,7 +17,6 @@ use std::{
 use tokio::fs;
 
 pub struct Discovery {
-    config: Arc<Config>,
     dir: PathBuf,
     filter: FileFilter,
     follow_symlinks: bool,
@@ -27,7 +26,6 @@ impl Discovery {
     pub fn new(config: Arc<Config>, dir: PathBuf) -> Self {
         let filter = FileFilter::new(&config).expect("Could not load filters");
         Self {
-            config,
             dir,
             filter,
             follow_symlinks: true,

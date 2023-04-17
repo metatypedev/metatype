@@ -3,14 +3,15 @@
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/rpc.rs
 // https://github.com/prisma/prisma-engines/blob/main/migration-engine/core/src/api.rs
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::Result;
 use convert_case::{Case, Casing};
-use log::info;
+use log::{error, trace};
+use macros::deno;
 use migration_core::json_rpc::types::{
-    ApplyMigrationsInput, CreateMigrationInput, DiffParams, DiffTarget, EvaluateDataLossInput,
-    ListMigrationDirectoriesInput, SchemaContainer,
+    ApplyMigrationsInput, CreateMigrationInput, DevAction, DevDiagnosticInput, DevDiagnosticOutput,
+    DiffParams, DiffTarget, EvaluateDataLossInput, ListMigrationDirectoriesInput, SchemaContainer,
 };
-use migration_core::CoreError;
+use migration_core::{CoreError, CoreResult, GenericApi};
 use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -26,7 +27,6 @@ pub async fn loss(
 ) -> Result<String, CoreError> {
     let schema = format!("{datasource}{datamodel}");
     let api = migration_core::migration_api(Some(datasource.clone()), None)?;
-
     let data_loss = EvaluateDataLossInput {
         migrations_directory_path: migration_folder.to_string(),
         prisma_schema: schema.to_string(),
@@ -44,88 +44,201 @@ pub async fn loss(
     }
 }
 
-pub(super) async fn apply(inp: super::PrismaApplyInp) -> Result<super::PrismaApplyOut> {
-    use migration_core::json_rpc::types::{DevAction, DevDiagnosticInput};
-    use migration_core::migration_api;
-
-    let migrations = MigrationsFolder::from(inp.migrations)?;
-
-    let api = migration_api(Some(inp.datasource), None)?;
-
-    let res = api
-        .dev_diagnostic(DevDiagnosticInput {
-            migrations_directory_path: migrations.to_string(),
-        })
-        .await?;
-
-    let reset_reason: Option<String> = if let DevAction::Reset(reset) = res.action {
-        if inp.reset_database {
-            api.reset().await.context("Reset database")?;
-            Some(reset.reason)
-        } else {
-            return Ok(super::PrismaApplyOut::ResetRequired {
-                reset_reason: reset.reason,
-            });
-        }
-    } else {
-        None
-    };
-
-    let res = api
-        .apply_migrations(ApplyMigrationsInput {
-            migrations_directory_path: migrations.to_string(),
-        })
-        .await?;
-
-    let applied_migrations = res.applied_migration_names;
-
-    Ok(super::PrismaApplyOut::MigrationsApplied {
-        reset_reason,
-        applied_migrations,
-        migrations: migrations.serialize()?,
-    })
+pub struct MigrationContextBuilder {
+    pub datasource: String,
+    pub datamodel: String,
+    migrations: Option<String>,
 }
 
-pub(super) async fn create(input: super::PrismaCreateInp) -> Result<super::PrismaCreateOut> {
-    use migration_core::migration_api;
+impl MigrationContextBuilder {
+    pub fn new(datasource: String, datamodel: String) -> Self {
+        Self {
+            datasource,
+            datamodel,
+            migrations: None,
+        }
+    }
 
-    let migrations = MigrationsFolder::from(input.migrations)?;
+    pub fn with_migrations(self, migrations: Option<String>) -> Self {
+        Self {
+            datasource: self.datasource,
+            datamodel: self.datamodel,
+            migrations,
+        }
+    }
 
-    let api = migration_api(Some(input.datasource.clone()), None).context("Get migration api")?;
-
-    let res = api
-        .create_migration(CreateMigrationInput {
-            draft: !input.apply,
-            migration_name: input.migration_name.to_case(Case::Snake),
-            migrations_directory_path: migrations.to_string(),
-            prisma_schema: format!("{}{}", input.datasource, input.datamodel),
+    fn build(self) -> Result<MigrationContext, String> {
+        let api = migration_core::migration_api(Some(self.datasource.clone()), None)
+            .map_err(err_to_string)?;
+        let migrations_dir =
+            MigrationsFolder::from(self.migrations.as_ref()).map_err(|e| e.to_string())?;
+        Ok(MigrationContext {
+            builder: self,
+            migrations_dir,
+            api,
         })
-        .await
-        .context("Create migration")?;
+    }
+}
 
-    let created_migration_name = res.generated_migration_name;
+struct MigrationContext {
+    builder: MigrationContextBuilder,
+    migrations_dir: MigrationsFolder,
+    api: Box<dyn GenericApi>,
+}
 
-    let applied_migrations = if input.apply {
-        let res = api
-            .apply_migrations(ApplyMigrationsInput {
-                migrations_directory_path: migrations.to_string(),
+impl MigrationContext {
+    async fn dev_diagnostic(&self) -> CoreResult<DevDiagnosticOutput> {
+        // See: /schema-engin/core/src/commands/dev_diagnostic.rs
+        // Returns error if drift by migration failure or error in unapplied migrations
+        // Returns Reset(reason) if there are failed migrations, edited migrations, drift, history
+        // divergence, or if migrations directory is behind
+        // Otherwise: CreateMigration
+        self.api
+            .dev_diagnostic(DevDiagnosticInput {
+                migrations_directory_path: self.migrations_dir.to_string(),
             })
             .await
-            .map_err(|e| anyhow!("Error while applying migrations: {e}"))?;
+    }
 
-        res.applied_migration_names
-    } else {
-        vec![]
+    fn schema(&self) -> String {
+        format!("{}{}", self.builder.datasource, self.builder.datamodel)
+    }
+}
+
+#[deno]
+pub enum PrismaApplyResult {
+    Err {
+        message: String,
+    },
+    ResetRequired {
+        reset_reason: String,
+    },
+    Ok {
+        applied_migrations: Vec<String>,
+        reset_reason: Option<String>,
+    },
+}
+
+impl From<Result<PrismaApplyResult, String>> for PrismaApplyResult {
+    fn from(res: Result<PrismaApplyResult, String>) -> Self {
+        match res {
+            Err(message) => PrismaApplyResult::Err { message },
+            Ok(res) => res,
+        }
+    }
+}
+
+impl MigrationContext {
+    async fn apply(&self, reset_database: bool) -> Result<PrismaApplyResult, String> {
+        trace!("Migrations::apply");
+
+        let res = self.dev_diagnostic().await.map_err(err_to_string)?;
+
+        let reset_reason = if let DevAction::Reset(reset) = res.action {
+            if reset_database {
+                self.api.reset().await.map_err(err_to_string)?;
+                Some(reset.reason)
+            } else {
+                return Ok(PrismaApplyResult::ResetRequired {
+                    reset_reason: reset.reason,
+                });
+            }
+        } else {
+            None
+        };
+
+        let res = self
+            .api
+            .apply_migrations(ApplyMigrationsInput {
+                migrations_directory_path: self.migrations_dir.to_string(),
+            })
+            .await
+            .map_err(err_to_string)?;
+        Ok(PrismaApplyResult::Ok {
+            applied_migrations: res.applied_migration_names,
+            reset_reason,
+        })
+    }
+}
+
+pub async fn apply(ctx: MigrationContextBuilder, reset_database: bool) -> PrismaApplyResult {
+    let ctx = match ctx.build() {
+        Err(e) => return Err(e).into(),
+        Ok(ctx) => ctx,
     };
+    ctx.apply(reset_database).await.into()
+}
 
-    Ok(super::PrismaCreateOut::Ok {
-        created_migration_name,
-        applied_migrations,
-        migrations: migrations.serialize()?,
-    })
+#[deno]
+pub enum PrismaCreateResult {
+    Err {
+        message: String,
+    },
+    Ok {
+        created_migration_name: Option<String>,
+        migrations: Option<String>,
+        apply_err: Option<String>,
+    },
+}
+
+impl MigrationContext {
+    pub async fn create(&self, name: String, apply: bool) -> PrismaCreateResult {
+        trace!("Migrations::create (name={name:?}, apply={apply})");
+
+        match self
+            .api
+            .create_migration(CreateMigrationInput {
+                draft: !apply,
+                migration_name: name.to_case(Case::Snake),
+                migrations_directory_path: self.migrations_dir.to_string(),
+                prisma_schema: self.schema(),
+            })
+            .await
+        {
+            Err(e) => {
+                return PrismaCreateResult::Err {
+                    message: err_to_string(e),
+                }
+            }
+            Ok(res) => {
+                let Some(generated_migration_name) = res.generated_migration_name else {
+                    return PrismaCreateResult::Ok {
+                        created_migration_name: None,
+                        migrations: None,
+                        apply_err: None,
+                    };
+                };
+                // migration directory cannot be empty...
+                let migrations = self.migrations_dir.serialize().ok().flatten().unwrap();
+                let apply_err = self
+                    .api
+                    .apply_migrations(ApplyMigrationsInput {
+                        migrations_directory_path: self.migrations_dir.to_string(),
+                    })
+                    .await
+                    .map_err(err_to_string)
+                    .err();
+
+                PrismaCreateResult::Ok {
+                    created_migration_name: Some(generated_migration_name),
+                    migrations: Some(migrations),
+                    apply_err,
+                }
+            }
+        }
+    }
+}
+
+pub async fn create(ctx: MigrationContextBuilder, name: String, apply: bool) -> PrismaCreateResult {
+    let ctx = match ctx.build() {
+        Err(message) => return PrismaCreateResult::Err { message },
+        Ok(ctx) => ctx,
+    };
+    ctx.create(name, apply).await
 }
 
 pub async fn diff(datasource: String, datamodel: String, script: bool) -> Result<Option<String>> {
+    trace!("diff");
     let schema = format!("{datasource}{datamodel}");
     let buffer = Arc::new(Mutex::new(Some(String::default())));
     let api = migration_core::migration_api(
@@ -163,43 +276,89 @@ pub async fn diff(datasource: String, datamodel: String, script: bool) -> Result
     Ok(diff.take())
 }
 
-pub async fn deploy(
-    datasource: String,
-    _datamodel: String,
-    migrations: String,
-) -> Result<(usize, Vec<String>)> {
-    let migrations = MigrationsFolder::from(Some(migrations))?;
-
-    let api = migration_core::migration_api(Some(datasource), None)?;
-
-    let res = api
-        .list_migration_directories(ListMigrationDirectoriesInput {
-            migrations_directory_path: migrations.to_string(),
-        })
-        .await?;
-    let migration_count = res.migrations.len();
-
-    info!(
-        "migrations in {}: {:?}",
-        migrations.to_string(),
-        res.migrations
-    );
-
-    let res = api
-        .apply_migrations(ApplyMigrationsInput {
-            migrations_directory_path: migrations.to_string(),
-        })
-        .await?;
-    let applied_migrations = res.applied_migration_names;
-
-    Ok((migration_count, applied_migrations))
+#[deno]
+pub enum PrismaDeployOut {
+    Err {
+        message: String,
+    },
+    Ok {
+        migration_count: usize,
+        applied_migrations: Vec<String>,
+    },
 }
 
-pub async fn reset(datasource: String) -> Result<bool> {
-    let api = migration_core::migration_api(Some(datasource), None)?;
+impl From<Result<PrismaDeployOut, String>> for PrismaDeployOut {
+    fn from(res: Result<PrismaDeployOut, String>) -> Self {
+        match res {
+            Err(message) => Self::Err { message },
+            Ok(res) => res,
+        }
+    }
+}
 
-    api.reset().await?;
-    Ok(true)
+impl MigrationContext {
+    async fn deploy(&self) -> Result<PrismaDeployOut, String> {
+        let res = self
+            .api
+            .list_migration_directories(ListMigrationDirectoriesInput {
+                migrations_directory_path: self.migrations_dir.to_string(),
+            })
+            .await
+            .map_err(err_to_string)?;
+        let migration_count = res.migrations.len();
+
+        let res = self
+            .api
+            .apply_migrations(ApplyMigrationsInput {
+                migrations_directory_path: self.migrations_dir.to_string(),
+            })
+            .await
+            .map_err(err_to_string)?;
+        let applied_migrations = res.applied_migration_names;
+
+        Ok(PrismaDeployOut::Ok {
+            migration_count,
+            applied_migrations,
+        })
+    }
+}
+
+pub async fn deploy(ctx: MigrationContextBuilder) -> PrismaDeployOut {
+    let ctx = match ctx.build() {
+        Err(e) => return Err(e).into(),
+        Ok(ctx) => ctx,
+    };
+    ctx.deploy().await.into()
+}
+
+fn err_to_string(err: CoreError) -> String {
+    error!("{err:?}");
+    err.to_user_facing().message().to_string()
+}
+
+#[deno]
+pub enum PrismaResetResult {
+    Err { message: String },
+    Ok { reset: bool },
+}
+
+impl MigrationContext {
+    async fn reset(&self) -> PrismaResetResult {
+        match self.api.reset().await {
+            Err(e) => PrismaResetResult::Err {
+                message: e.to_user_facing().message().to_string(),
+            },
+            Ok(_) => PrismaResetResult::Ok { reset: true },
+        }
+    }
+}
+
+pub async fn reset(ctx: MigrationContextBuilder) -> PrismaResetResult {
+    let ctx = match ctx.build() {
+        Err(message) => return PrismaResetResult::Err { message },
+        Ok(ctx) => ctx,
+    };
+    ctx.reset().await
 }
 
 struct MigrationsFolder {
@@ -207,13 +366,18 @@ struct MigrationsFolder {
 }
 
 impl MigrationsFolder {
-    pub fn from(serialized: Option<String>) -> Result<Self> {
+    pub fn update(&self, data: impl AsRef<[u8]>) -> Result<()> {
+        common::archive::unpack(&self.dir, Some(data))?;
+        Ok(())
+    }
+
+    pub fn from(serialized: Option<impl AsRef<[u8]>>) -> Result<Self> {
         let tempdir = tempdir_in(TMP_DIR.as_path())?;
         common::archive::unpack(&tempdir, serialized)?;
         Ok(Self { dir: tempdir })
     }
 
-    fn serialize(self) -> Result<String> {
+    fn serialize(&self) -> Result<Option<String>> {
         common::archive::archive(self)
     }
 }

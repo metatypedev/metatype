@@ -32,11 +32,18 @@ pub enum MessageEntry {
 }
 
 #[derive(Deserialize, Debug)]
+pub struct Migrations {
+    pub runtime: String,
+    pub migrations: String,
+}
+
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PushResult {
     name: String,
-    custom_data: String,
     messages: Vec<MessageEntry>,
+    migrations: Vec<Migrations>,
+    reset_required: Vec<String>,
     #[serde(skip)]
     pub path: Option<PathBuf>,
 }
@@ -63,26 +70,18 @@ impl PushResult {
         &self.name
     }
 
-    pub fn should_retry(&self) -> bool {
-        let res = serde_json::from_str::<HashMap<String, serde_json::Value>>(&self.custom_data);
-        res.map(|data| {
-            data.get("retry")
-                .map(|v| matches!(v, serde_json::Value::Bool(true)))
-                .unwrap_or(false)
-        })
-        .unwrap_or(false)
-    }
-
-    pub fn iter_custom_data(&self) -> Result<impl Iterator<Item = (String, serde_json::Value)>> {
-        let map: HashMap<String, serde_json::Value> = serde_json::from_str(&self.custom_data)?;
-        Ok(map.into_iter().map(|(k, v)| (k, v)))
-    }
-
-    pub fn has_error(&self) -> bool {
-        return self
-            .messages
+    pub fn success(&self) -> bool {
+        self.messages
             .iter()
-            .any(|m| matches!(m, MessageEntry::Error(_)));
+            .all(|m| !matches!(m, MessageEntry::Error(_)))
+    }
+
+    pub fn take_migrations(&mut self) -> Vec<Migrations> {
+        std::mem::take(&mut self.migrations)
+    }
+
+    pub fn reset_required(&self) -> &[String] {
+        self.reset_required.as_slice()
     }
 }
 
@@ -106,7 +105,8 @@ impl PushConfig {
                     addTypegraph(fromString: $tg, secrets: $secrets) {
                         name
                         messages { type text }
-                        customData
+                        migrations { runtime migrations }
+                        resetRequired
                     }
                 }"}
                 .to_string(),

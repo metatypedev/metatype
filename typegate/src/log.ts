@@ -58,7 +58,7 @@ if (!config.rust_log) {
       set("off");
       break;
     case "DEBUG":
-      set("debug");
+      set("info,native=trace");
       break;
     case "WARNING":
       set("warn");

@@ -58,6 +58,7 @@ pub fn apply_all<'a>(
 pub use deno_rt::DenoModules;
 pub use deno_rt::ReformatScripts;
 pub use prisma_rt::EmbedPrismaMigrations;
+pub use prisma_rt::EmbeddedPrismaMigrationsPatch;
 
 pub mod deno_rt {
     use std::path::Path;
@@ -218,9 +219,39 @@ pub mod prisma_rt {
                 );
                 let path = base_path.join(rt_name);
                 if path.try_exists()? {
-                    rt_data.migrations = Some(archive::archive(path)?);
+                    rt_data.migrations = archive::archive(path)?;
                     rt_data.create_migration = self.create_migration;
                     rt_data.reset_on_drift = self.reset_on_drift;
+                }
+                rt.data = map_from_object(rt_data)?;
+            }
+
+            tg.runtimes = runtimes;
+
+            Ok(())
+        }
+    }
+
+    #[derive(Default)]
+    pub struct EmbeddedPrismaMigrationsPatch {
+        reset_on_drift: Option<bool>,
+    }
+
+    impl EmbeddedPrismaMigrationsPatch {
+        pub fn reset_on_drift(mut self, reset: bool) -> Self {
+            self.reset_on_drift = Some(reset);
+            self
+        }
+
+        pub fn apply(&self, tg: &mut Typegraph, runtime_names: Vec<String>) -> Result<()> {
+            let mut runtimes = std::mem::take(&mut tg.runtimes);
+            for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
+                let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
+                let rt_name = &rt_data.name;
+                if runtime_names.contains(rt_name) {
+                    if let Some(reset_on_drift) = self.reset_on_drift {
+                        rt_data.reset_on_drift = reset_on_drift;
+                    }
                 }
                 rt.data = map_from_object(rt_data)?;
             }

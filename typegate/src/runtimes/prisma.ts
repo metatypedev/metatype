@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import { green } from "std/fmt/colors.ts";
 import { Runtime } from "./Runtime.ts";
 import * as native from "native";
 import { FromVars, GraphQLRuntime } from "./graphql.ts";
@@ -63,7 +64,7 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
 
     const prefix = `[prisma runtime: '${rt.data.name}']`;
 
-    if (rt.data.create_migration) {
+    if (rt.data.create_migration) { // same as `meta prisma dev`
       const applyRes = await native.prisma_apply({
         datasource,
         datamodel,
@@ -71,69 +72,69 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
         reset_database: rt.data.reset_on_drift ?? false,
       });
       if ("Err" in applyRes) {
+        console.error(`prisma apply failed: ${applyRes.Err}`);
         throw new Error(applyRes.Err.message);
       }
       if ("ResetRequired" in applyRes) {
+        response.resetDb(rt.data.name);
         throw new Error(
           `Database reset required: ${applyRes.ResetRequired.reset_reason}`,
         );
+      }
+
+      const { applied_migrations, reset_reason } = applyRes.Ok!;
+      if (reset_reason != null) {
+        response.info(`Database reset: {reset_reason}`);
+      }
+      if (applied_migrations.length === 0) {
+        response.info(`${prefix} No migration applied.`);
       } else {
-        const { applied_migrations } = applyRes.MigrationsApplied!;
-        if (applied_migrations.length === 0) {
-          response.info(`${prefix} No migration applied.`);
-        } else {
-          const count = applied_migrations.length;
-          response.info(
-            `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
-          );
-          for (const migrationName of applied_migrations) {
-            response.info(`  - ${migrationName}`);
-          }
-        }
-
-        // diff
-        const res = nativeResult(
-          await native.prisma_diff({
-            datasource,
-            datamodel,
-            script: false,
-          }),
+        const count = applied_migrations.length;
+        response.info(
+          `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
         );
+        for (const migrationName of applied_migrations) {
+          response.info(`  - ${migrationName}`);
+        }
+      }
 
-        if (res.diff != null) {
-          // create
-          const res = nativeResult(
+      // diff
+      const { diff } = nativeResult(
+        await native.prisma_diff({
+          datasource,
+          datamodel,
+          script: false,
+        }),
+      );
+
+      if (diff != null) {
+        response.info(`Changes detected in the schema: ${diff}`);
+        // create
+        const { created_migration_name, migrations: newMigrations, apply_err } =
+          nativeResult(
             await native.prisma_create({
               datasource,
               datamodel,
-              migrations: migrations!,
+              migrations: migrations,
               migration_name: "generated",
               apply: true,
             }),
           );
 
-          const { created_migration_name, applied_migrations } = res;
-          if (created_migration_name != null) {
-            response.info(
-              `${prefix} Created migration: '${created_migration_name}'`,
-            );
-            response.data(`migrations:${rt.data.name}`, res.migrations);
-            rt.data.migrations = res.migrations;
+        if (apply_err != null) {
+          response.error(apply_err);
+        }
+
+        if (created_migration_name != null) {
+          response.info(`Migration created: ${created_migration_name}`);
+          if (apply_err == null) {
+            response.info(`New migration applied: ${created_migration_name}`);
           }
-          if (applied_migrations.length === 0) {
-            response.info(`${prefix} No migration applied.`);
-          } else {
-            const count = applied_migrations.length;
-            response.info(
-              `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
-            );
-            for (const migrationName of applied_migrations) {
-              response.info(`  - ${migrationName}`);
-            }
-          }
+          response.migration(rt.data.name, newMigrations!);
+          rt.data.migrations = newMigrations;
         }
       }
-    } else {
+    } else { // like `meta prisma deploy`
       const { migration_count, applied_migrations } = nativeResult(
         await native.prisma_deploy({
           datasource,

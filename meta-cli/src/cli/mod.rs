@@ -61,7 +61,7 @@ pub(crate) enum Commands {
     /// Push typegraph(s) with development mode features enabled
     Dev(dev::Dev),
     /// Push typegraph(s) to typegate
-    Deploy(deploy::Deploy),
+    Deploy(deploy::DeploySubcommand),
     /// Generate materializers code from typegraph definition
     Codegen(codegen::Codegen),
     /// Upgrade

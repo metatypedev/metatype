@@ -119,7 +119,7 @@ impl TypegraphLoaderConfig {
 
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct PrismaConfig {
-    migrations_path: Option<PathBuf>,
+    pub migrations_path: Option<PathBuf>,
 }
 
 impl PrismaConfig {
@@ -135,6 +135,16 @@ impl PrismaConfig {
             )
             .join(&args.typegraph)
     }
+}
+
+pub fn tg_migrations_dir(
+    base_dir: &Path,
+    migrations_root: Option<&Path>,
+    tg_name: &str,
+) -> PathBuf {
+    base_dir
+        .join(migrations_root.unwrap_or_else(|| Path::new("prisma/migrations")))
+        .join(tg_name)
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]

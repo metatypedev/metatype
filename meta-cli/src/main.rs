@@ -36,7 +36,18 @@ fn init_logger() {
                 Level::Debug => format!("[{level} {module_path}]").dimmed(),
                 Level::Trace => format!("[{level} {module_path}]").dimmed(),
             };
-            writeln!(buf, "{level} {}", rec.args())
+
+            let text = format!("{}", rec.args());
+            let mut lines = text.lines();
+            if let Some(first_line) = lines.next() {
+                writeln!(buf, "{level} {first_line}")?;
+            }
+            for line in lines {
+                if !line.is_empty() {
+                    writeln!(buf, "{level}> {line}")?;
+                }
+            }
+            Ok(())
         })
         .init();
 }
