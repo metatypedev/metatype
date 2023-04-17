@@ -101,8 +101,8 @@ impl PushConfig {
             .post("/typegate")?
             .gql(
                 indoc! {"
-                mutation InsertTypegraph($tg: String!, $secrets: String!) {
-                    addTypegraph(fromString: $tg, secrets: $secrets) {
+                mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
+                    addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
                         name
                         messages { type text }
                         migrations { runtime migrations }
@@ -110,7 +110,7 @@ impl PushConfig {
                     }
                 }"}
                 .to_string(),
-                Some(json!({ "tg": serde_json::to_string(tg)?, "secrets": serde_json::to_string(&secrets)? })),
+                Some(json!({ "tg": serde_json::to_string(tg)?, "secrets": serde_json::to_string(&secrets)?, "cliVersion": common::get_version() })),
             )
             .await?;
 

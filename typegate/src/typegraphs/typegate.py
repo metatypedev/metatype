@@ -50,7 +50,9 @@ with TypeGraph(
             TypeGraphMat(),
         ).rate(calls=True),
         addTypegraph=t.func(
-            t.struct({"fromString": t.json(), "secrets": t.json()}),
+            t.struct(
+                {"fromString": t.json(), "secrets": t.json(), "cliVersion": t.string()}
+            ),
             t.struct(
                 {
                     "name": t.string(),
