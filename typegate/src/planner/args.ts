@@ -265,6 +265,10 @@ class ArgumentCollector {
       return (vars) => vars[varName];
     }
 
+    if (valueNode.kind === Kind.NULL) {
+      return () => null;
+    }
+
     switch (typ.type) {
       case Type.OBJECT: {
         return this.collectObjectArg(valueNode, typ);

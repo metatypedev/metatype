@@ -8,8 +8,8 @@ test("array of optional", async (t) => {
     await gql`
         query {
           test(
-            string_array: ["one", "two"],
-            integer_array: [1, 2],
+            string_array: ["one", "two", null],
+            integer_array: [1, 2, null],
             enum_array: ["A", "B", "A"],
             union_array: [1, "two", 3]
           ) {
@@ -19,47 +19,65 @@ test("array of optional", async (t) => {
             union_array
           }
         }
-      `
-      .expectData({
-        test: {
-          string_array: ["one", "two"],
-          integer_array: [1, 2],
-          enum_array: ["A", "B", "A"],
-          union_array: [1, "two", 3],
-        },
-      })
+    `.expectData({
+      test: {
+        string_array: ["one", "two", null],
+        integer_array: [1, 2, null],
+        enum_array: ["A", "B", "A"],
+        union_array: [1, "two", 3],
+      },
+    })
       .on(e);
   });
-  await t.should("work with array of objects", async () => {
+
+  await t.should("work with array of objects and null", async () => {
     await gql`
         query {
           test(
             struct_array: [
-              {a: "one", b: 1, c: {c1: "any1"}}, 
-              {a: "two", b: 2, c: {c1: "any2"}}
+              null,
+              {
+                a: "one", b: 1, 
+                c: { c1: "any1", inner: [null, "any"] }
+              }, 
+              {
+                a: "two", b: 2, 
+                c: { c1: "any2",  inner: ["any"] }
+              }
             ],
           ) {
             struct_array {
               b
-              c { c1 }
+              c { c1 inner }
             }
           }
         }
-      `
-      .expectData({
-        test: {
-          struct_array: [
-            {
-              b: 1,
-              c: { c1: "any1" },
-            },
-            {
-              b: 2,
-              c: { c1: "any2" },
-            },
-          ],
-        },
-      })
+    `.expectData({
+      test: {
+        struct_array: [
+          null,
+          { b: 1, c: { c1: "any1", inner: [null, "any"] } },
+          { b: 2, c: { c1: "any2", inner: ["any"] } },
+        ],
+      },
+    })
+      .on(e);
+  });
+
+  await t.should("not work with non nullable array values", async () => {
+    await gql`
+        query {
+          testNonNull(
+            struct_array: [{x: "any"}, {x: "any2"}, null],
+            string_array: ["one", "two", null],
+            integer_array: [1, 2, null],
+          ) {
+            integer_array
+            struct_array
+            string_array
+          }
+        }
+    `.expectErrorContains("must be object at /struct_array/2")
       .on(e);
   });
 }, { introspection: true });
