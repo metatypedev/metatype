@@ -1,0 +1,5 @@
+query {
+  version_team_b
+
+  version_team_a
+}

@@ -40,7 +40,7 @@ const config = {
             rules: [
               {
                 test: /\.py$/i,
-                use: ["filename-loader", "code-loader"],
+                use: ["code-loader"],
               },
               {
                 test: /\.(graphql|gql)$/,
@@ -52,9 +52,6 @@ const config = {
           resolveLoader: {
             alias: {
               "code-loader": require.resolve("./packages/code-loader.js"),
-              "filename-loader": require.resolve(
-                "./packages/filename-loader.js"
-              ),
             },
           },
         };

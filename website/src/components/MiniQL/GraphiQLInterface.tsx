@@ -42,7 +42,7 @@ import {
 import styles from "./styles.module.scss";
 import { GraphiQLInterfaceProps } from "graphiql";
 
-const autoHeight = (codeMirror: any) => {
+const autoHeight = (codeMirror) => {
   const target = codeMirror.getWrapperElement().closest(".graphiql-editor");
   target.style.height = `${codeMirror.doc.height}px`;
 };

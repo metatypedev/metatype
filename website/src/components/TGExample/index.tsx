@@ -4,20 +4,15 @@ import MiniQL, { MiniQLProps } from "@site/src/components/MiniQL";
 import React from "react";
 
 interface TGExampleProps extends MiniQLProps {
-  python: string;
-}
-
-function splitAt(s: string, index: number) {
-  return [s.slice(0, index), s.slice(index + 1)];
+  python: { content: string; path: string };
 }
 
 export default function TGExample({ python, ...props }: TGExampleProps) {
-  const [pyFile, pyCode] = splitAt(python, python.indexOf("\n"));
   return (
     <MiniQL
-      code={pyCode}
+      code={python.content}
       codeLanguage="python"
-      codeFileUrl={pyFile}
+      codeFileUrl={python.path}
       {...props}
     />
   );

@@ -1,5 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+/* eslint-disable @typescript-eslint/no-var-requires */
 const deindent = require("de-indent");
+const path = require("path");
+
+const projectDir = path.resolve(__dirname, "../..");
 
 const commentsPrefix = {
   py: "#",
@@ -12,7 +15,8 @@ const postTransformations = {
 };
 
 module.exports = function (source) {
-  const ext = this.resourcePath.split(".").pop();
+  const relPath = path.relative(projectDir, this.resourcePath);
+  const ext = relPath.split(".").pop();
   const prefix = commentsPrefix[ext];
 
   const ret = [];
@@ -47,7 +51,10 @@ module.exports = function (source) {
   }
 
   const transformation = postTransformations[ext];
+  const content = transformation(deindent(ret.join("\n"))).trim();
 
-  const exp = transformation(deindent(ret.join("\n"))).trim();
-  return `module.exports = ${JSON.stringify(exp)};`;
+  return `module.exports = ${JSON.stringify({
+    content,
+    path: relPath,
+  })};`;
 };
