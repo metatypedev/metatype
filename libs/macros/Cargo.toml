@@ -1,6 +1,10 @@
 [package]
 name = "macros"
+<<<<<<< HEAD
 version = "0.1.6-dev.0"
+=======
+version = "0.1.5"
+>>>>>>> eb3b5d5a (feat: typos fix and pipeline change)
 edition = "2021"
 
 [lib]
