@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.1.5-dev.0"
+version = "0.1.5"
 edition = "2021"
 
 description = "Compose your data, anywhere, and build iterative API blocks with zero-trust and serverless deployment, no matter where and how your (legacy) systems are."
@@ -34,7 +34,9 @@ self_update = { version = "0.36.0", features = [
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
 tokio = { version = "1.27.0", features = ["full"] }
+futures = "0.3.28"
 log = "0.4.17"
+env_logger = "0.10.0"
 clap = { version = "4.1.14", features = ["derive", "env"] }
 crossbeam-channel = "0.5.7"
 notify-debouncer-mini = { version = "0.2.0", default-features = false }
@@ -68,6 +70,7 @@ itertools = "0.10.5"
 enum_dispatch = "0.3.11"
 git2 = { version = "0.16.1", features = ["vendored-libgit2"], default-features = false }
 normpath = "1.1.1"
+include_dir = "0.7.3"
 
 [dev-dependencies]
 assert_cmd = "2.0.10"

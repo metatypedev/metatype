@@ -1,0 +1,13 @@
+typegates:
+  dev:
+    url: "http://localhost:7890"
+    username: admin
+    password: password
+    env:
+      TG_EXAMPLE_ENV_VAR: "example"
+  deploy:
+    url: "https://cloud.metatype.dev"
+    username: admin
+    password: password
+    env:
+      TG_EXAMPLE_ENV_VAR: "example"

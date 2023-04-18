@@ -195,10 +195,10 @@ post = t.struct(
 ).named("Post")
 ```
 
-#### queryRaw
+#### raw\_query
 
 ```python
-def queryRaw(query: str, out: t.TypeNode, *, effect: Effect) -> t.func
+def raw_query(query: str, out: t.TypeNode, *, effect: Effect) -> t.func
 ```
 
 Generate a raw SQL query operation on the runtime
@@ -208,14 +208,14 @@ Generate a raw SQL query operation on the runtime
 ```python
 db = PrismaRuntime("my-app", "POSTGRES")
 g.expose(
-    countUsers=db.queryRaw("SELECT COUNT(*) FROM User", t.integer())
+    countUsers=db.raw_query("SELECT COUNT(*) FROM User", t.integer())
 )
 ```
 
-#### executeRaw
+#### raw\_execute
 
 ```python
-def executeRaw(query: str, *, effect: Effect) -> t.func
+def raw_execute(query: str, *, effect: Effect) -> t.func
 ```
 
 Generate a raw SQL query operation without return
@@ -225,6 +225,6 @@ Generate a raw SQL query operation without return
 ```python
 db = PrismaRuntime("my-app", "POSTGRES")
 g.expose(
-    setActive=db.executeRaw("UPDATE User SET active = TRUE WHERE id=$1", effect=effects.update()),
+    setActive=db.raw_execute("UPDATE User SET active = TRUE WHERE id=$1", effect=effects.update()),
 )
 ```

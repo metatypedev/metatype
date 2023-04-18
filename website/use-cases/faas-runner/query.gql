@@ -1,0 +1,5 @@
+query {
+  pycumsum(n: 5)
+
+  tscumsum(n: 5)
+}

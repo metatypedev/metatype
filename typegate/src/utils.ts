@@ -3,9 +3,14 @@
 import type { ComputeStage } from "./engine.ts";
 import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
+import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
 import { deepMerge } from "std/collections/deep_merge.ts";
+
 import { z } from "zod";
+
+import { Type } from "./type_node.ts";
+import { TypeGraph } from "./typegraph.ts";
 
 export const maxi32 = 2_147_483_647;
 
@@ -140,4 +145,57 @@ export function nativeVoid(res: "Ok" | { Err: { message: string } }): void {
 
 export function pluralSuffix(count: number) {
   return count === 1 ? "" : "s";
+}
+
+export function closestWord(
+  str: string,
+  list: string[],
+  ignoreCase = true,
+  maxDistance = 3,
+) {
+  if (list.length == 0) {
+    return null;
+  }
+  const [top] = list
+    .map((word) => {
+      const s = ignoreCase ? str.toLowerCase() : str;
+      const t = ignoreCase ? word.toLowerCase() : word;
+      return { word, score: levenshtein(s, t) };
+    })
+    .sort((a, b) => a.score - b.score);
+  if (top.score > maxDistance) {
+    return null;
+  }
+  return top.word;
+}
+
+/**
+ * Idea:
+ * query: [a1, a2, ..], mutation: [b1, a1, b2, ..], ...
+ * => a1: [query, mutation], a2: [query], ..., b1: [mutation] ...
+ */
+export function getReverseMapNameToQuery(tg: TypeGraph, names: string[]) {
+  const indices = names.map((name) =>
+    tg.type(0, Type.OBJECT).properties?.[name]
+  );
+  const res = new Map<string, Set<string>>();
+  for (const idx of indices) {
+    const { fields, title } = collectFieldNames(tg, idx);
+    for (const name of fields) {
+      if (res.has(name)) {
+        res.get(name)!.add(title);
+      } else {
+        res.set(name, new Set<string>([title]));
+      }
+    }
+  }
+  return res;
+}
+
+export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
+  const typ = tg.type(typeIdx);
+  if (typ && typ.type === Type.OBJECT) {
+    return { title: typ.title, fields: Object.keys(typ.properties ?? {}) };
+  }
+  return { title: typ?.title, fields: [] };
 }

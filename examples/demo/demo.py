@@ -1,10 +1,9 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.graph.auth import oauth2
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
-from typegraph.runtimes.python_wasi import PythonWasiRuntime
 from typegraph.runtimes.deno import PureFunMat
 from typegraph.runtimes.http import HTTPRuntime
-
+from typegraph.runtimes.python_wasi import PythonWasiRuntime
 
 with TypeGraph(
     "public-api",
@@ -58,7 +57,7 @@ with TypeGraph(
     ).named("user")
 
     g.expose(
-        insert_user=db.insert_one(user),
+        insert_user=db.create(user),
         users=db.find_many(user),
         default_policy=[github_only],
     )

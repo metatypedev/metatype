@@ -1,0 +1,20 @@
+mutation create {
+  create_user(
+    data: {
+      firstname: "" # fill me
+      email: "john@doe.com"
+    }
+  ) {
+    id
+  }
+}
+
+query read {
+  read_user(
+    where: {
+      firstname: "" # fill me
+    }
+  ) {
+    id
+  }
+}

@@ -1,7 +1,10 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 use anyhow::{bail, Context, Result};
+use colored::Colorize;
 use common::typegraph::{TypeNode, Typegraph};
+use log::{info, trace};
+use pathdiff::diff_paths;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
@@ -24,13 +27,21 @@ struct ModuleMatData {
     code: String,
 }
 
-// TODO implement as a processor
-pub fn codegen<P>(tg: &Typegraph, base_dir: P) -> Result<()>
+// TODO implement as a post-processor
+/// Generate codes for missing deno function referenced from the typegraph.
+/// Returns false if no function is to be generated.
+/// Parameter `meta_codegen` is true if the codegen in run from the `meta codegen` subcommand.
+pub fn codegen<P>(tg: &Typegraph, base_dir: P) -> Result<bool>
 where
     P: AsRef<Path>,
 {
     let cg = Codegen::new(tg, base_dir);
     let codes = cg.codegen()?;
+    if codes.is_empty() {
+        return Ok(false);
+    }
+
+    let current_dir = std::env::current_dir().unwrap();
     for code in codes.into_iter() {
         let parent_folder = Path::new(&code.path).parent().unwrap();
         fs::create_dir_all(parent_folder).unwrap();
@@ -41,8 +52,14 @@ where
             .open(&code.path)
             .context(format!("could not open output file: {:?}", code.path))?;
         write!(file, "\n{code}\n", code = code.code)?;
+        let rel_path = diff_paths(&code.path, &current_dir).unwrap();
+        info!(
+            "{} Successfully added new function(s) in {:?}.",
+            "✓".green(),
+            rel_path
+        );
     }
-    Ok(())
+    Ok(true)
 }
 
 struct ModuleCode {
@@ -152,6 +169,7 @@ impl<'a> Codegen<'a> {
                         if self.ts_modules.contains_key(path)
                             && self.check_func(path, &mat_data.name)
                         {
+                            trace!("Entry[{path:?}]: {:?}", self.ts_modules.get(path).unwrap());
                             gen_list.push(GenItem {
                                 input: *input,
                                 output: *output,
@@ -177,6 +195,7 @@ impl<'a> Codegen<'a> {
             .into_iter()
             .map(|(name, code)| -> Result<ModuleCode> {
                 let path = self.ts_modules.remove(&name).unwrap().path;
+                trace!("Code path: {path:?}");
                 let code = ts::format_text(&path, &code)
                     .context(format!("could not format code: {code:#?}"))?;
                 Ok(ModuleCode { path, code })
@@ -186,6 +205,7 @@ impl<'a> Codegen<'a> {
 
     fn generate(&self, gen_list: Vec<GenItem>) -> HashMap<String, String> {
         let mut map: HashMap<String, Vec<Result<String>>> = HashMap::default();
+        let current_dir = std::env::current_dir().unwrap();
         for GenItem {
             input,
             output,
@@ -193,6 +213,9 @@ impl<'a> Codegen<'a> {
             name,
         } in gen_list.into_iter()
         {
+            trace!("Codegen::generate: path={path:?}, current-dir={current_dir:?}");
+            // let rel_path = diff_paths(&path, &current_dir).unwrap();
+            info!("Generating missing function {} for {:?}", name.blue(), path);
             let functions = map.entry(path).or_default();
             functions.push(self.gen_func(input, output, &name));
         }
@@ -456,35 +479,54 @@ impl IntoJson for HashMap<String, Value> {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Arc;
+
+    use normpath::PathExt;
+
     use super::*;
     use crate::config::Config;
     use crate::tests::utils::ensure_venv;
-    use crate::typegraph::loader::{Loader, LoaderOptions, LoaderOutput};
+    use crate::typegraph::loader::{Loader, LoaderResult};
 
     #[tokio::test(flavor = "multi_thread")]
     async fn codegen() -> Result<()> {
+        crate::logger::init();
         ensure_venv()?;
-        let test_folder = Path::new("./src/tests/typegraphs");
-        let tests = fs::read_dir(test_folder).unwrap();
-        let config = Config::default_in(test_folder);
+        let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
+        std::env::set_current_dir(&test_folder)?;
+        trace!("Test folder: {test_folder:?}");
+        let tests = fs::read_dir(&test_folder).unwrap();
+        let config = Config::default_in(".");
+        let config = Arc::new(config);
 
         for typegraph_test in tests {
             let typegraph_test = typegraph_test.unwrap().path();
-            let mut loader_options = LoaderOptions::with_config(&config);
-            loader_options
-                .skip_deno_modules(true)
-                .file(&typegraph_test.canonicalize()?);
-            let mut loader = Loader::from(loader_options);
+            let typegraph_test = diff_paths(&typegraph_test, &test_folder).unwrap();
+            trace!("test: {typegraph_test:?}");
+            let loader = Loader::new(Arc::clone(&config)).skip_deno_modules(true);
 
-            let LoaderOutput::Typegraph(tg) = loader.next().await.unwrap() else {
-                bail!("Unexpected");
-            };
+            match loader.load_file(&typegraph_test).await {
+                LoaderResult::Loaded(tgs) => {
+                    assert_eq!(tgs.len(), 1);
+                    let tg = &tgs[0];
 
-            let module_codes = Codegen::new(&tg, &typegraph_test).codegen()?;
-            assert_eq!(module_codes.len(), 1);
+                    let module_codes = Codegen::new(tg, &typegraph_test).codegen()?;
+                    assert_eq!(module_codes.len(), 1);
 
-            let test_name = typegraph_test.to_string_lossy().to_string();
-            insta::assert_snapshot!(test_name, &module_codes[0].code);
+                    let test_name = typegraph_test.to_string_lossy().to_string();
+                    trace!("test-name={test_name:?}");
+                    insta::assert_snapshot!(test_name, &module_codes[0].code);
+                }
+                LoaderResult::Error(e) => {
+                    bail!(
+                        "Error while loading typegraph from {typegraph_test:?}: {e}",
+                        e = e.to_string()
+                    );
+                }
+                LoaderResult::Rewritten(_) => {
+                    bail!("Unexpected: typegraph definition module has been rewritten");
+                }
+            }
         }
 
         Ok(())

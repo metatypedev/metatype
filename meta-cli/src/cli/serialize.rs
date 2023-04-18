@@ -2,7 +2,7 @@
 
 use super::{Action, GenArgs};
 use crate::config::Config;
-use crate::typegraph::loader::{Loader, LoaderOptions, LoaderOutput};
+use crate::typegraph::loader::{Discovery, Loader, LoaderResult};
 use crate::typegraph::postprocess;
 use crate::utils::ensure_venv;
 use anyhow::bail;
@@ -10,7 +10,10 @@ use anyhow::{Context, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use core::fmt::Debug;
+use log::warn;
 use std::io::{self, Write};
+use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 
 #[derive(Parser, Debug)]
@@ -54,31 +57,46 @@ impl Action for Serialize {
         } else {
             Config::load_or_find(config_path, dir)?
         };
+        let config = Arc::new(config);
 
-        let mut loader_options = LoaderOptions::with_config(&config);
+        let mut loader = Loader::new(Arc::clone(&config));
         if self.deploy {
-            loader_options.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
+            loader = loader.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
         }
-        if self.files.is_empty() {
-            loader_options.dir(dir);
+        let loader = loader;
+
+        let paths = if self.files.is_empty() {
+            Discovery::new(Arc::clone(&config), dir.clone())
+                .get_all()
+                .await?
         } else {
-            for file in self.files.iter() {
-                loader_options.file(file);
+            self.files.iter().map(PathBuf::from).collect()
+        };
+
+        if paths.is_empty() {
+            warn!("No typegraph definition module found.");
+            bail!("No typegraph definition module found.");
+        }
+
+        let mut loaded = vec![];
+        for path in paths {
+            match loader.load_file(&path).await {
+                LoaderResult::Loaded(tgs) => {
+                    for tg in tgs.into_iter() {
+                        loaded.push(tg);
+                    }
+                }
+                LoaderResult::Rewritten(_) => {
+                    // ? reload?
+                    warn!("Typegraph definition at {path:?} has been rewritten.");
+                }
+                LoaderResult::Error(e) => {
+                    bail!("{}", e.to_string());
+                }
             }
         }
 
-        let mut loader = Loader::from(loader_options);
-        let mut tgs = vec![];
-        while let Some(output) = loader.next().await {
-            if let LoaderOutput::Typegraph(tg) = output {
-                tgs.push(tg);
-            }
-        }
-
-        if tgs.is_empty() {
-            eprintln!("No typegraph!");
-            return Ok(());
-        }
+        let tgs = loaded;
 
         if let Some(tg_name) = self.typegraph.as_ref() {
             if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
@@ -90,8 +108,7 @@ impl Action for Serialize {
             if tgs.len() == 1 {
                 self.write(&self.to_string(&tgs[0])?).await?;
             } else {
-                eprintln!("expected only one typegraph, got {}", tgs.len());
-                std::process::exit(1);
+                bail!("expected only one typegraph, got {}", tgs.len());
             }
         } else {
             self.write(&self.to_string(&tgs)?).await?;

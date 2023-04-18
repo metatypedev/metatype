@@ -21,11 +21,11 @@ with TypeGraph("prisma") as g:
     ).named("Profile")
 
     g.expose(
-        dropSchema=db.executeRaw(
+        dropSchema=db.raw_execute(
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
-        createUser=db.insert_one(user).add_policy(public),
+        createUser=db.create(user).add_policy(public),
         updateUser=db.update(user).add_policy(public),
-        findUniqueProfile=db.find_unique(profile).add_policy(public),
+        findUniqueProfile=db.find(profile).add_policy(public),
         deleteUser=db.delete(user).add_policy(public),
     )

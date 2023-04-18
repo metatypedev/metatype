@@ -60,7 +60,6 @@ if (args.bump) {
     undefined,
     "dev",
   )!;
-  lockfile.released.lock = structuredClone(lockfile.dev.lock);
   lockfile.dev.lock.METATYPE_VERSION = newVersion;
   console.log(`Bumping ${version} → ${newVersion}`);
 }
@@ -73,13 +72,19 @@ for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
 
   for (const [glob, lookups] of Object.entries(rules)) {
     const url = resolve(projectDir, glob);
+    const paths = Array.from(expandGlobSync(url, {
+      includeDirs: false,
+      globstar: true,
+      exclude: ignores,
+    }));
+
+    if (paths.length == 0) {
+      console.error(`No files found for ${glob}, please check and retry.`);
+      Deno.exit(1);
+    }
 
     for (
-      const { path } of expandGlobSync(url, {
-        includeDirs: false,
-        globstar: true,
-        exclude: ignores,
-      })
+      const { path } of paths
     ) {
       const text = Deno.readTextFileSync(path);
       const rewrite = [...text.split("\n")];

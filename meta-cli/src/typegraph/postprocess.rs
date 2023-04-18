@@ -58,6 +58,7 @@ pub fn apply_all<'a>(
 pub use deno_rt::DenoModules;
 pub use deno_rt::ReformatScripts;
 pub use prisma_rt::EmbedPrismaMigrations;
+pub use prisma_rt::EmbeddedPrismaMigrationsPatch;
 
 pub mod deno_rt {
     use std::path::Path;
@@ -140,7 +141,7 @@ pub mod deno_rt {
 
 pub mod prisma_rt {
     use super::*;
-    use anyhow::{bail, Context};
+    use anyhow::{anyhow, bail, Context};
     use common::{archive, typegraph::PrismaRuntimeData};
     use log::warn;
 
@@ -175,7 +176,7 @@ pub mod prisma_rt {
 
     impl PostProcessor for EmbedPrismaMigrations {
         fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()> {
-            if !self.allow_dirty {
+            let error = if !self.allow_dirty {
                 let repo = git2::Repository::discover(&config.base_dir).ok();
 
                 if let Some(repo) = repo {
@@ -185,18 +186,27 @@ pub mod prisma_rt {
                         !s.status().is_empty() && !s.status().contains(git2::Status::IGNORED)
                     });
                     if dirty {
-                        bail!("Dirty repository not allowed");
+                        // TODO only check migration directory for the current typegraph
+                        Some(anyhow!("Dirty repository not allowed"))
+                    } else {
+                        None
                     }
                 } else {
                     warn!("Not in a git repository.");
+                    None
                 }
-            }
+            } else {
+                None
+            };
 
             let prisma_config = &config.typegraphs.materializers.prisma;
             let tg_name = tg.name().context("Getting typegraph name")?;
 
             let mut runtimes = std::mem::take(&mut tg.runtimes);
             for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
+                if let Some(error) = error {
+                    bail!(error);
+                }
                 let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
                 let rt_name = &rt_data.name;
                 let base_path = prisma_config.base_migrations_path(
@@ -209,9 +219,39 @@ pub mod prisma_rt {
                 );
                 let path = base_path.join(rt_name);
                 if path.try_exists()? {
-                    rt_data.migrations = Some(archive::archive(path)?);
+                    rt_data.migrations = archive::archive(path)?;
                     rt_data.create_migration = self.create_migration;
                     rt_data.reset_on_drift = self.reset_on_drift;
+                }
+                rt.data = map_from_object(rt_data)?;
+            }
+
+            tg.runtimes = runtimes;
+
+            Ok(())
+        }
+    }
+
+    #[derive(Default)]
+    pub struct EmbeddedPrismaMigrationsPatch {
+        reset_on_drift: Option<bool>,
+    }
+
+    impl EmbeddedPrismaMigrationsPatch {
+        pub fn reset_on_drift(mut self, reset: bool) -> Self {
+            self.reset_on_drift = Some(reset);
+            self
+        }
+
+        pub fn apply(&self, tg: &mut Typegraph, runtime_names: Vec<String>) -> Result<()> {
+            let mut runtimes = std::mem::take(&mut tg.runtimes);
+            for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
+                let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
+                let rt_name = &rt_data.name;
+                if runtime_names.contains(rt_name) {
+                    if let Some(reset_on_drift) = self.reset_on_drift {
+                        rt_data.reset_on_drift = reset_on_drift;
+                    }
                 }
                 rt.data = map_from_object(rt_data)?;
             }

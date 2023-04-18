@@ -305,14 +305,14 @@ class PrismaRuntime(Runtime):
             g = TypegraphContext.get_active()
         return LinkProxy(g, typ, rel_name=name, field=field, fkey=fkey)
 
-    def queryRaw(self, query: str, out: t.TypeNode, *, effect: Effect) -> t.func:
+    def raw_query(self, query: str, out: t.TypeNode, *, effect: Effect) -> t.func:
         """Generate a raw SQL query operation on the runtime
 
         Example:
         ```python
         db = PrismaRuntime("my-app", "POSTGRES")
         g.expose(
-            countUsers=db.queryRaw("SELECT COUNT(*) FROM User", t.integer())
+            countUsers=db.raw_query("SELECT COUNT(*) FROM User", t.integer())
         )
         ```
         """
@@ -326,14 +326,14 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, query, "queryRaw", effect=effect),
         )
 
-    def executeRaw(self, query: str, *, effect: Effect) -> t.func:
+    def raw_execute(self, query: str, *, effect: Effect) -> t.func:
         """Generate a raw SQL query operation without return
 
         Example:
         ```python
         db = PrismaRuntime("my-app", "POSTGRES")
         g.expose(
-            setActive=db.executeRaw("UPDATE User SET active = TRUE WHERE id=$1", effect=effects.update()),
+            setActive=db.raw_execute("UPDATE User SET active = TRUE WHERE id=$1", effect=effects.update()),
         )
         ```
         """
@@ -347,7 +347,7 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, query, "executeRaw", effect=effect),
         )
 
-    def find_unique(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
+    def find(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
         _pref = get_name_generator("Unique", tpe)
@@ -600,9 +600,6 @@ class PrismaRuntime(Runtime):
     @property
     def edges(self) -> List[Node]:
         return super().edges + list(self.reg.managed.values())
-
-    def insert_one(self, tpe):
-        return self.create(tpe)
 
 
 @frozen

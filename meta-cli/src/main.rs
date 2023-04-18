@@ -4,6 +4,7 @@ mod cli;
 mod codegen;
 mod config;
 mod fs;
+mod logger;
 #[cfg(test)]
 mod tests;
 mod typegraph;
@@ -17,6 +18,8 @@ use cli::Args;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    logger::init();
+
     let args = match Args::try_parse() {
         Ok(args) => args,
         Err(e) => {

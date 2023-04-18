@@ -185,7 +185,7 @@ async fn recreate_db_schema(t: &TestContext) -> Result<()> {
     t.query(
         r#"
         mutation a {
-            executeRaw(
+            execute_raw(
             query: "DROP SCHEMA IF EXISTS test CASCADE"
             parameters: "[]"
             )

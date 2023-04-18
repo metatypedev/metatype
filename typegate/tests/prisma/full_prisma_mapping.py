@@ -49,16 +49,16 @@ with TypeGraph("prisma") as g:
     ).named("ExtendedProfile")
 
     g.expose(
-        dropSchema=db.executeRaw(
+        dropSchema=db.raw_execute(
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
         findManyUsers=db.find_many(user).add_policy(public),
-        findUniqueUser=db.find_unique(user).add_policy(public),
+        findUniqueUser=db.find(user).add_policy(public),
         createOneUser=db.create(user).add_policy(public),
         createManyUsers=db.create_many(user).add_policy(public),
         upsertOneUser=db.upsert(user).add_policy(public),
         findManyPosts=db.find_many(post).add_policy(public),
-        findUniquePost=db.find_unique(post).add_policy(public),
+        findUniquePost=db.find(post).add_policy(public),
         createManyPosts=db.create_many(post).add_policy(public),
         updateManyPosts=db.update_many(post).add_policy(public),
         groupByPost=db.group_by(post).add_policy(public),
