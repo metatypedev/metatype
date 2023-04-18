@@ -6,6 +6,7 @@ import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
 import { ComputeStageProps } from "../types.ts";
+import { getReverseMapNameToQuery } from "../utils.ts";
 import {
   getWrappedType,
   isArray,
@@ -14,7 +15,7 @@ import {
   Type,
 } from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { ensure, unparse } from "../utils.ts";
+import { closestWord, ensure, unparse } from "../utils.ts";
 import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../log.ts";
@@ -140,6 +141,7 @@ export class Planner {
       } = field;
       // name: used to fetch the value
       // canonicalName: field name on the expected output
+
       const canonicalName = alias ?? name;
       const path = [...node.path, canonicalName];
       const fieldIdx = props[name];
@@ -147,8 +149,33 @@ export class Planner {
         fieldIdx == undefined &&
         !(name === "__schema" || name === "__type" || name === "__typename")
       ) {
-        const suggestions = Object.keys(props).join(", ");
+        const allProps = Object.keys(props);
         const formattedPath = this.formatPath(node.path);
+        if (typ.title === "Mutation" || typ.title === "Query") {
+          // propose which root type has that name
+          const nameToPaths = getReverseMapNameToQuery(this.tg, [
+            "mutation",
+            "query",
+          ]);
+          if (nameToPaths.has(name)) {
+            const rootPaths = [...nameToPaths.get(name)!];
+            // Mutation or Query but never both
+            if (rootPaths.length == 1) {
+              const [suggestion] = rootPaths;
+              throw new Error(
+                `'${name}' not found at '${formattedPath}', did you mean using '${name}' from '${suggestion}'?`,
+              );
+            }
+          }
+        }
+        // if the above fails, tell the user in case they made a typo
+        const suggestion = closestWord(name, allProps);
+        if (suggestion) {
+          throw new Error(
+            `'${name}' not found at '${formattedPath}', did you mean '${suggestion}'?`,
+          );
+        }
+        const suggestions = allProps.join(", ");
         throw new Error(
           `'${name}' not found at '${formattedPath}', available names are: ${suggestions}`,
         );
