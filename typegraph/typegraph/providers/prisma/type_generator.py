@@ -166,6 +166,19 @@ class TypeGenerator:
 
         return t.struct(node_props)
 
+    # This only applies to find_unique
+    # as it only works for `id`s and `unique` fields
+    def gen_query_where_unique_expr(self, tpe: t.struct) -> t.struct:
+        tpe = self.get_where_type(tpe)
+        props = {}
+        # for k, v in tpe.props.items():
+        #     props_flag = tpe.runtime_config
+        #     unique_flag = tpe.runtime_config.get("unique")
+        #     id_flag = tpe.runtime_config.get("id")
+        #     if (unique_flag is True or id_flag is True):
+        #         props[k] = v
+        return t.struct(props)
+
     # Examples:
     # where: { name: { not: { equals: "John" } } }
     # where: { AND: [ { unique: { gt: 2 } }, { name: { startsWith: "P" }}]}
