@@ -9,12 +9,11 @@ sidebar_position: 2
 
 ## addTypegraph
 
-**Type:** [object_31!](/docs/reference/typegate/typegate/objects#object_31)
+**Type:** [object_31!](objects#object_31)
 
 addTypegraph field
 
 Policies:
-
 - admin_only
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
@@ -25,7 +24,7 @@ Policies:
 <tr>
 <td>
 cliVersion<br />
-<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+<a href="scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>cliVersion input field</p>
@@ -59,7 +58,6 @@ fromString<br />
 removeTypegraph field
 
 Policies:
-
 - admin_only
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>

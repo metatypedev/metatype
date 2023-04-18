@@ -108,7 +108,7 @@ object_27 type
 <tr>
 <td>
 migrations<br />
-<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+<a href="scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>migrations field</p>
@@ -121,7 +121,7 @@ migrations<br />
 <tr>
 <td>
 runtime<br />
-<a href="/docs/reference/typegate/typegate/scalars#string"><code>String!</code></a>
+<a href="scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>runtime field</p>
@@ -146,7 +146,7 @@ object_31 type
 <tr>
 <td>
 resetRequired<br />
-<a href="/docs/reference/typegate/typegate/scalars#string"><code>[String!]!</code></a>
+<a href="scalars#string"><code>[String!]!</code></a>
 </td>
 <td>
 <p>resetRequired field</p>
@@ -159,7 +159,7 @@ resetRequired<br />
 <tr>
 <td>
 migrations<br />
-<a href="/docs/reference/typegate/typegate/objects#object_27"><code>[object_27!]!</code></a>
+<a href="objects#object_27"><code>[object_27!]!</code></a>
 </td>
 <td>
 <p>migrations field</p>
@@ -172,7 +172,7 @@ migrations<br />
 <tr>
 <td>
 messages<br />
-<a href="/docs/reference/typegate/typegate/objects#object_23"><code>[object_23!]!</code></a>
+<a href="objects#object_23"><code>[object_23!]!</code></a>
 </td>
 <td>
 <p>messages field</p>

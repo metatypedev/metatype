@@ -9,7 +9,7 @@ dev:
       '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
       '(  POETRY_VERSION: ").+(")': POETRY_VERSION
       '(  RUST_VERSION: ").+(")': RUST_VERSION
-      "(  DENO_BINDGEN_URL: ).+()": DENO_BINDGEN_URL
+      '(  DENO_BINDGEN_URL: ).+()': DENO_BINDGEN_URL
       '(  DENO_VERSION: ").+(")': DENO_VERSION
       '(  PNPM_VERSION: ").+(")': PNPM_VERSION
       '(  NODE_VERSION: ").+(")': NODE_VERSION
@@ -19,7 +19,7 @@ dev:
     typegraph/pyproject.toml:
       (description = ").+("): TAGLINE
       (version = ").+("): METATYPE_VERSION
-    "**/*/Cargo.toml":
+    '**/*/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
       (description = ").+("): TAGLINE
     dev/Dockerfile:
@@ -35,16 +35,16 @@ dev:
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
     examples/**/compose.yml:
-      "(    image: ghcr.io/metatypedev/typegate:v).+()": METATYPE_VERSION
+      '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
     examples/**/pyproject.toml:
       (version = ").+("): METATYPE_VERSION
       (typegraph = ").+("): METATYPE_VERSION
   lock:
-    PYTHON_VERSION: "3.8"
+    PYTHON_VERSION: '3.8'
     POETRY_VERSION: 1.4.1
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.68.0
-    DENO_BINDGEN_URL: "https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts"
+    DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
     DENO_VERSION: 1.32.4
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.1.0

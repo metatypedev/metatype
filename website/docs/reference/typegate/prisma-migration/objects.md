@@ -121,11 +121,7 @@ migrations<br />
 <tr>
 <td>
 applyError<br />
-<<<<<<< HEAD
-<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
-=======
 <a href="scalars#string"><code>String</code></a>
->>>>>>> eb3b5d5a (feat: typos fix and pipeline change)
 </td>
 <td>
 <p>applyError field</p>
