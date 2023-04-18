@@ -146,6 +146,7 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
         }),
       );
       if (diff != null) {
+        response.warn(`Changes detected: ${diff}`);
         throw new Error(
           "Cannot run migrations: the migration files is not in sync with the typegraph and migration creation is disabled.",
         );

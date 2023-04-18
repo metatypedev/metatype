@@ -141,12 +141,11 @@ pub mod deno_rt {
 
 pub mod prisma_rt {
     use super::*;
-    use anyhow::{anyhow, bail, Context};
+    use anyhow::{anyhow, Context};
     use common::{
         archive,
         typegraph::{MigrationOptions, PrismaRuntimeData},
     };
-    use log::warn;
 
     use crate::{
         cli::prisma::PrismaArgs,
@@ -157,15 +156,9 @@ pub mod prisma_rt {
     pub struct EmbedPrismaMigrations {
         create_migration: bool,
         reset_on_drift: bool,
-        allow_dirty: bool,
     }
 
     impl EmbedPrismaMigrations {
-        pub fn allow_dirty(mut self, allow: bool) -> Self {
-            self.allow_dirty = allow;
-            self
-        }
-
         pub fn create_migration(mut self, create: bool) -> Self {
             self.create_migration = create;
             self
@@ -179,37 +172,11 @@ pub mod prisma_rt {
 
     impl PostProcessor for EmbedPrismaMigrations {
         fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()> {
-            let error = if !self.allow_dirty {
-                let repo = git2::Repository::discover(&config.base_dir).ok();
-
-                if let Some(repo) = repo {
-                    let dirty = repo.statuses(None)?.iter().any(|s| {
-                        // git2::Status::CURRENT.bits() == 0
-                        // https://github.com/libgit2/libgit2/blob/2f20fe8869d7a1df7c9b7a9e2939c1a20533c6dc/include/git2/status.h#L35
-                        !s.status().is_empty() && !s.status().contains(git2::Status::IGNORED)
-                    });
-                    if dirty {
-                        // TODO only check migration directory for the current typegraph
-                        Some(anyhow!("Dirty repository not allowed"))
-                    } else {
-                        None
-                    }
-                } else {
-                    warn!("Not in a git repository.");
-                    None
-                }
-            } else {
-                None
-            };
-
             let prisma_config = &config.typegraphs.materializers.prisma;
             let tg_name = tg.name().context("Getting typegraph name")?;
 
             let mut runtimes = std::mem::take(&mut tg.runtimes);
             for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
-                if let Some(error) = error {
-                    bail!(error);
-                }
                 let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
                 let rt_name = &rt_data.name;
                 let base_path = prisma_config.base_migrations_path(

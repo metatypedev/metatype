@@ -147,7 +147,6 @@ impl Deploy<DefaultModeData> {
         if !options.no_migration {
             loader = loader.with_postprocessor(
                 EmbedPrismaMigrations::default()
-                    .allow_dirty(options.allow_dirty)
                     .reset_on_drift(options.allow_destructive)
                     .create_migration(options.create_migration),
             );
@@ -360,6 +359,24 @@ where
 impl Action for DeploySubcommand {
     async fn run(&self, args: GenArgs) -> Result<()> {
         let deploy = Deploy::new(self, args).await?;
+
+        if !self.options.allow_dirty {
+            let repo = git2::Repository::discover(&deploy.config.base_dir).ok();
+
+            if let Some(repo) = repo {
+                let dirty = repo.statuses(None)?.iter().any(|s| {
+                    // git2::Status::CURRENT.bits() == 0
+                    // https://github.com/libgit2/libgit2/blob/2f20fe8869d7a1df7c9b7a9e2939c1a20533c6dc/include/git2/status.h#L35
+                    !s.status().is_empty() && !s.status().contains(git2::Status::IGNORED)
+                });
+                if dirty {
+                    bail!("Dirty repository not allowed");
+                }
+            } else {
+                warn!("Not in a git repository.");
+            }
+        }
+
         if deploy.options.watch {
             deploy.watch_mode()?.run(self.file.as_ref()).await?;
         } else {
