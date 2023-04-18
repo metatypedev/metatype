@@ -10,8 +10,7 @@ export type OptionalNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -23,8 +22,7 @@ export type BooleanNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -41,8 +39,7 @@ export type NumberNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -59,8 +56,7 @@ export type IntegerNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -76,8 +72,7 @@ export type StringNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -93,8 +88,7 @@ export type ObjectNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -110,8 +104,7 @@ export type ArrayNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -128,8 +121,7 @@ export type FunctionNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -142,8 +134,7 @@ export type UnionNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -156,8 +147,7 @@ export type EitherNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -169,8 +159,7 @@ export type AnyNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: string | null;
-  inject?: any;
+  injection?: InjectionSwitch | null;
   enum?: any[] | null;
   config?: {
     [k: string]: unknown;
@@ -189,7 +178,21 @@ export type TypeNode =
   | EitherNode
   | AnyNode;
 export type PolicyIndices = number | PolicyIndicesByEffect;
+export type InjectionCondition = (EffectType | null) | number;
 export type EffectType = "create" | "update" | "upsert" | "delete";
+export type InjectionSource = {
+  source: "static";
+  data: string;
+} | {
+  source: "context";
+  data: string;
+} | {
+  source: "secret";
+  data: string;
+} | {
+  source: "parent";
+  data: number;
+};
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
 export interface Typegraph {
   $id: string;
@@ -205,6 +208,14 @@ export interface PolicyIndicesByEffect {
   delete?: number | null;
   update?: number | null;
   upsert?: number | null;
+}
+export interface InjectionSwitch {
+  cases: InjectionCase[];
+  default?: InjectionSource | null;
+}
+export interface InjectionCase {
+  when: InjectionCondition;
+  from: InjectionSource;
 }
 export interface Materializer {
   name: string;

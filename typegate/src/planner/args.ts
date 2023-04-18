@@ -659,15 +659,22 @@ class ArgumentCollector {
   private collectInjection(
     typ: TypeNode,
   ): ComputeArg {
-    const { injection, inject } = typ;
+    const injection = typ.injection!;
 
-    switch (injection) {
-      case "raw": {
+    // TODO test injection cases
+
+    const def = injection.default!;
+    if (def == null) {
+      throw new Error("Unexpected");
+    }
+
+    switch (def.source) {
+      case "static": {
         visitType(this.tg.tg, this.currentNode.typeIdx, (node) => {
           this.addPoliciesFrom(node.idx);
           return true;
         });
-        const value = JSON.parse(inject as string);
+        const value = JSON.parse(def.data);
         // TODO typecheck --> add to common predefined hooks (MET-113);
         // and eventually in the CLI/typegraph
         return () => value;
@@ -678,8 +685,7 @@ class ArgumentCollector {
           this.addPoliciesFrom(node.idx);
           return true;
         });
-        const name = inject as string;
-        const value = this.tg.parseSecret(typ, name);
+        const value = this.tg.parseSecret(typ, def.data);
 
         return () => value;
       }
@@ -695,7 +701,7 @@ class ArgumentCollector {
           throw new Error(`Unexpected`); // unreachable
         }
 
-        const name = inject as string;
+        const name = def.data;
         this.deps.context.add(name);
 
         return (_vars, _parent, context) => {
@@ -708,7 +714,7 @@ class ArgumentCollector {
       }
 
       case "parent":
-        return this.collectParentInjection(typ);
+        return this.collectParentInjection(typ, def.data);
 
       default:
         throw new Error(
@@ -720,8 +726,8 @@ class ArgumentCollector {
   /** Collect the value of an injected parameter with 'parent' injection. */
   private collectParentInjection(
     typ: TypeNode,
+    ref: number,
   ): ComputeArg {
-    const ref = typ.inject as number;
     const name = Object.keys(this.parentProps).find(
       (name) => this.parentProps[name] === ref,
     );

@@ -90,12 +90,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -149,12 +152,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -243,12 +249,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -337,12 +346,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -422,12 +434,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -497,12 +512,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -584,12 +602,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -673,12 +694,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -742,12 +766,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -811,12 +838,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -870,12 +900,15 @@
             },
             "injection": {
               "default": null,
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
-            "inject": true,
             "enum": {
               "default": null,
               "type": [
@@ -950,6 +983,151 @@
         }
       }
     },
+    "InjectionSwitch": {
+      "type": "object",
+      "required": [
+        "cases"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/InjectionCase"
+          }
+        },
+        "default": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/InjectionSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "InjectionCase": {
+      "type": "object",
+      "required": [
+        "from",
+        "when"
+      ],
+      "properties": {
+        "when": {
+          "$ref": "#/definitions/InjectionCondition"
+        },
+        "from": {
+          "$ref": "#/definitions/InjectionSource"
+        }
+      }
+    },
+    "InjectionCondition": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EffectType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      ]
+    },
+    "EffectType": {
+      "type": "string",
+      "enum": [
+        "create",
+        "update",
+        "upsert",
+        "delete"
+      ]
+    },
+    "InjectionSource": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "static"
+              ]
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "context"
+              ]
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "secret"
+              ]
+            },
+            "data": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "parent"
+              ]
+            },
+            "data": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            }
+          }
+        }
+      ]
+    },
     "Materializer": {
       "type": "object",
       "required": [
@@ -996,15 +1174,6 @@
           "type": "boolean"
         }
       }
-    },
-    "EffectType": {
-      "type": "string",
-      "enum": [
-        "create",
-        "update",
-        "upsert",
-        "delete"
-      ]
     },
     "TGRuntime": {
       "type": "object",

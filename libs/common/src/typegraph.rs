@@ -76,6 +76,38 @@ pub struct TypeMeta {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum InjectionCondition {
+    Effect(Option<EffectType>),
+    Policy(u32),
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct InjectionCase {
+    when: InjectionCondition,
+    from: InjectionSource,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase", tag = "source", content = "data")]
+pub enum InjectionSource {
+    Static(String),
+    Context(String),
+    Secret(String),
+    Parent(u32),
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct InjectionSwitch {
+    cases: Vec<InjectionCase>,
+    default: Option<InjectionSource>,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TypeNodeBase {
@@ -85,9 +117,7 @@ pub struct TypeNodeBase {
     #[serde(default)]
     pub description: Option<String>,
     #[serde(default)]
-    pub injection: Option<String>,
-    #[serde(default, skip_serializing_if = "serde_json::Value::is_null")]
-    pub inject: Value,
+    pub injection: Option<InjectionSwitch>,
     #[serde(default, rename = "enum")]
     pub enumeration: Option<Vec<Value>>,
     #[serde(default)]
