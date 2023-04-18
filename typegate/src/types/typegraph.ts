@@ -268,7 +268,10 @@ export interface PrismaRuntimeData {
   datamodel: string;
   connection_string_secret: string;
   models: number[];
-  migrations?: string | null;
-  create_migration?: boolean;
-  reset_on_drift?: boolean;
+  migration_options?: MigrationOptions | null;
+}
+export interface MigrationOptions {
+  migration_files?: string | null;
+  create: boolean;
+  reset: boolean;
 }
