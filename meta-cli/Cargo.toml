@@ -34,7 +34,9 @@ self_update = { version = "0.36.0", features = [
 prisma-models = { git = "https://github.com/prisma/prisma-engines" }
 lazy_static = "1.4.0"
 tokio = { version = "1.27.0", features = ["full"] }
+futures = "0.3.28"
 log = "0.4.17"
+env_logger = "0.10.0"
 clap = { version = "4.1.14", features = ["derive", "env"] }
 crossbeam-channel = "0.5.7"
 notify-debouncer-mini = { version = "0.2.0", default-features = false }

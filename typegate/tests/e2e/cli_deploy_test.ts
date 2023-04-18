@@ -53,9 +53,7 @@ test("cli:deploy - automatic migrations", async (t) => {
   });
 
   await t.should("fail on dirty repo", async () => {
-    await assertRejects(() =>
-      meta("deploy", ...nodeConfigs, "-f", "prisma/prisma.py")
-    );
+    await assertRejects(() => meta("deploy", "-f", "prisma/prisma.py"));
   });
 
   await t.should("commit changes", async () => {

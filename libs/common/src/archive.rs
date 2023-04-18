@@ -7,7 +7,7 @@ use std::fs;
 use std::path::Path;
 use tar::Archive;
 
-pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<String>) -> Result<()> {
+pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> Result<()> {
     fs::create_dir_all(dest.as_ref())?;
     let Some(migrations) = migrations else {
         return Ok(())
@@ -19,11 +19,15 @@ pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<String>) -> Result<()>
     Ok(())
 }
 
-pub fn archive<P: AsRef<Path>>(folder: P) -> Result<String> {
+pub fn archive<P: AsRef<Path>>(folder: P) -> Result<Option<String>> {
     let encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar = tar::Builder::new(encoder);
-    tar.append_dir_all(".", &folder)
-        .context("Adding directory to tarball")?;
-    let bytes = tar.into_inner()?.finish()?;
-    Ok(STANDARD.encode(bytes))
+    if folder.as_ref().read_dir()?.next().is_none() {
+        Ok(None)
+    } else {
+        tar.append_dir_all(".", &folder)
+            .context("Adding directory to tarball")?;
+        let bytes = tar.into_inner()?.finish()?;
+        Ok(Some(STANDARD.encode(bytes)))
+    }
 }

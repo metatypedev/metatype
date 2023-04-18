@@ -9,6 +9,7 @@ import { TypeGraphDS } from "../typegraph.ts";
 import { typegraph_validate } from "native";
 import { ensure } from "../utils.ts";
 import { getLogger } from "../log.ts";
+import config from "../config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -99,7 +100,13 @@ export class TypeGateRuntime extends Runtime {
     return JSON.stringify(tg.tg.tg);
   };
 
-  addTypegraph: Resolver = async ({ fromString, secrets }) => {
+  addTypegraph: Resolver = async ({ fromString, secrets, cliVersion }) => {
+    if (cliVersion !== config.version) {
+      const cmp = `"${cliVersion} != ${config.version}"`;
+      throw new Error(
+        `The version of the CLI does not match the version of the typegate: ${cmp}`,
+      );
+    }
     const json = await typegraph_validate({ json: fromString }).then((res) => {
       if ("Valid" in res) {
         return res.Valid.json;
@@ -115,14 +122,16 @@ export class TypeGateRuntime extends Runtime {
       throw new Error(`Typegraph name ${name} cannot be used`);
     }
 
-    const { typegraphName, messages, customData } = await this.register.set(
-      json,
-      JSON.parse(secrets),
-    );
+    const { typegraphName, messages, migrations, resetRequired } = await this
+      .register
+      .set(
+        json,
+        JSON.parse(secrets),
+      );
     logger.info(`Typegraph ${typegraphName} registered`);
     ensure(typegraphName == null || name === typegraphName, "unexpected");
 
-    return { name, messages, customData: JSON.stringify(customData) };
+    return { name, messages, migrations, resetRequired };
   };
 
   removeTypegraph: Resolver = ({ name }) => {

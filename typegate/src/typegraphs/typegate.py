@@ -50,9 +50,12 @@ with TypeGraph(
             TypeGraphMat(),
         ).rate(calls=True),
         addTypegraph=t.func(
-            t.struct({"fromString": t.string(), "secrets": t.string()}),
-            typegraph.compose(
+            t.struct(
+                {"fromString": t.json(), "secrets": t.json(), "cliVersion": t.string()}
+            ),
+            t.struct(
                 {
+                    "name": t.string(),
                     "messages": t.array(
                         t.struct(
                             {
@@ -61,9 +64,17 @@ with TypeGraph(
                             }
                         )
                     ),
-                    "customData": t.json(),
+                    "migrations": t.array(
+                        t.struct(
+                            {
+                                "runtime": t.string(),
+                                "migrations": t.string(),
+                            }
+                        )
+                    ),
+                    "resetRequired": t.array(t.string()),
                 }
-            ).optional(),
+            ),
             AddTypeGraphMat(),
         ).rate(calls=True),
         removeTypegraph=t.func(

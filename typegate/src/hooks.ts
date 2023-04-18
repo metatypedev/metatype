@@ -1,10 +1,9 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
-import { MessageEntry } from "./register.ts";
+import { MessageEntry, Migrations } from "./register.ts";
 import { SecretManager, TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { upgradeTypegraph } from "./typegraph/versions.ts";
-import { JSONValue } from "./utils.ts";
 
 const Message = {
   INFO: "info",
@@ -13,21 +12,38 @@ const Message = {
 } as const;
 
 export class PushResponse {
+  tgName?: string;
   messages: MessageEntry[] = [];
-  customData: Record<string, JSONValue> = {};
+  migrations: Migrations[] = [];
+  resetRequired: string[] = [];
 
   constructor() {}
+
+  typegraphName(name: string) {
+    this.tgName = name;
+  }
+
   info(text: string) {
     this.messages.push({ type: Message.INFO, text });
   }
+
   warn(text: string) {
     this.messages.push({ type: Message.WARNING, text });
   }
+
   error(text: string) {
     this.messages.push({ type: Message.ERROR, text });
   }
-  data(key: string, value: JSONValue) {
-    this.customData[key] = value;
+
+  migration(rtName: string, migrations: string) {
+    this.migrations.push({
+      runtime: rtName,
+      migrations,
+    });
+  }
+
+  resetDb(rtName: string) {
+    this.resetRequired.push(rtName);
   }
 
   hasError() {

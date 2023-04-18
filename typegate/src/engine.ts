@@ -154,6 +154,7 @@ export class Engine {
   ) {
     const typegraph = JSON.parse(payload);
     const typegraphName = typegraph.types[0].title;
+    response.typegraphName(typegraphName);
 
     const secretManager = new SecretManager(typegraphName, secrets);
 

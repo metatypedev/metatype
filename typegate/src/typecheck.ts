@@ -348,6 +348,7 @@ export class TypeCheck {
     this.check(value);
 
     if (this.validator.errors) {
+      console.error("Some errors occurred while validating: ", value);
       console.error({ errors: this.validator.errors });
       throw new SchemaValidatorError(value, this.validator.errors, this.schema);
     }

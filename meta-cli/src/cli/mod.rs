@@ -39,8 +39,8 @@ pub(crate) struct Args {
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None, disable_version_flag = true)]
 pub struct GenArgs {
-    #[clap(short = 'C', long, value_parser, default_value_t = String::from("."))]
-    dir: String,
+    #[clap(short = 'C', long, value_parser, default_value = ".")]
+    dir: PathBuf,
 
     /// path to the config file
     #[clap(long, value_parser)]
@@ -63,7 +63,7 @@ pub(crate) enum Commands {
     /// Push typegraph(s) with development mode features enabled
     Dev(dev::Dev),
     /// Push typegraph(s) to typegate
-    Deploy(deploy::Deploy),
+    Deploy(deploy::DeploySubcommand),
     /// Generate materializers code from typegraph definition
     Codegen(codegen::Codegen),
     /// Upgrade
@@ -80,7 +80,7 @@ pub trait Action {
     async fn run(&self, args: GenArgs) -> Result<()>;
 }
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 pub struct CommonArgs {
     /// Address of the typegate.
     #[clap(short, long, value_parser = UrlValueParser::new().http())]
