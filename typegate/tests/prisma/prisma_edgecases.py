@@ -13,8 +13,10 @@ with TypeGraph("prisma") as g:
             "id": t.integer().config("id", "auto"),
             "pseudo": t.string().config("unique"),
             "email": t.email(),
-            # TODO: schema validation fails when min(.>=1).max(20) ?
-            "firstname": t.string().min(0).max(20),
+            # Note:
+            # * schema validation fails when min(.>=1).max(20) (2023/04/17)
+            # * now it seems to work. ajv issues ? (2023/04/18)
+            "firstname": t.string().min(2).max(20),
         },
     ).named("User")
 
