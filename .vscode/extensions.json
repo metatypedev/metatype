@@ -11,6 +11,7 @@
         "ms-python.vscode-pylance",
         "ms-python.python",
         "errata-ai.vale-server",
-        "hediet.vscode-drawio"
+        "hediet.vscode-drawio",
+        "davidlday.languagetool-linter"
     ]
 }

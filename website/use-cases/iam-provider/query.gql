@@ -1,0 +1,9 @@
+query {
+  loginUrl
+
+  context {
+    username
+  }
+
+  logoutUrl
+}

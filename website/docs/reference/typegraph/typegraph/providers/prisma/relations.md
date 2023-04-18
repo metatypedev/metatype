@@ -3,20 +3,17 @@ sidebar_label: relations
 title: typegraph.providers.prisma.relations
 ---
 
-## Side Objects
+## RelationshipModel Objects
 
 ```python
-class Side(StrEnum)
+@frozen
+class RelationshipModel()
 ```
 
-A relationship is defined between two models:
-- the "owner", on the "left" side of the relationship, has the foreign key
-- the "ownee", on the "right" side of the relationship
+#### field
 
-## RelationshipRegister Objects
+field of this model pointing to the other side
 
-```python
-class RelationshipRegister()
-```
+#### cardinality
 
-Relationships are defined by `LinkProxy` NodeProxy types on the model types (`t.struct`).
+cardinality of the field pointing to the other model

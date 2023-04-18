@@ -34,9 +34,9 @@ with TypeGraph("prisma") as g:
     ).named("Record")
 
     g.expose(
-        dropSchema=db.executeRaw(
+        dropSchema=db.raw_execute(
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
-        createOneRecord=db.insert_one(record).add_policy(public),
-        findUniqueRecord=db.find_unique(record).add_policy(public),
+        createOneRecord=db.create(record).add_policy(public),
+        findUniqueRecord=db.find(record).add_policy(public),
     )

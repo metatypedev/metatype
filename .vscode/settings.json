@@ -37,4 +37,18 @@
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"
   },
+  "languageToolLinter.languageTool.ignoredWordsInWorkspace": [
+    "cockroachdb",
+    "deno",
+    "faas",
+    "materializer",
+    "materializers",
+    "metatype",
+    "openapi",
+    "pbac",
+    "prisma",
+    "typegate",
+    "typegates",
+    "typegraphs"
+  ],
 }

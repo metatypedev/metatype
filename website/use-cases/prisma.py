@@ -4,7 +4,7 @@ from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 # skip:end
 with TypeGraph(
-    "orm-for-the-edge",
+    "prisma-runtime",
     # skip:next-line
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
@@ -15,11 +15,12 @@ with TypeGraph(
         {
             "id": t.uuid().config("id", "auto"),
             "email": t.email(),
-            "firstname": t.string().max(2000),
+            "firstname": t.string().min(2).max(2000),
         }
     ).named("user")
 
     g.expose(
-        create_user=db.insert_one(user),
+        create_user=db.create(user),
+        read_user=db.find(user),
         default_policy=[public],
     )

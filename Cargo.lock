@@ -903,7 +903,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.1.5-dev.0"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -2495,6 +2495,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "include_dir"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "18762faeff7122e89e0857b02f7ce6fcc0d101d5e9ad2ad7846cc01d61b7f19e"
+dependencies = [
+ "include_dir_macros",
+]
+
+[[package]]
+name = "include_dir_macros"
+version = "0.7.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b139284b5cf57ecfa712bcc66950bb635b31aff41c188e8a4cfc758eca374a3f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+]
+
+[[package]]
 name = "indexmap"
 version = "1.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3054,7 +3073,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.1.5-dev.0"
+version = "0.1.5"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3137,7 +3156,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.1.5-dev.0"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -3158,6 +3177,7 @@ dependencies = [
  "git2",
  "globset",
  "ignore",
+ "include_dir",
  "indexmap",
  "indoc 2.0.1",
  "insta",
@@ -3598,7 +3618,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.1.5-dev.0"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -7187,7 +7207,7 @@ checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
 name = "typescript"
-version = "0.1.5-dev.0"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -7900,7 +7920,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.5-dev.0"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "clap",

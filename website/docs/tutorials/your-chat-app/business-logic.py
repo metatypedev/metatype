@@ -61,7 +61,7 @@ with TypeGraph(
     # highlight-end
 
     g.expose(
-        create_message=db.insert_one(message),
+        create_message=db.create(message),
         send_notification=googleapi.functions["projectsMessagesSend"],
         list_users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         default_policy=[internal],

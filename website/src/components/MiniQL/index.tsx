@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import { createGraphiQLFetcher } from "@graphiql/toolkit";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import CodeBlock from "@theme-original/CodeBlock";
 
 import {
   GraphiQLProvider,
@@ -19,7 +20,9 @@ import styles from "./styles.module.scss";
 export interface MiniQLProps {
   typegraph: string;
   query: ast.DocumentNode;
-  panel?: React.ReactNode;
+  code?: string;
+  codeLanguage?: string;
+  codeFileUrl?: string;
   headers?: Record<string, unknown>;
   variables?: Record<string, unknown>;
   tab?: Tab;
@@ -33,7 +36,9 @@ function Loader() {
 export default function MiniQL({
   typegraph,
   query,
-  panel = null,
+  code,
+  codeLanguage,
+  codeFileUrl,
   headers = {},
   variables = {},
   tab = "",
@@ -54,7 +59,7 @@ export default function MiniQL({
             createGraphiQLFetcher({
               url: `${tgUrl}/${typegraph}`,
             }),
-          [],
+          []
         );
         return (
           <GraphiQLProvider
@@ -64,20 +69,32 @@ export default function MiniQL({
             variables={JSON.stringify(variables)}
             storage={storage}
           >
-            <div className={`graphiql-container ${styles.container}`}>
-              {panel ? (
-                <div className={`graphiql-response ${styles.panel}`}>
-                  {panel}
-                </div>
-              ) : null}
+            <div className="mb-6">
+              <div className={`graphiql-container ${styles.container}`}>
+                {code ? (
+                  <div className={`graphiql-response ${styles.panel}`}>
+                    <CodeBlock language={codeLanguage}>{code}</CodeBlock>
+                  </div>
+                ) : null}
 
-              <div className={`graphiql-session ${styles.editor}`}>
-                <GraphiQLInterface defaultTab={tab} />
+                <div className={`graphiql-session ${styles.editor}`}>
+                  <GraphiQLInterface defaultTab={tab} />
+                </div>
+                <div className={`graphiql-response ${styles.response}`}>
+                  <Loader />
+                  <ResponseEditor />
+                </div>
               </div>
-              <div className={`graphiql-response ${styles.response}`}>
-                <Loader />
-                <ResponseEditor />
-              </div>
+              {codeFileUrl ? (
+                <small className="mx-2">
+                  See/edit full code on{" "}
+                  <a
+                    href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
+                  >
+                    {codeFileUrl}
+                  </a>
+                </small>
+              ) : null}
             </div>
           </GraphiQLProvider>
         );

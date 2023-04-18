@@ -16,6 +16,7 @@ pub(crate) mod completion;
 pub(crate) mod deploy;
 pub(crate) mod dev;
 pub(crate) mod doctor;
+pub(crate) mod new;
 pub(crate) mod prisma;
 pub(crate) mod serialize;
 pub(crate) mod upgrade;
@@ -72,6 +73,8 @@ pub(crate) enum Commands {
     Completion(completion::Completion),
     /// Troubleshoot the installation
     Doctor(doctor::Doctor),
+    /// Create a new Metatype project
+    New(new::New),
 }
 
 #[async_trait]

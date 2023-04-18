@@ -9,10 +9,10 @@ import gql from "graphql-tag";
 
 # Typegraph
 
-Typegraph is a [Python package](https://pypi.org/project/typegraph/) for building virtual graphs of types and managing their metadata. The name also refer to the [typegraph specification](/docs/reference/specification) which is a file format, currently in JSON, describing all elements of a typegraph.
+Typegraph is a [Python package](https://pypi.org/project/typegraph/) for building virtual graphs of types and managing their metadata. The name also refers to the [typegraph specification](/docs/reference/specification) which is a file format, currently in JSON, describing all elements of a typegraph.
 
 :::info Why Python?
-Python is a high-level general purpose language with great readability and dynamic typing. This was an asset during the prototyping phase enabling to quickly iterate on the design. It has now fewer benefits but remains an accessible language for everyone to pick up. No advanced features of the language is used.
+Python was historically chosen during Metatype's prototyping phase and remained since then the default way to describe typegraphs. Its great readability and dynamic typing make it a very accessible language for everyone to pick up quickly.
 
 In theory, all frameworks and languages can produce typegraphs respecting the specification to become executable by typegates. This opens the door to a wide range of use cases, including generating typegraphs automatically from existing code base and tools.
 :::
@@ -21,27 +21,27 @@ In theory, all frameworks and languages can produce typegraphs respecting the sp
 
 **Types** are the building block of typegraphs. They define a type system describing all data objects processed in Metatype. They can be easily extended to support new data types according to the needs of the application.
 
-<CodeBlock language="python">{require("./types.py")}</CodeBlock>
+<CodeBlock language="python">{require("./types.py").content}</CodeBlock>
 
-**SQL analogy**: types are similar to the Data Definition Language (DDL) with the capacity of describing any type of data.
+**Analogy in SQL**: types are similar to the Data Definition Language (DDL) with the extended capacity of describing any type of data.
 
 ## Materializers
 
-Types can also describe functions and **materializers** define how the input type gets transformed into the output type. The input and output types can understood like a function signature and a materializer like the function implementation, except that it might not always know what the function body is. In such case, the materializer knows at least where and how to access it.
+Types can also describe functions and **materializers** define how the input type gets transformed into the output type. The input and output types are similar to a function signature and a materializer to its implementation, except that it might not always know what the function body is. In such case, the materializer knows at least where and how to access it.
 
-<CodeBlock language="python">{require("./functions.py")}</CodeBlock>
+<CodeBlock language="python">{require("./functions.py").content}</CodeBlock>
 
-**SQL analogy**: a materializer is similar to a join, a function, or an alias.
+**Analogy in SQL**: a materializer is similar to a join, a function, or an alias.
 
 ## Runtimes
 
-Every type and materializer have a runtime associated to it. This runtime describes where the type or materializer are physically located. It can be another API, a database, or any other services the typegate can connect to. The typegates uses that information to optimize the execution of the queries and minimize the amount of data moved.
+Every type and materializer have a runtime associated to it. This runtime describes where the types or materializers are physically located. It can be another API, a database, or any other services the typegate can connect to. The typegates uses that information to optimize the execution of the queries and minimize the amount of data moved.
 
 In practice, materializers are often not explicitly used and the usage of runtime sugar syntax is preferred.
 
-<CodeBlock language="python">{require("./runtimes.py")}</CodeBlock>
+<CodeBlock language="python">{require("./runtimes.py").content}</CodeBlock>
 
-**SQL analogy**: a runtime is similar to a database instance running some requests.
+**Analogy in SQL**: a runtime is similar to a database instance running some requests.
 
 ## Policies
 
@@ -53,14 +53,14 @@ The policy decision can be:
 - `false`: the access is denied
 - `null`: the access in inherited from the parent types
 
-<CodeBlock language="python">{require("./policies.py")}</CodeBlock>
+<CodeBlock language="python">{require("./policies.py").content}</CodeBlock>
 
-**SQL analogy**: policies are similar to Row Security Policies (RSP) or Row Level Security (RLS) concepts.
+**Analogy in SQL**: policies are similar to Row Security Policies (RSP) or Row Level Security (RLS) concepts.
 
 ## Triggers
 
 Triggers are events launching the execution of one or multiple functions. They fire when a GraphQL request is received for the specific typegraph.
 
-<CodeBlock language="python">{require("./triggers.py")}</CodeBlock>
+<CodeBlock language="python">{require("./triggers.py").content}</CodeBlock>
 
-**SQL analogy**: a trigger is similar to receiving a new query.
+**Analogy in SQL**: a trigger is similar to receiving a new query.

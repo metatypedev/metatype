@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.1.5-dev.0"
+version = "0.1.5"
 edition = "2021"
 
 description = "Compose your data, anywhere, and build iterative API blocks with zero-trust and serverless deployment, no matter where and how your (legacy) systems are."
@@ -70,6 +70,7 @@ itertools = "0.10.5"
 enum_dispatch = "0.3.11"
 git2 = { version = "0.16.1", features = ["vendored-libgit2"], default-features = false }
 normpath = "1.1.1"
+include_dir = "0.7.3"
 
 [dev-dependencies]
 assert_cmd = "2.0.10"

@@ -43,7 +43,7 @@ with TypeGraph(
             t.struct({}),
             t.array(stargazer),
         ),
-        send_feedback=db.insert_one(feedback),
+        send_feedback=db.create(feedback),
         list_feedback=db.find_many(feedback),
         default_policy=[public],
     )
