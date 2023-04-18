@@ -59,14 +59,6 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm build
-      - name: Deploy typegraph
-        env:
-          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-        run: |
-          python3 -m venv .venv
-          source .venv/bin/activate
-          pip3 install ./typegraph
-          cargo run --locked --package meta-cli -- -C website deploy --password ${{ secrets.DOCS_TG_ADMIN_PASSWORD }}
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -75,3 +67,11 @@ jobs:
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
           cname: metatype.dev
+      - name: Deploy typegraph
+        env:
+          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip3 install ./typegraph
+          cargo run --locked --package meta-cli -- -C website deploy --password ${{ secrets.DOCS_TG_ADMIN_PASSWORD }}

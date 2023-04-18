@@ -57,8 +57,10 @@ async function getHostname() {
     const stdout = await cmd.output();
     cmd.close();
     return new TextDecoder().decode(stdout).trim();
-  } catch (e) {
-    console.debug(`cannot use hostname binary (${e.message}), fallback to env`);
+  } catch (_e) {
+    console.debug(
+      `Not hostname binary found, falling back to env var HOSTNAME`,
+    );
     return Deno.env.get("HOSTNAME") ?? "UNKNOWN_HOSTNAME";
   }
 }

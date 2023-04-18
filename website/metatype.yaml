@@ -26,31 +26,30 @@ typegates:
       TG_IAM_PROVIDER_GITHUB_CLIENT_SECRET: "fake"
       TG_RETREND_ACCESS_KEY: minio
       TG_RETREND_SECRET_KEY: password
-  # website:
   deploy:
     url: https://demo.metatype.dev
     username: admin
     env:
-      TG_AUTH_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_AUTH_GITHUB_CLIENT_ID
-      TG_AUTH_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_AUTH_GITHUB_CLIENT_SECRET
+      TG_AUTH_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+      TG_AUTH_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
       TG_AUTH_BASIC_ADMIN: "pass"
       TG_AUTH_KEYCLOAK_JWT: '{"kty":"EC","crv":"P-384","alg":"ES384","x":"YGwqY0bEGT451RGYwRAKOe4zbpdzQfvqSONWnsHMKW34ReXw0vqPLgG8T0lxqCJg","y":"rWMDwQXDyaUGwg5oXdNNGch5hPufMQIpXQOaoqfAwGYRF_-fRfHBxtiSw52ZGBFP","key_ops":["verify"],"ext":true}'
       TG_DOCS_SENDINBLUE_KEY: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DOCS_SENDINBLUE_KEY
-      TG_HOMEPAGE_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_HOMEPAGE_GITHUB_CLIENT_ID
-      TG_HOMEPAGE_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_HOMEPAGE_GITHUB_CLIENT_SECRET
+      TG_HOMEPAGE_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+      TG_HOMEPAGE_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
       TG_HOMEPAGE_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_HOMEPAGE_POSTGRES_CONN
-      TG_PRISMA_RUNTIME_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_ORM_FOR_THE_EDGE_POSTGRES_CONN
+      TG_PRISMA_RUNTIME_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_PRISMA_RUNTIME_POSTGRES_CONN
       TG_DATABASE_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DATABASE_POSTGRES_CONN
       TG_POLICIES_BASIC_ADMIN: "admin_pass"
       TG_POLICIES_BASIC_USER: "user_pass"
       TG_AUTH_CUSTOM_JWT: "mysupersecretkey"
       TG_GRAPHQL_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_GRAPHQL_POSTGRES_CONN
       TG_FCM_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_FCM_POSTGRES_CONN
-      TG_BUSINESS_LOGIC_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BUSINESS_LOGIC_GITHUB_CLIENT_ID
-      TG_BUSINESS_LOGIC_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BUSINESS_LOGIC_GITHUB_CLIENT_SECRET
+      TG_BUSINESS_LOGIC_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+      TG_BUSINESS_LOGIC_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
       TG_BUSINESS_LOGIC_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BUSINESS_LOGIC_POSTGRES_CONN
-      TG_IAM_PROVIDER_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BUSINESS_LOGIC_GITHUB_CLIENT_ID
-      TG_IAM_PROVIDER_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BUSINESS_LOGIC_GITHUB_CLIENT_SECRET
+      TG_IAM_PROVIDER_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+      TG_IAM_PROVIDER_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
       TG_RETREND_ACCESS_KEY: minio
       TG_RETREND_SECRET_KEY: password
 
