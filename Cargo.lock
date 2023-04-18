@@ -3622,6 +3622,7 @@ version = "0.1.5"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
+ "colored",
  "common",
  "connection-string 0.2.0",
  "convert_case 0.6.0",
@@ -3648,6 +3649,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sql-introspection-connector",
+ "tap",
  "tempfile",
  "temporal-client",
  "temporal-sdk-core-protos",

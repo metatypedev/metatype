@@ -5,9 +5,10 @@ mod errors;
 mod runtimes;
 mod typegraph;
 
+use colored::Colorize;
 use config::Config;
 use envconfig::Envconfig;
-use log::{error, info};
+use log::{error, info, Level};
 use macros::deno_sync;
 use once_cell::sync::Lazy;
 use sentry::ClientInitGuard;
@@ -47,13 +48,22 @@ fn init_native() {
     env_logger::builder()
         .format_timestamp_millis()
         .format(|buf, record| {
+            let location = match (record.level(), record.module_path(), record.line()) {
+                (Level::Error, Some(module_path), Some(line))
+                    if module_path.starts_with("native::") =>
+                {
+                    format!("\n    at {module_path}:{line}")
+                }
+                _ => Default::default(),
+            };
             writeln!(
                 buf,
-                "{} {: <5} {: <12} {}",
+                "{} {: <5} {: <12} {}{}",
                 buf.timestamp_millis(),
                 record.level(),
                 record.target(),
-                record.args()
+                record.args(),
+                location.dimmed(),
             )
         })
         .init();
