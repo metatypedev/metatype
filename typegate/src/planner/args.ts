@@ -265,10 +265,6 @@ class ArgumentCollector {
       return (vars) => vars[varName];
     }
 
-    if (valueNode.kind === Kind.NULL) {
-      return () => null;
-    }
-
     switch (typ.type) {
       case Type.OBJECT: {
         return this.collectObjectArg(valueNode, typ);
@@ -558,13 +554,17 @@ class ArgumentCollector {
 
     // likely optimizabe as type should be shared
     for (const node of valueNodes) {
-      computes.push(
-        this.collectArgPrivate({
-          ...this.currentNode,
-          astNode: { value: node } as unknown as ast.ArgumentNode,
-          typeIdx: itemTypeIdx,
-        }),
-      );
+      if (node.kind === Kind.NULL) {
+        computes.push(() => null);
+      } else {
+        computes.push(
+          this.collectArgPrivate({
+            ...this.currentNode,
+            astNode: { value: node } as unknown as ast.ArgumentNode,
+            typeIdx: itemTypeIdx,
+          }),
+        );
+      }
     }
 
     return (...params) => computes.map((c) => c(...params));
