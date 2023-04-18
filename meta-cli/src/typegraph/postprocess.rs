@@ -58,7 +58,7 @@ pub fn apply_all<'a>(
 pub use deno_rt::DenoModules;
 pub use deno_rt::ReformatScripts;
 pub use prisma_rt::EmbedPrismaMigrations;
-pub use prisma_rt::EmbeddedPrismaMigrationsPatch;
+pub use prisma_rt::EmbeddedPrismaMigrationOptionsPatch;
 
 pub mod deno_rt {
     use std::path::Path;
@@ -142,15 +142,18 @@ pub mod deno_rt {
 pub mod prisma_rt {
     use super::*;
     use anyhow::{anyhow, bail, Context};
-    use common::{archive, typegraph::PrismaRuntimeData};
-    use log::warn;
+    use common::{
+        archive,
+        typegraph::{MigrationOptions, PrismaRuntimeData},
+    };
+    use log::{trace, warn};
 
     use crate::{
         cli::prisma::PrismaArgs,
         typegraph::utils::{map_from_object, object_from_map},
     };
 
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct EmbedPrismaMigrations {
         create_migration: bool,
         reset_on_drift: bool,
@@ -176,6 +179,7 @@ pub mod prisma_rt {
 
     impl PostProcessor for EmbedPrismaMigrations {
         fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()> {
+            trace!("{:?}", self);
             let error = if !self.allow_dirty {
                 let repo = git2::Repository::discover(&config.base_dir).ok();
 
@@ -218,11 +222,12 @@ pub mod prisma_rt {
                     config,
                 );
                 let path = base_path.join(rt_name);
-                if path.try_exists()? {
-                    rt_data.migrations = archive::archive(path)?;
-                    rt_data.create_migration = self.create_migration;
-                    rt_data.reset_on_drift = self.reset_on_drift;
-                }
+                rt_data.migration_options = Some(MigrationOptions {
+                    migration_files: archive::archive(path)?,
+                    create: self.create_migration,
+                    reset: self.reset_on_drift,
+                });
+                trace!("new data: {:?}", rt_data);
                 rt.data = map_from_object(rt_data)?;
             }
 
@@ -233,13 +238,13 @@ pub mod prisma_rt {
     }
 
     #[derive(Default)]
-    pub struct EmbeddedPrismaMigrationsPatch {
-        reset_on_drift: Option<bool>,
+    pub struct EmbeddedPrismaMigrationOptionsPatch {
+        reset: Option<bool>,
     }
 
-    impl EmbeddedPrismaMigrationsPatch {
+    impl EmbeddedPrismaMigrationOptionsPatch {
         pub fn reset_on_drift(mut self, reset: bool) -> Self {
-            self.reset_on_drift = Some(reset);
+            self.reset = Some(reset);
             self
         }
 
@@ -249,8 +254,12 @@ pub mod prisma_rt {
                 let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
                 let rt_name = &rt_data.name;
                 if runtime_names.contains(rt_name) {
-                    if let Some(reset_on_drift) = self.reset_on_drift {
-                        rt_data.reset_on_drift = reset_on_drift;
+                    let migration_options =
+                        rt_data.migration_options.as_mut().ok_or_else(|| {
+                            anyhow!("Runtime '{rt_name}' not configured to include migrations")
+                        })?;
+                    if let Some(reset_on_drift) = self.reset {
+                        migration_options.reset = reset_on_drift;
                     }
                 }
                 rt.data = map_from_object(rt_data)?;

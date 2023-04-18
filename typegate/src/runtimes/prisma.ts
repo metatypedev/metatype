@@ -52,10 +52,11 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
   ) as unknown[] as PrismaRuntimeDS[];
 
   for (const rt of runtimes) {
-    const { connection_string_secret, datamodel, migrations } = rt.data;
-    if (migrations == null) {
+    const { connection_string_secret, datamodel, migration_options } = rt.data;
+    if (migration_options == null) {
       continue;
     }
+    const { migration_files, create, reset } = migration_options;
 
     const datasource = makeDatasource(
       secretManager.secretOrFail(connection_string_secret),
@@ -63,37 +64,39 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
 
     const prefix = `[prisma runtime: '${rt.data.name}']`;
 
-    if (rt.data.create_migration) { // same as `meta prisma dev`
-      const applyRes = await native.prisma_apply({
-        datasource,
-        datamodel,
-        migrations: migrations!,
-        reset_database: rt.data.reset_on_drift ?? false,
-      });
-      if ("Err" in applyRes) {
-        console.error(`prisma apply failed: ${applyRes.Err}`);
-        throw new Error(applyRes.Err.message);
-      }
-      if ("ResetRequired" in applyRes) {
-        response.resetDb(rt.data.name);
-        throw new Error(
-          `Database reset required: ${applyRes.ResetRequired.reset_reason}`,
-        );
-      }
+    if (create) { // same as `meta prisma dev`
+      if (migration_files != null) {
+        const applyRes = await native.prisma_apply({
+          datasource,
+          datamodel,
+          migrations: migration_files!,
+          reset_database: reset,
+        });
+        if ("Err" in applyRes) {
+          console.error(`prisma apply failed: ${applyRes.Err}`);
+          throw new Error(applyRes.Err.message);
+        }
+        if ("ResetRequired" in applyRes) {
+          response.resetDb(rt.data.name);
+          throw new Error(
+            `Database reset required: ${applyRes.ResetRequired.reset_reason}`,
+          );
+        }
 
-      const { applied_migrations, reset_reason } = applyRes.Ok!;
-      if (reset_reason != null) {
-        response.info(`Database reset: {reset_reason}`);
-      }
-      if (applied_migrations.length === 0) {
-        response.info(`${prefix} No migration applied.`);
-      } else {
-        const count = applied_migrations.length;
-        response.info(
-          `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
-        );
-        for (const migrationName of applied_migrations) {
-          response.info(`  - ${migrationName}`);
+        const { reset_reason, applied_migrations } = applyRes.Ok;
+        if (reset_reason != null) {
+          response.info(`Database reset: {reset_reason}`);
+        }
+        if (applied_migrations.length === 0) {
+          response.info(`${prefix} No migration applied.`);
+        } else {
+          const count = applied_migrations.length;
+          response.info(
+            `${prefix} ${count} migration${pluralSuffix(count)} applied:`,
+          );
+          for (const migrationName of applied_migrations) {
+            response.info(`  - ${migrationName}`);
+          }
         }
       }
 
@@ -114,7 +117,7 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
             await native.prisma_create({
               datasource,
               datamodel,
-              migrations: migrations,
+              migrations: migration_files,
               migration_name: "generated",
               apply: true,
             }),
@@ -130,7 +133,7 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
             response.info(`New migration applied: ${created_migration_name}`);
           }
           response.migration(rt.data.name, newMigrations!);
-          rt.data.migrations = newMigrations;
+          rt.data.migration_options!.migration_files = newMigrations;
         }
       }
     } else { // like `meta prisma deploy`
@@ -138,7 +141,7 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
         await native.prisma_deploy({
           datasource,
           datamodel,
-          migrations: migrations!,
+          migrations: migration_files!,
         }),
       );
 

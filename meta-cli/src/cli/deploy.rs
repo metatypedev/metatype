@@ -14,7 +14,7 @@ use crate::typegraph::loader::watch::Watcher;
 use crate::typegraph::loader::Loader;
 use crate::typegraph::loader::{Discovery, LoaderResult};
 use crate::typegraph::postprocess::prisma_rt::EmbedPrismaMigrations;
-use crate::typegraph::postprocess::{self, EmbeddedPrismaMigrationsPatch};
+use crate::typegraph::postprocess::{self, EmbeddedPrismaMigrationOptionsPatch};
 use crate::typegraph::push::{PushConfig, PushResult, RetryId, RetryManager, RetryState};
 use crate::utils::{ensure_venv, plural_suffix};
 use anyhow::{bail, Context, Result};
@@ -216,9 +216,10 @@ impl Deploy<DefaultModeData> {
                                 error!("Error while pushing typegraph {tg_name}");
                             }
                             HandlePushResult::PushAgain { reset_database } => {
+                                err_count -= 1;
                                 let mut tg = tg;
                                 if !reset_database.is_empty() {
-                                    EmbeddedPrismaMigrationsPatch::default()
+                                    EmbeddedPrismaMigrationOptionsPatch::default()
                                         .reset_on_drift(true)
                                         .apply(&mut tg, reset_database)
                                         .unwrap();
@@ -307,11 +308,6 @@ where
 
     fn handle_push_result(&self, mut res: PushResult) -> HandlePushResult {
         let name = res.tg_name().to_string();
-        info!(
-            "{} Successfully pushed typegraph {}",
-            "✓".green(),
-            name.cyan()
-        );
         res.print_messages();
         let prisma_config = &self.config.typegraphs.materializers.prisma;
         let migdir = tg_migrations_dir(
@@ -462,7 +458,7 @@ impl Deploy<WatchModeData> {
                 HandlePushResult::PushAgain { reset_database } => {
                     let mut tg = tg;
                     if !reset_database.is_empty() {
-                        EmbeddedPrismaMigrationsPatch::default()
+                        EmbeddedPrismaMigrationOptionsPatch::default()
                             .reset_on_drift(true)
                             .apply(&mut tg, reset_database)
                             .unwrap();

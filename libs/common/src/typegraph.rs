@@ -299,6 +299,17 @@ pub struct ModuleMatData {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct MigrationOptions {
+    pub migration_files: Option<String>,
+    // enable migration creation
+    // otherwise, a non-empty diff will make the push fail
+    pub create: bool,
+    // reset the database if required
+    pub reset: bool,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PrismaRuntimeData {
@@ -306,9 +317,7 @@ pub struct PrismaRuntimeData {
     pub datamodel: String,
     pub connection_string_secret: String,
     pub models: Vec<u32>,
-    pub migrations: Option<String>,
+    // if migration_options is not None: migrations will be applied on push
     #[serde(default)]
-    pub create_migration: bool,
-    #[serde(default)]
-    pub reset_on_drift: bool,
+    pub migration_options: Option<MigrationOptions>,
 }

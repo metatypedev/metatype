@@ -1241,18 +1241,36 @@
             "minimum": 0.0
           }
         },
-        "migrations": {
+        "migration_options": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MigrationOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "MigrationOptions": {
+      "type": "object",
+      "required": [
+        "create",
+        "reset"
+      ],
+      "properties": {
+        "migration_files": {
           "type": [
             "string",
             "null"
           ]
         },
-        "create_migration": {
-          "default": false,
+        "create": {
           "type": "boolean"
         },
-        "reset_on_drift": {
-          "default": false,
+        "reset": {
           "type": "boolean"
         }
       }
