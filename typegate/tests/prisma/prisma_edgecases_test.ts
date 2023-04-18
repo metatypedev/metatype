@@ -72,17 +72,18 @@ test("prisma critical edgecases", async (t) => {
     },
   );
 
-  await t.should("findUnique with a record that has empty string", async () => {
+  await t.should("not allow non-unique/id fields", async () => {
     await gql`
       query q {
         findUniqueUser (
-          where: { firstname: "" } # firstname is not a unique identifier
+          # firstname is neither unique nor id
+          where: { firstname: "" }
         )
         {
           id
         }
       }
-    `.expectErrorContains("Field does not exist on enclosing type")
+    `.expectErrorContains("Unexpected props 'firstname'")
       .on(e);
   });
 });
