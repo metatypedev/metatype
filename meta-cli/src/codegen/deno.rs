@@ -490,14 +490,17 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread")]
     async fn codegen() -> Result<()> {
+        crate::logger::init();
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs");
+        trace!("Test folder: {test_folder:?}");
         let tests = fs::read_dir(test_folder).unwrap();
         let config = Config::default_in(".");
         let config = Arc::new(config);
 
         for typegraph_test in tests {
             let typegraph_test = typegraph_test.unwrap().path();
+            trace!("test: {typegraph_test:?}");
             let loader = Loader::new(Arc::clone(&config)).skip_deno_modules(true);
 
             match loader.load_file(&typegraph_test).await {
