@@ -169,6 +169,7 @@ impl<'a> Codegen<'a> {
                         if self.ts_modules.contains_key(path)
                             && self.check_func(path, &mat_data.name)
                         {
+                            trace!("Entry[{path:?}]: {:?}", self.ts_modules.get(path).unwrap());
                             gen_list.push(GenItem {
                                 input: *input,
                                 output: *output,
@@ -194,6 +195,7 @@ impl<'a> Codegen<'a> {
             .into_iter()
             .map(|(name, code)| -> Result<ModuleCode> {
                 let path = self.ts_modules.remove(&name).unwrap().path;
+                trace!("Code path: {path:?}");
                 let code = ts::format_text(&path, &code)
                     .context(format!("could not format code: {code:#?}"))?;
                 Ok(ModuleCode { path, code })
@@ -212,12 +214,8 @@ impl<'a> Codegen<'a> {
         } in gen_list.into_iter()
         {
             trace!("Codegen::generate: path={path:?}, current-dir={current_dir:?}");
-            let rel_path = diff_paths(&path, &current_dir).unwrap();
-            info!(
-                "Generating missing function {} for {:?}",
-                name.blue(),
-                rel_path
-            );
+            // let rel_path = diff_paths(&path, &current_dir).unwrap();
+            info!("Generating missing function {} for {:?}", name.blue(), path);
             let functions = map.entry(path).or_default();
             functions.push(self.gen_func(input, output, &name));
         }
@@ -483,6 +481,8 @@ impl IntoJson for HashMap<String, Value> {
 mod tests {
     use std::sync::Arc;
 
+    use normpath::PathExt;
+
     use super::*;
     use crate::config::Config;
     use crate::tests::utils::ensure_venv;
@@ -492,14 +492,16 @@ mod tests {
     async fn codegen() -> Result<()> {
         crate::logger::init();
         ensure_venv()?;
-        let test_folder = Path::new("./src/tests/typegraphs");
+        let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
+        std::env::set_current_dir(&test_folder)?;
         trace!("Test folder: {test_folder:?}");
-        let tests = fs::read_dir(test_folder).unwrap();
+        let tests = fs::read_dir(&test_folder).unwrap();
         let config = Config::default_in(".");
         let config = Arc::new(config);
 
         for typegraph_test in tests {
             let typegraph_test = typegraph_test.unwrap().path();
+            let typegraph_test = diff_paths(&typegraph_test, &test_folder).unwrap();
             trace!("test: {typegraph_test:?}");
             let loader = Loader::new(Arc::clone(&config)).skip_deno_modules(true);
 
@@ -512,6 +514,7 @@ mod tests {
                     assert_eq!(module_codes.len(), 1);
 
                     let test_name = typegraph_test.to_string_lossy().to_string();
+                    trace!("test-name={test_name:?}");
                     insta::assert_snapshot!(test_name, &module_codes[0].code);
                 }
                 LoaderResult::Error(e) => {
