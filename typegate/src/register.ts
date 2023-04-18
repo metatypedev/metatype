@@ -6,17 +6,22 @@ import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import { decrypt, encrypt } from "./crypto.ts";
 import { PushResponse } from "./hooks.ts";
-import { JSONValue } from "./utils.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
   text: string;
 }
 
+export interface Migrations {
+  runtime: string;
+  migrations: string;
+}
+
 export interface RegistrationResult {
-  typegraphName: string | null;
+  typegraphName: string;
   messages: Array<MessageEntry>;
-  customData: Record<string, JSONValue>;
+  migrations: Array<Migrations>;
+  resetRequired: Array<string>;
 }
 
 export abstract class Register {
@@ -93,14 +98,16 @@ export class ReplicatedRegister extends Register {
       return {
         typegraphName: engine.name,
         messages: response.messages,
-        customData: response.customData,
+        migrations: response.migrations,
+        resetRequired: response.resetRequired,
       };
     }
 
     return {
-      typegraphName: null,
+      typegraphName: response.tgName!,
       messages: response.messages,
-      customData: response.customData,
+      migrations: response.migrations,
+      resetRequired: response.resetRequired,
     };
   }
 

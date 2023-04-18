@@ -25,6 +25,7 @@ pub const REQUIREMENTS_FILES: &[&str] = &["requirements.txt"];
 
 lazy_static! {
     static ref DEFAULT_NODE_CONFIG: NodeConfig = Default::default();
+    static ref DEFAULT_LOADER_CONFIG: TypegraphLoaderConfig = Default::default();
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]
@@ -125,7 +126,7 @@ impl TypegraphLoaderConfig {
 
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct PrismaConfig {
-    migrations_path: Option<PathBuf>,
+    pub migrations_path: Option<PathBuf>,
 }
 
 impl PrismaConfig {
@@ -143,21 +144,39 @@ impl PrismaConfig {
     }
 }
 
+pub fn tg_migrations_dir(
+    base_dir: &Path,
+    migrations_root: Option<&Path>,
+    tg_name: &str,
+) -> PathBuf {
+    base_dir
+        .join(migrations_root.unwrap_or_else(|| Path::new("prisma/migrations")))
+        .join(tg_name)
+}
+
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct Materializers {
     pub prisma: PrismaConfig,
 }
 
+#[derive(Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ModuleType {
+    Python,
+}
+
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct Typegraphs {
-    #[serde(default)]
-    pub python: TypegraphLoaderConfig,
+    #[serde(flatten)]
+    pub loaders: HashMap<ModuleType, TypegraphLoaderConfig>,
     #[serde(default)]
     pub materializers: Materializers,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct Config {
+    #[serde(skip)]
+    pub path: Option<PathBuf>,
     #[serde(skip)]
     pub base_dir: PathBuf,
     #[serde(default)]
@@ -191,6 +210,7 @@ impl Config {
             _ => anyhow!(err.to_string()),
         })?;
         let mut config: Self = serde_yaml::from_reader(file)?;
+        config.path = Some(path.clone());
         config.base_dir = {
             let mut path = path;
             path.pop();
@@ -226,11 +246,11 @@ impl Config {
         self.typegates.get(profile).unwrap_or(&DEFAULT_NODE_CONFIG)
     }
 
-    pub fn loader(&self, lang: &str) -> Option<&TypegraphLoaderConfig> {
-        match lang {
-            "python" => Some(&self.typegraphs.python),
-            _ => None,
-        }
+    pub fn loader(&self, module_type: ModuleType) -> &TypegraphLoaderConfig {
+        self.typegraphs
+            .loaders
+            .get(&module_type)
+            .unwrap_or(&DEFAULT_LOADER_CONFIG)
     }
 }
 

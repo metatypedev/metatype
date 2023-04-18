@@ -45,7 +45,7 @@ const config = {
               {
                 test: /\.(graphql|gql)$/,
                 exclude: /node_modules/,
-                loader: "graphql-tag/loader",
+                use: ["graphql-tag/loader"],
               },
             ],
           },

@@ -1,0 +1,11 @@
+query A {
+  static_a {
+    foo
+  }
+}
+
+query B {
+  static_b {
+    foo
+  }
+}

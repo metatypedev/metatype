@@ -15,6 +15,7 @@ use clap::{Parser, Subcommand};
 use colored::Colorize;
 use common::archive::{self};
 use indoc::indoc;
+use log::{error, info};
 use prisma_models::psl;
 use question::{Answer, Question};
 
@@ -106,7 +107,7 @@ impl PrismaArgs {
 pub struct PrismaArgsFull {
     pub typegraph: String,
     pub runtime: String,
-    pub migrations: String,
+    pub migrations: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -332,7 +333,8 @@ impl PrismaMigrate {
             .as_ref()
             .map(|rt_name| archive::archive(base_migpath.join(rt_name)))
             .transpose()
-            .context("Archiving migrations")?;
+            .context("Archiving migrations")?
+            .flatten();
 
         Ok(Self {
             typegraph: args.typegraph.clone(),
@@ -459,7 +461,7 @@ impl PrismaMigrate {
                     mutation PrismaCreate($tg: String!, $rt: String, $mig: String, $name: String!, $apply: Boolean!) {
                         create(typegraph: $tg, runtime: $rt, migrations: $mig, name: $name, apply: $apply) {
                             createdMigrationName
-                            appliedMigrations
+                            applyError
                             migrations
                             runtimeName
                         }
@@ -481,41 +483,28 @@ impl PrismaMigrate {
         #[serde(rename_all = "camelCase")]
         struct Res {
             created_migration_name: String,
-            applied_migrations: Vec<String>,
+            apply_err: Option<String>,
             migrations: String,
             runtime_name: String,
         }
         let res: Res = res.data("create")?;
 
-        let applied = if let Some((last, others)) = res.applied_migrations.split_last() {
-            if last != &res.created_migration_name {
-                bail!("The new migration was not the latest applied migration");
-            }
-            others
-        } else {
-            &res.applied_migrations
-        };
-
-        if !applied.is_empty() {
-            let plural = applied.len() > 1;
-            println!(
-                "The following migration{s} {have} been applied:",
-                s = if plural { "s" } else { "" },
-                have = if plural { "have" } else { "has" }
+        if let Some(apply_err) = res.apply_err {
+            info!(
+                "The following migration has been created: {}",
+                res.created_migration_name.green()
             );
-            for mig in applied {
-                println!("{}", format!("- {mig}").blue())
-            }
+            error!(
+                "The migration {} failed to be applied: {apply_err}",
+                res.created_migration_name
+            );
+        } else {
         }
 
-        println!();
-        println!(
-            "The following migration has been created{}:",
-            if apply { " and applied" } else { "" }
-        );
-        println!(
-            "{}",
-            format!(" - {mig}", mig = res.created_migration_name).green()
+        info!(
+            "The following migration has been created{}: {}.",
+            if apply { " and applied" } else { "" },
+            res.created_migration_name.green(),
         );
 
         self.runtime_name.replace(res.runtime_name);

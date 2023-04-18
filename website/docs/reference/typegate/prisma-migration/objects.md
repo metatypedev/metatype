@@ -118,11 +118,11 @@ migrations<br />
 </tr>
 <tr>
 <td>
-appliedMigrations<br />
-<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>[String!]!</code></a>
+applyError<br />
+<a href="/docs/reference/typegate/prisma-migration/scalars#string"><code>String</code></a>
 </td>
 <td>
-<p>appliedMigrations field</p>
+<p>applyError field</p>
 <p>Policies:</p>
 <ul>
 <li>inherit</li>

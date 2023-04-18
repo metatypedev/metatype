@@ -5,6 +5,7 @@ pub mod graphql;
 
 use anyhow::{bail, Result};
 use dialoguer::{Input, Password};
+use log::trace;
 use reqwest::{Client, IntoUrl, RequestBuilder, Url};
 use std::collections::HashMap;
 use std::env::{set_var, var};
@@ -16,8 +17,14 @@ use crate::config::VENV_FOLDERS;
 use crate::fs::find_in_parents;
 
 pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
-    if var("VIRTUAL_ENV").is_ok() {
-        return Ok(());
+    if let Ok(active_venv) = var("VIRTUAL_ENV") {
+        let active_venv = Path::new(&active_venv);
+        trace!("Detected active venv at {active_venv:?}.");
+        if active_venv.is_dir() {
+            return Ok(());
+        } else {
+            bail!("Active venv at {active_venv:?} not found.");
+        }
     }
 
     if let Some(venv_dir) = find_in_parents(dir, VENV_FOLDERS)? {
@@ -40,6 +47,14 @@ pub fn ensure_venv<P: AsRef<Path>>(dir: P) -> Result<()> {
         Ok(())
     } else {
         bail!("Python venv required")
+    }
+}
+
+pub fn plural_suffix(count: usize) -> &'static str {
+    if count == 1 {
+        ""
+    } else {
+        "s"
     }
 }
 

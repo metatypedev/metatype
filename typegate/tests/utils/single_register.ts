@@ -12,7 +12,8 @@ export class SingleRegister extends Register {
     return Promise.resolve({
       typegraphName: this.name,
       messages: [],
-      customData: {},
+      migrations: [],
+      resetRequired: [],
     });
   }
 

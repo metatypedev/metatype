@@ -2,7 +2,7 @@
 
 const fs = require("fs/promises");
 
-const plugin = (context) => ({
+module.exports = (context) => ({
   name: "changelog",
   extendCli(cli) {
     const { organizationName, projectName } = context.siteConfig;
@@ -59,5 +59,3 @@ ${changelog}
       });
   },
 });
-
-module.exports = plugin;

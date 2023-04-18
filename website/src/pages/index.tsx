@@ -50,7 +50,7 @@ const featureList = [
     description: (
       <>
         No surprises. The typesystem of Metatype ensures the correctness of your
-        data flows among your frontends, backends, databases, models and
+        data across your frontends, backends, databases, models and
         third-parties.
       </>
     ),
@@ -67,13 +67,13 @@ const featureList = [
     ),
   },
   {
-    title: "Stay productive as your stacks evolve",
+    title: "Productivity as your stacks evolve",
     svg: require("@site/static/icons/iterate-quickly.svg").default,
     description: (
       <>
-        Cut your time to deployment in half. Metatype's iterative approach lets
-        innovate in your (legacy) systems step by step without making
-        compromises.
+        Cut your time to deployment in half. Metatype's iterative approach
+        enables you to innovate step by step with your (legacy) systems without
+        making compromises.
       </>
     ),
   },
@@ -140,9 +140,7 @@ function Features(): JSX.Element {
 function Example(): JSX.Element {
   return (
     <section className="container">
-      <h2 className="inline-block mt-12 text-3xl">
-        Iterate fast and with ease
-      </h2>
+      <h2 className="inline-block mt-12 text-3xl">Try it by yourself</h2>
       <div className="">
         <TGExample
           python={require("./index.py")}
@@ -234,7 +232,7 @@ function DemoVideo(): JSX.Element {
   return (
     <section className="container">
       <h2 className="mt-6 text-3xl">
-        Replace backends with low-code API composition
+        3 minutes introduction to API composition
       </h2>
       <div className="flex justify-center mt-8">
         <div

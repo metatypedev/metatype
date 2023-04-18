@@ -4,12 +4,12 @@ env:
 meta:
   watch:
     - "meta-cli/src/**/*.rs"
-    - "examples/metatype.yaml"
     - "typegraph/typegraph/**/*.py"
   command: "cargo run --color always -p meta-cli -- -C examples dev"
   env:
     VIRTUAL_ENV: $PWD/examples/.venv
     PATH: $PWD/examples/.venv/bin:$PATH
+    CLICOLOR_FORCE: "1"
   depends_on:
     - libs
 

@@ -13,6 +13,11 @@ use dashmap::DashMap;
 mod utils;
 use macros::deno;
 
+use self::migration::{
+    MigrationContextBuilder, PrismaApplyResult, PrismaCreateResult, PrismaDeployOut,
+    PrismaResetResult,
+};
+
 static ENGINES: Lazy<DashMap<String, engine_import::QueryEngine>> = Lazy::new(DashMap::new);
 
 // introspection
@@ -140,36 +145,20 @@ fn prisma_diff(input: PrismaDiffInp) -> PrismaDiffOut {
 }
 
 #[deno]
-struct PrismaApplyInp {
-    datasource: String,
-    datamodel: String,
-    migrations: Option<String>,
-    reset_database: bool,
+struct PrismaDevInp {
+    pub datasource: String,
+    pub datamodel: String,
+    pub migrations: Option<String>,
+    pub reset_database: bool,
 }
 
 #[deno]
-enum PrismaApplyOut {
-    ResetRequired {
-        reset_reason: String,
-    },
-    MigrationsApplied {
-        reset_reason: Option<String>,
-        applied_migrations: Vec<String>,
-        migrations: String,
-    },
-    Err {
-        message: String,
-    },
-}
-
-#[deno]
-fn prisma_apply(input: PrismaApplyInp) -> PrismaApplyOut {
-    match RT.block_on(migration::apply(input)) {
-        Ok(res) => res,
-        Err(e) => PrismaApplyOut::Err {
-            message: e.to_string(),
-        },
-    }
+fn prisma_apply(input: PrismaDevInp) -> PrismaApplyResult {
+    RT.block_on(migration::apply(
+        MigrationContextBuilder::new(input.datasource, input.datamodel)
+            .with_migrations(input.migrations),
+        input.reset_database,
+    ))
 }
 
 #[deno]
@@ -180,33 +169,11 @@ struct PrismaDeployInp {
 }
 
 #[deno]
-enum PrismaDeployOut {
-    Ok {
-        migration_count: usize,
-        applied_migrations: Vec<String>,
-    },
-    Err {
-        message: String,
-    },
-}
-
-#[deno]
 fn prisma_deploy(input: PrismaDeployInp) -> PrismaDeployOut {
-    let ret = RT.block_on(migration::deploy(
-        input.datasource,
-        input.datamodel,
-        input.migrations,
-    ));
-
-    match ret {
-        Ok((migration_count, applied_migrations)) => PrismaDeployOut::Ok {
-            migration_count,
-            applied_migrations,
-        },
-        Err(e) => PrismaDeployOut::Err {
-            message: e.to_string(),
-        },
-    }
+    RT.block_on(migration::deploy(
+        MigrationContextBuilder::new(input.datasource, input.datamodel)
+            .with_migrations(Some(input.migrations)),
+    ))
 }
 
 #[deno]
@@ -219,25 +186,13 @@ pub struct PrismaCreateInp {
 }
 
 #[deno]
-pub enum PrismaCreateOut {
-    Ok {
-        created_migration_name: Option<String>,
-        applied_migrations: Vec<String>,
-        migrations: String,
-    },
-    Err {
-        message: String,
-    },
-}
-
-#[deno]
-fn prisma_create(input: PrismaCreateInp) -> PrismaCreateOut {
-    match RT.block_on(migration::create(input)) {
-        Ok(res) => res,
-        Err(e) => PrismaCreateOut::Err {
-            message: e.to_string(),
-        },
-    }
+fn prisma_create(input: PrismaCreateInp) -> PrismaCreateResult {
+    RT.block_on(migration::create(
+        MigrationContextBuilder::new(input.datasource, input.datamodel)
+            .with_migrations(input.migrations),
+        input.migration_name,
+        input.apply,
+    ))
 }
 
 #[deno]
@@ -246,19 +201,11 @@ pub struct PrismaResetInp {
 }
 
 #[deno]
-pub enum PrismaResetOut {
-    Ok { reset: bool },
-    Err { message: String },
-}
-
-#[deno]
-fn prisma_reset(input: PrismaResetInp) -> PrismaResetOut {
-    match RT.block_on(migration::reset(input.datasource)) {
-        Ok(_) => PrismaResetOut::Ok { reset: true },
-        Err(e) => PrismaResetOut::Err {
-            message: e.to_string(),
-        },
-    }
+fn prisma_reset(input: PrismaResetInp) -> PrismaResetResult {
+    RT.block_on(migration::reset(MigrationContextBuilder::new(
+        input.datasource,
+        "".to_string(),
+    )))
 }
 
 #[deno]
@@ -290,7 +237,7 @@ struct ArchiveInp {
 
 #[deno]
 enum ArchiveResult {
-    Ok { base64: String },
+    Ok { base64: Option<String> },
     Err { message: String },
 }
 

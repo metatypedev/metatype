@@ -29,11 +29,11 @@ Importers are quite recent and likely to evolve as feedback is received. Your vo
 
 Importers are function call with a boolean re-writing the source code file where they live. As they can generate quite long type definition, the best practice is to separate them into a dedicated file that can be imported into your main typegraph. Lets create `google.py` and run `python google.py` to generate the types.
 
-<CodeBlock language="python">{require("./importer.py")}</CodeBlock>
+<CodeBlock language="python">{require("./importer.py").content}</CodeBlock>
 
 This should generate code similar to this:
 
-<CodeBlock language="python">{require("./google.py")}</CodeBlock>
+<CodeBlock language="python">{require("./google.py").content}</CodeBlock>
 
 And can be imported/customized in your main typegraph file:
 

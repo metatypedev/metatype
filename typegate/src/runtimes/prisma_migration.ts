@@ -72,7 +72,7 @@ export class PrismaMigrate {
       );
     }
 
-    const { reset_reason, applied_migrations } = res.MigrationsApplied;
+    const { reset_reason, applied_migrations } = res.Ok;
 
     return {
       databaseReset: reset_reason != null,
@@ -96,7 +96,7 @@ export class PrismaMigrate {
 
     return {
       createdMigrationName: res.created_migration_name,
-      appliedMigrations: res.applied_migrations,
+      applyError: res.apply_err,
       migrations: res.migrations,
       runtimeName: name,
     };

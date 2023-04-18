@@ -58,9 +58,7 @@ if (!config.rust_log) {
       set("off");
       break;
     case "DEBUG":
-      set(
-        "debug,tokio_postgres::prepare=info,tokio_postgres::query=info,tokio_postgres::simple_query=info,mobc=info",
-      );
+      set("info,native=trace");
       break;
     case "WARNING":
       set("warn");

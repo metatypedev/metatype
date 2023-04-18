@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.4.1"
-  DENO_VERSION: "1.32.3"
+  DENO_VERSION: "1.32.4"
 
 jobs:
   check-bump:

@@ -60,7 +60,6 @@ export class SchemaValidatorError extends Error {
       errorMessage = [
         `value: ${toPrettyJSON(value)}`,
         `errors: ${toPrettyJSON(schemaErrors)}`,
-        `schema: ${toPrettyJSON(schema)}`,
       ].join("\n\n");
     } else {
       // if there is only one error, return it instead of the whole error,
@@ -348,6 +347,7 @@ export class TypeCheck {
     this.check(value);
 
     if (this.validator.errors) {
+      console.error("Some errors occurred while validating: ", value);
       console.error({ errors: this.validator.errors });
       throw new SchemaValidatorError(value, this.validator.errors, this.schema);
     }

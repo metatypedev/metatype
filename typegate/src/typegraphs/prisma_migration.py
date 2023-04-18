@@ -71,7 +71,7 @@ with TypeGraph(
             t.struct(
                 {
                     "createdMigrationName": t.string(),
-                    "appliedMigrations": t.array(t.string()),
+                    "applyError": t.optional(t.string()),
                     "migrations": t.string(),
                     "runtimeName": t.string(),
                 }

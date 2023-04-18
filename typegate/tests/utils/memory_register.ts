@@ -28,7 +28,8 @@ export class MemoryRegister extends Register {
     return {
       typegraphName: engine.name,
       messages: [],
-      customData: {},
+      migrations: [],
+      resetRequired: [],
     };
   }
   remove(name: string): Promise<void> {
