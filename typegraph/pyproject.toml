@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph"
-version = "0.1.5"
+version = "0.1.6-dev.0"
 description = "Compose your data, anywhere, and build iterative API blocks with zero-trust and serverless deployment, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license = "ELv2"
