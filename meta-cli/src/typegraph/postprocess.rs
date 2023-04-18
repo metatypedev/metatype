@@ -146,7 +146,7 @@ pub mod prisma_rt {
         archive,
         typegraph::{MigrationOptions, PrismaRuntimeData},
     };
-    use log::{trace, warn};
+    use log::warn;
 
     use crate::{
         cli::prisma::PrismaArgs,
@@ -179,7 +179,6 @@ pub mod prisma_rt {
 
     impl PostProcessor for EmbedPrismaMigrations {
         fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()> {
-            trace!("{:?}", self);
             let error = if !self.allow_dirty {
                 let repo = git2::Repository::discover(&config.base_dir).ok();
 
@@ -227,7 +226,6 @@ pub mod prisma_rt {
                     create: self.create_migration,
                     reset: self.reset_on_drift,
                 });
-                trace!("new data: {:?}", rt_data);
                 rt.data = map_from_object(rt_data)?;
             }
 

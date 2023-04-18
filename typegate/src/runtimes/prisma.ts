@@ -137,6 +137,20 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
         }
       }
     } else { // like `meta prisma deploy`
+      // diff
+      const { diff } = nativeResult(
+        await native.prisma_diff({
+          datasource,
+          datamodel,
+          script: false,
+        }),
+      );
+      if (diff != null) {
+        throw new Error(
+          "Cannot run migrations: the migration files is not in sync with the typegraph and migration creation is disabled.",
+        );
+      }
+
       const { migration_count, applied_migrations } = nativeResult(
         await native.prisma_deploy({
           datasource,
