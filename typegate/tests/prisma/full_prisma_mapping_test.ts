@@ -63,6 +63,29 @@ test("prisma full mapping", async (t) => {
       .on(e);
   });
 
+  await t.should("find the first item", async () => {
+    await gql`
+        query {
+          findFirstPost(
+            where: {
+              title: { contains: "Title" }
+            },
+            skip: 1,
+            orderBy: [ {title: "desc"} ]
+          ) {
+            id
+            title
+          }
+        }
+    `.expectData({
+      findFirstPost: {
+        id: 10004,
+        title: "Some Title 4",
+      },
+    })
+      .on(e);
+  });
+
   await t.should("paginate correctly with findManyPosts", async () => {
     await gql`
         query {

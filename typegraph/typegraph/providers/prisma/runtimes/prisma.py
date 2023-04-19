@@ -394,6 +394,33 @@ class PrismaRuntime(Runtime):
             PrismaOperationMat(self, tpe.name, "findMany", effect=effects.none()),
         )
 
+    def find_first(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
+        self.__manage(tpe)
+        typegen = self.__typegen
+        _pref = get_name_generator("First", tpe)
+        output = typegen.get_out_type(tpe)
+        rel_cols = tpe.props.keys()
+        output = typegen.get_out_type(tpe)
+        if where is None:
+            where = typegen.gen_query_where_expr(tpe).named(_pref("Where")).optional()
+        return t.func(
+            t.struct(
+                {
+                    "where": where,
+                    "orderBy": typegen.get_order_by_type(tpe)
+                    .named(_pref("OrderBy"))
+                    .optional(),
+                    "take": t.integer().named(_pref("Take")).optional(),
+                    "skip": t.integer().named(_pref("Skip")).optional(),
+                    "distinct": t.array(t.enum(rel_cols))
+                    .named(_pref("Distinct"))
+                    .optional(),
+                }
+            ),
+            output.named(_pref("Output")).optional(),
+            PrismaOperationMat(self, tpe.name, "findFirst", effect=effects.none()),
+        )
+
     def aggregate(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
         self.__manage(tpe)
         typegen = self.__typegen
