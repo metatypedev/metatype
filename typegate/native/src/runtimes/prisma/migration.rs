@@ -15,6 +15,7 @@ use migration_core::{CoreError, CoreResult, GenericApi};
 use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
+use tap::prelude::*;
 use tempfile::{tempdir_in, NamedTempFile, TempDir};
 
 use crate::TMP_DIR;
@@ -69,9 +70,11 @@ impl MigrationContextBuilder {
 
     fn build(self) -> Result<MigrationContext, String> {
         let api = migration_core::migration_api(Some(self.datasource.clone()), None)
+            .tap_err(|e| error!("{e:?}"))
             .map_err(err_to_string)?;
-        let migrations_dir =
-            MigrationsFolder::from(self.migrations.as_ref()).map_err(|e| e.to_string())?;
+        let migrations_dir = MigrationsFolder::from(self.migrations.as_ref())
+            .tap_err(|e| error!("{e:?}"))
+            .map_err(|e| e.to_string())?;
         Ok(MigrationContext {
             builder: self,
             migrations_dir,
@@ -132,11 +135,19 @@ impl MigrationContext {
     async fn apply(&self, reset_database: bool) -> Result<PrismaApplyResult, String> {
         trace!("Migrations::apply");
 
-        let res = self.dev_diagnostic().await.map_err(err_to_string)?;
+        let res = self
+            .dev_diagnostic()
+            .await
+            .tap_err(|e| error!("{e:?}"))
+            .map_err(err_to_string)?;
 
         let reset_reason = if let DevAction::Reset(reset) = res.action {
             if reset_database {
-                self.api.reset().await.map_err(err_to_string)?;
+                self.api
+                    .reset()
+                    .await
+                    .tap_err(|e| error!("{e:?}"))
+                    .map_err(err_to_string)?;
                 Some(reset.reason)
             } else {
                 return Ok(PrismaApplyResult::ResetRequired {
@@ -153,6 +164,7 @@ impl MigrationContext {
                 migrations_directory_path: self.migrations_dir.to_string(),
             })
             .await
+            .tap_err(|e| error!("{e:}"))
             .map_err(err_to_string)?;
         Ok(PrismaApplyResult::Ok {
             applied_migrations: res.applied_migration_names,
@@ -196,7 +208,7 @@ impl MigrationContext {
             .await
         {
             Err(e) => PrismaCreateResult::Err {
-                message: err_to_string(e),
+                message: e.tap(|e| error!("{e:?}")).pipe(err_to_string),
             },
             Ok(res) => {
                 let Some(generated_migration_name) = res.generated_migration_name else {
@@ -207,13 +219,20 @@ impl MigrationContext {
                     };
                 };
                 // migration directory cannot be empty...
-                let migrations = self.migrations_dir.serialize().ok().flatten().unwrap();
+                let migrations = self
+                    .migrations_dir
+                    .serialize()
+                    .tap(|e| error!("{e:?}"))
+                    .ok()
+                    .flatten()
+                    .unwrap();
                 let apply_err = self
                     .api
                     .apply_migrations(ApplyMigrationsInput {
                         migrations_directory_path: self.migrations_dir.to_string(),
                     })
                     .await
+                    .tap_err(|e| error!("{e:?}"))
                     .map_err(err_to_string)
                     .err();
 
@@ -302,6 +321,7 @@ impl MigrationContext {
                 migrations_directory_path: self.migrations_dir.to_string(),
             })
             .await
+            .tap_err(|e| error!("{e:?}"))
             .map_err(err_to_string)?;
         let migration_count = res.migrations.len();
 
@@ -311,6 +331,7 @@ impl MigrationContext {
                 migrations_directory_path: self.migrations_dir.to_string(),
             })
             .await
+            .tap_err(|e| error!("{e:?}"))
             .map_err(err_to_string)?;
         let applied_migrations = res.applied_migration_names;
 
@@ -330,7 +351,6 @@ pub async fn deploy(ctx: MigrationContextBuilder) -> PrismaDeployOut {
 }
 
 fn err_to_string(err: CoreError) -> String {
-    error!("{err:?}");
     err.to_user_facing().message().to_string()
 }
 

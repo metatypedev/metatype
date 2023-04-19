@@ -20,6 +20,9 @@ pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> 
 }
 
 pub fn archive<P: AsRef<Path>>(folder: P) -> Result<Option<String>> {
+    if !folder.as_ref().try_exists()? {
+        return Ok(None);
+    }
     let encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar = tar::Builder::new(encoder);
     if folder.as_ref().read_dir()?.next().is_none() {
