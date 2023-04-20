@@ -2,7 +2,7 @@
 
 mod types;
 // mod validator;
-// mod visitor;
+mod visitor;
 
 pub use types::*;
 
