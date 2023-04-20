@@ -166,6 +166,20 @@ class TypeGenerator:
 
         return t.struct(node_props)
 
+    def gen_query_unique_where_expr(self, tpe: t.struct) -> t.struct:
+        props = {}
+        for k, v in tpe.props.items():
+            # not for this runtime
+            v = resolve_proxy(v)
+            if v.runtime is not None and v.runtime != tpe.runtime:
+                continue
+            v = resolve_proxy(resolve_entity_quantifier(v))
+            is_id = v.runtime_config.get("id", False)
+            is_unique = v.runtime_config.get("unique", False)
+            if is_id or is_unique:
+                props[k] = v.optional()
+        return t.struct(props)
+
     # Examples:
     # where: { name: { not: { equals: "John" } } }
     # where: { AND: [ { unique: { gt: 2 } }, { name: { startsWith: "P" }}]}
