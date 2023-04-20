@@ -29,7 +29,7 @@ import {
   SchemaValidatorError,
   trimType,
 } from "../typecheck.ts";
-import { EffectType, EitherNode, InjectionSource } from "../types/typegraph.ts";
+import { EffectType, EitherNode } from "../types/typegraph.ts";
 
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
@@ -681,58 +681,41 @@ class ArgumentCollector {
       return true;
     });
 
-    const injection = typ.injection!;
+    const source =
+      typ.injection!.cases.find((c) => c.effect == this.effect)?.injection ??
+        typ.injection!["default"];
 
-    // TODO effect can be known before this...
-    const prepareTest = (test: EffectType): ComputeArg<boolean> => {
-      if (typeof test === "string") {
-        return (params) => {
-          return params.effect === test;
+    if (source == null) {
+      if (typ.type === Type.OPTIONAL) {
+        const value = typ.default_value ?? null;
+        return () => value;
+      }
+      throw new Error("Invalid injection");
+    }
+
+    switch (source.source) {
+      case "static":
+        return () => JSON.parse(source.data);
+      case "secret":
+        return () => this.tg.parseSecret(typ, source.data);
+      case "context": {
+        const name = source.data;
+        this.deps.context.add(name);
+        return ({ context }) => {
+          const { [name]: value } = context;
+          if (value == null && typ.type != Type.OPTIONAL) {
+            throw new Error(
+              `Non optional injection '${name}' was not found in the context`,
+            );
+          }
+          return value;
         };
-      } else {
-        throw new Error("Not yet implemented: switch injection by policy");
       }
-    };
-
-    const prepareCompute = (source: InjectionSource): ComputeArg => {
-      switch (source.source) {
-        case "static":
-          return () => JSON.parse(source.data);
-        case "secret":
-          return () => this.tg.parseSecret(typ, source.data);
-        case "context": {
-          const name = source.data;
-          this.deps.context.add(name);
-          return ({ context }) => {
-            const { [name]: value } = context;
-            if (value == null && typ.type != Type.OPTIONAL) {
-              throw new Error(
-                `Non optional injection '${name}' was not found in the context`,
-              );
-            }
-            return value;
-          };
-        }
-        case "parent":
-          return this.collectParentInjection(typ, source.data);
-        default:
-          throw new Error("Unreachable");
-      }
-    };
-
-    const cases = injection.cases.map(
-      (c) => [prepareTest(c.effect), prepareCompute(c.injection)],
-    );
-    const def = injection.default != null
-      ? prepareCompute(injection.default)
-      : () => null;
-
-    return (args) => {
-      for (const [test, compute] of cases) {
-        if (test(args)) return compute(args);
-      }
-      return def(args);
-    };
+      case "parent":
+        return this.collectParentInjection(typ, source.data);
+      default:
+        throw new Error("Unreachable");
+    }
   }
 
   /** Collect the value of an injected parameter with 'parent' injection. */
