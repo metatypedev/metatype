@@ -61,12 +61,6 @@
                 "optional"
               ]
             },
-            "item": {
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 0.0
-            },
-            "default_value": true,
             "title": {
               "type": "string"
             },
@@ -111,7 +105,13 @@
               "default": {},
               "type": "object",
               "additionalProperties": true
-            }
+            },
+            "item": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "default_value": true
           }
         },
         {
@@ -191,41 +191,6 @@
                 "number"
               ]
             },
-            "minimum": {
-              "type": [
-                "number",
-                "null"
-              ],
-              "format": "double"
-            },
-            "maximum": {
-              "type": [
-                "number",
-                "null"
-              ],
-              "format": "double"
-            },
-            "exclusiveMinimum": {
-              "type": [
-                "number",
-                "null"
-              ],
-              "format": "double"
-            },
-            "exclusiveMaximum": {
-              "type": [
-                "number",
-                "null"
-              ],
-              "format": "double"
-            },
-            "multipleOf": {
-              "type": [
-                "number",
-                "null"
-              ],
-              "format": "double"
-            },
             "title": {
               "type": "string"
             },
@@ -270,6 +235,41 @@
               "default": {},
               "type": "object",
               "additionalProperties": true
+            },
+            "minimum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "maximum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "exclusiveMinimum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "exclusiveMaximum": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "multipleOf": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
             }
           }
         },
@@ -288,6 +288,51 @@
                 "integer"
               ]
             },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
             "minimum": {
               "type": [
                 "integer",
@@ -322,6 +367,23 @@
                 "null"
               ],
               "format": "int64"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "string"
+              ]
             },
             "title": {
               "type": "string"
@@ -367,23 +429,6 @@
               "default": {},
               "type": "object",
               "additionalProperties": true
-            }
-          }
-        },
-        {
-          "type": "object",
-          "required": [
-            "policies",
-            "runtime",
-            "title",
-            "type"
-          ],
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "string"
-              ]
             },
             "minLength": {
               "type": [
@@ -410,51 +455,6 @@
                 "string",
                 "null"
               ]
-            },
-            "title": {
-              "type": "string"
-            },
-            "runtime": {
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 0.0
-            },
-            "policies": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PolicyIndices"
-              }
-            },
-            "description": {
-              "default": null,
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "injection": {
-              "default": null,
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/InjectionSwitch"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "enum": {
-              "default": null,
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": true
-            },
-            "config": {
-              "default": {},
-              "type": "object",
-              "additionalProperties": true
             }
           }
         },
@@ -474,6 +474,51 @@
                 "object"
               ]
             },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
             "properties": {
               "type": "object",
               "additionalProperties": {
@@ -488,59 +533,14 @@
               "items": {
                 "type": "string"
               }
-            },
-            "title": {
-              "type": "string"
-            },
-            "runtime": {
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 0.0
-            },
-            "policies": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PolicyIndices"
-              }
-            },
-            "description": {
-              "default": null,
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "injection": {
-              "default": null,
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/InjectionSwitch"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "enum": {
-              "default": null,
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": true
-            },
-            "config": {
-              "default": {},
-              "type": "object",
-              "additionalProperties": true
             }
           }
         },
         {
           "type": "object",
           "required": [
-            "items",
             "policies",
+            "properties",
             "runtime",
             "title",
             "type"
@@ -552,33 +552,6 @@
                 "array"
               ]
             },
-            "items": {
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 0.0
-            },
-            "maxItems": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "uint32",
-              "minimum": 0.0
-            },
-            "minItems": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "format": "uint32",
-              "minimum": 0.0
-            },
-            "uniqueItems": {
-              "type": [
-                "boolean",
-                "null"
-              ]
-            },
             "title": {
               "type": "string"
             },
@@ -623,6 +596,21 @@
               "default": {},
               "type": "object",
               "additionalProperties": true
+            },
+            "properties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
+            },
+            "required": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         },
@@ -644,6 +632,51 @@
               "enum": [
                 "function"
               ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": true
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
             },
             "input": {
               "type": "integer",
@@ -670,51 +703,6 @@
             },
             "rate_calls": {
               "type": "boolean"
-            },
-            "title": {
-              "type": "string"
-            },
-            "runtime": {
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 0.0
-            },
-            "policies": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PolicyIndices"
-              }
-            },
-            "description": {
-              "default": null,
-              "type": [
-                "string",
-                "null"
-              ]
-            },
-            "injection": {
-              "default": null,
-              "anyOf": [
-                {
-                  "$ref": "#/definitions/InjectionSwitch"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            },
-            "enum": {
-              "default": null,
-              "type": [
-                "array",
-                "null"
-              ],
-              "items": true
-            },
-            "config": {
-              "default": {},
-              "type": "object",
-              "additionalProperties": true
             }
           }
         },
@@ -734,15 +722,6 @@
                 "union"
               ]
             },
-            "anyOf": {
-              "description": "Array of indexes of the nodes that are used as subschemes in the anyOf field of JSON Schema.",
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
-              }
-            },
             "title": {
               "type": "string"
             },
@@ -787,13 +766,22 @@
               "default": {},
               "type": "object",
               "additionalProperties": true
+            },
+            "anyOf": {
+              "description": "Array of indexes of the nodes that are used as subschemes in the anyOf field of JSON Schema.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
             }
           }
         },
         {
           "type": "object",
           "required": [
-            "oneOf",
+            "anyOf",
             "policies",
             "runtime",
             "title",
@@ -806,15 +794,6 @@
                 "either"
               ]
             },
-            "oneOf": {
-              "description": "Array of indexes of the nodes that are used as subschemes in the oneOf field of JSON Schema.",
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
-              }
-            },
             "title": {
               "type": "string"
             },
@@ -859,6 +838,15 @@
               "default": {},
               "type": "object",
               "additionalProperties": true
+            },
+            "anyOf": {
+              "description": "Array of indexes of the nodes that are used as subschemes in the anyOf field of JSON Schema.",
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint32",
+                "minimum": 0.0
+              }
             }
           }
         },

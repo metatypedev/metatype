@@ -144,15 +144,8 @@ impl<'a> Codegen<'a> {
         let mut gen_list = vec![];
 
         for tpe in self.tg.types.iter() {
-            if let TypeNode::Function {
-                materializer,
-                input,
-                output,
-                base,
-                ..
-            } = tpe
-            {
-                let mat = self.tg.materializers[*materializer as usize].clone();
+            if let TypeNode::Function { base, data } = tpe {
+                let mat = self.tg.materializers[data.materializer as usize].clone();
                 let runtime = &self.tg.runtimes[base.runtime as usize];
                 if runtime.name != "deno" && runtime.name != "worker" {
                     continue;
@@ -171,8 +164,8 @@ impl<'a> Codegen<'a> {
                         {
                             trace!("Entry[{path:?}]: {:?}", self.ts_modules.get(path).unwrap());
                             gen_list.push(GenItem {
-                                input: *input,
-                                output: *output,
+                                input: data.input,
+                                output: data.output,
                                 path: self
                                     .ts_modules
                                     .get(path)
@@ -322,8 +315,8 @@ impl<'a> Codegen<'a> {
             TypeNode::Boolean { .. } => Ok("false".to_owned()),
             TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("0".to_owned()),
             TypeNode::String { .. } => Ok("\"\"".to_owned()),
-            TypeNode::Object { properties, .. } => {
-                let props = properties.clone();
+            TypeNode::Object { data, .. } => {
+                let props = data.properties.clone();
                 #[cfg(test)]
                 let props = props
                     .into_iter()
@@ -337,21 +330,23 @@ impl<'a> Codegen<'a> {
                     .join(", ");
                 Ok(format!("{{ {body} }}"))
             }
-            TypeNode::Union { any_of, .. } => {
+            TypeNode::Union { data, .. } => {
                 // a type cannot be all the variants, as they might be a
                 // disjoint union, therefore by returning the default value of
                 // one variant would be enough
-                let variant_type_index = any_of
+                let variant_type_index = data
+                    .any_of
                     .clone()
                     .pop()
                     .expect("the union type should have at least one variant of type nodes");
                 self.gen_default_value(variant_type_index)
             }
-            TypeNode::Either { one_of, .. } => {
+            TypeNode::Either { data, .. } => {
                 // a type cannot be all the variants, as they are a
                 // disjoint union, therefore by returning the default value of
                 // one variant would be enough
-                let variant_type_index = one_of
+                let variant_type_index = data
+                    .one_of
                     .clone()
                     .pop()
                     .expect("the either type should have at least one variant of type nodes");
@@ -428,8 +423,12 @@ impl<'a> Codegen<'a> {
         let tpe = &self.tg.types[idx as usize];
 
         match tpe {
-            TypeNode::Optional { item, .. } => Ok(format!("null | {}", self.get_typespec(*item)?)),
-            TypeNode::Array { items, .. } => Ok(format!("Array<{}>", self.get_typespec(*items)?)),
+            TypeNode::Optional { data, .. } => {
+                Ok(format!("null | {}", self.get_typespec(data.item)?))
+            }
+            TypeNode::Array { data, .. } => {
+                Ok(format!("Array<{}>", self.get_typespec(data.items)?))
+            }
             TypeNode::Boolean { .. } => Ok("boolean".to_owned()),
             TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
             TypeNode::String { base, .. } => {
@@ -452,8 +451,8 @@ impl<'a> Codegen<'a> {
                 }
             }
             TypeNode::Object { .. } => self.gen_obj_type(tpe),
-            TypeNode::Union { any_of, .. } => self.gen_union_type_definition(any_of),
-            TypeNode::Either { one_of, .. } => self.gen_union_type_definition(one_of),
+            TypeNode::Union { data, .. } => self.gen_union_type_definition(&data.any_of),
+            TypeNode::Either { data, .. } => self.gen_union_type_definition(&data.one_of),
             _ => bail!("unsupported type to generate type specification: {tpe:#?}"),
         }
     }

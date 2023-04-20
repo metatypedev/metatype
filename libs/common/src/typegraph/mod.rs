@@ -1,5 +1,11 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+mod types;
+// mod validator;
+// mod visitor;
+
+pub use types::*;
+
 use std::path::PathBuf;
 
 use anyhow::{bail, Result};
@@ -95,137 +101,8 @@ pub enum InjectionSource {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct InjectionSwitch {
-    cases: Vec<InjectionCase>,
-    default: Option<InjectionSource>,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
-pub struct TypeNodeBase {
-    pub title: String,
-    pub runtime: u32,
-    pub policies: Vec<PolicyIndices>,
-    #[serde(default)]
-    pub description: Option<String>,
-    #[serde(default)]
-    pub injection: Option<InjectionSwitch>,
-    #[serde(default, rename = "enum")]
-    pub enumeration: Option<Vec<Value>>,
-    #[serde(default)]
-    pub config: IndexMap<String, serde_json::Value>,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(tag = "type", rename_all = "lowercase")]
-pub enum TypeNode {
-    Optional {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-        item: u32,
-        #[serialize_always]
-        default_value: Option<serde_json::Value>,
-    },
-    Boolean {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-    },
-    #[serde(rename_all = "camelCase")]
-    Number {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-        minimum: Option<f64>,
-        maximum: Option<f64>,
-        exclusive_minimum: Option<f64>,
-        exclusive_maximum: Option<f64>,
-        multiple_of: Option<f64>,
-    },
-    #[serde(rename_all = "camelCase")]
-    Integer {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-        minimum: Option<i64>,
-        maximum: Option<i64>,
-        exclusive_minimum: Option<i64>,
-        exclusive_maximum: Option<i64>,
-        multiple_of: Option<i64>,
-    },
-    #[serde(rename_all = "camelCase")]
-    String {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-        min_length: Option<i64>,
-        max_length: Option<i64>,
-        pattern: Option<String>,
-        format: Option<String>,
-    },
-    Object {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-        properties: IndexMap<String, u32>,
-        #[serde(default)]
-        required: Vec<String>,
-    },
-    #[serde(rename_all = "camelCase")]
-    Array {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-        items: u32,
-        max_items: Option<u32>,
-        min_items: Option<u32>,
-        unique_items: Option<bool>,
-    },
-    Function {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-        input: u32,
-        output: u32,
-        materializer: u32,
-        #[serialize_always]
-        rate_weight: Option<u32>,
-        rate_calls: bool,
-    },
-    #[serde(rename_all = "camelCase")]
-    Union {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-        /// Array of indexes of the nodes that are used as subschemes in the
-        /// anyOf field of JSON Schema.
-        any_of: Vec<u32>,
-    },
-    #[serde(rename_all = "camelCase")]
-    Either {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-        /// Array of indexes of the nodes that are used as subschemes in the
-        /// oneOf field of JSON Schema.
-        one_of: Vec<u32>,
-    },
-    Any {
-        #[serde(flatten)]
-        base: TypeNodeBase,
-    },
-}
-
-impl TypeNode {
-    pub fn base(&self) -> &TypeNodeBase {
-        use TypeNode::*;
-        match self {
-            Optional { base, .. }
-            | Boolean { base, .. }
-            | Number { base, .. }
-            | Integer { base, .. }
-            | String { base, .. }
-            | Object { base, .. }
-            | Array { base, .. }
-            | Function { base, .. }
-            | Union { base, .. }
-            | Either { base, .. }
-            | Any { base, .. } => base,
-        }
-    }
+    pub cases: Vec<InjectionCase>,
+    pub default: Option<InjectionSource>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -301,8 +178,8 @@ impl Typegraph {
 
 impl TypeNode {
     pub fn get_struct_fields(&self) -> Result<IndexMap<String, u32>> {
-        if let TypeNode::Object { properties, .. } = &self {
-            Ok(properties.clone())
+        if let TypeNode::Object { data, .. } = &self {
+            Ok(data.properties.clone())
         } else {
             bail!("node is not an object variant, found: {self:#?}")
         }
