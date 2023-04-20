@@ -12,11 +12,13 @@ from typing import (
     Union,
     get_args,
     get_origin,
+    overload,
 )
 
 from attrs import evolve, field, frozen
 from frozendict import frozendict
 from typing_extensions import Self
+from typegraph.effects import EffectType
 
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
@@ -31,6 +33,7 @@ from typegraph.injection import (
 )
 from typegraph.policies import Policy, EffectPolicies
 from typegraph.runtimes.base import Materializer, Runtime
+from typegraph.utils import eprint
 from typegraph.utils.attrs import SKIP, always, asdict
 
 # if os.environ.get("DEBUG"):
@@ -125,7 +128,7 @@ class typedef(Node):
         if self.name == "":
             object.__setattr__(self, "name", f"{self.type}_{self.graph.next_type_id()}")
 
-    def replace(self, **changes):
+    def replace(self, **changes) -> Self:
         return evolve(self, **changes)
 
     @property
@@ -188,6 +191,7 @@ class typedef(Node):
         return self
 
     def _propagate_runtime(self, runtime: "Runtime", visited: Set["typedef"] = None):
+        eprint(f"name={self.name}, injection={self.injection}")
         if visited is None:
             visited = set()
         elif self in visited:
@@ -205,9 +209,19 @@ class typedef(Node):
                 e.get()._propagate_runtime(self.runtime, visited)
 
     # TODO @overload
-    def inject(self, injection: Injection):
+    @overload
+    def inject(self, injection: Injection) -> Self:
+        pass
+
+    @overload
+    def inject(self, injection: Dict[Optional[EffectType], Injection]) -> Self:
+        pass
+
+    def inject(self, injection) -> Self:
         if self.injection is not None:
             raise Exception(f"{self.name} can only have one injection")
+        if isinstance(injection, dict):
+            return self.replace(injection=InjectionSwitch.from_dict(injection))
         return self.replace(injection=InjectionSwitch(default=injection))
 
     def set(self, value):
@@ -256,6 +270,7 @@ class typedef(Node):
 
         if self.injection is not None:
             ret["injection"] = self.injection.data(collector)
+            eprint(f"injection: {ret['injection']}")
 
         config = self.runtime.get_type_config(self)
         if len(config) > 0:
@@ -719,7 +734,10 @@ def named(name: str, define: Callable[[], typedef]) -> TypeNode:
 
 
 def proxy(name: str) -> NodeProxy:
-    return NodeProxy(TypegraphContext.get_active(), name)
+    g = TypegraphContext.get_active()
+    if g is None:
+        raise Exception("Active typegraph context required for 't.proxy'")
+    return NodeProxy(g, name)
 
 
 def visit_reversed(

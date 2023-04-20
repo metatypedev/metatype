@@ -29,11 +29,11 @@ import {
   SchemaValidatorError,
   trimType,
 } from "../typecheck.ts";
-import { EffectType, EitherNode } from "../types/typegraph.ts";
+import { EffectType, EitherNode, InjectionSource } from "../types/typegraph.ts";
 
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
-import { getChildTypes, visitType, visitTypes } from "../typegraph/visitor.ts";
+import { getChildTypes, visitTypes } from "../typegraph/visitor.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -49,12 +49,22 @@ interface ArgumentObjectSchema {
   required?: string[];
 }
 
+export interface ComputeArgParams {
+  variables: Variables;
+  parent: Parents;
+  context: Context;
+  effect: EffectType | null;
+}
+
+export const DEFAULT_COMPUTE_PARAMS: ComputeArgParams = {
+  variables: {},
+  parent: {},
+  context: {},
+  effect: null,
+};
+
 export interface ComputeArg<T = unknown> {
-  (
-    variables: Variables,
-    parent: Parents,
-    context: Context,
-  ): T;
+  (params: ComputeArgParams): T;
 }
 
 export interface ArgTypePolicies {
@@ -122,7 +132,14 @@ export function collectArgs(
 
   if (!collector.hasDeps()) { // no deps
     // pre-compute
-    const value = mapValues(compute, (c) => c({}, {}, {}));
+    const value = mapValues(
+      compute,
+      (c) =>
+        c({
+          ...DEFAULT_COMPUTE_PARAMS,
+          effect: effect !== "none" ? effect : null,
+        }),
+    );
     // typecheck
     validate(value);
     return {
@@ -133,8 +150,8 @@ export function collectArgs(
   }
 
   return {
-    compute: (...deps) => {
-      const value = mapValues(compute, (c) => c(...deps));
+    compute: (params) => {
+      const value = mapValues(compute, (c) => c(params));
       validate(value);
       return value;
     },
@@ -262,7 +279,7 @@ class ArgumentCollector {
         name: { value: varName },
       } = valueNode;
       this.deps.variables.add(varName);
-      return (vars) => vars[varName];
+      return ({ variables: vars }) => vars[varName];
     }
 
     switch (typ.type) {
@@ -659,68 +676,63 @@ class ArgumentCollector {
   private collectInjection(
     typ: TypeNode,
   ): ComputeArg {
+    visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
+      this.addPoliciesFrom(node.idx);
+      return true;
+    });
+
     const injection = typ.injection!;
 
-    // TODO test injection cases
-
-    const def = injection.default!;
-    if (def == null) {
-      throw new Error("Unexpected");
-    }
-
-    switch (def.source) {
-      case "static": {
-        visitType(this.tg.tg, this.currentNode.typeIdx, (node) => {
-          this.addPoliciesFrom(node.idx);
-          return true;
-        });
-        const value = JSON.parse(def.data);
-        // TODO typecheck --> add to common predefined hooks (MET-113);
-        // and eventually in the CLI/typegraph
-        return () => value;
-      }
-
-      case "secret": {
-        visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
-          this.addPoliciesFrom(node.idx);
-          return true;
-        });
-        const value = this.tg.parseSecret(typ, def.data);
-
-        return () => value;
-      }
-
-      case "context": {
-        // TODO check on the typegraph validation hook (MET-113)
-        // and eventually in the CLI/typegraph
-        if (
-          typ.type !== Type.STRING &&
-          !(typ.type === Type.OPTIONAL &&
-            this.tg.type(typ.item).type === Type.STRING)
-        ) {
-          throw new Error(`Unexpected`); // unreachable
-        }
-
-        const name = def.data;
-        this.deps.context.add(name);
-
-        return (_vars, _parent, context) => {
-          const { [name]: value } = context;
-          if (value == null && typ.type != Type.OPTIONAL) {
-            throw new Error(`injection '${name}' was not found in context`);
-          }
-          return value;
+    // TODO effect can be known before this...
+    const prepareTest = (test: EffectType): ComputeArg<boolean> => {
+      if (typeof test === "string") {
+        return (params) => {
+          return params.effect === test;
         };
+      } else {
+        throw new Error("Not yet implemented: switch injection by policy");
       }
+    };
 
-      case "parent":
-        return this.collectParentInjection(typ, def.data);
+    const prepareCompute = (source: InjectionSource): ComputeArg => {
+      switch (source.source) {
+        case "static":
+          return () => JSON.parse(source.data);
+        case "secret":
+          return () => this.tg.parseSecret(typ, source.data);
+        case "context": {
+          const name = source.data;
+          this.deps.context.add(name);
+          return ({ context }) => {
+            const { [name]: value } = context;
+            if (value == null && typ.type != Type.OPTIONAL) {
+              throw new Error(
+                `Non optional injection '${name}' was not found in the context`,
+              );
+            }
+            return value;
+          };
+        }
+        case "parent":
+          return this.collectParentInjection(typ, source.data);
+        default:
+          throw new Error("Unreachable");
+      }
+    };
 
-      default:
-        throw new Error(
-          `Unexpected injection type '${injection}' for argument ${this.currentNodeDetails}`,
-        );
-    }
+    const cases = injection.cases.map(
+      (c) => [prepareTest(c.effect), prepareCompute(c.injection)],
+    );
+    const def = injection.default != null
+      ? prepareCompute(injection.default)
+      : () => null;
+
+    return (args) => {
+      for (const [test, compute] of cases) {
+        if (test(args)) return compute(args);
+      }
+      return def(args);
+    };
   }
 
   /** Collect the value of an injected parameter with 'parent' injection. */
@@ -741,7 +753,7 @@ class ArgumentCollector {
       return true;
     });
 
-    return (_vars, parent) => {
+    return ({ parent }) => {
       const { [name]: value } = parent;
       if (value == null) {
         if (typ.type === Type.OPTIONAL) {

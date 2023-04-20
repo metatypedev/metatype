@@ -178,8 +178,7 @@ export type TypeNode =
   | EitherNode
   | AnyNode;
 export type PolicyIndices = number | PolicyIndicesByEffect;
-export type InjectionCondition = (EffectType | null) | number;
-export type EffectType = "create" | "update" | "upsert" | "delete";
+export type EffectType = "create" | "update" | "upsert" | "delete" | "none";
 export type InjectionSource = {
   source: "static";
   data: string;
@@ -214,8 +213,8 @@ export interface InjectionSwitch {
   default?: InjectionSource | null;
 }
 export interface InjectionCase {
-  when: InjectionCondition;
-  from: InjectionSource;
+  effect: EffectType;
+  injection: InjectionSource;
 }
 export interface Materializer {
   name: string;

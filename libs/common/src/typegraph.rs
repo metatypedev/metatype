@@ -77,17 +77,9 @@ pub struct TypeMeta {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged)]
-pub enum InjectionCondition {
-    Effect(Option<EffectType>),
-    Policy(u32),
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
 pub struct InjectionCase {
-    when: InjectionCondition,
-    from: InjectionSource,
+    effect: EffectType,
+    injection: InjectionSource,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -244,6 +236,7 @@ pub enum EffectType {
     Update,
     Upsert,
     Delete,
+    None,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

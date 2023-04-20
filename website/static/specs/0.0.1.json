@@ -1010,36 +1010,17 @@
     "InjectionCase": {
       "type": "object",
       "required": [
-        "from",
-        "when"
+        "effect",
+        "injection"
       ],
       "properties": {
-        "when": {
-          "$ref": "#/definitions/InjectionCondition"
+        "effect": {
+          "$ref": "#/definitions/EffectType"
         },
-        "from": {
+        "injection": {
           "$ref": "#/definitions/InjectionSource"
         }
       }
-    },
-    "InjectionCondition": {
-      "anyOf": [
-        {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/EffectType"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        },
-        {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0.0
-        }
-      ]
     },
     "EffectType": {
       "type": "string",
@@ -1047,7 +1028,8 @@
         "create",
         "update",
         "upsert",
-        "delete"
+        "delete",
+        "none"
       ]
     },
     "InjectionSource": {
