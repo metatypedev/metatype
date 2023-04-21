@@ -191,6 +191,10 @@ const config = {
                 href: "https://github.com/metatypedev/metatype/discussions",
               },
               {
+                label: "Discord",
+                href: "https://discord.gg/PSyYcEHyw5",
+              },
+              {
                 label: "Stack Overflow",
                 href: "https://stackoverflow.com/questions/tagged/metatype",
               },
