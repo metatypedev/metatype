@@ -8,13 +8,20 @@ use super::{TypeNode, Typegraph};
 impl Typegraph {
     /// Depth-first traversal over all the types
     pub fn traverse_types<V: TypeVisitor + Sized>(&self, visitor: V) -> Option<V::Return> {
-        TypegraphTraversal {
+        let mut traversal = TypegraphTraversal {
             tg: self,
             path: vec![],
             visited_types: HashSet::new(),
             visitor,
-        }
-        .visit_type(0)
+        };
+        traversal
+            .visit_type(0)
+            .or_else(|| traversal.visitor.get_result())
+        // if let Some(ret) = traversal.visit_type(0) {
+        //     ret
+        // } else {
+        //     traversal.visitor.get_result()
+        // }
     }
 }
 
@@ -142,13 +149,14 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
     fn visit_child(&mut self, segment: PathSegment<'a>, type_idx: u32) -> Option<V::Return> {
         self.path.push(segment);
         let res = self.visit_type(type_idx);
-        let segment = self.path.pop().unwrap();
-        assert!(segment.from == type_idx);
+        self.path.pop().unwrap();
         res
     }
 }
 
+#[derive(Debug)]
 pub struct PathSegment<'a> {
+    #[allow(dead_code)]
     from: u32, // typeIdx
     edge: Edge<'a>,
 }
@@ -167,7 +175,7 @@ impl<'a> Display for PathSegment<'a> {
     }
 }
 
-struct Path<'a>(Vec<PathSegment<'a>>);
+pub struct Path<'a>(pub &'a [PathSegment<'a>]);
 
 impl<'a> Display for Path<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -178,6 +186,7 @@ impl<'a> Display for Path<'a> {
     }
 }
 
+#[derive(Debug)]
 pub enum Edge<'a> {
     ObjectProp(&'a str),
     ArrayItem,
@@ -194,7 +203,13 @@ pub enum VisitResult<T> {
 }
 
 pub trait TypeVisitor {
-    type Return;
+    type Return: Sized;
     /// return true to continue the traversal on the subgraph
     fn visit(&mut self, node: &TypeNode, path: &[PathSegment]) -> VisitResult<Self::Return>;
+    fn get_result(self) -> Option<Self::Return>
+    where
+        Self: Sized,
+    {
+        None
+    }
 }

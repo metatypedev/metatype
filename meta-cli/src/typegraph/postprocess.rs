@@ -5,8 +5,11 @@ use std::sync::{Arc, RwLock};
 use crate::config::Config;
 
 use super::utils::{map_from_object, object_from_map};
-use anyhow::Result;
+use anyhow::{bail, Result};
+use colored::Colorize;
+use common::typegraph::validator::validate_typegraph;
 use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
+use log::error;
 use typescript::parser::{transform_module, transform_script};
 
 pub trait PostProcessor {
@@ -59,6 +62,26 @@ pub use deno_rt::DenoModules;
 pub use deno_rt::ReformatScripts;
 pub use prisma_rt::EmbedPrismaMigrations;
 pub use prisma_rt::EmbeddedPrismaMigrationOptionsPatch;
+
+pub struct Validator;
+impl PostProcessor for Validator {
+    fn postprocess(&self, tg: &mut Typegraph, _config: &Config) -> Result<()> {
+        let errors = validate_typegraph(tg);
+        let tg_name = tg.name()?.cyan();
+        if !errors.is_empty() {
+            for err in errors.iter() {
+                error!(
+                    "at {tg_name}{err_path}: {msg}",
+                    err_path = err.path,
+                    msg = err.message
+                );
+            }
+            bail!("Typegraph {tg_name} failed validation");
+        } else {
+            Ok(())
+        }
+    }
+}
 
 pub mod deno_rt {
     use std::path::Path;

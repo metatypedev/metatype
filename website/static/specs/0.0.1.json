@@ -539,8 +539,8 @@
         {
           "type": "object",
           "required": [
+            "items",
             "policies",
-            "properties",
             "runtime",
             "title",
             "type"
@@ -597,20 +597,32 @@
               "type": "object",
               "additionalProperties": true
             },
-            "properties": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "integer",
-                "format": "uint32",
-                "minimum": 0.0
-              }
+            "items": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
             },
-            "required": {
-              "default": [],
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+            "max_items": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "min_items": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "unique_items": {
+              "type": [
+                "boolean",
+                "null"
+              ]
             }
           }
         },
@@ -781,7 +793,7 @@
         {
           "type": "object",
           "required": [
-            "anyOf",
+            "oneOf",
             "policies",
             "runtime",
             "title",
@@ -839,8 +851,8 @@
               "type": "object",
               "additionalProperties": true
             },
-            "anyOf": {
-              "description": "Array of indexes of the nodes that are used as subschemes in the anyOf field of JSON Schema.",
+            "oneOf": {
+              "description": "Array of indexes of the nodes that are used as subschemes in the oneOf field of JSON Schema.",
               "type": "array",
               "items": {
                 "type": "integer",

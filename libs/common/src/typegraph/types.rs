@@ -6,7 +6,47 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use super::{InjectionSwitch, PolicyIndices};
+use super::{EffectType, PolicyIndices};
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct InjectionCase {
+    effect: EffectType,
+    injection: InjectionSource,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase", tag = "source", content = "data")]
+pub enum InjectionSource {
+    Static(String),
+    Context(String),
+    Secret(String),
+    Parent(u32),
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct InjectionSwitch {
+    pub cases: Vec<InjectionCase>,
+    pub default: Option<InjectionSource>,
+}
+
+impl InjectionSwitch {
+    pub fn sources(&self) -> impl Iterator<Item = &InjectionSource> {
+        self.cases
+            .iter()
+            .map(|c| &c.injection)
+            .chain(self.default.as_ref().into_iter())
+    }
+
+    pub fn cases(&self) -> impl Iterator<Item = (Option<EffectType>, &InjectionSource)> {
+        self.cases
+            .iter()
+            .map(|c| (Some(c.effect), &c.injection))
+            .chain(self.default.as_ref().map(|inj| (None, inj)))
+    }
+}
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]

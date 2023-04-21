@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-mod types;
-// mod validator;
-mod visitor;
+pub mod types;
+pub mod validator;
+pub mod visitor;
 
 pub use types::*;
 
@@ -82,31 +82,7 @@ pub struct TypeMeta {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
-pub struct InjectionCase {
-    effect: EffectType,
-    injection: InjectionSource,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase", tag = "source", content = "data")]
-pub enum InjectionSource {
-    Static(String),
-    Context(String),
-    Secret(String),
-    Parent(u32),
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
-pub struct InjectionSwitch {
-    pub cases: Vec<InjectionCase>,
-    pub default: Option<InjectionSource>,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum EffectType {
     Create,

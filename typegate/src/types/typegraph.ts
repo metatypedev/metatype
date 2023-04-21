@@ -105,10 +105,10 @@ export type ArrayNode = {
   config?: {
     [k: string]: unknown;
   };
-  properties: {
-    [k: string]: number;
-  };
-  required?: string[];
+  items: number;
+  max_items?: number | null;
+  min_items?: number | null;
+  unique_items?: boolean | null;
 };
 export type FunctionNode = {
   type: "function";
@@ -151,7 +151,7 @@ export type EitherNode = {
   config?: {
     [k: string]: unknown;
   };
-  anyOf: number[];
+  oneOf: number[];
 };
 export type AnyNode = {
   type: "any";
