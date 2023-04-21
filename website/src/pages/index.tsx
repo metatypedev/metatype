@@ -116,6 +116,7 @@ function Features(): JSX.Element {
   return (
     <section className="flex items-center p-4">
       <div className="container">
+        <h2 className="inline-block mt-12 text-3xl">Main features</h2>
         <div className="row">
           {featureList.map((props, idx) => {
             const Svg = props.svg;
@@ -137,7 +138,7 @@ function Features(): JSX.Element {
   );
 }
 
-function Example(): JSX.Element {
+function TryIt(): JSX.Element {
   return (
     <section className="container">
       <h2 className="inline-block mt-12 text-3xl">Try it by yourself</h2>
@@ -250,15 +251,40 @@ function DemoVideo(): JSX.Element {
   );
 }
 
+function Intro(): JSX.Element {
+  return (
+    <section className="container flex md:flex-row  sm:flex-col items-center pt-6">
+      <div className="flex-1">
+        <p className="text-xl">
+          Metatype is a <strong>HTTP/GraphQL query engine</strong> that enables
+          developers to deploy virtual graphs connecting all the components of
+          their stack . They can easily{" "}
+          <strong>compose databases, APIs and business logic</strong> in a type
+          safe manner. The serverless engine compiles, optimizes, runs and
+          caches queries on the fly. Authentication, authorization and security
+          also come for free.
+        </p>
+      </div>
+      <div className="flex-1 text-center">
+        <img
+          src="/images/query-engine.png"
+          style={{ maxWidth: "100%", maxHeight: "400px" }}
+        />
+      </div>
+    </section>
+  );
+}
+
 export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   return (
     <Layout title={siteConfig.title} description={siteConfig.tagline}>
       <Header />
       <main>
-        <Features />
+        <Intro />
+        <TryIt />
         <DemoVideo />
-        <Example />
+        <Features />
         <Runtimes />
       </main>
     </Layout>

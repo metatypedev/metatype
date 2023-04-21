@@ -36,22 +36,6 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: actions/cache@v3
-        with:
-          path: .venv
-          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-      - name: Install Infisical
-        run: |
-          curl -1sLf 'https://dl.cloudsmith.io/public/infisical/infisical-cli/setup.deb.sh' | sudo -E bash
-          sudo apt-get update 
-          sudo apt-get install -y infisical
       - name: Install and build
         working-directory: website
         env:
@@ -67,11 +51,3 @@ jobs:
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
           cname: metatype.dev
-      - name: Deploy typegraph
-        env:
-          INFISICAL_TOKEN: ${{ secrets.INFISICAL_TOKEN }}
-        run: |
-          python3 -m venv .venv
-          source .venv/bin/activate
-          pip3 install ./typegraph
-          cargo run --locked --package meta-cli -- -C website deploy --password ${{ secrets.DOCS_TG_ADMIN_PASSWORD }}
