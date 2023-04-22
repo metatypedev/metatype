@@ -105,6 +105,38 @@ test("Role jwt policy access", async (t) => {
       .on(e_norm);
   });
 
+  await t.should("support regex successful check", async () => {
+    await gql`
+      query {
+        sayHelloRegexWorld
+      }
+    `.withContext({
+      user: {
+        name: "bdmin",
+      },
+    })
+      .expectData({
+        sayHelloRegexWorld: "Hello World!",
+      })
+      .on(e_norm);
+  });
+
+  await t.should("support regex wrong check", async () => {
+    await gql`
+      query {
+        sayHelloRegexWorld
+      }
+    `.withContext({
+      user: {
+        name: "dmin",
+      },
+    })
+      .expectErrorContains(
+        "Authorization failed for policy",
+      )
+      .on(e_norm);
+  });
+
   await t.should("not have a role", async () => {
     await gql`
       query {
@@ -112,7 +144,6 @@ test("Role jwt policy access", async (t) => {
       }
     `
       .expectErrorContains(
-        // "__jwt_user_name_some_role in sayHelloWorld",
         "Authorization failed for policy '__jwt_user_name_some_role'",
       )
       .withContext({

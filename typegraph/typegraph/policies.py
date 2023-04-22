@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-from re import sub as reg_sub
-from typing import List, Optional, Union
+import re
+from typing import List, Optional, Pattern, Union
 
 from attrs import evolve, field, frozen
 
@@ -105,14 +105,28 @@ def public(name: str = "__public"):
     return Policy(PredefinedFunMat("true")).named(name)
 
 
-def jwt(dotaccess: str, value: str):
+def jwt(dotaccess: str, value: Union[str, Pattern]):
     # join role_name, field with '__jwt' as prefix
-    separator, pattern = "_", r"[^a-zA-Z0-9_]+"
-    prefix = "__jwt"
-    jwt_name = reg_sub(pattern, separator, separator.join([prefix, dotaccess, value]))
-    # build the policy
+    separator = "_"
+    is_regex = isinstance(value, Pattern)
+    value = sanitize_ts_string(value if not is_regex else value.pattern)
     dotaccess = sanitize_ts_string(dotaccess)
-    value = sanitize_ts_string(value)
+    jwt_name = re.sub(
+        "[^a-zA-Z0-9_]+",
+        separator,
+        separator.join(
+            [
+                "__jwt",
+                dotaccess,
+                value,
+            ]
+        ),
+    )
+    check = (
+        f""" value === "{value}" """
+        if not is_regex
+        else f""" new RegExp("{value}").test(value) """
+    )
     src = f"""
             (_, {{ context }}) => {{
                 const role_chunks = "{dotaccess}".split(".");
@@ -120,7 +134,7 @@ def jwt(dotaccess: str, value: str):
                 for (const chunk of role_chunks) {{
                     value = value?.[chunk];
                 }}
-                return value === "{value}";
+                return {check};
             }}
         """
     return Policy(PureFunMat(src)).named(jwt_name)

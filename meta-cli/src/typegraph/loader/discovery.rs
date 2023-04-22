@@ -75,7 +75,10 @@ impl Discovery {
                     queue.push_back(file_name);
                 } else if !self.filter.is_excluded(&file_name) {
                     let rel_path = diff_paths(&file_name, &self.dir).unwrap();
-                    info!("Found typegraph definition module at {rel_path:?}");
+                    info!(
+                        "Found typegraph definition module at {}",
+                        rel_path.display()
+                    );
                     res.push(file_name);
                 }
             }

@@ -200,7 +200,7 @@ impl Deploy<DefaultModeData> {
 
             while let Some(tg) = tgs.pop_front() {
                 let tg_name = tg.name().unwrap().cyan();
-                info!("Pushing typegraph {tg_name}...",);
+                info!("Pushing typegraph {tg_name}...");
                 match self.push_config.push(&tg).await {
                     Ok(res) => {
                         if res.success() {

@@ -256,9 +256,9 @@ function Intro(): JSX.Element {
     <section className="container flex md:flex-row  sm:flex-col items-center pt-6">
       <div className="flex-1">
         <p className="text-xl">
-          Metatype is a <strong>HTTP/GraphQL query engine</strong> that enables
+          Metatype is an <strong>HTTP/GraphQL query engine</strong> that enables
           developers to deploy virtual graphs connecting all the components of
-          their stack . They can easily{" "}
+          their stack. They can easily{" "}
           <strong>compose databases, APIs and business logic</strong> in a type
           safe manner. The serverless engine compiles, optimizes, runs and
           caches queries on the fly. Authentication, authorization and security

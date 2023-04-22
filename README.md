@@ -1,20 +1,19 @@
 # Metatype
 
-Metatype is a HTTP/GraphQL query engine that enables developers to deploy
-virtual graphs connecting all the components of their stack. They can easily
-compose databases (Postgres, MongoDB, etc.), APIs (GRPCs, REST, etc.) and
-business logic (Typescript, Python, WASM, etc.) in a type safe manner. The
-serverless engine compiles, optimizes, runs and caches queries on the fly.
-Authentication (JWT, OAuth, etc.), authorization (field-level policy, PBAC,
-etc.) and security (rate limiting, CORS, etc.) also come for free.
-
 [![Typegate version](https://ghcr-badge.deta.dev/metatypedev/typegate/latest_tag?trim=major&label=typegate)](https://github.com/metatypedev/metatype/pkgs/container/typegate)
 [![Meta-cli version](https://img.shields.io/github/v/release/metatypedev/metatype?include_prereleases&label=meta-cli)](https://github.com/metatypedev/metatype/releases)
 [![Typegraph version](https://img.shields.io/pypi/v/typegraph?label=typegraph)](https://pypi.org/project/typegraph/)
+![Discord](https://img.shields.io/discord/948200476351004672)
+
+Metatype is an **HTTP/GraphQL query engine** that enables developers to deploy
+virtual graphs connecting all the components of their stack. They can easily
+**compose databases, APIs and business logic** in a type safe manner. The
+serverless engine compiles, optimizes, runs and caches queries on the fly.
+Authentication, authorization and security also come for free.
 
 Support us by starring ⭐ this repository, joining the community on
 [Discord](https://discord.gg/PSyYcEHyw5) or on
-[GitHb](https://github.com/metatypedev/metatype/discussions) 💬, watching new
+[GitHub](https://github.com/metatypedev/metatype/discussions) 💬, watching new
 [releases](https://github.com/metatypedev/metatype/releases) 🔔, reporting
 [issues](https://github.com/metatypedev/metatype/issues) 🐛 or even contributing
 back :octocat: fixing a bug, improving documentation or adding a new feature.
