@@ -29,7 +29,7 @@ mutation C($message: String!) {
 
 query D {
   list_feedback {
-    email # cannot be access, delete me
+    email # cannot be accessed, delete me
     message
   }
 }
