@@ -38,8 +38,8 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
             return None;
         }
         self.visited_types.insert(type_idx);
+        let res = self.visitor.visit(type_idx, &self.path, self.tg);
         let type_node = &self.tg.types[type_idx as usize];
-        let res = self.visitor.visit(type_node, &self.path);
         match res {
             VisitResult::Continue(deeper) if deeper => match type_node {
                 TypeNode::Optional { data, .. } => self.visit_optional(type_idx, data.item),
@@ -205,7 +205,12 @@ pub enum VisitResult<T> {
 pub trait TypeVisitor {
     type Return: Sized;
     /// return true to continue the traversal on the subgraph
-    fn visit(&mut self, node: &TypeNode, path: &[PathSegment]) -> VisitResult<Self::Return>;
+    fn visit(
+        &mut self,
+        type_idx: u32,
+        path: &[PathSegment],
+        tg: &Typegraph,
+    ) -> VisitResult<Self::Return>;
     fn get_result(self) -> Option<Self::Return>
     where
         Self: Sized,

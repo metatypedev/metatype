@@ -9,7 +9,6 @@ with TypeGraph("injection") as g:
             "raw_str": t.string().set("2"),
             "secret": t.integer().from_secret("TEST_VAR"),
             "raw_obj": t.struct({"in": t.integer()}).set({"in": -1}),
-            # TODO raw_obj with invalid type
             "alt_raw": t.string().inject(injection.static("2")),
             "alt_secret": t.string().inject(injection.secret("TEST_VAR")),
             "alt_context": t.string().inject(injection.context("userId")),

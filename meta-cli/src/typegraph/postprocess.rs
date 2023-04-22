@@ -71,7 +71,7 @@ impl PostProcessor for Validator {
         if !errors.is_empty() {
             for err in errors.iter() {
                 error!(
-                    "at {tg_name}{err_path}: {msg}",
+                    "at {tg_name}:{err_path}: {msg}",
                     err_path = err.path,
                     msg = err.message
                 );

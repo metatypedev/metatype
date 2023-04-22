@@ -108,9 +108,10 @@ pub struct IntegerTypeData {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct StringTypeData {
-    pub min_length: Option<i64>,
-    pub max_length: Option<i64>,
+    pub min_length: Option<u32>,
+    pub max_length: Option<u32>,
     pub pattern: Option<String>,
+    // TODO Option<Enum>
     pub format: Option<String>,
 }
 
