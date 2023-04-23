@@ -313,8 +313,7 @@ export class TypeGraph {
 
     if (isArray(type)) {
       if (isOptional(this.type(type.items))) {
-        throw Error("D");
-        //return (x: any) => x.flat().filter((c: any) => !!c);
+        return (x: any) => x.flat().filter((c: any) => !!c);
       }
       return (x: any) => ensureArray(x).flat();
     }
