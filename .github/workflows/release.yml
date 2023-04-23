@@ -91,7 +91,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - working-directory: typegraph
+      - working-directory: typegraph/python
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
         run: |
@@ -101,7 +101,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}
-          file: "typegraph/dist/*"
+          file: "typegraph/python/dist/*"
           file_glob: true
           overwrite: false
 

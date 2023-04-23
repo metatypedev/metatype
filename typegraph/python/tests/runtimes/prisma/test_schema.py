@@ -25,7 +25,7 @@ from typegraph.providers.prisma.schema import build_model
 #     debugpy.wait_for_client()
 
 
-META_BIN = str(Path(getcwd()) / "../target/debug/meta")
+META_BIN = str(Path(getcwd()) / "../../target/debug/meta")
 
 
 def reformat_schema(schema: str):

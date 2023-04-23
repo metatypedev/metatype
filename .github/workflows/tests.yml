@@ -267,9 +267,9 @@ jobs:
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          cd typegraph
+          cd typegraph/python
           poetry install --sync
-          cd ..
+          cd ../..
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
           which py-tg
