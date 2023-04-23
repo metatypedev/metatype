@@ -123,7 +123,7 @@ jobs:
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          cd typegraph
+          cd typegraph/python
           poetry install --sync
           pytest -s tests
 
@@ -150,9 +150,9 @@ jobs:
       - run: |
           python3 -m venv .venv
           source .venv/bin/activate
-          cd typegraph
+          cd typegraph/python
           poetry install --sync
-          cd ..
+          cd ../..
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
           tar -cvf meta.tar target/debug/meta
@@ -192,9 +192,9 @@ jobs:
       - run: |
           python3 -m venv .venv
           ${{ matrix.activate }}
-          cd typegraph
+          cd typegraph/python
           poetry install --sync
-          cd ..
+          cd ../..
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package meta-cli
 
@@ -311,9 +311,9 @@ jobs:
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          cd typegraph
+          cd typegraph/python
           poetry install --sync
-          cd ..
+          cd ../..
           cargo test --locked --exclude meta-cli --exclude native --workspace
 
   test-docker:
