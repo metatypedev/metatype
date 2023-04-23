@@ -1,0 +1,28 @@
+
+interface core {
+  record tpe {
+    id: u32
+  }
+
+  union out {
+    tpe,
+    string,
+    s32,
+    u32
+  }
+
+  integerb: func() -> tpe
+
+  // do a set per wit type, not per typegraph type (similar to gettpe)
+  integermin: func(id: u32, n: s32) -> tpe
+
+  structb: func(props: list<tuple<string, tpe>>) -> tpe
+
+  gettpe: func(id: u32, field: string) -> option<tpe>
+}
+
+default world typegraph {
+  import print: func(msg: string)
+
+  export core: self.core
+}
