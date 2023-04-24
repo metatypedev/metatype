@@ -77,11 +77,6 @@ pub struct OptionalTypeData {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
-pub struct BooleanTypeData;
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct NumberTypeData {
     pub minimum: Option<f64>,
@@ -169,12 +164,6 @@ pub struct EitherTypeData {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct AnyTypeData;
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum TypeNode {
     Optional {
@@ -186,8 +175,6 @@ pub enum TypeNode {
     Boolean {
         #[serde(flatten)]
         base: TypeNodeBase,
-        #[serde(flatten)]
-        data: BooleanTypeData,
     },
     Number {
         #[serde(flatten)]
