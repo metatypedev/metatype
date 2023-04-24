@@ -704,6 +704,27 @@ class func(typedef):
     #     return self.compose(other)
 
 
+class cls_struct:
+    __repr_of__: struct = None
+
+    def __init__(self, name: Union[str, None] = None):
+        cls = self.__class__
+        props = {}
+        # custom
+        for k in dir(self):
+            if k.startswith("__"):
+                continue
+            v = getattr(cls, k)
+            if isinstance(v, typedef):
+                props[k] = v
+        if name is not None:
+            self.__repr_of__ = struct(props).named(name)
+        self.__repr_of__ = struct(props)
+
+    def struct(self) -> Union[struct, None]:
+        return self.__repr_of__
+
+
 def gen(out: typedef, mat: Materializer, **kwargs) -> func:
     return func(struct(), out, mat, **kwargs)
 
