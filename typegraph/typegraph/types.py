@@ -704,7 +704,7 @@ class func(typedef):
     #     return self.compose(other)
 
 
-class cls_struct:
+class custom:
     __repr_of__: struct = None
 
     def __init__(self, name: Union[str, None] = None):
@@ -717,6 +717,8 @@ class cls_struct:
             v = getattr(cls, k)
             if isinstance(v, typedef):
                 props[k] = v
+            if isinstance(v, custom):
+                props[k] = v.struct()
         if name is not None:
             self.__repr_of__ = struct(props).named(name)
         self.__repr_of__ = struct(props)

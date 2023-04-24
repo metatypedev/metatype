@@ -6,22 +6,21 @@ from typegraph.graph.typegraph import TypeGraph
 
 with TypeGraph("sandbox") as g:
 
-    class infos(t.cls_struct):
+    class infos(t.custom):
         address = t.string()
         phone_number = t.string()
 
-    class medal(t.cls_struct):
+    class medal(t.custom):
         year = t.integer().min(2000).max(2100)
         type = t.enum(["silver", "gold"])
 
-    class university(t.cls_struct):
+    class university(t.custom):
         name = t.string()
         medals = t.array(medal().struct())  # nested
-        infos = infos().struct()  # nested
+        infos = infos()  # nested
 
     univ = university("Some Univ")
 
     assert univ.struct() is univ.struct()
-
-    print(univ.struct().infos.props.keys())
-    print(univ.struct().props.keys())
+    assert isinstance(univ.struct().props["infos"], t.struct)
+    assert univ.infos
