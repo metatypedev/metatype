@@ -36,6 +36,10 @@ impl Validator {
     }
 }
 
+fn to_string(value: &Value) -> String {
+    serde_json::to_string(value).unwrap()
+}
+
 impl TypeVisitor for Validator {
     type Return = Vec<ValidatorError>;
 
@@ -101,10 +105,9 @@ impl Typegraph {
             TypeNode::Any { .. } => Ok(()),
             TypeNode::Integer { data, .. } => self.validate_integer(data, value),
             TypeNode::Number { data, .. } => self.validate_number(data, value),
-            TypeNode::Boolean { .. } => value
-                .as_bool()
-                .map(|_| ())
-                .ok_or_else(|| anyhow!("Expected a boolean got {value:?}")),
+            TypeNode::Boolean { .. } => value.as_bool().map(|_| ()).ok_or_else(|| {
+                anyhow!("Expected a boolean got '{value}'", value = to_string(value))
+            }),
             TypeNode::String { data, .. } => self.validate_string(data, value),
             TypeNode::Optional { data, .. } => {
                 if value.is_null() {
@@ -123,7 +126,7 @@ impl Typegraph {
 
     fn validate_integer(&self, data: &IntegerTypeData, value: &Value) -> Result<()> {
         let Value::Number(n) = value else {
-            bail!("Expected number got {value:?}");
+            bail!("Expected number got '{}'", to_string(value));
         };
         let Some(value) = n.as_i64() else {
             bail!("Number value {value:?} cannot be stored in f64");
@@ -150,7 +153,7 @@ impl Typegraph {
 
     fn validate_number(&self, data: &NumberTypeData, value: &Value) -> Result<()> {
         let Value::Number(n) = value else {
-            bail!("Expected number got {value:?}");
+            bail!("Expected number got '{}'", to_string(value));
         };
         let Some(value) = n.as_f64() else {
             bail!("Number value {value:?} cannot be stored in f64");
@@ -179,7 +182,7 @@ impl Typegraph {
     fn validate_string(&self, data: &StringTypeData, value: &Value) -> Result<()> {
         let s = value
             .as_str()
-            .ok_or_else(|| anyhow!("Expected a string, got {value:?}"))?;
+            .ok_or_else(|| anyhow!("Expected a string, got '{}'", to_string(value)))?;
         if let Some(min_length) = data.min_length {
             if s.len() < min_length as usize {
                 bail!(
@@ -203,13 +206,14 @@ impl Typegraph {
     fn validate_array(&self, data: &ArrayTypeData, value: &Value) -> Result<()> {
         let array = value
             .as_array()
-            .ok_or_else(|| anyhow!("Expected an array got {value:?}"))?;
+            .ok_or_else(|| anyhow!("Expected an array got '{}'", to_string(value)))?;
 
         if let Some(max_items) = data.max_items {
             if array.len() > max_items as usize {
                 bail!(
-                    "Expected a maximum item count of {max_items} in array {value:?} (len={})",
-                    array.len()
+                    "Expected a maximum item count of {max_items} in array '{arr}' (len={})",
+                    array.len(),
+                    arr = to_string(value),
                 );
             }
         }
@@ -217,8 +221,9 @@ impl Typegraph {
         if let Some(min_items) = data.min_items {
             if array.len() < min_items as usize {
                 bail!(
-                    "Expected a minimum item count of {min_items} in array {value:?} (len={})",
-                    array.len()
+                    "Expected a minimum item count of {min_items} in array '{arr}' (len={})",
+                    array.len(),
+                    arr = to_string(value),
                 );
             }
         }
@@ -230,15 +235,22 @@ impl Typegraph {
     }
 
     fn validate_object(&self, data: &ObjectTypeData, value: &Value) -> Result<()> {
-        let object = value
-            .as_object()
-            .ok_or_else(|| anyhow!("Expected an object, got {value:?}"))?;
+        let object = value.as_object().ok_or_else(|| {
+            anyhow!(
+                "Expected an object, got '{value}'",
+                value = to_string(value)
+            )
+        })?;
+
         let mut remaining_keys = object.keys().collect::<HashSet<_>>();
         for (key, typ) in data.properties.iter() {
             match object.get(key) {
                 None => {
-                    if data.required.iter().any(|i| i == key) {
-                        bail!("Required field {key:?} not found in object {value:?}");
+                    if !matches!(self.types[*typ as usize], TypeNode::Optional { .. }) {
+                        bail!(
+                            "Required field {key:?} not found in object '{value}'",
+                            value = to_string(value)
+                        );
                     }
                 }
                 Some(val) => {
@@ -248,9 +260,17 @@ impl Typegraph {
             }
         }
 
-        // additional properties
+        // additional properties?
         if !remaining_keys.is_empty() {
-            bail!("Unexpected fields {remaining_keys:?} in object {value:?}");
+            bail!(
+                "Unexpected fields {} in object {:?}",
+                remaining_keys
+                    .iter()
+                    .map(|k| format!("{k:?}"))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                to_string(value),
+            );
         }
 
         Ok(())
@@ -262,7 +282,10 @@ impl Typegraph {
                 return Ok(());
             }
         }
-        bail!("Value {value:?} did not match any of the variants of the union");
+        bail!(
+            "Value '{value}' did not match any of the variants of the union",
+            value = to_string(value)
+        );
     }
 
     fn validate_either(&self, data: &EitherTypeData, value: &Value) -> Result<()> {
@@ -273,15 +296,19 @@ impl Typegraph {
             }
         }
         match valid_variants.len() {
-            0 => bail!("Value {value:?} did not match any of the variants of the either"),
+            0 => bail!(
+                "Value '{value}' did not match any of the variants of the either",
+                value = to_string(value)
+            ),
             1 => Ok(()),
             _ => bail!(
-                "Value {value:?} matched to more than one variant onf the either: {}",
+                "Value '{value}' matched to more than one variant onf the either: {}",
                 valid_variants
                     .iter()
                     .map(|v| format!("#{v}"))
                     .collect::<Vec<_>>()
-                    .join(", ")
+                    .join(", "),
+                value = to_string(value)
             ),
         }
     }

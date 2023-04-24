@@ -33,7 +33,6 @@ from typegraph.injection import (
 )
 from typegraph.policies import Policy, EffectPolicies
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils import eprint
 from typegraph.utils.attrs import SKIP, always, asdict
 
 # if os.environ.get("DEBUG"):
@@ -191,7 +190,6 @@ class typedef(Node):
         return self
 
     def _propagate_runtime(self, runtime: "Runtime", visited: Set["typedef"] = None):
-        eprint(f"name={self.name}, injection={self.injection}")
         if visited is None:
             visited = set()
         elif self in visited:
@@ -270,7 +268,6 @@ class typedef(Node):
 
         if self.injection is not None:
             ret["injection"] = self.injection.data(collector)
-            eprint(f"injection: {ret['injection']}")
 
         config = self.runtime.get_type_config(self)
         if len(config) > 0:
