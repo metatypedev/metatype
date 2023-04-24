@@ -40,6 +40,7 @@ pydoc-markdown = { git = "https://github.com/metatypedev/pydoc-markdown", branch
 ruff = "^0.0.261"
 respx = "^0.20.1"
 coverage = "^7.2.3"
+black = "^23.3.0"
 
 [build-system]
 requires = ["poetry-core"]
