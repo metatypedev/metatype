@@ -4,6 +4,7 @@ mod cli;
 mod codegen;
 mod config;
 mod fs;
+mod global_config;
 mod logger;
 #[cfg(test)]
 mod tests;
@@ -13,18 +14,24 @@ mod utils;
 use anyhow::{bail, Result};
 use clap::error::ErrorKind;
 use clap::Parser;
+use cli::upgrade::upgrade_check;
 use cli::Action;
 use cli::Args;
+use log::warn;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     logger::init();
 
+    upgrade_check()
+        .await
+        .unwrap_or_else(|e| warn!("cannot check for update: {}", e));
+
     let args = match Args::try_parse() {
         Ok(args) => args,
         Err(e) => {
             if e.kind() == ErrorKind::DisplayHelp {
-                println!("Meta {}\n{}", common::get_version(), e.render().ansi());
+                println!("meta {}\n{}", common::get_version(), e.render().ansi());
                 return Ok(());
             }
             bail!("{}", e.render().ansi());
@@ -32,7 +39,7 @@ async fn main() -> Result<()> {
     };
 
     if args.version || args.command.is_none() {
-        println!("Meta {}", common::get_version());
+        println!("meta {}", common::get_version());
         return Ok(());
     }
 

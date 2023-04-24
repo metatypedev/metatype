@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use crate::{
     config::{METATYPE_FILES, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS},
     fs::{clean_path, find_in_parents},
+    global_config::GlobalConfig,
 };
 
 use super::{Action, GenArgs};
@@ -29,6 +30,7 @@ impl Action for Doctor {
     async fn run(&self, args: GenArgs) -> Result<()> {
         let dir = &args.dir()?;
         println!("Current directory: {}", dir.display());
+        println!("Global config: {}", GlobalConfig::default_path()?.display());
 
         /*
         - docker-compose

@@ -77,5 +77,5 @@ fn init_native() {
 
 #[deno_sync]
 fn get_version() -> String {
-    common::get_version()
+    common::get_version().to_string()
 }

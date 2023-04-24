@@ -3,8 +3,8 @@
 pub mod archive;
 pub mod typegraph;
 
-pub fn get_version() -> String {
-    env!("CARGO_PKG_VERSION").to_string()
+pub fn get_version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
 }
 
 pub fn is_dev() -> bool {

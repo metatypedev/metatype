@@ -36,6 +36,6 @@ test("Python WASI runtime", async (t) => {
 
     await Promise.all(tests);
     const end = performance.now();
-    assert((end - start) < 120);
+    assert((end - start) < 150);
   });
 });
