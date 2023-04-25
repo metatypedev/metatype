@@ -10,3 +10,4 @@ expression: "String::from_utf8(output.stderr).expect(\"failed to decode output\"
 [ERROR] at invalid_injections:/test/[in]/f: Required field "a" not found in object '{"b":1}'
 [ERROR] at invalid_injections:/test/[in]/g: Unexpected fields "b" in object "{\"a\":2,\"b\":1}"
 Error: Error while post processing typegraph invalid_injections from "tests/e2e/typegraphs/validator.py": Typegraph invalid_injections failed validation
+

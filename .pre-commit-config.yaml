@@ -13,7 +13,7 @@ repos:
       - id: check-merge-conflict
       - id: check-symlinks
       - id: end-of-file-fixer
-        exclude: typegate/deno.lock
+        exclude: (typegate/deno.lock|.*\.snap$)
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: "v0.0.261"
     hooks:

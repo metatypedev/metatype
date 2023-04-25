@@ -14,6 +14,7 @@ fn test_invalid_injections() {
     let bin = root.join("target/debug/meta");
     let output = Command::new(bin)
         .args(&["serialize", "-f", "tests/e2e/typegraphs/validator.py"])
+        .env("RUST_LOG", "error")
         .output()
         .expect("failed to execute process");
 
