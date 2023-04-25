@@ -472,7 +472,13 @@ class PrismaRuntime(Runtime):
         )
         row_def = tpe.compose(aggreg_def.props)
         if where is None:
-            where = typegen.gen_query_where_expr(tpe).named(_pref("Where")).optional()
+            # Note: if set to False
+            # we get: tokio-runtime-worker has overflowed its stack
+            where = (
+                typegen.gen_query_where_expr(tpe, skip_rel=True)
+                .named(_pref("Where"))
+                .optional()
+            )
         if having is None:
             having = (
                 typegen.gen_having_expr(tpe, aggreg_def)

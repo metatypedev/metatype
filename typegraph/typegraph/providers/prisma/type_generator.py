@@ -160,22 +160,21 @@ class TypeGenerator:
 
         node_props = {}
         for k, v in tpe.props.items():
-            # nested
             v = resolve_proxy(v)
             if v.runtime is not None and v.runtime != tpe.runtime:
                 continue
             nested = resolve_proxy(resolve_entity_quantifier(v))
-            if nested.type == "object":
-                if skip_rel:
-                    continue
+            if nested.type == "object" and not skip_rel:
+                # nested
                 node_props[k] = self.extend_terminal_nodes_props(
-                    nested, skip_rel=False
+                    nested, skip_rel=True
                 ).optional()
                 continue
-            # same depth
-            term = t.either(term_list + [undo_optional(v)])
-            not_node = rename_with_idx(t.struct({"not": term}), "not")
-            node_props[k] = t.either([not_node, term]).optional()
+            else:
+                # same depth
+                term = t.either(term_list + [undo_optional(v)])
+                not_node = rename_with_idx(t.struct({"not": term}), "not")
+                node_props[k] = t.either([not_node, term]).optional()
 
         return t.struct(node_props)
 
@@ -201,8 +200,8 @@ class TypeGenerator:
     def gen_query_where_expr(
         self, tpe: t.struct, exclude_extra_fields=False, skip_rel=False
     ) -> t.struct:
-        tpe = self.get_where_type(tpe, skip_rel)
-        extended_tpe = self.extend_terminal_nodes_props(tpe)
+        tpe = self.get_where_type(tpe)
+        extended_tpe = self.extend_terminal_nodes_props(tpe, skip_rel)
         extended_tpe = rename_with_idx(extended_tpe, "extended_tpe")
 
         # define the terminal expression
