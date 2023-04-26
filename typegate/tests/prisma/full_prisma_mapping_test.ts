@@ -616,7 +616,7 @@ test("prisma full mapping", async (t) => {
           findFirstComment(
             where: {
               related_post: { 
-                title: { contains: "Some Title" }
+                title: { contains: "MODIFIED" }
               }
             },
           ) {
@@ -632,7 +632,7 @@ test("prisma full mapping", async (t) => {
         id: 50001,
         related_post: {
           id: 10001,
-          title: "Some Title 1",
+          title: "TITLE_MODIFIED",
         },
       },
     })
