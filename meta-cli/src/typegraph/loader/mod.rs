@@ -41,7 +41,10 @@ impl Loader {
         Self {
             config,
             skip_deno_modules: false,
-            postprocessors: vec![postprocess::ReformatScripts.into()],
+            postprocessors: vec![
+                postprocess::Validator.into(),
+                postprocess::ReformatScripts.into(),
+            ],
         }
     }
 

@@ -37,7 +37,7 @@ const logger = getLogger("sync");
 export type JSONSchema = Exclude<jst.JSONSchema, boolean>;
 
 export function trimType(node: TypeNode): JSONSchema {
-  const { runtime, policies, config, injection, inject, ...ret } = node;
+  const { runtime, policies, config, injection, ...ret } = node;
   return ret as unknown as JSONSchema;
 }
 

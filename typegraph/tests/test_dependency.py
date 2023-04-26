@@ -90,8 +90,14 @@ class TestDependency:
                     },
                     {
                         "runtime": 0,
-                        "inject": 7,
-                        "injection": "parent",
+                        "injection": frozendict.frozendict(
+                            {
+                                "cases": (),
+                                "default": frozendict.frozendict(
+                                    {"source": "parent", "data": 7}
+                                ),
+                            }
+                        ),
                         "policies": [],
                         "type": "integer",
                         "title": "integer_2",
