@@ -15,33 +15,48 @@ test("Injected queries", async (t) => {
     secrets: { TG_INJECTION_TEST_VAR: "3" },
   });
 
+  await t.should("fail for missing context", async () => {
+    await gql`
+    query {
+      test(a: 1) {
+        raw_int
+      }
+    }
+    `
+      .expectErrorContains("'userId' was not found in the context")
+      .on(e);
+  });
+
   await t.should("inject values", async () => {
     await gql`
       query {
         test(a: 0) {
           a
-          b
-          c
-          d
-          e {
+          raw_int
+          raw_str
+          secret
+          parent {
             a2
           }
-          f {
+          raw_obj {
             in
           }
         }
       }
     `
+      .withContext({
+        userId: "123",
+      })
       .expectData({
         test: {
           a: 0,
-          b: 1,
-          c: "2",
-          d: 3,
-          e: {
+          raw_int: 1,
+          raw_str: "2",
+          secret: 3,
+          parent: {
             a2: 0,
           },
-          f: {
+          raw_obj: {
             in: -1,
           },
         },
@@ -52,13 +67,40 @@ test("Injected queries", async (t) => {
   await t.should("refuse injected variables", async () => {
     await gql`
       query {
-        test(a: 0, b: 1) {
+        test(a: 0, raw_int: 1) {
           a
-          b
+          raw_int
         }
       }
     `
-      .expectErrorContains("Unexpected value for injected parameter 'b'")
+      .expectErrorContains("Unexpected value for injected parameter 'raw_int'")
+      .on(e);
+  });
+
+  await t.should("inject the right value matching the effect", async () => {
+    await gql`
+      query {
+        effect_none { operation }
+      }
+    `
+      .expectData({
+        effect_none: { operation: "read" },
+      })
+      .on(e);
+    await gql`
+      mutation {
+        effect_create { operation }
+        effect_delete { operation }
+        effect_update { operation }
+        effect_upsert { operation }
+      }
+    `
+      .expectData({
+        effect_create: { operation: "insert" },
+        effect_delete: { operation: "remove" },
+        effect_update: { operation: "modify" },
+        effect_upsert: { operation: "read" },
+      })
       .on(e);
   });
 });

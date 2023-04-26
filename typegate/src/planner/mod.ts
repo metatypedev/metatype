@@ -253,6 +253,7 @@ export class Planner {
           parent: parent.parentStage,
           args: null,
           outType: TypeGraph.typenameType,
+          effect: null,
           typeIdx: parent.typeIdx,
           runtime: DenoRuntime.getDefaultRuntime(this.tg.name),
           batcher: this.tg.nextBatcher(outType),
@@ -299,6 +300,7 @@ export class Planner {
     const stage = this.createComputeStage(node, {
       dependencies: node.parentStage ? [node.parentStage.id()] : [],
       args: null,
+      effect: null,
       runtime,
       batcher: this.tg.nextBatcher(schema),
       rateCalls: true,
@@ -370,6 +372,7 @@ export class Planner {
     const outputType = this.tg.type(outputIdx);
 
     const mat = this.tg.materializer(schema.materializer);
+    const effect = mat.effect.effect ?? null;
     const runtime = this.tg.runtimeReferences[mat.runtime];
     if (this.operation.operation === "query" && mat.effect.effect != null) {
       throw new Error(
@@ -402,6 +405,7 @@ export class Planner {
       argumentNodes: node.args,
       inpType: argSchema,
       outType: outputType,
+      effect,
       runtime,
       materializer: mat,
       batcher: this.tg.nextBatcher(outputType),

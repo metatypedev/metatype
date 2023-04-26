@@ -228,6 +228,7 @@ export class Engine {
       const {
         dependencies,
         args,
+        effect,
         resolver,
         path,
         parent,
@@ -255,13 +256,13 @@ export class Engine {
       const res = await Promise.all(
         previousValues.map((parent: any) =>
           resolver!({
-            ...computeArgs(variables, parent, context),
+            ...computeArgs({ variables, context, parent, effect }),
             _: {
               parent: parent ?? {},
               context,
               info,
               variables,
-              effect: null, // TODO
+              effect,
               ...deps,
             },
           })
