@@ -169,7 +169,6 @@ class TypeGenerator:
                 node_props[k] = self.extend_terminal_nodes_props(
                     nested, skip_rel=True
                 ).optional()
-                continue
             else:
                 # same depth
                 term = t.either(term_list + [undo_optional(v)])

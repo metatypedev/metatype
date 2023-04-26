@@ -472,8 +472,6 @@ class PrismaRuntime(Runtime):
         )
         row_def = tpe.compose(aggreg_def.props)
         if where is None:
-            # Note: if set to False
-            # we get: tokio-runtime-worker has overflowed its stack
             where = (
                 typegen.gen_query_where_expr(tpe, skip_rel=True)
                 .named(_pref("Where"))
