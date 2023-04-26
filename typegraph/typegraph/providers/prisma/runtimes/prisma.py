@@ -230,16 +230,18 @@ class PrismaRuntime(Runtime):
 
         g.expose(
             createUser=db.create(user).add_policy(public),
-            findUser=db.find_unique(user).add_policy(public),
+            findUser=db.find(user).add_policy(public),
             findManyUsers=db.find_many(user).add_policy(public),
         )
     ```
 
     Here is a list of all available generators:
-    - `find_unique`
+    - `find`
+    - `find_first`
     - `find_many`
     - `create`
     - `update`
+    - `upsert`
     - `delete`
     - `delete_many`
 
