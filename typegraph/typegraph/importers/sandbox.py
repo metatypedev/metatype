@@ -9,21 +9,22 @@ with TypeGraph("sandbox") as g:
     class another(t.struct):
         pass
 
-    class infos(t.custom):
+    class infos(t.struct):
         address = t.string()
         phone_number = t.string()
 
-    class medal(t.custom):
+    class medal(t.struct):
         year = t.integer().min(2000).max(2100)
         type = t.enum(["silver", "gold"])
 
-    class university(t.custom):
-        name = t.string()
-        medals = t.array(medal().struct())  # nested
-        infos = infos()  # nested
+    print(medal.props)
 
-    univ = university("Some Univ")
+    # class university(t.struct):
+    #     name = t.string()
+    #     medals = t.array(medal().struct())  # nested
+    #     infos = infos()  # nested
 
-    assert univ.struct() is univ.struct()
-    assert isinstance(univ.struct().props["infos"], t.struct)
-    assert univ.infos
+    # univ = university("Some Univ")
+
+    # assert univ.struct() is univ.struct()
+    # assert isinstance(univ.struct().props["infos"], t.struct)

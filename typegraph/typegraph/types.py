@@ -501,8 +501,17 @@ class struct(typedef):
     _max: Optional[int] = constraint("maxProperties")
     # _dependentRequired
 
-    def __init__(self, p=None):
-        pass
+    def __post__init__(self, p: Dict[str, TypeNode] = {}):
+        if self.__class__ == struct:
+            self.props = p
+        else:
+            all_attr = [i for i in dir(self) if not i.startswith("__")]
+            props = {}
+            for attr in all_attr:
+                value = self.__getattribute__(attr)
+                if isinstance(value, typedef):
+                    props[attr] = value
+            self.props = props
 
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
@@ -525,10 +534,9 @@ class struct(typedef):
             return super().__getattr__(attr)
         except AttributeError:
             pass
-
         # if attr in self.props:
-        #    return self.props[attr]
-        # raise Exception(f'no prop named "{attr}" in type {self}')
+        #     return self.props[attr]
+        raise Exception(f'no prop named "{attr}" in type {self}')
 
     @property
     def type(self):
