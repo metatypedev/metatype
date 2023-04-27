@@ -49,7 +49,7 @@ dev:
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.1.0
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.1.6-dev.0
+    METATYPE_VERSION: 0.1.6
     TAGLINE: >-
       Compose your data, anywhere, and build iterative API blocks with
       zero-trust and serverless deployment, no matter where and how your

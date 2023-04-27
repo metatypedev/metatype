@@ -912,7 +912,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -3082,7 +3082,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3165,7 +3165,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -3629,7 +3629,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -7226,7 +7226,7 @@ checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
 name = "typescript"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -7939,7 +7939,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "clap",
