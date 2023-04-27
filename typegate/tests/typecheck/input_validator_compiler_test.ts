@@ -3,8 +3,9 @@
 import { Type } from "../../src/type_node.ts";
 import { nativeResult } from "../../src/utils.ts";
 import { compile } from "../../src/validator/input/compiler.ts";
-import { test } from "../utils.ts";
+import { gql, test } from "../utils.ts";
 import * as native from "native";
+import { assertEquals } from "std/testing/asserts.ts";
 
 test("input validator compiler", async (t) => {
   const e = await t.pythonFile("typecheck/typecheck.py");
@@ -27,5 +28,20 @@ test("input validator compiler", async (t) => {
     console.log(code);
     console.log("-- END code");
     t.assertSnapshot(code);
+  });
+
+  await t.should("fail for invalid inputs", async () => {
+    await gql`
+      mutation CreatePost {
+        createPost(title: "Hello!", content: "Good morning!", authorId: "12") {
+          id
+        }
+      }
+    `
+      .expectBody((body) => {
+        assertEquals(body.errors.length, 1);
+        t.assertSnapshot(body.errors[0].message);
+      })
+      .on(e);
   });
 });

@@ -29,6 +29,14 @@ snapshot[`input validator compiler 1`] = `
       errors.push(\`string format constraint "uuid" not satisfied\`);
     }
   }
+  return errors;
 }
 '
+`;
+
+snapshot[`input validator compiler 2`] = `
+'Validation errors: 
+  - expected minimum length: 10, got 6
+  - expected minimum length: 100, got 13
+  - string format constraint "uuid" not satisfied'
 `;

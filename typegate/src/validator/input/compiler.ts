@@ -33,6 +33,7 @@ function* generateValidatorCode(root: Node): Generator<string, void> {
   yield `const { formatValidators } = context;`;
   yield `const errors = [];`;
   yield* new CodeGenerator().generateFromNode(root, "value", false);
+  yield `return errors`;
   yield "}";
 }
 
