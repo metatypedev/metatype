@@ -151,13 +151,11 @@ class ValidationGraphBuilder {
     typeNode: StringNode,
     shift?: ValueShift,
   ): Node {
-    const root: ValidationNode = {
-      kind: "validation",
+    const root = validationNode({
       shift,
       condition: (v) => `typeof ${v} === "string"`,
       error: (v) => `\`expected string, got \${typeof ${v}}\``,
-      next: [],
-    };
+    });
 
     const constraints = [
       ["minLength", ">=", "minimum length"],
@@ -167,13 +165,11 @@ class ValidationGraphBuilder {
     let node = root; // leaf node on which new nodes will be attatched
     for (const [key, compare, name] of constraints) {
       if (typeNode[key] != null) {
-        const next: ValidationNode = {
-          kind: "validation",
+        const next = validationNode({
           condition: (v) => `${v}.length ${compare} ${typeNode[key]}`,
           error: (v) =>
             `\`expected ${name}: ${typeNode[key]}, got \${${v}.length}\``,
-          next: [],
-        };
+        });
         node.next.push(next);
         node = next;
       }
@@ -203,11 +199,27 @@ class ValidationGraphBuilder {
       error: (v) => `\`expected array, but got \${typeof ${v}}\``,
     });
 
-    // TODO constraints
+    const constraints = [
+      ["minItems", ">=", "minimum item count"],
+      ["maxItems", "<=", "maximum item count"],
+    ] as const;
+
+    let leaf = root;
+    for (const [key, compare, name] of constraints) {
+      if (typeNode[key] != null) {
+        const next = validationNode({
+          condition: (v) => `${v}.length ${compare} ${typeNode[key]}`,
+          error: (v) =>
+            `\`expected ${name}: ${typeNode[key]}, got \${${v}.length}\``,
+        });
+        leaf.next.push(next);
+        leaf = next;
+      }
+    }
 
     const iterationVariable = this.nextIterVarName();
 
-    root.next.push({
+    leaf.next.push({
       kind: "loop",
       iterationCount: (v) => `${v}.length`,
       iterationVariable,

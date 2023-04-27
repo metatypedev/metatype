@@ -45,7 +45,7 @@ with TypeGraph(
                 "title": t.string().min(10).max(200),
                 "content": t.string().min(100),
                 "authorId": t.string().uuid(),
-                "tags": t.array(t.string().max(10)).optional(),
+                "tags": t.array(t.string().max(10)).min(2).optional(),
             }
         ),
         post,

@@ -37,6 +37,9 @@ snapshot[`input validator compiler 1`] = `
       if (!(Array.isArray(value["tags"]))) {
         errors.push([\`v.tags\`,
           \`expected array, but got \${typeof value["tags"]}\`]);
+      } else if (!(value["tags"].length >= 2)) {
+        errors.push([\`v.tags\`,
+          \`expected minimum item count: 2, got \${value["tags"].length}\`]);
       } else {
         for (let _i0 = 0; _i0 < value["tags"].length; ++_i0) {
           if (!(typeof value["tags"][_i0] === "string")) {
