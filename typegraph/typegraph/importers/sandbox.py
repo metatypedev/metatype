@@ -17,7 +17,7 @@ with TypeGraph("sandbox") as g:
         year = t.integer().min(2000).max(2100)
         type = t.enum(["silver", "gold"])
 
-    print(medal.props)
+    print(medal())
 
     # class university(t.struct):
     #     name = t.string()

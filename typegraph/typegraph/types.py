@@ -501,14 +501,19 @@ class struct(typedef):
     _max: Optional[int] = constraint("maxProperties")
     # _dependentRequired
 
-    def __post__init__(self, p: Dict[str, TypeNode] = {}):
+    def __init__(self, p: Dict[str, TypeNode] = {}):
         if self.__class__ == struct:
             self.props = p
         else:
-            all_attr = [i for i in dir(self) if not i.startswith("__")]
+            all_attr = set([i for i in dir(self) if not i.startswith("__")])
+            (base,) = self.__class__.__bases__
+            parent_attr = set([i for i in dir(base) if not i.startswith("__")])
+            # common = all_attr.intersection(parent_attr)
+            # child_attr = list(common.union(all_attr - parent_attr))
+            child_attr = list(all_attr - parent_attr)
             props = {}
-            for attr in all_attr:
-                value = self.__getattribute__(attr)
+            for attr in child_attr:
+                value = self.__getattr__(attr)
                 if isinstance(value, typedef):
                     props[attr] = value
             self.props = props
@@ -534,8 +539,10 @@ class struct(typedef):
             return super().__getattr__(attr)
         except AttributeError:
             pass
-        # if attr in self.props:
-        #     return self.props[attr]
+        if attr == "props":
+            return self.props  # recursion
+        if attr in self.props:
+            return self.props[attr]
         raise Exception(f'no prop named "{attr}" in type {self}')
 
     @property
