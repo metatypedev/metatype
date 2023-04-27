@@ -48,7 +48,7 @@ class CodeGenerator {
       case "validation": {
         const ifPrefix = elseClause ? "else " : "";
         yield `${ifPrefix}if (!(${node.condition(valueRef)})) {`;
-        yield `errors.push(${node.error(valueRef)}) }`;
+        yield `errors.push(['${valueRef}', ${node.error(valueRef)}]) }`;
         switch (node.next.length) {
           case 0:
             break;

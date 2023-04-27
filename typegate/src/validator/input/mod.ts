@@ -10,7 +10,7 @@ interface ValidatorContext {
 }
 
 // TODO: path, message
-type ValidatorError = string;
+type ValidatorError = [path: string, message: string];
 
 interface GeneratedValidator {
   (value: unknown, context: ValidatorContext): ValidatorError[];
@@ -30,7 +30,10 @@ export function compileValidator(tg: TypeGraph, typeIdx: TypeIdx) {
     console.debug("Running validator for value:", value);
     const errors = validator(value, context);
     if (errors.length > 0) {
-      throw new Error(`Validation errors: \n  - ${errors.join("\n  - ")}`);
+      const errorList = errors.map(([path, message]) =>
+        `  - at ${path}: ${message}`
+      ).join("\n");
+      throw new Error(`Validation errors:\n${errorList}`);
     }
   };
 }
