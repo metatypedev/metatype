@@ -1,0 +1,28 @@
+export const snapshot = {};
+
+snapshot[`input validator compiler 1`] = `
+'function validate(value, context) {
+  const { formatValidators } = context;
+  const errors = [];
+  if (!(typeof value === "object")) {
+    errors.push(\`expected object, but got \${typeof value}\`) }
+  else if (!(value !== null)) {
+    errors.push(Expected non-null object, but got null) }
+  else {
+    if (!(typeof value["title"] === "string")) {
+      errors.push(\`expected string, got \${typeof value["title"]}\`) }
+    else if (!(value["title"].length >= 10)) {
+      errors.push(expected minimum length: 10, got value["title"].length) }
+    else if (!(value["title"].length <= 200)) {
+      errors.push(expected maximum length: 200, got value["title"].length) }
+    if (!(typeof value["content"] === "string")) {
+      errors.push(\`expected string, got \${typeof value["content"]}\`) }
+    else if (!(value["content"].length >= 100)) {
+      errors.push(expected minimum length: 100, got value["content"].length) }
+    if (!(typeof value["authorId"] === "string")) {
+      errors.push(\`expected string, got \${typeof value["authorId"]}\`) }
+    else if (!(formatValidators["uuid"](value["authorId"]))) {
+      errors.push(string format constraint "uuid" not satisfied) }
+  }
+}'
+`;
