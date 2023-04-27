@@ -170,7 +170,8 @@ class ValidationGraphBuilder {
           kind: "validation",
           pathSuffix: "",
           condition: (v) => `${v}.length ${compare} ${typeNode[key]}`,
-          error: (v) => `expected ${name}: ${typeNode[key]}, got ${v}.length`,
+          error: (v) =>
+            `\`expected ${name}: ${typeNode[key]}, got \${${v}.length}\``,
           next: [],
         };
         node.next.push(next);
@@ -184,7 +185,7 @@ class ValidationGraphBuilder {
         pathSuffix: "",
         condition: (v) => `formatValidators["${typeNode.format}"](${v})`,
         error: (_v) =>
-          `string format constraint "${typeNode.format}" not satisfied`,
+          `\`string format constraint "${typeNode.format}" not satisfied\``,
       });
       node.next.push(next);
       node = next;
@@ -231,7 +232,7 @@ class ValidationGraphBuilder {
     const next = validationNode({
       pathSuffix: "",
       condition: (v) => `${v} !== null`,
-      error: (_v) => `Expected non-null object, but got null`,
+      error: (_v) => '"Expected non-null object, but got null"',
     });
     root.next.push(next);
     for (const [name, type] of Object.entries(typeNode.properties)) {

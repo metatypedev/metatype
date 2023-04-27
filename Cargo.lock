@@ -3666,6 +3666,7 @@ dependencies = [
  "temporal-sdk-core-protos",
  "thiserror",
  "tokio",
+ "typescript",
  "url",
  "user-facing-errors",
  "wasmedge-sdk",
