@@ -45,6 +45,7 @@ with TypeGraph(
                 "title": t.string().min(10).max(200),
                 "content": t.string().min(100),
                 "authorId": t.string().uuid(),
+                "tags": t.array(t.string().max(10)).optional(),
             }
         ),
         post,
@@ -54,5 +55,5 @@ with TypeGraph(
     g.expose(
         posts=posts,
         findPost=find_post.add_policy(my_policy),
-        createPost=create_post,
+        createPost=create_post.add_policy(my_policy),
     )

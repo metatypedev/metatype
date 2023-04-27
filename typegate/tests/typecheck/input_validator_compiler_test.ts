@@ -32,12 +32,18 @@ test("input validator compiler", async (t) => {
 
   await t.should("fail for invalid inputs", async () => {
     await gql`
-      mutation CreatePost {
-        createPost(title: "Hello!", content: "Good morning!", authorId: "12") {
+      mutation CreatePost($title: String!, $content: String!, $authorId: String!, $tags: [String]) {
+        createPost(title: $title, content: $content, authorId: $authorId, tags: $tags) {
           id
         }
       }
     `
+      .withVars({
+        title: "Hello!",
+        content: "Good morning!",
+        authorId: "12",
+        tags: ["tech", "web", "programming"],
+      })
       .expectBody((body) => {
         assertEquals(body.errors.length, 1);
         t.assertSnapshot(body.errors[0].message);

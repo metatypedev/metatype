@@ -13,9 +13,14 @@ import { TypeGraph } from "../../typegraph.ts";
 
 export type PathSegment = string | number;
 
+export interface ValueShift {
+  path: string;
+  ref: string;
+}
+
 export interface ValidationNode {
   kind: "validation";
-  pathSuffix: string;
+  shift?: ValueShift;
   condition: (valRef: string) => string;
   error: (valRef: string) => string;
   next: Array<Node>;
@@ -23,7 +28,7 @@ export interface ValidationNode {
 
 export interface BranchNode {
   kind: "branch";
-  pathSuffix: string;
+  shift?: ValueShift;
   condition: (val: string) => string;
   yes: Array<Node>;
   no: Array<Node>;
@@ -31,7 +36,7 @@ export interface BranchNode {
 
 export interface LoopNode {
   kind: "loop";
-  pathSuffix: string;
+  shift?: ValueShift;
   iterationCount: (valueRef: string) => string;
   iterationVariable: string;
   nextNodes: Node;
@@ -39,10 +44,7 @@ export interface LoopNode {
 
 export type Node = BranchNode | ValidationNode | LoopNode;
 
-type ValidationNodeInit = Pick<
-  ValidationNode,
-  "pathSuffix" | "condition" | "error"
->;
+type ValidationNodeInit = Omit<ValidationNode, "kind" | "next">;
 
 function validationNode(init: ValidationNodeInit): ValidationNode {
   return {
@@ -58,7 +60,7 @@ export function createValidationGraph(
 ): Node {
   return new ValidationGraphBuilder(tg).buildObject(
     tg.type(typeIdx, Type.OBJECT),
-    "",
+    undefined,
   );
 }
 
@@ -77,44 +79,44 @@ class ValidationGraphBuilder {
 
   constructor(private tg: TypeGraph) {}
 
-  build(typeIdx: number, pathSuffix: string): Node {
+  build(typeIdx: number, shift?: ValueShift): Node {
     const typeNode = this.tg.type(typeIdx);
     switch (typeNode.type) {
       case Type.OPTIONAL:
-        return this.buildOptional(typeNode, pathSuffix);
+        return this.buildOptional(typeNode, shift);
       case Type.NUMBER:
       case Type.INTEGER:
-        return this.buildNumber(typeNode, pathSuffix);
+        return this.buildNumber(typeNode, shift);
       case Type.STRING:
-        return this.buildString(typeNode, pathSuffix);
+        return this.buildString(typeNode, shift);
       // case Type.BOOLEAN:
-      //   return this.buildBoolean(typeNode, pathSuffix);
+      //   return this.buildBoolean(typeNode, shift);
       case Type.ARRAY:
-        return this.buildArray(typeNode, pathSuffix);
+        return this.buildArray(typeNode, shift);
       case Type.OBJECT:
-        return this.buildObject(typeNode, pathSuffix);
+        return this.buildObject(typeNode, shift);
       default:
         throw new Error("Type not supported");
     }
   }
 
-  buildOptional(typeNode: OptionalNode, pathSuffix: string): Node {
+  buildOptional(typeNode: OptionalNode, shift?: ValueShift): Node {
     return {
       kind: "branch",
-      pathSuffix,
+      shift,
       condition: (v) => `${v} == null`,
       yes: [],
-      no: [this.build(typeNode.item, pathSuffix)],
+      no: [this.build(typeNode.item)],
     };
   }
 
   buildNumber(
     typeNode: NumberNode | IntegerNode,
-    pathSuffix: string,
+    shift?: ValueShift,
   ): Node {
     const root: ValidationNode = {
       kind: "validation",
-      pathSuffix,
+      shift,
       condition: (v) => `typeof ${v} === "number"`,
       error: (v) => `\`expected number, got \${typeof ${v}}\``,
       next: [],
@@ -132,7 +134,6 @@ class ValidationGraphBuilder {
       if (typeNode[key] != null) {
         const next: ValidationNode = {
           kind: "validation",
-          pathSuffix: "",
           condition: (v) => `${v} ${compare} ${typeNode[key]}`,
           error: (v) =>
             `\`expected ${name} value: ${typeNode[key]} , got ${v}\``,
@@ -148,11 +149,11 @@ class ValidationGraphBuilder {
 
   buildString(
     typeNode: StringNode,
-    pathSuffix: string,
+    shift?: ValueShift,
   ): Node {
     const root: ValidationNode = {
       kind: "validation",
-      pathSuffix,
+      shift,
       condition: (v) => `typeof ${v} === "string"`,
       error: (v) => `\`expected string, got \${typeof ${v}}\``,
       next: [],
@@ -168,7 +169,6 @@ class ValidationGraphBuilder {
       if (typeNode[key] != null) {
         const next: ValidationNode = {
           kind: "validation",
-          pathSuffix: "",
           condition: (v) => `${v}.length ${compare} ${typeNode[key]}`,
           error: (v) =>
             `\`expected ${name}: ${typeNode[key]}, got \${${v}.length}\``,
@@ -182,7 +182,6 @@ class ValidationGraphBuilder {
     if (typeNode.format != null) {
       // TODO check if format is a known format
       const next = validationNode({
-        pathSuffix: "",
         condition: (v) => `formatValidators["${typeNode.format}"](${v})`,
         error: (_v) =>
           `\`string format constraint "${typeNode.format}" not satisfied\``,
@@ -196,11 +195,11 @@ class ValidationGraphBuilder {
 
   buildArray(
     typeNode: ArrayNode,
-    pathSuffix: string,
+    shift?: ValueShift,
   ): Node {
     const root = validationNode({
-      condition: (v) => `typeof ${v} === "array"`,
-      pathSuffix,
+      condition: (v) => `Array.isArray(${v})`,
+      shift,
       error: (v) => `\`expected array, but got \${typeof ${v}}\``,
     });
 
@@ -210,10 +209,12 @@ class ValidationGraphBuilder {
 
     root.next.push({
       kind: "loop",
-      pathSuffix: "",
       iterationCount: (v) => `${v}.length`,
       iterationVariable,
-      nextNodes: this.build(typeNode.items, `[${iterationVariable}]`),
+      nextNodes: this.build(typeNode.items, {
+        ref: `[${iterationVariable}]`,
+        path: `[\${${iterationVariable}}]`,
+      }),
     });
 
     return root;
@@ -221,23 +222,24 @@ class ValidationGraphBuilder {
 
   buildObject(
     typeNode: ObjectNode,
-    pathSuffix: string,
+    shift?: ValueShift,
   ): Node {
     const root = validationNode({
-      pathSuffix,
+      shift,
       condition: (v) => `typeof ${v} === "object"`,
       error: (v) => `\`expected object, but got \${typeof ${v}}\``,
     });
 
     const next = validationNode({
-      pathSuffix: "",
       condition: (v) => `${v} !== null`,
       error: (_v) => '"Expected non-null object, but got null"',
     });
     root.next.push(next);
     for (const [name, type] of Object.entries(typeNode.properties)) {
       // TODO what if `name` contains '"'
-      next.next.push(this.build(type, `["${name}"]`));
+      next.next.push(
+        this.build(type, { ref: `["${name}"]`, path: `.${name}` }),
+      );
     }
     return root;
   }

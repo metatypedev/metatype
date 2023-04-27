@@ -5,33 +5,49 @@ snapshot[`input validator compiler 1`] = `
   const { formatValidators } = context;
   const errors = [];
   if (!(typeof value === "object")) {
-    errors.push(["value", \`expected object, but got \${typeof value}\`]);
+    errors.push([\`v\`, \`expected object, but got \${typeof value}\`]);
   } else if (!(value !== null)) {
-    errors.push(["value", "Expected non-null object, but got null"]);
+    errors.push([\`v\`, "Expected non-null object, but got null"]);
   } else {
     if (!(typeof value["title"] === "string")) {
-      errors.push(["value[\\\\"title\\\\"]",
-        \`expected string, got \${typeof value["title"]}\`]);
+      errors.push([\`v.title\`, \`expected string, got \${typeof value["title"]}\`]);
     } else if (!(value["title"].length >= 10)) {
-      errors.push(["value[\\\\"title\\\\"]",
+      errors.push([\`v.title\`,
         \`expected minimum length: 10, got \${value["title"].length}\`]);
     } else if (!(value["title"].length <= 200)) {
-      errors.push(["value[\\\\"title\\\\"]",
+      errors.push([\`v.title\`,
         \`expected maximum length: 200, got \${value["title"].length}\`]);
     }
     if (!(typeof value["content"] === "string")) {
-      errors.push(["value[\\\\"content\\\\"]",
+      errors.push([\`v.content\`,
         \`expected string, got \${typeof value["content"]}\`]);
     } else if (!(value["content"].length >= 100)) {
-      errors.push(["value[\\\\"content\\\\"]",
+      errors.push([\`v.content\`,
         \`expected minimum length: 100, got \${value["content"].length}\`]);
     }
     if (!(typeof value["authorId"] === "string")) {
-      errors.push(["value[\\\\"authorId\\\\"]",
+      errors.push([\`v.authorId\`,
         \`expected string, got \${typeof value["authorId"]}\`]);
     } else if (!(formatValidators["uuid"](value["authorId"]))) {
-      errors.push(["value[\\\\"authorId\\\\"]",
+      errors.push([\`v.authorId\`,
         \`string format constraint "uuid" not satisfied\`]);
+    }
+    if (value["tags"] == null) {
+    } else {
+      if (!(Array.isArray(value["tags"]))) {
+        errors.push([\`v.tags\`,
+          \`expected array, but got \${typeof value["tags"]}\`]);
+      } else {
+        for (let _i0 = 0; _i0 < value["tags"].length; ++_i0) {
+          if (!(typeof value["tags"][_i0] === "string")) {
+            errors.push([\`v.tags[\${_i0}]\`,
+              \`expected string, got \${typeof value["tags"][_i0]}\`]);
+          } else if (!(value["tags"][_i0].length <= 10)) {
+            errors.push([\`v.tags[\${_i0}]\`,
+              \`expected maximum length: 10, got \${value["tags"][_i0].length}\`]);
+          }
+        }
+      }
     }
   }
   return errors;
@@ -41,7 +57,8 @@ snapshot[`input validator compiler 1`] = `
 
 snapshot[`input validator compiler 2`] = `
 'Validation errors:
-  - at value["title"]: expected minimum length: 10, got 6
-  - at value["content"]: expected minimum length: 100, got 13
-  - at value["authorId"]: string format constraint "uuid" not satisfied'
+  - at v.title: expected minimum length: 10, got 6
+  - at v.content: expected minimum length: 100, got 13
+  - at v.authorId: string format constraint "uuid" not satisfied
+  - at v.tags[2]: expected maximum length: 10, got 11'
 `;

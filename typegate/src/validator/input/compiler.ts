@@ -2,7 +2,12 @@
 
 import { TypeNode } from "../../type_node.ts";
 import { TypeGraph } from "../../typegraph.ts";
-import { createValidationGraph, LoopNode, Node } from "./validation_graph.ts";
+import {
+  createValidationGraph,
+  LoopNode,
+  Node,
+  ValueShift,
+} from "./validation_graph.ts";
 
 export interface ValidationError {
   location: string; // virtual path, in the value/object
@@ -25,14 +30,14 @@ export function compile(
 ): string {
   const graphRoot = createValidationGraph(tg, inputTypeIdx);
 
-  return [...generateValidatorCode(graphRoot)].join("");
+  return [...generateValidatorCode(graphRoot)].join("\n");
 }
 
 function* generateValidatorCode(root: Node): Generator<string, void> {
   yield "function validate(value, context) {";
   yield `const { formatValidators } = context;`;
   yield `const errors = [];`;
-  yield* new CodeGenerator().generateFromNode(root, "value", false);
+  yield* new CodeGenerator().generateFromNode(root, "v", "value", false);
   yield `return errors`;
   yield "}";
 }
@@ -40,21 +45,23 @@ function* generateValidatorCode(root: Node): Generator<string, void> {
 class CodeGenerator {
   *generateFromNode(
     node: Node,
+    prevPath: string,
     prevValueRef: string,
     elseClause: boolean,
   ): Generator<string, void> {
-    const valueRef = prevValueRef + node.pathSuffix;
+    const [path, valueRef] = shifted([prevPath, prevValueRef], node.shift);
     switch (node.kind) {
       case "validation": {
         const ifPrefix = elseClause ? "else " : "";
         yield `${ifPrefix}if (!(${node.condition(valueRef)})) {`;
-        yield `errors.push(['${valueRef}', ${node.error(valueRef)}]) }`;
+        yield `errors.push([\`${path}\`, ${node.error(valueRef)}]) }`;
         switch (node.next.length) {
           case 0:
             break;
           case 1:
             yield* this.generateFromNode(
               node.next[0],
+              path,
               valueRef,
               true,
             );
@@ -64,6 +71,7 @@ class CodeGenerator {
             for (const nextNode of node.next) {
               yield* this.generateFromNode(
                 nextNode,
+                path,
                 valueRef,
                 false,
               );
@@ -77,25 +85,25 @@ class CodeGenerator {
         const ifPrefix = elseClause ? "else " : "";
         yield `${ifPrefix}if (${node.condition(valueRef)}) {`;
         for (const nod of node.yes) {
-          yield* this.generateFromNode(nod, valueRef, false);
+          yield* this.generateFromNode(nod, path, valueRef, false);
         }
         yield `} else {`;
         for (const nod of node.no) {
-          yield* this.generateFromNode(nod, valueRef, false);
+          yield* this.generateFromNode(nod, path, valueRef, false);
         }
         yield "}";
         break;
       }
 
-      case "loop": {
-        this.generateFromLoopNode(node, prevValueRef, elseClause);
+      case "loop":
+        yield* this.generateFromLoopNode(node, path, prevValueRef, elseClause);
         break;
-      }
     }
   }
 
   *generateFromLoopNode(
     node: LoopNode,
+    prevPath: string,
     prevValueRef: string,
     elseClause: boolean,
   ): Generator<string, void> {
@@ -103,21 +111,34 @@ class CodeGenerator {
       yield `else {`;
       yield* this.generateFromLoopNode(
         node,
+        prevPath,
         prevValueRef,
         false,
       );
       yield "}";
     } else {
-      const valueRef = prevValueRef + node.pathSuffix;
+      const [path, valueRef] = shifted([prevPath, prevValueRef], node.shift);
       const iterVar = node.iterationVariable;
       const iterCount = node.iterationCount(valueRef);
       yield `for (let ${iterVar} = 0; ${iterVar} < ${iterCount}; ++${iterVar}) {`;
       yield* this.generateFromNode(
         node.nextNodes,
+        path,
         valueRef,
         false,
       );
       yield "}";
     }
   }
+}
+
+function shifted(
+  prev: [path: string, ref: string],
+  shift: ValueShift | undefined,
+): [path: string, ref: string] {
+  if (shift == null) {
+    return prev;
+  }
+  const [prevPath, prevRef] = prev;
+  return [prevPath + shift.path, prevRef + shift.ref];
 }
