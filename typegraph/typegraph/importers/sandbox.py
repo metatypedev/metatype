@@ -6,6 +6,9 @@ from typegraph.graph.typegraph import TypeGraph
 
 with TypeGraph("sandbox") as g:
 
+    class another(t.struct):
+        pass
+
     class infos(t.custom):
         address = t.string()
         phone_number = t.string()

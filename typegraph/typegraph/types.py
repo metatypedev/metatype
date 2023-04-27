@@ -501,6 +501,9 @@ class struct(typedef):
     _max: Optional[int] = constraint("maxProperties")
     # _dependentRequired
 
+    def __init__(self, p=None):
+        pass
+
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
 
@@ -523,10 +526,9 @@ class struct(typedef):
         except AttributeError:
             pass
 
-        if attr in self.props:
-            return self.props[attr]
-
-        raise Exception(f'no prop named "{attr}" in type {self}')
+        # if attr in self.props:
+        #    return self.props[attr]
+        # raise Exception(f'no prop named "{attr}" in type {self}')
 
     @property
     def type(self):
