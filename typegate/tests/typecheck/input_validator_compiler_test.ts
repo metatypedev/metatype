@@ -18,8 +18,9 @@ test("input validator compiler", async (t) => {
       Type.FUNCTION,
     );
 
+    const generatedCode = compile(tg, createPost.input);
     const code = nativeResult(native.typescript_format_code({
-      source: compile(tg, createPost.input),
+      source: generatedCode,
     })).formatted_code;
 
     console.log("-- BEGIN code");

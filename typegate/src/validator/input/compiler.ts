@@ -25,16 +25,14 @@ export function compile(
 ): string {
   const graphRoot = createValidationGraph(tg, inputTypeIdx);
 
-  return [...generateValidatorCode(graphRoot)].join("\n");
+  return [...generateValidatorCode(graphRoot)].join("");
 }
-
-const INDENT = "  ";
 
 function* generateValidatorCode(root: Node): Generator<string, void> {
   yield "function validate(value, context) {";
-  yield `${INDENT}const { formatValidators } = context;`;
-  yield `${INDENT}const errors = [];`;
-  yield* new CodeGenerator().generateFromNode(root, "value", INDENT, false);
+  yield `const { formatValidators } = context;`;
+  yield `const errors = [];`;
+  yield* new CodeGenerator().generateFromNode(root, "value", false);
   yield "}";
 }
 
@@ -42,15 +40,14 @@ class CodeGenerator {
   *generateFromNode(
     node: Node,
     prevValueRef: string,
-    indent: string,
     elseClause: boolean,
   ): Generator<string, void> {
     const valueRef = prevValueRef + node.pathSuffix;
     switch (node.kind) {
       case "validation": {
         const ifPrefix = elseClause ? "else " : "";
-        yield `${indent}${ifPrefix}if (!(${node.condition(valueRef)})) {`;
-        yield `${indent + INDENT}errors.push(${node.error(valueRef)}) }`;
+        yield `${ifPrefix}if (!(${node.condition(valueRef)})) {`;
+        yield `errors.push(${node.error(valueRef)}) }`;
         switch (node.next.length) {
           case 0:
             break;
@@ -58,41 +55,39 @@ class CodeGenerator {
             yield* this.generateFromNode(
               node.next[0],
               valueRef,
-              indent,
               true,
             );
             break;
           default:
-            yield `${indent}else {`;
+            yield `else {`;
             for (const nextNode of node.next) {
               yield* this.generateFromNode(
                 nextNode,
                 valueRef,
-                indent + INDENT,
                 false,
               );
             }
-            yield `${indent}}`;
+            yield `}`;
         }
         break;
       }
 
       case "branch": {
         const ifPrefix = elseClause ? "else " : "";
-        yield `${indent}${ifPrefix}if (${node.condition(valueRef)}) {`;
+        yield `${ifPrefix}if (${node.condition(valueRef)}) {`;
         for (const nod of node.yes) {
-          yield* this.generateFromNode(nod, valueRef, indent + INDENT, false);
+          yield* this.generateFromNode(nod, valueRef, false);
         }
-        yield `${indent}} else {`;
+        yield `} else {`;
         for (const nod of node.no) {
-          yield* this.generateFromNode(nod, valueRef, indent + INDENT, false);
+          yield* this.generateFromNode(nod, valueRef, false);
         }
         yield "}";
         break;
       }
 
       case "loop": {
-        this.generateFromLoopNode(node, prevValueRef, indent, elseClause);
+        this.generateFromLoopNode(node, prevValueRef, elseClause);
         break;
       }
     }
@@ -101,15 +96,13 @@ class CodeGenerator {
   *generateFromLoopNode(
     node: LoopNode,
     prevValueRef: string,
-    indent: string,
     elseClause: boolean,
   ): Generator<string, void> {
     if (elseClause) {
-      yield `${indent}else {`;
+      yield `else {`;
       yield* this.generateFromLoopNode(
         node,
         prevValueRef,
-        indent + INDENT,
         false,
       );
       yield "}";
@@ -117,11 +110,10 @@ class CodeGenerator {
       const valueRef = prevValueRef + node.pathSuffix;
       const iterVar = node.iterationVariable;
       const iterCount = node.iterationCount(valueRef);
-      yield `${indent}for (let ${iterVar} = 0; ${iterVar} < ${iterCount}; ++${iterVar}) {`;
+      yield `for (let ${iterVar} = 0; ${iterVar} < ${iterCount}; ++${iterVar}) {`;
       yield* this.generateFromNode(
         node.nextNodes,
         valueRef,
-        indent + INDENT,
         false,
       );
       yield "}";
