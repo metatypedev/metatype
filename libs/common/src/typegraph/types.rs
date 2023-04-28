@@ -68,6 +68,7 @@ pub struct TypeNodeBase {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct OptionalTypeData {
     pub item: u32,
     #[serialize_always]
@@ -122,6 +123,7 @@ pub struct ObjectTypeData {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ArrayTypeData {
     pub items: u32,
     pub max_items: Option<u32>,
@@ -132,6 +134,7 @@ pub struct ArrayTypeData {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Debug)]
+// #[serde(rename_all = "camelCase")]
 pub struct FunctionTypeData {
     pub input: u32,
     pub output: u32,

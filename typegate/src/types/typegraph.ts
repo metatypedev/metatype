@@ -14,7 +14,7 @@ export type OptionalNode = {
     [k: string]: unknown;
   };
   item: number;
-  default_value?: any;
+  defaultValue?: any;
 };
 export type BooleanNode = {
   type: "boolean";
@@ -106,9 +106,9 @@ export type ArrayNode = {
     [k: string]: unknown;
   };
   items: number;
-  max_items?: number | null;
-  min_items?: number | null;
-  unique_items?: boolean | null;
+  maxItems?: number | null;
+  minItems?: number | null;
+  uniqueItems?: boolean | null;
 };
 export type FunctionNode = {
   type: "function";

@@ -111,7 +111,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "default_value": true
+            "defaultValue": true
           }
         },
         {
@@ -435,14 +435,16 @@
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "uint32",
+              "minimum": 0.0
             },
             "maxLength": {
               "type": [
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "uint32",
+              "minimum": 0.0
             },
             "pattern": {
               "type": [
@@ -602,7 +604,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "max_items": {
+            "maxItems": {
               "type": [
                 "integer",
                 "null"
@@ -610,7 +612,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "min_items": {
+            "minItems": {
               "type": [
                 "integer",
                 "null"
@@ -618,7 +620,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "unique_items": {
+            "uniqueItems": {
               "type": [
                 "boolean",
                 "null"

@@ -239,7 +239,7 @@ class ArgumentCollector {
     if (astNode == null) {
       if (typ.type === Type.OPTIONAL) {
         this.addPoliciesFrom(typ.item);
-        const { default_value: defaultValue } = typ;
+        const { defaultValue: defaultValue } = typ;
         const value = defaultValue ?? null;
         return () => value;
       }
@@ -652,7 +652,7 @@ class ArgumentCollector {
     } else {
       this.addPoliciesFrom(typ.item);
     }
-    const { default_value: defaultValue } = typ;
+    const { defaultValue: defaultValue } = typ;
     return () => defaultValue;
   }
 
@@ -671,7 +671,7 @@ class ArgumentCollector {
 
     if (source == null) {
       if (typ.type === Type.OPTIONAL) {
-        const value = typ.default_value ?? null;
+        const value = typ.defaultValue ?? null;
         return () => value;
       }
       throw new Error("Invalid injection");
@@ -724,7 +724,7 @@ class ArgumentCollector {
       const { [name]: value } = parent;
       if (value == null) {
         if (typ.type === Type.OPTIONAL) {
-          return typ.default_value;
+          return typ.defaultValue;
         }
 
         const suggestions = `available fields from parent are: ${
