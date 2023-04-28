@@ -19,7 +19,7 @@ class Parent:
             super().__init__(p)
         else:
             """
-            # Motativation:
+            # Motivation:
             - Throw an explicit error if the user uses a reserved attr name
 
             all := {'b', 'pb', 'c', 'some_field', 'd', 'props', 'a'} (= set(dir(child) without __))
@@ -61,7 +61,7 @@ class Parent:
 
 class Child(Parent):
     a = Typedef("Child a")  # overlaps with Parent.a
-    b = Typedef("Child b")
+    b = Typedef("Child b")  # overlaps with Parent.b
     c = "not included"
     d = Typedef("Child d")
 
