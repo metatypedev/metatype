@@ -12,7 +12,7 @@ with TypeGraph("new-class") as g:
 
     class medal(t.struct):
         year = t.integer().min(2000).max(2100)
-        type = t.enum(["silver", "gold"])
+        # type = t.enum(["silver", "gold"])  # reserved
 
     class university(t.struct):
         name = t.string()
@@ -20,16 +20,11 @@ with TypeGraph("new-class") as g:
         infos = infos()  # nested
 
     # dict_keys(['year'])
-    # print(medal().props.keys())
-    print(medal().name)
+    print(medal().props.keys())
+    print(university().props.keys())
 
-    # dict_keys(['infos', 'medals'])
-    # print(university().props.keys())
-    # print(university().name)
-    # univ = university("Some Univ")
-
-    x = t.struct({"a": t.integer(), "b": t.integer()})
-    print(x.name)
-
-    # assert univ.struct() is univ.struct()
-    # assert isinstance(univ.struct().props["infos"], t.struct)
+    # FIXME:
+    # name prints a dict instead of string, why ?
+    # x = t.struct({"a": t.integer(), "b": t.integer()})
+    # print(medal().name)
+    # print(x.name)

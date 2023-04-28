@@ -505,14 +505,21 @@ class struct(typedef):
         if self.__class__ == struct:
             object.__setattr__(self, "props", p)
         else:
-            all_attr = set([i for i in dir(self) if not i.startswith("__")])
             (base,) = self.__class__.__bases__
-            parent_attr = set([i for i in dir(base) if not i.startswith("__")])
-            # common = all_attr.intersection(parent_attr)
-            # child_attr = common.union(all_attr - parent_attr)
-            child_attr = all_attr - parent_attr
+            child_cls = self.__class__
+            child_attr = set([i for i in vars(child_cls) if not i.startswith("__")])
+            parent_attr = set([i for i in vars(base) if not i.startswith("__")])
+            common = sorted(parent_attr.intersection(child_attr))
+            if len(common) > 0:
+                err_msg = ", ".join(common)
+                if len(common) == 1:
+                    err_msg += " is reserved"
+                else:
+                    err_msg += " are reserved"
+                raise Exception(err_msg)
+            self_attr = sorted(child_attr - parent_attr)
             props = {}
-            for attr in child_attr:
+            for attr in self_attr:
                 value = getattr(self, attr)
                 if isinstance(value, typedef):
                     props[attr] = value
