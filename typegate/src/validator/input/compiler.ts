@@ -52,19 +52,25 @@ class CodeGenerator {
     const [path, valueRef] = shifted([prevPath, prevValueRef], node.shift);
     switch (node.kind) {
       case "validation": {
-        const { collectErrorsIn: errVar = "errors" } = node;
+        const { collectErrorsIn: errVar = "errors", prepare = [] } = node;
         let closeBrackets = 0;
         let ifPrefix = "";
         if (elseClause) {
-          if (node.prepare != null) {
-            yield `else { ${node.prepare}`;
+          if (prepare.length > 0) {
+            yield `else {`;
+            for (const prep of prepare) {
+              yield prep;
+            }
             ++closeBrackets;
           } else {
             ifPrefix = "else ";
           }
-        } else if (node.prepare != null) {
-          yield node.prepare;
+        } else if (prepare.length > 0) {
+          for (const prep of prepare) {
+            yield prep;
+          }
         }
+
         yield `${ifPrefix}if (!(${node.condition(valueRef)})) {`;
         yield `${errVar}.push([\`${path}\`, ${node.error(valueRef)}]) }`;
         switch (node.next.length) {

@@ -2,6 +2,7 @@
 
 import {
   ArrayNode,
+  EitherNode,
   IntegerNode,
   NumberNode,
   ObjectNode,
@@ -21,7 +22,7 @@ export interface ValueShift {
 
 export interface ValidationNode {
   kind: "validation";
-  prepare?: string;
+  prepare?: string[];
   shift?: ValueShift;
   condition: (valRef: string) => string;
   error: (valRef: string) => string;
@@ -105,6 +106,8 @@ class ValidationGraphBuilder {
         return [this.buildObject(typeNode, params)];
       case Type.UNION:
         return this.buildUnion(typeNode, params);
+      case Type.EITHER:
+        return this.buildEither(typeNode, params);
       default:
         throw new Error("Type not supported");
     }
@@ -281,7 +284,7 @@ class ValidationGraphBuilder {
       const [typeIdx, ...rest] = variants;
       const res: Node[] = [];
       res.push(...this.build(typeIdx, {
-        prepare: `${first ? "let " : ""}${errorsVariable} = []`,
+        prepare: [`${first ? "let " : ""}${errorsVariable} = []`],
         collectErrorsIn: errorsVariable,
         ...(first ? restParams : {}),
       }));
@@ -304,5 +307,48 @@ class ValidationGraphBuilder {
     };
 
     return shiftVariants(typeNode.anyOf, true);
+  }
+
+  buildEither(typeNode: EitherNode, params: BuildParams): Node[] {
+    if (typeNode.oneOf.length < 2) {
+      throw new Error("Unexpected: either has less than two variants");
+    }
+
+    const { collectErrorsIn, prepare = [], ...buildParams } = params;
+
+    const errorVars: string[] = [];
+    const res: Node[] = [];
+    for (const variantIdx of typeNode.oneOf) {
+      const errVar = this.nextVarName();
+      errorVars.push(errVar);
+      res.push(...this.build(variantIdx, {
+        prepare: [...prepare, `const ${errVar} = []`],
+        collectErrorsIn: errVar,
+        ...buildParams,
+      }));
+    }
+
+    const varErrArrays = this.nextVarName();
+    const varSuccessCount = this.nextVarName();
+    const variantMessage =
+      `\`For variant #\${i}: \${errs.map(([p, msg]) => msg).join("; ")}\``;
+    const collectedErrors =
+      `\${${varErrArrays}.map((errs, i) => ${variantMessage}).join(". ")}`;
+    res.push(validationNode({
+      prepare: [
+        `const ${varErrArrays} = [${errorVars.join(", ")}]`,
+        `const ${varSuccessCount} = ${varErrArrays}.filter(errs => errs.length === 0).length`,
+      ],
+      condition: () => `${varSuccessCount} === 1`,
+      error: () =>
+        [
+          `${varSuccessCount} > 1`,
+          `? \`The value satisfied more than one variants (\${${varSuccessCount}}) of the either\``,
+          `: \`The value satisfied none of the either variants (${collectedErrors})\``,
+        ].join(" "),
+      collectErrorsIn,
+    }));
+
+    return res;
   }
 }

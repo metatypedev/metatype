@@ -118,6 +118,118 @@ snapshot[`input validator compiler 3`] = `
           \`string format constraint "uuid" not satisfied\`]);
       }
     }
+    if (value["search"] == null) {
+    } else {
+      const _a2 = [];
+      if (!(typeof value["search"] === "object")) {
+        _a2.push([\`v.search\`,
+          \`expected object, but got \${typeof value["search"]}\`]);
+      } else if (!(value["search"] !== null)) {
+        _a2.push([\`v.search\`, "Expected non-null object, but got null"]);
+      } else {
+        const _a3 = [];
+        if (!(typeof value["search"]["title"] === "string")) {
+          _a3.push([\`v.search.title\`,
+            \`expected string, got \${typeof value["search"]["title"]}\`]);
+        } else if (!(value["search"]["title"].length >= 3)) {
+          _a3.push([\`v.search.title\`,
+            \`expected minimum length: 3, got \${
+              value["search"]["title"].length
+            }\`]);
+        }
+        const _a4 = [];
+        if (!(typeof value["search"]["title"] === "string")) {
+          _a4.push([\`v.search.title\`,
+            \`expected string, got \${typeof value["search"]["title"]}\`]);
+        } else if (!(value["search"]["title"].length <= 10)) {
+          _a4.push([\`v.search.title\`,
+            \`expected maximum length: 10, got \${
+              value["search"]["title"].length
+            }\`]);
+        }
+        const _a5 = [_a3, _a4];
+        const _a6 = _a5.filter(errs => errs.length === 0).length;
+        if (!(_a6 === 1)) {
+          _a2.push([\`v.search\`, _a6 > 1
+            ? \`The value satisfied more than one variants (\${_a6}) of the either\`
+            : \`The value satisfied none of the either variants (\${
+              _a5.map((errs, i) =>
+                \`For variant #\${i}: \${
+                  errs.map(([p, msg]) => msg).join("; ")
+                }\`
+              ).join(". ")
+            })\`]);
+        }
+      }
+      const _a7 = [];
+      if (!(typeof value["search"] === "object")) {
+        _a7.push([\`v.search\`,
+          \`expected object, but got \${typeof value["search"]}\`]);
+      } else if (!(value["search"] !== null)) {
+        _a7.push([\`v.search\`, "Expected non-null object, but got null"]);
+      } else {
+        const _a8 = [];
+        if (!(typeof value["search"]["content"] === "string")) {
+          _a8.push([\`v.search.content\`,
+            \`expected string, got \${typeof value["search"]["content"]}\`]);
+        } else if (!(value["search"]["content"].length >= 3)) {
+          _a8.push([\`v.search.content\`,
+            \`expected minimum length: 3, got \${
+              value["search"]["content"].length
+            }\`]);
+        }
+        const _a9 = [];
+        if (!(Array.isArray(value["search"]["content"]))) {
+          _a9.push([\`v.search.content\`,
+            \`expected array, but got \${typeof value["search"]["content"]}\`]);
+        } else if (!(value["search"]["content"].length <= 3)) {
+          _a9.push([\`v.search.content\`,
+            \`expected maximum item count: 3, got \${
+              value["search"]["content"].length
+            }\`]);
+        } else {
+          for (let _a10 = 0; _a10 < value["search"]["content"].length; ++_a10) {
+            if (!(typeof value["search"]["content"][_a10] === "string")) {
+              _a9.push([\`v.search.content[\${_a10}]\`,
+                \`expected string, got \${typeof value["search"]["content"][
+                  _a10
+                ]}\`]);
+            } else if (!(value["search"]["content"][_a10].length >= 3)) {
+              _a9.push([\`v.search.content[\${_a10}]\`,
+                \`expected minimum length: 3, got \${
+                  value["search"]["content"][_a10].length
+                }\`]);
+            }
+          }
+        }
+        const _a11 = [_a8, _a9];
+        const _a12 = _a11.filter(errs => errs.length === 0).length;
+        if (!(_a12 === 1)) {
+          _a7.push([\`v.search\`, _a12 > 1
+            ? \`The value satisfied more than one variants (\${_a12}) of the either\`
+            : \`The value satisfied none of the either variants (\${
+              _a11.map((errs, i) =>
+                \`For variant #\${i}: \${
+                  errs.map(([p, msg]) => msg).join("; ")
+                }\`
+              ).join(". ")
+            })\`]);
+        }
+      }
+      const _a13 = [_a2, _a7];
+      const _a14 = _a13.filter(errs => errs.length === 0).length;
+      if (!(_a14 === 1)) {
+        errors.push([\`v.search\`, _a14 > 1
+          ? \`The value satisfied more than one variants (\${_a14}) of the either\`
+          : \`The value satisfied none of the either variants (\${
+            _a13.map((errs, i) =>
+              \`For variant #\${i}: \${
+                errs.map(([p, msg]) => msg).join("; ")
+              }\`
+            ).join(". ")
+          })\`]);
+      }
+    }
   }
   return errors;
 }
@@ -132,4 +244,14 @@ snapshot[`input validator compiler 4`] = `
 snapshot[`input validator compiler 5`] = `
 "Validation errors:
   - at v.tag: The value matches none of the union variants"
+`;
+
+snapshot[`input validator compiler 6`] = `
+"Validation errors:
+  - at v.search: The value satisfied none of the either variants (For variant #0: The value satisfied more than one variants (2) of the either. For variant #1: The value satisfied none of the either variants (For variant #0: expected string, got undefined. For variant #1: expected array, but got undefined))"
+`;
+
+snapshot[`input validator compiler 7`] = `
+"Validation errors:
+  - at v.search: The value satisfied none of the either variants (For variant #0: The value satisfied none of the either variants (For variant #0: expected string, got undefined. For variant #1: expected string, got undefined). For variant #1: The value satisfied none of the either variants (For variant #0: expected string, got object. For variant #1: expected maximum item count: 3, got 4))"
 `;

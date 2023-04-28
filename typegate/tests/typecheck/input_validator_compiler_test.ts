@@ -52,7 +52,7 @@ test("input validator compiler", async (t) => {
       .on(e);
   });
 
-  await t.should("generate valid code with unions", () => {
+  await t.should("generate valid code with union and either types", () => {
     const queries = tg.type(root.properties["query"], Type.OBJECT);
     const posts = tg.type(
       queries.properties["posts"],
@@ -100,6 +100,46 @@ test("input validator compiler", async (t) => {
     await gql`
       query FindPosts {
         posts(tag: ["tech", "deno"], authorId: "36b8f84d-df4e-4d49-b662-bcde71a8764f") {
+          id
+        }
+      }
+    `
+      .expectBody((body) => {
+        assert(body.errors == null);
+      })
+      .on(e);
+  });
+
+  await t.should("fail for invalid inputs: either", async () => {
+    await gql`
+      query FindPosts {
+        posts(search: { title: "Hello" }) {
+          id
+        }
+      }
+    `
+      .expectBody((body) => {
+        assertEquals(body.errors.length, 1);
+        t.assertSnapshot(body.errors[0].message);
+      })
+      .on(e);
+
+    await gql`
+      query FindPosts {
+        posts(search: { content: ["tech", "programming", "web", "softwares"] }) {
+          id
+        }
+      }
+    `
+      .expectBody((body) => {
+        assertEquals(body.errors.length, 1);
+        t.assertSnapshot(body.errors[0].message);
+      })
+      .on(e);
+
+    await gql`
+      query FindPosts {
+        posts(search: { title: "Hi" }) {
           id
         }
       }

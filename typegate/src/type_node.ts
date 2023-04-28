@@ -40,6 +40,7 @@ export type {
   AnyNode,
   ArrayNode,
   BooleanNode,
+  EitherNode,
   FunctionNode,
   IntegerNode,
   NumberNode,

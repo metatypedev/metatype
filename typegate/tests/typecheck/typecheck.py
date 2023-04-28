@@ -33,6 +33,20 @@ with TypeGraph(
         {
             "tag": t.union([tag, t.array(tag)]).optional(),
             "authorId": t.uuid().optional(),
+            "search": t.either(
+                [
+                    t.struct(
+                        {"title": t.either([t.string().min(3), t.string().max(10)])}
+                    ),
+                    t.struct(
+                        {
+                            "content": t.either(
+                                [t.string().min(3), t.array(t.string().min(3)).max(3)]
+                            )
+                        }
+                    ),
+                ]
+            ).optional(),
         }
     )
 
