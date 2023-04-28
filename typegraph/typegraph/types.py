@@ -513,10 +513,12 @@ class struct(typedef):
             child_attr = list(all_attr - parent_attr)
             props = {}
             for attr in child_attr:
-                value = self.__getattr__(attr)
+                value = getattr(self, attr)
                 if isinstance(value, typedef):
                     props[attr] = value
-            self.props = props
+            object.__setattr__(self, "props", props)  # calls __getattr__
+            # frozen instance issue
+            # self.props = props
 
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
@@ -534,16 +536,16 @@ class struct(typedef):
             props=frozendict(new_props), name=f"{self.type}_{self.graph.next_type_id()}"
         )
 
-    def __getattr__(self, attr):
-        try:
-            return super().__getattr__(attr)
-        except AttributeError:
-            pass
-        if attr == "props":
-            return self.props  # recursion
-        if attr in self.props:
-            return self.props[attr]
-        raise Exception(f'no prop named "{attr}" in type {self}')
+    # def __getattr__(self, attr):
+    #     try:
+    #         return super().__getattr__(attr)
+    #     except AttributeError:
+    #         pass
+    #     if attr == "props":
+    #         return self.props  # recursion (implicit call __getattr__)
+    #     if attr in self.props:
+    #         return self.props[attr]
+    #     raise Exception(f'no prop named "{attr}" in type {self}')
 
     @property
     def type(self):

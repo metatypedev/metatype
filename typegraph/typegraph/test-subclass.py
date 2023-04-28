@@ -17,10 +17,12 @@ class Parent:
         if self.__class__ == Parent:
             super().__init__(p)
         else:
-            all_attr = [i for i in dir(self) if not i.startswith("__")]
-            # (base,) = self.__class__.__bases__
-            # parent_attr = [i for i in dir(base) if not i.startswith('__')]
-            # child_attr = list(set(all_attr) - set(parent_attr))
+            all_attr = set([i for i in dir(self) if not i.startswith("__")])
+            (base,) = self.__class__.__bases__
+            parent_attr = set([i for i in dir(base) if not i.startswith("__")])
+            common = all_attr.intersection(parent_attr)
+            child_attr = list(common.union(all_attr - parent_attr))
+
             # 1. if child uses a reserved name, it will not be taken into account
             # 2. there is currently no way of determining which attr is strictly
             #    owned by the Child
@@ -30,11 +32,7 @@ class Parent:
             # Parent - Child = attr' but there is no guarantee that attr' == attr
             # since parent Union attr can overlap (Child can override a field from Parent)
             # => it's impossible to safely tell the user if a name is reserved
-            # for attr in child_attr:
-            #     value = self.__getattribute__(attr)
-            #     if isinstance(value, Typedef):
-            #         self.props[attr] = value
-            for attr in all_attr:
+            for attr in child_attr:
                 value = self.__getattribute__(attr)
                 if isinstance(value, Typedef):
                     self.props[attr] = value
@@ -48,4 +46,4 @@ class Child(Parent):
 
 
 c = Child()
-print(c.props)
+print(c.props.keys())
