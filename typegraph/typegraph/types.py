@@ -503,22 +503,20 @@ class struct(typedef):
 
     def __init__(self, p: Dict[str, TypeNode] = {}):
         if self.__class__ == struct:
-            self.props = p
+            object.__setattr__(self, "props", p)
         else:
             all_attr = set([i for i in dir(self) if not i.startswith("__")])
             (base,) = self.__class__.__bases__
             parent_attr = set([i for i in dir(base) if not i.startswith("__")])
             # common = all_attr.intersection(parent_attr)
-            # child_attr = list(common.union(all_attr - parent_attr))
-            child_attr = list(all_attr - parent_attr)
+            # child_attr = common.union(all_attr - parent_attr)
+            child_attr = all_attr - parent_attr
             props = {}
             for attr in child_attr:
                 value = getattr(self, attr)
                 if isinstance(value, typedef):
                     props[attr] = value
-            object.__setattr__(self, "props", props)  # calls __getattr__
-            # frozen instance issue
-            # self.props = props
+            object.__setattr__(self, "props", props)
 
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
@@ -536,16 +534,16 @@ class struct(typedef):
             props=frozendict(new_props), name=f"{self.type}_{self.graph.next_type_id()}"
         )
 
-    # def __getattr__(self, attr):
-    #     try:
-    #         return super().__getattr__(attr)
-    #     except AttributeError:
-    #         pass
-    #     if attr == "props":
-    #         return self.props  # recursion (implicit call __getattr__)
-    #     if attr in self.props:
-    #         return self.props[attr]
-    #     raise Exception(f'no prop named "{attr}" in type {self}')
+    def __getattr__(self, attr):
+        try:
+            if attr != "props":
+                return self.props
+            return super().__getattr__(attr)
+        except AttributeError:
+            pass
+        if attr in self.props:
+            return self.props[attr]
+        raise Exception(f'no prop named "{attr}" in type {self}')
 
     @property
     def type(self):

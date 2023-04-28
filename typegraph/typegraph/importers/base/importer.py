@@ -121,6 +121,7 @@ class Importer:
 
         cg.line("types = {}")
 
+        # !!!
         if len(self.types) > 0:
             for name, tpe in self.types.items():
                 cg.line(f"types[{repr(name)}] = {typify(tpe, name)}")
