@@ -12,15 +12,25 @@ from typing import (
     Union,
     get_args,
     get_origin,
+    overload,
 )
 
 from attrs import evolve, field, frozen
 from frozendict import frozendict
 from typing_extensions import Self
+from typegraph.effects import EffectType
 
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypeGraph, TypegraphContext, find
+from typegraph.injection import (
+    Injection,
+    InjectionSwitch,
+    context,
+    parent,
+    secret,
+    static,
+)
 from typegraph.policies import Policy, EffectPolicies
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always, asdict
@@ -99,8 +109,7 @@ class typedef(Node):
     name: str = field(kw_only=True, default="")
     description: Optional[str] = optional_field()
     runtime: Optional["Runtime"] = optional_field()
-    inject: Optional[Union[str, TypeNode]] = optional_field()
-    injection: Optional[Any] = optional_field()
+    injection: InjectionSwitch = optional_field()
     policies: Tuple[Policy, ...] = field(kw_only=True, factory=tuple)
     # runtime_config: Dict[str, Any] = field(
     #     kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
@@ -117,10 +126,8 @@ class typedef(Node):
             raise Exception("No typegraph context")
         if self.name == "":
             object.__setattr__(self, "name", f"{self.type}_{self.graph.next_type_id()}")
-        if self.inject is None:
-            object.__setattr__(self, "injection", None)
 
-    def replace(self, **changes):
+    def replace(self, **changes) -> Self:
         return evolve(self, **changes)
 
     @property
@@ -129,11 +136,16 @@ class typedef(Node):
 
     @property
     def edges(self) -> List[Node]:
-        secret = self.inject if self.injection == "secret" else None
+        secrets = (
+            [Secret(s) for s in self.injection.secrets()]
+            if self.injection is not None
+            else []
+        )
         return (
             super().edges
             + list(self.policies)
-            + list(filter(None, [self.runtime, secret]))
+            + list(filter(None, [self.runtime]))
+            + secrets
         )
 
     @property
@@ -194,32 +206,34 @@ class typedef(Node):
             if isinstance(e, NodeProxy):
                 e.get()._propagate_runtime(self.runtime, visited)
 
+    # TODO @overload
+    @overload
+    def inject(self, injection: Injection) -> Self:
+        pass
+
+    @overload
+    def inject(self, injection: Dict[Optional[EffectType], Injection]) -> Self:
+        pass
+
+    def inject(self, injection) -> Self:
+        if self.injection is not None:
+            raise Exception(f"{self.name} can only have one injection")
+        if isinstance(injection, dict):
+            return self.replace(injection=InjectionSwitch.from_dict(injection))
+        return self.replace(injection=InjectionSwitch(default=injection))
+
     def set(self, value):
-        if self.inject is not None:
-            raise Exception(f"{self.name} can only have one injection")
+        return self.inject(static(value))
 
-        import json
+    def from_secret(self, secret_name: str):
+        return self.inject(secret(secret_name))
 
-        return self.replace(injection="raw", inject=json.dumps(value))
-
-    def from_secret(self, secret_name):
-        if self.inject is not None:
-            raise Exception(f"{self.name} can only have one injection")
-
-        return self.replace(injection="secret", inject=Secret(secret_name))
-
-    def from_parent(self, sibiling: "NodeProxy"):
+    def from_parent(self, sibling: "NodeProxy"):
         # TODO: check for same type and value in same context
-        if self.inject is not None:
-            raise Exception(f"{self.name} can only have one injection")
-
-        return self.replace(injection="parent", inject=sibiling)
+        return self.inject(parent(sibling))
 
     def from_context(self, claim: str):
-        if self.inject is not None:
-            raise Exception(f"{self.name} can only have one injection")
-
-        return self.replace(injection="context", inject=claim)
+        return self.inject(context(claim))
 
     def add_policy(
         self,
@@ -251,10 +265,9 @@ class typedef(Node):
             p.data(collector) if isinstance(p, EffectPolicies) else collector.index(p)
             for p in self.policies
         ]
-        if self.injection == "parent":
-            ret["inject"] = collector.index(self.inject)
-        elif self.injection == "secret":
-            ret["inject"] = self.inject.secret
+
+        if self.injection is not None:
+            ret["injection"] = self.injection.data(collector)
 
         config = self.runtime.get_type_config(self)
         if len(config) > 0:
@@ -765,7 +778,10 @@ def named(name: str, define: Callable[[], typedef]) -> TypeNode:
 
 
 def proxy(name: str) -> NodeProxy:
-    return NodeProxy(TypegraphContext.get_active(), name)
+    g = TypegraphContext.get_active()
+    if g is None:
+        raise Exception("Active typegraph context required for 't.proxy'")
+    return NodeProxy(g, name)
 
 
 def visit_reversed(

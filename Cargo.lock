@@ -912,7 +912,7 @@ dependencies = [
 
 [[package]]
 name = "common"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -1698,9 +1698,9 @@ dependencies = [
 
 [[package]]
 name = "enumflags2"
-version = "0.7.5"
+version = "0.7.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e75d4cd21b95383444831539909fbb14b9dc3fdceb2a6f5d36577329a1f55ccb"
+checksum = "c041f5090df68b32bcd905365fd51769c8b9d553fe87fde0b683534f10c01bd2"
 dependencies = [
  "enumflags2_derive",
  "serde",
@@ -1708,13 +1708,13 @@ dependencies = [
 
 [[package]]
 name = "enumflags2_derive"
-version = "0.7.4"
+version = "0.7.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f58dc3c5e468259f19f2d46304a6b28f1c3d034442e14b322d2b850e36f6d5ae"
+checksum = "5e9a1f9f7d83e59740248a6e14ecf93929ade55027844dfcea78beafccc15745"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 1.0.109",
+ "syn 2.0.13",
 ]
 
 [[package]]
@@ -3082,7 +3082,7 @@ dependencies = [
 
 [[package]]
 name = "macros"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3165,7 +3165,7 @@ dependencies = [
 
 [[package]]
 name = "meta-cli"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -3629,7 +3629,7 @@ dependencies = [
 
 [[package]]
 name = "native"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "base64 0.21.0",
@@ -7226,7 +7226,7 @@ checksum = "497961ef93d974e23eb6f433eb5fe1b7930b659f06d12dec6fc44a8f554c0bba"
 
 [[package]]
 name = "typescript"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "dprint-plugin-typescript",
@@ -7939,7 +7939,7 @@ dependencies = [
 
 [[package]]
 name = "xtask"
-version = "0.1.6-dev.0"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "clap",

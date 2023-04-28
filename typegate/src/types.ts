@@ -69,6 +69,7 @@ export interface ComputeStageProps {
   argumentNodes?: ReadonlyArray<ast.ArgumentNode>;
   inpType?: ObjectNode;
   outType: TypeNode; // only temp
+  effect: EffectType | null;
   typeIdx: number;
   runtime: Runtime;
   materializer?: TypeMaterializer;

@@ -230,16 +230,18 @@ class PrismaRuntime(Runtime):
 
         g.expose(
             createUser=db.create(user).add_policy(public),
-            findUser=db.find_unique(user).add_policy(public),
+            findUser=db.find(user).add_policy(public),
             findManyUsers=db.find_many(user).add_policy(public),
         )
     ```
 
     Here is a list of all available generators:
-    - `find_unique`
+    - `find`
+    - `find_first`
     - `find_many`
     - `create`
     - `update`
+    - `upsert`
     - `delete`
     - `delete_many`
 
@@ -472,7 +474,11 @@ class PrismaRuntime(Runtime):
         )
         row_def = tpe.compose(aggreg_def.props)
         if where is None:
-            where = typegen.gen_query_where_expr(tpe).named(_pref("Where")).optional()
+            where = (
+                typegen.gen_query_where_expr(tpe, skip_rel=True)
+                .named(_pref("Where"))
+                .optional()
+            )
         if having is None:
             having = (
                 typegen.gen_having_expr(tpe, aggreg_def)
