@@ -8,6 +8,7 @@ import {
   OptionalNode,
   StringNode,
   Type,
+  UnionNode,
 } from "../../type_node.ts";
 import { TypeGraph } from "../../typegraph.ts";
 
@@ -20,9 +21,11 @@ export interface ValueShift {
 
 export interface ValidationNode {
   kind: "validation";
+  prepare?: string;
   shift?: ValueShift;
   condition: (valRef: string) => string;
   error: (valRef: string) => string;
+  collectErrorsIn?: string;
   next: Array<Node>;
 }
 
@@ -39,7 +42,7 @@ export interface LoopNode {
   shift?: ValueShift;
   iterationCount: (valueRef: string) => string;
   iterationVariable: string;
-  nextNodes: Node;
+  nodes: Node[];
 }
 
 export type Node = BranchNode | ValidationNode | LoopNode;
@@ -54,23 +57,28 @@ function validationNode(init: ValidationNodeInit): ValidationNode {
   };
 }
 
+type BuildParams = Pick<
+  ValidationNode,
+  "shift" | "prepare" | "collectErrorsIn"
+>;
+
 export function createValidationGraph(
   tg: TypeGraph,
   typeIdx: number,
 ): Node {
   return new ValidationGraphBuilder(tg).buildObject(
     tg.type(typeIdx, Type.OBJECT),
-    undefined,
+    {},
   );
 }
 
 class ValidationGraphBuilder {
-  iterVarNameGenerator = (function* () {
-    for (let i = 0; true; ++i) yield `_i${i}`;
+  varNameGenerator = (function* () {
+    for (let i = 0; true; ++i) yield `_a${i}`;
   })();
 
-  nextIterVarName() {
-    const res = this.iterVarNameGenerator.next();
+  nextVarName() {
+    const res = this.varNameGenerator.next();
     if (res.done) {
       throw new Error("Unexpected");
     }
@@ -79,48 +87,49 @@ class ValidationGraphBuilder {
 
   constructor(private tg: TypeGraph) {}
 
-  build(typeIdx: number, shift?: ValueShift): Node {
+  build(typeIdx: number, params: BuildParams = {}): Node[] {
     const typeNode = this.tg.type(typeIdx);
     switch (typeNode.type) {
       case Type.OPTIONAL:
-        return this.buildOptional(typeNode, shift);
+        return [this.buildOptional(typeNode, params)];
       case Type.NUMBER:
       case Type.INTEGER:
-        return this.buildNumber(typeNode, shift);
+        return [this.buildNumber(typeNode, params)];
       case Type.STRING:
-        return this.buildString(typeNode, shift);
+        return [this.buildString(typeNode, params)];
       // case Type.BOOLEAN:
       //   return this.buildBoolean(typeNode, shift);
       case Type.ARRAY:
-        return this.buildArray(typeNode, shift);
+        return [this.buildArray(typeNode, params)];
       case Type.OBJECT:
-        return this.buildObject(typeNode, shift);
+        return [this.buildObject(typeNode, params)];
+      case Type.UNION:
+        return this.buildUnion(typeNode, params);
       default:
         throw new Error("Type not supported");
     }
   }
 
-  buildOptional(typeNode: OptionalNode, shift?: ValueShift): Node {
+  buildOptional(typeNode: OptionalNode, params: BuildParams): Node {
     return {
       kind: "branch",
-      shift,
+      ...params,
       condition: (v) => `${v} == null`,
       yes: [],
-      no: [this.build(typeNode.item)],
+      no: [
+        ...this.build(typeNode.item, {
+          collectErrorsIn: params.collectErrorsIn,
+        }),
+      ],
     };
   }
 
-  buildNumber(
-    typeNode: NumberNode | IntegerNode,
-    shift?: ValueShift,
-  ): Node {
-    const root: ValidationNode = {
-      kind: "validation",
-      shift,
+  buildNumber(typeNode: NumberNode | IntegerNode, params: BuildParams): Node {
+    const root = validationNode({
+      ...params,
       condition: (v) => `typeof ${v} === "number"`,
       error: (v) => `\`expected number, got \${typeof ${v}}\``,
-      next: [],
-    };
+    });
 
     let node = root; // leaf node on which new nodes will be attatched
     const constraints = [
@@ -132,13 +141,12 @@ class ValidationGraphBuilder {
 
     for (const [key, compare, name] of constraints) {
       if (typeNode[key] != null) {
-        const next: ValidationNode = {
-          kind: "validation",
+        const next = validationNode({
+          collectErrorsIn: params.collectErrorsIn,
           condition: (v) => `${v} ${compare} ${typeNode[key]}`,
           error: (v) =>
             `\`expected ${name} value: ${typeNode[key]} , got ${v}\``,
-          next: [],
-        };
+        });
         node.next.push(next);
         node = next;
       }
@@ -147,12 +155,9 @@ class ValidationGraphBuilder {
     return root;
   }
 
-  buildString(
-    typeNode: StringNode,
-    shift?: ValueShift,
-  ): Node {
+  buildString(typeNode: StringNode, params: BuildParams): Node {
     const root = validationNode({
-      shift,
+      ...params,
       condition: (v) => `typeof ${v} === "string"`,
       error: (v) => `\`expected string, got \${typeof ${v}}\``,
     });
@@ -169,6 +174,7 @@ class ValidationGraphBuilder {
           condition: (v) => `${v}.length ${compare} ${typeNode[key]}`,
           error: (v) =>
             `\`expected ${name}: ${typeNode[key]}, got \${${v}.length}\``,
+          collectErrorsIn: params.collectErrorsIn,
         });
         node.next.push(next);
         node = next;
@@ -181,6 +187,7 @@ class ValidationGraphBuilder {
         condition: (v) => `formatValidators["${typeNode.format}"](${v})`,
         error: (_v) =>
           `\`string format constraint "${typeNode.format}" not satisfied\``,
+        collectErrorsIn: params.collectErrorsIn,
       });
       node.next.push(next);
       node = next;
@@ -191,11 +198,11 @@ class ValidationGraphBuilder {
 
   buildArray(
     typeNode: ArrayNode,
-    shift?: ValueShift,
+    params: BuildParams,
   ): Node {
     const root = validationNode({
+      ...params,
       condition: (v) => `Array.isArray(${v})`,
-      shift,
       error: (v) => `\`expected array, but got \${typeof ${v}}\``,
     });
 
@@ -211,33 +218,34 @@ class ValidationGraphBuilder {
           condition: (v) => `${v}.length ${compare} ${typeNode[key]}`,
           error: (v) =>
             `\`expected ${name}: ${typeNode[key]}, got \${${v}.length}\``,
+          collectErrorsIn: params.collectErrorsIn,
         });
         leaf.next.push(next);
         leaf = next;
       }
     }
 
-    const iterationVariable = this.nextIterVarName();
+    const iterationVariable = this.nextVarName();
 
     leaf.next.push({
       kind: "loop",
       iterationCount: (v) => `${v}.length`,
       iterationVariable,
-      nextNodes: this.build(typeNode.items, {
-        ref: `[${iterationVariable}]`,
-        path: `[\${${iterationVariable}}]`,
+      nodes: this.build(typeNode.items, {
+        shift: {
+          ref: `[${iterationVariable}]`,
+          path: `[\${${iterationVariable}}]`,
+        },
+        collectErrorsIn: params.collectErrorsIn,
       }),
     });
 
     return root;
   }
 
-  buildObject(
-    typeNode: ObjectNode,
-    shift?: ValueShift,
-  ): Node {
+  buildObject(typeNode: ObjectNode, params: BuildParams): Node {
     const root = validationNode({
-      shift,
+      ...params,
       condition: (v) => `typeof ${v} === "object"`,
       error: (v) => `\`expected object, but got \${typeof ${v}}\``,
     });
@@ -245,14 +253,56 @@ class ValidationGraphBuilder {
     const next = validationNode({
       condition: (v) => `${v} !== null`,
       error: (_v) => '"Expected non-null object, but got null"',
+      collectErrorsIn: params.collectErrorsIn,
     });
     root.next.push(next);
     for (const [name, type] of Object.entries(typeNode.properties)) {
       // TODO what if `name` contains '"'
       next.next.push(
-        this.build(type, { ref: `["${name}"]`, path: `.${name}` }),
+        ...this.build(type, {
+          shift: { ref: `["${name}"]`, path: `.${name}` },
+          collectErrorsIn: params.collectErrorsIn,
+        }),
       );
     }
+    // TODO additionalProperties
     return root;
+  }
+
+  buildUnion(typeNode: UnionNode, params: BuildParams): Node[] {
+    if (typeNode.anyOf.length < 2) {
+      throw new Error("Unexpected: union has less than two variants");
+    }
+
+    const { collectErrorsIn, ...restParams } = params;
+
+    const errorsVariable = this.nextVarName();
+    const shiftVariants = (variants: number[], first = false): Node[] => {
+      const [typeIdx, ...rest] = variants;
+      const res: Node[] = [];
+      res.push(...this.build(typeIdx, {
+        prepare: `${first ? "let " : ""}${errorsVariable} = []`,
+        collectErrorsIn: errorsVariable,
+        ...(first ? restParams : {}),
+      }));
+      if (rest.length === 0) {
+        res.push(validationNode({
+          condition: () => `${errorsVariable}.length === 0`,
+          error: () => '"The value matches none of the union variants"',
+          collectErrorsIn,
+        }));
+      } else {
+        res.push({
+          kind: "branch",
+          condition: () => `${errorsVariable}.length === 0`,
+          yes: [],
+          no: shiftVariants(rest),
+        });
+      }
+
+      return res;
+    };
+
+    return shiftVariants(typeNode.anyOf, true);
   }
 }

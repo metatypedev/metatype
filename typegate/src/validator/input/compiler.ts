@@ -52,9 +52,21 @@ class CodeGenerator {
     const [path, valueRef] = shifted([prevPath, prevValueRef], node.shift);
     switch (node.kind) {
       case "validation": {
-        const ifPrefix = elseClause ? "else " : "";
+        const { collectErrorsIn: errVar = "errors" } = node;
+        let closeBrackets = 0;
+        let ifPrefix = "";
+        if (elseClause) {
+          if (node.prepare != null) {
+            yield `else { ${node.prepare}`;
+            ++closeBrackets;
+          } else {
+            ifPrefix = "else ";
+          }
+        } else if (node.prepare != null) {
+          yield node.prepare;
+        }
         yield `${ifPrefix}if (!(${node.condition(valueRef)})) {`;
-        yield `errors.push([\`${path}\`, ${node.error(valueRef)}]) }`;
+        yield `${errVar}.push([\`${path}\`, ${node.error(valueRef)}]) }`;
         switch (node.next.length) {
           case 0:
             break;
@@ -67,7 +79,7 @@ class CodeGenerator {
             );
             break;
           default:
-            yield `else {`;
+            yield "else {";
             for (const nextNode of node.next) {
               yield* this.generateFromNode(
                 nextNode,
@@ -76,7 +88,10 @@ class CodeGenerator {
                 false,
               );
             }
-            yield `}`;
+            yield "}";
+        }
+        while (closeBrackets-- > 0) {
+          yield "}";
         }
         break;
       }
@@ -84,6 +99,7 @@ class CodeGenerator {
       case "branch": {
         const ifPrefix = elseClause ? "else " : "";
         yield `${ifPrefix}if (${node.condition(valueRef)}) {`;
+        // TODO empty branches...
         for (const nod of node.yes) {
           yield* this.generateFromNode(nod, path, valueRef, false);
         }
@@ -121,12 +137,14 @@ class CodeGenerator {
       const iterVar = node.iterationVariable;
       const iterCount = node.iterationCount(valueRef);
       yield `for (let ${iterVar} = 0; ${iterVar} < ${iterCount}; ++${iterVar}) {`;
-      yield* this.generateFromNode(
-        node.nextNodes,
-        path,
-        valueRef,
-        false,
-      );
+      for (const nextNode of node.nodes) {
+        yield* this.generateFromNode(
+          nextNode,
+          path,
+          valueRef,
+          false,
+        );
+      }
       yield "}";
     }
   }

@@ -41,13 +41,13 @@ snapshot[`input validator compiler 1`] = `
         errors.push([\`v.tags\`,
           \`expected minimum item count: 2, got \${value["tags"].length}\`]);
       } else {
-        for (let _i0 = 0; _i0 < value["tags"].length; ++_i0) {
-          if (!(typeof value["tags"][_i0] === "string")) {
-            errors.push([\`v.tags[\${_i0}]\`,
-              \`expected string, got \${typeof value["tags"][_i0]}\`]);
-          } else if (!(value["tags"][_i0].length <= 10)) {
-            errors.push([\`v.tags[\${_i0}]\`,
-              \`expected maximum length: 10, got \${value["tags"][_i0].length}\`]);
+        for (let _a0 = 0; _a0 < value["tags"].length; ++_a0) {
+          if (!(typeof value["tags"][_a0] === "string")) {
+            errors.push([\`v.tags[\${_a0}]\`,
+              \`expected string, got \${typeof value["tags"][_a0]}\`]);
+          } else if (!(value["tags"][_a0].length <= 10)) {
+            errors.push([\`v.tags[\${_a0}]\`,
+              \`expected maximum length: 10, got \${value["tags"][_a0].length}\`]);
           }
         }
       }
@@ -64,4 +64,72 @@ snapshot[`input validator compiler 2`] = `
   - at v.content: expected minimum length: 100, got 13
   - at v.authorId: string format constraint "uuid" not satisfied
   - at v.tags[2]: expected maximum length: 10, got 11'
+`;
+
+snapshot[`input validator compiler 3`] = `
+'function validate(value, context) {
+  const { formatValidators } = context;
+  const errors = [];
+  if (!(typeof value === "object")) {
+    errors.push([\`v\`, \`expected object, but got \${typeof value}\`]);
+  } else if (!(value !== null)) {
+    errors.push([\`v\`, "Expected non-null object, but got null"]);
+  } else {
+    if (value["tag"] == null) {
+    } else {
+      let _a0 = [];
+      if (!(typeof value["tag"] === "string")) {
+        _a0.push([\`v.tag\`, \`expected string, got \${typeof value["tag"]}\`]);
+      } else if (!(value["tag"].length <= 10)) {
+        _a0.push([\`v.tag\`,
+          \`expected maximum length: 10, got \${value["tag"].length}\`]);
+      }
+      if (_a0.length === 0) {
+      } else {
+        _a0 = [];
+        if (!(Array.isArray(value["tag"]))) {
+          _a0.push([\`v.tag\`, \`expected array, but got \${typeof value["tag"]}\`]);
+        } else {
+          for (let _a1 = 0; _a1 < value["tag"].length; ++_a1) {
+            if (!(typeof value["tag"][_a1] === "string")) {
+              _a0.push([\`v.tag[\${_a1}]\`,
+                \`expected string, got \${typeof value["tag"][_a1]}\`]);
+            } else if (!(value["tag"][_a1].length <= 10)) {
+              _a0.push([\`v.tag[\${_a1}]\`,
+                \`expected maximum length: 10, got \${
+                  value["tag"][_a1].length
+                }\`]);
+            }
+          }
+        }
+        if (!(_a0.length === 0)) {
+          errors.push([\`v.tag\`,
+            "The value matches none of the union variants"]);
+        }
+      }
+    }
+    if (value["authorId"] == null) {
+    } else {
+      if (!(typeof value["authorId"] === "string")) {
+        errors.push([\`v.authorId\`,
+          \`expected string, got \${typeof value["authorId"]}\`]);
+      } else if (!(formatValidators["uuid"](value["authorId"]))) {
+        errors.push([\`v.authorId\`,
+          \`string format constraint "uuid" not satisfied\`]);
+      }
+    }
+  }
+  return errors;
+}
+'
+`;
+
+snapshot[`input validator compiler 4`] = `
+'Validation errors:
+  - at v.authorId: string format constraint "uuid" not satisfied'
+`;
+
+snapshot[`input validator compiler 5`] = `
+"Validation errors:
+  - at v.tag: The value matches none of the union variants"
 `;
