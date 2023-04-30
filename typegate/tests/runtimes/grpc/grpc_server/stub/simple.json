@@ -1,0 +1,15 @@
+{
+  "service": "Gripmock",
+  "method": "SayHello",
+  "input": {
+    "equals": {
+      "name": "Metatype"
+    }
+  },
+  "output": {
+    "data": {
+      "message": "Hello Metatype",
+      "return_code": 0
+    }
+  }
+}
