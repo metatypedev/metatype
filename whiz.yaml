@@ -79,13 +79,24 @@ typegate_native:
   depends_on:
     - libs
 
+typegraph:
+  watch:
+    - "typegraph/core/src/**/*.rs"
+    - "typegraph/core/**/*.wit"
+  command: |
+    set -e
+    rm -rf typegraph/deno/gen
+    cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
+    wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o target/debug/typegraph_core.wasm
+    jco transpile target/debug/typegraph_core.wasm -o typegraph/deno/gen --no-nodejs-compat --map print=../src/imports.ts
+
 website:
   workdir: website
   command: "pnpm start --no-open"
   env:
     TG_URL: http://localhost:7890
   depends_on:
-    - install_website
+    - install
 
 website_meta:
   workdir: .
@@ -101,7 +112,7 @@ website_meta:
 website_docgen:
   workdir: website
   watch:
-    - "../typegraph/typegraph/**/*.py"
+    - "../typegraph/**/*.py"
   command: |
     pydoc-markdown
     npx docusaurus docs:generate:graphql:typegate
@@ -110,15 +121,17 @@ website_docgen:
   depends_on:
     - typegate_native
 
-install_website:
-  workdir: website
-  watch: "package.json"
-  command: "pnpm install"
-
-install_typegraph:
+install:
   workdir: .
   watch:
-    - typegraph/pyproject.toml
+    - typegraph/python/pyproject.toml
+    - website/package.json
   command: |
+    set -e
     [ -d .venv ] || python3 -m venv .venv
-    cd typegraph && poetry install
+    cd typegraph/python
+    poetry install
+    cd ../..
+    cd website
+    pnpm install
+    cd ..
