@@ -1,5 +1,7 @@
 on:
   push:
+    branches:
+      - rust-sdk
     tags:
       - v*
 
@@ -9,33 +11,33 @@ env:
   DENO_VERSION: "1.32.5"
 
 jobs:
-  check-bump:
-    runs-on: ubuntu-latest
-    if: github.ref_type == 'tag'
+  # check-bump:
+  #   runs-on: ubuntu-latest
+  #   if: github.ref_type == 'tag'
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v${{ env.DENO_VERSION }}
-      - name: Check version
-        run: |
-          VERSION=$(deno run -A dev/lock.ts --version)
-          if [[ "${{ github.ref_name }}" != "v$VERSION" ]]; then
-            echo "Tag does not match code version, stopping."
-            exit -1
-          fi
-          echo "Releasing v$VERSION"
-      - uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ github.ref_name }}
-          makeLatest: true
-          generateReleaseNotes: true
-          discussionCategory: "Announcements"
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: denoland/setup-deno@v1
+  #       with:
+  #         deno-version: v${{ env.DENO_VERSION }}
+  #     - name: Check version
+  #       run: |
+  #         VERSION=$(deno run -A dev/lock.ts --version)
+  #         if [[ "${{ github.ref_name }}" != "v$VERSION" ]]; then
+  #           echo "Tag does not match code version, stopping."
+  #           exit -1
+  #         fi
+  #         echo "Releasing v$VERSION"
+  #     - uses: ncipollo/release-action@v1
+  #       with:
+  #         tag: ${{ github.ref_name }}
+  #         makeLatest: true
+  #         generateReleaseNotes: true
+  #         discussionCategory: "Announcements"
 
   meta-cli:
-    needs:
-      - check-bump
+    #needs:
+    #  - check-bump
     runs-on: "${{ matrix.os }}"
     strategy:
       fail-fast: false
@@ -44,18 +46,18 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             suffix: ""
-          #- os: macos-latest
-          #  target: aarch64-apple-darwin
-          #  suffix: ""
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            target: aarch64-apple-darwin
             suffix: ""
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            suffix: ""
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            suffix: ".exe"
+          # - os: ubuntu-latest
+          #   target: x86_64-unknown-linux-gnu
+          #   suffix: ""
+          # - os: ubuntu-latest
+          #   target: aarch64-unknown-linux-gnu
+          #   suffix: ""
+          # - os: windows-latest
+          #   target: x86_64-pc-windows-msvc
+          #   suffix: ".exe"
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
@@ -64,88 +66,90 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}
+      - run: |
+          rustup target add aarch64-apple-darwin
       - uses: actions-rs/cargo@v1
         with:
           use-cross: true
           command: build
           args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
-      - run: |
-          cd target/${{ matrix.target }}/release          
-          tar czvf ../../../meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
-      - uses: svenstaro/upload-release-action@v2
-        with:
-          tag: ${{ github.ref }}
-          file: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
-          asset_name: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
-          overwrite: false
+  #     - run: |
+  #         cd target/${{ matrix.target }}/release
+  #         tar czvf ../../../meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
+  #     - uses: svenstaro/upload-release-action@v2
+  #       with:
+  #         tag: ${{ github.ref }}
+  #         file: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
+  #         asset_name: "meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz"
+  #         overwrite: false
 
-  typegraph:
-    needs:
-      - check-bump
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "poetry"
-      - working-directory: typegraph/python
-        env:
-          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          poetry install --sync
-          poetry build
-          poetry publish
-      - uses: svenstaro/upload-release-action@v2
-        with:
-          tag: ${{ github.ref }}
-          file: "typegraph/python/dist/*"
-          file_glob: true
-          overwrite: false
+  # typegraph:
+  #   needs:
+  #     - check-bump
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: abatilo/actions-poetry@v2
+  #       with:
+  #         poetry-version: ${{ env.POETRY_VERSION }}
+  #     - uses: actions/setup-python@v4
+  #       with:
+  #         python-version: ${{ env.PYTHON_VERSION }}
+  #         cache: "poetry"
+  #     - working-directory: typegraph/python
+  #       env:
+  #         POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+  #       run: |
+  #         poetry install --sync
+  #         poetry build
+  #         poetry publish
+  #     - uses: svenstaro/upload-release-action@v2
+  #       with:
+  #         tag: ${{ github.ref }}
+  #         file: "typegraph/python/dist/*"
+  #         file_glob: true
+  #         overwrite: false
 
-  typegate:
-    needs:
-      - check-bump
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: docker/setup-buildx-action@v2
-      - uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v4
-        with:
-          file: dev/Dockerfile
-          platforms: linux/amd64
-          push: true
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
-          tags: ghcr.io/${{ github.repository_owner }}/typegate:${{ github.ref_name }},ghcr.io/${{ github.repository_owner }}/typegate:latest
+  # typegate:
+  #   needs:
+  #     - check-bump
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: docker/setup-buildx-action@v2
+  #     - uses: docker/login-action@v2
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #     - uses: docker/build-push-action@v4
+  #       with:
+  #         file: dev/Dockerfile
+  #         platforms: linux/amd64
+  #         push: true
+  #         cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:latest
+  #         tags: ghcr.io/${{ github.repository_owner }}/typegate:${{ github.ref_name }},ghcr.io/${{ github.repository_owner }}/typegate:latest
 
-  bump:
-    needs:
-      - meta-cli
-      - typegraph
-      - typegate
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v${{ env.DENO_VERSION }}
-      - id: bump
-        run: |
-          deno run -A dev/lock.ts --bump prerelease
-          echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
-      - uses: peter-evans/create-pull-request@v4
-        with:
-          branch: bump-${{ steps.bump.outputs.version }}
-          delete-branch: true
-          commit-message: "chore: prepare release ${{ steps.bump.outputs.version }}"
-          title: "chore: prepare release ${{ steps.bump.outputs.version }}"
-          body: "Automatic suggested bump"
-          base: main
+  # bump:
+  #   needs:
+  #     - meta-cli
+  #     - typegraph
+  #     - typegate
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - uses: denoland/setup-deno@v1
+  #       with:
+  #         deno-version: v${{ env.DENO_VERSION }}
+  #     - id: bump
+  #       run: |
+  #         deno run -A dev/lock.ts --bump prerelease
+  #         echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
+  #     - uses: peter-evans/create-pull-request@v4
+  #       with:
+  #         branch: bump-${{ steps.bump.outputs.version }}
+  #         delete-branch: true
+  #         commit-message: "chore: prepare release ${{ steps.bump.outputs.version }}"
+  #         title: "chore: prepare release ${{ steps.bump.outputs.version }}"
+  #         body: "Automatic suggested bump"
+  #         base: main
