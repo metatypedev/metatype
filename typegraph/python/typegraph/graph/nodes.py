@@ -44,7 +44,7 @@ class NodeProxy(Node):
         )
 
     def get(self) -> "t.typedef":
-        tpe = self.graph.type_by_names.get(self.node)
+        tpe = self.graph.type_by_names.get(self.node, None)
         if tpe is None:
             raise Exception(f"No registered type named '{self.node}'")
         if self.after_apply is None:

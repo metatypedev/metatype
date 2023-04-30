@@ -4,7 +4,7 @@ import { iterParentStages, JSONValue } from "../../utils.ts";
 import type { FromVars } from "../graphql.ts";
 import { ComputeStage } from "../../engine.ts";
 import { filterValues } from "std/collections/filter_values.ts";
-import { ComputeArg } from "../../planner/args.ts";
+import { ComputeArg, DEFAULT_COMPUTE_PARAMS } from "../../planner/args.ts";
 
 export function stringifyQL(
   obj: JSONValue | FromVars<JSONValue>,
@@ -65,7 +65,10 @@ function formatArgs(
     return "";
   }
   const computedArgs = Object.entries(
-    filterValues(args(vars, {}, {}), (v) => v != undefined),
+    filterValues(
+      args({ ...DEFAULT_COMPUTE_PARAMS, variables: vars }),
+      (v) => v != undefined,
+    ),
   );
   if (computedArgs.length === 0) {
     return "";
