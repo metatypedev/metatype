@@ -68,8 +68,8 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.target }}
       - run: |
           rustup show
-          #rustup target add ${{ matrix.target }}
-          #rustup show
+          rustup target add ${{ matrix.target }}
+          rustup show
       - uses: actions-rs/cargo@v1
         with:
           use-cross: true
