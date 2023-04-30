@@ -2,7 +2,7 @@
 
 Copyright © Metatype OÜ.
 
-Portions of this software are licensed as follows:
+Portions of this repository are licensed as follows:
 
 - all third party components incorporated into the repository are licensed under
   the original license provided by the owner of the applicable component (see
