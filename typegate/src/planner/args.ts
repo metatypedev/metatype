@@ -116,8 +116,11 @@ export function collectArgs(
     });
   }
 
+  performance.mark("start");
   const jsonSchema = buildJsonSchema(argTypeNode, typegraph);
+  performance.mark("schema");
   const validator = ajv.compile(jsonSchema);
+  performance.mark("compile");
   const validate = (value: unknown) => {
     // FIXME: ajv "Maximum call stack size exceeded" error
     // validator may stackoverflow even if the schema/value are
@@ -127,6 +130,12 @@ export function collectArgs(
       throw new SchemaValidatorError(value, validator.errors, jsonSchema);
     }
   };
+  console.debug("performance", {
+    schemaBuild:
+      performance.measure("buildSchema", "start", "schema").duration / 1000,
+    compile: performance.measure("ajv::compile", "schema", "compile").duration /
+      1000,
+  });
 
   const policies = collector.policies;
 
@@ -140,8 +149,15 @@ export function collectArgs(
           effect: effect !== "none" ? effect : null,
         }),
     );
+    console.log({ value });
     // typecheck
+    performance.mark("start");
     validate(value);
+    performance.mark("end");
+    console.debug(
+      "validation",
+      performance.measure("validate", "start", "end").duration / 1000,
+    );
     return {
       compute: () => value,
       deps: [],
@@ -152,7 +168,13 @@ export function collectArgs(
   return {
     compute: (params) => {
       const value = mapValues(compute, (c) => c(params));
+      performance.mark("start");
       validate(value);
+      performance.mark("end");
+      console.debug(
+        "validation",
+        performance.measure("validate", "start", "end").duration / 1000,
+      );
       return value;
     },
     deps: Array.from(collector.deps.parent),
