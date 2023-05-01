@@ -31,7 +31,7 @@ temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core" }
 connection-string = "0.2.0"
 url = "2.3.1"
 thiserror = "1.0.40"
-tokio = { version = "1.27.0", features = ["full"] }
+tokio = { version = "1.28.0", features = ["full"] }
 log = "0.4.17"
 env_logger = "0.10.0"
 serde_json = "1.0.95"
