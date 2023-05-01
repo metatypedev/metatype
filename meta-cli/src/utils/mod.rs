@@ -86,6 +86,7 @@ impl BasicAuth {
 #[derive(Debug, Clone)]
 pub struct Node {
     pub base_url: Url,
+    pub prefix: Option<String>,
     auth: Option<BasicAuth>,
     pub env: HashMap<String, String>,
 }
@@ -93,11 +94,13 @@ pub struct Node {
 impl Node {
     pub fn new<U: IntoUrl>(
         url: U,
+        prefix: Option<String>,
         auth: Option<BasicAuth>,
         env: HashMap<String, String>,
     ) -> Result<Self> {
         Ok(Self {
             base_url: url.into_url()?,
+            prefix,
             auth,
             env,
         })

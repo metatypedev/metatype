@@ -29,6 +29,7 @@ export async function run(
   cwd: string = Deno.cwd(),
   env: Record<string, string> = Deno.env.toObject(),
 ) {
+  // deno-lint-ignore no-deprecated-deno-api
   const p = Deno.run({
     cmd,
     cwd: cwd,
@@ -43,6 +44,7 @@ export async function runOrExit(
   cwd: string = Deno.cwd(),
   env: Record<string, string> = Deno.env.toObject(),
 ) {
+  // deno-lint-ignore no-deprecated-deno-api
   const p = Deno.run({
     cmd,
     cwd: cwd,
