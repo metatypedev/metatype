@@ -65,7 +65,7 @@ lade-sdk = "0.5.5"
 async-trait = "0.1.68"
 async-recursion = "1.0.4"
 clap-verbosity-flag = "2.0.1"
-clap_complete = "4.1.6"
+clap_complete = "4.2.1"
 itertools = "0.10.5"
 enum_dispatch = "0.3.11"
 git2 = { version = "0.16.1", features = ["vendored-libgit2"], default-features = false }
