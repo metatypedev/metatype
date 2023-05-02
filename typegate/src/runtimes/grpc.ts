@@ -22,18 +22,15 @@ export class GrpcRuntime extends Runtime {
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const { materializer, inpType } = stage.props;
-    const { proto, method } = materializer?.data ?? {};
-    const order = Object.keys(inpType?.properties ?? {});
+    const { materializer } = stage.props;
+    const { proto_file, method } = materializer?.data ?? {};
 
     const resolver: Resolver = async (args) => {
-      const transfert = order.map((k) => JSON.stringify(args[k]));
-
       const { res } = nativeResult(
         await native.call_grpc_method({
-          proto: proto as string,
+          proto_file: proto_file as string,
           method: method as string,
-          args: transfert,
+          payload: `{"name": "${args.name}"}`,
         }),
       );
       return JSON.parse(res);

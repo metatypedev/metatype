@@ -1,8 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 
-import base64
-
 from attrs import frozen
 
 from typegraph import effects
@@ -36,16 +34,15 @@ class GrpcRuntime(Runtime):
         effect: Effect = effects.none(),
         **kwargs
     ):
-        with open(proto_file, "rb") as f:
-            proto = base64.b64encode(f.read()).decode("utf-8")
-
-        return t.func(inp, out, GrpcMat(self, proto, method, effect=effect, **kwargs))
+        return t.func(
+            inp, out, GrpcMat(self, proto_file, method, effect=effect, **kwargs)
+        )
 
 
 @frozen
 class GrpcMat(Materializer):
     runtime: Runtime
-    proto: str
+    proto_file: str
     method: str
     effect: Effect = required()
     materializer_name: str = always("grpc_materializer")
