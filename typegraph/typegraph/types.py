@@ -127,7 +127,7 @@ class typedef(Node):
         if self.name == "":
             object.__setattr__(self, "name", f"{self.type}_{self.graph.next_type_id()}")
 
-    def ovewrite_name(self, name: str):
+    def overwrite_name(self, name: str):
         object.__setattr__(self, "name", name)
 
     def replace(self, **changes) -> Self:
@@ -538,7 +538,7 @@ class struct(typedef):
                 value = getattr(self, attr)
                 if isinstance(value, typedef):
                     props[attr] = value
-            self.ovewrite_name(self.__class__.__name__)
+            self.overwrite_name(self.__class__.__name__)
             object.__setattr__(self, "props", frozendict(props))
 
     def additional(self, t: Union[bool, TypeNode]):
