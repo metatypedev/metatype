@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+use crate::RT;
 use macros::deno;
 
 use std::path::{Path, PathBuf};
@@ -157,12 +158,12 @@ fn get_relative_method_name(absolute_method_name: &str) -> anyhow::Result<String
     Ok(method_name.to_string())
 }
 
-async fn get_gprc_client(endpoint: String) -> anyhow::Result<Grpc<Channel>> {
+fn get_gprc_client(endpoint: String) -> anyhow::Result<Grpc<Channel>> {
     let endpoint = Endpoint::from_str(endpoint.as_str()).unwrap();
-    let channel = Channel::builder(endpoint.uri().to_owned())
-        .connect()
-        .await
-        .unwrap();
+
+    let channel = Channel::builder(endpoint.uri().to_owned());
+    let channel = RT.block_on(channel.connect()).unwrap();
+
     let client = Grpc::new(channel);
 
     Ok(client)
@@ -172,13 +173,13 @@ type JsonResponse = String;
 type JsonRequest = String;
 type MethodPath = String;
 
-async fn call_method(
+fn call_method(
     endpoint: String,
     proto_file: &Path,
     method_path: MethodPath,
     json_payload: JsonRequest,
 ) -> JsonResponse {
-    let mut client = get_gprc_client(endpoint).await.unwrap();
+    let mut client = get_gprc_client(endpoint).unwrap();
 
     let file_descriptor = get_file_descriptor(proto_file).unwrap();
 
@@ -192,23 +193,24 @@ async fn call_method(
         .into_request();
 
     let path = PathAndQuery::from_str(method_path.as_str()).unwrap();
-    client.ready().await.unwrap();
+
+    RT.block_on(client.ready()).unwrap();
 
     let codec = DynCodec {
         method_descriptor_proto,
         file_descriptor,
     };
 
-    let response = client.unary(req, path, codec).await;
+    let response = RT.block_on(client.unary(req, path, codec));
     let response = response.unwrap().get_ref().to_string();
     response
 }
 
 #[deno]
-async fn call_grpc_method(input: GrpcInput) -> GrpcOutput {
+fn call_grpc_method(input: GrpcInput) -> GrpcOutput {
     let endpoint = String::from("http://localhost:4770");
     let proto_file = PathBuf::from_str(&input.proto_file).unwrap();
 
-    let response = call_method(endpoint, &proto_file, input.method, input.payload).await;
+    let response = call_method(endpoint, &proto_file, input.method, input.payload);
     GrpcOutput::Ok { res: response }
 }
