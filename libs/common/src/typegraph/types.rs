@@ -121,7 +121,12 @@ pub struct ObjectTypeData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
+<<<<<<< HEAD
 #[derive(Serialize, Deserialize, Clone, Debug)]
+=======
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+>>>>>>> b08217bb (First draft)
 pub struct ArrayTypeData {
     pub items: u32,
     pub max_items: Option<u32>,

@@ -106,9 +106,9 @@ export type ArrayNode = {
     [k: string]: unknown;
   };
   items: number;
-  max_items?: number | null;
-  min_items?: number | null;
-  unique_items?: boolean | null;
+  maxItems?: number | null;
+  minItems?: number | null;
+  uniqueItems?: boolean | null;
 };
 export type FunctionNode = {
   type: "function";

@@ -604,7 +604,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "max_items": {
+            "maxItems": {
               "type": [
                 "integer",
                 "null"
@@ -612,7 +612,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "min_items": {
+            "minItems": {
               "type": [
                 "integer",
                 "null"
@@ -620,7 +620,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "unique_items": {
+            "uniqueItems": {
               "type": [
                 "boolean",
                 "null"
