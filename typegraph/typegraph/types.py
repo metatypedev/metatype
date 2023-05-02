@@ -127,6 +127,9 @@ class typedef(Node):
         if self.name == "":
             object.__setattr__(self, "name", f"{self.type}_{self.graph.next_type_id()}")
 
+    def ovewrite_name(self, name: str):
+        object.__setattr__(self, "name", name)
+
     def replace(self, **changes) -> Self:
         return evolve(self, **changes)
 
@@ -514,10 +517,9 @@ class struct(typedef):
     _max: Optional[int] = constraint("maxProperties")
     # _dependentRequired
 
-    def __init__(self, p: Dict[str, TypeNode] = {}):
-        if self.__class__ == struct:
-            object.__setattr__(self, "props", p)
-        else:
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+        if self.__class__ != struct:
             (base,) = self.__class__.__bases__
             child_cls = self.__class__
             child_attr = set([i for i in vars(child_cls) if not i.startswith("__")])
@@ -536,6 +538,7 @@ class struct(typedef):
                 value = getattr(self, attr)
                 if isinstance(value, typedef):
                     props[attr] = value
+            self.ovewrite_name(self.__class__.__name__)
             object.__setattr__(self, "props", props)
 
     def additional(self, t: Union[bool, TypeNode]):
@@ -556,7 +559,7 @@ class struct(typedef):
 
     def __getattr__(self, attr):
         try:
-            if attr != "props":
+            if attr == "props":
                 return self.props
             return super().__getattr__(attr)
         except AttributeError:

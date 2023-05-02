@@ -22,9 +22,11 @@ with TypeGraph("new-class") as g:
     # dict_keys(['year'])
     print(medal().props.keys())
     print(university().props.keys())
+    print("name " + university().name)
 
     # FIXME:
     # name prints a dict instead of string, why ?
-    # x = t.struct({"a": t.integer(), "b": t.integer()})
+    x = t.struct({"a": t.integer(), "b": t.integer()})
+    print("name: " + x.name)
     # print(medal().name)
     # print(x.name)
