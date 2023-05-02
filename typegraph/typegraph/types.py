@@ -539,7 +539,7 @@ class struct(typedef):
                 if isinstance(value, typedef):
                     props[attr] = value
             self.ovewrite_name(self.__class__.__name__)
-            object.__setattr__(self, "props", props)
+            object.__setattr__(self, "props", frozendict(props))
 
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
