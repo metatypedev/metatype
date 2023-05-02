@@ -141,7 +141,7 @@ jobs:
         run: |
           deno run -A dev/lock.ts --bump prerelease
           echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
-      - uses: peter-evans/create-pull-request@v4
+      - uses: peter-evans/create-pull-request@v5
         with:
           branch: bump-${{ steps.bump.outputs.version }}
           delete-branch: true
