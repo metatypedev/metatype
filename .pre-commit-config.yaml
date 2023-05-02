@@ -11,11 +11,10 @@ repos:
       - id: check-case-conflict
       - id: check-executables-have-shebangs
       - id: check-merge-conflict
-      - id: check-symlinks
       - id: end-of-file-fixer
         exclude: (typegate/deno.lock|.*\.snap$)
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.261"
+    rev: "v0.0.263"
     hooks:
       - id: ruff
   - repo: https://github.com/psf/black
@@ -23,7 +22,7 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v2.42.1
+    rev: 3.2.0
     hooks:
       - id: commitizen
         stages: [commit-msg]

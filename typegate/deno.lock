@@ -526,8 +526,8 @@
       "mathjs": "mathjs@11.8.0"
     },
     "packages": {
-      "@babel/runtime@7.21.0": {
-        "integrity": "sha512-xwII0//EObnq89Ji5AKYQaRYiW/nZ3llSv29d49IuxPhKbtJoLP+9QUUZ4nVragQVtaVGeZrpB+ZtG/Pdy/POw==",
+      "@babel/runtime@7.21.5": {
+        "integrity": "sha512-8jI69toZqqcsnqGGqwGS4Qb1VwLOEp4hz+CXPywcvjs60u3B4Pom/U/7rm4W8tMOYEB+E9wgD0mW1l3r8qlI9Q==",
         "dependencies": {
           "regenerator-runtime": "regenerator-runtime@0.13.11"
         }
@@ -627,7 +627,7 @@
       "mathjs@11.8.0": {
         "integrity": "sha512-I7r8HCoqUGyEiHQdeOCF2m2k9N+tcOHO3cZQ3tyJkMMBQMFqMR7dMQEboBMJAiFW2Um3PEItGPwcOc4P6KRqwg==",
         "dependencies": {
-          "@babel/runtime": "@babel/runtime@7.21.0",
+          "@babel/runtime": "@babel/runtime@7.21.5",
           "complex.js": "complex.js@2.1.1",
           "decimal.js": "decimal.js@10.4.3",
           "escape-latex": "escape-latex@1.2.0",

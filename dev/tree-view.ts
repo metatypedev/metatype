@@ -29,7 +29,7 @@ if (files.length === 0) {
 if (files.length > 1) {
   throw new Error("Cannot accept more than one file");
 }
-
+// deno-lint-ignore no-deprecated-deno-api
 const process = Deno.run({
   cmd: ["cargo", "run", "-p", "meta-cli", "--", "serialize", "-f", files[0]],
   stdout: "piped",

@@ -45,11 +45,11 @@ dev:
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.69.0
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
-    DENO_VERSION: 1.32.5
+    DENO_VERSION: 1.33.1
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.1.0
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.1.6
+    METATYPE_VERSION: 0.1.7
     TAGLINE: >-
       Compose your data, anywhere, and build iterative API blocks with
       zero-trust and serverless deployment, no matter where and how your

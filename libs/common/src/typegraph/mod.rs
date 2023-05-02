@@ -17,7 +17,7 @@ use serde_json::Value;
 use serde_with::skip_serializing_none;
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Typegraph {
     #[serde(rename = "$id")]
     pub id: String,
@@ -33,7 +33,7 @@ pub struct Typegraph {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Cors {
     pub allow_origin: Vec<String>,
     pub allow_headers: Vec<String>,
@@ -45,7 +45,7 @@ pub struct Cors {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum AuthProtocol {
     OAuth2,
@@ -54,7 +54,7 @@ pub enum AuthProtocol {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Auth {
     pub name: String,
     pub protocol: AuthProtocol,
@@ -62,7 +62,7 @@ pub struct Auth {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Rate {
     pub window_limit: u32,
     pub window_sec: u32,
@@ -72,7 +72,7 @@ pub struct Rate {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TypeMeta {
     pub secrets: Vec<String>,
     pub cors: Cors,
@@ -109,14 +109,14 @@ pub struct Materializer {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TGRuntime {
     pub name: String,
     pub data: IndexMap<String, Value>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Policy {
     pub name: String,
     pub materializer: u32,
@@ -124,7 +124,7 @@ pub struct Policy {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PolicyIndicesByEffect {
     pub none: Option<u32>,
     pub create: Option<u32>,
@@ -135,7 +135,7 @@ pub struct PolicyIndicesByEffect {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(untagged)]
 pub enum PolicyIndices {
     Policy(u32),
@@ -144,9 +144,28 @@ pub enum PolicyIndices {
 
 impl Typegraph {
     pub fn name(&self) -> Result<String> {
-        let root_type = &self.types[0];
-        match root_type {
+        match &self.types[0] {
             TypeNode::Object { base, .. } => Ok(base.title.clone()),
+            _ => bail!("invalid variant for root type"),
+        }
+    }
+
+    pub fn with_prefix(&self, prefix: &String) -> Result<Self> {
+        match &self.types[0] {
+            TypeNode::Object { base, data } => {
+                let new_type = TypeNode::Object {
+                    base: TypeNodeBase {
+                        title: format!("{}{}", prefix, base.title),
+                        ..base.clone()
+                    },
+                    data: data.clone(),
+                };
+                let tg = Typegraph {
+                    types: vec![new_type],
+                    ..self.clone()
+                };
+                Ok(tg)
+            }
             _ => bail!("invalid variant for root type"),
         }
     }
@@ -163,19 +182,19 @@ impl TypeNode {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionMatData {
     pub script: String,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ModuleMatData {
     pub code: String,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MigrationOptions {
     pub migration_files: Option<String>,
     // enable migration creation
@@ -187,7 +206,7 @@ pub struct MigrationOptions {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PrismaRuntimeData {
     pub name: String,
     pub datamodel: String,

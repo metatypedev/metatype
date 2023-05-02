@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 
 description = "Compose your data, anywhere, and build iterative API blocks with zero-trust and serverless deployment, no matter where and how your (legacy) systems are."

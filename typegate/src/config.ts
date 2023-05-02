@@ -53,6 +53,7 @@ const schema = {
 
 async function getHostname() {
   try {
+    // deno-lint-ignore no-deprecated-deno-api
     const cmd = Deno.run({ cmd: ["hostname"], stdout: "piped" });
     const stdout = await cmd.output();
     cmd.close();

@@ -435,14 +435,16 @@
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "uint32",
+              "minimum": 0.0
             },
             "maxLength": {
               "type": [
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "uint32",
+              "minimum": 0.0
             },
             "pattern": {
               "type": [
