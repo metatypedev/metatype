@@ -4,25 +4,27 @@ from typegraph.runtimes.deno import PredefinedFunMat
 with TypeGraph("class_syntax") as g:
 
     class Comment(t.struct):
-        title = t.string()
+        title = t.string().min(2).max(20)
         content = t.string()
 
     class Post(t.struct):
         id = t.string()
-        title = t.string().min(2).max(20)
+        title = t.string().min(2).max(20).optional()
         content = t.string()
-        likes = t.integer().min(0)
+        likes = t.integer().min(0).optional()
         comments = t.array(Comment()).named("Comments")
 
     # # mix
-    # class A:
-    #     a = t.string()
-    # # struct > class
-    # B = t.struct({"b": t.string(), "class": A()}).named("B")
+    class A(t.struct):
+        a = t.string()
 
-    # # class > struct
-    # class C:
-    #     c = t.struct({"any": t.string()}).named("struct")
+    # struct > class
+    B = t.struct({"b": t.string(), "class": A()}).named("B")
+
+    # class > struct
+    class C(t.struct):
+        c = t.string()
+        struct = B.named("Bstruct")
 
     g.expose(
         identity=t.func(
@@ -32,15 +34,11 @@ with TypeGraph("class_syntax") as g:
             Post().named("Out"),
             PredefinedFunMat("identity"),
         ),
-        # id_class_struct=t.func(
-        #     B.named("BIn"),
-        #     B.named("BOut"),
-        #     PredefinedFunMat("identity")
-        # ),
-        # id_struct_class=t.func(
-        #     C().named("CIn"),
-        #     C().named("COut"),
-        #     PredefinedFunMat("identity")
-        # ),
+        id_struct_class=t.func(
+            B.named("BIn"), B.named("BOut"), PredefinedFunMat("identity")
+        ),
+        id_class_struct=t.func(
+            C().named("CIn"), C().named("COut"), PredefinedFunMat("identity")
+        ),
         default_policy=[policies.public()],
     )
