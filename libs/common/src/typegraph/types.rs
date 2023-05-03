@@ -60,7 +60,7 @@ pub struct TypeNodeBase {
     #[serde(default)]
     pub injection: Option<InjectionSwitch>,
     #[serde(default, rename = "enum")]
-    pub enumeration: Option<Vec<serde_json::Value>>,
+    pub enumeration: Option<Vec<String>>, // JSON-serialized values
     #[serde(default)]
     pub config: IndexMap<String, serde_json::Value>,
 }

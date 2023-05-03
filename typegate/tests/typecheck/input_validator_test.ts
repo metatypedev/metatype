@@ -70,6 +70,60 @@ test("input validator compiler", async (t) => {
       .on(e);
   });
 
+  await t.should("generate valid code with enums", () => {
+    const queries = tg.type(root.properties["query"], Type.OBJECT);
+    const enums = tg.type(
+      queries.properties["enums"],
+      Type.FUNCTION,
+    );
+
+    const generatedCode = new InputValidationCompiler(tg).generate(enums.input);
+    const code = nativeResult(native.typescript_format_code({
+      source: generatedCode,
+    })).formatted_code;
+
+    console.log("-- BEGIN code");
+    console.log(code);
+    console.log("-- END code");
+    t.assertSnapshot(code);
+  });
+
+  await t.should("fail for invalid inputs: enums", async () => {
+    await gql`
+      query Enums($role: String!, $items: [AvailableItem]!) {
+        enums(userRole: $role, availableItems: $items) {
+          userRole
+          availableItems { name unitPrice }
+        }
+      }
+    `
+      .withVars({
+        role: "model",
+        items: [{ name: "banana", unitPrice: 200 }],
+      })
+      .matchErrorSnapshot(t)
+      .on(e);
+
+    await gql`
+      query Enums($role: String!, $items: [AvailableItem]!) {
+        enums(userRole: $role, availableItems: $items) {
+          userRole
+          availableItems { name unitPrice }
+        }
+      }
+    `
+      .withVars({
+        role: "moderator",
+        items: [
+          { name: "apple", unitPrice: 200 },
+          { name: "banana", unitPrice: 200 },
+          { name: "orange", unitPrice: 200 },
+        ],
+      })
+      .matchErrorSnapshot(t)
+      .on(e);
+  });
+
   await t.should("generate valid code with union and either types", () => {
     const queries = tg.type(root.properties["query"], Type.OBJECT);
     const posts = tg.type(

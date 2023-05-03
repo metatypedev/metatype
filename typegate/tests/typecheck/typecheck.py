@@ -79,10 +79,28 @@ with TypeGraph(
         create_post_mat,
     )
 
+    enums = t.struct(
+        {
+            "userRole": t.enum(["admin", "moderator"]).optional(),
+            "availableItems": t.array(
+                t.struct({"name": t.string(), "unitPrice": t.number()})
+                .enum(
+                    [
+                        {"name": "banana", "unitPrice": 200},
+                        {"name": "orange", "unitPrice": 300},
+                        {"name": "apple", "unitPrice": 400},
+                    ]
+                )
+                .named("AvailableItem")
+            ),
+        }
+    )
+
     g.expose(
         createUser=create_user,
         posts=posts,
         findPost=find_post,
         createPost=create_post,
+        enums=t.func(enums, enums, PredefinedFunMat("identity")),
         default_policy=[my_policy],
     )

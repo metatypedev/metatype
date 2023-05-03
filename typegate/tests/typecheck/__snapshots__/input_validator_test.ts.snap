@@ -98,6 +98,73 @@ snapshot[`input validator compiler 3`] = `
 `;
 
 snapshot[`input validator compiler 4`] = `
+'function validate_46(value, path, errors, context) {
+  if (typeof value !== "object") {
+    errors.push([path, \`expected an object, got \${typeof value}\`]);
+  } else if (value == null) {
+    errors.push([path, "exptected a non-null object, got null"]);
+  } else {
+    const keys = new Set(Object.keys(value));
+    keys.delete("userRole");
+    validate_47(value["userRole"], path + ".userRole", errors, context);
+    keys.delete("availableItems");
+    validate_49(value["availableItems"], path + ".availableItems", errors,
+      context);
+    if (keys.size > 0) {
+      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
+    }
+  }
+}
+function validate_47(value, path, errors, context) {
+  if (value != null) {
+    validate_48(value, path, errors, context);
+  }
+}
+function validate_49(value, path, errors, context) {
+  if (!Array.isArray(value)) {
+    errors.push([path, \`expected an array, got \${typeof value}\`]);
+  } else {
+    for (let i = 0; i < value.length; ++i) {
+      const item = value[i];
+      validate_50(value[i], path + \`[\${i}]\`, errors, context);
+    }
+  }
+}
+function validate_48(value, path, errors, context) {
+  if (value !== "admin" && value !== "moderator") {
+    errors.push([path, "value did not match to any of the enum values"]);
+  }
+}
+function validate_50(value, path, errors, context) {
+  if (!context.deepEqual(value, { "name": "banana", "unitPrice": 200 })
+    && !context.deepEqual(value, { "name": "orange", "unitPrice": 300 })
+    && !context.deepEqual(value, { "name": "apple", "unitPrice": 400 }))
+  {
+    errors.push([path, "value did not match to any of the enum values"]);
+  }
+}
+return validate_46;
+'
+`;
+
+snapshot[`input validator compiler 5`] = `
+[
+  "Validation errors:
+  - at <value>.userRole: value did not match to any of the enum values
+",
+]
+`;
+
+snapshot[`input validator compiler 6`] = `
+[
+  "Validation errors:
+  - at <value>.availableItems[0]: value did not match to any of the enum values
+  - at <value>.availableItems[2]: value did not match to any of the enum values
+",
+]
+`;
+
+snapshot[`input validator compiler 7`] = `
 "function validate_9(value, path, errors, context) {
   if (typeof value !== \\"object\\") {
     errors.push([path, \`expected an object, got \${typeof value}\`]);
@@ -294,7 +361,7 @@ return validate_9;
 "
 `;
 
-snapshot[`input validator compiler 5`] = `
+snapshot[`input validator compiler 8`] = `
 [
   "Validation errors:
   - at <value>.authorId: string does not statisfy the required format 'uuid'
@@ -302,7 +369,7 @@ snapshot[`input validator compiler 5`] = `
 ]
 `;
 
-snapshot[`input validator compiler 6`] = `
+snapshot[`input validator compiler 9`] = `
 [
   "Validation errors:
   - at <value>.tag: Value does not match to any variant of the union type
@@ -310,13 +377,13 @@ snapshot[`input validator compiler 6`] = `
 ]
 `;
 
-snapshot[`input validator compiler 7`] = `
+snapshot[`input validator compiler 10`] = `
 "Validation errors:
   - at <value>.search: Value does not match to any variant of the either type
 "
 `;
 
-snapshot[`input validator compiler 8`] = `
+snapshot[`input validator compiler 11`] = `
 "Validation errors:
   - at <value>.search: Value does not match to any variant of the either type
 "

@@ -8,12 +8,14 @@ import {
   ObjectNode,
   OptionalNode,
   StringNode,
+  Type,
   UnionNode,
 } from "../type_node.ts";
 import { TypeGraph } from "../typegraph.ts";
-import { EitherNode, StringFormat } from "../types/typegraph.ts";
+import { EitherNode, StringFormat, TypeNode } from "../types/typegraph.ts";
 import * as uuid from "std/uuid/mod.ts";
 import validator from "npm:validator";
+import lodash from "npm:lodash";
 
 type ErrorEntry = [path: string, message: string];
 
@@ -21,6 +23,7 @@ type FormatValidator = (value: string) => boolean;
 
 interface ValidationContext {
   formatValidators: Record<StringFormat, FormatValidator>;
+  deepEqual: <T>(left: T, right: T) => boolean;
 }
 
 const formatValidators: Record<StringFormat, FormatValidator> = {
@@ -60,7 +63,10 @@ export function generateValidator(tg: TypeGraph, typeIdx: number) {
 
   return (value: unknown) => {
     const errors: ErrorEntry[] = [];
-    validator(value, "<value>", errors, { formatValidators });
+    validator(value, "<value>", errors, {
+      formatValidators,
+      deepEqual: lodash.isEqual,
+    });
     if (errors.length > 0) {
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
@@ -116,37 +122,71 @@ class CodeGenerator {
     this.lines = [];
     let deps: number[] = [];
     const typeNode = this.tg.type(typeIdx);
-    switch (typeNode.type) {
-      case "boolean":
-        this.generateBooleanValidator(typeNode);
-        break;
-      case "number":
-      case "integer":
-        this.generateNumberValidator(typeNode);
-        break;
-      case "string":
-        this.generateStringValidator(typeNode);
-        break;
-      case "optional":
-        deps = this.generateOptionalValidator(typeNode);
-        break;
-      case "array":
-        deps = this.generateArrayValidator(typeNode);
-        break;
-      case "object":
-        deps = this.generateObjectValidator(typeNode);
-        break;
-      case "union":
-        deps = this.generateUnionValidator(typeNode);
-        break;
-      case "either":
-        deps = this.generateEitherValidator(typeNode);
-        break;
-      default:
-        throw new Error(`Unsupported type: ${typeNode.type}`);
+
+    if (typeNode.enum != null) {
+      this.generateEnumValidator(typeNode);
+    } else {
+      switch (typeNode.type) {
+        case "boolean":
+          this.generateBooleanValidator(typeNode);
+          break;
+        case "number":
+        case "integer":
+          this.generateNumberValidator(typeNode);
+          break;
+        case "string":
+          this.generateStringValidator(typeNode);
+          break;
+        case "optional":
+          deps = this.generateOptionalValidator(typeNode);
+          break;
+        case "array":
+          deps = this.generateArrayValidator(typeNode);
+          break;
+        case "object":
+          deps = this.generateObjectValidator(typeNode);
+          break;
+        case "union":
+          deps = this.generateUnionValidator(typeNode);
+          break;
+        case "either":
+          deps = this.generateEitherValidator(typeNode);
+          break;
+        default:
+          throw new Error(`Unsupported type: ${typeNode.type}`);
+      }
     }
 
     return { code: this.end(typeIdx), deps };
+  }
+
+  generateEnumValidator(typeNode: TypeNode) {
+    const comparisons = [];
+
+    if (
+      ([
+        Type.BOOLEAN,
+        Type.NUMBER,
+        Type.INTEGER,
+        Type.STRING,
+      ] as TypeNode["type"][])
+        .includes(typeNode.type)
+    ) {
+      // shallow comparison
+      comparisons.push(
+        ...typeNode.enum!.map((val) => `value !== ${val}`),
+      );
+    } else {
+      // deep comparison
+      comparisons.push(
+        ...typeNode.enum!.map((val) => `!context.deepEqual(value, ${val})`),
+      );
+    }
+
+    this.validation(
+      comparisons.join(" && "),
+      '"value did not match to any of the enum values"',
+    );
   }
 
   generateBooleanValidator(_typeNode: BooleanNode) {

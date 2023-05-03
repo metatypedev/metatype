@@ -433,17 +433,13 @@ impl<'a> Codegen<'a> {
             TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
             TypeNode::String { base, .. } => {
                 if let Some(variants) = &base.enumeration {
-                    let variants: Vec<String> = variants
-                        .iter()
-                        .map(|variant| {
-                            let variant = variant
-                                .as_str()
-                                .expect("each variant of a string enum should be a string");
-
-                            format!("\"{variant}\"")
-                        })
-                        .collect();
-
+                    // for variant in variants.iter() {
+                    //     let value = serde_json::to_value(variant)
+                    //         .expect("failed to deserialize enum variant");
+                    //     let _ = value
+                    //         .as_str()
+                    //         .expect("each variant of a string enum should be a string");
+                    // }
                     let enum_definition = variants.join(" | ");
                     Ok(enum_definition)
                 } else {
