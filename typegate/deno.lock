@@ -523,7 +523,8 @@
     "specifiers": {
       "@sentry/node@7.49.0": "@sentry/node@7.49.0",
       "chance@1.1.11": "chance@1.1.11",
-      "mathjs": "mathjs@11.8.0"
+      "mathjs": "mathjs@11.8.0",
+      "validator": "validator@13.9.0"
     },
     "packages": {
       "@babel/runtime@7.21.5": {
@@ -660,6 +661,10 @@
       },
       "typed-function@4.1.0": {
         "integrity": "sha512-DGwUl6cioBW5gw2L+6SMupGwH/kZOqivy17E4nsh1JI9fKF87orMmlQx3KISQPmg3sfnOUGlwVkroosvgddrlg==",
+        "dependencies": {}
+      },
+      "validator@13.9.0": {
+        "integrity": "sha512-B+dGG8U3fdtM0/aNK4/X8CXq/EcxU2WPrPEkJGslb47qyHsxmbggTWK0yEA4qnYVNF+nxNlN88o14hIcPmSIEA==",
         "dependencies": {}
       }
     }

@@ -99,6 +99,22 @@ pub struct IntegerTypeData {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum StringFormat {
+    Uuid,
+    Email,
+    Uri,
+    Json,
+    Hostname,
+    Ean,
+    Date,
+    // DateTime,
+    // Path,
+    Phone,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -106,8 +122,7 @@ pub struct StringTypeData {
     pub min_length: Option<u32>,
     pub max_length: Option<u32>,
     pub pattern: Option<String>,
-    // TODO Option<Enum>
-    pub format: Option<String>,
+    pub format: Option<StringFormat>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

@@ -76,7 +76,7 @@ export type StringNode = {
   minLength?: number | null;
   maxLength?: number | null;
   pattern?: string | null;
-  format?: string | null;
+  format?: StringFormat | null;
 };
 export type ObjectNode = {
   type: "object";
@@ -192,6 +192,15 @@ export type InjectionSource = {
   source: "parent";
   data: number;
 };
+export type StringFormat =
+  | "uuid"
+  | "email"
+  | "uri"
+  | "json"
+  | "hostname"
+  | "ean"
+  | "date"
+  | "phone";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
 export interface Typegraph {
   $id: string;

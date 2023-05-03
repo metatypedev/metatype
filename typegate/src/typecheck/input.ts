@@ -11,16 +11,19 @@ import {
   UnionNode,
 } from "../type_node.ts";
 import { TypeGraph } from "../typegraph.ts";
-import { EitherNode } from "../types/typegraph.ts";
+import { EitherNode, StringFormat } from "../types/typegraph.ts";
 import * as uuid from "std/uuid/mod.ts";
+import validator from "npm:validator";
 
 type ErrorEntry = [path: string, message: string];
 
+type FormatValidator = (value: string) => boolean;
+
 interface ValidationContext {
-  formatValidators: Record<string, (s: string) => boolean>;
+  formatValidators: Record<StringFormat, FormatValidator>;
 }
 
-const formatValidators = {
+const formatValidators: Record<StringFormat, FormatValidator> = {
   uuid: uuid.validate,
   json: (value: string) => {
     try {
@@ -30,6 +33,19 @@ const formatValidators = {
       return false;
     }
   },
+  email: validator.isEmail,
+  // TODO validatorjs does not have a URI validator, so this is stricter than expected
+  uri: (value: string) =>
+    validator.isURL(value, {
+      require_valid_protocol: false,
+      require_host: false,
+    }),
+  // TODO
+  hostname: validator.isFQDN,
+  ean: validator.isEAN,
+  phone: validator.isMobilePhone, // ??
+  date: validator.isDate,
+  // datetime: ??
 };
 
 export function generateValidator(tg: TypeGraph, typeIdx: number) {
@@ -44,7 +60,7 @@ export function generateValidator(tg: TypeGraph, typeIdx: number) {
 
   return (value: unknown) => {
     const errors: ErrorEntry[] = [];
-    validator(value, "v", errors, { formatValidators });
+    validator(value, "<value>", errors, { formatValidators });
     if (errors.length > 0) {
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");

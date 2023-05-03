@@ -487,7 +487,6 @@ def date() -> string:
 
 
 def phone() -> string:
-    # TODO replace with the phone number pattern when typechecking
     return string().format("phone")
 
 
