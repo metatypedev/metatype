@@ -14,14 +14,27 @@ test("Class Syntax", async (t) => {
           likes: 13,
           comments: [
             { title: "c1", content: "comment 1" },
-            { title: "c1", content: "comment 2" },
-          ]
+            { title: "c1", content: "comment 2" }
+          ],
+          metadatas: [
+            { name: "tag name" },
+            { title: "info", content: "content" }
+          ],
         ) {
           id
           content
           likes
           comments {
             content
+          }
+          metadatas {
+            ... on Tag {
+              name
+            }
+            ... on Info {
+              title
+              content
+            }
           }
         }
       }
@@ -34,6 +47,10 @@ test("Class Syntax", async (t) => {
           comments: [
             { content: "comment 1" },
             { content: "comment 2" },
+          ],
+          metadatas: [
+            { name: "tag name" },
+            { title: "info", content: "content" },
           ],
         },
       })

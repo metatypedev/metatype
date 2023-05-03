@@ -2,6 +2,15 @@ from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.deno import PredefinedFunMat
 
 with TypeGraph("class_syntax") as g:
+    # class Tag(t.struct):
+    #     # name = t.string() # reserved
+    tag = t.struct({"name": t.string()}).named("Tag")
+
+    class Info(t.struct):
+        title = t.string()
+        content = t.string()
+
+    metadata = t.either([tag, Info()])
 
     class Comment(t.struct):
         title = t.string().min(2).max(20)
@@ -13,6 +22,7 @@ with TypeGraph("class_syntax") as g:
         content = t.string()
         likes = t.integer().min(0).optional()
         comments = t.array(Comment()).named("Comments")
+        metadatas = t.array(metadata).optional()
 
     # # mix
     class A(t.struct):
