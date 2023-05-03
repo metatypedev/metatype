@@ -538,6 +538,11 @@ class struct(typedef):
             self_attr = child_attr
             if base != struct:
                 # child.props should inherit parent.props
+                curr_base = base
+                while curr_base != struct:
+                    (curr_base,) = curr_base.__bases__
+                    fields = set([i for i in vars(curr_base) if not i.startswith("__")])
+                    parent_attr = parent_attr.union(fields)
                 self_attr = self_attr.union(parent_attr)
             props = {}
             for attr in sorted(self_attr):
