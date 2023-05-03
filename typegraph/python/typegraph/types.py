@@ -520,6 +520,10 @@ class struct(typedef):
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
         if self.__class__ != struct:
+            # TODO implement recursive props resolution for parent class
+            # https://en.wikipedia.org/wiki/C3_linearization
+            if len(self.__class__.__bases__) > 1:
+                raise Exception("multiple inheritance is currently not supported")
             (base,) = self.__class__.__bases__
             child_cls = self.__class__
             child_attr = set([i for i in vars(child_cls) if not i.startswith("__")])
@@ -540,6 +544,10 @@ class struct(typedef):
                 # child.props should inherit parent.props
                 curr_base = base
                 while curr_base != struct:
+                    if len(curr_base.__bases__) > 1:
+                        raise Exception(
+                            "multiple inheritance is currently not supported"
+                        )
                     (curr_base,) = curr_base.__bases__
                     fields = set([i for i in vars(curr_base) if not i.startswith("__")])
                     parent_attr = parent_attr.union(fields)
