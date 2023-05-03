@@ -6,25 +6,26 @@ with TypeGraph("class_syntax") as g:
     #     # name = t.string() # reserved
     tag = t.struct({"name": t.string()}).named("Tag")
 
-    class Info(t.struct):
-        title = t.string()
+    class TitledEntity(t.struct):
+        title = t.string().min(2).max(20).optional()
+
+    # child class should inherit from parent
+    class Info(TitledEntity):
         content = t.string()
 
     metadata = t.either([tag, Info()])
 
-    class Comment(t.struct):
-        title = t.string().min(2).max(20)
+    class Comment(TitledEntity):
         content = t.string()
 
-    class Post(t.struct):
+    class Post(TitledEntity):
         id = t.string()
-        title = t.string().min(2).max(20).optional()
         content = t.string()
         likes = t.integer().min(0).optional()
         comments = t.array(Comment()).named("Comments")
         metadatas = t.array(metadata).optional()
 
-    # # mix
+    # mix
     class A(t.struct):
         a = t.string()
 

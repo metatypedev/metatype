@@ -525,16 +525,20 @@ class struct(typedef):
             child_attr = set([i for i in vars(child_cls) if not i.startswith("__")])
             parent_attr = set([i for i in vars(base) if not i.startswith("__")])
             common = sorted(parent_attr.intersection(child_attr))
-            if len(common) > 0:
+            if len(common) > 0 and base == struct:
                 err_msg = ", ".join(common)
                 if len(common) == 1:
-                    err_msg += " is reserved"
+                    err_msg += " is a reserved field"
                 else:
-                    err_msg += " are reserved"
+                    err_msg += " are reserved fields"
                 raise Exception(err_msg)
-            self_attr = sorted(child_attr - parent_attr)
+            self_attr = child_attr
+            if base != struct:
+                self_attr = child_attr.union(parent_attr)
             props = {}
-            for attr in self_attr:
+            for attr in sorted(self_attr):
+                if attr.startswith("__"):
+                    raise Exception(f'field name cannot start with "__", got {attr}')
                 value = getattr(self, attr)
                 if isinstance(value, typedef):
                     props[attr] = value
