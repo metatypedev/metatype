@@ -1,7 +1,7 @@
 # Copyright Metatype under the Elastic License 2.0.
 
 from typegraph import TypeGraph, effects, policies, t
-from typegraph.runtimes.deno import FunMat, PureFunMat
+from typegraph.runtimes.deno import FunMat, PredefinedFunMat, PureFunMat
 
 with TypeGraph(
     "typecheck",
@@ -9,11 +9,15 @@ with TypeGraph(
     user = t.struct(
         {
             "id": t.uuid(),
-            "username": t.string().min(4).max(63),
+            "username": t.string().min(4).max(63).pattern("^[a-z]+$"),
             "email": t.email(),
             "website": t.uri().optional(),
         }
     ).named("User")
+
+    create_user = t.func(
+        user, user, PredefinedFunMat("identity", effect=effects.create())
+    )
 
     post = t.struct(
         {
@@ -76,6 +80,7 @@ with TypeGraph(
     )
 
     g.expose(
+        createUser=create_user,
         posts=posts,
         findPost=find_post,
         createPost=create_post,

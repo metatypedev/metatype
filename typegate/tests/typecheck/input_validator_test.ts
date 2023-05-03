@@ -52,6 +52,22 @@ test("input validator compiler", async (t) => {
         t.assertSnapshot(body.errors[0].message);
       })
       .on(e);
+
+    await gql`
+      mutation CreateUser($id: String!, $username: String!, $email: String!, $website: String!) {
+        createUser(id: $id, username: $username, email: $email, website: $website) {
+          id
+        }
+      }
+    `
+      .withVars({
+        id: crypto.randomUUID(),
+        username: "John",
+        email: "user email",
+        website: "userwebsite",
+      })
+      .matchErrorSnapshot(t)
+      .on(e);
   });
 
   await t.should("generate valid code with union and either types", () => {
@@ -80,10 +96,7 @@ test("input validator compiler", async (t) => {
         }
       }
     `
-      .expectBody((body) => {
-        assertEquals(body.errors.length, 1);
-        t.assertSnapshot(body.errors[0].message);
-      })
+      .matchErrorSnapshot(t)
       .on(e);
 
     await gql`
@@ -93,10 +106,7 @@ test("input validator compiler", async (t) => {
         }
       }
     `
-      .expectBody((body) => {
-        assertEquals(body.errors.length, 1);
-        t.assertSnapshot(body.errors[0].message);
-      })
+      .matchErrorSnapshot(t)
       .on(e);
 
     await gql`

@@ -200,6 +200,14 @@ class CodeGenerator {
         );
       }
     }
+    if (typeNode.pattern != null) {
+      this.line("else {");
+      this.validation(
+        `!new RegExp("${typeNode.pattern}").test(value)`,
+        `"string does not match to the pattern /${typeNode.pattern}/"`,
+      );
+      this.line("}");
+    }
     if (typeNode.format != null) {
       this.line("else {");
       this.line(
