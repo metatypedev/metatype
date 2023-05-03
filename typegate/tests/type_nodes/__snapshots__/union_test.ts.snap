@@ -2,62 +2,7 @@ export const snapshot = {};
 
 snapshot[`Union type 1`] = `
 [
-  'value: {
-  "color": "hello world",
-  "to": "rgb_array"
-}
-
-errors: [
-  {
-    "instancePath": "/color",
-    "schemaPath": "#/properties/color/anyOf/0/type",
-    "keyword": "type",
-    "params": {
-      "type": "array"
-    },
-    "message": "must be array"
-  },
-  {
-    "instancePath": "/color",
-    "schemaPath": "#/properties/color/anyOf/1/type",
-    "keyword": "type",
-    "params": {
-      "type": "object"
-    },
-    "message": "must be object"
-  },
-  {
-    "instancePath": "/color",
-    "schemaPath": "#/properties/color/anyOf/2/pattern",
-    "keyword": "pattern",
-    "params": {
-      "pattern": "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$"
-    },
-    "message": "must match pattern \\\\"^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})\$\\\\""
-  },
-  {
-    "instancePath": "/color",
-    "schemaPath": "#/properties/color/anyOf/3/enum",
-    "keyword": "enum",
-    "params": {
-      "allowedValues": [
-        "red",
-        "green",
-        "blue",
-        "black",
-        "white"
-      ]
-    },
-    "message": "must be equal to one of the allowed values"
-  },
-  {
-    "instancePath": "/color",
-    "schemaPath": "#/properties/color/anyOf",
-    "keyword": "anyOf",
-    "params": {},
-    "message": "must match a schema in anyOf"
-  }
-]',
+  "Error: cannot parse RGB from undefined",
 ]
 `;
 
