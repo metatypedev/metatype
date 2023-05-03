@@ -84,7 +84,7 @@ test("typecheck", async (t) => {
   };
 
   const user1 = { id: crypto.randomUUID() };
-  const user2 = { ...user1, username: "John" };
+  const user2 = { ...user1, username: "john" };
 
   const post2 = { ...post1, author: user1 };
   const post3 = { ...post1, author: user2 };
@@ -127,7 +127,7 @@ test("typecheck", async (t) => {
 
     const user = {
       id: "user-id",
-      username: "John",
+      username: "john",
       email: "my email",
     };
 
@@ -164,7 +164,7 @@ test("typecheck", async (t) => {
             ...post1,
             author: {
               id: crypto.randomUUID(),
-              username: "John",
+              username: "john",
               email: "user@example.com",
               website: "example.com",
             },
@@ -179,7 +179,7 @@ test("typecheck", async (t) => {
         ...post1,
         author: {
           id: crypto.randomUUID(),
-          username: "John",
+          username: "john",
           email: "user@example.com",
         },
       }],
@@ -190,7 +190,7 @@ test("typecheck", async (t) => {
         ...post1,
         author: {
           id: crypto.randomUUID(),
-          username: "John",
+          username: "john",
           email: "user@example.com",
           website: "https://example.com",
         },
