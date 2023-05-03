@@ -110,13 +110,7 @@ export function collectArgs(
     });
   }
 
-  performance.mark("start");
   const validate = generateValidator(typegraph, typeIdx);
-  performance.mark("compile");
-  console.debug(
-    ">> compile duration:",
-    performance.measure("compile", "start", "compile").duration / 1000,
-  );
 
   const policies = collector.policies;
 
@@ -131,13 +125,7 @@ export function collectArgs(
         }),
     );
     // typecheck
-    performance.mark("start");
     validate(value);
-    performance.mark("end");
-    console.debug(
-      "validation",
-      performance.measure("validate", "start", "end").duration / 1000,
-    );
     return {
       compute: () => value,
       deps: [],
@@ -148,13 +136,7 @@ export function collectArgs(
   return {
     compute: (params) => {
       const value = mapValues(compute, (c) => c(params));
-      performance.mark("start");
       validate(value);
-      performance.mark("end");
-      console.debug(
-        "validation",
-        performance.measure("validate", "start", "end").duration / 1000,
-      );
       return value;
     },
     deps: Array.from(collector.deps.parent),
