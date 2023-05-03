@@ -27,7 +27,30 @@ with TypeGraph(
 
     my_policy = policies.public()
 
-    posts = t.func(t.struct(), t.array(post).max(20), PureFunMat("() => []")).named(
+    tag = t.string().max(10)
+
+    post_filter = t.struct(
+        {
+            "tag": t.union([tag, t.array(tag)]).optional(),
+            "authorId": t.uuid().optional(),
+            "search": t.either(
+                [
+                    t.struct(
+                        {"title": t.either([t.string().min(3), t.string().max(10)])}
+                    ),
+                    t.struct(
+                        {
+                            "content": t.either(
+                                [t.string().min(3), t.array(t.string().min(3)).max(3)]
+                            )
+                        }
+                    ),
+                ]
+            ).optional(),
+        }
+    )
+
+    posts = t.func(post_filter, t.array(post).max(20), PureFunMat("() => []")).named(
         "posts"
     )
     find_post = t.func(
@@ -45,6 +68,7 @@ with TypeGraph(
                 "title": t.string().min(10).max(200),
                 "content": t.string().min(100),
                 "authorId": t.string().uuid(),
+                "tags": t.array(t.string().max(10)).min(2).optional(),
             }
         ),
         post,
@@ -53,6 +77,7 @@ with TypeGraph(
 
     g.expose(
         posts=posts,
-        findPost=find_post.add_policy(my_policy),
+        findPost=find_post,
         createPost=create_post,
+        default_policy=[my_policy],
     )

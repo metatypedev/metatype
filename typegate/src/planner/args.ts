@@ -130,7 +130,6 @@ export function collectArgs(
           effect: effect !== "none" ? effect : null,
         }),
     );
-    console.log({ value });
     // typecheck
     performance.mark("start");
     validate(value);

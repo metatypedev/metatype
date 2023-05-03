@@ -1,0 +1,309 @@
+export const snapshot = {};
+
+snapshot[`input validator compiler 1`] = `
+"function validate_37(value, path, errors, context) {
+  if (typeof value !== \\"object\\") {
+    errors.push([path, \`expected an object, got \${typeof value}\`]);
+  } else if (value == null) {
+    errors.push([path, \\"exptected a non-null object, got null\\"]);
+  } else {
+    const keys = new Set(Object.keys(value));
+    keys.delete(\\"title\\");
+    validate_38(value[\\"title\\"], path + \\".title\\", errors, context);
+    keys.delete(\\"content\\");
+    validate_39(value[\\"content\\"], path + \\".content\\", errors, context);
+    keys.delete(\\"authorId\\");
+    validate_40(value[\\"authorId\\"], path + \\".authorId\\", errors, context);
+    keys.delete(\\"tags\\");
+    validate_41(value[\\"tags\\"], path + \\".tags\\", errors, context);
+    if (keys.size > 0) {
+      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
+    }
+  }
+}
+function validate_38(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length < 10) {
+    errors.push([path, \`expected minimum length: 10, got \${value.length}\`]);
+  } else if (value.length > 200) {
+    errors.push([path, \`expected maximum length: 200, got \${value.length}\`]);
+  }
+}
+function validate_39(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length < 100) {
+    errors.push([path, \`expected minimum length: 100, got \${value.length}\`]);
+  }
+}
+function validate_40(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else {
+    const formatValidator = context.formatValidators[\\"uuid\\"];
+    if (formatValidator == null) {
+      errors.push([path, \\"unknown format 'uuid'\\"]);
+    } else if (!formatValidator(value)) {
+      errors.push([path,
+        \\"string does not statisfy the required format 'uuid'\\"]);
+    }
+  }
+}
+function validate_41(value, path, errors, context) {
+  if (value != null) {
+    validate_42(value, path, errors, context);
+  }
+}
+function validate_42(value, path, errors, context) {
+  if (!Array.isArray(value)) {
+    errors.push([path, \`expected an array, got \${typeof value}\`]);
+  } else if (value.length < 2) {
+    errors.push([path, \`expected minimum items: 2, got \${value.length}\`]);
+  } else {
+    for (let i = 0; i < value.length; ++i) {
+      const item = value[i];
+      validate_43(value[i], path + \`[\${i}]\`, errors, context);
+    }
+  }
+}
+function validate_43(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length > 10) {
+    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
+  }
+}
+return validate_37;
+"
+`;
+
+snapshot[`input validator compiler 2`] = `
+"Validation errors:
+  - at v.title: expected minimum length: 10, got 6
+  - at v.content: expected minimum length: 100, got 13
+  - at v.authorId: string does not statisfy the required format 'uuid'
+  - at v.tags[2]: expected maximum length: 10, got 11
+"
+`;
+
+snapshot[`input validator compiler 3`] = `
+"function validate_2(value, path, errors, context) {
+  if (typeof value !== \\"object\\") {
+    errors.push([path, \`expected an object, got \${typeof value}\`]);
+  } else if (value == null) {
+    errors.push([path, \\"exptected a non-null object, got null\\"]);
+  } else {
+    const keys = new Set(Object.keys(value));
+    keys.delete(\\"tag\\");
+    validate_3(value[\\"tag\\"], path + \\".tag\\", errors, context);
+    keys.delete(\\"authorId\\");
+    validate_7(value[\\"authorId\\"], path + \\".authorId\\", errors, context);
+    keys.delete(\\"search\\");
+    validate_9(value[\\"search\\"], path + \\".search\\", errors, context);
+    if (keys.size > 0) {
+      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
+    }
+  }
+}
+function validate_3(value, path, errors, context) {
+  if (value != null) {
+    validate_4(value, path, errors, context);
+  }
+}
+function validate_7(value, path, errors, context) {
+  if (value != null) {
+    validate_8(value, path, errors, context);
+  }
+}
+function validate_9(value, path, errors, context) {
+  if (value != null) {
+    validate_10(value, path, errors, context);
+  }
+}
+function validate_4(value, path, errors, context) {
+  let errs;
+  errs = [];
+  validate_5(value, path, errs, context);
+  if (errs.length === 0) return;
+  errs = [];
+  validate_6(value, path, errs, context);
+  if (errs.length === 0) return;
+  errors.push([path, \\"Value does not match to any variant of the union type\\"]);
+}
+function validate_8(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else {
+    const formatValidator = context.formatValidators[\\"uuid\\"];
+    if (formatValidator == null) {
+      errors.push([path, \\"unknown format 'uuid'\\"]);
+    } else if (!formatValidator(value)) {
+      errors.push([path,
+        \\"string does not statisfy the required format 'uuid'\\"]);
+    }
+  }
+}
+function validate_10(value, path, errors, context) {
+  let matchCount = 0;
+  let errs;
+  errs = [];
+  validate_11(value, path, errs, context);
+  if (errs.length === 0) matchCount += 1;
+  errs = [];
+  validate_15(value, path, errs, context);
+  if (errs.length === 0) matchCount += 1;
+  if (matchCount === 0) {
+    errors.push([path,
+      \\"Value does not match to any variant of the either type\\"]);
+  } else if (matchCount > 1) {
+    errors.push([path,
+      \\"Value match to more than one variant of the either type\\"]);
+  }
+}
+function validate_5(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length > 10) {
+    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
+  }
+}
+function validate_6(value, path, errors, context) {
+  if (!Array.isArray(value)) {
+    errors.push([path, \`expected an array, got \${typeof value}\`]);
+  } else {
+    for (let i = 0; i < value.length; ++i) {
+      const item = value[i];
+      validate_5(value[i], path + \`[\${i}]\`, errors, context);
+    }
+  }
+}
+function validate_11(value, path, errors, context) {
+  if (typeof value !== \\"object\\") {
+    errors.push([path, \`expected an object, got \${typeof value}\`]);
+  } else if (value == null) {
+    errors.push([path, \\"exptected a non-null object, got null\\"]);
+  } else {
+    const keys = new Set(Object.keys(value));
+    keys.delete(\\"title\\");
+    validate_12(value[\\"title\\"], path + \\".title\\", errors, context);
+    if (keys.size > 0) {
+      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
+    }
+  }
+}
+function validate_15(value, path, errors, context) {
+  if (typeof value !== \\"object\\") {
+    errors.push([path, \`expected an object, got \${typeof value}\`]);
+  } else if (value == null) {
+    errors.push([path, \\"exptected a non-null object, got null\\"]);
+  } else {
+    const keys = new Set(Object.keys(value));
+    keys.delete(\\"content\\");
+    validate_16(value[\\"content\\"], path + \\".content\\", errors, context);
+    if (keys.size > 0) {
+      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
+    }
+  }
+}
+function validate_12(value, path, errors, context) {
+  let matchCount = 0;
+  let errs;
+  errs = [];
+  validate_13(value, path, errs, context);
+  if (errs.length === 0) matchCount += 1;
+  errs = [];
+  validate_14(value, path, errs, context);
+  if (errs.length === 0) matchCount += 1;
+  if (matchCount === 0) {
+    errors.push([path,
+      \\"Value does not match to any variant of the either type\\"]);
+  } else if (matchCount > 1) {
+    errors.push([path,
+      \\"Value match to more than one variant of the either type\\"]);
+  }
+}
+function validate_16(value, path, errors, context) {
+  let matchCount = 0;
+  let errs;
+  errs = [];
+  validate_17(value, path, errs, context);
+  if (errs.length === 0) matchCount += 1;
+  errs = [];
+  validate_18(value, path, errs, context);
+  if (errs.length === 0) matchCount += 1;
+  if (matchCount === 0) {
+    errors.push([path,
+      \\"Value does not match to any variant of the either type\\"]);
+  } else if (matchCount > 1) {
+    errors.push([path,
+      \\"Value match to more than one variant of the either type\\"]);
+  }
+}
+function validate_13(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length < 3) {
+    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
+  }
+}
+function validate_14(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length > 10) {
+    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
+  }
+}
+function validate_17(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length < 3) {
+    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
+  }
+}
+function validate_18(value, path, errors, context) {
+  if (!Array.isArray(value)) {
+    errors.push([path, \`expected an array, got \${typeof value}\`]);
+  } else if (value.length > 3) {
+    errors.push([path, \`expected maximum items: 3, got \${value.length}\`]);
+  } else {
+    for (let i = 0; i < value.length; ++i) {
+      const item = value[i];
+      validate_19(value[i], path + \`[\${i}]\`, errors, context);
+    }
+  }
+}
+function validate_19(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length < 3) {
+    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
+  }
+}
+return validate_2;
+"
+`;
+
+snapshot[`input validator compiler 4`] = `
+"Validation errors:
+  - at v.authorId: string does not statisfy the required format 'uuid'
+"
+`;
+
+snapshot[`input validator compiler 5`] = `
+"Validation errors:
+  - at v.tag: Value does not match to any variant of the union type
+"
+`;
+
+snapshot[`input validator compiler 6`] = `
+"Validation errors:
+  - at v.search: Value does not match to any variant of the either type
+"
+`;
+
+snapshot[`input validator compiler 7`] = `
+"Validation errors:
+  - at v.search: Value does not match to any variant of the either type
+"
+`;
