@@ -6,7 +6,6 @@ on:
 env:
   PNPM_VERSION: "8.1.0"
   NODE_VERSION: "19.8.1"
-  PYTHON_VERSION: "3.8"
 
 jobs:
   changes:

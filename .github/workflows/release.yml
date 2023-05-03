@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.4.1"
-  DENO_VERSION: "1.32.5"
+  DENO_VERSION: "1.33.1"
 
 jobs:
   check-bump:
@@ -44,9 +44,9 @@ jobs:
           - os: macos-latest
             target: x86_64-apple-darwin
             suffix: ""
-          # - os: macos-latest
-          #   target: aarch64-apple-darwin
-          #   suffix: ""
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            suffix: ""
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             suffix: ""
@@ -63,14 +63,14 @@ jobs:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ runner.os }}
+          key: ${{ runner.os }}-${{ matrix.target }}
       - uses: actions-rs/cargo@v1
         with:
           use-cross: true
           command: build
           args: "--locked --release --package meta-cli --target ${{ matrix.target }}"
       - run: |
-          cd target/${{ matrix.target }}/release          
+          cd target/${{ matrix.target }}/release
           tar czvf ../../../meta-cli-${{ github.ref_name }}-${{ matrix.target }}.tar.gz "meta${{ matrix.suffix }}"
       - uses: svenstaro/upload-release-action@v2
         with:
@@ -92,7 +92,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "poetry"
-      - working-directory: typegraph
+      - working-directory: typegraph/python
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
         run: |
@@ -102,7 +102,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v2
         with:
           tag: ${{ github.ref }}
-          file: "typegraph/dist/*"
+          file: "typegraph/python/dist/*"
           file_glob: true
           overwrite: false
 
@@ -141,7 +141,7 @@ jobs:
         run: |
           deno run -A dev/lock.ts --bump prerelease
           echo "version=$(deno run -A dev/lock.ts --version)" >> $GITHUB_OUTPUT
-      - uses: peter-evans/create-pull-request@v4
+      - uses: peter-evans/create-pull-request@v5
         with:
           branch: bump-${{ steps.bump.outputs.version }}
           delete-branch: true

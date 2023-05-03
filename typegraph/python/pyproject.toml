@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph"
-version = "0.1.6"
+version = "0.1.7"
 description = "Compose your data, anywhere, and build iterative API blocks with zero-trust and serverless deployment, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license = "ELv2"
@@ -40,6 +40,7 @@ pydoc-markdown = { git = "https://github.com/metatypedev/pydoc-markdown", branch
 ruff = "^0.0.261"
 respx = "^0.20.1"
 coverage = "^7.2.3"
+black = "^23.3.0"
 
 [build-system]
 requires = ["poetry-core"]

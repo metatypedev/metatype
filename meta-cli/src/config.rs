@@ -50,6 +50,7 @@ impl<T> Lift<T> {
 #[derive(Deserialize, Debug, Clone)]
 pub struct NodeConfig {
     pub url: Url,
+    pub prefix: Option<String>,
     username: Option<String>,
     password: Option<String>,
     #[serde(default)]
@@ -60,6 +61,7 @@ impl Default for NodeConfig {
     fn default() -> Self {
         NodeConfig {
             url: "http://localhost:7890".parse().unwrap(),
+            prefix: None,
             username: None,
             password: None,
             env: HashMap::default(),
@@ -92,6 +94,7 @@ impl NodeConfig {
     pub async fn build<P: AsRef<Path>>(&self, dir: P) -> Result<Node> {
         Node::new(
             self.url.clone(),
+            self.prefix.clone(),
             Some(self.basic_auth(dir).await?),
             self.env.clone(),
         )

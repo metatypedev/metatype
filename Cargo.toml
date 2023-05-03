@@ -6,6 +6,8 @@ members = [
   "libs/typescript",
   "libs/xtask",
   "libs/macros",
+  "typegraph/core",
+  "typegraph/rust"
 ]
 # https://github.com/prisma/quaint/issues/392
 resolver = "2"

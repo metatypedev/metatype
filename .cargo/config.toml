@@ -1,2 +1,6 @@
 [env]
 OUT_DIR = { value = "target", relative = true }
+
+[profile.typegraph_core.release]
+opt-level = "z"
+lto = true
