@@ -20,6 +20,7 @@ with TypeGraph("validator") as g:
             "b": t.struct({"name": t.string(), "age": t.number()}).enum(
                 [{"name": "John", "age": "13"}]
             ),
+            "c": t.integer().optional().enum([1, 3, 5]),
         }
     )
 

@@ -52,16 +52,23 @@ impl TypeVisitor for Validator {
         let node = &tg.types[type_idx as usize];
 
         if let Some(enumeration) = &node.base().enumeration {
-            for value in enumeration.iter() {
-                match serde_json::from_str::<Value>(value) {
-                    Ok(val) => match tg.validate_value(type_idx, &val) {
-                        Ok(_) => {}
-                        Err(err) => self.push_error(path, err.to_string()),
-                    },
-                    Err(e) => self.push_error(
-                        path,
-                        format!("Error while deserializing enum value {value:?}: {e:?}"),
-                    ),
+            if matches!(node, TypeNode::Optional { .. }) {
+                self.push_error(
+                    path,
+                    "optional not cannot have enumerated balues".to_owned(),
+                );
+            } else {
+                for value in enumeration.iter() {
+                    match serde_json::from_str::<Value>(value) {
+                        Ok(val) => match tg.validate_value(type_idx, &val) {
+                            Ok(_) => {}
+                            Err(err) => self.push_error(path, err.to_string()),
+                        },
+                        Err(e) => self.push_error(
+                            path,
+                            format!("Error while deserializing enum value {value:?}: {e:?}"),
+                        ),
+                    }
                 }
             }
         }

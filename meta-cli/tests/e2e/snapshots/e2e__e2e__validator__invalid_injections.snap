@@ -12,5 +12,6 @@ expression: "String::from_utf8(output.stderr).expect(\"failed to decode output\"
 [ERROR] at validator:/testEnums/[in]/a: Expected a minimum length of 4, got "hi" (len=2)
 [ERROR] at validator:/testEnums/[in]/a: Expected a string, got '12'
 [ERROR] at validator:/testEnums/[in]/b: Expected number got '"13"'
+[ERROR] at validator:/testEnums/[in]/c: optional not cannot have enumerated balues
 Error: Error while post processing typegraph validator from "tests/e2e/typegraphs/validator.py": Typegraph validator failed validation
 
