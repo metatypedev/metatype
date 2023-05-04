@@ -117,7 +117,7 @@ class typedef(Node):
     runtime_config: Dict[str, Any] = field(
         kw_only=True, factory=frozendict, hash=False, metadata={SKIP: True}
     )
-    _enum: Optional[Tuple[Any]] = optional_field()
+    _enum: Optional[Tuple[str]] = optional_field()
 
     collector_target: Optional[str] = always(Collector.types)
 
@@ -206,7 +206,6 @@ class typedef(Node):
             if isinstance(e, NodeProxy):
                 e.get()._propagate_runtime(self.runtime, visited)
 
-    # TODO @overload
     @overload
     def inject(self, injection: Injection) -> Self:
         pass
@@ -251,7 +250,9 @@ class typedef(Node):
         return self.replace(runtime_config=frozendict(d))
 
     def enum(self, variants: List[Any]) -> Self:
-        return self.replace(enum=tuple(variants))
+        import json
+
+        return self.replace(enum=tuple(json.dumps(variant) for variant in variants))
 
     def data(self, collector) -> dict:
         if self.runtime is None:
@@ -487,7 +488,6 @@ def date() -> string:
 
 
 def phone() -> string:
-    # TODO replace with the phone number pattern when typechecking
     return string().format("phone")
 
 

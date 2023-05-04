@@ -252,9 +252,9 @@
       "runtime": 1,
       "policies": [],
       "enum": [
-        "info",
-        "warning",
-        "error"
+        "\"info\"",
+        "\"warning\"",
+        "\"error\""
       ],
       "config": {}
     },

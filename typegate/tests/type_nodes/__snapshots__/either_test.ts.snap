@@ -2,53 +2,9 @@ export const snapshot = {};
 
 snapshot[`Either type 1`] = `
 [
-  \`value: {
-  "user": {
-    "age": 5,
-    "name": "John",
-    "company": "The company"
-  }
-}
-
-errors: [
-  {
-    "instancePath": "/user",
-    "schemaPath": "#/properties/user/oneOf/0/required",
-    "keyword": "required",
-    "params": {
-      "missingProperty": "school"
-    },
-    "message": "must have required property 'school'"
-  },
-  {
-    "instancePath": "/user",
-    "schemaPath": "#/properties/user/oneOf/1/required",
-    "keyword": "required",
-    "params": {
-      "missingProperty": "college"
-    },
-    "message": "must have required property 'college'"
-  },
-  {
-    "instancePath": "/user/age",
-    "schemaPath": "#/properties/user/oneOf/2/properties/age/minimum",
-    "keyword": "minimum",
-    "params": {
-      "comparison": ">=",
-      "limit": 25
-    },
-    "message": "must be >= 25"
-  },
-  {
-    "instancePath": "/user",
-    "schemaPath": "#/properties/user/oneOf",
-    "keyword": "oneOf",
-    "params": {
-      "passingSchemas": null
-    },
-    "message": "must match exactly one schema in oneOf"
-  }
-]\`,
+  "Validation errors:
+  - at <value>.user: Value does not match to any variant of the either type
+",
 ]
 `;
 

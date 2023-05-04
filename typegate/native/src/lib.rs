@@ -4,6 +4,7 @@ mod config;
 mod errors;
 mod runtimes;
 mod typegraph;
+mod typescript;
 
 use colored::Colorize;
 use config::Config;

@@ -4,7 +4,7 @@ from typegraph.runtimes.deno import ModuleMat
 
 with TypeGraph("union") as g:
     rgb = t.array(t.integer().min(0).max(255)).min(3).max(3).named("RGB")
-    hex = t.string().format("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").named("HEX")
+    hex = t.string().pattern("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").named("HEX")
     colorName = (
         t.string()
         .enum(

@@ -50,6 +50,29 @@ impl TypeVisitor for Validator {
         tg: &Typegraph,
     ) -> VisitResult<Self::Return> {
         let node = &tg.types[type_idx as usize];
+
+        if let Some(enumeration) = &node.base().enumeration {
+            if matches!(node, TypeNode::Optional { .. }) {
+                self.push_error(
+                    path,
+                    "optional not cannot have enumerated values".to_owned(),
+                );
+            } else {
+                for value in enumeration.iter() {
+                    match serde_json::from_str::<Value>(value) {
+                        Ok(val) => match tg.validate_value(type_idx, &val) {
+                            Ok(_) => {}
+                            Err(err) => self.push_error(path, err.to_string()),
+                        },
+                        Err(e) => self.push_error(
+                            path,
+                            format!("Error while deserializing enum value {value:?}: {e:?}"),
+                        ),
+                    }
+                }
+            }
+        }
+
         if let Some(injection) = &node.base().injection {
             if injection.cases.is_empty() && injection.default.is_none() {
                 self.push_error(path, "Invalid injection: Injection has no case".to_string());
@@ -60,10 +83,7 @@ impl TypeVisitor for Validator {
                             match serde_json::from_str::<Value>(value) {
                                 Ok(val) => match tg.validate_value(type_idx, &val) {
                                     Ok(_) => {}
-                                    Err(err) => self.errors.push(ValidatorError {
-                                        path: Path(path).to_string(),
-                                        message: err.to_string(),
-                                    }),
+                                    Err(err) => self.push_error(path, err.to_string()),
                                 },
                                 Err(e) => {
                                     self.push_error(

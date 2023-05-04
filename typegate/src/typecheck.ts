@@ -101,6 +101,9 @@ export class ValidationSchemaBuilder {
     type: TypeNode,
     selectionSet: SelectionSetNode | undefined,
   ): JSONSchema {
+    const enumOverride = type.enum == null
+      ? {}
+      : { enum: type.enum.map((v) => JSON.parse(v)) };
     switch (type.type) {
       case "object": {
         const properties = {} as Record<string, JSONSchema>;
@@ -169,6 +172,7 @@ export class ValidationSchemaBuilder {
           properties,
           required,
           additionalProperties: false,
+          ...enumOverride,
         };
 
         if (invalidNodePaths.length > 0) {
@@ -202,6 +206,7 @@ export class ValidationSchemaBuilder {
             return {
               ...trimType(type),
               items: this.get(path, item, selectionSet),
+              ...enumOverride,
             };
           }
         }
@@ -209,6 +214,7 @@ export class ValidationSchemaBuilder {
         return {
           ...trimType(type),
           items: this.get(path, currentType, selectionSet),
+          ...enumOverride,
         };
       }
 
@@ -230,7 +236,7 @@ export class ValidationSchemaBuilder {
             `Path ${path} cannot be a field selection on value of type ${type.type}`,
           );
         }
-        return trimType(type);
+        return { ...trimType(type), ...enumOverride };
     }
   }
 
@@ -309,6 +315,9 @@ export class ValidationSchemaBuilder {
 
     const schema = {
       ...trimmedType,
+      ...(typeNode.enum == null
+        ? {}
+        : { enum: typeNode.enum.map((v) => JSON.parse(v)) }),
     };
 
     if (isUnion(typeNode)) {
