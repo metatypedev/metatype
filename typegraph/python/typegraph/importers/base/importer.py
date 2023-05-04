@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import black
 from attrs import define, field, frozen
+from box import Box
 from redbaron import AtomtrailersNode, NameNode, RedBaron
 
 from typegraph import TypeGraph, t
@@ -77,6 +78,7 @@ class Importer:
             raise Exception(f"Cannot use reserved types: {', '.join(reserved)}")
 
         self.tg = TypeGraph(name="__importer__")
+        self.type_hint = []
 
     def __enter__(self):
         ImporterContext.push(self)
@@ -132,9 +134,10 @@ class Importer:
             cg.line(f"functions[{repr(name)}] = {typify(fn)}")
         cg.line()
 
+        self.imports.add(("box", "Box"))
         self.imports.add(("typegraph.importers.base.importer", "Import"))
         cg.line(
-            f"return Import(importer={repr(self.name)}, renames=renames, types=types, functions=functions)"
+            f"return Import(importer={repr(self.name)}, renames=renames, types=Box(types), functions=Box(functions))"
         )
 
         return cg
@@ -253,8 +256,8 @@ class ImporterContext:
 class Import:
     importer: str
     renames: Dict[str, str]
-    types: Dict[str, t.typedef]
-    functions: Dict[str, t.func]
+    types: Box  # Dict[str, t.typedef]
+    functions: Box  # Dict[str, t.func]
 
     def type(self, name: str):
         typ = self.types.get(name)
