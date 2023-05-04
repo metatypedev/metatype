@@ -55,7 +55,7 @@ impl TypeVisitor for Validator {
             if matches!(node, TypeNode::Optional { .. }) {
                 self.push_error(
                     path,
-                    "optional not cannot have enumerated balues".to_owned(),
+                    "optional not cannot have enumerated values".to_owned(),
                 );
             } else {
                 for value in enumeration.iter() {
