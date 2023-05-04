@@ -127,6 +127,9 @@ class typedef(Node):
         if self.name == "":
             object.__setattr__(self, "name", f"{self.type}_{self.graph.next_type_id()}")
 
+    def overwrite_name(self, name: str):
+        object.__setattr__(self, "name", name)
+
     def replace(self, **changes) -> Self:
         return evolve(self, **changes)
 
@@ -514,6 +517,49 @@ class struct(typedef):
     _max: Optional[int] = constraint("maxProperties")
     # _dependentRequired
 
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+        if self.__class__ != struct:
+            # TODO implement recursive props resolution for parent class
+            # https://en.wikipedia.org/wiki/C3_linearization
+            if len(self.__class__.__bases__) > 1:
+                raise Exception("multiple inheritance is currently not supported")
+            (base,) = self.__class__.__bases__
+            child_cls = self.__class__
+            child_attr = set([i for i in vars(child_cls) if not i.startswith("__")])
+            parent_attr = set([i for i in vars(base) if not i.startswith("__")])
+
+            # reserved field check
+            reserved_attr = set(vars(struct)).union(vars(typedef))
+            common = sorted(reserved_attr.intersection(child_attr))
+            if len(common) > 0:
+                err_msg = ", ".join(common)
+                if len(common) == 1:
+                    err_msg += " is a reserved field"
+                else:
+                    err_msg += " are reserved fields"
+                raise Exception(err_msg)
+            self_attr = child_attr
+            if base != struct:
+                # child.props should inherit parent.props
+                curr_base = base
+                while curr_base != struct:
+                    if len(curr_base.__bases__) > 1:
+                        raise Exception(
+                            "multiple inheritance is currently not supported"
+                        )
+                    (curr_base,) = curr_base.__bases__
+                    fields = set([i for i in vars(curr_base) if not i.startswith("__")])
+                    parent_attr = parent_attr.union(fields)
+                self_attr = self_attr.union(parent_attr)
+            props = {}
+            for attr in sorted(self_attr):
+                value = getattr(self, attr)
+                if isinstance(value, typedef):
+                    props[attr] = value
+            self.overwrite_name(self.__class__.__name__)
+            object.__setattr__(self, "props", frozendict(props))
+
     def additional(self, t: Union[bool, TypeNode]):
         return self.replace(additional_props=t)
 
@@ -532,13 +578,13 @@ class struct(typedef):
 
     def __getattr__(self, attr):
         try:
+            if attr == "props":
+                return self.props
             return super().__getattr__(attr)
         except AttributeError:
             pass
-
         if attr in self.props:
             return self.props[attr]
-
         raise Exception(f'no prop named "{attr}" in type {self}')
 
     @property
