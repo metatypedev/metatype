@@ -125,4 +125,26 @@ test("Class Syntax", async (t) => {
     })
       .on(e);
   });
-});
+
+  await t.should("be valid", async () => {
+    await gql`
+      query IntrospectionQuery {
+        __schema {
+          queryType { 
+            name 
+            kind 
+          }
+          types {
+            name
+            kind
+            fields { 
+              name 
+            }
+          }
+        }
+      }
+    `
+      .matchSnapshot(t)
+      .on(e);
+  });
+}, { introspection: true });

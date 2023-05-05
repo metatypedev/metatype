@@ -557,7 +557,7 @@ class struct(typedef):
                 value = getattr(self, attr)
                 if isinstance(value, typedef):
                     props[attr] = value
-            self.overwrite_name(self.__class__.__name__)
+            # self.overwrite_name(self.__class__.__name__)
             object.__setattr__(self, "props", frozendict(props))
 
     def additional(self, t: Union[bool, TypeNode]):
