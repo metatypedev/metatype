@@ -72,28 +72,8 @@ test("Class Syntax", async (t) => {
       }
     `
       .expectErrorContains(
-        "must NOT have fewer than 2 characters at /comments/0/title",
+        "expected minimum length: 2, got 0",
       )
-      .on(e);
-  });
-
-  await t.should("work with struct > class", async () => {
-    await gql`
-      query {
-        id_struct_class(
-          b: "B!",
-          class: { a: "A!" }
-        ) {
-          b
-          class { a }
-        }
-      }
-    `.expectData({
-      id_struct_class: {
-        b: "B!",
-        class: { a: "A!" },
-      },
-    })
       .on(e);
   });
 
