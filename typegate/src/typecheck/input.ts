@@ -1,62 +1,17 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { TypeGraph } from "../typegraph.ts";
-import { StringFormat } from "../types/typegraph.ts";
-import * as uuid from "std/uuid/mod.ts";
-import validator from "npm:validator";
-import lodash from "npm:lodash";
 import { CodeGenerator } from "./code_generator.ts";
-
-type ErrorEntry = [path: string, message: string];
-
-type FormatValidator = (value: string) => boolean;
-
-interface ValidationContext {
-  formatValidators: Record<StringFormat, FormatValidator>;
-  deepEqual: <T>(left: T, right: T) => boolean;
-}
-
-const formatValidators: Record<StringFormat, FormatValidator> = {
-  uuid: uuid.validate,
-  json: (value: string) => {
-    try {
-      JSON.parse(value);
-      return true;
-    } catch (_e) {
-      return false;
-    }
-  },
-  email: validator.isEmail,
-  // TODO validatorjs does not have a URI validator, so this is stricter than expected
-  uri: (value: string) =>
-    validator.isURL(value, {
-      require_valid_protocol: false,
-      require_host: false,
-    }),
-  // TODO
-  hostname: validator.isFQDN,
-  ean: validator.isEAN,
-  phone: validator.isMobilePhone, // ??
-  date: validator.isDate,
-  // datetime: ??
-};
+import { mapValues } from "std/collections/map_values.ts";
+import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";
 
 export function generateValidator(tg: TypeGraph, typeIdx: number) {
   const validator = new Function(
     new InputValidationCompiler(tg).generate(typeIdx),
-  )() as (
-    value: unknown,
-    path: string,
-    errors: Array<ErrorEntry>,
-    context: ValidationContext,
-  ) => void;
-
+  )() as ValidatorFn;
   return (value: unknown) => {
     const errors: ErrorEntry[] = [];
-    validator(value, "<value>", errors, {
-      formatValidators,
-      deepEqual: lodash.isEqual,
-    });
+    validator(value, "<value>", errors, validationContext);
     if (errors.length > 0) {
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
@@ -104,23 +59,32 @@ export class InputValidationCompiler {
             cg.generateStringValidator(typeNode);
             break;
           case "optional":
-            cg.generateOptionalValidator(typeNode, functionName);
+            cg.generateOptionalValidator(typeNode, functionName(typeNode.item));
             queue.push(typeNode.item);
             break;
           case "array":
-            cg.generateArrayValidator(typeNode, functionName);
+            cg.generateArrayValidator(typeNode, functionName(typeNode.items));
             queue.push(typeNode.items);
             break;
           case "object":
-            cg.generateObjectValidator(typeNode, functionName);
+            cg.generateObjectValidator(
+              typeNode,
+              mapValues(typeNode.properties, functionName),
+            );
             queue.push(...Object.values(typeNode.properties));
             break;
           case "union":
-            cg.generateUnionValidator(typeNode, functionName);
+            cg.generateUnionValidator(
+              typeNode,
+              typeNode.anyOf.map(functionName),
+            );
             queue.push(...typeNode.anyOf);
             break;
           case "either":
-            cg.generateEitherValidator(typeNode, functionName);
+            cg.generateEitherValidator(
+              typeNode,
+              typeNode.oneOf.map(functionName),
+            );
             queue.push(...typeNode.oneOf);
             break;
           default:

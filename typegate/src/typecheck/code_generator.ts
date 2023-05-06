@@ -124,19 +124,19 @@ export class CodeGenerator {
   }
 
   generateOptionalValidator(
-    typeNode: OptionalNode,
-    validatorName: (idx: number) => string,
+    _typeNode: OptionalNode,
+    itemValidatorName: string,
   ) {
     this.line(`if (value != null) {`);
     this.line(
-      `${validatorName(typeNode.item)}(value, path, errors, context)`,
+      `${itemValidatorName}(value, path, errors, context)`,
     );
     this.line("}");
   }
 
   generateArrayValidator(
     typeNode: ArrayNode,
-    validatorName: (idx: number) => string,
+    itemValidatorName: string,
   ) {
     this.validation(
       `!Array.isArray(value)`,
@@ -159,13 +159,12 @@ export class CodeGenerator {
     }
 
     const itemType = typeNode.items;
-    const itemValidator = validatorName(itemType);
 
     this.line("else {");
     this.line("for (let i = 0; i < value.length; ++i) {");
     this.line("const item = value[i]");
     this.line(
-      `${itemValidator}(value[i], path + \`[\${i}]\`, errors, context)`,
+      `${itemValidatorName}(value[i], path + \`[\${i}]\`, errors, context)`,
     );
     this.line("}");
     this.line("}");
@@ -175,7 +174,7 @@ export class CodeGenerator {
 
   generateObjectValidator(
     typeNode: ObjectNode,
-    validatorName: (idx: number) => string,
+    propValidatorNames: Record<string, string>,
   ) {
     this.validation(
       `typeof value !== "object"`,
@@ -189,9 +188,9 @@ export class CodeGenerator {
 
     this.line("else {");
     this.line("const keys = new Set(Object.keys(value))");
-    for (const [name, typeIdx] of Object.entries(typeNode.properties)) {
+    for (const name of Object.keys(typeNode.properties)) {
       this.line(`keys.delete("${name}")`);
-      const validator = validatorName(typeIdx);
+      const validator = propValidatorNames[name];
       this.line(
         `${validator}(value["${name}"], path + ".${name}", errors, context)`,
       );
@@ -207,32 +206,45 @@ export class CodeGenerator {
 
   generateUnionValidator(
     typeNode: UnionNode,
-    validatorName: (idx: number) => string,
+    variantValidatorNames: string[],
   ) {
     this.line("let errs;");
-    for (const variantIdx of typeNode.anyOf) {
+
+    const variantCount = typeNode.anyOf.length;
+    if (variantValidatorNames.length !== variantCount) {
+      throw new Error(
+        "The length of variantValidatorNames does not match to the variant count",
+      );
+    }
+    for (let i = 0; i < variantCount; ++i) {
       this.line(`errs = []`);
-      const validator = validatorName(variantIdx);
+      const validator = variantValidatorNames[i];
       this.line(`${validator}(value, path, errs, context)`);
       this.line("if (errs.length === 0) { return }");
     }
+
     // TODO display variant errors
     this.line(
       'errors.push([path, "Value does not match to any variant of the union type"])',
     );
-    return typeNode.anyOf;
   }
 
   generateEitherValidator(
     typeNode: EitherNode,
-    validatorName: (idx: number) => string,
+    variantValidatorNames: string[],
   ) {
     this.line("let matchCount = 0;");
     this.line("let errs;");
 
-    for (const variantIdx of typeNode.oneOf) {
+    const variantCount = typeNode.oneOf.length;
+    if (variantValidatorNames.length !== variantCount) {
+      throw new Error(
+        "The length of variantValidatorNames does not match to the variant count",
+      );
+    }
+    for (let i = 0; i < variantCount; ++i) {
       this.line(`errs = []`);
-      const validator = validatorName(variantIdx);
+      const validator = variantValidatorNames[i];
       this.line(`${validator}(value, path, errs, context);`);
       this.line("if (errs.length === 0) { matchCount += 1 }");
     }
@@ -247,8 +259,6 @@ export class CodeGenerator {
       'errors.push([path, "Value match to more than one variant of the either type"])',
     );
     this.line("}");
-
-    return typeNode.oneOf;
   }
 
   reset(): string[] {
