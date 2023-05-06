@@ -75,15 +75,17 @@ export function generateValidator(tg: TypeGraph, typeIdx: number) {
   };
 }
 
+function functionName(typeIdx: number) {
+  return `validate_${typeIdx}`;
+}
+
 export class InputValidationCompiler {
   codes: Map<number, string> = new Map();
-  codegen: CodeGenerator;
 
-  constructor(tg: TypeGraph) {
-    this.codegen = new CodeGenerator(tg);
-  }
+  constructor(private tg: TypeGraph) {}
 
   generate(rootTypeIdx: number): string {
+    const cg = new CodeGenerator();
     const queue = [rootTypeIdx];
     const refs = new Set([rootTypeIdx]);
     for (
@@ -95,12 +97,56 @@ export class InputValidationCompiler {
       if (this.codes.has(typeIdx)) {
         continue;
       }
-      const { code, deps } = this.codegen.generate(typeIdx);
-      this.codes.set(typeIdx, code);
-      queue.push(...deps);
+      const typeNode = this.tg.type(typeIdx);
+
+      if (typeNode.enum != null) {
+        cg.generateEnumValidator(typeNode);
+      } else {
+        switch (typeNode.type) {
+          case "boolean":
+            cg.generateBooleanValidator(typeNode);
+            break;
+          case "number":
+          case "integer":
+            cg.generateNumberValidator(typeNode);
+            break;
+          case "string":
+            cg.generateStringValidator(typeNode);
+            break;
+          case "optional":
+            cg.generateOptionalValidator(typeNode);
+            queue.push(typeNode.item);
+            break;
+          case "array":
+            cg.generateArrayValidator(typeNode);
+            queue.push(typeNode.items);
+            break;
+          case "object":
+            cg.generateObjectValidator(typeNode);
+            queue.push(...Object.values(typeNode.properties));
+            break;
+          case "union":
+            cg.generateUnionValidator(typeNode);
+            queue.push(...typeNode.anyOf);
+            break;
+          case "either":
+            cg.generateEitherValidator(typeNode);
+            queue.push(...typeNode.oneOf);
+            break;
+          default:
+            throw new Error(`Unsupported type: ${typeNode.type}`);
+        }
+      }
+
+      const fnName = functionName(typeIdx);
+      const fnBody = cg.reset().join("\n");
+      this.codes.set(
+        typeIdx,
+        `function ${fnName}(value, path, errors, context) {\n${fnBody}\n}`,
+      );
     }
 
-    const rootValidatorName = CodeGenerator.functionName(rootTypeIdx);
+    const rootValidatorName = functionName(rootTypeIdx);
     const rootValidator = `\nreturn ${rootValidatorName}`;
 
     return [...refs].map((idx) => this.codes.get(idx))
@@ -108,57 +154,8 @@ export class InputValidationCompiler {
   }
 }
 
-interface GeneratedCode {
-  code: string;
-  deps: number[];
-}
-
 class CodeGenerator {
   lines: string[] = [];
-
-  constructor(private tg: TypeGraph) {}
-
-  public generate(typeIdx: number): GeneratedCode {
-    this.lines = [];
-    let deps: number[] = [];
-    const typeNode = this.tg.type(typeIdx);
-
-    if (typeNode.enum != null) {
-      this.generateEnumValidator(typeNode);
-    } else {
-      switch (typeNode.type) {
-        case "boolean":
-          this.generateBooleanValidator(typeNode);
-          break;
-        case "number":
-        case "integer":
-          this.generateNumberValidator(typeNode);
-          break;
-        case "string":
-          this.generateStringValidator(typeNode);
-          break;
-        case "optional":
-          deps = this.generateOptionalValidator(typeNode);
-          break;
-        case "array":
-          deps = this.generateArrayValidator(typeNode);
-          break;
-        case "object":
-          deps = this.generateObjectValidator(typeNode);
-          break;
-        case "union":
-          deps = this.generateUnionValidator(typeNode);
-          break;
-        case "either":
-          deps = this.generateEitherValidator(typeNode);
-          break;
-        default:
-          throw new Error(`Unsupported type: ${typeNode.type}`);
-      }
-    }
-
-    return { code: this.end(typeIdx), deps };
-  }
 
   generateEnumValidator(typeNode: TypeNode) {
     const comparisons = [];
@@ -220,7 +217,7 @@ class CodeGenerator {
     }
   }
 
-  private generateStringValidator(typeNode: StringNode) {
+  generateStringValidator(typeNode: StringNode) {
     this.validation(
       'typeof value !== "string"',
       "`expected a string, got ${typeof value}`",
@@ -266,18 +263,15 @@ class CodeGenerator {
     }
   }
 
-  private generateOptionalValidator(typeNode: OptionalNode): number[] {
+  generateOptionalValidator(typeNode: OptionalNode) {
     this.line(`if (value != null) {`);
     this.line(
-      `${
-        CodeGenerator.functionName(typeNode.item)
-      }(value, path, errors, context)`,
+      `${functionName(typeNode.item)}(value, path, errors, context)`,
     );
     this.line("}");
-    return [typeNode.item];
   }
 
-  private generateArrayValidator(typeNode: ArrayNode): number[] {
+  generateArrayValidator(typeNode: ArrayNode) {
     this.validation(
       `!Array.isArray(value)`,
       "`expected an array, got ${typeof value}`",
@@ -299,7 +293,7 @@ class CodeGenerator {
     }
 
     const itemType = typeNode.items;
-    const itemValidator = CodeGenerator.functionName(itemType);
+    const itemValidator = functionName(itemType);
 
     this.line("else {");
     this.line("for (let i = 0; i < value.length; ++i) {");
@@ -313,7 +307,7 @@ class CodeGenerator {
     return [itemType];
   }
 
-  private generateObjectValidator(typeNode: ObjectNode): number[] {
+  generateObjectValidator(typeNode: ObjectNode) {
     this.validation(
       `typeof value !== "object"`,
       "`expected an object, got ${typeof value}`",
@@ -328,7 +322,7 @@ class CodeGenerator {
     this.line("const keys = new Set(Object.keys(value))");
     for (const [name, typeIdx] of Object.entries(typeNode.properties)) {
       this.line(`keys.delete("${name}")`);
-      const validator = CodeGenerator.functionName(typeIdx);
+      const validator = functionName(typeIdx);
       this.line(
         `${validator}(value["${name}"], path + ".${name}", errors, context)`,
       );
@@ -342,11 +336,11 @@ class CodeGenerator {
     return Object.values(typeNode.properties);
   }
 
-  private generateUnionValidator(typeNode: UnionNode): number[] {
+  generateUnionValidator(typeNode: UnionNode) {
     this.line("let errs;");
     for (const variantIdx of typeNode.anyOf) {
       this.line(`errs = []`);
-      const validator = CodeGenerator.functionName(variantIdx);
+      const validator = functionName(variantIdx);
       this.line(`${validator}(value, path, errs, context)`);
       this.line("if (errs.length === 0) { return }");
     }
@@ -357,13 +351,13 @@ class CodeGenerator {
     return typeNode.anyOf;
   }
 
-  private generateEitherValidator(typeNode: EitherNode): number[] {
+  generateEitherValidator(typeNode: EitherNode) {
     this.line("let matchCount = 0;");
     this.line("let errs;");
 
     for (const variantIdx of typeNode.oneOf) {
       this.line(`errs = []`);
-      const validator = CodeGenerator.functionName(variantIdx);
+      const validator = functionName(variantIdx);
       this.line(`${validator}(value, path, errs, context);`);
       this.line("if (errs.length === 0) { matchCount += 1 }");
     }
@@ -382,10 +376,10 @@ class CodeGenerator {
     return typeNode.oneOf;
   }
 
-  private end(typeIdx: number): string {
-    const fnName = CodeGenerator.functionName(typeIdx);
-    const fnBody = this.lines.join("\n");
-    return `function ${fnName}(value, path, errors, context) {\n${fnBody}\n}`;
+  reset(): string[] {
+    const lines = this.lines;
+    this.lines = [];
+    return lines;
   }
 
   private validation(
@@ -399,11 +393,7 @@ class CodeGenerator {
     this.line("}");
   }
 
-  private line(l: string) {
+  line(l: string) {
     this.lines.push(l);
-  }
-
-  static functionName(typeIdx: number) {
-    return `validate_${typeIdx}`;
   }
 }
