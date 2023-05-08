@@ -112,6 +112,14 @@ interface Plan {
   validator: Validator;
 }
 
+// TODO what about nested array types: t.array(t.array(T))
+function withEmptyObjects(res: unknown) {
+  if (Array.isArray(res)) {
+    return res.map((x) => typeof x === "object" && x != null ? {} : x);
+  }
+  return typeof res === "object" && res != null ? {} : res;
+}
+
 class QueryCache {
   private map: Map<string, Plan> = new Map();
 
@@ -289,7 +297,9 @@ export class Engine {
       const field = path[path.length - 1] as any;
       if (node !== "") {
         lens.forEach((l: any, i: number) => {
-          l[field] = res[i];
+          // Objects are replaced by empty objects `{}`.
+          // It will be populated by child compute stages using values in `cache`.
+          l[field] = withEmptyObjects(res[i]);
         });
 
         lenses[stage.id()] = batcher(lens).flatMap((l: any) => {
@@ -359,14 +369,13 @@ export class Engine {
     // when
     const optimizedStages = this.optimize(stagesMat, verbose);
 
-    const validator = generateValidator(this.tg, operation, fragments);
-    // const validator = TypeCheck.init(
-    //   isIntrospectionQuery(operation, fragments)
-    //     ? this.tg.introspection!.tg.types
-    //     : this.tg.tg.types,
-    //   operation,
-    //   fragments,
-    // );
+    const validator = generateValidator(
+      isIntrospectionQuery(operation, fragments)
+        ? this.tg.introspection!
+        : this.tg,
+      operation,
+      fragments,
+    );
 
     const plan: Plan = {
       stages: optimizedStages,
