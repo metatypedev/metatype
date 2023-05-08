@@ -1,3 +1,4 @@
+from box import Box
 from typegraph import TypeGraph, policies, t
 from typegraph.importers.base.importer import Import
 from typegraph.importers.graphql import GraphQLImporter
@@ -839,7 +840,9 @@ def import_hivdb():
         t.struct({}), t.proxy(renames["Viewer"]).optional()
     )
 
-    return Import(importer="hivdb", renames=renames, types=types, functions=functions)
+    return Import(
+        importer="hivdb", renames=renames, types=Box(types), functions=Box(functions)
+    )
 
 
 with TypeGraph(name="hivdb") as g:

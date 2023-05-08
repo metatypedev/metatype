@@ -292,15 +292,18 @@ class Import:
     functions: Box  # Dict[str, t.func]
 
     def type(self, name: str):
-        typ = self.types.get(name)
-        if typ is None:
+        try:
+            typ = getattr(self.types, name)
+            return typ
+        except Exception:
             raise Exception(f"Type '{name}' not found in import '{self.importer}")
 
     def func(self, name: str):
-        fn = self.functions.get(name)
-        if fn is None:
+        try:
+            fn = getattr(self.functions, name)
+            return fn
+        except Exception:
             raise Exception(f"Function '{name}' not found in import '{self.importer}'")
-        return fn
 
     def all(self):
         return self.functions
