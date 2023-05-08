@@ -12,16 +12,20 @@ import { TypeGraph } from "../typegraph.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { visitType } from "../typegraph/visitor.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";
+import {
+  ErrorEntry,
+  validationContext,
+  Validator,
+  ValidatorFn,
+} from "./common.ts";
 
 export function generateValidator(
   tg: TypeGraph,
   operation: OperationDefinitionNode,
   fragments: FragmentDefs,
-) {
-  const validator = new Function(
-    new ResultValidationCompiler(tg, fragments).generate(operation),
-  )() as ValidatorFn;
+): Validator {
+  const code = new ResultValidationCompiler(tg, fragments).generate(operation);
+  const validator = new Function(code)() as ValidatorFn;
 
   return (value: unknown) => {
     const errors: ErrorEntry[] = [];
@@ -48,7 +52,7 @@ function validatorName(idx: number, counter: number | null) {
 
 export class ResultValidationCompiler {
   codes: Map<string, string> = new Map();
-  counter = 1;
+  counter = 0;
 
   constructor(private tg: TypeGraph, private fragments: FragmentDefs) {}
 
@@ -215,7 +219,7 @@ export class ResultValidationCompiler {
       return [propName, {
         name: "validate_typename",
         typeIdx: -1,
-        path: entry.path + "/__typename",
+        path: entry.path + ".__typename",
       } as QueueEntry];
     }
 
@@ -226,7 +230,7 @@ export class ResultValidationCompiler {
     }
 
     const propTypeIdx = typeNode.properties[name.value];
-    const path = `${entry.path}/${name.value}`;
+    const path = `${entry.path}.${name.value}`;
     let validator: string;
     if (this.hasNestedObjectType(propTypeIdx)) {
       if (selectionSet == null) {

@@ -188,9 +188,9 @@ export class CodeGenerator {
 
     this.line("else {");
     this.line("const keys = new Set(Object.keys(value))");
-    for (const name of Object.keys(typeNode.properties)) {
+
+    for (const [name, validator] of Object.entries(propValidatorNames)) {
       this.line(`keys.delete("${name}")`);
-      const validator = propValidatorNames[name];
       this.line(
         `${validator}(value["${name}"], path + ".${name}", errors, context)`,
       );

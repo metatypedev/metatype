@@ -23,7 +23,6 @@ import {
 import { mapValues } from "std/collections/map_values.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 
-import { JSONSchema, SchemaValidatorError, trimType } from "../typecheck.ts";
 import { EffectType, EitherNode } from "../types/typegraph.ts";
 
 import { getChildTypes, visitTypes } from "../typegraph/visitor.ts";
@@ -35,12 +34,6 @@ class MandatoryArgumentError extends Error {
       `mandatory argument ${argDetails} not found`,
     );
   }
-}
-
-interface ArgumentObjectSchema {
-  type: string;
-  properties: Record<string, JSONSchema>;
-  required?: string[];
 }
 
 export interface ComputeArgParams {
@@ -390,107 +383,6 @@ class ArgumentCollector {
   }
 
   /**
-   * Returns the JSON Schema of an argument type node.
-   *
-   * The JSON Schema returned is useful to check non-primitive values such as
-   * objects or unions.
-   */
-  private getArgumentSchema(typenode: TypeNode): JSONSchema {
-    switch (typenode.type) {
-      case Type.OPTIONAL: {
-        // Note:
-        // The field `item` does not exist in JSON Schema
-        // we must get its schema and make the type nullable
-        const itemTypeNode = this.tg.type(typenode.item);
-        const nullableType = [itemTypeNode.type, "null"];
-        const itemSchema = this.getArgumentSchema(itemTypeNode);
-        const schema = {
-          ...itemSchema,
-          type: nullableType,
-        };
-        return schema;
-      }
-      case Type.ARRAY: {
-        const itemsTypeNode = this.tg.type(typenode.items);
-        const itemsSchema = this.getArgumentSchema(itemsTypeNode);
-        const schema = {
-          ...trimType(typenode),
-          items: itemsSchema,
-        };
-        return schema;
-      }
-
-      case Type.UNION: {
-        const schemes = typenode.anyOf
-          .map((variantTypeIndex) => this.tg.type(variantTypeIndex))
-          .map((variant) => this.getArgumentSchema(variant));
-
-        const argumentSchema = {
-          anyOf: schemes as JSONSchema[],
-        };
-
-        return argumentSchema;
-      }
-
-      case Type.EITHER: {
-        const schemes = typenode.oneOf
-          .map((variantTypeIndex) => this.tg.type(variantTypeIndex))
-          .map((variant) => this.getArgumentSchema(variant));
-
-        const argumentSchema = {
-          oneOf: schemes as JSONSchema[],
-        };
-
-        return argumentSchema;
-      }
-
-      case Type.STRING:
-      case Type.BOOLEAN:
-      case Type.NUMBER:
-      case Type.INTEGER: {
-        const schema = trimType(typenode);
-        return schema;
-      }
-
-      case Type.OBJECT: {
-        const schema: ArgumentObjectSchema = {} as ArgumentObjectSchema;
-
-        schema.type = Type.OBJECT;
-        schema.required = [];
-        schema.properties = {};
-
-        for (
-          const [propertyName, propertyTypeIndex] of Object.entries(
-            typenode.properties,
-          )
-        ) {
-          const propertyNode = this.tg.type(propertyTypeIndex);
-          if (propertyNode.type !== Type.OPTIONAL) {
-            schema.required.push(propertyName);
-            schema.properties[propertyName] = this.getArgumentSchema(
-              propertyNode,
-            );
-          } else {
-            schema.properties[propertyName] = this.getArgumentSchema(
-              this.tg.type(propertyNode.item),
-            );
-          }
-        }
-
-        return schema;
-      }
-
-      default:
-        throw new Error(
-          [
-            `unsupported type node '${typenode.type}'`,
-            `to generate its argument schema`,
-          ].join(" "),
-        );
-    }
-  }
-
-  /**
    * Collect the value of a parameter of type 'union' or 'either'.
    */
   private collectGeneralUnionArg(
@@ -511,8 +403,7 @@ class ArgumentCollector {
       } catch (error) {
         if (
           error instanceof TypeMismatchError ||
-          error instanceof MandatoryArgumentError ||
-          error instanceof SchemaValidatorError
+          error instanceof MandatoryArgumentError
         ) {
           continue;
         }

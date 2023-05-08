@@ -24,13 +24,14 @@ import {
   Resolver,
   Variables,
 } from "./types.ts";
-import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { Option } from "monads";
 import { getLogger } from "./log.ts";
 import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
+import { Validator } from "./typecheck/common.ts";
+import { generateValidator } from "./typecheck/result.ts";
 
 const logger = getLogger(import.meta);
 
@@ -108,7 +109,7 @@ function isIntrospectionQuery(
 interface Plan {
   stages: ComputeStage[];
   policies: OperationPolicies;
-  validator: TypeCheck;
+  validator: Validator;
 }
 
 class QueryCache {
@@ -358,13 +359,14 @@ export class Engine {
     // when
     const optimizedStages = this.optimize(stagesMat, verbose);
 
-    const validator = TypeCheck.init(
-      isIntrospectionQuery(operation, fragments)
-        ? this.tg.introspection!.tg.types
-        : this.tg.tg.types,
-      operation,
-      fragments,
-    );
+    const validator = generateValidator(this.tg, operation, fragments);
+    // const validator = TypeCheck.init(
+    //   isIntrospectionQuery(operation, fragments)
+    //     ? this.tg.introspection!.tg.types
+    //     : this.tg.tg.types,
+    //   operation,
+    //   fragments,
+    // );
 
     const plan: Plan = {
       stages: optimizedStages,
@@ -436,7 +438,7 @@ export class Engine {
       const computeTime = performance.now();
 
       //console.log("value computed", res);
-      validator.validate(res);
+      validator(res);
       const endTime = performance.now();
 
       if (verbose) {

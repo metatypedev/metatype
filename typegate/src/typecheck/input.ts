@@ -3,9 +3,14 @@
 import { TypeGraph } from "../typegraph.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";
+import {
+  ErrorEntry,
+  validationContext,
+  Validator,
+  ValidatorFn,
+} from "./common.ts";
 
-export function generateValidator(tg: TypeGraph, typeIdx: number) {
+export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
   const validator = new Function(
     new InputValidationCompiler(tg).generate(typeIdx),
   )() as ValidatorFn;

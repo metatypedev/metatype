@@ -1,11 +1,16 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { test } from "../utils.ts";
-import { assert, assertThrows } from "std/testing/asserts.ts";
-import { TypeCheck, ValidationSchemaBuilder } from "../../src/typecheck.ts";
+import { assertThrows } from "std/testing/asserts.ts";
 import { findOperation } from "../../src/graphql.ts";
 import { parse } from "graphql";
 import { None } from "monads";
+import {
+  generateValidator,
+  ResultValidationCompiler,
+} from "../../src/typecheck/result.ts";
+import * as native from "native";
+import { nativeResult } from "../../src/utils.ts";
 
 test("typecheck", async (t) => {
   const e = await t.pythonFile("typecheck/typecheck.py");
@@ -14,38 +19,46 @@ test("typecheck", async (t) => {
   // for syntax highlighting
   const graphql = String.raw;
 
-  const typecheck = (query: string) => {
+  const getValidationCode = (query: string) => {
     const [operation, fragments] = findOperation(parse(query), None);
     if (operation.isNone()) {
       throw new Error("No operation found in the query");
     }
-    const validationSchema = new ValidationSchemaBuilder(
-      tg.tg.types,
-      operation.unwrap(),
-      fragments,
-    ).build();
 
-    return new TypeCheck(validationSchema);
+    return new ResultValidationCompiler(tg, fragments).generate(
+      operation.unwrap(),
+    );
   };
 
-  await t.should("invalid queries", () => {
+  const getValidator = (query: string) => {
+    const [operation, fragments] = findOperation(parse(query), None);
+    if (operation.isNone()) {
+      throw new Error("No operation found in the query");
+    }
+
+    return generateValidator(tg, operation.unwrap(), fragments);
+  };
+
+  await t.should("fail for invalid queries", () => {
     assertThrows(
       () =>
-        typecheck(graphql`
-          query Q {
+        getValidationCode(graphql`
+          query Query1 {
             postis {
               id
             }
           }
         `),
       Error,
-      "Q.postis is undefined",
+      "Unexpected property 'postis' at 'Query1'",
     );
+
+    console.log("Q2");
 
     assertThrows(
       () =>
-        typecheck(graphql`
-          query Q {
+        getValidationCode(graphql`
+          query Query2 {
             posts {
               id
               title
@@ -54,33 +67,39 @@ test("typecheck", async (t) => {
           }
         `),
       Error,
-      "Q.posts.text is undefined",
+      "Unexpected property 'text' at 'Query2.posts'",
     );
   });
 
-  let query1: TypeCheck;
-
-  await t.should("valid query", () => {
-    query1 = typecheck(graphql`
-      query GetPosts {
-        posts {
+  const queryGetPosts = graphql`
+    query GetPosts {
+      posts {
+        id
+        title
+        author {
           id
-          title
-          author {
-            id
-            username
-          }
+          username
         }
       }
-    `);
+    }
+  `;
 
-    assert(query1 instanceof TypeCheck);
+  await t.should("generate validation code for valid queries", () => {
+    const code = getValidationCode(queryGetPosts);
+
+    const formattedCode = nativeResult(native.typescript_format_code({
+      source: code,
+    })).formatted_code;
+    console.log("-- START code --");
+    console.log(formattedCode);
+    console.log("-- END code --");
+    t.assertSnapshot(formattedCode);
   });
 
   const post1 = {
     id: crypto.randomUUID(),
     title: "Hello World of Metatype",
-    content: "Hello, World!",
+    // content: "Hello, World!",
   };
 
   const user1 = { id: crypto.randomUUID() };
@@ -90,27 +109,20 @@ test("typecheck", async (t) => {
   const post3 = { ...post1, author: user2 };
 
   await t.should("data type validation", () => {
-    assertThrows(
-      () => query1.validate({ posts: [post1] }),
-      Error,
-      "must have required property 'author' at /posts/0",
+    const validate = getValidator(queryGetPosts);
+    t.assertThrowsSnapshot(() => validate({ posts: [post1] }));
+
+    t.assertThrowsSnapshot(
+      () => validate({ posts: [post2] }),
     );
 
-    assertThrows(
-      () => query1.validate({ posts: [post2] }),
-      Error,
-      "must have required property 'username' at /posts/0/author",
+    validate({ posts: [post3] });
+
+    t.assertThrowsSnapshot(
+      () => validate({ posts: [post3, post2] }),
     );
 
-    query1.validate({ posts: [post3] });
-
-    assertThrows(
-      () => query1.validate({ posts: [post3, post2] }),
-      Error,
-      "must have required property 'username' at /posts/1/author",
-    );
-
-    const query2 = typecheck(graphql`
+    const validate2 = getValidator(graphql`
       query GetPosts {
         posts {
           id
@@ -131,9 +143,9 @@ test("typecheck", async (t) => {
       email: "my email",
     };
 
-    assertThrows(
+    t.assertThrowsSnapshot(
       () =>
-        query2.validate({
+        validate2({
           posts: [
             {
               ...post1,
@@ -141,25 +153,21 @@ test("typecheck", async (t) => {
             },
           ],
         }),
-      Error,
-      'must match format "uuid" at /posts/0/author/id',
     );
 
-    assertThrows(
+    t.assertThrowsSnapshot(
       () =>
-        query2.validate({
+        validate2({
           posts: [{
             ...post1,
             author: { ...user, id: crypto.randomUUID() },
           }],
         }),
-      Error,
-      'must match format "email" at /posts/0/author/email',
     );
 
-    assertThrows(
+    t.assertThrowsSnapshot(
       () =>
-        query2.validate({
+        validate2({
           posts: [{
             ...post1,
             author: {
@@ -170,11 +178,9 @@ test("typecheck", async (t) => {
             },
           }],
         }),
-      Error,
-      'must match format "uri" at /posts/0/author/website',
     );
 
-    query2.validate({
+    validate2({
       posts: [{
         ...post1,
         author: {
@@ -185,7 +191,7 @@ test("typecheck", async (t) => {
       }],
     });
 
-    query2.validate({
+    validate2({
       posts: [{
         ...post1,
         author: {
