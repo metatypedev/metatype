@@ -1,0 +1,194 @@
+export const snapshot = {};
+
+snapshot[`Class Syntax 1`] = `
+{
+  __schema: {
+    queryType: {
+      kind: "OBJECT",
+      name: "Query",
+    },
+    types: [
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "String",
+      },
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "Int",
+      },
+      {
+        fields: [
+          {
+            name: "string",
+          },
+        ],
+        kind: "OBJECT",
+        name: "_String",
+      },
+      {
+        fields: [
+          {
+            name: "integer",
+          },
+        ],
+        kind: "OBJECT",
+        name: "_Integer",
+      },
+      {
+        fields: [
+          {
+            name: "id_class_struct",
+          },
+          {
+            name: "id_struct_class",
+          },
+          {
+            name: "identity",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Query",
+      },
+      {
+        fields: [
+          {
+            name: "metadatas",
+          },
+          {
+            name: "likes",
+          },
+          {
+            name: "id",
+          },
+          {
+            name: "content",
+          },
+          {
+            name: "title",
+          },
+          {
+            name: "comments",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Out",
+      },
+      {
+        fields: [
+          {
+            name: "title",
+          },
+          {
+            name: "content",
+          },
+        ],
+        kind: "OBJECT",
+        name: "object_13",
+      },
+      {
+        fields: null,
+        kind: "UNION",
+        name: "either_7Out",
+      },
+      {
+        fields: [
+          {
+            name: "name",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Tag",
+      },
+      {
+        fields: [
+          {
+            name: "content",
+          },
+          {
+            name: "title",
+          },
+        ],
+        kind: "OBJECT",
+        name: "object_6",
+      },
+      {
+        fields: [
+          {
+            name: "class",
+          },
+          {
+            name: "b",
+          },
+        ],
+        kind: "OBJECT",
+        name: "BOut",
+      },
+      {
+        fields: [
+          {
+            name: "a",
+          },
+        ],
+        kind: "OBJECT",
+        name: "object_19",
+      },
+      {
+        fields: [
+          {
+            name: "struct",
+          },
+          {
+            name: "c",
+          },
+        ],
+        kind: "OBJECT",
+        name: "COut",
+      },
+      {
+        fields: [
+          {
+            name: "class",
+          },
+          {
+            name: "b",
+          },
+        ],
+        kind: "OBJECT",
+        name: "Bstruct",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "object_13Inp",
+      },
+      {
+        fields: null,
+        kind: "SCALAR",
+        name: "either_7In",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "TagInp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "object_6Inp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "object_19Inp",
+      },
+      {
+        fields: null,
+        kind: "INPUT_OBJECT",
+        name: "BstructInp",
+      },
+    ],
+  },
+}
+`;

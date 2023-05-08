@@ -77,7 +77,7 @@ test("array of optional", async (t) => {
             string_array
           }
         }
-    `.expectErrorContains("must be object at /struct_array/2")
+    `.matchErrorSnapshot(t)
       .on(e);
   });
 }, { introspection: true });

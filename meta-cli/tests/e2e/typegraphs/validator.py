@@ -1,8 +1,8 @@
 from typegraph import TypeGraph, t
 from typegraph.runtimes import deno
 
-with TypeGraph("invalid_injections") as g:
-    record = t.struct(
+with TypeGraph("validator") as g:
+    injection = t.struct(
         {
             "a": t.integer().set("1"),
             "b": t.string().set(["h", "e", "l", "l", "o"]),
@@ -14,4 +14,17 @@ with TypeGraph("invalid_injections") as g:
         }
     )
 
-    g.expose(test=t.func(record, record, deno.PredefinedFunMat("identity")))
+    enums = t.struct(
+        {
+            "a": t.string().min(4).enum(["hi", "hello", 12]),
+            "b": t.struct({"name": t.string(), "age": t.number()}).enum(
+                [{"name": "John", "age": "13"}]
+            ),
+            "c": t.integer().optional().enum([1, 3, 5]),
+        }
+    )
+
+    g.expose(
+        test=t.func(injection, injection, deno.PredefinedFunMat("identity")),
+        testEnums=t.func(enums, enums, deno.PredefinedFunMat("identity")),
+    )
