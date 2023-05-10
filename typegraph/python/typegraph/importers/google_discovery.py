@@ -40,8 +40,6 @@ class GoogleDiscoveryImporter(Importer):
         super().__init__(name, renames=renames, keep_names=keep_names)
         self.imports = {
             ("typegraph", "t"),
-            ("typegraph", "TypeGraph"),
-            ("typegraph", "effects"),
             ("typegraph.runtimes.http", "HTTPRuntime"),
         }
 

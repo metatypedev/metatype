@@ -40,6 +40,6 @@ with TypeGraph(
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         user=gql.query(t.struct({"id": t.integer()}), user),
         # highlight-next-line
-        send_notification=googleapi.functions["projectsMessagesSend"],
+        send_notification=googleapi.functions.projectsMessagesSend,
         default_policy=[public],
     )

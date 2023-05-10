@@ -34,4 +34,4 @@
     functions = {}
     functions['projectsMessagesSend'] = test.post('v1/{parent}/messages:send', t.struct({'parent': t.string(), 'message': t.proxy(renames['MessageIn']), 'validateOnly': t.boolean().optional(), 'auth': t.string().optional()}), t.proxy(renames['MessageOut']), auth_token_field='auth', content_type='application/json')
 
-    return Import(importer='test', renames=renames, types=types, functions=functions)
+    return Import(importer='test', renames=renames, types=Box(types), functions=Box(functions))

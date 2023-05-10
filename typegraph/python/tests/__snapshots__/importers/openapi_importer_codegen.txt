@@ -13,4 +13,4 @@
     functions['getUserProfile'] = test.get('/profile/{userId}', t.struct({'userId': t.number()}), t.proxy(renames['UserProfile']).optional(), )
     functions['updateUserProfile'] = test.patch('/profile/{userId}', t.struct({'userId': t.number()}), t.proxy(renames['UserProfile']), )
 
-    return Import(importer='test', renames=renames, types=types, functions=functions)
+    return Import(importer='test', renames=renames, types=Box(types), functions=Box(functions))
