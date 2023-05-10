@@ -33,7 +33,7 @@ function Loader() {
   return ec.isFetching ? <Spinner /> : null;
 }
 
-export default function MiniQL({
+function MiniQLBrowser({
   typegraph,
   query,
   code,
@@ -51,54 +51,57 @@ export default function MiniQL({
 
   const storage = useMemo(() => new MemoryStorage(), []);
 
+  const fetcher = useMemo(
+    () =>
+      createGraphiQLFetcher({
+        url: `${tgUrl}/${typegraph}`,
+      }),
+    []
+  );
+
+  return (
+    <GraphiQLProvider
+      fetcher={fetcher}
+      defaultQuery={query.loc.source.body.trim()}
+      defaultHeaders={JSON.stringify(headers)}
+      variables={JSON.stringify(variables)}
+      storage={storage}
+    >
+      <div className="mb-6">
+        <div className={`graphiql-container ${styles.container}`}>
+          {code ? (
+            <div className={`graphiql-response ${styles.panel}`}>
+              <CodeBlock language={codeLanguage}>{code}</CodeBlock>
+            </div>
+          ) : null}
+
+          <div className={`graphiql-session ${styles.editor}`}>
+            <GraphiQLInterface defaultTab={tab} />
+          </div>
+          <div className={`graphiql-response ${styles.response}`}>
+            <Loader />
+            <ResponseEditor />
+          </div>
+        </div>
+        {codeFileUrl ? (
+          <small className="mx-2">
+            See/edit full code on{" "}
+            <a
+              href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
+            >
+              {codeFileUrl}
+            </a>
+          </small>
+        ) : null}
+      </div>
+    </GraphiQLProvider>
+  );
+}
+
+export default function MiniQL(props: MiniQLProps) {
   return (
     <BrowserOnly fallback={<div>Loading...</div>}>
-      {() => {
-        const fetcher = useMemo(
-          () =>
-            createGraphiQLFetcher({
-              url: `${tgUrl}/${typegraph}`,
-            }),
-          []
-        );
-        return (
-          <GraphiQLProvider
-            fetcher={fetcher}
-            defaultQuery={query.loc.source.body.trim()}
-            defaultHeaders={JSON.stringify(headers)}
-            variables={JSON.stringify(variables)}
-            storage={storage}
-          >
-            <div className="mb-6">
-              <div className={`graphiql-container ${styles.container}`}>
-                {code ? (
-                  <div className={`graphiql-response ${styles.panel}`}>
-                    <CodeBlock language={codeLanguage}>{code}</CodeBlock>
-                  </div>
-                ) : null}
-
-                <div className={`graphiql-session ${styles.editor}`}>
-                  <GraphiQLInterface defaultTab={tab} />
-                </div>
-                <div className={`graphiql-response ${styles.response}`}>
-                  <Loader />
-                  <ResponseEditor />
-                </div>
-              </div>
-              {codeFileUrl ? (
-                <small className="mx-2">
-                  See/edit full code on{" "}
-                  <a
-                    href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
-                  >
-                    {codeFileUrl}
-                  </a>
-                </small>
-              ) : null}
-            </div>
-          </GraphiQLProvider>
-        );
-      }}
+      {() => <MiniQLBrowser {...props} />}
     </BrowserOnly>
   );
 }

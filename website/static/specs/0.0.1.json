@@ -99,7 +99,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -167,7 +169,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -229,7 +233,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -326,7 +332,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -423,7 +431,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -518,7 +528,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -596,7 +608,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -689,7 +703,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -778,7 +794,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -850,7 +868,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -921,7 +941,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},

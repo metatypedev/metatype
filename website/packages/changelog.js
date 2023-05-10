@@ -2,6 +2,7 @@
 
 const fs = require("fs/promises");
 
+/** @type {import('@docusaurus/types').PluginModule} */
 module.exports = (context) => ({
   name: "changelog",
   extendCli(cli) {

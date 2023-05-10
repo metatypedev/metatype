@@ -55,7 +55,6 @@ export async function shell(
   options: MetaOptions = {},
 ): Promise<string> {
   const { stdin = null } = options;
-  // deno-lint-ignore no-deprecated-deno-api
   const p = Deno.run({
     cwd: testDir,
     cmd,

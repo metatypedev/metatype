@@ -3,26 +3,51 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 
 import React from "react";
-import clsx from "clsx";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
-import styles from "./index.module.scss";
 import TGExample from "../components/TGExample";
 import LiteYouTubeEmbed from "react-lite-youtube-embed";
 import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
+import { CastleBuilding } from "./castles";
 
 function Header() {
   return (
-    <header className={clsx("hero hero--primary", styles.heroBanner)}>
+    <header className="text-center py-10 bg-gradient-to-b from-slate-200 from-0% to-white to-100%">
       <div className="container">
         <div className="rounded-full bg-white w-40 h-40 flex px-6 m-auto mb-10">
           <img src="images/logo.svg" alt="Metatype logo" />
         </div>
-        <h1 className="hero__title">Compose your data, anywhere.</h1>
-        <p className="hero__subtitle mx-auto" style={{ maxWidth: "800px" }}>
-          Build iterative API blocks with zero-trust and serverless deployment,
-          no matter where and how your (legacy) systems are.
+        <h1 className="text-5xl">
+          The{" "}
+          <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-metared from-15% via-metablue via-50% to-metared to-85%">
+            low-code API platform
+          </span>{" "}
+          for developers.
+        </h1>
+        <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[950px]">
+          Build{" "}
+          <span className="group tooltip">
+            modular APIs
+            <span className="group-hover:block group-active:block">
+              Scale, re-use and compose your APIs.
+            </span>
+          </span>{" "}
+          with{" "}
+          <span className="group tooltip">
+            zero-trust
+            <span className="group-hover:block group-active:block">
+              Ensure authorization and compliance for all API fields.
+            </span>
+          </span>{" "}
+          and{" "}
+          <span className="group tooltip">
+            serverless
+            <span className="group-hover:block group-active:block">
+              Iterate quickly and deploy your APIs in seconds.
+            </span>
+          </span>{" "}
+          deployment, no matter where and how your (legacy) systems are.
         </p>
         <div className="md:flex md:px-32 justify-center">
           <Link
@@ -251,27 +276,95 @@ function DemoVideo(): JSX.Element {
   );
 }
 
+function ProfilePicker({ profiles }: { profiles: string[] }) {
+  return (
+    <div>
+      I am a(n)
+      <ul className="inline-block ml-2 pl-0 m-0 list-none border border-solid rounded-lg overflow-clip">
+        {profiles.map((profile) => (
+          <li key={profile} className="inline-block">
+            <div>
+              <label className="cursor-pointer">
+                <input
+                  type="radio"
+                  name="profile"
+                  value={profile}
+                  className="hidden peer"
+                />
+                <div className="px-2 py-1 peer-checked:bg-sky-500">
+                  {profile}
+                </div>
+              </label>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function Intro(): JSX.Element {
   return (
-    <section className="container flex md:flex-row  sm:flex-col items-center pt-6">
-      <div className="flex-1">
-        <p className="text-xl">
-          Metatype is an <strong>HTTP/GraphQL query engine</strong> that enables
-          developers to deploy virtual graphs connecting all the components of
-          their stack. They can easily{" "}
-          <strong>compose databases, APIs and business logic</strong> in a type
-          safe manner. The serverless engine compiles, optimizes, runs and
-          caches queries on the fly. Authentication, authorization and security
-          also come for free.
-        </p>
-      </div>
-      <div className="flex-1 text-center">
-        <img
-          src="/images/query-engine.png"
-          style={{ maxWidth: "100%", maxHeight: "400px" }}
-        />
-      </div>
-    </section>
+    <div className="container">
+      <section className="grid md:grid-cols-2 gap-4 items-center">
+        <div>
+          <ProfilePicker
+            profiles={["engineering-leader", "developer", "business-user"]}
+          />
+          <h2>Programming is like castle building</h2>
+          <p className="text-xl">
+            And castle building is hard. Even the best teams can struggle to
+            build according to the plans, especially with the ever changing tech
+            landscape. Metatype has your back, and helps to build evolving
+            castles fast.
+          </p>
+        </div>
+        <CastleBuilding />
+      </section>
+      <section className="grid md:grid-cols-2 gap-4 items-center flex-col-reverse">
+        <div className="md:order-last">
+          <h2>
+            Build <span className="text-metared">stable</span> castle with{" "}
+            <span>typegraphs</span>
+          </h2>
+          <p className="text-xl">
+            Programmatically manage and deploy virtual graphs describing all
+            your components of your stack. Typegraphs enable you to compose
+            databases, APIs and business logic in a type safe manner.
+          </p>
+        </div>
+        <CastleBuilding />
+      </section>
+      <section className="grid md:grid-cols-2 gap-4 items-center flex-col-reverse">
+        <div className="">
+          <h2>
+            Build <span className="text-metared">modulable</span> castle with{" "}
+            <span>typegate</span>
+          </h2>
+          <p className="text-xl">
+            Typegate is a serverless HTTP/GraphQL query engine that compiles,
+            optimizes, runs and caches queries to typegraphs on the fly.
+            Authentication, authorization and security come for free.
+          </p>
+        </div>
+        <CastleBuilding />
+      </section>
+      <section className="grid md:grid-cols-2 gap-4 items-center flex-col-reverse">
+        <div className="md:order-last">
+          <h2>
+            Build <strong className="text-metared">reusable</strong> castle with
+            the ecosystem
+          </h2>
+          <p className="text-xl">
+            Install open source typegraphs as dependencies using your preferred
+            packet manager, and start composing APIs together. The Meta CLI
+            offers you live reloading and one-command deployment to Metacloud or
+            your self-hosted typegate.
+          </p>
+        </div>
+        <CastleBuilding />
+      </section>
+    </div>
   );
 }
 

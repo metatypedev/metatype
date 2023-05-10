@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.4.1"
-  DENO_VERSION: "1.33.1"
+  DENO_VERSION: "1.33.2"
 
 jobs:
   check-bump:
@@ -64,6 +64,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ runner.os }}-${{ matrix.target }}
+      - run: |
+          # sometimes, dtolnay/rust-toolchain does not select the correct default target
+          rustup target add ${{ matrix.target }}
       - uses: actions-rs/cargo@v1
         with:
           use-cross: true

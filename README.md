@@ -3,7 +3,6 @@
 [![Typegate version](https://ghcr-badge.deta.dev/metatypedev/typegate/latest_tag?trim=major&label=typegate)](https://github.com/metatypedev/metatype/pkgs/container/typegate)
 [![Meta-cli version](https://img.shields.io/github/v/release/metatypedev/metatype?include_prereleases&label=meta-cli)](https://github.com/metatypedev/metatype/releases)
 [![Typegraph version](https://img.shields.io/pypi/v/typegraph?label=typegraph)](https://pypi.org/project/typegraph/)
-![Discord](https://img.shields.io/discord/948200476351004672)
 
 Metatype is an **HTTP/GraphQL query engine** that enables developers to deploy
 virtual graphs connecting all the components of their stack. They can easily
@@ -12,7 +11,6 @@ serverless engine compiles, optimizes, runs and caches queries on the fly.
 Authentication, authorization and security also come for free.
 
 Support us by starring ⭐ this repository, joining the community on
-[Discord](https://discord.gg/PSyYcEHyw5) or on
 [GitHub](https://github.com/metatypedev/metatype/discussions) 💬, watching new
 [releases](https://github.com/metatypedev/metatype/releases) 🔔, reporting
 [issues](https://github.com/metatypedev/metatype/issues) 🐛 or even contributing
