@@ -10,7 +10,7 @@ import { FieldNode, Kind } from "graphql";
 import { isScalar, ObjectNode, Type } from "../type_node.ts";
 import { TypeGraph } from "../typegraph.ts";
 import { CodeGenerator } from "./code_generator.ts";
-import { visitType } from "../typegraph/visitor.ts";
+import { getChildTypes } from "../typegraph/visitor.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import {
   ErrorEntry,
@@ -28,6 +28,7 @@ export function generateValidator(
   const validator = new Function(code)() as ValidatorFn;
 
   return (value: unknown) => {
+    console.log("validating", value);
     const errors: ErrorEntry[] = [];
     validator(value, "<value>", errors, validationContext);
     if (errors.length > 0) {
@@ -233,7 +234,7 @@ export class ResultValidationCompiler {
     const propTypeIdx = typeNode.properties[name.value];
     const path = `${entry.path}.${name.value}`;
     let validator: string;
-    if (this.hasNestedObjectType(propTypeIdx)) {
+    if (this.hasNestedObjectResult(propTypeIdx)) {
       if (selectionSet == null) {
         throw new Error(
           `Selection set required at '${path}'`,
@@ -360,17 +361,21 @@ export class ResultValidationCompiler {
     });
   }
 
-  private hasNestedObjectType(typeIdx: number): boolean {
-    let res = false;
-    visitType(this.tg.tg, typeIdx, {
-      [Type.OBJECT]: () => {
-        res = true;
-        // this is not as efficient as we want:
-        // we should end the traversal on the first Type.OBJECT
-        return false;
-      },
-      default: () => true,
-    });
-    return res;
+  private hasNestedObjectResult(typeIdx: number): boolean {
+    const queue = [typeIdx];
+
+    for (let idx = queue.shift(); idx != null; idx = queue.shift()) {
+      const typeNode = this.tg.type(idx);
+      switch (typeNode.type) {
+        case Type.OBJECT:
+          return true;
+        case Type.FUNCTION:
+          queue.push(typeNode.output);
+          break;
+        default:
+          queue.push(...getChildTypes(typeNode));
+      }
+    }
+    return false;
   }
 }

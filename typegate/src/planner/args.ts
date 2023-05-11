@@ -628,7 +628,7 @@ class ArgumentCollector {
         );
       }
 
-      return value;
+      return typeof value === "function" ? value() : value;
     };
   }
 

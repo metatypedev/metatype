@@ -32,6 +32,7 @@ import { getLogger } from "./log.ts";
 import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
+import { distinct } from "std/collections/distinct.ts";
 
 const logger = getLogger(import.meta);
 
@@ -112,10 +113,9 @@ interface Plan {
   validator: Validator;
 }
 
-// TODO what about nested array types: t.array(t.array(T))
-function withEmptyObjects(res: unknown) {
+function withEmptyObjects(res: unknown): unknown {
   if (Array.isArray(res)) {
-    return res.map((x) => typeof x === "object" && x != null ? {} : x);
+    return res.map(withEmptyObjects);
   }
   return typeof res === "object" && res != null ? {} : res;
 }
@@ -228,10 +228,17 @@ export class Engine {
     verbose: boolean,
   ): Promise<JSONValue> {
     const ret = {};
-    const cache: Record<string, unknown> = {};
-    const lenses: Record<string, unknown> = {};
+    const cache: Record<string, unknown[]> = {};
+    const lenses: Record<string, unknown[]> = {};
 
     await policies.authorize(context, info, verbose);
+
+    interface ChildSelectionStatus {
+      level: number;
+      select: string | null;
+    }
+    const selections: ChildSelectionStatus[] = [];
+    let activeSelection: ChildSelectionStatus | null = null;
 
     for await (const stage of plan) {
       const {
@@ -245,16 +252,41 @@ export class Engine {
         node,
         rateCalls,
         rateWeight,
+        childSelection,
+        outType,
       } = stage.props;
 
+      const level = path.length;
+      const stageId = stage.id();
+      // const parentId = parent.id();
+      const parentId = stageId.slice(0, stageId.lastIndexOf("."));
+
+      while (activeSelection != null && level < activeSelection.level) {
+        selections.pop();
+        activeSelection = selections[selections.length] ?? null;
+      }
+
+      if (activeSelection != null) {
+        if (activeSelection.level === level) {
+          // potential variant transition
+          activeSelection.select = outType.title;
+        }
+
+        if (parent && cache[parentId].length === 0) {
+          // non matching variant -> skip stage
+          continue;
+        }
+      }
+
+      // TODO
       const deps = dependencies
         .filter((dep) => dep !== parent?.id())
         .filter((dep) => !(parent && dep.startsWith(`${parent.id()}.`)))
         .reduce((agg, dep) => ({ ...agg, [dep]: cache[dep] }), {});
 
       //verbose && console.log("dep", stage.id(), deps);
-      const previousValues = parent ? cache[parent.id()] : ([{}] as any);
-      const lens = parent ? lenses[parent.id()] : ([ret] as any);
+      const previousValues = parent ? cache[parentId] : ([{}] as any);
+      const lens = parent ? lenses[parentId] : ([ret] as any);
 
       if (limit && rateCalls) {
         limit.consume(rateWeight ?? 1);
@@ -283,7 +315,7 @@ export class Engine {
       }
 
       // or no cache if no further usage
-      cache[stage.id()] = batcher(res);
+      cache[stageId] = batcher(res);
 
       if (
         lens.length !== res.length
@@ -294,7 +326,8 @@ export class Engine {
           }, ${JSON.stringify(res)}`,
         );
       }
-      const field = path[path.length - 1] as any;
+
+      const field = path[path.length - 1];
       if (node !== "") {
         lens.forEach((l: any, i: number) => {
           // Objects are replaced by empty objects `{}`.
@@ -304,6 +337,34 @@ export class Engine {
 
         lenses[stage.id()] = batcher(lens).flatMap((l: any) => {
           return l[field] ?? [];
+        });
+      }
+
+      if (childSelection != null) {
+        if (activeSelection != null && activeSelection.level === level) {
+          // nested union/either: variants should have been combined
+          throw new Error();
+        }
+        const resultVariants = cache[stageId].map((r) => {
+          const variant = childSelection(r);
+          if (variant == null) {
+            throw new Error(
+              `at '${stageId}': No matcing union variant for the result`,
+            );
+          }
+          return variant;
+        });
+        for (const variant of distinct(resultVariants)) {
+          cache[`${stageId}$${variant}`] = [];
+          lenses[`${stageId}$${variant}`] = [];
+        }
+        for (const [i, variant] of resultVariants.entries()) {
+          cache[`${stageId}$${variant}`].push(cache[stageId][i]);
+          lenses[`${stageId}$${variant}`].push(lenses[stageId][i]);
+        }
+        selections.push({
+          level: level + 1,
+          select: null,
         });
       }
     }

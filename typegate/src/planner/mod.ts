@@ -1,25 +1,21 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import * as ast from "graphql/ast";
-import { Kind } from "graphql";
+import { FieldNode, Kind } from "graphql";
 import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
 import { ComputeStageProps } from "../types.ts";
 import { getReverseMapNameToQuery } from "../utils.ts";
-import {
-  getWrappedType,
-  isArray,
-  isObject,
-  isQuantifier,
-  Type,
-} from "../type_node.ts";
+import { getWrappedType, isQuantifier, Type, UnionNode } from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno/deno.ts";
 import { closestWord, ensure, unparse } from "../utils.ts";
 import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../log.ts";
+import { EitherNode } from "../types/typegraph.ts";
 const logger = getLogger(import.meta);
+import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 
 interface Node {
   name: string;
@@ -109,90 +105,137 @@ export class Planner {
   ): ComputeStage[] {
     const { name, selectionSet, args, typeIdx } = node;
     const typ = this.tg.type(typeIdx);
-    const stages: ComputeStage[] = [];
 
-    const selection = selectionSet
-      ? resolveSelection(selectionSet, this.fragments)
-      : [];
-    const props = (typ.type === Type.OBJECT && typ.properties) || {};
-
-    this.verbose &&
-      logger.debug(
-        this.tg.root.title,
-        name,
-        args.map((n) => n.name?.value),
-        selection.map((n) => n.name?.value),
-        typ.type,
-        Object.entries(props).reduce(
-          (agg, [k, v]) => ({ ...agg, [k]: this.tg.type(v).type }),
-          {},
-        ),
-      );
-
-    if (typ.type === Type.OBJECT && selection.length < 1) {
-      throw new Error(`struct '${name}' must be a field selection`);
-    }
-
-    for (const field of selection) {
-      const {
-        name: { value: name },
-        alias: { value: alias } = {},
-        arguments: args,
-      } = field;
-      // name: used to fetch the value
-      // canonicalName: field name on the expected output
-
-      const canonicalName = alias ?? name;
-      const path = [...node.path, canonicalName];
-      const fieldIdx = props[name];
-      if (
-        fieldIdx == undefined &&
-        !(name === "__schema" || name === "__type" || name === "__typename")
-      ) {
-        const allProps = Object.keys(props);
-        const formattedPath = this.formatPath(node.path);
-        if (typ.title === "Mutation" || typ.title === "Query") {
-          // propose which root type has that name
-          const nameToPaths = getReverseMapNameToQuery(this.tg, [
-            "mutation",
-            "query",
-          ]);
-          if (nameToPaths.has(name)) {
-            const rootPaths = [...nameToPaths.get(name)!];
-            // Mutation or Query but never both
-            if (rootPaths.length == 1) {
-              const [suggestion] = rootPaths;
-              throw new Error(
-                `'${name}' not found at '${formattedPath}', did you mean using '${name}' from '${suggestion}'?`,
-              );
-            }
-          }
-        }
-        // if the above fails, tell the user in case they made a typo
-        const suggestion = closestWord(name, allProps);
-        if (suggestion) {
-          throw new Error(
-            `'${name}' not found at '${formattedPath}', did you mean '${suggestion}'?`,
-          );
-        }
-        const suggestions = allProps.join(", ");
+    if (selectionSet == null) {
+      if (this.isSelectionSetExpectedFor(typeIdx)) {
+        const path = this.formatPath(node.path);
         throw new Error(
-          `'${name}' not found at '${formattedPath}', available names are: ${suggestions}`,
+          `at ${path}: selection set is expected for object type`,
         );
       }
-      const childNode = {
-        parent: node,
-        name: canonicalName,
-        path,
-        selectionSet: field.selectionSet,
-        args: args ?? [],
-        typeIdx: props[name],
-        parentStage: stage,
-      };
-      stages.push(...this.traverseField(childNode, field));
+      return [];
     }
 
-    return stages;
+    if (typ.type === Type.OBJECT) {
+      const selection = resolveSelection(selectionSet, this.fragments);
+      const props = (typ.type === Type.OBJECT && typ.properties) || {};
+      const stages: ComputeStage[] = [];
+
+      this.verbose &&
+        logger.debug(
+          this.tg.root.title,
+          name,
+          args.map((n) => n.name?.value),
+          selection.map((n) => n.name?.value),
+          typ.type,
+          Object.entries(props).reduce(
+            (agg, [k, v]) => ({ ...agg, [k]: this.tg.type(v).type }),
+            {},
+          ),
+        );
+
+      for (const field of selection) {
+        stages.push(
+          ...this.traverseField(
+            this.getChildNodeForField(field, node, props, stage),
+            field,
+          ),
+        );
+      }
+
+      return stages;
+    }
+
+    if (typ.type === Type.EITHER || typ.type === Type.UNION) {
+      const stages: ComputeStage[] = [];
+      const variants = this.getNestedVariantsByName(typ);
+      const unselectedVariants = new Set(Object.keys(variants));
+      // expect selections to be inline fragments with type conditions
+      const selections = selectionSet.selections.map((sel) => {
+        if (sel.kind !== Kind.INLINE_FRAGMENT || sel.typeCondition == null) {
+          throw new Error("Expected inline fragment with type condition");
+        }
+        const typeName = sel.typeCondition.name.value;
+        if (!unselectedVariants.has(typeName)) {
+          const path = this.formatPath(node.path);
+          throw new Error(
+            `at: ${path}: Unknown type on type condition: ${typeName}`,
+          );
+        }
+        unselectedVariants.delete(typeName);
+        return [typeName, sel.selectionSet] as const;
+      });
+
+      if (unselectedVariants.size > 0) {
+        const path = this.formatPath;
+        const s = unselectedVariants.size > 0 ? "s" : "";
+        const variants = [...unselectedVariants].join(", ");
+        throw new Error(
+          `at ${path}: Unselected union variant${s}: ${variants}`,
+        );
+      }
+
+      stage!.props.childSelection = generateVariantMatcher(this.tg, typeIdx);
+
+      for (const [typeName, selectionSet] of selections) {
+        const selection = resolveSelection(selectionSet, this.fragments);
+        const props = this.tg.type(variants[typeName], Type.OBJECT).properties;
+        const parentPath = node.path.slice();
+        parentPath[parentPath.length - 1] += `$${typeName}`;
+        for (const field of selection) {
+          stages.push(
+            ...this.traverseField(
+              this.getChildNodeForField(
+                field,
+                { ...node, path: parentPath },
+                props,
+                stage,
+              ),
+              field,
+            ),
+          );
+        }
+      }
+
+      return stages;
+    }
+
+    // unreachable
+    throw new Error();
+  }
+
+  private getChildNodeForField(
+    field: FieldNode,
+    node: Node,
+    props: Record<string, number>,
+    parentStage?: ComputeStage,
+  ) {
+    const {
+      name: { value: name },
+      alias: { value: alias } = {},
+      arguments: args,
+    } = field;
+    // name: used to fetch the value
+    // canonicalName: field name on the expected output
+
+    const canonicalName = alias ?? name;
+    const path = [...node.path, canonicalName];
+    const fieldIdx = props[name];
+    if (
+      fieldIdx == undefined &&
+      !(name === "__schema" || name === "__type" || name === "__typename")
+    ) {
+      throw this.unexpectedFieldError(node, name);
+    }
+    return {
+      parent: node,
+      name: canonicalName,
+      path,
+      selectionSet: field.selectionSet,
+      args: args ?? [],
+      typeIdx: props[name],
+      parentStage,
+    };
   }
 
   /**
@@ -267,14 +310,14 @@ export class Planner {
 
     const fieldType = this.tg.type(node.typeIdx);
 
-    if (fieldType.type !== Type.FUNCTION) {
-      return this.traverseValueField(node);
-    }
+    const stages = fieldType.type !== Type.FUNCTION
+      ? this.traverseValueField(node)
+      : this.traverseFuncField(
+        node,
+        this.tg.type(parent.typeIdx, Type.OBJECT).properties,
+      );
 
-    return this.traverseFuncField(
-      node,
-      this.tg.type(parent.typeIdx, Type.OBJECT).properties,
-    );
+    return stages;
   }
 
   /**
@@ -313,41 +356,16 @@ export class Planner {
 
     stages.push(stage);
 
-    if (schema.type === Type.OBJECT) {
-      stages.push(...this.traverse(node, stage));
-      return stages;
+    // nested quantifiers
+    let nestedTypeIdx = node.typeIdx;
+    let nestedSchema = this.tg.type(nestedTypeIdx);
+    while (isQuantifier(nestedSchema)) {
+      nestedTypeIdx = getWrappedType(nestedSchema);
+      nestedSchema = this.tg.type(nestedTypeIdx);
+      types.push(nestedTypeIdx);
     }
 
-    // TODO support for nested quantifiers
-    // What nested quantifiers should be supported: t.optional(t.optional(...)), ...
-    if (isQuantifier(schema)) {
-      const itemTypeIdx = getWrappedType(schema);
-      types.push(itemTypeIdx);
-      const itemSchema = this.tg.type(itemTypeIdx);
-
-      if (itemSchema.type === Type.OBJECT) {
-        stages.push(...this.traverse({ ...node, typeIdx: itemTypeIdx }, stage));
-      }
-
-      // support for nested quantifier `t.array(t.struct()).optional()`,
-      // which is necessary to compute some introspection fields
-      if (isArray(itemSchema)) {
-        const nestedItemTypeIndex = getWrappedType(itemSchema);
-        types.push(nestedItemTypeIndex);
-        const nestedItemNode = this.tg.type(nestedItemTypeIndex);
-
-        if (isObject(nestedItemNode)) {
-          stages.push(
-            ...this.traverse(
-              { ...node, typeIdx: nestedItemTypeIndex },
-              stage,
-            ),
-          );
-        }
-      }
-
-      return stages;
-    }
+    stages.push(...this.traverse({ ...node, typeIdx: nestedTypeIdx }, stage));
 
     return stages;
   }
@@ -500,5 +518,74 @@ export class Planner {
 
   private formatPath(path: string[]) {
     return [this.operationName, ...path].join(".");
+  }
+
+  private isSelectionSetExpectedFor(typeIdx: number): boolean {
+    const typ = this.tg.type(typeIdx);
+    if (typ.type === Type.OBJECT) {
+      return true;
+    }
+
+    if (typ.type === Type.UNION) {
+      // only check for first variant
+      // typegraph validation ensure that all the (nested) variants are all either objects or scalars
+      return this.isSelectionSetExpectedFor(typ.anyOf[0]);
+    }
+    if (typ.type === Type.EITHER) {
+      return this.isSelectionSetExpectedFor(typ.oneOf[0]);
+    }
+    return false;
+  }
+
+  private unexpectedFieldError(node: Node, name: string): Error {
+    const typ = this.tg.type(node.typeIdx, Type.OBJECT);
+    const allProps = Object.keys(typ.properties);
+    const formattedPath = this.formatPath(node.path);
+    if (typ.title === "Mutation" || typ.title === "Query") {
+      // propose which root type has that name
+      const nameToPaths = getReverseMapNameToQuery(this.tg, [
+        "mutation",
+        "query",
+      ]);
+      if (nameToPaths.has(name)) {
+        const rootPaths = [...nameToPaths.get(name)!];
+        // Mutation or Query but never both
+        if (rootPaths.length == 1) {
+          const [suggestion] = rootPaths;
+          return new Error(
+            `'${name}' not found at '${formattedPath}', did you mean using '${name}' from '${suggestion}'?`,
+          );
+        }
+      }
+    }
+    // if the above fails, tell the user in case they made a typo
+    const suggestion = closestWord(name, allProps);
+    if (suggestion) {
+      return new Error(
+        `'${name}' not found at '${formattedPath}', did you mean '${suggestion}'?`,
+      );
+    }
+    const suggestions = allProps.join(", ");
+    return new Error(
+      `'${name}' not found at '${formattedPath}', available names are: ${suggestions}`,
+    );
+  }
+
+  private getNestedVariantsByName(
+    typ: UnionNode | EitherNode,
+  ): Record<string, number> {
+    const getEntries = (
+      typ: UnionNode | EitherNode,
+    ): Array<[string, number]> => {
+      const variants = typ.type === Type.UNION ? typ.anyOf : typ.oneOf;
+      return variants.flatMap((idx) => {
+        const typeNode = this.tg.type(idx);
+        if (typeNode.type === Type.EITHER || typeNode.type === Type.UNION) {
+          return getEntries(typeNode);
+        }
+        return [[typeNode.title, idx]];
+      });
+    };
+    return Object.fromEntries(getEntries(typ));
   }
 }
