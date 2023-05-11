@@ -9,8 +9,8 @@ import { SpringValue } from "@react-spring/konva";
 interface ResponsiveCanvasP {
   scene: (value: SpringValue<number>) => React.ReactNode;
   height: number;
-  start?: number;
-  end?: number;
+  before?: number;
+  after?: number;
   slowMotion?: number;
   hiddenMarginTop?: number;
   canvasHeight: number;
@@ -21,8 +21,8 @@ interface ResponsiveCanvasP {
 export function AnimatedCanvas({
   height,
   scene,
-  start = 0,
-  end = 1,
+  before = 0,
+  after = 0,
   slowMotion = 1,
   canvasHeight,
   canvasWidth,
@@ -31,10 +31,10 @@ export function AnimatedCanvas({
   const ref = useRef<HTMLDivElement>(null);
 
   // if 0, safari might throw invalid state error
-  const [{ width, offsetTop, windowHeight }, setSize] = useState({
+  const [{ width, min, max }, setSize] = useState({
     width: 1,
-    offsetTop: 0,
-    windowHeight: window.innerHeight,
+    min: 0,
+    max: 0,
   });
   const scaleX = width / canvasWidth;
   const scaleY = height / canvasHeight;
@@ -43,10 +43,27 @@ export function AnimatedCanvas({
   useEffect(() => {
     function resize() {
       if (ref.current) {
+        const { scrollHeight } = document.documentElement;
+        const { innerHeight: windowHeight } = window;
+        const { offsetTop, offsetWidth } = ref.current;
+
+        const top = offsetTop - before;
+        const bottom = offsetTop + height + after;
+
+        const scrollable = 1 - windowHeight / scrollHeight;
+        const triggerMin =
+          windowHeight / 2 < bottom && top < scrollHeight - windowHeight / 2
+            ? top - windowHeight / 2
+            : top * scrollable;
+        const triggerMax =
+          windowHeight / 2 < bottom && top < scrollHeight - windowHeight / 2
+            ? bottom - windowHeight / 2
+            : bottom * scrollable;
+
         setSize({
-          width: ref.current.offsetWidth,
-          offsetTop: ref.current.offsetTop,
-          windowHeight: window.innerHeight,
+          width: offsetWidth,
+          min: Math.max(triggerMin, 0),
+          max: Math.max(triggerMax, 0),
         });
       }
     }
@@ -59,12 +76,10 @@ export function AnimatedCanvas({
     };
   }, [ref, setSize]);
 
-  if (start < end) {
+  if (before < after) {
     throw new Error("start must be smaller than end");
   }
 
-  const min = Math.max(offsetTop - windowHeight * start, 0);
-  const max = Math.max(offsetTop - windowHeight * end, 0);
   const { progress } = useVirtualScroll([min, max], slowMotion);
 
   return (

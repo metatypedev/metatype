@@ -2,10 +2,10 @@
 
 import React from "react";
 
-import { Arrow, Image, Layer } from "react-konva";
+import { Image, Layer } from "react-konva";
 import { Block, blockHeight } from "../components/animations/block";
 import { useLinearSpring } from "../components/animations/hooks";
-import { Animated } from "../components/animations/a";
+import { Animated } from "../components/animations/animated";
 import { AnimatedCanvas } from "../components/animations/canvas";
 import { TextArrow } from "../components/animations/textarrow";
 import useImage from "use-image";
@@ -17,9 +17,9 @@ export function BuildingCastle() {
       canvasHeight={300}
       canvasWidth={500}
       height={300}
-      start={0.5}
-      end={0.25}
-      slowMotion={1}
+      before={20}
+      after={20}
+      slowMotion={0.5}
       scene={(progress) => {
         const topMargin = 55;
         const blockMargin = 40;
@@ -225,8 +225,8 @@ export function StableCastle() {
       canvasHeight={300}
       canvasWidth={500}
       height={300}
-      start={0.5}
-      end={0.25}
+      before={20}
+      after={20}
       slowMotion={1}
       scene={(progress) => {
         const topMargin = 55;
@@ -398,8 +398,8 @@ export function ModulableCastle() {
       canvasHeight={300}
       canvasWidth={500}
       height={300}
-      start={0.5}
-      end={0.25}
+      before={20}
+      after={20}
       slowMotion={1}
       scene={(progress) => {
         const topMargin = 55;
@@ -511,8 +511,8 @@ export function ReusableCastle() {
       canvasHeight={300}
       canvasWidth={500}
       height={300}
-      start={0.5}
-      end={0.25}
+      before={20}
+      after={20}
       slowMotion={1}
       scene={(progress) => {
         const topMargin = 60;
@@ -525,8 +525,7 @@ export function ReusableCastle() {
         const oneFadeInOut = useLinearSpring(
           progress,
           [0.0, 0.2, 0.45],
-          [0, 1, 0],
-          "tag"
+          [0, 1, 0]
         );
 
         const twoFadeIn = useLinearSpring(progress, [0.25, 0.45], [0, 1]);

@@ -1,79 +1,112 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { KeyboardEvent, useEffect } from "react";
+import { KeyboardEvent, useEffect, useState } from "react";
 import { useSpring, SpringValue } from "@react-spring/konva";
 import { each } from "@react-spring/shared";
 
 export function useVirtualScroll(
   [min, max]: [number, number],
-  slowMotionRatio = 1
+  speedRatio: number
 ) {
   const [values, api] = useSpring(
     () => ({
-      progress: window.pageYOffset,
+      progress: 0,
     }),
     []
   );
 
+  const [scrollOnLoad, setScrollOnLoad] = useState(0);
   useEffect(() => {
-    const initialScroll = document.documentElement.scrollTop;
+    console.log(
+      "useVirtualScroll",
+      window.pageYOffset,
+      document.documentElement.scrollTop
+    );
+    setScrollOnLoad(window.scrollY);
+  }, [setScrollOnLoad]);
+
+  useEffect(() => {
+    if (min === max) {
+      return;
+    }
+
+    const initialScroll = window.scrollY > 0 ? window.scrollY : scrollOnLoad;
     let virtualScroll = virtualize(initialScroll);
-    api.set({ progress: progressRatio(initialScroll) });
+    api.set({ progress: progress(scrollOnLoad) });
 
-    function unvirtualize(scroll: number) {
-      if (scroll < min) {
-        return scroll;
+    function unvirtualize(vscroll: number) {
+      if (vscroll < min) {
+        return vscroll;
       }
-      if (scroll < min + (max - min) / slowMotionRatio) {
-        return min + (scroll - min) * slowMotionRatio;
+      if (vscroll < min + (max - min) / speedRatio) {
+        return min + (vscroll - min) * speedRatio;
       }
-      return scroll + (max - min) - (max - min) / slowMotionRatio;
+      return min + (max - min) * speedRatio + (vscroll - virtualize(max));
     }
 
-    function virtualize(scroll: number) {
-      if (scroll < min) {
-        return scroll;
+    function virtualize(rscroll: number) {
+      if (rscroll < min) {
+        return rscroll;
       }
-      if (scroll < min + (max - min) * slowMotionRatio) {
-        return min + (scroll - min) / slowMotionRatio;
+      if (rscroll < min + (max - min)) {
+        return min + (rscroll - min) / speedRatio;
       }
-      return scroll + (max - min) - (max - min) * slowMotionRatio;
+      return min + (max - min) / speedRatio + (rscroll - max);
     }
 
-    function progressRatio(scroll: number) {
+    function progress(scroll: number) {
       return Math.max(Math.min((scroll - min) / (max - min), 1), 0);
     }
 
     function handleVirtualScroll(delta: number) {
+      const { scrollHeight } = document.documentElement;
+      const { scrollY } = window;
+      const realScroll = scrollY + delta;
       virtualScroll = Math.max(
-        Math.min(
-          virtualScroll + delta,
-          document.documentElement.scrollHeight + max - min
-        ),
+        Math.min(virtualScroll + delta, scrollHeight + max - min),
         0
       );
 
-      const realScroll = unvirtualize(virtualScroll);
-      window.scrollTo({ top: realScroll });
-      api.start({
-        progress: progressRatio(realScroll),
-      });
+      if (min < realScroll && realScroll <= max) {
+        const simulatedScroll = unvirtualize(virtualScroll);
+        /*
+        console.log(
+          `${min}-${max}-${speedRatio}`,
+          realScroll,
+          virtualScroll,
+          simulatedScroll,
+          Math.round(progress(simulatedScroll) * 100)
+        );
+        */
+        api.start({
+          progress: progress(simulatedScroll),
+        });
+        window.scrollTo({ top: simulatedScroll });
+        return true;
+      }
 
-      // console.log(virtualScroll, realScroll, progressRatio(realScroll));
+      api.start({
+        progress: progress(realScroll),
+      });
+      virtualScroll = virtualize(realScroll);
+      return false;
     }
 
     function wheelListner(e: WheelEvent) {
-      e.preventDefault();
-      handleVirtualScroll(e.deltaY);
+      if (handleVirtualScroll(e.deltaY)) {
+        e.preventDefault();
+      }
     }
 
     function keyListner(e: KeyboardEvent<HTMLElement>) {
       if (e.key === "ArrowUp") {
-        e.preventDefault();
-        handleVirtualScroll(-50);
+        if (handleVirtualScroll(-50)) {
+          e.preventDefault();
+        }
       } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        handleVirtualScroll(50);
+        if (handleVirtualScroll(50)) {
+          e.preventDefault();
+        }
       }
     }
 

@@ -400,6 +400,51 @@ function Intro(): JSX.Element {
   );
 }
 
+function Landscape(): JSX.Element {
+  return (
+    <section className="container">
+      <h2 className="mt-6 text-3xl">Tech landscape positioning</h2>
+      <div className="flex justify-center mt-8">
+        <table className="table-auto">
+          <tbody>
+            <tr>
+              <td></td>
+              <td>
+                <small>← entity data</small>
+                <br />
+                transactional
+              </td>
+              <td>
+                <small>large dataset →</small>
+                <br />
+                analytical
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <small>short-lived ↑</small>
+                <br />
+                synchronous
+              </td>
+              <td>Metatype</td>
+              <td>Trino</td>
+            </tr>
+            <tr>
+              <td>
+                asynchronous
+                <br />
+                <small>long-running ↓</small>
+              </td>
+              <td>Temporal</td>
+              <td>Spark</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 export default function Home(): JSX.Element {
   const { siteConfig } = useDocusaurusContext();
   return (
@@ -407,6 +452,7 @@ export default function Home(): JSX.Element {
       <Header />
       <main>
         <Intro />
+        <Landscape />
         <TryIt />
         <DemoVideo />
         <Features />
