@@ -41,7 +41,8 @@
     "react-konva": "^18.2.8",
     "react-lite-youtube-embed": "^2.3.52",
     "tailwindcss": "^3.3.2",
-    "use-font-face-observer": "^1.2.1"
+    "use-font-face-observer": "^1.2.1",
+    "use-image": "^1.1.0"
   },
   "devDependencies": {
     "@docusaurus/eslint-plugin": "^2.4.0",

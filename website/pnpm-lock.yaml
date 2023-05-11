@@ -81,6 +81,9 @@ dependencies:
   use-font-face-observer:
     specifier: ^1.2.1
     version: 1.2.1(react@18.2.0)
+  use-image:
+    specifier: ^1.1.0
+    version: 1.1.0(react-dom@18.2.0)(react@18.2.0)
 
 devDependencies:
   '@docusaurus/eslint-plugin':
@@ -12040,6 +12043,16 @@ packages:
     dependencies:
       fontfaceobserver: 2.1.0
       react: 18.2.0
+    dev: false
+
+  /use-image@1.1.0(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-+cBHRR/44ZyMUS873O0vbVylgMM0AbdTunEplAWXvIQ2p69h2sIo2Qq74zeUsq6AMo+27e5lERQvXzd1crGiMg==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+    dependencies:
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
     dev: false
 
   /use-isomorphic-layout-effect@1.1.2(@types/react@18.2.6)(react@18.2.0):

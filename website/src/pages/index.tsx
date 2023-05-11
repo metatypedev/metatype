@@ -2,14 +2,19 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import TGExample from "../components/TGExample";
 import LiteYouTubeEmbed from "react-lite-youtube-embed";
 import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
-import { CastleBuilding } from "./castles";
+import {
+  BuildingCastle,
+  ModulableCastle,
+  ReusableCastle,
+  StableCastle,
+} from "./castles";
 
 function Header() {
   return (
@@ -57,7 +62,7 @@ function Header() {
             Getting started
           </Link>
           <Link
-            className="button button--secondary button--lg m-2"
+            className="button bg-slate-400 hover:bg-slate-300  button--lg m-2"
             to="/docs/concepts/overview"
           >
             Learn more
@@ -276,23 +281,37 @@ function DemoVideo(): JSX.Element {
   );
 }
 
-function ProfilePicker({ profiles }: { profiles: string[] }) {
+interface ProfilePickerP {
+  profiles: Record<string, string>;
+  profile: string;
+  onChange: (profile: string) => void;
+  className?: string;
+}
+
+function ProfilePicker({
+  profiles,
+  profile,
+  onChange,
+  className,
+}: ProfilePickerP) {
   return (
-    <div>
-      I am a(n)
-      <ul className="inline-block ml-2 pl-0 m-0 list-none border border-solid rounded-lg overflow-clip">
-        {profiles.map((profile) => (
-          <li key={profile} className="inline-block">
+    <div className={`flex ${className}`}>
+      <span className="py-1">I am</span>
+      <ul className="inline-block ml-2 pl-0 m-0 list-none rounded-md overflow-clip">
+        {Object.entries(profiles).map(([k, p]) => (
+          <li key={p} className="inline-block">
             <div>
               <label className="cursor-pointer">
                 <input
                   type="radio"
                   name="profile"
-                  value={profile}
+                  value={k}
+                  checked={k === profile}
+                  onChange={() => onChange(k)}
                   className="hidden peer"
                 />
-                <div className="px-2 py-1 peer-checked:bg-sky-500">
-                  {profile}
+                <div className="px-3 py-1 bg-slate-100 peer-checked:bg-metared peer-checked:text-white">
+                  {p}
                 </div>
               </label>
             </div>
@@ -303,66 +322,79 @@ function ProfilePicker({ profiles }: { profiles: string[] }) {
   );
 }
 
+const profiles = {
+  leader: "an engineering leader",
+  developer: "a developer",
+  business: "a business user",
+};
+
 function Intro(): JSX.Element {
+  const [profile, setProfile] = useState(Object.keys(profiles)[0]);
+
   return (
     <div className="container">
-      <section className="grid md:grid-cols-2 gap-4 items-center">
+      <section className="grid md:grid-cols-2 gap-4 items-center my-12">
         <div>
           <ProfilePicker
-            profiles={["engineering-leader", "developer", "business-user"]}
+            profiles={{
+              leader: "an engineering leader",
+              developer: "a developer",
+              business: "a business user",
+            }}
+            profile={profile}
+            onChange={setProfile}
+            className="mb-8"
           />
           <h2>Programming is like castle building</h2>
           <p className="text-xl">
-            And castle building is hard. Even the best teams can struggle to
-            build according to the plans, especially with the ever changing tech
-            landscape. Metatype has your back, and helps to build evolving
-            castles fast.
+            And castle building is <strong>hard</strong>. Even the best teams
+            can struggle to build according to the plans, especially with the
+            ever evolving needs and tech landscape complexities.
           </p>
         </div>
-        <CastleBuilding />
+        <BuildingCastle />
       </section>
-      <section className="grid md:grid-cols-2 gap-4 items-center flex-col-reverse">
+      <section className="grid md:grid-cols-2 gap-4 items-center my-12 flex-col-reverse">
         <div className="md:order-last">
           <h2>
             Build <span className="text-metared">stable</span> castle with{" "}
-            <span>typegraphs</span>
+            <span className="text-metared">typegraphs</span>
           </h2>
           <p className="text-xl">
-            Programmatically manage and deploy virtual graphs describing all
-            your components of your stack. Typegraphs enable you to compose
-            databases, APIs and business logic in a type safe manner.
+            Typegraphs are programmable <strong>virtual graphs</strong>{" "}
+            describing all the components of your stack. They enable you to
+            compose databases, APIs and business logic in a type safe manner.
           </p>
         </div>
-        <CastleBuilding />
+        <StableCastle />
       </section>
-      <section className="grid md:grid-cols-2 gap-4 items-center flex-col-reverse">
+      <section className="grid md:grid-cols-2 gap-4 items-center my-12 flex-col-reverse">
         <div className="">
           <h2>
             Build <span className="text-metared">modulable</span> castle with{" "}
-            <span>typegate</span>
+            <span className="text-metared">typegate</span>
           </h2>
           <p className="text-xl">
-            Typegate is a serverless HTTP/GraphQL query engine that compiles,
-            optimizes, runs and caches queries to typegraphs on the fly.
-            Authentication, authorization and security come for free.
+            Typegate is a HTTP/GraphQL <strong>query engine</strong> that
+            compiles, optimizes, runs and caches queries to typegraphs on the
+            fly. It enforces authentication, authorization and security for you.
           </p>
         </div>
-        <CastleBuilding />
+        <ModulableCastle />
       </section>
-      <section className="grid md:grid-cols-2 gap-4 items-center flex-col-reverse">
+      <section className="grid md:grid-cols-2 gap-4 items-center my-12 flex-col-reverse">
         <div className="md:order-last">
           <h2>
-            Build <strong className="text-metared">reusable</strong> castle with
-            the ecosystem
+            Build <span className="text-metared">reusable</span> castle with{" "}
+            <span className="text-metared">Metatype</span>
           </h2>
           <p className="text-xl">
-            Install open source typegraphs as dependencies using your preferred
-            packet manager, and start composing APIs together. The Meta CLI
-            offers you live reloading and one-command deployment to Metacloud or
-            your self-hosted typegate.
+            Install third parties as <strong>dependencies</strong> and start
+            reusing components. The Meta CLI offers you live reloading and
+            one-command deployment to Metacloud or your own instance.
           </p>
         </div>
-        <CastleBuilding />
+        <ReusableCastle />
       </section>
     </div>
   );

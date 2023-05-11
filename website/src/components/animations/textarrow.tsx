@@ -9,7 +9,7 @@ interface TextArrowP {
   p: [number, number];
   size: number;
   text: string;
-  arrow?: [number, number];
+  arrows?: [number, number][];
   fontFamily?: string;
 }
 
@@ -21,7 +21,7 @@ export function TextArrow({
   p: [x, y],
   size,
   text,
-  arrow,
+  arrows = [],
   fontFamily = "Lexend",
 }: TextArrowP) {
   const isFontListLoaded = useFontFaceObserver([{ family: fontFamily }]);
@@ -49,31 +49,34 @@ export function TextArrow({
     />
   );
 
-  if (!arrow) {
+  if (arrows.length === 0) {
     return t;
   }
-
-  const [px, py] = arrow;
-
-  const vertical = px - mx < py - my;
-  const sx =
-    px < x
-      ? mx - width / 2 - (vertical ? 10 : 0)
-      : mx + width / 2 + (!vertical ? width / 2 + 10 : 0);
-  const sy =
-    py < y
-      ? my - height / 2 - (vertical ? 10 : 0)
-      : my + height / 2 + (vertical ? height / 2 + 10 : 0);
 
   return (
     <Group>
       {t}
-      <Arrow
-        points={[sx, sy, px, py]}
-        fill="black"
-        stroke="black"
-        strokeWidth={1}
-      />
+      {arrows.map(([px, py]) => {
+        const vertical = px - x < py - my;
+        const sx =
+          px < x
+            ? x - (vertical ? 0 : width / 2 + 10)
+            : x + (vertical ? 0 : width / 2 + 10);
+        const sy =
+          py < y
+            ? y - (!vertical ? 0 : height / 2 + 10)
+            : y + (!vertical ? 0 : height / 2 + 10);
+
+        return (
+          <Arrow
+            key={`${px}-${py}`}
+            points={[sx, sy, px, py]}
+            fill="black"
+            stroke="black"
+            strokeWidth={1}
+          />
+        );
+      })}
     </Group>
   );
 }

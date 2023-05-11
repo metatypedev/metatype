@@ -90,15 +90,26 @@ export function useVirtualScroll(
   return values;
 }
 
-export function useDerived(
+export function useLinearSpring(
   value: SpringValue<number>,
-  [start, end]: [number, number],
-  [targetStart, targetEnd]: [number, number]
+  xs: number[],
+  ys: number[]
 ) {
-  return value.to(
-    (v) =>
+  if (xs.length !== ys.length) {
+    throw new Error("xs and ys must have the same length");
+  }
+
+  return value.to((v) => {
+    let i = 0;
+    while (xs[i + 1] < v && i < xs.length - 2) i += 1;
+    const start = xs[i];
+    const end = xs[i + 1];
+    const targetStart = ys[i];
+    const targetEnd = ys[i + 1];
+    return (
       Math.max(Math.min((v - start) / (end - start), 1), 0) *
         (targetEnd - targetStart) +
       targetStart
-  );
+    );
+  });
 }

@@ -9,6 +9,12 @@ const colors: Record<string, string> = {
   blue: "rgb(160, 195, 242)",
   gray: "rgb(239, 239, 239)",
   orange: "rgb(252, 201, 159)",
+  pink: "rgb(201, 158, 181)",
+  red: "rgb(221, 147, 143)",
+  green: "rgb(157, 187, 193)",
+  yellow: "rgb(250, 226, 144)",
+  turquoise: "rgb(156, 208, 228)",
+  purple: "rgb(170, 158, 208)",
 };
 
 interface BlockP {
@@ -66,6 +72,7 @@ export function Block({
       {b}
       {deltas.map((dx) => (
         <CacheRect
+          key={dx}
           x={mx + dx}
           y={my - size * 0.25}
           width={size * 0.6}
