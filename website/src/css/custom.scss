@@ -122,11 +122,19 @@ p {
   font-weight: 450;
 }
 
-#landscape {
+table#landscape {
   td {
-    width: 30%;
+    width: 33%;
     max-width: 250px;
+    @apply text-xs;
   }
+
+  @media (min-width: 1024px) {
+    td {
+      @apply text-base;
+    }
+  }
+
   tr {
     background: none !important;
   }
