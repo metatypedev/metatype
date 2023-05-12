@@ -42,9 +42,9 @@ class Codegen:
             self.res_hint += f"{indent}{line}\n"
 
 
-# Some Type Name => Some_Type_Name
+# Some Type-Name => Some_Type_Name
 def as_attr(name: str):
-    return re.sub(r"\s+", "_", name)
+    return re.sub(r"[^0-9a-zA-Z]+", "_", name)
 
 
 class Importer:
@@ -228,6 +228,7 @@ class Importer:
             f.write(new_hint_code)
 
         print(f"File updated: {file}", file=sys.stderr)
+        print(f"File updated: {filename_pyi}", file=sys.stderr)
         exit(0)
 
     def find_generate_arg(self, code: RedBaron) -> Optional[NameNode]:
