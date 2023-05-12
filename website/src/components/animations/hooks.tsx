@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { KeyboardEvent, useEffect, useState } from "react";
+import { KeyboardEvent, useEffect } from "react";
 import { useSpring, SpringValue } from "@react-spring/konva";
 import { each } from "@react-spring/shared";
 
@@ -15,24 +15,14 @@ export function useVirtualScroll(
     []
   );
 
-  const [scrollOnLoad, setScrollOnLoad] = useState(0);
-  useEffect(() => {
-    console.log(
-      "useVirtualScroll",
-      window.pageYOffset,
-      document.documentElement.scrollTop
-    );
-    setScrollOnLoad(window.scrollY);
-  }, [setScrollOnLoad]);
-
   useEffect(() => {
     if (min === max) {
       return;
     }
 
-    const initialScroll = window.scrollY > 0 ? window.scrollY : scrollOnLoad;
-    let virtualScroll = virtualize(initialScroll);
-    api.set({ progress: progress(scrollOnLoad) });
+    // safari does not scrollY on page load, manually scroll to last position
+    // setting to null and initialize with first scroll event is a workaround
+    let virtualScroll: number | null = null;
 
     function unvirtualize(vscroll: number) {
       if (vscroll < min) {
@@ -41,7 +31,11 @@ export function useVirtualScroll(
       if (vscroll < min + (max - min) / speedRatio) {
         return min + (vscroll - min) * speedRatio;
       }
-      return min + (max - min) * speedRatio + (vscroll - virtualize(max));
+      return (
+        min +
+        (max - min) * speedRatio +
+        (vscroll - ((max - min) / speedRatio + min))
+      );
     }
 
     function virtualize(rscroll: number) {
@@ -62,13 +56,18 @@ export function useVirtualScroll(
       const { scrollHeight } = document.documentElement;
       const { scrollY } = window;
       const realScroll = scrollY + delta;
-      virtualScroll = Math.max(
-        Math.min(virtualScroll + delta, scrollHeight + max - min),
-        0
-      );
 
-      if (min < realScroll && realScroll <= max) {
+      if (min < realScroll && realScroll < max) {
+        if (virtualScroll === null) {
+          virtualScroll = virtualize(window.scrollY);
+        }
+
+        virtualScroll = Math.max(
+          Math.min(virtualScroll + delta, scrollHeight + max - min),
+          0
+        );
         const simulatedScroll = unvirtualize(virtualScroll);
+
         /*
         console.log(
           `${min}-${max}-${speedRatio}`,
@@ -78,18 +77,23 @@ export function useVirtualScroll(
           Math.round(progress(simulatedScroll) * 100)
         );
         */
-        api.start({
-          progress: progress(simulatedScroll),
-        });
+
         window.scrollTo({ top: simulatedScroll });
         return true;
       }
 
-      api.start({
-        progress: progress(realScroll),
-      });
       virtualScroll = virtualize(realScroll);
       return false;
+    }
+
+    function scrollListner() {
+      if (virtualScroll === null) {
+        virtualScroll = virtualize(window.scrollY);
+      }
+
+      api.start({
+        progress: progress(window.scrollY),
+      });
     }
 
     function wheelListner(e: WheelEvent) {
@@ -110,11 +114,13 @@ export function useVirtualScroll(
       }
     }
 
+    window.addEventListener("scroll", scrollListner);
     window.addEventListener("keydown", keyListner);
     window.addEventListener("wheel", wheelListner, { passive: false });
 
     return () => {
       each(Object.values(values), (value) => value.stop());
+      window.removeEventListener("scroll", scrollListner);
       window.removeEventListener("keydown", keyListner);
       window.removeEventListener("wheel", wheelListner);
     };

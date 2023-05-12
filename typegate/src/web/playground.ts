@@ -75,7 +75,7 @@ export const renderPlayground = (
             url: "${url}"
           });
 
-          ReactDOM.render(<GraphiQL fetcher={fetcher}>
+          ReactDOM.render(<GraphiQL shouldPersistHeaders={true} fetcher={fetcher}>
             <GraphiQL.Logo>
               <select className="graphiql-ddl-typegraphs" onChange={(e => window.location = e.target.value)}>
                 ${options}

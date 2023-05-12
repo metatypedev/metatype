@@ -19,7 +19,7 @@ export function BuildingCastle() {
       height={300}
       before={20}
       after={20}
-      slowMotion={0.5}
+      slowMotion={1}
       scene={(progress) => {
         const topMargin = 55;
         const blockMargin = 40;

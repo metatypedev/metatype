@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer components {
+@layer utilities {
   .tooltip {
     @apply relative inline-block cursor-pointer font-medium;
   }
@@ -14,6 +14,75 @@
   }
   h2 {
     @apply text-3xl font-bold;
+  }
+
+  main#homepage {
+    > section {
+      @apply grid md:grid-cols-2 gap-12 items-center my-12;
+
+      h2 + p {
+        @apply text-xl;
+      }
+    }
+
+    > section.grid-3 {
+      @apply md:grid-cols-3 items-start;
+    }
+
+    > section:nth-child(2n + 1) {
+      @apply flex-col-reverse;
+
+      > div:first-child {
+        @apply md:order-last;
+      }
+    }
+  }
+
+  .miniql {
+    @apply text-sm;
+
+    .theme-code-block,
+    .prism-code {
+      @apply bg-slate-100;
+    }
+
+    .theme-code-block {
+      @apply m-0;
+    }
+
+    .graphiql-session {
+      padding: 0 !important;
+    }
+
+    .graphiql-container {
+      .graphiql-editors {
+        @apply shadow-none bg-none;
+        @apply bg-slate-100;
+
+        .graphiql-query-editor {
+          @apply pb-4 border-none;
+        }
+
+        .graphiql-editor-tool {
+          @apply px-2 pt-0 pb-4 text-sm;
+        }
+
+        .graphiql-editor-tools {
+          @apply p-0 px-1 text-slate-500;
+        }
+      }
+      .CodeMirror {
+        @apply bg-slate-100 text-sm;
+        height: auto !important;
+      }
+      .graphiql-query-editor {
+        @apply p-2;
+      }
+    }
+
+    code {
+      @apply p-2;
+    }
   }
 }
 
@@ -53,6 +122,12 @@ p {
   font-weight: 450;
 }
 
-.CodeMirror {
-  height: auto !important;
+#landscape {
+  td {
+    width: 30%;
+    max-width: 250px;
+  }
+  tr {
+    background: none !important;
+  }
 }

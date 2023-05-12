@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { createGraphiQLFetcher } from "@graphiql/toolkit";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
@@ -15,7 +15,7 @@ import {
 import GraphiQLInterface, { Tab } from "./GraphiQLInterface";
 import * as ast from "graphql/language/ast";
 import { MemoryStorage } from "./MemoryStore";
-import styles from "./styles.module.scss";
+import { ChoicePicker } from "../ChoicePicker";
 
 export interface MiniQLProps {
   typegraph: string;
@@ -26,12 +26,19 @@ export interface MiniQLProps {
   headers?: Record<string, unknown>;
   variables?: Record<string, unknown>;
   tab?: Tab;
+  noTool?: boolean;
+  defaultMode?: keyof typeof modes | null;
 }
 
 function Loader() {
   const ec = useExecutionContext({ nonNull: true });
   return ec.isFetching ? <Spinner /> : null;
 }
+
+const modes = {
+  typegraph: "Typegraph",
+  playground: "Playground",
+};
 
 function MiniQLBrowser({
   typegraph,
@@ -42,6 +49,8 @@ function MiniQLBrowser({
   headers = {},
   variables = {},
   tab = "",
+  noTool = false,
+  defaultMode = null,
 }: MiniQLProps) {
   const {
     siteConfig: {
@@ -59,42 +68,68 @@ function MiniQLBrowser({
     []
   );
 
+  const [mode, setMode] = useState(defaultMode);
+
   return (
-    <GraphiQLProvider
-      fetcher={fetcher}
-      defaultQuery={query.loc.source.body.trim()}
-      defaultHeaders={JSON.stringify(headers)}
-      variables={JSON.stringify(variables)}
-      storage={storage}
-    >
-      <div className="mb-6">
-        <div className={`graphiql-container ${styles.container}`}>
-          {code ? (
-            <div className={`graphiql-response ${styles.panel}`}>
-              <CodeBlock language={codeLanguage}>{code}</CodeBlock>
+    <div className="@container miniql">
+      {defaultMode ? (
+        <div className="mb-2">
+          <ChoicePicker
+            name="mode"
+            choices={modes}
+            choice={mode}
+            onChange={setMode}
+          />
+        </div>
+      ) : null}
+
+      <GraphiQLProvider
+        fetcher={fetcher}
+        defaultQuery={query.loc?.source.body.trim()}
+        defaultHeaders={JSON.stringify(headers)}
+        shouldPersistHeaders={true}
+        variables={JSON.stringify(variables)}
+        storage={storage}
+      >
+        <div
+          className={`grid ${
+            defaultMode ? "" : "@2xl:grid-cols-2"
+          } gap-2 w-full order-first`}
+        >
+          {!defaultMode || mode === "typegraph" ? (
+            <div className=" bg-slate-100 rounded-lg relative">
+              {codeFileUrl ? (
+                <div className="absolute p-2 text-xs font-light">
+                  See/edit full code on{" "}
+                  <a
+                    href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
+                  >
+                    {codeFileUrl}
+                  </a>
+                </div>
+              ) : null}
+              {code ? (
+                <CodeBlock language={codeLanguage} wrap className="pt-7 h-full">
+                  {code}
+                </CodeBlock>
+              ) : null}
             </div>
           ) : null}
+          {!defaultMode || mode === "playground" ? (
+            <div className="flex flex-col graphiql-container">
+              <div className="flex-1 graphiql-session">
+                <GraphiQLInterface defaultTab={tab} noTool={noTool} />
+              </div>
 
-          <div className={`graphiql-session ${styles.editor}`}>
-            <GraphiQLInterface defaultTab={tab} />
-          </div>
-          <div className={`graphiql-response ${styles.response}`}>
-            <Loader />
-            <ResponseEditor />
-          </div>
+              <div className="flex-1 graphiql-response min-h-[200px] p-2 mt-2 bg-slate-100 rounded-lg">
+                <Loader />
+                <ResponseEditor />
+              </div>
+            </div>
+          ) : null}
         </div>
-        {codeFileUrl ? (
-          <small className="mx-2">
-            See/edit full code on{" "}
-            <a
-              href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
-            >
-              {codeFileUrl}
-            </a>
-          </small>
-        ) : null}
-      </div>
-    </GraphiQLProvider>
+      </GraphiQLProvider>
+    </div>
   );
 }
 

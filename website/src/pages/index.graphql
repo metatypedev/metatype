@@ -1,11 +1,4 @@
-# command/ctrl + enter to run
 query A {
-  stargazers {
-    login
-  }
-}
-
-query B {
   stargazers {
     login
     # composition
@@ -15,11 +8,11 @@ query B {
   }
 }
 
-mutation C($message: String!) {
+mutation B {
   send_feedback(
     data: {
       email: "" # fill me
-      message: $message
+      message: "I love X!"
     }
   ) {
     id
@@ -27,7 +20,7 @@ mutation C($message: String!) {
   }
 }
 
-query D {
+query C {
   list_feedback {
     email # cannot be accessed, delete me
     message
