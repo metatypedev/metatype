@@ -11,7 +11,7 @@ const projectName = "metatype";
 const config = {
   title: "Metatype",
   // prettier-ignore
-  tagline: "Compose your data, anywhere, and build iterative API blocks with zero-trust and serverless deployment, no matter where and how your (legacy) systems are.",
+  tagline: "The low-code API platform for developers. Build modular APIs with zero-trust and serverless deployment, no matter where and how your (legacy) systems are.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -31,32 +31,9 @@ const config = {
   ],
   plugins: [
     "docusaurus-plugin-sass",
-    "docusaurus-tailwindcss",
-    () => ({
-      name: "pyLoader",
-      configureWebpack() {
-        return {
-          module: {
-            rules: [
-              {
-                test: /\.py$/i,
-                use: ["code-loader"],
-              },
-              {
-                test: /\.(graphql|gql)$/,
-                exclude: /node_modules/,
-                use: ["graphql-tag/loader"],
-              },
-            ],
-          },
-          resolveLoader: {
-            alias: {
-              "code-loader": require.resolve("./packages/code-loader.js"),
-            },
-          },
-        };
-      },
-    }),
+    require("./packages/tailwindcss"),
+    require("./packages/code-loader"),
+    require("./packages/changelog"),
     [
       "docusaurus-graphql-plugin",
       {
@@ -73,7 +50,6 @@ const config = {
         routeBasePath: "/docs/reference/typegate/prisma-migration",
       },
     ],
-    require("./packages/changelog"),
     [
       "posthog-docusaurus",
       {
@@ -189,10 +165,6 @@ const config = {
               {
                 label: "GitHub",
                 href: "https://github.com/metatypedev/metatype/discussions",
-              },
-              {
-                label: "Discord",
-                href: "https://discord.gg/PSyYcEHyw5",
               },
               {
                 label: "Stack Overflow",

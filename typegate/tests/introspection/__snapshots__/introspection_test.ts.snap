@@ -3,8 +3,7 @@ export const snapshot = {};
 snapshot[`Full introspection 1`] = `
 {
   __schema: {
-    directives: [
-    ],
+    directives: [],
     mutationType: null,
     queryType: {
       name: "Query",
@@ -95,8 +94,7 @@ Policies:
           },
         ],
         inputFields: null,
-        interfaces: [
-        ],
+        interfaces: [],
         kind: "OBJECT",
         name: "Query",
         possibleTypes: null,
@@ -106,8 +104,7 @@ Policies:
         enumValues: null,
         fields: [
           {
-            args: [
-            ],
+            args: [],
             deprecationReason: null,
             description: "a field
 
@@ -127,8 +124,7 @@ Policies:
           },
         ],
         inputFields: null,
-        interfaces: [
-        ],
+        interfaces: [],
         kind: "OBJECT",
         name: "res",
         possibleTypes: null,
@@ -155,8 +151,7 @@ Policies:
             },
           },
         ],
-        interfaces: [
-        ],
+        interfaces: [],
         kind: "INPUT_OBJECT",
         name: "NestedInp",
         possibleTypes: null,

@@ -9,7 +9,7 @@ export type OptionalNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -23,7 +23,7 @@ export type BooleanNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -35,7 +35,7 @@ export type NumberNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -52,7 +52,7 @@ export type IntegerNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -69,7 +69,7 @@ export type StringNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -85,7 +85,7 @@ export type ObjectNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -101,7 +101,7 @@ export type ArrayNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -117,7 +117,7 @@ export type FunctionNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -134,7 +134,7 @@ export type UnionNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -147,7 +147,7 @@ export type EitherNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -160,7 +160,7 @@ export type AnyNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };

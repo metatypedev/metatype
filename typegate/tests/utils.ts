@@ -55,29 +55,35 @@ export async function shell(
   options: MetaOptions = {},
 ): Promise<string> {
   const { stdin = null } = options;
-  // deno-lint-ignore no-deprecated-deno-api
-  const p = Deno.run({
+  const p = new Deno.Command(cmd[0], {
     cwd: testDir,
-    cmd,
+    args: cmd.slice(1),
     stdout: "piped",
-    stderr: "inherit",
+    stderr: "piped",
     stdin: "piped",
     env: { RUST_LOG: "info,meta=trace" },
-  });
+  }).spawn();
+
+  p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
 
   if (stdin != null) {
-    await p.stdin.write(new TextEncoder().encode(stdin));
+    const w = p.stdin.getWriter();
+    w.write(new TextEncoder().encode(stdin));
+    await w.close();
+  } else {
+    p.stdin.close();
   }
-  p.stdin.close();
 
-  const [status, stdout] = await Promise.all([p.status(), p.output()]);
-  p.close();
+  let out = "";
+  for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
+    out += l;
+  }
 
-  const out = new TextDecoder().decode(stdout).trim();
+  const { code, success } = await p.status;
 
-  if (!status.success) {
+  if (!success) {
     console.log(out);
-    throw new Error(`Command failed: ${cmd.join(" ")}`);
+    throw new Error(`Command failed with ${code}: ${cmd.join(" ")}`);
   }
 
   return out;

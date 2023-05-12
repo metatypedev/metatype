@@ -29,14 +29,16 @@ export async function run(
   cwd: string = Deno.cwd(),
   env: Record<string, string> = Deno.env.toObject(),
 ) {
-  // deno-lint-ignore no-deprecated-deno-api
-  const p = Deno.run({
-    cmd,
+  const p = new Deno.Command(cmd[0], {
+    args: cmd.slice(1),
     cwd: cwd,
+    stdout: "piped",
+    stderr: "piped",
     env,
-  });
-
-  return await p.status();
+  }).spawn();
+  p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
+  p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
+  return await p.status;
 }
 
 export async function runOrExit(
@@ -44,17 +46,10 @@ export async function runOrExit(
   cwd: string = Deno.cwd(),
   env: Record<string, string> = Deno.env.toObject(),
 ) {
-  // deno-lint-ignore no-deprecated-deno-api
-  const p = Deno.run({
-    cmd,
-    cwd: cwd,
-    env,
-  });
+  const { code, success } = await run(cmd, cwd, env);
 
-  const status = await p.status();
-
-  if (!status.success) {
-    Deno.exit(status.code);
+  if (!success) {
+    Deno.exit(code);
   }
 }
 

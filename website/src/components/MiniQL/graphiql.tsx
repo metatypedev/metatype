@@ -32,14 +32,12 @@ import {
   PrettifyIcon,
   QueryEditor,
   ToolbarButton,
-  UnStyledButton,
   useCopyQuery,
   useEditorContext,
   usePrettifyEditors,
   VariableEditor,
 } from "@graphiql/react";
 
-import styles from "./styles.module.scss";
 import { GraphiQLInterfaceProps } from "graphiql";
 
 const autoHeight = (codeMirror) => {
@@ -50,7 +48,7 @@ const autoHeight = (codeMirror) => {
 export type Tab = "variables" | "headers" | "";
 
 export default function GraphiQLInterface(
-  props: GraphiQLInterfaceProps & { defaultTab: Tab }
+  props: GraphiQLInterfaceProps & { defaultTab: Tab; noTool: boolean }
 ) {
   const { queryEditor, variableEditor, headerEditor } = useEditorContext({
     nonNull: true,
@@ -140,50 +138,56 @@ export default function GraphiQLInterface(
         </div>
       </section>
 
-      <div className="graphiql-editor-tools">
-        <div className="graphiql-editor-tools-tabs">
-          <UnStyledButton
-            type="button"
-            className={tab === "variables" ? "active" : ""}
-            onClick={() => {
-              setTab(tab === "variables" ? "" : "variables");
-            }}
-          >
-            Variables
-          </UnStyledButton>
-          <UnStyledButton
-            type="button"
-            className={tab === "headers" ? "active" : ""}
-            onClick={() => {
-              setTab(tab === "headers" ? "" : "headers");
-            }}
-          >
-            Headers
-          </UnStyledButton>
-        </div>
-      </div>
+      {props.noTool ? null : (
+        <>
+          <div className="graphiql-editor-tools p-0 text-sm ">
+            <div className="graphiql-editor-tools-tabs">
+              <div
+                className={`${
+                  tab === "variables" ? "text-slate-800" : ""
+                } p-2 hover:text-slate-800 cursor-pointer`}
+                onClick={() => {
+                  setTab(tab === "variables" ? "" : "variables");
+                }}
+              >
+                Variables
+              </div>
+              <div
+                className={`${
+                  tab === "headers" ? "text-slate-800" : ""
+                } p-2 hover:text-slate-800 cursor-pointer`}
+                onClick={() => {
+                  setTab(tab === "headers" ? "" : "headers");
+                }}
+              >
+                Headers
+              </div>
+            </div>
+          </div>
 
-      <section
-        className={`graphiql-editor-tool ${
-          tab && tab.length > 0 ? styles.tool : styles.notool
-        }`}
-        aria-label={tab === "variables" ? "Variables" : "Headers"}
-      >
-        <VariableEditor
-          editorTheme={props.editorTheme}
-          isHidden={tab !== "variables"}
-          keyMap={props.keyMap}
-          onEdit={props.onEditVariables}
-          readOnly={props.readOnly}
-        />
-        <HeaderEditor
-          editorTheme={props.editorTheme}
-          isHidden={tab !== "headers"}
-          keyMap={props.keyMap}
-          onEdit={props.onEditHeaders}
-          readOnly={props.readOnly}
-        />
-      </section>
+          <section
+            className={`graphiql-editor-tool ${
+              tab && tab.length > 0 ? "pt-0" : "hidden p-0"
+            }`}
+            aria-label={tab === "variables" ? "Variables" : "Headers"}
+          >
+            <VariableEditor
+              editorTheme={props.editorTheme}
+              isHidden={tab !== "variables"}
+              keyMap={props.keyMap}
+              onEdit={props.onEditVariables}
+              readOnly={props.readOnly}
+            />
+            <HeaderEditor
+              editorTheme={props.editorTheme}
+              isHidden={tab !== "headers"}
+              keyMap={props.keyMap}
+              onEdit={props.onEditHeaders}
+              readOnly={props.readOnly}
+            />
+          </section>
+        </>
+      )}
     </div>
   );
 }

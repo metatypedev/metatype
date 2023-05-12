@@ -1,15 +1,18 @@
 # skip:start
+import re
+
 from typegraph import TypeGraph, policies, t
 from typegraph.graph.auth import oauth2
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.http import HTTPRuntime
-import re
 
 # skip:end
 with TypeGraph(
     "homepage",
-    auths=[oauth2.github("openid profile email")],
+    auths=[oauth2.github("openid email")],
+    # skip:next-line
     rate=TypeGraph.Rate(window_limit=2000, window_sec=60, query_limit=200),
+    # skip:next-line
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
     public = policies.public()
