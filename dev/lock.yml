@@ -51,6 +51,6 @@ dev:
     TYPEGRAPH_VERSION: 0.0.1
     METATYPE_VERSION: 0.1.7
     TAGLINE: >-
-      Compose your data, anywhere, and build iterative API blocks with
+      The low-code API platform for developers. Build modular APIs with
       zero-trust and serverless deployment, no matter where and how your
       (legacy) systems are.
