@@ -59,19 +59,23 @@ export async function shell(
     cwd: testDir,
     args: cmd.slice(1),
     stdout: "piped",
-    stderr: "inherit",
+    stderr: "piped",
     stdin: "piped",
     env: { RUST_LOG: "info,meta=trace" },
   }).spawn();
+
+  p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
 
   if (stdin != null) {
     await p.stdin.getWriter().write(new TextEncoder().encode(stdin));
   }
   p.stdin.close();
 
-  const { code, stdout, success } = await p.output();
-
-  const out = new TextDecoder().decode(stdout).trim();
+  let out = "";
+  for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
+    out += l;
+  }
+  const { code, success } = await p.status;
 
   if (!success) {
     console.log(out);

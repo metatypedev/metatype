@@ -29,11 +29,16 @@ export async function run(
   cwd: string = Deno.cwd(),
   env: Record<string, string> = Deno.env.toObject(),
 ) {
-  return await new Deno.Command(cmd[0], {
+  const p = new Deno.Command(cmd[0], {
     args: cmd.slice(1),
     cwd: cwd,
+    stdout: "piped",
+    stderr: "piped",
     env,
-  }).output();
+  }).spawn();
+  p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
+  p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
+  return await p.status;
 }
 
 export async function runOrExit(
