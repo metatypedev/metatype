@@ -67,14 +67,18 @@ export async function shell(
   p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
 
   if (stdin != null) {
-    await p.stdin.getWriter().write(new TextEncoder().encode(stdin));
+    const w = p.stdin.getWriter();
+    w.write(new TextEncoder().encode(stdin));
+    await w.close();
+  } else {
+    p.stdin.close();
   }
-  p.stdin.close();
 
   let out = "";
   for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
     out += l;
   }
+
   const { code, success } = await p.status;
 
   if (!success) {

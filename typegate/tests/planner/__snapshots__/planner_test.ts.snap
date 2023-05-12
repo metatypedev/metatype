@@ -111,20 +111,6 @@ snapshot[`planner 2`] = `
       type: "function",
     },
     referencedTypes: {
-      one: [
-        {
-          title: "function_12",
-          type: "function",
-        },
-        {
-          title: "object_9",
-          type: "object",
-        },
-        {
-          title: "object_11",
-          type: "object",
-        },
-      ],
       "one.email": [
         {
           title: "string_2",
@@ -167,6 +153,20 @@ snapshot[`planner 2`] = `
         {
           title: "boolean_6",
           type: "boolean",
+        },
+      ],
+      one: [
+        {
+          title: "function_12",
+          type: "function",
+        },
+        {
+          title: "object_9",
+          type: "object",
+        },
+        {
+          title: "object_11",
+          type: "object",
         },
       ],
     },
