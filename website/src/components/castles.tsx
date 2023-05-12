@@ -3,13 +3,13 @@
 import React from "react";
 
 import { Image, Layer } from "react-konva";
-import { Block, blockHeight } from "../components/animations/block";
-import { useLinearSpring } from "../components/animations/hooks";
-import { Animated } from "../components/animations/animated";
-import { AnimatedCanvas } from "../components/animations/canvas";
-import { TextArrow } from "../components/animations/textarrow";
+import { Block, blockHeight } from "./animations/block";
+import { useLinearSpring } from "./animations/hooks";
+import { Animated } from "./animations/animated";
+import { AnimatedCanvas } from "./animations/animated_canvas";
+import { TextArrow } from "./animations/textarrow";
 import useImage from "use-image";
-import { DoubleArrow } from "../components/animations/doublearrow";
+import { DoubleArrow } from "./animations/doublearrow";
 
 export function BuildingCastle() {
   return (

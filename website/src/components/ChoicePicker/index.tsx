@@ -6,7 +6,7 @@ interface ChoicePickerP<T> {
   name: string;
   choices: Record<string, string>;
   choice: T;
-  onChange: (choice: any) => void;
+  onChange: (choice: string) => void;
   className?: string;
 }
 
@@ -16,7 +16,6 @@ export function ChoicePicker<T>({
   choice,
   onChange,
 }: ChoicePickerP<T>) {
-  console.log(choice, choices);
   return (
     <ul className="pl-0 m-0 list-none rounded-md overflow-clip">
       {Object.entries(choices).map(([k, p]) => (

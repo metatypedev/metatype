@@ -12,9 +12,9 @@ import {
   Spinner,
   useExecutionContext,
 } from "@graphiql/react";
-import GraphiQLInterface, { Tab } from "./GraphiQLInterface";
+import GraphiQLInterface, { Tab } from "./graphiql";
 import * as ast from "graphql/language/ast";
-import { MemoryStorage } from "./MemoryStore";
+import { MemoryStorage } from "./memory_store";
 import { ChoicePicker } from "../ChoicePicker";
 
 export interface MiniQLProps {

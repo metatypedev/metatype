@@ -5,6 +5,9 @@ module.exports = () => ({
   name: "pyloader",
   configureWebpack() {
     return {
+      externals: {
+        canvas: {}, // https://github.com/facebook/docusaurus/issues/8589: BrowserOnly is not enough
+      },
       module: {
         rules: [
           {

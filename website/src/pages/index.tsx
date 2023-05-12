@@ -7,14 +7,10 @@ import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import TGExample from "../components/TGExample";
+import BrowserOnly from "@docusaurus/BrowserOnly";
 import LiteYouTubeEmbed from "react-lite-youtube-embed";
 import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
-import {
-  BuildingCastle,
-  ModulableCastle,
-  ReusableCastle,
-  StableCastle,
-} from "./castles";
+
 import { ChoicePicker } from "../components/ChoicePicker";
 
 function Header() {
@@ -60,7 +56,7 @@ function Intro({
   setProfile,
 }: {
   profile: string;
-  setProfile: (p: any) => void;
+  setProfile: (p: string) => void;
 }): JSX.Element {
   return (
     <section>
@@ -83,7 +79,12 @@ function Intro({
           evolving needs and tech landscape complexities.
         </p>
       </div>
-      <BuildingCastle />
+      <BrowserOnly fallback={<div className="h-[300px]"></div>}>
+        {() => {
+          const Castle = require(`../components/castles`).BuildingCastle;
+          return <Castle />;
+        }}
+      </BrowserOnly>
     </section>
   );
 }
@@ -102,7 +103,12 @@ function Stability(): JSX.Element {
           databases, APIs and business logic in a type safe manner.
         </p>
       </div>
-      <StableCastle />
+      <BrowserOnly fallback={<div className="h-[300px]"></div>}>
+        {() => {
+          const Castle = require(`../components/castles`).StableCastle;
+          return <Castle />;
+        }}
+      </BrowserOnly>
     </section>
   );
 }
@@ -121,7 +127,12 @@ function Modularity(): JSX.Element {
           enforces authentication, authorization and security for you.
         </p>
       </div>
-      <ModulableCastle />
+      <BrowserOnly fallback={<div className="h-[300px]"></div>}>
+        {() => {
+          const Castle = require(`../components/castles`).ModulableCastle;
+          return <Castle />;
+        }}
+      </BrowserOnly>
     </section>
   );
 }
@@ -140,7 +151,12 @@ function Reusability(): JSX.Element {
           one-command deployment to Metacloud or your own instance.
         </p>
       </div>
-      <ReusableCastle />
+      <BrowserOnly fallback={<div className="h-[300px]"></div>}>
+        {() => {
+          const Castle = require(`../components/castles`).ReusableCastle;
+          return <Castle />;
+        }}
+      </BrowserOnly>
     </section>
   );
 }

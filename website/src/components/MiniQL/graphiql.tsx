@@ -32,7 +32,6 @@ import {
   PrettifyIcon,
   QueryEditor,
   ToolbarButton,
-  UnStyledButton,
   useCopyQuery,
   useEditorContext,
   usePrettifyEditors,
