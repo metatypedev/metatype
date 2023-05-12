@@ -57,7 +57,17 @@ export class CodeGenerator {
     this.validation(
       'typeof value !== "number"',
       "`expected number, got ${typeof value}`",
+      ["return"],
     );
+
+    if (typeNode.type === "integer") {
+      this.validation(
+        `parseInt(value) !== value`,
+        `\`expected an integer, got \${value}\``,
+        ["return"],
+      );
+    }
+
     const constraints = [
       ["minimum", "<"],
       ["maximum", ">"],
