@@ -96,6 +96,19 @@ impl TypeVisitor for Validator {
                             | TypeNode::String { .. } => {
                                 // scalar
                             }
+                            TypeNode::Array { data, .. } => {
+                                let item_type = tg.types.get(data.items as usize).unwrap();
+                                if !item_type.is_scalar() {
+                                    self.push_error(
+                                        path,
+                                        format!(
+                                            "array of '{}' not allowed as union/either variant",
+                                            item_type.type_name()
+                                        ),
+                                    );
+                                    return VisitResult::Continue(false);
+                                }
+                            }
                             _ => {
                                 self.push_error(
                                     path,

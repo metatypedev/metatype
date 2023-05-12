@@ -281,4 +281,12 @@ impl TypeNode {
             Any { .. } => "any",
         }
     }
+
+    pub fn is_scalar(&self) -> bool {
+        use TypeNode::*;
+        matches!(
+            self,
+            Boolean { .. } | Number { .. } | Integer { .. } | String { .. }
+        )
+    }
 }
