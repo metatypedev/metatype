@@ -53,9 +53,10 @@ const schema = {
 
 async function getHostname() {
   try {
-    const cmd = Deno.run({ cmd: ["hostname"], stdout: "piped" });
-    const stdout = await cmd.output();
-    cmd.close();
+    const { stdout } = await new Deno.Command(
+      "hostname",
+      { stdout: "piped" },
+    ).output();
     return new TextDecoder().decode(stdout).trim();
   } catch (_e) {
     console.debug(

@@ -55,28 +55,27 @@ export async function shell(
   options: MetaOptions = {},
 ): Promise<string> {
   const { stdin = null } = options;
-  const p = Deno.run({
+  const p = new Deno.Command(cmd[0], {
     cwd: testDir,
-    cmd,
+    args: cmd.slice(1),
     stdout: "piped",
     stderr: "inherit",
     stdin: "piped",
     env: { RUST_LOG: "info,meta=trace" },
-  });
+  }).spawn();
 
   if (stdin != null) {
-    await p.stdin.write(new TextEncoder().encode(stdin));
+    await p.stdin.getWriter().write(new TextEncoder().encode(stdin));
   }
   p.stdin.close();
 
-  const [status, stdout] = await Promise.all([p.status(), p.output()]);
-  p.close();
+  const { code, stdout, success } = await p.output();
 
   const out = new TextDecoder().decode(stdout).trim();
 
-  if (!status.success) {
+  if (!success) {
     console.log(out);
-    throw new Error(`Command failed: ${cmd.join(" ")}`);
+    throw new Error(`Command failed with ${code}: ${cmd.join(" ")}`);
   }
 
   return out;
