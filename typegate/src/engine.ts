@@ -141,6 +141,11 @@ class QueryCache {
   }
 }
 
+interface BranchSelection {
+  level: number;
+  select: string | null;
+}
+
 export class Engine {
   name: string;
   queryCache: QueryCache;
@@ -235,12 +240,7 @@ export class Engine {
 
     await policies.authorize(context, info, verbose);
 
-    interface ChildSelectionStatus {
-      level: number;
-      select: string | null;
-    }
-    const selections: ChildSelectionStatus[] = [];
-
+    const selections: BranchSelection[] = [];
     const getActiveSelection = () => selections[selections.length - 1] ?? null;
 
     for await (const stage of plan) {
