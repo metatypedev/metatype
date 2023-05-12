@@ -2,10 +2,7 @@ export const snapshot = {};
 
 snapshot[`Union type 1`] = `
 [
-  "Validation errors:
-" +
-    "  - at <value>.color: Value does not match to any variant of the union type
-",
+  "Type mismatch: got 'StringValue' but expected 'OBJECT' for argument 'color' of type 'union' ('Color') at convert",
 ]
 `;
 
@@ -43,26 +40,41 @@ snapshot[`Union type 2`] = `
         name: "ColorOut",
         possibleTypes: [
           {
-            kind: "LIST",
-            name: null,
+            kind: "OBJECT",
+            name: "RGBArray",
           },
           {
             kind: "OBJECT",
-            name: "RGB_struct",
+            name: "RGBStruct",
           },
           {
             kind: "OBJECT",
-            name: "_String",
+            name: "HexColor",
           },
           {
             kind: "OBJECT",
-            name: "_String",
+            name: "NamedColor",
           },
         ],
       },
       {
         kind: "OBJECT",
-        name: "RGB_struct",
+        name: "RGBArray",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "RGBStruct",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "HexColor",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "NamedColor",
         possibleTypes: null,
       },
       {
@@ -72,7 +84,22 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "INPUT_OBJECT",
-        name: "RGB_structInp",
+        name: "RGBArrayInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "RGBStructInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "HexColorInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "NamedColorInp",
         possibleTypes: null,
       },
     ],

@@ -264,4 +264,21 @@ impl TypeNode {
             | Any { base, .. } => base,
         }
     }
+
+    pub fn type_name(&self) -> &'static str {
+        use TypeNode::*;
+        match self {
+            Optional { .. } => "optional",
+            Boolean { .. } => "booleal",
+            Number { .. } => "number",
+            Integer { .. } => "integer",
+            String { .. } => "string",
+            Object { .. } => "object",
+            Array { .. } => "array",
+            Function { .. } => "function",
+            Union { .. } => "union",
+            Either { .. } => "either",
+            Any { .. } => "any",
+        }
+    }
 }

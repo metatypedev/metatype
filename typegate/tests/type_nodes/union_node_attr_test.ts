@@ -11,9 +11,13 @@ test(
       await gql`
         query {
           normalize(x: 8, y: 0, z: 6, as: "color") {
-            R
-            G
-            B
+            ... on Rgb { R G B }
+            ... on Vec { x y z }
+            ... on AxisPair {
+              xy { first second }
+              xz { first second }
+              yz { first second }
+            }
           }
         }
       `
@@ -27,9 +31,13 @@ test(
       await gql`
         query {
           normalize(x: 8, y: 0, z: 6, as: "vec") {
-            x
-            y
-            z
+            ... on Rgb { R G B }
+            ... on Vec { x y z }
+            ... on AxisPair {
+              xy { first second }
+              xz { first second }
+              yz { first second }
+            }
           }
         }
       `
@@ -45,7 +53,13 @@ test(
         await gql`
           query {
             normalize(x: 8, y: 0, z: 6, as: "vec") {
-              x
+              ... on Rgb { R }
+              ... on Vec { x }
+              ... on AxisPair {
+                xy { first }
+                xz { first }
+                yz { first }
+              }
             }
           }
         `
@@ -60,12 +74,11 @@ test(
       await gql`
         query {
           normalize(x: 8, y: 0, z: 6, as: "pair") {
-            xz {
-              first
-              second
-            }
-            xy {
-              first
+            ... on Rgb { R G B }
+            ... on Vec { x y z }
+            ... on AxisPair {
+              xy { first }
+              xz { first second }
             }
           }
         }

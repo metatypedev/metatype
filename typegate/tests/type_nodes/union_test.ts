@@ -12,11 +12,16 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: "blue", to: "rgb_array")
+            convert(color: { name: "blue" }, to: "rgb_array") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .expectData({
-            convert: [0, 0, 255],
+            convert: { rgb: [0, 0, 255] },
           })
           .on(e);
       },
@@ -27,11 +32,16 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: "#ffffff", to: "rgb_array")
+            convert(color: { hex: "#ffffff" }, to: "rgb_array") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .expectData({
-            convert: [255, 255, 255],
+            convert: { rgb: [255, 255, 255] },
           })
           .on(e);
       },
@@ -42,11 +52,16 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: [220, 20, 60], to: "hex")
+            convert(color: { rgb: [220, 20, 60] }, to: "hex") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .expectData({
-            convert: "#dc143c",
+            convert: { hex: "#dc143c" },
           })
           .on(e);
       },
@@ -58,9 +73,10 @@ test(
         await gql`
           query {
             convert(color: { r: 155, g: 38, b: 182 }, to: "rgb_struct") {
-              r
-              g
-              b
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
             }
           }
         `
@@ -81,7 +97,10 @@ test(
         await gql`
           query {
             convert(color: { r: 155, g: 38, b: 182 }, to: "rgb_struct") {
-              r
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
             }
           }
         `
@@ -99,7 +118,12 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: 100, to: "rgb_array")
+            convert(color: 100, to: "rgb_array") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .expectErrorContains("Type mismatch: got 'IntValue'")
@@ -112,7 +136,12 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: "hello world", to: "rgb_array")
+            convert(color: "hello world", to: "rgb_array") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .matchErrorSnapshot(t)

@@ -311,25 +311,34 @@ export class TypeGraph {
 
     if (isArray(type)) {
       if (isOptional(this.type(type.items))) {
-        return (x: any) => x.flat().filter((c: any) => !!c);
+        return (x: any) => {
+          return x.flat().filter((c: any) => !!c);
+        };
       }
-      return (x: any) => ensureArray(x).flat();
+      return (x: any) => {
+        return ensureArray(x).flat();
+      };
     }
     if (isOptional(type)) {
       if (isArray(this.type(type.item))) {
-        return (x: any) =>
-          ensureArray(x)
-            .filter((c: any) => !!c)
-            .flat();
+        return (x: any) => {
+          return ensureArray(x)
+            .flat()
+            .filter((c: any) => !!c);
+        };
       }
-      return (x: any) => ensureArray(x).filter((c: any) => !!c);
+      return (x: any) => {
+        return ensureArray(x).filter((c: any) => !!c);
+      };
     }
     ensure(
       isObject(type) || isInteger(type) || isNumber(type) || isBoolean(type) ||
         isFunction(type) || isString(type) || isUnion(type) || isEither(type),
       `object expected but got ${type.type}`,
     );
-    return (x: any) => ensureArray(x);
+    return (x: any) => {
+      return ensureArray(x);
+    };
   };
 
   typeByNameOrIndex(nameOrIndex: string | number): TypeNode {

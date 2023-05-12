@@ -22,9 +22,11 @@ with TypeGraph("either") as g:
 
     # transaction models
 
-    success_transaction = t.struct({"user_id": t.string(), "date": t.date()})
+    success_transaction = t.struct({"user_id": t.string(), "date": t.date()}).named(
+        "SuccessTransaction"
+    )
 
-    failed_transaction = t.struct({"reason": t.string()})
+    failed_transaction = t.struct({"reason": t.string()}).named("FailedTransaction")
 
     response = t.either([success_transaction, failed_transaction]).named("Response")
 

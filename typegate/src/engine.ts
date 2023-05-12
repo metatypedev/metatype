@@ -41,6 +41,8 @@ const introspectionDefStatic = await Deno.readTextFile(
   join(localDir, "typegraphs/introspection.json"),
 );
 
+const VARIANT_TRANSITION_REGEX = /\$([^\.\$]+)$/;
+
 /**
  * Processed graphql node to be evaluated against a Runtime
  * ```
@@ -238,7 +240,8 @@ export class Engine {
       select: string | null;
     }
     const selections: ChildSelectionStatus[] = [];
-    let activeSelection: ChildSelectionStatus | null = null;
+
+    const getActiveSelection = () => selections[selections.length - 1] ?? null;
 
     for await (const stage of plan) {
       const {
@@ -253,26 +256,36 @@ export class Engine {
         rateCalls,
         rateWeight,
         childSelection,
-        outType,
       } = stage.props;
 
       const level = path.length;
       const stageId = stage.id();
       // const parentId = parent.id();
-      const parentId = stageId.slice(0, stageId.lastIndexOf("."));
+      const parentId = parent && stageId.slice(0, stageId.lastIndexOf("."));
 
+      let activeSelection = getActiveSelection();
       while (activeSelection != null && level < activeSelection.level) {
         selections.pop();
-        activeSelection = selections[selections.length] ?? null;
+        activeSelection = getActiveSelection();
       }
 
       if (activeSelection != null) {
-        if (activeSelection.level === level) {
-          // potential variant transition
-          activeSelection.select = outType.title;
+        if (parentId == null) {
+          throw new Error("unexpected state");
         }
 
-        if (parent && cache[parentId].length === 0) {
+        if (activeSelection.level === level) {
+          // potential variant transition
+          const match = parentId?.match(VARIANT_TRANSITION_REGEX);
+          if (match == null) {
+            throw new Error(
+              "Expected parentId to match variant transition RegExp",
+            );
+          }
+          activeSelection.select = match[1];
+        }
+
+        if (cache[parentId] == null || cache[parentId].length === 0) {
           // non matching variant -> skip stage
           continue;
         }
@@ -285,8 +298,8 @@ export class Engine {
         .reduce((agg, dep) => ({ ...agg, [dep]: cache[dep] }), {});
 
       //verbose && console.log("dep", stage.id(), deps);
-      const previousValues = parent ? cache[parentId] : ([{}] as any);
-      const lens = parent ? lenses[parentId] : ([ret] as any);
+      const previousValues = parentId ? cache[parentId] : ([{}] as any);
+      const lens = parentId ? lenses[parentId] : ([ret] as any);
 
       if (limit && rateCalls) {
         limit.consume(rateWeight ?? 1);
@@ -335,8 +348,8 @@ export class Engine {
           l[field] = withEmptyObjects(res[i]);
         });
 
-        lenses[stage.id()] = batcher(lens).flatMap((l: any) => {
-          return l[field] ?? [];
+        lenses[stageId] = lens.flatMap((l: any) => {
+          return batcher([l[field]]) ?? [];
         });
       }
 

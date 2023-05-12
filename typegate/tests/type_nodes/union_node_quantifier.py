@@ -18,7 +18,7 @@ with TypeGraph("union") as g:
             "os": t.enum(["Android", "iOS"]),
             "metadatas": t.array(metadata).optional(),
         }
-    ).named("Smartphone")
+    ).named("SmartPhone")
 
     basic_phone = t.struct(
         {

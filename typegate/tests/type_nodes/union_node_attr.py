@@ -2,16 +2,14 @@ from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.deno import ModuleMat
 
 with TypeGraph("union_attr") as g:
-    rgb = t.struct({"R": t.float(), "G": t.float(), "B": t.float()}).named("rgb")
-    vec = t.struct({"x": t.float(), "y": t.float(), "z": t.float()}).named("vec")
-    pair_or_list = t.union(
-        [t.struct({"first": t.float(), "second": t.float()}), t.array(t.float())]
-    )
+    rgb = t.struct({"R": t.float(), "G": t.float(), "B": t.float()}).named("Rgb")
+    vec = t.struct({"x": t.float(), "y": t.float(), "z": t.float()}).named("Vec")
+    pair = t.struct({"first": t.float(), "second": t.float()})
     axis_pairs = t.struct(
         {
-            "xy": pair_or_list.named("xy"),
-            "xz": pair_or_list.named("xz"),
-            "yz": pair_or_list.named("yz"),
+            "xy": pair.named("xy"),
+            "xz": pair.named("xz"),
+            "yz": pair.named("yz"),
         }
     ).named("AxisPair")
     public = policies.public()

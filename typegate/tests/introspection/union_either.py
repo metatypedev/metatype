@@ -7,7 +7,7 @@ with TypeGraph("introspect-union-either") as g:
     gunpla = t.struct(
         {"model": t.string(), "ref": t.union([t.string(), t.integer()])}
     ).named("Gunpla")
-    toy = t.either([rubix_cube, toygun, gunpla, t.string()])
+    toy = t.either([rubix_cube, toygun, gunpla])
 
     user = t.struct(
         {

@@ -28,11 +28,10 @@ export function generateValidator(
   const validator = new Function(code)() as ValidatorFn;
 
   return (value: unknown) => {
-    console.log("validating", value);
+    // console.log("validating", value);
     const errors: ErrorEntry[] = [];
     validator(value, "<value>", errors, validationContext);
     if (errors.length > 0) {
-      console.log("validating", value);
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
       throw new Error(`Validation errors:\n${messages}`);
@@ -92,7 +91,14 @@ export class ResultValidationCompiler {
 
       const typeNode = this.tg.type(entry.typeIdx);
 
-      if (isScalar(typeNode)) {
+      if (entry.name === "validate_typename") {
+        cg.generateStringValidator({
+          type: "string",
+          title: "__TypeName",
+          runtime: -1,
+          policies: [],
+        });
+      } else if (isScalar(typeNode)) {
         if (entry.selectionSet != null) {
           throw new Error(
             `Unexpected selection set for scalar type '${typeNode.type}' at '${entry.path}'`,
