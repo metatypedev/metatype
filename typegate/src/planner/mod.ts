@@ -158,8 +158,9 @@ export class Planner {
         const typeName = sel.typeCondition.name.value;
         if (!unselectedVariants.has(typeName)) {
           const path = this.formatPath(node.path);
+          const suggestions = [...unselectedVariants].join(", ");
           throw new Error(
-            `at: ${path}: Unknown type on type condition: ${typeName}`,
+            `at: ${path}: Unknown type condition '${typeName}'; available types are: ${suggestions}`,
           );
         }
         unselectedVariants.delete(typeName);

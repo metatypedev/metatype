@@ -13,7 +13,7 @@ with TypeGraph("class_syntax") as g:
     class Info(TitledEntity):
         content = t.string()
 
-    metadata = t.either([tag, Info()])
+    metadata = t.either([tag, Info().named("Info")])
 
     class Comment(TitledEntity):
         content = t.string()
