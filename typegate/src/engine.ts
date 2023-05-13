@@ -32,7 +32,7 @@ import { getLogger } from "./log.ts";
 import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
-import { distinct } from "std/collections/distinct.ts";
+import { ComputationEngine } from "./engine/computation_engine.ts";
 
 const logger = getLogger(import.meta);
 
@@ -40,8 +40,6 @@ const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
   join(localDir, "typegraphs/introspection.json"),
 );
-
-const VARIANT_TRANSITION_REGEX = /\$([^\.\$]+)$/;
 
 /**
  * Processed graphql node to be evaluated against a Runtime
@@ -109,17 +107,12 @@ function isIntrospectionQuery(
   return operation.name?.value === "IntrospectionQuery";
 }
 
+// See `planner/mod.ts` on how the graphql is processed to build the plan
 interface Plan {
+  // matching to each selection in the graphql query
   stages: ComputeStage[];
   policies: OperationPolicies;
   validator: Validator;
-}
-
-function withEmptyObjects(res: unknown): unknown {
-  if (Array.isArray(res)) {
-    return res.map(withEmptyObjects);
-  }
-  return typeof res === "object" && res != null ? {} : res;
 }
 
 class QueryCache {
@@ -139,11 +132,6 @@ class QueryCache {
   put(key: string, plan: Plan) {
     this.map.set(key, plan);
   }
-}
-
-interface BranchSelection {
-  level: number;
-  select: string | null;
 }
 
 export class Engine {
@@ -215,174 +203,6 @@ export class Engine {
 
   async terminate() {
     return await this.tg.deinit();
-  }
-
-  /**
-   * Note:
-   * Each `ComputeStage` relates to a specific type/node generated from the graphql
-   * 1. `plan: ComputeStage` should be of the same cardinality as the types enumerated in the graphql
-   * 2. values are computed depending on the Runtime
-   *
-   * See `planner/mod.ts` on how the graphql is processed to build the plan
-   */
-  async compute(
-    plan: ComputeStage[],
-    policies: OperationPolicies,
-    context: Context,
-    info: Info,
-    variables: Record<string, unknown>,
-    limit: RateLimit | null,
-    verbose: boolean,
-  ): Promise<JSONValue> {
-    const ret = {};
-    const cache: Record<string, unknown[]> = {};
-    const lenses: Record<string, unknown[]> = {};
-
-    await policies.authorize(context, info, verbose);
-
-    const selections: BranchSelection[] = [];
-    const getActiveSelection = () => selections[selections.length - 1] ?? null;
-
-    for await (const stage of plan) {
-      const {
-        dependencies,
-        args,
-        effect,
-        resolver,
-        path,
-        parent,
-        batcher,
-        node,
-        rateCalls,
-        rateWeight,
-        childSelection,
-      } = stage.props;
-
-      const level = path.length;
-      const stageId = stage.id();
-      // const parentId = parent.id();
-      const parentId = parent && stageId.slice(0, stageId.lastIndexOf("."));
-
-      let activeSelection = getActiveSelection();
-      while (activeSelection != null && level < activeSelection.level) {
-        selections.pop();
-        activeSelection = getActiveSelection();
-      }
-
-      if (activeSelection != null) {
-        if (parentId == null) {
-          throw new Error("unexpected state");
-        }
-
-        if (activeSelection.level === level) {
-          // potential variant transition
-          const match = parentId?.match(VARIANT_TRANSITION_REGEX);
-          if (match == null) {
-            throw new Error(
-              "Expected parentId to match variant transition RegExp",
-            );
-          }
-          activeSelection.select = match[1];
-        }
-
-        if (cache[parentId] == null || cache[parentId].length === 0) {
-          // non matching variant -> skip stage
-          continue;
-        }
-      }
-
-      // TODO
-      const deps = dependencies
-        .filter((dep) => dep !== parent?.id())
-        .filter((dep) => !(parent && dep.startsWith(`${parent.id()}.`)))
-        .reduce((agg, dep) => ({ ...agg, [dep]: cache[dep] }), {});
-
-      //verbose && console.log("dep", stage.id(), deps);
-      const previousValues = parentId ? cache[parentId] : ([{}] as any);
-      const lens = parentId ? lenses[parentId] : ([ret] as any);
-
-      if (limit && rateCalls) {
-        limit.consume(rateWeight ?? 1);
-      }
-
-      const computeArgs = args ?? (() => ({}));
-
-      const res = await Promise.all(
-        previousValues.map((parent: any) =>
-          resolver!({
-            ...computeArgs({ variables, context, parent, effect }),
-            _: {
-              parent: parent ?? {},
-              context,
-              info,
-              variables,
-              effect,
-              ...deps,
-            },
-          })
-        ),
-      );
-
-      if (limit && !rateCalls) {
-        limit.consume(res.length * (rateWeight ?? 1));
-      }
-
-      // or no cache if no further usage
-      cache[stageId] = batcher(res);
-
-      if (
-        lens.length !== res.length
-      ) {
-        throw new Error(
-          `cannot align array results ${lens.length} != ${res.length} at stage ${stage.id()}: ${
-            JSON.stringify(lens)
-          }, ${JSON.stringify(res)}`,
-        );
-      }
-
-      const field = path[path.length - 1];
-      if (node !== "") {
-        lens.forEach((l: any, i: number) => {
-          // Objects are replaced by empty objects `{}`.
-          // It will be populated by child compute stages using values in `cache`.
-          l[field] = withEmptyObjects(res[i]);
-        });
-
-        lenses[stageId] = lens.flatMap((l: any) => {
-          return batcher([l[field]]) ?? [];
-        });
-      }
-
-      if (childSelection != null) {
-        if (activeSelection != null && activeSelection.level === level) {
-          // nested union/either: variants should have been combined
-          throw new Error();
-        }
-        const resultVariants = cache[stageId].map((r) => {
-          const variant = childSelection(r);
-          if (variant == null) {
-            throw new Error(
-              `at '${stageId}': No matcing union variant for the result`,
-            );
-          }
-          return variant;
-        });
-        for (const variant of distinct(resultVariants)) {
-          cache[`${stageId}$${variant}`] = [];
-          lenses[`${stageId}$${variant}`] = [];
-        }
-        for (const [i, variant] of resultVariants.entries()) {
-          cache[`${stageId}$${variant}`].push(cache[stageId][i]);
-          lenses[`${stageId}$${variant}`].push(lenses[stageId][i]);
-        }
-        selections.push({
-          level: level + 1,
-          select: null,
-        });
-      }
-    }
-
-    return ret;
   }
 
   materialize(
@@ -509,7 +329,7 @@ export class Engine {
       const { stages, policies, validator } = plan;
 
       //logger.info("dag:", stages);
-      const res = await this.compute(
+      const res = await ComputationEngine.compute(
         stages,
         policies,
         context,
