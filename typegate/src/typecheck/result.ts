@@ -46,16 +46,20 @@ interface QueueEntry {
   path: string;
 }
 
-function validatorName(idx: number, counter: number | null) {
-  if (counter == null) return `validate_${idx}`;
-  else return `validate_${idx}_${counter}`;
-}
-
 export class ResultValidationCompiler {
   codes: Map<string, string> = new Map();
   counter = 0;
 
   constructor(private tg: TypeGraph, private fragments: FragmentDefs) {}
+
+  private validatorName(idx: number, additionalSuffix = false) {
+    if (!additionalSuffix) {
+      return `validate_${idx}`;
+    }
+
+    this.counter += 1;
+    return `validate_${idx}_${this.counter}`;
+  }
 
   private getRootQueueEntry(opDef: OperationDefinitionNode): QueueEntry {
     const { name, operation, selectionSet } = opDef;
@@ -66,7 +70,7 @@ export class ResultValidationCompiler {
     const rootPath = name?.value ?? operation[0].toUpperCase();
     // TODO check if selection set is required or prohibited
     return {
-      name: validatorName(rootTypeIdx, ++this.counter),
+      name: this.validatorName(rootTypeIdx, true),
       typeIdx: rootTypeIdx,
       selectionSet,
       path: rootPath,
@@ -126,8 +130,10 @@ export class ResultValidationCompiler {
 
         switch (typeNode.type) {
           case "optional": {
-            const c = entry.selectionSet != null ? ++this.counter : null;
-            const itemValidatorName = validatorName(typeNode.item, c);
+            const itemValidatorName = this.validatorName(
+              typeNode.item,
+              entry.selectionSet != null,
+            );
             cg.generateOptionalValidator(typeNode, itemValidatorName);
             queue.push({
               name: itemValidatorName,
@@ -139,8 +145,10 @@ export class ResultValidationCompiler {
           }
 
           case "array": {
-            const c = entry.selectionSet != null ? ++this.counter : null;
-            const itemValidatorName = validatorName(typeNode.items, c);
+            const itemValidatorName = this.validatorName(
+              typeNode.items,
+              entry.selectionSet != null,
+            );
             cg.generateArrayValidator(typeNode, itemValidatorName);
             queue.push({
               name: itemValidatorName,
@@ -183,9 +191,9 @@ export class ResultValidationCompiler {
           }
 
           case "function": {
-            const outputValidator = validatorName(
+            const outputValidator = this.validatorName(
               typeNode.output,
-              entry.selectionSet == null ? null : ++this.counter,
+              entry.selectionSet != null,
             );
             cg.line(`${outputValidator}(value, path, errors, context)`);
             queue.push({
@@ -246,14 +254,14 @@ export class ResultValidationCompiler {
           `Selection set required at '${path}'`,
         );
       }
-      validator = validatorName(propTypeIdx, ++this.counter);
+      validator = this.validatorName(propTypeIdx, true);
     } else {
       if (selectionSet != null) {
         throw new Error(
           `Unexpected selection set at '${path}'`,
         );
       }
-      validator = validatorName(propTypeIdx, null);
+      validator = this.validatorName(propTypeIdx, false);
     }
 
     return [propName, {
@@ -326,7 +334,7 @@ export class ResultValidationCompiler {
         throw new Error(`Selection set required at '${entry.path}'`);
       }
       return variants.map((variantIdx) => ({
-        name: validatorName(variantIdx, null),
+        name: this.validatorName(variantIdx, false),
         path: entry.path,
         typeIdx: variantIdx,
       }));
@@ -359,7 +367,7 @@ export class ResultValidationCompiler {
       }
       const selectionSet = variantSelections[variantType.title];
       return {
-        name: validatorName(variantIdx, ++this.counter),
+        name: this.validatorName(variantIdx, true),
         path: entry.path,
         typeIdx: variantIdx,
         selectionSet,

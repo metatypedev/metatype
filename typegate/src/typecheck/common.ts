@@ -31,8 +31,7 @@ const formatValidators: Record<StringFormat, FormatValidator> = {
   email: validator.isEmail,
   // TODO validatorjs does not have a URI validator, so this is stricter than expected
   uri: (value: string) => {
-    console.log("validating uri", value);
-    return validator.isURL(value, {
+    return validator.isDataURI(value) || validator.isURL(value, {
       require_protocol: true,
       require_valid_protocol: false,
       require_host: true,
