@@ -50,8 +50,17 @@ interface BranchSelection {
 // contexts
 export class ComputationEngine {
   ret: Record<string, unknown> = {};
+
+  // Array of the raw values returned by the resolver of each stage.
+  // Note: Arrays are flattened and null values are filtered out by the batcher
   cache: Record<string, unknown[]> = {};
+
+  // Array of the values corresponding to the result of each stage.
+  // Objects are references to objects nested within `ret`; only containing
+  // fields that are to be included in the final result.
+  // Note: Arrays are flattened and null values are filtered out by the batcher
   lenses: Record<string, unknown[]> = {};
+
   // stack of active selections
   activeSelections: BranchSelection[] = [];
 
