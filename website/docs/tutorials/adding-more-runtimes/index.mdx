@@ -15,7 +15,7 @@ You can raise issues, suggest improvements, ask questions and share your feedbac
 
 ## Prisma runtime
 
-[Prisma](https://www.prisma.io/) is a "Next-generation Node.js and Typescript ORM" that support for PostgreSQL, MySQL/MariaDB, SQLite, MongoDB, CockroadDB and Microsoft SQL Server. It is one of the main runtimes provided by Metatype and doesn't require any additional installation.
+[Prisma](https://www.prisma.io/) is a "Next-generation Node.js and Typescript ORM" that support for PostgreSQL, MySQL/MariaDB, SQLite, MongoDB, CockroachDB and Microsoft SQL Server. It is one of the main runtimes provided by Metatype and doesn't require any additional installation.
 
 Go ahead and update `typegraph.py` with the highlighted lines below:
 
@@ -28,7 +28,7 @@ Go ahead and update `typegraph.py` with the highlighted lines below:
 A few things to note on the changes:
 
 1. You can import runtimes from `typegraph.runtime.Y` or `typegraph.providers.X.runtimes.Y` for non-core providers.
-1. The `config` method allows to specify runtime specific attributes. In this case, `id` shall be automatically set and incremented by the database.
+1. The `config` method allows specifying runtime specific attributes. In this case, `id` shall be automatically set and incremented by the database.
 1. Types get generated names unless you manually specify them. You can find the exact names in the playground documentation. Here you want to have a human friendly name as it will also be the name of the table in your database.
 1. Runtimes often come with some sugar syntax to generate types and avoid manipulating materializers directly. A corresponding declaration would have looked like this:
 
@@ -36,27 +36,25 @@ A few things to note on the changes:
   {require("./prisma-no-sugar.py").content}
 </CodeBlock>
 
-In order to use the Prisma runtime, you need to add a new environment variable to the typegate and restart the docker container. Runtimes don't take raw secrets, but instead a secret key used to look up environment variables named under the format `TG_[typegraph name]_[key]`. You also need to run a separate command to generate the database migration.
+In order to use the Prisma runtime, you need to add a new environment variable. Runtimes don't take raw secrets, but instead a secret key used to look up environment variables named under the format `TG_[typegraph name]_[key]`. You can either add it in your `metatype.yml` (recommended) or in your `compose.yml`.
 
 ```bash
-cat docker-compose.yml
-#services:
-#  ..
-#  environment:
+$ cat metatype.yml
+typegates:
+  dev:
+    # ..
+    env:
 # highlight-next-line
-#    TG_DATABASE_POSTGRES_CONN: postgres://postgres:password@postgres:5432/db
+      TG_DATABASE_POSTGRES_CONN: postgres://postgres:password@postgres:5432/db
 
-docker compose down
-docker compose up -d
-
-meta prisma dev database # you need to mention the typegraph name, in this case `database`
+$ meta dev
 ```
 
 And now, you can iteratively continue to improve your interface, running migrations and having data stored inside your database.
 
 ## GraphQL runtime
 
-You currently have a single model to describe messages sent in the chat-based app. A reasonable next step is to add a user model and make a link between the two. While you can store users in the same database, it's wiser to avoid data duplication and re-use your service for user management available at [GraphQLZero](https://graphqlzero.almansi.me) endpoint. Lets introduce the GraphQL runtime that allows remote GraphQL queries.
+You currently have a single model to describe messages sent in the chat-based app. A reasonable next step is to add a user model and make a link between the two. While you can store users in the same database, it's wiser to avoid data duplication and re-use your service for user management available at [GraphQLZero](https://graphqlzero.almansi.me) endpoint. Let's introduce the GraphQL runtime that allows remote GraphQL queries.
 
 Update `typegraph.py` with the highlighted lines below:
 
@@ -68,8 +66,8 @@ Update `typegraph.py` with the highlighted lines below:
 
 Again, a few interesting happened here:
 
-1. No need to run `meta prisma dev [typegraph name]` again. The field `user` comes from another runtime and doesn't exist in the database. The typegate will orchestrate the query execution in all runtimes and minimize the work done.
-2. The `from_parent` rule automatically fills the input type with the parent field named `uid`. The `g(·)` rule allows to make named reference to another type and avoid circular reference.
+1. No migration has been run. The field `user` comes from another runtime and doesn't exist in the database. The typegate will orchestrate the query execution in all runtimes and minimize the work done.
+2. The `from_parent` rule automatically fills the input type with the parent field named `uid`. The `g(·)` rule allows making named reference to another type and avoid circular reference.
 
 Other type enforcement rules also exists:
 
@@ -77,4 +75,4 @@ Other type enforcement rules also exists:
 - `from_context(·)` to fill the input type with content from the request context, such as JSON Web Token (JWT), etc.
 - `set(x)` to fill the input type with content `x`
 
-You should now start to see the power provided by Metatype and might wonder how to integrate it step by step with your existing systems. Writing all those types by hand is tedious and error prone. The next section will show you how to generate types from existing sources.
+You should now start to see the power provided by Metatype and might wonder how to integrate it step by step with your existing systems. Writing all those types by hand is tedious and error-prone. The next section will show you how to generate types from existing sources.

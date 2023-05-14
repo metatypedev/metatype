@@ -8,11 +8,11 @@ with TypeGraph(
     # highlight-next-line
     rate=TypeGraph.Rate(
         # highlight-next-line
-        window_limit=2000,
+        window_limit=35,
         # highlight-next-line
         window_sec=15,
         # highlight-next-line
-        query_limit=200,
+        query_limit=25,
         # highlight-next-line
         context_identifier=None,
         # highlight-next-line
@@ -28,7 +28,7 @@ with TypeGraph(
     g.expose(
         lightweight_call=random.generate(t.string(), rate_weight=1, rate_calls=True),
         medium_call=random.generate(t.string(), rate_weight=5, rate_calls=True),
-        heavy_call=random.generate(t.string(), rate_weight=20, rate_calls=True),
+        heavy_call=random.generate(t.string(), rate_weight=15, rate_calls=True),
         by_result_count=random.generate(
             t.array(t.string()),
             rate_weight=2,

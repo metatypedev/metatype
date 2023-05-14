@@ -9,9 +9,8 @@ from typegraph.utils.attrs import always
 
 @frozen
 class TemporalRuntime(Runtime):
-    """Interacts with Temporal server.
-
-    This runtime is *experimental* state and is subject to change.
+    """
+    [Documentation](https://metatype.dev/docs/reference/runtimes/temporal)
     """
 
     host: str

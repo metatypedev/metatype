@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createGraphiQLFetcher } from "@graphiql/toolkit";
 import BrowserOnly from "@docusaurus/BrowserOnly";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
@@ -59,6 +59,13 @@ function MiniQLBrowser({
   } = useDocusaurusContext();
 
   const storage = useMemo(() => new MemoryStorage(), []);
+  const codeRef = useRef<HTMLDivElement>();
+
+  useEffect(() => {
+    if (codeRef.current) {
+      codeRef.current.querySelector<HTMLButtonElement>(".clean-btn")?.click();
+    }
+  }, [codeRef.current]);
 
   const fetcher = useMemo(
     () =>
@@ -71,7 +78,7 @@ function MiniQLBrowser({
   const [mode, setMode] = useState(defaultMode);
 
   return (
-    <div className="@container miniql">
+    <div className="@container miniql mb-5">
       {defaultMode ? (
         <ChoicePicker
           name="mode"
@@ -95,9 +102,12 @@ function MiniQLBrowser({
           } gap-2 w-full order-first`}
         >
           {!defaultMode || mode === "typegraph" ? (
-            <div className=" bg-slate-100 rounded-lg relative">
+            <div
+              className=" bg-slate-100 rounded-lg flex flex-col"
+              ref={codeRef}
+            >
               {codeFileUrl ? (
-                <div className="absolute p-2 text-xs font-light">
+                <div className="p-2 text-xs font-light">
                   See/edit full code on{" "}
                   <a
                     href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
@@ -107,7 +117,7 @@ function MiniQLBrowser({
                 </div>
               ) : null}
               {code ? (
-                <CodeBlock language={codeLanguage} wrap className="pt-7 h-full">
+                <CodeBlock language={codeLanguage} wrap className="flex-1">
                   {code}
                 </CodeBlock>
               ) : null}

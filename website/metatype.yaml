@@ -4,10 +4,11 @@ typegates:
     username: admin
     password: password
     env:
-      TG_AUTH_GITHUB_CLIENT_ID: "fake"
-      TG_AUTH_GITHUB_CLIENT_SECRET: "fake"
-      TG_AUTH_BASIC_ADMIN: "pass"
-      TG_AUTH_KEYCLOAK_JWT: '{"kty":"EC","crv":"P-384","alg":"ES384","x":"YGwqY0bEGT451RGYwRAKOe4zbpdzQfvqSONWnsHMKW34ReXw0vqPLgG8T0lxqCJg","y":"rWMDwQXDyaUGwg5oXdNNGch5hPufMQIpXQOaoqfAwGYRF_-fRfHBxtiSw52ZGBFP","key_ops":["verify"],"ext":true}'
+      TG_AUTHENTICATION_GITHUB_CLIENT_ID: "fake"
+      TG_AUTHENTICATION_GITHUB_CLIENT_SECRET: "fake"
+      TG_AUTHENTICATION_BASIC_ADMIN: "pass"
+      TG_AUTHENTICATION_KEYCLOAK_JWT: '{"kty":"EC","crv":"P-384","alg":"ES384","x":"YGwqY0bEGT451RGYwRAKOe4zbpdzQfvqSONWnsHMKW34ReXw0vqPLgG8T0lxqCJg","y":"rWMDwQXDyaUGwg5oXdNNGch5hPufMQIpXQOaoqfAwGYRF_-fRfHBxtiSw52ZGBFP","key_ops":["verify"],"ext":true}'
+      TG_AUTHENTICATION_CUSTOM_JWT: "RUkrn38oZbSYgDkuXJX7JdjWK"
       TG_DOCS_SENDINBLUE_KEY: "fake"
       TG_HOMEPAGE_GITHUB_CLIENT_ID: "fake"
       TG_HOMEPAGE_GITHUB_CLIENT_SECRET: "fake"
@@ -30,10 +31,11 @@ typegates:
     url: https://demo.metatype.dev
     username: admin
     env:
-      TG_AUTH_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
-      TG_AUTH_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
-      TG_AUTH_BASIC_ADMIN: "pass"
-      TG_AUTH_KEYCLOAK_JWT: '{"kty":"EC","crv":"P-384","alg":"ES384","x":"YGwqY0bEGT451RGYwRAKOe4zbpdzQfvqSONWnsHMKW34ReXw0vqPLgG8T0lxqCJg","y":"rWMDwQXDyaUGwg5oXdNNGch5hPufMQIpXQOaoqfAwGYRF_-fRfHBxtiSw52ZGBFP","key_ops":["verify"],"ext":true}'
+      TG_AUTHENTICATION_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+      TG_AUTHENTICATION_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
+      TG_AUTHENTICATION_BASIC_ADMIN: "pass"
+      TG_AUTHENTICATION_KEYCLOAK_JWT: '{"kty":"EC","crv":"P-384","alg":"ES384","x":"YGwqY0bEGT451RGYwRAKOe4zbpdzQfvqSONWnsHMKW34ReXw0vqPLgG8T0lxqCJg","y":"rWMDwQXDyaUGwg5oXdNNGch5hPufMQIpXQOaoqfAwGYRF_-fRfHBxtiSw52ZGBFP","key_ops":["verify"],"ext":true}'
+      TG_AUTHENTICATION_CUSTOM_JWT: "RUkrn38oZbSYgDkuXJX7JdjWK"
       TG_DOCS_SENDINBLUE_KEY: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DOCS_SENDINBLUE_KEY
       TG_HOMEPAGE_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
       TG_HOMEPAGE_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET

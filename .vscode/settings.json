@@ -49,6 +49,7 @@
     "prisma",
     "typegate",
     "typegates",
-    "typegraphs"
+    "typegraphs",
+    "wasmedge"
   ],
 }

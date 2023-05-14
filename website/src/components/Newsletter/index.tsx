@@ -25,7 +25,7 @@ export function useClient(gate: string) {
         uri: `${tgUrl}/${gate}`,
         cache: new InMemoryCache(),
       }),
-    [tgUrl],
+    [tgUrl]
   );
 
   return client;
@@ -44,7 +44,7 @@ export default function Newsletter() {
         variables: { email },
       });
       setMessage(
-        data?.newsletterSignUp?.id ? "Success!" : "Already subscribed!",
+        data?.newsletterSignUp?.id ? "Success!" : "Already subscribed!"
       );
     }
   };
@@ -54,16 +54,16 @@ export default function Newsletter() {
   }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit} className="inline-block rounded-lg overflow-clip">
       <input
         type="email"
-        className="p-1 border border-solid font-sans border-gray-300 rounded-sm text-base"
+        className="px-2 py-1 font-sans bg-slate-100 border-none text-base"
         value={email}
         onChange={(event) => setEmail(event.target.value)}
       />
       <input
         type="submit"
-        className="ml-2 p-1 border border-solid font-sans border-gray-300 rounded-sm cursor-pointer text-base bg-transparent"
+        className="py-1 px-2 border-none cursor-pointer text-base bg-transparent bg-metared text-white"
         value="Submit"
       />
     </form>

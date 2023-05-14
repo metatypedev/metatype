@@ -163,7 +163,7 @@ function Reusability(): JSX.Element {
 
 const featureList = [
   {
-    title: "Compose type safe API blocks",
+    title: "Compose type safe APIs",
     svg: require("@site/static/icons/compose-api-blocks.svg").default,
     description: (
       <>
@@ -408,7 +408,7 @@ function Landscape(): JSX.Element {
           <strong>interoperable</strong> with your existing (legacy) systems.
         </p>
       </div>
-      <div className="flex justify-center mt-8">
+      <div className="flex justify-center mt-8 overflow-auto">
         <table className="table-fixed text-center" id="landscape">
           <tbody>
             <tr className="border-none">

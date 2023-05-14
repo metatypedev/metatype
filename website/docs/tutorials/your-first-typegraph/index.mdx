@@ -33,13 +33,13 @@ The typegraph package is a Python package that allows to describe a full typegra
 
 1. _what_ data types exists → value, quantifier, consolidator **types**
 2. _how_ these data get transformed → function types and **materializers** that specify the transformation
-3. _where_ these data and transformations run → **runtimes** metadata that describe materializers operate
+3. _where_ these data and transformations run → **runtimes** that describe materializers operate
 4. _who_ can access them → a special case of function types named **policies** that control accesses
 
 This tutorial will cover these abstractions concept by concept and show how to use them by example.
 
 :::info Code sample are interactive
-You can interact with most of the typegraph in the documentation. Some parts might be voluntary hidden and full source can be found on GitHub. Click on "edit this page" to jump there and look into the parent folder.
+You can interact with most of the typegraph in the documentation. Press command/ctrl + enter to submit the selected query or use the "play" button. Some parts might be voluntarily hidden and full source can be found by clicking on the link.
 :::
 
 A complete typegraph definition may look like the following:
@@ -50,7 +50,7 @@ A complete typegraph definition may look like the following:
   query={require("./query.graphql")}
 />
 
-To start with the chat app design, copy the typegraph into a file named `typegraph.py` next to your `docker-compose.yml` file.
+To start with the chat app design, copy the typegraph into the file named `example.py` next to your `compose.yml` file.
 
 ## The meta CLI
 
@@ -70,19 +70,25 @@ typegraphs:
 
 At this point, you should have everything ready for your first typegraph. Run the following command in your terminal:
 
-```bash
-ls -1a
-# ./
-# ../
-# .venv/
-# docker-compose.yml
-# metatype.yml
-# typegraph.py
+```shell
+$ ls -1a
+./
+../
+.venv/
+api/
+compose.yml
+metatype.yml
+pyproject.toml
 
-meta dev
-# Loaded 1 typegraph from ./typegraph.py:
-#  → Pushing typegraph first-typegraph...
-#  ✓ Success!
+$ ls -1a api
+./
+../
+example.py
+
+$ meta dev
+Loaded 1 typegraph from ./api/example.py:
+  → Pushing typegraph first-typegraph...
+  ✓ Success!
 ```
 
 You can now open [http://localhost:7890/first-typegraph](http://localhost:7890/first-typegraph) in your browser. The CLI will automatically watch for changes in the typegraph and reload the typegraph. You should see a GraphQL playground with a query editor and some auto-generated documentation clicking the top-left menu item. **Congrats**, you can now to play with your first typegraph!

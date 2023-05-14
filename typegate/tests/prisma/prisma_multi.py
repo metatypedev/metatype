@@ -40,7 +40,7 @@ with TypeGraph("prisma") as g:
         deleteOneRecord=db.delete(record).add_policy(public),
         updateOneRecord=db.update(record).add_policy(public),
         createUser=db.create(users).add_policy(public),
-        findUniqueUser=db.find(users).add_policy(public),
+        findUniqueUser=db.find_unique(users).add_policy(public),
         findMessages=db.find_many(messages).add_policy(public),
         updateUser=db.update(users).add_policy(public),
         deleteMessages=db.delete_many(messages).add_policy(public),

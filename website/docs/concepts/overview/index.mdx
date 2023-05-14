@@ -14,11 +14,11 @@ For a hands-on introduction, head over to the [quick-start](/docs/tutorials/gett
 
 ## Why does Metatype exist?
 
-As products/projects evolve and grow, the technological stack becomes a challenging hot spot where initiatives collides and efficiency becomes a struggle. While deploying new features, all developer teams spend a non-negligible amount of time on low-value added tasks like CRUD generation, data validation, interoperability with (legacy) systems, authentication or authorization. This leaves little time under business constraints for designing great interfaces and experimenting to find the best technical solution, increasing time to delivery and weakening innovation.
+As products evolve and grow, the technological stack becomes a challenging hot spot where initiatives collides and efficiency becomes a struggle. While deploying new features, all developer teams spend a non-negligible amount of time on low-value added tasks like CRUD generation, data validation, interoperability with (legacy) systems, authentication and authorization. This leaves little time (under business constraints) to design great interfaces and experiment with the best technical solution, eventually increasing the time to delivery and weakening the innovation process.
 
-Metatype's vision is to enable everyone to compose their data, anywhere. By helping developer the re-use of data and existing systems, it enables teams to focus on what matters: their expert knowledge in business logic, modelling and technologies. Metatype handle the complex layers for them and orchestrate systems into modular API blocks, making it easy to understand and remaining innovative for the next iterations.
+Metatype's vision is to enable everyone to build modular API with as little effort as possible. By helping developers to re-use existing systems and APIs, it enables teams to focus on what matters: their expert knowledge in business logic, modelling and technologies. Metatype manage the complex layers for them, making them productive and innovation-friendly for the next iterations.
 
-In short, Metatype promotes standardized and composable solutions to the following challenges:
+In short, Metatype promotes standardized and composable API solutions to address the following challenges:
 
 - make system interfaces accessible and easy to understand for everyone (discoverability)
 - embrace iterative approaches and cut time to deployment in half (autonomy)
@@ -27,15 +27,15 @@ In short, Metatype promotes standardized and composable solutions to the followi
 
 ## How does Metatype work?
 
-When developing a feature, the classical approach is to define what data will be at play, how to transform them, where the execution shall take place and who should be authorized. Instead, Metatype define an abstraction for each of those steps and put the emphasis on composing pre-defined API blocks or defining re-usable ones when there is no existing solution.
+When developing a feature, the classical approach is to define what data will be at play, how to transform them, where the execution shall take place and who should be authorized. Instead, Metatype define an abstraction for each of those steps and put the emphasis on composing pre-defined APIs or defining re-usable ones when there is no existing solution.
 
-|                       | Classical approach                       | Metatype's approach                                                                       |
-| --------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------- |
-| What (data)           | fixed response defined by the controller | API clients selects what they need from [types](/docs/concepts/typegraph#types)           |
-| How (transformations) | ad-hoc code logic                        | compose data with interchangeable [materializers](/docs/concepts/typegraph#materializers) |
-| Where (execution)     | 1 code base + 1 database                 | orchestrate the request across multiple [runtimes](/docs/concepts/typegraph#runtimes)     |
-| Who (authentication)  | hard-coded rules or system               | request context based and controlled by [policies](/docs/concepts/typegraph#policies)     |
-| When (event)          | request arrival                          | based on [triggers](/docs/concepts/typegraph#triggers)                                    |
+|                       | Classical approach                  | Metatype's approach                                                                        |
+| --------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ |
+| What (data)           | fixed response defined by the logic | API clients selects what they need from [types](/docs/concepts/typegraph#types)            |
+| How (transformations) | ad-hoc code logic                   | composed data with interchangeable [materializers](/docs/concepts/typegraph#materializers) |
+| Where (execution)     | 1 code base + 1 database            | orchestrate the request across multiple [runtimes](/docs/concepts/typegraph#runtimes)      |
+| Who (authentication)  | hard-coded rules or system          | request context based and controlled by [policies](/docs/concepts/typegraph#policies)      |
+| When (event)          | request arrival                     | based on [triggers](/docs/concepts/typegraph#triggers)                                     |
 
 ## What's exactly Metatype?
 

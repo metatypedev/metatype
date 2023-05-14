@@ -39,7 +39,7 @@ const config = {
       {
         id: "typegate",
         schema: "http://localhost:7890/typegate",
-        routeBasePath: "/docs/reference/typegate/typegate",
+        routeBasePath: "/docs/reference/typegate/internal-api/typegate",
       },
     ],
     [
@@ -47,7 +47,7 @@ const config = {
       {
         id: "prisma-migration",
         schema: "http://localhost:7890/typegate/prisma_migration",
-        routeBasePath: "/docs/reference/typegate/prisma-migration",
+        routeBasePath: "/docs/reference/typegate/internal-api/prisma-migration",
       },
     ],
     [
