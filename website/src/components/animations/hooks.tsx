@@ -21,8 +21,10 @@ export function useVirtualScroll(
     }
 
     // safari does not scrollY on page load, manually scroll to last position
+    // sometimes there is a race condition between this and the first scroll event
     // setting to null and initialize with first scroll event is a workaround
     let virtualScroll: number | null = null;
+    scrollListner();
 
     function unvirtualize(vscroll: number) {
       if (vscroll < min) {
@@ -69,14 +71,14 @@ export function useVirtualScroll(
         const simulatedScroll = unvirtualize(virtualScroll);
 
         /*
-        console.log(
-          `${min}-${max}-${speedRatio}`,
-          realScroll,
-          virtualScroll,
-          simulatedScroll,
-          Math.round(progress(simulatedScroll) * 100)
-        );
-        */
+          console.log(
+            `${min}-${max}-${speedRatio}`,
+            realScroll,
+            virtualScroll,
+            simulatedScroll,
+            Math.round(progress(simulatedScroll) * 100)
+            );
+            */
 
         window.scrollTo({ top: simulatedScroll });
         return true;

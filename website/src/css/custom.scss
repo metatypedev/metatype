@@ -41,9 +41,16 @@
   .miniql {
     @apply text-sm;
 
-    .theme-code-block,
-    .prism-code {
-      @apply bg-slate-100;
+    .theme-code-block {
+      @apply bg-slate-100 shadow-none;
+
+      > div {
+        @apply h-full;
+      }
+
+      .prism-code {
+        @apply bg-slate-100 h-full;
+      }
     }
 
     .theme-code-block {

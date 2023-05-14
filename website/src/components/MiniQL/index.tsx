@@ -73,14 +73,12 @@ function MiniQLBrowser({
   return (
     <div className="@container miniql">
       {defaultMode ? (
-        <div className="mb-2">
-          <ChoicePicker
-            name="mode"
-            choices={modes}
-            choice={mode}
-            onChange={setMode}
-          />
-        </div>
+        <ChoicePicker
+          name="mode"
+          choices={modes}
+          choice={mode}
+          onChange={setMode}
+        />
       ) : null}
 
       <GraphiQLProvider

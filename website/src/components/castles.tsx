@@ -475,7 +475,15 @@ export function ModulableCastle() {
               size={size}
             />
 
-            <Image x={col1 - 50} y={90} width={100} height={120} image={logo} />
+            <Animated opacity={oneFadeIn}>
+              <Image
+                x={col1 - 50}
+                y={90}
+                width={100}
+                height={120}
+                image={logo}
+              />
+            </Animated>
 
             <Animated opacity={twoFadeOut}>
               <TextArrow
@@ -675,7 +683,7 @@ export function ReusableCastle() {
                   col1 + size * 6,
                   topMargin + blockMargin * 2 + blockHeight(size, 2) * 0 + 5,
                 ]}
-                text="chop services"
+                text="split services"
                 size={20}
               />
             </Animated>

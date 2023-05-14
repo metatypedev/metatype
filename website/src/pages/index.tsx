@@ -99,8 +99,8 @@ function Stability(): JSX.Element {
         </h2>
         <p>
           Typegraphs are programmable <strong>virtual graphs</strong> describing
-          all the components of your stack. They enable you to compose
-          databases, APIs and business logic in a type safe manner.
+          all the components of your stack. They enable you to compose APIs,
+          storage and business logic in a type safe manner.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -404,9 +404,8 @@ function Landscape(): JSX.Element {
         </h2>
         <p className="text-xl">
           Metatype fills a gap in the tech landscape by introducing a new way to
-          build high-performance APIs based on the{" "}
-          <strong>interoperability</strong> with your existing (legacy) data
-          systems.
+          build fast and developper-friendly APIs that are{" "}
+          <strong>interoperable</strong> with your existing (legacy) systems.
         </p>
       </div>
       <div className="flex justify-center mt-8">
@@ -434,7 +433,9 @@ function Landscape(): JSX.Element {
               <td className="bg-slate-100">
                 <strong>Metatype</strong>
                 <br />
-                <small>entity query engine for heterogeneous systems</small>
+                <small>
+                  query engine for data entities in evolving systems
+                </small>
               </td>
               <td>
                 Trino
@@ -453,16 +454,12 @@ function Landscape(): JSX.Element {
               <td>
                 Temporal
                 <br />
-                <small>
-                  stateful workflow engine for durable data operations
-                </small>
+                <small>workflow orchestration engine for data operations</small>
               </td>
               <td>
                 Spark
                 <br />
-                <small>
-                  large-scale batch/streaming data processing engine
-                </small>
+                <small>batch/streaming engine for large data processing</small>
               </td>
             </tr>
           </tbody>
