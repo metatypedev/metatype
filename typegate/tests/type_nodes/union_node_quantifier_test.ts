@@ -23,11 +23,21 @@ test(
               message
               type
               phone {
-                name
-                metadatas {
-                  label
-                  content
-                  source
+                ... on BasicPhone {
+                  name
+                  metadatas {
+                    label
+                    content
+                    source
+                  }
+                }
+                ... on SmartPhone {
+                  name
+                  metadatas {
+                    label
+                    content
+                    source
+                  }
                 }
               }
             }
@@ -70,8 +80,8 @@ test(
             message
             type
             phone {
-              name
-              os
+              ... on SmartPhone { name os }
+              ... on BasicPhone { name os }
             }
           }
         }

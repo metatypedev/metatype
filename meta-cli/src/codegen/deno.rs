@@ -483,7 +483,7 @@ mod tests {
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
         std::env::set_current_dir(&test_folder)?;
-        trace!("Test folder: {test_folder:?}");
+        trace!("Test folder: {:?}", test_folder.as_path());
         let tests = fs::read_dir(&test_folder).unwrap();
         let config = Config::default_in(".");
         let config = Arc::new(config);

@@ -54,6 +54,7 @@ export async function shell(
   cmd: string[],
   options: MetaOptions = {},
 ): Promise<string> {
+  console.log("shell", cmd);
   const { stdin = null } = options;
   const p = new Deno.Command(cmd[0], {
     cwd: testDir,

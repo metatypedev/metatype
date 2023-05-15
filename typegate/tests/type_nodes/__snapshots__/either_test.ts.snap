@@ -44,22 +44,22 @@ snapshot[`Either type 2`] = `
         possibleTypes: [
           {
             kind: "OBJECT",
-            name: "object_16",
+            name: "SuccessTransaction",
           },
           {
             kind: "OBJECT",
-            name: "object_18",
+            name: "FailedTransaction",
           },
         ],
       },
       {
         kind: "OBJECT",
-        name: "object_16",
+        name: "SuccessTransaction",
         possibleTypes: null,
       },
       {
         kind: "OBJECT",
-        name: "object_18",
+        name: "FailedTransaction",
         possibleTypes: null,
       },
       {

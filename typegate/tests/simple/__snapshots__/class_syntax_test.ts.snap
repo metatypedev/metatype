@@ -111,7 +111,7 @@ snapshot[`Class Syntax 1`] = `
           },
         ],
         kind: "OBJECT",
-        name: "object_6",
+        name: "Info",
       },
       {
         fields: [
@@ -176,7 +176,7 @@ snapshot[`Class Syntax 1`] = `
       {
         fields: null,
         kind: "INPUT_OBJECT",
-        name: "object_6Inp",
+        name: "InfoInp",
       },
       {
         fields: null,

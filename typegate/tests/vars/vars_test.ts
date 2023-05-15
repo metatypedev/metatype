@@ -64,7 +64,7 @@ test("GraphQL variable types", async (t) => {
         first: 2,
         second: "3",
       })
-      .expectErrorContains("variable second")
+      .expectErrorContains("at <value>.second: expected number, got string")
       .on(e);
   });
 
@@ -77,7 +77,7 @@ test("GraphQL variable types", async (t) => {
       .withVars({
         numbers: [1, 4, "5"],
       })
-      .expectErrorContains("variable numbers[2]")
+      .expectErrorContains("at <value>.numbers[2]: expected number")
       .on(e);
 
     await gql`
@@ -90,7 +90,7 @@ test("GraphQL variable types", async (t) => {
           level2: 2,
         },
       })
-      .expectErrorContains("variable val.level2")
+      .expectErrorContains("at <value>.level1.level2: expected an array")
       .on(e);
 
     await gql`
@@ -103,7 +103,7 @@ test("GraphQL variable types", async (t) => {
           level2: ["hello", ["world"]],
         },
       })
-      .expectErrorContains("variable val.level2[1]")
+      .expectErrorContains("at <value>.level1.level2[1]: expected a string")
       .on(e);
   });
 });

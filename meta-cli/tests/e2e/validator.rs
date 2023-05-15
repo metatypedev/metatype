@@ -5,7 +5,7 @@ use std::process::Command;
 #[test]
 fn test_invalid_injections() {
     let status = Command::new("cargo")
-        .args(&["build", "-p", "meta-cli", "--quiet"])
+        .args(["build", "-p", "meta-cli", "--quiet"])
         .status()
         .expect("failed to execute build for meta-cli");
     assert!(status.success(), "`cargo build -p meta-cli` failed");
@@ -13,7 +13,7 @@ fn test_invalid_injections() {
     let root = project_root::get_project_root().unwrap();
     let bin = root.join("target/debug/meta");
     let output = Command::new(bin)
-        .args(&["serialize", "-f", "tests/e2e/typegraphs/validator.py"])
+        .args(["serialize", "-f", "tests/e2e/typegraphs/validator.py"])
         .env("RUST_LOG", "error")
         .output()
         .expect("failed to execute process");
