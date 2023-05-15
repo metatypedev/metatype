@@ -203,9 +203,7 @@ impl Deploy<DefaultModeData> {
                 info!("Pushing typegraph {tg_name}...");
                 match self.push_config.push(&tg).await {
                     Ok(res) => {
-                        if res.success() {
-                            info!("{} Successfully pushed typegraph {tg_name}.", "✓".green());
-                        } else {
+                        if !res.success() {
                             error!("Some errors occured while pushing the typegraph {tg_name}");
                             err_count += 1;
                         }
@@ -348,6 +346,7 @@ where
             };
         }
         if res.success() {
+            info!("{} Successfully pushed typegraph {name}.", "✓".green());
             HandlePushResult::Success
         } else {
             HandlePushResult::Failure
