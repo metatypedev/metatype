@@ -160,10 +160,8 @@ impl Typegraph {
                     },
                     data: data.clone(),
                 };
-                let tg = Typegraph {
-                    types: vec![new_type],
-                    ..self.clone()
-                };
+                let mut tg = self.clone();
+                tg.types[0] = new_type;
                 Ok(tg)
             }
             _ => bail!("invalid variant for root type"),

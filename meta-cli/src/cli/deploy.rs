@@ -133,10 +133,10 @@ pub struct Deploy<T = DefaultModeData> {
 }
 
 impl Deploy<DefaultModeData> {
-    pub async fn new(deploy: &DeploySubcommand, args: GenArgs) -> Result<Self> {
+    pub async fn new(deploy: &DeploySubcommand, args: &GenArgs) -> Result<Self> {
         let dir = args.dir()?;
         ensure_venv(&dir)?;
-        let config_path = args.config;
+        let config_path = args.config.clone();
         let config = Arc::new(Config::load_or_find(config_path, &dir)?);
 
         let options = deploy.options.clone();
@@ -203,9 +203,7 @@ impl Deploy<DefaultModeData> {
                 info!("Pushing typegraph {tg_name}...");
                 match self.push_config.push(&tg).await {
                     Ok(res) => {
-                        if res.success() {
-                            info!("{} Successfully pushed typegraph {tg_name}.", "✓".green());
-                        } else {
+                        if !res.success() {
                             error!("Some errors occured while pushing the typegraph {tg_name}");
                             err_count += 1;
                         }
@@ -348,6 +346,7 @@ where
             };
         }
         if res.success() {
+            info!("{} Successfully pushed typegraph {name}.", "✓".green());
             HandlePushResult::Success
         } else {
             HandlePushResult::Failure
@@ -355,10 +354,12 @@ where
     }
 }
 
+struct WatchModeRestart(bool);
+
 #[async_trait]
 impl Action for DeploySubcommand {
     async fn run(&self, args: GenArgs) -> Result<()> {
-        let deploy = Deploy::new(self, args).await?;
+        let deploy = Deploy::new(self, &args).await?;
 
         if !self.options.allow_dirty {
             let repo = git2::Repository::discover(&deploy.config.base_dir).ok();
@@ -378,7 +379,14 @@ impl Action for DeploySubcommand {
         }
 
         if deploy.options.watch {
-            deploy.watch_mode()?.run(self.file.as_ref()).await?;
+            let mut deploy = deploy;
+            loop {
+                let restart = deploy.watch_mode()?.run(self.file.as_ref()).await?;
+                if !restart.0 {
+                    break;
+                }
+                deploy = Deploy::new(self, &args).await?;
+            }
         } else {
             deploy.run(self.file.as_ref()).await?;
         }
@@ -412,20 +420,12 @@ impl Deploy<WatchModeData> {
         Ok(())
     }
 
-    async fn reset(&mut self) -> Result<()> {
-        self.mode_data = WatchModeData::new(&self.base_dir, &self.config)?;
-        self.reload_all_from_discovery().await?;
-
-        Ok(())
-    }
-
-    async fn file_modified(&mut self, path: PathBuf) -> Result<()> {
+    async fn file_modified(&mut self, path: PathBuf) -> Result<WatchModeRestart> {
         if &path == self.config.path.as_ref().unwrap() {
             warn!("Metatype config file has been modified.");
             warn!("Reloading everything...");
             // reload everything
-            self.reset().await?;
-            return Ok(());
+            return Ok(WatchModeRestart(true));
         }
 
         let w = &mut self.mode_data;
@@ -439,7 +439,7 @@ impl Deploy<WatchModeData> {
                 info!("- Reloading dependency: {rel_path:?}");
                 w.queue.push(path);
             }
-            return Ok(());
+            return Ok(WatchModeRestart(false));
         }
 
         if !w.file_filter.is_excluded(&path) {
@@ -448,7 +448,7 @@ impl Deploy<WatchModeData> {
             w.retry_manager.cancell_all(&path);
             w.queue.push(path);
         }
-        Ok(())
+        Ok(WatchModeRestart(false))
     }
 
     fn file_deleted(&mut self, path: PathBuf) {
@@ -535,7 +535,7 @@ impl Deploy<WatchModeData> {
         Ok(())
     }
 
-    async fn run(mut self, file: Option<&PathBuf>) -> Result<()> {
+    async fn run(mut self, file: Option<&PathBuf>) -> Result<WatchModeRestart> {
         if let Some(file) = &file {
             error!("Cannot enter watch mode with a single file {:?}:", file);
             error!("Please re-run without the --file option.");
@@ -555,7 +555,10 @@ impl Deploy<WatchModeData> {
 
                 Some(path) = self.mode_data.watcher.next() => {
                     if path.try_exists()? {
-                        self.file_modified(path).await?;
+                        let restart = self.file_modified(path).await?;
+                        if restart.0 {
+                            return Ok(restart);
+                        }
                     }
                     else {
                         self.file_deleted(path);
