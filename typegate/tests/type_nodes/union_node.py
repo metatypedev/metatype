@@ -79,6 +79,25 @@ with TypeGraph("union") as g:
         ]
     ).named("NestedUnions")
 
+    multilevel_union = t.union(
+        [
+            t.struct({"a": t.string()}).named("Ua"),
+            t.struct({"b": t.string()}).named("Ub"),
+            t.union(
+                [
+                    t.struct({"c": t.string()}).named("Uc"),
+                    t.struct({"d": t.string()}).named("Ud"),
+                    t.either(
+                        [
+                            t.struct({"e": t.string()}).named("Ue"),
+                            t.struct({"f": t.string()}).named("Uf"),
+                        ]
+                    ),
+                ]
+            ),
+        ]
+    ).named("MultilevelUnion")
+
     scalar_union = t.union([t.boolean(), t.integer(), t.string()]).named("ScalarUnion")
 
     public = policies.public()
@@ -93,6 +112,11 @@ with TypeGraph("union") as g:
         scalar=t.func(
             t.struct({"inp": t.array(scalar_union)}),
             t.array(scalar_union),
+            PureFunMat("({ inp }) => inp"),
+        ),
+        multilevel=t.func(
+            t.struct({"inp": t.array(multilevel_union)}),
+            t.array(multilevel_union),
             PureFunMat("({ inp }) => inp"),
         ),
         default_policy=public,

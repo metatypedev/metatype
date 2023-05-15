@@ -173,6 +173,86 @@ snapshot[`Union type 2`] = `
         ],
       },
       {
+        kind: "UNION",
+        name: "MultilevelUnionOut",
+        possibleTypes: [
+          {
+            kind: "OBJECT",
+            name: "Ua",
+          },
+          {
+            kind: "OBJECT",
+            name: "Ub",
+          },
+          {
+            kind: "UNION",
+            name: "union_38Out",
+          },
+        ],
+      },
+      {
+        kind: "OBJECT",
+        name: "Ua",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "Ub",
+        possibleTypes: null,
+      },
+      {
+        kind: "UNION",
+        name: "union_38Out",
+        possibleTypes: [
+          {
+            kind: "OBJECT",
+            name: "Uc",
+          },
+          {
+            kind: "OBJECT",
+            name: "Ud",
+          },
+          {
+            kind: "UNION",
+            name: "either_37Out",
+          },
+        ],
+      },
+      {
+        kind: "OBJECT",
+        name: "Uc",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "Ud",
+        possibleTypes: null,
+      },
+      {
+        kind: "UNION",
+        name: "either_37Out",
+        possibleTypes: [
+          {
+            kind: "OBJECT",
+            name: "Ue",
+          },
+          {
+            kind: "OBJECT",
+            name: "Uf",
+          },
+        ],
+      },
+      {
+        kind: "OBJECT",
+        name: "Ue",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "Uf",
+        possibleTypes: null,
+      },
+      {
         kind: "SCALAR",
         name: "ColorIn",
         possibleTypes: null,
@@ -240,6 +320,51 @@ snapshot[`Union type 2`] = `
       {
         kind: "SCALAR",
         name: "ScalarUnionIn",
+        possibleTypes: null,
+      },
+      {
+        kind: "SCALAR",
+        name: "MultilevelUnionIn",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "UaInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "UbInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "SCALAR",
+        name: "union_38In",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "UcInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "UdInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "SCALAR",
+        name: "either_37In",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "UeInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "UfInp",
         possibleTypes: null,
       },
     ],

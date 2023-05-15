@@ -18,6 +18,10 @@ import {
   Validator,
   ValidatorFn,
 } from "./common.ts";
+import {
+  flattenUnionVariants,
+  getNestedUnionVariants,
+} from "./matching_variant.ts";
 
 export function generateValidator(
   tg: TypeGraph,
@@ -322,8 +326,13 @@ export class ResultValidationCompiler {
     variants: number[],
     entry: QueueEntry,
   ): QueueEntry[] {
+    const multilevelVariants = flattenUnionVariants(this.tg, variants);
     if (entry.selectionSet == null) {
-      if (variants.some((variantIdx) => !isScalar(this.tg.type(variantIdx)))) {
+      if (
+        multilevelVariants.some((variantIdx) =>
+          !isScalar(this.tg.type(variantIdx))
+        )
+      ) {
         const hasScalar = variants.some((idx) => isScalar(this.tg.type(idx)));
         if (hasScalar) {
           // TODO: AOT validation for the typegraph
@@ -340,39 +349,82 @@ export class ResultValidationCompiler {
       }));
     }
 
-    if (variants.some((idx) => this.tg.type(idx).type !== Type.OBJECT)) {
-      // TODO AOT validation; on typegraph validation
+    if (
+      multilevelVariants.some((idx) => this.tg.type(idx).type !== Type.OBJECT)
+    ) {
       throw new Error(
         `Either/union variants must be either all scalars or all objects at '${entry.path}'`,
       );
     }
 
-    const variantSelections = Object.fromEntries(
+    const variantSelections = new Map(
       entry.selectionSet.selections.map((node) => {
         if (node.kind !== Kind.INLINE_FRAGMENT || node.typeCondition == null) {
           throw new Error(
             `at '${entry.path}': selection nodes must be inline fragments with type condition`,
           );
         }
-        return [node.typeCondition.name.value, node.selectionSet];
+        return [node.typeCondition.name.value, node];
       }),
     );
 
-    return variants.map((variantIdx) => {
-      const variantType = this.tg.type(variantIdx, Type.OBJECT);
-      if (!Object.hasOwn(variantSelections, variantType.title)) {
-        throw new Error(
-          `at '${entry.path}': variant type '${variantType.title}' must be selected with type condition inline fragment`,
-        );
+    const entries: QueueEntry[] = variants.map((variantIdx) => {
+      const variantType = this.tg.type(variantIdx);
+      switch (variantType.type) {
+        case Type.OBJECT: {
+          const typeName = variantType.title;
+          const selectionSet = variantSelections.get(typeName)?.selectionSet;
+          if (selectionSet == null) {
+            throw new Error(
+              `at '${entry.path}': variant type '${typeName}' must be selected with type condition inline fragment`,
+            );
+          }
+          variantSelections.delete(typeName);
+          return {
+            name: this.validatorName(variantIdx, true),
+            path: entry.path,
+            typeIdx: variantIdx,
+            selectionSet,
+          };
+        }
+
+        case Type.UNION:
+        case Type.EITHER: {
+          const variantIndices = getNestedUnionVariants(this.tg, variantType);
+          return {
+            name: this.validatorName(variantIdx, true),
+            path: entry.path,
+            typeIdx: variantIdx,
+            selectionSet: {
+              kind: Kind.SELECTION_SET,
+              selections: variantIndices.map((idx) => {
+                const typeNode = this.tg.type(idx);
+                const typeName = typeNode.title;
+                const node = variantSelections.get(typeName);
+                if (node == null) {
+                  throw new Error(
+                    `at '${entry.path}': variant type '${typeName}' must be selected with type condition inline fragment`,
+                  );
+                }
+                variantSelections.delete(typeName);
+                return node;
+              }),
+            },
+          };
+        }
+
+        default:
+          throw new Error();
       }
-      const selectionSet = variantSelections[variantType.title];
-      return {
-        name: this.validatorName(variantIdx, true),
-        path: entry.path,
-        typeIdx: variantIdx,
-        selectionSet,
-      };
     });
+
+    if (variantSelections.size > 0) {
+      const names = [...variantSelections.keys()].join(", ");
+      throw new Error(
+        `at '${entry.path}': Unexpected type conditions: ${names}`,
+      );
+    }
+    return entries;
   }
 
   private hasNestedObjectResult(typeIdx: number): boolean {

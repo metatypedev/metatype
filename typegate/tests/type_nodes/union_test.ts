@@ -213,13 +213,48 @@ test("nested unions", async (t) => {
   });
 });
 
+test("multilevel unions", async (t) => {
+  const e = await t.pythonFile("type_nodes/union_node.py");
+
+  await t.should("success", async () => {
+    const data: JSONValue = [
+      { a: "a" },
+      { b: "b" },
+      { c: "c" },
+      { d: "d" },
+      { e: "e" },
+      { f: "f" },
+    ];
+
+    await gql`
+      query Q($inp: [MultilevelUnionIn]!) {
+        multilevel(inp: $inp) {
+          ... on Ua { a }
+          ... on Ub { b }
+          ... on Uc { c }
+          ... on Ud { d }
+          ... on Ue { e }
+          ... on Uf { f }
+        }
+      }
+    `
+      .withVars({
+        inp: data,
+      })
+      .expectData({
+        multilevel: data,
+      })
+      .on(e);
+  });
+});
+
 test("scalar unions", async (t) => {
   const e = await t.pythonFile("type_nodes/union_node.py");
 
   await t.should("succeed", async () => {
     const data: JSONValue = [1, "hello", 12, false];
     await gql`
-      query Q($inp: [ScalarUnionIn]) {
+      query Q($inp: [MultilevelUnionIn]) {
         scalar(inp: $inp)
       }
     `

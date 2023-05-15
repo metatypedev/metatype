@@ -8,24 +8,44 @@ import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";
 
 export type VariantMatcher = (value: unknown) => string | null;
 
-function getUnionVariants(typeNode: TypeNode): number[] {
+export function flattenUnionVariants(
+  tg: TypeGraph,
+  variants: number[],
+): number[] {
+  return variants.flatMap((idx) => {
+    const typeNode = tg.type(idx);
+    switch (typeNode.type) {
+      case Type.UNION:
+        return flattenUnionVariants(tg, typeNode.anyOf);
+      case Type.EITHER:
+        return flattenUnionVariants(tg, typeNode.oneOf);
+      default:
+        return [idx];
+    }
+  });
+}
+
+// get the all the variants in a multilevel union/either
+export function getNestedUnionVariants(
+  tg: TypeGraph,
+  typeNode: TypeNode,
+): number[] {
   switch (typeNode.type) {
     case Type.UNION:
-      return typeNode.anyOf;
+      return flattenUnionVariants(tg, typeNode.anyOf);
     case Type.EITHER:
-      return typeNode.oneOf;
+      return flattenUnionVariants(tg, typeNode.oneOf);
     default:
       throw new Error(`Expected either or union, got '${typeNode.type}'`);
   }
 }
-
 // optimized variant matcher for union of objects
 export function generateVariantMatcher(
   tg: TypeGraph,
   typeIdx: number,
 ): VariantMatcher {
   // all variants must be objects
-  const variantIndices = getUnionVariants(tg.type(typeIdx));
+  const variantIndices = getNestedUnionVariants(tg, tg.type(typeIdx));
   const variants = variantIndices.map((idx) => tg.type(idx, Type.OBJECT));
 
   const validators = new Function(

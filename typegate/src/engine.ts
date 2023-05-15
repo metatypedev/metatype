@@ -410,7 +410,7 @@ export class Engine {
       if (value === undefined) {
         throw Error(`missing variable "${varName}" value`);
       }
-      // variables are validated with the argument validator
+      // variable values are validated with the argument validator
     }
   }
 
