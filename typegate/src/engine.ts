@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { Kind, parse } from "graphql";
+import { parse } from "graphql";
 import * as ast from "graphql/ast";
 import {
   RuntimeResolver,
@@ -90,15 +90,6 @@ export class ComputeStage {
     });
   }
 }
-
-// typechecks for scalar types
-const typeChecks: Record<string, (value: unknown) => boolean> = {
-  Int: (value) => typeof value === "number",
-  Float: (value) => typeof value === "number",
-  String: (value) => typeof value === "string",
-  ID: (value) => typeof value === "string",
-  Boolean: (value) => typeof value === "boolean",
-};
 
 function isIntrospectionQuery(
   operation: ast.OperationDefinitionNode,
@@ -419,51 +410,8 @@ export class Engine {
       if (value === undefined) {
         throw Error(`missing variable "${varName}" value`);
       }
-      this.validateVariable(varDef.type, value, varName);
+      // variables are validated with the argument validator
     }
-  }
-
-  validateVariable(type: ast.TypeNode, value: unknown, label: string) {
-    if (type.kind === Kind.NON_NULL_TYPE) {
-      if (value == null) {
-        throw new Error(`variable ${label} cannot be null`);
-      }
-      type = type.type;
-    }
-    if (value == null) {
-      return;
-    }
-    switch (type.kind) {
-      case Kind.LIST_TYPE:
-        if (!Array.isArray(value)) {
-          throw new Error(`variable ${label} must be an array`);
-        }
-        value.forEach((item, idx) => {
-          this.validateVariable(
-            (type as ast.ListTypeNode).type,
-            item,
-            `${label}[${idx}]`,
-          );
-        });
-        break;
-      case Kind.NAMED_TYPE:
-        this.validateValueType(type.name.value, value, label);
-    }
-  }
-
-  validateValueType(typeName: string, value: unknown, label: string) {
-    const check = typeChecks[typeName];
-    if (check != null) {
-      // scalar type
-      if (!check(value)) {
-        console.error(
-          `expected type ${typeName}, got value ${JSON.stringify(value)}`,
-        );
-        throw new Error(`variable ${label} must be a ${typeName}`);
-      }
-      return;
-    }
-    this.tg.validateValueType(typeName, value, label);
   }
 
   async ensureJWT(

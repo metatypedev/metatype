@@ -78,6 +78,73 @@ snapshot[`Union type 2`] = `
         possibleTypes: null,
       },
       {
+        kind: "UNION",
+        name: "NestedUnionsOut",
+        possibleTypes: [
+          {
+            kind: "OBJECT",
+            name: "A1",
+          },
+          {
+            kind: "OBJECT",
+            name: "B",
+          },
+        ],
+      },
+      {
+        kind: "OBJECT",
+        name: "A1",
+        possibleTypes: null,
+      },
+      {
+        kind: "UNION",
+        name: "union_20Out",
+        possibleTypes: [
+          {
+            kind: "OBJECT",
+            name: "A2",
+          },
+          {
+            kind: "OBJECT",
+            name: "B",
+          },
+        ],
+      },
+      {
+        kind: "OBJECT",
+        name: "A2",
+        possibleTypes: null,
+      },
+      {
+        kind: "UNION",
+        name: "union_18Out",
+        possibleTypes: [
+          {
+            kind: "OBJECT",
+            name: "A3",
+          },
+          {
+            kind: "OBJECT",
+            name: "A4",
+          },
+        ],
+      },
+      {
+        kind: "OBJECT",
+        name: "A3",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "A4",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "B",
+        possibleTypes: null,
+      },
+      {
         kind: "SCALAR",
         name: "ColorIn",
         possibleTypes: null,
@@ -100,6 +167,46 @@ snapshot[`Union type 2`] = `
       {
         kind: "INPUT_OBJECT",
         name: "NamedColorInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "SCALAR",
+        name: "NestedUnionsIn",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "A1Inp",
+        possibleTypes: null,
+      },
+      {
+        kind: "SCALAR",
+        name: "union_20In",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "A2Inp",
+        possibleTypes: null,
+      },
+      {
+        kind: "SCALAR",
+        name: "union_18In",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "A3Inp",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "A4Inp",
+        possibleTypes: null,
+      },
+      {
+        kind: "INPUT_OBJECT",
+        name: "BInp",
         possibleTypes: null,
       },
     ],

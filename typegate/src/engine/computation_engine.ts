@@ -222,7 +222,9 @@ export class ComputationEngine {
 
     const currentLevel = path.length;
 
-    if (this.topSelection != null && this.topSelection.level === currentLevel) {
+    if (
+      this.topSelection != null && this.topSelection.level + 1 === currentLevel
+    ) {
       // nested union/either should have been flattened
       throw new Error();
     }

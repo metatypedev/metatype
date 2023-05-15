@@ -1,7 +1,7 @@
 from typegraph import policies
 from typegraph import t
 from typegraph import TypeGraph
-from typegraph.runtimes.deno import ModuleMat
+from typegraph.runtimes.deno import ModuleMat, PureFunMat
 
 with TypeGraph("union") as g:
     channel_of_8_bits = t.integer().min(0).max(255).named("8BitsChannel")
@@ -48,8 +48,45 @@ with TypeGraph("union") as g:
         colorMaterializer.imp("convert"),
     )
 
+    nested_unions = t.union(
+        [
+            t.struct(
+                {
+                    "a": t.union(
+                        [
+                            t.struct(
+                                {
+                                    "a": t.union(
+                                        [
+                                            t.struct({"s": t.string()}).named("A3"),
+                                            t.struct(
+                                                {"i": t.integer(), "j": t.integer()}
+                                            ).named("A4"),
+                                        ]
+                                    )
+                                }
+                            ).named("A2"),
+                            g("B"),
+                        ],
+                    ),
+                }
+            ).named("A1"),
+            t.struct(
+                {
+                    "b": t.string(),
+                }
+            ).named("B"),
+        ]
+    ).named("NestedUnions")
+
     public = policies.public()
 
     g.expose(
-        convert=convert.add_policy(public),
+        convert=convert,
+        nested=t.func(
+            t.struct({"inp": t.array(nested_unions)}),
+            t.array(nested_unions),
+            PureFunMat("({ inp }) => inp"),
+        ),
+        default_policy=public,
     )

@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import { JSONValue } from "../../src/utils.ts";
 import { gql, test } from "../utils.ts";
 
 test(
@@ -169,3 +170,45 @@ test(
   },
   { introspection: true },
 );
+
+test("nested unions", async (t) => {
+  const e = await t.pythonFile("type_nodes/union_node.py");
+
+  await t.should("support nested unions", async () => {
+    const data: JSONValue = [
+      { b: "Hello" },
+      { a: { b: "Hello" } },
+      { a: { a: { s: "World" } } },
+      { a: { a: { i: 12, j: 15 } } },
+    ];
+    await gql`
+      query Q($inp: [NestedUnionsInp]) {
+        nested(inp: $inp) {
+          ... on A1 {
+            a {
+              ... on A2 {
+                a {
+                  ... on A3 { s }
+                  ... on A4 { i j }
+                }
+              }
+              ... on B { 
+                b
+              }
+            }
+          }
+          ... on B {
+            b
+          }
+        }
+      }
+    `
+      .withVars({
+        inp: data,
+      })
+      .expectData({
+        nested: data,
+      })
+      .on(e);
+  });
+});
