@@ -2,155 +2,281 @@ export const snapshot = {};
 
 snapshot[`input validator compiler 1`] = `
 "function validate_38(value, path, errors, context) {
-  if (typeof value !== \\"object\\") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, \\"exptected a non-null object, got null\\"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete(\\"title\\");
-    validate_39(value[\\"title\\"], path + \\".title\\", errors, context);
-    keys.delete(\\"content\\");
-    validate_40(value[\\"content\\"], path + \\".content\\", errors, context);
-    keys.delete(\\"authorId\\");
-    validate_41(value[\\"authorId\\"], path + \\".authorId\\", errors, context);
-    keys.delete(\\"tags\\");
-    validate_42(value[\\"tags\\"], path + \\".tags\\", errors, context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
-    }
-  }
-}
-function validate_39(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length < 10) {
-    errors.push([path, \`expected minimum length: 10, got \${value.length}\`]);
-  } else if (value.length > 200) {
-    errors.push([path, \`expected maximum length: 200, got \${value.length}\`]);
-  }
-}
-function validate_40(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length < 100) {
-    errors.push([path, \`expected minimum length: 100, got \${value.length}\`]);
-  }
-}
-function validate_41(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else {
-    const formatValidator = context.formatValidators[\\"uuid\\"];
-    if (formatValidator == null) {
-      errors.push([path, \\"unknown format 'uuid'\\"]);
-    } else if (!formatValidator(value)) {
-      errors.push([path,
-        \\"string does not statisfy the required format 'uuid'\\"]);
-    }
-  }
-}
-function validate_42(value, path, errors, context) {
-  if (value != null) {
-    validate_43(value, path, errors, context);
-  }
-}
-function validate_43(value, path, errors, context) {
-  if (!Array.isArray(value)) {
-    errors.push([path, \`expected an array, got \${typeof value}\`]);
-  } else if (value.length < 2) {
-    errors.push([path, \`expected minimum items: 2, got \${value.length}\`]);
-  } else {
-    for (let i = 0; i < value.length; ++i) {
-      const item = value[i];
-      validate_44(value[i], path + \`[\${i}]\`, errors, context);
-    }
-  }
-}
-function validate_44(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length > 10) {
-    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
-  }
-}
-return validate_38;
+" +
+  '  if (typeof value !== "object") {
+' +
+  "    errors.push([path, \`expected an object, got \${typeof value}\`]);
+" +
+  "  } else if (value == null) {
+" +
+  '    errors.push([path, "exptected a non-null object, got null"]);
+' +
+  "  } else {
+" +
+  "    const keys = new Set(Object.keys(value));
+" +
+  '    keys.delete("title");
+' +
+  '    validate_39(value["title"], path + ".title", errors, context);
+' +
+  '    keys.delete("content");
+' +
+  '    validate_40(value["content"], path + ".content", errors, context);
+' +
+  '    keys.delete("authorId");
+' +
+  '    validate_41(value["authorId"], path + ".authorId", errors, context);
+' +
+  '    keys.delete("tags");
+' +
+  '    validate_42(value["tags"], path + ".tags", errors, context);
+' +
+  "    if (keys.size > 0) {
+" +
+  '      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
+' +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_39(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else if (value.length < 10) {
+" +
+  "    errors.push([path, \`expected minimum length: 10, got \${value.length}\`]);
+" +
+  "  } else if (value.length > 200) {
+" +
+  "    errors.push([path, \`expected maximum length: 200, got \${value.length}\`]);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_40(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else if (value.length < 100) {
+" +
+  "    errors.push([path, \`expected minimum length: 100, got \${value.length}\`]);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_41(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else {
+" +
+  '    const formatValidator = context.formatValidators["uuid"];
+' +
+  "    if (formatValidator == null) {
+" +
+  \`      errors.push([path, "unknown format 'uuid'"]);
+\` +
+  "    } else if (!formatValidator(value)) {
+" +
+  "      errors.push([path,
+" +
+  \`        "string does not statisfy the required format 'uuid'"]);
+\` +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_42(value, path, errors, context) {
+" +
+  "  if (value != null) {
+" +
+  "    validate_43(value, path, errors, context);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_43(value, path, errors, context) {
+" +
+  "  if (!Array.isArray(value)) {
+" +
+  "    errors.push([path, \`expected an array, got \${typeof value}\`]);
+" +
+  "  } else if (value.length < 2) {
+" +
+  "    errors.push([path, \`expected minimum items: 2, got \${value.length}\`]);
+" +
+  "  } else {
+" +
+  "    for (let i = 0; i < value.length; ++i) {
+" +
+  "      const item = value[i];
+" +
+  "      validate_44(value[i], path + \`[\${i}]\`, errors, context);
+" +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_44(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else if (value.length > 10) {
+" +
+  "    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
+" +
+  "  }
+" +
+  "}
+" +
+  "return validate_38;
 "
 `;
 
 snapshot[`input validator compiler 2`] = `
 "Validation errors:
-  - at <value>.title: expected minimum length: 10, got 6
-  - at <value>.content: expected minimum length: 100, got 13
-  - at <value>.authorId: string does not statisfy the required format 'uuid'
-  - at <value>.tags[2]: expected maximum length: 10, got 11
+" +
+  "  - at <value>.title: expected minimum length: 10, got 6
+" +
+  "  - at <value>.content: expected minimum length: 100, got 13
+" +
+  "  - at <value>.authorId: string does not statisfy the required format 'uuid'
+" +
+  "  - at <value>.tags[2]: expected maximum length: 10, got 11
 "
 `;
 
 snapshot[`input validator compiler 3`] = `
 [
   "Validation errors:
-  - at <value>.username: string does not match to the pattern /^[a-z]+\$/
-  - at <value>.email: string does not statisfy the required format 'email'
-  - at <value>.website: string does not statisfy the required format 'uri'
+" +
+    "  - at <value>.username: string does not match to the pattern /^[a-z]+\$/
+" +
+    "  - at <value>.email: string does not statisfy the required format 'email'
+" +
+    "  - at <value>.website: string does not statisfy the required format 'uri'
 ",
 ]
 `;
 
 snapshot[`input validator compiler 4`] = `
-'function validate_46(value, path, errors, context) {
-  if (typeof value !== "object") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, "exptected a non-null object, got null"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete("userRole");
-    validate_47(value["userRole"], path + ".userRole", errors, context);
-    keys.delete("availableItems");
-    validate_49(value["availableItems"], path + ".availableItems", errors,
-      context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
-    }
-  }
-}
-function validate_47(value, path, errors, context) {
-  if (value != null) {
-    validate_48(value, path, errors, context);
-  }
-}
-function validate_49(value, path, errors, context) {
-  if (!Array.isArray(value)) {
-    errors.push([path, \`expected an array, got \${typeof value}\`]);
-  } else {
-    for (let i = 0; i < value.length; ++i) {
-      const item = value[i];
-      validate_50(value[i], path + \`[\${i}]\`, errors, context);
-    }
-  }
-}
-function validate_48(value, path, errors, context) {
-  if (value !== "admin" && value !== "moderator") {
-    errors.push([path, "value did not match to any of the enum values"]);
-  }
-}
-function validate_50(value, path, errors, context) {
-  if (!context.deepEqual(value, { "name": "banana", "unitPrice": 200 })
-    && !context.deepEqual(value, { "name": "orange", "unitPrice": 300 })
-    && !context.deepEqual(value, { "name": "apple", "unitPrice": 400 }))
-  {
-    errors.push([path, "value did not match to any of the enum values"]);
-  }
-}
-return validate_46;
-'
+"function validate_46(value, path, errors, context) {
+" +
+  '  if (typeof value !== "object") {
+' +
+  "    errors.push([path, \`expected an object, got \${typeof value}\`]);
+" +
+  "  } else if (value == null) {
+" +
+  '    errors.push([path, "exptected a non-null object, got null"]);
+' +
+  "  } else {
+" +
+  "    const keys = new Set(Object.keys(value));
+" +
+  '    keys.delete("userRole");
+' +
+  '    validate_47(value["userRole"], path + ".userRole", errors, context);
+' +
+  '    keys.delete("availableItems");
+' +
+  '    validate_49(value["availableItems"], path + ".availableItems", errors,
+' +
+  "      context);
+" +
+  "    if (keys.size > 0) {
+" +
+  '      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
+' +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_47(value, path, errors, context) {
+" +
+  "  if (value != null) {
+" +
+  "    validate_48(value, path, errors, context);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_49(value, path, errors, context) {
+" +
+  "  if (!Array.isArray(value)) {
+" +
+  "    errors.push([path, \`expected an array, got \${typeof value}\`]);
+" +
+  "  } else {
+" +
+  "    for (let i = 0; i < value.length; ++i) {
+" +
+  "      const item = value[i];
+" +
+  "      validate_50(value[i], path + \`[\${i}]\`, errors, context);
+" +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_48(value, path, errors, context) {
+" +
+  '  if (value !== "admin" && value !== "moderator") {
+' +
+  '    errors.push([path, "value did not match to any of the enum values"]);
+' +
+  "  }
+" +
+  "}
+" +
+  "function validate_50(value, path, errors, context) {
+" +
+  '  if (!context.deepEqual(value, { "name": "banana", "unitPrice": 200 })
+' +
+  '    && !context.deepEqual(value, { "name": "orange", "unitPrice": 300 })
+' +
+  '    && !context.deepEqual(value, { "name": "apple", "unitPrice": 400 }))
+' +
+  "  {
+" +
+  '    errors.push([path, "value did not match to any of the enum values"]);
+' +
+  "  }
+" +
+  "}
+" +
+  "return validate_46;
+"
 `;
 
 snapshot[`input validator compiler 5`] = `
 [
   "Validation errors:
-  - at <value>.userRole: value did not match to any of the enum values
+" +
+    "  - at <value>.userRole: value did not match to any of the enum values
 ",
 ]
 `;
@@ -158,213 +284,408 @@ snapshot[`input validator compiler 5`] = `
 snapshot[`input validator compiler 6`] = `
 [
   "Validation errors:
-  - at <value>.availableItems[0]: value did not match to any of the enum values
-  - at <value>.availableItems[2]: value did not match to any of the enum values
+" +
+    "  - at <value>.availableItems[0]: value did not match to any of the enum values
+" +
+    "  - at <value>.availableItems[2]: value did not match to any of the enum values
 ",
 ]
 `;
 
 snapshot[`input validator compiler 7`] = `
 "function validate_9(value, path, errors, context) {
-  if (typeof value !== \\"object\\") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, \\"exptected a non-null object, got null\\"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete(\\"tag\\");
-    validate_10(value[\\"tag\\"], path + \\".tag\\", errors, context);
-    keys.delete(\\"authorId\\");
-    validate_14(value[\\"authorId\\"], path + \\".authorId\\", errors, context);
-    keys.delete(\\"search\\");
-    validate_16(value[\\"search\\"], path + \\".search\\", errors, context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
-    }
-  }
-}
-function validate_10(value, path, errors, context) {
-  if (value != null) {
-    validate_11(value, path, errors, context);
-  }
-}
-function validate_14(value, path, errors, context) {
-  if (value != null) {
-    validate_15(value, path, errors, context);
-  }
-}
-function validate_16(value, path, errors, context) {
-  if (value != null) {
-    validate_17(value, path, errors, context);
-  }
-}
-function validate_11(value, path, errors, context) {
-  let errs;
-  errs = [];
-  validate_12(value, path, errs, context);
-  if (errs.length === 0) return;
-  errs = [];
-  validate_13(value, path, errs, context);
-  if (errs.length === 0) return;
-  errors.push([path, \\"Value does not match to any variant of the union type\\"]);
-}
-function validate_15(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else {
-    const formatValidator = context.formatValidators[\\"uuid\\"];
-    if (formatValidator == null) {
-      errors.push([path, \\"unknown format 'uuid'\\"]);
-    } else if (!formatValidator(value)) {
-      errors.push([path,
-        \\"string does not statisfy the required format 'uuid'\\"]);
-    }
-  }
-}
-function validate_17(value, path, errors, context) {
-  let matchCount = 0;
-  let errs;
-  errs = [];
-  validate_18(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  errs = [];
-  validate_22(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  if (matchCount === 0) {
-    errors.push([path,
-      \\"Value does not match to any variant of the either type\\"]);
-  } else if (matchCount > 1) {
-    errors.push([path,
-      \\"Value match to more than one variant of the either type\\"]);
-  }
-}
-function validate_12(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length > 10) {
-    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
-  }
-}
-function validate_13(value, path, errors, context) {
-  if (!Array.isArray(value)) {
-    errors.push([path, \`expected an array, got \${typeof value}\`]);
-  } else {
-    for (let i = 0; i < value.length; ++i) {
-      const item = value[i];
-      validate_12(value[i], path + \`[\${i}]\`, errors, context);
-    }
-  }
-}
-function validate_18(value, path, errors, context) {
-  if (typeof value !== \\"object\\") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, \\"exptected a non-null object, got null\\"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete(\\"title\\");
-    validate_19(value[\\"title\\"], path + \\".title\\", errors, context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
-    }
-  }
-}
-function validate_22(value, path, errors, context) {
-  if (typeof value !== \\"object\\") {
-    errors.push([path, \`expected an object, got \${typeof value}\`]);
-  } else if (value == null) {
-    errors.push([path, \\"exptected a non-null object, got null\\"]);
-  } else {
-    const keys = new Set(Object.keys(value));
-    keys.delete(\\"content\\");
-    validate_23(value[\\"content\\"], path + \\".content\\", errors, context);
-    if (keys.size > 0) {
-      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
-    }
-  }
-}
-function validate_19(value, path, errors, context) {
-  let matchCount = 0;
-  let errs;
-  errs = [];
-  validate_20(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  errs = [];
-  validate_21(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  if (matchCount === 0) {
-    errors.push([path,
-      \\"Value does not match to any variant of the either type\\"]);
-  } else if (matchCount > 1) {
-    errors.push([path,
-      \\"Value match to more than one variant of the either type\\"]);
-  }
-}
-function validate_23(value, path, errors, context) {
-  let matchCount = 0;
-  let errs;
-  errs = [];
-  validate_24(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  errs = [];
-  validate_25(value, path, errs, context);
-  if (errs.length === 0) matchCount += 1;
-  if (matchCount === 0) {
-    errors.push([path,
-      \\"Value does not match to any variant of the either type\\"]);
-  } else if (matchCount > 1) {
-    errors.push([path,
-      \\"Value match to more than one variant of the either type\\"]);
-  }
-}
-function validate_20(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length < 3) {
-    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
-  }
-}
-function validate_21(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length > 10) {
-    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
-  }
-}
-function validate_24(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length < 3) {
-    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
-  }
-}
-function validate_25(value, path, errors, context) {
-  if (!Array.isArray(value)) {
-    errors.push([path, \`expected an array, got \${typeof value}\`]);
-  } else if (value.length > 3) {
-    errors.push([path, \`expected maximum items: 3, got \${value.length}\`]);
-  } else {
-    for (let i = 0; i < value.length; ++i) {
-      const item = value[i];
-      validate_26(value[i], path + \`[\${i}]\`, errors, context);
-    }
-  }
-}
-function validate_26(value, path, errors, context) {
-  if (typeof value !== \\"string\\") {
-    errors.push([path, \`expected a string, got \${typeof value}\`]);
-  } else if (value.length < 3) {
-    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
-  }
-}
-return validate_9;
+" +
+  '  if (typeof value !== "object") {
+' +
+  "    errors.push([path, \`expected an object, got \${typeof value}\`]);
+" +
+  "  } else if (value == null) {
+" +
+  '    errors.push([path, "exptected a non-null object, got null"]);
+' +
+  "  } else {
+" +
+  "    const keys = new Set(Object.keys(value));
+" +
+  '    keys.delete("tag");
+' +
+  '    validate_10(value["tag"], path + ".tag", errors, context);
+' +
+  '    keys.delete("authorId");
+' +
+  '    validate_14(value["authorId"], path + ".authorId", errors, context);
+' +
+  '    keys.delete("search");
+' +
+  '    validate_16(value["search"], path + ".search", errors, context);
+' +
+  "    if (keys.size > 0) {
+" +
+  '      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
+' +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_10(value, path, errors, context) {
+" +
+  "  if (value != null) {
+" +
+  "    validate_11(value, path, errors, context);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_14(value, path, errors, context) {
+" +
+  "  if (value != null) {
+" +
+  "    validate_15(value, path, errors, context);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_16(value, path, errors, context) {
+" +
+  "  if (value != null) {
+" +
+  "    validate_17(value, path, errors, context);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_11(value, path, errors, context) {
+" +
+  "  let errs;
+" +
+  "  errs = [];
+" +
+  "  validate_12(value, path, errs, context);
+" +
+  "  if (errs.length === 0) return;
+" +
+  "  errs = [];
+" +
+  "  validate_13(value, path, errs, context);
+" +
+  "  if (errs.length === 0) return;
+" +
+  '  errors.push([path, "Value does not match to any variant of the union type"]);
+' +
+  "}
+" +
+  "function validate_15(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else {
+" +
+  '    const formatValidator = context.formatValidators["uuid"];
+' +
+  "    if (formatValidator == null) {
+" +
+  \`      errors.push([path, "unknown format 'uuid'"]);
+\` +
+  "    } else if (!formatValidator(value)) {
+" +
+  "      errors.push([path,
+" +
+  \`        "string does not statisfy the required format 'uuid'"]);
+\` +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_17(value, path, errors, context) {
+" +
+  "  let matchCount = 0;
+" +
+  "  let errs;
+" +
+  "  errs = [];
+" +
+  "  validate_18(value, path, errs, context);
+" +
+  "  if (errs.length === 0) matchCount += 1;
+" +
+  "  errs = [];
+" +
+  "  validate_22(value, path, errs, context);
+" +
+  "  if (errs.length === 0) matchCount += 1;
+" +
+  "  if (matchCount === 0) {
+" +
+  "    errors.push([path,
+" +
+  '      "Value does not match to any variant of the either type"]);
+' +
+  "  } else if (matchCount > 1) {
+" +
+  "    errors.push([path,
+" +
+  '      "Value match to more than one variant of the either type"]);
+' +
+  "  }
+" +
+  "}
+" +
+  "function validate_12(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else if (value.length > 10) {
+" +
+  "    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_13(value, path, errors, context) {
+" +
+  "  if (!Array.isArray(value)) {
+" +
+  "    errors.push([path, \`expected an array, got \${typeof value}\`]);
+" +
+  "  } else {
+" +
+  "    for (let i = 0; i < value.length; ++i) {
+" +
+  "      const item = value[i];
+" +
+  "      validate_12(value[i], path + \`[\${i}]\`, errors, context);
+" +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_18(value, path, errors, context) {
+" +
+  '  if (typeof value !== "object") {
+' +
+  "    errors.push([path, \`expected an object, got \${typeof value}\`]);
+" +
+  "  } else if (value == null) {
+" +
+  '    errors.push([path, "exptected a non-null object, got null"]);
+' +
+  "  } else {
+" +
+  "    const keys = new Set(Object.keys(value));
+" +
+  '    keys.delete("title");
+' +
+  '    validate_19(value["title"], path + ".title", errors, context);
+' +
+  "    if (keys.size > 0) {
+" +
+  '      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
+' +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_22(value, path, errors, context) {
+" +
+  '  if (typeof value !== "object") {
+' +
+  "    errors.push([path, \`expected an object, got \${typeof value}\`]);
+" +
+  "  } else if (value == null) {
+" +
+  '    errors.push([path, "exptected a non-null object, got null"]);
+' +
+  "  } else {
+" +
+  "    const keys = new Set(Object.keys(value));
+" +
+  '    keys.delete("content");
+' +
+  '    validate_23(value["content"], path + ".content", errors, context);
+' +
+  "    if (keys.size > 0) {
+" +
+  '      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
+' +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_19(value, path, errors, context) {
+" +
+  "  let matchCount = 0;
+" +
+  "  let errs;
+" +
+  "  errs = [];
+" +
+  "  validate_20(value, path, errs, context);
+" +
+  "  if (errs.length === 0) matchCount += 1;
+" +
+  "  errs = [];
+" +
+  "  validate_21(value, path, errs, context);
+" +
+  "  if (errs.length === 0) matchCount += 1;
+" +
+  "  if (matchCount === 0) {
+" +
+  "    errors.push([path,
+" +
+  '      "Value does not match to any variant of the either type"]);
+' +
+  "  } else if (matchCount > 1) {
+" +
+  "    errors.push([path,
+" +
+  '      "Value match to more than one variant of the either type"]);
+' +
+  "  }
+" +
+  "}
+" +
+  "function validate_23(value, path, errors, context) {
+" +
+  "  let matchCount = 0;
+" +
+  "  let errs;
+" +
+  "  errs = [];
+" +
+  "  validate_24(value, path, errs, context);
+" +
+  "  if (errs.length === 0) matchCount += 1;
+" +
+  "  errs = [];
+" +
+  "  validate_25(value, path, errs, context);
+" +
+  "  if (errs.length === 0) matchCount += 1;
+" +
+  "  if (matchCount === 0) {
+" +
+  "    errors.push([path,
+" +
+  '      "Value does not match to any variant of the either type"]);
+' +
+  "  } else if (matchCount > 1) {
+" +
+  "    errors.push([path,
+" +
+  '      "Value match to more than one variant of the either type"]);
+' +
+  "  }
+" +
+  "}
+" +
+  "function validate_20(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else if (value.length < 3) {
+" +
+  "    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_21(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else if (value.length > 10) {
+" +
+  "    errors.push([path, \`expected maximum length: 10, got \${value.length}\`]);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_24(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else if (value.length < 3) {
+" +
+  "    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_25(value, path, errors, context) {
+" +
+  "  if (!Array.isArray(value)) {
+" +
+  "    errors.push([path, \`expected an array, got \${typeof value}\`]);
+" +
+  "  } else if (value.length > 3) {
+" +
+  "    errors.push([path, \`expected maximum items: 3, got \${value.length}\`]);
+" +
+  "  } else {
+" +
+  "    for (let i = 0; i < value.length; ++i) {
+" +
+  "      const item = value[i];
+" +
+  "      validate_26(value[i], path + \`[\${i}]\`, errors, context);
+" +
+  "    }
+" +
+  "  }
+" +
+  "}
+" +
+  "function validate_26(value, path, errors, context) {
+" +
+  '  if (typeof value !== "string") {
+' +
+  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
+" +
+  "  } else if (value.length < 3) {
+" +
+  "    errors.push([path, \`expected minimum length: 3, got \${value.length}\`]);
+" +
+  "  }
+" +
+  "}
+" +
+  "return validate_9;
 "
 `;
 
 snapshot[`input validator compiler 8`] = `
 [
   "Validation errors:
-  - at <value>.authorId: string does not statisfy the required format 'uuid'
+" +
+    "  - at <value>.authorId: string does not statisfy the required format 'uuid'
 ",
 ]
 `;
@@ -372,19 +693,22 @@ snapshot[`input validator compiler 8`] = `
 snapshot[`input validator compiler 9`] = `
 [
   "Validation errors:
-  - at <value>.tag: Value does not match to any variant of the union type
+" +
+    "  - at <value>.tag: Value does not match to any variant of the union type
 ",
 ]
 `;
 
 snapshot[`input validator compiler 10`] = `
 "Validation errors:
-  - at <value>.search: Value does not match to any variant of the either type
+" +
+  "  - at <value>.search: Value does not match to any variant of the either type
 "
 `;
 
 snapshot[`input validator compiler 11`] = `
 "Validation errors:
-  - at <value>.search: Value does not match to any variant of the either type
+" +
+  "  - at <value>.search: Value does not match to any variant of the either type
 "
 `;
