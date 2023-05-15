@@ -43,22 +43,16 @@ export function AnimatedCanvas({
   useEffect(() => {
     function resize() {
       if (ref.current) {
-        const { scrollHeight } = document.documentElement;
         const { innerHeight: windowHeight } = window;
         const { offsetTop, offsetWidth } = ref.current;
 
         const top = offsetTop - before;
         const bottom = offsetTop + height + after;
+        const middleWindow = windowHeight * 0.5;
 
-        const scrollable = 1 - windowHeight / scrollHeight;
-        const triggerMin =
-          windowHeight / 2 < bottom && top < scrollHeight - windowHeight / 2
-            ? top - windowHeight / 2
-            : top * scrollable;
-        const triggerMax =
-          windowHeight / 2 < bottom && top < scrollHeight - windowHeight / 2
-            ? bottom - windowHeight / 2
-            : bottom * scrollable;
+        const locRatio = Math.min(bottom / windowHeight, 1);
+        const triggerMin = top - middleWindow * locRatio;
+        const triggerMax = bottom - middleWindow * locRatio;
 
         setSize({
           width: offsetWidth,

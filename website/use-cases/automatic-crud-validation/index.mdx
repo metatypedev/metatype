@@ -20,7 +20,7 @@ For example, you would need to define a `Customer` type with the following field
 
 ## Metatype's solution
 
-Metatype simplifies the development of CRUD APIs by providing the [Prisma runtime](/docs/reference/typegraph/typegraph/providers/prisma/runtimes/prisma) that automates the creation of the API for CRUD operations and corresponding data validation. It can even validate some advanced types like email which may not be supported by downstream system (like database that often store email address into plain string field). This makes it faster for developers to create scalable CRUD APIs and enable them to focus their expertise where it matters most like checkout or search capabilities.
+Metatype simplifies the development of CRUD APIs by providing the [Prisma runtime](/docs/reference/runtimes/prisma) that automates the creation of the API for CRUD operations and corresponding data validation in PostgreSQL, MySQL, SQLite, SQL Server, MongoDB and CockroachDB. It can even validate some advanced types like email which may not be supported by downstream system (databases often store email address into plain string instead of a specialized field). This makes it faster for developers to create scalable CRUD APIs and enable them to focus their expertise where it matters most like checkout or the search capabilities.
 
 <TGExample
   typegraph="prisma-runtime"

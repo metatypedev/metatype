@@ -12,7 +12,7 @@ Backend for frontend (BFF) is an architectural pattern in which each frontend cl
 
 </div>
 
-Imagine you have a web frontend and a mobile app that both consume data from a microservices-based backend. The web frontend requires certain data fields in a format B, and the mobile app requires the same field plus additional ones in format B.
+Imagine you have a web frontend and a mobile app that both consume data from a microservices-based backend. The web frontend requires certain data fields in a given format, and the mobile app requires the same additional fields in another format.
 
 In a traditional architecture, both the web and mobile frontends would have to make separate API calls to the microservices, and then format the data into the appropriate structure themselves. This can lead to duplicated code, increased latency due heavier calls with non-necessary data, and decreased developer efficiency.
 

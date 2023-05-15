@@ -17,9 +17,9 @@ export function ChoicePicker<T>({
   onChange,
 }: ChoicePickerP<T>) {
   return (
-    <ul className="pl-0 m-0 list-none rounded-md overflow-clip">
+    <ul className="pl-0 m-0 list-none w-full">
       {Object.entries(choices).map(([k, p]) => (
-        <li key={k} className="inline-block">
+        <li key={k} className="inline-block rounded-md overflow-clip mr-1">
           <div>
             <label className="cursor-pointer">
               <input

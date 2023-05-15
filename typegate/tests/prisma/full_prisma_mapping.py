@@ -53,7 +53,7 @@ with TypeGraph("prisma") as g:
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ),
         findManyUsers=db.find_many(user),
-        findUniqueUser=db.find(user),
+        findUniqueUser=db.find_unique(user),
         findFirstUser=db.find_first(user),
         createOneUser=db.create(user),
         createManyUsers=db.create_many(user),
@@ -61,7 +61,7 @@ with TypeGraph("prisma") as g:
         findManyPosts=db.find_many(post),
         findFirstPost=db.find_first(post),
         findFirstComment=db.find_first(comment),
-        findUniquePost=db.find(post),
+        findUniquePost=db.find_unique(post),
         createManyPosts=db.create_many(post),
         updateManyPosts=db.update_many(post),
         groupByPost=db.group_by(post),

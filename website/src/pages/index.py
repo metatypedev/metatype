@@ -17,7 +17,7 @@ with TypeGraph(
 ) as g:
     public = policies.public()
     meta_only = policies.jwt("email", re.compile(".+@metatype.dev"))
-    public_read_only = {"create": public, "none": meta_only}
+    public_write_only = {"create": public, "none": meta_only}
 
     github = HTTPRuntime("https://api.github.com")
     db = PrismaRuntime("demo", "POSTGRES_CONN")
@@ -25,8 +25,8 @@ with TypeGraph(
     feedback = t.struct(
         {
             "id": t.uuid().config("id", "auto"),
-            "email": t.email().add_policy(public_read_only),
-            "message": t.string().max(2000),
+            "email": t.email().add_policy(public_write_only),
+            "message": t.string().min(1).max(2000),
         }
     ).named("feedback")
 

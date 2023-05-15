@@ -11,9 +11,9 @@ This section also makes use of toy typegraph for the sake of clarity. You will c
 
 ## Deno runtime
 
-While the tutorial covered already interesting runtimes, allowing you to connect to already a lots of systems and different protocols, there is still one powerful that wasn't covered yet: the typescript or Deno runtime.
+While the tutorial covered already interesting runtimes, allowing you to connect to already a lot of systems and different protocols, there is still one powerful that wasn't covered yet: the typescript or Deno runtime.
 
-This enable to run lightweight and short-lived typescript function in a sandboxed environment. Permissions can be customized per typegraph and by default only include some HTTPs domains. It's a great way to implement custom logic and materializers. All typegraphs can lazily spawn a web worker and get an incredible cold-start and continuous performance thanks to the V8 engine powering Deno.
+This enables to run lightweight and short-lived typescript function in a sandboxed environment. Permissions can be customized per typegraph and by default only include some HTTPs domains. It's a great way to implement custom logic and materializers. All typegraphs can lazily spawn a web worker and get an incredible cold-start and continuous performance thanks to the V8 engine powering Deno.
 
 <TGExample
   typegraph="deno"
@@ -25,12 +25,12 @@ This enable to run lightweight and short-lived typescript function in a sandboxe
 
 The Deno runtime enable to understand the last abstraction. Policies are a way to verify for each type whether the user is authorized or not to access it. It's a very powerful concept that can be for instance used to guarantee a given type is never accidentally exposed to the outside world.
 
-Metatype comes with some built-in policies but you can use the Deno runtime to define your own:
+Metatype comes with some built-in policies, but you can use the Deno runtime to define your own:
 
 - `policies.public()` is an alias for `Policy(PureFunMat("() => true"))` providing everyone open access.
-- `policies.jwt("role_value", "role_field")` is a companion policy for the authentication strategy you learnt in the previous section. It will verify the context and give adequate access to the user.
+- `policies.jwt("role_value", "role_field")` is a companion policy for the authentication strategy you learned in the previous section. It will verify the context and give adequate access to the user.
 
-Policies are hierarchical in the sense that the request starts with a deny, and the root materializers must explicitly provide an access or not. Once access granted, any further types can either inherit or override the access. Policies evaluate in order in case multiple ones are defined.
+Policies are hierarchical in the sense that the request starts with a denial, and the root materializers must explicitly provide an access or not. Once access granted, any further types can either inherit or override the access. Policies evaluate in order in case multiple ones are defined.
 
 <TGExample
   typegraph="policies"
@@ -38,4 +38,4 @@ Policies are hierarchical in the sense that the request starts with a deny, and 
   query={require("./policies.graphql")}
 />
 
-Enough studied, lets go back to your app and finalize it.
+Enough studied, let's go back to your app and finalize it.

@@ -1,0 +1,89 @@
+{
+  "items": [
+    {
+      "items": [
+        "docs/reference/typegraph/python/typegraph/graph/models",
+        "docs/reference/typegraph/python/typegraph/graph/typegraph"
+      ],
+      "label": "typegraph.graph",
+      "type": "category"
+    },
+    {
+      "items": [
+        {
+          "items": [
+            "docs/reference/typegraph/python/typegraph/importers/base/importer"
+          ],
+          "label": "typegraph.importers.base",
+          "type": "category"
+        },
+        "docs/reference/typegraph/python/typegraph/importers/openapi"
+      ],
+      "label": "typegraph.importers",
+      "type": "category"
+    },
+    {
+      "items": [
+        {
+          "items": [
+            {
+              "items": [
+                "docs/reference/typegraph/python/typegraph/providers/aws/runtimes/s3"
+              ],
+              "label": "typegraph.providers.aws.runtimes",
+              "type": "category"
+            }
+          ],
+          "label": "typegraph.providers.aws",
+          "type": "category"
+        },
+        {
+          "items": [
+            {
+              "items": [
+                "docs/reference/typegraph/python/typegraph/providers/prisma/runtimes/prisma"
+              ],
+              "label": "typegraph.providers.prisma.runtimes",
+              "type": "category"
+            },
+            "docs/reference/typegraph/python/typegraph/providers/prisma/relations",
+            "docs/reference/typegraph/python/typegraph/providers/prisma/schema"
+          ],
+          "label": "typegraph.providers.prisma",
+          "type": "category"
+        },
+        {
+          "items": [
+            {
+              "items": [
+                "docs/reference/typegraph/python/typegraph/providers/temporal/runtimes/temporal"
+              ],
+              "label": "typegraph.providers.temporal.runtimes",
+              "type": "category"
+            }
+          ],
+          "label": "typegraph.providers.temporal",
+          "type": "category"
+        }
+      ],
+      "label": "typegraph.providers",
+      "type": "category"
+    },
+    {
+      "items": [
+        "docs/reference/typegraph/python/typegraph/runtimes/deno",
+        "docs/reference/typegraph/python/typegraph/runtimes/graphql",
+        "docs/reference/typegraph/python/typegraph/runtimes/http",
+        "docs/reference/typegraph/python/typegraph/runtimes/python",
+        "docs/reference/typegraph/python/typegraph/runtimes/random",
+        "docs/reference/typegraph/python/typegraph/runtimes/wasmedge"
+      ],
+      "label": "typegraph.runtimes",
+      "type": "category"
+    },
+    "docs/reference/typegraph/python/typegraph/injection",
+    "docs/reference/typegraph/python/typegraph/types"
+  ],
+  "label": "typegraph",
+  "type": "category"
+}
