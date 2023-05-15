@@ -21,6 +21,11 @@ snapshot[`Union type 2`] = `
         possibleTypes: null,
       },
       {
+        kind: "SCALAR",
+        name: "Boolean",
+        possibleTypes: null,
+      },
+      {
         kind: "OBJECT",
         name: "_Integer",
         possibleTypes: null,
@@ -28,6 +33,11 @@ snapshot[`Union type 2`] = `
       {
         kind: "OBJECT",
         name: "_String",
+        possibleTypes: null,
+      },
+      {
+        kind: "OBJECT",
+        name: "_Boolean",
         possibleTypes: null,
       },
       {
@@ -146,8 +156,12 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "UNION",
-        name: "union_27Out",
+        name: "ScalarUnionOut",
         possibleTypes: [
+          {
+            kind: "OBJECT",
+            name: "_Boolean",
+          },
           {
             kind: "OBJECT",
             name: "_Integer",
@@ -225,7 +239,7 @@ snapshot[`Union type 2`] = `
       },
       {
         kind: "SCALAR",
-        name: "union_27In",
+        name: "ScalarUnionIn",
         possibleTypes: null,
       },
     ],

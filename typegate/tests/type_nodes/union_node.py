@@ -79,7 +79,7 @@ with TypeGraph("union") as g:
         ]
     ).named("NestedUnions")
 
-    scalar_union = t.union([t.integer(), t.string()])
+    scalar_union = t.union([t.boolean(), t.integer(), t.string()]).named("ScalarUnion")
 
     public = policies.public()
 

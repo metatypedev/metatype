@@ -182,7 +182,7 @@ test("nested unions", async (t) => {
       { a: { a: { i: 12, j: 15 } } },
     ];
     await gql`
-      query Q($inp: [NestedUnionsInp]) {
+      query Q($inp: [NestedUnionsIn]) {
         nested(inp: $inp) {
           ... on A1 {
             a {
@@ -217,9 +217,9 @@ test("scalar unions", async (t) => {
   const e = await t.pythonFile("type_nodes/union_node.py");
 
   await t.should("succeed", async () => {
-    const data: JSONValue = [1, "hello", 12];
+    const data: JSONValue = [1, "hello", 12, false];
     await gql`
-      query Q($inp: [ScalarUnionInp]) {
+      query Q($inp: [ScalarUnionIn]) {
         scalar(inp: $inp)
       }
     `
