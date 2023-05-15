@@ -50,11 +50,16 @@ class TypedefFromJsonSchema:
             return self(Box(merge_all([self.resolve_ref(s) for s in schema.allOf])))
 
         if "type" not in schema:
-            raise Exception(f"Unsupported schema: {schema}")
+            schema = Box({"properties": {}, "type": "object"})
+            # raise Exception(f'Unsupported schema, field "type" not found: {schema}')
 
         gen = self.type_dispatch.get(schema.type)
         if gen is None:
             raise Exception(f"Unsupported type '{schema.type}'")
+
+        if "nullable" in schema:  # and "type" in schema
+            schema = Box({k: v for k, v in schema.items() if k != "nullable"})
+            return gen(schema).optional()
 
         return gen(schema)
 
