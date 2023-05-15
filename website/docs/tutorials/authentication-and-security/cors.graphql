@@ -1,3 +1,4 @@
 query {
   catch_me_if_you_can
+  # the results panel should show an error
 }

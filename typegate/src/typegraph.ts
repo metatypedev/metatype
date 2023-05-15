@@ -156,20 +156,18 @@ export class TypeGraph {
     if (meta.cors.max_age_sec) {
       staticCors["Access-Control-Max-Age"] = meta.cors.max_age_sec.toString();
     }
-    const exposeOrigins = new Set(meta.cors.expose_headers);
+    const allowedOrigins = new Set(meta.cors.allow_origin);
+    const wildcardOrigin = allowedOrigins.has("*");
 
     const cors = (req: Request) => {
-      if (meta.cors.allow_origin.length === 0) {
-        return {};
-      }
       const origin = req.headers.get("origin");
-      if (!origin || exposeOrigins.has(origin)) {
-        return {};
+      if (wildcardOrigin || (origin && allowedOrigins.has(origin))) {
+        return {
+          ...staticCors,
+          "Access-Control-Allow-Origin": origin,
+        };
       }
-      return {
-        ...staticCors,
-        "Access-Control-Allow-Origin": origin,
-      };
+      return {};
     };
 
     const auths = new Map<string, Auth>();

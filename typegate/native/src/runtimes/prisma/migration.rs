@@ -222,7 +222,7 @@ impl MigrationContext {
                 let migrations = self
                     .migrations_dir
                     .serialize()
-                    .tap(|e| error!("{e:?}"))
+                    .tap_err(|e| error!("{e:?}"))
                     .ok()
                     .flatten()
                     .unwrap();

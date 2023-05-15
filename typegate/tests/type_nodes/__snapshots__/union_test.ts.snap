@@ -3,7 +3,8 @@ export const snapshot = {};
 snapshot[`Union type 1`] = `
 [
   "Validation errors:
-  - at <value>.color: Value does not match to any variant of the union type
+" +
+    "  - at <value>.color: Value does not match to any variant of the union type
 ",
 ]
 `;

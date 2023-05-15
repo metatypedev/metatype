@@ -25,6 +25,6 @@ with TypeGraph("prisma") as g:
             "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
         ).add_policy(public),
         findManyUsers=db.find_many(user).add_policy(public),
-        findUniqueUser=db.find(user).add_policy(public),
+        findUniqueUser=db.find_unique(user).add_policy(public),
         createOneUser=db.create(user).add_policy(public),
     )

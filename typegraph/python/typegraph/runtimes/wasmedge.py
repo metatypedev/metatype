@@ -14,9 +14,8 @@ from typegraph.utils.attrs import always, required
 
 @frozen
 class WasmEdgeRuntime(Runtime):
-    """Runs Wasm functions on the WasmEdge runtime.
-
-    **Experimental**
+    """
+    [Documentation](https://metatype.dev/docs/reference/runtimes/wasmedge)
     """
 
     runtime_name: str = always("wasmedge")

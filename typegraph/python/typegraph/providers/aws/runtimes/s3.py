@@ -10,6 +10,10 @@ from typegraph.utils.attrs import always
 
 @frozen
 class S3Runtime(Runtime):
+    """
+    [Documentation](https://metatype.dev/docs/reference/runtimes/s3)
+    """
+
     host: str
     region: str
     access_key_secret: str

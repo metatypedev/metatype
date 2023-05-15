@@ -13,6 +13,10 @@ from typegraph.utils.attrs import always, required
 
 @frozen
 class GraphQLRuntime(Runtime):
+    """
+    [Documentation](https://metatype.dev/docs/reference/runtimes/graphql)
+    """
+
     endpoint: str
     runtime_name: str = always("graphql")
 

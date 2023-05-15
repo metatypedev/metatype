@@ -1,7 +1,7 @@
 # skip:start
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.deno import DenoRuntime, PureFunMat
-from typegraph.runtimes.python_wasi import PythonWasiRuntime
+from typegraph.runtimes.python import Python
 
 # skip:end
 with TypeGraph(
@@ -12,7 +12,7 @@ with TypeGraph(
     public = policies.public()
 
     deno = DenoRuntime()
-    python = PythonWasiRuntime()
+    python = Python()
 
     def cumsum(mat):
         inp = t.struct({"n": t.integer().min(0).max(100)})

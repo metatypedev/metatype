@@ -1,0 +1,189 @@
+# Prisma runtime
+
+Prisma is a database ORM runtime that enables to query many different databases. It enables to create, read, update and delete data with a developer-friendly API. This runtime is included within the typegate and is compatible with the following databases:
+
+- PostgreSQL
+- MySQL
+- MariaDB
+- SQLite (however, SQLite is unlikely to be used with Metatype as it cannot be distributed easily)
+- AWS Aurora
+- AWS Aurora Serverless
+- Microsoft SQL Server
+- Azure SQL
+- MongoDB
+- CockroachDB
+
+The exact supported version can be found on their [documentation](https://www.prisma.io/docs/reference/database-reference/supported-databases). Some databases may not have some specific behaviors and features support. The precise details are also available in [this page](https://www.prisma.io/docs/reference/database-reference/database-features).
+
+## Usage
+
+```python
+with TypeGraph("prisma-runtime-example") as g:
+    db = PrismaRuntime("main_db", "DB_CONNECTION")
+
+    user = t.struct(
+        {
+            "id": t.uuid().config("id", "auto"),
+            "email": t.email(),
+        }
+    )
+
+    g.expose(
+        createUser=db.create(user).add_policy(public)
+    )
+```
+
+### Raw query
+
+Generate a raw SQL query operation on the runtime
+
+```python
+db = PrismaRuntime("my-app", "POSTGRES")
+g.expose(
+    countUsers=db.raw_query("SELECT COUNT(*) FROM User", t.integer())
+)
+```
+
+Generate a raw SQL query operation without return
+
+```python
+db = PrismaRuntime("my-app", "POSTGRES")
+g.expose(
+    setActive=db.raw_execute("UPDATE User SET active = TRUE WHERE id=$1", effect=effects.update()),
+)
+```
+
+## Models
+
+Any `t.struct` that is passed to a generator of a `PrismaRuntime`
+defines a model. Models must have an ID field specified by the `"id"` config.
+
+Here is the list of all the available configs for model fields:
+
+| Config   | Effect                                                                                                     |
+| -------- | ---------------------------------------------------------------------------------------------------------- |
+| `id`     | defines the field ID for the model (a.k.a. primary key)                                                    |
+| `auto`   | the value of this field can be auto generated; supported for `t.integer()` (auto-increment) and `t.uuid()` |
+| `unique` | make this field unique among all instances of the model                                                    |
+
+## Relationships
+
+Relationship fields must be defined on both sides of the relationship.
+A relationship is always defined for `t.struct` types and `t.optional` or
+`t.array` of `t.struct`.
+
+Relationships can also be defined implicitly using the [`link`](#link) instance method
+of `PrismaRuntime`.
+
+```python
+runtime = PrismaRuntime("example", "POSTGRES")
+
+user = t.struct(
+    {
+        "id": t.uuid().config("id", "auto"),
+        "email": t.email().config("unique"),
+        "posts": t.array(g("Post")),
+    }
+).named("User")
+
+post = t.struct(
+    {
+        "id": t.uuid().config("id", "auto"),
+        "title": t.string(),
+        "author": g("User"),
+    }
+).named("Post")
+```
+
+The `PrismaRuntime` supports two kinds of relationship between models.
+
+### One-to-one relationships
+
+A one-to-one relationship must be in one of these two variants.
+
+| Cardinality | Field type in Model1     | Field type in Model2     |
+| ----------- | ------------------------ | ------------------------ |
+| 1..1 ↔ 0..1 | `g("Model2")`            | `g("Model1").optional()` |
+| 0..1 ↔ 0..1 | `g("Model2").optional()` | `g("Model1").optional()` |
+
+For the optional (0..1 ↔ 0..1) one-to-one relationship,
+you need to indicate on which field/model the foreign key will be by:
+
+- wrapping the type in a [`runtime.link(.)`](#link) with `fkey=True`:
+  `runtime.link(g("Model2").optional(), fkey=True)`;<br/>
+- or adding `.config("unique")`: `g("Model2").optional().config("unique")`.
+
+### One-to-many relationships
+
+A one-to-many relationship must be in one of these two variants.
+
+| Cardinality | Field type in Model1     | Field type in Model2   |
+| ----------- | ------------------------ | ---------------------- |
+| 1..1 ↔ 0..n | `g("Model2")`            | `t.array(g("Model1"))` |
+| 0..1 ↔ 0..n | `g("Model2").optional()` | `t.array(g("Model1"))` |
+
+### Link
+
+Explicitly declare a relationship between models. The return value of
+this function shall be the type of a property of a `t.struct` that
+defines a model. If the other end of the relationship is also defined using `link`,
+both links must have the same name.
+
+```python
+runtime = PrismaRuntime("example", "POSTGRES")
+
+user = t.struct(
+    {
+        "id": t.uuid().config("id", "auto"),
+        "email": t.email().config("unique"),
+        "posts": runtime.link(t.array(g("Post")), "postAuthor"),
+    }
+).named("User")
+
+post = t.struct(
+    {
+        "id": t.uuid().config("id", "auto"),
+        "title": t.string(),
+        "author": runtime.link(g("User"), "postAuthor"),
+    }
+).named("Post")
+```
+
+## Generators
+
+Generators are instance methods of `PrismaRuntime` that can be used
+to generate a `t.func` that represents a specific operation on a specific
+model of the runtime. They match to the model queries defined for the
+[prisma client API](https://www.prisma.io/docs/reference/api-reference/prisma-client-reference).
+for the type of the input `t.struct` and the return type.
+
+Example:
+
+```python
+with TypeGraph("prisma-runtime-example") as g:
+    db = PrismaRuntime("main_db", "DB_CONNECTION")
+
+    user = t.struct(
+        {
+            "id": t.uuid().config("id", "auto"),
+            "email": t.email(),
+        }
+    )
+
+    g.expose(
+        createUser=db.create(user).add_policy(public),
+        findUser=db.find(user).add_policy(public),
+        findManyUsers=db.find_many(user).add_policy(public),
+    )
+```
+
+Here is a list of all available generators:
+
+- `find_unique`
+- `find_first`
+- `find_many`
+- `create`
+- `update`
+- `upsert`
+- `delete`
+- `delete_many`

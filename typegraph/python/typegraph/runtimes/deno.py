@@ -17,6 +17,10 @@ from typegraph.utils.attrs import SKIP, always
 
 @frozen
 class DenoRuntime(Runtime):
+    """
+    [Documentation](https://metatype.dev/docs/reference/runtimes/deno)
+    """
+
     worker: str = field(kw_only=True, default="default")
     allow_net: Tuple[str, ...] = field(
         kw_only=True, factory=tuple, metadata={SKIP: True}

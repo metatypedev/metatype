@@ -3,7 +3,7 @@ from typegraph.graph.auth import oauth2
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.deno import PureFunMat
 from typegraph.runtimes.http import HTTPRuntime
-from typegraph.runtimes.python_wasi import PythonWasiRuntime
+from typegraph.runtimes.python import Python
 
 with TypeGraph(
     "public-api",
@@ -25,7 +25,7 @@ with TypeGraph(
 
     # 3 where / runtimes
 
-    python = PythonWasiRuntime()
+    python = Python()
 
     # 4 who / policies
 

@@ -4,9 +4,8 @@ from typing import Callable, Dict, List, Optional
 
 from attrs import field, frozen
 
-from typegraph import effects
+from typegraph import effects, utils
 from typegraph import types as t
-from typegraph import utils
 from typegraph.effects import Effect
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
@@ -18,6 +17,10 @@ def pick(d: Dict, *largs) -> Dict:
 
 @frozen
 class RandomRuntime(Runtime):
+    """
+    [Documentation](https://metatype.dev/docs/reference/runtimes/random)
+    """
+
     runtime_name: str = always("random")
     seed: Optional[int] = field(kw_only=True, default=None)
     reset: str = field(kw_only=True, default="")

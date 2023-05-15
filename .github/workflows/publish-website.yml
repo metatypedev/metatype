@@ -35,15 +35,13 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-      - name: Install and build
-        working-directory: website
+      - working-directory: website
         env:
           TG_URL: https://demo.metatype.dev
         run: |
           pnpm install --frozen-lockfile
           pnpm build
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: website/build

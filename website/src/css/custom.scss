@@ -2,9 +2,100 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .tooltip {
+    @apply relative inline-block cursor-pointer font-medium;
+  }
+  .tooltip > span {
+    @apply absolute top-10 p-2 bg-slate-600 text-white rounded-md hidden w-[300px] -left-[150px] text-2xl z-10 font-normal;
+  }
+  strong {
+    @apply font-semibold;
+  }
+  h2 {
+    @apply text-3xl font-bold;
+  }
+
+  main#homepage {
+    > section {
+      @apply grid md:grid-cols-2 gap-12 items-center my-12;
+
+      h2 + p {
+        @apply text-xl;
+      }
+    }
+
+    > section.grid-3 {
+      @apply md:grid-cols-3 items-start;
+    }
+
+    > section:nth-child(2n + 1) {
+      @apply flex-col-reverse;
+
+      > div:first-child {
+        @apply md:order-last;
+      }
+    }
+  }
+
+  .miniql {
+    @apply text-sm;
+
+    .theme-code-block {
+      @apply bg-slate-100 shadow-none;
+
+      > div {
+        @apply h-full;
+      }
+
+      .prism-code {
+        @apply bg-slate-100 h-full;
+      }
+    }
+
+    .theme-code-block {
+      @apply m-0;
+    }
+
+    .graphiql-session {
+      padding: 0 !important;
+    }
+
+    .graphiql-container {
+      .graphiql-editors {
+        @apply shadow-none bg-none;
+        @apply bg-slate-100;
+
+        .graphiql-query-editor {
+          @apply pb-4 border-none;
+        }
+
+        .graphiql-editor-tool {
+          @apply px-2 pt-0 pb-4 text-sm;
+        }
+
+        .graphiql-editor-tools {
+          @apply p-0 px-1 text-slate-500;
+        }
+      }
+      .CodeMirror {
+        @apply bg-slate-100 text-sm;
+        height: auto !important;
+      }
+      .graphiql-query-editor {
+        @apply p-2;
+      }
+    }
+
+    code {
+      @apply p-2;
+    }
+  }
+}
+
 :root {
-  --ifm-color-primary: rgba(149, 31, 94, 1);
-  --ifm-color-primary-dark: rgba(149, 31, 94, 0.75);
+  --ifm-color-primary: rgba(151, 28, 93, 1);
+  --ifm-color-primary-dark: rgba(151, 28, 93, 0.75);
   --ifm-color-primary-darker: #277148;
   --ifm-color-primary-darkest: #205d3b;
   --ifm-color-primary-light: #33925d;
@@ -26,7 +117,8 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
-p {
+p,
+li {
   font-weight: 350;
 }
 
@@ -38,19 +130,20 @@ p {
   font-weight: 450;
 }
 
-.hero {
-  background: rgb(149, 31, 94);
-  background: linear-gradient(
-    135deg,
-    rgba(149, 31, 94, 1) 0%,
-    rgba(10, 27, 81, 1) 100%
-  );
-}
+table#landscape {
+  td {
+    width: 33%;
+    max-width: 250px;
+    @apply text-xs;
+  }
 
-.footer {
-  background: rgb(10, 27, 81);
-}
+  @media (min-width: 1024px) {
+    td {
+      @apply text-base;
+    }
+  }
 
-.CodeMirror {
-  height: auto !important;
+  tr {
+    background: none !important;
+  }
 }
