@@ -201,8 +201,10 @@ export class Planner {
       return stages;
     }
 
-    // unreachable
-    throw new Error();
+    const path = this.formatPath(node.path);
+    throw new Error(
+      `at ${path}: Unexpected selection set for type '${typ.type}'`,
+    );
   }
 
   private getChildNodeForField(

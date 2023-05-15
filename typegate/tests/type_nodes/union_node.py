@@ -79,6 +79,8 @@ with TypeGraph("union") as g:
         ]
     ).named("NestedUnions")
 
+    scalar_union = t.union([t.integer(), t.string()])
+
     public = policies.public()
 
     g.expose(
@@ -86,6 +88,11 @@ with TypeGraph("union") as g:
         nested=t.func(
             t.struct({"inp": t.array(nested_unions)}),
             t.array(nested_unions),
+            PureFunMat("({ inp }) => inp"),
+        ),
+        scalar=t.func(
+            t.struct({"inp": t.array(scalar_union)}),
+            t.array(scalar_union),
             PureFunMat("({ inp }) => inp"),
         ),
         default_policy=public,

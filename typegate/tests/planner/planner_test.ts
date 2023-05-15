@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 import { findOperation } from "../../src/graphql.ts";
-import { test } from "../utils.ts";
+import { gql, test } from "../utils.ts";
 import { None } from "monads";
 import { parse } from "graphql";
 import { mapValues } from "std/collections/map_values.ts";
@@ -55,5 +55,37 @@ test("planner", async (t) => {
         ),
       };
     }));
+  });
+
+  await t.should("fail when required selections are missing", async () => {
+    await gql`
+      query {
+        one
+      }
+    `
+      .expectErrorContains("at Q.one: selection set is expected for object")
+      .on(e);
+
+    await gql`
+      query {
+        one {
+          nested
+        }
+      }
+    `
+      .expectErrorContains("at Q.one.nested: selection set is expected")
+      .on(e);
+  });
+
+  await t.should("fail for unexpected selections", async () => {
+    await gql`
+      query {
+        one {
+          id { id }
+        }
+      }
+    `
+      .expectErrorContains("at Q.one.id: Unexpected selection set")
+      .on(e);
   });
 });

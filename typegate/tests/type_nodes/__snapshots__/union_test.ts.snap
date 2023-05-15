@@ -145,6 +145,20 @@ snapshot[`Union type 2`] = `
         possibleTypes: null,
       },
       {
+        kind: "UNION",
+        name: "union_27Out",
+        possibleTypes: [
+          {
+            kind: "OBJECT",
+            name: "_Integer",
+          },
+          {
+            kind: "OBJECT",
+            name: "_String",
+          },
+        ],
+      },
+      {
         kind: "SCALAR",
         name: "ColorIn",
         possibleTypes: null,
@@ -207,6 +221,11 @@ snapshot[`Union type 2`] = `
       {
         kind: "INPUT_OBJECT",
         name: "BInp",
+        possibleTypes: null,
+      },
+      {
+        kind: "SCALAR",
+        name: "union_27In",
         possibleTypes: null,
       },
     ],

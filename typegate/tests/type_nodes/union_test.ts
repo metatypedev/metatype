@@ -212,3 +212,23 @@ test("nested unions", async (t) => {
       .on(e);
   });
 });
+
+test("scalar unions", async (t) => {
+  const e = await t.pythonFile("type_nodes/union_node.py");
+
+  await t.should("succeed", async () => {
+    const data: JSONValue = [1, "hello", 12];
+    await gql`
+      query Q($inp: [ScalarUnionInp]) {
+        scalar(inp: $inp)
+      }
+    `
+      .withVars({
+        inp: data,
+      })
+      .expectData({
+        scalar: data,
+      })
+      .on(e);
+  });
+});
