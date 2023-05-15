@@ -46,12 +46,21 @@ class TypedefFromJsonSchema:
         if "$ref" in schema:
             return t.proxy(self.ref_to_name(schema["$ref"]))
 
+        # TODO:
+        # use either/union
+        if "oneOf" in schema or "anyOf" in schema:
+            variants = schema.anyOf if "anyOf" in schema else schema.oneOf
+            return self(Box(merge_all([self.resolve_ref(s) for s in variants])))
+
         if "allOf" in schema:
             return self(Box(merge_all([self.resolve_ref(s) for s in schema.allOf])))
 
+        # {'nullable': True}, {'deprecated': True}, ... could happen
         if "type" not in schema:
-            schema = Box({"properties": {}, "type": "object"})
-            # raise Exception(f'Unsupported schema, field "type" not found: {schema}')
+            schema = Box({"nullable": True, "properties": {}, "type": "object"})
+
+        if "type" not in schema:
+            raise Exception(f'Unsupported schema, field "type" not found: {schema}')
 
         gen = self.type_dispatch.get(schema.type)
         if gen is None:

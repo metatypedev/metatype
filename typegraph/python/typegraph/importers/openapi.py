@@ -10,7 +10,7 @@ from urllib.parse import urljoin
 import httpx
 import semver
 import yaml
-from box import Box, BoxList
+from box import Box
 
 from typegraph import t
 from typegraph.importers.base.importer import Importer
@@ -26,8 +26,10 @@ MIME_TYPES = Box(
 )
 
 
+# Example:
+# "#/components/schemas/financial_connections.account_owner"
 def ref_to_name(ref: str) -> str:
-    match = re.match(r"^#/components/schemas/([\w\-_]+)$", ref)
+    match = re.match(r"^#/components/schemas/([\w\-_\.]+)$", ref)
     if not match:
         raise Exception(f"Could not resolve $ref '{ref}'")
     return match.group(1)
@@ -117,8 +119,7 @@ class OpenApiImporter(Importer):
         schemas = self.specification.get("components", {}).get("schemas", [])
 
         if len(schemas) > 0:
-            items = schemas if isinstance(BoxList, schemas) else schemas.items()
-            for name, schema in items:
+            for name, schema in schemas.items():
                 self.add_schema(name, schema)
 
         with self as imp:
