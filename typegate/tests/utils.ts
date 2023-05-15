@@ -54,6 +54,7 @@ export async function shell(
   cmd: string[],
   options: MetaOptions = {},
 ): Promise<string> {
+  console.log("shell", cmd);
   const { stdin = null } = options;
   const p = new Deno.Command(cmd[0], {
     cwd: testDir,
@@ -64,7 +65,7 @@ export async function shell(
     env: { RUST_LOG: "info,meta=trace" },
   }).spawn();
 
-  p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
+  const stderr = p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
 
   if (stdin != null) {
     const w = p.stdin.getWriter();
@@ -78,6 +79,8 @@ export async function shell(
   for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
     out += l;
   }
+
+  await stderr;
 
   const { code, success } = await p.status;
 
