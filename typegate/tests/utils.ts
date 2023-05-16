@@ -181,7 +181,7 @@ export function gql(query: readonly string[], ...args: any[]) {
   const template = query
     .map((q, i) => `${q}${args[i] ? JSON.stringify(args[i]) : ""}`)
     .join("");
-  return new Q(template, {}, {}, {}, []);
+  return new Q(template, {}, {}, {}, [], []);
 }
 
 export async function execute(

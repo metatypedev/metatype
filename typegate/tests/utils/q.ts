@@ -42,27 +42,28 @@ interface ResponseBody {
 }
 
 export class Q {
-  query: string;
-  context: Context;
-  contextEncoder: ContextEncoder;
-  variables: Variables;
-  headers: Record<string, string>;
-  expects: Expect[];
-
   constructor(
-    query: string,
-    context: Context,
-    variables: Variables,
-    headers: Record<string, string>,
-    expects: Expect[],
-    contextEncoder: ContextEncoder = defaultContextEncoder,
-  ) {
-    this.query = query;
-    this.context = context;
-    this.contextEncoder = contextEncoder;
-    this.variables = variables;
-    this.headers = headers;
-    this.expects = expects;
+    public query: string,
+    private context: Context,
+    private variables: Variables,
+    private headers: Record<string, string>,
+    private files: Array<[file: File, paths: string[]]>,
+    private expects: Expect[],
+    private contextEncoder: ContextEncoder = defaultContextEncoder,
+  ) {}
+
+  private clone(patch: (q: Q) => void = (_q) => {}): Q {
+    const q = new Q(
+      this.query,
+      this.context,
+      this.variables,
+      this.headers,
+      this.files,
+      this.expects,
+      this.contextEncoder,
+    );
+    patch(q);
+    return q;
   }
 
   static async fs(path: string, engine: Engine) {
@@ -81,56 +82,43 @@ export class Q {
       await Deno.writeTextFile(output, JSON.stringify(result, null, 2));
     }
     const result = Deno.readTextFile(output);
-    return new Q(await query, {}, {}, {}, [])
+    return new Q(await query, {}, {}, {}, [], [])
       .expectValue(JSON.parse(await result))
       .on(engine);
   }
 
   withContext(context: Context, contextEncoder?: ContextEncoder) {
-    return new Q(
-      this.query,
-      deepMerge(this.context, context),
-      this.variables,
-      this.headers,
-      this.expects,
-      contextEncoder || this.contextEncoder,
-    );
+    return this.clone((q) => {
+      q.context = deepMerge(q.context, context);
+      q.contextEncoder = contextEncoder || q.contextEncoder;
+    });
   }
 
   withVars(variables: Variables) {
-    return new Q(
-      this.query,
-      this.context,
-      deepMerge(this.variables, variables),
-      this.headers,
-      this.expects,
-      this.contextEncoder,
-    );
+    return this.clone((q) => {
+      q.variables = deepMerge(q.variables, variables);
+    });
   }
 
   withHeaders(headers: Record<string, string>) {
-    return new Q(
-      this.query,
-      this.context,
-      this.variables,
-      deepMerge(this.headers, headers),
-      this.expects,
-      this.contextEncoder,
-    );
+    return this.clone((q) => {
+      q.headers = deepMerge(q.headers, headers);
+    });
+  }
+
+  withFile(file: File, paths: string[]) {
+    if (paths.length === 0) {
+      throw new Error("`paths` cannot be empty");
+    }
+    return this.clone((q) => {
+      q.files = [...q.files, [file, paths]];
+    });
   }
 
   expect(expect: Expect) {
-    return new Q(
-      this.query,
-      this.context,
-      this.variables,
-      this.headers,
-      [
-        ...this.expects,
-        expect,
-      ],
-      this.contextEncoder,
-    );
+    return this.clone((q) => {
+      q.expects = [...q.expects, expect];
+    });
   }
 
   expectStatus(status: number) {
@@ -204,31 +192,60 @@ export class Q {
     });
   }
 
-  async on(engine: Engine, host = "http://typegate.local") {
-    const { query, variables, headers, context, expects } = this;
+  json() {
+    const { query, variables } = this;
+    return { query, variables, operationName: null };
+  }
+
+  formData() {
+    const data = new FormData();
+    data.set("operations", JSON.stringify(this.json()));
+    const map: Record<string, string[]> = {};
+    for (const [i, [file, paths]] of this.files.entries()) {
+      const key = `${i}`;
+      map[key] = paths;
+      data.set(key, file);
+    }
+    data.set("map", JSON.stringify(map));
+    return data;
+  }
+
+  async getRequest(url: string) {
+    const { headers, context } = this;
 
     const defaults: Record<string, string> = {};
 
     if (Object.keys(context).length > 0) {
       defaults["Authorization"] = await this.contextEncoder(context);
     }
+    if (this.files.length === 0) {
+      return new Request(url, {
+        method: "POST",
+        body: JSON.stringify(this.json()),
+        headers: {
+          ...defaults,
+          ...headers,
+          "Content-Type": "application/json",
+        },
+      });
+    } else {
+      return new Request(url, {
+        method: "POST",
+        body: this.formData(),
+        headers: {
+          ...defaults,
+          ...headers,
+          // "Content-Type": "multipart/form-data",
+        },
+      });
+    }
+  }
 
-    const request = new Request(`${host}/${engine.name}`, {
-      method: "POST",
-      body: JSON.stringify({
-        query,
-        variables,
-        operationName: null,
-      }),
-      headers: {
-        ...defaults,
-        ...headers,
-        "Content-Type": "application/json",
-      },
-    });
+  async on(engine: Engine, host = "http://typegate.local") {
+    const request = await this.getRequest(`${host}/${engine.name}`);
     const response = await execute(engine, request);
 
-    for (const expect of expects) {
+    for (const expect of this.expects) {
       expect(response);
     }
   }
