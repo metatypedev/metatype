@@ -32,8 +32,7 @@ with TypeGraph(name="circular") as g:
             # Edgecase #6: nested union/either
             "award": t.either(
                 [
-                    t.string(),
-                    t.integer(),
+                    t.struct({"name": t.string()}).named("NamedAward"),
                     t.union([medals, stars]),
                 ]
             ).optional(),

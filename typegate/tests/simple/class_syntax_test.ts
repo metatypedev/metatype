@@ -72,7 +72,7 @@ test("Class Syntax", async (t) => {
       }
     `
       .expectErrorContains(
-        "expected minimum length: 2, got 0",
+        "<value>.comments[0].title: expected minimum length: 2",
       )
       .on(e);
   });

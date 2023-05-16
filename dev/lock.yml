@@ -49,7 +49,7 @@ dev:
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.1.0
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.1.7
+    METATYPE_VERSION: 0.1.8
     TAGLINE: >-
       The low-code API platform for developers. Build modular APIs with
       zero-trust and serverless deployment, no matter where and how your

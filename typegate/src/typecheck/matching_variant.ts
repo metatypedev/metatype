@@ -1,29 +1,68 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import { Type, TypeNode } from "../type_node.ts";
 import { TypeGraph } from "../typegraph.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import {
-  ErrorEntry,
-  validationContext,
-  Validator,
-  ValidatorFn,
-} from "./common.ts";
+import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";
 
-export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
-  const validator = new Function(
-    new InputValidationCompiler(tg).generate(typeIdx),
-  )() as ValidatorFn;
-  return (value: unknown) => {
-    const errors: ErrorEntry[] = [];
-    validator(value, "<value>", errors, validationContext);
-    // console.log("validating input", value);
-    if (errors.length > 0) {
-      console.log(errors);
-      const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
-        .join("");
-      throw new Error(`Validation errors:\n${messages}`);
+export type VariantMatcher = (value: unknown) => string | null;
+
+export function flattenUnionVariants(
+  tg: TypeGraph,
+  variants: number[],
+): number[] {
+  return variants.flatMap((idx) => {
+    const typeNode = tg.type(idx);
+    switch (typeNode.type) {
+      case Type.UNION:
+        return flattenUnionVariants(tg, typeNode.anyOf);
+      case Type.EITHER:
+        return flattenUnionVariants(tg, typeNode.oneOf);
+      default:
+        return [idx];
     }
+  });
+}
+
+// get the all the variants in a multilevel union/either
+export function getNestedUnionVariants(
+  tg: TypeGraph,
+  typeNode: TypeNode,
+): number[] {
+  switch (typeNode.type) {
+    case Type.UNION:
+      return flattenUnionVariants(tg, typeNode.anyOf);
+    case Type.EITHER:
+      return flattenUnionVariants(tg, typeNode.oneOf);
+    default:
+      throw new Error(`Expected either or union, got '${typeNode.type}'`);
+  }
+}
+// optimized variant matcher for union of objects
+export function generateVariantMatcher(
+  tg: TypeGraph,
+  typeIdx: number,
+): VariantMatcher {
+  // all variants must be objects
+  const variantIndices = getNestedUnionVariants(tg, tg.type(typeIdx));
+  const variants = variantIndices.map((idx) => tg.type(idx, Type.OBJECT));
+
+  const validators = new Function(
+    new VariantMatcherCompiler(tg).generate(variantIndices),
+  )() as ValidatorFn[];
+
+  return (value: unknown) => {
+    let errors: ErrorEntry[] = [];
+    for (let i = 0; i < variants.length; ++i) {
+      const validator = validators[i];
+      validator(value, "<value>", errors, validationContext);
+      if (errors.length === 0) {
+        return variants[i].title;
+      }
+      errors = [];
+    }
+    return null;
   };
 }
 
@@ -31,15 +70,17 @@ function functionName(typeIdx: number) {
   return `validate_${typeIdx}`;
 }
 
-export class InputValidationCompiler {
+class VariantMatcherCompiler {
   codes: Map<number, string> = new Map();
 
   constructor(private tg: TypeGraph) {}
 
-  generate(rootTypeIdx: number): string {
+  generate(variants: number[]): string {
+    // TODO onError: return
     const cg = new CodeGenerator();
-    const queue = [rootTypeIdx];
-    const refs = new Set([rootTypeIdx]);
+    const queue = [...variants];
+    const refs = new Set(variants);
+
     for (
       let typeIdx = queue.shift();
       typeIdx != null;
@@ -107,10 +148,10 @@ export class InputValidationCompiler {
       );
     }
 
-    const rootValidatorName = functionName(rootTypeIdx);
-    const rootValidator = `\nreturn ${rootValidatorName}`;
+    const validatorNames = variants.map((idx) => functionName(idx));
+    const variantValidators = `\nreturn [${validatorNames.join(", ")}]`;
 
-    return [...refs].map((idx) => this.codes.get(idx))
-      .join("\n") + rootValidator;
+    return [...refs].map((idx) => this.codes.get(idx)).join("\n") +
+      variantValidators;
   }
 }

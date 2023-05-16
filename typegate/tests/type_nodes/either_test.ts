@@ -11,8 +11,13 @@ test(
       await gql`
         query {
           regist_user(user: { age: 11, name: "Bob", school: "The school" }) {
-            user_id
-            date
+            ... on SuccessTransaction {
+              user_id
+              date
+            }
+            ... on FailedTransaction {
+              reason
+            }
           }
         }
       `
@@ -29,8 +34,13 @@ test(
       await gql`
         query {
           regist_user(user: { age: 20, name: "Dave", college: "The college" }) {
-            user_id
-            date
+            ... on SuccessTransaction {
+              user_id
+              date
+            }
+            ... on FailedTransaction {
+              reason
+            }
           }
         }
       `
@@ -47,8 +57,13 @@ test(
       await gql`
         query {
           regist_user(user: { age: 32, name: "John", company: "The company" }) {
-            user_id
-            date
+            ... on SuccessTransaction {
+              user_id
+              date
+            }
+            ... on FailedTransaction {
+              reason
+            }
           }
         }
       `
@@ -69,7 +84,12 @@ test(
             regist_user(
               user: { age: 32, name: "John", company: "The company" }
             ) {
-              date
+              ... on SuccessTransaction {
+                date
+              }
+              ... on FailedTransaction {
+                reason
+              }
             }
           }
         `
@@ -96,8 +116,13 @@ test(
                 company: "The company"
               }
             ) {
-              user_id
-              date
+              ... on SuccessTransaction {
+                user_id
+                date
+              }
+              ... on FailedTransaction {
+                reason
+              }
             }
           }
         `
@@ -118,8 +143,13 @@ test(
                 school: "The school"
               }
             ) {
-              user_id
-              date
+              ... on SuccessTransaction {
+                user_id
+                date
+              }
+              ... on FailedTransaction {
+                reason
+              }
             }
           }
         `
@@ -127,6 +157,7 @@ test(
           .on(e);
       },
     );
+
     await t.should("allow to introspect the either type", async () => {
       await gql`
         query IntrospectionQuery {

@@ -15,9 +15,10 @@ export function ChoicePicker<T>({
   choices,
   choice,
   onChange,
+  className,
 }: ChoicePickerP<T>) {
   return (
-    <ul className="pl-0 m-0 list-none w-full">
+    <ul className={`pl-0 m-0 list-none w-full ${className ?? ""}`}>
       {Object.entries(choices).map(([k, p]) => (
         <li key={k} className="inline-block rounded-md overflow-clip mr-1">
           <div>
