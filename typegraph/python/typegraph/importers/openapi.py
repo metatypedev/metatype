@@ -26,13 +26,24 @@ MIME_TYPES = Box(
 )
 
 
-# Example:
-# "#/components/schemas/financial_connections.account_owner"
 def ref_to_name(ref: str) -> str:
+    """
+    Example match:\n
+    `#/components/schemas/financial_connections.account_owner`
+    """
     match = re.match(r"^#/components/schemas/([\w\-_\.]+)$", ref)
     if not match:
         raise Exception(f"Could not resolve $ref '{ref}'")
     return match.group(1)
+
+
+def create_fn_name(method: str, path: str):
+    """
+    Example:\n
+    `method`=get, `path`=/users/{id} => getUsersId
+    """
+    parts = map(lambda s: s.capitalize(), re.findall(r"([^/{}]+)", path))
+    return f"{method}{''.join(parts)}"
 
 
 class OpenApiImporter(Importer):
@@ -178,19 +189,22 @@ class Path:
     def generate_functions(self):
         ret = {}
         for method in self.spec:
+            name = None
             if method in METHODS:
                 try:
                     name, fn = self.generate_function(method)
                     ret[name] = fn
                 except Exception as e:
-                    name = self.spec[method].operationId
+                    identifier = name
+                    if identifier is None:
+                        identifier = f"method={method} path={self.path}"
                     print(
-                        f"Warning: Generation of function '{name}' skipped: {e}",
+                        f"Warning: Generation of function {identifier}, {e}",
                         file=stderr,
                     )
             else:
                 print(
-                    f"Warning: Unsupported method {method}: generation skipped",
+                    f"Warning: Unsupported method {method} at path={self.path}: generation skipped",
                     file=stderr,
                 )
         return ret
@@ -221,8 +235,16 @@ class Path:
         if "404" in spec.responses:
             out = out.optional()
 
+        # operationId is optional
+        # (method, path) can still uniquely identify a endpoint
+        name = (
+            spec.operationId
+            if hasattr(spec, "operationId")
+            else create_fn_name(method, self.path)
+        )
+
         return (
-            spec.operationId,
+            name,
             t.func(
                 inp_type,
                 out,
