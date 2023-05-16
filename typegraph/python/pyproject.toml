@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph"
-version = "0.1.8"
+version = "0.1.9-dev.0"
 description = "The low-code API platform for developers. Build modular APIs with zero-trust and serverless deployment, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license = "ELv2"
