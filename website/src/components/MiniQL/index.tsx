@@ -85,6 +85,7 @@ function MiniQLBrowser({
           choices={modes}
           choice={mode}
           onChange={setMode}
+          className="mb-2"
         />
       ) : null}
 

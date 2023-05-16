@@ -65,8 +65,6 @@ export async function shell(
     env: { RUST_LOG: "info,meta=trace" },
   }).spawn();
 
-  const stderr = p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
-
   if (stdin != null) {
     const w = p.stdin.getWriter();
     w.write(new TextEncoder().encode(stdin));
@@ -80,7 +78,7 @@ export async function shell(
     out += l;
   }
 
-  await stderr;
+  await p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
 
   const { code, success } = await p.status;
 

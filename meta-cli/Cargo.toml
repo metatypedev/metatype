@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.1.7"
+version = "0.1.8"
 edition = "2021"
 
 description = "The low-code API platform for developers. Build modular APIs with zero-trust and serverless deployment, no matter where and how your (legacy) systems are."

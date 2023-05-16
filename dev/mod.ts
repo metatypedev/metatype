@@ -36,8 +36,9 @@ export async function run(
     stderr: "piped",
     env,
   }).spawn();
-  p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
-  p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
+  // keep pipe asynchronous till the command exists
+  void p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
+  void p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
   return await p.status;
 }
 
