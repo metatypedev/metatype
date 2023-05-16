@@ -34,6 +34,8 @@ enum S3PresigningOut {
 
 #[deno]
 fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> S3PresigningOut {
+    eprintln!("client: {client:?}");
+    eprintln!("presigning: {presigning:?}");
     let region = Region::Custom {
         region: client.region,
         endpoint: client.endpoint,
