@@ -199,7 +199,7 @@ class Path:
                     if identifier is None:
                         identifier = f"method={method} path={self.path}"
                     print(
-                        f"Warning: Generation of function {identifier}, {e}",
+                        f"Warning: Generation of function {identifier}: {e}",
                         file=stderr,
                     )
             else:
@@ -273,20 +273,23 @@ class Path:
             if MIME_TYPES.json in types:
                 content_type = MIME_TYPES.json
             elif MIME_TYPES.urlenc in types:
-                content_type = MIME_TYPES.json
+                content_type = MIME_TYPES.urlenc
             elif MIME_TYPES.multipart in types:
                 content_type = MIME_TYPES.multipart
             else:
                 raise Exception(
                     f"No supported content type for request: {', '.join(types)}"
                 )
-
             schema = body[content_type].schema
             schema = self.resolve_ref(schema)
             if schema.type != "object":
                 raise Exception(f"Unsupported type for request body: {schema.type}")
 
-            for name, typ in self.typedef_from_jsonschema(schema).props.items():
+            gen_typ = self.typedef_from_jsonschema(schema)
+            if isinstance(gen_typ, t.optional):
+                gen_typ = gen_typ.of
+
+            for name, typ in gen_typ.props.items():
                 if name in props:
                     raise Exception(
                         f"Name clash: '{name}' present in both query parameters and request body"
