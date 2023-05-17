@@ -11,7 +11,7 @@ const projectName = "metatype";
 const config = {
   title: "Metatype",
   // prettier-ignore
-  tagline: "The low-code API platform for developers. Build modular APIs with zero-trust and serverless deployment, no matter where and how your (legacy) systems are.",
+  tagline: "Open source, low-code API platform for developers. It enables them to build modular APIs with zero-trust and serverless deployment, no matter where and how their (legacy) systems are.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
