@@ -79,12 +79,13 @@ export class S3Runtime extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     const name = stage.props.materializer?.name;
-    const { bucket, content_type } = stage.props.materializer?.data ?? {};
+    const matData = stage.props.materializer?.data ?? {};
 
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
     const mask = getMask(sameRuntime);
 
     const resolver: Resolver = (() => {
+      const { bucket } = matData;
       if (name === "list") {
         return async ({ path }) => {
           const { items, prefix } = nativeResult(
@@ -99,6 +100,7 @@ export class S3Runtime extends Runtime {
       }
 
       if (name === "sign") {
+        const { bucket, content_type } = matData;
         return async ({ length, path }) => {
           const params: native.S3Presigning = {
             bucket: bucket as string,
@@ -113,16 +115,30 @@ export class S3Runtime extends Runtime {
       }
 
       if (name === "upload") {
-        return async ({ file, path }: { file: File; path: string }) => {
+        const { bucket } = matData;
+        return async ({ file, path }) => {
           const { key } = nativeResult(
             await native.s3_upload(
               this.client,
               bucket as string,
-              path,
-              new Uint8Array(await file.arrayBuffer()),
+              path as string,
+              new Uint8Array(await (file as File).arrayBuffer()),
             ),
           );
           return key;
+        };
+      }
+
+      if (name === "download_url") {
+        const { bucket, expiry_secs } = matData;
+        return async ({ path }) => {
+          const params: native.S3PresigningGet = {
+            bucket: bucket as string,
+            key: path as string,
+            expires: expiry_secs as number,
+          };
+          return nativeResult(await native.s3_presign_get(this.client, params))
+            .res;
         };
       }
 

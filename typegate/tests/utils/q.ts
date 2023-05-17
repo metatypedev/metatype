@@ -246,7 +246,7 @@ export class Q {
     const response = await execute(engine, request);
 
     for (const expect of this.expects) {
-      expect(response);
+      await expect(response);
     }
   }
 }

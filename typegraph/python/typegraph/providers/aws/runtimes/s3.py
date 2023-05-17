@@ -7,6 +7,7 @@ from typegraph import effects, t
 from typegraph.effects import Effect
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
+from typing import Optional
 
 
 @frozen
@@ -57,6 +58,13 @@ class S3Runtime(Runtime):
             UploadMat(self, bucket),
         )
 
+    def download_url(self, bucket: str, expiry_secs: Optional[int] = 3600):
+        return t.func(
+            t.struct({"path": t.string()}),
+            t.uri(),
+            DownloadUrlMat(self, bucket, expiry_secs),
+        )
+
 
 @frozen
 class SignMat(Materializer):
@@ -81,3 +89,12 @@ class UploadMat(Materializer):
     bucket: str
     materializer_name: str = always("upload")
     effect: Effect = always(effects.upsert())
+
+
+@frozen
+class DownloadUrlMat(Materializer):
+    runtime: S3Runtime
+    bucket: str
+    expiry_secs: int
+    materializer_name: str = always("download_url")
+    effect: Effect = always(effects.none())

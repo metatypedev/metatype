@@ -36,6 +36,7 @@ const formatValidators: Record<StringFormat, FormatValidator> = {
       require_protocol: true,
       require_valid_protocol: false,
       require_host: true,
+      require_tld: false,
     });
   },
   // TODO

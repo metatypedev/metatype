@@ -13,7 +13,6 @@ const contentTypes = {
 
 export async function parseRequest(request: Request): Promise<Operations> {
   const contentType = request.headers.get("content-type");
-  console.log(contentType);
 
   if (contentType == null) {
     throw new Error("Content-Type header is required");

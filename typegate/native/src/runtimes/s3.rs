@@ -188,3 +188,35 @@ fn s3_upload(client: S3Client, bucket: &str, key: &str, file: &[u8]) -> S3Upload
         },
     }
 }
+
+#[deno]
+struct S3PresigningGet {
+    bucket: String,
+    key: String,
+    expires: u32,
+}
+
+#[deno]
+fn s3_presign_get(client: S3Client, presigning: S3PresigningGet) -> S3PresigningOut {
+    let mut bucket = match create_bucket(client, &presigning.bucket) {
+        Ok(bucket) => bucket,
+        Err(e) => {
+            error!("{e:?}");
+            return S3PresigningOut::Err {
+                message: e.to_string(),
+            };
+        }
+    };
+
+    bucket.set_path_style();
+
+    match bucket.presign_get(presigning.key, presigning.expires, None) {
+        Ok(res) => S3PresigningOut::Ok { res },
+        Err(e) => {
+            error!("{e:?}");
+            S3PresigningOut::Err {
+                message: e.to_string(),
+            }
+        }
+    }
+}
