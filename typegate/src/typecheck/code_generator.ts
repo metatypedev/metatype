@@ -4,6 +4,7 @@
 import {
   ArrayNode,
   BooleanNode,
+  FileNode,
   IntegerNode,
   NumberNode,
   ObjectNode,
@@ -131,6 +132,25 @@ export class CodeGenerator {
         `"string does not statisfy the required format '${typeNode.format}'"`,
       );
       this.line("}");
+    }
+  }
+
+  generateFileValidator(typeNode: FileNode) {
+    this.validation("!(value instanceof File)", '"expected a file"');
+    const constraints = [
+      ["minSize", "<", "minimum size"],
+      ["maxSize", ">", "maximum size"],
+    ] as const;
+    for (const c of constraints) {
+      const [prop, comp, name] = c;
+      const constraint = typeNode[prop];
+      if (constraint != null) {
+        this.line("else");
+        this.validation(
+          `value.size ${comp} ${constraint}`,
+          `\`expected ${name}: ${constraint}, got \${value.size}\``,
+        );
+      }
     }
   }
 

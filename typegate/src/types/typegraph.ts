@@ -79,6 +79,20 @@ export type StringNode = {
   pattern?: string | null;
   format?: StringFormat | null;
 };
+export type FileNode = {
+  type: "file";
+  title: string;
+  runtime: number;
+  policies: PolicyIndices[];
+  description?: string | null;
+  injection?: InjectionSwitch | null;
+  enum?: string[] | null;
+  config?: {
+    [k: string]: unknown;
+  };
+  minSize?: number | null;
+  maxSize?: number | null;
+};
 export type ObjectNode = {
   type: "object";
   title: string;
@@ -172,6 +186,7 @@ export type TypeNode =
   | NumberNode
   | IntegerNode
   | StringNode
+  | FileNode
   | ObjectNode
   | ArrayNode
   | FunctionNode

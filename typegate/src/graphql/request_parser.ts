@@ -6,21 +6,29 @@ export interface Operations {
   variables: Record<string, unknown>;
 }
 
+const contentTypes = {
+  json: "application/json",
+  formData: "multipart/form-data",
+} as const;
+
 export async function parseRequest(request: Request): Promise<Operations> {
   const contentType = request.headers.get("content-type");
   console.log(contentType);
-  switch (contentType) {
-    case "application/json":
-      return await request.json();
 
-    case "multipart/form-data": {
-      const data = await request.formData();
-      return new FormDataParser(data).parse();
-    }
-
-    default:
-      throw new Error(`Unsupported content type: '${contentType}'`);
+  if (contentType == null) {
+    throw new Error("Content-Type header is required");
   }
+
+  if (contentType.startsWith(contentTypes.json)) {
+    // validate??
+    return await request.json();
+  }
+
+  if (contentType.startsWith(contentTypes.formData)) {
+    const data = await request.formData();
+    return new FormDataParser(data).parse();
+  }
+  throw new Error(`Unsupported content type: '${contentType}'`);
 }
 
 export class FormDataParser {

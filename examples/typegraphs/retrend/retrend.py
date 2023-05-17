@@ -13,6 +13,7 @@ with TypeGraph(
     g.expose(
         presigned=s3.sign("bucket", "image/png").add_policy(all),
         list=s3.list("bucket").add_policy(all),
+        upload=s3.upload("bucket").add_policy(all),
         resize=t.func(
             t.struct(
                 {

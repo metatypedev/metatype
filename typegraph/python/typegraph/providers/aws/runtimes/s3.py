@@ -50,6 +50,13 @@ class S3Runtime(Runtime):
             ListMat(self, bucket),
         )
 
+    def upload(self, bucket: str):
+        return t.func(
+            t.struct({"file": t.file(), "path": t.string()}),
+            t.string(),
+            UploadMat(self, bucket),
+        )
+
 
 @frozen
 class SignMat(Materializer):
@@ -66,3 +73,11 @@ class ListMat(Materializer):
     bucket: str
     materializer_name: str = always("list")
     effect: Effect = always(effects.none())
+
+
+@frozen
+class UploadMat(Materializer):
+    runtime: S3Runtime
+    bucket: str
+    materializer_name: str = always("upload")
+    effect: Effect = always(effects.upsert())

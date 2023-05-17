@@ -70,6 +70,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
                 | TypeNode::Number { .. }
                 | TypeNode::Integer { .. }
                 | TypeNode::String { .. }
+                | TypeNode::File { .. }
                 | TypeNode::Any { .. } => {
                     // scalar types -- no children
                     None

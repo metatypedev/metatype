@@ -478,6 +478,86 @@
           "type": "object",
           "required": [
             "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "file"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "minSize": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "maxSize": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "policies",
             "properties",
             "runtime",
             "title",

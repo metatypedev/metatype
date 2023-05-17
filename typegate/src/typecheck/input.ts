@@ -66,6 +66,9 @@ export class InputValidationCompiler {
           case "string":
             cg.generateStringValidator(typeNode);
             break;
+          case "file":
+            cg.generateFileValidator(typeNode);
+            break;
           case "optional":
             cg.generateOptionalValidator(typeNode, functionName(typeNode.item));
             queue.push(typeNode.item);

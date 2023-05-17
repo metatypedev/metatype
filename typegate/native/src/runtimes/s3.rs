@@ -2,12 +2,15 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 use crate::RT;
-use http::header::{self};
+use http::header;
 use http::{HeaderMap, HeaderValue};
+use log::error;
 use macros::deno;
 use s3::bucket::Bucket;
 use s3::creds::Credentials;
+use s3::error::S3Error;
 use s3::Region;
+use tap::TapFallible;
 
 #[deno]
 struct S3Client {
@@ -15,6 +18,22 @@ struct S3Client {
     access_key: String,
     secret_key: String,
     endpoint: String,
+}
+
+fn create_bucket(client: S3Client, bucket: &str) -> Result<Bucket, S3Error> {
+    let region = Region::Custom {
+        region: client.region,
+        endpoint: client.endpoint,
+    };
+    let credentials = Credentials {
+        access_key: Some(client.access_key),
+        secret_key: Some(client.secret_key),
+        security_token: None,
+        session_token: None,
+        expiration: None,
+    };
+
+    Bucket::new(bucket, region, credentials)
 }
 
 #[deno]
@@ -34,21 +53,7 @@ enum S3PresigningOut {
 
 #[deno]
 fn s3_presign_put(client: S3Client, presigning: S3Presigning) -> S3PresigningOut {
-    eprintln!("client: {client:?}");
-    eprintln!("presigning: {presigning:?}");
-    let region = Region::Custom {
-        region: client.region,
-        endpoint: client.endpoint,
-    };
-    let credentials = Credentials {
-        access_key: Some(client.access_key),
-        secret_key: Some(client.secret_key),
-        security_token: None,
-        session_token: None,
-        expiration: None,
-    };
-
-    let mut bucket = match Bucket::new(&presigning.bucket, region, credentials) {
+    let mut bucket = match create_bucket(client, &presigning.bucket) {
         Ok(bucket) => bucket,
         Err(e) => {
             return S3PresigningOut::Err {
@@ -112,19 +117,7 @@ enum S3Items {
 
 #[deno]
 fn s3_list(client: S3Client, bucket: &str, path: &str) -> S3Items {
-    let region = Region::Custom {
-        region: client.region,
-        endpoint: client.endpoint,
-    };
-    let credentials = Credentials {
-        access_key: Some(client.access_key),
-        secret_key: Some(client.secret_key),
-        security_token: None,
-        session_token: None,
-        expiration: None,
-    };
-
-    let mut bucket = match Bucket::new(bucket, region, credentials) {
+    let mut bucket = match create_bucket(client, bucket) {
         Ok(bucket) => bucket,
         Err(e) => {
             return S3Items::Err {
@@ -155,6 +148,42 @@ fn s3_list(client: S3Client, bucket: &str, path: &str) -> S3Items {
                 .collect(),
         },
         Err(e) => S3Items::Err {
+            message: e.to_string(),
+        },
+    }
+}
+
+#[deno]
+struct S3Upload {
+    key: String,
+}
+
+#[deno]
+enum S3UploadedFile {
+    Ok { key: String },
+    Err { message: String },
+}
+
+#[deno]
+fn s3_upload(client: S3Client, bucket: &str, key: &str, file: &[u8]) -> S3UploadedFile {
+    let mut bucket = match create_bucket(client, bucket).tap_err(|e| error!("{e:?}")) {
+        Ok(bucket) => bucket,
+        Err(e) => {
+            return S3UploadedFile::Err {
+                message: e.to_string(),
+            }
+        }
+    };
+
+    bucket.set_path_style();
+
+    let temp = RT.block_on(bucket.put_object(key, file));
+
+    match temp.tap_err(|e| error!("{e:?}")) {
+        Ok(_res) => S3UploadedFile::Ok {
+            key: key.to_string(),
+        },
+        Err(e) => S3UploadedFile::Err {
             message: e.to_string(),
         },
     }

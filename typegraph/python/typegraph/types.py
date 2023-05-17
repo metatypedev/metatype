@@ -499,6 +499,13 @@ def enum(variants: List[str]) -> string:
     return string().enum(variants)
 
 
+@with_constraints
+@frozen
+class file(typedef):
+    _min: Optional[int] = constraint("minSize")
+    _max: Optional[int] = constraint("maxSize")
+
+
 def validate_struct_props(instance, attribute, props):
     for tpe in props.values():
         if not isinstance(tpe, typedef) and not isinstance(tpe, NodeProxy):

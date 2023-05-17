@@ -129,6 +129,15 @@ pub struct StringTypeData {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct FileTypeData {
+    pub min_size: Option<u32>,
+    pub max_size: Option<u32>,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[skip_serializing_none]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ObjectTypeData {
     pub properties: IndexMap<String, u32>,
     #[serde(default)]
@@ -211,6 +220,12 @@ pub enum TypeNode {
         #[serde(flatten)]
         data: StringTypeData,
     },
+    File {
+        #[serde(flatten)]
+        base: TypeNodeBase,
+        #[serde(flatten)]
+        data: FileTypeData,
+    },
     Object {
         #[serde(flatten)]
         base: TypeNodeBase,
@@ -257,6 +272,7 @@ impl TypeNode {
             | Number { base, .. }
             | Integer { base, .. }
             | String { base, .. }
+            | File { base, .. }
             | Object { base, .. }
             | Array { base, .. }
             | Function { base, .. }
@@ -274,6 +290,7 @@ impl TypeNode {
             Number { .. } => "number",
             Integer { .. } => "integer",
             String { .. } => "string",
+            File { .. } => "file",
             Object { .. } => "object",
             Array { .. } => "array",
             Function { .. } => "function",

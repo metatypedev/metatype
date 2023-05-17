@@ -112,6 +112,20 @@ export class S3Runtime extends Runtime {
         };
       }
 
+      if (name === "upload") {
+        return async ({ file, path }: { file: File; path: string }) => {
+          const { key } = nativeResult(
+            await native.s3_upload(
+              this.client,
+              bucket as string,
+              path,
+              new Uint8Array(await file.arrayBuffer()),
+            ),
+          );
+          return key;
+        };
+      }
+
       return fieldSelectorResolver(stage);
     })();
     return [
