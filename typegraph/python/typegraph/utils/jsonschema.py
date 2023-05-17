@@ -40,31 +40,39 @@ class TypedefFromJsonSchema:
                     for prop_name, prop_schema in s.get("properties", dict()).items()
                 }
             ),
+            "union": lambda s: (
+                self(s.anyOf[0])
+                if len(s.anyOf) == 1
+                else t.union([self(t) for t in s.anyOf])
+            ),
+            "either": lambda s: (
+                self(s.oneOf[0])
+                if len(s.oneOf) == 1
+                else t.either([self(t) for t in s.oneOf])
+            ),
         }
 
     def __call__(self, schema: Box):
         if "$ref" in schema:
             return t.proxy(self.ref_to_name(schema["$ref"]))
 
-        # TODO:
-        # use either/union
-        if "oneOf" in schema or "anyOf" in schema:
-            variants = schema.anyOf if "anyOf" in schema else schema.oneOf
-            return self(Box(merge_all([self.resolve_ref(s) for s in variants])))
-
         if "allOf" in schema:
             return self(Box(merge_all([self.resolve_ref(s) for s in schema.allOf])))
 
-        # {'nullable': True}, {'deprecated': True}, ... could happen
-        if "type" not in schema:
-            schema = Box({"nullable": True, "properties": {}, "type": "object"})
+        schema_type = schema.get("type")
 
-        if "type" not in schema:
+        if "anyOf" in schema:
+            schema_type = "union"
+
+        if "oneOf" in schema:
+            schema_type = "either"
+
+        if schema_type is None:
             raise Exception(f'Unsupported schema, field "type" not found: {schema}')
 
-        gen = self.type_dispatch.get(schema.type)
+        gen = self.type_dispatch.get(schema_type)
         if gen is None:
-            raise Exception(f"Unsupported type '{schema.type}'")
+            raise Exception(f"Unsupported type '{schema_type}'")
 
         if "nullable" in schema:  # and "type" in schema
             schema = Box({k: v for k, v in schema.items() if k != "nullable"})
