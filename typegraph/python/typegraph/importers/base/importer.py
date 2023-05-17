@@ -42,9 +42,14 @@ class Codegen:
             self.res_hint += f"{indent}{line}\n"
 
 
-# Some Type-Name => Some_Type_Name
 def as_attr(name: str):
-    return re.sub(r"[^0-9a-zA-Z]+", "_", name)
+    """
+    Convert a string into valid attribute\n
+    Example:\n
+    `root:some complicated/Name` => `root_some_complicated_Name`
+    """
+    # return re.sub(r"[^0-9a-zA-Z]+", "_", name)
+    return Box()._safe_attr(name)
 
 
 class Importer:
