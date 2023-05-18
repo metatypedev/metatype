@@ -7,7 +7,7 @@ import { mapKeys } from "std/collections/map_keys.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { parse } from "std/flags/mod.ts";
 import { RedisConnectOptions } from "redis";
-
+import { join } from "std/path/mod.ts";
 // This import ensure log loads before config, important for the version hydration
 import { zBooleanString } from "./log.ts";
 
@@ -40,6 +40,7 @@ const schema = {
     return bytes;
   }),
   tg_admin_password: z.string(),
+  tmp_dir: z.string(),
   cookies_max_age_sec: z.coerce.number().positive().min(30),
   cookies_min_refresh_sec: z.coerce.number().positive().min(60),
   version: z.string(),
@@ -71,6 +72,7 @@ const config = await configOrExit([
     debug: "false",
     packaged: "true",
     hostname: await getHostname(),
+    tmp_dir: join(Deno.cwd(), "tmp"),
     cookies_max_age_sec: 3600 * 24 * 30,
     cookies_min_refresh_sec: 60 * 5,
     sentry_sample_rate: 1,

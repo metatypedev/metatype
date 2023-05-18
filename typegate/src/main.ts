@@ -9,11 +9,11 @@ import { typegate } from "./typegate.ts";
 import { RedisRateLimiter } from "./rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
-
+import { exists } from "std/fs/mod.ts";
 import { getLogger } from "./log.ts";
 
 const logger = getLogger(import.meta);
-logger.info(`Typegate v${config.version} starting`);
+logger.info(`typegate v${config.version} starting`);
 
 Sentry.init({
   dsn: config.sentry_dsn,
@@ -31,6 +31,11 @@ Sentry.init({
   ],
   debug: true,
 });
+
+if (!await exists(config.tmp_dir)) {
+  logger.info(`creating tmp dir ${config.tmp_dir}`);
+  await Deno.mkdir(config.tmp_dir, { recursive: true });
+}
 
 addEventListener("unhandledrejection", (e) => {
   Sentry.captureException(e);
@@ -67,6 +72,6 @@ if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
   setTimeout(reload, 200);
 }
 
-getLogger().info(`Typegate ready on ${config.tg_port}`);
+getLogger().info(`typegate ready on ${config.tg_port}`);
 
 await server;

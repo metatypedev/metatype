@@ -4,11 +4,13 @@ import Context from "std/wasi/snapshot_preview1.ts";
 import { Memory, RustResult } from "./memory.ts";
 import { gunzip, tar } from "compress";
 import { AsyncMessenger } from "../patterns/messenger/async_messenger.ts";
+import config from "../../config.ts";
+import { join } from "std/path/mod.ts";
 
 const pythonWasiReactorUrl =
   "https://github.com/metatypedev/python-wasi-reactor/releases/download/v0.1.0/python3.11.1-wasi-reactor.wasm.tar.gz";
 
-const cachePath = "./tmp/python3.11.1-wasi-reactor.wasm";
+const cachePath = join(config.tmp_dir, "python3.11.1-wasi-reactor.wasm");
 
 export class PythonWasmMessenger extends AsyncMessenger<
   [WebAssembly.Instance, Memory],
@@ -65,12 +67,12 @@ export class PythonWasmMessenger extends AsyncMessenger<
     if (!await Deno.stat(cachePath).then((f) => f.isFile).catch(() => false)) {
       const res = await fetch(pythonWasiReactorUrl);
       const archivePath = await Deno.makeTempFile({
-        dir: "./tmp",
+        dir: config.tmp_dir,
       });
       const buffer = await res.arrayBuffer();
       const archive = await gunzip(new Uint8Array(buffer));
       await Deno.writeFile(archivePath, archive);
-      await tar.uncompress(archivePath, "./tmp");
+      await tar.uncompress(archivePath, config.tmp_dir);
     }
 
     const binary = await Deno.readFile(cachePath);

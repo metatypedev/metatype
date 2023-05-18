@@ -14,16 +14,17 @@ use macros::deno_sync;
 use once_cell::sync::Lazy;
 use sentry::ClientInitGuard;
 use std::io::Write;
-use std::{borrow::Cow, env, fs, panic, path::PathBuf};
+use std::str::FromStr;
+use std::{borrow::Cow, env, panic, path::PathBuf};
 use tokio::runtime::Runtime;
 
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("failed to create Tokio runtime"));
 static CONFIG: Lazy<Config> =
     Lazy::new(|| Config::init_from_env().expect("failed to parse config"));
 static TMP_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = env::current_dir().expect("no current dir").join("tmp");
-    fs::create_dir_all(&path).expect("failed to create tmp dir");
-    path
+    env::var("TMP_DIR")
+        .map(|p| PathBuf::from_str(&p).expect("invalid TMP_DIR"))
+        .unwrap_or_else(|_| env::current_dir().expect("no current dir").join("tmp"))
 });
 static SENTRY_GUARD: Lazy<ClientInitGuard> = Lazy::new(|| {
     let env = if CONFIG.debug {

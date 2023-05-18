@@ -88,6 +88,7 @@ export class RedisReplicatedMap<T> {
     for (let i = 0; i < all.length; i += 2) {
       const name = all[i];
       const payload = all[i + 1];
+      logger.info(`reloaded addition: ${name}`);
       memory.set(name, await deserializer(payload));
     }
 

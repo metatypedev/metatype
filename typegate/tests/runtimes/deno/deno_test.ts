@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import config from "../../../src/config.ts";
 import { gql, test } from "../../utils.ts";
 import { resolve } from "std/path/mod.ts";
 
@@ -109,7 +110,7 @@ test("Deno runtime: permissions", async (t) => {
 
 test("Deno runtime: reloading", async (t) => {
   const dynamicPath = await Deno.makeTempFile({
-    dir: "./tmp",
+    dir: config.tmp_dir,
     suffix: ".ts",
   });
 

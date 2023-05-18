@@ -82,13 +82,17 @@ if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
 const failures = [];
 Deno.env.set("DENO_TESTING", "true");
 for await (const testFile of testFiles) {
-  const status = await run([
-    "deno",
-    "task",
-    "test",
-    testFile,
-    ...flags["--"],
-  ], resolve(projectDir, "typegate"));
+  const status = await run(
+    [
+      "deno",
+      "task",
+      "test",
+      testFile,
+      ...flags["--"],
+    ],
+    resolve(projectDir, "typegate"),
+    { NO_COLOR: "true" },
+  );
 
   if (!status.success) {
     failures.push(testFile);

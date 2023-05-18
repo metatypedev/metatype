@@ -27,14 +27,14 @@ export const projectDir = resolve(
 export async function run(
   cmd: string[],
   cwd: string = Deno.cwd(),
-  env: Record<string, string> = Deno.env.toObject(),
+  env: Record<string, string> = {},
 ) {
   const p = new Deno.Command(cmd[0], {
     args: cmd.slice(1),
     cwd: cwd,
     stdout: "piped",
     stderr: "piped",
-    env,
+    env: { ...Deno.env.toObject(), ...env },
   }).spawn();
   // keep pipe asynchronous till the command exists
   void p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });

@@ -71,6 +71,7 @@ RUN chmod +x /tini
 
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG}
 
+ENV NO_COLOR true
 ENV DENO_DIR /deno-dir/
 ENV LD_LIBRARY_PATH /nonroot/.wasmedge/lib
 

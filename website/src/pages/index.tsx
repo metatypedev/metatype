@@ -426,9 +426,9 @@ function Landscape(): JSX.Element {
             </tr>
             <tr>
               <td>
-                <small>short-lived ↑</small>
+                <small>instantaneous ↑</small>
                 <br />
-                instantaneous
+                short-lived
               </td>
               <td className="bg-slate-100">
                 <strong>Metatype</strong>
@@ -447,9 +447,9 @@ function Landscape(): JSX.Element {
             </tr>
             <tr>
               <td>
-                asynchronous
+                long-running
                 <br />
-                <small>long-running ↓</small>
+                <small>asynchronous ↓</small>
               </td>
               <td>
                 Temporal
