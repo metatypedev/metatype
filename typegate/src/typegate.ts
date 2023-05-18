@@ -61,7 +61,9 @@ export const typegate =
       const engine = register.get(lookup);
 
       if (!engine) {
-        console.error(`Typegraph not found: ${lookup}`);
+        if (lookup !== "favicon.ico") {
+          logger.info(`typegraph not found: ${lookup}`);
+        }
         return new Response("not found", {
           status: 404,
         });

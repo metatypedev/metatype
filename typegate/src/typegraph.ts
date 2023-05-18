@@ -69,11 +69,24 @@ export class SecretManager {
     return `TG_${this.typegraph}_${name}`.replaceAll("-", "_").toUpperCase();
   }
 
+  private valueOrNull(secretName: string): string | null {
+    const valueFromEnv = Deno.env.get(secretName);
+    const valueFromSecrets = this.secrets[secretName];
+    if (valueFromSecrets) {
+      ensure(
+        valueFromSecrets !== valueFromEnv,
+        `secret ${secretName} cannot override env defined secret`,
+      );
+      return valueFromSecrets;
+    }
+    return valueFromEnv ?? null;
+  }
+
   secretOrFail(
     name: string,
   ): string {
     const secretName = this.secretName(name);
-    const value = this.secrets[secretName];
+    const value = this.valueOrNull(secretName);
     ensure(
       value != null,
       `cannot find env "${secretName}" for "${this.typegraph}"`,
@@ -85,7 +98,7 @@ export class SecretManager {
     name: string,
   ): string | null {
     const secretName = this.secretName(name);
-    return this.secrets[secretName] ?? null;
+    return this.valueOrNull(secretName);
   }
 }
 

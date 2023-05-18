@@ -13,6 +13,7 @@ use log::{error, info, Level};
 use macros::deno_sync;
 use once_cell::sync::Lazy;
 use sentry::ClientInitGuard;
+use std::fs;
 use std::io::Write;
 use std::str::FromStr;
 use std::{borrow::Cow, env, panic, path::PathBuf};
@@ -46,7 +47,6 @@ static SENTRY_GUARD: Lazy<ClientInitGuard> = Lazy::new(|| {
 
 #[deno_sync]
 fn init_native() {
-    SENTRY_GUARD.is_enabled();
     env_logger::builder()
         .format_timestamp_millis()
         .format(|buf, record| {
@@ -69,7 +69,17 @@ fn init_native() {
             )
         })
         .init();
+
     info!("init native");
+
+    SENTRY_GUARD.is_enabled();
+
+    if !TMP_DIR.exists() {
+        // also required by Deno
+        fs::create_dir_all(TMP_DIR.clone())
+            .unwrap_or_else(|e| panic!("failed to create TMP_DIR {}: {}", TMP_DIR.display(), e));
+    }
+
     let default_panic = std::panic::take_hook();
     panic::set_hook(Box::new(move |panic_info| {
         error!("Panic: {}", panic_info);

@@ -1,7 +1,5 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import "./env.ts";
-
 import { Engine } from "../src/engine.ts";
 import { dirname, fromFileUrl, join, resolve } from "std/path/mod.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";

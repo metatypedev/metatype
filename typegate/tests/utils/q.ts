@@ -17,6 +17,7 @@ import { None } from "monads";
 import { execute, testDir } from "../utils.ts";
 
 import { MetaTest } from "./metatest.ts";
+import { exists } from "std/fs/exists.ts";
 
 const testConfig = parse(Deno.args);
 
@@ -67,10 +68,7 @@ export class Q {
     const input = join(testDir, `auto/queries/${path}.graphql`);
     const output = join(testDir, `auto/queries/${path}.json`);
     const query = Deno.readTextFile(input);
-    const exists = await Deno.stat(output).then((f) => f.isFile).catch(() =>
-      false
-    );
-    if (testConfig.override || !exists) {
+    if (testConfig.override || !await exists(output)) {
       const { ...result } = await engine!.execute(
         await query,
         None,

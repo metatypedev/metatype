@@ -6,6 +6,7 @@ import { gunzip, tar } from "compress";
 import { AsyncMessenger } from "../patterns/messenger/async_messenger.ts";
 import config from "../../config.ts";
 import { join } from "std/path/mod.ts";
+import { exists } from "std/fs/exists.ts";
 
 const pythonWasiReactorUrl =
   "https://github.com/metatypedev/python-wasi-reactor/releases/download/v0.1.0/python3.11.1-wasi-reactor.wasm.tar.gz";
@@ -64,7 +65,7 @@ export class PythonWasmMessenger extends AsyncMessenger<
   }
 
   static async init(): Promise<PythonWasmMessenger> {
-    if (!await Deno.stat(cachePath).then((f) => f.isFile).catch(() => false)) {
+    if (!await exists(cachePath)) {
       const res = await fetch(pythonWasiReactorUrl);
       const archivePath = await Deno.makeTempFile({
         dir: config.tmp_dir,

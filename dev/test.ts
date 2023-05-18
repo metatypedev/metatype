@@ -70,17 +70,27 @@ if (flags._.length === 0) {
   }
 }
 
+const env: Record<string, string> = {
+  "NO_COLOR": "true",
+  "DEBUG": "true",
+  "PACKAGED": "false",
+  "TG_SECRET":
+    "a4lNi0PbEItlFZbus1oeH/+wyIxi9uH6TpL8AIqIaMBNvp7SESmuUBbfUwC0prxhGhZqHw8vMDYZAGMhSZ4fLw==",
+  "TG_ADMIN_PASSWORD": "password",
+  "REDIS_URL": "redis://:password@localhost:6379/0",
+  "DENO_TESTING": "true",
+};
+
 const libPath = Deno.build.os === "darwin"
   ? "DYLD_LIBRARY_PATH"
   : "LD_LIBRARY_PATH";
 const wasmEdgeLib = `${Deno.env.get("HOME")}/.wasmedge/lib`;
 
 if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
-  Deno.env.set(libPath, `${wasmEdgeLib}:${Deno.env.get(libPath) ?? ""}`);
+  env[libPath] = `${wasmEdgeLib}:${Deno.env.get(libPath) ?? ""}`;
 }
 
 const failures = [];
-Deno.env.set("DENO_TESTING", "true");
 for await (const testFile of testFiles) {
   const status = await run(
     [
@@ -91,7 +101,7 @@ for await (const testFile of testFiles) {
       ...flags["--"],
     ],
     resolve(projectDir, "typegate"),
-    { NO_COLOR: "true" },
+    env,
   );
 
   if (!status.success) {
