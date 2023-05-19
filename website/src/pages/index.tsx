@@ -21,7 +21,7 @@ function Header() {
           <img src="images/logo.svg" alt="Metatype logo" />
         </div>
         <h1 className="text-5xl">
-          The{" "}
+          Open source,{" "}
           <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-metared from-15% via-metablue via-50% to-metared to-85%">
             low-code API platform
           </span>{" "}

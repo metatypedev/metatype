@@ -1,6 +1,6 @@
 dev:
   files:
-    LICENSE.md:
+    LICENSE-ELv2.md:
       - typegraph/python/LICENSE.md
   rules:
     rust-toolchain.toml:
@@ -49,8 +49,8 @@ dev:
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.1.0
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.1.8
+    METATYPE_VERSION: 0.1.9-dev.0
     TAGLINE: >-
-      The low-code API platform for developers. Build modular APIs with
-      zero-trust and serverless deployment, no matter where and how your
-      (legacy) systems are.
+      Open source, low-code API platform for developers. It enables them to
+      build modular APIs with zero-trust and serverless deployment, no matter
+      where and how their (legacy) systems are.
