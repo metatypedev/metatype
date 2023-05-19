@@ -23,7 +23,7 @@ import { exists } from "std/fs/exists.ts";
 const testConfig = parse(Deno.args);
 
 type Expect = (res: Response) => Promise<void> | void;
-type Variables = Record<string, JSONValue>;
+type Variables = Record<string, unknown>;
 type Context = Record<string, unknown>;
 type ContextEncoder = (context: Context) => Promise<string>;
 
@@ -47,7 +47,6 @@ export class Q {
     private context: Context,
     private variables: Variables,
     private headers: Record<string, string>,
-    private files: Array<[file: File, paths: string[]]>,
     private expects: Expect[],
     private contextEncoder: ContextEncoder = defaultContextEncoder,
   ) {}
@@ -58,7 +57,6 @@ export class Q {
       this.context,
       this.variables,
       this.headers,
-      this.files,
       this.expects,
       this.contextEncoder,
     );
@@ -82,7 +80,7 @@ export class Q {
       await Deno.writeTextFile(output, JSON.stringify(result, null, 2));
     }
     const result = Deno.readTextFile(output);
-    return new Q(await query, {}, {}, {}, [], [])
+    return new Q(await query, {}, {}, {}, [])
       .expectValue(JSON.parse(await result))
       .on(engine);
   }
@@ -103,15 +101,6 @@ export class Q {
   withHeaders(headers: Record<string, string>) {
     return this.clone((q) => {
       q.headers = deepMerge(q.headers, headers);
-    });
-  }
-
-  withFile(file: File, paths: string[]) {
-    if (paths.length === 0) {
-      throw new Error("`paths` cannot be empty");
-    }
-    return this.clone((q) => {
-      q.files = [...q.files, [file, paths]];
     });
   }
 
@@ -197,17 +186,43 @@ export class Q {
     return { query, variables, operationName: null };
   }
 
-  formData() {
+  formData(files: Map<File, string[]>) {
     const data = new FormData();
     data.set("operations", JSON.stringify(this.json()));
     const map: Record<string, string[]> = {};
-    for (const [i, [file, paths]] of this.files.entries()) {
+    for (const [i, [file, paths]] of [...files.entries()].entries()) {
       const key = `${i}`;
       map[key] = paths;
       data.set(key, file);
     }
     data.set("map", JSON.stringify(map));
     return data;
+  }
+
+  private extractFilesFromVars(): Map<File, string[]> {
+    const res = new Map();
+
+    const addFile = (file: File, path: string) => {
+      if (res.has(file)) {
+        res.get(file).push(path);
+      } else {
+        res.set(file, [path]);
+      }
+    };
+
+    const visitObject = (o: Record<string, unknown>, path: string) => {
+      for (const [k, v] of Object.entries(o)) {
+        if (v instanceof File) {
+          o[k] = null;
+          addFile(v, `${path}.${k}`);
+        } else if (typeof v === "object" && v != null && !Array.isArray(v)) {
+          visitObject(v as Record<string, unknown>, `${path}.${k}`);
+        }
+      }
+    };
+
+    visitObject(this.variables, "variables");
+    return res;
   }
 
   async getRequest(url: string) {
@@ -218,7 +233,9 @@ export class Q {
     if (Object.keys(context).length > 0) {
       defaults["Authorization"] = await this.contextEncoder(context);
     }
-    if (this.files.length === 0) {
+
+    const files = this.extractFilesFromVars();
+    if (files.size === 0) {
       return new Request(url, {
         method: "POST",
         body: JSON.stringify(this.json()),
@@ -231,7 +248,7 @@ export class Q {
     } else {
       return new Request(url, {
         method: "POST",
-        body: this.formData(),
+        body: this.formData(files),
         headers: {
           ...defaults,
           ...headers,

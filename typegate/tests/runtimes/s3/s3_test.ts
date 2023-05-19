@@ -23,17 +23,13 @@ test("s3", async (t) => {
       }
     `
       .withVars({
-        file: null,
-        path: "hello.txt",
-      })
-      .withFile(
-        new File(
+        file: new File(
           [fileContent],
           "hello.txt",
           { type: "text/plain" },
         ),
-        ["variables.file"],
-      )
+        path: "hello.txt",
+      })
       .expectData({
         upload: "hello.txt",
       })

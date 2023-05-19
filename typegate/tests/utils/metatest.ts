@@ -164,9 +164,9 @@ export class MetaTest {
           await fn(t);
         } catch (e) {
           console.error(e);
+          throw e;
         }
       },
-      //sanitizeOps: false,
     });
     if (!res) {
       Deno.exit(1);
