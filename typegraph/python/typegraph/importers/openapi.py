@@ -80,7 +80,7 @@ class OpenApiImporter(Importer):
             else:  # suppose it is JSON
                 self.specification = Box(res.json())
 
-            self.base_url = ""
+            self.base_url = url
         else:
             assert file is not None and base_url is not None
             self.base_url = base_url
@@ -110,8 +110,11 @@ class OpenApiImporter(Importer):
 
         # Enable the function argument `params`
         self.enable_params = True
+        if server_url.startswith("/"):
+            url = urljoin(self.base_url, server_url)
+        else:
+            url = server_url
 
-        url = urljoin(self.base_url, server_url)
         self.headers.append(f"target_url = inject_params({repr(url)}, params)")
         self.headers.append(f"{name} = HTTPRuntime(target_url)")
 
@@ -134,7 +137,8 @@ class OpenApiImporter(Importer):
 
         schemas = self.specification.get("components", {}).get("schemas", [])
 
-        if len(schemas) > 0:
+        # can be a BoxList(list) or a list
+        if hasattr(schemas, "items"):
             for name, schema in schemas.items():
                 self.add_schema(name, schema)
 
