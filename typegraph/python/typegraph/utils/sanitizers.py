@@ -1,6 +1,6 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 from json import dumps
-from typing import Dict
+from typing import Dict, Union
 import re
 
 
@@ -8,7 +8,7 @@ def sanitize_ts_string(content: str):
     return dumps(content)[1:-1]
 
 
-def inject_params(s: str, params: Dict[str, str] | None):
+def inject_params(s: str, params: Union[None, Dict[str, str]]):
     """
     Example:\n
     s = `"{protocol}://{hostname}"`, params= `{'protocol': 'http', 'hostname': 'example.com'}`\n
