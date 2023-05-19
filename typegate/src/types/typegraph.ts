@@ -92,6 +92,7 @@ export type FileNode = {
   };
   minSize?: number | null;
   maxSize?: number | null;
+  mimeTypes?: string[] | null;
 };
 export type ObjectNode = {
   type: "object";

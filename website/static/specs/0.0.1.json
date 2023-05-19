@@ -551,6 +551,15 @@
               ],
               "format": "uint32",
               "minimum": 0.0
+            },
+            "mimeTypes": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
             }
           }
         },

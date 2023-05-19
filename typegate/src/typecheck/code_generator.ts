@@ -152,6 +152,17 @@ export class CodeGenerator {
         );
       }
     }
+
+    const mimeTypes = typeNode.mimeTypes;
+    console.log({ mimeTypes });
+    if (mimeTypes != null) {
+      this.line("else");
+      const arrayExpr = JSON.stringify(mimeTypes);
+      this.validation(
+        `!${arrayExpr}.includes(value.type)`,
+        `\`type '\${value.type}' not allowed\``,
+      );
+    }
   }
 
   generateOptionalValidator(

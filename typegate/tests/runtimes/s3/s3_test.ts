@@ -30,6 +30,7 @@ test("s3", async (t) => {
         new File(
           [fileContent],
           "hello.txt",
+          { type: "text/plain" },
         ),
         ["variables.file"],
       )

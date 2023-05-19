@@ -133,6 +133,7 @@ pub struct StringTypeData {
 pub struct FileTypeData {
     pub min_size: Option<u32>,
     pub max_size: Option<u32>,
+    pub mime_types: Option<Vec<String>>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

@@ -51,9 +51,11 @@ class S3Runtime(Runtime):
             ListMat(self, bucket),
         )
 
-    def upload(self, bucket: str):
+    def upload(self, bucket: str, file_type: Optional[t.file] = None):
+        if file_type is None:
+            file_type = t.file()
         return t.func(
-            t.struct({"file": t.file(), "path": t.string()}),
+            t.struct({"file": file_type, "path": t.string()}),
             t.string(),
             UploadMat(self, bucket),
         )

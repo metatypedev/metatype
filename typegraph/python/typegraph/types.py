@@ -315,11 +315,14 @@ class typedef(Node):
 TYPE_CONSTRAINT = "__type_constraint_name"
 
 
-def constraint(name: Optional[str] = None):
+def constraint(name: Optional[str] = None, **kwargs):
     # Additional constraint on type: Validation keyword.
     # Field to be manually set on the serialization.
     return field(
-        kw_only=True, default=None, metadata={SKIP: True, TYPE_CONSTRAINT: name or True}
+        kw_only=True,
+        default=None,
+        metadata={SKIP: True, TYPE_CONSTRAINT: name or True},
+        **kwargs,
     )
 
 
@@ -504,6 +507,9 @@ def enum(variants: List[str]) -> string:
 class file(typedef):
     _min: Optional[int] = constraint("minSize")
     _max: Optional[int] = constraint("maxSize")
+    _allow: Optional[Tuple[str, ...]] = constraint(
+        "mimeTypes", converter=lambda v: v and tuple(v)
+    )
 
 
 def validate_struct_props(instance, attribute, props):
