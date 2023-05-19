@@ -80,8 +80,7 @@ class OpenApiImporter(Importer):
             else:  # suppose it is JSON
                 self.specification = Box(res.json())
 
-            self.base_url = url
-
+            self.base_url = ""
         else:
             assert file is not None and base_url is not None
             self.base_url = base_url
@@ -102,13 +101,19 @@ class OpenApiImporter(Importer):
         )
 
         self.imports.add(("typegraph.runtimes.http", "HTTPRuntime"))
+        self.imports.add(("typegraph.utils.sanitizers", "inject_params"))
 
         if "servers" in self.specification:
             server_url = self.specification.servers[0].url
         else:
             server_url = "/"
+
+        # Enable the function argument `params`
+        self.enable_params = True
+
         url = urljoin(self.base_url, server_url)
-        self.headers.append(f"{name} = HTTPRuntime({repr(url)})")
+        self.headers.append(f"target_url = inject_params({repr(url)}, params)")
+        self.headers.append(f"{name} = HTTPRuntime(target_url)")
 
     def resolve_ref(self, obj: Box):
         if "$ref" not in obj:
