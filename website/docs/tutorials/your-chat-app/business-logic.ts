@@ -1,5 +1,7 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
 // skip:start
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 // skip:end
 
 import * as emoji from "https://deno.land/x/emoji@0.2.1/mod.ts";

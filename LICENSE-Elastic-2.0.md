@@ -1,4 +1,4 @@
-## Elastic License 2.0 (ELv2)
+## Elastic License 2.0 (Elastic-2.0)
 
 ### Acceptance
 
