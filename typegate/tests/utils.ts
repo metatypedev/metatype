@@ -7,7 +7,7 @@ import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
 import { copy } from "std/streams/copy.ts";
 import * as native from "native";
 import { init_native } from "native";
-import { PrismaRuntimeDS } from "../src/runtimes/prisma.ts";
+import { PrismaRuntime, PrismaRuntimeDS } from "../src/runtimes/prisma.ts";
 import { MemoryRegister } from "./utils/memory_register.ts";
 import { Q } from "./utils/q.ts";
 import { MetaTest } from "./utils/metatest.ts";
@@ -15,6 +15,7 @@ import { SingleRegister } from "./utils/single_register.ts";
 import { NoLimiter } from "./utils/no_limiter.ts";
 import { typegate } from "../src/typegate.ts";
 import { ConnInfo } from "std/http/server.ts";
+import { ensure } from "../src/utils.ts";
 
 export const testDir = dirname(fromFileUrl(import.meta.url));
 export const metaCli = resolve(testDir, "../../target/debug/meta");
@@ -197,14 +198,49 @@ export async function execute(
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+export async function dropSchemas(engine: Engine) {
+  const runtimes = engine.tg.runtimeReferences.filter((r) =>
+    r instanceof PrismaRuntime
+  ) as PrismaRuntime[];
+
+  for (const runtime of runtimes) {
+    const secret = engine.tg.tg.runtimes.find((rt) =>
+      rt.data.name === runtime.name
+    )?.data.connection_string_secret;
+    ensure(!!secret, `no secret for runtime ${runtime.name}`);
+
+    const connection_string = engine.tg.secretManager.secretOrFail(
+      secret as string,
+    );
+    const schema = new URL(connection_string).searchParams.get("schema");
+    ensure(
+      !!schema,
+      `no schema for connection string ${connection_string![1]}`,
+    );
+
+    const res = await runtime.query(`
+        mutation { 
+          executeRaw(
+            query: "DROP SCHEMA IF EXISTS \\"${schema}\\" CASCADE",
+            parameters: "[]",
+          )
+        }
+      `);
+
+    if (res.errors) {
+      console.error(JSON.stringify(res.errors));
+      throw new Error(`cannot drop schema ${schema}`);
+    }
+  }
+}
+
 export async function recreateMigrations(engine: Engine) {
   const runtimes = engine.tg.tg.runtimes.filter(
     (rt) => rt.name === "prisma",
   ) as unknown[] as PrismaRuntimeDS[];
-
   const migrationsBaseDir = join(testDir, "prisma-migrations");
 
-  for await (const runtime of runtimes) {
+  for (const runtime of runtimes) {
     const prisma = new PrismaMigrate(engine, runtime, null);
     const { migrations } = await prisma.create({
       name: "init",

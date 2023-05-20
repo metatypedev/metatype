@@ -1,27 +1,17 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { gql, recreateMigrations, test } from "../utils.ts";
+import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
 
 test("prisma mixed runtime", async (t) => {
-  const e = await t.pythonFile("prisma/mixed_runtime.py", {
+  const e = await t.pythonFile("runtimes/prisma/mixed_runtime.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma-mixed",
     },
   });
 
-  await t.should("drop schema and recreate", async () => {
-    await gql`
-      mutation a {
-        dropSchema
-      }
-    `
-      .expectData({
-        dropSchema: 0,
-      })
-      .on(e);
-    await recreateMigrations(e);
-  });
+  await dropSchemas(e);
+  await recreateMigrations(e);
 
   await t.should(
     "insert a record without considering fields owned by other runtimes",

@@ -1,7 +1,7 @@
-from typegraph import TypeGraph, effects, policies, t
+from typegraph import TypeGraph, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
-with TypeGraph("prisma") as g:
+with TypeGraph("prisma_multi") as g:
     db = PrismaRuntime("prisma", "POSTGRES")
 
     public = policies.public()
@@ -32,16 +32,14 @@ with TypeGraph("prisma") as g:
     ).named("users")
 
     g.expose(
-        dropSchema=db.raw_execute(
-            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
-        ).add_policy(public),
-        findManyRecors=db.find_many(record).add_policy(public),
-        createOneRecord=db.create(record).add_policy(public),
-        deleteOneRecord=db.delete(record).add_policy(public),
-        updateOneRecord=db.update(record).add_policy(public),
-        createUser=db.create(users).add_policy(public),
-        findUniqueUser=db.find_unique(users).add_policy(public),
-        findMessages=db.find_many(messages).add_policy(public),
-        updateUser=db.update(users).add_policy(public),
-        deleteMessages=db.delete_many(messages).add_policy(public),
+        findManyRecors=db.find_many(record),
+        createOneRecord=db.create(record),
+        deleteOneRecord=db.delete(record),
+        updateOneRecord=db.update(record),
+        createUser=db.create(users),
+        findUniqueUser=db.find_unique(users),
+        findMessages=db.find_many(messages),
+        updateUser=db.update(users),
+        deleteMessages=db.delete_many(messages),
+        default_policy=public,
     )

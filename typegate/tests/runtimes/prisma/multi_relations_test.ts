@@ -1,28 +1,17 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { gql, recreateMigrations, test } from "../utils.ts";
+import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
 
 test("multiple relationships", async (t) => {
-  const tgPath = "prisma/prisma_multi.py";
-  const e = await t.pythonFile(tgPath, {
+  const e = await t.pythonFile("runtimes/prisma/multi_relations.py", {
     secrets: {
-      TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+      TG_PRISMA_MULTI_POSTGRES:
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma-multi",
     },
   });
 
-  await t.should("drop schema and recreate", async () => {
-    await gql`
-      mutation a {
-        dropSchema
-      }
-    `
-      .expectData({
-        dropSchema: 0,
-      })
-      .on(e);
-    await recreateMigrations(e);
-  });
+  await dropSchemas(e);
+  await recreateMigrations(e);
 
   await t.should("insert a simple record", async () => {
     await gql`

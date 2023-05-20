@@ -1,27 +1,17 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { gql, recreateMigrations, test } from "../utils.ts";
+import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
 
 test("prisma critical edgecases", async (t) => {
-  const e = await t.pythonFile("prisma/prisma_edgecases.py", {
+  const e = await t.pythonFile("runtimes/prisma/prisma_edgecases.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma-edgecases",
     },
   });
 
-  await t.should("drop schema and recreate", async () => {
-    await gql`
-      mutation a {
-        dropSchema
-      }
-    `
-      .expectData({
-        dropSchema: 0,
-      })
-      .on(e);
-    await recreateMigrations(e);
-  });
+  await dropSchemas(e);
+  await recreateMigrations(e);
 
   // create test data
   await t.should("insert a record with nested object", async () => {

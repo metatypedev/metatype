@@ -7,6 +7,10 @@ export {
 } from "https://deno.land/std@0.184.0/path/mod.ts";
 export { parse as parseFlags } from "https://deno.land/std@0.184.0/flags/mod.ts";
 export { expandGlobSync } from "https://deno.land/std@0.184.0/fs/mod.ts";
+export {
+  mergeReadableStreams,
+  TextLineStream,
+} from "https://deno.land/std@0.184.0/streams/mod.ts";
 export { groupBy } from "https://deno.land/std@0.184.0/collections/group_by.ts";
 export type { WalkEntry } from "https://deno.land/std@0.184.0/fs/mod.ts";
 export * as yaml from "https://deno.land/std@0.184.0/yaml/mod.ts";
@@ -24,7 +28,7 @@ export const projectDir = resolve(
   "..",
 );
 
-export async function run(
+export async function runOrExit(
   cmd: string[],
   cwd: string = Deno.cwd(),
   env: Record<string, string> = {},
@@ -36,19 +40,12 @@ export async function run(
     stderr: "piped",
     env: { ...Deno.env.toObject(), ...env },
   }).spawn();
+
   // keep pipe asynchronous till the command exists
   void p.stdout.pipeTo(Deno.stdout.writable, { preventClose: true });
   void p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
-  return await p.status;
-}
 
-export async function runOrExit(
-  cmd: string[],
-  cwd: string = Deno.cwd(),
-  env: Record<string, string> = Deno.env.toObject(),
-) {
-  const { code, success } = await run(cmd, cwd, env);
-
+  const { code, success } = await p.status;
   if (!success) {
     Deno.exit(code);
   }

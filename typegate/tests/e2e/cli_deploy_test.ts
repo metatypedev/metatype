@@ -1,18 +1,27 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { gql, meta, shell, test } from "../utils.ts";
-import { init } from "../prisma/prisma_seed.ts";
+import {
+  dropSchemas,
+  gql,
+  meta,
+  removeMigrations,
+  shell,
+  test,
+} from "../utils.ts";
 import { assertRejects } from "std/testing/asserts.ts";
 
 const port = 7895;
 
 test("cli:deploy - automatic migrations", async (t) => {
-  const e = await init(t, "prisma/prisma.py", false, {
+  const e = await t.pythonFile("runtimes/prisma/prisma.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=e2e",
     },
   });
+
+  await dropSchemas(e);
+  await removeMigrations(e);
 
   const nodeConfigs = [
     "--gate",
@@ -37,7 +46,7 @@ test("cli:deploy - automatic migrations", async (t) => {
         }
       }
     `
-      .expectErrorContains("table `test.record` does not exist")
+      .expectErrorContains("table `e2e.record` does not exist")
       .on(e);
   });
 
@@ -62,7 +71,7 @@ test("cli:deploy - automatic migrations", async (t) => {
   });
 
   await t.should("run migrations with `meta deploy`", async () => {
-    await meta("deploy", ...nodeConfigs, "-f", "prisma/prisma.py");
+    await meta("deploy", ...nodeConfigs, "-f", "runtimes/prisma/prisma.py");
   });
 
   await t.should("succeed to query database", async () => {

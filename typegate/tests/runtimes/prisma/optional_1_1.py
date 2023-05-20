@@ -1,4 +1,4 @@
-from typegraph import TypeGraph, effects, policies, t
+from typegraph import TypeGraph, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 
 with TypeGraph("prisma") as g:
@@ -21,11 +21,9 @@ with TypeGraph("prisma") as g:
     ).named("Profile")
 
     g.expose(
-        dropSchema=db.raw_execute(
-            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
-        ).add_policy(public),
-        createUser=db.create(user).add_policy(public),
-        updateUser=db.update(user).add_policy(public),
-        findUniqueProfile=db.find_unique(profile).add_policy(public),
-        deleteUser=db.delete(user).add_policy(public),
+        createUser=db.create(user),
+        updateUser=db.update(user),
+        findUniqueProfile=db.find_unique(profile),
+        deleteUser=db.delete(user),
+        default_policy=public,
     )

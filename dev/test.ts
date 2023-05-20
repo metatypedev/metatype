@@ -22,13 +22,14 @@
 import {
   basename,
   expandGlobSync,
+  mergeReadableStreams,
   parseFlags,
   projectDir,
   resolve,
-  run,
+  TextLineStream,
 } from "./mod.ts";
 
-const flags = parseFlags(Deno.args, { "--": true });
+const flags = parseFlags(Deno.args, { "--": true, string: ["threads"] });
 
 const testFiles = [];
 
@@ -90,22 +91,45 @@ if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
   env[libPath] = `${wasmEdgeLib}:${Deno.env.get(libPath) ?? ""}`;
 }
 
+const threads = flags.threads ? parseInt(flags.threads) : 4;
 const failures = [];
-for await (const testFile of testFiles) {
-  const status = await run(
-    [
-      "deno",
-      "task",
-      "test",
-      testFile,
-      ...flags["--"],
-    ],
-    resolve(projectDir, "typegate"),
-    env,
-  );
 
-  if (!status.success) {
-    failures.push(testFile);
+for (let i = 0; i < testFiles.length; i += threads) {
+  const tests = [];
+
+  for (let j = 0; j < threads && i + j < testFiles.length; j += 1) {
+    const testFile = testFiles[i + j];
+
+    const p = new Deno.Command("deno", {
+      args: [
+        "task",
+        "test",
+        testFile,
+        ...flags["--"],
+      ],
+      cwd: resolve(projectDir, "typegate"),
+      stdout: "piped",
+      stderr: "piped",
+      env: { ...Deno.env.toObject(), ...env },
+    }).spawn();
+
+    const output = mergeReadableStreams(p.stdout, p.stderr).pipeThrough(
+      new TextDecoderStream(),
+    ).pipeThrough(new TextLineStream());
+
+    tests.push({ status: p.status, output, testFile });
+  }
+
+  for (const { status, output, testFile } of tests) {
+    for await (const line of output) {
+      console.log(line);
+    }
+    console.log("\n");
+
+    const { success } = await status;
+    if (!success) {
+      failures.push(testFile);
+    }
   }
 }
 

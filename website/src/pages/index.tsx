@@ -23,14 +23,14 @@ function Header() {
         <h1 className="text-5xl">
           Open source,{" "}
           <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-metared from-15% via-metablue via-50% to-metared to-85%">
-            low-code API platform
+            low-code backend platform
           </span>{" "}
           for developers.
         </h1>
         <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[950px]">
           Build <strong>modular APIs</strong> with <strong>zero-trust</strong>{" "}
           and <strong>serverless</strong> deployment, no matter where and how
-          your (legacy) systems are.
+          (legacy) systems are.
         </p>
         <div className="md:flex md:px-32 justify-center">
           <Link

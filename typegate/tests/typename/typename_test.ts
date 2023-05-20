@@ -6,7 +6,7 @@ test("Typename", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
 
@@ -27,7 +27,7 @@ test("Typename in deno runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
 
@@ -52,7 +52,7 @@ test("Typename in random runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
 
@@ -77,7 +77,7 @@ test("Typename in prisma runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
 
