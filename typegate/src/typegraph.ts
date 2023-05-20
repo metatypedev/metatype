@@ -74,7 +74,7 @@ export class SecretManager {
     const valueFromSecrets = this.secrets[secretName];
     if (valueFromSecrets) {
       ensure(
-        valueFromSecrets !== valueFromEnv,
+        !valueFromEnv,
         `secret ${secretName} cannot override env defined secret`,
       );
       return valueFromSecrets;
