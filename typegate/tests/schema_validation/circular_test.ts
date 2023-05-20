@@ -12,7 +12,7 @@ test("circular test", async (t) => {
           registerUser(
             user: {
               name: "John",
-              professor: {name: "Kramer", parents: [], award: 6},
+              professor: {name: "Kramer", parents: [], award: {count: 6}},
               parents: [],
               paper: {title: "Some paper", author: {name: "John", parents: []}},
               friends: [

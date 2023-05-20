@@ -3,8 +3,8 @@ from typegraph import TypeGraph
 from typegraph.runtimes.deno import ModuleMat
 
 with TypeGraph("union") as g:
-    rgb = t.array(t.integer().min(0).max(255)).min(3).max(3).named("RGB")
-    hex = t.string().format("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").named("HEX")
+    rgb = t.array(t.integer().min(0).max(255)).min(3).max(3).named("RGBArray")
+    hex = t.string().pattern("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$").named("HexColor")
     colorName = (
         t.string()
         .enum(
@@ -18,7 +18,7 @@ with TypeGraph("union") as g:
                 "yellow",
             ]
         )
-        .named("ColorName")
+        .named("NamedColor")
     )
 
     color = t.union((rgb, hex, colorName)).named("Color")

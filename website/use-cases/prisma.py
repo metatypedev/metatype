@@ -21,6 +21,6 @@ with TypeGraph(
 
     g.expose(
         create_user=db.create(user),
-        read_user=db.find(user),
+        read_user=db.find_many(user),
         default_policy=[public],
     )

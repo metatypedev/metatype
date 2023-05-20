@@ -76,10 +76,6 @@ snapshot[`Basic introspection 1`] = `
             kind: "OBJECT",
             name: "Gunpla",
           },
-          {
-            kind: "OBJECT",
-            name: "_String",
-          },
         ],
       },
       {

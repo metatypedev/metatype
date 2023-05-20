@@ -158,20 +158,18 @@ export class TypeGraph {
     if (meta.cors.max_age_sec) {
       staticCors["Access-Control-Max-Age"] = meta.cors.max_age_sec.toString();
     }
-    const exposeOrigins = new Set(meta.cors.expose_headers);
+    const allowedOrigins = new Set(meta.cors.allow_origin);
+    const wildcardOrigin = allowedOrigins.has("*");
 
     const cors = (req: Request) => {
-      if (meta.cors.allow_origin.length === 0) {
-        return {};
-      }
       const origin = req.headers.get("origin");
-      if (!origin || exposeOrigins.has(origin)) {
-        return {};
+      if (wildcardOrigin || (origin && allowedOrigins.has(origin))) {
+        return {
+          ...staticCors,
+          "Access-Control-Allow-Origin": origin,
+        };
       }
-      return {
-        ...staticCors,
-        "Access-Control-Allow-Origin": origin,
-      };
+      return {};
     };
 
     const auths = new Map<string, Auth>();
@@ -315,25 +313,34 @@ export class TypeGraph {
 
     if (isArray(type)) {
       if (isOptional(this.type(type.items))) {
-        return (x: any) => x.flat().filter((c: any) => !!c);
+        return (x: any) => {
+          return x.flat().filter((c: any) => !!c);
+        };
       }
-      return (x: any) => ensureArray(x).flat();
+      return (x: any) => {
+        return ensureArray(x).flat();
+      };
     }
     if (isOptional(type)) {
       if (isArray(this.type(type.item))) {
-        return (x: any) =>
-          ensureArray(x)
-            .filter((c: any) => !!c)
-            .flat();
+        return (x: any) => {
+          return ensureArray(x)
+            .flat()
+            .filter((c: any) => !!c);
+        };
       }
-      return (x: any) => ensureArray(x).filter((c: any) => !!c);
+      return (x: any) => {
+        return ensureArray(x).filter((c: any) => !!c);
+      };
     }
     ensure(
       isObject(type) || isInteger(type) || isNumber(type) || isBoolean(type) ||
         isFunction(type) || isString(type) || isUnion(type) || isEither(type),
       `object expected but got ${type.type}`,
     );
-    return (x: any) => ensureArray(x);
+    return (x: any) => {
+      return ensureArray(x);
+    };
   };
 
   typeByNameOrIndex(nameOrIndex: string | number): TypeNode {
@@ -349,75 +356,5 @@ export class TypeGraph {
       throw new Error(`type ${nameOrIndex} not found`);
     }
     return tpe;
-  }
-
-  validateValueType(
-    nameOrIndex: string | number,
-    value: unknown,
-    label: string,
-  ) {
-    const tpe = this.typeByNameOrIndex(nameOrIndex);
-
-    if (isOptional(tpe)) {
-      if (value == null) return;
-      this.validateValueType(tpe.item as number, value, label);
-      return;
-    }
-
-    if (value == null) {
-      throw new Error(`variable ${label} cannot be null`);
-    }
-
-    switch (tpe.type) {
-      case "object":
-        if (typeof value !== "object") {
-          throw new Error(`variable ${label} must be an object`);
-        }
-        Object.entries(tpe.properties).forEach(
-          ([key, typeIdx]) => {
-            this.validateValueType(
-              typeIdx,
-              (value as Record<string, unknown>)[key],
-              `${label}.${key}`,
-            );
-          },
-        );
-        return;
-      case "array":
-        if (!Array.isArray(value)) {
-          throw new Error(`variable ${label} must be an array`);
-        }
-        value.forEach((item, idx) => {
-          this.validateValueType(
-            tpe.items,
-            item,
-            `${label}[${idx}]`,
-          );
-        });
-        return;
-      case "integer":
-      case "number":
-        if (typeof value !== "number") {
-          throw new Error(`variable ${label} must be a number`);
-        }
-        return;
-      case "boolean":
-        if (typeof value !== "boolean") {
-          throw new Error(`variable ${label} must be a boolean`);
-        }
-        return;
-      case "string":
-        if (typeof value !== "string") {
-          throw new Error(`variable ${label} must be a string`);
-        }
-        return;
-      // case "uuid":
-      //   if (!uuid.validate(value as string)) {
-      //     throw new Error(`variable ${label} must be a valid UUID`);
-      //   }
-      //   return;
-      default:
-        throw new Error(`unsupported type ${tpe.type}`);
-    }
   }
 }

@@ -11,6 +11,7 @@ import { ObjectNode, TypeNode } from "./type_node.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "./planner/args.ts";
 import { EffectType, PolicyIndices } from "./types/typegraph.ts";
+import { VariantMatcher } from "./typecheck/matching_variant.ts";
 
 export interface Parents {
   [key: string]: (() => Promise<unknown> | unknown) | unknown;
@@ -78,6 +79,7 @@ export interface ComputeStageProps {
   path: string[];
   rateCalls: boolean;
   rateWeight: number;
+  childSelection?: VariantMatcher;
 }
 
 export type StageId = string;

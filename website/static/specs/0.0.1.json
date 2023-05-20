@@ -99,7 +99,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -167,7 +169,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -229,7 +233,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -326,7 +332,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -423,7 +431,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -435,14 +445,16 @@
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "uint32",
+              "minimum": 0.0
             },
             "maxLength": {
               "type": [
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "uint32",
+              "minimum": 0.0
             },
             "pattern": {
               "type": [
@@ -451,9 +463,13 @@
               ]
             },
             "format": {
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/StringFormat"
+                },
+                {
+                  "type": "null"
+                }
               ]
             }
           }
@@ -512,7 +528,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -590,7 +608,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -602,7 +622,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "max_items": {
+            "maxItems": {
               "type": [
                 "integer",
                 "null"
@@ -610,7 +630,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "min_items": {
+            "minItems": {
               "type": [
                 "integer",
                 "null"
@@ -618,7 +638,7 @@
               "format": "uint32",
               "minimum": 0.0
             },
-            "unique_items": {
+            "uniqueItems": {
               "type": [
                 "boolean",
                 "null"
@@ -683,7 +703,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -772,7 +794,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -844,7 +868,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -915,7 +941,9 @@
                 "array",
                 "null"
               ],
-              "items": true
+              "items": {
+                "type": "string"
+              }
             },
             "config": {
               "default": {},
@@ -1108,6 +1136,19 @@
             }
           }
         }
+      ]
+    },
+    "StringFormat": {
+      "type": "string",
+      "enum": [
+        "uuid",
+        "email",
+        "uri",
+        "json",
+        "hostname",
+        "ean",
+        "date",
+        "phone"
       ]
     },
     "Materializer": {

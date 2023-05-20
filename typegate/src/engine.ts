@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { Kind, parse } from "graphql";
+import { parse } from "graphql";
 import * as ast from "graphql/ast";
 import {
   RuntimeResolver,
@@ -24,13 +24,15 @@ import {
   Resolver,
   Variables,
 } from "./types.ts";
-import { TypeCheck } from "./typecheck.ts";
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { Option } from "monads";
 import { getLogger } from "./log.ts";
 import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
+import { Validator } from "./typecheck/common.ts";
+import { generateValidator } from "./typecheck/result.ts";
+import { ComputationEngine } from "./engine/computation_engine.ts";
 
 const logger = getLogger(import.meta);
 
@@ -89,15 +91,6 @@ export class ComputeStage {
   }
 }
 
-// typechecks for scalar types
-const typeChecks: Record<string, (value: unknown) => boolean> = {
-  Int: (value) => typeof value === "number",
-  Float: (value) => typeof value === "number",
-  String: (value) => typeof value === "string",
-  ID: (value) => typeof value === "string",
-  Boolean: (value) => typeof value === "boolean",
-};
-
 function isIntrospectionQuery(
   operation: ast.OperationDefinitionNode,
   _fragments: FragmentDefs,
@@ -105,10 +98,12 @@ function isIntrospectionQuery(
   return operation.name?.value === "IntrospectionQuery";
 }
 
+// See `planner/mod.ts` on how the graphql is processed to build the plan
 interface Plan {
+  // matching to each selection in the graphql query
   stages: ComputeStage[];
   policies: OperationPolicies;
-  validator: TypeCheck;
+  validator: Validator;
 }
 
 class QueryCache {
@@ -201,105 +196,6 @@ export class Engine {
     return await this.tg.deinit();
   }
 
-  /**
-   * Note:
-   * Each `ComputeStage` relates to a specific type/node generated from the graphql
-   * 1. `plan: ComputeStage` should be of the same cardinality as the types enumerated in the graphql
-   * 2. values are computed depending on the Runtime
-   *
-   * See `planner/mod.ts` on how the graphql is processed to build the plan
-   */
-  async compute(
-    plan: ComputeStage[],
-    policies: OperationPolicies,
-    context: Context,
-    info: Info,
-    variables: Record<string, unknown>,
-    limit: RateLimit | null,
-    verbose: boolean,
-  ): Promise<JSONValue> {
-    const ret = {};
-    const cache: Record<string, unknown> = {};
-    const lenses: Record<string, unknown> = {};
-
-    await policies.authorize(context, info, verbose);
-
-    for await (const stage of plan) {
-      const {
-        dependencies,
-        args,
-        effect,
-        resolver,
-        path,
-        parent,
-        batcher,
-        node,
-        rateCalls,
-        rateWeight,
-      } = stage.props;
-
-      const deps = dependencies
-        .filter((dep) => dep !== parent?.id())
-        .filter((dep) => !(parent && dep.startsWith(`${parent.id()}.`)))
-        .reduce((agg, dep) => ({ ...agg, [dep]: cache[dep] }), {});
-
-      //verbose && console.log("dep", stage.id(), deps);
-      const previousValues = parent ? cache[parent.id()] : ([{}] as any);
-      const lens = parent ? lenses[parent.id()] : ([ret] as any);
-
-      if (limit && rateCalls) {
-        limit.consume(rateWeight ?? 1);
-      }
-
-      const computeArgs = args ?? (() => ({}));
-
-      const res = await Promise.all(
-        previousValues.map((parent: any) =>
-          resolver!({
-            ...computeArgs({ variables, context, parent, effect }),
-            _: {
-              parent: parent ?? {},
-              context,
-              info,
-              variables,
-              effect,
-              ...deps,
-            },
-          })
-        ),
-      );
-
-      if (limit && !rateCalls) {
-        limit.consume(res.length * (rateWeight ?? 1));
-      }
-
-      // or no cache if no further usage
-      cache[stage.id()] = batcher(res);
-
-      if (
-        lens.length !== res.length
-      ) {
-        throw new Error(
-          `cannot align array results ${lens.length} != ${res.length} at stage ${stage.id()}: ${
-            JSON.stringify(lens)
-          }, ${JSON.stringify(res)}`,
-        );
-      }
-      const field = path[path.length - 1] as any;
-      if (node !== "") {
-        lens.forEach((l: any, i: number) => {
-          l[field] = res[i];
-        });
-
-        lenses[stage.id()] = batcher(lens).flatMap((l: any) => {
-          return l[field] ?? [];
-        });
-      }
-    }
-
-    return ret;
-  }
-
   materialize(
     stages: ComputeStage[],
     verbose: boolean,
@@ -358,10 +254,10 @@ export class Engine {
     // when
     const optimizedStages = this.optimize(stagesMat, verbose);
 
-    const validator = TypeCheck.init(
+    const validator = generateValidator(
       isIntrospectionQuery(operation, fragments)
-        ? this.tg.introspection!.tg.types
-        : this.tg.tg.types,
+        ? this.tg.introspection!
+        : this.tg,
       operation,
       fragments,
     );
@@ -424,7 +320,7 @@ export class Engine {
       const { stages, policies, validator } = plan;
 
       //logger.info("dag:", stages);
-      const res = await this.compute(
+      const res = await ComputationEngine.compute(
         stages,
         policies,
         context,
@@ -436,7 +332,7 @@ export class Engine {
       const computeTime = performance.now();
 
       //console.log("value computed", res);
-      validator.validate(res);
+      validator(res);
       const endTime = performance.now();
 
       if (verbose) {
@@ -514,51 +410,8 @@ export class Engine {
       if (value === undefined) {
         throw Error(`missing variable "${varName}" value`);
       }
-      this.validateVariable(varDef.type, value, varName);
+      // variable values are validated with the argument validator
     }
-  }
-
-  validateVariable(type: ast.TypeNode, value: unknown, label: string) {
-    if (type.kind === Kind.NON_NULL_TYPE) {
-      if (value == null) {
-        throw new Error(`variable ${label} cannot be null`);
-      }
-      type = type.type;
-    }
-    if (value == null) {
-      return;
-    }
-    switch (type.kind) {
-      case Kind.LIST_TYPE:
-        if (!Array.isArray(value)) {
-          throw new Error(`variable ${label} must be an array`);
-        }
-        value.forEach((item, idx) => {
-          this.validateVariable(
-            (type as ast.ListTypeNode).type,
-            item,
-            `${label}[${idx}]`,
-          );
-        });
-        break;
-      case Kind.NAMED_TYPE:
-        this.validateValueType(type.name.value, value, label);
-    }
-  }
-
-  validateValueType(typeName: string, value: unknown, label: string) {
-    const check = typeChecks[typeName];
-    if (check != null) {
-      // scalar type
-      if (!check(value)) {
-        console.error(
-          `expected type ${typeName}, got value ${JSON.stringify(value)}`,
-        );
-        throw new Error(`variable ${label} must be a ${typeName}`);
-      }
-      return;
-    }
-    this.tg.validateValueType(typeName, value, label);
   }
 
   async ensureJWT(

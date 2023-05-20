@@ -2,7 +2,7 @@ import TGExample from "@site/src/components/TGExample";
 
 # ORM for the edge
 
-Edge computing platforms like [Deno Deploy](https://deno.com/deploy) and [Cloudflare Workers](https://workers.cloudflare.com) can provide a convenient and scalable way for developers to deploy their applications and APIs near the end-users, improving performance, reducing latency, and enhancing the user experience. Due to the resource constraints and compatibility issues (legacy libraries or specific drivers) of those environments, running a traditional Object-Relational Mapping (ORM) library might not be as easy as in normal deployments.
+Edge computing platforms like Deno Deploy and Cloudflare Workers can provide a convenient and scalable way for developers to deploy their applications and APIs near the end-users, improving performance, reducing latency, and enhancing the user experience. Due to the resource constraints and compatibility issues (legacy libraries or specific drivers) of those environments, running a traditional Object-Relational Mapping (ORM) library might not be as easy as in normal deployments.
 
 ## Case study
 
@@ -20,7 +20,7 @@ When a user makes a request to view the menu or place an order, the correspondin
 
 ## Metatype's solution
 
-Metatype can act out of the box as a lightweight relay API, simplifying database interactions via HTTP/GraphQL requests, and allowing you to query your database through the [Prisma runtime](/docs/reference/typegraph/typegraph/providers/prisma/runtimes/prisma). Prisma is a well-known ORM library that provides a convenient interface to interact with PostgreSQL, MySQL, SQLite, SQL Server, MongoDB, CockroachDB databases.
+Metatype can act out of the box as a lightweight relay API, simplifying database interactions via HTTP/GraphQL requests, and allowing you to query your database through the [Prisma runtime](/docs/reference/runtimes/prisma). Prisma is a well-known ORM library that provides a convenient interface to interact with PostgreSQL, MySQL, SQLite, SQL Server, MongoDB, CockroachDB databases.
 
 <TGExample
   typegraph="prisma-runtime"

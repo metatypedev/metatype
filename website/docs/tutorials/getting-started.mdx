@@ -6,6 +6,9 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 import Newsletter from "@site/src/components/Newsletter";
 import Metatype from "../../shared/metatype-intro.mdx";
+import InstallMetaCli from "../../shared/install/meta-cli.mdx";
+import InstallTypegate from "../../shared/install/typegate.mdx";
+import InstallTypegraph from "../../shared/install/typegraph.mdx";
 
 # Getting started
 
@@ -18,7 +21,7 @@ Head over to the [conceptual overview](/docs/concepts/overview) to understand th
 ## Introduction
 
 In this tutorial, you will write your first typegraph and deploy it on a typegate node using the Meta CLI.
-You will design some API blocks for a chat-based app where users can exchange messages.
+You will design some APIs for a chat-based app where users can exchange messages.
 
 Running the ecosystem requires Python >=3.8 which should be available on most of the recent OS.
 
@@ -29,15 +32,15 @@ Running the ecosystem requires Python >=3.8 which should be available on most of
   <TabItem value="linux" label="Debian-based Linux" default>
 
 ```bash
-sudo apt-get update
-sudo apt-get install python3 python3-pip python3-venv
+$ sudo apt-get update
+$ sudo apt-get install python3 python3-pip python3-venv
 ```
 
   </TabItem>
   <TabItem value="macos" label="MacOS">
 
 ```bash
-brew install python3
+$ brew install python3
 ```
 
   </TabItem>
@@ -51,8 +54,8 @@ Download the [Python installer](https://www.python.org/downloads/windows/) from 
 Then verify that you have a version higher than 3.8:
 
 ```bash
-python --version # or python3 --version
-> Python 3.8.16
+$ python --version # or python3 --version
+Python 3.8.16
 ```
 
 </details>
@@ -77,16 +80,16 @@ This is the easiest way to get started, yet it's not publicly accessible. You ca
   <TabItem value="linux" label="Debian-based Linux" default>
 
 ```bash
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+$ curl -fsSL https://get.docker.com -o get-docker.sh
+$ sudo sh get-docker.sh
 ```
 
   </TabItem>
   <TabItem value="macos" label="MacOS">
 
 ```bash
-softwareupdate --install-rosetta # if you're on an Apple Silicon
-brew install docker
+$ softwareupdate --install-rosetta # if you're on an Apple Silicon
+$ brew install docker
 ```
 
   </TabItem>
@@ -98,53 +101,30 @@ Download the [Docker installer](https://docs.docker.com/desktop/install/windows-
 </Tabs>
 </details>
 
-### 1. `meta` CLI
+### 1. Meta CLI
 
-You can download the binary executable from
-[releases page](https://github.com/metatypedev/metatype/releases/) on GitHub, make it
-executable and add it to your `$PATH` or use
-[eget](https://github.com/zyedidia/eget) to automate those steps.
+<InstallMetaCli />
 
-```bash
-eget metatypedev/metatype --to $HOME/.local/bin
+### 2. Typegraph package
 
-meta --help
-meta upgrade # to upgrade to the latest version
-```
+<InstallTypegraph />
 
-### 2. `typegraph` package
-
-Create (and activate) the virtual environment (a local folder where you install the dependency of a project) for your project. Then install the `typegraph` package from PyPi using pip.
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip3 install typegraph --upgrade
-
-meta doctor # to check version
-```
-
-### 3. `typegate` node
+### 3. Typegate node
 
 Finally, download and launch the docker-compose manifest running a typegate node, a Redis instance (this is the sole dependency of the typegate) and a Postgres instance to store the app's messages.
 
-```bash
-meta new your-folder
-cd your-folder
-docker compose up --detach
-
-curl -X POST http://localhost:7890/typegate \
-  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQ=' \ # base64 encoded "admin:password"
-  --data '{"query":"query list { typegraphs { name  }}"}'
-```
+<InstallTypegate />
 
 And go the next section.
 
-### Source installation
+<details>
+  <summary>Alternative installation from source</summary>
 
 Alternatively, you can install directly the `typegraph` package and the CLI from the GitHub repository (useful to check out unreleased features).
 
 ```
-pip3 install --upgrade git+https://github.com/metatypedev/metatype#subdirectory=typegraph
-cargo install --force meta-cli --git https://github.com/metatypedev/metatype --locked
+$ pip3 install --upgrade git+https://github.com/metatypedev/metatype#subdirectory=typegraph
+$ cargo install --force meta-cli --git https://github.com/metatypedev/metatype --locked
 ```
+
+</details>

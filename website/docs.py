@@ -1,6 +1,5 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.http import HTTPRuntime
-from typegraph.runtimes.random import RandomMat
 
 with TypeGraph(
     "docs",
@@ -26,6 +25,4 @@ with TypeGraph(
 
     g.expose(
         newsletterSignUp=newsletterSignUp,
-        get=t.gen(t.string(), RandomMat()).add_policy(public),
-        # https://metatype.atlassian.net/browse/MET-11
     )

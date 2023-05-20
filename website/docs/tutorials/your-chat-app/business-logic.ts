@@ -10,53 +10,31 @@ interface ISend {
 
 export default async function (
   { title }: ISend,
-  { self, context },
+  { context },
+  { gql },
 ): Promise<boolean> {
   const text = `New message: ${title} from ${context.user.name} ${
     emoji("coffee")
   }`;
 
-  const message = await fetch(
-    self,
-    {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        "x-metatype-key": self, // forward internal key
-      },
-      body: JSON.stringify({
-        query: `
-            mutation db($title: String!, $user_id: Int!) {
-                create_message(data: {title: $title, user_id: $user_id}) {
-            }
-            `,
-        variables: { title: text, user_id: context.user.id },
-      }),
-    },
-  ).then((r) => r.json());
-
+  const messageQuery = gql`
+    mutation db($title: String!, $user_id: Int!) {
+      create_message(data: {title: $title, user_id: $user_id}) {
+        id
+      }
+    }
+  `;
+  const message = await messageQuery(
+    { title: text, user_id: context.user.id },
+  );
   console.log(`created message ${message.data.db.create_message.id}`);
 
-  const notif = await fetch(
-    self,
-    {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        "content-type": "application/json",
-        "x-typegate-key": self,
-      },
-      body: JSON.stringify({
-        query: `
-            mutation fcm {
-                send_notification
-            }
-            `,
-        variables: {},
-      }),
-    },
-  ).then((r) => r.json());
+  const notifQuery = gql`
+    mutation fcm {
+      send_notification
+    }
+  `;
+  const notif = await notifQuery();
 
   console.log(`created notif ${notif.data.fcm.send_notification}`);
   return true;

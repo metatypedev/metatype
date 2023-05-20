@@ -6,7 +6,7 @@ from typegraph.runtimes.random import RandomRuntime
 # skip:end
 
 with TypeGraph(
-    "auth",
+    "authentication",
     # highlight-next-line
     auths=[
         # highlight-next-line

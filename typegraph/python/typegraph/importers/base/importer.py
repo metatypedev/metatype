@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 import black
 from attrs import define, field, frozen
+from box import Box
 from redbaron import AtomtrailersNode, NameNode, RedBaron
 
 from typegraph import TypeGraph, t
@@ -22,7 +23,9 @@ from typegraph.types import reserved_types
 class Codegen:
     indent: str = field(default=" " * 4)
     indent_level: int = field(default=1)
+    indent_level_pyi: int = field(default=0)
     res: str = field(default="", init=False)
+    res_hint: str = field(default="", init=False)
 
     def line(self, line: str = "", indent_level=0):
         indent = self.indent * (self.indent_level + indent_level)
@@ -30,6 +33,18 @@ class Codegen:
             self.res += "\n"
         else:
             self.res += f"{indent}{line}\n"
+
+    def hint_line(self, line: str = "", indent_level=0):
+        indent = self.indent * (self.indent_level_pyi + indent_level)
+        if line == "":
+            self.res_hint += "\n"
+        else:
+            self.res_hint += f"{indent}{line}\n"
+
+
+# Some Type Name => Some_Type_Name
+def as_attr(name: str):
+    return re.sub(r"\s+", "_", name)
 
 
 class Importer:
@@ -77,6 +92,7 @@ class Importer:
             raise Exception(f"Cannot use reserved types: {', '.join(reserved)}")
 
         self.tg = TypeGraph(name="__importer__")
+        self.type_hint = []
 
     def __enter__(self):
         ImporterContext.push(self)
@@ -120,24 +136,38 @@ class Importer:
         cg.line()
 
         cg.line("types = {}")
+        cg.hint_line("from typegraph import t")
+        cg.hint_line("class TypeList:")
 
         if len(self.types) > 0:
             for name, tpe in self.types.items():
                 cg.line(f"types[{repr(name)}] = {typify(tpe, name)}")
+                cg.hint_line(f"{as_attr(name)}: t.typedef = ...", 1)
 
             cg.line()
 
         cg.line("functions = {}")
+        cg.hint_line("class FuncList:")
         for name, fn in self.exposed.items():
             cg.line(f"functions[{repr(name)}] = {typify(fn)}")
+            cg.hint_line(f"{as_attr(name)}: t.func = ...", 1)
         cg.line()
 
+        cg.hint_line("class Import:")
+        cg.hint_line("types: TypeList = ...", 1)
+        cg.hint_line("functions: FuncList = ...", 1)
+        cg.hint_line(f"def {self.get_def_name()}() -> Import: ...")
+
+        self.imports.add(("box", "Box"))
         self.imports.add(("typegraph.importers.base.importer", "Import"))
         cg.line(
-            f"return Import(importer={repr(self.name)}, renames=renames, types=types, functions=functions)"
+            f"return Import(importer={repr(self.name)}, renames=renames, types=Box(types), functions=Box(functions))"
         )
 
         return cg
+
+    def get_def_name(self):
+        return f"import_{self.name}"
 
     def imp(self, gen: bool):
         if not gen:
@@ -153,7 +183,7 @@ class Importer:
             raise Exception("Expected to find generate argument import node")
         gen_arg.value = "False"
 
-        cg = self.codegen(Codegen()).res
+        source = self.codegen(Codegen())
 
         for frm, imp in self.imports:
             if not code.find(
@@ -163,7 +193,7 @@ class Importer:
             ):
                 code.insert(0, f"from {frm} import {imp}\n")
 
-        name = f"import_{self.name}"
+        name = self.get_def_name()
         target_node = code.find("def", lambda node: node.name == name)
         wth = code.find("with")
 
@@ -182,15 +212,20 @@ class Importer:
                 target_node.insert_before(comment)
             else:
                 comment_node.value = comment
-            target_node.value = cg
+            target_node.value = source.res
         else:
             wth.insert_before(comment)
-            wth.insert_before(f"def {name}():\n{cg}")
+            wth.insert_before(f"def {name}():\n{source.res}")
 
         new_code = black.format_str(code.dumps(), mode=black.FileMode())
+        new_hint_code = black.format_str(source.res_hint, mode=black.FileMode())
 
         with open(file, "w") as f:
             f.write(new_code)
+
+        filename_pyi = re.sub(r"\.py$", ".pyi", file)
+        with open(filename_pyi, "w") as f:
+            f.write(new_hint_code)
 
         print(f"File updated: {file}", file=sys.stderr)
         exit(0)
@@ -253,19 +288,22 @@ class ImporterContext:
 class Import:
     importer: str
     renames: Dict[str, str]
-    types: Dict[str, t.typedef]
-    functions: Dict[str, t.func]
+    types: Box  # Dict[str, t.typedef]
+    functions: Box  # Dict[str, t.func]
 
     def type(self, name: str):
-        typ = self.types.get(name)
-        if typ is None:
+        try:
+            typ = getattr(self.types, name)
+            return typ
+        except Exception:
             raise Exception(f"Type '{name}' not found in import '{self.importer}")
 
     def func(self, name: str):
-        fn = self.functions.get(name)
-        if fn is None:
+        try:
+            fn = getattr(self.functions, name)
+            return fn
+        except Exception:
             raise Exception(f"Function '{name}' not found in import '{self.importer}'")
-        return fn
 
     def all(self):
         return self.functions

@@ -4,14 +4,12 @@ snapshot[`GraphQL parser 1`] = `
 [
   {
     config: {},
-    policies: [
-    ],
+    policies: [],
     properties: {
       mutation: 19,
       query: 18,
     },
-    required: [
-    ],
+    required: [],
     runtime: 0,
     title: "graphql_namespaces",
     type: "object",
@@ -27,8 +25,7 @@ snapshot[`GraphQL parser 1`] = `
       profile: 8,
       update: 7,
     },
-    required: [
-    ],
+    required: [],
     runtime: 0,
     title: "user_namespace",
     type: "object",
@@ -49,13 +46,11 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
-    policies: [
-    ],
+    policies: [],
     properties: {
       id: 4,
     },
-    required: [
-    ],
+    required: [],
     runtime: 1,
     title: "object_7",
     type: "object",
@@ -63,30 +58,26 @@ snapshot[`GraphQL parser 1`] = `
   {
     config: {},
     format: "uuid",
-    policies: [
-    ],
+    policies: [],
     runtime: 1,
     title: "user_id",
     type: "string",
   },
   {
     config: {},
-    policies: [
-    ],
+    policies: [],
     properties: {
       id: 4,
       name: 6,
     },
-    required: [
-    ],
+    required: [],
     runtime: 1,
     title: "user_model",
     type: "object",
   },
   {
     config: {},
-    policies: [
-    ],
+    policies: [],
     runtime: 1,
     title: "string_2",
     type: "string",
@@ -107,14 +98,12 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
-    policies: [
-    ],
+    policies: [],
     properties: {
       picture: 9,
       setPicture: 13,
     },
-    required: [
-    ],
+    required: [],
     runtime: 0,
     title: "profile_namespace",
     type: "object",
@@ -135,27 +124,23 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
-    policies: [
-    ],
+    policies: [],
     properties: {
       id: 4,
     },
-    required: [
-    ],
+    required: [],
     runtime: 1,
     title: "object_10",
     type: "object",
   },
   {
     config: {},
-    policies: [
-    ],
+    policies: [],
     properties: {
       id: 4,
       url: 12,
     },
-    required: [
-    ],
+    required: [],
     runtime: 1,
     title: "picture_model",
     type: "object",
@@ -163,8 +148,7 @@ snapshot[`GraphQL parser 1`] = `
   {
     config: {},
     format: "uri",
-    policies: [
-    ],
+    policies: [],
     runtime: 1,
     title: "string_4",
     type: "string",
@@ -194,8 +178,7 @@ snapshot[`GraphQL parser 1`] = `
     properties: {
       picture: 9,
     },
-    required: [
-    ],
+    required: [],
     runtime: 0,
     title: "user_namespace_q",
     type: "object",
@@ -211,8 +194,7 @@ snapshot[`GraphQL parser 1`] = `
     properties: {
       setPicture: 13,
     },
-    required: [
-    ],
+    required: [],
     runtime: 0,
     title: "user_namespace_m",
     type: "object",
@@ -221,14 +203,12 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
-    policies: [
-    ],
+    policies: [],
     properties: {
       find: 2,
       profile: 14,
     },
-    required: [
-    ],
+    required: [],
     runtime: 0,
     title: "graphql_namespaces_q",
     type: "object",
@@ -237,14 +217,12 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
-    policies: [
-    ],
+    policies: [],
     properties: {
       profile: 15,
       update: 7,
     },
-    required: [
-    ],
+    required: [],
     runtime: 0,
     title: "graphql_namespaces_m",
     type: "object",
@@ -253,13 +231,11 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
-    policies: [
-    ],
+    policies: [],
     properties: {
       user: 16,
     },
-    required: [
-    ],
+    required: [],
     runtime: 0,
     title: "Query",
     type: "object",
@@ -268,13 +244,11 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
-    policies: [
-    ],
+    policies: [],
     properties: {
       user: 17,
     },
-    required: [
-    ],
+    required: [],
     runtime: 0,
     title: "Mutation",
     type: "object",

@@ -29,15 +29,24 @@ if (files.length === 0) {
 if (files.length > 1) {
   throw new Error("Cannot accept more than one file");
 }
-
-const process = Deno.run({
-  cmd: ["cargo", "run", "-p", "meta-cli", "--", "serialize", "-f", files[0]],
+const cmd = [
+  "cargo",
+  "run",
+  "-p",
+  "meta-cli",
+  "--",
+  "serialize",
+  "-f",
+  files[0],
+];
+const { stdout } = await new Deno.Command(cmd[0], {
+  args: cmd.slice(1),
   stdout: "piped",
   stderr: "inherit",
-});
+}).output();
 
 const tgs: TypeGraphDS[] = JSON.parse(
-  new TextDecoder().decode(await process.output()),
+  new TextDecoder().decode(stdout),
 );
 
 for (const tg of tgs) {

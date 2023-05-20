@@ -71,4 +71,4 @@
     functions['vehicle'] = test.query(t.struct({'id': t.string().optional(), 'vehicleID': t.string().optional()}), t.proxy(renames['Vehicle']).optional())
     functions['node'] = test.query(t.struct({'id': t.string()}), t.proxy(renames['Node']).optional())
 
-    return Import(importer='test', renames=renames, types=types, functions=functions)
+    return Import(importer='test', renames=renames, types=Box(types), functions=Box(functions))

@@ -86,6 +86,7 @@ export class ReplicatedRegister extends Register {
         SystemTypegraph.getCustomRuntimes(this),
       );
     } catch (err) {
+      console.error(err);
       response.error(err.message);
     }
     if (engine != null && !response.hasError()) {

@@ -83,9 +83,6 @@ export class RandomRuntime extends Runtime {
           case "integer":
             return this.chance.integer();
           case "string":
-            if (typ.format === "name") {
-              return this.chance.name();
-            }
             if (typ.format === "uuid") {
               return this.chance.guid();
             }

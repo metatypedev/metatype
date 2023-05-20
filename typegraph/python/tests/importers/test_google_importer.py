@@ -17,3 +17,16 @@ def test_codegen(snapshot):
     snapshot.assert_match(
         importer.codegen(Codegen()).res, "google_importer_codegen.txt"
     )
+
+
+def test_type_hint(snapshot):
+    importer = GoogleDiscoveryImporter(
+        "test",
+        url="https://example.com/api",
+        file=path.join(path.dirname(__file__), "fcm_googleapi_spec.json"),
+    )
+
+    snapshot.snapshot_dir = "tests/__snapshots__/importers"
+    snapshot.assert_match(
+        importer.codegen(Codegen()).res_hint, "google_importer_type_hint_codegen.txt"
+    )

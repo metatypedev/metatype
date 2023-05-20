@@ -10,7 +10,7 @@
         "unifiedjs.vscode-mdx",
         "ms-python.vscode-pylance",
         "ms-python.python",
-        "errata-ai.vale-server",
+        "chrischinchilla.vale-vscode",
         "hediet.vscode-drawio",
         "davidlday.languagetool-linter"
     ]

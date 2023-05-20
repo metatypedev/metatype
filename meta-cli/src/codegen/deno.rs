@@ -433,17 +433,7 @@ impl<'a> Codegen<'a> {
             TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
             TypeNode::String { base, .. } => {
                 if let Some(variants) = &base.enumeration {
-                    let variants: Vec<String> = variants
-                        .iter()
-                        .map(|variant| {
-                            let variant = variant
-                                .as_str()
-                                .expect("each variant of a string enum should be a string");
-
-                            format!("\"{variant}\"")
-                        })
-                        .collect();
-
+                    // variants are valid strings in JSON (validated by the validator)
                     let enum_definition = variants.join(" | ");
                     Ok(enum_definition)
                 } else {
@@ -493,7 +483,7 @@ mod tests {
         ensure_venv()?;
         let test_folder = Path::new("./src/tests/typegraphs").normalize()?;
         std::env::set_current_dir(&test_folder)?;
-        trace!("Test folder: {test_folder:?}");
+        trace!("Test folder: {:?}", test_folder.as_path());
         let tests = fs::read_dir(&test_folder).unwrap();
         let config = Config::default_in(".");
         let config = Arc::new(config);

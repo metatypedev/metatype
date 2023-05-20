@@ -16,7 +16,7 @@ with TypeGraph(
         # highlight-next-line
         allow_credentials=True,
         # highlight-next-line
-        max_age_sec=60,  # cache in seconds
+        max_age_sec=60,
         # highlight-next-line
     ),
 ) as g:

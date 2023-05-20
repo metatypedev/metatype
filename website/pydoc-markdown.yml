@@ -1,7 +1,7 @@
 loaders:
   - type: python
     search_path:
-      - ../typegraph
+      - ../typegraph/python
 processors:
   - type: filter
     skip_empty_modules: true
@@ -10,7 +10,7 @@ processors:
 renderer:
   type: docusaurus
   docs_base_path: .
-  relative_output_path: docs/reference/typegraph
+  relative_output_path: docs/reference/typegraph/python
   relative_sidebar_path: pydoc.json
   sidebar_top_level_label: null
   markdown:

@@ -26,6 +26,6 @@ with TypeGraph("prisma") as g:
         ).add_policy(public),
         createUser=db.create(user).add_policy(public),
         updateUser=db.update(user).add_policy(public),
-        findUniqueProfile=db.find(profile).add_policy(public),
+        findUniqueProfile=db.find_unique(profile).add_policy(public),
         deleteUser=db.delete(user).add_policy(public),
     )

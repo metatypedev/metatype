@@ -9,7 +9,7 @@ export type OptionalNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -23,7 +23,7 @@ export type BooleanNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -35,7 +35,7 @@ export type NumberNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -52,7 +52,7 @@ export type IntegerNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -69,14 +69,14 @@ export type StringNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
   minLength?: number | null;
   maxLength?: number | null;
   pattern?: string | null;
-  format?: string | null;
+  format?: StringFormat | null;
 };
 export type ObjectNode = {
   type: "object";
@@ -85,7 +85,7 @@ export type ObjectNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -101,14 +101,14 @@ export type ArrayNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
   items: number;
-  max_items?: number | null;
-  min_items?: number | null;
-  unique_items?: boolean | null;
+  maxItems?: number | null;
+  minItems?: number | null;
+  uniqueItems?: boolean | null;
 };
 export type FunctionNode = {
   type: "function";
@@ -117,7 +117,7 @@ export type FunctionNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -134,7 +134,7 @@ export type UnionNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -147,7 +147,7 @@ export type EitherNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -160,7 +160,7 @@ export type AnyNode = {
   policies: PolicyIndices[];
   description?: string | null;
   injection?: InjectionSwitch | null;
-  enum?: any[] | null;
+  enum?: string[] | null;
   config?: {
     [k: string]: unknown;
   };
@@ -192,6 +192,15 @@ export type InjectionSource = {
   source: "parent";
   data: number;
 };
+export type StringFormat =
+  | "uuid"
+  | "email"
+  | "uri"
+  | "json"
+  | "hostname"
+  | "ean"
+  | "date"
+  | "phone";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
 export interface Typegraph {
   $id: string;

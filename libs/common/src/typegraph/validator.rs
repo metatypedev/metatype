@@ -28,16 +28,35 @@ struct Validator {
 }
 
 impl Validator {
-    fn push_error(&mut self, path: &[PathSegment], message: String) {
+    fn push_error(&mut self, path: &[PathSegment], message: impl Into<String>) {
         self.errors.push(ValidatorError {
             path: Path(path).to_string(),
-            message,
+            message: message.into(),
         });
     }
 }
 
 fn to_string(value: &Value) -> String {
     serde_json::to_string(value).unwrap()
+}
+
+impl Typegraph {
+    fn collect_nested_variants_into(&self, out: &mut Vec<u32>, variants: &[u32]) {
+        for idx in variants {
+            let node = self.types.get(*idx as usize).unwrap();
+            match node {
+                TypeNode::Union {
+                    data: UnionTypeData { any_of: variants },
+                    ..
+                }
+                | TypeNode::Either {
+                    data: EitherTypeData { one_of: variants },
+                    ..
+                } => self.collect_nested_variants_into(out, variants),
+                _ => out.push(*idx),
+            }
+        }
+    }
 }
 
 impl TypeVisitor for Validator {
@@ -48,8 +67,95 @@ impl TypeVisitor for Validator {
         type_idx: u32,
         path: &[PathSegment],
         tg: &Typegraph,
+        as_input: bool,
     ) -> VisitResult<Self::Return> {
         let node = &tg.types[type_idx as usize];
+
+        if as_input {
+            // do not allow t.func in input types
+            if let TypeNode::Function { .. } = node {
+                self.push_error(path, "function is not allowed in input types");
+                return VisitResult::Continue(false);
+            }
+        } else {
+            match node {
+                TypeNode::Union { .. } | TypeNode::Either { .. } => {
+                    let mut variants = vec![];
+                    tg.collect_nested_variants_into(&mut variants, &[type_idx]);
+                    let mut object_count = 0;
+
+                    for variant_type in variants
+                        .iter()
+                        .map(|idx| tg.types.get(*idx as usize).unwrap())
+                    {
+                        match variant_type {
+                            TypeNode::Object { .. } => object_count += 1,
+                            TypeNode::Boolean { .. }
+                            | TypeNode::Number { .. }
+                            | TypeNode::Integer { .. }
+                            | TypeNode::String { .. } => {
+                                // scalar
+                            }
+                            TypeNode::Array { data, .. } => {
+                                let item_type = tg.types.get(data.items as usize).unwrap();
+                                if !item_type.is_scalar() {
+                                    self.push_error(
+                                        path,
+                                        format!(
+                                            "array of '{}' not allowed as union/either variant",
+                                            item_type.type_name()
+                                        ),
+                                    );
+                                    return VisitResult::Continue(false);
+                                }
+                            }
+                            _ => {
+                                self.push_error(
+                                    path,
+                                    format!(
+                                        "type '{}' not allowed as union/either variant",
+                                        variant_type.type_name()
+                                    ),
+                                );
+                                return VisitResult::Continue(false);
+                            }
+                        }
+                    }
+
+                    if object_count != 0 && object_count != variants.len() {
+                        self.push_error(
+                            path,
+                            "union variants must either be all scalars or all objects",
+                        );
+                        return VisitResult::Continue(false);
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        if let Some(enumeration) = &node.base().enumeration {
+            if matches!(node, TypeNode::Optional { .. }) {
+                self.push_error(
+                    path,
+                    "optional not cannot have enumerated values".to_owned(),
+                );
+            } else {
+                for value in enumeration.iter() {
+                    match serde_json::from_str::<Value>(value) {
+                        Ok(val) => match tg.validate_value(type_idx, &val) {
+                            Ok(_) => {}
+                            Err(err) => self.push_error(path, err.to_string()),
+                        },
+                        Err(e) => self.push_error(
+                            path,
+                            format!("Error while deserializing enum value {value:?}: {e:?}"),
+                        ),
+                    }
+                }
+            }
+        }
+
         if let Some(injection) = &node.base().injection {
             if injection.cases.is_empty() && injection.default.is_none() {
                 self.push_error(path, "Invalid injection: Injection has no case".to_string());
@@ -60,10 +166,7 @@ impl TypeVisitor for Validator {
                             match serde_json::from_str::<Value>(value) {
                                 Ok(val) => match tg.validate_value(type_idx, &val) {
                                     Ok(_) => {}
-                                    Err(err) => self.errors.push(ValidatorError {
-                                        path: Path(path).to_string(),
-                                        message: err.to_string(),
-                                    }),
+                                    Err(err) => self.push_error(path, err.to_string()),
                                 },
                                 Err(e) => {
                                     self.push_error(

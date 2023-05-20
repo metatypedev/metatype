@@ -171,4 +171,18 @@ export class MetaTest {
   assertSnapshot(...params: AssertSnapshotParams): Promise<void> {
     return assertSnapshot(this.t, ...params);
   }
+
+  assertThrowsSnapshot(fn: () => void) {
+    let err: Error | null = null;
+    try {
+      fn();
+    } catch (e) {
+      err = e;
+    }
+
+    if (err == null) {
+      throw new Error("Assertion failure: function did not throw");
+    }
+    this.assertSnapshot(err.message);
+  }
 }

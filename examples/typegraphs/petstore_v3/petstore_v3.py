@@ -1,3 +1,4 @@
+from box import Box
 from typegraph import TypeGraph, t
 from typegraph.importers.base.importer import Import
 from typegraph.importers.openapi import OpenApiImporter
@@ -223,7 +224,7 @@ def import_petstore():
     )
 
     return Import(
-        importer="petstore", renames=renames, types=types, functions=functions
+        importer="petstore", renames=renames, types=Box(types), functions=Box(functions)
     )
 
 

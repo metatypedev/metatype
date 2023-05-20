@@ -43,9 +43,6 @@ export const typegate =
       if (url.pathname === "/") {
         const info = {
           app: "typegate",
-          node: `${config.hostname}:${config.tg_port}`,
-          version: config.version,
-          debug: config.debug,
         };
         return new Response(JSON.stringify(info), {
           headers: {

@@ -9,14 +9,14 @@ use serde_with::skip_serializing_none;
 use super::{EffectType, PolicyIndices};
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InjectionCase {
     effect: EffectType,
     injection: InjectionSource,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase", tag = "source", content = "data")]
 pub enum InjectionSource {
     Static(String),
@@ -26,7 +26,7 @@ pub enum InjectionSource {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct InjectionSwitch {
     pub cases: Vec<InjectionCase>,
     pub default: Option<InjectionSource>,
@@ -50,7 +50,7 @@ impl InjectionSwitch {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct TypeNodeBase {
     pub title: String,
     pub runtime: u32,
@@ -60,14 +60,14 @@ pub struct TypeNodeBase {
     #[serde(default)]
     pub injection: Option<InjectionSwitch>,
     #[serde(default, rename = "enum")]
-    pub enumeration: Option<Vec<serde_json::Value>>,
+    pub enumeration: Option<Vec<String>>, // JSON-serialized values
     #[serde(default)]
     pub config: IndexMap<String, serde_json::Value>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct OptionalTypeData {
     pub item: u32,
     #[serialize_always]
@@ -76,7 +76,7 @@ pub struct OptionalTypeData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct NumberTypeData {
     pub minimum: Option<f64>,
@@ -88,7 +88,7 @@ pub struct NumberTypeData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct IntegerTypeData {
     pub minimum: Option<i64>,
@@ -99,20 +99,35 @@ pub struct IntegerTypeData {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum StringFormat {
+    Uuid,
+    Email,
+    Uri,
+    Json,
+    Hostname,
+    Ean,
+    Date,
+    // DateTime,
+    // Path,
+    Phone,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct StringTypeData {
     pub min_length: Option<u32>,
     pub max_length: Option<u32>,
     pub pattern: Option<String>,
-    // TODO Option<Enum>
-    pub format: Option<String>,
+    pub format: Option<StringFormat>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ObjectTypeData {
     pub properties: IndexMap<String, u32>,
     #[serde(default)]
@@ -121,7 +136,8 @@ pub struct ObjectTypeData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct ArrayTypeData {
     pub items: u32,
     pub max_items: Option<u32>,
@@ -131,7 +147,7 @@ pub struct ArrayTypeData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct FunctionTypeData {
     pub input: u32,
     pub output: u32,
@@ -143,7 +159,7 @@ pub struct FunctionTypeData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UnionTypeData {
     /// Array of indexes of the nodes that are used as subschemes in the
@@ -153,7 +169,7 @@ pub struct UnionTypeData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct EitherTypeData {
     /// Array of indexes of the nodes that are used as subschemes in the
@@ -163,7 +179,7 @@ pub struct EitherTypeData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum TypeNode {
     Optional {
@@ -247,5 +263,30 @@ impl TypeNode {
             | Either { base, .. }
             | Any { base, .. } => base,
         }
+    }
+
+    pub fn type_name(&self) -> &'static str {
+        use TypeNode::*;
+        match self {
+            Optional { .. } => "optional",
+            Boolean { .. } => "booleal",
+            Number { .. } => "number",
+            Integer { .. } => "integer",
+            String { .. } => "string",
+            Object { .. } => "object",
+            Array { .. } => "array",
+            Function { .. } => "function",
+            Union { .. } => "union",
+            Either { .. } => "either",
+            Any { .. } => "any",
+        }
+    }
+
+    pub fn is_scalar(&self) -> bool {
+        use TypeNode::*;
+        matches!(
+            self,
+            Boolean { .. } | Number { .. } | Integer { .. } | String { .. }
+        )
     }
 }

@@ -1,5 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
+import { JSONValue } from "../../src/utils.ts";
 import { gql, test } from "../utils.ts";
 
 test(
@@ -12,11 +13,16 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: "blue", to: "rgb_array")
+            convert(color: { name: "blue" }, to: "rgb_array") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .expectData({
-            convert: [0, 0, 255],
+            convert: { rgb: [0, 0, 255] },
           })
           .on(e);
       },
@@ -27,11 +33,16 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: "#ffffff", to: "rgb_array")
+            convert(color: { hex: "#ffffff" }, to: "rgb_array") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .expectData({
-            convert: [255, 255, 255],
+            convert: { rgb: [255, 255, 255] },
           })
           .on(e);
       },
@@ -42,11 +53,16 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: [220, 20, 60], to: "hex")
+            convert(color: { rgb: [220, 20, 60] }, to: "hex") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .expectData({
-            convert: "#dc143c",
+            convert: { hex: "#dc143c" },
           })
           .on(e);
       },
@@ -58,9 +74,10 @@ test(
         await gql`
           query {
             convert(color: { r: 155, g: 38, b: 182 }, to: "rgb_struct") {
-              r
-              g
-              b
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
             }
           }
         `
@@ -81,7 +98,10 @@ test(
         await gql`
           query {
             convert(color: { r: 155, g: 38, b: 182 }, to: "rgb_struct") {
-              r
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
             }
           }
         `
@@ -99,7 +119,12 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: 100, to: "rgb_array")
+            convert(color: 100, to: "rgb_array") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .expectErrorContains("Type mismatch: got 'IntValue'")
@@ -112,7 +137,12 @@ test(
       async () => {
         await gql`
           query {
-            convert(color: "hello world", to: "rgb_array")
+            convert(color: "hello world", to: "rgb_array") {
+              ... on RGBArray { rgb }
+              ... on RGBStruct { r g b }
+              ... on HexColor { hex }
+              ... on NamedColor { name }
+            }
           }
         `
           .matchErrorSnapshot(t)
@@ -140,3 +170,100 @@ test(
   },
   { introspection: true },
 );
+
+test("nested unions", async (t) => {
+  const e = await t.pythonFile("type_nodes/union_node.py");
+
+  await t.should("support nested unions", async () => {
+    const data: JSONValue = [
+      { b: "Hello" },
+      { a: { b: "Hello" } },
+      { a: { a: { s: "World" } } },
+      { a: { a: { i: 12, j: 15 } } },
+    ];
+    await gql`
+      query Q($inp: [NestedUnionsIn]) {
+        nested(inp: $inp) {
+          ... on A1 {
+            a {
+              ... on A2 {
+                a {
+                  ... on A3 { s }
+                  ... on A4 { i j }
+                }
+              }
+              ... on B { 
+                b
+              }
+            }
+          }
+          ... on B {
+            b
+          }
+        }
+      }
+    `
+      .withVars({
+        inp: data,
+      })
+      .expectData({
+        nested: data,
+      })
+      .on(e);
+  });
+});
+
+test("multilevel unions", async (t) => {
+  const e = await t.pythonFile("type_nodes/union_node.py");
+
+  await t.should("success", async () => {
+    const data: JSONValue = [
+      { a: "a" },
+      { b: "b" },
+      { c: "c" },
+      { d: "d" },
+      { e: "e" },
+      { f: "f" },
+    ];
+
+    await gql`
+      query Q($inp: [MultilevelUnionIn]!) {
+        multilevel(inp: $inp) {
+          ... on Ua { a }
+          ... on Ub { b }
+          ... on Uc { c }
+          ... on Ud { d }
+          ... on Ue { e }
+          ... on Uf { f }
+        }
+      }
+    `
+      .withVars({
+        inp: data,
+      })
+      .expectData({
+        multilevel: data,
+      })
+      .on(e);
+  });
+});
+
+test("scalar unions", async (t) => {
+  const e = await t.pythonFile("type_nodes/union_node.py");
+
+  await t.should("succeed", async () => {
+    const data: JSONValue = [1, "hello", 12, false];
+    await gql`
+      query Q($inp: [MultilevelUnionIn]) {
+        scalar(inp: $inp)
+      }
+    `
+      .withVars({
+        inp: data,
+      })
+      .expectData({
+        scalar: data,
+      })
+      .on(e);
+  });
+});

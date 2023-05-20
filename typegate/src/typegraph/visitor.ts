@@ -48,6 +48,10 @@ export function getChildTypes(type: TypeNode): number[] {
       return Object.values(type.properties);
     case Type.FUNCTION:
       return [type.input, type.output];
+    case Type.UNION:
+      return type.anyOf;
+    case Type.EITHER:
+      return type.oneOf;
 
     default:
       return [];

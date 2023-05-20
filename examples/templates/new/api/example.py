@@ -1,9 +1,9 @@
 from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.python_wasi import PythonWasiRuntime
+from typegraph.runtimes.python import Python
 
 with TypeGraph(name="example") as g:
     public = policies.public()
-    python = PythonWasiRuntime()
+    python = Python()
 
     hello = t.func(
         t.struct({"world": t.string()}),
