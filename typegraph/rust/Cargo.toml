@@ -2,6 +2,7 @@
 name = "typegraph"
 version = "0.1.9-dev.0"
 edition = "2021"
+license-file = "../../LICENSE-MPL-2.0.md"
 
 [dependencies]
 typegraph_core = {path = "../core"}

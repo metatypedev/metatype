@@ -1,7 +1,8 @@
 dev:
   files:
-    LICENSE-ELv2.md:
+    LICENSE-MPL-2.0.md:
       - typegraph/python/LICENSE.md
+      - typegraph/deno/LICENSE.md
   rules:
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
