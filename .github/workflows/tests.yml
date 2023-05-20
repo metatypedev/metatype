@@ -228,6 +228,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DENO_DIR: deno-dir
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
