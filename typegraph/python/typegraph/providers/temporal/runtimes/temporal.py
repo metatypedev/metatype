@@ -3,6 +3,7 @@
 
 from attrs import frozen
 
+from typegraph import effects
 from typegraph import types as t
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
@@ -14,8 +15,8 @@ class TemporalRuntime(Runtime):
     [Documentation](https://metatype.dev/docs/reference/runtimes/temporal)
     """
 
-    host: str
     name: str
+    host: str
     runtime_name: str = always("temporal")
 
     def data(self, collector):
@@ -29,7 +30,9 @@ class TemporalRuntime(Runtime):
         return t.func(
             t.struct({"workflow_id": t.string(), "args": t.array(arg)}),
             t.string(),
-            StartWorkflowMat(self, workflow_type),
+            StartWorkflowMat(
+                runtime=self, effect=effects.create(), workflow_type=workflow_type
+            ),
         )
 
     def signal_workflow(self, signal_name: str, arg):
@@ -38,7 +41,9 @@ class TemporalRuntime(Runtime):
                 {"workflow_id": t.string(), "run_id": t.string(), "args": t.array(arg)}
             ),
             t.string(),
-            SignalWorkflowMat(self, signal_name),
+            SignalWorkflowMat(
+                runtime=self, effect=effects.update(), signal_name=signal_name
+            ),
         )
 
     def query_workflow(self, query_type: str, arg):
@@ -47,14 +52,16 @@ class TemporalRuntime(Runtime):
                 {"workflow_id": t.string(), "run_id": t.string(), "args": t.array(arg)}
             ),
             t.string(),
-            QueryWorkflowMat(self, query_type),
+            QueryWorkflowMat(
+                runtime=self, effect=effects.none(), query_type=query_type
+            ),
         )
 
     def describe_workflow(self):
         return t.func(
             t.struct({"workflow_id": t.string(), "run_id": t.string()}),
             t.string(),
-            DescribeWorkflowMat(self),
+            DescribeWorkflowMat(runtime=self, effect=effects.none()),
         )
 
 

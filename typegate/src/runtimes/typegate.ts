@@ -103,9 +103,8 @@ export class TypeGateRuntime extends Runtime {
 
   addTypegraph: Resolver = async ({ fromString, secrets, cliVersion }) => {
     if (cliVersion !== config.version) {
-      const cmp = `"${cliVersion} != ${config.version}"`;
       throw new Error(
-        `The version of the CLI does not match the version of the typegate: ${cmp}`,
+        `Meta CLI version ${cliVersion} must match typegate version ${config.version} (until the releases are stable)`,
       );
     }
     const json = await typegraph_validate({ json: fromString }).then((res) => {
