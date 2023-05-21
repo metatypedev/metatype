@@ -83,8 +83,8 @@ pub struct DeployOptions {
     #[clap(long, default_value_t = false)]
     pub watch: bool,
 
-    /// Target typegate profile (in metatype.yaml)
-    #[clap(long, default_value_t = String::from("deploy"))]
+    /// Typegate target (in metatype.yaml)
+    #[clap(short, long)]
     pub target: String,
 }
 

@@ -72,7 +72,14 @@ test("cli:deploy - automatic migrations", async (t) => {
   });
 
   await t.should("run migrations with `meta deploy`", async () => {
-    await meta("deploy", ...nodeConfigs, "-f", "runtimes/prisma/prisma.py");
+    await meta(
+      "deploy",
+      ...nodeConfigs,
+      "-t",
+      "deploy",
+      "-f",
+      "prisma/prisma.py",
+    );
   });
 
   await t.should("succeed to query database", async () => {

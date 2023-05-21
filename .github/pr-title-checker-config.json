@@ -4,7 +4,7 @@
     "color": "eee"
   },
   "CHECKS": {
-    "regexp": "(?<type>build|chore|ci|docs|feat|fix|perf|refactor|revert|test)(?<scope>(?:([^()\\r\\n]*)|()?(?<breaking>!)?:)(?<subject>:.*)?",
+    "regexp": "(?<type>build|chore|ci|docs|feat|fix|perf|refactor|revert|test)(?<scope>(?:\\([^()\\r\\n]*\\)|\\()?(?<breaking>!)?:)(?<subject>:.*)?",
     "regexpFlags": "i"
   },
   "MESSAGES": {
