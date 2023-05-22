@@ -83,7 +83,11 @@ class TypedefFromJsonSchema:
             schema_type = "empty"
 
         if schema_type is None:
-            raise Exception(f'Unsupported schema, field "type" not found: {schema}')
+            schema_type = "string"
+            print(
+                f'Unsupported schema, field "type" not found, "string" was used instead: {schema}'
+            )
+            # raise Exception(f'Unsupported schema, field "type" not found: {schema}')
 
         gen = self.type_dispatch.get(schema_type)
         if gen is None:

@@ -291,12 +291,27 @@ class Path:
                 )
             schema = body[content_type].schema
             schema = self.resolve_ref(schema)
+
             if schema.type != "object":
                 raise Exception(f"Unsupported type for request body: {schema.type}")
 
             gen_typ = self.typedef_from_jsonschema(schema)
             if isinstance(gen_typ, t.optional):
                 gen_typ = gen_typ.of
+
+            # print(f"{gen_typ.name} of type {gen_typ.__class__.__name__}")
+            # print(f"  {schema}")
+            if not isinstance(gen_typ, t.struct):
+                """
+                Example:
+                Spec: https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.yaml
+                At method=post path=/repos/{owner}/{repo}/pages
+                - It uses `anyOf` with *property names of the *closest schema as variants but not references to object or schemas (against jsonschema spec)
+                https://swagger.io/docs/specification/data-models/oneof-anyof-allof-not/
+                """
+                raise Exception(
+                    f"spec assigned type as 'object' but '{gen_typ.__class__.__name__}' was generated instead"
+                )
 
             for name, typ in gen_typ.props.items():
                 if name in props:
