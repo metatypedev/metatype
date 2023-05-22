@@ -33,10 +33,10 @@ export function generateValidator(
   const validator = new Function(code)() as ValidatorFn;
 
   return (value: unknown) => {
-    // console.log("validating", value);
     const errors: ErrorEntry[] = [];
     validator(value, "<value>", errors, validationContext);
     if (errors.length > 0) {
+      console.log("validating", value);
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
       throw new Error(`Validation errors:\n${messages}`);

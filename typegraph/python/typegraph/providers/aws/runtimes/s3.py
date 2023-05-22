@@ -32,11 +32,23 @@ class S3Runtime(Runtime):
         )
         return data
 
-    def sign(self, bucket: str, content_type: str):
+    def presign_get(self, bucket: str, expiry_secs: Optional[int] = None):
+        return t.func(
+            t.struct({"path": t.string()}),
+            t.uri(),
+            PresignGetMat(self, bucket, expiry_secs),
+        )
+
+    def presign_put(
+        self,
+        bucket: str,
+        content_type: Optional[str] = None,
+        expiry_secs: Optional[int] = None,
+    ):
         return t.func(
             t.struct({"length": t.integer(), "path": t.string()}),
-            t.string(),
-            SignMat(self, bucket, content_type),
+            t.uri(),
+            PresignPutMat(self, bucket, content_type, expiry_secs),
         )
 
     def list(self, bucket: str):
@@ -60,26 +72,29 @@ class S3Runtime(Runtime):
             UploadMat(self, bucket),
         )
 
-    def download_url(self, bucket: str, expiry_secs: Optional[int] = 3600):
-        return t.func(
-            t.struct({"path": t.string()}),
-            t.uri(),
-            DownloadUrlMat(self, bucket, expiry_secs),
-        )
+
+@frozen
+class PresignGetMat(Materializer):
+    runtime: S3Runtime
+    bucket: str
+    expiry_secs: Optional[int]
+    materializer_name: str = always("presign_get")
+    effect: Effect = always(effects.none())
 
 
 @frozen
-class SignMat(Materializer):
-    runtime: Runtime
+class PresignPutMat(Materializer):
+    runtime: S3Runtime
     bucket: str
-    content_type: str
-    materializer_name: str = always("sign")
+    content_type: Optional[str]
+    expiry_secs: Optional[int]
+    materializer_name: str = always("presign_put")
     effect: Effect = always(effects.none())
 
 
 @frozen
 class ListMat(Materializer):
-    runtime: Runtime
+    runtime: S3Runtime
     bucket: str
     materializer_name: str = always("list")
     effect: Effect = always(effects.none())
@@ -91,12 +106,3 @@ class UploadMat(Materializer):
     bucket: str
     materializer_name: str = always("upload")
     effect: Effect = always(effects.upsert())
-
-
-@frozen
-class DownloadUrlMat(Materializer):
-    runtime: S3Runtime
-    bucket: str
-    expiry_secs: int
-    materializer_name: str = always("download_url")
-    effect: Effect = always(effects.none())

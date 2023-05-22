@@ -210,16 +210,8 @@ export class HTTPRuntime extends Runtime {
     );
 
     for (const field of sameRuntime) {
-      const resolver: Resolver = ({ _: { parent } }) => {
-        const resolver = parent[field.props.node];
-        const ret = typeof resolver === "function" ? resolver() : resolver;
-        return ret;
-      };
       stagesMat.push(
-        new ComputeStage({
-          ...field.props,
-          resolver,
-        }),
+        stage.withResolver(Runtime.resolveFromParent(field.props.node)),
       );
     }
     return stagesMat;

@@ -34,6 +34,7 @@
     "test/mock_fetch": "https://deno.land/x/mock_fetch@0.3.0/mod.ts",
     "json_schema_typed": "https://deno.land/x/json_schema_typed@v8.0.0/draft_latest.ts",
     "url_join": "https://deno.land/x/url_join@1.0.0/mod.ts",
-    "levenshtein": "https://deno.land/x/levenshtein@v1.0.1/mod.ts"
+    "levenshtein": "https://deno.land/x/levenshtein@v1.0.1/mod.ts",
+    "aws-sdk/": "https://esm.sh/@aws-sdk/"
   }
 }

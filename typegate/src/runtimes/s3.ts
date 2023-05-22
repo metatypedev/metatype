@@ -3,71 +3,81 @@
 
 import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
-import { iterParentStages, JSONValue, nativeResult } from "../utils.ts";
-import * as native from "native";
+import { RuntimeInitParams } from "../types.ts";
+// import { iterParentStages, JSONValue } from "../utils.ts";
+import {
+  GetObjectCommand,
+  GetObjectCommandInput,
+  ListObjectsCommand,
+  PutObjectCommand,
+  PutObjectCommandInput,
+  S3Client,
+} from "aws-sdk/client-s3";
+import { getSignedUrl } from "aws-sdk/s3-request-presigner";
+import {
+  Materializer,
+  S3Materializer,
+  S3RuntimeData,
+} from "../types/typegraph.ts";
 
-const fieldSelectorResolver = (stage: ComputeStage) => {
-  const resolver: Resolver = async ({ _: { parent }, ...args }) => {
-    const field = parent[stage.props.node];
-    return typeof field === "function" ? await field(args) : field;
-  };
-  return resolver;
-};
-
-interface Mask {
-  [key: string]: Mask | true;
-}
-
-const pick = (
-  obj: JSONValue,
-  mask: Mask,
-): JSONValue => {
-  if (Array.isArray(obj)) {
-    return obj.map((o) => pick(o, mask));
-  }
-  if (typeof obj === "object" && obj !== null) {
-    for (const k of Object.keys(obj)) {
-      const m = mask[k];
-      if (m === undefined) {
-        delete obj[k];
-      } else if (m !== true) {
-        pick(obj[k], m);
-      }
-    }
-  }
-  return obj;
-};
-
-const getMask = (stages: ComputeStage[]): Mask => {
-  const ret: Mask = {};
-  iterParentStages(stages, (stage, children) => {
-    ret[stage.props.node] = children.length > 0 ? getMask(children) : true;
-  });
-  return ret;
-};
+// interface Mask {
+//   [key: string]: Mask | true;
+// }
+//
+// const pick = (
+//   obj: JSONValue,
+//   mask: Mask,
+// ): JSONValue => {
+//   if (Array.isArray(obj)) {
+//     return obj.map((o) => pick(o, mask));
+//   }
+//   if (typeof obj === "object" && obj !== null) {
+//     for (const k of Object.keys(obj)) {
+//       const m = mask[k];
+//       if (m === undefined) {
+//         delete obj[k];
+//       } else if (m !== true) {
+//         pick(obj[k], m);
+//       }
+//     }
+//   }
+//   return obj;
+// };
+//
+// const getMask = (stages: ComputeStage[]): Mask => {
+//   const ret: Mask = {};
+//   iterParentStages(stages, (stage, children) => {
+//     ret[stage.props.node] = children.length > 0 ? getMask(children) : true;
+//   });
+//   return ret;
+// };
 
 export class S3Runtime extends Runtime {
   private constructor(
-    private client: native.S3Client,
+    private client: S3Client,
   ) {
     super();
   }
 
   static init(params: RuntimeInitParams): Runtime {
-    const { args, secretManager } = params;
+    const { secretManager } = params;
+    const args = params.args as unknown as S3RuntimeData;
 
     const { host, region } = args;
-    const client: native.S3Client = {
-      region: region as string,
-      access_key: secretManager.secretOrFail(
-        args.access_key_secret as string,
+    const credentials = {
+      accessKeyId: secretManager.secretOrFail(
+        args.access_key_secret,
       ),
-      secret_key: secretManager.secretOrFail(
-        args.secret_key_secret as string,
+      secretAccessKey: secretManager.secretOrFail(
+        args.secret_key_secret,
       ),
-      endpoint: host as string,
     };
+    const client = new S3Client({
+      endpoint: host,
+      region: region,
+      credentials,
+      forcePathStyle: true,
+    });
     return new S3Runtime(client);
   }
 
@@ -78,77 +88,94 @@ export class S3Runtime extends Runtime {
     waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const name = stage.props.materializer?.name;
-    const matData = stage.props.materializer?.data ?? {};
-
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
-    const mask = getMask(sameRuntime);
 
-    const resolver: Resolver = (() => {
-      const { bucket } = matData;
-      if (name === "list") {
-        return async ({ path }) => {
-          const { items, prefix } = nativeResult(
-            await native.s3_list(
-              this.client,
-              bucket as string,
-              path,
-            ),
+    return [stage, ...sameRuntime].map((stage) => {
+      const mat = stage.props.materializer as unknown as S3Materializer;
+      if (mat == null) {
+        return stage.withResolver(Runtime.resolveFromParent(stage.props.node));
+      }
+
+      switch (mat.name) {
+        case "list": {
+          const { bucket } = mat.data;
+          return stage.withResolver(async ({ path }) => {
+            const command = new ListObjectsCommand({
+              Bucket: bucket as string,
+              Prefix: path as string,
+            });
+            const res = await this.client.send(command);
+            return {
+              keys: (res.Contents ?? []).map((c) => ({
+                key: c.Key,
+                size: c.Size,
+              })),
+              prefix: res.Prefix != null ? [res.Prefix] : [],
+            };
+          });
+        }
+
+        case "presign_put": {
+          const { bucket, content_type, expiry_secs } = mat.data;
+
+          return stage.withResolver(async ({ length, path }) => {
+            const input: PutObjectCommandInput = {
+              Bucket: bucket,
+              Key: path as string,
+              ContentLength: length,
+            };
+            if (content_type != null) {
+              input.ContentType = content_type;
+            }
+            const command = new PutObjectCommand(input);
+
+            return await getSignedUrl(this.client, command, {
+              expiresIn: expiry_secs ?? 60,
+            });
+          });
+        }
+
+        case "presign_get": {
+          const { bucket, expiry_secs } = mat.data;
+
+          return stage.withResolver(async ({ path }) => {
+            const input: GetObjectCommandInput = {
+              Bucket: bucket,
+              Key: path as string,
+            };
+            const command = new GetObjectCommand(input);
+
+            return await getSignedUrl(this.client, command, {
+              expiresIn: expiry_secs ?? 3600,
+            });
+          });
+        }
+
+        case "upload": {
+          const { bucket } = mat.data;
+
+          return stage.withResolver(async ({ path, file: f }) => {
+            const file = f as File;
+            const command = new PutObjectCommand({
+              Bucket: bucket as string,
+              Key: path as string,
+              ContentType: file.type,
+              ContentLength: file.size,
+              Body: file,
+            });
+
+            await this.client.send(command);
+            return path;
+          });
+        }
+
+        default:
+          throw new Error(
+            `Unknown materializer: ${
+              JSON.stringify((mat as Materializer).name)
+            }`,
           );
-          return pick({ keys: items, prefix }, mask);
-        };
       }
-
-      if (name === "sign") {
-        const { bucket, content_type } = matData;
-        return async ({ length, path }) => {
-          const params: native.S3Presigning = {
-            bucket: bucket as string,
-            key: path,
-            content_type: content_type as string,
-            content_length: length.toString(),
-            expires: 60,
-          };
-          return nativeResult(await native.s3_presign_put(this.client, params))
-            .res;
-        };
-      }
-
-      if (name === "upload") {
-        const { bucket } = matData;
-        return async ({ file, path }) => {
-          const { key } = nativeResult(
-            await native.s3_upload(
-              this.client,
-              bucket as string,
-              path as string,
-              new Uint8Array(await (file as File).arrayBuffer()),
-            ),
-          );
-          return key;
-        };
-      }
-
-      if (name === "download_url") {
-        const { bucket, expiry_secs } = matData;
-        return async ({ path }) => {
-          const params: native.S3PresigningGet = {
-            bucket: bucket as string,
-            key: path as string,
-            expires: expiry_secs as number,
-          };
-          return nativeResult(await native.s3_presign_get(this.client, params))
-            .res;
-        };
-      }
-
-      return fieldSelectorResolver(stage);
-    })();
-    return [
-      new ComputeStage({
-        ...stage.props,
-        resolver,
-      }),
-    ];
+    });
   }
 }

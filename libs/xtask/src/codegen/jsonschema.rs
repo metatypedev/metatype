@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 use anyhow::{Context, Result};
-use common::typegraph::{FunctionMatData, ModuleMatData, PrismaRuntimeData, Typegraph};
+use common::typegraph::runtimes::s3::{S3Materializer, S3RuntimeData};
+use common::typegraph::runtimes::{FunctionMatData, ModuleMatData, PrismaRuntimeData};
+use common::typegraph::Typegraph;
 use schemars::schema_for;
 use std::io::Write;
 use std::path::Path;
@@ -40,6 +42,8 @@ pub fn run() -> Result<()> {
     add_schema!(&mut schema, FunctionMatData);
     add_schema!(&mut schema, ModuleMatData);
     add_schema!(&mut schema, PrismaRuntimeData);
+    add_schema!(&mut schema, S3RuntimeData);
+    add_schema!(&mut schema, S3Materializer);
 
     serde_json::to_writer_pretty(&mut file, &schema)?;
     writeln!(file)?;

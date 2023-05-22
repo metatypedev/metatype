@@ -7,6 +7,9 @@ with TypeGraph(name="s3-test") as g:
     s3 = S3Runtime("http://localhost:9000", "local", "access_key", "secret_key")
 
     g.expose(
-        upload=s3.upload("bucket", t.file().allow(["text/plain"])).add_policy(public),
-        getDownloadUrl=s3.download_url("bucket").add_policy(public),
+        signTextUploadUrl=s3.presign_put("bucket", "text/plain"),
+        listObjects=s3.list("bucket"),
+        upload=s3.upload("bucket", t.file().allow(["text/plain"])),
+        getDownloadUrl=s3.presign_get("bucket"),
+        default_policy=[public],
     )
