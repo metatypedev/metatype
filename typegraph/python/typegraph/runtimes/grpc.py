@@ -1,6 +1,7 @@
 # Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
 
+from pathlib import PosixPath
 from attrs import frozen
 
 from typegraph import effects
@@ -27,7 +28,7 @@ class GrpcRuntime(Runtime):
 
     def call_method(
         self,
-        proto_file: str,
+        proto_file: PosixPath,
         method: str,
         inp,
         out,
