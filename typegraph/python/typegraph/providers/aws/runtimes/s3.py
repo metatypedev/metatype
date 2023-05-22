@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from attrs import frozen
+from attrs import frozen, field
 
 from typegraph import effects, t
 from typegraph.effects import Effect
@@ -20,6 +20,7 @@ class S3Runtime(Runtime):
     region: str
     access_key_secret: str
     secret_key_secret: str
+    path_style: bool = field(default=False, kw_only=True)
     runtime_name: str = always("s3")
 
     def data(self, collector):

@@ -52,6 +52,7 @@ pub mod s3 {
         pub region: String,
         pub access_key_secret: String,
         pub secret_key_secret: String,
+        pub path_style: bool,
     }
 
     #[cfg_attr(feature = "codegen", derive(JsonSchema))]
