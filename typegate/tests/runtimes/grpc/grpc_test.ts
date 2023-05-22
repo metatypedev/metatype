@@ -1,6 +1,6 @@
 // Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
 
-import { gql, test } from "../../utils.ts";
+import { gql, sleep, test } from "../../utils.ts";
 
 test("Grpc runtime", async (t) => {
   const e = await t.pythonFile("runtimes/grpc/grpc.py");
@@ -13,12 +13,7 @@ test("Grpc runtime", async (t) => {
       },
     ).spawn();
 
-    const sleep = new Deno.Command("/bin/sleep", {
-      args: ["5"],
-      stdout: "null",
-    }).spawn();
-
-    await sleep.status;
+    await sleep(5 * 1000);
 
     await gql`
       query {
