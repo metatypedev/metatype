@@ -3,7 +3,7 @@ name = "meta-cli"
 version = "0.1.9-dev.0"
 edition = "2021"
 
-description = "Open source, low-code API platform for developers. It enables them to build modular APIs with zero-trust and serverless deployment, no matter where and how their (legacy) systems are."
+description = "Open source, low-code backend platform for developers — build modular APIs with zero-trust and serverless deployment, no matter where and how (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license-file = "../LICENSE-MPL-2.0.md"
 homepage = "https://metatype.dev"
@@ -61,7 +61,7 @@ serde_yaml = "0.9.19"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.48", features = ["vendored"] }
 indexmap = { version = "1.9.3", features = ["serde"] }
-lade-sdk = "0.6.0"
+lade-sdk = "0.6.2"
 async-trait = "0.1.68"
 async-recursion = "1.0.4"
 clap-verbosity-flag = "2.0.1"

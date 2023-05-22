@@ -17,9 +17,9 @@
   },
   "dependencies": {
     "@apollo/client": "^3.7.14",
-    "@docusaurus/core": "^2.4.0",
-    "@docusaurus/preset-classic": "^2.4.0",
-    "@docusaurus/theme-common": "^2.4.0",
+    "@docusaurus/core": "^2.4.1",
+    "@docusaurus/preset-classic": "^2.4.1",
+    "@docusaurus/theme-common": "^2.4.1",
     "@giscus/react": "^2.2.8",
     "@graphiql/react": "^0.17.4",
     "@graphiql/toolkit": "^0.8.4",
@@ -34,7 +34,7 @@
     "graphiql": "2.4.4",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
-    "konva": "^9.0.1",
+    "konva": "^9.0.2",
     "posthog-docusaurus": "^2.0.0",
     "prism-react-renderer": "^1.3.5",
     "react": "^18.2.0",
@@ -46,14 +46,14 @@
     "use-image": "^1.1.0"
   },
   "devDependencies": {
-    "@docusaurus/eslint-plugin": "^2.4.0",
-    "@docusaurus/module-type-aliases": "^2.4.0",
-    "@docusaurus/plugin-content-docs": "^2.4.0",
-    "@docusaurus/types": "^2.4.0",
+    "@docusaurus/eslint-plugin": "^2.4.1",
+    "@docusaurus/module-type-aliases": "^2.4.1",
+    "@docusaurus/plugin-content-docs": "^2.4.1",
+    "@docusaurus/types": "^2.4.1",
     "@tsconfig/docusaurus": "^1.0.7",
     "@types/react": "^18.2.6",
-    "@typescript-eslint/eslint-plugin": "^5.59.5",
-    "@typescript-eslint/parser": "^5.59.5",
+    "@typescript-eslint/eslint-plugin": "^5.59.6",
+    "@typescript-eslint/parser": "^5.59.6",
     "de-indent": "^1.0.2",
     "docusaurus-graphql-plugin": "^0.9.0",
     "docusaurus-lunr-search": "^2.3.2",
@@ -68,7 +68,7 @@
     "sass": "^1.62.1",
     "sass-loader": "^13.2.2",
     "typescript": "^5.0.4",
-    "webpack": "^5.82.1"
+    "webpack": "^5.83.1"
   },
   "browserslist": {
     "production": [

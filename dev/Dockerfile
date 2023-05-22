@@ -1,5 +1,5 @@
 ARG RUST_VERSION=1.69.0
-ARG DENO_VERSION=1.33.3
+ARG DENO_VERSION=1.33.4
 ARG DISTROLESS_TAG=nonroot
 
 FROM rust:${RUST_VERSION} AS base
@@ -71,6 +71,7 @@ RUN chmod +x /tini
 
 FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG}
 
+ENV NO_COLOR true
 ENV DENO_DIR /deno-dir/
 ENV LD_LIBRARY_PATH /nonroot/.wasmedge/lib
 
@@ -80,7 +81,7 @@ COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
 COPY --from=debian /tini /tini
 COPY --from=deno-bin /deno /bin/deno
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
-COPY LICENSE.md .
+COPY LICENSE-Elastic-2.0.md LICENSE.md
 COPY --from=builder /app/bindings/bindings.ts ./bindings/
 COPY --from=builder /app/libnative.so ./target/release/
 COPY --from=builder /app/typegate/deno.json ./typegate/

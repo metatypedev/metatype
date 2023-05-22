@@ -1,6 +1,6 @@
 services:
   envoy:
-    image: envoyproxy/envoy:v1.25.0
+    image: envoyproxy/envoy:v1.26-latest
     restart: always
     ports:
       - "9901:9901"
@@ -11,8 +11,9 @@ services:
       - "host.docker.internal:host-gateway"
 
   redis:
-    image: redis:7
+    image: bitnami/redis:7.0
     restart: always
     ports:
       - "6379:6379"
-    command: --requirepass password
+    environment:
+      REDIS_PASSWORD: password

@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { assertEquals } from "std/testing/asserts.ts";
 import { replaceDynamicPathParams } from "../../src/runtimes/utils/http.ts";
