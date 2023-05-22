@@ -56,3 +56,15 @@ Effects are a property of materializers and help categorization what happens to 
 | `delete` | DELETE     | `DELETE`             |
 
 They provide hints to the typegates for the query orchestration by splitting the queries and mutations. For example, the `create` effect is exposed as a mutation. They also allow setting different policies based on them, that's for the next page.
+
+# Introduction to typegraph_std
+
+Alternatively, you can use the typegraph_std package for the most common APIs.
+
+It currently includes:
+- Google API (fcm, firebase, youtube, etc.)
+- Stripe
+- Github
+
+They work pretty much the same way as Importers.
+<CodeBlock language="python">{require("./typegraph_std.py").content}</CodeBlock>
