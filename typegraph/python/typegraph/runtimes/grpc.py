@@ -35,7 +35,9 @@ class GrpcRuntime(Runtime):
         **kwargs
     ):
         return t.func(
-            inp, out, GrpcMat(self, proto_file, method, effect=effect, **kwargs)
+            inp,
+            out,
+            GrpcMat(self, str(proto_file), method, effect=effect, **kwargs),
         )
 
 

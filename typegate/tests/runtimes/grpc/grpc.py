@@ -13,9 +13,9 @@ with TypeGraph("Grpc") as g:
     g.expose(
         greet=grpc.call_method(
             # protocol buffer file with the definition for the method to call
-            this_dir.joinpath("grpc_server/proto/simple.proto"),
+            this_dir.joinpath("grpc_server/proto/helloworld.proto"),
             # the method to call: `SayHello`
-            "simple.Gripmock/SayHello",
+            "/helloworld.Greeter/SayHello",
             t.struct({"name": t.string()}),
             t.string(),
         ),

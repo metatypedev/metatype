@@ -28,10 +28,6 @@ import {
   run,
 } from "./mod.ts";
 
-run(["./typegate/tests/runtimes/grpc/grpc_server/start.sh", "&"]);
-// wait until server is up
-await run(["sleep", "10"]);
-
 const flags = parseFlags(Deno.args, { "--": true });
 
 const testFiles = [];

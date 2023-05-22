@@ -1,5 +1,5 @@
 {
-  "service": "Gripmock",
+  "service": "Greeter",
   "method": "SayHello",
   "input": {
     "equals": {
@@ -8,8 +8,7 @@
   },
   "output": {
     "data": {
-      "message": "Hello Metatype",
-      "return_code": 0
+      "message": "Hello Metatype"
     }
   }
 }

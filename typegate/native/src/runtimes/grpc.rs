@@ -3,6 +3,7 @@
 use crate::RT;
 use macros::deno;
 
+use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
@@ -113,9 +114,10 @@ fn buf2response(
 }
 
 fn get_file_descriptor(proto_file: &Path) -> anyhow::Result<FileDescriptor> {
+    let proto_folder = proto_file.parent().unwrap();
+
     let mut file_descriptor_protos = protobuf_parse::Parser::new()
-        .protoc()
-        .includes(["proto"])
+        .include(proto_folder)
         .input(proto_file)
         .parse_and_typecheck()
         .unwrap()
@@ -201,9 +203,9 @@ fn call_method(
         file_descriptor,
     };
 
-    let response = RT.block_on(client.unary(req, path, codec));
-    let response = response.unwrap().get_ref().to_string();
-    response
+    let response = RT.block_on(client.unary(req, path, codec)).unwrap();
+    let response = response.get_ref().deref();
+    protobuf_json_mapping::print_to_string(response).unwrap()
 }
 
 #[deno]

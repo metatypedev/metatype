@@ -33,7 +33,11 @@ export class GrpcRuntime extends Runtime {
           payload: `{"name": "${args.name}"}`,
         }),
       );
-      return JSON.parse(res);
+
+      const json = JSON.parse(res);
+      const { name } = json;
+
+      return name;
     };
 
     return [
