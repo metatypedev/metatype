@@ -103,7 +103,7 @@ impl FileFilter {
         } else {
             None
         };
-        let matcher = RegexMatcher::new_line_matcher("with TypeGraph")?;
+        let matcher = RegexMatcher::new_line_matcher("with\\s+TypeGraph")?;
 
         Ok(Self {
             base_dir: config.base_dir.clone(),
