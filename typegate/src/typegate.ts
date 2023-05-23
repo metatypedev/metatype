@@ -156,7 +156,7 @@ export const typegate =
         )
         : null;
 
-      const contentLength = request.headers.get("content-Length");
+      const contentLength = request.headers.get("content-length");
       if (contentLength !== null && contentLength == "0") {
         throw Error("empty body was provided");
       }
