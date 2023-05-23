@@ -13,7 +13,7 @@ test("Grpc runtime", async (t) => {
       },
     ).spawn();
 
-    await sleep(10 * 1000);
+    await sleep(20 * 1000);
 
     await gql`
       query {
