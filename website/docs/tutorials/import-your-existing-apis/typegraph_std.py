@@ -1,5 +1,5 @@
 from typegraph import TypeGraph, policies
-from typegraph_std.github.ghes import import_ghes
+from typegraph_std.github.github import import_github
 from typegraph_std.google.gmail import import_gmail
 
 with TypeGraph(
@@ -10,7 +10,7 @@ with TypeGraph(
     public = policies.public()
 
     # {protocol}://{hostname}/api/v3
-    github = import_ghes({"protocol": "https", "hostname": "custom_host"})
+    github = import_github({"protocol": "https", "hostname": "custom_host"})
 
     gmail = import_gmail()
 
