@@ -26,6 +26,7 @@ use colored::Colorize;
 use common::archive::unpack;
 use common::typegraph::Typegraph;
 use dialoguer::Confirm;
+use grep::searcher::{BinaryDetection, SearcherBuilder};
 use log::{error, info, trace, warn};
 use normpath::PathExt;
 use pathdiff::diff_paths;
@@ -443,7 +444,11 @@ impl Deploy<WatchModeData> {
             return Ok(WatchModeRestart(false));
         }
 
-        if !w.file_filter.is_excluded(&path) {
+        let mut searcher = SearcherBuilder::new()
+            .binary_detection(BinaryDetection::none())
+            .build();
+
+        if !w.file_filter.is_excluded(&path, &mut searcher) {
             let rel_path = diff_paths(&path, &self.base_dir).unwrap();
             info!("Reloading: file modified {:?}...", rel_path);
             w.retry_manager.cancell_all(&path);

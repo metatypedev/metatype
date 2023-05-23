@@ -7,15 +7,18 @@ use crate::{
 };
 use anyhow::Result;
 use globset::GlobSet;
+use grep::searcher::sinks::UTF8;
+use grep::searcher::{BinaryDetection, SearcherBuilder};
+use grep::{regex::RegexMatcher, searcher::Searcher};
 use ignore::{gitignore::Gitignore, Match};
-use log::info;
+use log::{debug, info};
 use pathdiff::diff_paths;
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::{HashMap, HashSet},
     path::{Path, PathBuf},
     sync::Arc,
 };
-use tokio::fs;
+use walkdir::WalkDir;
 
 pub struct Discovery {
     dir: PathBuf,
@@ -34,58 +37,39 @@ impl Discovery {
         }
     }
 
-    #[allow(dead_code)]
-    pub fn exclude_gitignored(mut self, exclude: bool) -> Self {
-        self.filter.exclude_gitignored(exclude);
-        self
-    }
-
-    #[allow(dead_code)]
-    pub fn exclude_hidden_files(mut self, exclude: bool) -> Self {
-        self.filter.exclude_hidden(exclude);
-        self
-    }
-
-    #[allow(dead_code)]
-    pub fn follow_symlinks(mut self, follow: bool) -> Self {
-        self.follow_symlinks = follow;
-        self
-    }
-
     pub async fn get_all(self) -> Result<Vec<PathBuf>> {
-        let mut res = vec![];
-        let mut queue: VecDeque<PathBuf> = VecDeque::new();
-        queue.push_back(self.dir.clone());
+        let mut res = HashSet::new();
+        let mut searcher = SearcherBuilder::new()
+            .binary_detection(BinaryDetection::none())
+            .build();
 
-        while let Some(dir) = queue.pop_front() {
-            let mut read_dir = fs::read_dir(&dir).await?;
-            while let Some(entry) = read_dir.next_entry().await? {
-                let mut file_name = dir.join(entry.file_name());
-                let mut file_type = entry.file_type().await?;
-
-                while file_type.is_symlink() {
-                    file_name = fs::read_link(file_name).await?;
-                    file_name = dir.join(file_name); // ?
-                    file_type = fs::metadata(&file_name).await?.file_type();
+        for result in WalkDir::new(self.dir.clone())
+            .follow_links(self.follow_symlinks)
+            .into_iter()
+            .filter_entry(|e| !self.filter.is_excluded(e.path(), &mut searcher))
+        {
+            let entry = match result {
+                Ok(entry) => entry,
+                Err(err) => {
+                    debug!("{}", err);
+                    continue;
                 }
+            };
 
-                let file_name = file_name;
-                let file_type = file_type;
-
-                if file_type.is_dir() {
-                    queue.push_back(file_name);
-                } else if !self.filter.is_excluded(&file_name) {
-                    let rel_path = diff_paths(&file_name, &self.dir).unwrap();
-                    info!(
-                        "Found typegraph definition module at {}",
-                        rel_path.display()
-                    );
-                    res.push(file_name);
-                }
+            if !entry.file_type().is_file() {
+                continue;
             }
+
+            let path = entry.path();
+            let rel_path = diff_paths(path, &self.dir).unwrap();
+            info!(
+                "Found typegraph definition module at {}",
+                rel_path.display()
+            );
+            res.insert(path.to_path_buf());
         }
 
-        Ok(res)
+        Ok(res.into_iter().collect())
     }
 }
 
@@ -99,6 +83,7 @@ pub struct FileFilter {
     globs: HashMap<ModuleType, GlobFilter>,
     gitignore: Option<Gitignore>,
     exclude_hidden: bool,
+    matcher: RegexMatcher,
 }
 
 impl FileFilter {
@@ -112,36 +97,28 @@ impl FileFilter {
                 exclude_set: python_loader_config.get_exclude_set()?,
             },
         );
+        let ignore = config.base_dir.join(".gitignore");
+        let gitignore = if ignore.exists() {
+            Some(Gitignore::new(ignore).0)
+        } else {
+            None
+        };
+        let matcher = RegexMatcher::new_line_matcher("with\\s+TypeGraph")?;
+
         Ok(Self {
             base_dir: config.base_dir.clone(),
             globs,
-            gitignore: None,
-            exclude_hidden: false,
+            gitignore,
+            exclude_hidden: true,
+            matcher,
         })
     }
 
-    pub fn exclude_hidden(&mut self, exclude: bool) {
-        self.exclude_hidden = exclude;
-    }
-
-    pub fn exclude_gitignored(&mut self, exclude: bool) {
-        if exclude {
-            if self.gitignore.is_none() {
-                self.gitignore = Some(Gitignore::new(self.base_dir.join(".gitignore")).0);
+    pub fn is_excluded(&self, path: &Path, searcher: &mut Searcher) -> bool {
+        if let Some(gi) = &self.gitignore {
+            if matches!(gi.matched(path, false), Match::Ignore(_)) {
+                return true;
             }
-        } else {
-            self.gitignore = None;
-        }
-    }
-
-    pub fn is_excluded(&self, path: &Path) -> bool {
-        match &self.gitignore {
-            Some(gi) => {
-                if matches!(gi.matched(path, false), Match::Ignore(_)) {
-                    return true;
-                }
-            }
-            None => {}
         }
 
         if self.exclude_hidden && is_hidden(path) {
@@ -149,26 +126,32 @@ impl FileFilter {
         }
 
         let rel_path = diff_paths(path, &self.base_dir).unwrap();
-
-        match path.extension() {
-            Some(ext) if ext == "py" => {
-                let globs = self.globs.get(&ModuleType::Python).unwrap();
-                if !globs.include_set.is_empty() && !globs.include_set.is_match(&rel_path) {
-                    return true;
-                }
-
-                if !globs.exclude_set.is_empty() && globs.exclude_set.is_match(&rel_path) {
-                    return true;
-                }
-
-                // TODO regex check file content
-
-                false
-            }
-            _ => {
-                // trace!("File excluded: unknown extension: {path:?}");
-                true
-            }
+        if rel_path.as_os_str().is_empty() || path.is_dir() {
+            return false;
         }
+
+        let globs = self.globs.get(&ModuleType::Python).unwrap();
+
+        if !globs.include_set.is_empty() && !globs.include_set.is_match(&rel_path) {
+            return true;
+        }
+
+        if !globs.exclude_set.is_empty() && globs.exclude_set.is_match(&rel_path) {
+            return true;
+        }
+
+        let mut ret = true;
+        searcher
+            .search_path(
+                &self.matcher,
+                path,
+                UTF8(|_, _| {
+                    ret = false;
+                    Ok(true)
+                }),
+            )
+            .unwrap();
+
+        ret
     }
 }
