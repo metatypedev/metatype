@@ -157,8 +157,15 @@ export const typegate =
         : null;
 
       const contentLength = request.headers.get("content-length");
-      if (contentLength !== null && contentLength == "0") {
-        throw Error("empty body was provided");
+
+      if (contentLength === null) {
+        return new Response("'Content-Length' unspecified in the header", {
+          status: 411,
+        });
+      }
+
+      if (contentLength == "0") {
+        return new Response("empty body was provided", { status: 400 });
       }
 
       const { query, operationName, variables } = await request.json();
