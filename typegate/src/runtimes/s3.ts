@@ -155,14 +155,37 @@ export class S3Runtime extends Runtime {
             const file = f as File;
             const command = new PutObjectCommand({
               Bucket: bucket as string,
-              Key: path as string,
+              Key: path as string ?? file.name,
               ContentType: file.type,
               ContentLength: file.size,
               Body: file,
             });
 
             await this.client.send(command);
-            return path;
+            return true;
+          });
+        }
+
+        case "upload_all": {
+          const { bucket } = mat.data;
+
+          return stage.withResolver(async (args) => {
+            const files = args.files as File[];
+            const prefix = args.prefix as string;
+
+            // TODO: collect errors
+            await Promise.all(files.map((file) => {
+              const command = new PutObjectCommand({
+                Bucket: bucket as string,
+                Key: `${prefix}${file.name}`,
+                ContentType: file.type,
+                ContentLength: file.size,
+                Body: file,
+              });
+              return this.client.send(command);
+            }));
+
+            return true;
           });
         }
 

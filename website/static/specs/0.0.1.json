@@ -1712,6 +1712,32 @@
               }
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "upload_all"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                }
+              }
+            }
+          }
         }
       ]
     }

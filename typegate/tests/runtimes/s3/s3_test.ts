@@ -2,7 +2,12 @@
 
 import { assertEquals, assertExists } from "std/testing/asserts.ts";
 import { gql, test } from "../../utils.ts";
-import { CreateBucketCommand, S3Client } from "aws-sdk/client-s3";
+import {
+  CreateBucketCommand,
+  DeleteObjectsCommand,
+  ListObjectsCommand,
+  S3Client,
+} from "aws-sdk/client-s3";
 
 const ACCESS_KEY = "minio";
 const SECRET_KEY = "password";
@@ -24,7 +29,19 @@ async function initBucket() {
     });
     await client.send(command);
   } catch (_e) {
-    //
+    // bucket already exists
+    const listCommand = new ListObjectsCommand({ Bucket: "bucket" });
+    const res = await client.send(listCommand);
+
+    if (res.Contents != null) {
+      const deleteCommand = new DeleteObjectsCommand({
+        Bucket: "bucket",
+        Delete: {
+          Objects: res.Contents.map(({ Key }) => ({ Key })),
+        },
+      });
+      await client.send(deleteCommand);
+    }
   }
 }
 
@@ -55,7 +72,7 @@ test("s3", async (t) => {
         path: "hello.txt",
       })
       .expectData({
-        upload: "hello.txt",
+        upload: true,
       })
       .on(e);
   });
@@ -153,6 +170,46 @@ test("s3", async (t) => {
             { key: "hello2.txt", size: fileContent2.length },
           ],
           prefix: [""],
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("upload multiple files", async () => {
+    await gql`
+      mutation ($files: [File]!, $prefix: String!) {
+        uploadMany(files: $files, prefix: $prefix)
+      }
+    `
+      .withVars({
+        files: [1, 2, 3, 4].map((i) =>
+          new File([`hello #${i}`], `hello-${i}.txt`, { type: "text/plain" })
+        ),
+        prefix: "user/",
+      })
+      .expectData({
+        uploadMany: true,
+      })
+      .on(e);
+
+    await gql`
+        query ($path: String!) {
+          listObjects(path: $path) {
+            keys { key, size }
+            prefix
+          }
+        }
+      `
+      .withVars({
+        path: "user/",
+      })
+      .expectData({
+        listObjects: {
+          keys: [1, 2, 3, 4].map((i) => ({
+            key: `user/hello-${i}.txt`,
+            size: 8,
+          })),
+          prefix: ["user/"],
         },
       })
       .on(e);

@@ -74,5 +74,8 @@ pub mod s3 {
         Upload {
             bucket: String,
         },
+        UploadAll {
+            bucket: String,
+        },
     }
 }

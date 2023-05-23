@@ -35,6 +35,7 @@
     "json_schema_typed": "https://deno.land/x/json_schema_typed@v8.0.0/draft_latest.ts",
     "url_join": "https://deno.land/x/url_join@1.0.0/mod.ts",
     "levenshtein": "https://deno.land/x/levenshtein@v1.0.1/mod.ts",
-    "aws-sdk/": "https://esm.sh/@aws-sdk/"
+    "aws-sdk/client-s3": "https://esm.sh/@aws-sdk/client-s3@3.335.0",
+    "aws-sdk/s3-request-presigner": "https://esm.sh/@aws-sdk/s3-request-presigner@3.335.0"
   }
 }

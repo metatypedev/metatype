@@ -242,6 +242,11 @@ export type S3Materializer = {
   data: {
     bucket: string;
   };
+} | {
+  name: "upload_all";
+  data: {
+    bucket: string;
+  };
 };
 export interface Typegraph {
   $id: string;

@@ -68,9 +68,24 @@ class S3Runtime(Runtime):
         if file_type is None:
             file_type = t.file()
         return t.func(
-            t.struct({"file": file_type, "path": t.string()}),
-            t.string(),
+            t.struct({"file": file_type, "path": t.string().optional()}),
+            t.boolean(),  # True
             UploadMat(self, bucket),
+        )
+
+    def upload_all(self, bucket: str, file_type: Optional[t.file] = None):
+        if file_type is None:
+            file_type = t.file()
+        return t.func(
+            t.struct(
+                {
+                    "prefix": t.string().optional(""),
+                    # s3 key will be `prefix + file.name`
+                    "files": t.array(file_type),
+                }
+            ),
+            t.boolean(),  # True
+            UploadAllMat(self, bucket),
         )
 
 
@@ -106,4 +121,12 @@ class UploadMat(Materializer):
     runtime: S3Runtime
     bucket: str
     materializer_name: str = always("upload")
+    effect: Effect = always(effects.upsert())
+
+
+@frozen
+class UploadAllMat(Materializer):
+    runtime: S3Runtime
+    bucket: str
+    materializer_name: str = always("upload_all")
     effect: Effect = always(effects.upsert())
