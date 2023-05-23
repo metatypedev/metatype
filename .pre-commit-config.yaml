@@ -14,7 +14,7 @@ repos:
       - id: end-of-file-fixer
         exclude: (typegate/deno.lock|.*\.snap$)
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.267"
+    rev: "v0.0.269"
     hooks:
       - id: ruff
   - repo: https://github.com/psf/black
@@ -71,40 +71,50 @@ repos:
     rev: v1.5.1
     hooks:
       - id: insert-license
-        name: "License header python"
+        name: "License MPL-2.0 python"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header.txt
+          - --license-filepath=dev/license-header-MPL-2.0.txt
           - "--comment-style=#"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - python
         files: ^typegraph/
       - id: insert-license
-        name: "License header rust"
+        name: "License Elastic-2.0 rust"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header.txt
+          - --license-filepath=dev/license-header-Elastic-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - rust
-        files: ^(typegate|libs|meta-cli)/
+        files: ^(typegate|libs)/
       - id: insert-license
-        name: "License header deno"
+        name: "License MPL-2.0 rust"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header.txt
+          - --license-filepath=dev/license-header-MPL-2.0.txt
+          - "--comment-style=//"
+          - "--skip-license-insertion-comment=no-auto-license-header"
+        types_or:
+          - rust
+        files: ^(meta-cli|typegraph)/
+      - id: insert-license
+        name: "License Elastic-2.0 deno"
+        args:
+          #- --remove-header
+          - --license-filepath=dev/license-header-Elastic-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:
           - ts
         files: ^(typegate|dev)/
       - id: insert-license
-        name: "License header typescript"
+        name: "License Elastic-2.0 typescript"
         args:
           #- --remove-header
-          - --license-filepath=dev/license-header.txt
+          - --license-filepath=dev/license-header-Elastic-2.0.txt
           - "--comment-style=//"
           - "--skip-license-insertion-comment=no-auto-license-header"
         types_or:

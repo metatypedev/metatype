@@ -1,4 +1,4 @@
-from typegraph import TypeGraph, effects, policies, t
+from typegraph import TypeGraph, policies, t
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.graphql import GraphQLRuntime
 from typegraph.runtimes.random import RandomMat, RandomRuntime
@@ -34,9 +34,7 @@ with TypeGraph("prisma") as g:
     ).named("Record")
 
     g.expose(
-        dropSchema=db.raw_execute(
-            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
-        ).add_policy(public),
-        createOneRecord=db.create(record).add_policy(public),
-        findUniqueRecord=db.find_unique(record).add_policy(public),
+        createOneRecord=db.create(record),
+        findUniqueRecord=db.find_unique(record),
+        default_policy=public,
     )

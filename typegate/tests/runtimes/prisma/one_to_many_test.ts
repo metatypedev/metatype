@@ -1,28 +1,19 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
-import { gql, recreateMigrations, test } from "../utils.ts";
+import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
 
 function runTest(tgPath: string, name: string) {
   test(name, async (t) => {
     const e = await t.pythonFile(tgPath, {
       secrets: {
         TG_PRISMA_POSTGRES:
-          "postgresql://postgres:password@localhost:5432/db?schema=test",
+          "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-many",
       },
     });
 
-    await t.should("drop schema and recreate", async () => {
-      await gql`
-        mutation a {
-          dropSchema
-        }
-      `
-        .expectData({
-          dropSchema: 0,
-        })
-        .on(e);
-      await recreateMigrations(e);
-    });
+    await dropSchemas(e);
+    await recreateMigrations(e);
 
     await t.should("insert a record with nested object", async () => {
       await gql`
@@ -148,5 +139,5 @@ function runTest(tgPath: string, name: string) {
   });
 }
 
-runTest("prisma/prisma.py", "required one-to-many");
-runTest("prisma/optional_1_n.py", "optional one-to-many");
+runTest("runtimes/prisma/prisma.py", "required one-to-many");
+runTest("runtimes/prisma/optional_1_n.py", "optional one-to-many");

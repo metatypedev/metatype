@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import config from "./config.ts";
 import { Register } from "./register.ts";
@@ -61,7 +62,9 @@ export const typegate =
       const engine = register.get(lookup);
 
       if (!engine) {
-        console.error(`Typegraph not found: ${lookup}`);
+        if (lookup !== "favicon.ico") {
+          logger.info(`typegraph not found: ${lookup}`);
+        }
         return new Response("not found", {
           status: 404,
         });

@@ -1,7 +1,8 @@
 dev:
   files:
-    LICENSE-ELv2.md:
+    LICENSE-MPL-2.0.md:
       - typegraph/python/LICENSE.md
+      - typegraph/deno/LICENSE.md
   rules:
     rust-toolchain.toml:
       (channel = ").+("): RUST_VERSION
@@ -45,12 +46,12 @@ dev:
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.69.0
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
-    DENO_VERSION: 1.33.3
+    DENO_VERSION: 1.33.4
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.1.0
     TYPEGRAPH_VERSION: 0.0.1
     METATYPE_VERSION: 0.1.9-dev.0
     TAGLINE: >-
-      Open source, low-code API platform for developers. It enables them to
-      build modular APIs with zero-trust and serverless deployment, no matter
-      where and how their (legacy) systems are.
+      Open source, low-code backend platform for developers — build modular APIs
+      with zero-trust and serverless deployment, no matter where and how
+      (legacy) systems are.

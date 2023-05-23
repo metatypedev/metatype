@@ -1,23 +1,11 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
-import { Engine } from "../../src/engine.ts";
-import { gql, recreateMigrations, test } from "../utils.ts";
-import { MetaTest } from "../utils/metatest.ts";
+import { Engine } from "../../../src/engine.ts";
+import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
+import { MetaTest } from "../../utils/metatest.ts";
 
 async function runCommonTestSteps(t: MetaTest, e: Engine) {
-  await t.should("drop schema and recreate", async () => {
-    await gql`
-      mutation a {
-        dropSchema
-      }
-    `
-      .expectData({
-        dropSchema: 0,
-      })
-      .on(e);
-    await recreateMigrations(e);
-  });
-
   await t.should("create a record with a nested object", async () => {
     await gql`
       mutation {
@@ -56,13 +44,14 @@ async function runCommonTestSteps(t: MetaTest, e: Engine) {
 }
 
 test("required 1-1 relationships", async (t) => {
-  const tgPath = "prisma/prisma_1_1.py";
-  const e = await t.pythonFile(tgPath, {
+  const e = await t.pythonFile("runtimes/prisma/normal_1_1.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
     },
   });
+  await dropSchemas(e);
+  await recreateMigrations(e);
 
   await runCommonTestSteps(t, e);
 
@@ -80,13 +69,14 @@ test("required 1-1 relationships", async (t) => {
 });
 
 test("optional 1-1 relationships", async (t) => {
-  const tgPath = "prisma/optional_1_1.py";
-  const e = await t.pythonFile(tgPath, {
+  const e = await t.pythonFile("runtimes/prisma/optional_1_1.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
     },
   });
+  await dropSchemas(e);
+  await recreateMigrations(e);
 
   await runCommonTestSteps(t, e);
 

@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
 import * as native from "native";
@@ -187,7 +188,11 @@ registerHook("onPush", async (typegraph, secretManager, response) => {
 });
 
 export class PrismaRuntime extends GraphQLRuntime {
-  private constructor(private engine_name: string, private datamodel: string) {
+  private constructor(
+    readonly name: string,
+    private engine_name: string,
+    private datamodel: string,
+  ) {
     super(""); // no endpoint
     this.disableVariables();
   }
@@ -199,9 +204,13 @@ export class PrismaRuntime extends GraphQLRuntime {
     const datasource = makeDatasource(secretManager.secretOrFail(
       args.connection_string_secret as string,
     ));
-    const schema = `${datasource}${args.datamodel}`;
+    const datamodel = `${datasource}${args.datamodel}`;
     const engine_name = `${typegraphName}_${args.name}`;
-    const instance = new PrismaRuntime(engine_name, schema);
+    const instance = new PrismaRuntime(
+      args.name as string,
+      engine_name,
+      datamodel,
+    );
     await instance.registerEngine();
     return instance;
   }
@@ -236,25 +245,30 @@ export class PrismaRuntime extends GraphQLRuntime {
     );
   }
 
+  async query(query: string) {
+    const { res } = nativeResult(
+      await native.prisma_query({
+        engine_name: this.engine_name,
+        query: {
+          query,
+          variables: {}, // TODO: remove this
+        },
+        datamodel: this.datamodel,
+      }),
+    );
+    return JSON.parse(res);
+  }
+
   execute(query: string | FromVars<string>, path: string[]): Resolver {
     return async ({ _: { variables } }) => {
-      const startTime = performance.now();
       const q = typeof query === "function" ? query(variables) : query;
       logger.debug(`remote graphql: ${q}`);
 
-      const ret = nativeResult(
-        await native.prisma_query({
-          engine_name: this.engine_name,
-          query: {
-            query: q,
-            variables: {}, // TODO: remove this
-          },
-          datamodel: this.datamodel,
-        }),
-      );
+      const startTime = performance.now();
+      const res = await this.query(q);
       const endTime = performance.now();
       logger.debug(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
-      const res = JSON.parse(ret.res);
+
       if ("errors" in res) {
         throw new ResolverError(
           `Error from the prisma engine: ${

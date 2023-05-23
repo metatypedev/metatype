@@ -1,7 +1,8 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../../utils.ts";
-import { resolve } from "std/path/mod.ts";
+import { gql, test, testDir } from "../../utils.ts";
+import { join, resolve } from "std/path/mod.ts";
 
 test("Deno runtime", async (t) => {
   const e = await t.pythonFile("runtimes/deno/deno.py");
@@ -108,8 +109,10 @@ test("Deno runtime: permissions", async (t) => {
 });
 
 test("Deno runtime: reloading", async (t) => {
+  const tmpDir = join(testDir, "tmp");
+  await Deno.mkdir(tmpDir, { recursive: true });
   const dynamicPath = await Deno.makeTempFile({
-    dir: "./tmp",
+    dir: tmpDir,
     suffix: ".ts",
   });
 

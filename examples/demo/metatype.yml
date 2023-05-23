@@ -5,5 +5,5 @@ typegates:
     password: password
     env:
       TG_PUBLIC_API_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=public-api"
-      TG_PUBLIC_API_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_AUTH_GITHUB_CLIENT_ID
-      TG_PUBLIC_API_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_AUTH_GITHUB_CLIENT_SECRET
+      TG_PUBLIC_API_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
+      TG_PUBLIC_API_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
