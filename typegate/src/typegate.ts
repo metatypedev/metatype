@@ -156,6 +156,11 @@ export const typegate =
         )
         : null;
 
+      const contentLength = request.headers.get("content-Length");
+      if (contentLength !== null && contentLength == "0") {
+        throw Error("empty body was provided");
+      }
+
       const { query, operationName, variables } = await request.json();
       const info = {
         url,
