@@ -1,6 +1,6 @@
 from typegraph import TypeGraph, policies
-from typegraph_std.github.github import import_github
-from typegraph_std.google.gmail import import_gmail
+from typegraph_std.github import import_github
+from typegraph_std.google import import_gmail
 
 with TypeGraph(
     "emails",
