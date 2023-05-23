@@ -20,38 +20,6 @@ import {
   S3RuntimeData,
 } from "../types/typegraph.ts";
 
-// interface Mask {
-//   [key: string]: Mask | true;
-// }
-//
-// const pick = (
-//   obj: JSONValue,
-//   mask: Mask,
-// ): JSONValue => {
-//   if (Array.isArray(obj)) {
-//     return obj.map((o) => pick(o, mask));
-//   }
-//   if (typeof obj === "object" && obj !== null) {
-//     for (const k of Object.keys(obj)) {
-//       const m = mask[k];
-//       if (m === undefined) {
-//         delete obj[k];
-//       } else if (m !== true) {
-//         pick(obj[k], m);
-//       }
-//     }
-//   }
-//   return obj;
-// };
-//
-// const getMask = (stages: ComputeStage[]): Mask => {
-//   const ret: Mask = {};
-//   iterParentStages(stages, (stage, children) => {
-//     ret[stage.props.node] = children.length > 0 ? getMask(children) : true;
-//   });
-//   return ret;
-// };
-
 export class S3Runtime extends Runtime {
   private constructor(
     private client: S3Client,

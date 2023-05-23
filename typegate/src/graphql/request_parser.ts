@@ -63,6 +63,7 @@ export class FormDataParser {
     return operations;
   }
 
+  // read the map field
   private getMap(): Record<string, string[]> {
     const field = this.data.get("map");
     if (typeof field !== "string") {
