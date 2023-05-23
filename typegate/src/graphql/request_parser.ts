@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 export interface Operations {
   query: string;
@@ -30,6 +31,9 @@ export async function parseRequest(request: Request): Promise<Operations> {
   throw new Error(`Unsupported content type: '${contentType}'`);
 }
 
+/**
+ * Used to parse request payload in multipart/form-data format into Operations
+ */
 export class FormDataParser {
   constructor(private data: FormData) {}
 
