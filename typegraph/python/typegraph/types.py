@@ -10,6 +10,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     get_args,
     get_origin,
@@ -318,7 +319,10 @@ def constraint(name: Optional[str] = None):
     )
 
 
-def with_constraints(cls):
+Cls = TypeVar("Cls", bound=typedef)
+
+
+def with_constraints(cls: Type[Cls]) -> Type[Cls]:
     if not hasattr(cls, "__attrs_attrs__"):
         raise Exception(
             "@with_constraints decorator requires class to have attribute '__attrs_attrs__'"
