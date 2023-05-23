@@ -2,8 +2,6 @@
 
 SCRIPT_DIR=$(dirname "${BASH_SOURCE[0]}")
 
-docker pull tkpd/gripmock
-
 # start gRPC mock server
 docker run \
     --name grpc-runtime-test \

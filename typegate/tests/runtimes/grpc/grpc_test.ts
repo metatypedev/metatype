@@ -6,6 +6,15 @@ test("Grpc runtime", async (t) => {
   const e = await t.pythonFile("runtimes/grpc/grpc.py");
 
   await t.should("works", async () => {
+    const setup = new Deno.Command(
+      "./typegate/tests/runtimes/grpc/grpc_server/setup.sh",
+      {
+        stdout: "null",
+      },
+    ).spawn();
+
+    await setup.status;
+
     new Deno.Command(
       "./typegate/tests/runtimes/grpc/grpc_server/start.sh",
       {
@@ -13,7 +22,7 @@ test("Grpc runtime", async (t) => {
       },
     ).spawn();
 
-    await sleep(20 * 1000);
+    await sleep(5 * 1000);
 
     await gql`
       query {
