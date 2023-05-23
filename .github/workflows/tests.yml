@@ -13,7 +13,7 @@ env:
   PROTOC_VERSION: "3.x"
   POETRY_VERSION: "1.4.1"
   DENO_BINDGEN_URL: https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts
-  DENO_VERSION: "1.33.3"
+  DENO_VERSION: "1.33.4"
   PNPM_VERSION: "8.1.0"
   NODE_VERSION: "19.8.1"
 
@@ -207,7 +207,9 @@ jobs:
     timeout-minutes: 60
     services:
       redis:
-        image: redis:7
+        image: bitnami/redis:7.0
+        env:
+          REDIS_PASSWORD: password
         ports:
           - 6379:6379
         options: >-
@@ -230,9 +232,6 @@ jobs:
           --health-retries 5
     env:
       DENO_DIR: deno-dir
-      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=test"
-      TG_PRISMA_POSTGRES_2: "postgresql://postgres:password@localhost:5432/db?schema=test2"
-      REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable

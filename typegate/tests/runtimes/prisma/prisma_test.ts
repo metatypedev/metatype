@@ -1,17 +1,19 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { v4 } from "std/uuid/mod.ts";
 import { assert } from "std/testing/asserts.ts";
-import { gql, test } from "../utils.ts";
-import { init } from "./prisma_seed.ts";
+import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
 
 test("prisma", async (t) => {
-  const e = await init(t, "prisma/prisma.py", true, {
+  const e = await t.pythonFile("runtimes/prisma/prisma.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma",
     },
   });
+  await dropSchemas(e);
+  await recreateMigrations(e);
 
   await t.should("return no data when empty", async () => {
     await gql`

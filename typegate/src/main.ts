@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { serve } from "std/http/server.ts";
 import { init_native } from "native";
@@ -9,11 +10,10 @@ import { typegate } from "./typegate.ts";
 import { RedisRateLimiter } from "./rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
-
 import { getLogger } from "./log.ts";
 
 const logger = getLogger(import.meta);
-logger.info(`Typegate v${config.version} starting`);
+logger.info(`typegate v${config.version} starting`);
 
 Sentry.init({
   dsn: config.sentry_dsn,
@@ -67,6 +67,6 @@ if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
   setTimeout(reload, 200);
 }
 
-getLogger().info(`Typegate ready on ${config.tg_port}`);
+getLogger().info(`typegate ready on ${config.tg_port}`);
 
 await server;

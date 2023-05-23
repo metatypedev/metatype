@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { basename, dirname, fromFileUrl, join } from "std/path/mod.ts";
 
@@ -40,7 +41,7 @@ export class SystemTypegraph {
   static async loadAll(register: Register, watch = false) {
     const reload = async (paths: string[]) => {
       for await (const path of paths) {
-        logger.info(`Reloading system graph ${basename(path)}`);
+        logger.info(`reloading system graph ${basename(path)}`);
         await register.set(await Deno.readTextFile(path), {});
       }
     };

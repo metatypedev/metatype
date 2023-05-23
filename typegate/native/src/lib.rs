@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 mod config;
 mod errors;
@@ -13,17 +14,19 @@ use log::{error, info, Level};
 use macros::deno_sync;
 use once_cell::sync::Lazy;
 use sentry::ClientInitGuard;
+use std::fs;
 use std::io::Write;
-use std::{borrow::Cow, env, fs, panic, path::PathBuf};
+use std::str::FromStr;
+use std::{borrow::Cow, env, panic, path::PathBuf};
 use tokio::runtime::Runtime;
 
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("failed to create Tokio runtime"));
 static CONFIG: Lazy<Config> =
     Lazy::new(|| Config::init_from_env().expect("failed to parse config"));
 static TMP_DIR: Lazy<PathBuf> = Lazy::new(|| {
-    let path = env::current_dir().expect("no current dir").join("tmp");
-    fs::create_dir_all(&path).expect("failed to create tmp dir");
-    path
+    env::var("TMP_DIR")
+        .map(|p| PathBuf::from_str(&p).expect("invalid TMP_DIR"))
+        .unwrap_or_else(|_| env::current_dir().expect("no current dir").join("tmp"))
 });
 static SENTRY_GUARD: Lazy<ClientInitGuard> = Lazy::new(|| {
     let env = if CONFIG.debug {
@@ -45,7 +48,6 @@ static SENTRY_GUARD: Lazy<ClientInitGuard> = Lazy::new(|| {
 
 #[deno_sync]
 fn init_native() {
-    SENTRY_GUARD.is_enabled();
     env_logger::builder()
         .format_timestamp_millis()
         .format(|buf, record| {
@@ -68,7 +70,17 @@ fn init_native() {
             )
         })
         .init();
+
     info!("init native");
+
+    SENTRY_GUARD.is_enabled();
+
+    if !TMP_DIR.exists() {
+        // also required by Deno
+        fs::create_dir_all(TMP_DIR.clone())
+            .unwrap_or_else(|e| panic!("failed to create TMP_DIR {}: {}", TMP_DIR.display(), e));
+    }
+
     let default_panic = std::panic::take_hook();
     panic::set_hook(Box::new(move |panic_info| {
         error!("Panic: {}", panic_info);

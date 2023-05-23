@@ -1,33 +1,37 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { dropSchemas, gql, removeMigrations, test, testDir } from "../utils.ts";
 import {
   assert,
   assertArrayIncludes,
   assertEquals,
   assertExists,
 } from "std/testing/asserts.ts";
-import { dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { join } from "std/path/mod.ts";
 import * as native from "native";
 import { nativeResult } from "../../src/utils.ts";
-import { init } from "../prisma/prisma_seed.ts";
-
-const localDir = dirname(fromFileUrl(import.meta.url));
 
 test("prisma migrations", async (t) => {
-  const tgPath = "prisma/prisma.py";
+  const tgPath = "runtimes/prisma/prisma.py";
   const migrations = t.getTypegraph("typegate/prisma_migration")!;
   assertExists(migrations);
 
-  const migrationDir = join(localDir, "../prisma-migrations/prisma/prisma");
+  const migrationDir = join(
+    testDir,
+    "prisma-migrations/prisma/prisma",
+  );
   const createdMigrations: string[] = [];
 
-  const e = await init(t, tgPath, false, {
+  const e = await t.pythonFile(tgPath, {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=prisma-migrate",
     },
   });
+
+  await dropSchemas(e);
+  await removeMigrations(e);
 
   await t.should("should fail", async () => {
     await gql`
@@ -37,7 +41,7 @@ test("prisma migrations", async (t) => {
         }
       }
     `
-      .expectErrorContains("table `test.record` does not exist")
+      .expectErrorContains("table `prisma-migrate.record` does not exist")
       .on(e);
   });
 
@@ -124,6 +128,7 @@ test("prisma migrations", async (t) => {
     mig = nativeResult(
       await native.archive({ path: migrationDir }),
     ).base64!;
+
     await gql`
       mutation PrismaApply($mig: String!) {
         apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {
@@ -173,19 +178,10 @@ test("prisma migrations", async (t) => {
       .on(e);
   });
 
-  await t.should("apply pending migrations", async () => {
-    // reset database
-    // TODO use reset mutation on prisma_migrations
-    await gql`
-        mutation a {
-          dropSchema
-        }
-      `
-      .expectData({
-        dropSchema: 0,
-      })
-      .on(e);
+  await dropSchemas(e);
 
+  await t.should("apply pending migrations", async () => {
+    // TODO use reset mutation on prisma_migrations instead of dropSchemas
     await gql`
         mutation PrismaApply($mig: String!) {
           apply(migrations: $mig, typegraph: "prisma", resetDatabase: false) {

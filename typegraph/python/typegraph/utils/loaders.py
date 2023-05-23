@@ -1,4 +1,5 @@
-# Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
 
 import importlib
 import json
@@ -11,6 +12,7 @@ import attrs
 from attrs import define
 from frozendict import frozendict
 
+from typegraph import version
 from typegraph.graph.typegraph import TypeGraph
 
 
@@ -67,11 +69,20 @@ def find_typegraphs(module) -> List[TypeGraph]:
 
 def cmd():
     parser = ArgumentParser()
-    parser.add_argument("module")
+    parser.add_argument("module", nargs="?")
     parser.add_argument("--pretty", action="store_true")
+    parser.add_argument("--version", action="store_true")
     # TODO option: output file
 
     args = parser.parse_args()
+
+    if args.version:
+        print(version)
+        return
+
+    if args.module is None:
+        print("No module specified")
+        return
 
     tgs = import_file(args.module)
 

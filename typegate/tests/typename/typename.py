@@ -25,7 +25,7 @@ with TypeGraph("prisma") as g:
         denoUser=denoUser,
         randomUser=randomUser,
         dropSchema=prismaRuntimePostgres.raw_execute(
-            "DROP SCHEMA IF EXISTS test CASCADE", effect=effects.delete()
+            "DROP SCHEMA IF EXISTS typename CASCADE", effect=effects.delete()
         ).add_policy(public),
         createUser=prismaRuntimePostgres.create(userModelPrisma).add_policy(public),
     )

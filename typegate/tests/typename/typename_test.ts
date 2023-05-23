@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { gql, recreateMigrations, test } from "../utils.ts";
 
@@ -6,7 +7,7 @@ test("Typename", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
 
@@ -27,7 +28,7 @@ test("Typename in deno runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
 
@@ -52,7 +53,7 @@ test("Typename in random runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
 
@@ -77,7 +78,7 @@ test("Typename in prisma runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
-        "postgresql://postgres:password@localhost:5432/db?schema=test",
+        "postgresql://postgres:password@localhost:5432/db?schema=typename",
     },
   });
 
