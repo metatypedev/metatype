@@ -18,7 +18,7 @@ with respx.mock:
     assert m.called
 
 
-def import_petstore():
+def import_petstore(params=None):
     pass
 
 
