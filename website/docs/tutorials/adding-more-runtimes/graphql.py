@@ -17,12 +17,14 @@ with TypeGraph(
     gql = GraphQLRuntime("https://graphqlzero.almansi.me/api")
     public = policies.public()
 
+    # highlight-next-line
     user = t.struct({"id": t.integer(), "name": t.string()})
 
     message = t.struct(
         {
             "id": t.integer().config("id", "auto"),
             "title": t.string(),
+            # highlight-next-line
             "user_id": t.integer().named("uid"),
             # highlight-next-line
             "user": gql.query(
@@ -40,6 +42,7 @@ with TypeGraph(
     g.expose(
         create_message=db.create(message),
         list_messages=db.find_many(message),
+        # highlight-next-line
         list_users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         default_policy=[public],
     )
