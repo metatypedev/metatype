@@ -10,6 +10,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     get_args,
     get_origin,
@@ -34,7 +35,7 @@ from typegraph.injection import (
 )
 from typegraph.policies import Policy, EffectPolicies
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils.attrs import SKIP, always, asdict
+from typegraph.utils.attrs import SKIP, asdict
 
 # if os.environ.get("DEBUG"):
 #     import debugpy
@@ -65,11 +66,6 @@ class Secret(Node):
 
     def data(self, collector: "Collector") -> dict:
         return self.secret  # this is a string
-
-
-# Optional keyword-only field
-def optional_field():
-    return field(kw_only=True, default=None)
 
 
 # reserved types are used for internal implementation
@@ -108,9 +104,9 @@ class typedef(Node):
         metadata={SKIP: True},
     )
     name: str = field(kw_only=True, default="")
-    description: Optional[str] = optional_field()
-    runtime: Optional["Runtime"] = optional_field()
-    injection: InjectionSwitch = optional_field()
+    description: Optional[str] = field(kw_only=True, default=None)
+    runtime: Optional["Runtime"] = field(kw_only=True, default=None)
+    injection: InjectionSwitch = field(kw_only=True, default=None)
     policies: Tuple[Policy, ...] = field(kw_only=True, factory=tuple)
     # runtime_config: Dict[str, Any] = field(
     #     kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
@@ -118,9 +114,9 @@ class typedef(Node):
     runtime_config: Dict[str, Any] = field(
         kw_only=True, factory=frozendict, hash=False, metadata={SKIP: True}
     )
-    _enum: Optional[Tuple[str]] = optional_field()
+    _enum: Optional[Tuple[str]] = field(kw_only=True, default=None)
 
-    collector_target: Optional[str] = always(Collector.types)
+    collector_target: Optional[str] = field(default=Collector.types, init=False)
 
     def __attrs_post_init__(self):
         if self.graph is None:
@@ -323,7 +319,10 @@ def constraint(name: Optional[str] = None):
     )
 
 
-def with_constraints(cls):
+Cls = TypeVar("Cls", bound=typedef)
+
+
+def with_constraints(cls: Type[Cls]) -> Type[Cls]:
     if not hasattr(cls, "__attrs_attrs__"):
         raise Exception(
             "@with_constraints decorator requires class to have attribute '__attrs_attrs__'"
