@@ -11,6 +11,7 @@ from typegraph.effects import Effect
 from typegraph.graph.nodes import NodeProxy
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
+from typegraph.utils.sanitizers import as_attr
 
 if TYPE_CHECKING:
     from typegraph.importers.base.importer import Importer
@@ -44,7 +45,7 @@ class Typify:
         if isinstance(typ, NodeProxy):
             renames = self.importer.renames
             name = renames[typ.node] if typ.node in renames else typ.node
-            return f"{self.ns}.proxy(renames[{repr(name)}])"
+            return f"{self.ns}.proxy(renames[{repr(as_attr(name))}])"
 
         if hasattr(self, typ.type):
             method = getattr(self, typ.type)
@@ -54,7 +55,7 @@ class Typify:
             else:
                 raise Exception(f"No handler for type '{typ.type}'")
 
-        suffix = "" if name is None else f".named(renames[{repr(name)}])"
+        suffix = "" if name is None else f".named(renames[{repr(as_attr(name))}])"
         return method(typ) + suffix
 
     def constraints(typ: t.typedef) -> str:

@@ -3,6 +3,7 @@
 
 from json import dumps
 from typing import Dict, Union
+from box import Box
 import re
 
 
@@ -22,3 +23,13 @@ def inject_params(s: str, params: Union[None, Dict[str, str]]):
         s = re.sub(f"\\{{\\s*{placeholder}\\s*\\}}", value, s)
 
     return s
+
+
+def as_attr(name: str):
+    """
+    Convert a string into valid attribute\n
+    Example:\n
+    `root:some complicated/Name` => `root_some_complicated_Name`
+    """
+    # return re.sub(r"[^0-9a-zA-Z]+", "_", name)
+    return Box()._safe_attr(name)
