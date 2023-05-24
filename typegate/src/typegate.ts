@@ -158,11 +158,11 @@ export const typegate =
 
       const contentLength = request.headers.get("content-length");
 
-      if (contentLength === null) {
-        return new Response("'Content-Length' unspecified in the header", {
-          status: 411,
-        });
-      }
+      // if (contentLength === null) {
+      //   return new Response("'Content-Length' unspecified in the header", {
+      //     status: 411,
+      //   });
+      // }
 
       if (contentLength == "0") {
         return new Response("empty body was provided", { status: 400 });
