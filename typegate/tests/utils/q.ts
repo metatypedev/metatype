@@ -213,16 +213,19 @@ export class Q {
       defaults["Authorization"] = await this.contextEncoder(context);
     }
 
+    const body = JSON.stringify({
+      query,
+      variables,
+      operationName: null,
+    });
+
     const request = new Request(`${host}/${engine.name}`, {
       method: "POST",
-      body: JSON.stringify({
-        query,
-        variables,
-        operationName: null,
-      }),
+      body,
       headers: {
         ...defaults,
         ...headers,
+        "Content-Length": `${body.length}`,
         "Content-Type": "application/json",
       },
     });
