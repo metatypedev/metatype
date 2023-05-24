@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from typing import Optional, Tuple
+from attr import field
 
 from attrs import frozen
 
@@ -19,7 +20,7 @@ class GraphQLRuntime(Runtime):
     """
 
     endpoint: str
-    runtime_name: str = always("graphql")
+    runtime_name: str = field(default="graphql", init=False)
 
     def query(
         self, inp: t.struct, out: t.typedef, *, path: Optional[Tuple[str, ...]] = None

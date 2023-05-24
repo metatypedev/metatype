@@ -169,12 +169,12 @@ class typedef(Node):
             )
         types[name] = self
 
-    def named(self, name: str) -> "typedef":
+    def named(self, name: str) -> Self:
         ret = self.replace(name=name)
         ret.register_name()
         return ret
 
-    def describe(self, description: str) -> "typedef":
+    def describe(self, description: str) -> Self:
         return self.replace(description=description)
 
     def within(self, runtime):

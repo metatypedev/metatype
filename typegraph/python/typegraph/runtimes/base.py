@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from typing import TYPE_CHECKING, Dict, List, Optional
+from attr import field
 
 from attrs import frozen
 
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
 @frozen
 class Runtime(Node):
     runtime_name: str
-    collector_target: Optional[str] = always(Collector.runtimes)
+    collector_target: Optional[str] = field(default=Collector.runtimes, init=False)
 
     def data(self, collector: Collector) -> Dict:
         data = asdict(self)

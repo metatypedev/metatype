@@ -120,7 +120,7 @@ class PrismaRuntime(Runtime):
 
     name: str
     connection_string_secret: str
-    runtime_name: str = always("prisma")
+    runtime_name: str = field(default="prisma", init=False)
     reg: Registry = field(init=False, hash=False, metadata={SKIP: True})
     __typegen: TypeGenerator = field(init=False, hash=False, metadata={SKIP: True})
 
