@@ -159,8 +159,14 @@ export class MetaTest {
   ): Promise<boolean> {
     const res = await this.t.step({
       name: `should ${fact}`,
-      fn,
-      //sanitizeOps: false,
+      fn: async (t) => {
+        try {
+          await fn(t);
+        } catch (e) {
+          console.error(e);
+          throw e;
+        }
+      },
     });
     if (!res) {
       Deno.exit(1);

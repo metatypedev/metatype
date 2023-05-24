@@ -36,6 +36,7 @@ const SCALAR_TYPE_MAP = {
   "integer": "Int",
   "number": "Float",
   "string": "String",
+  "file": "File",
 };
 
 function generateCustomScalar(type: TypeNode, idx: number) {

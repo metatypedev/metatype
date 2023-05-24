@@ -3,6 +3,7 @@
 
 import { ComputeStage } from "../engine.ts";
 import { equal } from "std/testing/asserts.ts";
+import { Resolver } from "../types.ts";
 
 export abstract class Runtime {
   abstract deinit(): Promise<void>;
@@ -41,5 +42,12 @@ export abstract class Runtime {
       }
     }
     return ret;
+  }
+
+  static resolveFromParent(name: string): Resolver {
+    return ({ _: { parent } }) => {
+      const resolver = parent[name];
+      return typeof resolver === "function" ? resolver() : resolver;
+    };
   }
 }
