@@ -478,6 +478,95 @@
           "type": "object",
           "required": [
             "policies",
+            "runtime",
+            "title",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "file"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "runtime": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "policies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PolicyIndices"
+              }
+            },
+            "description": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "injection": {
+              "default": null,
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/InjectionSwitch"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "enum": {
+              "default": null,
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "config": {
+              "default": {},
+              "type": "object",
+              "additionalProperties": true
+            },
+            "minSize": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "maxSize": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            "mimeTypes": {
+              "type": [
+                "array",
+                "null"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "policies",
             "properties",
             "runtime",
             "title",
@@ -1466,6 +1555,191 @@
           "type": "boolean"
         }
       }
+    },
+    "S3RuntimeData": {
+      "title": "S3RuntimeData",
+      "type": "object",
+      "required": [
+        "access_key_secret",
+        "host",
+        "path_style",
+        "region",
+        "secret_key_secret"
+      ],
+      "properties": {
+        "host": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "access_key_secret": {
+          "type": "string"
+        },
+        "secret_key_secret": {
+          "type": "string"
+        },
+        "path_style": {
+          "type": "boolean"
+        }
+      }
+    },
+    "S3Materializer": {
+      "title": "S3Materializer",
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "presign_get"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                },
+                "expiry_secs": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint",
+                  "minimum": 0.0
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "presign_put"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "expiry_secs": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "format": "uint",
+                  "minimum": 0.0
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "list"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "upload"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "upload_all"
+              ]
+            },
+            "data": {
+              "type": "object",
+              "required": [
+                "bucket"
+              ],
+              "properties": {
+                "bucket": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }
