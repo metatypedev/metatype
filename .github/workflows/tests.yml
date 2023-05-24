@@ -230,6 +230,16 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      minio:
+        image: bitnami/minio:2022
+        env:
+          MINIO_REGION_NAME: local
+          MINIO_ROOT_USER: minio
+          MINIO_ROOT_PASSWORD: password
+          MINIO_DEFAULT_BUCKETS: "bucket:none"
+        ports:
+          - "9000:9000"
+          - "9001:9001"
     env:
       DENO_DIR: deno-dir
     steps:
