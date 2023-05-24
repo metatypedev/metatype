@@ -79,6 +79,21 @@ export type StringNode = {
   pattern?: string | null;
   format?: StringFormat | null;
 };
+export type FileNode = {
+  type: "file";
+  title: string;
+  runtime: number;
+  policies: PolicyIndices[];
+  description?: string | null;
+  injection?: InjectionSwitch | null;
+  enum?: string[] | null;
+  config?: {
+    [k: string]: unknown;
+  };
+  minSize?: number | null;
+  maxSize?: number | null;
+  mimeTypes?: string[] | null;
+};
 export type ObjectNode = {
   type: "object";
   title: string;
@@ -172,6 +187,7 @@ export type TypeNode =
   | NumberNode
   | IntegerNode
   | StringNode
+  | FileNode
   | ObjectNode
   | ArrayNode
   | FunctionNode
@@ -203,6 +219,35 @@ export type StringFormat =
   | "date"
   | "phone";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
+export type S3Materializer = {
+  name: "presign_get";
+  data: {
+    bucket: string;
+    expiry_secs?: number | null;
+  };
+} | {
+  name: "presign_put";
+  data: {
+    bucket: string;
+    content_type?: string | null;
+    expiry_secs?: number | null;
+  };
+} | {
+  name: "list";
+  data: {
+    bucket: string;
+  };
+} | {
+  name: "upload";
+  data: {
+    bucket: string;
+  };
+} | {
+  name: "upload_all";
+  data: {
+    bucket: string;
+  };
+};
 export interface Typegraph {
   $id: string;
   types: TypeNode[];
@@ -294,4 +339,11 @@ export interface MigrationOptions {
   migration_files?: string | null;
   create: boolean;
   reset: boolean;
+}
+export interface S3RuntimeData {
+  host: string;
+  region: string;
+  access_key_secret: string;
+  secret_key_secret: string;
+  path_style: boolean;
 }

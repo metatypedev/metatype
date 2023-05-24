@@ -18,8 +18,8 @@ export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
   return (value: unknown) => {
     const errors: ErrorEntry[] = [];
     validator(value, "<value>", errors, validationContext);
-    // console.log("validating input", value);
     if (errors.length > 0) {
+      console.log("validating input", value);
       console.log(errors);
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
@@ -65,6 +65,9 @@ export class InputValidationCompiler {
             break;
           case "string":
             cg.generateStringValidator(typeNode);
+            break;
+          case "file":
+            cg.generateFileValidator(typeNode);
             break;
           case "optional":
             cg.generateOptionalValidator(typeNode, functionName(typeNode.item));

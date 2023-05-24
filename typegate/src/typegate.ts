@@ -10,6 +10,7 @@ import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { getLogger } from "./log.ts";
 import { forceAnyToOption } from "./utils.ts";
+import { parseRequest } from "./graphql/request_parser.ts";
 
 interface ParsedPath {
   lookup: string;
@@ -156,7 +157,7 @@ export const typegate =
         )
         : null;
 
-      const { query, operationName, variables } = await request.json();
+      const { query, operationName, variables } = await parseRequest(request);
       const info = {
         url,
         headers: Object.fromEntries(request.headers.entries()),
