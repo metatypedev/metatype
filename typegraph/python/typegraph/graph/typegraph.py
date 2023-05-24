@@ -12,6 +12,7 @@ from typegraph.runtimes.deno import DenoRuntime
 
 if TYPE_CHECKING:
     from typegraph import types as t
+    from typegraph.policies import Policy
 
 
 OperationTable = Dict[str, Union["t.func", "t.struct"]]
@@ -71,24 +72,29 @@ class TypeGraph:
     ) -> "NodeProxy":
         return NodeProxy(self, node, after_apply)
 
-    def expose(self, **ops: Union["t.func", "t.struct"]):
+    def expose(
+        self,
+        default_policy: Optional[Union["Policy", List["Policy"]]] = None,
+        **ops: Union["t.func", "t.struct"],
+    ):
         from typegraph import types as t
 
-        default_policy = ops.pop("default_policy", [])
-        if not isinstance(default_policy, list):
-            default_policy = [default_policy]
+        default_policies = default_policy or []
+        if not isinstance(default_policies, list):
+            default_policies = [default_policies]
 
         # allow to expose only functions or structures (namespaces)
         for name, op in ops.items():
             if not isinstance(op, t.func) and not isinstance(op, t.struct):
                 raise Exception(
-                    f"cannot expose type {op.title} under {name}, requires a function or structure (namespace), got a {op.type}"
+                    f"cannot expose type {op.title} under {name}, requires a function"
+                    f" or structure (namespace), got a {op.type}"
                 )
 
             if name in self.exposed:
                 raise Exception(f"operation {name} already exposed")
 
-            self.exposed[name] = op.add_policy(*default_policy)
+            self.exposed[name] = op.add_policy(*default_policies)
 
         return self
 

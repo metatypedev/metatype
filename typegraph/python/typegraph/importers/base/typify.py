@@ -94,7 +94,12 @@ class Typify:
     def union(self, typ: t.typedef) -> str:
         typ = cast(t.union, typ)
         variants = [self(v) for v in typ.variants]
-        return f"{self.ns}.union({', '.join(variants)})"
+        return f"{self.ns}.union([{', '.join(variants)}])"
+
+    def either(self, typ: t.typedef) -> str:
+        typ = cast(t.union, typ)
+        variants = [self(v) for v in typ.variants]
+        return f"{self.ns}.either([{', '.join(variants)}])"
 
     def function(self, typ: t.typedef) -> str:
         typ = cast(t.func, typ)

@@ -59,16 +59,17 @@ class GoogleDiscoveryImporter(Importer):
         self.specification.revision
         self.specification.version
 
-        self.specification.canonicalName
+        # self.specification.canonicalName
         self.specification.description
         self.specification.documentationLink
         with self:
-            # self.renames["ErrorResponse"] = "error_response"
             self.types["ErrorResponse"] = self.error_struct()
             for schema in self.specification.schemas.values():
-                assert schema.type == "object"
-                # self.renames[f"{schema.id}In"] = f"{camel_to_snake(schema.id)}_in"
-                # self.renames[f"{schema.id}Out"] = f"{camel_to_snake(schema.id)}_out"
+                assert schema.type == "object" or schema.type == "any"
+                if schema.type == "any":
+                    print(f"Warning: schema of type '{schema.type}' not supported")
+                    continue
+
                 self.types[f"{schema.id}In"] = self.gen_type(
                     schema,
                     has_error=False,
@@ -115,6 +116,9 @@ class GoogleDiscoveryImporter(Importer):
 
         return ret
 
+    def gen_any(self):
+        return t.struct({"_": t.string().optional()})
+
     def gen_type(
         self, cursor, has_error=False, filter_read_only=False, suffix="", allow_opt=True
     ):
@@ -139,7 +143,7 @@ class GoogleDiscoveryImporter(Importer):
             "boolean": t.boolean(),
             "integer": t.integer(),
             "number": t.float(),
-            "any": t.struct({"_": t.string().optional()}),
+            "any": self.gen_any(),
         }
 
         tpe = simple_type.get(cursor.type)
@@ -161,26 +165,32 @@ class GoogleDiscoveryImporter(Importer):
         if "methods" in cursor:
             for methodName, method in cursor.methods.items():
                 inp_fields: Dict[str, t.typedef] = {}
-                # query params
-                for parameterName, parameter in method.parameters.items():
-                    if parameterName != "readMask":
-                        inp_fields[parameterName] = self.gen_type(
-                            parameter, suffix="In"
-                        )
+                if "parameters" in method:
+                    # query params
+                    for parameterName, parameter in method.parameters.items():
+                        if parameterName != "readMask":
+                            inp_fields[parameterName] = self.gen_type(
+                                parameter, suffix="In"
+                            )
 
-                # flatten first depth fields
+                # flatten first depth fields and merge
                 if "request" in method and "$ref" in method.request:
                     # resolve first depth
                     ref = f"{method.request.get('$ref')}In"
                     assert self.obj_fields_cache.get(ref) is not None
                     for k, v in self.obj_fields_cache.get(ref).items():
                         inp_fields[k] = v
+
                 # Bearer token
                 inp_fields["auth"] = t.string().optional()
 
                 # In/Out
                 inp = t.struct(inp_fields)
-                out = self.gen_type(method.response, suffix="Out")
+                out = None
+                if "response" not in method:
+                    out = self.gen_any()
+                else:
+                    out = self.gen_type(method.response, suffix="Out")
 
                 # kwargs
                 fparams = {
