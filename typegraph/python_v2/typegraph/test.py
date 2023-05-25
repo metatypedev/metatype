@@ -1,10 +1,14 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph.gen.exports.core import Core
+from typegraph.gen.exports.core import Core, IntegerConstraints, StructConstraints
 from typegraph.gen import TypegraphCore
-from typing import Optional
+from typing import Optional, Dict
 from wasmtime import Store
+
+
+def my_print(s: str):
+    print(s)
 
 
 store = Store()
@@ -17,26 +21,47 @@ class typedef:
     def __init__(self, id: int):
         self.id = id
 
+    def __repr__(self):
+        return core.get_type_repr(store, self.id)
+
 
 class integer(typedef):
-    def __init__(self, id: Optional[int] = None):
-        super().__init__(core.integerb(store).id)
+    min: Optional[int] = None
+    max: Optional[int] = None
 
-    def min(self, n: int) -> "integer":
-        return integer(core.integermin(store, self.id, n))
+    def __init__(self, *, min: Optional[int] = None, max: Optional[int] = None):
+        data = IntegerConstraints(min=min, max=max)
+        super().__init__(core.integerb(store, data).id)
+        self.min = min
+        self.max = max
 
-    def __str__(self):
-        return f"integer#{self.id}()"
 
-    def __getattr__(self, name: str):
-        return core.gettpe(store, self.id, name)
+class struct(typedef):
+    props: Dict[str, typedef]
+
+    def __init__(self, props: Dict[str, typedef]):
+        data = StructConstraints(
+            props=list((name, tpe.id) for (name, tpe) in props.items())
+        )
+
+        super().__init__(core.structb(store, data).id)
+        self.props = props
 
 
 a = integer()
-b = integer()
+b = integer(min=12)
+c = integer(min=12, max=43)
 
 print(a)
 print(b)
-print(a.min(1))
-print(a._min)
-print(a.min(2)._min)
+print(c)
+print(c.min, c.max)
+
+s1 = struct(
+    {
+        "a": a,
+        "b": integer(),
+    }
+)
+
+print(s1)

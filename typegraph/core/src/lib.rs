@@ -31,13 +31,13 @@ impl core::Core for Lib {
     }
 
     fn structb(data: StructConstraints) -> core::Tpe {
-        print(&format!("data: {:?}", data));
+        // print(&format!("data: {:?}", data));
         let tpe = T::Struct(data);
         tg().add(tpe)
     }
 
     fn type_as_struct(id: u32) -> Option<StructConstraints> {
-        print(&format!("data: {:?}", tg().get(id)));
+        // print(&format!("data: {:?}", tg().get(id)));
         match tg().get(id) {
             T::Struct(typ) => Some(typ.clone()),
             _ => None,
@@ -49,16 +49,28 @@ impl core::Core for Lib {
         match tg.get(id) {
             T::Integer(v) => {
                 let type_data = [
-                    v.min.map(|min| format!("{min}")),
-                    v.max.map(|max| format!("{max}")),
+                    Some(format!("#{id}")),
+                    v.min.map(|min| format!("min={min}")),
+                    v.max.map(|max| format!("max={max}")),
                 ]
                 .into_iter()
                 .flatten()
                 .collect::<Vec<_>>()
                 .join(", ");
-                Some(format!("integer#{id}({type_data})"))
+                Some(format!("integer({type_data})"))
             }
-            _ => panic!("not an integer"),
+            T::Struct(v) => {
+                let mut params = vec![format!("#{id}")];
+                params.reserve(v.props.len());
+
+                let props = v
+                    .props
+                    .iter()
+                    .map(|(name, tpe_id)| format!("[{name}] => #{tpe_id}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                Some(format!("struct(#{id}, {props})"))
+            }
         }
     }
 }

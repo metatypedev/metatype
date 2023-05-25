@@ -92,6 +92,16 @@ typegraph:
     wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o target/debug/typegraph_core.wasm
     jco transpile target/debug/typegraph_core.wasm -o typegraph/deno/gen --no-nodejs-compat --map print=../src/imports.ts
 
+typegraph_python:
+  workdir: typegraph/python_v2
+  env:
+    VIRTUAL_ENV: "$PWD/.venv"
+    PATH: "$PWD/.venv/bin:$PATH"
+  command: .venv/bin/python3 -m wasmtime.bindgen ../../target/debug/typegraph_core.wasm --out-dir typegraph/gen
+  depends_on:
+    - typegraph
+
+
 website:
   workdir: website
   command: "pnpm start --no-open"

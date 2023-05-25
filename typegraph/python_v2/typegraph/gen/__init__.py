@@ -19,18 +19,27 @@ class TypegraphCore:
         realloc0 = instance0["cabi_realloc"]
         assert isinstance(realloc0, wasmtime.Func)
         self._realloc0 = realloc0
+        post_return0 = instance0["cabi_post_core#type-as-struct"]
+        assert isinstance(post_return0, wasmtime.Func)
+        self._post_return0 = post_return0
+        post_return1 = instance0["cabi_post_core#get-type-repr"]
+        assert isinstance(post_return1, wasmtime.Func)
+        self._post_return1 = post_return1
         lift_callee0 = instance0["core#integerb"]
         assert isinstance(lift_callee0, wasmtime.Func)
         self.lift_callee0 = lift_callee0
-        lift_callee1 = instance0["core#integermin"]
+        lift_callee1 = instance0["core#type-as-integer"]
         assert isinstance(lift_callee1, wasmtime.Func)
         self.lift_callee1 = lift_callee1
         lift_callee2 = instance0["core#structb"]
         assert isinstance(lift_callee2, wasmtime.Func)
         self.lift_callee2 = lift_callee2
-        lift_callee3 = instance0["core#gettpe"]
+        lift_callee3 = instance0["core#type-as-struct"]
         assert isinstance(lift_callee3, wasmtime.Func)
         self.lift_callee3 = lift_callee3
+        lift_callee4 = instance0["core#get-type-repr"]
+        assert isinstance(lift_callee4, wasmtime.Func)
+        self.lift_callee4 = lift_callee4
 
     def core(self) -> core.Core:
         return core.Core(self)

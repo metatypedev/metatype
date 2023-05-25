@@ -12,6 +12,19 @@ def _clamp(i: int, min: int, max: int) -> int:
     return i
 
 
+def _load(
+    ty: Any, mem: wasmtime.Memory, store: wasmtime.Storelike, base: int, offset: int
+) -> Any:
+    ptr = (base & 0xFFFFFFFF) + offset
+    if ptr + ctypes.sizeof(ty) > mem.data_len(store):
+        raise IndexError("out-of-bounds store")
+    raw_base = mem.data_ptr(store)
+    c_ptr = ctypes.POINTER(ty)(
+        ty.from_address(ctypes.addressof(raw_base.contents) + ptr)
+    )
+    return c_ptr[0]
+
+
 def _encode_utf8(
     val: str, realloc: wasmtime.Func, mem: wasmtime.Memory, store: wasmtime.Storelike
 ) -> Tuple[int, int]:
@@ -47,14 +60,15 @@ def _store(
     c_ptr[0] = val
 
 
-def _load(
-    ty: Any, mem: wasmtime.Memory, store: wasmtime.Storelike, base: int, offset: int
-) -> Any:
-    ptr = (base & 0xFFFFFFFF) + offset
-    if ptr + ctypes.sizeof(ty) > mem.data_len(store):
-        raise IndexError("out-of-bounds store")
-    raw_base = mem.data_ptr(store)
-    c_ptr = ctypes.POINTER(ty)(
-        ty.from_address(ctypes.addressof(raw_base.contents) + ptr)
+def _decode_utf8(
+    mem: wasmtime.Memory, store: wasmtime.Storelike, ptr: int, len: int
+) -> str:
+    ptr = ptr & 0xFFFFFFFF
+    len = len & 0xFFFFFFFF
+    if ptr + len > mem.data_len(store):
+        raise IndexError("string out of bounds")
+    base = mem.data_ptr(store)
+    base = ctypes.POINTER(ctypes.c_ubyte)(
+        ctypes.c_ubyte.from_address(ctypes.addressof(base.contents) + ptr)
     )
-    return c_ptr[0]
+    return ctypes.string_at(base, len).decode("utf-8")
