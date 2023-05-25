@@ -171,8 +171,13 @@ export class Q {
   expectBody(expect: (body: any) => Promise<void> | void) {
     return this.expect(async (res) => {
       try {
-        const json = await res.json();
-        await expect(json);
+        if (res.headers.get("Content-Type") === "application/json") {
+          const json = await res.json();
+          await expect(json);
+        } else {
+          const text = await res.text();
+          await expect(text);
+        }
       } catch (error) {
         console.error(
           `cannot expect json body with status ${res.status}: ${error}`,
@@ -264,6 +269,16 @@ export class Q {
       defaults["Authorization"] = await this.contextEncoder(context);
     }
 
+    const getContentLength = (length: number) => {
+      for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === "content-length") {
+          // skip if exist
+          return {};
+        }
+      }
+      return { "Content-Length": `${length}` } as Record<string, string>;
+    };
+
     const files = this.extractFilesFromVars();
     if (files.size === 0) {
       const body = JSON.stringify(this.json());
@@ -273,7 +288,7 @@ export class Q {
         headers: {
           ...defaults,
           ...headers,
-          "Content-Length": `${body.length}`,
+          ...getContentLength(body.length),
           "Content-Type": "application/json",
         },
       });
@@ -286,11 +301,11 @@ export class Q {
 
       return new Request(url, {
         method: "POST",
-        body: this.formData(files),
+        body,
         headers: {
           ...defaults,
           ...headers,
-          "Content-Length": `${length}`,
+          ...getContentLength(length),
           // "Content-Type": "multipart/form-data",
         },
       });
