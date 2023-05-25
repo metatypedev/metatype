@@ -31,11 +31,29 @@ test("post content-length with empty body", async (t) => {
         }
       }
     `
+      .withHeaders({
+        "Content-Length": "0",
+      })
       .expectBody((body) => {
         assertEquals(body, "empty body was provided");
       })
-      .withHeaders({
-        "Content-Length": "0",
+      .on(e);
+  });
+
+  await t.should("throw when Content-Length is undefined", async () => {
+    await gql`
+      query {
+        identity(message: "Hello World") {
+          message
+        }
+      }
+    `
+      .withoutHeaders(["Content-Length"])
+      .expectBody((body) => {
+        assertEquals(
+          body,
+          "POST request must specify 'Content-Length' in the header",
+        );
       })
       .on(e);
   });

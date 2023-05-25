@@ -156,6 +156,14 @@ export class Q {
     });
   }
 
+  withoutHeaders(headers: Array<string>) {
+    return this.clone((q) => {
+      for (const name of headers) {
+        q.headers[name] = "NULL";
+      }
+    });
+  }
+
   expect(expect: Expect) {
     return this.clone((q) => {
       q.expects = [...q.expects, expect];
@@ -269,6 +277,15 @@ export class Q {
       defaults["Authorization"] = await this.contextEncoder(context);
     }
 
+    const clean = (headers: Record<string, string>) => {
+      for (const [k, v] of Object.entries(headers)) {
+        if (v === "NULL") {
+          delete headers[k];
+        }
+      }
+      return headers;
+    };
+
     const getContentLength = (length: number) => {
       for (const key of Object.keys(headers)) {
         if (key.toLowerCase() === "content-length") {
@@ -285,12 +302,12 @@ export class Q {
       return new Request(url, {
         method: "POST",
         body,
-        headers: {
+        headers: clean({
           ...defaults,
           ...headers,
           ...getContentLength(body.length),
           "Content-Type": "application/json",
-        },
+        }),
       });
     } else {
       const body = this.formData(files);
@@ -302,12 +319,12 @@ export class Q {
       return new Request(url, {
         method: "POST",
         body,
-        headers: {
+        headers: clean({
           ...defaults,
           ...headers,
           ...getContentLength(length),
           // "Content-Type": "multipart/form-data",
-        },
+        }),
       });
     }
   }
