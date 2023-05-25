@@ -7,6 +7,7 @@ export const Type = {
   NUMBER: "number",
   INTEGER: "integer",
   STRING: "string",
+  FILE: "file",
   OBJECT: "object",
   ARRAY: "array",
   FUNCTION: "function",
@@ -15,18 +16,12 @@ export const Type = {
   ANY: "any",
 } as const;
 
-type Injection =
-  | { injection?: undefined; inject?: undefined }
-  | { injection: "parent"; inject: number }
-  | { injection: "secret"; inject: string }
-  | { injection: "context"; inject: string }
-  | { injection: "raw"; inject: string /* json */ };
-
 import type {
   AnyNode,
   ArrayNode,
   BooleanNode,
   EitherNode,
+  FileNode,
   FunctionNode,
   IntegerNode,
   NumberNode,
@@ -41,6 +36,7 @@ export type {
   AnyNode,
   ArrayNode,
   BooleanNode,
+  FileNode,
   FunctionNode,
   IntegerNode,
   NumberNode,
@@ -51,7 +47,12 @@ export type {
   UnionNode,
 };
 
-export type ScalarNode = BooleanNode | IntegerNode | NumberNode | StringNode;
+export type ScalarNode =
+  | BooleanNode
+  | IntegerNode
+  | NumberNode
+  | StringNode
+  | FileNode;
 export type QuantifierNode = OptionalNode | ArrayNode;
 
 //
@@ -90,6 +91,10 @@ export function isString(t: TypeNode): t is StringNode {
   return t.type === Type.STRING;
 }
 
+export function isFile(t: TypeNode): t is FileNode {
+  return t.type === Type.FILE;
+}
+
 export function isObject(t: TypeNode): t is ObjectNode {
   return t.type === Type.OBJECT;
 }
@@ -103,7 +108,8 @@ export function isArray(t: TypeNode): t is ArrayNode {
 }
 
 export function isScalar(t: TypeNode): t is ScalarNode {
-  return isBoolean(t) || isInteger(t) || isNumber(t) || isString(t);
+  return isBoolean(t) || isInteger(t) || isNumber(t) || isString(t) ||
+    isFile(t);
 }
 
 export function isQuantifier(t: TypeNode): t is QuantifierNode {

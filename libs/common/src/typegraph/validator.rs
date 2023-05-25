@@ -213,6 +213,7 @@ impl Typegraph {
                 anyhow!("Expected a boolean got '{value}'", value = to_string(value))
             }),
             TypeNode::String { data, .. } => self.validate_string(data, value),
+            TypeNode::File { .. } => bail!("Literal file not supported"),
             TypeNode::Optional { data, .. } => {
                 if value.is_null() {
                     Ok(())

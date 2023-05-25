@@ -23,7 +23,7 @@ import { exists } from "std/fs/exists.ts";
 const testConfig = parse(Deno.args);
 
 type Expect = (res: Response) => Promise<void> | void;
-type Variables = Record<string, JSONValue>;
+type Variables = Record<string, unknown>;
 type Context = Record<string, unknown>;
 type ContextEncoder = (context: Context) => Promise<string>;
 
@@ -41,28 +41,79 @@ interface ResponseBody {
   errors?: ResponseBodyError[];
 }
 
-export class Q {
-  query: string;
-  context: Context;
-  contextEncoder: ContextEncoder;
-  variables: Variables;
-  headers: Record<string, string>;
-  expects: Expect[];
+class FileExtractor {
+  private map: Map<File, string[]> = new Map();
 
-  constructor(
-    query: string,
-    context: Context,
-    variables: Variables,
-    headers: Record<string, string>,
-    expects: Expect[],
-    contextEncoder: ContextEncoder = defaultContextEncoder,
+  private addFile(file: File, path: string) {
+    if (this.map.has(file)) {
+      this.map.get(file)!.push(path);
+    } else {
+      this.map.set(file, [path]);
+    }
+  }
+
+  private traverse(
+    parent: Array<unknown>,
+    index: number,
+    parentPath: string,
+  ): void;
+  private traverse(
+    parent: Record<string, unknown>,
+    key: string,
+    parentPath: string,
+  ): void;
+  private traverse(
+    parent: Array<unknown> | Record<string, unknown>,
+    field: string | number,
+    parentPath: string,
   ) {
-    this.query = query;
-    this.context = context;
-    this.contextEncoder = contextEncoder;
-    this.variables = variables;
-    this.headers = headers;
-    this.expects = expects;
+    const path = `${parentPath}.${field}`;
+    const value = (parent as Record<string | number, unknown>)[field];
+    if (typeof value === "object" && value != null) {
+      if (value instanceof File) {
+        (parent as Record<string | number, unknown>)[field] = null;
+        this.addFile(value, path);
+      } else if (Array.isArray(value)) {
+        for (let i = 0; i < value.length; ++i) {
+          this.traverse(value, i, path);
+        }
+      } else {
+        for (const key of Object.keys(value)) {
+          this.traverse(value as Record<string, unknown>, key, path);
+        }
+      }
+    }
+  }
+
+  extractFilesFromVars(variables: Variables): Map<File, string[]> {
+    for (const key of Object.keys(variables)) {
+      this.traverse(variables, key, "variables");
+    }
+    return this.map;
+  }
+}
+
+export class Q {
+  constructor(
+    public query: string,
+    private context: Context,
+    private variables: Variables,
+    private headers: Record<string, string>,
+    private expects: Expect[],
+    private contextEncoder: ContextEncoder = defaultContextEncoder,
+  ) {}
+
+  private clone(patch: (q: Q) => void = (_q) => {}): Q {
+    const q = new Q(
+      this.query,
+      this.context,
+      this.variables,
+      this.headers,
+      this.expects,
+      this.contextEncoder,
+    );
+    patch(q);
+    return q;
   }
 
   static async fs(path: string, engine: Engine) {
@@ -87,50 +138,28 @@ export class Q {
   }
 
   withContext(context: Context, contextEncoder?: ContextEncoder) {
-    return new Q(
-      this.query,
-      deepMerge(this.context, context),
-      this.variables,
-      this.headers,
-      this.expects,
-      contextEncoder || this.contextEncoder,
-    );
+    return this.clone((q) => {
+      q.context = deepMerge(q.context, context);
+      q.contextEncoder = contextEncoder || q.contextEncoder;
+    });
   }
 
   withVars(variables: Variables) {
-    return new Q(
-      this.query,
-      this.context,
-      deepMerge(this.variables, variables),
-      this.headers,
-      this.expects,
-      this.contextEncoder,
-    );
+    return this.clone((q) => {
+      q.variables = deepMerge(q.variables, variables);
+    });
   }
 
   withHeaders(headers: Record<string, string>) {
-    return new Q(
-      this.query,
-      this.context,
-      this.variables,
-      deepMerge(this.headers, headers),
-      this.expects,
-      this.contextEncoder,
-    );
+    return this.clone((q) => {
+      q.headers = deepMerge(q.headers, headers);
+    });
   }
 
   expect(expect: Expect) {
-    return new Q(
-      this.query,
-      this.context,
-      this.variables,
-      this.headers,
-      [
-        ...this.expects,
-        expect,
-      ],
-      this.contextEncoder,
-    );
+    return this.clone((q) => {
+      q.expects = [...q.expects, expect];
+    });
   }
 
   expectStatus(status: number) {
@@ -204,8 +233,30 @@ export class Q {
     });
   }
 
-  async on(engine: Engine, host = "http://typegate.local") {
-    const { query, variables, headers, context, expects } = this;
+  json() {
+    const { query, variables } = this;
+    return { query, variables, operationName: null };
+  }
+
+  formData(files: Map<File, string[]>) {
+    const data = new FormData();
+    data.set("operations", JSON.stringify(this.json()));
+    const map: Record<string, string[]> = {};
+    for (const [i, [file, paths]] of [...files.entries()].entries()) {
+      const key = `${i}`;
+      map[key] = paths;
+      data.set(key, file);
+    }
+    data.set("map", JSON.stringify(map));
+    return data;
+  }
+
+  private extractFilesFromVars(): Map<File, string[]> {
+    return new FileExtractor().extractFilesFromVars(this.variables);
+  }
+
+  async getRequest(url: string) {
+    const { headers, context } = this;
 
     const defaults: Record<string, string> = {};
 
@@ -213,26 +264,38 @@ export class Q {
       defaults["Authorization"] = await this.contextEncoder(context);
     }
 
-    const body = JSON.stringify({
-      query,
-      variables,
-      operationName: null,
-    });
+    const files = this.extractFilesFromVars();
+    if (files.size === 0) {
+      const body = JSON.stringify(this.json());
+      return new Request(url, {
+        method: "POST",
+        body,
+        headers: {
+          ...defaults,
+          ...headers,
+          "Content-Length": `{body.length}`,
+          "Content-Type": "application/json",
+        },
+      });
+    } else {
+      return new Request(url, {
+        method: "POST",
+        body: this.formData(files),
+        headers: {
+          ...defaults,
+          ...headers,
+          // "Content-Type": "multipart/form-data",
+        },
+      });
+    }
+  }
 
-    const request = new Request(`${host}/${engine.name}`, {
-      method: "POST",
-      body,
-      headers: {
-        ...defaults,
-        ...headers,
-        "Content-Length": `${body.length}`,
-        "Content-Type": "application/json",
-      },
-    });
+  async on(engine: Engine, host = "http://typegate.local") {
+    const request = await this.getRequest(`${host}/${engine.name}`);
     const response = await execute(engine, request);
 
-    for (const expect of expects) {
-      expect(response);
+    for (const expect of this.expects) {
+      await expect(response);
     }
   }
 }

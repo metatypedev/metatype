@@ -39,8 +39,6 @@ with TypeGraph("class_syntax") as g:
 
     g.expose(
         identity=t.func(
-            # Note:
-            # by default, X() ~ a struct of name "X"
             Post().named("In"),
             Post().named("Out"),
             PredefinedFunMat("identity"),

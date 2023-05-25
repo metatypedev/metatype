@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import * as MathJS from "npm:mathjs";
+import * as MathJS from "npm:mathjs@11.8.0";
 
 interface LogInput {
   base: null | number;

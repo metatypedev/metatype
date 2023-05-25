@@ -16,6 +16,7 @@ from redbaron import AtomtrailersNode, NameNode, RedBaron
 from typegraph import TypeGraph, t
 from typegraph.importers.base.typify import Typify
 from typegraph.types import reserved_types
+from typegraph.utils.sanitizers import as_attr
 
 # TODO: detect indentation size/character from file
 
@@ -28,24 +29,23 @@ class Codegen:
     res: str = field(default="", init=False)
     res_hint: str = field(default="", init=False)
 
-    def line(self, line: str = "", indent_level=0):
+    def line(self, line: str = "", indent_level=0, do=True):
+        if not do:
+            return
         indent = self.indent * (self.indent_level + indent_level)
         if line == "":
             self.res += "\n"
         else:
             self.res += f"{indent}{line}\n"
 
-    def hint_line(self, line: str = "", indent_level=0):
+    def hint_line(self, line: str = "", indent_level=0, do=True):
+        if not do:
+            return
         indent = self.indent * (self.indent_level_pyi + indent_level)
         if line == "":
             self.res_hint += "\n"
         else:
             self.res_hint += f"{indent}{line}\n"
-
-
-# Some Type Name => Some_Type_Name
-def as_attr(name: str):
-    return re.sub(r"\s+", "_", name)
 
 
 class Importer:
@@ -58,6 +58,7 @@ class Importer:
     exposed: Dict[str, t.func]
     renames: Dict[str, str]
     tg: TypeGraph
+    enable_params: bool
 
     def __init__(
         self, name: str, *, renames: Dict[str, str] = {}, keep_names: List[str] = []
@@ -68,6 +69,8 @@ class Importer:
             `renames`: a dictionary mapping original (imported) names to exposed names
             `keep_names`: a list of names to keep as the original (imported)
         """
+
+        self.enable_params = False
 
         self.imports = {
             ("typegraph", "t"),
@@ -130,7 +133,10 @@ class Importer:
         cg.line()
 
         counter = itertools.count(1)
-        renames = {name: f"_{self.name}_{next(counter)}_{name}" for name in self.types}
+        renames = {
+            as_attr(name): f"_{as_attr(self.name)}_{next(counter)}_{as_attr(name)}"
+            for name in self.types
+        }
         renames.update(self.renames)
 
         cg.line(f"renames = {repr(renames)}")
@@ -138,29 +144,39 @@ class Importer:
 
         cg.line("types = {}")
         cg.hint_line("from typegraph import t")
+        cg.hint_line("from typing import Dict, Union", do=self.enable_params)
         cg.hint_line("class TypeList:")
 
         if len(self.types) > 0:
             for name, tpe in self.types.items():
-                cg.line(f"types[{repr(name)}] = {typify(tpe, name)}")
-                cg.hint_line(f"{as_attr(name)}: t.typedef = ...", 1)
-
+                attr_name = as_attr(name)
+                cg.line(f"types[{repr(attr_name)}] = {typify(tpe, name)}")
+                cg.hint_line(f"{attr_name}: t.typedef = ...", 1)
             cg.line()
 
         cg.line("functions = {}")
         cg.hint_line("class FuncList:")
         for name, fn in self.exposed.items():
-            cg.line(f"functions[{repr(name)}] = {typify(fn)}")
-            cg.hint_line(f"{as_attr(name)}: t.func = ...", 1)
+            attr_name = as_attr(name)
+            cg.line(f"functions[{repr(attr_name)}] = {typify(fn)}")
+            cg.hint_line(f"{attr_name}: t.func = ...", 1)
         cg.line()
 
         cg.hint_line("class Import:")
         cg.hint_line("types: TypeList = ...", 1)
         cg.hint_line("functions: FuncList = ...", 1)
-        cg.hint_line(f"def {self.get_def_name()}() -> Import: ...")
+
+        cg.hint_line(
+            f"def {self.get_def_name()}(params: Union[None, Dict[str, str]]) -> Import: ...",
+            do=self.enable_params,
+        )
+        cg.hint_line(
+            f"def {self.get_def_name()}() -> Import: ...", do=not self.enable_params
+        )
 
         self.imports.add(("box", "Box"))
         self.imports.add(("typegraph.importers.base.importer", "Import"))
+
         cg.line(
             f"return Import(importer={repr(self.name)}, renames=renames, types=Box(types), functions=Box(functions))"
         )
@@ -216,7 +232,10 @@ class Importer:
             target_node.value = source.res
         else:
             wth.insert_before(comment)
-            wth.insert_before(f"def {name}():\n{source.res}")
+            if self.enable_params:
+                wth.insert_before(f"def {name}(params = None):\n{source.res}")
+            else:
+                wth.insert_before(f"def {name}():\n{source.res}")
 
         new_code = black.format_str(code.dumps(), mode=black.FileMode())
         new_hint_code = black.format_str(source.res_hint, mode=black.FileMode())
@@ -229,6 +248,7 @@ class Importer:
             f.write(new_hint_code)
 
         print(f"File updated: {file}", file=sys.stderr)
+        print(f"File updated: {filename_pyi}", file=sys.stderr)
         exit(0)
 
     def find_generate_arg(self, code: RedBaron) -> Optional[NameNode]:
