@@ -273,7 +273,7 @@ export class Q {
         headers: {
           ...defaults,
           ...headers,
-          "Content-Length": `{body.length}`,
+          "Content-Length": `${body.length}`,
           "Content-Type": "application/json",
         },
       });
