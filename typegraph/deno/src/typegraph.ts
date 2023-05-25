@@ -64,17 +64,27 @@ typegraph("name", (g) => {
 
   const a = t.integer();
   const b = t.integer();
+  const a1 = t.integer({ min: 12 });
+  const b1 = t.integer({ min: 12, max: 43 });
 
   console.log('"');
   console.log(b);
-  console.log(b._min);
-  console.log(b.min(0));
-  console.log("a", b.min(0)._min);
+  console.log(b.min);
+  console.log(a1.min);
+  console.log(b1);
+  console.log(b1.min, b1.max);
+  console.log();
   console.log('"');
+  console.log(a.repr);
+  console.log(a1.asTpe());
+  console.log(a1.asTpe().asInteger());
 
   console.log("----");
   const c = t.struct({ b });
 
-  console.log(t.struct({ b }).b);
+  console.log(t.struct({ b }).props.b);
   console.log(c);
+  console.log(c.asTpe());
+  const d = c.asTpe().asStruct();
+  console.log(c.asTpe().asStruct());
 });

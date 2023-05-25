@@ -5,28 +5,25 @@ use enum_dispatch::enum_dispatch;
 use serde::Serialize;
 use std::collections::HashMap;
 
-use crate::core::Tpe;
-
-#[enum_dispatch]
-pub trait TypeFun {
-    fn getattr(&self, field: String) -> Option<Tpe>;
-}
+use crate::core::{IntegerConstraints, StructConstraints};
 
 #[derive(Debug)]
 #[enum_dispatch(TypeFun)]
 pub enum T {
-    Struct(Struct),
-    Integer(Integer),
+    Struct(StructConstraints),
+    Integer(IntegerConstraints),
 }
 
-#[derive(Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct Struct {
     pub props: HashMap<String, u32>,
 }
 
-impl TypeFun for Struct {
-    fn getattr(&self, field: String) -> Option<Tpe> {
-        self.props.get(&field).map(|x| Tpe { id: *x })
+impl From<StructConstraints> for Struct {
+    fn from(value: StructConstraints) -> Self {
+        Self {
+            props: value.props.into_iter().collect(),
+        }
     }
 }
 
@@ -36,8 +33,11 @@ pub struct Integer {
     pub max: Option<i32>,
 }
 
-impl TypeFun for Integer {
-    fn getattr(&self, _field: String) -> Option<Tpe> {
-        None
+impl From<IntegerConstraints> for Integer {
+    fn from(value: IntegerConstraints) -> Self {
+        Self {
+            min: value.min,
+            max: value.max,
+        }
     }
 }

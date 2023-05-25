@@ -1,36 +1,78 @@
 import { core } from "../gen/typegraph_core.js";
-
-const proxy = {
-  get(target, p, receiver) {
-    if (typeof p === "symbol") {
-      return Reflect.get(target, p, receiver);
-    }
-    return target[p] ?? core.gettpe(target.id, p);
-  },
-};
+import type { IntegerConstraints } from "../gen/exports/core.d.ts";
+import { NullableOptional } from "./utils/type_utils.ts";
 
 class Tpe {
-  id: number;
-}
+  constructor(public id: number) {}
 
-class Struct extends Tpe {
-}
+  get repr(): string | null {
+    return core.getTypeRepr(this.id);
+  }
 
-export function struct<T extends { [key: string]: Tpe }>(props: T): Struct & T {
-  const tpe = Object.assign(new Struct(), core.structb(Object.entries(props)));
-  return new Proxy<T & Struct>(tpe, proxy);
-}
+  asInteger(): Integer {
+    if (this instanceof Integer) {
+      return this;
+    }
 
-class Integer extends Tpe {
-  _min: number;
+    const typeData = core.typeAsInteger(this.id);
+    if (typeData != null) {
+      return new Integer(this.id, typeData);
+    }
+    throw new Error("Not an integer");
+  }
 
-  min(n: number) {
-    const tpe = Object.assign(new Integer(), core.integermin(this.id, n));
-    return new Proxy<Integer>(tpe, proxy);
+  asStruct(): Struct<Record<string, Tpe>> {
+    if (this instanceof Struct) {
+      return this;
+    }
+
+    const typeData = core.typeAsStruct(this.id);
+    if (typeData != null) {
+      return new Struct(this.id, {
+        ...typeData,
+        props: Object.fromEntries(
+          typeData.props.map(([name, id]) => [name, new Tpe(id)]),
+        ),
+      });
+    }
+    throw new Error("Not a struct");
+  }
+
+  asTpe(): Tpe {
+    return new Tpe(this.id);
   }
 }
 
-export function integer() {
-  const tpe = Object.assign(new Integer(), core.integerb());
-  return new Proxy<Integer>(tpe, proxy);
+class Integer extends Tpe implements Readonly<IntegerConstraints> {
+  readonly min?: number;
+  readonly max?: number;
+
+  constructor(id: number, data: IntegerConstraints) {
+    super(id);
+    this.min = data.min;
+    this.max = data.max;
+  }
+}
+
+export function integer(data: NullableOptional<IntegerConstraints> = {}) {
+  return new Integer(core.integerb(data).id, data);
+}
+
+class Struct<P extends { [key: string]: Tpe }> extends Tpe {
+  props: P;
+  constructor(id: number, { props }: { props: P }) {
+    super(id);
+    this.props = props;
+  }
+}
+
+export function struct<P extends { [key: string]: Tpe }>(props: P): Struct<P> {
+  return new Struct(
+    core.structb({
+      props: Object.entries(props).map(([name, typ]) => [name, typ.id]),
+    }).id,
+    {
+      props,
+    },
+  );
 }

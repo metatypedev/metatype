@@ -1,14 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
+use crate::core::{IntegerConstraints, StructConstraints};
 
 mod typegraph;
 mod types;
 
-use types::{Integer, Struct, TypeFun, T};
-
 use typegraph::tg;
+use types::T;
 
 wit_bindgen::generate!("typegraph");
 
@@ -18,36 +17,48 @@ export_typegraph!(Lib);
 pub struct Lib {}
 
 impl core::Core for Lib {
-    fn integerb() -> core::Tpe {
-        let tpe = T::Integer(Integer {
-            ..Default::default()
-        });
+    fn integerb(data: IntegerConstraints) -> core::Tpe {
+        // print(&serde_json::to_string(&data).unwrap());
+        let tpe = T::Integer(data);
         tg().add(tpe)
     }
 
-    fn integermin(id: u32, n: i32) -> core::Tpe {
-        let mut tg = tg();
-        match tg.get(id) {
-            T::Integer(parent) => {
-                let tpe = T::Integer(Integer {
-                    min: Some(n),
-                    ..*parent
-                });
-                tg.add(tpe)
-            }
-            _ => panic!("not an integer"),
+    fn type_as_integer(id: u32) -> Option<IntegerConstraints> {
+        match tg().get(id) {
+            T::Integer(typ) => Some(*typ),
+            _ => None,
         }
     }
 
-    fn structb(props: Vec<(String, core::Tpe)>) -> core::Tpe {
-        //print(&format!("props: {:?}", props));
-        let props = HashMap::from_iter(props.into_iter().map(|(k, v)| (k, v.id)));
-        let tpe = T::Struct(Struct { props });
+    fn structb(data: StructConstraints) -> core::Tpe {
+        print(&format!("data: {:?}", data));
+        let tpe = T::Struct(data);
         tg().add(tpe)
     }
 
-    fn gettpe(id: u32, field: String) -> Option<core::Tpe> {
+    fn type_as_struct(id: u32) -> Option<StructConstraints> {
+        print(&format!("data: {:?}", tg().get(id)));
+        match tg().get(id) {
+            T::Struct(typ) => Some(typ.clone()),
+            _ => None,
+        }
+    }
+
+    fn get_type_repr(id: u32) -> Option<String> {
         let tg = tg();
-        tg.get(id).getattr(field)
+        match tg.get(id) {
+            T::Integer(v) => {
+                let type_data = [
+                    v.min.map(|min| format!("{min}")),
+                    v.max.map(|max| format!("{max}")),
+                ]
+                .into_iter()
+                .flatten()
+                .collect::<Vec<_>>()
+                .join(", ");
+                Some(format!("integer#{id}({type_data})"))
+            }
+            _ => panic!("not an integer"),
+        }
     }
 }

@@ -11,14 +11,22 @@ interface core {
     u32
   }
 
-  integerb: func() -> tpe
+  record %integer-constraints {
+    min: option<s32>,
+    max: option<s32>,
+  }
 
-  // do a set per wit type, not per typegraph type (similar to gettpe)
-  integermin: func(id: u32, n: s32) -> tpe
+  integerb: func(data: %integer-constraints) -> tpe
+  %type-as-integer: func(id: u32) -> option<%integer-constraints>
 
-  structb: func(props: list<tuple<string, tpe>>) -> tpe
+  record %struct-constraints {
+    props: list<tuple<string, u32>>,
+  }
 
-  gettpe: func(id: u32, field: string) -> option<tpe>
+  structb: func(data: %struct-constraints) -> tpe
+  %type-as-struct: func(id: u32) -> option<%struct-constraints>
+
+  %get-type-repr: func(id: u32) -> option<string>
 }
 
 default world typegraph {
