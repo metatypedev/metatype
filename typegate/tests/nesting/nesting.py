@@ -19,10 +19,10 @@ with TypeGraph("nesting") as g:
     post = t.struct(
         {
             "id": t.integer(),
-            "authorId": t.integer().named("Post.authorId"),
+            "authorId": t.integer().named("Post_authorId"),
             "author": remote.get(
                 "/users/{id}",
-                t.struct({"id": t.integer().from_parent(g("Post.authorId"))}),
+                t.struct({"id": t.integer().from_parent(g("Post_authorId"))}),
                 t.optional(g("User")),
             ),
             "title": t.string(),

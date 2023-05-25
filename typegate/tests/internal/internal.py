@@ -1,7 +1,7 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.deno import DenoRuntime, ModuleMat
 
-with TypeGraph("test-internal") as g:
+with TypeGraph("test_internal") as g:
     public = policies.public()
     internal = policies.internal()
 

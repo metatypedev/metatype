@@ -3,7 +3,7 @@ import os
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.deno import ModuleMat
 
-with TypeGraph("deno-reload") as g:
+with TypeGraph("deno_reload") as g:
     public = policies.public()
     mod = ModuleMat(os.environ["DYNAMIC"])
 

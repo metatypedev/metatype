@@ -278,12 +278,19 @@ export class Q {
         },
       });
     } else {
+      const body = this.formData(files);
+      const length = Array.from(body.entries()).reduce(
+        (acc, [_, v]) => acc + (typeof v === "string" ? v.length : v.size),
+        0,
+      );
+
       return new Request(url, {
         method: "POST",
         body: this.formData(files),
         headers: {
           ...defaults,
           ...headers,
+          "Content-Length": `${length}`,
           // "Content-Type": "multipart/form-data",
         },
       });
