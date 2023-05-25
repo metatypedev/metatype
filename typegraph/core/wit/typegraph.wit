@@ -11,22 +11,32 @@ interface core {
     u32
   }
 
-  record %integer-constraints {
-    min: option<s32>,
-    max: option<s32>,
+  record integer-constraints {
+    min: option<s64>,
+    max: option<s64>,
   }
 
-  integerb: func(data: %integer-constraints) -> tpe
-  %type-as-integer: func(id: u32) -> option<%integer-constraints>
+  integerb: func(data: integer-constraints) -> tpe
+  type-as-integer: func(id: u32) -> option<integer-constraints>
 
-  record %struct-constraints {
+  record struct-constraints {
     props: list<tuple<string, u32>>,
   }
 
-  structb: func(data: %struct-constraints) -> tpe
-  %type-as-struct: func(id: u32) -> option<%struct-constraints>
+  structb: func(data: struct-constraints) -> tpe
+  type-as-struct: func(id: u32) -> option<struct-constraints>
 
-  %get-type-repr: func(id: u32) -> option<string>
+  get-type-repr: func(id: u32) -> string
+
+  record func-constraints {
+    inp: u32,
+    out: u32,
+  }
+  funcb: func(data: func-constraints) -> result<tpe, string>
+
+  expose: func(fns: list<tuple<string, u32>>, namespace: list<string>) -> result<_, string>
+
+  serialize: func() -> result<string, string>
 }
 
 default world typegraph {

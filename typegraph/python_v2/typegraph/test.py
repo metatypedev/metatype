@@ -4,7 +4,7 @@
 from typegraph import t, TypeGraph
 
 
-with TypeGraph(name="test"):
+with TypeGraph(name="test") as g:
     a = t.integer()
     b = t.integer(min=12)
     c = t.integer(min=12, max=43)
@@ -20,5 +20,11 @@ with TypeGraph(name="test"):
             "b": t.integer(),
         }
     )
-
     print(s1)
+
+    f = t.func(s1, a)
+    print(f)
+
+    g.expose(
+        one=t.func(s1, a),
+    )

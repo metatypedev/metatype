@@ -5,13 +5,43 @@ use enum_dispatch::enum_dispatch;
 use serde::Serialize;
 use std::collections::HashMap;
 
-use crate::core::{IntegerConstraints, StructConstraints};
+use crate::core::{FuncConstraints, IntegerConstraints, StructConstraints};
 
 #[derive(Debug)]
 #[enum_dispatch(TypeFun)]
 pub enum T {
     Struct(StructConstraints),
     Integer(IntegerConstraints),
+    Func(FuncConstraints),
+}
+
+impl T {
+    pub fn get_repr(&self, id: u32) -> String {
+        match self {
+            T::Integer(v) => {
+                let data = [
+                    Some(format!("#{id}")),
+                    v.min.map(|min| format!("min={min}")),
+                    v.max.map(|max| format!("max={max}")),
+                ]
+                .into_iter()
+                .flatten()
+                .collect::<Vec<_>>()
+                .join(", ");
+                format!("integer({data})")
+            }
+            T::Struct(v) => {
+                let props = v
+                    .props
+                    .iter()
+                    .map(|(name, tpe_id)| format!("[{name}] => #{tpe_id}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("struct(#{id}, {props})")
+            }
+            T::Func(t) => format!("func(#{id}, #{} => #{})", t.inp, t.out),
+        }
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -29,8 +59,8 @@ impl From<StructConstraints> for Struct {
 
 #[derive(Debug, Default, Serialize, Clone)]
 pub struct Integer {
-    pub min: Option<i32>,
-    pub max: Option<i32>,
+    pub min: Option<i64>,
+    pub max: Option<i64>,
 }
 
 impl From<IntegerConstraints> for Integer {

@@ -1,8 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::core::{IntegerConstraints, StructConstraints};
+use crate::core::{FuncConstraints, IntegerConstraints, StructConstraints};
 
+mod serialize;
 mod typegraph;
 mod types;
 
@@ -44,33 +45,28 @@ impl core::Core for Lib {
         }
     }
 
-    fn get_type_repr(id: u32) -> Option<String> {
-        let tg = tg();
-        match tg.get(id) {
-            T::Integer(v) => {
-                let type_data = [
-                    Some(format!("#{id}")),
-                    v.min.map(|min| format!("min={min}")),
-                    v.max.map(|max| format!("max={max}")),
-                ]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<_>>()
-                .join(", ");
-                Some(format!("integer({type_data})"))
-            }
-            T::Struct(v) => {
-                let mut params = vec![format!("#{id}")];
-                params.reserve(v.props.len());
-
-                let props = v
-                    .props
-                    .iter()
-                    .map(|(name, tpe_id)| format!("[{name}] => #{tpe_id}"))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                Some(format!("struct(#{id}, {props})"))
-            }
+    fn funcb(data: FuncConstraints) -> Result<core::Tpe, String> {
+        let mut tg = tg();
+        let inp_type = tg.get(data.inp);
+        if !matches!(inp_type, T::Struct(_)) {
+            return Err(format!(
+                "Expected a Struct as input type; got {}",
+                tg.get_type_repr(data.inp)
+            ));
         }
+        let tpe = T::Func(data);
+        Ok(tg.add(tpe))
+    }
+
+    fn get_type_repr(id: u32) -> String {
+        tg().get_type_repr(id)
+    }
+
+    fn expose(fns: Vec<(String, u32)>, namespace: Vec<String>) -> Result<(), String> {
+        tg().expose(fns, namespace)
+    }
+
+    fn serialize() -> Result<String, String> {
+        tg().serialize()
     }
 }

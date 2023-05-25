@@ -1,7 +1,12 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph.gen.exports.core import IntegerConstraints, StructConstraints
+from typegraph.gen.exports.core import (
+    IntegerConstraints,
+    StructConstraints,
+    FuncConstraints,
+)
+from typegraph.gen.types import Err
 from typing import Optional, Dict
 from typegraph import TypeGraph
 
@@ -41,3 +46,19 @@ class struct(typedef):
 
         super().__init__(tg, tg.core.structb(tg.store, data).id)
         self.props = props
+
+
+class func(typedef):
+    inp: struct
+    out: typedef
+
+    def __init__(self, inp: struct, out: typedef):
+        tg = TypeGraph.get_active()
+        data = FuncConstraints(inp=inp.id, out=out.id)
+        res = tg.core.funcb(tg.store, data)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        id = res.value.id
+        super().__init__(tg, id)
+        self.inp = inp
+        self.out = out
