@@ -36,6 +36,7 @@ from typegraph.injection import (
 from typegraph.policies import Policy, EffectPolicies
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, asdict
+import re
 
 # if os.environ.get("DEBUG"):
 #     import debugpy
@@ -55,6 +56,13 @@ def remove_none_values(obj):
 def is_optional(tpe: Type):
     # Optional = Union[T, NoneType]
     return get_origin(tpe) is Union and type(None) in get_args(tpe)
+
+
+def validate_name(name: str):
+    invalids = re.findall("[^_A-Za-z0-9]+", name)
+    # print(invalids)
+    if bool(invalids):
+        raise Exception(f'name "{name}" does not match [_A-Za-z0-9]')
 
 
 class Secret(Node):
@@ -170,6 +178,7 @@ class typedef(Node):
         types[name] = self
 
     def named(self, name: str) -> "typedef":
+        validate_name(name)
         ret = self.replace(name=name)
         ret.register_name()
         return ret
@@ -783,6 +792,7 @@ def gen(out: typedef, mat: Materializer, **kwargs) -> func:
 # single instance
 def named(name: str, define: Callable[[], typedef]) -> TypeNode:
     defined = find(name)
+    validate_name(name)
     if defined is not None:
         return defined
     else:

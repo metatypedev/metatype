@@ -16,6 +16,7 @@ from redbaron import AtomtrailersNode, NameNode, RedBaron
 from typegraph import TypeGraph, t
 from typegraph.importers.base.typify import Typify
 from typegraph.types import reserved_types
+from typegraph.utils.sanitizers import as_attr
 
 # TODO: detect indentation size/character from file
 
@@ -45,16 +46,6 @@ class Codegen:
             self.res_hint += "\n"
         else:
             self.res_hint += f"{indent}{line}\n"
-
-
-def as_attr(name: str):
-    """
-    Convert a string into valid attribute\n
-    Example:\n
-    `root:some complicated/Name` => `root_some_complicated_Name`
-    """
-    # return re.sub(r"[^0-9a-zA-Z]+", "_", name)
-    return Box()._safe_attr(name)
 
 
 class Importer:
@@ -142,7 +133,10 @@ class Importer:
         cg.line()
 
         counter = itertools.count(1)
-        renames = {name: f"_{self.name}_{next(counter)}_{name}" for name in self.types}
+        renames = {
+            as_attr(name): f"_{as_attr(self.name)}_{next(counter)}_{as_attr(name)}"
+            for name in self.types
+        }
         renames.update(self.renames)
 
         cg.line(f"renames = {repr(renames)}")
@@ -155,16 +149,17 @@ class Importer:
 
         if len(self.types) > 0:
             for name, tpe in self.types.items():
-                cg.line(f"types[{repr(name)}] = {typify(tpe, name)}")
-                cg.hint_line(f"{as_attr(name)}: t.typedef = ...", 1)
-
+                attr_name = as_attr(name)
+                cg.line(f"types[{repr(attr_name)}] = {typify(tpe, name)}")
+                cg.hint_line(f"{attr_name}: t.typedef = ...", 1)
             cg.line()
 
         cg.line("functions = {}")
         cg.hint_line("class FuncList:")
         for name, fn in self.exposed.items():
-            cg.line(f"functions[{repr(name)}] = {typify(fn)}")
-            cg.hint_line(f"{as_attr(name)}: t.func = ...", 1)
+            attr_name = as_attr(name)
+            cg.line(f"functions[{repr(attr_name)}] = {typify(fn)}")
+            cg.hint_line(f"{attr_name}: t.func = ...", 1)
         cg.line()
 
         cg.hint_line("class Import:")
