@@ -1,8 +1,11 @@
 import { core } from "../gen/typegraph_core.js";
-import type { IntegerConstraints } from "../gen/exports/core.d.ts";
+import * as core_types from "../gen/exports/core.d.ts";
 import { NullableOptional } from "./utils/type_utils.ts";
 
-class Tpe {
+type IntegerConstraints = NullableOptional<core_types.IntegerConstraints>;
+// type StructConstraints = core_types.StructConstraints;
+
+export class Tpe {
   constructor(public id: number) {}
 
   get repr(): string | null {
@@ -31,7 +34,7 @@ class Tpe {
       return new Struct(this.id, {
         ...typeData,
         props: Object.fromEntries(
-          typeData.props.map(([name, id]) => [name, new Tpe(id)]),
+          typeData.props.map(([name, id]) => [name, new Tpe(id as number)]),
         ),
       });
     }
@@ -43,9 +46,9 @@ class Tpe {
   }
 }
 
-class Integer extends Tpe implements Readonly<IntegerConstraints> {
-  readonly min?: number;
-  readonly max?: number;
+export class Integer extends Tpe implements Readonly<IntegerConstraints> {
+  readonly min?: bigint | null;
+  readonly max?: bigint | null;
 
   constructor(id: number, data: IntegerConstraints) {
     super(id);
@@ -54,11 +57,11 @@ class Integer extends Tpe implements Readonly<IntegerConstraints> {
   }
 }
 
-export function integer(data: NullableOptional<IntegerConstraints> = {}) {
+export function integer(data: IntegerConstraints = {}) {
   return new Integer(core.integerb(data).id, data);
 }
 
-class Struct<P extends { [key: string]: Tpe }> extends Tpe {
+export class Struct<P extends { [key: string]: Tpe }> extends Tpe {
   props: P;
   constructor(id: number, { props }: { props: P }) {
     super(id);
@@ -74,5 +77,32 @@ export function struct<P extends { [key: string]: Tpe }>(props: P): Struct<P> {
     {
       props,
     },
+  );
+}
+
+export class Func<
+  P extends { [key: string]: Tpe },
+  I extends Struct<P>,
+  O extends Tpe,
+> extends Tpe {
+  inp: I;
+  out: O;
+
+  constructor(id: number, inp: I, out: O) {
+    super(id);
+    this.inp = inp;
+    this.out = out;
+  }
+}
+
+export function func<
+  P extends { [key: string]: Tpe },
+  I extends Struct<P>,
+  O extends Tpe,
+>(inp: I, out: O) {
+  return new Func(
+    (core.funcb({ inp: inp.id, out: out.id }) as { id: number }).id,
+    inp,
+    out,
   );
 }
