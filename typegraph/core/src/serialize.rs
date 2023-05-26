@@ -79,15 +79,7 @@ impl Converter {
 
     fn register_struct(&mut self, tg: &TypeGraph, id: u32, data: &StructConstraints) -> u32 {
         self.tpe(id, |c| TypeNode::Object {
-            base: TypeNodeBase {
-                config: Default::default(),
-                description: None,
-                enumeration: None,
-                injection: None,
-                policies: Vec::new(),
-                runtime: 0,
-                title: "".to_string(),
-            },
+            base: gen_base(format!("object_{id}")),
             data: ObjectTypeData {
                 properties: data
                     .props
@@ -101,7 +93,7 @@ impl Converter {
 
     fn register_integer(&mut self, _tg: &TypeGraph, id: u32, data: &IntegerConstraints) -> u32 {
         self.tpe(id, |_| TypeNode::Integer {
-            base: gen_base(),
+            base: gen_base(format!("integer_{id}")),
             data: IntegerTypeData {
                 minimum: data.min,
                 maximum: data.max,
@@ -114,7 +106,7 @@ impl Converter {
 
     fn register_func(&mut self, tg: &TypeGraph, id: u32, data: &FuncConstraints) -> u32 {
         self.tpe(id, |c| TypeNode::Function {
-            base: gen_base(),
+            base: gen_base(format!("func_{id}")),
             data: FunctionTypeData {
                 input: c.register_type(tg, data.inp),
                 output: c.register_type(tg, data.out),
@@ -134,7 +126,7 @@ impl Converter {
     }
 }
 
-fn gen_base() -> TypeNodeBase {
+fn gen_base(name: String) -> TypeNodeBase {
     TypeNodeBase {
         config: Default::default(),
         description: None,
@@ -142,6 +134,6 @@ fn gen_base() -> TypeNodeBase {
         injection: None,
         policies: Vec::new(),
         runtime: 0,
-        title: "".to_string(),
+        title: name,
     }
 }
