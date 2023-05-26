@@ -21,14 +21,22 @@ export_typegraph!(Lib);
 pub struct Lib {}
 
 impl core::Core for Lib {
+    fn init_typegraph(name: String) -> Result<(), String> {
+        tg().init_typegraph(name)
+    }
+
+    fn finalize_typegraph() -> Result<String, String> {
+        tg().finalize_typegraph()
+    }
+
     fn integerb(data: IntegerConstraints) -> core::Tpe {
         // print(&serde_json::to_string(&data).unwrap());
         let tpe = T::Integer(data);
-        tg().add(tpe)
+        tg().add_type(tpe)
     }
 
     fn type_as_integer(id: u32) -> Option<IntegerConstraints> {
-        match tg().get(id) {
+        match tg().get_type(id) {
             T::Integer(typ) => Some(*typ),
             _ => None,
         }
@@ -49,12 +57,12 @@ impl core::Core for Lib {
         }
 
         let tpe = T::Struct(data);
-        Ok(tg().add(tpe))
+        Ok(tg().add_type(tpe))
     }
 
     fn type_as_struct(id: u32) -> Option<StructConstraints> {
         // print(&format!("data: {:?}", tg().get(id)));
-        match tg().get(id) {
+        match tg().get_type(id) {
             T::Struct(typ) => Some(typ.clone()),
             _ => None,
         }
@@ -62,7 +70,7 @@ impl core::Core for Lib {
 
     fn funcb(data: FuncConstraints) -> Result<core::Tpe, String> {
         let mut tg = tg();
-        let inp_type = tg.get(data.inp);
+        let inp_type = tg.get_type(data.inp);
         if !matches!(inp_type, T::Struct(_)) {
             return Err(format!(
                 "Expected a Struct as input type; got {}",
@@ -70,7 +78,7 @@ impl core::Core for Lib {
             ));
         }
         let tpe = T::Func(data);
-        Ok(tg.add(tpe))
+        Ok(tg.add_type(tpe))
     }
 
     fn get_type_repr(id: u32) -> String {
@@ -79,9 +87,5 @@ impl core::Core for Lib {
 
     fn expose(fns: Vec<(String, u32)>, namespace: Vec<String>) -> Result<(), String> {
         tg().expose(fns, namespace)
-    }
-
-    fn serialize() -> Result<String, String> {
-        tg().serialize()
     }
 }

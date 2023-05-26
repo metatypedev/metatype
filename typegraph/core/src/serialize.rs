@@ -1,19 +1,26 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::core::{FuncConstraints, IntegerConstraints, StructConstraints};
-use crate::{typegraph::TypeGraph, types::T};
+use crate::core::{FuncConstraints, IntegerConstraints, StructConstraints, Tpe};
+use crate::{
+    typegraph::{ActiveTypegraph, Typegraph},
+    types::T,
+};
 use common::typegraph::types::{
     FunctionTypeData, IntegerTypeData, ObjectTypeData, TypeNode, TypeNodeBase,
 };
 use std::collections::HashMap;
 
-pub fn serialize_typegraph(tg: &crate::typegraph::TypeGraph) -> Result<String, String> {
+pub(crate) fn serialize_typegraph(
+    tg: &Typegraph,
+    tg_meta: ActiveTypegraph,
+    root: Tpe,
+) -> Result<String, String> {
     let serializable_tg = Converter {
         m: Default::default(),
         types: Vec::new(),
     }
-    .convert(tg)?;
+    .convert(tg, tg_meta, root)?;
     serde_json::to_string(&serializable_tg).map_err(|e| e.to_string())
 }
 
@@ -29,8 +36,13 @@ struct Converter {
 }
 
 impl Converter {
-    fn convert(mut self, tg: &TypeGraph) -> Result<common::typegraph::Typegraph, String> {
-        self.register_struct(tg, 0, &tg.root_type());
+    fn convert(
+        mut self,
+        tg: &Typegraph,
+        _tg_meta: ActiveTypegraph,
+        root: Tpe,
+    ) -> Result<common::typegraph::Typegraph, String> {
+        self.register_type(tg, root.id);
 
         let mut types = Vec::new();
         types.reserve(self.types.len());
@@ -68,16 +80,16 @@ impl Converter {
         })
     }
 
-    fn register_type(&mut self, tg: &TypeGraph, id: u32) -> u32 {
-        let tpe = tg.get(id);
+    fn register_type(&mut self, tg: &Typegraph, id: u32) -> u32 {
+        let tpe = tg.get_type(id);
         match tpe {
-            T::Struct(data) => self.register_struct(tg, id, data),
-            T::Integer(data) => self.register_integer(tg, id, data),
-            T::Func(data) => self.register_func(tg, id, data),
+            T::Struct(data) => self.register_struct(tg, id, &data),
+            T::Integer(data) => self.register_integer(tg, id, &data),
+            T::Func(data) => self.register_func(tg, id, &data),
         }
     }
 
-    fn register_struct(&mut self, tg: &TypeGraph, id: u32, data: &StructConstraints) -> u32 {
+    fn register_struct(&mut self, tg: &Typegraph, id: u32, data: &StructConstraints) -> u32 {
         self.tpe(id, |c| TypeNode::Object {
             base: gen_base(format!("object_{id}")),
             data: ObjectTypeData {
@@ -91,7 +103,7 @@ impl Converter {
         })
     }
 
-    fn register_integer(&mut self, _tg: &TypeGraph, id: u32, data: &IntegerConstraints) -> u32 {
+    fn register_integer(&mut self, _tg: &Typegraph, id: u32, data: &IntegerConstraints) -> u32 {
         self.tpe(id, |_| TypeNode::Integer {
             base: gen_base(format!("integer_{id}")),
             data: IntegerTypeData {
@@ -104,7 +116,7 @@ impl Converter {
         })
     }
 
-    fn register_func(&mut self, tg: &TypeGraph, id: u32, data: &FuncConstraints) -> u32 {
+    fn register_func(&mut self, tg: &Typegraph, id: u32, data: &FuncConstraints) -> u32 {
         self.tpe(id, |c| TypeNode::Function {
             base: gen_base(format!("func_{id}")),
             data: FunctionTypeData {

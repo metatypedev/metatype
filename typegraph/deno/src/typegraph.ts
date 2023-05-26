@@ -20,7 +20,9 @@ import { core } from "../gen/typegraph_core.js";
 // };
 
 class TypeGraph {
-  constructor(public name: string) {}
+  constructor(public name: string) {
+    core.initTypegraph(name);
+  }
 
   expose(exports: { [key: string]: t.Func }) {
     // const { defaultPolicy } = exports;
@@ -31,10 +33,23 @@ class TypeGraph {
   }
 }
 
-function typegraph(name, builder: (g: TypeGraph) => void) {
+const a = t.integer();
+const b = t.integer({ min: 12n });
+const c = t.integer({ min: 12n, max: 43n });
+console.log(a.repr);
+console.log(b.repr);
+console.log(c.repr);
+
+const s1 = t.struct({ a, b: t.integer() });
+console.log(s1.repr);
+
+const f = t.func(s1, a);
+console.log(f.repr);
+
+function typegraph(name: string, builder: (g: TypeGraph) => void) {
   const g = new TypeGraph(name);
   builder(g);
-  console.log(core.serialize());
+  console.log(core.finalizeTypegraph());
 }
 
 typegraph("name", (g) => {
@@ -44,19 +59,6 @@ typegraph("name", (g) => {
   //   a: new Func(new Struct({}), new Struct({}), new PureFunc()),
   //   defaultPolicy: pub,
   // });
-
-  const a = t.integer();
-  const b = t.integer({ min: 12n });
-  const c = t.integer({ min: 12n, max: 43n });
-  console.log(a.repr);
-  console.log(b.repr);
-  console.log(c.repr);
-
-  const s1 = t.struct({ a, b: t.integer() });
-  console.log(s1.repr);
-
-  const f = t.func(s1, a);
-  console.log(f.repr);
 
   g.expose({
     one: t.func(s1, a),

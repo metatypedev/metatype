@@ -1,5 +1,9 @@
 
 interface core {
+
+  init-typegraph: func(name: string) -> result<_, string>
+  finalize-typegraph: func() -> result<string, string>
+
   record tpe {
     id: u32
   }
@@ -35,8 +39,6 @@ interface core {
   funcb: func(data: func-constraints) -> result<tpe, string>
 
   expose: func(fns: list<tuple<string, u32>>, namespace: list<string>) -> result<_, string>
-
-  serialize: func() -> result<string, string>
 }
 
 default world typegraph {

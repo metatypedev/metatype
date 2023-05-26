@@ -8,19 +8,17 @@ from typegraph.gen.exports.core import (
 )
 from typegraph.gen.types import Err
 from typing import Optional, Dict
-from typegraph import TypeGraph
+from typegraph.graph.typegraph import TypeGraph, core, store
 
 
 class typedef:
     id: int
-    tg: TypeGraph
 
-    def __init__(self, tg: TypeGraph, id: int):
-        self.tg = tg
+    def __init__(self, id: int):
         self.id = id
 
     def __repr__(self):
-        return self.tg.core.get_type_repr(self.tg.store, self.id)
+        return core.get_type_repr(store, self.id)
 
 
 class integer(typedef):
@@ -28,9 +26,8 @@ class integer(typedef):
     max: Optional[int] = None
 
     def __init__(self, *, min: Optional[int] = None, max: Optional[int] = None):
-        tg = TypeGraph.get_active()
         data = IntegerConstraints(min=min, max=max)
-        super().__init__(tg, tg.core.integerb(tg.store, data).id)
+        super().__init__(core.integerb(store, data).id)
         self.min = min
         self.max = max
 
@@ -39,15 +36,14 @@ class struct(typedef):
     props: Dict[str, typedef]
 
     def __init__(self, props: Dict[str, typedef]):
-        tg = TypeGraph.get_active()
         data = StructConstraints(
             props=list((name, tpe.id) for (name, tpe) in props.items())
         )
 
-        res = tg.core.structb(tg.store, data)
+        res = core.structb(store, data)
         if isinstance(res, Err):
             raise Exception(res.value)
-        super().__init__(tg, res.value.id)
+        super().__init__(res.value.id)
         self.props = props
 
 
@@ -56,12 +52,11 @@ class func(typedef):
     out: typedef
 
     def __init__(self, inp: struct, out: typedef):
-        tg = TypeGraph.get_active()
         data = FuncConstraints(inp=inp.id, out=out.id)
-        res = tg.core.funcb(tg.store, data)
+        res = core.funcb(store, data)
         if isinstance(res, Err):
             raise Exception(res.value)
         id = res.value.id
-        super().__init__(tg, id)
+        super().__init__(id)
         self.inp = inp
         self.out = out
