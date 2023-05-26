@@ -1,4 +1,5 @@
 from box import Box
+
 from typegraph import TypeGraph, t
 from typegraph.importers.base.importer import Import
 from typegraph.importers.openapi import OpenApiImporter
@@ -228,5 +229,5 @@ def import_petstore():
     )
 
 
-with TypeGraph(name="petstore-v3") as g:
+with TypeGraph(name="petstore_v3") as g:
     pass

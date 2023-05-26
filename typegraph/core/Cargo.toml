@@ -1,6 +1,6 @@
 [package]
 name = "typegraph_core"
-version = "0.1.9-dev.0"
+version = "0.1.9"
 edition = "2021"
 
 
