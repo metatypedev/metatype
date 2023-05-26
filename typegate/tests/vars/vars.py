@@ -1,7 +1,7 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.deno import PureFunMat
 
-with TypeGraph("test_vars") as g:
+with TypeGraph("test-vars") as g:
     g.expose(
         add=t.func(
             t.struct(

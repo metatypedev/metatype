@@ -125,7 +125,8 @@ class TypeGraph:
                     assert_no_effect_materializers(e)
 
         with self:
-            root = t.struct(self.exposed).named(self.name)
+            # allow all characters for the root entry-point
+            root = t.struct(self.exposed).named(self.name, validate=False)
 
         root._propagate_runtime(DenoRuntime())
 
