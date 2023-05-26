@@ -60,12 +60,6 @@ impl Typegraph {
         self.get_type(id).get_repr(id)
     }
 
-    pub fn active_typegraph(&self) -> Result<&ActiveTypegraph, String> {
-        self.active_typegraph
-            .as_ref()
-            .ok_or_else(|| "No active typegraph context".to_string())
-    }
-
     pub fn take_active_typegraph(&mut self) -> Result<ActiveTypegraph, String> {
         self.active_typegraph
             .take()

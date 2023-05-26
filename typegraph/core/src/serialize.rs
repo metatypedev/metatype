@@ -53,7 +53,7 @@ impl Converter {
 
         use common::typegraph::{Cors, TypeMeta};
 
-        let version = "0.0.2".to_string();
+        let version = "0.0.1".to_string();
 
         Ok(common::typegraph::Typegraph {
             id: format!("https://metatype.dev/specs/{version}.json"),
@@ -83,9 +83,9 @@ impl Converter {
     fn register_type(&mut self, tg: &Typegraph, id: u32) -> u32 {
         let tpe = tg.get_type(id);
         match tpe {
-            T::Struct(data) => self.register_struct(tg, id, &data),
-            T::Integer(data) => self.register_integer(tg, id, &data),
-            T::Func(data) => self.register_func(tg, id, &data),
+            T::Struct(data) => self.register_struct(tg, id, data),
+            T::Integer(data) => self.register_integer(tg, id, data),
+            T::Func(data) => self.register_func(tg, id, data),
         }
     }
 

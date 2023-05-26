@@ -4,8 +4,16 @@
 use enum_dispatch::enum_dispatch;
 use serde::Serialize;
 use std::collections::HashMap;
+use std::fmt::Display;
 
-use crate::core::{FuncConstraints, IntegerConstraints, StructConstraints};
+use crate::core::{FuncConstraints, IntegerConstraints, StructConstraints, Tpe};
+use crate::typegraph::tg;
+
+impl Display for Tpe {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&tg().get_type_repr(self.id))
+    }
+}
 
 #[derive(Debug)]
 #[enum_dispatch(TypeFun)]
