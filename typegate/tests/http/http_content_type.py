@@ -1,7 +1,7 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.http import HTTPRuntime
 
-with TypeGraph("content-type") as g:
+with TypeGraph("content_type") as g:
     remote = HTTPRuntime("https://content-type.example.com/api")
     public = policies.public()
 

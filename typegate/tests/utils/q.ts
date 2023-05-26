@@ -156,6 +156,14 @@ export class Q {
     });
   }
 
+  withoutHeaders(headers: Array<string>) {
+    return this.clone((q) => {
+      for (const name of headers) {
+        q.headers[name] = "NULL";
+      }
+    });
+  }
+
   expect(expect: Expect) {
     return this.clone((q) => {
       q.expects = [...q.expects, expect];
@@ -171,8 +179,13 @@ export class Q {
   expectBody(expect: (body: any) => Promise<void> | void) {
     return this.expect(async (res) => {
       try {
-        const json = await res.json();
-        await expect(json);
+        if (res.headers.get("Content-Type") === "application/json") {
+          const json = await res.json();
+          await expect(json);
+        } else {
+          const text = await res.text();
+          await expect(text);
+        }
       } catch (error) {
         console.error(
           `cannot expect json body with status ${res.status}: ${error}`,
@@ -264,26 +277,54 @@ export class Q {
       defaults["Authorization"] = await this.contextEncoder(context);
     }
 
+    const clean = (headers: Record<string, string>) => {
+      for (const [k, v] of Object.entries(headers)) {
+        if (v === "NULL") {
+          delete headers[k];
+        }
+      }
+      return headers;
+    };
+
+    const getContentLength = (length: number) => {
+      for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === "content-length") {
+          // skip if exist
+          return {};
+        }
+      }
+      return { "Content-Length": `${length}` } as Record<string, string>;
+    };
+
     const files = this.extractFilesFromVars();
     if (files.size === 0) {
+      const body = JSON.stringify(this.json());
       return new Request(url, {
         method: "POST",
-        body: JSON.stringify(this.json()),
-        headers: {
+        body,
+        headers: clean({
           ...defaults,
           ...headers,
+          ...getContentLength(body.length),
           "Content-Type": "application/json",
-        },
+        }),
       });
     } else {
+      const body = this.formData(files);
+      const length = Array.from(body.entries()).reduce(
+        (acc, [_, v]) => acc + (typeof v === "string" ? v.length : v.size),
+        0,
+      );
+
       return new Request(url, {
         method: "POST",
-        body: this.formData(files),
-        headers: {
+        body,
+        headers: clean({
           ...defaults,
           ...headers,
+          ...getContentLength(length),
           // "Content-Type": "multipart/form-data",
-        },
+        }),
       });
     }
   }

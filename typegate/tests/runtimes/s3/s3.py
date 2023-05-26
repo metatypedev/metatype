@@ -1,7 +1,7 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.providers.aws.runtimes.s3 import S3Runtime
 
-with TypeGraph(name="s3-test") as g:
+with TypeGraph(name="s3_test") as g:
     public = policies.public()
 
     s3 = S3Runtime(
