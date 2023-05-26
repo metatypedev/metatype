@@ -177,8 +177,9 @@ class typedef(Node):
             )
         types[name] = self
 
-    def named(self, name: str) -> "typedef":
-        validate_name(name)
+    def named(self, name: str, validate=True) -> "typedef":
+        if validate:
+            validate_name(name)
         ret = self.replace(name=name)
         ret.register_name()
         return ret
