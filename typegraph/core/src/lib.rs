@@ -1,7 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::collections::HashSet;
+
 use crate::core::{FuncConstraints, IntegerConstraints, StructConstraints};
+use regex::Regex;
 
 mod serialize;
 mod typegraph;
@@ -31,10 +34,22 @@ impl core::Core for Lib {
         }
     }
 
-    fn structb(data: StructConstraints) -> core::Tpe {
-        // print(&format!("data: {:?}", data));
+    fn structb(data: StructConstraints) -> Result<core::Tpe, String> {
+        let mut prop_names = HashSet::new();
+        let re = Regex::new(r"^[_a-zA-Z]+$")
+            .map_err(|err| format!("Could not compile Regex: {err:?}"))?;
+        for (name, _) in data.props.iter() {
+            if !re.is_match(name) {
+                return Err(format!("'{name}' is not a valid property key: keys can only contain letters and underscore"));
+            }
+            if prop_names.contains(name) {
+                return Err(format!("Duplicate key '{name}' in struct props"));
+            }
+            prop_names.insert(name.clone());
+        }
+
         let tpe = T::Struct(data);
-        tg().add(tpe)
+        Ok(tg().add(tpe))
     }
 
     fn type_as_struct(id: u32) -> Option<StructConstraints> {

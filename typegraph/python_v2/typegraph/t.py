@@ -44,7 +44,10 @@ class struct(typedef):
             props=list((name, tpe.id) for (name, tpe) in props.items())
         )
 
-        super().__init__(tg, tg.core.structb(tg.store, data).id)
+        res = tg.core.structb(tg.store, data)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(tg, res.value.id)
         self.props = props
 
 

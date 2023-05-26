@@ -23,7 +23,7 @@ interface core {
     props: list<tuple<string, u32>>,
   }
 
-  structb: func(data: struct-constraints) -> tpe
+  structb: func(data: struct-constraints) -> result<tpe, string>
   type-as-struct: func(id: u32) -> option<struct-constraints>
 
   get-type-repr: func(id: u32) -> string
