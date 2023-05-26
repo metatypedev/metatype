@@ -7549,6 +7549,7 @@ dependencies = [
  "common",
  "enum_dispatch",
  "indexmap",
+ "insta",
  "once_cell",
  "regex",
  "serde",

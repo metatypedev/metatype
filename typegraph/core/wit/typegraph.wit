@@ -20,7 +20,7 @@ interface core {
     max: option<s64>,
   }
 
-  integerb: func(data: integer-constraints) -> tpe
+  integerb: func(data: integer-constraints) -> result<tpe, string>
   type-as-integer: func(id: u32) -> option<integer-constraints>
 
   record struct-constraints {

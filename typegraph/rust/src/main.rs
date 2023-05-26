@@ -8,12 +8,14 @@ fn main() {
     let a = t::integerb(IntegerConstraints {
         min: None,
         max: None,
-    });
+    })
+    .unwrap();
     println!("{a}");
     let b = t::integerb(IntegerConstraints {
         min: Some(12),
         max: None,
-    });
+    })
+    .unwrap();
     println!("{b}");
 
     let s1 = t::structb(StructConstraints {

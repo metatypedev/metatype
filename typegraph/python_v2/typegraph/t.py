@@ -8,7 +8,7 @@ from typegraph.gen.exports.core import (
 )
 from typegraph.gen.types import Err
 from typing import Optional, Dict
-from typegraph.graph.typegraph import TypeGraph, core, store
+from typegraph.graph.typegraph import core, store
 
 
 class typedef:
@@ -27,7 +27,10 @@ class integer(typedef):
 
     def __init__(self, *, min: Optional[int] = None, max: Optional[int] = None):
         data = IntegerConstraints(min=min, max=max)
-        super().__init__(core.integerb(store, data).id)
+        res = core.integerb(store, data)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value.id)
         self.min = min
         self.max = max
 

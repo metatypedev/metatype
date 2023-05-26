@@ -18,5 +18,8 @@ regex = "1.8.3"
 indexmap = { version = "1.9.3", features = ["serde"] }
 common = { path = "../../libs/common" }
 
+[dev-dependencies]
+insta = "1.29.0"
+
 [features]
 wasm = []

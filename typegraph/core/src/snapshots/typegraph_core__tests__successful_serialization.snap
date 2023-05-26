@@ -1,0 +1,5 @@
+---
+source: typegraph/core/src/lib.rs
+expression: typegraph
+---
+{"$id":"https://metatype.dev/specs/0.0.1.json","types":[{"type":"object","title":"object_4","runtime":0,"policies":[],"config":{},"properties":{"one":1},"required":[]},{"type":"function","title":"func_3","runtime":0,"policies":[],"config":{},"input":2,"output":5,"materializer":0,"rate_weight":null,"rate_calls":false},{"type":"object","title":"object_2","runtime":0,"policies":[],"config":{},"properties":{"one":3,"two":4},"required":[]},{"type":"integer","title":"integer_0","runtime":0,"policies":[],"config":{}},{"type":"integer","title":"integer_1","runtime":0,"policies":[],"config":{},"minimum":12,"maximum":44},{"type":"integer","title":"integer_1","runtime":0,"policies":[],"config":{},"minimum":12,"maximum":44}],"materializers":[],"runtimes":[],"policies":[],"meta":{"secrets":[],"cors":{"allow_origin":[],"allow_headers":[],"expose_headers":[],"allow_methods":[],"allow_credentials":false,"max_age_sec":null},"auths":[],"rate":null,"version":"0.0.1"}}
