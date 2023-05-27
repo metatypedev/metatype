@@ -2,80 +2,101 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use enum_dispatch::enum_dispatch;
-use serde::Serialize;
-use std::collections::HashMap;
 use std::fmt::Display;
 
-use crate::core::{FuncConstraints, IntegerConstraints, StructConstraints, Tpe};
-use crate::typegraph::tg;
+use crate::{
+    core::{TypeBase, TypeFunc, TypeId, TypeInteger, TypeRef, TypeStruct},
+    errors::Result,
+    global_store::{store, Store},
+};
 
-impl Display for Tpe {
+impl Display for TypeRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&tg().get_type_repr(self.id))
+        match self {
+            TypeRef::Id(id) => write!(f, "#{id}"),
+            TypeRef::Name(name) => write!(f, "#{name}"),
+        }
+    }
+}
+
+impl TypeRef {
+    pub fn resolve(&self, s: &Store) -> Result<TypeId> {
+        s.resolve_ref(self.clone())
+    }
+
+    pub fn repr(&self) -> Result<String> {
+        let s = store();
+        s.get_type_repr(self.resolve(&s)?)
+    }
+}
+
+impl From<TypeId> for TypeRef {
+    fn from(val: TypeId) -> Self {
+        TypeRef::Id(val)
+    }
+}
+
+#[allow(clippy::derivable_impls)]
+impl Default for TypeBase {
+    fn default() -> Self {
+        Self { name: None }
     }
 }
 
 #[derive(Debug)]
+pub struct Struct(pub TypeBase, pub TypeStruct);
+
+#[derive(Debug)]
+pub struct Integer(pub TypeBase, pub TypeInteger);
+
+#[derive(Debug)]
+pub struct Func(pub TypeBase, pub TypeFunc);
+
+#[derive(Debug)]
 #[enum_dispatch(TypeFun)]
 pub enum T {
-    Struct(StructConstraints),
-    Integer(IntegerConstraints),
-    Func(FuncConstraints),
+    Struct(Struct),
+    Integer(Integer),
+    Func(Func),
 }
 
-impl T {
-    pub fn get_repr(&self, id: u32) -> String {
-        match self {
-            T::Integer(v) => {
-                let data = [
-                    Some(format!("#{id}")),
-                    v.min.map(|min| format!("min={min}")),
-                    v.max.map(|max| format!("max={max}")),
-                ]
-                .into_iter()
-                .flatten()
-                .collect::<Vec<_>>()
-                .join(", ");
-                format!("integer({data})")
-            }
-            T::Struct(v) => {
-                let props = v
-                    .props
-                    .iter()
-                    .map(|(name, tpe_id)| format!("[{name}] => #{tpe_id}"))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                format!("struct(#{id}, {props})")
-            }
-            T::Func(t) => format!("func(#{id}, #{} => #{})", t.inp, t.out),
-        }
+#[enum_dispatch]
+pub trait TypeFun {
+    fn get_repr(&self, id: TypeId) -> String;
+}
+
+impl TypeFun for Integer {
+    fn get_repr(&self, id: TypeId) -> String {
+        let c = self.1;
+        let data = [
+            Some(format!("#{id}")),
+            c.min.map(|min| format!("min={min}")),
+            c.max.map(|max| format!("max={max}")),
+        ]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>()
+        .join(", ");
+        format!("integer({data})")
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
-pub struct Struct {
-    pub props: HashMap<String, u32>,
-}
-
-impl From<StructConstraints> for Struct {
-    fn from(value: StructConstraints) -> Self {
-        Self {
-            props: value.props.into_iter().collect(),
-        }
+impl TypeFun for Struct {
+    fn get_repr(&self, id: TypeId) -> String {
+        let c = &self.1;
+        let props = c
+            .props
+            .iter()
+            .map(|(name, tpe_id)| format!("[{name}] => #{tpe_id}"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!("struct(#{id}, {props})")
     }
 }
 
-#[derive(Debug, Default, Serialize, Clone)]
-pub struct Integer {
-    pub min: Option<i64>,
-    pub max: Option<i64>,
-}
-
-impl From<IntegerConstraints> for Integer {
-    fn from(value: IntegerConstraints) -> Self {
-        Self {
-            min: value.min,
-            max: value.max,
-        }
+impl TypeFun for Func {
+    fn get_repr(&self, id: TypeId) -> String {
+        let c = &self.1;
+        format!("func(#{id}, #{} => #{})", c.inp, c.out)
     }
 }

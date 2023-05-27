@@ -140,6 +140,19 @@ jobs:
           poetry install
           pytest -s tests
 
+  test-typegraph2:
+    needs:
+      - changes
+    if: ${{ needs.changes.outputs.typegraph == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
+      - run: cargo test --package typegraph_core -- --test-threads=1
+
   test-meta-cli:
     needs: changes
     if: ${{ needs.changes.outputs.meta-cli == 'true' || needs.changes.outputs.typegraph == 'true' || needs.changes.outputs.typegate == 'true' || needs.changes.outputs.rust == 'true' }}

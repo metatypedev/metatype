@@ -1,44 +1,50 @@
 
 interface core {
 
-  init-typegraph: func(name: string) -> result<_, string>
-  finalize-typegraph: func() -> result<string, string>
+  type error = string
 
-  record tpe {
-    id: u32
+  record typegraph-init-params {
+    name: string,
   }
 
-  union out {
-    tpe,
-    string,
-    s32,
-    u32
+  init-typegraph: func(params: typegraph-init-params) -> result<_, error>
+  finalize-typegraph: func() -> result<string, error>
+
+  type type-id = u32
+
+  variant type-ref {
+    id(type-id),
+    name(string),
   }
 
-  record integer-constraints {
+  record type-base {
+    name: option<string>,
+  }
+
+  record type-integer {
     min: option<s64>,
     max: option<s64>,
   }
 
-  integerb: func(data: integer-constraints) -> result<tpe, string>
-  type-as-integer: func(id: u32) -> option<integer-constraints>
+  integerb: func(data: type-integer) -> result<type-id, error>
+  type-as-integer: func(ref: type-ref) -> result<tuple<type-id, type-base, type-integer>, error>
 
-  record struct-constraints {
-    props: list<tuple<string, u32>>,
+  record type-struct {
+    props: list<tuple<string, type-ref>>,
   }
 
-  structb: func(data: struct-constraints) -> result<tpe, string>
-  type-as-struct: func(id: u32) -> option<struct-constraints>
+  structb: func(data: type-struct) -> result<type-id, error>
+  type-as-struct: func(id: type-ref) -> result<tuple<type-id, type-base, type-struct>, error>
 
-  get-type-repr: func(id: u32) -> string
+  get-type-repr: func(id: type-ref) -> result<string, error>
 
-  record func-constraints {
-    inp: u32,
-    out: u32,
+  record type-func {
+    inp: type-ref,
+    out: type-ref,
   }
-  funcb: func(data: func-constraints) -> result<tpe, string>
+  funcb: func(data: type-func) -> result<type-id, error>
 
-  expose: func(fns: list<tuple<string, u32>>, namespace: list<string>) -> result<_, string>
+  expose: func(fns: list<tuple<string, type-ref>>, namespace: list<string>) -> result<_, error>
 }
 
 default world typegraph {

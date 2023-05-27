@@ -1,37 +1,42 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use typegraph_core::core::{Core, FuncConstraints, IntegerConstraints, StructConstraints};
+use typegraph_core::core::{Core, TypeFunc, TypeInteger, TypeRef, TypeStruct, TypegraphInitParams};
 use typegraph_core::Lib as t;
 
-fn main() {
-    let a = t::integerb(IntegerConstraints {
+fn main() -> Result<(), String> {
+    let a = t::integerb(TypeInteger {
         min: None,
         max: None,
     })
     .unwrap();
-    println!("{a}");
-    let b = t::integerb(IntegerConstraints {
+    println!("{}", TypeRef::Id(a).repr()?);
+    let b = t::integerb(TypeInteger {
         min: Some(12),
         max: None,
     })
     .unwrap();
-    println!("{b}");
+    println!("{}", TypeRef::Id(b).repr()?);
 
-    let s1 = t::structb(StructConstraints {
-        props: vec![("a".to_string(), a.id), ("b".to_string(), b.id)],
+    let s1 = t::structb(TypeStruct {
+        props: vec![("a".to_string(), a.into()), ("b".to_string(), b.into())],
     })
     .unwrap();
-    println!("{s1}");
+    println!("{}", TypeRef::Id(s1).repr()?);
 
-    let f = t::funcb(FuncConstraints {
-        inp: s1.id,
-        out: a.id,
+    let f = t::funcb(TypeFunc {
+        inp: s1.into(),
+        out: a.into(),
     })
     .unwrap();
-    println!("{f}");
+    println!("{}", TypeRef::Id(f).repr()?);
 
-    t::init_typegraph("test".to_string()).unwrap();
-    t::expose(vec![("one".to_string(), f.id)], vec![]).unwrap();
+    t::init_typegraph(TypegraphInitParams {
+        name: "test".to_string(),
+    })
+    .unwrap();
+    t::expose(vec![("one".to_string(), f.into())], vec![]).unwrap();
     println!("{}", t::finalize_typegraph().unwrap());
+
+    Ok(())
 }
