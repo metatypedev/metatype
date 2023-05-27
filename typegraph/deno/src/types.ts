@@ -2,14 +2,18 @@ import { core } from "../gen/typegraph_core.js";
 import * as core_types from "../gen/exports/core.d.ts";
 import { NullableOptional } from "./utils/type_utils.ts";
 
-type IntegerConstraints = NullableOptional<core_types.IntegerConstraints>;
+type TypeInteger = NullableOptional<core_types.TypeInteger>;
 // type StructConstraints = core_types.StructConstraints;
+
+export function ref(tpe: Tpe): core_types.TypeRef {
+  return { tag: "id", val: tpe.id };
+}
 
 export class Tpe {
   constructor(public id: number) {}
 
   get repr(): string | null {
-    return core.getTypeRepr(this.id);
+    return core.getTypeRepr({ tag: "id", val: this.id });
   }
 
   asInteger(): Integer {
@@ -46,19 +50,19 @@ export class Tpe {
   }
 }
 
-export class Integer extends Tpe implements Readonly<IntegerConstraints> {
+export class Integer extends Tpe implements Readonly<TypeInteger> {
   readonly min?: bigint | null;
   readonly max?: bigint | null;
 
-  constructor(id: number, data: IntegerConstraints) {
+  constructor(id: number, data: TypeInteger) {
     super(id);
     this.min = data.min;
     this.max = data.max;
   }
 }
 
-export function integer(data: IntegerConstraints = {}) {
-  return new Integer(core.integerb(data).id, data);
+export function integer(data: TypeInteger = {}) {
+  return new Integer(core.integerb(data) as number, data);
 }
 
 export class Struct<P extends { [key: string]: Tpe }> extends Tpe {
@@ -72,8 +76,8 @@ export class Struct<P extends { [key: string]: Tpe }> extends Tpe {
 export function struct<P extends { [key: string]: Tpe }>(props: P): Struct<P> {
   return new Struct(
     core.structb({
-      props: Object.entries(props).map(([name, typ]) => [name, typ.id]),
-    }).id,
+      props: Object.entries(props).map(([name, typ]) => [name, ref(typ)]),
+    }) as number,
     {
       props,
     },
@@ -101,7 +105,7 @@ export function func<
   O extends Tpe,
 >(inp: I, out: O) {
   return new Func(
-    (core.funcb({ inp: inp.id, out: out.id }) as { id: number }).id,
+    core.funcb({ inp: ref(inp), out: ref(out) }) as number,
     inp,
     out,
   );

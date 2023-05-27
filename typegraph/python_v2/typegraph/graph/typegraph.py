@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph.gen.exports.core import Core
+from typegraph.gen.exports.core import Core, TypegraphInitParams, TypeRefId
 from typegraph.gen.types import Err
 from wasmtime import Store
 from typegraph.gen import TypegraphCore
@@ -23,7 +23,7 @@ class TypeGraph:
 
     def __enter__(self):
         self._context.append(self)
-        core.init_typegraph(store, self.name)
+        core.init_typegraph(store, TypegraphInitParams(self.name))
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
@@ -41,7 +41,7 @@ class TypeGraph:
         return cls._context[-1]
 
     def expose(self, **kwargs: "t.func"):
-        lst = list((name, fn.id) for (name, fn) in kwargs.items())
+        lst = list((name, TypeRefId(fn.id)) for (name, fn) in kwargs.items())
         res = core.expose(store, lst, [])
         if isinstance(res, Err):
             raise Exception(res.value)

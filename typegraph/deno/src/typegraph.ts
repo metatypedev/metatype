@@ -21,13 +21,13 @@ import { core } from "../gen/typegraph_core.js";
 
 class TypeGraph {
   constructor(public name: string) {
-    core.initTypegraph(name);
+    core.initTypegraph({ name });
   }
 
   expose(exports: { [key: string]: t.Func }) {
     // const { defaultPolicy } = exports;
     core.expose(
-      Object.entries(exports).map(([name, fn]) => [name, fn.id]),
+      Object.entries(exports).map(([name, fn]) => [name, t.ref(fn)]),
       [],
     );
   }
