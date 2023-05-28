@@ -164,6 +164,22 @@ test("Auth", async (t) => {
     assertEquals(await decrypt(claims.refreshToken as string), refreshToken);
   });
 
+  await t.should("take jwt after oauth2 flow", async () => {
+    const headers = new Headers();
+    const token = "very-secret";
+    const redirectUri = "http://localhost:3000";
+    const cookie = await encrypt(JSON.stringify({ token, redirectUri }));
+    headers.set("cookie", `test_auth=${cookie}`);
+    const req = new Request(
+      `http://typegate.local/test_auth/auth/take`,
+      { headers },
+    );
+    const res = await execute(e, req);
+    assertEquals(res.status, 200);
+    const { token: takenToken } = await res.json();
+    assertEquals(takenToken, token);
+  });
+
   await t.should("retrieve oauth2 profile", async () => {
     const token = "very-secret";
     const login = "zifeo";

@@ -68,18 +68,19 @@ export class OAuth2Auth extends Protocol {
     // callback
     if (query.code && query.state) {
       try {
-        const { state, codeVerifier, redirectUri } = await getEncryptedCookie(
-          request.headers,
-          this.typegraphName,
-        );
+        const { state, codeVerifier, userRedirectUri } =
+          await getEncryptedCookie(
+            request.headers,
+            this.typegraphName,
+          );
         const tokens = await client.code.getToken(url, { state, codeVerifier });
         const token = await this.createJWT(tokens);
         const headers = await setEncryptedSessionCookie(
           url.hostname,
           this.typegraphName,
-          { token, redirectUri },
+          { token, redirectUri: userRedirectUri },
         );
-        headers.set("location", redirectUri as string);
+        headers.set("location", userRedirectUri as string);
         return new Response(null, {
           status: 302,
           headers,
@@ -96,7 +97,9 @@ export class OAuth2Auth extends Protocol {
     }
 
     // initiate
-    if (query.redirect_uri) {
+    const userRedirectUri = request.headers.get("origin") ??
+      query.redirect_uri;
+    if (userRedirectUri) {
       const state = randomUUID();
       const { codeVerifier, uri } = await client.code.getAuthorizationUri({
         state,
@@ -104,7 +107,7 @@ export class OAuth2Auth extends Protocol {
       const loginState = {
         state,
         codeVerifier,
-        redirectUri: query.redirect_uri,
+        userRedirectUri,
       };
       const headers = await setEncryptedSessionCookie(
         url.hostname,
@@ -118,7 +121,7 @@ export class OAuth2Auth extends Protocol {
       });
     }
 
-    return new Response("missing redirect_uri query parameter", {
+    return new Response("missing origin or redirect_uri query parameter", {
       status: 400,
     });
   }
@@ -146,6 +149,7 @@ export class OAuth2Auth extends Protocol {
     if (!jwt) {
       return [{}, new Headers({ [nextAuthorizationHeader]: "" })];
     }
+
     const { refreshToken, ...claims } = jwt;
 
     if (new Date().valueOf() / 1000 > claims.refreshAt) {
