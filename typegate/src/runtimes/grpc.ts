@@ -19,31 +19,43 @@ export class GrpcRuntime extends Runtime {
 
   materialize(
     stage: ComputeStage,
-    _waitlist: ComputeStage[],
+    waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const { materializer } = stage.props;
+    const { materializer, inpType } = stage.props;
     const { proto_file, method } = materializer?.data ?? {};
+    const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
+
+    const inputArgs = Object.keys(inpType?.properties || {});
 
     const resolver: Resolver = async (args) => {
+      const computedArgs: Record<string, unknown> = {};
+
+      for (const inputArg of inputArgs) {
+        computedArgs[inputArg] = args[inputArg];
+      }
+
       const { res } = nativeResult(
         await native.call_grpc_method({
           proto_file: proto_file as string,
           method: method as string,
-          payload: `{"name": "${args.name}"}`,
+          payload: JSON.stringify(computedArgs),
         }),
       );
 
       const json = JSON.parse(res);
-      const { name } = json;
-
-      return name;
+      return json;
     };
 
     return [
-      new ComputeStage({
-        ...stage.props,
-        resolver,
+      stage.withResolver(resolver),
+      ...sameRuntime.map((runtime) => {
+        return runtime.withResolver((args) => {
+          const parentValue = args._.parent;
+          const currentNode = runtime.props.node;
+
+          return parentValue[currentNode];
+        });
       }),
     ];
   }
