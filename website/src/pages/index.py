@@ -16,7 +16,7 @@ with TypeGraph(
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
     public = policies.public()
-    meta_only = policies.jwt("email", re.compile(".+@metatype.dev"))
+    meta_only = policies.ctx("email", re.compile(".+@metatype.dev"))
     public_write_only = {"create": public, "none": meta_only}
 
     github = HTTPRuntime("https://api.github.com")

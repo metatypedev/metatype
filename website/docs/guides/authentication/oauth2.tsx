@@ -30,8 +30,14 @@ export default function OAuth2({ name, typegraph }) {
   return (
     <p className="mb-6">
       Start the flow via <a href={url}>{url}</a> and take token by clicking{" "}
-      <a onClick={take}>here</a>:<br />
-      <input className="px-2 py-1 w-full" value={token ?? ""} />
+      <a className="cursor-pointer" onClick={take}>
+        here
+      </a>
+      :<br />
+      <input
+        className="py-1 border-0 bg-slate-200 w-full"
+        value={token ?? ""}
+      />
     </p>
   );
 }

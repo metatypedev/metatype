@@ -42,7 +42,7 @@ with TypeGraph(
     github = HTTPRuntime("https://api.github.com")
 
     # http://localhost:7890/public-api/auth/github
-    github_only = policies.jwt("provider", "github")
+    github_only = policies.ctx("provider", "github")
 
     user = t.struct(
         {

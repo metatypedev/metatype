@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "metatype"
+version = "0.1.10-dev.0"
+description = ""
+authors = []
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+typegraph = { path = "typegraph/python", develop = true }
+
+[tool.poetry.group.dev.dependencies]
+pydoc-markdown = { git = "https://github.com/metatypedev/pydoc-markdown", branch = "develop" }
+ruff = "^0.0.261"
+black = "^23.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"

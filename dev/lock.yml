@@ -19,7 +19,6 @@ dev:
       (version = ").+("): METATYPE_VERSION
     typegraph/python/pyproject.toml:
       (description = ").+("): TAGLINE
-      (version = ").+("): METATYPE_VERSION
     '**/*/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
       (description = ").+("): TAGLINE
@@ -37,8 +36,9 @@ dev:
       '(  tagline: ").+(",)': TAGLINE
     examples/**/compose.yml:
       '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
-    examples/**/pyproject.toml:
+    '**/*/pyproject.toml':
       (version = ").+("): METATYPE_VERSION
+    examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
   lock:
     PYTHON_VERSION: '3.8'

@@ -11,7 +11,7 @@ with TypeGraph(
     public = PureFunMat("() => true")
     mod = ModuleMat("ts/effects.ts")
     # current_user_only = mod.imp("currentUserOnly")
-    admin_only = p.jwt("role", "admin")
+    admin_only = p.ctx("role", "admin")
     user = (
         t.struct(
             {

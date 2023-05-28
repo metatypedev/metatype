@@ -1,7 +1,5 @@
 query {
   get_context {
-    basic
-    jwt
-    github
+    username
   }
 }

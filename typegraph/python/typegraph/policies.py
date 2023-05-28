@@ -106,7 +106,7 @@ def public(name: str = "__public"):
     return Policy(PredefinedFunMat("true")).named(name)
 
 
-def jwt(dotaccess: str, value: Union[str, Pattern]):
+def ctx(dotaccess: str, value: Union[str, Pattern]):
     # join role_name, field with '__jwt' as prefix
     separator = "_"
     is_regex = isinstance(value, Pattern)
@@ -117,7 +117,7 @@ def jwt(dotaccess: str, value: Union[str, Pattern]):
         separator,
         separator.join(
             [
-                "__jwt",
+                "__ctx",
                 dotaccess,
                 value,
             ]

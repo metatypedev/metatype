@@ -131,9 +131,7 @@ install:
   command: |
     set -e
     [ -d .venv ] || python3 -m venv .venv
-    cd typegraph/python
     poetry install
-    cd ../..
     cd website
     pnpm install
     cd ..

@@ -60,13 +60,6 @@ function MiniQLBrowser({
   } = useDocusaurusContext();
 
   const storage = useMemo(() => new MemoryStorage(), []);
-  const codeRef = useRef<HTMLDivElement>();
-
-  useEffect(() => {
-    if (codeRef.current) {
-      codeRef.current.querySelector<HTMLButtonElement>(".clean-btn")?.click();
-    }
-  }, [codeRef.current]);
 
   const fetcher = useMemo(
     () =>
@@ -104,10 +97,7 @@ function MiniQLBrowser({
           } gap-2 w-full order-first`}
         >
           {!defaultMode || mode === "typegraph" ? (
-            <div
-              className=" bg-slate-100 rounded-lg flex flex-col"
-              ref={codeRef}
-            >
+            <div className=" bg-slate-100 rounded-lg flex flex-col">
               {codeFileUrl ? (
                 <div className="p-2 text-xs font-light">
                   See/edit full code on{" "}

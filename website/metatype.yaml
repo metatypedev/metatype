@@ -8,11 +8,7 @@ typegates:
       TG_JWT_AUTHENTIFICATION_CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
       TG_OAUTH2_AUTHENTICATION_GITHUB_CLIENT_ID: fake
       TG_OAUTH2_AUTHENTICATION_GITHUB_CLIENT_SECRET: fake
-      TG_AUTHENTICATION_GITHUB_CLIENT_ID: "fake"
-      TG_AUTHENTICATION_GITHUB_CLIENT_SECRET: "fake"
-      TG_AUTHENTICATION_BASIC_ADMIN: "pass"
-      TG_AUTHENTICATION_KEYCLOAK_JWT: '{"kty":"EC","crv":"P-384","alg":"ES384","x":"YGwqY0bEGT451RGYwRAKOe4zbpdzQfvqSONWnsHMKW34ReXw0vqPLgG8T0lxqCJg","y":"rWMDwQXDyaUGwg5oXdNNGch5hPufMQIpXQOaoqfAwGYRF_-fRfHBxtiSw52ZGBFP","key_ops":["verify"],"ext":true}'
-      TG_AUTHENTICATION_CUSTOM_JWT: "RUkrn38oZbSYgDkuXJX7JdjWK"
+      TG_AUTHENTICATION_BASIC_ADMIN: "password"
       TG_DOCS_SENDINBLUE_KEY: "fake"
       TG_HOMEPAGE_GITHUB_CLIENT_ID: "fake"
       TG_HOMEPAGE_GITHUB_CLIENT_SECRET: "fake"
@@ -24,8 +20,8 @@ typegates:
       TG_AUTH_CUSTOM_JWT: "mysupersecretkey"
       TG_GRAPHQL_POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=graphql"
       TG_FCM_POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=fcm"
-      TG_BUSINESS_LOGIC_GITHUB_CLIENT_ID: "fake"
-      TG_BUSINESS_LOGIC_GITHUB_CLIENT_SECRET: "fake"
+      TG_BUSINESS_LOGIC_BASIC_ADMIN: "password"
+      TG_BUSINESS_LOGIC_BASIC_USER: "user"
       TG_BUSINESS_LOGIC_POSTGRES_CONN: "postgresql://postgres:password@localhost:5432/db?schema=business_logic"
       TG_IAM_PROVIDER_GITHUB_CLIENT_ID: "fake"
       TG_IAM_PROVIDER_GITHUB_CLIENT_SECRET: "fake"
@@ -40,11 +36,7 @@ typegates:
       TG_JWT_AUTHENTIFICATION_CUSTOM_JWT: "wOoyc8ijEHP99oASvJ0IXmHDOMYQH6"
       TG_OAUTH2_AUTHENTICATION_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
       TG_OAUTH2_AUTHENTICATION_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
-      TG_AUTHENTICATION_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
-      TG_AUTHENTICATION_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
-      TG_AUTHENTICATION_BASIC_ADMIN: "pass"
-      TG_AUTHENTICATION_KEYCLOAK_JWT: '{"kty":"EC","crv":"P-384","alg":"ES384","x":"YGwqY0bEGT451RGYwRAKOe4zbpdzQfvqSONWnsHMKW34ReXw0vqPLgG8T0lxqCJg","y":"rWMDwQXDyaUGwg5oXdNNGch5hPufMQIpXQOaoqfAwGYRF_-fRfHBxtiSw52ZGBFP","key_ops":["verify"],"ext":true}'
-      TG_AUTHENTICATION_CUSTOM_JWT: "RUkrn38oZbSYgDkuXJX7JdjWK"
+      TG_AUTHENTICATION_BASIC_ADMIN: "password"
       TG_DOCS_SENDINBLUE_KEY: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_DOCS_SENDINBLUE_KEY
       TG_HOMEPAGE_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
       TG_HOMEPAGE_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
@@ -56,8 +48,8 @@ typegates:
       TG_AUTH_CUSTOM_JWT: "mysupersecretkey"
       TG_GRAPHQL_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_GRAPHQL_POSTGRES_CONN
       TG_FCM_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_FCM_POSTGRES_CONN
-      TG_BUSINESS_LOGIC_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
-      TG_BUSINESS_LOGIC_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET
+      TG_BUSINESS_LOGIC_BASIC_ADMIN: "password"
+      TG_BUSINESS_LOGIC_BASIC_USER: "user"
       TG_BUSINESS_LOGIC_POSTGRES_CONN: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/TG_BUSINESS_LOGIC_POSTGRES_CONN
       TG_IAM_PROVIDER_GITHUB_CLIENT_ID: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_ID
       TG_IAM_PROVIDER_GITHUB_CLIENT_SECRET: infisical://app.infisical.com/643057c5bb17b13ef6e73d99/prod/GITHUB_CLIENT_SECRET

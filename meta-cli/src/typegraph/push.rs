@@ -121,7 +121,7 @@ impl PushConfig {
         )
         .await?;
 
-        println!("Pushing typegraph {:?}", tg.name());
+        println!("Pushing typegraph {}", tg.name()?);
         res.data("addTypegraph")
             .context("addTypegraph field in the response")
     }
