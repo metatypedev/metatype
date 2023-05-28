@@ -107,10 +107,8 @@ test("Auth", async (t) => {
     },
   );
 
-  function tokensFromAuthAndCook(hs: Headers): [string | null, string | null] {
-    const auth = hs.get(nextAuthorizationHeader)!;
-    const cook = getSetCookies(hs)[0]?.value ?? null;
-    return [auth, cook];
+  function getCookie(hs: Headers): string | null {
+    return getSetCookies(hs)[0]?.value ?? null;
   }
 
   await t.should("retrieve oauth2 access and refresh tokens", async () => {
@@ -158,12 +156,12 @@ test("Auth", async (t) => {
     assertEquals(res.status, 302);
     assertEquals(res.headers.get("location")!, redirectUri);
 
-    const [auth, cook] = tokensFromAuthAndCook(res.headers);
-    assertEquals(auth, cook);
+    const cook = getCookie(res.headers);
 
-    const claims = await verifyJWT(auth!);
+    const { token } = JSON.parse(await decrypt(cook!));
+    const claims = await verifyJWT(token);
     assertEquals(claims.accessToken, accessToken);
-    assertEquals(claims.refreshToken, refreshToken);
+    assertEquals(await decrypt(claims.refreshToken as string), refreshToken);
   });
 
   await t.should("retrieve oauth2 profile", async () => {
@@ -223,24 +221,6 @@ test("Auth", async (t) => {
       .on(e);
   });
 
-  await t.should("use jwt from cookie", async () => {
-    const jwt = await signJWT({ provider: "internal", user1: "zifeo" }, 10);
-    await gql`
-        query {
-          private(x: 1) {
-            x
-          }
-        }
-      `
-      .withHeaders({ "cookie": `test_auth=${jwt}` })
-      .expectData({
-        private: {
-          x: 1,
-        },
-      })
-      .on(e);
-  });
-
   await t.should("not renew valid oauth2 access token", async () => {
     const claims: JWTClaims = {
       provider: "github",
@@ -258,9 +238,8 @@ test("Auth", async (t) => {
       `
       .withHeaders({ "authorization": `bearer ${jwt}` })
       .expect((res) => {
-        const [auth, cook] = tokensFromAuthAndCook(res.headers);
-        assertEquals(auth, null);
-        assertEquals(auth, cook);
+        const cook = getCookie(res.headers);
+        assertEquals(cook, null);
       })
       .expectData({
         token: {
@@ -271,10 +250,11 @@ test("Auth", async (t) => {
   });
 
   await t.should("renew expired oauth2 access token", async () => {
+    const refreshToken = await encrypt("r1");
     const claims: JWTClaims = {
       provider: "github",
       accessToken: "a1",
-      refreshToken: "r1",
+      refreshToken,
       refreshAt: Math.floor(new Date().valueOf() / 1000),
     };
     const jwt = await signJWT(claims, 10);
@@ -284,7 +264,7 @@ test("Auth", async (t) => {
       mf.reset();
       const body = await req.formData();
       const data = Object.fromEntries(body.entries());
-      assertEquals(data.refresh_token, "r1");
+      assertEquals(await decrypt(data.refresh_token as string), "r1");
       const res = {
         "access_token": "a2",
         "expires_in": 28800,
@@ -309,11 +289,10 @@ test("Auth", async (t) => {
       `
       .withHeaders({ "authorization": `bearer ${jwt}` })
       .expect(async (res) => {
-        const [auth, cook] = tokensFromAuthAndCook(res.headers);
-        assertEquals(auth, cook);
-        const newClaims = await verifyJWT(auth!);
+        const header = res.headers.get(nextAuthorizationHeader);
+        const newClaims = await verifyJWT(header!);
         assertEquals(newClaims.accessToken, "a2");
-        assertEquals(newClaims.refreshToken, "r1");
+        assertEquals(await decrypt(newClaims.refreshToken as string), "r1");
       })
       .expectData({
         token: {
@@ -349,9 +328,8 @@ test("Auth", async (t) => {
       `
       .withHeaders({ "authorization": `bearer ${jwt}` })
       .expect((res) => {
-        const [auth, cook] = tokensFromAuthAndCook(res.headers);
-        assertEquals(auth, "");
-        assertEquals(auth, cook);
+        const header = res.headers.get(nextAuthorizationHeader);
+        assertEquals(header, "");
       })
       .expectErrorContains("Authorization failed")
       .on(e);

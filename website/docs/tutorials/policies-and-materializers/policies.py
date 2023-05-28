@@ -21,12 +21,12 @@ with TypeGraph(
 
     admin_only = Policy(
         PureFunMat(
-            "(args, { context }) => context.user ? context.user === 'admin' : null"
+            "(args, { context }) => context.username ? context.username === 'admin' : null"
         ),
     )
     user_only = Policy(
         PureFunMat(
-            "(args, { context }) => context.user ? context.user === 'user' : null"
+            "(args, { context }) => context.username ? context.username === 'user' : null"
         ),
     )
 

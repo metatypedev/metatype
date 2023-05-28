@@ -1,0 +1,5 @@
+query {
+  get_context {
+    username
+  }
+}

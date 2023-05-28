@@ -1,0 +1,29 @@
+import TGExample from "@site/src/components/TGExample";
+
+# Authenticate your requests
+
+Authentication enable the typegate to identify the user making the request and share some contextual data (called later "context" or "claims"). This data can then be used by policies or injected into various fields. Authenticated requests must use the `Authorization` header to provide a token in one of the following format.
+
+## Basic authentication
+
+Basic authentication is the simplest way to authenticate requests. It is done by sending a base64 encoded string of your username and password in the authorization header. Recall that base64 encoding is not encryption and can be easily reversed, thus **the traffic must be encrypted with SSL/TLS** when using basic authentication.
+
+| Components | Values                                                   |
+| ---------- | -------------------------------------------------------- |
+| Secrets    | `TG_[typegraph]_BASIC_[username]=bcrypt(password)`       |
+| Header     | `Authorization: Basic base64(username:bcrypt(password))` |
+| Context    | `{ username }`                                           |
+
+<TGExample
+  typegraph="basic_authentification"
+  python={require("./basic.py")}
+  query={require("./basic.graphql")}
+  headers={{
+    Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",
+  }}
+  tab="headers"
+/>
+
+## JWT authentication
+
+## OAuth2 authentication

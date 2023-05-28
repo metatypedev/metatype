@@ -72,42 +72,48 @@ export class RandomRuntime extends Runtime {
 
   execute(typ: TypeNode): Resolver {
     return () => {
-      const randomizeRecursively = (typ: TypeNode): any => {
-        const config = typ.config ?? {};
-        if (Object.prototype.hasOwnProperty.call(config, "gen")) {
-          const { gen, ...arg } = config;
-          return this.chance[gen as string](arg);
-        }
-        switch (typ.type) {
-          case "object":
-            return {};
-          case "integer":
-            return this.chance.integer();
-          case "string":
-            if (typ.format === "uuid") {
-              return this.chance.guid();
-            }
-            if (typ.format === "email") {
-              return this.chance.email();
-            }
-            return this.chance.string();
-          case "boolean":
-            return this.chance.bool();
-          case "array": {
-            const res = [];
-            let size = this.chance.integer({ min: 1, max: 10 });
-            const childNodeName = this.getTgTypeNameByIndex(typ.items);
-            while (size--) {
-              res.push(randomizeRecursively(childNodeName));
-            }
-            return res;
-          }
-          default:
-            throw new Error(`type not supported "${typ.type}"`);
-        }
-      };
-
-      return randomizeRecursively(typ);
+      return this.randomizeRecursively(typ);
     };
+  }
+
+  randomizeRecursively(typ: TypeNode): any {
+    const config = typ.config ?? {};
+    if (Object.prototype.hasOwnProperty.call(config, "gen")) {
+      const { gen, ...arg } = config;
+      return this.chance[gen as string](arg);
+    }
+    switch (typ.type) {
+      case "object":
+        return {};
+      case "optional": {
+        const childNodeName = this.getTgTypeNameByIndex(typ.item);
+        return this.chance.bool()
+          ? this.randomizeRecursively(childNodeName)
+          : null;
+      }
+      case "integer":
+        return this.chance.integer();
+      case "string":
+        if (typ.format === "uuid") {
+          return this.chance.guid();
+        }
+        if (typ.format === "email") {
+          return this.chance.email();
+        }
+        return this.chance.string();
+      case "boolean":
+        return this.chance.bool();
+      case "array": {
+        const res = [];
+        let size = this.chance.integer({ min: 1, max: 10 });
+        const childNodeName = this.getTgTypeNameByIndex(typ.items);
+        while (size--) {
+          res.push(this.randomizeRecursively(childNodeName));
+        }
+        return res;
+      }
+      default:
+        throw new Error(`type not supported "${typ.type}"`);
+    }
   }
 }

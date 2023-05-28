@@ -21,7 +21,7 @@ with TypeGraph(
     ),
 ) as g:
     admin_only = Policy(
-        PureFunMat("(_args, { context }) => context.user === 'admin'")
+        PureFunMat("(_args, { context }) => context.username === 'admin'")
     ).named("admin_only")
 
     base = t.struct(

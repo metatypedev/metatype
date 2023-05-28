@@ -37,6 +37,7 @@ test("Python WASI runtime", async (t) => {
 
     await Promise.all(tests);
     const end = performance.now();
-    assert((end - start) < 150);
+    const duration = end - start;
+    assert(duration < 150, `Python WASI runtime was too slow: ${duration}ms`);
   });
 });

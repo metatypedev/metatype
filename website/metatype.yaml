@@ -4,6 +4,8 @@ typegates:
     username: admin
     password: password
     env:
+      TG_BASIC_AUTHENTIFICATION_BASIC_ADMIN: "password"
+
       TG_AUTHENTICATION_GITHUB_CLIENT_ID: "fake"
       TG_AUTHENTICATION_GITHUB_CLIENT_SECRET: "fake"
       TG_AUTHENTICATION_BASIC_ADMIN: "pass"

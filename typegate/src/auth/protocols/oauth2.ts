@@ -1,34 +1,33 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Auth, AuthDS, nextAuthorizationHeader } from "../auth.ts";
+import { AuthDS, nextAuthorizationHeader } from "../auth.ts";
 import config from "../../config.ts";
-import { deleteCookie, getCookies, setCookie } from "std/http/cookie.ts";
 import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
-import {
-  decrypt,
-  encrypt,
-  randomUUID,
-  signJWT,
-  verifyJWT,
-} from "../../crypto.ts";
+import { encrypt, randomUUID, signJWT, verifyJWT } from "../../crypto.ts";
 import { JWTClaims } from "../auth.ts";
 import { getLogger } from "../../log.ts";
 import { SecretManager } from "../../typegraph.ts";
+import {
+  clearCookie,
+  getEncryptedCookie,
+  setEncryptedSessionCookie,
+} from "../cookies.ts";
+import { Protocol } from "./protocol.ts";
 
 const logger = getLogger(import.meta.url);
 
-export class OAuth2Auth implements Auth {
+export class OAuth2Auth extends Protocol {
   static init(
     typegraphName: string,
     auth: AuthDS,
     secretManager: SecretManager,
-  ): Promise<Auth> {
+  ): Promise<Protocol> {
     const clientId = secretManager.secretOrFail(`${auth.name}_CLIENT_ID`);
     const clientSecret = secretManager.secretOrFail(
       `${auth.name}_CLIENT_SECRET`,
     );
-    const { authorize_url, access_url, scopes, profile_url } = auth.auth_data;
+    const { authorize_url, access_url, scopes } = auth.auth_data;
     const clientData = {
       clientId,
       clientSecret,
@@ -43,17 +42,17 @@ export class OAuth2Auth implements Auth {
         typegraphName,
         auth.name,
         clientData,
-        profile_url as string,
       ),
     );
   }
 
   private constructor(
-    public typegraphName: string,
+    typegraphName: string,
     private authName: string,
     private clientData: Omit<OAuth2ClientConfig, "redirectUri">,
-    private profileUrl: string,
-  ) {}
+  ) {
+    super(typegraphName);
+  }
 
   async authMiddleware(request: Request): Promise<Response> {
     const url = new URL(request.url);
@@ -66,35 +65,20 @@ export class OAuth2Auth implements Auth {
     });
     const query = Object.fromEntries(url.searchParams.entries());
 
-    if (query.clear !== undefined) {
-      const headers = this.clearCookie(url.hostname, typegraphPath);
-      if (query.redirect_uri) {
-        headers.set("location", query.redirect_uri ?? base);
-      }
-      return new Response(null, {
-        status: 302,
-        headers,
-      });
-    }
-
+    // callback
     if (query.code && query.state) {
       try {
-        const cookies = getCookies(request.headers);
-        const loginStateEncrypted = cookies[this.typegraphName];
-        if (!loginStateEncrypted) {
-          throw new Error("missing login state");
-        }
-        const loginState = await decrypt(loginStateEncrypted);
-        const { state, codeVerifier, redirectUri } = JSON.parse(loginState);
-
-        const token = await client.code.getToken(url, { state, codeVerifier });
-        const jwt = await this.createJWT(token, config.cookies_max_age_sec);
-        const headers = this.createHeaders(
-          jwt,
-          config.cookies_max_age_sec,
-          url.hostname,
+        const { state, codeVerifier, redirectUri } = await getEncryptedCookie(
+          request.headers,
+          this.typegraphName,
         );
-
+        const tokens = await client.code.getToken(url, { state, codeVerifier });
+        const token = await this.createJWT(tokens);
+        const headers = await setEncryptedSessionCookie(
+          url.hostname,
+          this.typegraphName,
+          { token, redirectUri },
+        );
         headers.set("location", redirectUri as string);
         return new Response(null, {
           status: 302,
@@ -102,38 +86,32 @@ export class OAuth2Auth implements Auth {
         });
       } catch (e) {
         logger.warning(e);
-        return new Response(`invalid oauth2: ${e}`, {
+        const headers = clearCookie(url.hostname, this.typegraphName);
+        // https://github.com/cmd-johnson/deno-oauth2-client/issues/25
+        return new Response(`invalid oauth2, check your credentials: ${e}`, {
           status: 400,
+          headers,
         });
       }
     }
 
+    // initiate
     if (query.redirect_uri) {
       const state = randomUUID();
       const { codeVerifier, uri } = await client.code.getAuthorizationUri({
         state,
       });
-
-      const loginState = JSON.stringify({
+      const loginState = {
         state,
         codeVerifier,
         redirectUri: query.redirect_uri,
-      });
-      const loginStateEncrypted = await encrypt(loginState);
-
-      const headers = new Headers();
+      };
+      const headers = await setEncryptedSessionCookie(
+        url.hostname,
+        this.typegraphName,
+        loginState,
+      );
       headers.set("location", uri.toString());
-      setCookie(headers, {
-        // no maxAge or expires, so cookie expires at end of session
-        name: this.typegraphName,
-        value: loginStateEncrypted,
-        domain: url.hostname,
-        path: typegraphPath,
-        secure: !config.debug,
-        sameSite: "Lax",
-        httpOnly: true,
-      });
-
       return new Response(null, {
         status: 302,
         headers,
@@ -143,13 +121,6 @@ export class OAuth2Auth implements Auth {
     return new Response("missing redirect_uri query parameter", {
       status: 400,
     });
-  }
-
-  private clearCookie(domain: string, path: string): Headers {
-    const hs = new Headers();
-    hs.set(nextAuthorizationHeader, "");
-    deleteCookie(hs, this.typegraphName, { path, domain });
-    return hs;
   }
 
   async tokenMiddleware(
@@ -164,93 +135,46 @@ export class OAuth2Auth implements Auth {
     });
 
     if (!token) {
-      return [{}, this.clearCookie(url.hostname, typegraphPath)];
+      return [{}, new Headers()];
     }
 
-    try {
-      const claims = await verifyJWT(token) as JWTClaims;
-      if (!claims) {
-        return [{}, this.clearCookie(url.hostname, typegraphPath)];
-      }
-
-      if (new Date().valueOf() / 1000 > claims.refreshAt) {
-        const hs = await this.renewJWTCookie(
-          client,
-          claims.refreshToken,
-          config.cookies_max_age_sec,
-          url.hostname,
-        );
-        return [claims, hs];
-      }
-
-      return [claims, new Headers()];
-    } catch (e) {
+    const jwt = await verifyJWT(token).catch((e) => {
       logger.info(`invalid auth: ${e}`);
-      return [{}, this.clearCookie(url.hostname, typegraphPath)];
+      return null;
+    }) as JWTClaims | null;
+
+    if (!jwt) {
+      return [{}, new Headers({ [nextAuthorizationHeader]: "" })];
     }
+    const { refreshToken, ...claims } = jwt;
+
+    if (new Date().valueOf() / 1000 > claims.refreshAt) {
+      try {
+        const newClaims = await client.refreshToken.refresh(refreshToken);
+        const token = await this.createJWT(newClaims);
+        return [
+          claims,
+          new Headers({ [nextAuthorizationHeader]: token ?? "" }),
+        ];
+      } catch (e) {
+        logger.info(`expired auth: ${e}`);
+        return [{}, new Headers({ [nextAuthorizationHeader]: "" })];
+      }
+    }
+
+    return [claims, new Headers()];
   }
 
-  async getProfile(token: string): Promise<unknown> {
-    if (!this.profileUrl) {
-      return {};
-    }
-
-    const profile = await fetch(
-      this.profileUrl,
-      { headers: { authorization: `Bearer ${token}` } },
-    );
-
-    return await profile.json();
-  }
-
-  private async createJWT(token: Tokens, maxAge: number): Promise<string> {
+  private async createJWT(token: Tokens): Promise<string> {
     const payload: JWTClaims = {
       provider: this.authName,
       accessToken: token.accessToken,
-      refreshToken: token.refreshToken as string,
+      refreshToken: await encrypt(token.refreshToken as string),
       refreshAt: Math.floor(
         new Date().valueOf() / 1000 +
           (token.expiresIn ?? config.cookies_min_refresh_sec),
       ),
     };
-    return await signJWT(payload, maxAge);
-  }
-
-  private createHeaders(
-    jwt: string,
-    maxAge: number,
-    hostname: string,
-  ): Headers {
-    const hs = new Headers();
-    const name = this.typegraphName;
-    setCookie(hs, {
-      name,
-      value: jwt,
-      maxAge,
-      domain: hostname,
-      path: `/${name}`,
-      secure: !config.debug,
-      sameSite: "Lax",
-      httpOnly: false, // jwt should be decodeable by the browser
-    });
-    hs.set(nextAuthorizationHeader, jwt);
-    return hs;
-  }
-
-  private async renewJWTCookie(
-    client: OAuth2Client,
-    refreshToken: string,
-    maxAge: number,
-    hostname: string,
-  ): Promise<Headers> {
-    const token = await client.refreshToken.refresh(refreshToken);
-    const jwt = await this.createJWT(token, maxAge);
-    if (jwt) {
-      return this.createHeaders(jwt, maxAge, hostname);
-    }
-    const hs = new Headers();
-    const name = this.typegraphName;
-    deleteCookie(hs, name);
-    return hs;
+    return await signJWT(payload, config.cookies_max_age_sec);
   }
 }

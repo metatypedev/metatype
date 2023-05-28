@@ -30,7 +30,7 @@ class DenoRuntime(Runtime):
     runtime_name: str = always("deno")
 
     @classmethod
-    def static(cls, out: t.Type, value: Any) -> "StaticMat":
+    def static(cls, out: t.Type, value: Any) -> "t.func":
         def prepare(x):
             if isinstance(x, dict):
                 return frozendict({k: prepare(v) for k, v in x.items()})
@@ -39,6 +39,10 @@ class DenoRuntime(Runtime):
             return x
 
         return t.func(t.struct({}), out, StaticMat(prepare(value)))
+
+    @classmethod
+    def identity(cls, tpe: t.Type) -> "t.func":
+        return t.func(tpe, tpe, PredefinedFunMat("identity"))
 
     def __attrs_post_init__(self):
         permissions = {}

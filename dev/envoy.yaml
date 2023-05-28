@@ -36,6 +36,13 @@ static_resources:
   clusters:
     - name: typegate
       type: STRICT_DNS
+      health_checks:
+        - timeout: 1s
+          interval: 1s
+          unhealthy_threshold: 2
+          healthy_threshold: 1
+          http_health_check:
+            path: /
       load_assignment:
         cluster_name: typegate
         endpoints:
