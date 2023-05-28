@@ -99,11 +99,11 @@ test("Auth", async (t) => {
       );
       const cookies = getSetCookies(res.headers);
       const loginState = await decrypt(cookies[0].value);
-      const { state, redirectUri: redirectUriInCookie } = JSON.parse(
+      const { state, userRedirectUri } = JSON.parse(
         loginState,
       );
       assertEquals(state, redirect.searchParams.get("state")!);
-      assertEquals(redirectUri, redirectUriInCookie);
+      assertEquals(redirectUri, userRedirectUri);
     },
   );
 
@@ -113,7 +113,7 @@ test("Auth", async (t) => {
 
   await t.should("retrieve oauth2 access and refresh tokens", async () => {
     const code = "abc123";
-    const redirectUri = "http://localhost:3000";
+    const userRedirectUri = "http://localhost:3000";
 
     const accessToken = "ghu_16C7e42F292c6912E7710c838347Ae178B4a";
     const refreshToken =
@@ -143,7 +143,7 @@ test("Auth", async (t) => {
 
     const state = randomUUID();
     const cookie = await encrypt(JSON.stringify({
-      redirectUri,
+      userRedirectUri,
       state,
     }));
     const headers = new Headers();
@@ -154,7 +154,7 @@ test("Auth", async (t) => {
     );
     const res = await execute(e, req);
     assertEquals(res.status, 302);
-    assertEquals(res.headers.get("location")!, redirectUri);
+    assertEquals(res.headers.get("location")!, userRedirectUri);
 
     const cook = getCookie(res.headers);
 
@@ -164,7 +164,7 @@ test("Auth", async (t) => {
     assertEquals(await decrypt(claims.refreshToken as string), refreshToken);
   });
 
-  await t.should("take jwt after oauth2 flow", async () => {
+  await t.should("take jwt after oauth2 flow only once", async () => {
     const headers = new Headers();
     const token = "very-secret";
     const redirectUri = "http://localhost:3000";
@@ -178,6 +178,8 @@ test("Auth", async (t) => {
     assertEquals(res.status, 200);
     const { token: takenToken } = await res.json();
     assertEquals(takenToken, token);
+    const cook = getCookie(res.headers);
+    assertEquals(cook, "");
   });
 
   await t.should("retrieve oauth2 profile", async () => {

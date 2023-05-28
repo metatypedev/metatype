@@ -97,8 +97,7 @@ export class OAuth2Auth extends Protocol {
     }
 
     // initiate
-    const userRedirectUri = request.headers.get("origin") ??
-      query.redirect_uri;
+    const userRedirectUri = query.redirect_uri ?? request.headers.get("origin");
     if (userRedirectUri) {
       const state = randomUUID();
       const { codeVerifier, uri } = await client.code.getAuthorizationUri({
