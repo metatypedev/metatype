@@ -74,7 +74,7 @@ impl Decoder for DynCodec {
         let length = buf.len();
 
         let response_message =
-            get_relative_message_name(self.method_descriptor_proto.input_type()).unwrap();
+            get_relative_message_name(self.method_descriptor_proto.output_type()).unwrap();
 
         let ret = buf2response(buf, response_message, self.file_descriptor.clone())
             .map(Some)
