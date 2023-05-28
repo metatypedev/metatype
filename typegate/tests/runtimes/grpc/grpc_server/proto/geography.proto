@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package geography;
+
+service Demography {
+  rpc Country (CountryRequest) returns (CountryReply) {}
+}
+
+message CountryRequest {
+  string name = 1;
+}
+
+message CountryReply {
+  string name = 1;
+  string capital = 2;
+  int32 population = 3;
+}

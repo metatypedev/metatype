@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package helloworld;
 
-option go_package = "github.com/tokopedia/gripmock/example/simple";
-
 service Greeter {
   rpc SayHello (HelloRequest) returns (HelloReply) {}
 }

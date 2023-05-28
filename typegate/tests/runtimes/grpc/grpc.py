@@ -16,8 +16,40 @@ with TypeGraph("Grpc") as g:
             this_dir.joinpath("grpc_server/proto/helloworld.proto"),
             # the method to call: `SayHello`
             "/helloworld.Greeter/SayHello",
+            t.struct(
+                {
+                    "name": t.string(),
+                }
+            ),
+            t.struct({"message": t.string()}),
+        ),
+        sum=grpc.call_method(
+            this_dir.joinpath("grpc_server/proto/maths.proto"),
+            "/maths.Calculator/Sum",
+            t.struct(
+                {
+                    "list": t.array(t.integer()),
+                }
+            ),
+            t.struct({"total": t.integer()}),
+        ),
+        country=grpc.call_method(
+            this_dir.joinpath("grpc_server/proto/geography.proto"),
+            "/geography.Demography/Country",
             t.struct({"name": t.string()}),
-            t.string(),
+            t.struct(
+                {"name": t.string(), "capital": t.string(), "population": t.integer()}
+            ),
+        ),
+        is_prime=grpc.call_method(
+            this_dir.joinpath("grpc_server/proto/maths.proto"),
+            "/maths.Calculator/IsPrime",
+            t.struct({"number": t.integer()}),
+            t.struct(
+                {
+                    "isPrime": t.boolean(),
+                }
+            ),
         ),
         default_policy=[public],
     )

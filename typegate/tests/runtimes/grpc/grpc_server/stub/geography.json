@@ -1,0 +1,16 @@
+{
+  "service": "Demography",
+  "method": "Country",
+  "input": {
+    "equals": {
+      "name": "France"
+    }
+  },
+  "output": {
+    "data": {
+      "name": "France",
+      "capital": "Paris",
+      "population": 68035000
+    }
+  }
+}

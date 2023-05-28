@@ -2,45 +2,108 @@
 
 import { gql, sleep, test } from "../../utils.ts";
 
+const withMockServer = async (test: () => Promise<void>) => {
+  const setup = new Deno.Command(
+    "./typegate/tests/runtimes/grpc/grpc_server/setup.sh",
+    {
+      stdout: "null",
+    },
+  ).spawn();
+
+  await setup.status;
+
+  new Deno.Command("./typegate/tests/runtimes/grpc/grpc_server/start.sh", {
+    stdout: "null",
+  }).spawn();
+
+  await sleep(7 * 1000);
+
+  // before
+
+  await test();
+
+  // after
+
+  const end = new Deno.Command(
+    "./typegate/tests/runtimes/grpc/grpc_server/shutdown.sh",
+    {
+      stdout: "null",
+    },
+  ).spawn();
+
+  await end.status;
+};
+
 test("Grpc runtime", async (t) => {
   const e = await t.pythonFile("runtimes/grpc/grpc.py");
 
-  await t.should("works", async () => {
-    const setup = new Deno.Command(
-      "./typegate/tests/runtimes/grpc/grpc_server/setup.sh",
-      {
-        stdout: "null",
-      },
-    ).spawn();
+  await withMockServer(async () => {
+    await t.should("works", async () => {
+      await gql`
+        query {
+          greet(name: "Metatype") {
+            message
+          }
+        }
+      `
+        .expectData({
+          greet: {
+            message: "Hello Metatype",
+          },
+        })
+        .on(e);
+    });
 
-    await setup.status;
+    await t.should("works 2", async () => {
+      await gql`
+        query {
+          sum(list: [1, 2, 3, 4, 5]) {
+            total
+          }
+        }
+      `
+        .expectData({
+          sum: {
+            total: 15,
+          },
+        })
+        .on(e);
+    });
 
-    new Deno.Command(
-      "./typegate/tests/runtimes/grpc/grpc_server/start.sh",
-      {
-        stdout: "null",
-      },
-    ).spawn();
+    await t.should("works 3", async () => {
+      await gql`
+        query {
+          country(name: "France") {
+            name
+            capital
+            population
+          }
+        }
+      `
+        .expectData({
+          country: {
+            name: "France",
+            capital: "Paris",
+            population: 68_035_000,
+          },
+        })
+        .on(e);
+    });
 
-    await sleep(15 * 1000);
-
-    await gql`
-      query {
-        greet(name: "Metatype")
-      }
-    `
-      .expectData({
-        greet: "Hello Metatype",
-      })
-      .on(e);
-
-    const end = new Deno.Command(
-      "./typegate/tests/runtimes/grpc/grpc_server/shutdown.sh",
-      {
-        stdout: "null",
-      },
-    ).spawn();
-
-    await end.status;
+    await t.should("works 4", async () => {
+      await gql`
+        query {
+          is_prime(number: 17) {
+            isPrime
+          }
+        }
+      `
+        .expectData({
+          is_prime: {
+            isPrime: true,
+          },
+        })
+        .on(e);
+    });
   });
 });
