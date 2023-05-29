@@ -116,6 +116,7 @@ fn buf2response(
 
 fn get_file_descriptor(proto_file: &Path) -> anyhow::Result<FileDescriptor> {
     let proto_folder = proto_file.parent().unwrap();
+    println!("proto_file: {:#?}", proto_file);
 
     let mut file_descriptor_protos = protobuf_parse::Parser::new()
         .include(proto_folder)
