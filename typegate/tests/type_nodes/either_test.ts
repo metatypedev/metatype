@@ -174,7 +174,7 @@ test(
           }
         }
       `
-        .matchSnapshot(t)
+        .matchOkSnapshot(t)
         .on(e);
     });
   },

@@ -1,0 +1,353 @@
+export const snapshot = {};
+
+snapshot[`Auto-tests for basic 1`] = `
+{
+  data: {
+    get_context: {
+      username: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for jwt 1`] = `
+{
+  data: {
+    get_context: {
+      your_own_content: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for oauth2 1`] = `
+{
+  data: {
+    get_context: {
+      exp: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for database 1`] = `
+{
+  data: {
+    create_message: {
+      id: 4,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for database 2`] = `
+{
+  data: {
+    list_messages: [
+      {
+        body: "This is a message",
+        id: 1,
+      },
+      {
+        body: "This is a message",
+        id: 2,
+      },
+      {
+        body: "This is a message",
+        id: 3,
+      },
+      {
+        body: "This is a message",
+        id: 4,
+      },
+    ],
+  },
+}
+`;
+
+snapshot[`Auto-tests for graphql 1`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:22.116Z",
+      },
+      locations: [],
+      message: 'From remote graphql: Cannot query field "list_users" on type "Query". Did you mean "users"?',
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for graphql 2`] = `
+{
+  data: {
+    list_messages: [],
+  },
+}
+`;
+
+snapshot[`Auto-tests for authentication 1`] = `
+{
+  data: {
+    get_context: {
+      username: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for cors 1`] = `
+{
+  data: {
+    catch_me_if_you_can: "R0!S@O!FUVCGw",
+  },
+}
+`;
+
+snapshot[`Auto-tests for rate 1`] = `
+{
+  data: {
+    lightweight_call: "hLCos%&N4*w",
+  },
+}
+`;
+
+snapshot[`Auto-tests for rate 2`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:22.538Z",
+      },
+      locations: [],
+      message: "rate-limited",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for rate 3`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:22.540Z",
+      },
+      locations: [],
+      message: "rate-limited",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for rate 4`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:22.541Z",
+      },
+      locations: [],
+      message: "rate-limited",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for fcm 1`] = `
+{
+  data: {
+    send_notification: {
+      error: {
+        code: 401,
+        message: "Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.",
+      },
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for fcm 2`] = `
+{
+  data: {
+    user: {
+      id: "1",
+      name: "Leanne Graham",
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for deno 1`] = `
+{
+  data: {
+    compute_fib: {
+      ms: 2,
+      res: 3,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for policies 1`] = `
+{
+  data: {
+    public: "ZIX3eg2sG8e9&34dxO",
+  },
+}
+`;
+
+snapshot[`Auto-tests for policies 2`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:25.047Z",
+      },
+      locations: [],
+      message: "No policy took decision on type 'function_9' ('function') at '<root>.admin_only'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for policies 3`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:25.049Z",
+      },
+      locations: [],
+      message: "No policy took decision on type 'function_12' ('function') at '<root>.user_only'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for policies 4`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:25.051Z",
+      },
+      locations: [],
+      message: "No policy took decision on type 'function_15' ('function') at '<root>.both'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for business-logic 1`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:25.683Z",
+      },
+      locations: [],
+      message: "'your_turn' not found at 'Q', available names are: list_messages, emit_new_message, list_users",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for index 1`] = `
+{
+  data: {
+    stargazers: [
+      {
+        login: "cgallay",
+        user: {
+          name: "Charles Gallay",
+        },
+      },
+      {
+        login: "Kazy",
+        user: {
+          name: "Jocelyn Boullier",
+        },
+      },
+    ],
+  },
+}
+`;
+
+snapshot[`Auto-tests for index 2`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:26.319Z",
+      },
+      locations: [],
+      message: "Validation errors:
+" +
+        "  - at <value>.data.email: string does not statisfy the required format 'email'
+",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for index 3`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:26.321Z",
+      },
+      locations: [],
+      message: "Authorization failed for policy '__ctx_email__metatype_dev' with effect 'none' on type 'string_4' ('string') at '<root>.list_feedback.email'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for prisma 1`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:26.580Z",
+      },
+      locations: [],
+      message: "Validation errors:
+" +
+        "  - at <value>.data.firstname: expected minimum length: 2, got 0
+",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for prisma 2`] = `
+{
+  errors: [
+    {
+      extensions: {
+        timestamp: "2023-05-29T02:42:26.582Z",
+      },
+      locations: [],
+      message: "Validation errors:
+" +
+        "  - at <value>.where.firstname: Value does not match to any variant of the either type
+",
+      path: [],
+    },
+  ],
+}
+`;

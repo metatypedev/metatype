@@ -25,7 +25,7 @@ test("Basic introspection", async (t) => {
         }
       }
     `
-      .matchSnapshot(t)
+      .matchOkSnapshot(t)
       .on(e);
   });
 }, { introspection: true });
