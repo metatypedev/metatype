@@ -3,8 +3,9 @@
 
 import React, { useCallback, useState } from "react";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import BrowserOnly from "@docusaurus/BrowserOnly";
 
-export default function OAuth2({ name, typegraph }) {
+function OAuth2({ name, typegraph }) {
   const {
     siteConfig: {
       customFields: { tgUrl },
@@ -41,3 +42,11 @@ export default function OAuth2({ name, typegraph }) {
     </p>
   );
 }
+
+export default (props) => {
+  return (
+    <BrowserOnly>
+      <OAuth2 {...props} />
+    </BrowserOnly>
+  );
+};

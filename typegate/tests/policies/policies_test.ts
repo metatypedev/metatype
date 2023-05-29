@@ -145,7 +145,7 @@ test("Role jwt policy access", async (t) => {
       }
     `
       .expectErrorContains(
-        "Authorization failed for policy '__jwt_user_name_some_role'",
+        "Authorization failed for policy '__ctx_user_name_some_role'",
       )
       .withContext({
         user: {
@@ -164,7 +164,7 @@ test("Role jwt policy access", async (t) => {
         sayHelloWorld
       }
     `
-        .expectErrorContains("__jwt")
+        .expectErrorContains("__ctx")
         .withContext({
           "literally": "anything",
         })

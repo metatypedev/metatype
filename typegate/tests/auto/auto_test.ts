@@ -6,7 +6,7 @@ import { runAuto } from "../utils.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 
-//await runAuto(localDir);
+await runAuto(localDir);
 
 const websiteDir = join(localDir, "../../../website");
 

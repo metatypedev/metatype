@@ -13,7 +13,7 @@ export class BasicAuth extends Protocol {
     typegraphName: string,
     auth: AuthDS,
     secretManager: SecretManager,
-  ): Protocol {
+  ): Promise<Protocol> {
     const tokens = new Map();
     for (const user of auth.auth_data.users as string[]) {
       const password = SystemTypegraph.check(typegraphName)
@@ -21,7 +21,7 @@ export class BasicAuth extends Protocol {
         : secretManager.secretOrFail(`BASIC_${user}`);
       tokens.set(user, password);
     }
-    return new BasicAuth(typegraphName, tokens);
+    return Promise.resolve(new BasicAuth(typegraphName, tokens));
   }
 
   private constructor(

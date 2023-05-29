@@ -299,8 +299,6 @@ test("Full introspection", async (t) => {
         description
         type { ...TypeRef }
         defaultValue
-        
-        
       }
 
       fragment TypeRef on __Type {
@@ -336,9 +334,7 @@ test("Full introspection", async (t) => {
         }
       }
     `
-      .expectBody((body) => {
-        t.assertSnapshot(body.data);
-      })
+      .matchOkSnapshot(t)
       .on(e);
   });
 }, { introspection: true });

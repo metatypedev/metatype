@@ -16,7 +16,7 @@ with TypeGraph(
         allow_headers=["authorization"],
     ),
 ) as g:
-    random = RandomRuntime()
+    random = RandomRuntime(seed=0)
     public = policies.public()
 
     admin_only = Policy(

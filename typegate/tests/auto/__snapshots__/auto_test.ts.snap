@@ -1,5 +1,15 @@
 export const snapshot = {};
 
+snapshot[`Auto-tests for test 1`] = `
+{
+  data: {
+    test: {
+      a: 2,
+    },
+  },
+}
+`;
+
 snapshot[`Auto-tests for basic 1`] = `
 {
   data: {
@@ -34,7 +44,7 @@ snapshot[`Auto-tests for database 1`] = `
 {
   data: {
     create_message: {
-      id: 4,
+      id: 1,
     },
   },
 }
@@ -48,18 +58,6 @@ snapshot[`Auto-tests for database 2`] = `
         body: "This is a message",
         id: 1,
       },
-      {
-        body: "This is a message",
-        id: 2,
-      },
-      {
-        body: "This is a message",
-        id: 3,
-      },
-      {
-        body: "This is a message",
-        id: 4,
-      },
     ],
   },
 }
@@ -67,24 +65,75 @@ snapshot[`Auto-tests for database 2`] = `
 
 snapshot[`Auto-tests for graphql 1`] = `
 {
-  errors: [
-    {
-      extensions: {
-        timestamp: "2023-05-29T02:42:22.116Z",
-      },
-      locations: [],
-      message: 'From remote graphql: Cannot query field "list_users" on type "Query". Did you mean "users"?',
-      path: [],
+  data: {
+    users: {
+      data: [
+        {
+          id: "1",
+          name: "Leanne Graham",
+        },
+        {
+          id: "2",
+          name: "Ervin Howell",
+        },
+        {
+          id: "3",
+          name: "Clementine Bauch",
+        },
+        {
+          id: "4",
+          name: "Patricia Lebsack",
+        },
+        {
+          id: "5",
+          name: "Chelsey Dietrich",
+        },
+        {
+          id: "6",
+          name: "Mrs. Dennis Schulist",
+        },
+        {
+          id: "7",
+          name: "Kurtis Weissnat",
+        },
+        {
+          id: "8",
+          name: "Nicholas Runolfsdottir V",
+        },
+        {
+          id: "9",
+          name: "Glenna Reichert",
+        },
+        {
+          id: "10",
+          name: "Clementina DuBuque",
+        },
+      ],
     },
-  ],
+  },
 }
 `;
 
 snapshot[`Auto-tests for graphql 2`] = `
 {
   data: {
-    list_messages: [],
+    create_message: {
+      id: 1,
+    },
   },
+}
+`;
+
+snapshot[`Auto-tests for graphql 3`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "Invalid state",
+      path: [],
+    },
+  ],
 }
 `;
 
@@ -109,7 +158,7 @@ snapshot[`Auto-tests for cors 1`] = `
 snapshot[`Auto-tests for rate 1`] = `
 {
   data: {
-    lightweight_call: "hLCos%&N4*w",
+    lightweight_call: "R0!S@O!FUVCGw",
   },
 }
 `;
@@ -118,9 +167,7 @@ snapshot[`Auto-tests for rate 2`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:22.538Z",
-      },
+      extensions: {},
       locations: [],
       message: "rate-limited",
       path: [],
@@ -133,9 +180,7 @@ snapshot[`Auto-tests for rate 3`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:22.540Z",
-      },
+      extensions: {},
       locations: [],
       message: "rate-limited",
       path: [],
@@ -148,9 +193,7 @@ snapshot[`Auto-tests for rate 4`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:22.541Z",
-      },
+      extensions: {},
       locations: [],
       message: "rate-limited",
       path: [],
@@ -187,7 +230,7 @@ snapshot[`Auto-tests for deno 1`] = `
 {
   data: {
     compute_fib: {
-      ms: 2,
+      ms: 0,
       res: 3,
     },
   },
@@ -197,7 +240,7 @@ snapshot[`Auto-tests for deno 1`] = `
 snapshot[`Auto-tests for policies 1`] = `
 {
   data: {
-    public: "ZIX3eg2sG8e9&34dxO",
+    public: "R0!S@O!FUVCGw",
   },
 }
 `;
@@ -206,9 +249,7 @@ snapshot[`Auto-tests for policies 2`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:25.047Z",
-      },
+      extensions: {},
       locations: [],
       message: "No policy took decision on type 'function_9' ('function') at '<root>.admin_only'",
       path: [],
@@ -221,9 +262,7 @@ snapshot[`Auto-tests for policies 3`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:25.049Z",
-      },
+      extensions: {},
       locations: [],
       message: "No policy took decision on type 'function_12' ('function') at '<root>.user_only'",
       path: [],
@@ -236,9 +275,7 @@ snapshot[`Auto-tests for policies 4`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:25.051Z",
-      },
+      extensions: {},
       locations: [],
       message: "No policy took decision on type 'function_15' ('function') at '<root>.both'",
       path: [],
@@ -251,11 +288,9 @@ snapshot[`Auto-tests for business-logic 1`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:25.683Z",
-      },
+      extensions: {},
       locations: [],
-      message: "'your_turn' not found at 'Q', available names are: list_messages, emit_new_message, list_users",
+      message: "Authorization failed for policy '__ctx_user_type' with effect 'none' on type 'function_408' ('function') at '<root>.list_messages'",
       path: [],
     },
   ],
@@ -287,9 +322,7 @@ snapshot[`Auto-tests for index 2`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:26.319Z",
-      },
+      extensions: {},
       locations: [],
       message: "Validation errors:
 " +
@@ -305,9 +338,7 @@ snapshot[`Auto-tests for index 3`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:26.321Z",
-      },
+      extensions: {},
       locations: [],
       message: "Authorization failed for policy '__ctx_email__metatype_dev' with effect 'none' on type 'string_4' ('string') at '<root>.list_feedback.email'",
       path: [],
@@ -320,9 +351,7 @@ snapshot[`Auto-tests for prisma 1`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:26.580Z",
-      },
+      extensions: {},
       locations: [],
       message: "Validation errors:
 " +
@@ -338,9 +367,7 @@ snapshot[`Auto-tests for prisma 2`] = `
 {
   errors: [
     {
-      extensions: {
-        timestamp: "2023-05-29T02:42:26.582Z",
-      },
+      extensions: {},
       locations: [],
       message: "Validation errors:
 " +

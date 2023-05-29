@@ -28,6 +28,7 @@ const defaultContextEncoder: ContextEncoder = async (context) => {
 
 interface ResponseBodyError {
   message: string;
+  extensions: Record<string, unknown>;
 }
 
 interface ResponseBody {
@@ -168,35 +169,33 @@ export class Q {
     });
   }
 
-  /**
-   * Asserts if the response body error matches the previous generated snapshot
-   */
+  matchSnapshot(testContext: MetaTest): Q {
+    return this.expectBody(async (body: ResponseBody) => {
+      if (body.errors) {
+        body.errors.forEach((error) => {
+          delete error.extensions?.timestamp;
+        });
+      }
+      await testContext.assertSnapshot(body);
+    });
+  }
+
   matchErrorSnapshot(testContext: MetaTest): Q {
-    return this.expectBody((body: ResponseBody) => {
+    return this.expectBody(async (body: ResponseBody) => {
       if (body.errors === undefined) {
         throw new AssertionError(
-          "should have 'errors' field in the response body",
+          `should have 'errors' field in the response body: ${
+            JSON.stringify(body)
+          }`,
         );
       }
       const errors: string[] = body.errors.map((error) => error.message);
-      testContext.assertSnapshot(errors);
+      await testContext.assertSnapshot(errors);
     });
   }
 
-  /**
-   * Asserts if the response body matches the previous generated snapshot
-   */
-  matchSnapshot(testContext: MetaTest): Q {
-    return this.expectBody((body: ResponseBody) => {
-      testContext.assertSnapshot(body);
-    });
-  }
-
-  /**
-   * Asserts if the response body matches the previous generated snapshot
-   */
   matchOkSnapshot(testContext: MetaTest): Q {
-    return this.expectBody((body: ResponseBody) => {
+    return this.expectBody(async (body: ResponseBody) => {
       if (body.data === undefined) {
         throw new AssertionError(
           `should have 'data' field in the response body: ${
@@ -204,7 +203,7 @@ export class Q {
           }`,
         );
       }
-      testContext.assertSnapshot(body.data);
+      await testContext.assertSnapshot(body.data);
     });
   }
 

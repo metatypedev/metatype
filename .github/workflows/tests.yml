@@ -84,6 +84,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: pnpm/action-setup@v2.2.4
         with:
           version: ${{ env.PNPM_VERSION }}
@@ -92,8 +102,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
           cache-dependency-path: website/pnpm-lock.yaml
-      - working-directory: website
-        run: |
+      - run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          poetry install
+          cd website
           pnpm install --frozen-lockfile
           pnpm lint
           pnpm build
@@ -124,7 +137,7 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           cd typegraph/python
-          poetry install --sync
+          poetry install
           pytest -s tests
 
   test-meta-cli:

@@ -221,6 +221,8 @@ export async function runAuto(rootDir: string, target = "dev") {
 
     test(`Auto-tests for ${name}`, async (t) => {
       const e = await t.pythonFile(pythonFile.path, { secrets });
+      await dropSchemas(e);
+      await recreateMigrations(e);
 
       for (const [name, graphqlFile] of Object.entries(graphqlFiles)) {
         await t.should(
