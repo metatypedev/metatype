@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import config from "./config.ts";
 import { Register } from "./register.ts";
@@ -9,6 +10,7 @@ import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { getLogger } from "./log.ts";
 import { forceAnyToOption } from "./utils.ts";
+import { parseRequest } from "./graphql/request_parser.ts";
 
 interface ParsedPath {
   lookup: string;
@@ -61,7 +63,9 @@ export const typegate =
       const engine = register.get(lookup);
 
       if (!engine) {
-        console.error(`Typegraph not found: ${lookup}`);
+        if (lookup !== "favicon.ico") {
+          logger.info(`typegraph not found: ${lookup}`);
+        }
         return new Response("not found", {
           status: 404,
         });
@@ -153,7 +157,22 @@ export const typegate =
         )
         : null;
 
-      const { query, operationName, variables } = await request.json();
+      const contentLength = request.headers.get("content-length");
+
+      if (contentLength === null) {
+        return new Response(
+          "POST request must specify 'Content-Length' in the header",
+          {
+            status: 411,
+          },
+        );
+      }
+
+      if (contentLength == "0") {
+        return new Response("empty body was provided", { status: 400 });
+      }
+
+      const { query, operationName, variables } = await parseRequest(request);
       const info = {
         url,
         headers: Object.fromEntries(request.headers.entries()),

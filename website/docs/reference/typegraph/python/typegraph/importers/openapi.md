@@ -3,6 +3,27 @@ sidebar_label: openapi
 title: typegraph.importers.openapi
 ---
 
+#### ref\_to\_name
+
+```python
+def ref_to_name(ref: str) -> str
+```
+
+Example match:
+
+`#/components/schemas/financial_connections.account_owner`
+
+#### create\_fn\_name
+
+```python
+def create_fn_name(method: str, path: str)
+```
+
+**Example**:
+
+  
+  `method`=get, `path`=/users/{id} => getUsersId
+
 ## OpenApiImporter Objects
 
 ```python

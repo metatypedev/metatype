@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 use anyhow::{anyhow, bail, Context, Result};
 use std::io::Write;
@@ -83,8 +84,16 @@ pub fn run() -> Result<()> {
 
     let code = typescript::format_text(path, std::str::from_utf8(&buffer)?)?;
 
-    let license_header =
-        fs::read_to_string(project_root::get_project_root()?.join("dev/license-header.txt"))?;
+    let license_header = fs::read_to_string(
+        project_root::get_project_root()?.join("dev/license-header-Elastic-2.0.txt"),
+    )
+    .context("Reading license header")?;
+    let license_header = license_header
+        .lines()
+        .map(|line| format!("// {line}\n"))
+        .collect::<Vec<_>>()
+        .join("");
+
     let lint_ignore_directive = "deno-lint-ignore-file no-explicit-any";
 
     println!("Writing at {path:?}");
@@ -97,7 +106,7 @@ pub fn run() -> Result<()> {
     file.set_len(0)?;
     write!(
         file,
-        "// {license_header}\n// {lint_ignore_directive}\n\n{code}"
+        "{license_header}\n// {lint_ignore_directive}\n\n{code}"
     )
     .with_context(|| format!("Writing to output file {path:?}"))?;
     println!("  > written at {:?}", path.canonicalize()?);

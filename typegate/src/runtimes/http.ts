@@ -1,27 +1,14 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { ComputeStage } from "../engine.ts";
 import { Runtime } from "./Runtime.ts";
-import { createUrl, JSONValue } from "../utils.ts";
+import { createUrl } from "../utils.ts";
 import { MatOptions, replaceDynamicPathParams } from "./utils/http.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
-
-const traverseLift = (obj: JSONValue): any => {
-  if (Array.isArray(obj)) {
-    return obj.map(traverseLift);
-  }
-  if (typeof obj === "object" && obj !== null) {
-    const res: any = {};
-    for (const k in obj) {
-      res[k] = () => traverseLift(obj[k]);
-    }
-    return res;
-  }
-  return obj;
-};
 
 const encodeRequestBody = (
   body: Record<string, any>,
@@ -170,17 +157,17 @@ export class HTTPRuntime extends Runtime {
       const contentType = res.headers.get("content-type")?.split("; ")[0];
       switch (contentType) {
         case "application/json":
-          return traverseLift(await res.json());
+          return await res.json();
         case "text/plain":
-          return traverseLift(await res.text());
+          return await res.text();
       }
 
       if (res.status === 204) { // no content
-        return traverseLift(true);
+        return true;
       }
 
       if (res.status === 404) { // not found
-        return traverseLift(null);
+        return null;
       }
 
       throw new Error(`Unsupported content type "${contentType}"`);
@@ -209,16 +196,8 @@ export class HTTPRuntime extends Runtime {
     );
 
     for (const field of sameRuntime) {
-      const resolver: Resolver = ({ _: { parent } }) => {
-        const resolver = parent[field.props.node];
-        const ret = typeof resolver === "function" ? resolver() : resolver;
-        return ret;
-      };
       stagesMat.push(
-        new ComputeStage({
-          ...field.props,
-          resolver,
-        }),
+        field.withResolver(Runtime.resolveFromParent(field.props.node)),
       );
     }
     return stagesMat;

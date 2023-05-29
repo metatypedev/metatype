@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { FragmentDefs } from "../graphql.ts";
 import {
@@ -32,10 +33,10 @@ export function generateValidator(
   const validator = new Function(code)() as ValidatorFn;
 
   return (value: unknown) => {
-    // console.log("validating", value);
     const errors: ErrorEntry[] = [];
     validator(value, "<value>", errors, validationContext);
     if (errors.length > 0) {
+      console.log("validating", value);
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
       throw new Error(`Validation errors:\n${messages}`);

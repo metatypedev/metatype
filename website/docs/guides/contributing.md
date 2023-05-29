@@ -61,10 +61,6 @@ cd website
 pnpm install
 cd ..
 
-cd typegate
-cp .env.sample .env
-cd ..
-
 whiz
 ```
 

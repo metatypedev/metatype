@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
 use std::sync::{Arc, RwLock};
 
@@ -8,7 +9,7 @@ use super::utils::{map_from_object, object_from_map};
 use anyhow::{bail, Result};
 use colored::Colorize;
 use common::typegraph::validator::validate_typegraph;
-use common::typegraph::{FunctionMatData, Materializer, ModuleMatData, Typegraph};
+use common::typegraph::{Materializer, Typegraph};
 use log::error;
 use typescript::parser::{transform_module, transform_script};
 
@@ -85,6 +86,8 @@ impl PostProcessor for Validator {
 
 pub mod deno_rt {
     use std::path::Path;
+
+    use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
 
     use crate::typegraph::utils::{get_materializers, get_runtimes};
 
@@ -167,7 +170,7 @@ pub mod prisma_rt {
     use anyhow::{anyhow, Context};
     use common::{
         archive,
-        typegraph::{MigrationOptions, PrismaRuntimeData},
+        typegraph::runtimes::{MigrationOptions, PrismaRuntimeData},
     };
 
     use crate::{

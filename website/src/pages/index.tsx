@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 
@@ -23,14 +24,14 @@ function Header() {
         <h1 className="text-5xl">
           Open source,{" "}
           <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-metared from-15% via-metablue via-50% to-metared to-85%">
-            low-code API platform
+            low-code backend platform
           </span>{" "}
           for developers.
         </h1>
         <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[950px]">
           Build <strong>modular APIs</strong> with <strong>zero-trust</strong>{" "}
           and <strong>serverless</strong> deployment, no matter where and how
-          your (legacy) systems are.
+          (legacy) systems are.
         </p>
         <div className="md:flex md:px-32 justify-center">
           <Link
@@ -426,9 +427,9 @@ function Landscape(): JSX.Element {
             </tr>
             <tr>
               <td>
-                <small>short-lived ↑</small>
+                <small>instantaneous ↑</small>
                 <br />
-                instantaneous
+                short-lived
               </td>
               <td className="bg-slate-100">
                 <strong>Metatype</strong>
@@ -447,9 +448,9 @@ function Landscape(): JSX.Element {
             </tr>
             <tr>
               <td>
-                asynchronous
+                long-running
                 <br />
-                <small>long-running ↓</small>
+                <small>asynchronous ↓</small>
               </td>
               <td>
                 Temporal

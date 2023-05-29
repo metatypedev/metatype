@@ -1,8 +1,10 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import {
   ArrayNode,
   BooleanNode,
+  FileNode,
   IntegerNode,
   NumberNode,
   ObjectNode,
@@ -130,6 +132,36 @@ export class CodeGenerator {
         `"string does not statisfy the required format '${typeNode.format}'"`,
       );
       this.line("}");
+    }
+  }
+
+  generateFileValidator(typeNode: FileNode) {
+    this.validation("!(value instanceof File)", '"expected a file"');
+    const constraints = [
+      ["minSize", "<", "minimum size"],
+      ["maxSize", ">", "maximum size"],
+    ] as const;
+    for (const c of constraints) {
+      const [prop, comp, name] = c;
+      const constraint = typeNode[prop];
+      if (constraint != null) {
+        this.line("else");
+        this.validation(
+          `value.size ${comp} ${constraint}`,
+          `\`expected ${name}: ${constraint}, got \${value.size}\``,
+        );
+      }
+    }
+
+    const mimeTypes = typeNode.mimeTypes;
+    console.log({ mimeTypes });
+    if (mimeTypes != null) {
+      this.line("else");
+      const arrayExpr = JSON.stringify(mimeTypes);
+      this.validation(
+        `!${arrayExpr}.includes(value.type)`,
+        `\`type '\${value.type}' not allowed\``,
+      );
     }
   }
 

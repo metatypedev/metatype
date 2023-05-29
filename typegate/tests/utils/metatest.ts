@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
@@ -158,8 +159,14 @@ export class MetaTest {
   ): Promise<boolean> {
     const res = await this.t.step({
       name: `should ${fact}`,
-      fn,
-      //sanitizeOps: false,
+      fn: async (t) => {
+        try {
+          await fn(t);
+        } catch (e) {
+          console.error(e);
+          throw e;
+        }
+      },
     });
     if (!res) {
       Deno.exit(1);

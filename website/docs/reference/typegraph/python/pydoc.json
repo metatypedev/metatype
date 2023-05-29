@@ -81,6 +81,13 @@
       "label": "typegraph.runtimes",
       "type": "category"
     },
+    {
+      "items": [
+        "docs/reference/typegraph/python/typegraph/utils/sanitizers"
+      ],
+      "label": "typegraph.utils",
+      "type": "category"
+    },
     "docs/reference/typegraph/python/typegraph/injection",
     "docs/reference/typegraph/python/typegraph/types"
   ],

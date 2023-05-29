@@ -1,4 +1,5 @@
-# Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
 
 import json
 import pathlib
@@ -27,10 +28,23 @@ MIME_TYPES = Box(
 
 
 def ref_to_name(ref: str) -> str:
-    match = re.match(r"^#/components/schemas/(\w+)$", ref)
+    """
+    Example match:\n
+    `#/components/schemas/financial_connections.account_owner`
+    """
+    match = re.match(r"^#/components/schemas/([\w\-_\.]+)$", ref)
     if not match:
         raise Exception(f"Could not resolve $ref '{ref}'")
     return match.group(1)
+
+
+def create_fn_name(method: str, path: str):
+    """
+    Example:\n
+    `method`=get, `path`=/users/{id} => getUsersId
+    """
+    parts = map(lambda s: s.capitalize(), re.findall(r"([^/{}]+)", path))
+    return f"{method}{''.join(parts)}"
 
 
 class OpenApiImporter(Importer):
@@ -68,7 +82,6 @@ class OpenApiImporter(Importer):
                 self.specification = Box(res.json())
 
             self.base_url = url
-
         else:
             assert file is not None and base_url is not None
             self.base_url = base_url
@@ -89,13 +102,22 @@ class OpenApiImporter(Importer):
         )
 
         self.imports.add(("typegraph.runtimes.http", "HTTPRuntime"))
+        self.imports.add(("typegraph.utils.sanitizers", "inject_params"))
 
         if "servers" in self.specification:
             server_url = self.specification.servers[0].url
         else:
             server_url = "/"
-        url = urljoin(self.base_url, server_url)
-        self.headers.append(f"{name} = HTTPRuntime({repr(url)})")
+
+        # Enable the function argument `params`
+        self.enable_params = True
+        if server_url.startswith("/"):
+            url = urljoin(self.base_url, server_url)
+        else:
+            url = server_url
+
+        self.headers.append(f"target_url = inject_params({repr(url)}, params)")
+        self.headers.append(f"{name} = HTTPRuntime(target_url)")
 
     def resolve_ref(self, obj: Box):
         if "$ref" not in obj:
@@ -115,8 +137,11 @@ class OpenApiImporter(Importer):
         self.specification.paths
 
         schemas = self.specification.get("components", {}).get("schemas", [])
-        for name, schema in schemas.items():
-            self.add_schema(name, schema)
+
+        # can be a BoxList(list) or a list
+        if hasattr(schemas, "items"):
+            for name, schema in schemas.items():
+                self.add_schema(name, schema)
 
         with self as imp:
             for path in self.specification.paths:
@@ -174,19 +199,22 @@ class Path:
     def generate_functions(self):
         ret = {}
         for method in self.spec:
+            name = None
             if method in METHODS:
                 try:
                     name, fn = self.generate_function(method)
                     ret[name] = fn
                 except Exception as e:
-                    name = self.spec[method].operationId
+                    identifier = name
+                    if identifier is None:
+                        identifier = f"method={method} path={self.path}"
                     print(
-                        f"Warning: Generation of function '{name}' skipped: {e}",
+                        f"Warning: Generation of function {identifier}: {e}",
                         file=stderr,
                     )
             else:
                 print(
-                    f"Warning: Unsupported method {method}: generation skipped",
+                    f"Warning: Unsupported method {method} at path={self.path}: generation skipped",
                     file=stderr,
                 )
         return ret
@@ -217,8 +245,16 @@ class Path:
         if "404" in spec.responses:
             out = out.optional()
 
+        # operationId is optional
+        # (method, path) can still uniquely identify a endpoint
+        name = (
+            spec.operationId
+            if hasattr(spec, "operationId")
+            else create_fn_name(method, self.path)
+        )
+
         return (
-            spec.operationId,
+            name,
             t.func(
                 inp_type,
                 out,
@@ -247,20 +283,38 @@ class Path:
             if MIME_TYPES.json in types:
                 content_type = MIME_TYPES.json
             elif MIME_TYPES.urlenc in types:
-                content_type = MIME_TYPES.json
+                content_type = MIME_TYPES.urlenc
             elif MIME_TYPES.multipart in types:
                 content_type = MIME_TYPES.multipart
             else:
                 raise Exception(
                     f"No supported content type for request: {', '.join(types)}"
                 )
-
             schema = body[content_type].schema
             schema = self.resolve_ref(schema)
+
             if schema.type != "object":
                 raise Exception(f"Unsupported type for request body: {schema.type}")
 
-            for name, typ in self.typedef_from_jsonschema(schema).props.items():
+            gen_typ = self.typedef_from_jsonschema(schema)
+            if isinstance(gen_typ, t.optional):
+                gen_typ = gen_typ.of
+
+            # print(f"{gen_typ.name} of type {gen_typ.__class__.__name__}")
+            # print(f"  {schema}")
+            if not isinstance(gen_typ, t.struct):
+                """
+                Example:
+                Spec: https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.yaml
+                At method=post path=/repos/{owner}/{repo}/pages
+                - It uses `anyOf` with *property names of the *closest schema as variants but not references to object or schemas (against jsonschema spec)
+                https://swagger.io/docs/specification/data-models/oneof-anyof-allof-not/
+                """
+                raise Exception(
+                    f"spec assigned type as 'object' but '{gen_typ.__class__.__name__}' was generated instead"
+                )
+
+            for name, typ in gen_typ.props.items():
                 if name in props:
                     raise Exception(
                         f"Name clash: '{name}' present in both query parameters and request body"

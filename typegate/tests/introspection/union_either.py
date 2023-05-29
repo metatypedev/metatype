@@ -1,7 +1,7 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.deno import PredefinedFunMat
 
-with TypeGraph("introspect-union-either") as g:
+with TypeGraph("introspect_union_either") as g:
     rubix_cube = t.struct({"name": t.string(), "size": t.integer()}).named("Rubix")
     toygun = t.struct({"color": t.string()}).named("Toygun")
     gunpla = t.struct(

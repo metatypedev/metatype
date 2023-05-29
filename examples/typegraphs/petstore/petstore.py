@@ -1,7 +1,7 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.http import HTTPRuntime
 
-with TypeGraph("swagger-petstore") as g:
+with TypeGraph("swagger_petstore") as g:
     remote = HTTPRuntime("https://petstore.swagger.io/v2")
 
     public = policies.public()

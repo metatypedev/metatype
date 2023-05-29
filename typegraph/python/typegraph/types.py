@@ -1,4 +1,5 @@
-# Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+# Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+# SPDX-License-Identifier: MPL-2.0
 
 from typing import (
     Any,
@@ -9,6 +10,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TypeVar,
     Union,
     get_args,
     get_origin,
@@ -33,7 +35,8 @@ from typegraph.injection import (
 )
 from typegraph.policies import Policy, EffectPolicies
 from typegraph.runtimes.base import Materializer, Runtime
-from typegraph.utils.attrs import SKIP, always, asdict
+from typegraph.utils.attrs import SKIP, asdict
+import re
 
 # if os.environ.get("DEBUG"):
 #     import debugpy
@@ -55,6 +58,13 @@ def is_optional(tpe: Type):
     return get_origin(tpe) is Union and type(None) in get_args(tpe)
 
 
+def validate_name(name: str):
+    invalids = re.findall("[^_A-Za-z0-9]+", name)
+    # print(invalids)
+    if bool(invalids):
+        raise Exception(f'name "{name}" does not match [_A-Za-z0-9]')
+
+
 class Secret(Node):
     secret: str
 
@@ -64,11 +74,6 @@ class Secret(Node):
 
     def data(self, collector: "Collector") -> dict:
         return self.secret  # this is a string
-
-
-# Optional keyword-only field
-def optional_field():
-    return field(kw_only=True, default=None)
 
 
 # reserved types are used for internal implementation
@@ -107,9 +112,9 @@ class typedef(Node):
         metadata={SKIP: True},
     )
     name: str = field(kw_only=True, default="")
-    description: Optional[str] = optional_field()
-    runtime: Optional["Runtime"] = optional_field()
-    injection: InjectionSwitch = optional_field()
+    description: Optional[str] = field(kw_only=True, default=None)
+    runtime: Optional["Runtime"] = field(kw_only=True, default=None)
+    injection: InjectionSwitch = field(kw_only=True, default=None)
     policies: Tuple[Policy, ...] = field(kw_only=True, factory=tuple)
     # runtime_config: Dict[str, Any] = field(
     #     kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
@@ -117,9 +122,9 @@ class typedef(Node):
     runtime_config: Dict[str, Any] = field(
         kw_only=True, factory=frozendict, hash=False, metadata={SKIP: True}
     )
-    _enum: Optional[Tuple[str]] = optional_field()
+    _enum: Optional[Tuple[str]] = field(kw_only=True, default=None)
 
-    collector_target: Optional[str] = always(Collector.types)
+    collector_target: Optional[str] = field(default=Collector.types, init=False)
 
     def __attrs_post_init__(self):
         if self.graph is None:
@@ -172,7 +177,9 @@ class typedef(Node):
             )
         types[name] = self
 
-    def named(self, name: str) -> "typedef":
+    def named(self, name: str, validate=True) -> "typedef":
+        if validate:
+            validate_name(name)
         ret = self.replace(name=name)
         ret.register_name()
         return ret
@@ -314,15 +321,21 @@ class typedef(Node):
 TYPE_CONSTRAINT = "__type_constraint_name"
 
 
-def constraint(name: Optional[str] = None):
+def constraint(name: Optional[str] = None, **kwargs):
     # Additional constraint on type: Validation keyword.
     # Field to be manually set on the serialization.
     return field(
-        kw_only=True, default=None, metadata={SKIP: True, TYPE_CONSTRAINT: name or True}
+        kw_only=True,
+        default=None,
+        metadata={SKIP: True, TYPE_CONSTRAINT: name or True},
+        **kwargs,
     )
 
 
-def with_constraints(cls):
+Cls = TypeVar("Cls", bound=typedef)
+
+
+def with_constraints(cls: Type[Cls]) -> Type[Cls]:
     if not hasattr(cls, "__attrs_attrs__"):
         raise Exception(
             "@with_constraints decorator requires class to have attribute '__attrs_attrs__'"
@@ -496,6 +509,16 @@ def phone() -> string:
 
 def enum(variants: List[str]) -> string:
     return string().enum(variants)
+
+
+@with_constraints
+@frozen
+class file(typedef):
+    _min: Optional[int] = constraint("minSize")
+    _max: Optional[int] = constraint("maxSize")
+    _allow: Optional[Tuple[str, ...]] = constraint(
+        "mimeTypes", converter=lambda v: v and tuple(v)
+    )
 
 
 def validate_struct_props(instance, attribute, props):
@@ -770,6 +793,7 @@ def gen(out: typedef, mat: Materializer, **kwargs) -> func:
 # single instance
 def named(name: str, define: Callable[[], typedef]) -> TypeNode:
     defined = find(name)
+    validate_name(name)
     if defined is not None:
         return defined
     else:

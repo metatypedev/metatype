@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
@@ -88,6 +89,7 @@ export class RedisReplicatedMap<T> {
     for (let i = 0; i < all.length; i += 2) {
       const name = all[i];
       const payload = all[i + 1];
+      logger.info(`reloaded addition: ${name}`);
       memory.set(name, await deserializer(payload));
     }
 

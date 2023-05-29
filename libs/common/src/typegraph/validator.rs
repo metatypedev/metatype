@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 use std::collections::HashSet;
 
@@ -212,6 +213,7 @@ impl Typegraph {
                 anyhow!("Expected a boolean got '{value}'", value = to_string(value))
             }),
             TypeNode::String { data, .. } => self.validate_string(data, value),
+            TypeNode::File { .. } => bail!("Literal file not supported"),
             TypeNode::Optional { data, .. } => {
                 if value.is_null() {
                     Ok(())

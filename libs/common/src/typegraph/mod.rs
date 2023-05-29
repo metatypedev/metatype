@@ -1,5 +1,7 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
+pub mod runtimes;
 pub mod types;
 pub mod validator;
 pub mod visitor;
@@ -177,40 +179,4 @@ impl TypeNode {
             bail!("node is not an object variant, found: {self:#?}")
         }
     }
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct FunctionMatData {
-    pub script: String,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ModuleMatData {
-    pub code: String,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct MigrationOptions {
-    pub migration_files: Option<String>,
-    // enable migration creation
-    // otherwise, a non-empty diff will make the push fail
-    pub create: bool,
-    // reset the database if required
-    pub reset: bool,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[skip_serializing_none]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PrismaRuntimeData {
-    pub name: String,
-    pub datamodel: String,
-    pub connection_string_secret: String,
-    pub models: Vec<u32>,
-    // if migration_options is not None: migrations will be applied on push
-    #[serde(default)]
-    pub migration_options: Option<MigrationOptions>,
 }

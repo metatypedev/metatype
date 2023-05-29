@@ -2,7 +2,7 @@ from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.random import RandomMat, RandomRuntime
 
 with TypeGraph(
-    "type-alias",
+    "type_alias",
 ) as g:
     random = RandomRuntime(seed=1)
     public = policies.public()

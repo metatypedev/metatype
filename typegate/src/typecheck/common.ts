@@ -1,4 +1,5 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { StringFormat } from "../types/typegraph.ts";
 import * as uuid from "std/uuid/mod.ts";
@@ -35,6 +36,7 @@ const formatValidators: Record<StringFormat, FormatValidator> = {
       require_protocol: true,
       require_valid_protocol: false,
       require_host: true,
+      require_tld: false,
     });
   },
   // TODO

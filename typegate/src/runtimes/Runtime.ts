@@ -1,7 +1,9 @@
-// Copyright Metatype OÜ under the Elastic License 2.0 (ELv2). See LICENSE.md for usage.
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
 
 import { ComputeStage } from "../engine.ts";
 import { equal } from "std/testing/asserts.ts";
+import { Resolver } from "../types.ts";
 
 export abstract class Runtime {
   abstract deinit(): Promise<void>;
@@ -40,5 +42,12 @@ export abstract class Runtime {
       }
     }
     return ret;
+  }
+
+  static resolveFromParent(name: string): Resolver {
+    return ({ _: { parent } }) => {
+      const resolver = parent[name];
+      return typeof resolver === "function" ? resolver() : resolver;
+    };
   }
 }

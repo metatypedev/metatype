@@ -1,4 +1,5 @@
-    test = HTTPRuntime('http://example.com/')
+    target_url = inject_params('http://example.com/', params)
+    test = HTTPRuntime(target_url)
 
     renames = {'User': '_test_1_User', 'UserProfile': '_test_2_UserProfile'}
 

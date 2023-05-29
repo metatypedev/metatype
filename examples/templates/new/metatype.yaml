@@ -11,3 +11,7 @@ typegates:
     password: password
     env:
       TG_EXAMPLE_ENV_VAR: "example"
+
+typegraphs:
+  python:
+    include: "api/**/*.py"
