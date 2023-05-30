@@ -1,0 +1,380 @@
+export const snapshot = {};
+
+snapshot[`Auto-tests for test 1`] = `
+{
+  data: {
+    test: {
+      a: 2,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for basic 1`] = `
+{
+  data: {
+    get_context: {
+      username: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for jwt 1`] = `
+{
+  data: {
+    get_context: {
+      your_own_content: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for oauth2 1`] = `
+{
+  data: {
+    get_context: {
+      exp: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for database 1`] = `
+{
+  data: {
+    create_message: {
+      id: 1,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for database 2`] = `
+{
+  data: {
+    list_messages: [
+      {
+        body: "This is a message",
+        id: 1,
+      },
+    ],
+  },
+}
+`;
+
+snapshot[`Auto-tests for graphql 1`] = `
+{
+  data: {
+    users: {
+      data: [
+        {
+          id: "1",
+          name: "Leanne Graham",
+        },
+        {
+          id: "2",
+          name: "Ervin Howell",
+        },
+        {
+          id: "3",
+          name: "Clementine Bauch",
+        },
+        {
+          id: "4",
+          name: "Patricia Lebsack",
+        },
+        {
+          id: "5",
+          name: "Chelsey Dietrich",
+        },
+        {
+          id: "6",
+          name: "Mrs. Dennis Schulist",
+        },
+        {
+          id: "7",
+          name: "Kurtis Weissnat",
+        },
+        {
+          id: "8",
+          name: "Nicholas Runolfsdottir V",
+        },
+        {
+          id: "9",
+          name: "Glenna Reichert",
+        },
+        {
+          id: "10",
+          name: "Clementina DuBuque",
+        },
+      ],
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for graphql 2`] = `
+{
+  data: {
+    create_message: {
+      id: 1,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for graphql 3`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "Invalid state",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for authentication 1`] = `
+{
+  data: {
+    get_context: {
+      username: null,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for cors 1`] = `
+{
+  data: {
+    catch_me_if_you_can: "R0!S@O!FUVCGw",
+  },
+}
+`;
+
+snapshot[`Auto-tests for rate 1`] = `
+{
+  data: {
+    lightweight_call: "R0!S@O!FUVCGw",
+  },
+}
+`;
+
+snapshot[`Auto-tests for rate 2`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "rate-limited",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for rate 3`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "rate-limited",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for rate 4`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "rate-limited",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for fcm 1`] = `
+{
+  data: {
+    send_notification: {
+      error: {
+        code: 401,
+        message: "Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential. See https://developers.google.com/identity/sign-in/web/devconsole-project.",
+      },
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for fcm 2`] = `
+{
+  data: {
+    user: {
+      id: "1",
+      name: "Leanne Graham",
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for deno 1`] = `
+{
+  data: {
+    compute_fib: {
+      ms: 0,
+      res: 3,
+    },
+  },
+}
+`;
+
+snapshot[`Auto-tests for policies 1`] = `
+{
+  data: {
+    public: "R0!S@O!FUVCGw",
+  },
+}
+`;
+
+snapshot[`Auto-tests for policies 2`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "No policy took decision on type 'function_9' ('function') at '<root>.admin_only'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for policies 3`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "No policy took decision on type 'function_12' ('function') at '<root>.user_only'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for policies 4`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "No policy took decision on type 'function_15' ('function') at '<root>.both'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for business-logic 1`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "Authorization failed for policy '__ctx_user_type' with effect 'none' on type 'function_408' ('function') at '<root>.list_messages'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for index 1`] = `
+{
+  data: {
+    stargazers: [
+      {
+        login: "cgallay",
+        user: {
+          name: "Charles Gallay",
+        },
+      },
+      {
+        login: "Kazy",
+        user: {
+          name: "Jocelyn Boullier",
+        },
+      },
+    ],
+  },
+}
+`;
+
+snapshot[`Auto-tests for index 2`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "Validation errors:
+" +
+        "  - at <value>.data.email: string does not statisfy the required format 'email'
+",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for index 3`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "Authorization failed for policy '__ctx_email__metatype_dev' with effect 'none' on type 'string_4' ('string') at '<root>.list_feedback.email'",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for prisma 1`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "Validation errors:
+" +
+        "  - at <value>.data.firstname: expected minimum length: 2, got 0
+",
+      path: [],
+    },
+  ],
+}
+`;
+
+snapshot[`Auto-tests for prisma 2`] = `
+{
+  errors: [
+    {
+      extensions: {},
+      locations: [],
+      message: "Validation errors:
+" +
+        "  - at <value>.where.firstname: Value does not match to any variant of the either type
+",
+      path: [],
+    },
+  ],
+}
+`;

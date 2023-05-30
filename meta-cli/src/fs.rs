@@ -5,23 +5,13 @@ use anyhow::{bail, Result};
 use pathdiff::diff_paths;
 use std::path::{Path, PathBuf};
 
-#[cfg(target_os = "windows")]
 pub fn is_hidden(path: impl AsRef<Path>) -> bool {
-    use std::os::windows::fs::MetadataExt;
-
-    // https://learn.microsoft.com/en-us/windows/win32/fileio/file-attribute-constants
-    path.as_ref()
-        .metadata()
-        .map(|m| m.file_attributes() & 0x02 == 0x02)
-        .unwrap_or(false)
-}
-
-#[cfg(not(target_os = "windows"))]
-pub fn is_hidden(path: impl AsRef<Path>) -> bool {
-    path.as_ref()
-        .file_name()
-        .and_then(|n| n.to_str())
-        .map_or(false, |n| n.starts_with('.'))
+    path.as_ref().components().any(|c| {
+        c.as_os_str()
+            .to_str()
+            .map(|s| s.starts_with('.'))
+            .unwrap_or(false)
+    })
 }
 
 pub fn find_in_parents<P: AsRef<Path>>(start_dir: P, files: &[&str]) -> Result<Option<PathBuf>> {

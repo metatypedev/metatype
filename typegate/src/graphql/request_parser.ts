@@ -16,19 +16,22 @@ export async function parseRequest(request: Request): Promise<Operations> {
   const contentType = request.headers.get("content-type");
 
   if (contentType == null) {
-    throw new Error("Content-Type header is required");
+    throw new Error("content-type header is required");
   }
 
   if (contentType.startsWith(contentTypes.json)) {
-    // validate??
-    return await request.json();
+    return await request.json().catch(() => {
+      throw new Error("invalid json");
+    });
   }
 
   if (contentType.startsWith(contentTypes.formData)) {
-    const data = await request.formData();
+    const data = await request.formData().catch(() => {
+      throw new Error("invalid form data");
+    });
     return new FormDataParser(data).parse();
   }
-  throw new Error(`Unsupported content type: '${contentType}'`);
+  throw new Error(`unsupported content type: '${contentType}'`);
 }
 
 /**

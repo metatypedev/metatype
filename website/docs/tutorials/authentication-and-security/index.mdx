@@ -28,21 +28,19 @@ TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"])
 
 ## Authentication
 
-Metatype supports multiple authentication schemes like Basic Auth, JSON Web Tokens (JWT) and OAuth2. This enables every request to have a context and store some information about the user. You can then use the context to set specific fields with `from_context` or as you will see next step, to restrict some accesses via the policies.
+Metatype supports multiple [authentication schemes](/docs/guides/authentication): Basic authentication, JSON Web Tokens (JWT) and OAuth2. This enables every request to have a context and store some information about the user. You can then use the context to set specific fields with `from_context` or as you will see next step, to restrict accesses via the policies.
 
-For Basic Auth, well, it's basic. The context contains a field `user` with its name.
-
-For JWT, it supports parsing from the cookie or the `Authorization` header and loads the context with the claims.
-
-For OAuth2, the typegate provide some helpers to obtain the access token and renew them, either in the cookie - this works only when on the same subdomain due to third-party cookies restrictions - or in the `Authorization` header. Once setup, you can redirect your users to `http://localhost:7890/[typegraph]/auth/[auth name]` and the OAuth2 flow will be handled for you. The context will contain the user info of the provider. You can test it by setting up a [GitHub OAuth2 App](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app) or [try with the flow](https://demo.metatype.dev/authentication/auth/github?redirect_uri=https://metatype.dev/docs/tutorials/authentication-and-security) with the demo.
+For your app, you will use basic authentication in order to restrict some actions for admin users. In order to do so, adding the following secret to your `metatype.yml` file: `TG_AUTHENTICATION_BASIC_ADMIN=password`.
 
 <TGExample
   typegraph="authentication"
   python={require("./authentication.py")}
   query={require("./authentication.graphql")}
+  headers={{
+    Authorization: "Basic YWRtaW46cGFzc3dvcmQ=",
+  }}
+  tab="headers"
 />
-
-Some OAuth2 providers are already ready to use for you in `typegraph.graph.auth.oauth2`, no need to gather URL and scopes each time.
 
 ## Rate limiting
 
@@ -53,7 +51,7 @@ The rate limiting algorithm works as follows:
 - each request is identified by its IP or by one value of its context if set `context_identifier`
 - a single query can score a maximum of `query_limit`
 - multiple queries can sum up to `window_limit` in a `window_sec` window
-- when there is multiple typegates (`N`), you can improve performance by avoiding score synchronizing while the typegate has not reach `local_excess`: the real maximum score is thus `window_limit + min(local_excess, query_limit) * N`
+- when there is multiple typegates (`N`), you can improve performance by avoiding score synchronizing while the typegate has not reached `local_excess`: the real maximum score is thus `window_limit + min(local_excess, query_limit) * N`
 
 <TGExample
   typegraph="rate"

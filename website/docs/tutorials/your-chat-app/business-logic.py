@@ -1,7 +1,6 @@
 # skip:start
 
 from typegraph import TypeGraph, policies, t
-from typegraph.graph.auth.oauth2 import github_auth
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.runtimes.deno import ModuleMat
 from typegraph.runtimes.graphql import GraphQLRuntime
@@ -24,7 +23,7 @@ with TypeGraph(
         allow_headers=["authorization"],
     ),
     auths=[
-        github_auth,
+        TypeGraph.Auth.basic(["admin", "user"]),
     ],
 ) as g:
     db = PrismaRuntime("database", "POSTGRES_CONN")
@@ -32,7 +31,7 @@ with TypeGraph(
     googleapi = import_googleapi()
 
     public = policies.public()
-    gh_user = policies.jwt("user", "type")
+    gh_user = policies.ctx("user", "type")
     # highlight-next-line
     internal = policies.internal()
 

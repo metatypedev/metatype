@@ -36,6 +36,8 @@ test("Injected queries", async (t) => {
           raw_int
           raw_str
           secret
+          context
+          optional_context
           parent {
             a2
           }
@@ -54,6 +56,8 @@ test("Injected queries", async (t) => {
           raw_int: 1,
           raw_str: "2",
           secret: 3,
+          context: "123",
+          optional_context: null,
           parent: {
             a2: 0,
           },

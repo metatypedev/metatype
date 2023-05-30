@@ -4,7 +4,7 @@ on:
       - main
 
 env:
-  PNPM_VERSION: "8.1.0"
+  PNPM_VERSION: "8.6.0"
   NODE_VERSION: "19.8.1"
 
 jobs:

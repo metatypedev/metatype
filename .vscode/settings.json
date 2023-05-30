@@ -41,6 +41,8 @@
     "cockroachdb",
     "deno",
     "faas",
+    "idp",
+    "keycloak",
     "materializer",
     "materializers",
     "metatype",

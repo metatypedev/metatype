@@ -1,4 +1,4 @@
-from typegraph import TypeGraph, policies, t, effects, injection
+from typegraph import TypeGraph, effects, injection, policies, t
 from typegraph.runtimes import deno
 
 with TypeGraph("injection") as g:
@@ -8,11 +8,13 @@ with TypeGraph("injection") as g:
             "raw_int": t.integer().set(1),
             "raw_str": t.string().set("2"),
             "secret": t.integer().from_secret("TEST_VAR"),
+            "context": t.string().from_context("userId"),
+            "optional_context": t.string().optional().from_context("inexistent"),
             "raw_obj": t.struct({"in": t.integer()}).set({"in": -1}),
             "alt_raw": t.string().inject(injection.static("2")),
             "alt_secret": t.string().inject(injection.secret("TEST_VAR")),
             "alt_context": t.string().inject(injection.context("userId")),
-            # "alt_context_missing": t.string().inject(injection.context("user")), # fail
+            # "alt_context_missing": t.string().inject(injection.context("inexistent")), # fail
             "alt_context_opt": t.string()
             .optional()
             .inject(injection.context("userId")),

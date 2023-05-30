@@ -18,20 +18,20 @@ with TypeGraph(
     public = policies.public()
 
     # highlight-next-line
-    user = t.struct({"id": t.integer(), "name": t.string()})
+    user = t.struct({"id": t.string(), "name": t.string()})
 
     message = t.struct(
         {
             "id": t.integer().config("id", "auto"),
             "title": t.string(),
             # highlight-next-line
-            "user_id": t.integer().named("uid"),
+            "user_id": t.string().named("uid"),
             # highlight-next-line
             "user": gql.query(
                 t.struct(
                     {
                         # highlight-next-line
-                        "id": t.integer().from_parent(g("uid"))
+                        "id": t.string().from_parent(g("uid"))
                     }
                 ),
                 t.optional(user),
@@ -41,8 +41,8 @@ with TypeGraph(
 
     g.expose(
         create_message=db.create(message),
-        list_messages=db.find_many(message),
+        messages=db.find_many(message),
         # highlight-next-line
-        list_users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
+        users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
         default_policy=[public],
     )

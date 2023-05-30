@@ -10,17 +10,11 @@ import {
 import { Engine } from "../../src/engine.ts";
 import { JSONValue } from "../../src/utils.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";
-import { join } from "std/path/mod.ts";
 import { signJWT } from "../../src/crypto.ts";
-import { parse } from "std/flags/mod.ts";
 
-import { None } from "monads";
-import { execute, testDir } from "../utils.ts";
+import { execute } from "../utils.ts";
 
 import { MetaTest } from "./metatest.ts";
-import { exists } from "std/fs/exists.ts";
-
-const testConfig = parse(Deno.args);
 
 type Expect = (res: Response) => Promise<void> | void;
 type Variables = Record<string, unknown>;
@@ -34,6 +28,7 @@ const defaultContextEncoder: ContextEncoder = async (context) => {
 
 interface ResponseBodyError {
   message: string;
+  extensions: Record<string, unknown>;
 }
 
 interface ResponseBody {
@@ -116,27 +111,6 @@ export class Q {
     return q;
   }
 
-  static async fs(path: string, engine: Engine) {
-    const input = join(testDir, `auto/queries/${path}.graphql`);
-    const output = join(testDir, `auto/queries/${path}.json`);
-    const query = Deno.readTextFile(input);
-    if (testConfig.override || !await exists(output)) {
-      const { ...result } = await engine!.execute(
-        await query,
-        None,
-        {},
-        {},
-        { headers: {}, url: new URL("") },
-        null,
-      );
-      await Deno.writeTextFile(output, JSON.stringify(result, null, 2));
-    }
-    const result = Deno.readTextFile(output);
-    return new Q(await query, {}, {}, {}, [])
-      .expectValue(JSON.parse(await result))
-      .on(engine);
-  }
-
   withContext(context: Context, contextEncoder?: ContextEncoder) {
     return this.clone((q) => {
       q.context = deepMerge(q.context, context);
@@ -195,32 +169,41 @@ export class Q {
     });
   }
 
-  /**
-   * Asserts if the response body error matches the previous generated snapshot
-   */
-  matchErrorSnapshot(testContext: MetaTest): Q {
-    return this.expectBody((body: ResponseBody) => {
-      if (body.errors === undefined) {
-        throw new AssertionError(
-          "should have 'errors' field in the response body",
-        );
+  matchSnapshot(testContext: MetaTest): Q {
+    return this.expectBody(async (body: ResponseBody) => {
+      if (body.errors) {
+        body.errors.forEach((error) => {
+          delete error.extensions?.timestamp;
+        });
       }
-      const errors: string[] = body.errors.map((error) => error.message);
-      testContext.assertSnapshot(errors);
+      await testContext.assertSnapshot(body);
     });
   }
 
-  /**
-   * Asserts if the response body matches the previous generated snapshot
-   */
-  matchSnapshot(testContext: MetaTest): Q {
-    return this.expectBody((body: ResponseBody) => {
-      if (body.data === undefined) {
+  matchErrorSnapshot(testContext: MetaTest): Q {
+    return this.expectBody(async (body: ResponseBody) => {
+      if (body.errors === undefined) {
         throw new AssertionError(
-          "should have 'data' field in the response body",
+          `should have 'errors' field in the response body: ${
+            JSON.stringify(body)
+          }`,
         );
       }
-      testContext.assertSnapshot(body.data);
+      const errors: string[] = body.errors.map((error) => error.message);
+      await testContext.assertSnapshot(errors);
+    });
+  }
+
+  matchOkSnapshot(testContext: MetaTest): Q {
+    return this.expectBody(async (body: ResponseBody) => {
+      if (body.data === undefined) {
+        throw new AssertionError(
+          `should have 'data' field in the response body: ${
+            JSON.stringify(body)
+          }`,
+        );
+      }
+      await testContext.assertSnapshot(body.data);
     });
   }
 

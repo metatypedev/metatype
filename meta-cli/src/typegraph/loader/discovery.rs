@@ -10,7 +10,7 @@ use globset::GlobSet;
 use grep::searcher::sinks::UTF8;
 use grep::searcher::{BinaryDetection, SearcherBuilder};
 use grep::{regex::RegexMatcher, searcher::Searcher};
-use ignore::{gitignore::Gitignore, Match};
+use ignore::{gitignore::Gitignore, Match, WalkBuilder};
 use log::{debug, info};
 use pathdiff::diff_paths;
 use std::{
@@ -18,7 +18,6 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-use walkdir::WalkDir;
 
 pub struct Discovery {
     dir: PathBuf,
@@ -43,10 +42,10 @@ impl Discovery {
             .binary_detection(BinaryDetection::none())
             .build();
 
-        for result in WalkDir::new(self.dir.clone())
-            .follow_links(self.follow_symlinks)
-            .into_iter()
-            .filter_entry(|e| !self.filter.is_excluded(e.path(), &mut searcher))
+        for result in WalkBuilder::new(self.dir.clone())
+            .standard_filters(true)
+            .follow_links(true)
+            .build()
         {
             let entry = match result {
                 Ok(entry) => entry,
@@ -55,12 +54,11 @@ impl Discovery {
                     continue;
                 }
             };
-
-            if !entry.file_type().is_file() {
+            let path = entry.path();
+            if self.filter.is_excluded(path, &mut searcher) {
                 continue;
             }
 
-            let path = entry.path();
             let rel_path = diff_paths(path, &self.dir).unwrap();
             info!(
                 "Found typegraph definition module at {}",
@@ -115,19 +113,23 @@ impl FileFilter {
     }
 
     pub fn is_excluded(&self, path: &Path, searcher: &mut Searcher) -> bool {
-        if let Some(gi) = &self.gitignore {
-            if matches!(gi.matched(path, false), Match::Ignore(_)) {
-                return true;
-            }
-        }
-
-        if self.exclude_hidden && is_hidden(path) {
+        if path.is_dir() {
             return true;
         }
 
         let rel_path = diff_paths(path, &self.base_dir).unwrap();
-        if rel_path.as_os_str().is_empty() || path.is_dir() {
-            return false;
+        if rel_path.as_os_str().is_empty() {
+            return true;
+        }
+
+        if let Some(gi) = &self.gitignore {
+            if matches!(gi.matched(&rel_path, false), Match::Ignore(_)) {
+                return true;
+            }
+        }
+
+        if self.exclude_hidden && is_hidden(&rel_path) {
+            return true;
         }
 
         let globs = self.globs.get(&ModuleType::Python).unwrap();

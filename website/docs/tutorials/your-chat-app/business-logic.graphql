@@ -1,3 +1,7 @@
 query {
-  your_turn
+  list_messages(take: 2) {
+    title
+  }
+
+  # your turn
 }

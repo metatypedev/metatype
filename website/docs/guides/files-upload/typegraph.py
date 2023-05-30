@@ -8,5 +8,5 @@ with TypeGraph(
     s3 = S3Runtime("http://localhost:9000", "local", "access_key", "secret_key")
 
     g.expose(
-        presigned=s3.sign("bucket", "image/png").add_policy(public),
+        presigned=s3.presign_put("bucket", "image/png").add_policy(public),
     )

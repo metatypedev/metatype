@@ -578,8 +578,8 @@ class ArgumentCollector {
         const name = source.data;
         this.deps.context.add(name);
         return ({ context }) => {
-          const { [name]: value } = context;
-          if (value == null && typ.type != Type.OPTIONAL) {
+          const { [name]: value = null } = context;
+          if (value === null && typ.type != Type.OPTIONAL) {
             throw new Error(
               `Non optional injection '${name}' was not found in the context`,
             );

@@ -422,7 +422,7 @@
         "idempotent": true
       },
       "data": {
-        "script": "var _my_lambda=(_args,{context})=>context.user===\"admin\";"
+        "script": "var _my_lambda=(_args,{context})=>context.username===\"admin\";"
       }
     },
     {

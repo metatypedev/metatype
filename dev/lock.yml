@@ -19,7 +19,6 @@ dev:
       (version = ").+("): METATYPE_VERSION
     typegraph/python/pyproject.toml:
       (description = ").+("): TAGLINE
-      (version = ").+("): METATYPE_VERSION
     '**/*/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
       (description = ").+("): TAGLINE
@@ -37,8 +36,9 @@ dev:
       '(  tagline: ").+(",)': TAGLINE
     examples/**/compose.yml:
       '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
-    examples/**/pyproject.toml:
+    '**/*/pyproject.toml':
       (version = ").+("): METATYPE_VERSION
+    examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
   lock:
     PYTHON_VERSION: '3.8'
@@ -46,9 +46,9 @@ dev:
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.69.0
     DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
-    DENO_VERSION: 1.33.4
+    DENO_VERSION: 1.34.0
     NODE_VERSION: 19.8.1
-    PNPM_VERSION: 8.1.0
+    PNPM_VERSION: 8.6.0
     TYPEGRAPH_VERSION: 0.0.1
     METATYPE_VERSION: 0.1.10-dev.0
     TAGLINE: >-

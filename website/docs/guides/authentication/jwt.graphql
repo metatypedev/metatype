@@ -1,0 +1,5 @@
+query {
+  get_context {
+    your_own_content
+  }
+}

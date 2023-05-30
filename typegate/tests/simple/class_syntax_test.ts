@@ -145,7 +145,7 @@ test("Class Syntax", async (t) => {
         }
       }
     `
-      .matchSnapshot(t)
+      .matchOkSnapshot(t)
       .on(e);
   });
 }, { introspection: true });

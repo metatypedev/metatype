@@ -1,10 +1,10 @@
 from typegraph import TypeGraph, policies, t
-from typegraph.graph.auth.oauth2 import github_auth
+from typegraph.graph.auth import oauth2
 from typegraph.policies import Policy
 from typegraph.runtimes.deno import PredefinedFunMat, PureFunMat
 from typegraph.runtimes.http import HTTPRuntime
 
-with TypeGraph("test_auth", auths=[github_auth]) as g:
+with TypeGraph("test_auth", auths=[oauth2.github("openid profile email")]) as g:
     remote = HTTPRuntime("https://api.github.com")
 
     public = policies.public()
