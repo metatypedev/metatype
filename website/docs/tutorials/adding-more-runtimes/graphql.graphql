@@ -1,5 +1,5 @@
 query A {
-  list_users {
+  users {
     data {
       id
       name
@@ -7,11 +7,16 @@ query A {
   }
 }
 
-query B {
-  list_messages(take: 2) {
+mutation B {
+  create_message(data: { title: "Hey", user_id: "1" }) {
+    id
+  }
+}
+
+query C {
+  messages(take: 2) {
     title
     user {
-      # composition automatically happens here
       name
     }
   }

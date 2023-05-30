@@ -17,13 +17,16 @@ import { NoLimiter } from "./utils/no_limiter.ts";
 import { typegate } from "../src/typegate.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { ensure } from "../src/utils.ts";
-
+import { expandGlob } from "std/fs/expand_glob.ts";
+import { exists } from "std/fs/mod.ts";
+import * as yaml from "std/yaml/mod.ts";
+import * as graphql from "graphql";
 export const testDir = dirname(fromFileUrl(import.meta.url));
 export const metaCli = resolve(testDir, "../../target/debug/meta");
 
 init_native();
 
-export interface MetaOptions {
+export interface ShellOptions {
   stdin?: string;
 }
 
@@ -31,11 +34,11 @@ let compiled = false;
 
 export async function meta(...args: string[]): Promise<void>;
 export async function meta(
-  options: MetaOptions,
+  options: ShellOptions,
   ...args: string[]
 ): Promise<void>;
 export async function meta(
-  first: string | MetaOptions,
+  first: string | ShellOptions,
   ...input: string[]
 ): Promise<void> {
   if (!compiled) {
@@ -52,7 +55,7 @@ export async function meta(
 
 export async function shell(
   cmd: string[],
-  options: MetaOptions = {},
+  options: ShellOptions = {},
 ): Promise<string> {
   console.log("shell", cmd);
   const { stdin = null } = options;
@@ -156,25 +159,87 @@ test.only = (name, fn, opts = {}) => test(name, fn, { ...opts, only: true });
 test.ignore = (name, fn, opts = {}) =>
   test(name, fn, { ...opts, ignore: true });
 
-export function testAll(engineName: string) {
-  test(`Auto-tests for ${engineName}`, async (t) => {
-    const e = await t.pythonFile(`auto/${engineName}.py`);
+export async function findInParents(
+  dir: string,
+  names: string[],
+): Promise<string | null> {
+  let current = dir;
+  while (true) {
+    for (const name of names) {
+      const candidate = join(current, name);
+      if (await exists(candidate)) {
+        return candidate;
+      }
+    }
 
+    const parent = dirname(current);
+    if (parent === current) {
+      return null;
+    }
+
+    current = parent;
+  }
+}
+
+export async function runAuto(rootDir: string, target = "dev") {
+  for await (
+    const pythonFile of expandGlob("**/*.py", {
+      root: rootDir,
+      globstar: true,
+    })
+  ) {
+    const dir = dirname(pythonFile.path);
+    const name = pythonFile.name.replace(".py", "");
+
+    const graphqlFiles: Record<string, string> = {};
     for await (
-      const f of Deno.readDir(
-        join(testDir, `auto/queries/${engineName}`),
-      )
+      const graphqlFile of expandGlob(`**/${name}*.graphql`, {
+        root: dir,
+        globstar: true,
+      })
     ) {
-      if (f.name.endsWith(".graphql")) {
+      graphqlFiles[graphqlFile.name] = await Deno.readTextFile(
+        graphqlFile.path,
+      );
+    }
+
+    if (Object.keys(graphqlFiles).length === 0) {
+      continue;
+    }
+
+    const configFile = await findInParents(dir, [
+      "metatype.yml",
+      "metatype.yaml",
+    ]);
+
+    if (configFile === null) {
+      throw new Error(`Cannot find config file for ${name}`);
+    }
+
+    const config = yaml.parse(await Deno.readTextFile(configFile)) as any;
+    const secrets = config.typegates[target]?.env ?? {};
+
+    test(`Auto-tests for ${name}`, async (t) => {
+      const e = await t.pythonFile(pythonFile.path, { secrets });
+      await dropSchemas(e);
+      await recreateMigrations(e);
+
+      for (const [name, graphqlFile] of Object.entries(graphqlFiles)) {
         await t.should(
-          `run case ${f.name.replace(".graphql", "")}`,
+          `run case ${name}`,
           async () => {
-            await Q.fs(`${engineName}/1`, e);
+            const doc = graphql.parse(graphqlFile);
+            for (const operation of doc.definitions) {
+              const query = graphql.print(operation);
+              await new Q(query, {}, {}, {}, [])
+                .matchSnapshot(t)
+                .on(e);
+            }
           },
         );
       }
-    }
-  });
+    });
+  }
 }
 
 export function gql(query: readonly string[], ...args: any[]) {

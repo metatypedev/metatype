@@ -8,68 +8,52 @@ Install:
 - [Python](https://www.python.org/downloads/)
 - [pipx](https://pypa.github.io/pipx/installation/)
 - [PNPM](https://pnpm.io/installation)
-- [Deno](https://deno.land/manual@v1.29.1/getting_started/installation)
+- [Deno](https://deno.com/manual/getting_started/installation)
 - [Node](https://nodejs.org/en/download/)
-
-## Getting started
 
 ### Essential packages for Linux / WSL
 
 ```
-sudo apt install build-essential
-sudo apt install unzip
-sudo apt install pkg-config libssl-dev
+sudo apt install build-essential unzip pkg-config libssl-dev protobuf-compiler
 ```
 
-### Toolset
+## Getting started
+
+### Toolkit
 
 ```bash
-cargo install cargo-watch
+# manage rust dependencies
 cargo install cargo-edit
-cargo install --git https://github.com/zifeo/whiz --locked
-
-apt install -y protobuf-compiler
-
+# task runner
+cargo install whiz
+# enforce style and good practice
 pipx install pre-commit
+# maange python dependencies
 pipx install poetry
-
+# generate Deno/Rust bindings
 deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen/cli.ts
-
-# wasmedge
+# wasm runtime
 curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
 ```
 
-### Init workspace
+### Initiate workspace
 
-```
+```bash
+# install git hooks
 pre-commit install
-
+# prepare python virtual environment
 python3 -m venv .venv
-python3 -m venv examples/.venv
-
-cd typegraph
-source ../.venv/bin/activate
-poetry install
-deactivate
-cd ..
-
-cd examples
-poetry install
-cd ..
-
-cd website
-pnpm install
-cd ..
-
+source .venv/bin/activate # depends on your shell
+# run the task runner and it will install the remaining dependencies
 whiz
 ```
 
-## Tests
+## Testing
 
-```
-deno run -A dev/env.ts all
+```bash
+deno run -A dev/env.ts all # or only the env required (e.g. base prisma s3)
 cargo test
 deno run -A dev/test.ts
-cd typegraph && pytest -s
-deno run -A dev/env.ts
+cd typegraph/python && pytest -s
+deno run -A dev/env.ts # shutdown all env
 ```

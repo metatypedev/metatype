@@ -3,37 +3,36 @@
 
 import config from "./config.ts";
 import { Register } from "./register.ts";
-import { renderDebugAuth } from "./web/auth_debug.ts";
 import { renderPlayground } from "./web/playground.ts";
 import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { getLogger } from "./log.ts";
 import { forceAnyToOption } from "./utils.ts";
-import { parseRequest } from "./graphql/request_parser.ts";
-
-interface ParsedPath {
-  lookup: string;
-  service?: string;
-  providerName?: string;
-}
+import { Operations, parseRequest } from "./graphql/request_parser.ts";
+import { handleAuthService } from "./auth/auth.ts";
+import { Engine } from "./engine.ts";
 
 const logger = getLogger("http");
 
-const parsePath = (pathname: string): ParsedPath | null => {
-  const arr = pathname.split("/");
-  if (arr[1] === "typegate") {
-    switch (arr.length) {
-      case 2:
-        return { lookup: "typegate" };
-      case 3:
-        return { lookup: arr.slice(1).join("/") };
-      default:
-        return null;
-    }
+type Service = (req: Request, engine: Engine) => Promise<Response | null>;
+
+const services: Record<string, Service> = {
+  auth: handleAuthService,
+};
+
+const silenceList = new Set(["favicon.ico"]);
+
+const parsePath = (
+  pathname: string,
+): [string, string | undefined] => {
+  const [engineName, serviceName] = pathname.split("/").slice(1, 3);
+  if (engineName === "typegate") {
+    // if path starts with typegate, there is no service
+    // and typegraph correspond to full path
+    return [pathname.slice(1), undefined];
   }
-  const [, lookup, service, providerName] = arr;
-  return { lookup, service, providerName };
+  return [engineName ?? "", serviceName];
 };
 
 export const typegate =
@@ -53,52 +52,38 @@ export const typegate =
         });
       }
 
-      const parsedPath = parsePath(url.pathname);
-      if (parsedPath == null) {
-        return new Response("not found", {
-          status: 404,
-        });
-      }
-      const { lookup, service, providerName } = parsedPath;
-      const engine = register.get(lookup);
+      const [engineName, serviceName] = parsePath(url.pathname);
 
+      const engine = register.get(engineName);
       if (!engine) {
-        if (lookup !== "favicon.ico") {
-          logger.info(`typegraph not found: ${lookup}`);
+        if (!silenceList.has(engineName)) {
+          logger.info(`typegraph not found: ${engineName}`);
         }
         return new Response("not found", {
           status: 404,
         });
       }
 
-      if (service) {
-        if (service !== "auth" || request.method !== "GET") {
-          return new Response("not found", {
-            status: 404,
-          });
-        }
+      // cors
+      const corsHeaders = engine.tg.cors(request);
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          headers: corsHeaders,
+        });
+      }
 
-        if (!providerName) {
-          if (config.debug) {
-            const debugAuth = await renderDebugAuth(engine, request);
-            return new Response(debugAuth, {
-              headers: { "content-type": "text/html" },
-            });
+      if (serviceName) {
+        const service = services[serviceName];
+        const response = service ? await service(request, engine) : null;
+        if (response) {
+          for (const [k, v] of Object.entries(corsHeaders)) {
+            response.headers.set(k, v);
           }
-
-          return new Response("not found", {
-            status: 404,
-          });
+          return response;
         }
-
-        const provider = engine.tg.auths.get(providerName);
-        if (!provider) {
-          return new Response("not found", {
-            status: 404,
-          });
-        }
-
-        return await provider.authMiddleware(request);
+        return new Response("not found", {
+          status: 404,
+        });
       }
 
       if (request.method === "GET" && config.debug) {
@@ -108,19 +93,11 @@ export const typegate =
           ? `${forwarded_scheme}://${forwarded_host}`
           : url.origin;
         const playground = renderPlayground(
-          `${targetUrl}/${lookup}`,
+          `${targetUrl}/${engineName}`,
           register.list().map((e) => e.name),
         );
         return new Response(playground, {
           headers: { "content-type": "text/html" },
-        });
-      }
-
-      // cors
-      const corsHeaders = engine.tg.cors(request);
-      if (request.method === "OPTIONS") {
-        return new Response(null, {
-          headers: corsHeaders,
         });
       }
 
@@ -157,22 +134,14 @@ export const typegate =
         )
         : null;
 
-      const contentLength = request.headers.get("content-length");
-
-      if (contentLength === null) {
-        return new Response(
-          "POST request must specify 'Content-Length' in the header",
-          {
-            status: 411,
-          },
-        );
+      let content: Operations | null = null;
+      try {
+        content = await parseRequest(request);
+      } catch (e) {
+        return new Response(`bad request: ${e.message}`, { status: 400 });
       }
+      const { query, operationName, variables } = content;
 
-      if (contentLength == "0") {
-        return new Response("empty body was provided", { status: 400 });
-      }
-
-      const { query, operationName, variables } = await parseRequest(request);
       const info = {
         url,
         headers: Object.fromEntries(request.headers.entries()),
@@ -187,7 +156,7 @@ export const typegate =
       );
 
       if (
-        lookup !== "typegate" && (!operationName ||
+        engineName !== "typegate" && (!operationName ||
           !operationName.toLowerCase().includes("introspection"))
       ) {
         logger.debug({ req: { query, operationName, variables }, res });

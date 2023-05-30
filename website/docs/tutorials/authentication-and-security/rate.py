@@ -22,7 +22,7 @@ with TypeGraph(
     # skip:next-line
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
 ) as g:
-    random = RandomRuntime()
+    random = RandomRuntime(seed=0)
     public = policies.public()
 
     g.expose(

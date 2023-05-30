@@ -26,8 +26,6 @@
     "monads": "https://deno.land/x/monads@v0.5.10/mod.ts",
     "jwt": "https://deno.land/x/djwt@v2.7/mod.ts",
     "redis": "https://deno.land/x/redis@v0.29.3/mod.ts",
-    "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts",
-    "_bcrypt": "https://deno.land/x/bcrypt@v0.4.1/src/worker.ts",
     "oauth2_client": "https://deno.land/x/oauth2_client@v1.0.0/mod.ts",
     "test/mock_fetch": "https://deno.land/x/mock_fetch@0.3.0/mod.ts",
     "json_schema_typed": "https://deno.land/x/json_schema_typed@v8.0.0/draft_latest.ts",

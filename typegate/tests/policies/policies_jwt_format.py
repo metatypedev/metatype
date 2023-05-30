@@ -6,7 +6,7 @@ with TypeGraph(
     "policies_jwt_format",
     auths=[Auth.hmac256("native")],
 ) as g:
-    some_policy = policies.jwt("role", "myrole")
+    some_policy = policies.ctx("role", "myrole")
     g.expose(
         sayHelloWorld=t.func(
             t.struct(),

@@ -21,7 +21,7 @@ module.exports = (context) => ({
 
         if (res.status !== 200) {
           console.error(
-            "failed to load releases, got ${res.status} from Github"
+            `failed to load releases, got ${res.status} from Github`
           );
           return;
         }

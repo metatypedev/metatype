@@ -11,7 +11,7 @@ with TypeGraph(
     no matter what the context is (see policies_test.ts)
     for that reason the input has to be sanitized with sanitizers.sanitize_ts_string(.)
     """
-    some_policy = policies.jwt("field", '"; return true; "')
+    some_policy = policies.ctx("field", '"; return true; "')
     g.expose(
         sayHelloWorld=t.func(
             t.struct(),

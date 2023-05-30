@@ -11,7 +11,11 @@ import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure } from "./utils.ts";
 
-import { Auth, nextAuthorizationHeader } from "./auth/auth.ts";
+import {
+  initAuth,
+  internalAuthName,
+  nextAuthorizationHeader,
+} from "./auth/auth.ts";
 
 import {
   isArray,
@@ -42,6 +46,7 @@ import { InternalAuth } from "./auth/protocols/internal.ts";
 import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
 import { PythonWasiRuntime } from "./runtimes/python_wasi/python_wasi.ts";
 import { GrpcRuntime } from "./runtimes/grpc.ts";
+import { Protocol } from "./auth/protocols/protocol.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -127,7 +132,7 @@ export class TypeGraph {
     public secretManager: SecretManager,
     public runtimeReferences: Runtime[],
     public cors: (req: Request) => Record<string, string>,
-    public auths: Map<string, Auth>,
+    public auths: Map<string, Protocol>,
     public introspection: TypeGraph | null,
   ) {
     this.root = this.type(0);
@@ -157,15 +162,16 @@ export class TypeGraph {
 
     const staticCors: Record<string, string> = {
       "Access-Control-Allow-Methods": "POST,OPTIONS",
-      "Access-Control-Allow-Headers": [
-        nextAuthorizationHeader,
-        "Cache-Control",
-        "Content-Language",
-        "Content-Type",
-      ].concat(
-        meta.cors.allow_headers,
+      "Access-Control-Allow-Headers": Array.from(
+        new Set([
+          // https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header
+          "Cache-Control",
+          ...meta.cors.allow_headers,
+        ]),
       ).join(","),
-      "Access-Control-Expose-Headers": meta.cors.expose_headers.join(","),
+      "Access-Control-Expose-Headers": Array.from(
+        new Set([nextAuthorizationHeader, ...meta.cors.expose_headers]),
+      ).join(","),
       "Access-Control-Allow-Credentials": meta.cors.allow_credentials
         .toString(),
     };
@@ -186,15 +192,15 @@ export class TypeGraph {
       return {};
     };
 
-    const auths = new Map<string, Auth>();
+    const auths = new Map<string, Protocol>();
     for (const auth of meta.auths) {
       auths.set(
         auth.name,
-        await Auth.init(typegraphName, auth, secretManager),
+        await initAuth(typegraphName, auth, secretManager),
       );
     }
     // override "internal" to enforce internal auth
-    auths.set("internal", await InternalAuth.init(typegraphName));
+    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
 
     const runtimeReferences = await Promise.all(
       runtimes.map((runtime, idx) => {

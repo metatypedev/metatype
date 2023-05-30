@@ -16,7 +16,6 @@ import * as log from "std/log/mod.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { ResolverError } from "./errors.ts";
-import { getCookies } from "std/http/cookie.ts";
 import { RateLimit } from "./rate_limiter.ts";
 import {
   ComputeStageProps,
@@ -419,18 +418,12 @@ export class Engine {
     headers: Headers,
     url: URL,
   ): Promise<[Record<string, unknown>, Headers]> {
-    let [kind, token] = (headers.get("Authorization") ?? "").split(" ");
-    if (!token) {
-      const name = this.tg.root.title;
-      token = getCookies(headers)[name];
-    }
-
+    const [kind, token] = (headers.get("Authorization") ?? "").split(" ");
     if (!token) {
       return [{}, new Headers()];
     }
 
     let auth = null;
-
     if (kind.toLowerCase() === "basic") {
       auth = this.tg.auths.get("basic");
     } else {

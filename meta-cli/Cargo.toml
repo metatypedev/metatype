@@ -56,7 +56,6 @@ tar = "0.4.38"
 base64 = "0.21.0"
 common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
-walkdir = "2.3.3"
 serde_yaml = "0.9.19"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.48", features = ["vendored"] }

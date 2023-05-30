@@ -111,6 +111,7 @@ export class MetaTest {
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }
+
     const { typegraphName, messages } = await this.register.set(
       stdout,
       opts.secrets ?? {},
@@ -130,8 +131,6 @@ export class MetaTest {
   }
 
   async unregister(engine: Engine) {
-    const engines = this.register.list().filter((e) => e == engine);
-    await Promise.all(engines);
     await Promise.all(
       this.register
         .list()
@@ -146,11 +145,6 @@ export class MetaTest {
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
     await Promise.all(this.register.list().map((e) => e.terminate()));
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(undefined);
-      }, 1000);
-    });
   }
 
   async should(
@@ -175,11 +169,11 @@ export class MetaTest {
     return true;
   }
 
-  assertSnapshot(...params: AssertSnapshotParams): Promise<void> {
-    return assertSnapshot(this.t, ...params);
+  async assertSnapshot(...params: AssertSnapshotParams): Promise<void> {
+    await assertSnapshot(this.t, ...params);
   }
 
-  assertThrowsSnapshot(fn: () => void) {
+  async assertThrowsSnapshot(fn: () => void): Promise<void> {
     let err: Error | null = null;
     try {
       fn();
@@ -190,6 +184,6 @@ export class MetaTest {
     if (err == null) {
       throw new Error("Assertion failure: function did not throw");
     }
-    this.assertSnapshot(err.message);
+    await this.assertSnapshot(err.message);
   }
 }

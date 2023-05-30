@@ -97,28 +97,31 @@ impl PushConfig {
     }
 
     pub async fn push(&self, tg: &Typegraph) -> Result<PushResult> {
-        let secrets = lade_sdk::hydrate(self.node.env.clone(), self.base_dir.clone()).await?;
+        let secrets = lade_sdk::hydrate(self.node.env.clone(), self.base_dir.clone())
+            .await
+            .context("while fetching secrets")?;
         let tg = match &self.node.prefix {
             Some(prefix) => tg.with_prefix(prefix)?,
             None => tg.clone(),
         };
         let res = self.node
-            .post("/typegate")?
-            .gql(
-                indoc! {"
-                mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
-                    addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
-                        name
-                        messages { type text }
-                        migrations { runtime migrations }
-                        resetRequired
-                    }
-                }"}
-                .to_string(),
-                Some(json!({ "tg": serde_json::to_string(&tg)?, "secrets": serde_json::to_string(&secrets)?, "cliVersion": common::get_version() })),
-            )
-            .await?;
+        .post("/typegate")?
+        .gql(
+            indoc! {"
+            mutation InsertTypegraph($tg: String!, $secrets: String!, $cliVersion: String!) {
+                addTypegraph(fromString: $tg, secrets: $secrets, cliVersion: $cliVersion) {
+                    name
+                    messages { type text }
+                    migrations { runtime migrations }
+                    resetRequired
+                }
+            }"}
+            .to_string(),
+            Some(json!({ "tg": serde_json::to_string(&tg)?, "secrets": serde_json::to_string(&secrets)?, "cliVersion": common::get_version() })),
+        )
+        .await?;
 
+        println!("Pushing typegraph {}", tg.name()?);
         res.data("addTypegraph")
             .context("addTypegraph field in the response")
     }

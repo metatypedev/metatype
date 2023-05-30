@@ -3399,7 +3399,6 @@ dependencies = [
  "tiny_http",
  "tokio",
  "typescript",
- "walkdir",
 ]
 
 [[package]]

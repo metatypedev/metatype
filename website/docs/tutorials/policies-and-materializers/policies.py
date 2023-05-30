@@ -16,17 +16,17 @@ with TypeGraph(
         allow_headers=["authorization"],
     ),
 ) as g:
-    random = RandomRuntime()
+    random = RandomRuntime(seed=0)
     public = policies.public()
 
     admin_only = Policy(
         PureFunMat(
-            "(args, { context }) => context.user ? context.user === 'admin' : null"
+            "(args, { context }) => context.username ? context.username === 'admin' : null"
         ),
     )
     user_only = Policy(
         PureFunMat(
-            "(args, { context }) => context.user ? context.user === 'user' : null"
+            "(args, { context }) => context.username ? context.username === 'user' : null"
         ),
     )
 

@@ -20,7 +20,7 @@ with TypeGraph(
         # highlight-next-line
     ),
 ) as g:
-    random = RandomRuntime()
+    random = RandomRuntime(seed=0)
     public = policies.public()
 
     g.expose(
