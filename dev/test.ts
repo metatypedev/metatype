@@ -43,9 +43,7 @@ if (flags._.length === 0) {
       globstar: true,
     })
   ) {
-    if (entry.path.includes("grpc")) {
-      testFiles.push(entry.path);
-    }
+    testFiles.push(entry.path);
   }
 } else {
   for (const f of flags._) {
