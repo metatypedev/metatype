@@ -9,7 +9,7 @@ use std::{
 use once_cell::sync::Lazy;
 
 use crate::{
-    core::{Error as TgError, TypeId, TypeRef},
+    core::{Error as TgError, TypeId},
     errors::{self, Result},
     types::{TypeFun, T},
 };
@@ -35,14 +35,14 @@ impl Store {
 }
 
 impl Store {
-    pub fn resolve_ref(&self, type_ref: TypeRef) -> Result<TypeId, TgError> {
-        match type_ref {
-            TypeRef::Id(id) => Ok(id),
-            TypeRef::Name(name) => self
+    pub fn resolve_proxy(&self, type_id: TypeId) -> Result<TypeId, TgError> {
+        match self.get_type(type_id)? {
+            T::Proxy(p) => self
                 .type_by_names
-                .get(&name)
+                .get(&p.0.name)
                 .copied()
-                .ok_or_else(|| errors::unregistered_type_name(&name)),
+                .ok_or_else(|| errors::unregistered_type_name(&p.0.name)),
+            _ => Ok(type_id),
         }
     }
 

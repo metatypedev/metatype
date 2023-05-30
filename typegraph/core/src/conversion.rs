@@ -42,8 +42,8 @@ pub fn convert_struct(
                 .1
                 .props
                 .iter()
-                .map(|(name, type_ref)| -> Result<(String, TypeId)> {
-                    let id = s.resolve_ref(type_ref.clone())?;
+                .map(|(name, type_id)| -> Result<(String, TypeId)> {
+                    let id = s.resolve_proxy(*type_id)?;
                     Ok((name.clone(), c.register_type(s, id)?))
                 })
                 .collect::<Result<IndexMap<_, _>>>()?,
@@ -53,7 +53,7 @@ pub fn convert_struct(
 }
 
 pub fn convert_func(c: &mut TypegraphContext, s: &Store, id: u32, data: &Func) -> Result<TypeNode> {
-    let input = s.resolve_ref(data.1.inp.clone())?;
+    let input = s.resolve_proxy(data.1.inp)?;
     match s.get_type(input)? {
         T::Struct(_) => (),
         _ => return Err(errors::invalid_input_type(&s.get_type_repr(input)?)),
@@ -64,7 +64,7 @@ pub fn convert_func(c: &mut TypegraphContext, s: &Store, id: u32, data: &Func) -
         base: gen_base(format!("func_{id}")),
         data: FunctionTypeData {
             input,
-            output: c.register_type(s, s.resolve_ref(data.1.out.clone())?)?,
+            output: c.register_type(s, s.resolve_proxy(data.1.out)?)?,
             materializer: 0,
             rate_calls: false,
             rate_weight: None,

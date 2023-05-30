@@ -5,15 +5,11 @@ import { NullableOptional } from "./utils/type_utils.ts";
 type TypeInteger = NullableOptional<core_types.TypeInteger>;
 // type StructConstraints = core_types.StructConstraints;
 
-export function ref(tpe: Tpe): core_types.TypeRef {
-  return { tag: "id", val: tpe.id };
-}
-
-export class Tpe {
-  constructor(public id: number) {}
+export class Typedef {
+  constructor(public readonly id: number) {}
 
   get repr(): string | null {
-    return core.getTypeRepr({ tag: "id", val: this.id });
+    return core.getTypeRepr(this.id);
   }
 
   asInteger(): Integer {
@@ -28,7 +24,7 @@ export class Tpe {
     throw new Error("Not an integer");
   }
 
-  asStruct(): Struct<Record<string, Tpe>> {
+  asStruct(): Struct<Record<string, Typedef>> {
     if (this instanceof Struct) {
       return this;
     }
@@ -38,19 +34,29 @@ export class Tpe {
       return new Struct(this.id, {
         ...typeData,
         props: Object.fromEntries(
-          typeData.props.map(([name, id]) => [name, new Tpe(id as number)]),
+          typeData.props.map(([name, id]) => [name, new Typedef(id as number)]),
         ),
       });
     }
     throw new Error("Not a struct");
   }
 
-  asTpe(): Tpe {
-    return new Tpe(this.id);
+  asTypedef(): Typedef {
+    return new Typedef(this.id);
   }
 }
 
-export class Integer extends Tpe implements Readonly<TypeInteger> {
+export class TypeProxy<T extends Typedef = Typedef> extends Typedef {
+  constructor(id: number, private readonly name: string) {
+    super(id);
+  }
+}
+
+export function proxy<T extends Typedef = Typedef>(name: string) {
+  return new TypeProxy<T>(core.proxyb({ name }), name);
+}
+
+export class Integer extends Typedef implements Readonly<TypeInteger> {
   readonly min?: bigint | null;
   readonly max?: bigint | null;
 
@@ -65,7 +71,7 @@ export function integer(data: TypeInteger = {}) {
   return new Integer(core.integerb(data) as number, data);
 }
 
-export class Struct<P extends { [key: string]: Tpe }> extends Tpe {
+export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
   props: P;
   constructor(id: number, { props }: { props: P }) {
     super(id);
@@ -73,10 +79,12 @@ export class Struct<P extends { [key: string]: Tpe }> extends Tpe {
   }
 }
 
-export function struct<P extends { [key: string]: Tpe }>(props: P): Struct<P> {
+export function struct<P extends { [key: string]: Typedef }>(
+  props: P,
+): Struct<P> {
   return new Struct(
     core.structb({
-      props: Object.entries(props).map(([name, typ]) => [name, ref(typ)]),
+      props: Object.entries(props).map(([name, typ]) => [name, typ.id]),
     }) as number,
     {
       props,
@@ -85,10 +93,10 @@ export function struct<P extends { [key: string]: Tpe }>(props: P): Struct<P> {
 }
 
 export class Func<
-  P extends { [key: string]: Tpe },
+  P extends { [key: string]: Typedef },
   I extends Struct<P>,
-  O extends Tpe,
-> extends Tpe {
+  O extends Typedef,
+> extends Typedef {
   inp: I;
   out: O;
 
@@ -100,12 +108,12 @@ export class Func<
 }
 
 export function func<
-  P extends { [key: string]: Tpe },
+  P extends { [key: string]: Typedef },
   I extends Struct<P>,
-  O extends Tpe,
+  O extends Typedef,
 >(inp: I, out: O) {
   return new Func(
-    core.funcb({ inp: ref(inp), out: ref(out) }) as number,
+    core.funcb({ inp: inp.id, out: out.id }) as number,
     inp,
     out,
   );

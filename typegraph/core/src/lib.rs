@@ -11,10 +11,10 @@ mod validation;
 use crate::core::{TypeBase, TypegraphInitParams};
 use std::collections::HashSet;
 
-use crate::core::{TypeFunc, TypeId, TypeInteger, TypeRef, TypeStruct};
+use crate::core::{TypeFunc, TypeId, TypeInteger, TypeProxy, TypeStruct};
 use errors::Result;
 use global_store::store;
-use types::{Func, Integer, Struct, T};
+use types::{Func, Integer, Proxy, Struct, T};
 use validation::validate_name;
 
 wit_bindgen::generate!("typegraph");
@@ -33,6 +33,16 @@ impl core::Core for Lib {
         typegraph::finalize()
     }
 
+    fn proxyb(data: TypeProxy) -> Result<TypeId> {
+        let mut s = store();
+        if let Some(type_id) = s.type_by_names.get(&data.name) {
+            Ok(*type_id)
+        } else {
+            let tpe = T::Proxy(Proxy(data));
+            Ok(s.add_type(tpe))
+        }
+    }
+
     fn integerb(data: TypeInteger) -> Result<TypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
@@ -43,9 +53,9 @@ impl core::Core for Lib {
         Ok(store().add_type(tpe))
     }
 
-    fn type_as_integer(type_ref: TypeRef) -> Result<(TypeId, TypeBase, TypeInteger)> {
+    fn type_as_integer(type_id: TypeId) -> Result<(TypeId, TypeBase, TypeInteger)> {
         let s = store();
-        let type_id = s.resolve_ref(type_ref)?;
+        let type_id = s.resolve_proxy(type_id)?;
         match s.get_type(type_id)? {
             T::Integer(typ) => Ok((type_id, typ.0.clone(), typ.1)),
             _ => Err(errors::expected_type("integer", type_id)),
@@ -68,9 +78,9 @@ impl core::Core for Lib {
         Ok(store().add_type(tpe))
     }
 
-    fn type_as_struct(type_ref: TypeRef) -> Result<(TypeId, TypeBase, TypeStruct)> {
+    fn type_as_struct(type_id: TypeId) -> Result<(TypeId, TypeBase, TypeStruct)> {
         let s = store();
-        let type_id = s.resolve_ref(type_ref)?;
+        let type_id = s.resolve_proxy(type_id)?;
         match s.get_type(type_id)? {
             T::Struct(typ) => Ok((type_id, typ.0.clone(), typ.1.clone())),
             _ => Err(errors::expected_type("struct", type_id)),
@@ -79,7 +89,7 @@ impl core::Core for Lib {
 
     fn funcb(data: TypeFunc) -> Result<TypeId> {
         let mut s = store();
-        let inp_id = s.resolve_ref(data.inp.clone())?;
+        let inp_id = s.resolve_proxy(data.inp)?;
         let inp_type = s.get_type(inp_id)?;
         if !matches!(inp_type, T::Struct(_)) {
             return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
@@ -88,12 +98,11 @@ impl core::Core for Lib {
         Ok(s.add_type(tpe))
     }
 
-    fn get_type_repr(type_ref: TypeRef) -> Result<String> {
-        let s = store();
-        s.get_type_repr(s.resolve_ref(type_ref)?)
+    fn get_type_repr(type_id: TypeId) -> Result<String> {
+        store().get_type_repr(type_id)
     }
 
-    fn expose(fns: Vec<(String, TypeRef)>, namespace: Vec<String>) -> Result<(), String> {
+    fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), String> {
         typegraph::expose(fns, namespace)
     }
 }
@@ -130,18 +139,15 @@ mod tests {
     }
 
     impl TypeStruct {
-        fn prop(mut self, key: impl Into<String>, type_ref: impl Into<TypeRef>) -> Self {
-            self.props.push((key.into(), type_ref.into()));
+        fn prop(mut self, key: impl Into<String>, type_id: TypeId) -> Self {
+            self.props.push((key.into(), type_id));
             self
         }
     }
 
     impl TypeFunc {
-        fn new(inp: impl Into<TypeRef>, out: impl Into<TypeRef>) -> Self {
-            Self {
-                inp: inp.into(),
-                out: out.into(),
-            }
+        fn new(inp: TypeId, out: TypeId) -> Self {
+            Self { inp, out }
         }
     }
 

@@ -15,7 +15,7 @@ use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard};
 
-use crate::core::{Error as TgError, TypeId, TypeRef, TypegraphInitParams};
+use crate::core::{Error as TgError, TypeId, TypegraphInitParams};
 
 #[derive(Default)]
 struct IdMapping {
@@ -94,7 +94,7 @@ pub fn finalize() -> Result<String> {
     serde_json::to_string(&tg).map_err(|e| e.to_string())
 }
 
-pub fn expose(fns: Vec<(String, TypeRef)>, namespace: Vec<String>) -> Result<(), String> {
+pub fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), String> {
     let mut ctx = tg_context();
     let ctx = ctx
         .as_mut()
@@ -118,17 +118,17 @@ impl TypegraphContext {
         &mut self,
         target: &mut TypeNode,
         s: &Store,
-        fns: Vec<(String, TypeRef)>,
+        fns: Vec<(String, TypeId)>,
     ) -> Result<()> {
         let root = match target {
             TypeNode::Object { ref mut data, .. } => data,
             _ => panic!("expected a struct as root type"),
         };
-        for (name, type_ref) in fns.into_iter() {
+        for (name, type_id) in fns.into_iter() {
             if !validate_name(&name) {
                 return Err(errors::invalid_export_name(&name));
             }
-            let type_id = s.resolve_ref(type_ref)?;
+            let type_id = s.resolve_proxy(type_id)?;
             let tpe = s.get_type(type_id)?;
             if !matches!(tpe, T::Func(_)) {
                 return Err(errors::invalid_export_type(&name, &tpe.get_repr(type_id)));
@@ -158,6 +158,7 @@ impl TypegraphContext {
                     T::Struct(typ) => convert_struct(self, store, id, typ),
                     T::Integer(typ) => convert_integer(self, store, id, typ),
                     T::Func(typ) => convert_func(self, store, id, typ),
+                    T::Proxy(_p) => return Err("proxy must be resolved".to_string()),
                 }?;
 
                 self.types[idx] = Some(type_node);

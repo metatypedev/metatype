@@ -5,7 +5,6 @@ from typegraph.gen.exports.core import (
     TypeInteger,
     TypeStruct,
     TypeFunc,
-    TypeRefId,
 )
 from typegraph.gen.types import Err
 from typing import Optional, Dict
@@ -19,7 +18,7 @@ class typedef:
         self.id = id
 
     def __repr__(self):
-        res = core.get_type_repr(store, TypeRefId(self.id))
+        res = core.get_type_repr(store, self.id)
         if isinstance(res, Err):
             raise Exception(res.value)
         return res.value
@@ -43,9 +42,7 @@ class struct(typedef):
     props: Dict[str, typedef]
 
     def __init__(self, props: Dict[str, typedef]):
-        data = TypeStruct(
-            props=list((name, TypeRefId(tpe.id)) for (name, tpe) in props.items())
-        )
+        data = TypeStruct(props=list((name, tpe.id) for (name, tpe) in props.items()))
 
         res = core.structb(store, data)
         if isinstance(res, Err):
@@ -59,7 +56,7 @@ class func(typedef):
     out: typedef
 
     def __init__(self, inp: struct, out: typedef):
-        data = TypeFunc(inp=TypeRefId(inp.id), out=TypeRefId(out.id))
+        data = TypeFunc(inp=inp.id, out=out.id)
         res = core.funcb(store, data)
         if isinstance(res, Err):
             raise Exception(res.value)

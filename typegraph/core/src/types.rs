@@ -2,39 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use enum_dispatch::enum_dispatch;
-use std::fmt::Display;
 
-use crate::{
-    core::{TypeBase, TypeFunc, TypeId, TypeInteger, TypeRef, TypeStruct},
-    errors::Result,
-    global_store::{store, Store},
-};
-
-impl Display for TypeRef {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TypeRef::Id(id) => write!(f, "#{id}"),
-            TypeRef::Name(name) => write!(f, "#{name}"),
-        }
-    }
-}
-
-impl TypeRef {
-    pub fn resolve(&self, s: &Store) -> Result<TypeId> {
-        s.resolve_ref(self.clone())
-    }
-
-    pub fn repr(&self) -> Result<String> {
-        let s = store();
-        s.get_type_repr(self.resolve(&s)?)
-    }
-}
-
-impl From<TypeId> for TypeRef {
-    fn from(val: TypeId) -> Self {
-        TypeRef::Id(val)
-    }
-}
+use crate::core::{TypeBase, TypeFunc, TypeId, TypeInteger, TypeProxy, TypeStruct};
 
 #[allow(clippy::derivable_impls)]
 impl Default for TypeBase {
@@ -42,6 +11,9 @@ impl Default for TypeBase {
         Self { name: None }
     }
 }
+
+#[derive(Debug)]
+pub struct Proxy(pub TypeProxy);
 
 #[derive(Debug)]
 pub struct Struct(pub TypeBase, pub TypeStruct);
@@ -55,6 +27,7 @@ pub struct Func(pub TypeBase, pub TypeFunc);
 #[derive(Debug)]
 #[enum_dispatch(TypeFun)]
 pub enum T {
+    Proxy(Proxy),
     Struct(Struct),
     Integer(Integer),
     Func(Func),
@@ -63,6 +36,12 @@ pub enum T {
 #[enum_dispatch]
 pub trait TypeFun {
     fn get_repr(&self, id: TypeId) -> String;
+}
+
+impl TypeFun for Proxy {
+    fn get_repr(&self, id: TypeId) -> String {
+        format!("proxy(#{id})")
+    }
 }
 
 impl TypeFun for Integer {

@@ -27,7 +27,7 @@ class TypeGraph {
   expose(exports: { [key: string]: t.Func }) {
     // const { defaultPolicy } = exports;
     core.expose(
-      Object.entries(exports).map(([name, fn]) => [name, t.ref(fn)]),
+      Object.entries(exports).map(([name, fn]) => [name, fn.id]),
       [],
     );
   }
