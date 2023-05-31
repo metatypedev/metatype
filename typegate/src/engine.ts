@@ -33,6 +33,7 @@ import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./engine/computation_engine.ts";
+import { distinct } from "https://deno.land/std@0.184.0/collections/distinct.ts";
 
 const logger = getLogger(import.meta);
 
@@ -88,6 +89,16 @@ export class ComputeStage {
       ...this.props,
       resolver,
     });
+  }
+
+  setAdditionalSelections(descendants: ComputeStage[]) {
+    const depth = this.props.path.length;
+    const prefix = `${this.id()}.`;
+    this.props.additionalSelections = distinct(
+      descendants.flatMap((stage) =>
+        stage.props.path.length === depth + 1 ? stage.props.dependencies : []
+      ),
+    ).flatMap((p) => p.startsWith(prefix) ? [p.slice(prefix.length)] : []);
   }
 }
 

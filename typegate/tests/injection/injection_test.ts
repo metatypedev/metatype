@@ -3,12 +3,50 @@
 
 import { gql, test } from "../utils.ts";
 import { assertRejects } from "std/testing/asserts.ts";
+import { buildSchema, graphql } from "graphql";
+import * as mf from "test/mock_fetch";
 
 test("Missing env var", async (t) => {
   await assertRejects(
     () => t.pythonFile("injection/injection.py"),
     "cannot find env",
   );
+});
+
+const schema = buildSchema(`
+  type User {
+    id: Int!
+    name: String!
+    email: String!
+  }
+
+  type Query {
+    user(id: Int!): User!
+  }
+`);
+
+mf.install();
+
+mf.mock("POST@/api/graphql", async (req) => {
+  const { query, variables } = await req.json();
+  const res = await graphql({
+    schema,
+    source: query,
+    rootValue: {
+      user: ({ id }: { id: number }) => ({
+        id,
+        name: `User ${id}`,
+        email: `user.${id}@example.com`,
+      }),
+    },
+    variableValues: variables,
+  });
+  return new Response(JSON.stringify(res), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 });
 
 test("Injected queries", async (t) => {
@@ -31,8 +69,7 @@ test("Injected queries", async (t) => {
   await t.should("inject values", async () => {
     await gql`
       query {
-        test(a: 0) {
-          a
+        test(a: 12) {
           raw_int
           raw_str
           secret
@@ -52,14 +89,13 @@ test("Injected queries", async (t) => {
       })
       .expectData({
         test: {
-          a: 0,
           raw_int: 1,
           raw_str: "2",
           secret: 3,
           context: "123",
           optional_context: null,
           parent: {
-            a2: 0,
+            a2: 12,
           },
           raw_obj: {
             in: -1,
@@ -105,6 +141,31 @@ test("Injected queries", async (t) => {
         effect_delete: { operation: "remove" },
         effect_update: { operation: "modify" },
         effect_upsert: { operation: "read" },
+      })
+      .on(e);
+  });
+
+  await t.should("inject params to graphql", async () => {
+    await gql`
+      query {
+        test(a: 12) {
+          graphql {
+            id
+            name
+          }
+        }
+      }
+    `
+      .withContext({
+        userId: "123",
+      })
+      .expectData({
+        test: {
+          graphql: {
+            id: 12,
+            name: "User 12",
+          },
+        },
       })
       .on(e);
   });

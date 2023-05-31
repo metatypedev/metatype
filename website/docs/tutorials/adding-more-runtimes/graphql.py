@@ -10,7 +10,10 @@ from typegraph.runtimes.graphql import GraphQLRuntime
 with TypeGraph(
     "graphql",
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    cors=TypeGraph.Cors(
+        allow_origin=["https://metatype.dev", "http://localhost:3000"],
+        allow_headers=["content-type"],
+    ),
 ) as g:
     db = PrismaRuntime("database", "POSTGRES_CONN")
     # highlight-next-line

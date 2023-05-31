@@ -11,6 +11,7 @@ import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
 import * as ForwardVars from "./utils/graphql_forward_vars.ts";
 import * as InlineVars from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";
+import { mapKeys } from "std/collections/map_keys.ts";
 
 const logger = getLogger(import.meta);
 
@@ -42,10 +43,13 @@ export class GraphQLRuntime extends Runtime {
     if (path.length == 0) {
       throw new Error("Path cannot be empty");
     }
-    return async ({ _: { variables } }) => {
-      const q = typeof query === "function" ? query(variables) : query;
+    return async ({ _: { variables }, ...args }) => {
+      const vars = { ...variables, ...mapKeys(args, (key) => `_arg_${key}`) };
+      const q = typeof query === "function" ? query(vars) : query;
       // TODO: filter variables - only include forwared variables
-      const ret = await gq(this.endpoint, q, variables);
+      logger.debug(`remote graphql: ${q}`);
+      logger.debug(` -- with variables: ${JSON.stringify(vars)}`);
+      const ret = await gq(this.endpoint, q, vars);
       if (ret.errors) {
         logger.error(ret.errors);
         throw new Error(`From remote graphql: ${ret.errors[0].message}`);
@@ -84,6 +88,7 @@ export class GraphQLRuntime extends Runtime {
       const operationType = mat?.effect.effect != null
         ? OperationTypeNode.MUTATION
         : OperationTypeNode.QUERY;
+
       if (this.forwardVars) {
         const { selections, vars: forwaredVars } = ForwardVars
           .rebuildGraphQuery({

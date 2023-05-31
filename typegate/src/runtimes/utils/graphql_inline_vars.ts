@@ -31,10 +31,11 @@ export function stringifyQL(
 export interface RebuildQueryParam {
   stages: ComputeStage[];
   renames: Record<string, string>;
+  additionalSelections?: string[];
 }
 
 export function rebuildGraphQuery(
-  { stages, renames }: RebuildQueryParam,
+  { stages, renames, additionalSelections = [] }: RebuildQueryParam,
 ): FromVars<string> {
   const ss: Array<FromVars<string>> = [];
 
@@ -50,10 +51,20 @@ export function rebuildGraphQuery(
 
     if (children.length > 0) {
       ss.push((vars) =>
-        ` {${rebuildGraphQuery({ stages: children, renames })(vars)} }`
+        ` {${
+          rebuildGraphQuery({
+            stages: children,
+            renames,
+            additionalSelections: stage.props.additionalSelections,
+          })(vars)
+        } }`
       );
     }
   });
+
+  for (const sel of additionalSelections) {
+    ss.push(() => ` ${sel}`);
+  }
 
   return (vars) => ss.map((s) => s(vars)).join("");
 }

@@ -9,7 +9,10 @@ from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 with TypeGraph(
     "database",
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    cors=TypeGraph.Cors(
+        allow_origin=["https://metatype.dev", "http://localhost:3000"],
+        allow_headers=["content-type"],
+    ),
 ) as g:
     db = PrismaRuntime("database", "POSTGRES_CONN")
     public = policies.public()

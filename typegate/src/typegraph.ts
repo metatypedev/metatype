@@ -28,6 +28,7 @@ import {
   isOptional,
   isString,
   isUnion,
+  Type,
   TypeNode,
 } from "./type_node.ts";
 import { Batcher, RuntimeInit } from "./types.ts";
@@ -107,6 +108,13 @@ export class SecretManager {
     return this.valueOrNull(secretName);
   }
 }
+
+const GRAPHQL_SCALAR_TYPES = {
+  [Type.BOOLEAN]: "Boolean",
+  [Type.INTEGER]: "Int",
+  [Type.NUMBER]: "Float",
+  [Type.STRING]: "String",
+} as Partial<Record<TypeNode["type"], string>>;
 
 export class TypeGraph {
   static readonly emptyArgs: ast.ArgumentNode[] = [];
@@ -374,5 +382,26 @@ export class TypeGraph {
       throw new Error(`type ${nameOrIndex} not found`);
     }
     return tpe;
+  }
+
+  getGraphQLType(typeNode: TypeNode, optional = false): string {
+    if (typeNode.type === Type.OPTIONAL) {
+      return this.getGraphQLType(this.type(typeNode.item), true);
+    }
+
+    if (!optional) {
+      return `${this.getGraphQLType(typeNode, true)}!`;
+    }
+
+    if (typeNode.type === Type.ARRAY) {
+      return `[${this.getGraphQLType(this.type(typeNode.items))}]`;
+    }
+
+    const scalarType = GRAPHQL_SCALAR_TYPES[typeNode.type];
+    if (scalarType != null) {
+      return scalarType;
+    }
+
+    return typeNode.title;
   }
 }

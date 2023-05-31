@@ -17,6 +17,7 @@ import { getLogger } from "../log.ts";
 import { EitherNode } from "../types/typegraph.ts";
 const logger = getLogger(import.meta);
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
+import { mapValues } from "std/collections/map_values.ts";
 
 interface Node {
   name: string;
@@ -142,6 +143,10 @@ export class Planner {
             field,
           ),
         );
+      }
+
+      if (stage != null) {
+        stage.setAdditionalSelections(stages);
       }
 
       return stages;
@@ -402,7 +407,6 @@ export class Planner {
       );
     }
 
-    const argSchema = this.tg.type(inputIdx, Type.OBJECT);
     const argNodes = (node.args ?? []).reduce(
       (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
       {} as Record<string, ast.ArgumentNode>,
@@ -418,14 +422,20 @@ export class Planner {
     );
 
     deps.push(
-      ...collected.deps.map((dep) => [...node.path, dep].join(".")),
+      ...collected.deps.map((dep) =>
+        [...node.path.slice(0, node.path.length - 1), dep].join(".")
+      ),
     );
+
+    const inputType = this.tg.type(inputIdx, Type.OBJECT);
 
     const stage = this.createComputeStage(node, {
       dependencies: deps,
       args: collected.compute,
-      argumentNodes: node.args,
-      inpType: argSchema,
+      argumentTypes: mapValues(
+        inputType.properties,
+        (idx) => this.tg.getGraphQLType(this.tg.type(idx)),
+      ),
       outType: outputType,
       effect,
       runtime,

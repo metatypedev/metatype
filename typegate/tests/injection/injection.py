@@ -1,5 +1,6 @@
 from typegraph import TypeGraph, effects, injection, policies, t
 from typegraph.runtimes import deno
+from typegraph.runtimes.graphql import GraphQLRuntime
 
 with TypeGraph("injection") as g:
     req = t.struct(
@@ -39,10 +40,22 @@ with TypeGraph("injection") as g:
 
     copy = t.struct({"a2": t.integer().from_parent(g("A"))})
 
+    gql = GraphQLRuntime("https://example.com/api/graphql")
     res = t.struct(
         {
             **req.props,
             "parent": t.func(copy, copy, deno.PredefinedFunMat("identity")),
+            "graphql": gql.query(
+                t.struct({"id": t.integer().from_parent(g("A"))}),
+                t.struct(
+                    {
+                        "id": t.integer(),
+                        "name": t.string(),
+                        "email": t.email(),
+                    }
+                ),
+                path=("user",),
+            ),
         }
     )
 

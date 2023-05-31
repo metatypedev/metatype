@@ -625,7 +625,7 @@ class ArgumentCollector {
           ).join(", ")
         }`;
         throw new Error(
-          `non-optional injection argument ${this.currentNodeDetails} is missing from parent: ${suggestions}`,
+          `non-optional injected argument ${name} is missing from parent: ${suggestions}`,
         );
       }
 
@@ -657,6 +657,14 @@ class ArgumentCollector {
       throw new Error("Invalid state");
     }
     return this.stack[len - 1];
+  }
+
+  private getCurrentNode(): CollectNode | null {
+    return this.stack[this.stack.length - 1] ?? null;
+  }
+
+  private get currentPath(): string {
+    return this.stack.map((node) => node.path[node.path.length - 1]).join("/");
   }
 
   get currentNodeDetails() {

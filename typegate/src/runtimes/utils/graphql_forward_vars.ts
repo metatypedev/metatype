@@ -96,6 +96,19 @@ const createTargetField = (
   );
 };
 
+const createArgs = (
+  argTypes: Record<string, string>,
+): ReadonlyArray<ArgumentNode> => {
+  return Object.keys(argTypes).map((name) => ({
+    kind: Kind.ARGUMENT,
+    name: { kind: Kind.NAME, value: name },
+    value: {
+      kind: Kind.VARIABLE,
+      name: { kind: Kind.NAME, value: `_arg_${name}` },
+    },
+  }));
+};
+
 const createVarDef = (name: string, type: string): VariableDefinitionNode => {
   return {
     kind: Kind.VARIABLE_DEFINITION,
@@ -125,26 +138,45 @@ export function rebuildGraphQuery(
 ): RebuiltGraphQuery {
   const rootSelections: Array<FieldNode> = [];
   const forwaredVars: Array<VariableDefinitionNode> = [];
-  const forwardVar = (name: string) => {
+  const forwardVar = (name: string, type?: string) => {
     if (!forwaredVars.find((varDef) => varDef.variable.name.value === name)) {
-      forwaredVars.push(createVarDef(name, stages[0].varType(name)));
+      forwaredVars.push(createVarDef(name, type ?? stages[0].varType(name)));
     }
   };
+
+  const level = stages[0].props.path.length;
 
   iterParentStages(stages, (stage, children) => {
     const field = stage.props.path[stage.props.path.length - 1];
     const path = stage.props.materializer?.data["path"] as string[] ?? [field];
     ensure(path.length > 0, "unexpeced empty path");
 
+    const { argumentTypes } = stage.props;
+
+    const isTopLevel = stage.props.path.length === level;
+
+    // For top level selections, arguments (and referenced variables) are
+    // not forwarded. They are replaced by generated variables matching to the
+    // computed argument values. This is to ensure that injected values are
+    // properly set.
+    // Is this also necessary for non top level selections?
+    const argumentNodes: ReadonlyArray<ArgumentNode> = isTopLevel
+      ? (argumentTypes == null ? [] : createArgs(argumentTypes))
+      : (stage.props.argumentNodes ?? []);
+
     const targetField = createTargetField(
       path,
       rootSelections,
       children.length > 0,
-      stage.props.argumentNodes ?? [],
+      argumentNodes,
     );
 
-    if (stage.props.argumentNodes) {
-      for (const argNode of stage.props.argumentNodes) {
+    if (isTopLevel) {
+      for (const [name, type] of Object.entries(argumentTypes ?? {})) {
+        forwardVar(`_arg_${name}`, type);
+      }
+    } else {
+      for (const argNode of argumentNodes) {
         GraphQL.visit(argNode, {
           [Kind.VARIABLE]: (node) => {
             forwardVar(node.name.value);
