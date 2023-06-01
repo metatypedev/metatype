@@ -81,7 +81,7 @@ export interface ComputeStageProps {
   rateCalls: boolean;
   rateWeight: number;
   childSelection?: VariantMatcher;
-  additionalSelections?: string[];
+  excludeResult?: true;
 }
 
 export type StageId = string;

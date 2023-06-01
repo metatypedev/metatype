@@ -18,6 +18,7 @@ import { EitherNode } from "../types/typegraph.ts";
 const logger = getLogger(import.meta);
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "std/collections/map_values.ts";
+import { Scheduler } from "./scheduler.ts";
 
 interface Node {
   name: string;
@@ -136,18 +137,16 @@ export class Planner {
           ),
         );
 
-      for (const field of selection) {
-        stages.push(
-          ...this.traverseField(
+      const scheduler = new Scheduler(
+        stage ?? null,
+        (field) =>
+          this.traverseField(
             this.getChildNodeForField(field, node, props, stage),
             field,
           ),
-        );
-      }
-
-      if (stage != null) {
-        stage.setAdditionalSelections(stages);
-      }
+        selection,
+      );
+      stages.push(...scheduler.getScheduledStages());
 
       return stages;
     }

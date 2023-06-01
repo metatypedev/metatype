@@ -126,7 +126,6 @@ const createVarDef = (name: string, type: string): VariableDefinitionNode => {
 export interface RebuildQueryParam {
   stages: ComputeStage[];
   renames: Record<string, string>;
-  additionalSelections?: string[];
 }
 
 export interface RebuiltGraphQuery {
@@ -135,7 +134,7 @@ export interface RebuiltGraphQuery {
 }
 
 export function rebuildGraphQuery(
-  { stages, renames, additionalSelections = [] }: RebuildQueryParam,
+  { stages, renames }: RebuildQueryParam,
 ): RebuiltGraphQuery {
   const rootSelections: Array<FieldNode> = [];
   const forwaredVars: Array<VariableDefinitionNode> = [];
@@ -198,7 +197,6 @@ export function rebuildGraphQuery(
       const { selections, vars } = rebuildGraphQuery({
         stages: children,
         renames,
-        additionalSelections: stage.props.additionalSelections,
       });
       targetSelections.push(
         ...selections,
@@ -206,15 +204,6 @@ export function rebuildGraphQuery(
       forwaredVars.push(...vars);
     }
   });
-
-  for (const sel of additionalSelections) {
-    createTargetField(
-      [sel],
-      rootSelections,
-      false,
-      [],
-    );
-  }
 
   return { selections: rootSelections, vars: forwaredVars };
 }
