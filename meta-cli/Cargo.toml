@@ -53,7 +53,7 @@ question = "0.2.2"
 dialoguer = "0.10.3"
 flate2 = "1.0.25"
 tar = "0.4.38"
-base64 = "0.21.0"
+base64 = "0.21.2"
 common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
 serde_yaml = "0.9.19"

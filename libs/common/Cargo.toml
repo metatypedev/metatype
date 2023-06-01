@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.70"
-base64 = "0.21.0"
+base64 = "0.21.2"
 flate2 = "1.0.25"
 indexmap = { version = "1.9.3", features = ["serde"] }
 schemars = { version = "0.8.12", features = ["derive", "preserve_order"], optional = true }
