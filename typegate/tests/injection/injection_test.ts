@@ -25,31 +25,7 @@ const schema = buildSchema(`
   }
 `);
 
-mf.install();
-
-mf.mock("POST@/api/graphql", async (req) => {
-  const { query, variables } = await req.json();
-  const res = await graphql({
-    schema,
-    source: query,
-    rootValue: {
-      user: ({ id }: { id: number }) => ({
-        id,
-        name: `User ${id}`,
-        email: `user.${id}@example.com`,
-      }),
-    },
-    variableValues: variables,
-  });
-  return new Response(JSON.stringify(res), {
-    status: 200,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-});
-
-test("Injected queries", async (t) => {
+test("Injected values", async (t) => {
   const e = await t.pythonFile("injection/injection.py", {
     secrets: { TG_INJECTION_TEST_VAR: "3" },
   });
@@ -144,6 +120,36 @@ test("Injected queries", async (t) => {
       })
       .on(e);
   });
+});
+
+mf.install();
+
+mf.mock("POST@/api/graphql", async (req) => {
+  const { query, variables } = await req.json();
+  const res = await graphql({
+    schema,
+    source: query,
+    rootValue: {
+      user: ({ id }: { id: number }) => ({
+        id,
+        name: `User ${id}`,
+        email: `user.${id}@example.com`,
+      }),
+    },
+    variableValues: variables,
+  });
+  return new Response(JSON.stringify(res), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+});
+
+test("Injection from/into graphql", async (t) => {
+  const e = await t.pythonFile("injection/injection.py", {
+    secrets: { TG_INJECTION_TEST_VAR: "3" },
+  });
 
   await t.should("inject params to graphql", async () => {
     await gql`
@@ -164,6 +170,28 @@ test("Injected queries", async (t) => {
           graphql: {
             id: 12,
             name: "User 12",
+          },
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("get non-selected dependencies from graphql", async () => {
+    await gql`
+      query {
+        user(id: 12) {
+          id
+          from_parent {
+            email
+          }
+        }
+      }
+    `
+      .expectData({
+        user: {
+          id: 12,
+          from_parent: {
+            email: "user.12@example.com",
           },
         },
       })

@@ -40,6 +40,14 @@ with TypeGraph("injection") as g:
 
     copy = t.struct({"a2": t.integer().from_parent(g("A"))})
 
+    user = t.struct(
+        {
+            "id": t.integer(),
+            "name": t.string(),
+            "email": t.email().named("UserEmail"),
+        }
+    ).named("User")
+
     gql = GraphQLRuntime("https://example.com/api/graphql")
     res = t.struct(
         {
@@ -47,13 +55,7 @@ with TypeGraph("injection") as g:
             "parent": t.func(copy, copy, deno.PredefinedFunMat("identity")),
             "graphql": gql.query(
                 t.struct({"id": t.integer().from_parent(g("A"))}),
-                t.struct(
-                    {
-                        "id": t.integer(),
-                        "name": t.string(),
-                        "email": t.email(),
-                    }
-                ),
+                user,
                 path=("user",),
             ),
         }
@@ -64,20 +66,33 @@ with TypeGraph("injection") as g:
             req,
             res,
             deno.PredefinedFunMat("identity"),
-        ).add_policy(policies.public()),
-        effect_none=t.func(req2, req2, deno.PredefinedFunMat("identity")).add_policy(
-            policies.public()
         ),
+        effect_none=t.func(req2, req2, deno.PredefinedFunMat("identity")),
         effect_create=t.func(
             req2, req2, deno.PredefinedFunMat("identity", effect=effects.create())
-        ).add_policy(policies.public()),
+        ),
         effect_delete=t.func(
             req2, req2, deno.PredefinedFunMat("identity", effect=effects.delete())
-        ).add_policy(policies.public()),
+        ),
         effect_update=t.func(
             req2, req2, deno.PredefinedFunMat("identity", effect=effects.update())
-        ).add_policy(policies.public()),
+        ),
         effect_upsert=t.func(
             req2, req2, deno.PredefinedFunMat("identity", effect=effects.upsert())
-        ).add_policy(policies.public()),
+        ),
+        user=gql.query(
+            t.struct({"id": t.integer()}),
+            t.struct(
+                {
+                    **user.props,
+                    "from_parent": t.func(
+                        t.struct({"email": t.email().from_parent("UserEmail")}),
+                        t.struct({"email": t.email()}),
+                        deno.PredefinedFunMat("identity"),
+                    ),
+                }
+            ),
+            path=("user",),
+        ),
+        default_policy=[policies.public()],
     )
