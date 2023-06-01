@@ -1,74 +1,27 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { iterParentStages, JSONValue } from "../../utils.ts";
+import { JSONValue } from "../../utils.ts";
 import type { FromVars } from "../graphql.ts";
-import { ComputeStage } from "../../engine.ts";
 import { filterValues } from "std/collections/filter_values.ts";
 import { ComputeArg, DEFAULT_COMPUTE_PARAMS } from "../../planner/args.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import { isNameContinue, isNameStart } from "graphql/characters";
 
 export function stringifyQL(
-  obj: JSONValue | FromVars<JSONValue>,
-): FromVars<string> {
-  if (typeof obj === "function") {
-    return (vars) => stringifyQL(obj(vars))(vars);
-  }
-
+  obj: JSONValue,
+): string {
   if (Array.isArray(obj)) {
-    return (vars) => `[${obj.map((obj) => stringifyQL(obj)(vars)).join(", ")}]`;
+    return `[${obj.map((obj) => stringifyQL(obj)).join(", ")}]`;
   }
 
   if (typeof obj === "object" && obj !== null) {
-    return (vars) =>
-      `{ ${
-        Object.entries(obj).map(([k, v]) => `${k}: ${stringifyQL(v)(vars)}`)
-      } }`;
+    const entries = Object.entries(obj).map(
+      ([k, v]) => `${k}: ${stringifyQL(v)}`,
+    ).join(", ");
+    return `{ ${entries} }`;
   }
 
-  return (_vars) => JSON.stringify(obj);
-}
-
-export interface RebuildQueryParam {
-  stages: ComputeStage[];
-  renames: Record<string, string>;
-  additionalSelections?: string[];
-}
-
-export function rebuildGraphQuery(
-  { stages, renames, additionalSelections = [] }: RebuildQueryParam,
-): FromVars<string> {
-  const ss: Array<FromVars<string>> = [];
-
-  iterParentStages(stages, (stage, children) => {
-    const field = stage.props.path[stage.props.path.length - 1];
-    ss.push(() =>
-      ` ${field !== stage.props.node ? field + ": " : ""}${
-        renames[stage.props.node] ?? stage.props.node
-      }`
-    );
-
-    ss.push((vars) => formatArgs(stage.props.args, vars));
-
-    if (children.length > 0) {
-      ss.push((vars) =>
-        ` {${
-          rebuildGraphQuery({
-            stages: children,
-            renames,
-            additionalSelections: stage.props.additionalSelections,
-          })(vars)
-        } }`
-      );
-    }
-  });
-
-  for (const sel of additionalSelections) {
-    ss.push(() => ` ${sel}`);
-  }
-
-  return (vars) => ss.map((s) => s(vars)).join("");
+  return JSON.stringify(obj);
 }
 
 function formatArgs(
@@ -78,7 +31,6 @@ function formatArgs(
   if (args == null) {
     return "";
   }
-  // TODO inject parent context ..
   const computedArgs = Object.entries(
     filterValues(
       args({ ...DEFAULT_COMPUTE_PARAMS, variables: vars }),
@@ -90,7 +42,7 @@ function formatArgs(
   }
   return `(${
     computedArgs.map(([argName, argValue]) =>
-      `${argName}: ${stringifyQL(argValue as JSONValue)(vars)}`
+      `${argName}: ${stringifyQL(argValue as JSONValue)}`
     ).join(", ")
   })`;
 }
@@ -128,7 +80,6 @@ export function withInlinedVars(
   return (variables) => {
     const varExpressions = mapValues(variables, (v) => {
       const expr = stringifyQL(v as JSONValue);
-      if (typeof expr === "function") return expr(variables);
       return expr;
     });
     return generateQuery(varExpressions);
