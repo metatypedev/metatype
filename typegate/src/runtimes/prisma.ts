@@ -18,6 +18,7 @@ import {
 } from "../types/typegraph.ts";
 import { getLogger } from "../log.ts";
 import { registerHook } from "../hooks.ts";
+import { mapKeys } from "https://deno.land/std@0.184.0/collections/map_keys.ts";
 
 const logger = getLogger(import.meta);
 
@@ -259,9 +260,9 @@ export class PrismaRuntime extends GraphQLRuntime {
     return JSON.parse(res);
   }
 
-  execute(query: string | FromVars<string>, path: string[]): Resolver {
-    return async ({ _: { variables } }) => {
-      const q = typeof query === "function" ? query(variables) : query;
+  execute(query: FromVars<string>, path: string[]): Resolver {
+    return async ({ _: { variables }, ...args }) => {
+      const q = query({ ...variables, ...mapKeys(args, (k) => `_arg_${k}`) });
       logger.debug(`remote graphql: ${q}`);
 
       const startTime = performance.now();

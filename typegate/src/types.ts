@@ -88,3 +88,14 @@ export type StageId = string;
 export type PolicyIdx = number;
 export type PolicyList = Array<PolicyIndices>;
 export type TypeIdx = number;
+
+export interface ComputedValueParams {
+  variables: Variables;
+  parent: Parents;
+  context: Context;
+  effect: EffectType | null;
+}
+
+export interface ComputedValue<T = unknown> {
+  (params: ComputedValueParams): T;
+}

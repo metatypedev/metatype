@@ -1,6 +1,7 @@
 from typegraph import TypeGraph, effects, injection, policies, t
 from typegraph.runtimes import deno
 from typegraph.runtimes.graphql import GraphQLRuntime
+from typegraph.providers.prisma import PrismaRuntime
 
 with TypeGraph("injection") as g:
     req = t.struct(
@@ -42,7 +43,7 @@ with TypeGraph("injection") as g:
 
     user = t.struct(
         {
-            "id": t.integer(),
+            "id": t.integer().named("UserId"),
             "name": t.string(),
             "email": t.email().named("UserEmail"),
         }
@@ -60,6 +61,20 @@ with TypeGraph("injection") as g:
             ),
         }
     )
+
+    messages_db = PrismaRuntime("prisma", "POSTGRES")
+
+    message = t.struct(
+        {
+            "id": t.uuid().config("id", "auto"),
+            "time": t.datetime(),
+            "text": t.string(),
+            "senderId": t.integer(),
+            "recipientId": t.integer(),
+        }
+    ).named("Messages")
+
+    find_messages = messages_db.find_many(message)
 
     g.expose(
         test=t.func(
@@ -89,6 +104,19 @@ with TypeGraph("injection") as g:
                         t.struct({"email": t.email().from_parent("UserEmail")}),
                         t.struct({"email": t.email()}),
                         deno.PredefinedFunMat("identity"),
+                    ),
+                    "messagesSent": t.func(
+                        find_messages.inp.compose(
+                            {
+                                "where": t.struct(
+                                    {
+                                        "senderId": t.integer().from_parent("UserId"),
+                                    }
+                                )
+                            }
+                        ),
+                        find_messages.out,
+                        find_messages.mat,
                     ),
                 }
             ),

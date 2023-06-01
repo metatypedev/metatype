@@ -148,13 +148,13 @@ export function rebuildGraphQuery(
   const level = stages[0].props.path.length;
 
   iterParentStages(stages, (stage, children) => {
-    const field = stage.props.path[stage.props.path.length - 1];
+    const isTopLevel = stage.props.path.length === level;
+    const node = stage.props.path[stage.props.path.length - 1];
+    const field = isTopLevel ? renames[node] ?? node : node;
     const path = stage.props.materializer?.data["path"] as string[] ?? [field];
     ensure(path.length > 0, "unexpeced empty path");
 
     const { argumentTypes } = stage.props;
-
-    const isTopLevel = stage.props.path.length === level;
 
     // For top level selections, arguments (and referenced variables) are
     // not forwarded. They are replaced by generated variables matching to the

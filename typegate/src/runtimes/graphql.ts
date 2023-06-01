@@ -21,7 +21,7 @@ export interface FromVars<T> {
 
 export class GraphQLRuntime extends Runtime {
   endpoint: string;
-  forwardVars = true;
+  inlineVars = false;
 
   constructor(endpoint: string) {
     super();
@@ -29,7 +29,7 @@ export class GraphQLRuntime extends Runtime {
   }
 
   disableVariables() {
-    this.forwardVars = false;
+    this.inlineVars = true;
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
@@ -39,13 +39,13 @@ export class GraphQLRuntime extends Runtime {
 
   async deinit(): Promise<void> {}
 
-  execute(query: string | FromVars<string>, path: string[]): Resolver {
+  execute(query: FromVars<string>, path: string[]): Resolver {
     if (path.length == 0) {
       throw new Error("Path cannot be empty");
     }
     return async ({ _: { variables }, ...args }) => {
       const vars = { ...variables, ...mapKeys(args, (key) => `_arg_${key}`) };
-      const q = typeof query === "function" ? query(vars) : query;
+      const q = query(vars);
       // TODO: filter variables - only include forwared variables
       logger.debug(`remote graphql: ${q}`);
       logger.debug(` -- with variables: ${JSON.stringify(vars)}`);
@@ -68,9 +68,7 @@ export class GraphQLRuntime extends Runtime {
     const { materializer: mat } = stage.props;
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
     const fields = [stage, ...sameRuntime];
-    const renames: Record<string, string> = {
-      ql: "typegraph",
-    };
+    const renames: Record<string, string> = {};
 
     const operationLevel = stage.props.path.length;
     for (const field of fields) {
@@ -84,41 +82,38 @@ export class GraphQLRuntime extends Runtime {
       }
     }
 
-    const query = (() => {
-      const operationType = mat?.effect.effect != null
-        ? OperationTypeNode.MUTATION
-        : OperationTypeNode.QUERY;
+    // TODO extract function: build query
+    const operationType = mat?.effect.effect != null
+      ? OperationTypeNode.MUTATION
+      : OperationTypeNode.QUERY;
 
-      if (this.forwardVars) {
-        const { selections, vars: forwaredVars } = ForwardVars
-          .rebuildGraphQuery({
-            stages: fields,
-            renames,
-          });
-        const op: OperationDefinitionNode = {
-          kind: Kind.OPERATION_DEFINITION,
-          operation: operationType,
-          name: {
-            kind: Kind.NAME,
-            value: operationType.slice(0, 1).toUpperCase(),
-          },
-          variableDefinitions: forwaredVars,
-          selectionSet: {
-            kind: Kind.SELECTION_SET,
-            selections,
-          },
-        };
-        const ret = GraphQL.print(op);
-        return ret;
-      } else {
-        const query = InlineVars.rebuildGraphQuery({
-          stages: fields,
-          renames,
-        });
-        return (vars: Record<string, unknown>) =>
-          `${operationType} {${query(vars)} }`;
-      }
-    })();
+    const { selections, vars: forwardedVars } = ForwardVars
+      .rebuildGraphQuery({
+        stages: fields,
+        renames,
+      });
+    const op: OperationDefinitionNode = {
+      kind: Kind.OPERATION_DEFINITION,
+      operation: operationType,
+      name: {
+        kind: Kind.NAME,
+        value: operationType.slice(0, 1).toUpperCase(),
+      },
+      variableDefinitions: forwardedVars,
+      selectionSet: {
+        kind: Kind.SELECTION_SET,
+        selections,
+      },
+    };
+    const query = GraphQL.print(op);
+
+    // TODO nested args???
+    const queryFromVars: FromVars<string> = this.inlineVars
+      ? InlineVars.withInlinedVars(
+        query,
+        forwardedVars.map((varDef) => varDef.variable.name.value),
+      )
+      : () => query;
 
     verbose &&
       logger.debug(
@@ -134,7 +129,7 @@ export class GraphQLRuntime extends Runtime {
     }
     const queryStage = stage.withResolver(
       this.execute(
-        query,
+        queryFromVars,
         stage.props.materializer?.data.path as string[] ??
           [renames[node] ?? node],
       ),
