@@ -160,7 +160,7 @@ export function rebuildGraphQuery(
     // not forwarded. They are replaced by generated variables matching to the
     // computed argument values. This is to ensure that injected values are
     // properly set.
-    // Is this also necessary for non top level selections?
+    // Is this also necessary for non top level selections??
     const argumentNodes: ReadonlyArray<ArgumentNode> = isTopLevel
       ? (argumentTypes == null ? [] : createArgs(argumentTypes))
       : (stage.props.argumentNodes ?? []);

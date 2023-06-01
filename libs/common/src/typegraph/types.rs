@@ -103,6 +103,7 @@ pub struct IntegerTypeData {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub enum StringFormat {
+    GraphqlId,
     Uuid,
     Email,
     Uri,

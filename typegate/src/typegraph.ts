@@ -397,6 +397,13 @@ export class TypeGraph {
       return `[${this.getGraphQLType(this.type(typeNode.items))}]`;
     }
 
+    if (typeNode.type === Type.STRING) {
+      if (typeNode.format === "graphql-id") {
+        return "ID";
+      } else {
+        return "String";
+      }
+    }
     const scalarType = GRAPHQL_SCALAR_TYPES[typeNode.type];
     if (scalarType != null) {
       return scalarType;

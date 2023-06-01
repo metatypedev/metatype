@@ -210,6 +210,7 @@ export type InjectionSource = {
   data: number;
 };
 export type StringFormat =
+  | "graphql-id"
   | "uuid"
   | "email"
   | "uri"
@@ -217,6 +218,7 @@ export type StringFormat =
   | "hostname"
   | "ean"
   | "date"
+  | "date-time"
   | "phone";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
 export type S3Materializer = {

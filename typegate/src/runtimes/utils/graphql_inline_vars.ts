@@ -115,10 +115,13 @@ export function withInlinedVars(
   query: string,
   variables: string[],
 ): FromVars<string> {
-  const templateQuery = generateTemplateQuery(query, variables);
+  const [varDefs, templateQuery] = generateTemplateQuery(query, variables);
   const varList = variables.join(", ");
-  const generateQueryCode =
-    `const { ${varList} } = vars;\nreturn ${templateQuery}`;
+  const generateQueryCode = [
+    `const { ${varList} } = vars;`,
+    ...varDefs,
+    `return ${templateQuery}`,
+  ].join("\n");
   const generateQuery = new Function("vars", generateQueryCode) as FromVars<
     string
   >;
@@ -128,15 +131,13 @@ export function withInlinedVars(
       if (typeof expr === "function") return expr(variables);
       return expr;
     });
-    const q = generateQuery(varExpressions);
-    // TODO Temp
-    return q.split("\n").filter((line) => line.indexOf(": null") < 0).join(
-      "\n",
-    );
+    return generateQuery(varExpressions);
   };
 }
 
+// TODO test
 function generateTemplateQuery(query: string, variables: string[]) {
+  const varDefs = [];
   const parts = ["`"];
   let cursor = 0;
   const paramListStart = query.indexOf("(", cursor);
@@ -153,12 +154,14 @@ function generateTemplateQuery(query: string, variables: string[]) {
     argListStart + 1,
     varNames,
   );
-  parts.push(`(\n${formattedArgList})`);
+
+  varDefs.push(`const argList = \`${formattedArgList}\`;`);
+  parts.push(`\${ argList && \`(\n\${argList})\`}`);
   cursor = argListEnd + 1;
 
   parts.push(query.slice(cursor));
   parts.push("`");
-  return parts.join("");
+  return [varDefs, parts.join("")] as const;
 }
 
 // Return template string for argument list.
@@ -206,7 +209,7 @@ function formatArgList(
     }
 
     parts.push(
-      `\${ ${varName} == null ? "" : \`    ${argName}: \${${varName}}\\n\` }`,
+      `\${ ${varName} == "null" ? "" : \`    ${argName}: \${${varName}}\\n\` }`,
     );
   }
 }

@@ -1230,6 +1230,7 @@
     "StringFormat": {
       "type": "string",
       "enum": [
+        "graphql-id",
         "uuid",
         "email",
         "uri",
@@ -1237,6 +1238,7 @@
         "hostname",
         "ean",
         "date",
+        "date-time",
         "phone"
       ]
     },

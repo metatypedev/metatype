@@ -26,7 +26,7 @@ with TypeGraph("prisma") as g:
             "id": t.integer().config("id", "auto"),
             "description": t.string(),
             "post": gql_1.query(
-                t.struct({"id": t.string()}),
+                t.struct({"id": t.string().format("graphql-id")}),
                 t.optional(post),
             ),
             "user": t.gen(user, RandomMat(runtime=rand)),
