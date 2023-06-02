@@ -133,6 +133,6 @@ export class Scheduler {
 class PathUtils {
   static startsWith = (prefix: string) => (path: string) => {
     if (prefix.length === path.length) return prefix === path;
-    return path.startsWith(`${prefix}.`); // TODO branch selector
+    return path.startsWith(`${prefix}.`) || path.startsWith(`${prefix}$`);
   };
 }
