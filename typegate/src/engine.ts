@@ -353,6 +353,7 @@ export class Engine {
 
       return { status: 200, data: res };
     } catch (e) {
+      console.error(e);
       // deno-lint-ignore no-prototype-builtins
       if (e.hasOwnProperty("isErr")) {
         // field error

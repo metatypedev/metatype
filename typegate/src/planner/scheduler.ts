@@ -32,7 +32,8 @@ export class Scheduler {
       // filter out vertical dependencies:
       // dep is a direct ascendant of the node
       this.filterDep = (nodeId, depId) =>
-        !nodeId.startsWith(depId) && !depId.startsWith(nodeId);
+        !PathUtils.startsWith(depId)(nodeId) &&
+        !PathUtils.startsWith(nodeId)(depId);
       this.getNodeName = (nodeId) => {
         const end = nodeId.indexOf(".");
         return end < 0 ? nodeId : nodeId.slice(0, end);
@@ -44,8 +45,9 @@ export class Scheduler {
       // only keep descendants of root: other dependencies are scheduled in
       // some upper level.
       this.filterDep = (nodeId, depId) =>
-        !nodeId.startsWith(depId) && !depId.startsWith(nodeId) &&
-        depId.startsWith(rootId);
+        !PathUtils.startsWith(depId)(nodeId) &&
+        !PathUtils.startsWith(nodeId)(depId) &&
+        PathUtils.startsWith(rootId)(depId);
 
       const prefixLength = rootId.length;
       this.getNodeName = (nodeId) => {
@@ -125,4 +127,11 @@ export class Scheduler {
       // TODO what if the selection requires arguments???
     };
   }
+}
+
+class PathUtils {
+  static startsWith = (prefix: string) => (path: string) => {
+    if (prefix.length === path.length) return prefix === path;
+    return path.startsWith(`${prefix}.`); // TODO branch selector
+  };
 }

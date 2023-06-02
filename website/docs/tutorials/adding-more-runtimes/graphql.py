@@ -28,13 +28,15 @@ with TypeGraph(
             "id": t.integer().config("id", "auto"),
             "title": t.string(),
             # highlight-next-line
-            "user_id": t.string().named("uid"),
+            "user_id": t.string().format("graphql-id").named("uid"),
             # highlight-next-line
             "user": gql.query(
                 t.struct(
                     {
                         # highlight-next-line
-                        "id": t.string().from_parent(g("uid"))
+                        "id": t.string()
+                        .format("graphql-id")
+                        .from_parent(g("uid"))
                     }
                 ),
                 t.optional(user),
