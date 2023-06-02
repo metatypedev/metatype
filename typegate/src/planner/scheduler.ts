@@ -25,7 +25,8 @@ export class Scheduler {
   ) {
     this.selections = new Map();
     for (const selection of selections) {
-      this.selections.set(selection.name.value, selection);
+      const name = selection.alias?.value ?? selection.name.value;
+      this.selections.set(name, selection);
     }
 
     if (rootStage == null) {
