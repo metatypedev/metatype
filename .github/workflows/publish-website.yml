@@ -6,6 +6,8 @@ on:
 env:
   PNPM_VERSION: "8.6.0"
   NODE_VERSION: "19.8.1"
+  POETRY_VERSION: "1.4.1"
+  PYTHON_VERSION: "3.8"
 
 jobs:
   changes:
@@ -28,6 +30,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+      - uses: actions/cache@v3
+        with:
+          path: .venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -35,10 +47,13 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
           run_install: false
-      - working-directory: website
-        env:
+      - env:
           TG_URL: https://demo.metatype.dev
         run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          poetry install
+          cd website
           pnpm install --frozen-lockfile
           pnpm build
       - uses: peaceiris/actions-gh-pages@v3
