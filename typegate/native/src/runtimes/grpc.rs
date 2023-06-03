@@ -24,6 +24,7 @@ struct GrpcInput {
     proto_file: String,
     method: String,
     payload: String,
+    endpoint: String,
 }
 
 #[deno]
@@ -161,8 +162,8 @@ fn get_relative_method_name(absolute_method_name: &str) -> anyhow::Result<String
     Ok(method_name.to_string())
 }
 
-fn get_gprc_client(endpoint: String) -> anyhow::Result<Grpc<Channel>> {
-    let endpoint = Endpoint::from_str(endpoint.as_str()).unwrap();
+fn get_gprc_client(endpoint: &str) -> anyhow::Result<Grpc<Channel>> {
+    let endpoint = Endpoint::from_str(endpoint).unwrap();
 
     let channel = Channel::builder(endpoint.uri().to_owned());
     let channel = RT.block_on(channel.connect()).unwrap();
@@ -177,7 +178,7 @@ type JsonRequest = String;
 type MethodPath = String;
 
 fn call_method(
-    endpoint: String,
+    endpoint: &str,
     proto_file: &Path,
     method_path: MethodPath,
     json_payload: JsonRequest,
@@ -211,9 +212,8 @@ fn call_method(
 
 #[deno]
 fn call_grpc_method(input: GrpcInput) -> GrpcOutput {
-    let endpoint = String::from("http://localhost:4770");
     let proto_file = PathBuf::from_str(&input.proto_file).unwrap();
 
-    let response = call_method(endpoint, &proto_file, input.method, input.payload);
+    let response = call_method(&input.endpoint, &proto_file, input.method, input.payload);
     GrpcOutput::Ok { res: response }
 }

@@ -38,7 +38,14 @@ class GrpcRuntime(Runtime):
         return t.func(
             inp,
             out,
-            GrpcMat(self, str(proto_file.absolute()), method, effect=effect, **kwargs),
+            GrpcMat(
+                self,
+                str(proto_file.absolute()),
+                method,
+                self.endpoint,
+                effect=effect,
+                **kwargs
+            ),
         )
 
 
@@ -47,5 +54,6 @@ class GrpcMat(Materializer):
     runtime: Runtime
     proto_file: str
     method: str
+    endpoint: str
     effect: Effect = required()
     materializer_name: str = always("grpc_materializer")

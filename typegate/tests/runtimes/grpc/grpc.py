@@ -7,7 +7,7 @@ this_dir = Path(__file__).parent
 
 with TypeGraph("Grpc") as g:
     # gRPC server endpoint
-    grpc = GrpcRuntime("localhost:4770")
+    grpc = GrpcRuntime("http://localhost:4770")
     public = policies.public()
 
     g.expose(

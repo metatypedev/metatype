@@ -24,7 +24,7 @@ export class GrpcRuntime extends Runtime {
     _verbose: boolean,
   ): ComputeStage[] {
     const { materializer, inpType } = stage.props;
-    const { proto_file, method } = materializer?.data ?? {};
+    const { proto_file, method, endpoint } = materializer?.data ?? {};
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
 
     const inputArgs = Object.keys(inpType?.properties || {});
@@ -40,6 +40,7 @@ export class GrpcRuntime extends Runtime {
         await native.call_grpc_method({
           proto_file: proto_file as string,
           method: method as string,
+          endpoint: endpoint as string,
           payload: JSON.stringify(computedArgs),
         }),
       );
