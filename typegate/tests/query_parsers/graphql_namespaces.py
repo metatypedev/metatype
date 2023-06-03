@@ -4,7 +4,7 @@ from typegraph.runtimes.graphql import GraphQLRuntime
 with TypeGraph("graphql_namespaces") as g:
     gql = GraphQLRuntime("https://example.com/api/graphql")
 
-    user_id = t.uuid().named("user_id")
+    user_id = t.string().format("graphql-id").named("user_id")
     user_model = t.struct({"id": user_id, "name": t.string()}).named("user_model")
 
     picture_model = t.struct({"id": user_id, "url": t.uri()}).named("picture_model")

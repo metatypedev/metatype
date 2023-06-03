@@ -57,7 +57,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
-    format: "uuid",
+    format: "graphql-id",
     policies: [],
     runtime: 1,
     title: "user_id",
