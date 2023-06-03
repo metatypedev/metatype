@@ -138,6 +138,7 @@ export class Planner {
         );
 
       const scheduler = new Scheduler(
+        this.tg,
         stage ?? null,
         (field) =>
           this.traverseField(

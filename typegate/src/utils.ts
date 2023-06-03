@@ -178,8 +178,9 @@ export function closestWord(
 export function getReverseMapNameToQuery(tg: TypeGraph, names: string[]) {
   const indices = names.map((name) =>
     tg.type(0, Type.OBJECT).properties?.[name]
-  );
+  ).filter((idx) => idx != null);
   const res = new Map<string, Set<string>>();
+
   for (const idx of indices) {
     const { fields, title } = collectFieldNames(tg, idx);
     for (const name of fields) {
@@ -190,6 +191,7 @@ export function getReverseMapNameToQuery(tg: TypeGraph, names: string[]) {
       }
     }
   }
+
   return res;
 }
 

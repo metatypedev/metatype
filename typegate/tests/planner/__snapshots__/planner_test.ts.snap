@@ -9,7 +9,7 @@ snapshot[`planner 1`] = `
       "one",
     ],
     type: {
-      title: "function_12",
+      title: "function_24",
       type: "function",
     },
   },
@@ -107,7 +107,7 @@ snapshot[`planner 2`] = `
       rate_calls: false,
       rate_weight: null,
       runtime: 0,
-      title: "function_12",
+      title: "function_24",
       type: "function",
     },
     referencedTypes: {
@@ -157,19 +157,101 @@ snapshot[`planner 2`] = `
       ],
       one: [
         {
-          title: "function_12",
+          title: "function_24",
           type: "function",
         },
         {
-          title: "object_9",
+          title: "object_21",
           type: "object",
         },
         {
-          title: "object_11",
+          title: "object_23",
           type: "object",
         },
       ],
     },
   },
 }
+`;
+
+snapshot[`planner 3`] = `
+[
+  "one  one  one  object  object_21  false",
+  "one.union1  union1  one/union1  union  union_11  false",
+  "one.union2  union2  one/union2  union  union_20  false",
+  "one.union2\$A.a  a  one/union2\$A/a  integer  integer_12  false",
+  "one.union2\$B.b  b  one/union2\$B/b  either  either_18  false",
+  "one.union2\$B.b\$C1.c  c  one/union2\$B/b\$C1/c  integer  integer_14  false",
+  "one.union2\$B.b\$C2.c  c  one/union2\$B/b\$C2/c  string  string_16  false",
+]
+`;
+
+snapshot[`planner: dependencies 1`] = `
+[
+  "two  two  two  object  object_42  false",
+  "two.id  id  two/id  integer  integer_26  false",
+  "two.email  email  two/email  string  UserEmail  false",
+]
+`;
+
+snapshot[`planner: dependencies 2`] = `
+[
+  "two  two  two  object  object_42  false",
+  "two.id  id  two/id  integer  integer_26  false",
+  "two.email  email  two/email  string  UserEmail  false",
+  "two.profile  profile  two/profile  object  object_34  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_31  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_32  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_33  false",
+]
+`;
+
+snapshot[`planner: dependencies 3`] = `
+[
+  "two  two  two  object  object_42  false",
+  "two.id  id  two/id  integer  integer_26  false",
+  "two.email  email  two/email  string  UserEmail  false",
+  "two.profile  profile  two/profile  object  object_34  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_31  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_32  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_33  false",
+]
+`;
+
+snapshot[`planner: dependencies 4`] = `
+[
+  "two  two  two  object  object_42  false",
+  "two.email  email  two/email  string  UserEmail  true",
+  "two.profile  profile  two/profile  object  object_34  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_31  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_32  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_33  false",
+  "two.id  id  two/id  integer  integer_26  false",
+]
+`;
+
+snapshot[`planner: dependencies 5`] = `
+[
+  "two  two  two  object  object_42  false",
+  "two.email  email  two/email  string  UserEmail  true",
+  "two.profile  profile  two/profile  object  object_34  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_31  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_32  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_33  false",
+  "two.taggedPic  taggedPic  two/taggedPic  string  string_40  false",
+]
+`;
+
+snapshot[`planner: dependencies 6`] = `
+[
+  "two  two  two  object  object_42  false",
+  "two.id  id  two/id  integer  integer_26  false",
+  "two.email  email  two/email  string  UserEmail  true",
+  "two.profile  profile  two/profile  object  object_34  true",
+  "two.profile.email  email  two/profile/email  string  string_30  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_31  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_32  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_33  false",
+  "two.taggedPic  taggedPic  two/taggedPic  string  string_40  false",
+]
 `;

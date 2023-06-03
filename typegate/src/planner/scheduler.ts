@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { ComputeStage } from "../engine.ts";
-import { Kind } from "graphql";
+import { Kind, SelectionSetNode } from "graphql";
 import * as ast from "graphql/ast";
 import { distinct } from "std/collections/distinct.ts";
+import { TypeGraph } from "../typegraph.ts";
+import { Type } from "../type_node.ts";
 
 // Reorder stages based on dependencies.
 // Also adds additional stages for non-selected dependencies.
@@ -19,7 +21,8 @@ export class Scheduler {
   private getNodeId: (field: string) => string;
 
   constructor(
-    rootStage: ComputeStage | null,
+    private tg: TypeGraph,
+    private parentStage: ComputeStage | null,
     private getStages: (field: ast.FieldNode) => ComputeStage[],
     selections: ast.FieldNode[],
   ) {
@@ -29,7 +32,7 @@ export class Scheduler {
       this.selections.set(name, selection);
     }
 
-    if (rootStage == null) {
+    if (parentStage == null) {
       // filter out vertical dependencies:
       // dep is a direct ascendant of the node
       this.filterDep = (nodeId, depId) =>
@@ -41,7 +44,7 @@ export class Scheduler {
       };
       this.getNodeId = (field) => field;
     } else {
-      const rootId = rootStage.id();
+      const rootId = parentStage.id();
       // filter out vertical dependencies: cf supra;
       // only keep descendants of root: other dependencies are scheduled in
       // some upper level.
@@ -116,17 +119,77 @@ export class Scheduler {
     }
 
     // additional selections; not existing in the original query
+
+    if (
+      this.parentStage == null ||
+      this.parentStage.props.outType.type !== Type.OBJECT
+    ) {
+      throw new Error("");
+    }
+
+    const typeIdx = this.parentStage.props.outType.properties[field];
+    if (typeIdx == null) {
+      throw new Error("Unresolved dependency");
+    }
+
     return {
       kind: Kind.FIELD,
       name: {
         kind: Kind.NAME,
         value: field,
       },
-      // selectionSet: undefined,
-      // TODO select any possible selection based on type
+      selectionSet: this.getSelectionSet(typeIdx),
       // arguments: undefined,
       // TODO what if the selection requires arguments???
     };
+  }
+
+  private getSelectionSet(
+    typeIdx: number,
+  ): SelectionSetNode | undefined {
+    let typeNode = this.tg.type(typeIdx);
+
+    while (true) {
+      if (typeNode.type === Type.OPTIONAL) {
+        typeNode = this.tg.type(typeNode.item);
+      } else if (typeNode.type === Type.ARRAY) {
+        typeNode = this.tg.type(typeNode.items);
+      } else if (typeNode.type === Type.FUNCTION) {
+        typeNode = this.tg.type(typeNode.output);
+      } else {
+        break;
+      }
+    }
+
+    switch (typeNode.type) {
+      // scalar types
+      case Type.BOOLEAN:
+      case Type.INTEGER:
+      case Type.NUMBER:
+      case Type.STRING:
+      case Type.FILE:
+        return undefined;
+
+      case Type.OBJECT:
+        return {
+          kind: Kind.SELECTION_SET,
+          selections: Object.entries(typeNode.properties).map((
+            [name, idx],
+          ) => ({
+            kind: Kind.FIELD,
+            name: {
+              kind: Kind.NAME,
+              value: name,
+            },
+            selectionSet: this.getSelectionSet(idx),
+          })),
+        };
+
+      // TODO unions
+
+      default:
+        throw new Error(`Not implemented: type ${typeNode.type}`);
+    }
   }
 }
 
