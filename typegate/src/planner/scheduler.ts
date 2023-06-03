@@ -132,7 +132,10 @@ export class Scheduler {
 
 class PathUtils {
   static startsWith = (prefix: string) => (path: string) => {
-    if (prefix.length === path.length) return prefix === path;
-    return path.startsWith(`${prefix}.`) || path.startsWith(`${prefix}$`);
+    if (!path.startsWith(prefix)) return false;
+    const prefixLength = prefix.length;
+    if (path.length === prefixLength) return true; // prefix === path
+    const c = path.charAt(prefixLength);
+    return c === "." || c === "$";
   };
 }
