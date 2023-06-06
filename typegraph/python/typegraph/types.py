@@ -119,7 +119,7 @@ class typedef(Node):
     runtime_config: Dict[str, Any] = field(
         kw_only=True, factory=frozendict, hash=False, metadata={SKIP: True}
     )
-    _id: bool = field(kw_only=True, default=False)
+    _as_id: bool = field(kw_only=True, default=False)
     _enum: Optional[Tuple[str]] = field(kw_only=True, default=None)
 
     collector_target: Optional[str] = field(default=Collector.types, init=False)
@@ -182,8 +182,9 @@ class typedef(Node):
         ret.register_name()
         return ret
 
-    def id(self) -> Self:
-        return self.replace(id=True)
+    @property
+    def as_id(self) -> Self:
+        return self.replace(as_id=True)
 
     def describe(self, description: str) -> Self:
         return self.replace(description=description)
@@ -272,7 +273,7 @@ class typedef(Node):
         ret = remove_none_values(asdict(self))
         ret["type"] = self.type
         ret["title"] = ret.pop("name")
-        ret["id"] = ret.pop("_id")
+        ret["as_id"] = ret.pop("_as_id")
         ret["runtime"] = collector.index(self.runtime)
         ret["policies"] = [
             p.data(collector) if isinstance(p, EffectPolicies) else collector.index(p)

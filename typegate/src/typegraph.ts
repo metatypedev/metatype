@@ -128,7 +128,7 @@ export class TypeGraph {
     type: "string",
     policies: [],
     runtime: -1,
-    id: false,
+    as_id: false,
   };
 
   root: TypeNode;
@@ -399,7 +399,7 @@ export class TypeGraph {
     }
 
     if (typeNode.type === Type.STRING) {
-      if (typeNode.id) {
+      if (typeNode.as_id) {
         return "ID";
       } else {
         return "String";

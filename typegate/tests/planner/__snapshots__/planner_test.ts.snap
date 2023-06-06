@@ -97,8 +97,8 @@ snapshot[`planner 2`] = `
 {
   one: {
     funcType: {
+      as_id: false,
       config: {},
-      id: false,
       input: 2,
       materializer: 1,
       output: 3,

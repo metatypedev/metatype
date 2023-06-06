@@ -10,7 +10,7 @@ with TypeGraph("prisma") as g:
 
     user = t.struct(
         {
-            "id": t.integer().id(),
+            "id": t.integer().as_id,
             "name": t.string(),
             "age": t.integer().optional(),
             "coinflips": t.array(t.boolean()),
@@ -22,7 +22,7 @@ with TypeGraph("prisma") as g:
 
     post = t.struct(
         {
-            "id": t.integer().id(),
+            "id": t.integer().as_id,
             "title": t.string(),
             "views": t.integer(),
             "likes": t.integer(),
@@ -34,7 +34,7 @@ with TypeGraph("prisma") as g:
 
     comment = t.struct(
         {
-            "id": t.integer().id(),
+            "id": t.integer().as_id,
             "content": t.string(),
             "related_post": g("Post"),
         }
@@ -42,7 +42,7 @@ with TypeGraph("prisma") as g:
 
     extended_profile = t.struct(
         {
-            "id": t.integer().id(),
+            "id": t.integer().as_id,
             "bio": t.string(),
             "user": g("User"),
         }

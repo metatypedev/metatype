@@ -29,7 +29,7 @@ with TypeGraph(
 
     message = t.struct(
         {
-            "id": t.integer().id().config("auto"),
+            "id": t.integer().as_id.config("auto"),
             "title": t.string(),
         }
     ).named("message")
@@ -38,7 +38,7 @@ with TypeGraph(
         create_message=db.create(message),
         list_messages=db.find_many(message),
         users=gql.query(t.struct({}), t.struct({"data": t.array(user)})),
-        user=gql.query(t.struct({"id": t.string().id()}), user),
+        user=gql.query(t.struct({"id": t.string().as_id}), user),
         # highlight-next-line
         send_notification=googleapi.functions.projectsMessagesSend,
         default_policy=[public],

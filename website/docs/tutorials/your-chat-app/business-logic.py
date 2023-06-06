@@ -39,7 +39,7 @@ with TypeGraph(
 
     message = t.struct(
         {
-            "id": t.integer().id().config("auto"),
+            "id": t.integer().as_id.config("auto"),
             "title": t.string(),
             "user_id": t.integer().named("uid"),
             "user": gql.query(  # 1

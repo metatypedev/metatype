@@ -25,7 +25,7 @@ SCALAR_TYPES = {
     "Float": lambda: t.number(),
     "String": lambda: t.string(),
     "Boolean": lambda: t.boolean(),
-    "ID": lambda: t.string().id(),
+    "ID": lambda: t.string().as_id,
     "Char": lambda: t.string(),
 }
 

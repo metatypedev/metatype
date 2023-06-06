@@ -14,7 +14,7 @@ export type OptionalNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   item: number;
   default_value?: any;
 };
@@ -29,7 +29,7 @@ export type BooleanNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
 };
 export type NumberNode = {
   type: "number";
@@ -42,7 +42,7 @@ export type NumberNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   minimum?: number | null;
   maximum?: number | null;
   exclusiveMinimum?: number | null;
@@ -60,7 +60,7 @@ export type IntegerNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   minimum?: number | null;
   maximum?: number | null;
   exclusiveMinimum?: number | null;
@@ -78,7 +78,7 @@ export type StringNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   minLength?: number | null;
   maxLength?: number | null;
   pattern?: string | null;
@@ -95,7 +95,7 @@ export type FileNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   minSize?: number | null;
   maxSize?: number | null;
   mimeTypes?: string[] | null;
@@ -111,7 +111,7 @@ export type ObjectNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   properties: {
     [k: string]: number;
   };
@@ -128,7 +128,7 @@ export type ArrayNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   items: number;
   maxItems?: number | null;
   minItems?: number | null;
@@ -145,7 +145,7 @@ export type FunctionNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   input: number;
   output: number;
   materializer: number;
@@ -163,7 +163,7 @@ export type UnionNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   anyOf: number[];
 };
 export type EitherNode = {
@@ -177,7 +177,7 @@ export type EitherNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
   oneOf: number[];
 };
 export type AnyNode = {
@@ -191,7 +191,7 @@ export type AnyNode = {
   config?: {
     [k: string]: unknown;
   };
-  id: boolean;
+  as_id: boolean;
 };
 export type TypeNode =
   | OptionalNode

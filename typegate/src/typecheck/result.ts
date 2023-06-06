@@ -106,7 +106,7 @@ export class ResultValidationCompiler {
           title: "__TypeName",
           runtime: -1,
           policies: [],
-          id: false,
+          as_id: false,
         });
       } else if (isScalar(typeNode)) {
         if (entry.selectionSet != null) {

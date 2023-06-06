@@ -64,7 +64,7 @@ pub struct TypeNodeBase {
     pub enumeration: Option<Vec<String>>, // JSON-serialized values
     #[serde(default)]
     pub config: IndexMap<String, serde_json::Value>,
-    pub id: bool,
+    pub as_id: bool,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

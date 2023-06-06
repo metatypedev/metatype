@@ -11,7 +11,7 @@ with TypeGraph(name="blog") as g:
 
     users = t.struct(
         {
-            "id": t.integer().id(),
+            "id": t.integer().as_id,
             "name": t.string(),
             "posts": t.array(g("Post")),
             "profile": g("Profile").optional(),
@@ -20,7 +20,7 @@ with TypeGraph(name="blog") as g:
 
     profiles = t.struct(
         {
-            "id": t.integer().id(),
+            "id": t.integer().as_id,
             "profilePic": t.string(),
             "user": g("User"),
         }
@@ -28,7 +28,7 @@ with TypeGraph(name="blog") as g:
 
     posts = t.struct(
         {
-            "id": t.integer().id(),
+            "id": t.integer().as_id,
             "content": t.string(),
             "author": g("User"),
         }

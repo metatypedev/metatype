@@ -25,7 +25,7 @@ with TypeGraph(
 
     message = t.struct(
         {
-            "id": t.integer().id().config("auto"),
+            "id": t.integer().as_id.config("auto"),
             "title": t.string(),
             # highlight-next-line
             "user_id": t.string().named("uid"),
@@ -34,9 +34,7 @@ with TypeGraph(
                 t.struct(
                     {
                         # highlight-next-line
-                        "id": t.string()
-                        .id()
-                        .from_parent(g("uid"))
+                        "id": t.string().as_id.from_parent(g("uid"))
                     }
                 ),
                 t.optional(user),

@@ -47,7 +47,7 @@ class PrismaField:
 
 
 def get_ids(tpe: t.struct) -> Tuple[str, ...]:
-    return tuple(k for k, v in tpe.props.items() if resolve_proxy(v)._id)
+    return tuple(k for k, v in tpe.props.items() if resolve_proxy(v)._as_id)
 
 
 @frozen
@@ -68,7 +68,7 @@ class FieldBuilder:
 
     def additional_tags(self, typ: t.typedef) -> List[str]:
         tags = []
-        if typ._id:
+        if typ._as_id:
             tags.append("@id")
         if typ.runtime_config.get("unique", False):
             tags.append("@unique")
@@ -82,7 +82,7 @@ class FieldBuilder:
         return tags
 
     def get_type_ids(self, typ: t.struct) -> List[str]:
-        return [k for k, ty in typ.props.items() if resolve_proxy(ty)._id]
+        return [k for k, ty in typ.props.items() if resolve_proxy(ty)._as_id]
 
     def relation(
         self, field: str, typ: t.struct, rel_name: str, optional: bool
