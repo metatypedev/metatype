@@ -341,9 +341,9 @@ export interface MigrationOptions {
   reset: boolean;
 }
 export interface S3RuntimeData {
-  host: string;
-  region: string;
+  host_secret: string;
+  region_secret: string;
   access_key_secret: string;
   secret_key_secret: string;
-  path_style: boolean;
+  path_style_secret: string;
 }
