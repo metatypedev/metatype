@@ -18,7 +18,7 @@ import { EitherNode } from "../types/typegraph.ts";
 const logger = getLogger(import.meta);
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import { Scheduler } from "./scheduler.ts";
+import { ObjectSelectionScheduler } from "./scheduler.ts";
 
 interface Node {
   name: string;
@@ -110,7 +110,7 @@ export class Planner {
     const typ = this.tg.type(typeIdx);
 
     if (selectionSet == null) {
-      if (this.isSelectionSetExpectedFor(typeIdx)) {
+      if (this.tg.isSelectionSetExpectedFor(typeIdx)) {
         const path = this.formatPath(node.path);
         throw new Error(
           `at ${path}: selection set is expected for object type`,
@@ -137,17 +137,18 @@ export class Planner {
           ),
         );
 
-      const scheduler = new Scheduler(
-        this.tg,
-        stage ?? null,
-        (field) =>
-          this.traverseField(
-            this.getChildNodeForField(field, node, props, stage),
-            field,
-          ),
-        selection,
+      stages.push(
+        ...new ObjectSelectionScheduler(
+          this.tg,
+          stage!,
+          (field) =>
+            this.traverseField(
+              this.getChildNodeForField(field, node, props, stage),
+              field,
+            ),
+          selection,
+        ).getScheduledStages(),
       );
-      stages.push(...scheduler.getScheduledStages());
 
       return stages;
     }
@@ -516,23 +517,6 @@ export class Planner {
 
   private formatPath(path: string[]) {
     return [this.operationName, ...path].join(".");
-  }
-
-  private isSelectionSetExpectedFor(typeIdx: number): boolean {
-    const typ = this.tg.type(typeIdx);
-    if (typ.type === Type.OBJECT) {
-      return true;
-    }
-
-    if (typ.type === Type.UNION) {
-      // only check for first variant
-      // typegraph validation ensure that all the (nested) variants are all either objects or scalars
-      return this.isSelectionSetExpectedFor(typ.anyOf[0]);
-    }
-    if (typ.type === Type.EITHER) {
-      return this.isSelectionSetExpectedFor(typ.oneOf[0]);
-    }
-    return false;
   }
 
   private unexpectedFieldError(node: Node, name: string): Error {
