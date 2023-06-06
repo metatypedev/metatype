@@ -1562,7 +1562,7 @@
       "required": [
         "access_key_secret",
         "host_secret",
-        "path_style",
+        "path_style_secret",
         "region_secret",
         "secret_key_secret"
       ],
@@ -1579,8 +1579,8 @@
         "secret_key_secret": {
           "type": "string"
         },
-        "path_style": {
-          "type": "boolean"
+        "path_style_secret": {
+          "type": "string"
         }
       }
     },

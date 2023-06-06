@@ -345,5 +345,5 @@ export interface S3RuntimeData {
   region_secret: string;
   access_key_secret: string;
   secret_key_secret: string;
-  path_style: boolean;
+  path_style_secret: string;
 }

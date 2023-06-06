@@ -14,6 +14,7 @@ const HOST = "http://localhost:9000";
 const REGION = "local";
 const ACCESS_KEY = "minio";
 const SECRET_KEY = "password";
+const PATH_STYLE = "true";
 
 async function initBucket() {
   const client = new S3Client({
@@ -55,6 +56,7 @@ test("s3", async (t) => {
       TG_S3_TEST_REGION: REGION,
       TG_S3_TEST_ACCESS_KEY: ACCESS_KEY,
       TG_S3_TEST_SECRET_KEY: SECRET_KEY,
+      TG_S3_TEST_PATH_STYLE: PATH_STYLE,
     },
   });
 

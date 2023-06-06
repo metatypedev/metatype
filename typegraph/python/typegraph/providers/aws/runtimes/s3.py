@@ -21,17 +21,11 @@ class S3Runtime(Runtime):
     region_secret: str
     access_key_secret: str
     secret_key_secret: str
-    path_style: bool = field(default=False, kw_only=True)
+    path_style_secret: Optional[str] = field(default=None, kw_only=True)
     runtime_name: str = always("s3")
 
     def data(self, collector):
         data = super().data(collector)
-        data["data"].update(
-            host_secret=self.host_secret,
-            region_secret=self.region_secret,
-            access_key_secret=self.access_key_secret,
-            secret_key_secret=self.secret_key_secret,
-        )
         return data
 
     def presign_get(self, bucket: str, expiry_secs: Optional[int] = None):

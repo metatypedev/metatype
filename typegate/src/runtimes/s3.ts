@@ -34,7 +34,7 @@ export class S3Runtime extends Runtime {
     const {
       host_secret,
       region_secret,
-      path_style,
+      path_style_secret,
       access_key_secret,
       secret_key_secret,
     } = args;
@@ -42,12 +42,13 @@ export class S3Runtime extends Runtime {
       accessKeyId: secretManager.secretOrFail(access_key_secret),
       secretAccessKey: secretManager.secretOrFail(secret_key_secret),
     };
-    const client = new S3Client({
+    const clientInit = {
       endpoint: secretManager.secretOrFail(host_secret),
       region: secretManager.secretOrFail(region_secret),
       credentials,
-      forcePathStyle: path_style,
-    });
+      forcePathStyle: secretManager.secretOrNull(path_style_secret) === "true",
+    };
+    const client = new S3Client(clientInit);
     return new S3Runtime(client);
   }
 
