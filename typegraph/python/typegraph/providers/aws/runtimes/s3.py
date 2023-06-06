@@ -8,7 +8,6 @@ from typegraph.effects import Effect
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
 from typing import Optional
-import sys
 
 
 @frozen
