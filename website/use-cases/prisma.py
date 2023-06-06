@@ -13,7 +13,7 @@ with TypeGraph(
 
     user = t.struct(
         {
-            "id": t.uuid().config("id", "auto"),
+            "id": t.uuid().id().config("auto"),
             "email": t.email(),
             "firstname": t.string().min(2).max(2000),
         }

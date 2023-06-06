@@ -8,7 +8,7 @@ with TypeGraph("prisma") as g:
 
     record = t.struct(
         {
-            "id": t.uuid().config("id", "auto"),
+            "id": t.uuid().id().config("auto"),
             "name": t.string(),
             "age": t.integer().optional(),
         },
@@ -16,7 +16,7 @@ with TypeGraph("prisma") as g:
 
     messages = t.struct(
         {
-            "id": t.integer().config("id"),
+            "id": t.integer().id(),
             "time": t.integer(),
             "message": t.string(),
             "sender": db.link(g("users").optional(), "messageSender"),
@@ -25,7 +25,7 @@ with TypeGraph("prisma") as g:
 
     users = t.struct(
         {
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().id().config("auto"),
             "email": t.string(),
             "name": t.string(),
             "messages": db.link(t.array(g("messages")), "messageSender"),

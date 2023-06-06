@@ -23,10 +23,10 @@ with TypeGraph("prisma") as g:
     ).named("Album")
     record = t.struct(
         {
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().id().config("auto"),
             "description": t.string(),
             "post": gql_1.query(
-                t.struct({"id": t.string().format("graphql-id")}),
+                t.struct({"id": t.string().id()}),
                 t.optional(post),
             ),
             "user": t.gen(user, RandomMat(runtime=rand)),

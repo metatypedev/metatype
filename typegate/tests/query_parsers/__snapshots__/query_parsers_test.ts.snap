@@ -4,6 +4,7 @@ snapshot[`GraphQL parser 1`] = `
 [
   {
     config: {},
+    id: false,
     policies: [],
     properties: {
       mutation: 19,
@@ -16,6 +17,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     policies: [
       0,
       0,
@@ -32,6 +34,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     input: 3,
     materializer: 1,
     output: 5,
@@ -46,6 +49,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     policies: [],
     properties: {
       id: 4,
@@ -57,7 +61,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
-    format: "graphql-id",
+    id: true,
     policies: [],
     runtime: 1,
     title: "user_id",
@@ -65,6 +69,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     policies: [],
     properties: {
       id: 4,
@@ -77,6 +82,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     policies: [],
     runtime: 1,
     title: "string_2",
@@ -84,6 +90,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     input: 5,
     materializer: 2,
     output: 5,
@@ -98,6 +105,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     policies: [],
     properties: {
       picture: 9,
@@ -110,6 +118,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     input: 10,
     materializer: 3,
     output: 11,
@@ -124,6 +133,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     policies: [],
     properties: {
       id: 4,
@@ -135,6 +145,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     policies: [],
     properties: {
       id: 4,
@@ -148,6 +159,7 @@ snapshot[`GraphQL parser 1`] = `
   {
     config: {},
     format: "uri",
+    id: false,
     policies: [],
     runtime: 1,
     title: "string_4",
@@ -155,6 +167,7 @@ snapshot[`GraphQL parser 1`] = `
   },
   {
     config: {},
+    id: false,
     input: 11,
     materializer: 4,
     output: 11,
@@ -171,6 +184,7 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
+    id: false,
     policies: [
       0,
       0,
@@ -187,6 +201,7 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
+    id: false,
     policies: [
       0,
       0,
@@ -203,6 +218,7 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
+    id: false,
     policies: [],
     properties: {
       find: 2,
@@ -217,6 +233,7 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
+    id: false,
     policies: [],
     properties: {
       profile: 15,
@@ -231,6 +248,7 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
+    id: false,
     policies: [],
     properties: {
       user: 16,
@@ -244,6 +262,7 @@ snapshot[`GraphQL parser 1`] = `
     config: {
       __namespace: true,
     },
+    id: false,
     policies: [],
     properties: {
       user: 17,

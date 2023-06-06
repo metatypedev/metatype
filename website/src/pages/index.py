@@ -24,7 +24,7 @@ with TypeGraph(
 
     feedback = t.struct(
         {
-            "id": t.uuid().config("id", "auto"),
+            "id": t.uuid().id().config("auto"),
             "email": t.email().add_policy(public_write_only),
             "message": t.string().min(1).max(2000),
         }

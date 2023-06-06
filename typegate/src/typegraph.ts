@@ -128,6 +128,7 @@ export class TypeGraph {
     type: "string",
     policies: [],
     runtime: -1,
+    id: false,
   };
 
   root: TypeNode;
@@ -398,7 +399,7 @@ export class TypeGraph {
     }
 
     if (typeNode.type === Type.STRING) {
-      if (typeNode.format === "graphql-id") {
+      if (typeNode.id) {
         return "ID";
       } else {
         return "String";

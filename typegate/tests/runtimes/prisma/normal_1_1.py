@@ -8,14 +8,14 @@ with TypeGraph("prisma") as g:
 
     user = t.struct(
         {
-            "id": t.integer().config("id"),
+            "id": t.integer().id(),
             "profile": db.link(g("Profile").optional(), "userProfile"),
         }
     ).named("User")
 
     profile = t.struct(
         {
-            "id": t.integer().config("id"),
+            "id": t.integer().id(),
             "user": db.link(g("User"), "userProfile"),
         }
     ).named("Profile")

@@ -45,7 +45,6 @@ const formatValidators: Record<StringFormat, FormatValidator> = {
   phone: validator.isMobilePhone, // ??
   date: validator.isDate,
   "date-time": validator.isISO8601,
-  "graphql-id": () => true,
 };
 
 export const validationContext: ValidationContext = {

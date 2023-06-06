@@ -66,7 +66,7 @@ with TypeGraph("injection") as g:
 
     message = t.struct(
         {
-            "id": t.uuid().config("id", "auto"),
+            "id": t.uuid().id().config("auto"),
             "time": t.datetime(),
             "text": t.string(),
             "senderId": t.integer(),

@@ -20,7 +20,7 @@ with TypeGraph(
     message = t.struct(
         {
             # highlight-next-line
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().id().config("auto"),
             "title": t.string(),
             "body": t.string(),
         }

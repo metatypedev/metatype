@@ -25,17 +25,17 @@ with TypeGraph(
 
     message = t.struct(
         {
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().id().config("auto"),
             "title": t.string(),
             # highlight-next-line
-            "user_id": t.string().format("graphql-id").named("uid"),
+            "user_id": t.string().named("uid"),
             # highlight-next-line
             "user": gql.query(
                 t.struct(
                     {
                         # highlight-next-line
                         "id": t.string()
-                        .format("graphql-id")
+                        .id()
                         .from_parent(g("uid"))
                     }
                 ),

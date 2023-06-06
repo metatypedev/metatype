@@ -46,7 +46,7 @@ with TypeGraph(
 
     user = t.struct(
         {
-            "id": t.uuid().config("id", "auto"),
+            "id": t.uuid().id().config("auto"),
             "user": t.string().named("login"),
             "github": github.get(
                 "/users/{user}",

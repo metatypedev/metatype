@@ -67,7 +67,7 @@ class TestTypeGenerator:
 
             model = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().id().config("auto"),
                     "email": t.email(),
                     "age": t.integer().min(0).max(120),
                     "fullName": t.string(),
@@ -85,12 +85,10 @@ class TestTypeGenerator:
             db = PrismaRuntime("test", "POSTGRES")
 
             user = t.struct(
-                {"id": t.integer().config("id"), "posts": t.array(g("Post"))}
+                {"id": t.integer().id(), "posts": t.array(g("Post"))}
             ).named("User")
 
-            post = t.struct(
-                {"id": t.integer().config("id"), "author": g("User")}
-            ).named("Post")
+            post = t.struct({"id": t.integer().id(), "author": g("User")}).named("Post")
 
             typegen = db._PrismaRuntime__typegen
             self.assert_snapshot(typegen.get_input_type(user), "relations_input_1.json")
@@ -106,7 +104,7 @@ class TestTypeGenerator:
 
             node = t.struct(
                 {
-                    "name": t.string().min(2).config("id"),
+                    "name": t.string().min(2).id(),
                     "prev": g("ListNode").optional(),
                     "next": g("ListNode").optional().config("unique"),
                 }
@@ -183,7 +181,7 @@ def tg_blog(g: TypeGraph):
     return {
         "picture": t.struct(
             {
-                "id": t.uuid().config("id", "auto"),
+                "id": t.uuid().id().config("auto"),
                 "url": t.uri(),
                 "date_posted": t.date(),
                 "text": t.string().optional(),
@@ -192,7 +190,7 @@ def tg_blog(g: TypeGraph):
         ).named("Picture"),
         "profile": t.struct(
             {
-                "id": t.uuid().config("id", "auto"),
+                "id": t.uuid().id().config("auto"),
                 "display_name": t.string(),
                 "first_name": t.string().optional(),
                 "last_name": t.string(),
@@ -202,7 +200,7 @@ def tg_blog(g: TypeGraph):
         ).named("Profile"),
         "user": t.struct(
             {
-                "id": t.uuid().config("id", "auto"),
+                "id": t.uuid().id().config("auto"),
                 "email": t.email().config("unique"),
                 "profile": g("Profile").optional(),
             }
@@ -214,7 +212,7 @@ def tg_blog_2(g: TypeGraph):
     return {
         "user": t.struct(
             {
-                "id": t.integer().config("id"),
+                "id": t.integer().id(),
                 "name": t.string(),
                 "age": t.integer().optional(),
                 "coinflips": t.array(t.boolean()),
@@ -225,7 +223,7 @@ def tg_blog_2(g: TypeGraph):
         ).named("User"),
         "post": t.struct(
             {
-                "id": t.integer().config("id"),
+                "id": t.integer().id(),
                 "title": t.string(),
                 "views": t.integer(),
                 "likes": t.integer(),
@@ -236,14 +234,14 @@ def tg_blog_2(g: TypeGraph):
         ).named("Post"),
         "comment": t.struct(
             {
-                "id": t.integer().config("id"),
+                "id": t.integer().id(),
                 "content": t.string(),
                 "related_post": g("Post"),
             }
         ).named("Comment"),
         "extended_profile": t.struct(
             {
-                "id": t.integer().config("id"),
+                "id": t.integer().id(),
                 "bio": t.string(),
                 "user": g("User"),
             }
