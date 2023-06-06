@@ -8,6 +8,7 @@ from typegraph.effects import Effect
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
 from typing import Optional
+import sys
 
 
 @frozen
@@ -16,8 +17,8 @@ class S3Runtime(Runtime):
     [Documentation](https://metatype.dev/docs/reference/runtimes/s3)
     """
 
-    host: str
-    region: str
+    host_secret: str
+    region_secret: str
     access_key_secret: str
     secret_key_secret: str
     path_style: bool = field(default=False, kw_only=True)
@@ -26,8 +27,8 @@ class S3Runtime(Runtime):
     def data(self, collector):
         data = super().data(collector)
         data["data"].update(
-            host=self.host,
-            region=self.region,
+            host_secret=self.host_secret,
+            region_secret=self.region_secret,
             access_key_secret=self.access_key_secret,
             secret_key_secret=self.secret_key_secret,
         )
