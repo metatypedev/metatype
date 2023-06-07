@@ -33,9 +33,33 @@ with TypeGraph("test") as g:
         }
     )
 
-    public = p.public()
-
     dummy_mat = PureFunMat("() => ({})")
+
+    registered_user = t.struct(
+        {
+            "id": t.uuid().as_id,
+            "email": t.email().named("RegisteredUserEmail"),
+            "profile": t.func(
+                t.struct({"email": t.email().from_parent("RegisteredUserEmail")}),
+                t.struct(
+                    {
+                        "email": t.email(),
+                        "displayName": t.string(),
+                        "profilePic": t.string(),
+                    }
+                ),
+                dummy_mat,
+            ),
+        },
+    ).named("RegisteredUser")
+
+    guest_user = t.struct(
+        {
+            "id": t.uuid().as_id,
+        }
+    ).named("GuestUser")
+
+    public = p.public()
 
     g.expose(
         one=t.func(
@@ -72,6 +96,16 @@ with TypeGraph("test") as g:
                         t.string(),
                         dummy_mat,
                     ),
+                }
+            ),
+            dummy_mat,
+        ),
+        three=t.func(
+            t.struct(),
+            t.struct(
+                {
+                    "id": t.integer().as_id,
+                    "user": t.either([registered_user, guest_user]),
                 }
             ),
             dummy_mat,

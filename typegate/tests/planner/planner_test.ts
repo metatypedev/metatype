@@ -14,20 +14,25 @@ async function assertPlanSnapshot(t: MetaTest, e: Engine, query: string) {
   const [op, frags] = findOperation(parse(query), None);
   const [plan] = await e.getPlan(op.unwrap(), frags, false, false);
 
-  t.assertSnapshot(
-    plan.stages.map((s) =>
-      [
-        s.id(),
-        s.props.node,
-        s.props.path.join("/"),
-        s.props.outType.type,
-        s.props.outType.title,
-        s.props.excludeResult ?? false,
-      ].join(
-        "  ",
-      )
-    ),
-  );
+  try {
+    t.assertSnapshot(
+      plan.stages.map((s) =>
+        [
+          s.id(),
+          s.props.node,
+          s.props.path.join("/"),
+          s.props.outType.type,
+          s.props.outType.title,
+          s.props.excludeResult ?? false,
+        ].join(
+          "  ",
+        )
+      ),
+    );
+  } catch (e) {
+    console.error("error", e);
+    throw e;
+  }
 }
 
 test("planner", async (t) => {
@@ -219,6 +224,60 @@ test("planner: dependencies", async (t) => {
             taggedPic
           }
         }`,
+    );
+  });
+});
+
+test("planner: dependencies in union/either", async (t) => {
+  const e = await t.pythonFile("planner/planner.py");
+
+  await t.should("get the right plan", async () => {
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+      query {
+        three {
+          id
+          user {
+            ...on RegisteredUser {
+              id
+              email
+              profile {
+                email displayName profilePic
+              }
+            }
+            ... on GuestUser {
+              id
+            }
+          }
+        }
+      }
+    `,
+    );
+
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          three {
+            id
+            user {
+              ...on RegisteredUser {
+                id
+                profile {
+                  email
+                  displayName
+                }
+              }
+              ...on GuestUser {
+                id
+              }
+            }
+          }
+        }
+      `,
     );
   });
 });

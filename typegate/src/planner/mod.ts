@@ -18,7 +18,7 @@ import { EitherNode } from "../types/typegraph.ts";
 const logger = getLogger(import.meta);
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import { ObjectSelectionScheduler } from "./scheduler.ts";
+import { Scheduler } from "./scheduler.ts";
 
 interface Node {
   name: string;
@@ -138,9 +138,10 @@ export class Planner {
         );
 
       stages.push(
-        ...new ObjectSelectionScheduler(
+        ...new Scheduler(
           this.tg,
-          stage!,
+          stage?.id() ?? null,
+          typ,
           (field) =>
             this.traverseField(
               this.getChildNodeForField(field, node, props, stage),
@@ -183,26 +184,34 @@ export class Planner {
         );
       }
 
-      stage!.props.childSelection = generateVariantMatcher(this.tg, typeIdx);
+      if (stage == null) {
+        throw new Error("unexpected");
+      }
+      stage.props.childSelection = generateVariantMatcher(this.tg, typeIdx);
 
       for (const [typeName, selectionSet] of selections) {
         const selection = resolveSelection(selectionSet, this.fragments);
-        const props = this.tg.type(variants[typeName], Type.OBJECT).properties;
+        const outputType = this.tg.type(variants[typeName], Type.OBJECT);
         const parentPath = node.path.slice();
         parentPath[parentPath.length - 1] += `$${typeName}`;
-        for (const field of selection) {
-          stages.push(
-            ...this.traverseField(
-              this.getChildNodeForField(
+        stages.push(
+          ...new Scheduler(
+            this.tg,
+            parentPath.join("."),
+            outputType,
+            (field) =>
+              this.traverseField(
+                this.getChildNodeForField(
+                  field,
+                  { ...node, path: parentPath, typeIdx: variants[typeName] },
+                  outputType.properties,
+                  stage,
+                ),
                 field,
-                { ...node, path: parentPath },
-                props,
-                stage,
               ),
-              field,
-            ),
-          );
-        }
+            selection,
+          ).getScheduledStages(),
+        );
       }
 
       return stages;

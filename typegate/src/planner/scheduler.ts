@@ -6,32 +6,23 @@ import { FieldNode, Kind, SelectionSetNode } from "graphql";
 import * as ast from "graphql/ast";
 import { distinct } from "std/collections/distinct.ts";
 import { PossibleSelectionFields, TypeGraph } from "../typegraph.ts";
-import { ObjectNode, Type } from "../type_node.ts";
+import { ObjectNode } from "../type_node.ts";
 
-// Reorder stages based on dependencies.
+// Reorder stages for the selection on an object type, based on dependencies.
 // Also adds additional stages for non-selected dependencies.
-export class ObjectSelectionScheduler {
+export class Scheduler {
   private readonly fields: Map<string, ast.FieldNode>;
   private stages: ComputeStage[] = [];
   private activeFields: Set<string> = new Set();
   private visitedFields: Set<string> = new Set();
 
-  private parentId: string | null;
-  private parentType: ObjectNode | null;
-
   constructor(
     private tg: TypeGraph,
-    parentStage: ComputeStage | null,
+    private parentId: string | null,
+    private parentType: ObjectNode | null,
     private stageFactory: (field: ast.FieldNode) => ComputeStage[],
     selection: ast.FieldNode[],
   ) {
-    this.parentId = parentStage?.id() ?? null;
-    const parentType = parentStage &&
-      tg.typeNodeWithoutQuantifiers(parentStage.props.outType);
-    if (parentType != null && parentType.type !== Type.OBJECT) {
-      throw new Error("expected an object");
-    }
-    this.parentType = parentType;
     this.fields = new Map();
 
     for (const field of selection) {
