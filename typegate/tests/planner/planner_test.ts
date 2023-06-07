@@ -138,6 +138,21 @@ test("planner", async (t) => {
       }`,
     );
   });
+
+  await t.should("work with union dependency", async () => {
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          one {
+            from_union2
+            from_union1
+          }
+        }
+      `,
+    );
+  });
 });
 
 test("planner: dependencies", async (t) => {

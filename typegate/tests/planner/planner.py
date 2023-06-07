@@ -3,6 +3,26 @@ from typegraph.runtimes.deno import PureFunMat
 from typegraph import policies as p
 
 with TypeGraph("test") as g:
+    A = t.struct({"a": t.integer()}).named("A")
+    B = t.struct(
+        {
+            "b": t.either(
+                [
+                    t.struct({"c": t.integer()}).named("C1"),
+                    t.struct({"c": t.string()}).named("C2"),
+                ]
+            )
+        }
+    ).named("B")
+
+    def gen_union1():
+        return t.union([t.integer(), t.string()])
+
+    def gen_union2():
+        return t.union([A, B])
+
+    dummy_mat = PureFunMat("() => ({})")
+
     record = t.struct(
         {
             "id": t.uuid(),
@@ -14,26 +34,20 @@ with TypeGraph("test") as g:
                     "third": t.boolean().optional(),
                 }
             ),
-            "union1": t.union([t.integer(), t.string()]),
-            "union2": t.union(
-                [
-                    t.struct({"a": t.integer()}).named("A"),
-                    t.struct(
-                        {
-                            "b": t.either(
-                                [
-                                    t.struct({"c": t.integer()}).named("C1"),
-                                    t.struct({"c": t.string()}).named("C2"),
-                                ]
-                            )
-                        }
-                    ).named("B"),
-                ]
+            "from_union1": t.func(
+                t.struct({"u1": gen_union1().from_parent("Union1")}),
+                t.integer(),
+                dummy_mat,
             ),
+            "from_union2": t.func(
+                t.struct({"u2": gen_union2().from_parent("Union2")}),
+                t.integer(),
+                dummy_mat,
+            ),
+            "union1": gen_union1().named("Union1"),
+            "union2": gen_union2().named("Union2"),
         }
     )
-
-    dummy_mat = PureFunMat("() => ({})")
 
     registered_user = t.struct(
         {

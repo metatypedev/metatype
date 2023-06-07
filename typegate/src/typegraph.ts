@@ -460,8 +460,7 @@ export class TypeGraph {
     let variants: number[];
     if (typeNode.type === Type.UNION) {
       variants = typeNode.anyOf;
-    }
-    if (typeNode.type === Type.EITHER) {
+    } else if (typeNode.type === Type.EITHER) {
       variants = typeNode.oneOf;
     } else {
       return null;
