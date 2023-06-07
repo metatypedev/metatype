@@ -260,7 +260,7 @@ export class PrismaRuntime extends GraphQLRuntime {
     return JSON.parse(res);
   }
 
-  execute(query: FromVars<string>, path: string[]): Resolver {
+  override execute(query: FromVars<string>, path: string[]): Resolver {
     return async ({ _: { variables }, ...args }) => {
       const q = query({ ...variables, ...mapKeys(args, (k) => `_arg_${k}`) });
       logger.debug(`remote graphql: ${q}`);
@@ -322,5 +322,23 @@ export class PrismaRuntime extends GraphQLRuntime {
     }
 
     return super.materialize(stage, waitlist, verbose);
+  }
+
+  override getRenames(stages: ComputeStage[]): Record<string, string> {
+    const operationLevel = stages[0].props.path.length;
+
+    const renames: Record<string, string> = {};
+    for (const stage of stages) {
+      const { node, path, materializer: mat } = stage.props;
+      if (mat != null && path.length === operationLevel) {
+        const { operation, table } = mat.data as {
+          operation: string;
+          table: string;
+        };
+        renames[node] = operation + table;
+      }
+    }
+
+    return renames;
   }
 }

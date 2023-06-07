@@ -8,8 +8,8 @@ import { Runtime } from "./Runtime.ts";
 import * as GraphQL from "graphql";
 import { Kind } from "graphql";
 import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
-import * as ForwardVars from "./utils/graphql_forward_vars.ts";
-import * as InlineVars from "./utils/graphql_inline_vars.ts";
+import { rebuildGraphQuery } from "./utils/graphql_forward_vars.ts";
+import { withInlinedVars } from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";
 import { mapKeys } from "std/collections/map_keys.ts";
 
@@ -68,52 +68,14 @@ export class GraphQLRuntime extends Runtime {
     const { materializer: mat } = stage.props;
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
     const fields = [stage, ...sameRuntime];
-    const renames: Record<string, string> = {};
-
-    const operationLevel = stage.props.path.length;
-    for (const field of fields) {
-      const { node, path } = field.props;
-      if (mat?.name == "prisma_operation" && path.length === operationLevel) {
-        const { operation, table } = mat.data as {
-          operation: string;
-          table: string;
-        };
-        renames[node] = operation + table;
-      }
-    }
+    const renames = this.getRenames(fields);
 
     // TODO extract function: build query
     const operationType = mat?.effect.effect != null
       ? OperationTypeNode.MUTATION
       : OperationTypeNode.QUERY;
 
-    const { selections, vars: forwardedVars } = ForwardVars
-      .rebuildGraphQuery({
-        stages: fields,
-        renames,
-      });
-    const op: OperationDefinitionNode = {
-      kind: Kind.OPERATION_DEFINITION,
-      operation: operationType,
-      name: {
-        kind: Kind.NAME,
-        value: operationType.slice(0, 1).toUpperCase(),
-      },
-      variableDefinitions: forwardedVars,
-      selectionSet: {
-        kind: Kind.SELECTION_SET,
-        selections,
-      },
-    };
-    const query = GraphQL.print(op);
-
-    // TODO nested args???
-    const queryFromVars: FromVars<string> = this.inlineVars
-      ? InlineVars.withInlinedVars(
-        query,
-        forwardedVars.map((varDef) => varDef.variable.name.value),
-      )
-      : () => query;
+    const query = this.buildQuery(fields, operationType, renames);
 
     verbose &&
       logger.debug(
@@ -129,7 +91,7 @@ export class GraphQLRuntime extends Runtime {
     }
     const queryStage = stage.withResolver(
       this.execute(
-        queryFromVars,
+        query,
         stage.props.materializer?.data.path as string[] ??
           [renames[node] ?? node],
       ),
@@ -175,5 +137,44 @@ export class GraphQLRuntime extends Runtime {
     }
 
     return stagesMat;
+  }
+
+  buildQuery(
+    stages: ComputeStage[],
+    operationType: OperationTypeNode,
+    renames: Record<string, string>,
+  ): FromVars<string> {
+    const { selections, vars: forwardedVars } = rebuildGraphQuery({
+      stages,
+      renames,
+    });
+    const op: OperationDefinitionNode = {
+      kind: Kind.OPERATION_DEFINITION,
+      operation: operationType,
+      name: {
+        kind: Kind.NAME,
+        value: operationType.slice(0, 1).toUpperCase(),
+      },
+      variableDefinitions: forwardedVars,
+      selectionSet: {
+        kind: Kind.SELECTION_SET,
+        selections,
+      },
+    };
+    const query = GraphQL.print(op);
+
+    // TODO nested args???
+    if (this.inlineVars) {
+      return withInlinedVars(
+        query,
+        forwardedVars.map((varDef) => varDef.variable.name.value),
+      );
+    } else {
+      return () => query;
+    }
+  }
+
+  getRenames(_stages: ComputeStage[]): Record<string, string> {
+    return {};
   }
 }
