@@ -43,13 +43,13 @@ impl core::Core for Lib {
         }
     }
 
-    fn integerb(data: TypeInteger) -> Result<TypeId> {
+    fn integerb(data: TypeInteger, base: TypeBase) -> Result<TypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
             }
         }
-        let tpe = T::Integer(Integer(TypeBase::default(), data));
+        let tpe = T::Integer(Integer(base, data));
         Ok(store().add_type(tpe))
     }
 
@@ -62,7 +62,7 @@ impl core::Core for Lib {
         }
     }
 
-    fn structb(data: TypeStruct) -> Result<TypeId> {
+    fn structb(data: TypeStruct, base: TypeBase) -> Result<TypeId> {
         let mut prop_names = HashSet::new();
         for (name, _) in data.props.iter() {
             if !validate_name(name) {
@@ -74,7 +74,7 @@ impl core::Core for Lib {
             prop_names.insert(name.clone());
         }
 
-        let tpe = T::Struct(Struct(TypeBase::default(), data));
+        let tpe = T::Struct(Struct(base, data));
         Ok(store().add_type(tpe))
     }
 
@@ -122,11 +122,11 @@ mod tests {
     }
 
     impl TypeInteger {
-        fn min(mut self, min: i64) -> Self {
+        fn min(mut self, min: i32) -> Self {
             self.min = Some(min);
             self
         }
-        fn max(mut self, max: i64) -> Self {
+        fn max(mut self, max: i32) -> Self {
             self.max = Some(max);
             self
         }
@@ -153,17 +153,26 @@ mod tests {
 
     #[test]
     fn test_integer_invalid_max() {
-        let res = Lib::integerb(TypeInteger::default().min(12).max(10));
+        let res = Lib::integerb(TypeInteger::default().min(12).max(10), TypeBase::default());
         assert_eq!(res, Err(errors::invalid_max_value()));
     }
 
     #[test]
     fn test_struct_invalid_key() -> Result<(), String> {
-        let res =
-            Lib::structb(TypeStruct::default().prop("", Lib::integerb(TypeInteger::default())?));
+        let res = Lib::structb(
+            TypeStruct::default().prop(
+                "",
+                Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+            ),
+            TypeBase::default(),
+        );
         assert_eq!(res, Err(errors::invalid_prop_key("")));
         let res = Lib::structb(
-            TypeStruct::default().prop("hello world", Lib::integerb(TypeInteger::default())?),
+            TypeStruct::default().prop(
+                "hello world",
+                Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+            ),
+            TypeBase::default(),
         );
         assert_eq!(res, Err(errors::invalid_prop_key("hello world")));
         Ok(())
@@ -173,9 +182,19 @@ mod tests {
     fn test_struct_duplicate_key() -> Result<(), String> {
         let res = Lib::structb(
             TypeStruct::default()
-                .prop("one", Lib::integerb(TypeInteger::default())?)
-                .prop("two", Lib::integerb(TypeInteger::default())?)
-                .prop("one", Lib::integerb(TypeInteger::default())?),
+                .prop(
+                    "one",
+                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+                )
+                .prop(
+                    "two",
+                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+                )
+                .prop(
+                    "one",
+                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+                ),
+            TypeBase::default(),
         );
         assert_eq!(res, Err(errors::duplicate_key("one")));
         Ok(())
@@ -183,8 +202,11 @@ mod tests {
 
     #[test]
     fn test_invalid_input_type() -> Result<(), String> {
-        let inp = Lib::integerb(TypeInteger::default())?;
-        let res = Lib::funcb(TypeFunc::new(inp, Lib::integerb(TypeInteger::default())?));
+        let inp = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
+        let res = Lib::funcb(TypeFunc::new(
+            inp,
+            Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+        ));
         assert_eq!(
             res,
             Err(errors::invalid_input_type(&store().get_type_repr(inp)?))
@@ -230,7 +252,7 @@ mod tests {
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
         })?;
-        let tpe = Lib::integerb(TypeInteger::default())?;
+        let tpe = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
         let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![]);
 
         assert_eq!(
@@ -255,8 +277,8 @@ mod tests {
             vec![(
                 "".to_string(),
                 Lib::funcb(TypeFunc::new(
-                    Lib::structb(TypeStruct::default())?,
-                    Lib::integerb(TypeInteger::default())?,
+                    Lib::structb(TypeStruct::default(), TypeBase::default())?,
+                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
                 ))?
                 .into(),
             )],
@@ -268,8 +290,8 @@ mod tests {
             vec![(
                 "hello_world!".to_string(),
                 Lib::funcb(TypeFunc::new(
-                    Lib::structb(TypeStruct::default())?,
-                    Lib::integerb(TypeInteger::default())?,
+                    Lib::structb(TypeStruct::default(), TypeBase::default())?,
+                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
                 ))?
                 .into(),
             )],
@@ -292,16 +314,16 @@ mod tests {
                 (
                     "one".to_string(),
                     Lib::funcb(TypeFunc::new(
-                        Lib::structb(TypeStruct::default())?,
-                        Lib::integerb(TypeInteger::default())?,
+                        Lib::structb(TypeStruct::default(), TypeBase::default())?,
+                        Lib::integerb(TypeInteger::default(), TypeBase::default())?,
                     ))?
                     .into(),
                 ),
                 (
                     "one".to_string(),
                     Lib::funcb(TypeFunc::new(
-                        Lib::structb(TypeStruct::default())?,
-                        Lib::integerb(TypeInteger::default())?,
+                        Lib::structb(TypeStruct::default(), TypeBase::default())?,
+                        Lib::integerb(TypeInteger::default(), TypeBase::default())?,
                     ))?
                     .into(),
                 ),
@@ -316,9 +338,12 @@ mod tests {
     #[test]
     fn test_successful_serialization() -> Result<(), String> {
         store().reset();
-        let a = Lib::integerb(TypeInteger::default())?;
-        let b = Lib::integerb(TypeInteger::default().min(12).max(44))?;
-        let s = Lib::structb(TypeStruct::default().prop("one", a).prop("two", b))?;
+        let a = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
+        let b = Lib::integerb(TypeInteger::default().min(12).max(44), TypeBase::default())?;
+        let s = Lib::structb(
+            TypeStruct::default().prop("one", a).prop("two", b),
+            TypeBase::default(),
+        )?;
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
         })?;

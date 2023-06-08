@@ -1,26 +1,37 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use typegraph_core::core::{Core, TypeFunc, TypeInteger, TypeStruct, TypegraphInitParams};
+use typegraph_core::core::{
+    Core, TypeBase, TypeFunc, TypeInteger, TypeStruct, TypegraphInitParams,
+};
 use typegraph_core::Lib as t;
 
 fn main() -> Result<(), String> {
-    let a = t::integerb(TypeInteger {
-        min: None,
-        max: None,
-    })
+    let a = t::integerb(
+        TypeInteger {
+            min: None,
+            max: None,
+        },
+        TypeBase::default(),
+    )
     .unwrap();
     println!("{}", t::get_type_repr(a)?);
-    let b = t::integerb(TypeInteger {
-        min: Some(12),
-        max: None,
-    })
+    let b = t::integerb(
+        TypeInteger {
+            min: Some(12),
+            max: None,
+        },
+        TypeBase::default(),
+    )
     .unwrap();
     println!("{}", t::get_type_repr(b)?);
 
-    let s1 = t::structb(TypeStruct {
-        props: vec![("a".to_string(), a), ("b".to_string(), b)],
-    })
+    let s1 = t::structb(
+        TypeStruct {
+            props: vec![("a".to_string(), a), ("b".to_string(), b)],
+        },
+        TypeBase::default(),
+    )
     .unwrap();
     println!("{}", t::get_type_repr(s1)?);
 

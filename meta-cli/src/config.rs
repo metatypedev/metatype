@@ -167,6 +167,7 @@ pub struct Materializers {
 #[serde(rename_all = "snake_case")]
 pub enum ModuleType {
     Python,
+    Deno,
 }
 
 #[derive(Deserialize, Debug, Default, Clone)]

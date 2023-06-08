@@ -55,6 +55,9 @@ impl Store {
 
     pub fn add_type(&mut self, tpe: T) -> TypeId {
         let id = self.types.len() as u32;
+        if let Some(name) = tpe.get_base().and_then(|b| b.name.as_ref()) {
+            self.type_by_names.insert(name.clone(), id);
+        }
         self.types.push(tpe);
         id
     }

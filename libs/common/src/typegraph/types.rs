@@ -92,11 +92,11 @@ pub struct NumberTypeData {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct IntegerTypeData {
-    pub minimum: Option<i64>,
-    pub maximum: Option<i64>,
-    pub exclusive_minimum: Option<i64>,
-    pub exclusive_maximum: Option<i64>,
-    pub multiple_of: Option<i64>,
+    pub minimum: Option<i32>,
+    pub maximum: Option<i32>,
+    pub exclusive_minimum: Option<i32>,
+    pub exclusive_maximum: Option<i32>,
+    pub multiple_of: Option<i32>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

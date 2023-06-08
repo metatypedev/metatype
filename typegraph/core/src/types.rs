@@ -36,11 +36,16 @@ pub enum T {
 #[enum_dispatch]
 pub trait TypeFun {
     fn get_repr(&self, id: TypeId) -> String;
+    fn get_base(&self) -> Option<&TypeBase>;
 }
 
 impl TypeFun for Proxy {
     fn get_repr(&self, id: TypeId) -> String {
         format!("proxy(#{id})")
+    }
+
+    fn get_base(&self) -> Option<&TypeBase> {
+        None
     }
 }
 
@@ -58,6 +63,10 @@ impl TypeFun for Integer {
         .join(", ");
         format!("integer({data})")
     }
+
+    fn get_base(&self) -> Option<&TypeBase> {
+        Some(&self.0)
+    }
 }
 
 impl TypeFun for Struct {
@@ -71,11 +80,19 @@ impl TypeFun for Struct {
             .join(", ");
         format!("struct(#{id}, {props})")
     }
+
+    fn get_base(&self) -> Option<&TypeBase> {
+        Some(&self.0)
+    }
 }
 
 impl TypeFun for Func {
     fn get_repr(&self, id: TypeId) -> String {
         let c = &self.1;
         format!("func(#{id}, #{} => #{})", c.inp, c.out)
+    }
+
+    fn get_base(&self) -> Option<&TypeBase> {
+        Some(&self.0)
     }
 }

@@ -20,7 +20,7 @@ use anyhow::{bail, Context, Error, Result};
 use colored::Colorize;
 use common::typegraph::Typegraph;
 
-use crate::config::Config;
+use crate::config::{Config, ModuleType};
 
 use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
@@ -60,7 +60,12 @@ impl Loader {
     }
 
     pub async fn load_file(&self, path: &Path) -> LoaderResult {
-        match self.load_python_module(path).await {
+        // we passed through the filters, so we can unwrap safely
+        let res = match ModuleType::try_from(path).unwrap() {
+            ModuleType::Python => self.load_python_module(path).await,
+            ModuleType::Deno => self.load_deno_module(path).await,
+        };
+        match res {
             Ok(json) if json.is_empty() => LoaderResult::Rewritten(path.to_path_buf()),
             Ok(json) => match self.load_string(path, json) {
                 Err(err) => LoaderResult::Error(err),
@@ -92,6 +97,7 @@ impl Loader {
         Ok(tgs)
     }
 
+    #[cfg(not(feature = "typegraph-next"))]
     pub async fn load_python_module(&self, path: &Path) -> Result<String> {
         // Search in PATH does not work on Windows
         // See: https://doc.rust-lang.org/std/process/struct.Command.html#method.new
@@ -124,6 +130,77 @@ impl Loader {
         } else {
             let stderr = String::from_utf8(p.stderr)?;
             bail!("Python error:\n{}", stderr.red())
+        }
+    }
+
+    #[cfg(feature = "typegraph-next")]
+    pub async fn load_python_module(&self, path: &Path) -> Result<String> {
+        let vars: HashMap<_, _> = env::vars().collect();
+
+        let p = Command::new("python3")
+            .arg(path.to_str().unwrap())
+            .current_dir(&self.config.base_dir)
+            .envs(vars)
+            .env("PYTHONUNBUFFERED", "1")
+            .env("PYTHONDONTWRITEBYTECODE", "1")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .await
+            .with_context(|| format!("Error while running the command 'python3 {path:?}'"))?;
+
+        if p.status.success() {
+            #[cfg(debug_assertions)]
+            eprintln!("{}", String::from_utf8(p.stderr)?);
+
+            Ok(format!(
+                "[{}]",
+                std::str::from_utf8(&p.stdout)?
+                    .lines()
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ))
+        } else {
+            let stderr = String::from_utf8(p.stderr)?;
+            bail!("Command failed: 'python3 {path:?}':\n{}", stderr.red())
+        }
+    }
+
+    #[cfg(not(feature = "typegraph-next"))]
+    pub async fn load_deno_module(&self, _path: &Path) -> Result<String> {
+        bail!("deno modules not supported yet")
+    }
+
+    #[cfg(feature = "typegraph-next")]
+    pub async fn load_deno_module(&self, path: &Path) -> Result<String> {
+        let vars: HashMap<_, _> = env::vars().collect();
+        let p = Command::new("deno")
+            .arg("run")
+            .arg("--allow-read")
+            .arg("--check")
+            .arg(path.to_str().unwrap())
+            .current_dir(&self.config.base_dir)
+            .envs(vars)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .await
+            .with_context(|| format!("Error while running the command 'deno run {path:?}'"))?;
+
+        if p.status.success() {
+            #[cfg(debug_assertions)]
+            eprintln!("{}", String::from_utf8(p.stderr)?);
+
+            Ok(format!(
+                "[{}]",
+                std::str::from_utf8(&p.stdout)?
+                    .lines()
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ))
+        } else {
+            let stderr = String::from_utf8(p.stderr)?;
+            bail!("Command failed: 'deno run {path:?}':\n{}", stderr.red())
         }
     }
 }
