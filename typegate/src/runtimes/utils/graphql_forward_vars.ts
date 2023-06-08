@@ -104,7 +104,7 @@ const createArgs = (
     name: { kind: Kind.NAME, value: name },
     value: {
       kind: Kind.VARIABLE,
-      name: { kind: Kind.NAME, value: `_arg_${name}` },
+      name: { kind: Kind.NAME, value: name },
     },
   }));
 };
@@ -182,7 +182,7 @@ export class QueryRebuilder {
 
     if (isTopLevel) {
       for (const [name, type] of Object.entries(argumentTypes ?? {})) {
-        this.#forwardVar(`_arg_${name}`, type);
+        this.#forwardVar(name, type);
       }
     } else {
       for (const argNode of argumentNodes) {

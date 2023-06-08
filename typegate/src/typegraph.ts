@@ -9,7 +9,7 @@ import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
-import { ensure } from "./utils.ts";
+import { ensure, ensureNonNullable } from "./utils.ts";
 
 import {
   initAuth,
@@ -488,9 +488,7 @@ export class TypeGraph {
     ): Array<[string, Map<string, PossibleSelectionFields>]> => {
       const [typeName, possibleSelections] = entry;
 
-      if (possibleSelections === null) {
-        throw new Error("unreachable");
-      }
+      ensureNonNullable(possibleSelections, "unexpected");
 
       if (possibleSelections instanceof Map) {
         return [[typeName, possibleSelections]];

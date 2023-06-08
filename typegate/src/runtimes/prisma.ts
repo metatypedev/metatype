@@ -18,7 +18,6 @@ import {
 } from "../types/typegraph.ts";
 import { getLogger } from "../log.ts";
 import { registerHook } from "../hooks.ts";
-import { mapKeys } from "std/collections/map_keys.ts";
 
 const logger = getLogger(import.meta);
 
@@ -262,7 +261,7 @@ export class PrismaRuntime extends GraphQLRuntime {
 
   override execute(query: FromVars<string>, path: string[]): Resolver {
     return async ({ _: { variables }, ...args }) => {
-      const q = query({ ...variables, ...mapKeys(args, (k) => `_arg_${k}`) });
+      const q = query({ ...variables, ...args });
       logger.debug(`remote graphql: ${q}`);
 
       const startTime = performance.now();

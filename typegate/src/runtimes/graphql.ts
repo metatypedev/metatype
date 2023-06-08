@@ -11,7 +11,6 @@ import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
 import { QueryRebuilder } from "./utils/graphql_forward_vars.ts";
 import { withInlinedVars } from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";
-import { mapKeys } from "std/collections/map_keys.ts";
 
 const logger = getLogger(import.meta);
 
@@ -44,9 +43,9 @@ export class GraphQLRuntime extends Runtime {
       throw new Error("Path cannot be empty");
     }
     return async ({ _: { variables }, ...args }) => {
-      const vars = { ...variables, ...mapKeys(args, (key) => `_arg_${key}`) };
+      const vars = { ...variables, ...args };
       const q = query(vars);
-      // TODO: filter variables - only include forwared variables
+      // TODO: filter variables - only include forwarded variables
       logger.debug(`remote graphql: ${q}`);
       logger.debug(` -- with variables: ${JSON.stringify(vars)}`);
       const ret = await gq(this.endpoint, q, vars);
