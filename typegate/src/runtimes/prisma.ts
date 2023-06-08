@@ -18,7 +18,7 @@ import {
 } from "../types/typegraph.ts";
 import { getLogger } from "../log.ts";
 import { registerHook } from "../hooks.ts";
-import { mapKeys } from "https://deno.land/std@0.184.0/collections/map_keys.ts";
+import { mapKeys } from "std/collections/map_keys.ts";
 
 const logger = getLogger(import.meta);
 

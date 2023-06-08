@@ -133,23 +133,32 @@ export interface RebuiltGraphQuery {
   vars: Array<VariableDefinitionNode>;
 }
 
-export function rebuildGraphQuery(
-  { stages, renames }: RebuildQueryParam,
-): RebuiltGraphQuery {
-  const rootSelections: Array<FieldNode> = [];
-  const forwaredVars: Array<VariableDefinitionNode> = [];
-  const forwardVar = (name: string, type?: string) => {
-    if (!forwaredVars.find((varDef) => varDef.variable.name.value === name)) {
-      forwaredVars.push(createVarDef(name, type ?? stages[0].varType(name)));
+export class QueryRebuilder {
+  #rootSelections: Array<FieldNode> = [];
+  #forwardedVars: Array<VariableDefinitionNode> = [];
+  readonly #level: number;
+
+  constructor(
+    private stages: ComputeStage[],
+    private renames: Record<string, string>,
+  ) {
+    this.#level = stages[0].props.path.length;
+  }
+
+  #forwardVar(name: string, type?: string) {
+    if (
+      !this.#forwardedVars.find((varDef) => varDef.variable.name.value === name)
+    ) {
+      this.#forwardedVars.push(
+        createVarDef(name, type ?? this.stages[0].varType(name)),
+      );
     }
-  };
+  }
 
-  const level = stages[0].props.path.length;
-
-  iterParentStages(stages, (stage, children) => {
-    const isTopLevel = stage.props.path.length === level;
+  #visitParentStage(stage: ComputeStage, children: ComputeStage[]) {
+    const isTopLevel = stage.props.path.length === this.#level;
     const node = stage.props.path[stage.props.path.length - 1];
-    const field = isTopLevel ? renames[node] ?? node : node;
+    const field = isTopLevel ? this.renames[node] ?? node : node;
     const path = stage.props.materializer?.data["path"] as string[] ?? [field];
     ensure(path.length > 0, "unexpeced empty path");
 
@@ -166,20 +175,20 @@ export function rebuildGraphQuery(
 
     const targetField = createTargetField(
       path,
-      rootSelections,
+      this.#rootSelections,
       children.length > 0,
       argumentNodes,
     );
 
     if (isTopLevel) {
       for (const [name, type] of Object.entries(argumentTypes ?? {})) {
-        forwardVar(`_arg_${name}`, type);
+        this.#forwardVar(`_arg_${name}`, type);
       }
     } else {
       for (const argNode of argumentNodes) {
         GraphQL.visit(argNode, {
           [Kind.VARIABLE]: (node) => {
-            forwardVar(node.name.value);
+            this.#forwardVar(node.name.value);
           },
         });
       }
@@ -194,16 +203,30 @@ export function rebuildGraphQuery(
     >;
 
     if (children.length > 0) {
-      const { selections, vars } = rebuildGraphQuery({
-        stages: children,
-        renames,
-      });
+      const { selections, vars } = QueryRebuilder.rebuild(
+        children,
+        this.renames,
+      );
       targetSelections.push(
         ...selections,
       );
-      forwaredVars.push(...vars);
+      this.#forwardedVars.push(...vars);
     }
-  });
+  }
 
-  return { selections: rootSelections, vars: forwaredVars };
+  static rebuild(
+    stages: ComputeStage[],
+    renames: Record<string, string>,
+  ): RebuiltGraphQuery {
+    const builder = new QueryRebuilder(stages, renames);
+    iterParentStages(
+      stages,
+      (stage, children) => builder.#visitParentStage(stage, children),
+    );
+
+    return {
+      selections: builder.#rootSelections,
+      vars: builder.#forwardedVars,
+    };
+  }
 }

@@ -8,7 +8,7 @@ import { Runtime } from "./Runtime.ts";
 import * as GraphQL from "graphql";
 import { Kind } from "graphql";
 import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
-import { rebuildGraphQuery } from "./utils/graphql_forward_vars.ts";
+import { QueryRebuilder } from "./utils/graphql_forward_vars.ts";
 import { withInlinedVars } from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";
 import { mapKeys } from "std/collections/map_keys.ts";
@@ -144,10 +144,10 @@ export class GraphQLRuntime extends Runtime {
     operationType: OperationTypeNode,
     renames: Record<string, string>,
   ): FromVars<string> {
-    const { selections, vars: forwardedVars } = rebuildGraphQuery({
+    const { selections, vars: forwardedVars } = QueryRebuilder.rebuild(
       stages,
       renames,
-    });
+    );
     const op: OperationDefinitionNode = {
       kind: Kind.OPERATION_DEFINITION,
       operation: operationType,
@@ -175,6 +175,7 @@ export class GraphQLRuntime extends Runtime {
   }
 
   getRenames(_stages: ComputeStage[]): Record<string, string> {
+    // default
     return {};
   }
 }

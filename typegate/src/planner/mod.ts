@@ -7,10 +7,10 @@ import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
 import { ComputeStageProps } from "../types.ts";
-import { getReverseMapNameToQuery } from "../utils.ts";
+import { ensureNonNullable, getReverseMapNameToQuery } from "../utils.ts";
 import { getWrappedType, isQuantifier, Type, UnionNode } from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { closestWord, ensure, unparse } from "../utils.ts";
+import { closestWord, unparse } from "../utils.ts";
 import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../log.ts";
@@ -18,7 +18,7 @@ import { EitherNode } from "../types/typegraph.ts";
 const logger = getLogger(import.meta);
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import { Scheduler } from "./scheduler.ts";
+import { DependencyResolver } from "./dependency_resolver.ts";
 
 interface Node {
   name: string;
@@ -64,8 +64,8 @@ export class Planner {
   getPlan(): Plan {
     const rootIdx =
       this.tg.type(0, Type.OBJECT).properties[this.operation.operation];
-    ensure(
-      rootIdx != null,
+    ensureNonNullable(
+      rootIdx,
       `operation '${this.operation.operation}' is not available`,
     );
 
@@ -138,7 +138,7 @@ export class Planner {
         );
 
       stages.push(
-        ...new Scheduler(
+        ...new DependencyResolver(
           this.tg,
           stage?.id() ?? null,
           typ,
@@ -184,9 +184,8 @@ export class Planner {
         );
       }
 
-      if (stage == null) {
-        throw new Error("unexpected");
-      }
+      ensureNonNullable(stage, "unexpected");
+
       stage.props.childSelection = generateVariantMatcher(this.tg, typeIdx);
 
       for (const [typeName, selectionSet] of selections) {
@@ -195,7 +194,7 @@ export class Planner {
         const parentPath = node.path.slice();
         parentPath[parentPath.length - 1] += `$${typeName}`;
         stages.push(
-          ...new Scheduler(
+          ...new DependencyResolver(
             this.tg,
             parentPath.join("."),
             outputType,
@@ -431,11 +430,7 @@ export class Planner {
       argNodes,
     );
 
-    deps.push(
-      ...collected.deps.map((dep) =>
-        [...node.path.slice(0, node.path.length - 1), dep].join(".")
-      ),
-    );
+    deps.push(...collected.deps);
 
     const inputType = this.tg.type(inputIdx, Type.OBJECT);
 

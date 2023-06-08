@@ -28,6 +28,7 @@ import { EffectType, EitherNode } from "../types/typegraph.ts";
 
 import { getChildTypes, visitTypes } from "../typegraph/visitor.ts";
 import { generateValidator } from "../typecheck/input.ts";
+import { getParentId } from "../utils/stage_id.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -127,13 +128,15 @@ export function collectArgs(
     };
   }
 
+  const parentId = getParentId(stageId);
+
   return {
     compute: (params) => {
       const value = mapValues(compute, (c) => c(params));
       validate(value);
       return value;
     },
-    deps: Array.from(collector.deps.parent),
+    deps: Array.from(collector.deps.parent).map((dep) => `${parentId}.${dep}`),
     policies,
   };
 }

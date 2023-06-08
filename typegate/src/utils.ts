@@ -80,11 +80,23 @@ export const createUrl = (
   return url.href;
 };
 
-export const ensure = (predicat: boolean, message: string | (() => string)) => {
+export function ensure(
+  predicat: boolean,
+  message: string | (() => string),
+): asserts predicat is true {
   if (!predicat) {
     throw Error(typeof message === "function" ? message() : message);
   }
-};
+}
+
+export function ensureNonNullable<T>(
+  value: T,
+  message: string | (() => string),
+): asserts value is NonNullable<T> {
+  if (value == null) {
+    throw Error(typeof message === "function" ? message() : message);
+  }
+}
 
 export const collectFields = (
   obj: Record<string, unknown>,

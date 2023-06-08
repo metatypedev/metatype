@@ -7,10 +7,12 @@ import * as ast from "graphql/ast";
 import { distinct } from "std/collections/distinct.ts";
 import { PossibleSelectionFields, TypeGraph } from "../typegraph.ts";
 import { ObjectNode } from "../type_node.ts";
+import { ensure } from "../utils.ts";
+import { getChildId, getChildNode, startsWith } from "../utils/stage_id.ts";
 
 // Reorder stages for the selection on an object type, based on dependencies.
 // Also adds additional stages for non-selected dependencies.
-export class Scheduler {
+export class DependencyResolver {
   private readonly fields: Map<string, ast.FieldNode>;
   private stages: ComputeStage[] = [];
   private activeFields: Set<string> = new Set();
@@ -35,36 +37,18 @@ export class Scheduler {
     // 1. filter out vertical dependencies: dep is a direct ascendant of node
     // 2. only keep descendants of parent: since they will be scheduled as
     // a child stage
-    return !PathUtils.startsWith(depId)(nodeId) &&
-      !PathUtils.startsWith(nodeId)(depId) &&
-      (this.parentId == null || PathUtils.startsWith(this.parentId)(depId));
-  }
-
-  private getNodeName(nodeId: string) {
-    const prefixLength = this.parentId?.length;
-    const start = prefixLength == null
-      ? 0
-      : nodeId.indexOf(".", prefixLength) + 1;
-    const end = nodeId.indexOf(".", start);
-    return end < 0 ? nodeId.slice(start) : nodeId.slice(start, end);
-  }
-
-  private getNodeId(fieldName: string) {
-    return this.parentId == null ? fieldName : `${this.parentId}.${fieldName}`;
+    return !startsWith(nodeId, depId) && !startsWith(depId, nodeId) &&
+      (this.parentId == null || startsWith(depId, this.parentId));
   }
 
   getScheduledStages(): ComputeStage[] {
-    if (this.activeFields.size > 0) {
-      throw new Error("unexpected: invalid state");
-    }
+    ensure(this.activeFields.size === 0, "unexpected: invalid state");
 
     for (const fieldName of this.fields.keys()) {
       this.visitField(fieldName);
     }
 
-    if (this.activeFields.size > 0) {
-      throw new Error("unexpected: nvalid state");
-    }
+    ensure(this.activeFields.size === 0, "unexpected: invalid state");
 
     return this.stages;
   }
@@ -84,7 +68,7 @@ export class Scheduler {
     this.activeFields.add(field);
 
     const stages = this.stageFactory(this.getField(field));
-    const deps = this.getDeps(this.getNodeId(field), stages);
+    const deps = this.getDeps(getChildId(this.parentId, field), stages);
     for (const dep of deps) {
       this.visitField(dep);
     }
@@ -103,7 +87,9 @@ export class Scheduler {
     return distinct(
       stages.flatMap((s) => s.props.dependencies)
         .filter((depId) => this.filterDep(nodeId, depId))
-        .map((depId) => this.getNodeName(depId)),
+        .map((depId) => getChildNode(this.parentId, depId)!).filter((d) =>
+          d !== null
+        ),
     );
   }
 
@@ -116,7 +102,9 @@ export class Scheduler {
     // additional fields, not existing on the original query
     const typeIdx = this.parentType?.properties[fieldName];
     if (typeIdx == null) {
-      throw new Error("unresolved dependancy");
+      throw new Error(
+        `unresolved dependancy: '${fieldName}' at '${this.parentId}'`,
+      );
     }
 
     return createFieldNode(
@@ -180,15 +168,5 @@ function createFieldNode(
       value: fieldName,
     },
     selectionSet,
-  };
-}
-
-class PathUtils {
-  static startsWith = (prefix: string) => (path: string) => {
-    if (!path.startsWith(prefix)) return false;
-    const prefixLength = prefix.length;
-    if (path.length === prefixLength) return true; // prefix === path
-    const c = path.charAt(prefixLength);
-    return c === "." || c === "$";
   };
 }
