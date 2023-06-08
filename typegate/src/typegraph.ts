@@ -173,6 +173,7 @@ export class TypeGraph {
         new Set([
           // https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header
           "Cache-Control",
+          "Content-Type",
           ...meta.cors.allow_headers,
         ]),
       ).join(","),

@@ -462,6 +462,8 @@
     "https://deno.land/x/oauth2_client@v1.0.0/src/refresh_token_grant.ts": "b30094750e86c5cfcb9620575e28d595ffd43b783d220d9a2f7017b33142f825",
     "https://deno.land/x/oauth2_client@v1.0.0/src/resource_owner_password_credentials.ts": "bd3df99d32eeebffb411c4a2d3c3d057395515fb41690a8d91460dd74b9bf466",
     "https://deno.land/x/oauth2_client@v1.0.0/src/types.ts": "3327c2e81bc483e91843fb103595dd304393c3ac2a530d1c89200b6a5cf75e13",
+    "https://deno.land/x/outdent@v0.8.0/mod.ts": "72630e680dcc36d5ae556fbff6900b12706c81a6fd592345fc98bcc0878fb3ca",
+    "https://deno.land/x/outdent@v0.8.0/src/index.ts": "6dc3df4108d5d6fedcdb974844d321037ca81eaaa16be6073235ff3268841a22",
     "https://deno.land/x/redis@v0.29.3/backoff.ts": "33e4a6e245f8743fbae0ce583993a671a3ac2ecee433a3e7f0bd77b5dd541d84",
     "https://deno.land/x/redis@v0.29.3/command.ts": "9d1a679821c9065298fc2b8831b6532605426259b17a1f9d41ee9219180244c7",
     "https://deno.land/x/redis@v0.29.3/connection.ts": "335f0aa728b8e0b90353c4015daf5abaa7cae657739eb66cb48324f2d197dcc0",

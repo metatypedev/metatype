@@ -87,7 +87,6 @@ export function withInlinedVars(
   };
 }
 
-// TODO test
 function generateTemplateQuery(query: string, variables: string[]) {
   const varDefs = [];
   const parts = ["`"];
@@ -108,7 +107,7 @@ function generateTemplateQuery(query: string, variables: string[]) {
   );
 
   varDefs.push(`const argList = \`${formattedArgList}\`;`);
-  parts.push(`\${ argList && \`(\n\${argList})\`}`);
+  parts.push(`\${ argList && \`(\n\${argList}  )\`}`);
   cursor = argListEnd + 1;
 
   parts.push(query.slice(cursor));
