@@ -5,6 +5,8 @@ from typegraph.gen.exports.core import (
     TypeInteger,
     TypeStruct,
     TypeFunc,
+    TypeBase,
+    TypeProxy,
 )
 from typegraph.gen.types import Err
 from typing import Optional, Dict
@@ -24,13 +26,30 @@ class typedef:
         return res.value
 
 
+class ref(typedef):
+    name: str
+
+    def __init__(self, name: str):
+        res = core.proxyb(store, TypeProxy(name=name))
+        if isinstance(ref, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.name = name
+
+
 class integer(typedef):
     min: Optional[int] = None
     max: Optional[int] = None
 
-    def __init__(self, *, min: Optional[int] = None, max: Optional[int] = None):
+    def __init__(
+        self,
+        *,
+        min: Optional[int] = None,
+        max: Optional[int] = None,
+        name: Optional[str] = None
+    ):
         data = TypeInteger(min=min, max=max)
-        res = core.integerb(store, data)
+        res = core.integerb(store, data, TypeBase(name=name))
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -41,10 +60,10 @@ class integer(typedef):
 class struct(typedef):
     props: Dict[str, typedef]
 
-    def __init__(self, props: Dict[str, typedef]):
+    def __init__(self, props: Dict[str, typedef], *, name: Optional[str] = None):
         data = TypeStruct(props=list((name, tpe.id) for (name, tpe) in props.items()))
 
-        res = core.structb(store, data)
+        res = core.structb(store, data, base=TypeBase(name=name))
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
