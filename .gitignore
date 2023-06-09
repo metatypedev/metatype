@@ -37,4 +37,4 @@ tmp/
 coverage*
 
 typegraph/deno/gen
-typegraph/python_v2/typegraph/gen
+typegraph/python_next/typegraph/gen

@@ -96,7 +96,7 @@ typegraph:
     - libs
 
 typegraph_python:
-  workdir: typegraph/python_v2
+  workdir: typegraph/python_next
   env:
     VIRTUAL_ENV: "$PWD/.venv"
     PATH: "$PWD/.venv/bin:$PATH"
