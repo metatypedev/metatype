@@ -36,5 +36,5 @@ async function serialize(path: string): Promise<string> {
 }
 
 Deno.test("types", async (t) => {
-  assertSnapshot(t, await serialize("types.tg.ts"));
+  assertSnapshot(t, await serialize("types.ts"));
 });
