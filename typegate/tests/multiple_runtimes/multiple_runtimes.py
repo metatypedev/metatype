@@ -7,14 +7,14 @@ with TypeGraph(name="prisma") as g:
 
     user1 = t.struct(
         {
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().as_id.config("auto"),
             "name": t.string(),
         }
     ).named("test1_User")
 
     user2 = t.struct(
         {
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().as_id.config("auto"),
             "name": t.string(),
         }
     ).named("test2_User")

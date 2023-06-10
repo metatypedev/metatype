@@ -9,7 +9,7 @@ import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
-import { ensure } from "./utils.ts";
+import { ensure, ensureNonNullable } from "./utils.ts";
 
 import {
   initAuth,
@@ -28,6 +28,7 @@ import {
   isOptional,
   isString,
   isUnion,
+  Type,
   TypeNode,
 } from "./type_node.ts";
 import { Batcher, RuntimeInit } from "./types.ts";
@@ -108,6 +109,13 @@ export class SecretManager {
   }
 }
 
+const GRAPHQL_SCALAR_TYPES = {
+  [Type.BOOLEAN]: "Boolean",
+  [Type.INTEGER]: "Int",
+  [Type.NUMBER]: "Float",
+  [Type.STRING]: "String",
+} as Partial<Record<TypeNode["type"], string>>;
+
 export class TypeGraph {
   static readonly emptyArgs: ast.ArgumentNode[] = [];
   static emptyFields: ast.SelectionSetNode = {
@@ -120,6 +128,7 @@ export class TypeGraph {
     type: "string",
     policies: [],
     runtime: -1,
+    as_id: false,
   };
 
   root: TypeNode;
@@ -164,6 +173,7 @@ export class TypeGraph {
         new Set([
           // https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header
           "Cache-Control",
+          "Content-Type",
           ...meta.cors.allow_headers,
         ]),
       ).join(","),
@@ -375,4 +385,139 @@ export class TypeGraph {
     }
     return tpe;
   }
+
+  getGraphQLType(typeNode: TypeNode, optional = false): string {
+    if (typeNode.type === Type.OPTIONAL) {
+      return this.getGraphQLType(this.type(typeNode.item), true);
+    }
+
+    if (!optional) {
+      return `${this.getGraphQLType(typeNode, true)}!`;
+    }
+
+    if (typeNode.type === Type.ARRAY) {
+      return `[${this.getGraphQLType(this.type(typeNode.items))}]`;
+    }
+
+    if (typeNode.type === Type.STRING) {
+      if (typeNode.as_id) {
+        return "ID";
+      } else {
+        return "String";
+      }
+    }
+    const scalarType = GRAPHQL_SCALAR_TYPES[typeNode.type];
+    if (scalarType != null) {
+      return scalarType;
+    }
+
+    return typeNode.title;
+  }
+
+  isSelectionSetExpectedFor(typeIdx: number): boolean {
+    const typ = this.type(typeIdx);
+    if (typ.type === Type.OBJECT) {
+      return true;
+    }
+
+    if (typ.type === Type.UNION) {
+      // only check for first variant
+      // typegraph validation ensure that all the (nested) variants are all either objects or scalars
+      return this.isSelectionSetExpectedFor(typ.anyOf[0]);
+    }
+    if (typ.type === Type.EITHER) {
+      return this.isSelectionSetExpectedFor(typ.oneOf[0]);
+    }
+    return false;
+  }
+
+  // return all the possible selection fields for a type node
+  //  - an array of strings (for an object)
+  //  - a Map<string, string[]> (for an union type)
+  //  - `null` for scalar types (no selection set expected)
+  getPossibleSelectionFields(
+    typeIdx: number,
+  ): PossibleSelectionFields {
+    const typeNode = this.type(typeIdx);
+    if (typeNode.type === Type.OPTIONAL) {
+      return this.getPossibleSelectionFields(typeNode.item);
+    }
+    if (typeNode.type === Type.ARRAY) {
+      return this.getPossibleSelectionFields(typeNode.items);
+    }
+
+    if (typeNode.type === Type.FUNCTION) {
+      return this.getPossibleSelectionFields(typeNode.output);
+    }
+
+    if (typeNode.type === Type.OBJECT) {
+      return new Map(
+        Object.entries(typeNode.properties).map((
+          [key, idx],
+        ) => [key, this.getPossibleSelectionFields(idx)]),
+      );
+    }
+
+    let variants: number[];
+    if (typeNode.type === Type.UNION) {
+      variants = typeNode.anyOf;
+    } else if (typeNode.type === Type.EITHER) {
+      variants = typeNode.oneOf;
+    } else {
+      return null;
+    }
+
+    const entries = variants.map((
+      idx,
+    ) => [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const);
+
+    if (entries[0][1] === null) {
+      if (entries.some((e) => e[1] !== null)) {
+        throw new Error(
+          "Unexpected: All the variants must not expect selection set",
+        );
+      }
+      return null;
+    }
+
+    if (entries.some((e) => e[1] === null)) {
+      throw new Error("Unexpected: All the variants must expect selection set");
+    }
+
+    const expandNestedUnions = (
+      entry: readonly [string, PossibleSelectionFields],
+    ): Array<[string, Map<string, PossibleSelectionFields>]> => {
+      const [typeName, possibleSelections] = entry;
+
+      ensureNonNullable(possibleSelections, "unexpected");
+
+      if (possibleSelections instanceof Map) {
+        return [[typeName, possibleSelections]];
+      }
+
+      return possibleSelections.flatMap(expandNestedUnions);
+    };
+
+    const res = (entries).flatMap(expandNestedUnions);
+    return res;
+  }
+
+  typeWithoutQuantifiers(typeIdx: number): TypeNode {
+    return this.typeNodeWithoutQuantifiers(this.type(typeIdx));
+  }
+
+  typeNodeWithoutQuantifiers(typeNode: TypeNode): TypeNode {
+    if (typeNode.type === Type.OPTIONAL) {
+      return this.typeWithoutQuantifiers(typeNode.item);
+    }
+    if (typeNode.type === Type.ARRAY) {
+      return this.typeWithoutQuantifiers(typeNode.items);
+    }
+    return typeNode;
+  }
 }
+
+export type PossibleSelectionFields =
+  | null
+  | Map<string, PossibleSelectionFields>
+  | Array<[string, Map<string, PossibleSelectionFields>]>;

@@ -80,11 +80,23 @@ export const createUrl = (
   return url.href;
 };
 
-export const ensure = (predicat: boolean, message: string | (() => string)) => {
+export function ensure(
+  predicat: boolean,
+  message: string | (() => string),
+): asserts predicat is true {
   if (!predicat) {
     throw Error(typeof message === "function" ? message() : message);
   }
-};
+}
+
+export function ensureNonNullable<T>(
+  value: T,
+  message: string | (() => string),
+): asserts value is NonNullable<T> {
+  if (value == null) {
+    throw Error(typeof message === "function" ? message() : message);
+  }
+}
 
 export const collectFields = (
   obj: Record<string, unknown>,
@@ -178,8 +190,9 @@ export function closestWord(
 export function getReverseMapNameToQuery(tg: TypeGraph, names: string[]) {
   const indices = names.map((name) =>
     tg.type(0, Type.OBJECT).properties?.[name]
-  );
+  ).filter((idx) => idx != null);
   const res = new Map<string, Set<string>>();
+
   for (const idx of indices) {
     const { fields, title } = collectFieldNames(tg, idx);
     for (const name of fields) {
@@ -190,6 +203,7 @@ export function getReverseMapNameToQuery(tg: TypeGraph, names: string[]) {
       }
     }
   }
+
   return res;
 }
 

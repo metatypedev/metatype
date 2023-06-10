@@ -186,7 +186,7 @@ class TypeGenerator:
             if v.runtime is not None and v.runtime != tpe.runtime:
                 continue
             v = resolve_proxy(resolve_entity_quantifier(v))
-            is_id = v.runtime_config.get("id", False)
+            is_id = v._as_id
             is_unique = v.runtime_config.get("unique", False)
             if is_id or is_unique:
                 props[k] = v.optional()

@@ -4,6 +4,9 @@
 import { gql, test } from "../utils.ts";
 import * as mf from "test/mock_fetch";
 import { buildSchema, graphql } from "graphql";
+import { withInlinedVars } from "../../src/runtimes/utils/graphql_inline_vars.ts";
+import { assertEquals } from "std/testing/asserts.ts";
+import outdent from "outdent";
 
 const schema = buildSchema(`
   type User {
@@ -118,5 +121,40 @@ test("GraphQL variables", async (t) => {
         updateUser: { ...generateUser(15), name: "John" },
       })
       .on(e);
+  });
+});
+
+test("GraphQL: variable inlining", async (t) => {
+  await t.should("work", () => {
+    const getQuery = withInlinedVars(
+      outdent`
+      query CreatePerson($name: String!, $age: Int!, $parents: [ID!]!, $address: Address!) {
+        createPerson(name: $name, age: $age, parents: $parents, address: $address) {
+          id
+        }
+      }
+    `,
+      ["name", "age", "parents", "address"],
+    );
+    const query = getQuery({
+      name: "John Doe",
+      age: 21,
+      parents: ["123456789", "987654321"],
+      address: { city: "Paris", country: "France" },
+    });
+    assertEquals(
+      query,
+      outdent`
+        query CreatePerson {
+          createPerson(
+            name: "John Doe"
+            age: 21
+            parents: ["123456789", "987654321"]
+            address: { city: "Paris", country: "France" }
+          ) {
+            id
+          }
+        }`,
+    );
   });
 });

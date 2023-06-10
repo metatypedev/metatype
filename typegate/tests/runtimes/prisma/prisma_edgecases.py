@@ -10,7 +10,7 @@ with TypeGraph("prisma") as g:
 
     user = t.struct(
         {
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().as_id.config("auto"),
             "pseudo": t.string().config("unique"),
             "email": t.email(),
             # Note:

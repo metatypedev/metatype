@@ -9,7 +9,7 @@ snapshot[`planner 1`] = `
       "one",
     ],
     type: {
-      title: "function_12",
+      title: "function_46",
       type: "function",
     },
   },
@@ -22,7 +22,7 @@ snapshot[`planner 1`] = `
     ],
     type: {
       format: "uuid",
-      title: "string_1",
+      title: "string_9",
       type: "string",
     },
   },
@@ -35,7 +35,7 @@ snapshot[`planner 1`] = `
     ],
     type: {
       format: "email",
-      title: "string_2",
+      title: "string_10",
       type: "string",
     },
   },
@@ -47,7 +47,7 @@ snapshot[`planner 1`] = `
       "nested",
     ],
     type: {
-      title: "object_8",
+      title: "object_16",
       type: "object",
     },
   },
@@ -60,7 +60,7 @@ snapshot[`planner 1`] = `
       "first",
     ],
     type: {
-      title: "string_3",
+      title: "string_11",
       type: "string",
     },
   },
@@ -73,7 +73,7 @@ snapshot[`planner 1`] = `
       "second",
     ],
     type: {
-      title: "array_5",
+      title: "array_13",
       type: "array",
     },
   },
@@ -86,7 +86,7 @@ snapshot[`planner 1`] = `
       "third",
     ],
     type: {
-      title: "optional_7",
+      title: "optional_15",
       type: "optional",
     },
   },
@@ -97,6 +97,7 @@ snapshot[`planner 2`] = `
 {
   one: {
     funcType: {
+      as_id: false,
       config: {},
       input: 2,
       materializer: 1,
@@ -107,69 +108,194 @@ snapshot[`planner 2`] = `
       rate_calls: false,
       rate_weight: null,
       runtime: 0,
-      title: "function_12",
+      title: "function_46",
       type: "function",
     },
     referencedTypes: {
       "one.email": [
         {
-          title: "string_2",
+          title: "string_10",
           type: "string",
         },
       ],
       "one.id": [
         {
-          title: "string_1",
+          title: "string_9",
           type: "string",
         },
       ],
       "one.nested": [
         {
-          title: "object_8",
+          title: "object_16",
           type: "object",
         },
       ],
       "one.nested.first": [
         {
-          title: "string_3",
+          title: "string_11",
           type: "string",
         },
       ],
       "one.nested.second": [
         {
-          title: "array_5",
+          title: "array_13",
           type: "array",
         },
         {
-          title: "number_4",
+          title: "number_12",
           type: "number",
         },
       ],
       "one.nested.third": [
         {
-          title: "optional_7",
+          title: "optional_15",
           type: "optional",
         },
         {
-          title: "boolean_6",
+          title: "boolean_14",
           type: "boolean",
         },
       ],
       one: [
         {
-          title: "function_12",
+          title: "function_46",
           type: "function",
         },
         {
-          title: "object_9",
+          title: "object_31",
           type: "object",
         },
         {
-          title: "object_11",
+          title: "object_45",
           type: "object",
         },
       ],
     },
   },
 }
+`;
+
+snapshot[`planner 3`] = `
+[
+  "one  one  one  object  object_31  false",
+  "one.union1  union1  one/union1  union  Union1  false",
+  "one.union2  union2  one/union2  union  Union2  false",
+  "one.union2\$A.a  a  one/union2\$A/a  integer  integer_1  false",
+  "one.union2\$B.b  b  one/union2\$B/b  either  either_7  false",
+  "one.union2\$B.b\$C1.c  c  one/union2\$B/b\$C1/c  integer  integer_3  false",
+  "one.union2\$B.b\$C2.c  c  one/union2\$B/b\$C2/c  string  string_5  false",
+]
+`;
+
+snapshot[`planner 4`] = `
+[
+  "one  one  one  object  object_31  false",
+  "one.union2  union2  one/union2  union  Union2  true",
+  "one.union2\$A.a  a  one/union2\$A/a  integer  integer_1  false",
+  "one.union2\$B.b  b  one/union2\$B/b  either  either_7  false",
+  "one.union2\$B.b\$C1.c  c  one/union2\$B/b\$C1/c  integer  integer_3  false",
+  "one.union2\$B.b\$C2.c  c  one/union2\$B/b\$C2/c  string  string_5  false",
+  "one.from_union2  from_union2  one/from_union2  integer  integer_25  false",
+  "one.union1  union1  one/union1  union  Union1  true",
+  "one.from_union1  from_union1  one/from_union1  integer  integer_21  false",
+]
+`;
+
+snapshot[`planner: dependencies 1`] = `
+[
+  "two  two  two  object  object_64  false",
+  "two.id  id  two/id  integer  integer_48  false",
+  "two.email  email  two/email  string  UserEmail  false",
+]
+`;
+
+snapshot[`planner: dependencies 2`] = `
+[
+  "two  two  two  object  object_64  false",
+  "two.id  id  two/id  integer  integer_48  false",
+  "two.email  email  two/email  string  UserEmail  false",
+  "two.profile  profile  two/profile  object  object_56  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_53  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_54  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_55  false",
+]
+`;
+
+snapshot[`planner: dependencies 3`] = `
+[
+  "two  two  two  object  object_64  false",
+  "two.id  id  two/id  integer  integer_48  false",
+  "two.email  email  two/email  string  UserEmail  false",
+  "two.profile  profile  two/profile  object  object_56  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_53  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_54  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_55  false",
+]
+`;
+
+snapshot[`planner: dependencies 4`] = `
+[
+  "two  two  two  object  object_64  false",
+  "two.email  email  two/email  string  UserEmail  true",
+  "two.profile  profile  two/profile  object  object_56  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_53  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_54  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_55  false",
+  "two.id  id  two/id  integer  integer_48  false",
+]
+`;
+
+snapshot[`planner: dependencies 5`] = `
+[
+  "two  two  two  object  object_64  false",
+  "two.email  email  two/email  string  UserEmail  true",
+  "two.profile  profile  two/profile  object  object_56  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_53  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_54  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_55  false",
+  "two.taggedPic  taggedPic  two/taggedPic  string  string_62  false",
+]
+`;
+
+snapshot[`planner: dependencies 6`] = `
+[
+  "two  two  two  object  object_64  false",
+  "two.id  id  two/id  integer  integer_48  false",
+  "two.email  email  two/email  string  UserEmail  true",
+  "two.profile  profile  two/profile  object  object_56  true",
+  "two.profile.email  email  two/profile/email  string  string_52  false",
+  "two.profile.firstName  firstName  two/profile/firstName  string  string_53  false",
+  "two.profile.lastName  lastName  two/profile/lastName  string  string_54  false",
+  "two.profile.profilePic  profilePic  two/profile/profilePic  string  string_55  false",
+  "two.taggedPic  taggedPic  two/taggedPic  string  string_62  false",
+]
+`;
+
+snapshot[`planner: dependencies in union/either 1`] = `
+[
+  "three  three  three  object  object_69  false",
+  "three.id  id  three/id  integer  integer_67  false",
+  "three.user  user  three/user  either  either_68  false",
+  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  string_32  false",
+  "three.user\$RegisteredUser.email  email  three/user\$RegisteredUser/email  string  RegisteredUserEmail  false",
+  "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  object_39  false",
+  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  string_36  false",
+  "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  string_37  false",
+  "three.user\$RegisteredUser.profile.profilePic  profilePic  three/user\$RegisteredUser/profile/profilePic  string  string_38  false",
+  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  string_42  false",
+]
+`;
+
+snapshot[`planner: dependencies in union/either 2`] = `
+[
+  "three  three  three  object  object_69  false",
+  "three.id  id  three/id  integer  integer_67  false",
+  "three.user  user  three/user  either  either_68  false",
+  "three.user\$RegisteredUser.id  id  three/user\$RegisteredUser/id  string  string_32  false",
+  "three.user\$RegisteredUser.email  email  three/user\$RegisteredUser/email  string  RegisteredUserEmail  true",
+  "three.user\$RegisteredUser.profile  profile  three/user\$RegisteredUser/profile  object  object_39  false",
+  "three.user\$RegisteredUser.profile.email  email  three/user\$RegisteredUser/profile/email  string  string_36  false",
+  "three.user\$RegisteredUser.profile.displayName  displayName  three/user\$RegisteredUser/profile/displayName  string  string_37  false",
+  "three.user\$GuestUser.id  id  three/user\$GuestUser/id  string  string_42  false",
+]
 `;

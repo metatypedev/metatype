@@ -44,7 +44,7 @@ const formatValidators: Record<StringFormat, FormatValidator> = {
   ean: validator.isEAN,
   phone: validator.isMobilePhone, // ??
   date: validator.isDate,
-  // datetime: ??
+  "date-time": validator.isISO8601,
 };
 
 export const validationContext: ValidationContext = {
