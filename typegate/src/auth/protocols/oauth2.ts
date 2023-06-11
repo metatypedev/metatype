@@ -139,7 +139,6 @@ export class OAuth2Auth extends Protocol {
     if (!token) {
       return [{}, new Headers()];
     }
-
     const jwt = await verifyJWT(token).catch((e) => {
       logger.info(`invalid auth: ${e}`);
       return null;
@@ -150,6 +149,7 @@ export class OAuth2Auth extends Protocol {
     }
 
     const { refreshToken, ...claims } = jwt;
+    console.log(jwt);
 
     if (new Date().valueOf() / 1000 > claims.refreshAt) {
       try {

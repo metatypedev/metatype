@@ -81,7 +81,7 @@ COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
 COPY --from=debian /tini /tini
 COPY --from=deno-bin /deno /bin/deno
 COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
-COPY LICENSE-Elastic-2.0.md LICENSE.md
+COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
 COPY --from=builder /app/bindings/bindings.ts ./bindings/
 COPY --from=builder /app/libnative.so ./target/release/
 COPY --from=builder /app/typegate/deno.json ./typegate/

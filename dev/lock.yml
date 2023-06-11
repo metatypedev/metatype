@@ -1,6 +1,6 @@
 dev:
   files:
-    LICENSE-MPL-2.0.md:
+    dev/LICENSE-MPL-2.0.md:
       - typegraph/python/LICENSE.md
       - typegraph/deno/LICENSE.md
   rules:

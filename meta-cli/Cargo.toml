@@ -5,7 +5,7 @@ edition = "2021"
 
 description = "Open source, low-code backend platform for developers — build modular APIs with zero-trust and serverless deployment, no matter where and how (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
-license-file = "../LICENSE-MPL-2.0.md"
+license-file = "../dev/LICENSE-MPL-2.0.md"
 homepage = "https://metatype.dev"
 documentation = "https://metatype.dev"
 repository = "https://github.com/metatypedev/metatype"

@@ -16,7 +16,6 @@ with TypeGraph(
     auths=[TypeGraph.Auth.basic(["admin"])],
     cors=TypeGraph.Cors(
         allow_origin=["*"],
-        allow_headers=["*"],
         allow_credentials=True,
     ),
     rate=TypeGraph.Rate(

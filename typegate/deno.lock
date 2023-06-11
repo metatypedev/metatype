@@ -889,7 +889,18 @@
     "https://esm.sh/v124/ws@7.5.9/denonext/ws.mjs": "bb14a389271bb68778d59f498428caee8048221eea59cc7522898b44aad66d88",
     "https://esm.sh/v124/ws@8.13.0/denonext/ws.mjs": "8fb6d5e0d385ebc97031384c2db6a2ffa546eb18241226e45c2c7ae782312c4d",
     "https://esm.sh/v124/xtend@4.0.2/denonext/xtend.mjs": "503056f181793967e90c0566a737612694366fa7191172f4a106099b5c2a80d2",
-    "https://esm.sh/v124/yallist@4.0.0/denonext/yallist.mjs": "61f180d807dda50bac17028eda05d5722a3fecef6e98a9064e2353ea6864fd82"
+    "https://esm.sh/v124/yallist@4.0.0/denonext/yallist.mjs": "61f180d807dda50bac17028eda05d5722a3fecef6e98a9064e2353ea6864fd82",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/mod.ts": "20322e9a40d63b75ecc64a9a9026d664724a1cbd94fd2ef1b7d9d304f286676c",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/authorization_code_grant.ts": "36953750b75fb0a14fbf4e0e4bcc1d5ae0209d216d7b32f93a134b035ecf3d25",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/client_credentials_grant.ts": "5bb9869925c5f5d11e8d66a86da37e2353107d57f57ec3a1480e197462e79be5",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/errors.ts": "7603479b80386b5cc7e384c2af5f5262ed7c2123e4e297d9f21e95515f8a803a",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/grant_base.ts": "35b88b53a92420dad9b1a9034ec185c745127f9f122e30099e0464c45e6bd5df",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/implicit_grant.ts": "d5359aebbdaaff039c0d078890aa4ffa2869da19c521e535e15caf09c069e6b8",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/oauth2_client.ts": "4e5ec26676661a3f69544826a4c27b30cc07dfcfc77f86981c324aaa53291a11",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/pkce.ts": "d286a087cc8ef985b71a2bf391e9e9d86a78ac6d93e30c46e73006171aed0986",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/refresh_token_grant.ts": "22cb1598e48fb037b4111a446573f7b48a3b361b58de58af17ba097221b12b54",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/resource_owner_password_credentials.ts": "bd3df99d32eeebffb411c4a2d3c3d057395515fb41690a8d91460dd74b9bf466",
+    "https://raw.githubusercontent.com/zifeo/deno-oauth2-client/master/src/types.ts": "3327c2e81bc483e91843fb103595dd304393c3ac2a530d1c89200b6a5cf75e13"
   },
   "npm": {
     "specifiers": {

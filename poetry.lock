@@ -1041,6 +1041,21 @@ type = "directory"
 url = "typegraph/python"
 
 [[package]]
+name = "typegraph-std"
+version = "0.0.1"
+description = "Metatype standard library."
+category = "main"
+optional = false
+python-versions = ">=3.8,<4.0"
+files = [
+    {file = "typegraph_std-0.0.1-py3-none-any.whl", hash = "sha256:b3395824dc650d77dff505d4e6335854dfa2c092e820310514a695f5e4a2207f"},
+    {file = "typegraph_std-0.0.1.tar.gz", hash = "sha256:f91aa3eef3e4d178418581622b27d02b77e78f6d94a7403c85eda733b9a4a43d"},
+]
+
+[package.dependencies]
+typegraph = ">=0.1.9,<0.2.0"
+
+[[package]]
 name = "typing-extensions"
 version = "4.6.2"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -1228,4 +1243,4 @@ tomli = ">=2.0.1"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "3317b7d6959d4efc501e5a30ac45ea4eec4f4b532b545d4cdbe49421b79c984e"
+content-hash = "af6790b3f3c8b1ba1924af374d9cab880b4cc8c4d03db8af1ba6484c3dd97af7"

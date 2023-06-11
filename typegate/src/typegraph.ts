@@ -174,6 +174,7 @@ export class TypeGraph {
           // https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header
           "Cache-Control",
           "Content-Type",
+          "Authorization",
           ...meta.cors.allow_headers,
         ]),
       ).join(","),
