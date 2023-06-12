@@ -64,6 +64,7 @@ pub struct TypeNodeBase {
     pub enumeration: Option<Vec<String>>, // JSON-serialized values
     #[serde(default)]
     pub config: IndexMap<String, serde_json::Value>,
+    pub as_id: bool,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -101,7 +102,7 @@ pub struct IntegerTypeData {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case")]
 pub enum StringFormat {
     Uuid,
     Email,
@@ -110,7 +111,7 @@ pub enum StringFormat {
     Hostname,
     Ean,
     Date,
-    // DateTime,
+    DateTime,
     // Path,
     Phone,
 }

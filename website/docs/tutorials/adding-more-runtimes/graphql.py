@@ -10,7 +10,9 @@ from typegraph.runtimes.graphql import GraphQLRuntime
 with TypeGraph(
     "graphql",
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    cors=TypeGraph.Cors(
+        allow_origin=["https://metatype.dev", "http://localhost:3000"],
+    ),
 ) as g:
     db = PrismaRuntime("database", "POSTGRES_CONN")
     # highlight-next-line
@@ -22,7 +24,7 @@ with TypeGraph(
 
     message = t.struct(
         {
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().as_id.config("auto"),
             "title": t.string(),
             # highlight-next-line
             "user_id": t.string().named("uid"),
@@ -31,7 +33,7 @@ with TypeGraph(
                 t.struct(
                     {
                         # highlight-next-line
-                        "id": t.string().from_parent(g("uid"))
+                        "id": t.string().as_id.from_parent(g("uid"))
                     }
                 ),
                 t.optional(user),

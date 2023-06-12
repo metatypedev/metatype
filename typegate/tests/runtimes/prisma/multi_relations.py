@@ -7,12 +7,12 @@ with TypeGraph("prisma_multi") as g:
     public = policies.public()
 
     record = t.struct(
-        {"id": t.uuid().config("id"), "name": t.string(), "age": t.integer().optional()}
+        {"id": t.uuid().as_id, "name": t.string(), "age": t.integer().optional()}
     ).named("record")
 
     messages = t.struct(
         {
-            "id": t.integer().config("id"),
+            "id": t.integer().as_id,
             "time": t.integer(),
             "message": t.string(),
             "sender": db.link(g("users"), "messageSender"),
@@ -22,7 +22,7 @@ with TypeGraph("prisma_multi") as g:
 
     users = t.struct(
         {
-            "id": t.integer().config("id"),
+            "id": t.integer().as_id,
             "email": t.string(),
             "name": t.string(),
             "sentMessages": db.link(t.array(g("messages")), "messageSender"),

@@ -9,7 +9,9 @@ from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 with TypeGraph(
     "database",
     # skip:next-line
-    cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
+    cors=TypeGraph.Cors(
+        allow_origin=["https://metatype.dev", "http://localhost:3000"],
+    ),
 ) as g:
     db = PrismaRuntime("database", "POSTGRES_CONN")
     public = policies.public()
@@ -17,7 +19,7 @@ with TypeGraph(
     message = t.struct(
         {
             # highlight-next-line
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().as_id.config("auto"),
             "title": t.string(),
             "body": t.string(),
         }

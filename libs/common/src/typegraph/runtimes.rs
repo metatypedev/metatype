@@ -49,11 +49,11 @@ pub mod s3 {
     #[skip_serializing_none]
     #[derive(Serialize, Deserialize, Clone, Debug)]
     pub struct S3RuntimeData {
-        pub host: String,
-        pub region: String,
+        pub host_secret: String,
+        pub region_secret: String,
         pub access_key_secret: String,
         pub secret_key_secret: String,
-        pub path_style: bool,
+        pub path_style_secret: String,
     }
 
     #[cfg_attr(feature = "codegen", derive(JsonSchema))]

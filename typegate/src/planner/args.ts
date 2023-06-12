@@ -28,6 +28,7 @@ import { EffectType, EitherNode } from "../types/typegraph.ts";
 
 import { getChildTypes, visitTypes } from "../typegraph/visitor.ts";
 import { generateValidator } from "../typecheck/input.ts";
+import { getParentId } from "../utils/stage_id.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -127,13 +128,15 @@ export function collectArgs(
     };
   }
 
+  const parentId = getParentId(stageId);
+
   return {
     compute: (params) => {
       const value = mapValues(compute, (c) => c(params));
       validate(value);
       return value;
     },
-    deps: Array.from(collector.deps.parent),
+    deps: Array.from(collector.deps.parent).map((dep) => `${parentId}.${dep}`),
     policies,
   };
 }
@@ -625,7 +628,7 @@ class ArgumentCollector {
           ).join(", ")
         }`;
         throw new Error(
-          `non-optional injection argument ${this.currentNodeDetails} is missing from parent: ${suggestions}`,
+          `non-optional injected argument ${name} is missing from parent: ${suggestions}`,
         );
       }
 
@@ -657,6 +660,14 @@ class ArgumentCollector {
       throw new Error("Invalid state");
     }
     return this.stack[len - 1];
+  }
+
+  private getCurrentNode(): CollectNode | null {
+    return this.stack[this.stack.length - 1] ?? null;
+  }
+
+  private get currentPath(): string {
+    return this.stack.map((node) => node.path[node.path.length - 1]).join("/");
   }
 
   get currentNodeDetails() {

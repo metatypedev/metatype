@@ -7,16 +7,18 @@ import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
 import { TypeGraph } from "../typegraph.ts";
 import { ComputeStageProps } from "../types.ts";
-import { getReverseMapNameToQuery } from "../utils.ts";
+import { ensureNonNullable, getReverseMapNameToQuery } from "../utils.ts";
 import { getWrappedType, isQuantifier, Type, UnionNode } from "../type_node.ts";
 import { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { closestWord, ensure, unparse } from "../utils.ts";
+import { closestWord, unparse } from "../utils.ts";
 import { collectArgs, ComputeArg } from "./args.ts";
 import { OperationPolicies, OperationPoliciesBuilder } from "./policies.ts";
 import { getLogger } from "../log.ts";
 import { EitherNode } from "../types/typegraph.ts";
 const logger = getLogger(import.meta);
 import { generateVariantMatcher } from "../typecheck/matching_variant.ts";
+import { mapValues } from "std/collections/map_values.ts";
+import { DependencyResolver } from "./dependency_resolver.ts";
 
 interface Node {
   name: string;
@@ -62,8 +64,8 @@ export class Planner {
   getPlan(): Plan {
     const rootIdx =
       this.tg.type(0, Type.OBJECT).properties[this.operation.operation];
-    ensure(
-      rootIdx != null,
+    ensureNonNullable(
+      rootIdx,
       `operation '${this.operation.operation}' is not available`,
     );
 
@@ -108,7 +110,7 @@ export class Planner {
     const typ = this.tg.type(typeIdx);
 
     if (selectionSet == null) {
-      if (this.isSelectionSetExpectedFor(typeIdx)) {
+      if (this.tg.isSelectionSetExpectedFor(typeIdx)) {
         const path = this.formatPath(node.path);
         throw new Error(
           `at ${path}: selection set is expected for object type`,
@@ -135,14 +137,19 @@ export class Planner {
           ),
         );
 
-      for (const field of selection) {
-        stages.push(
-          ...this.traverseField(
-            this.getChildNodeForField(field, node, props, stage),
-            field,
-          ),
-        );
-      }
+      stages.push(
+        ...new DependencyResolver(
+          this.tg,
+          stage?.id() ?? null,
+          typ,
+          (field) =>
+            this.traverseField(
+              this.getChildNodeForField(field, node, props, stage),
+              field,
+            ),
+          selection,
+        ).getScheduledStages(),
+      );
 
       return stages;
     }
@@ -177,26 +184,33 @@ export class Planner {
         );
       }
 
-      stage!.props.childSelection = generateVariantMatcher(this.tg, typeIdx);
+      ensureNonNullable(stage, "unexpected");
+
+      stage.props.childSelection = generateVariantMatcher(this.tg, typeIdx);
 
       for (const [typeName, selectionSet] of selections) {
         const selection = resolveSelection(selectionSet, this.fragments);
-        const props = this.tg.type(variants[typeName], Type.OBJECT).properties;
+        const outputType = this.tg.type(variants[typeName], Type.OBJECT);
         const parentPath = node.path.slice();
         parentPath[parentPath.length - 1] += `$${typeName}`;
-        for (const field of selection) {
-          stages.push(
-            ...this.traverseField(
-              this.getChildNodeForField(
+        stages.push(
+          ...new DependencyResolver(
+            this.tg,
+            parentPath.join("."),
+            outputType,
+            (field) =>
+              this.traverseField(
+                this.getChildNodeForField(
+                  field,
+                  { ...node, path: parentPath, typeIdx: variants[typeName] },
+                  outputType.properties,
+                  stage,
+                ),
                 field,
-                { ...node, path: parentPath },
-                props,
-                stage,
               ),
-              field,
-            ),
-          );
-        }
+            selection,
+          ).getScheduledStages(),
+        );
       }
 
       return stages;
@@ -402,7 +416,6 @@ export class Planner {
       );
     }
 
-    const argSchema = this.tg.type(inputIdx, Type.OBJECT);
     const argNodes = (node.args ?? []).reduce(
       (agg, fieldArg) => ({ ...agg, [fieldArg.name.value]: fieldArg }),
       {} as Record<string, ast.ArgumentNode>,
@@ -417,15 +430,17 @@ export class Planner {
       argNodes,
     );
 
-    deps.push(
-      ...collected.deps.map((dep) => [...node.path, dep].join(".")),
-    );
+    deps.push(...collected.deps);
+
+    const inputType = this.tg.type(inputIdx, Type.OBJECT);
 
     const stage = this.createComputeStage(node, {
       dependencies: deps,
       args: collected.compute,
-      argumentNodes: node.args,
-      inpType: argSchema,
+      argumentTypes: mapValues(
+        inputType.properties,
+        (idx) => this.tg.getGraphQLType(this.tg.type(idx)),
+      ),
       outType: outputType,
       effect,
       runtime,
@@ -506,23 +521,6 @@ export class Planner {
 
   private formatPath(path: string[]) {
     return [this.operationName, ...path].join(".");
-  }
-
-  private isSelectionSetExpectedFor(typeIdx: number): boolean {
-    const typ = this.tg.type(typeIdx);
-    if (typ.type === Type.OBJECT) {
-      return true;
-    }
-
-    if (typ.type === Type.UNION) {
-      // only check for first variant
-      // typegraph validation ensure that all the (nested) variants are all either objects or scalars
-      return this.isSelectionSetExpectedFor(typ.anyOf[0]);
-    }
-    if (typ.type === Type.EITHER) {
-      return this.isSelectionSetExpectedFor(typ.oneOf[0]);
-    }
-    return false;
   }
 
   private unexpectedFieldError(node: Node, name: string): Error {

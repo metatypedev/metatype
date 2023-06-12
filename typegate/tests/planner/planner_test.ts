@@ -7,6 +7,33 @@ import { None } from "monads";
 import { parse } from "graphql";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterKeys } from "std/collections/filter_keys.ts";
+import { MetaTest } from "../utils/metatest.ts";
+import { Engine } from "../../src/engine.ts";
+
+async function assertPlanSnapshot(t: MetaTest, e: Engine, query: string) {
+  const [op, frags] = findOperation(parse(query), None);
+  const [plan] = await e.getPlan(op.unwrap(), frags, false, false);
+
+  try {
+    t.assertSnapshot(
+      plan.stages.map((s) =>
+        [
+          s.id(),
+          s.props.node,
+          s.props.path.join("/"),
+          s.props.outType.type,
+          s.props.outType.title,
+          s.props.excludeResult ?? false,
+        ].join(
+          "  ",
+        )
+      ),
+    );
+  } catch (e) {
+    console.error("error", e);
+    throw e;
+  }
+}
 
 test("planner", async (t) => {
   const e = await t.pythonFile("planner/planner.py");
@@ -88,5 +115,184 @@ test("planner", async (t) => {
     `
       .expectErrorContains("at Q.one.id: Unexpected selection set")
       .on(e);
+  });
+
+  await t.should("work with unions", async () => {
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+      query {
+        one {
+          union1
+          union2 {
+            ...on A { a }
+            ...on B {
+              b {
+                ...on C1 { c }
+                ...on C2 { c }
+              }
+            }
+          }
+        }
+      }`,
+    );
+  });
+
+  await t.should("work with union dependency", async () => {
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          one {
+            from_union2
+            from_union1
+          }
+        }
+      `,
+    );
+  });
+});
+
+test("planner: dependencies", async (t) => {
+  const e = await t.pythonFile("planner/planner.py");
+
+  await t.should("get the right plan", async () => {
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          two {
+            id
+            email
+          }
+        }`,
+    );
+
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          two {
+            id
+            email
+            profile {
+              firstName lastName profilePic
+            }
+          }
+        }`,
+    );
+
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          two {
+            id
+            profile {
+              firstName lastName profilePic
+            }
+            email
+          }
+        }`,
+    );
+
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          two {
+            profile {
+              firstName lastName profilePic
+            }
+            id
+          }
+        }`,
+    );
+
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          two {
+            taggedPic
+            profile {
+              firstName lastName profilePic
+            }
+          }
+        }`,
+    );
+
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          two {
+            id
+            taggedPic
+          }
+        }`,
+    );
+  });
+});
+
+test("planner: dependencies in union/either", async (t) => {
+  const e = await t.pythonFile("planner/planner.py");
+
+  await t.should("get the right plan", async () => {
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+      query {
+        three {
+          id
+          user {
+            ...on RegisteredUser {
+              id
+              email
+              profile {
+                email displayName profilePic
+              }
+            }
+            ... on GuestUser {
+              id
+            }
+          }
+        }
+      }
+    `,
+    );
+
+    await assertPlanSnapshot(
+      t,
+      e,
+      `
+        query {
+          three {
+            id
+            user {
+              ...on RegisteredUser {
+                id
+                profile {
+                  email
+                  displayName
+                }
+              }
+              ...on GuestUser {
+                id
+              }
+            }
+          }
+        }
+      `,
+    );
   });
 });

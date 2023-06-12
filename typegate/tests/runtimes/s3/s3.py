@@ -5,7 +5,7 @@ with TypeGraph(name="s3_test") as g:
     public = policies.public()
 
     s3 = S3Runtime(
-        "http://localhost:9000", "local", "access_key", "secret_key", path_style=True
+        "HOST", "REGION", "access_key", "secret_key", path_style_secret="PATH_STYLE"
     )
 
     g.expose(

@@ -62,6 +62,8 @@
     }
 
     .graphiql-container {
+      background-color: transparent;
+
       .graphiql-editors {
         @apply shadow-none bg-none;
         @apply bg-slate-100;
@@ -80,10 +82,13 @@
       }
       .CodeMirror {
         @apply bg-slate-100 text-sm;
-        height: auto !important;
+        position: relative;
       }
       .graphiql-query-editor {
         @apply p-2;
+      }
+      .graphiql-response {
+        flex-basis: auto;
       }
     }
 

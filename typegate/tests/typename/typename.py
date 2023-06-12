@@ -6,7 +6,7 @@ from typegraph.runtimes.random import RandomMat, RandomRuntime
 with TypeGraph("prisma") as g:
     public = policies.public()
     userModel = t.struct({"id": t.integer()}).named("user")
-    userModelPrisma = t.struct({"id": t.integer().config("id")}).named("userprisma")
+    userModelPrisma = t.struct({"id": t.integer().as_id}).named("userprisma")
 
     prismaRuntimePostgres = PrismaRuntime("prisma", "POSTGRES")
 

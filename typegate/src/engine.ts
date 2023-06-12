@@ -331,7 +331,6 @@ export class Engine {
       );
       const computeTime = performance.now();
 
-      //console.log("value computed", res);
       validator(res);
       const endTime = performance.now();
 
@@ -356,7 +355,7 @@ export class Engine {
       // deno-lint-ignore no-prototype-builtins
       if (e.hasOwnProperty("isErr")) {
         // field error
-        console.error("field err:", e.unwrapErr());
+        logger.error(`field err: ${e.unwrapErr()}`);
         return {
           status: 200, // or 502 is nested gateway
           errors: [
@@ -370,7 +369,7 @@ export class Engine {
         };
       } else if (e instanceof ResolverError) {
         // field error
-        console.error("field err:", e);
+        logger.error(`field err: ${e.message}`);
         return {
           status: 200, // or 502 is nested gateway
           errors: [
@@ -384,7 +383,7 @@ export class Engine {
         };
       } else {
         // request error
-        console.error("request err:", e);
+        logger.error(`request err: ${e}`);
         return {
           status: 400,
           errors: [
