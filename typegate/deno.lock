@@ -894,15 +894,14 @@
   "npm": {
     "specifiers": {
       "@sentry/node@7.49.0": "@sentry/node@7.49.0",
-      "@types/node": "@types/node@18.11.18",
       "chance@1.1.11": "chance@1.1.11",
       "lodash": "lodash@4.17.21",
       "mathjs@11.8.0": "mathjs@11.8.0",
       "validator": "validator@13.9.0"
     },
     "packages": {
-      "@babel/runtime@7.22.3": {
-        "integrity": "sha512-XsDuspWKLUsxwCp6r7EhsExHtYfbe5oAGQ19kqngTdCPUoPQzOPdUbD/pB9PJiwb2ptYKQDjSJT3R6dC+EPqfQ==",
+      "@babel/runtime@7.22.5": {
+        "integrity": "sha512-ecjvYlnAaZ/KVneE/OdKYBYfgXV3Ptu6zQWmgEF7vwKhQnvVS6bjMD2XYgj+SNvQ1GfK/pjgokfPkC/2CO8CuA==",
         "dependencies": {
           "regenerator-runtime": "regenerator-runtime@0.13.11"
         }
@@ -947,10 +946,6 @@
           "@sentry/types": "@sentry/types@7.49.0",
           "tslib": "tslib@1.14.1"
         }
-      },
-      "@types/node@18.11.18": {
-        "integrity": "sha512-DHQpWGjyQKSHj3ebjFI/wRKcqQcdR+MoFBygntYOZytCqNfkd2ZC4ARDJ2DQqhjH5p85Nnd3jhUJIXrszFX/JA==",
-        "dependencies": {}
       },
       "agent-base@6.0.2": {
         "integrity": "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==",
@@ -1010,7 +1005,7 @@
       "mathjs@11.8.0": {
         "integrity": "sha512-I7r8HCoqUGyEiHQdeOCF2m2k9N+tcOHO3cZQ3tyJkMMBQMFqMR7dMQEboBMJAiFW2Um3PEItGPwcOc4P6KRqwg==",
         "dependencies": {
-          "@babel/runtime": "@babel/runtime@7.22.3",
+          "@babel/runtime": "@babel/runtime@7.22.5",
           "complex.js": "complex.js@2.1.1",
           "decimal.js": "decimal.js@10.4.3",
           "escape-latex": "escape-latex@1.2.0",
