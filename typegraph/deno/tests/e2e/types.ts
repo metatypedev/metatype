@@ -1,4 +1,5 @@
 import { t, typegraph } from "../../src/mod.ts";
+import { DenoRuntime } from "../../src/runtimes/deno.ts";
 
 const a = t.integer();
 const b = t.integer({ min: 12 });
@@ -18,7 +19,11 @@ const post = t.struct({
 
 typegraph("test-types", (g) => {
   g.expose({
-    one: t.func(s1, a),
-    two: t.func(user, post),
+    one: DenoRuntime.func(s1, a, {
+      code: "() => 12",
+    }),
+    two: DenoRuntime.func(user, post, {
+      code: "(user) => ({ id: 12, user })",
+    }),
   });
 });

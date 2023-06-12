@@ -92,6 +92,7 @@ typegraph:
     wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o target/debug/typegraph_core.wasm
     jco transpile target/debug/typegraph_core.wasm -o typegraph/deno/gen --no-nodejs-compat --map print=../src/imports.ts
     deno run -A typegraph/deno/dev/fix-declarations.ts
+    bash typegraph/deno/dev/fix-declarations.sh
   depends_on:
     - libs
 

@@ -1,55 +1,101 @@
 
 interface core {
 
-  type error = string
+    type error = string
 
-  record typegraph-init-params {
-    name: string,
-  }
+    record typegraph-init-params {
+        name: string,
+    }
 
-  init-typegraph: func(params: typegraph-init-params) -> result<_, error>
-  finalize-typegraph: func() -> result<string, error>
+    init-typegraph: func(params: typegraph-init-params) -> result<_, error>
+    finalize-typegraph: func() -> result<string, error>
 
-  type type-id = u32
+    type type-id = u32
 
-  record type-base {
-    name: option<string>,
-  }
+    record type-base {
+        name: option<string>,
+    }
 
-  record type-proxy {
-    name: string,
-  }
+    record type-proxy {
+        name: string,
+    }
 
-  proxyb: func(data: type-proxy) -> result<type-id, error>
+    proxyb: func(data: type-proxy) -> result<type-id, error>
 
-  record type-integer {
-    min: option<s32>,
-    max: option<s32>,
-  }
+    record type-integer {
+        min: option<s32>,
+        max: option<s32>,
+    }
 
-  integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
-  type-as-integer: func(ref: type-id) -> result<tuple<type-id, type-base, type-integer>, error>
+    integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
+    type-as-integer: func(ref: type-id) -> result<tuple<type-id, type-base, type-integer>, error>
 
-  record type-struct {
-    props: list<tuple<string, type-id>>,
-  }
+    record type-struct {
+        props: list<tuple<string, type-id>>,
+    }
 
-  structb: func(data: type-struct, base: type-base) -> result<type-id, error>
-  type-as-struct: func(id: type-id) -> result<tuple<type-id, type-base, type-struct>, error>
+    structb: func(data: type-struct, base: type-base) -> result<type-id, error>
+    type-as-struct: func(id: type-id) -> result<tuple<type-id, type-base, type-struct>, error>
 
-  get-type-repr: func(id: type-id) -> result<string, error>
+    get-type-repr: func(id: type-id) -> result<string, error>
 
-  record type-func {
-    inp: type-id,
-    out: type-id,
-  }
-  funcb: func(data: type-func) -> result<type-id, error>
+    record type-func {
+        inp: type-id,
+        out: type-id,
+        mat: materializer-id,
+    }
+    funcb: func(data: type-func) -> result<type-id, error>
 
-  expose: func(fns: list<tuple<string, type-id>>, namespace: list<string>) -> result<_, error>
+    expose: func(fns: list<tuple<string, type-id>>, namespace: list<string>) -> result<_, error>
+    
+    type runtime-id = u32
+    type materializer-id = u32
+
+    register-runtime: func() -> runtime-id
+}
+
+
+interface runtimes {
+    use self.core.{error, runtime-id, materializer-id}
+
+    type idempotency = bool
+
+    variant effect {
+        none,
+        create(idempotency),
+        update(idempotency),
+        delete(idempotency),
+        upsert(idempotency),
+    }
+
+    record base-materializer {
+        runtime: runtime-id,
+        effect: effect,
+    }
+
+    record materializer-deno-func {
+        code: string,
+        secrets: list<string>,
+    }
+
+    record materializer-deno-predefined {
+        name: string,
+    }
+
+    record materializer-deno-import {
+        func-name: string,
+        module: string,
+        secrets: list<string>,
+    }
+
+    register-deno-func: func(data: materializer-deno-func, effect: effect) -> result<materializer-id, error>
+    get-predefined-deno-func: func(data: materializer-deno-predefined) -> result<materializer-id, error>
+    import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>
 }
 
 default world typegraph {
-  import print: func(msg: string)
+    import print: func(msg: string)
 
-  export core: self.core
+    export core: self.core
+    export runtimes: self.runtimes
 }

@@ -1,9 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use typegraph_core::core::{
+use typegraph_core::wit::core::{
     Core, TypeBase, TypeFunc, TypeInteger, TypeStruct, TypegraphInitParams,
 };
+use typegraph_core::wit::runtimes::Runtimes;
 use typegraph_core::Lib as t;
 
 fn main() -> Result<(), String> {

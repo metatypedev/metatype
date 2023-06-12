@@ -1,8 +1,9 @@
 // @deno-types="../gen/typegraph_core.d.ts"
 import { core } from "../gen/typegraph_core.js";
-import type { Core } from "../gen/exports/core.d.ts";
+// import type { Core } from "../gen/exports/core.d.ts";
 import { TypeBase, TypeInteger } from "../gen/exports/core.d.ts";
 import { NullableOptional } from "./utils/type_utils.ts";
+import { Materializer } from "./runtimes/deno.ts";
 
 // type StructConstraints = core_types.StructConstraints;
 
@@ -103,14 +104,17 @@ export class Func<
   P extends { [key: string]: Typedef } = Record<string, Typedef>,
   I extends Struct<P> = Struct<P>,
   O extends Typedef = Typedef,
+  M extends Materializer = Materializer,
 > extends Typedef {
   inp: I;
   out: O;
+  mat: M;
 
-  constructor(id: number, inp: I, out: O) {
+  constructor(id: number, inp: I, out: O, mat: M) {
     super(id, {});
     this.inp = inp;
     this.out = out;
+    this.mat = mat;
   }
 }
 
@@ -118,10 +122,12 @@ export function func<
   P extends { [key: string]: Typedef },
   I extends Struct<P> = Struct<P>,
   O extends Typedef = Typedef,
->(inp: I, out: O) {
-  return new Func(
-    core.funcb({ inp: inp.id, out: out.id }) as number,
+  M extends Materializer = Materializer,
+>(inp: I, out: O, mat: M) {
+  return new Func<P, I, O, M>(
+    core.funcb({ inp: inp.id, out: out.id, mat: mat.id }) as number,
     inp,
     out,
+    mat,
   );
 }

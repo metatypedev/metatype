@@ -9,16 +9,26 @@ use std::{
 use once_cell::sync::Lazy;
 
 use crate::{
-    core::{Error as TgError, TypeId},
     errors::{self, Result},
+    runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime},
     types::{TypeFun, T},
+    wit::core::{Error as TgError, RuntimeId, TypeId},
+    wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId},
 };
 
 #[derive(Default)]
 pub struct Store {
     pub types: Vec<T>,
     pub type_by_names: HashMap<String, TypeId>,
+
+    pub runtimes: Vec<Runtime>,
+    pub materializers: Vec<Materializer>,
+    default_deno_runtime: Option<RuntimeId>,
+    predefined_deno_functions: HashMap<String, MaterializerId>,
+    deno_modules: HashMap<String, MaterializerId>,
 }
+
+const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity"];
 
 static STORE: Lazy<Mutex<Store>> = Lazy::new(|| Mutex::new(Store::default()));
 
@@ -64,5 +74,64 @@ impl Store {
 
     pub fn get_type_repr(&self, id: TypeId) -> Result<String, TgError> {
         Ok(self.get_type(id)?.get_repr(id))
+    }
+
+    pub fn register_runtime(&mut self, rt: Runtime) -> RuntimeId {
+        let id = self.runtimes.len() as u32;
+        self.runtimes.push(rt);
+        id
+    }
+
+    pub fn register_materializer(&mut self, mat: Materializer) -> MaterializerId {
+        let id = self.runtimes.len() as u32;
+        self.materializers.push(mat);
+        id
+    }
+
+    pub fn get_default_deno_runtime(&mut self) -> RuntimeId {
+        match self.default_deno_runtime {
+            Some(runtime) => runtime,
+            None => {
+                let runtime = self.register_runtime(Runtime::Deno);
+                self.default_deno_runtime = Some(runtime);
+                runtime
+            }
+        }
+    }
+
+    pub fn get_predefined_deno_function(&mut self, name: String) -> Result<MaterializerId> {
+        if let Some(mat) = self.predefined_deno_functions.get(&name) {
+            Ok(*mat)
+        } else if PREDEFINED_DENO_FUNCTIONS.iter().any(|n| n == &name) {
+            Err(errors::unknown_predefined_function(&name, "deno"))
+        } else {
+            let runtime_id = self.get_default_deno_runtime();
+            let mat = self.register_materializer(Materializer {
+                runtime_id,
+                effect: Effect::None,
+                data: DenoMaterializer::Predefined(MaterializerDenoPredefined {
+                    name: name.clone(),
+                })
+                .into(),
+            });
+            self.predefined_deno_functions.insert(name, mat);
+            Ok(mat)
+        }
+    }
+
+    pub fn get_deno_module(&mut self, file: String) -> MaterializerId {
+        if let Some(mat) = self.deno_modules.get(&file) {
+            *mat
+        } else {
+            let runtime_id = self.get_default_deno_runtime();
+            let mat = self.register_materializer(Materializer {
+                runtime_id,
+                effect: Effect::None, // N/A
+                data: DenoMaterializer::Module(MaterializerDenoModule { file: file.clone() })
+                    .into(),
+            });
+            self.deno_modules.insert(file, mat);
+            mat
+        }
     }
 }

@@ -8,6 +8,8 @@ Deno.writeFileSync(
   target,
   new TextEncoder().encode(
     `import { Core } from "./exports/core.d.ts";
-export const core: typeof Core;`,
+import { Runtimes } from "./exports/runtimes.d.ts";
+export const core: typeof Core;
+export const runtimes: typeof Runtimes;`,
   ),
 );

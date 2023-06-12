@@ -15,7 +15,7 @@ use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard};
 
-use crate::core::{Error as TgError, TypeId, TypegraphInitParams};
+use crate::wit::core::{Error as TgError, TypeId, TypegraphInitParams};
 
 #[derive(Default)]
 struct IdMapping {

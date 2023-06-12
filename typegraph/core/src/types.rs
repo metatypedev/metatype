@@ -3,7 +3,7 @@
 
 use enum_dispatch::enum_dispatch;
 
-use crate::core::{TypeBase, TypeFunc, TypeId, TypeInteger, TypeProxy, TypeStruct};
+use crate::wit::core::{TypeBase, TypeFunc, TypeId, TypeInteger, TypeProxy, TypeStruct};
 
 #[allow(clippy::derivable_impls)]
 impl Default for TypeBase {

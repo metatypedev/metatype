@@ -6,9 +6,9 @@ use common::typegraph::{
 };
 use indexmap::IndexMap;
 
-use crate::core::TypeId;
 use crate::errors::{self, Result};
 use crate::types::{Integer, Struct, T};
+use crate::wit::core::TypeId;
 use crate::{global_store::Store, typegraph::TypegraphContext, types::Func};
 
 pub fn convert_integer(
