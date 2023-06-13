@@ -4,7 +4,7 @@
 use typegraph_core::wit::core::{
     Core, TypeBase, TypeFunc, TypeInteger, TypeStruct, TypegraphInitParams,
 };
-use typegraph_core::wit::runtimes::Runtimes;
+use typegraph_core::wit::runtimes::{MaterializerDenoFunc, Runtimes};
 use typegraph_core::Lib as t;
 
 fn main() -> Result<(), String> {
@@ -36,7 +36,19 @@ fn main() -> Result<(), String> {
     .unwrap();
     println!("{}", t::get_type_repr(s1)?);
 
-    let f = t::funcb(TypeFunc { inp: s1, out: a }).unwrap();
+    let f = t::funcb(TypeFunc {
+        inp: s1,
+        out: a,
+        mat: t::register_deno_func(
+            MaterializerDenoFunc {
+                code: "() => 12".to_string(),
+                secrets: vec![],
+            },
+            typegraph_core::wit::runtimes::Effect::None,
+        )
+        .unwrap(),
+    })
+    .unwrap();
     println!("{}", t::get_type_repr(f)?);
 
     t::init_typegraph(TypegraphInitParams {
