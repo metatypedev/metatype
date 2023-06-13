@@ -73,6 +73,7 @@ include_dir = "0.7.3"
 chrono = { version = "0.4.24", features = ["serde"] }
 directories = "5.0.0"
 grep = "0.2.12"
+semver = "1.0.17"
 
 [dev-dependencies]
 assert_cmd = "2.0.10"

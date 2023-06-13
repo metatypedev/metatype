@@ -67,7 +67,7 @@ Even though, asymmetric encryption is recommended, HMAC-SHA256 is so commonly us
 
 Note that for the sake of the demo, the token has no expiration time. Tokens should always be shorted lived and refreshed frequently to reduce the risk of unexpected access.
 
-## OAuth2 authentication
+## OAuth2 authorization
 
 OAuth2 allows a user to grant limited access to their resources on one site, to another site, without having to expose their credentials. It is commonly used when the typegate needed to access restricted information in third-parties such as Google or GitHub.
 
@@ -108,6 +108,10 @@ const { token } = await take.json();
   }}
   tab="headers"
 />
+
+### OpenID Connect
+
+OpenID Connect is an authentication layer on top of OAuth2. It is used to verify the identity of the user and retrieve basic information about them. You can add `openid` to the OAuth2 scope and you will receive an `id_token` in the response. The `id_token` is a JWT that contains the user's information and is signed by the IdP.
 
 ### Embedded providers
 

@@ -7,12 +7,14 @@ import { b64decode } from "../../utils.ts";
 import { SecretManager } from "../../typegraph.ts";
 import config from "../../config.ts";
 import { Protocol } from "./protocol.ts";
+import { DenoRuntime } from "../../runtimes/deno/deno.ts";
 
 export class BasicAuth extends Protocol {
   static init(
     typegraphName: string,
     auth: AuthDS,
     secretManager: SecretManager,
+    _denoRuntime: DenoRuntime,
   ): Promise<Protocol> {
     const tokens = new Map();
     for (const user of auth.auth_data.users as string[]) {

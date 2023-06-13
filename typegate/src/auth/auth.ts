@@ -11,6 +11,7 @@ import { Engine } from "../engine.ts";
 import { clearCookie, getEncryptedCookie } from "./cookies.ts";
 import { Protocol } from "./protocols/protocol.ts";
 import { getLogger } from "../log.ts";
+import { DenoRuntime } from "../runtimes/deno/deno.ts";
 export { AuthDS };
 
 const logger = getLogger(import.meta.url);
@@ -88,14 +89,15 @@ export function initAuth(
   typegraphName: string,
   auth: AuthDS,
   secretManager: SecretManager,
+  denoRuntime: DenoRuntime,
 ): Promise<Protocol> {
   switch (auth.protocol) {
     case "oauth2":
-      return OAuth2Auth.init(typegraphName, auth, secretManager);
+      return OAuth2Auth.init(typegraphName, auth, secretManager, denoRuntime);
     case "basic":
-      return BasicAuth.init(typegraphName, auth, secretManager);
+      return BasicAuth.init(typegraphName, auth, secretManager, denoRuntime);
     case "jwt":
-      return JWTAuth.init(typegraphName, auth, secretManager);
+      return JWTAuth.init(typegraphName, auth, secretManager, denoRuntime);
     default:
       throw new Error(`${auth.protocol} not yet supported`);
   }
@@ -106,4 +108,6 @@ export type JWTClaims = {
   accessToken: string;
   refreshToken: string;
   refreshAt: number;
+  profile: Record<string, unknown>;
+  scope?: string[];
 };

@@ -14,6 +14,8 @@ import {
   setEncryptedSessionCookie,
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
+import { DenoRuntime } from "../../runtimes/deno/deno.ts";
+import { Materializer } from "../../types/typegraph.ts";
 
 const logger = getLogger(import.meta.url);
 
@@ -22,12 +24,14 @@ export class OAuth2Auth extends Protocol {
     typegraphName: string,
     auth: AuthDS,
     secretManager: SecretManager,
+    denoRuntime: DenoRuntime,
   ): Promise<Protocol> {
     const clientId = secretManager.secretOrFail(`${auth.name}_CLIENT_ID`);
     const clientSecret = secretManager.secretOrFail(
       `${auth.name}_CLIENT_SECRET`,
     );
-    const { authorize_url, access_url, scopes } = auth.auth_data;
+    const { authorize_url, access_url, scopes, profile_url, profiler } =
+      auth.auth_data;
     const clientData = {
       clientId,
       clientSecret,
@@ -42,14 +46,38 @@ export class OAuth2Auth extends Protocol {
         typegraphName,
         auth.name,
         clientData,
+        profile_url as string | null,
+        denoRuntime,
+        profiler
+          ? OAuth2Auth.materializerForProfiler(profiler as string)
+          : null,
       ),
     );
+  }
+
+  static materializerForProfiler(
+    profiler: string,
+  ): Materializer {
+    return {
+      name: "function",
+      runtime: -1, // dummy
+      effect: {
+        effect: "none",
+        idempotent: true,
+      },
+      data: {
+        script: `var _my_lambda = ${profiler};`,
+      },
+    } as Materializer;
   }
 
   private constructor(
     typegraphName: string,
     private authName: string,
     private clientData: Omit<OAuth2ClientConfig, "redirectUri">,
+    private profileUrl: string | null,
+    private denoRuntime: DenoRuntime,
+    private profiler: Materializer | null,
   ) {
     super(typegraphName);
   }
@@ -168,16 +196,50 @@ export class OAuth2Auth extends Protocol {
     return [claims, new Headers()];
   }
 
+  private async getProfile(token: Tokens): Promise<Record<string, unknown>> {
+    if (!this.profileUrl) {
+      return {};
+    }
+    try {
+      const verb = this.profileUrl.startsWith("http")
+        ? "GET"
+        : this.profileUrl.split("@")[0];
+      const url = this.profileUrl.replace(`${verb}@`, "");
+      const res = await fetch(url, {
+        headers: {
+          "Accept": "application/json",
+          "authorization": `${token.tokenType} ${token.accessToken}`,
+        },
+      });
+      let profile = await res.json();
+
+      if (this.profiler) {
+        profile = await this.denoRuntime.delegate(this.profiler, false)(
+          // dummy values
+          { ...profile, _: { info: { url } } },
+        );
+      }
+
+      return profile;
+    } catch (e) {
+      logger.warning(e);
+      return {};
+    }
+  }
+
   private async createJWT(token: Tokens): Promise<string> {
+    const profile = await this.getProfile(token);
     const payload: JWTClaims = {
       provider: this.authName,
       accessToken: token.accessToken,
       refreshToken: await encrypt(token.refreshToken as string),
       refreshAt: Math.floor(
         new Date().valueOf() / 1000 +
-          (token.expiresIn ?? config.cookies_min_refresh_sec),
+          (token.expiresIn ?? config.jwt_refresh_duration_sec),
       ),
+      scope: token.scope,
+      profile,
     };
-    return await signJWT(payload, config.cookies_max_age_sec);
+    return await signJWT(payload, config.jwt_max_duration_sec);
   }
 }

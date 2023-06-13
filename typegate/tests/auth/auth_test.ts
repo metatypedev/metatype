@@ -118,6 +118,7 @@ test("Auth", async (t) => {
     const accessToken = "ghu_16C7e42F292c6912E7710c838347Ae178B4a";
     const refreshToken =
       "ghr_1B4a2e77838347a7E420ce178F2E7c6912E169246c34E1ccbF66C46812c06D5B1A9Dc86A1498";
+    const id = 2;
 
     mf.mock("POST@/login/oauth/access_token", async (req) => {
       mf.reset();
@@ -134,6 +135,21 @@ test("Auth", async (t) => {
         "scope": "",
         "token_type": "bearer",
       };
+
+      mf.mock("GET@/user", (req) => {
+        mf.reset();
+        const [type, bearer] = req.headers.get("authorization")!.split(" ");
+        assertEquals(type.toLowerCase(), "bearer");
+        assertEquals(bearer, accessToken);
+        const res = {
+          "id": id,
+        };
+        return new Response(JSON.stringify(res), {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      });
       return new Response(JSON.stringify(res), {
         headers: {
           "Content-Type": "application/json",
@@ -159,8 +175,9 @@ test("Auth", async (t) => {
     const cook = getCookie(res.headers);
 
     const { token } = JSON.parse(await decrypt(cook!));
-    const claims = await verifyJWT(token);
+    const claims = await verifyJWT(token) as JWTClaims;
     assertEquals(claims.accessToken, accessToken);
+    assertEquals(claims.profile.id, `${id}`);
     assertEquals(await decrypt(claims.refreshToken as string), refreshToken);
   });
 
@@ -245,6 +262,7 @@ test("Auth", async (t) => {
       accessToken: "a1",
       refreshToken: "r1",
       refreshAt: new Date().valueOf() + 10,
+      profile: {},
     };
     const jwt = await signJWT(claims, 10);
     await gql`
@@ -274,9 +292,11 @@ test("Auth", async (t) => {
       accessToken: "a1",
       refreshToken,
       refreshAt: Math.floor(new Date().valueOf() / 1000),
+      profile: {},
     };
     const jwt = await signJWT(claims, 10);
     await sleep(1);
+    const id = 1;
 
     mf.mock("POST@/login/oauth/access_token", async (req) => {
       mf.reset();
@@ -291,6 +311,19 @@ test("Auth", async (t) => {
         "scope": "",
         "token_type": "bearer",
       };
+
+      mf.mock("GET@/user", () => {
+        mf.reset();
+        const res = {
+          "id": id,
+        };
+        return new Response(JSON.stringify(res), {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      });
+
       return new Response(JSON.stringify(res), {
         headers: {
           "Content-Type": "application/json",
@@ -326,6 +359,7 @@ test("Auth", async (t) => {
       accessToken: "a1",
       refreshToken: "r1",
       refreshAt: Math.floor(new Date().valueOf() / 1000),
+      profile: {},
     };
     const jwt = await signJWT(claims, 10);
     await sleep(1);
