@@ -82,10 +82,22 @@ impl Store {
         id
     }
 
+    pub fn get_runtime(&self, id: RuntimeId) -> Result<&Runtime> {
+        self.runtimes
+            .get(id as usize)
+            .ok_or_else(|| errors::runtime_not_found(id))
+    }
+
     pub fn register_materializer(&mut self, mat: Materializer) -> MaterializerId {
-        let id = self.runtimes.len() as u32;
+        let id = self.materializers.len() as u32;
         self.materializers.push(mat);
         id
+    }
+
+    pub fn get_materializer(&self, id: MaterializerId) -> Result<&Materializer, TgError> {
+        self.materializers
+            .get(id as usize)
+            .ok_or_else(|| errors::materializer_not_found(id))
     }
 
     pub fn get_default_deno_runtime(&mut self) -> RuntimeId {

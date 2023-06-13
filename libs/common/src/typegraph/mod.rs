@@ -97,8 +97,8 @@ pub enum EffectType {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Effect {
-    effect: Option<EffectType>,
-    idempotent: bool,
+    pub effect: Option<EffectType>,
+    pub idempotent: bool,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

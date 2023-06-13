@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::core::{Error as TgError, TypeId};
+use crate::wit::core::{Error as TgError, MaterializerId, RuntimeId, TypeId};
 
 pub type Result<T, E = TgError> = std::result::Result<T, E>;
 
@@ -53,6 +53,14 @@ pub fn unregistered_type_name(name: &str) -> TgError {
 
 pub fn expected_type(type_name: &str, type_id: TypeId) -> TgError {
     format!("expected a {type_name} at #{type_id}")
+}
+
+pub fn runtime_not_found(id: RuntimeId) -> TgError {
+    format!("runtime #{id} not found")
+}
+
+pub fn materializer_not_found(id: MaterializerId) -> TgError {
+    format!("materializer #{id} not found")
 }
 
 pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {

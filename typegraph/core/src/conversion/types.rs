@@ -65,7 +65,7 @@ pub fn convert_func(c: &mut TypegraphContext, s: &Store, id: u32, data: &Func) -
         data: FunctionTypeData {
             input,
             output: c.register_type(s, s.resolve_proxy(data.1.out)?)?,
-            materializer: 0,
+            materializer: c.register_materializer(s, data.1.mat)?,
             rate_calls: false,
             rate_weight: None,
         },

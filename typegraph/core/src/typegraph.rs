@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::conversion::{convert_func, convert_integer, convert_struct, gen_base};
+use crate::conversion::runtimes::{convert_materializer, convert_runtime};
+use crate::conversion::types::{convert_func, convert_integer, convert_struct, gen_base};
 use crate::global_store::store;
 use crate::types::{TypeFun, T};
 use crate::validation::validate_name;
@@ -9,23 +10,30 @@ use crate::{
     errors::{self, Result},
     global_store::Store,
 };
-use common::typegraph::{Cors, ObjectTypeData, TypeMeta, TypeNode, Typegraph};
+use common::typegraph::{
+    Cors, Materializer, ObjectTypeData, TGRuntime, TypeMeta, TypeNode, Typegraph,
+};
 use indexmap::IndexMap;
 use once_cell::sync::Lazy;
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::sync::{Mutex, MutexGuard};
 
-use crate::wit::core::{Error as TgError, TypeId, TypegraphInitParams};
+use crate::wit::core::{Error as TgError, MaterializerId, RuntimeId, TypeId, TypegraphInitParams};
 
 #[derive(Default)]
 struct IdMapping {
     types: HashMap<u32, u32>,
+    runtimes: HashMap<u32, u32>,
+    materializers: HashMap<u32, u32>,
 }
 
 pub struct TypegraphContext {
     name: String,
     meta: TypeMeta,
     types: Vec<Option<TypeNode>>,
+    runtimes: Vec<TGRuntime>,
+    materializers: Vec<Option<Materializer>>,
     mapping: IdMapping,
 }
 
@@ -65,6 +73,8 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
                 required: vec![],
             },
         })],
+        runtimes: Vec::new(),
+        materializers: Vec::new(),
         mapping: Default::default(),
     });
 
@@ -83,8 +93,8 @@ pub fn finalize() -> Result<String> {
             .enumerate()
             .map(|(id, t)| t.ok_or_else(|| format!("Unexpected: type {id} was not finalized")))
             .collect::<Result<Vec<_>>>()?,
-        runtimes: Vec::new(),
-        materializers: Vec::new(),
+        runtimes: ctx.runtimes,
+        materializers: ctx.materializers.into_iter().map(|m| m.unwrap()).collect(),
         policies: Vec::new(),
         meta: ctx.meta,
         path: None,
@@ -146,9 +156,13 @@ impl TypegraphContext {
     }
 
     pub fn register_type(&mut self, store: &Store, id: u32) -> Result<TypeId, TgError> {
-        use std::collections::hash_map::Entry;
         match self.mapping.types.entry(id) {
             Entry::Vacant(e) => {
+                // to prevent infinite loop from circular dependencies,
+                // we allocate first a slot in the array for the type with None
+                // and register it into the mappings so that any dependency
+                // would resolve it as already registered with the right idx.
+
                 let idx = self.types.len();
                 e.insert(idx as u32);
                 self.types.push(None);
@@ -165,6 +179,37 @@ impl TypegraphContext {
                 Ok(idx as TypeId)
             }
             Entry::Occupied(e) => Ok(*e.get()),
+        }
+    }
+
+    // TODO
+    pub fn register_materializer(
+        &mut self,
+        store: &Store,
+        id: u32,
+    ) -> Result<MaterializerId, TgError> {
+        match self.mapping.materializers.entry(id) {
+            Entry::Vacant(e) => {
+                let idx = self.materializers.len();
+                e.insert(idx as u32);
+                self.materializers.push(None);
+                let converted = convert_materializer(self, store, store.get_materializer(id)?)?;
+                self.materializers[idx] = Some(converted);
+                Ok(idx as MaterializerId)
+            }
+            Entry::Occupied(e) => Ok(*e.get()),
+        }
+    }
+
+    pub fn register_runtime(&mut self, store: &Store, id: u32) -> Result<RuntimeId, TgError> {
+        if let Some(idx) = self.mapping.runtimes.get(&id) {
+            Ok(*idx)
+        } else {
+            let converted = convert_runtime(self, store, store.get_runtime(id)?)?;
+            let idx = self.runtimes.len();
+            self.mapping.runtimes.insert(id, idx as u32);
+            self.runtimes.push(converted);
+            Ok(idx as RuntimeId)
         }
     }
 }

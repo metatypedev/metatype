@@ -31,7 +31,7 @@ class ref(typedef):
 
     def __init__(self, name: str):
         res = core.proxyb(store, TypeProxy(name=name))
-        if isinstance(ref, Err):
+        if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
         self.name = name
