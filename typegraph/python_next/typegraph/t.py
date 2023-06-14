@@ -11,6 +11,7 @@ from typegraph.gen.exports.core import (
 from typegraph.gen.types import Err
 from typing import Optional, Dict
 from typegraph.graph.typegraph import core, store
+from typegraph.runtimes.deno import Materializer
 
 
 class typedef:
@@ -73,9 +74,10 @@ class struct(typedef):
 class func(typedef):
     inp: struct
     out: typedef
+    mat: Materializer
 
-    def __init__(self, inp: struct, out: typedef):
-        data = TypeFunc(inp=inp.id, out=out.id)
+    def __init__(self, inp: struct, out: typedef, mat: Materializer):
+        data = TypeFunc(inp=inp.id, out=out.id, mat=mat.id)
         res = core.funcb(store, data)
         if isinstance(res, Err):
             raise Exception(res.value)

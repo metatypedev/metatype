@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from typegraph import t, TypeGraph
+from typegraph.runtimes.deno import DenoRuntime
 
 a = t.integer()
 
@@ -14,4 +15,7 @@ user = t.struct({"id": t.integer(), "post": t.ref("Post")}, name="User")
 post = t.struct({"id": t.integer(), "user": t.ref("User")}, name="Post")
 
 with TypeGraph(name="test-types") as g:
-    g.expose(one=t.func(s1, c), two=t.func(user, post))
+    g.expose(
+        one=DenoRuntime.func(s1, c, code="() => 12"),
+        two=DenoRuntime.func(user, post, code="() => ({ id: 12, user: { id: 13 } })"),
+    )

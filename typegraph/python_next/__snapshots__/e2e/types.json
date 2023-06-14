@@ -73,7 +73,7 @@
         "config": {},
         "input": 7,
         "output": 9,
-        "materializer": 0,
+        "materializer": 1,
         "rate_weight": null,
         "rate_calls": false
       },
@@ -116,8 +116,38 @@
         "config": {}
       }
     ],
-    "materializers": [],
-    "runtimes": [],
+    "materializers": [
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=()=>12;"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=()=>({id:12,user:{id:13}});"
+        }
+      }
+    ],
+    "runtimes": [
+      {
+        "name": "deno",
+        "data": {
+          "worker": "default"
+        }
+      }
+    ],
     "policies": [],
     "meta": {
       "secrets": [],
