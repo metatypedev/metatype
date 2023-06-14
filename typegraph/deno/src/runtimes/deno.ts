@@ -11,6 +11,42 @@ export class Materializer {
   constructor(public readonly id: number) {}
 }
 
+export class DenoRuntime extends Runtime {
+  static func<
+    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
+    I extends t.Struct<P> = t.Struct<P>,
+    O extends t.Typedef = t.Typedef,
+  >(
+    inp: I,
+    out: O,
+    { code, secrets = [], effect = { tag: "none" } }: DenoFunc,
+  ): t.Func<P, I, O, FunMat> {
+    const matId = runtimes.registerDenoFunc({ code, secrets }, effect);
+    return t.func(inp, out, new FunMat(matId, code, secrets, effect));
+  }
+
+  static import<
+    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
+    I extends t.Struct<P> = t.Struct<P>,
+    O extends t.Typedef = t.Typedef,
+  >(
+    inp: I,
+    out: O,
+    { name, module, effect = { tag: "none" }, secrets = [] }: DenoImport,
+  ): t.Func<P, I, O, ImportMat> {
+    const matId = runtimes.importDenoFunction({
+      funcName: name,
+      module,
+      secrets,
+    }, effect);
+    return t.func(
+      inp,
+      out,
+      new ImportMat(matId, name, module, secrets, effect),
+    );
+  }
+}
+
 export class FunMat extends Materializer {
   constructor(
     id: number,
@@ -45,40 +81,4 @@ export interface DenoImport {
   module: string;
   secrets?: Array<string>;
   effect?: Effect;
-}
-
-export class DenoRuntime {
-  static func<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
-    O extends t.Typedef = t.Typedef,
-  >(
-    inp: I,
-    out: O,
-    { code, secrets = [], effect = { tag: "none" } }: DenoFunc,
-  ): t.Func<P, I, O, FunMat> {
-    const matId = runtimes.registerDenoFunc({ code, secrets }, effect);
-    return t.func(inp, out, new FunMat(matId, code, secrets, effect));
-  }
-
-  static import<
-    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
-    I extends t.Struct<P> = t.Struct<P>,
-    O extends t.Typedef = t.Typedef,
-  >(
-    inp: I,
-    out: O,
-    { name, module, effect = { tag: "none" }, secrets = [] }: DenoImport,
-  ): t.Func<P, I, O, ImportMat> {
-    const matId = runtimes.importDenoFunction({
-      funcName: name,
-      module,
-      secrets,
-    }, effect);
-    return t.func(
-      inp,
-      out,
-      new ImportMat(matId, name, module, secrets, effect),
-    );
-  }
 }

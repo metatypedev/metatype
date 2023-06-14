@@ -85,8 +85,6 @@ impl PostProcessor for Validator {
 }
 
 pub mod deno_rt {
-    use std::path::Path;
-
     use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
 
     use crate::typegraph::utils::{get_materializers, get_runtimes};
@@ -131,7 +129,7 @@ pub mod deno_rt {
         Ok(())
     }
 
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct DenoModules {
         codegen: bool,
     }
@@ -154,7 +152,7 @@ pub mod deno_rt {
                     continue;
                 };
 
-                let path = Path::new(path).to_owned();
+                let path = tg.path.as_ref().unwrap().parent().unwrap().join(path);
                 let code = std::fs::read_to_string(&path)?;
                 mat_data.code = transform_module(code)?;
                 mat.data = map_from_object(mat_data)?;

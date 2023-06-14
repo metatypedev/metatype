@@ -91,13 +91,12 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
         effect: wit::Effect,
     ) -> Result<wit::MaterializerId> {
         let module = store().get_deno_module(data.module);
-        // let module = 0;
         let data = MaterializerDenoImport {
             func_name: data.func_name,
             module,
             secrets: data.secrets,
         };
-        Ok(store()
-            .register_materializer(Materializer::deno(DenoMaterializer::Import(data), effect)))
+        let mat = Materializer::deno(DenoMaterializer::Import(data), effect);
+        Ok(store().register_materializer(mat))
     }
 }

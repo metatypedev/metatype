@@ -64,6 +64,12 @@ impl Action for Serialize {
         if self.deploy {
             loader = loader.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
         }
+
+        #[cfg(feature = "typegraph-next")]
+        {
+            loader = loader.with_postprocessor(postprocess::DenoModules::default());
+        }
+
         let loader = loader;
 
         let paths = if self.files.is_empty() {

@@ -25,7 +25,9 @@ snapshot[`types 1`] = `
 ' +
   '          "one": 1,
 ' +
-  '          "two": 5
+  '          "two": 5,
+' +
+  '          "three": 10
 ' +
   "        },
 " +
@@ -33,7 +35,9 @@ snapshot[`types 1`] = `
 ' +
   '          "one",
 ' +
-  '          "two"
+  '          "two",
+' +
+  '          "three"
 ' +
   "        ]
 " +
@@ -213,6 +217,30 @@ snapshot[`types 1`] = `
 ' +
   '        "config": {}
 ' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_12",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "input": 2,
+' +
+  '        "output": 2,
+' +
+  '        "materializer": 2,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
   "      }
 " +
   "    ],
@@ -258,6 +286,54 @@ snapshot[`types 1`] = `
   '        "data": {
 ' +
   '          "script": "var _my_lambda=user=>({id:12,user});"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "import_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "mod": 3,
+' +
+  '          "name": "three",
+' +
+  '          "secrets": []
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "module",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "code": "export function three({a,b},{context}){return{a:0,b:0};}"
 ' +
   "        }
 " +

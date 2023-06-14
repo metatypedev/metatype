@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::runtimes::{Materializer as RawMaterializer, MaterializerData, Runtime};
@@ -48,13 +51,13 @@ pub fn convert_materializer(
                 }
                 Module(module) => {
                     let data = serde_json::from_value(json!({
-                        "file": module.file
+                        "code": format!("file:{}", module.file),
                     }))
                     .unwrap();
                     ("module".to_string(), data)
                 }
                 Import(import) => {
-                    let module_mat = c.register_materializer(s, import.module);
+                    let module_mat = c.register_materializer(s, import.module).unwrap();
                     let data = serde_json::from_value(json!({
                         "mod": module_mat,
                         "name": import.func_name,

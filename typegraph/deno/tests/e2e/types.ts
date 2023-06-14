@@ -25,5 +25,10 @@ typegraph("test-types", (g) => {
     two: DenoRuntime.func(user, post, {
       code: "(user) => ({ id: 12, user })",
     }),
+    three: DenoRuntime.import(
+      s1,
+      s1,
+      { name: "three", module: "scripts/three.ts" },
+    ),
   });
 });
