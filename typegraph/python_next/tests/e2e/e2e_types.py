@@ -18,4 +18,5 @@ with TypeGraph(name="test-types") as g:
     g.expose(
         one=DenoRuntime.func(s1, c, code="() => 12"),
         two=DenoRuntime.func(user, post, code="() => ({ id: 12, user: { id: 13 } })"),
+        three=DenoRuntime.import_(s1, s1, name="three", module="scripts/three.ts"),
     )

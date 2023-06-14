@@ -10,11 +10,13 @@
         "config": {},
         "properties": {
           "one": 1,
-          "two": 6
+          "two": 6,
+          "three": 11
         },
         "required": [
           "one",
-          "two"
+          "two",
+          "three"
         ]
       },
       {
@@ -114,6 +116,18 @@
         "runtime": 0,
         "policies": [],
         "config": {}
+      },
+      {
+        "type": "function",
+        "title": "func_11",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "input": 2,
+        "output": 2,
+        "materializer": 2,
+        "rate_weight": null,
+        "rate_calls": false
       }
     ],
     "materializers": [
@@ -137,6 +151,30 @@
         },
         "data": {
           "script": "var _my_lambda=()=>({id:12,user:{id:13}});"
+        }
+      },
+      {
+        "name": "import_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "mod": 3,
+          "name": "three",
+          "secrets": []
+        }
+      },
+      {
+        "name": "module",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "code": "export function three({a,b},{context}){return{a:0,b:0};}"
         }
       }
     ],
