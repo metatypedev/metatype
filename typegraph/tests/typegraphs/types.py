@@ -8,15 +8,15 @@ a = t.integer()
 
 s1 = t.struct({"a": a, "b": t.integer(min=12)})
 
-c = t.integer(min=12, max=43)
+b = t.integer(min=12, max=43)
 
 user = t.struct({"id": t.integer(), "post": t.ref("Post")}, name="User")
 
-post = t.struct({"id": t.integer(), "user": t.ref("User")}, name="Post")
+post = t.struct({"id": t.integer(), "author": t.ref("User")}, name="Post")
 
 with TypeGraph(name="test-types") as g:
     g.expose(
-        one=DenoRuntime.func(s1, c, code="() => 12"),
-        two=DenoRuntime.func(user, post, code="() => ({ id: 12, user: { id: 13 } })"),
+        one=DenoRuntime.func(s1, b, code="() => 12"),
+        two=DenoRuntime.func(user, post, code="(user) => ({ id: 12, user })"),
         three=DenoRuntime.import_(s1, s1, name="three", module="scripts/three.ts"),
     )

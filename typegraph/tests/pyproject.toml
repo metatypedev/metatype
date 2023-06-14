@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "typegraph"
+name = "typegraph-tests"
 version = "0.1.10-dev.0"
 description = "Open source, low-code backend platform for developers — build modular APIs with zero-trust and serverless deployment, no matter where and how (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
@@ -15,7 +15,11 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-wasmtime = "^9.0.0"
+typegraph = { path ="../python_next", develop = true }
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.3.1"
+pytest-snapshot = "0.9.0"
 
 [tool.pyright]
 venvPath = "."

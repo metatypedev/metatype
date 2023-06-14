@@ -7,6 +7,7 @@ import sys
 
 
 def serialize(path: Path) -> str:
+    print(f"serializing {path}...")
     proc = subprocess.run(
         [
             "cargo",
@@ -31,10 +32,20 @@ def serialize(path: Path) -> str:
     if proc.returncode == 0:
         return proc.stdout
     else:
-        raise Exception("error")
+        raise Exception("error: return code was not {proc.returncode}")
 
 
-def test_types(snapshot):
-    snapshot.snapshot_dir = "__snapshots__/e2e"
-    tg = serialize((Path(__file__).parent / "e2e_types.py").absolute())
-    snapshot.assert_match(tg, "types.json")
+def test_python_sdk(snapshot):
+    snapshot.snapshot_dir = "__snapshots__/"
+
+    for path in Path(__file__).parent.glob("typegraphs/*.py"):
+        tg = serialize(path.absolute())
+        snapshot.assert_match(tg, f"{path.stem}.json")
+
+
+def test_deno_sdk(snapshot):
+    snapshot.snapshot_dir = "__snapshots__/"
+
+    for path in Path(__file__).parent.glob("typegraphs/*.ts"):
+        tg = serialize(path.absolute())
+        snapshot.assert_match(tg, f"{path.stem}.json")
