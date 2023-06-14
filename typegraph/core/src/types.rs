@@ -22,6 +22,9 @@ pub struct Struct(pub TypeBase, pub TypeStruct);
 pub struct Integer(pub TypeBase, pub TypeInteger);
 
 #[derive(Debug)]
+pub struct Boolean(pub TypeBase);
+
+#[derive(Debug)]
 pub struct Func(pub TypeBase, pub TypeFunc);
 
 #[derive(Debug)]
@@ -31,6 +34,7 @@ pub enum T {
     Struct(Struct),
     Integer(Integer),
     Func(Func),
+    Boolean(Boolean),
 }
 
 #[enum_dispatch]
@@ -62,6 +66,16 @@ impl TypeFun for Integer {
         .collect::<Vec<_>>()
         .join(", ");
         format!("integer({data})")
+    }
+
+    fn get_base(&self) -> Option<&TypeBase> {
+        Some(&self.0)
+    }
+}
+
+impl TypeFun for Boolean {
+    fn get_repr(&self, id: TypeId) -> String {
+        format!("boolean(#{id})")
     }
 
     fn get_base(&self) -> Option<&TypeBase> {

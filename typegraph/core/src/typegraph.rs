@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::conversion::runtimes::{convert_materializer, convert_runtime};
-use crate::conversion::types::{convert_func, convert_integer, convert_struct, gen_base};
+use crate::conversion::types::{
+    convert_boolean, convert_func, convert_integer, convert_struct, gen_base,
+};
 use crate::global_store::store;
 use crate::types::{TypeFun, T};
 use crate::validation::validate_name;
@@ -171,6 +173,7 @@ impl TypegraphContext {
                 let type_node = match tpe {
                     T::Struct(typ) => convert_struct(self, store, id, typ),
                     T::Integer(typ) => convert_integer(self, store, id, typ),
+                    T::Boolean(typ) => convert_boolean(self, store, id, typ),
                     T::Func(typ) => convert_func(self, store, id, typ),
                     T::Proxy(_p) => return Err("proxy must be resolved".to_string()),
                 }?;

@@ -7,7 +7,7 @@ use common::typegraph::{
 use indexmap::IndexMap;
 
 use crate::errors::{self, Result};
-use crate::types::{Integer, Struct, T};
+use crate::types::{Boolean, Integer, Struct, T};
 use crate::wit::core::TypeId;
 use crate::{global_store::Store, typegraph::TypegraphContext, types::Func};
 
@@ -26,6 +26,17 @@ pub fn convert_integer(
             exclusive_maximum: None,
             multiple_of: None,
         },
+    })
+}
+
+pub fn convert_boolean(
+    _c: &mut TypegraphContext,
+    _tg: &Store,
+    id: u32,
+    _data: &Boolean,
+) -> Result<TypeNode> {
+    Ok(TypeNode::Boolean {
+        base: gen_base(format!("boolean_{id}")),
     })
 }
 
