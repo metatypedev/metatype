@@ -10,9 +10,9 @@ if TYPE_CHECKING:
     from typegraph import t
 
 
-class TypeGraph:
+class typegraph:
     name: str
-    _context: List["TypeGraph"] = []
+    _context: List["typegraph"] = []
 
     def __init__(self, name: str):
         self.name = name
@@ -31,7 +31,7 @@ class TypeGraph:
         print(res.value)
 
     @classmethod
-    def get_active(cls) -> Optional["TypeGraph"]:
+    def get_active(cls) -> Optional["typegraph"]:
         if len(cls._context) == 0:
             raise Exception("No active typegraph")
         return cls._context[-1]

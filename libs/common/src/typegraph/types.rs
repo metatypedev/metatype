@@ -92,6 +92,7 @@ pub struct NumberTypeData {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct IntegerTypeData {
+    // we use i32 as GraphQL spec only support 32-bit integers (Int)
     pub minimum: Option<i32>,
     pub maximum: Option<i32>,
     pub exclusive_minimum: Option<i32>,

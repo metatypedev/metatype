@@ -103,8 +103,13 @@ pub struct FileFilter {
 
 impl FileFilter {
     fn python_filters(config: &TypegraphLoaderConfig) -> Result<SpecificFilters> {
+        #[cfg(feature = "typegraph-next")]
+        let matcher = RegexMatcher::new_line_matcher("with\\s+typegraph")?;
+        #[cfg(not(feature = "typegraph-next"))]
+        let matcher = RegexMatcher::new_line_matcher("with\\s+TypeGraph")?;
+
         Ok(SpecificFilters {
-            matcher: RegexMatcher::new_line_matcher("with\\s+TypeGraph")?,
+            matcher,
             globs: GlobFilter {
                 include_set: config.get_include_set()?,
                 exclude_set: config.get_exclude_set()?,
