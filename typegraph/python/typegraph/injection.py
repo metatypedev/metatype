@@ -76,7 +76,7 @@ class SecretInjection(Injection):
         )
 
 
-InjectionEffect = Literal["create", "update", "upsert", "delete", "none"]
+InjectionEffect = Literal["create", "update", "delete", "none"]
 
 
 @frozen

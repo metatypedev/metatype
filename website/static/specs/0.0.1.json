@@ -346,35 +346,35 @@
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "int32"
             },
             "maximum": {
               "type": [
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "int32"
             },
             "exclusiveMinimum": {
               "type": [
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "int32"
             },
             "exclusiveMaximum": {
               "type": [
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "int32"
             },
             "multipleOf": {
               "type": [
                 "integer",
                 "null"
               ],
-              "format": "int64"
+              "format": "int32"
             }
           }
         },
@@ -1089,14 +1089,6 @@
           ],
           "format": "uint32",
           "minimum": 0.0
-        },
-        "upsert": {
-          "type": [
-            "integer",
-            "null"
-          ],
-          "format": "uint32",
-          "minimum": 0.0
         }
       }
     },
@@ -1144,7 +1136,6 @@
       "enum": [
         "create",
         "update",
-        "upsert",
         "delete",
         "none"
       ]

@@ -97,14 +97,12 @@ test("Injected queries", async (t) => {
         effect_create { operation }
         effect_delete { operation }
         effect_update { operation }
-        effect_upsert { operation }
       }
     `
       .expectData({
         effect_create: { operation: "insert" },
         effect_delete: { operation: "remove" },
         effect_update: { operation: "modify" },
-        effect_upsert: { operation: "read" },
       })
       .on(e);
   });

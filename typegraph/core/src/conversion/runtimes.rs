@@ -22,7 +22,6 @@ fn convert_effect(eff: WitEffect) -> Effect {
         WitEffect::Create(idemp) => effect(EffectType::Create, idemp),
         WitEffect::Update(idemp) => effect(EffectType::Update, idemp),
         WitEffect::Delete(idemp) => effect(EffectType::Delete, idemp),
-        WitEffect::Upsert(idemp) => effect(EffectType::Upsert, idemp),
     }
 }
 

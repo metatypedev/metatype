@@ -438,8 +438,8 @@
       "name": "apply",
       "runtime": 1,
       "effect": {
-        "effect": "upsert",
-        "idempotent": true
+        "effect": "update",
+        "idempotent": false
       },
       "data": {}
     },
@@ -456,8 +456,8 @@
       "name": "deploy",
       "runtime": 1,
       "effect": {
-        "effect": "upsert",
-        "idempotent": true
+        "effect": "update",
+        "idempotent": false
       },
       "data": {}
     },

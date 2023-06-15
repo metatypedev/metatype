@@ -195,7 +195,7 @@ export type TypeNode =
   | EitherNode
   | AnyNode;
 export type PolicyIndices = number | PolicyIndicesByEffect;
-export type EffectType = "create" | "update" | "upsert" | "delete" | "none";
+export type EffectType = "create" | "update" | "delete" | "none";
 export type InjectionSource = {
   source: "static";
   data: string;
@@ -261,7 +261,6 @@ export interface PolicyIndicesByEffect {
   create?: number | null;
   delete?: number | null;
   update?: number | null;
-  upsert?: number | null;
 }
 export interface InjectionSwitch {
   cases: InjectionCase[];

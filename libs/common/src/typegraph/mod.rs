@@ -89,7 +89,6 @@ pub struct TypeMeta {
 pub enum EffectType {
     Create,
     Update,
-    Upsert,
     Delete,
     None,
 }
@@ -132,7 +131,6 @@ pub struct PolicyIndicesByEffect {
     pub create: Option<u32>,
     pub delete: Option<u32>,
     pub update: Option<u32>,
-    pub upsert: Option<u32>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

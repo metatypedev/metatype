@@ -45,7 +45,7 @@ class HTTPRuntime(Runtime):
             RESTMat(self, "POST", path, effect=effect, **kwargs),
         )
 
-    def put(self, path: str, inp, out, effect: Effect = effects.upsert(), **kwargs):
+    def put(self, path: str, inp, out, effect: Effect = effects.update(True), **kwargs):
         return t.func(
             inp,
             out,

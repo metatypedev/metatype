@@ -64,7 +64,4 @@ with TypeGraph("injection") as g:
         effect_update=t.func(
             req2, req2, deno.PredefinedFunMat("identity", effect=effects.update())
         ).add_policy(policies.public()),
-        effect_upsert=t.func(
-            req2, req2, deno.PredefinedFunMat("identity", effect=effects.upsert())
-        ).add_policy(policies.public()),
     )
