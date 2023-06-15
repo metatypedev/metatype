@@ -1,6 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::conversion::runtimes::MaterializerConverter;
+use crate::global_store::Store;
+use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
+use enum_dispatch::enum_dispatch;
+
 use crate::{
     global_store::store,
     wit::core::RuntimeId,
@@ -60,15 +65,16 @@ impl Materializer {
 }
 
 #[derive(Debug)]
+#[enum_dispatch]
 pub enum MaterializerData {
     Deno(DenoMaterializer),
 }
 
-impl From<DenoMaterializer> for MaterializerData {
-    fn from(mat: DenoMaterializer) -> Self {
-        Self::Deno(mat)
-    }
-}
+// impl From<DenoMaterializer> for MaterializerData {
+//     fn from(mat: DenoMaterializer) -> Self {
+//         Self::Deno(mat)
+//     }
+// }
 
 impl crate::wit::runtimes::Runtimes for crate::Lib {
     fn register_deno_func(
