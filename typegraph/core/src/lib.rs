@@ -107,8 +107,14 @@ impl wit::core::Core for Lib {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::wit::core::Core;
+    use crate::errors;
+    use crate::global_store::{with_store, with_store_mut};
+    use crate::wit::{
+        core::{Core, MaterializerId, TypeBase, TypeFunc, TypeId, TypeInteger, TypeStruct},
+        runtimes::{Effect, MaterializerDenoFunc, Runtimes},
+    };
+    use crate::Lib;
+    use crate::TypegraphInitParams;
 
     impl Default for TypeInteger {
         fn default() -> Self {
@@ -144,8 +150,28 @@ mod tests {
     }
 
     impl TypeFunc {
-        fn new(inp: TypeId, out: TypeId) -> Self {
-            Self { inp, out }
+        fn new(inp: TypeId, out: TypeId, mat: MaterializerId) -> Self {
+            Self { inp, out, mat }
+        }
+    }
+
+    impl MaterializerDenoFunc {
+        fn with_code(code: impl Into<String>) -> Self {
+            Self {
+                code: code.into(),
+                secrets: vec![],
+            }
+        }
+
+        // fn with_secrets(mut self, secrets: impl Into<Vec<String>>) -> Self {
+        //     self.secrets = secrets.into();
+        //     self
+        // }
+    }
+
+    impl Default for Effect {
+        fn default() -> Self {
+            Self::None
         }
     }
 
@@ -201,9 +227,12 @@ mod tests {
     #[test]
     fn test_invalid_input_type() -> Result<(), String> {
         let inp = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
+        let mat =
+            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
         let res = Lib::funcb(TypeFunc::new(
             inp,
             Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+            mat,
         ));
         assert_eq!(
             res,
@@ -251,7 +280,8 @@ mod tests {
         with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
-        })?;
+        })
+        .unwrap();
         let tpe = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
         let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![]);
 
@@ -268,10 +298,15 @@ mod tests {
 
     #[test]
     fn test_expose_invalid_name() -> Result<(), String> {
-        with_store_mut(|s| s.reset());
+        // with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
         })?;
+
+        let mat = Lib::register_deno_func(
+            MaterializerDenoFunc::with_code("() => 12"),
+            Effect::default(),
+        )?;
 
         let res = Lib::expose(
             vec![(
@@ -279,6 +314,7 @@ mod tests {
                 Lib::funcb(TypeFunc::new(
                     Lib::structb(TypeStruct::default(), TypeBase::default())?,
                     Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+                    mat,
                 ))?
                 .into(),
             )],
@@ -292,6 +328,7 @@ mod tests {
                 Lib::funcb(TypeFunc::new(
                     Lib::structb(TypeStruct::default(), TypeBase::default())?,
                     Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+                    mat,
                 ))?
                 .into(),
             )],
@@ -304,10 +341,13 @@ mod tests {
 
     #[test]
     fn test_expose_duplicate() -> Result<(), String> {
-        with_store_mut(|s| s.reset());
+        // with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
         })?;
+
+        let mat =
+            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
 
         let res = Lib::expose(
             vec![
@@ -316,6 +356,7 @@ mod tests {
                     Lib::funcb(TypeFunc::new(
                         Lib::structb(TypeStruct::default(), TypeBase::default())?,
                         Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+                        mat,
                     ))?
                     .into(),
                 ),
@@ -324,6 +365,7 @@ mod tests {
                     Lib::funcb(TypeFunc::new(
                         Lib::structb(TypeStruct::default(), TypeBase::default())?,
                         Lib::integerb(TypeInteger::default(), TypeBase::default())?,
+                        mat,
                     ))?
                     .into(),
                 ),
@@ -347,8 +389,13 @@ mod tests {
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
         })?;
+        let mat =
+            Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
         Lib::expose(
-            vec![("one".to_string(), Lib::funcb(TypeFunc::new(s, b))?.into())],
+            vec![(
+                "one".to_string(),
+                Lib::funcb(TypeFunc::new(s, b, mat))?.into(),
+            )],
             vec![],
         )?;
         let typegraph = Lib::finalize_typegraph()?;

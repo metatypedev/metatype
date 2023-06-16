@@ -14,10 +14,9 @@ use crate::{
 };
 use common::typegraph::{Materializer, ObjectTypeData, TGRuntime, TypeMeta, TypeNode, Typegraph};
 use indexmap::IndexMap;
-use once_cell::sync::Lazy;
+use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use std::sync::{Mutex, MutexGuard};
 
 use crate::wit::core::{Error as TgError, MaterializerId, RuntimeId, TypeId, TypegraphInitParams};
 
@@ -38,41 +37,72 @@ pub struct TypegraphContext {
     mapping: IdMapping,
 }
 
-static TG: Lazy<Mutex<Option<TypegraphContext>>> = Lazy::new(|| Mutex::new(None));
+thread_local! {
+    static TG: RefCell<Option<TypegraphContext>> = RefCell::new(None);
+}
 
 static VERSION: &str = "0.0.1";
 
-pub fn tg_context() -> MutexGuard<'static, Option<TypegraphContext>> {
-    TG.lock().unwrap()
+// pub fn with_tg<T>(f: impl FnOnce(&TypegraphContext) -> T) -> Result<T> {
+//     TG.with(|tg| {
+//         let tg = tg.borrow();
+//         tg.as_ref()
+//             .map(|tg| f(tg))
+//             .ok_or_else(errors::expected_typegraph_context)
+//     })
+// }
+
+pub fn with_tg_mut<T>(f: impl FnOnce(&mut TypegraphContext) -> T) -> Result<T> {
+    TG.with(|tg| {
+        let mut tg = tg.borrow_mut();
+        tg.as_mut()
+            .map(f)
+            .ok_or_else(errors::expected_typegraph_context)
+    })
 }
 
 pub fn init(params: TypegraphInitParams) -> Result<()> {
-    if let Some(tg) = &*tg_context() {
-        return Err(errors::nested_typegraph_context(&tg.name));
-    }
+    #[cfg(test)]
+    eprintln!("Initializing typegraph...");
 
-    *tg_context() = Some(TypegraphContext {
-        name: params.name.clone(),
-        meta: TypeMeta {
-            version: VERSION.to_string(),
-            ..Default::default()
-        },
-        types: vec![Some(TypeNode::Object {
-            base: gen_base(params.name),
-            data: ObjectTypeData {
-                properties: IndexMap::new(),
-                required: vec![],
+    TG.with(|tg| {
+        if let Some(tg) = tg.borrow().as_ref() {
+            Err(errors::nested_typegraph_context(&tg.name))
+        } else {
+            Ok(())
+        }
+    })?;
+
+    TG.with(|tg| {
+        *tg.borrow_mut() = Some(TypegraphContext {
+            name: params.name.clone(),
+            meta: TypeMeta {
+                version: VERSION.to_string(),
+                ..Default::default()
             },
-        })],
-        ..Default::default()
+            types: vec![Some(TypeNode::Object {
+                base: gen_base(params.name),
+                data: ObjectTypeData {
+                    properties: IndexMap::new(),
+                    required: vec![],
+                },
+            })],
+            ..Default::default()
+        })
     });
 
     Ok(())
 }
 
 pub fn finalize() -> Result<String> {
-    let mut ctx = tg_context();
-    let ctx = ctx.take().ok_or_else(errors::expected_typegraph_context)?;
+    #[cfg(test)]
+    eprintln!("Finalizing typegraph...");
+
+    let ctx = TG.with(|tg| {
+        tg.borrow_mut()
+            .take()
+            .ok_or_else(errors::expected_typegraph_context)
+    })?;
 
     let tg = Typegraph {
         id: format!("https://metatype.dev/specs/{VERSION}.json"),
@@ -94,20 +124,16 @@ pub fn finalize() -> Result<String> {
 }
 
 pub fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), String> {
-    let mut ctx = tg_context();
-    let ctx = ctx
-        .as_mut()
-        .ok_or_else(errors::expected_typegraph_context)?;
-    // let s = store();
+    with_tg_mut(|ctx| {
+        if !namespace.is_empty() {
+            return Err(String::from("namespaces not supported"));
+        }
 
-    if !namespace.is_empty() {
-        return Err(String::from("namespaces not supported"));
-    }
-
-    let mut root_type = ctx.types.get_mut(0).unwrap().take().unwrap();
-    let res = with_store(|s| ctx.expose_on(&mut root_type, s, fns));
-    ctx.types[0] = Some(root_type);
-    res?;
+        let mut root_type = ctx.types.get_mut(0).unwrap().take().unwrap();
+        let res = with_store(|s| ctx.expose_on(&mut root_type, s, fns));
+        ctx.types[0] = Some(root_type);
+        res
+    })??;
 
     Ok(())
 }
