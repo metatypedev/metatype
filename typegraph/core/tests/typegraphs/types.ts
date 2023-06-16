@@ -1,5 +1,5 @@
-import { t, typegraph } from "../../deno/src/mod.ts";
-import { DenoRuntime } from "../../deno/src/runtimes/deno.ts";
+import { t, typegraph } from "../../../deno/src/mod.ts";
+import { DenoRuntime } from "../../../deno/src/runtimes/deno.ts";
 
 const a = t.integer();
 

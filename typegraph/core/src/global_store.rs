@@ -49,8 +49,8 @@ pub fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
 #[cfg(test)]
 impl Store {
     pub fn reset(&mut self) {
-        *self = Store::default();
         let _ = crate::typegraph::finalize();
+        *self = Store::new();
     }
 }
 

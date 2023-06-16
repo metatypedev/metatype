@@ -19,7 +19,8 @@ indexmap = { version = "1.9.3", features = ["serde"] }
 common = { path = "../../libs/common" }
 
 [dev-dependencies]
-insta = "1.29.0"
+insta = { version = "1.29.0", features = ["glob"] }
+pathdiff = "0.2.1"
 
 [features]
 wasm = []

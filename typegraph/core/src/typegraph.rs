@@ -73,22 +73,25 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
         }
     })?;
 
-    TG.with(|tg| {
-        *tg.borrow_mut() = Some(TypegraphContext {
-            name: params.name.clone(),
-            meta: TypeMeta {
-                version: VERSION.to_string(),
-                ..Default::default()
-            },
-            types: vec![Some(TypeNode::Object {
-                base: gen_base(params.name),
-                data: ObjectTypeData {
-                    properties: IndexMap::new(),
-                    required: vec![],
-                },
-            })],
+    let mut ctx = TypegraphContext {
+        name: params.name.clone(),
+        meta: TypeMeta {
+            version: VERSION.to_string(),
             ..Default::default()
-        })
+        },
+        types: vec![Some(TypeNode::Object {
+            base: gen_base(params.name),
+            data: ObjectTypeData {
+                properties: IndexMap::new(),
+                required: vec![],
+            },
+        })],
+        ..Default::default()
+    };
+    with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
+
+    TG.with(move |tg| {
+        tg.borrow_mut().replace(ctx);
     });
 
     Ok(())

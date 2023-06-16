@@ -1,3 +1,8 @@
+---
+source: typegraph/core/tests/test_sdks.rs
+expression: tg
+input_file: typegraph/core/tests/typegraphs/types.py
+---
 [
   {
     "$id": "https://metatype.dev/specs/0.0.1.json",

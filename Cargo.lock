@@ -2776,9 +2776,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a28d25139df397cbca21408bb742cf6837e04cdbebf1b07b760caf971d6a972"
 dependencies = [
  "console",
+ "globset",
  "lazy_static",
  "linked-hash-map",
  "similar",
+ "walkdir",
  "yaml-rust",
 ]
 
@@ -7551,6 +7553,7 @@ dependencies = [
  "indexmap",
  "insta",
  "once_cell",
+ "pathdiff",
  "regex",
  "serde",
  "serde_json",

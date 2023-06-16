@@ -1,2 +1,0 @@
-[alias]
-t = "test -- --test-threads=1"
