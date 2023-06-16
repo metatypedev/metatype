@@ -2,15 +2,13 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::conversion::runtimes::MaterializerConverter;
-use crate::global_store::Store;
+use crate::global_store::{with_store_mut, Store};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
-use enum_dispatch::enum_dispatch;
-
 use crate::{
-    global_store::store,
     wit::core::RuntimeId,
     wit::runtimes::{self as wit, Error as TgError},
 };
+use enum_dispatch::enum_dispatch;
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
 
@@ -57,7 +55,7 @@ impl Materializer {
 
     fn deno(data: DenoMaterializer, effect: wit::Effect) -> Self {
         Self {
-            runtime_id: store().get_default_deno_runtime(),
+            runtime_id: with_store_mut(|s| s.get_default_deno_runtime()),
             effect,
             data: data.into(),
         }
@@ -83,26 +81,26 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
     ) -> Result<wit::MaterializerId> {
         // TODO: check code is valid function?
         let mat = Materializer::deno(DenoMaterializer::Inline(data), effect);
-        Ok(store().register_materializer(mat))
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 
     fn get_predefined_deno_func(
         data: wit::MaterializerDenoPredefined,
     ) -> Result<wit::MaterializerId> {
-        store().get_predefined_deno_function(data.name)
+        with_store_mut(|s| s.get_predefined_deno_function(data.name))
     }
 
     fn import_deno_function(
         data: wit::MaterializerDenoImport,
         effect: wit::Effect,
     ) -> Result<wit::MaterializerId> {
-        let module = store().get_deno_module(data.module);
+        let module = with_store_mut(|s| s.get_deno_module(data.module));
         let data = MaterializerDenoImport {
             func_name: data.func_name,
             module,
             secrets: data.secrets,
         };
         let mat = Materializer::deno(DenoMaterializer::Import(data), effect);
-        Ok(store().register_materializer(mat))
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }

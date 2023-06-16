@@ -13,19 +13,32 @@ impl Default for TypeBase {
 }
 
 #[derive(Debug)]
-pub struct Proxy(pub TypeProxy);
+pub struct Proxy {
+    pub data: TypeProxy,
+}
 
 #[derive(Debug)]
-pub struct Struct(pub TypeBase, pub TypeStruct);
+pub struct Struct {
+    pub base: TypeBase,
+    pub data: TypeStruct,
+}
 
 #[derive(Debug)]
-pub struct Integer(pub TypeBase, pub TypeInteger);
+pub struct Integer {
+    pub base: TypeBase,
+    pub data: TypeInteger,
+}
 
 #[derive(Debug)]
-pub struct Boolean(pub TypeBase);
+pub struct Boolean {
+    pub base: TypeBase,
+}
 
 #[derive(Debug)]
-pub struct Func(pub TypeBase, pub TypeFunc);
+pub struct Func {
+    pub base: TypeBase,
+    pub data: TypeFunc,
+}
 
 #[derive(Debug)]
 #[enum_dispatch(TypeFun)]
@@ -55,7 +68,7 @@ impl TypeFun for Proxy {
 
 impl TypeFun for Integer {
     fn get_repr(&self, id: TypeId) -> String {
-        let c = self.1;
+        let c = self.data;
         let data = [
             Some(format!("#{id}")),
             c.min.map(|min| format!("min={min}")),
@@ -69,7 +82,7 @@ impl TypeFun for Integer {
     }
 
     fn get_base(&self) -> Option<&TypeBase> {
-        Some(&self.0)
+        Some(&self.base)
     }
 }
 
@@ -79,13 +92,13 @@ impl TypeFun for Boolean {
     }
 
     fn get_base(&self) -> Option<&TypeBase> {
-        Some(&self.0)
+        Some(&self.base)
     }
 }
 
 impl TypeFun for Struct {
     fn get_repr(&self, id: TypeId) -> String {
-        let c = &self.1;
+        let c = &self.data;
         let props = c
             .props
             .iter()
@@ -96,17 +109,17 @@ impl TypeFun for Struct {
     }
 
     fn get_base(&self) -> Option<&TypeBase> {
-        Some(&self.0)
+        Some(&self.base)
     }
 }
 
 impl TypeFun for Func {
     fn get_repr(&self, id: TypeId) -> String {
-        let c = &self.1;
+        let c = &self.data;
         format!("func(#{id}, #{} => #{})", c.inp, c.out)
     }
 
     fn get_base(&self) -> Option<&TypeBase> {
-        Some(&self.0)
+        Some(&self.base)
     }
 }

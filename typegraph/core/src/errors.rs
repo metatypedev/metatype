@@ -51,10 +51,6 @@ pub fn unregistered_type_name(name: &str) -> TgError {
     format!("type name '{name}' has not been registered")
 }
 
-pub fn expected_type(type_name: &str, type_id: TypeId) -> TgError {
-    format!("expected a {type_name} at #{type_id}")
-}
-
 pub fn runtime_not_found(id: RuntimeId) -> TgError {
     format!("runtime #{id} not found")
 }

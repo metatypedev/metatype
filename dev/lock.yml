@@ -19,6 +19,8 @@ dev:
       (version = ").+("): METATYPE_VERSION
     typegraph/python/pyproject.toml:
       (description = ").+("): TAGLINE
+    typegraph/python_next/pyproject.toml:
+      (description = ").+("): TAGLINE
     '**/*/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
       (description = ").+("): TAGLINE

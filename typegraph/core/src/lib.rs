@@ -15,7 +15,7 @@ use crate::wit::core::{
     RuntimeId, TypeBase, TypeFunc, TypeId, TypeInteger, TypeProxy, TypeStruct, TypegraphInitParams,
 };
 use errors::Result;
-use global_store::store;
+use global_store::{with_store, with_store_mut};
 use types::{Func, Integer, Proxy, Struct, T};
 use validation::validate_name;
 
@@ -40,13 +40,14 @@ impl wit::core::Core for Lib {
     }
 
     fn proxyb(data: TypeProxy) -> Result<TypeId> {
-        let mut s = store();
-        if let Some(type_id) = s.type_by_names.get(&data.name) {
-            Ok(*type_id)
-        } else {
-            let tpe = T::Proxy(Proxy(data));
-            Ok(s.add_type(tpe))
-        }
+        with_store_mut(move |s| {
+            if let Some(type_id) = s.type_by_names.get(&data.name) {
+                Ok(*type_id)
+            } else {
+                let tpe = T::Proxy(Proxy { data });
+                Ok(s.add_type(tpe))
+            }
+        })
     }
 
     fn integerb(data: TypeInteger, base: TypeBase) -> Result<TypeId> {
@@ -55,17 +56,8 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        let tpe = T::Integer(Integer(base, data));
-        Ok(store().add_type(tpe))
-    }
-
-    fn type_as_integer(type_id: TypeId) -> Result<(TypeId, TypeBase, TypeInteger)> {
-        let s = store();
-        let type_id = s.resolve_proxy(type_id)?;
-        match s.get_type(type_id)? {
-            T::Integer(typ) => Ok((type_id, typ.0.clone(), typ.1)),
-            _ => Err(errors::expected_type("integer", type_id)),
-        }
+        let tpe = T::Integer(Integer { base, data });
+        Ok(with_store_mut(move |s| s.add_type(tpe)))
     }
 
     fn structb(data: TypeStruct, base: TypeBase) -> Result<TypeId> {
@@ -80,32 +72,27 @@ impl wit::core::Core for Lib {
             prop_names.insert(name.clone());
         }
 
-        let tpe = T::Struct(Struct(base, data));
-        Ok(store().add_type(tpe))
-    }
-
-    fn type_as_struct(type_id: TypeId) -> Result<(TypeId, TypeBase, TypeStruct)> {
-        let s = store();
-        let type_id = s.resolve_proxy(type_id)?;
-        match s.get_type(type_id)? {
-            T::Struct(typ) => Ok((type_id, typ.0.clone(), typ.1.clone())),
-            _ => Err(errors::expected_type("struct", type_id)),
-        }
+        let tpe = T::Struct(Struct { base, data });
+        Ok(with_store_mut(|s| s.add_type(tpe)))
     }
 
     fn funcb(data: TypeFunc) -> Result<TypeId> {
-        let mut s = store();
-        let inp_id = s.resolve_proxy(data.inp)?;
-        let inp_type = s.get_type(inp_id)?;
-        if !matches!(inp_type, T::Struct(_)) {
-            return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
-        }
-        let tpe = T::Func(Func(TypeBase::default(), data));
-        Ok(s.add_type(tpe))
+        with_store_mut(|s| {
+            let inp_id = s.resolve_proxy(data.inp)?;
+            let inp_type = s.get_type(inp_id)?;
+            if !matches!(inp_type, T::Struct(_)) {
+                return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
+            }
+            let tpe = T::Func(Func {
+                base: TypeBase::default(),
+                data,
+            });
+            Ok(s.add_type(tpe))
+        })
     }
 
     fn get_type_repr(type_id: TypeId) -> Result<String> {
-        store().get_type_repr(type_id)
+        with_store(|s| s.get_type_repr(type_id))
     }
 
     fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), String> {
@@ -120,8 +107,8 @@ impl wit::core::Core for Lib {
 
 #[cfg(test)]
 mod tests {
-    use super::core::Core;
     use super::*;
+    use crate::wit::core::Core;
 
     impl Default for TypeInteger {
         fn default() -> Self {
@@ -220,14 +207,16 @@ mod tests {
         ));
         assert_eq!(
             res,
-            Err(errors::invalid_input_type(&store().get_type_repr(inp)?))
+            Err(errors::invalid_input_type(&with_store(
+                |s| s.get_type_repr(inp)
+            )?)),
         );
         Ok(())
     }
 
     #[test]
     fn test_nested_typegraph_context() -> Result<(), String> {
-        store().reset();
+        with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test-1".to_string(),
         })?;
@@ -243,7 +232,7 @@ mod tests {
 
     #[test]
     fn test_no_active_context() -> Result<(), String> {
-        store().reset();
+        with_store_mut(|s| s.reset());
         assert_eq!(
             Lib::expose(vec![], vec![]),
             Err(errors::expected_typegraph_context())
@@ -259,7 +248,7 @@ mod tests {
 
     #[test]
     fn test_expose_invalid_type() -> Result<(), String> {
-        store().reset();
+        with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
         })?;
@@ -270,7 +259,7 @@ mod tests {
             res,
             Err(errors::invalid_export_type(
                 "one",
-                &store().get_type_repr(tpe)?
+                &with_store(|s| s.get_type_repr(tpe))?
             ))
         );
 
@@ -279,7 +268,7 @@ mod tests {
 
     #[test]
     fn test_expose_invalid_name() -> Result<(), String> {
-        store().reset();
+        with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
         })?;
@@ -315,7 +304,7 @@ mod tests {
 
     #[test]
     fn test_expose_duplicate() -> Result<(), String> {
-        store().reset();
+        with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
         })?;
@@ -348,7 +337,7 @@ mod tests {
 
     #[test]
     fn test_successful_serialization() -> Result<(), String> {
-        store().reset();
+        with_store_mut(|s| s.reset());
         let a = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
         let b = Lib::integerb(TypeInteger::default().min(12).max(44), TypeBase::default())?;
         let s = Lib::structb(

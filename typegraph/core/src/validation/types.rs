@@ -38,7 +38,7 @@ pub(super) mod utils {
                 // -> right must be a proxy for the types to be equal
                 Err(_) => match (s.get_type(left)?, s.get_type(right)?) {
                     (T::Proxy(left_proxy), T::Proxy(right_proxy)) => {
-                        Ok(left_proxy.0.name == right_proxy.0.name)
+                        Ok(left_proxy.data.name == right_proxy.data.name)
                     }
                     _ => Ok(false),
                 },

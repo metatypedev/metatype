@@ -15,13 +15,13 @@ pub fn convert_integer(
     _c: &mut TypegraphContext,
     _tg: &Store,
     id: u32,
-    data: &Integer,
+    typ: &Integer,
 ) -> Result<TypeNode> {
     Ok(TypeNode::Integer {
         base: gen_base(format!("integer_{id}")),
         data: IntegerTypeData {
-            minimum: data.1.min,
-            maximum: data.1.max,
+            minimum: typ.data.min,
+            maximum: typ.data.max,
             exclusive_minimum: None,
             exclusive_maximum: None,
             multiple_of: None,
@@ -44,13 +44,13 @@ pub fn convert_struct(
     c: &mut TypegraphContext,
     s: &Store,
     id: u32,
-    data: &Struct,
+    typ: &Struct,
 ) -> Result<TypeNode> {
     Ok(TypeNode::Object {
         base: gen_base(format!("object_{id}")),
         data: ObjectTypeData {
-            properties: data
-                .1
+            properties: typ
+                .data
                 .props
                 .iter()
                 .map(|(name, type_id)| -> Result<(String, TypeId)> {
@@ -63,8 +63,8 @@ pub fn convert_struct(
     })
 }
 
-pub fn convert_func(c: &mut TypegraphContext, s: &Store, id: u32, data: &Func) -> Result<TypeNode> {
-    let input = s.resolve_proxy(data.1.inp)?;
+pub fn convert_func(c: &mut TypegraphContext, s: &Store, id: u32, typ: &Func) -> Result<TypeNode> {
+    let input = s.resolve_proxy(typ.data.inp)?;
     match s.get_type(input)? {
         T::Struct(_) => (),
         _ => return Err(errors::invalid_input_type(&s.get_type_repr(input)?)),
@@ -75,8 +75,8 @@ pub fn convert_func(c: &mut TypegraphContext, s: &Store, id: u32, data: &Func) -
         base: gen_base(format!("func_{id}")),
         data: FunctionTypeData {
             input,
-            output: c.register_type(s, s.resolve_proxy(data.1.out)?)?,
-            materializer: c.register_materializer(s, data.1.mat)?,
+            output: c.register_type(s, s.resolve_proxy(typ.data.out)?)?,
+            materializer: c.register_materializer(s, typ.data.mat)?,
             rate_calls: false,
             rate_weight: None,
         },

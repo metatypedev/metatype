@@ -1,13 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{
-    collections::HashMap,
-    sync::{Mutex, MutexGuard},
-};
-
-use once_cell::sync::Lazy;
-
 use crate::{
     errors::{self, Result},
     runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime},
@@ -15,6 +8,7 @@ use crate::{
     wit::core::{Error as TgError, RuntimeId, TypeId},
     wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId},
 };
+use std::{cell::RefCell, collections::HashMap};
 
 #[derive(Default)]
 pub struct Store {
@@ -30,11 +24,22 @@ pub struct Store {
 
 const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity"];
 
-static STORE: Lazy<Mutex<Store>> = Lazy::new(|| Mutex::new(Store::default()));
-
-pub fn store() -> MutexGuard<'static, Store> {
-    STORE.lock().unwrap()
+thread_local! {
+    pub static STORE: RefCell<Store> = RefCell::new(Store::default());
 }
+// static STORE: Lazy<Mutex<Store>> = Lazy::new(|| Mutex::new(Store::default()));
+
+pub fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
+    STORE.with(|s| f(&s.borrow()))
+}
+
+pub fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
+    STORE.with(|s| f(&mut s.borrow_mut()))
+}
+
+// pub fn store() -> MutexGuard<'static, Store> {
+//     STORE.lock().unwrap()
+// }
 
 #[cfg(test)]
 impl Store {
@@ -49,9 +54,9 @@ impl Store {
         match self.get_type(type_id)? {
             T::Proxy(p) => self
                 .type_by_names
-                .get(&p.0.name)
+                .get(&p.data.name)
                 .copied()
-                .ok_or_else(|| errors::unregistered_type_name(&p.0.name)),
+                .ok_or_else(|| errors::unregistered_type_name(&p.data.name)),
             _ => Ok(type_id),
         }
     }

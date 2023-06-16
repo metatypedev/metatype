@@ -35,7 +35,7 @@ pub struct Typegraph {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Cors {
     pub allow_origin: Vec<String>,
     pub allow_headers: Vec<String>,
@@ -74,7 +74,7 @@ pub struct Rate {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct TypeMeta {
     pub secrets: Vec<String>,
     pub cors: Cors,

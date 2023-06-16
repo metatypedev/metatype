@@ -28,14 +28,12 @@ interface core {
     }
 
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
-    type-as-integer: func(ref: type-id) -> result<tuple<type-id, type-base, type-integer>, error>
 
     record type-struct {
         props: list<tuple<string, type-id>>,
     }
 
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
-    type-as-struct: func(id: type-id) -> result<tuple<type-id, type-base, type-struct>, error>
 
     get-type-repr: func(id: type-id) -> result<string, error>
 

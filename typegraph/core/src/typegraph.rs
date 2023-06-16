@@ -5,16 +5,14 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime};
 use crate::conversion::types::{
     convert_boolean, convert_func, convert_integer, convert_struct, gen_base,
 };
-use crate::global_store::store;
+use crate::global_store::with_store;
 use crate::types::{TypeFun, T};
 use crate::validation::validate_name;
 use crate::{
     errors::{self, Result},
     global_store::Store,
 };
-use common::typegraph::{
-    Cors, Materializer, ObjectTypeData, TGRuntime, TypeMeta, TypeNode, Typegraph,
-};
+use common::typegraph::{Materializer, ObjectTypeData, TGRuntime, TypeMeta, TypeNode, Typegraph};
 use indexmap::IndexMap;
 use once_cell::sync::Lazy;
 use std::collections::hash_map::Entry;
@@ -30,6 +28,7 @@ struct IdMapping {
     materializers: HashMap<u32, u32>,
 }
 
+#[derive(Default)]
 pub struct TypegraphContext {
     name: String,
     meta: TypeMeta,
@@ -55,18 +54,8 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     *tg_context() = Some(TypegraphContext {
         name: params.name.clone(),
         meta: TypeMeta {
-            auths: Default::default(),
-            cors: Cors {
-                allow_credentials: false,
-                allow_headers: Vec::new(),
-                expose_headers: Vec::new(),
-                allow_methods: Vec::new(),
-                allow_origin: Vec::new(),
-                max_age_sec: None,
-            },
-            rate: Default::default(),
-            secrets: Vec::new(),
             version: VERSION.to_string(),
+            ..Default::default()
         },
         types: vec![Some(TypeNode::Object {
             base: gen_base(params.name),
@@ -75,9 +64,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
                 required: vec![],
             },
         })],
-        runtimes: Vec::new(),
-        materializers: Vec::new(),
-        mapping: Default::default(),
+        ..Default::default()
     });
 
     Ok(())
@@ -111,14 +98,14 @@ pub fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), 
     let ctx = ctx
         .as_mut()
         .ok_or_else(errors::expected_typegraph_context)?;
-    let s = store();
+    // let s = store();
 
     if !namespace.is_empty() {
         return Err(String::from("namespaces not supported"));
     }
 
     let mut root_type = ctx.types.get_mut(0).unwrap().take().unwrap();
-    let res = ctx.expose_on(&mut root_type, &s, fns);
+    let res = with_store(|s| ctx.expose_on(&mut root_type, s, fns));
     ctx.types[0] = Some(root_type);
     res?;
 
