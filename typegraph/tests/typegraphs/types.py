@@ -15,8 +15,10 @@ user = t.struct({"id": t.integer(), "post": t.ref("Post")}, name="User")
 post = t.struct({"id": t.integer(), "author": t.ref("User")}, name="Post")
 
 with typegraph(name="test-types") as g:
+    deno = DenoRuntime()
+
     g.expose(
-        one=DenoRuntime.func(s1, b, code="() => 12"),
-        two=DenoRuntime.func(user, post, code="(user) => ({ id: 12, user })"),
-        three=DenoRuntime.import_(s1, s1, name="three", module="scripts/three.ts"),
+        one=deno.func(s1, b, code="() => 12"),
+        two=deno.func(user, post, code="(user) => ({ id: 12, user })"),
+        three=deno.import_(s1, s1, name="three", module="scripts/three.ts"),
     )

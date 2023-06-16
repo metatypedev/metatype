@@ -18,35 +18,6 @@ export class Typedef {
     return core.getTypeRepr(this.id);
   }
 
-  // asInteger(): Integer {
-  //   if (this instanceof Integer) {
-  //     return this;
-  //   }
-  //
-  //   const typeData = core.typeAsInteger(this.id);
-  //   if (typeData != null) {
-  //     return new Integer(this.id, typeData);
-  //   }
-  //   throw new Error("Not an integer");
-  // }
-
-  // asStruct(): Struct<Record<string, Typedef>> {
-  //   if (this instanceof Struct) {
-  //     return this;
-  //   }
-  //
-  //   const typeData = core.typeAsStruct(this.id);
-  //   if (typeData != null) {
-  //     return new Struct(this.id, {
-  //       ...typeData,
-  //       props: Object.fromEntries(
-  //         typeData.props.map(([name, id]) => [name, new Typedef(id as number)]),
-  //       ),
-  //     });
-  //   }
-  //   throw new Error("Not a struct");
-  // }
-
   asTypedef(): Typedef {
     return new Typedef(this.id, { name: this.name });
   }

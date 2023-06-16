@@ -12,7 +12,7 @@ mod validation;
 use std::collections::HashSet;
 
 use crate::wit::core::{
-    RuntimeId, TypeBase, TypeFunc, TypeId, TypeInteger, TypeProxy, TypeStruct, TypegraphInitParams,
+    TypeBase, TypeFunc, TypeId, TypeInteger, TypeProxy, TypeStruct, TypegraphInitParams,
 };
 use errors::Result;
 use global_store::{with_store, with_store_mut};
@@ -97,11 +97,6 @@ impl wit::core::Core for Lib {
 
     fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), String> {
         typegraph::expose(fns, namespace)
-    }
-
-    // TODO temp
-    fn register_runtime() -> RuntimeId {
-        0
     }
 }
 

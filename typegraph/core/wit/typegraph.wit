@@ -48,13 +48,13 @@ interface core {
     
     type runtime-id = u32
     type materializer-id = u32
-
-    register-runtime: func() -> runtime-id
 }
 
 
 interface runtimes {
     use self.core.{error, runtime-id, materializer-id}
+
+    get-deno-runtime: func() -> runtime-id
 
     type idempotency = bool
 

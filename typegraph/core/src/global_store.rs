@@ -17,17 +17,26 @@ pub struct Store {
 
     pub runtimes: Vec<Runtime>,
     pub materializers: Vec<Materializer>,
-    default_deno_runtime: Option<RuntimeId>,
+    deno_runtime: RuntimeId,
     predefined_deno_functions: HashMap<String, MaterializerId>,
     deno_modules: HashMap<String, MaterializerId>,
+}
+
+impl Store {
+    fn new() -> Self {
+        Self {
+            runtimes: vec![Runtime::Deno],
+            deno_runtime: 0,
+            ..Default::default()
+        }
+    }
 }
 
 const PREDEFINED_DENO_FUNCTIONS: &[&str] = &["identity"];
 
 thread_local! {
-    pub static STORE: RefCell<Store> = RefCell::new(Store::default());
+    pub static STORE: RefCell<Store> = RefCell::new(Store::new());
 }
-// static STORE: Lazy<Mutex<Store>> = Lazy::new(|| Mutex::new(Store::default()));
 
 pub fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
     STORE.with(|s| f(&s.borrow()))
@@ -36,10 +45,6 @@ pub fn with_store<T, F: FnOnce(&Store) -> T>(f: F) -> T {
 pub fn with_store_mut<T, F: FnOnce(&mut Store) -> T>(f: F) -> T {
     STORE.with(|s| f(&mut s.borrow_mut()))
 }
-
-// pub fn store() -> MutexGuard<'static, Store> {
-//     STORE.lock().unwrap()
-// }
 
 #[cfg(test)]
 impl Store {
@@ -61,7 +66,6 @@ impl Store {
         }
     }
 
-    // TODO: optional return
     pub fn get_type(&self, type_id: TypeId) -> Result<&T, TgError> {
         self.types
             .get(type_id as usize)
@@ -93,6 +97,10 @@ impl Store {
             .ok_or_else(|| errors::runtime_not_found(id))
     }
 
+    pub fn get_deno_runtime(&self) -> RuntimeId {
+        self.deno_runtime
+    }
+
     pub fn register_materializer(&mut self, mat: Materializer) -> MaterializerId {
         let id = self.materializers.len() as u32;
         self.materializers.push(mat);
@@ -105,24 +113,13 @@ impl Store {
             .ok_or_else(|| errors::materializer_not_found(id))
     }
 
-    pub fn get_default_deno_runtime(&mut self) -> RuntimeId {
-        match self.default_deno_runtime {
-            Some(runtime) => runtime,
-            None => {
-                let runtime = self.register_runtime(Runtime::Deno);
-                self.default_deno_runtime = Some(runtime);
-                runtime
-            }
-        }
-    }
-
     pub fn get_predefined_deno_function(&mut self, name: String) -> Result<MaterializerId> {
         if let Some(mat) = self.predefined_deno_functions.get(&name) {
             Ok(*mat)
         } else if PREDEFINED_DENO_FUNCTIONS.iter().any(|n| n == &name) {
             Err(errors::unknown_predefined_function(&name, "deno"))
         } else {
-            let runtime_id = self.get_default_deno_runtime();
+            let runtime_id = self.get_deno_runtime();
             let mat = self.register_materializer(Materializer {
                 runtime_id,
                 effect: Effect::None,
@@ -140,7 +137,7 @@ impl Store {
         if let Some(mat) = self.deno_modules.get(&file) {
             *mat
         } else {
-            let runtime_id = self.get_default_deno_runtime();
+            let runtime_id = self.get_deno_runtime();
             let mat = self.register_materializer(Materializer {
                 runtime_id,
                 effect: Effect::None, // N/A

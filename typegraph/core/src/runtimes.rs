@@ -55,7 +55,7 @@ impl Materializer {
 
     fn deno(data: DenoMaterializer, effect: wit::Effect) -> Self {
         Self {
-            runtime_id: with_store_mut(|s| s.get_default_deno_runtime()),
+            runtime_id: with_store_mut(|s| s.get_deno_runtime()),
             effect,
             data: data.into(),
         }
@@ -75,6 +75,10 @@ pub enum MaterializerData {
 // }
 
 impl crate::wit::runtimes::Runtimes for crate::Lib {
+    fn get_deno_runtime() -> RuntimeId {
+        with_store_mut(|s| s.get_deno_runtime())
+    }
+
     fn register_deno_func(
         data: wit::MaterializerDenoFunc,
         effect: wit::Effect,

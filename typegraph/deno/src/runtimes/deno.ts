@@ -4,7 +4,7 @@ import { runtimes } from "../../gen/typegraph_core.js";
 import { Effect } from "../../gen/exports/runtimes.d.ts";
 
 export class Runtime {
-  constructor(public readonly id: string) {}
+  constructor(public readonly id: number) {}
 }
 
 export class Materializer {
@@ -12,7 +12,11 @@ export class Materializer {
 }
 
 export class DenoRuntime extends Runtime {
-  static func<
+  constructor() {
+    super(runtimes.getDenoRuntime());
+  }
+
+  func<
     P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
     I extends t.Struct<P> = t.Struct<P>,
     O extends t.Typedef = t.Typedef,
@@ -25,7 +29,7 @@ export class DenoRuntime extends Runtime {
     return t.func(inp, out, new FunMat(matId, code, secrets, effect));
   }
 
-  static import<
+  import<
     P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
     I extends t.Struct<P> = t.Struct<P>,
     O extends t.Typedef = t.Typedef,

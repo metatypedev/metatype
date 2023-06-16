@@ -151,7 +151,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - run: cargo test --package typegraph_core -- --test-threads=1
+      - run: cargo test --package typegraph_core
 
   test-meta-cli:
     needs: changes

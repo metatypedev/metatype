@@ -18,14 +18,15 @@ const post = t.struct({
 }, { name: "Post" });
 
 typegraph("test-types", (g) => {
+  const deno = new DenoRuntime();
   g.expose({
-    one: DenoRuntime.func(s1, b, {
+    one: deno.func(s1, b, {
       code: "() => 12",
     }),
-    two: DenoRuntime.func(user, post, {
+    two: deno.func(user, post, {
       code: "(user) => ({ id: 12, user })",
     }),
-    three: DenoRuntime.import(
+    three: deno.import(
       s1,
       s1,
       { name: "three", module: "scripts/three.ts" },

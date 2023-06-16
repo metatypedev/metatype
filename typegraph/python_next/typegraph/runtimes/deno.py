@@ -28,12 +28,11 @@ class Materializer:
 
 
 class DenoRuntime(Runtime):
-    def __init__(self, id: int):
-        raise Exception("Deno runtime is not instatiable")
+    def __init__(self):
+        super().__init__(runtimes.get_deno_runtime(store))
 
-    @classmethod
     def func(
-        cls,
+        self,
         inp: "t.struct",
         out: "t.typedef",
         *,
@@ -58,9 +57,8 @@ class DenoRuntime(Runtime):
             inp, out, FunMat(mat_id.value, code=code, secrets=secrets, effect=effect)
         )
 
-    @classmethod
     def import_(
-        cls,
+        self,
         inp: "t.struct",
         out: "t.typedef",
         *,
