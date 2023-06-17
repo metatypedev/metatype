@@ -12,11 +12,11 @@ mod validation;
 use std::collections::HashSet;
 
 use crate::wit::core::{
-    TypeBase, TypeFunc, TypeId, TypeInteger, TypeProxy, TypeStruct, TypegraphInitParams,
+    TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy, TypeStruct, TypegraphInitParams,
 };
 use errors::Result;
 use global_store::{with_store, with_store_mut};
-use types::{Func, Integer, Proxy, Struct, T};
+use types::{Func, Integer, Proxy, Struct, Type, WithPolicy};
 use validation::validate_name;
 
 pub mod wit {
@@ -44,8 +44,7 @@ impl wit::core::Core for Lib {
             if let Some(type_id) = s.type_by_names.get(&data.name) {
                 Ok(*type_id)
             } else {
-                let tpe = T::Proxy(Proxy { data });
-                Ok(s.add_type(tpe))
+                Ok(s.add_type(|id| Type::Proxy(Proxy { id, data })))
             }
         })
     }
@@ -56,8 +55,9 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        let tpe = T::Integer(Integer { base, data });
-        Ok(with_store_mut(move |s| s.add_type(tpe)))
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Integer(Integer { id, base, data }))
+        }))
     }
 
     fn structb(data: TypeStruct, base: TypeBase) -> Result<TypeId> {
@@ -72,23 +72,25 @@ impl wit::core::Core for Lib {
             prop_names.insert(name.clone());
         }
 
-        let tpe = T::Struct(Struct { base, data });
-        Ok(with_store_mut(|s| s.add_type(tpe)))
+        Ok(with_store_mut(|s| {
+            s.add_type(|id| Type::Struct(Struct { id, base, data }))
+        }))
     }
 
     fn funcb(data: TypeFunc) -> Result<TypeId> {
         with_store_mut(|s| {
             let inp_id = s.resolve_proxy(data.inp)?;
             let inp_type = s.get_type(inp_id)?;
-            if !matches!(inp_type, T::Struct(_)) {
+            if !matches!(inp_type, Type::Struct(_)) {
                 return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
             }
-            let tpe = T::Func(Func {
-                base: TypeBase::default(),
-                data,
-            });
-            Ok(s.add_type(tpe))
+            let base = TypeBase::default();
+            Ok(s.add_type(|id| Type::Func(Func { id, base, data })))
         })
+    }
+
+    fn with_policy(data: TypePolicy) -> Result<TypeId> {
+        with_store_mut(|s| Ok(s.add_type(|id| Type::WithPolicy(WithPolicy { id, data }))))
     }
 
     fn get_type_repr(type_id: TypeId) -> Result<String> {

@@ -44,6 +44,25 @@ interface core {
     }
     funcb: func(data: type-func) -> result<type-id, error>
 
+    record policy-per-effect {
+        none: materializer-id,
+        create: materializer-id,
+        update: materializer-id,
+        delete: materializer-id,
+    }
+
+    variant policy {
+        single(materializer-id),
+        per-effect(policy-per-effect),
+    }
+
+    with-policy: func(data: type-policy) -> result<type-id, error>
+
+    record type-policy {
+        tpe: type-id,
+        policy: type-id,
+    }
+
     expose: func(fns: list<tuple<string, type-id>>, namespace: list<string>) -> result<_, error>
     
     type runtime-id = u32

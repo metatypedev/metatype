@@ -4,7 +4,7 @@
 use crate::{
     errors::{self, Result},
     runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime},
-    types::{TypeFun, T},
+    types::{Type, TypeFun},
     wit::core::{Error as TgError, RuntimeId, TypeId},
     wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId},
 };
@@ -12,7 +12,7 @@ use std::{cell::RefCell, collections::HashMap};
 
 #[derive(Default)]
 pub struct Store {
-    pub types: Vec<T>,
+    pub types: Vec<Type>,
     pub type_by_names: HashMap<String, TypeId>,
 
     pub runtimes: Vec<Runtime>,
@@ -57,23 +57,26 @@ impl Store {
 impl Store {
     pub fn resolve_proxy(&self, type_id: TypeId) -> Result<TypeId, TgError> {
         match self.get_type(type_id)? {
-            T::Proxy(p) => self
-                .type_by_names
-                .get(&p.data.name)
-                .copied()
+            Type::Proxy(p) => self
+                .get_type_by_name(&p.data.name)
                 .ok_or_else(|| errors::unregistered_type_name(&p.data.name)),
             _ => Ok(type_id),
         }
     }
 
-    pub fn get_type(&self, type_id: TypeId) -> Result<&T, TgError> {
+    pub fn get_type(&self, type_id: TypeId) -> Result<&Type, TgError> {
         self.types
             .get(type_id as usize)
             .ok_or_else(|| errors::type_not_found(type_id))
     }
 
-    pub fn add_type(&mut self, tpe: T) -> TypeId {
+    pub fn get_type_by_name(&self, name: &str) -> Option<TypeId> {
+        self.type_by_names.get(name).copied()
+    }
+
+    pub fn add_type(&mut self, build: impl FnOnce(TypeId) -> Type) -> TypeId {
         let id = self.types.len() as u32;
+        let tpe = build(id);
         if let Some(name) = tpe.get_base().and_then(|b| b.name.as_ref()) {
             self.type_by_names.insert(name.clone(), id);
         }
@@ -82,7 +85,7 @@ impl Store {
     }
 
     pub fn get_type_repr(&self, id: TypeId) -> Result<String, TgError> {
-        Ok(self.get_type(id)?.get_repr(id))
+        Ok(self.get_type(id)?.to_string())
     }
 
     pub fn register_runtime(&mut self, rt: Runtime) -> RuntimeId {

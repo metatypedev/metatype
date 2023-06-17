@@ -2,11 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::conversion::runtimes::{convert_materializer, convert_runtime};
-use crate::conversion::types::{
-    convert_boolean, convert_func, convert_integer, convert_struct, gen_base,
-};
+use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::with_store;
-use crate::types::{TypeFun, T};
+use crate::types::{Type, TypeFun};
 use crate::validation::validate_name;
 use crate::{
     errors::{self, Result},
@@ -126,8 +124,8 @@ pub fn finalize() -> Result<String> {
     serde_json::to_string(&tg).map_err(|e| e.to_string())
 }
 
-pub fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), String> {
-    with_tg_mut(|ctx| {
+pub fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<()> {
+    with_tg_mut(|ctx| -> Result<()> {
         if !namespace.is_empty() {
             return Err(String::from("namespaces not supported"));
         }
@@ -136,9 +134,7 @@ pub fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), 
         let res = with_store(|s| ctx.expose_on(&mut root_type, s, fns));
         ctx.types[0] = Some(root_type);
         res
-    })??;
-
-    Ok(())
+    })?
 }
 
 impl TypegraphContext {
@@ -158,8 +154,8 @@ impl TypegraphContext {
             }
             let type_id = s.resolve_proxy(type_id)?;
             let tpe = s.get_type(type_id)?;
-            if !matches!(tpe, T::Func(_)) {
-                return Err(errors::invalid_export_type(&name, &tpe.get_repr(type_id)));
+            if !matches!(tpe, Type::Func(_)) {
+                return Err(errors::invalid_export_type(&name, &tpe.to_string()));
             }
             if root.properties.contains_key(&name) {
                 return Err(errors::duplicate_export_name(&name));
@@ -186,13 +182,7 @@ impl TypegraphContext {
                 self.types.push(None);
 
                 let tpe = store.get_type(id)?;
-                let type_node = match tpe {
-                    T::Struct(typ) => convert_struct(self, store, id, typ),
-                    T::Integer(typ) => convert_integer(self, store, id, typ),
-                    T::Boolean(typ) => convert_boolean(self, store, id, typ),
-                    T::Func(typ) => convert_func(self, store, id, typ),
-                    T::Proxy(_p) => return Err("proxy must be resolved".to_string()),
-                }?;
+                let type_node = tpe.convert(self)?;
 
                 self.types[idx] = Some(type_node);
                 Ok(idx as TypeId)

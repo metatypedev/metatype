@@ -4,83 +4,106 @@
 use common::typegraph::{
     FunctionTypeData, IntegerTypeData, ObjectTypeData, TypeNode, TypeNodeBase,
 };
+use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 
 use crate::errors::{self, Result};
-use crate::types::{Boolean, Integer, Struct, T};
+use crate::global_store::with_store;
+use crate::types::{Boolean, Integer, Proxy, Struct, Type, WithPolicy};
 use crate::wit::core::TypeId;
-use crate::{global_store::Store, typegraph::TypegraphContext, types::Func};
+use crate::{typegraph::TypegraphContext, types::Func};
 
-pub fn convert_integer(
-    _c: &mut TypegraphContext,
-    _tg: &Store,
-    id: u32,
-    typ: &Integer,
-) -> Result<TypeNode> {
-    Ok(TypeNode::Integer {
-        base: gen_base(format!("integer_{id}")),
-        data: IntegerTypeData {
-            minimum: typ.data.min,
-            maximum: typ.data.max,
-            exclusive_minimum: None,
-            exclusive_maximum: None,
-            multiple_of: None,
-        },
-    })
+#[enum_dispatch]
+pub trait TypeConversion {
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode>;
 }
 
-pub fn convert_boolean(
-    _c: &mut TypegraphContext,
-    _tg: &Store,
-    id: u32,
-    _data: &Boolean,
-) -> Result<TypeNode> {
-    Ok(TypeNode::Boolean {
-        base: gen_base(format!("boolean_{id}")),
-    })
-}
-
-pub fn convert_struct(
-    c: &mut TypegraphContext,
-    s: &Store,
-    id: u32,
-    typ: &Struct,
-) -> Result<TypeNode> {
-    Ok(TypeNode::Object {
-        base: gen_base(format!("object_{id}")),
-        data: ObjectTypeData {
-            properties: typ
-                .data
-                .props
-                .iter()
-                .map(|(name, type_id)| -> Result<(String, TypeId)> {
-                    let id = s.resolve_proxy(*type_id)?;
-                    Ok((name.clone(), c.register_type(s, id)?))
-                })
-                .collect::<Result<IndexMap<_, _>>>()?,
-            required: Vec::new(),
-        },
-    })
-}
-
-pub fn convert_func(c: &mut TypegraphContext, s: &Store, id: u32, typ: &Func) -> Result<TypeNode> {
-    let input = s.resolve_proxy(typ.data.inp)?;
-    match s.get_type(input)? {
-        T::Struct(_) => (),
-        _ => return Err(errors::invalid_input_type(&s.get_type_repr(input)?)),
+impl TypeConversion for Integer {
+    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        Ok(TypeNode::Integer {
+            base: gen_base(format!("integer_{}", self.id)),
+            data: IntegerTypeData {
+                minimum: self.data.min,
+                maximum: self.data.max,
+                exclusive_minimum: None,
+                exclusive_maximum: None,
+                multiple_of: None,
+            },
+        })
     }
-    let input = c.register_type(s, input)?;
+}
 
-    Ok(TypeNode::Function {
-        base: gen_base(format!("func_{id}")),
-        data: FunctionTypeData {
-            input,
-            output: c.register_type(s, s.resolve_proxy(typ.data.out)?)?,
-            materializer: c.register_materializer(s, typ.data.mat)?,
-            rate_calls: false,
-            rate_weight: None,
-        },
-    })
+impl TypeConversion for Boolean {
+    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        Ok(TypeNode::Boolean {
+            base: gen_base(format!("boolean_{}", self.id)),
+        })
+    }
+}
+
+impl TypeConversion for Struct {
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        Ok(TypeNode::Object {
+            base: gen_base(format!("object_{}", self.id)),
+            data: ObjectTypeData {
+                properties: self
+                    .data
+                    .props
+                    .iter()
+                    .map(|(name, type_id)| -> Result<(String, TypeId)> {
+                        with_store(|s| -> Result<_> {
+                            let id = s.resolve_proxy(*type_id)?;
+                            Ok((name.clone(), ctx.register_type(s, id)?))
+                        })
+                    })
+                    .collect::<Result<IndexMap<_, _>>>()?,
+                required: Vec::new(),
+            },
+        })
+    }
+}
+
+impl TypeConversion for Func {
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        let input = with_store(|s| -> Result<_> {
+            let inp_id = s.resolve_proxy(self.data.inp)?;
+            match s.get_type(inp_id)? {
+                Type::Struct(_) => Ok(ctx.register_type(s, inp_id)?),
+                _ => Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?)),
+            }
+        })?;
+
+        let output = with_store(|s| -> Result<_> {
+            let out_id = s.resolve_proxy(self.data.out)?;
+            ctx.register_type(s, out_id)
+        })?;
+
+        let materializer =
+            with_store(|s| -> Result<_> { ctx.register_materializer(s, self.data.mat) })?;
+
+        Ok(TypeNode::Function {
+            base: gen_base(format!("func_{}", self.id)),
+            data: FunctionTypeData {
+                input,
+                output,
+                materializer,
+                rate_calls: false,
+                rate_weight: None,
+            },
+        })
+    }
+}
+
+impl TypeConversion for Proxy {
+    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        todo!()
+    }
+}
+
+impl TypeConversion for WithPolicy {
+    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        todo!()
+    }
 }
 
 pub fn gen_base(name: String) -> TypeNodeBase {

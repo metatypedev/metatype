@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::runtimes::{DenoMaterializer, MaterializerData, Runtime};
-use crate::types::T;
+use crate::types::Type;
 use crate::wit::core::TypeFunc;
 use crate::Result;
 use crate::{global_store::Store, runtimes::Materializer};
@@ -39,7 +39,7 @@ impl Materializer {
                     "true" | "false" => {
                         if let Ok(out_id) = s.resolve_proxy(func.out) {
                             let out_type = s.get_type(out_id)?;
-                            let T::Boolean(_) = out_type else {
+                            let Type::Boolean(_) = out_type else {
                                 return Err(errors::invalid_output_type_predefined(
                                     &predef.name,
                                     "bool",

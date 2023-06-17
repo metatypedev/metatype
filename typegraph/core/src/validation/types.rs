@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::global_store::Store;
-use crate::types::T;
+use crate::types::Type;
 use crate::wit::core::{TypeFunc, TypeId};
 use crate::{errors, Result};
 
@@ -10,7 +10,7 @@ impl TypeFunc {
     pub fn validate(&self, s: &Store) -> Result<()> {
         if let Ok(inp_id) = s.resolve_proxy(self.inp) {
             let inp_type = s.get_type(inp_id)?;
-            let T::Struct(_) = inp_type else {
+            let Type::Struct(_) = inp_type else {
                 return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
             };
         }
@@ -37,7 +37,7 @@ pub(super) mod utils {
                 // left is a proxy that could not be resolved
                 // -> right must be a proxy for the types to be equal
                 Err(_) => match (s.get_type(left)?, s.get_type(right)?) {
-                    (T::Proxy(left_proxy), T::Proxy(right_proxy)) => {
+                    (Type::Proxy(left_proxy), Type::Proxy(right_proxy)) => {
                         Ok(left_proxy.data.name == right_proxy.data.name)
                     }
                     _ => Ok(false),
