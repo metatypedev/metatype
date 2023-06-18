@@ -177,8 +177,6 @@ export class OAuth2Auth extends Protocol {
     }
 
     const { refreshToken, ...claims } = jwt;
-    console.log(jwt);
-
     if (new Date().valueOf() / 1000 > claims.refreshAt) {
       try {
         const newClaims = await client.refreshToken.refresh(refreshToken);
@@ -196,9 +194,11 @@ export class OAuth2Auth extends Protocol {
     return [claims, new Headers()];
   }
 
-  private async getProfile(token: Tokens): Promise<Record<string, unknown>> {
+  private async getProfile(
+    token: Tokens,
+  ): Promise<null | Record<string, unknown>> {
     if (!this.profileUrl) {
-      return {};
+      return null;
     }
     try {
       const verb = this.profileUrl.startsWith("http")
@@ -222,8 +222,7 @@ export class OAuth2Auth extends Protocol {
 
       return profile;
     } catch (e) {
-      logger.warning(e);
-      return {};
+      throw new Error(`failed to fetch profile: ${e}`);
     }
   }
 

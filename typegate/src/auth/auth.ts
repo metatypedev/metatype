@@ -108,6 +108,6 @@ export type JWTClaims = {
   accessToken: string;
   refreshToken: string;
   refreshAt: number;
-  profile: Record<string, unknown>;
+  profile: null | Record<string, unknown>;
   scope?: string[];
 };
