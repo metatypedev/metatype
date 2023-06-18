@@ -13,6 +13,7 @@ typegraph-std = "^0.0.1"
 pydoc-markdown = { git = "https://github.com/metatypedev/pydoc-markdown", branch = "develop" }
 ruff = "^0.0.261"
 black = "^23.3.0"
+respx = "^0.20.1"
 
 [build-system]
 requires = ["poetry-core"]
