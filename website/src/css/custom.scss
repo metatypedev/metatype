@@ -12,13 +12,14 @@
   strong {
     @apply font-semibold;
   }
-  h2 {
-    @apply text-3xl font-bold;
-  }
 
   main#homepage {
     > section {
       @apply grid md:grid-cols-2 gap-12 items-center my-12;
+
+      h2 {
+        @apply text-3xl font-bold;
+      }
 
       h2 + p {
         @apply text-xl;

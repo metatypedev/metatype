@@ -78,7 +78,7 @@ function Intro({
         <p>
           And castle building is <strong>hard</strong>. Even the best teams can
           struggle to build according to the plans, especially with the ever
-          evolving needs and tech landscape complexities.
+          evolving needs and the tech landscape complexities.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -262,10 +262,10 @@ function TryIt(): JSX.Element {
           <span className="text-metared">deploy</span>
         </h2>
         <p>
-          Metatype's <strong>low-code approach</strong> combines the best of the
-          two worlds. You are quickly productive thanks to the high-level
-          abstractions, yet you can leverage all the low-level developer tooling
-          you are familiar with.
+          Metatype's unique approach combines the{" "}
+          <strong>best of the two worlds</strong>. You are quickly productive
+          thanks to the high-level abstractions, yet you can leverage all the
+          low-level developer tooling you are familiar with.
         </p>
       </div>
       <div className="w-full">

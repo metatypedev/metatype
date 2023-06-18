@@ -1,7 +1,15 @@
-Metatype is an open-source **low-code backend platform** for developers. It allows building autonomous, discoverable, and modular APIs with serverless orchestration. These APIs are technology-agnostic and enable developers to iterate fast, yet remaining agile and focusing on data modelling as the stack grow.
+Metatype is an open source platform for developers to **declaratively build APIs**. It offers a unique approach to building APIs, where the focus is all on data modelling and the platform takes care of the rest.
+
+The intent is to find a convenient computing model that tackles the following challenges:
+
+- most developers still spend too much time on tasks with low-value (crud, data validation, compliance, etc.)
+- when growing a product, it is hard to keep up with business needs and remain innovative with technology
+- managing server and infrastructure shall never be a concern for developers nor slow them down
+
+In that respect, Metatype can be seen as an alternative to Hasura, Strapi, Firebase, or web frameworks like Django or NestJS. You can see how Metatype differs reading the [conceptual overview](/docs/concepts/overview) or the [comparison](/docs/concepts/comparisons).
 
 The platform consists of the following components:
 
-- [**Typegraph**](/docs/concepts/typegraph): a package to describe typegraphs - virtual graphs of types - and their compositions
-- [**Typegate**](/docs/concepts/typegate): a distributed HTTP/GraphQL query engine acting as a scalable gateway
+- [**Typegraph**](/docs/concepts/typegraph): a package to describe typegraphs - virtual graphs of types - and compose them
+- [**Typegate**](/docs/concepts/typegate): a distributed HTTP/GraphQL query engine to execute queries over typegraphs
 - [**Meta CLI**](/docs/concepts/meta-cli): a command-line tool to provide great developer experience and serverless deployment
