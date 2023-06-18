@@ -23,11 +23,11 @@ export class GrpcRuntime extends Runtime {
     waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const { materializer, inpType } = stage.props;
+    const { materializer, argumentTypes } = stage.props;
     const { proto_file, method, endpoint } = materializer?.data ?? {};
     const sameRuntime = Runtime.collectRelativeStages(stage, waitlist);
 
-    const inputArgs = Object.keys(inpType?.properties || {});
+    const inputArgs = Object.keys(argumentTypes ?? {});
 
     const resolver: Resolver = async (args) => {
       const computedArgs: Record<string, unknown> = {};
