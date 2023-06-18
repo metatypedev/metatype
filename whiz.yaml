@@ -84,7 +84,7 @@ typegate_native:
 typegraph:
   watch:
     - "typegraph/core/src/**/*.rs"
-    - "typegraph/core/**/*.wit"
+    - "typegraph/core/wit/*.wit"
   command: |
     set -e
     rm -rf typegraph/deno/gen
@@ -129,8 +129,13 @@ install:
   watch:
     - typegraph/python/pyproject.toml
     - website/package.json
+  env:
+    WASM_TOOLS_VERSION: "1.0.35"
+    JCO_VERSION: "0.8.0"
   command: |
     set -e
+    cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+    npm install --global @bytecodealliance/jco@$JCO_VERSION
     [ -d .venv ] || python3 -m venv .venv
     poetry install
     cd website

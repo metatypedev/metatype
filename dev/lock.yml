@@ -32,6 +32,8 @@ dev:
       (typegraph_version = ").*("): TYPEGRAPH_VERSION
     whiz.yaml:
       '(  TYPEGRAPH_VERSION: ").+(")': TYPEGRAPH_VERSION
+      '(    WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
+      '(    JCO_VERSION: ").+(")': JCO_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
     examples/**/compose.yml:
@@ -49,6 +51,8 @@ dev:
     DENO_VERSION: 1.34.3
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.6.0
+    WASM_TOOLS_VERSION: 1.0.35
+    JCO_VERSION: 0.8.0
     TYPEGRAPH_VERSION: 0.0.1
     METATYPE_VERSION: 0.1.10-dev.0
     TAGLINE: >-
