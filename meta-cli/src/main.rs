@@ -12,8 +12,9 @@ mod tests;
 mod typegraph;
 mod utils;
 
-use anyhow::{bail, Result};
-use clap::error::ErrorKind;
+use anyhow::Result;
+use clap::CommandFactory;
+
 use clap::Parser;
 use cli::upgrade::upgrade_check;
 use cli::Action;
@@ -28,24 +29,21 @@ async fn main() -> Result<()> {
         .await
         .unwrap_or_else(|e| warn!("cannot check for update: {}", e));
 
-    let args = match Args::try_parse() {
-        Ok(args) => args,
-        Err(e) => {
-            if e.kind() == ErrorKind::DisplayHelp {
-                println!("meta {}\n{}", common::get_version(), e.render().ansi());
-                return Ok(());
-            }
-            bail!("{}", e.render().ansi());
-        }
-    };
+    let args = Args::try_parse()?;
 
-    if args.version || args.command.is_none() {
+    if args.version {
         println!("meta {}", common::get_version());
         return Ok(());
     }
 
-    if let Some(command) = args.command {
-        command.run(args.gen).await?;
+    if args.help {
+        Args::command().print_help()?;
+        return Ok(());
+    }
+
+    match args.command {
+        Some(command) => command.run(args.gen).await?,
+        None => Args::command().print_help()?,
     }
 
     Ok(())

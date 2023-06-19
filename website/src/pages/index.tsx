@@ -13,6 +13,7 @@ import LiteYouTubeEmbed from "react-lite-youtube-embed";
 import "react-lite-youtube-embed/dist/LiteYouTubeEmbed.css";
 
 import { ChoicePicker } from "../components/ChoicePicker";
+import { CompareLandscape } from "../components/CompareLandscape";
 
 function Header() {
   return (
@@ -22,16 +23,16 @@ function Header() {
           <img src="images/logo.svg" alt="Metatype logo" />
         </div>
         <h1 className="text-5xl">
-          Open source,{" "}
+          Declarative{" "}
           <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-metared from-15% via-metablue via-50% to-metared to-85%">
-            low-code backend platform
+            API development
           </span>{" "}
-          for developers.
+          platform
         </h1>
-        <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[950px]">
-          Build <strong>modular APIs</strong> with <strong>zero-trust</strong>{" "}
-          and <strong>serverless</strong> deployment, no matter where and how
-          (legacy) systems are.
+        <p className="hero__subtitle mx-auto text-3xl leading-10 max-w-[850px]">
+          Build <strong>serverless</strong> backends with{" "}
+          <strong>zero-trust</strong> and <strong>less code</strong>, no matter
+          where and how your (legacy) systems are.
         </p>
         <div className="md:flex md:px-32 justify-center">
           <Link
@@ -77,7 +78,7 @@ function Intro({
         <p>
           And castle building is <strong>hard</strong>. Even the best teams can
           struggle to build according to the plans, especially with the ever
-          evolving needs and tech landscape complexities.
+          evolving needs and the tech landscape complexities.
         </p>
       </div>
       <BrowserOnly fallback={<div className="h-[300px]"></div>}>
@@ -261,10 +262,10 @@ function TryIt(): JSX.Element {
           <span className="text-metared">deploy</span>
         </h2>
         <p>
-          Metatype's <strong>low-code approach</strong> combines the best of the
-          two worlds. You are quickly productive thanks to the high-level
-          abstractions, yet you can leverage all the low-level developer tooling
-          you are familiar with.
+          Metatype's unique approach combines the{" "}
+          <strong>best of the two worlds</strong>. You are quickly productive
+          thanks to the high-level abstractions, yet you can leverage all the
+          low-level developer tooling you are familiar with.
         </p>
       </div>
       <div className="w-full">
@@ -409,63 +410,8 @@ function Landscape(): JSX.Element {
           <strong>interoperable</strong> with your existing (legacy) systems.
         </p>
       </div>
-      <div className="flex justify-center mt-8 overflow-auto">
-        <table className="table-fixed text-center" id="landscape">
-          <tbody>
-            <tr className="border-none">
-              <td className="border-none"></td>
-              <td>
-                <small>← individual level</small>
-                <br />
-                transactional
-              </td>
-              <td>
-                <small>large data →</small>
-                <br />
-                analytical
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <small>instantaneous ↑</small>
-                <br />
-                short-lived
-              </td>
-              <td className="bg-slate-100">
-                <strong>Metatype</strong>
-                <br />
-                <small>
-                  query engine for data entities in evolving systems
-                </small>
-              </td>
-              <td>
-                Trino
-                <br />
-                <small>
-                  query engine for large data from multiples sources
-                </small>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                long-running
-                <br />
-                <small>asynchronous ↓</small>
-              </td>
-              <td>
-                Temporal
-                <br />
-                <small>workflow orchestration engine for data operations</small>
-              </td>
-              <td>
-                Spark
-                <br />
-                <small>batch/streaming engine for large data processing</small>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+
+      <CompareLandscape />
     </section>
   );
 }

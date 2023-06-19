@@ -44,9 +44,5 @@ function OAuth2({ name, typegraph }) {
 }
 
 export default (props) => {
-  return (
-    <BrowserOnly>
-      <OAuth2 {...props} />
-    </BrowserOnly>
-  );
+  return <BrowserOnly>{() => <OAuth2 {...props} />}</BrowserOnly>;
 };

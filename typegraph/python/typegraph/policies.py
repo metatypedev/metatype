@@ -106,6 +106,10 @@ def public(name: str = "__public"):
     return Policy(PredefinedFunMat("true")).named(name)
 
 
+def never(name: str = "__never"):
+    return Policy(PredefinedFunMat("false")).named(name)
+
+
 def ctx(dotaccess: str, value: Union[str, Pattern]):
     # join role_name, field with '__jwt' as prefix
     separator = "_"

@@ -10,7 +10,7 @@ with TypeGraph(
         # highlight-next-line
         allow_origin=["https://not-this.domain"],
         # highlight-next-line
-        allow_headers=["authorization"],
+        allow_headers=["x-custom-header"],
         # highlight-next-line
         expose_headers=["header-1"],
         # highlight-next-line

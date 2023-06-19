@@ -24,6 +24,7 @@ class Auth:
         access_url: str,
         scopes: str,
         profile_url: Optional[str] = None,
+        profiler: Optional[str] = None,
     ) -> "Auth":
         """
         OAuth2 authentication
@@ -36,6 +37,7 @@ class Auth:
                 access_url=access_url,
                 scopes=scopes,
                 profile_url=profile_url,
+                profiler=profiler,
             ),
         )
 

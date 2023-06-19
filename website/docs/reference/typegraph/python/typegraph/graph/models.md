@@ -21,7 +21,8 @@ def oauth2(cls,
            authorize_url: str,
            access_url: str,
            scopes: str,
-           profile_url: Optional[str] = None) -> "Auth"
+           profile_url: Optional[str] = None,
+           profiler: Optional[str] = None) -> "Auth"
 ```
 
 OAuth2 authentication

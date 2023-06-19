@@ -20,7 +20,6 @@ with TypeGraph(
     "business-logic",
     cors=TypeGraph.Cors(
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
-        allow_headers=["authorization"],
     ),
     auths=[
         TypeGraph.Auth.basic(["admin", "user"]),

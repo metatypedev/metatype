@@ -6,3 +6,9 @@ export class ResolverError extends Error {
     super(message);
   }
 }
+
+export class BadContext extends Error {
+  constructor(message: string) {
+    super(message);
+  }
+}

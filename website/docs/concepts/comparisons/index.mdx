@@ -1,0 +1,88 @@
+---
+sidebar_position: 2
+title: Comparing Metatype
+---
+
+# Comparing Metatype
+
+Metatype foundations takes inspiration from many innovative tools that arose in the last years. We took the best of each of them and combined them into a single engine backed by a convenient [computing model](/docs/reference/specifications).
+
+While this provides a unique and powerful platform, it can be difficult to understand how exactly Metatype compares to other tools. This page provides a high-level overview of these differences.
+
+## App development platforms
+
+- Firebase
+- Supabase
+
+These are great platforms to quickly start a new project. However, they hardly scale in terms of architecture evolution, technology freedom, number of developers on the project, and you will eventually have to move out due to increasing costs or iterations slowness.
+
+**When to choose Metatype**
+
+1. You want to build modular APIs by composing pre-defined blocks and import the ones you need from existing systems
+2. You want to take advantage of developers tooling you are familiar with like version controls or multiple environments
+3. You favor interoperability and extensibility over vendor lock-in and follow your future needs with ease
+
+## Headless CMS
+
+- Strapi
+- Directus
+
+Headless Content Management Systems (CMS) are great tools to manage content and providing great editing experience. However, they are not designed to build complex APIs like a cart checkout or integrate with other systems.
+
+**When to choose Metatype**
+
+1. You want an all-in-one APIs development platforms and offer the same editing experience through a user-friendly interface
+2. You care about end-user performance and want to use the best underlying technology for each use cases
+3. You are more than one on the project and want to manage your data models using preferred programming language
+
+## APIs over databases
+
+- Hasura
+- PostGraphile
+
+These platforms offer great data accessibility, but they are focused on databases and forget about the importance of the business logic glues and the interoperability with other systems.
+
+**When to choose Metatype**
+
+1. You want to have more than CRUD operations and get authentication, rate-limiting, and business logic out of the box
+2. You want to decouple your database from your API and change where the data is stored as the project evolves
+3. You prefer focusing on what you want to achieve rather than how to achieve it (and get stuck Haskell or Postgres internals)
+
+## GraphQL-based backends
+
+- WunderGraph
+- Grafbase
+
+These great tools leverage GraphQL to build internal APIs using pre-determined queries. They are less API consumer oriented and that disables powerful capabilities like querying between multiple instances owned by different users.
+
+**When to choose Metatype**
+
+1. You want to build internal and external APIs, and go beyond what can be described in a GraphQL schema
+2. You want to optimize your API queries on the fly and let the engine resolve your data in the most efficient way
+3. You expect a fine-grained permission model and control the data you expose at the level of each model field
+
+## Web frameworks
+
+- Django
+- NestJS
+
+These frameworks are a great way to build web applications. However, they require a lot of boilerplate code to build APIs and are not designed to be deployed in a serverless environment. They also requires a lot of configuration to get a complete solution.
+
+**When to choose Metatype**
+
+1. When you want to build declarative APIs and let the engine handle the underlying implementation
+2. When you want to build APIs in multiple languages, with less code and have a consistent experience across them
+3. When you expect a lightweight and all-in-one solution with authentication, databases, caching, and more out of the box
+
+## Workflow engines
+
+- Temporal
+- Windmill
+
+Great tools when it comes at scheduling long-running jobs. However, they are not designed to answer instantaneous API calls and are not optimized for data entities fetching. They are nonetheless the perfect companion to Metatype and some [integrations](/docs/reference/runtimes/temporal) already exists.
+
+**When to choose Metatype**
+
+1. When you want to implement modular APIs and backends with instantaneous responses
+2. When you want to interact with workflow engines and control over the operations they perform, including pooling and retries
+3. When you look for a serverless deployment solution and want to focus on your business logic

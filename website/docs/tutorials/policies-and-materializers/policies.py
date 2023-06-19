@@ -13,7 +13,6 @@ with TypeGraph(
     ],
     cors=TypeGraph.Cors(
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
-        allow_headers=["authorization"],
     ),
 ) as g:
     random = RandomRuntime(seed=0)

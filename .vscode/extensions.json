@@ -12,6 +12,7 @@
         "ms-python.python",
         "chrischinchilla.vale-vscode",
         "hediet.vscode-drawio",
-        "davidlday.languagetool-linter"
+        "davidlday.languagetool-linter",
+        "dtsvet.vscode-wasm"
     ]
 }

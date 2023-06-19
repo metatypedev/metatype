@@ -47,6 +47,7 @@ import { InternalAuth } from "./auth/protocols/internal.ts";
 import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
 import { PythonWasiRuntime } from "./runtimes/python_wasi/python_wasi.ts";
 import { Protocol } from "./auth/protocols/protocol.ts";
+import { OAuth2Auth } from "./auth/protocols/oauth2.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -174,6 +175,7 @@ export class TypeGraph {
           // https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header
           "Cache-Control",
           "Content-Type",
+          "Authorization",
           ...meta.cors.allow_headers,
         ]),
       ).join(","),
@@ -200,15 +202,18 @@ export class TypeGraph {
       return {};
     };
 
-    const auths = new Map<string, Protocol>();
-    for (const auth of meta.auths) {
-      auths.set(
-        auth.name,
-        await initAuth(typegraphName, auth, secretManager),
-      );
-    }
-    // override "internal" to enforce internal auth
-    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
+    // this is not the best implementation for auth function
+    // however, it is the simplest one for now
+    const denoRuntimeIdx = runtimes.findIndex((r) => r.name === "deno");
+    ensure(denoRuntimeIdx !== -1, "cannot find deno runtime");
+
+    const additionnalAuthMaterializers = meta.auths.filter((auth) =>
+      auth.auth_data.profiler !== null
+    ).map((
+      auth,
+    ) =>
+      OAuth2Auth.materializerForProfiler(auth.auth_data.profiler! as string)
+    );
 
     const runtimeReferences = await Promise.all(
       runtimes.map((runtime, idx) => {
@@ -225,19 +230,44 @@ export class TypeGraph {
           }`,
         );
 
+        const materializers = typegraph.materializers.filter(
+          (mat) => mat.runtime === idx,
+        );
+
+        if (idx === denoRuntimeIdx) {
+          // register auth materializer
+          materializers.push(...additionnalAuthMaterializers);
+        }
+
         //logger.debug(`init ${runtime.name} (${idx})`);
         return runtimeInit[runtime.name]({
           typegraph,
-          materializers: typegraph.materializers.filter(
-            (mat) => mat.runtime === idx,
-          ),
+          materializers,
           args: runtime.data,
           secretManager,
         });
       }),
     );
 
-    const tg = new TypeGraph(
+    const denoRuntime = runtimeReferences[denoRuntimeIdx];
+    ensureNonNullable(denoRuntime, "cannot find deno runtime");
+
+    const auths = new Map<string, Protocol>();
+    for (const auth of meta.auths) {
+      auths.set(
+        auth.name,
+        await initAuth(
+          typegraphName,
+          auth,
+          secretManager,
+          denoRuntime as DenoRuntime,
+        ),
+      );
+    }
+    // override "internal" to enforce internal auth
+    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
+
+    return new TypeGraph(
       typegraph,
       secretManager,
       runtimeReferences,
@@ -245,8 +275,6 @@ export class TypeGraph {
       auths,
       introspection,
     );
-
-    return tg;
   }
 
   async deinit(): Promise<void> {
