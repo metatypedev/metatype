@@ -3819,8 +3819,8 @@ name = "native"
 version = "0.1.10-dev.0"
 dependencies = [
  "anyhow",
- "bytes",
  "base64 0.21.2",
+ "bytes",
  "colored",
  "common",
  "connection-string 0.2.0",
@@ -3839,10 +3839,10 @@ dependencies = [
  "migration-core",
  "mongodb-introspection-connector",
  "once_cell",
+ "prisma-models",
  "protobuf",
  "protobuf-json-mapping",
  "protobuf-parse",
- "prisma-models",
  "query-connector",
  "query-core",
  "request-handlers",
@@ -7393,7 +7393,7 @@ checksum = "3082666a3a6433f7f511c7192923fa1fe07c69332d3c6a2e6bb040b569199d5a"
 dependencies = [
  "async-trait",
  "axum",
- "base64 0.21.0",
+ "base64 0.21.2",
  "bytes",
  "futures-core",
  "futures-util",
