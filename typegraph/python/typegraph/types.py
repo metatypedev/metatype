@@ -248,7 +248,7 @@ class typedef(Node):
 
     def add_policy(
         self,
-        *policies: List[Union[Policy, Materializer]],
+        *policies: List[Union[Policy, EffectPolicies]],
     ):
         return self.replace(
             policies=self.policies + tuple(Policy.create_from(p) for p in policies)

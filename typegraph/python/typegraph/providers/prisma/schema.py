@@ -202,7 +202,7 @@ def build_model(model_type: t.struct, reg: Registry) -> str:
     if len(ids) > 1:
         # multi-field id
         # ? should require declaration on the struct??
-        tags.append(f"@@id([{', '.join(ids)}]")
+        tags.append(f"@@id([{', '.join(ids)}])")
         for field in fields:
             if "@id" in field.tags:
                 field.tags.remove("@id")

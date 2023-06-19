@@ -29,6 +29,7 @@ import { EffectType, EitherNode } from "../types/typegraph.ts";
 import { getChildTypes, visitTypes } from "../typegraph/visitor.ts";
 import { generateValidator } from "../typecheck/input.ts";
 import { getParentId } from "../utils/stage_id.ts";
+import { BadContext } from "../errors.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -583,8 +584,10 @@ class ArgumentCollector {
         return ({ context }) => {
           const { [name]: value = null } = context;
           if (value === null && typ.type != Type.OPTIONAL) {
-            throw new Error(
-              `Non optional injection '${name}' was not found in the context`,
+            throw new BadContext(
+              `Non optional injection '${name}' was not found in the context ${
+                JSON.stringify(context)
+              }`,
             );
           }
           return value;

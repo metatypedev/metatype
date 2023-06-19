@@ -1,3 +1,4 @@
+package default:typegraph
 
 interface core {
   record tpe {
@@ -21,8 +22,8 @@ interface core {
   gettpe: func(id: u32, field: string) -> option<tpe>
 }
 
-default world typegraph {
+world typegraph {
   import print: func(msg: string)
 
-  export core: self.core
+  export core
 }

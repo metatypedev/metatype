@@ -17,6 +17,8 @@ export_typegraph!(Lib);
 
 pub struct Lib {}
 
+pub use exports::default::typegraph::core;
+
 impl core::Core for Lib {
     fn integerb() -> core::Tpe {
         let tpe = T::Integer(Integer {

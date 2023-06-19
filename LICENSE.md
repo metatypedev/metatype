@@ -8,9 +8,9 @@ Portions of this repository are licensed as follows:
   the original license provided by the owner of the applicable component (see
   the license header of the relevant files)
 - all content under `typegraph/` and `meta-cli/` is licensed under
-  [Mozilla Public License 2.0 (MPL-2.0)](./LICENSE-MPL-2.0.md)
+  [Mozilla Public License 2.0 (MPL-2.0)](./dev/LICENSE-MPL-2.0.md)
 - all content outside the above-mentioned files or restrictions is available
-  under the [Elastic License 2.0 (Elastic-2.0)](./LICENSE-Elastic-2.0.md)
+  under the [Elastic License 2.0 (Elastic-2.0)](./dev/LICENSE-Elastic-2.0.md)
 - alternatively, the Metatype Commercial Licensing can take precedence in case
   your usage requires ad-hoc clarifications (reach out!)
 
