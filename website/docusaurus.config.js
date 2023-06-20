@@ -11,7 +11,7 @@ const projectName = "metatype";
 const config = {
   title: "Metatype",
   // prettier-ignore
-  tagline: "Open source, low-code backend platform for developers — build modular APIs with zero-trust and serverless deployment, no matter where and how (legacy) systems are.",
+  tagline: "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are.",
   url: "https://metatype.dev",
   baseUrl: "/",
   onBrokenLinks: "throw",
@@ -93,6 +93,13 @@ const config = {
           sidebarPath: require.resolve("./docs/sidebars.js"),
           editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
         },
+        blog: {
+          id: "blog",
+          path: "blog",
+          routeBasePath: "/blog",
+          showReadingTime: true,
+          editUrl: "https://github.com/metatypedev/metatype/tree/main/website/",
+        },
         theme: {
           customCss: require.resolve("./src/css/custom.scss"),
         },
@@ -131,6 +138,11 @@ const config = {
             sidebarId: "docs",
             position: "left",
             label: "Docs",
+          },
+          {
+            to: "/blog",
+            position: "left",
+            label: "Blog",
           },
           {
             href: "https://github.com/metatypedev/metatype",
@@ -183,6 +195,10 @@ const config = {
           {
             title: "Company",
             items: [
+              {
+                label: "Blog",
+                href: "/blog",
+              },
               {
                 label: "Terms & conditions",
                 href: "/legal/terms",

@@ -8,7 +8,7 @@ import type {
   TypeGraphDS,
   TypeMaterializer,
 } from "./typegraph.ts";
-import { ObjectNode, TypeNode } from "./type_node.ts";
+import { TypeNode } from "./type_node.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "./planner/args.ts";
 import { EffectType, PolicyIndices } from "./types/typegraph.ts";
@@ -68,8 +68,8 @@ export interface ComputeStageProps {
   parent?: ComputeStage;
   args: ComputeArg<Record<string, unknown>> | null;
   resolver?: Resolver;
+  argumentTypes?: Record<string, string>;
   argumentNodes?: ReadonlyArray<ast.ArgumentNode>;
-  inpType?: ObjectNode;
   outType: TypeNode; // only temp
   effect: EffectType | null;
   typeIdx: number;
@@ -81,9 +81,21 @@ export interface ComputeStageProps {
   rateCalls: boolean;
   rateWeight: number;
   childSelection?: VariantMatcher;
+  excludeResult?: true;
 }
 
 export type StageId = string;
 export type PolicyIdx = number;
 export type PolicyList = Array<PolicyIndices>;
 export type TypeIdx = number;
+
+export interface ComputedValueParams {
+  variables: Variables;
+  parent: Parents;
+  context: Context;
+  effect: EffectType | null;
+}
+
+export interface ComputedValue<T = unknown> {
+  (params: ComputedValueParams): T;
+}

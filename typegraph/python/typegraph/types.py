@@ -116,12 +116,10 @@ class typedef(Node):
     runtime: Optional["Runtime"] = field(kw_only=True, default=None)
     injection: InjectionSwitch = field(kw_only=True, default=None)
     policies: Tuple[Policy, ...] = field(kw_only=True, factory=tuple)
-    # runtime_config: Dict[str, Any] = field(
-    #     kw_only=True, factory=dict, hash=False, metadata={SKIP: True}
-    # )
     runtime_config: Dict[str, Any] = field(
         kw_only=True, factory=frozendict, hash=False, metadata={SKIP: True}
     )
+    _as_id: bool = field(kw_only=True, default=False)
     _enum: Optional[Tuple[str]] = field(kw_only=True, default=None)
 
     collector_target: Optional[str] = field(default=Collector.types, init=False)
@@ -177,14 +175,18 @@ class typedef(Node):
             )
         types[name] = self
 
-    def named(self, name: str, validate=True) -> "typedef":
+    def named(self, name: str, validate=True) -> Self:
         if validate:
             validate_name(name)
         ret = self.replace(name=name)
         ret.register_name()
         return ret
 
-    def describe(self, description: str) -> "typedef":
+    @property
+    def as_id(self) -> Self:
+        return self.replace(as_id=True)
+
+    def describe(self, description: str) -> Self:
         return self.replace(description=description)
 
     def within(self, runtime):
@@ -246,7 +248,7 @@ class typedef(Node):
 
     def add_policy(
         self,
-        *policies: List[Union[Policy, Materializer]],
+        *policies: List[Union[Policy, EffectPolicies]],
     ):
         return self.replace(
             policies=self.policies + tuple(Policy.create_from(p) for p in policies)
@@ -271,6 +273,7 @@ class typedef(Node):
         ret = remove_none_values(asdict(self))
         ret["type"] = self.type
         ret["title"] = ret.pop("name")
+        ret["as_id"] = ret.pop("_as_id")
         ret["runtime"] = collector.index(self.runtime)
         ret["policies"] = [
             p.data(collector) if isinstance(p, EffectPolicies) else collector.index(p)

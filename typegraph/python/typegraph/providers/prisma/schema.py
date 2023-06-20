@@ -47,9 +47,7 @@ class PrismaField:
 
 
 def get_ids(tpe: t.struct) -> Tuple[str, ...]:
-    return tuple(
-        k for k, v in tpe.props.items() if resolve_proxy(v).runtime_config.get("id")
-    )
+    return tuple(k for k, v in tpe.props.items() if resolve_proxy(v)._as_id)
 
 
 @frozen
@@ -70,7 +68,7 @@ class FieldBuilder:
 
     def additional_tags(self, typ: t.typedef) -> List[str]:
         tags = []
-        if typ.runtime_config.get("id", False):
+        if typ._as_id:
             tags.append("@id")
         if typ.runtime_config.get("unique", False):
             tags.append("@unique")
@@ -84,11 +82,7 @@ class FieldBuilder:
         return tags
 
     def get_type_ids(self, typ: t.struct) -> List[str]:
-        return [
-            k
-            for k, ty in typ.props.items()
-            if resolve_proxy(ty).runtime_config.get("id", False)
-        ]
+        return [k for k, ty in typ.props.items() if resolve_proxy(ty)._as_id]
 
     def relation(
         self, field: str, typ: t.struct, rel_name: str, optional: bool
@@ -208,9 +202,10 @@ def build_model(model_type: t.struct, reg: Registry) -> str:
     if len(ids) > 1:
         # multi-field id
         # ? should require declaration on the struct??
-        tags.append(f"@@id([{', '.join(ids)}]")
+        tags.append(f"@@id([{', '.join(ids)}])")
         for field in fields:
-            field.tags.remove("@id")
+            if "@id" in field.tags:
+                field.tags.remove("@id")
 
     # TODO process other struct-level config
 

@@ -66,22 +66,24 @@ function MiniQLBrowser({
       createGraphiQLFetcher({
         url: `${tgUrl}/${typegraph}`,
       }),
-    []
+    [],
   );
 
   const [mode, setMode] = useState(defaultMode);
 
   return (
     <div className="@container miniql mb-5">
-      {defaultMode ? (
-        <ChoicePicker
-          name="mode"
-          choices={modes}
-          choice={mode}
-          onChange={setMode}
-          className="mb-2"
-        />
-      ) : null}
+      {defaultMode
+        ? (
+          <ChoicePicker
+            name="mode"
+            choices={modes}
+            choice={mode}
+            onChange={setMode}
+            className="mb-2"
+          />
+        )
+        : null}
 
       <GraphiQLProvider
         fetcher={fetcher}
@@ -96,37 +98,45 @@ function MiniQLBrowser({
             defaultMode ? "" : "grid @2xl:grid-cols-2"
           } gap-2 w-full order-first`}
         >
-          {!defaultMode || mode === "typegraph" ? (
-            <div className=" bg-slate-100 rounded-lg flex flex-col">
-              {codeFileUrl ? (
-                <div className="p-2 text-xs font-light">
-                  See/edit full code on{" "}
-                  <a
-                    href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
-                  >
-                    {codeFileUrl}
-                  </a>
+          {!defaultMode || mode === "typegraph"
+            ? (
+              <div className=" bg-slate-100 rounded-lg flex flex-col">
+                {codeFileUrl
+                  ? (
+                    <div className="p-2 text-xs font-light">
+                      See/edit full code on{" "}
+                      <a
+                        href={`https://github.com/metatypedev/metatype/blob/main/${codeFileUrl}`}
+                      >
+                        {codeFileUrl}
+                      </a>
+                    </div>
+                  )
+                  : null}
+                {code
+                  ? (
+                    <CodeBlock language={codeLanguage} wrap className="flex-1">
+                      {code}
+                    </CodeBlock>
+                  )
+                  : null}
+              </div>
+            )
+            : null}
+          {!defaultMode || mode === "playground"
+            ? (
+              <div className="flex flex-col graphiql-container">
+                <div className="flex-1 graphiql-session">
+                  <GraphiQLInterface defaultTab={tab} noTool={noTool} />
                 </div>
-              ) : null}
-              {code ? (
-                <CodeBlock language={codeLanguage} wrap className="flex-1">
-                  {code}
-                </CodeBlock>
-              ) : null}
-            </div>
-          ) : null}
-          {!defaultMode || mode === "playground" ? (
-            <div className="flex flex-col graphiql-container">
-              <div className="flex-1 graphiql-session">
-                <GraphiQLInterface defaultTab={tab} noTool={noTool} />
-              </div>
 
-              <div className="flex-1 graphiql-response min-h-[200px] p-2 mt-2 bg-slate-100 rounded-lg">
-                <Loader />
-                <ResponseEditor />
+                <div className="flex-auto graphiql-response min-h-[200px] p-2 mt-2 bg-slate-100 rounded-lg">
+                  <Loader />
+                  <ResponseEditor />
+                </div>
               </div>
-            </div>
-          ) : null}
+            )
+            : null}
         </div>
       </GraphiQLProvider>
     </div>

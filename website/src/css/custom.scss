@@ -12,13 +12,14 @@
   strong {
     @apply font-semibold;
   }
-  h2 {
-    @apply text-3xl font-bold;
-  }
 
   main#homepage {
     > section {
       @apply grid md:grid-cols-2 gap-12 items-center my-12;
+
+      h2 {
+        @apply text-3xl font-bold;
+      }
 
       h2 + p {
         @apply text-xl;
@@ -62,6 +63,8 @@
     }
 
     .graphiql-container {
+      background-color: transparent;
+
       .graphiql-editors {
         @apply shadow-none bg-none;
         @apply bg-slate-100;
@@ -80,10 +83,13 @@
       }
       .CodeMirror {
         @apply bg-slate-100 text-sm;
-        height: auto !important;
+        position: relative;
       }
       .graphiql-query-editor {
         @apply p-2;
+      }
+      .graphiql-response {
+        flex-basis: auto;
       }
     }
 

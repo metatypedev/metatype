@@ -8,10 +8,11 @@ use anyhow::Result;
 use macros::deno;
 
 use base64::{engine::general_purpose, Engine as _};
+use wasmedge_sdk::VmBuilder;
 use wasmedge_sdk::{
     config::{ConfigBuilder, HostRegistrationConfigOptions},
     dock::{Param, VmDock},
-    Module, Vm,
+    Module,
 };
 
 #[deno]
@@ -63,7 +64,9 @@ fn wasmedge_wasi(input: WasiInput) -> WasiOutput {
         .with_host_registration_config(HostRegistrationConfigOptions::default().wasi(true))
         .build()
         .unwrap();
-    let vm = Vm::new(Some(config))
+    let vm = VmBuilder::new()
+        .with_config(config)
+        .build()
         .unwrap()
         .register_module(None, module)
         .unwrap();

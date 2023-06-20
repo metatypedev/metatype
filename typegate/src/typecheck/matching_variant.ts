@@ -91,7 +91,10 @@ class VariantMatcherCompiler {
       if (this.codes.has(typeIdx)) {
         continue;
       }
-      const typeNode = this.tg.type(typeIdx);
+      let typeNode = this.tg.type(typeIdx);
+      if (typeNode.type === Type.FUNCTION) {
+        typeNode = this.tg.type(typeNode.output);
+      }
 
       if (typeNode.enum != null) {
         cg.generateEnumValidator(typeNode);

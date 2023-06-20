@@ -20,7 +20,6 @@ with TypeGraph(
     "business-logic",
     cors=TypeGraph.Cors(
         allow_origin=["https://metatype.dev", "http://localhost:3000"],
-        allow_headers=["authorization"],
     ),
     auths=[
         TypeGraph.Auth.basic(["admin", "user"]),
@@ -39,7 +38,7 @@ with TypeGraph(
 
     message = t.struct(
         {
-            "id": t.integer().config("id", "auto"),
+            "id": t.integer().as_id.config("auto"),
             "title": t.string(),
             "user_id": t.integer().named("uid"),
             "user": gql.query(  # 1

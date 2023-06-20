@@ -9,7 +9,7 @@ import { HTTPRuntime } from "./runtimes/http.ts";
 import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
-import { ensure } from "./utils.ts";
+import { ensure, ensureNonNullable } from "./utils.ts";
 
 import {
   initAuth,
@@ -28,6 +28,7 @@ import {
   isOptional,
   isString,
   isUnion,
+  Type,
   TypeNode,
 } from "./type_node.ts";
 import { Batcher, RuntimeInit } from "./types.ts";
@@ -46,6 +47,7 @@ import { InternalAuth } from "./auth/protocols/internal.ts";
 import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
 import { PythonWasiRuntime } from "./runtimes/python_wasi/python_wasi.ts";
 import { Protocol } from "./auth/protocols/protocol.ts";
+import { OAuth2Auth } from "./auth/protocols/oauth2.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -108,6 +110,13 @@ export class SecretManager {
   }
 }
 
+const GRAPHQL_SCALAR_TYPES = {
+  [Type.BOOLEAN]: "Boolean",
+  [Type.INTEGER]: "Int",
+  [Type.NUMBER]: "Float",
+  [Type.STRING]: "String",
+} as Partial<Record<TypeNode["type"], string>>;
+
 export class TypeGraph {
   static readonly emptyArgs: ast.ArgumentNode[] = [];
   static emptyFields: ast.SelectionSetNode = {
@@ -120,6 +129,7 @@ export class TypeGraph {
     type: "string",
     policies: [],
     runtime: -1,
+    as_id: false,
   };
 
   root: TypeNode;
@@ -164,6 +174,8 @@ export class TypeGraph {
         new Set([
           // https://developer.mozilla.org/en-US/docs/Glossary/CORS-safelisted_request_header
           "Cache-Control",
+          "Content-Type",
+          "Authorization",
           ...meta.cors.allow_headers,
         ]),
       ).join(","),
@@ -190,15 +202,18 @@ export class TypeGraph {
       return {};
     };
 
-    const auths = new Map<string, Protocol>();
-    for (const auth of meta.auths) {
-      auths.set(
-        auth.name,
-        await initAuth(typegraphName, auth, secretManager),
-      );
-    }
-    // override "internal" to enforce internal auth
-    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
+    // this is not the best implementation for auth function
+    // however, it is the simplest one for now
+    const denoRuntimeIdx = runtimes.findIndex((r) => r.name === "deno");
+    ensure(denoRuntimeIdx !== -1, "cannot find deno runtime");
+
+    const additionnalAuthMaterializers = meta.auths.filter((auth) =>
+      auth.auth_data.profiler !== null
+    ).map((
+      auth,
+    ) =>
+      OAuth2Auth.materializerForProfiler(auth.auth_data.profiler! as string)
+    );
 
     const runtimeReferences = await Promise.all(
       runtimes.map((runtime, idx) => {
@@ -215,19 +230,44 @@ export class TypeGraph {
           }`,
         );
 
+        const materializers = typegraph.materializers.filter(
+          (mat) => mat.runtime === idx,
+        );
+
+        if (idx === denoRuntimeIdx) {
+          // register auth materializer
+          materializers.push(...additionnalAuthMaterializers);
+        }
+
         //logger.debug(`init ${runtime.name} (${idx})`);
         return runtimeInit[runtime.name]({
           typegraph,
-          materializers: typegraph.materializers.filter(
-            (mat) => mat.runtime === idx,
-          ),
+          materializers,
           args: runtime.data,
           secretManager,
         });
       }),
     );
 
-    const tg = new TypeGraph(
+    const denoRuntime = runtimeReferences[denoRuntimeIdx];
+    ensureNonNullable(denoRuntime, "cannot find deno runtime");
+
+    const auths = new Map<string, Protocol>();
+    for (const auth of meta.auths) {
+      auths.set(
+        auth.name,
+        await initAuth(
+          typegraphName,
+          auth,
+          secretManager,
+          denoRuntime as DenoRuntime,
+        ),
+      );
+    }
+    // override "internal" to enforce internal auth
+    auths.set(internalAuthName, await InternalAuth.init(typegraphName));
+
+    return new TypeGraph(
       typegraph,
       secretManager,
       runtimeReferences,
@@ -235,8 +275,6 @@ export class TypeGraph {
       auths,
       introspection,
     );
-
-    return tg;
   }
 
   async deinit(): Promise<void> {
@@ -375,4 +413,139 @@ export class TypeGraph {
     }
     return tpe;
   }
+
+  getGraphQLType(typeNode: TypeNode, optional = false): string {
+    if (typeNode.type === Type.OPTIONAL) {
+      return this.getGraphQLType(this.type(typeNode.item), true);
+    }
+
+    if (!optional) {
+      return `${this.getGraphQLType(typeNode, true)}!`;
+    }
+
+    if (typeNode.type === Type.ARRAY) {
+      return `[${this.getGraphQLType(this.type(typeNode.items))}]`;
+    }
+
+    if (typeNode.type === Type.STRING) {
+      if (typeNode.as_id) {
+        return "ID";
+      } else {
+        return "String";
+      }
+    }
+    const scalarType = GRAPHQL_SCALAR_TYPES[typeNode.type];
+    if (scalarType != null) {
+      return scalarType;
+    }
+
+    return typeNode.title;
+  }
+
+  isSelectionSetExpectedFor(typeIdx: number): boolean {
+    const typ = this.type(typeIdx);
+    if (typ.type === Type.OBJECT) {
+      return true;
+    }
+
+    if (typ.type === Type.UNION) {
+      // only check for first variant
+      // typegraph validation ensure that all the (nested) variants are all either objects or scalars
+      return this.isSelectionSetExpectedFor(typ.anyOf[0]);
+    }
+    if (typ.type === Type.EITHER) {
+      return this.isSelectionSetExpectedFor(typ.oneOf[0]);
+    }
+    return false;
+  }
+
+  // return all the possible selection fields for a type node
+  //  - an array of strings (for an object)
+  //  - a Map<string, string[]> (for an union type)
+  //  - `null` for scalar types (no selection set expected)
+  getPossibleSelectionFields(
+    typeIdx: number,
+  ): PossibleSelectionFields {
+    const typeNode = this.type(typeIdx);
+    if (typeNode.type === Type.OPTIONAL) {
+      return this.getPossibleSelectionFields(typeNode.item);
+    }
+    if (typeNode.type === Type.ARRAY) {
+      return this.getPossibleSelectionFields(typeNode.items);
+    }
+
+    if (typeNode.type === Type.FUNCTION) {
+      return this.getPossibleSelectionFields(typeNode.output);
+    }
+
+    if (typeNode.type === Type.OBJECT) {
+      return new Map(
+        Object.entries(typeNode.properties).map((
+          [key, idx],
+        ) => [key, this.getPossibleSelectionFields(idx)]),
+      );
+    }
+
+    let variants: number[];
+    if (typeNode.type === Type.UNION) {
+      variants = typeNode.anyOf;
+    } else if (typeNode.type === Type.EITHER) {
+      variants = typeNode.oneOf;
+    } else {
+      return null;
+    }
+
+    const entries = variants.map((
+      idx,
+    ) => [this.type(idx).title, this.getPossibleSelectionFields(idx)] as const);
+
+    if (entries[0][1] === null) {
+      if (entries.some((e) => e[1] !== null)) {
+        throw new Error(
+          "Unexpected: All the variants must not expect selection set",
+        );
+      }
+      return null;
+    }
+
+    if (entries.some((e) => e[1] === null)) {
+      throw new Error("Unexpected: All the variants must expect selection set");
+    }
+
+    const expandNestedUnions = (
+      entry: readonly [string, PossibleSelectionFields],
+    ): Array<[string, Map<string, PossibleSelectionFields>]> => {
+      const [typeName, possibleSelections] = entry;
+
+      ensureNonNullable(possibleSelections, "unexpected");
+
+      if (possibleSelections instanceof Map) {
+        return [[typeName, possibleSelections]];
+      }
+
+      return possibleSelections.flatMap(expandNestedUnions);
+    };
+
+    const res = (entries).flatMap(expandNestedUnions);
+    return res;
+  }
+
+  typeWithoutQuantifiers(typeIdx: number): TypeNode {
+    return this.typeNodeWithoutQuantifiers(this.type(typeIdx));
+  }
+
+  typeNodeWithoutQuantifiers(typeNode: TypeNode): TypeNode {
+    if (typeNode.type === Type.OPTIONAL) {
+      return this.typeWithoutQuantifiers(typeNode.item);
+    }
+    if (typeNode.type === Type.ARRAY) {
+      return this.typeWithoutQuantifiers(typeNode.items);
+    }
+    return typeNode;
+  }
 }
+
+export type PossibleSelectionFields =
+  | null
+  | Map<string, PossibleSelectionFields>
+  | Array<[string, Map<string, PossibleSelectionFields>]>;

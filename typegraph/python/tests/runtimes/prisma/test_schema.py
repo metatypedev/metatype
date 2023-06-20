@@ -60,7 +60,7 @@ class TestPrismaSchema:
             db = PrismaRuntime("test", "POSTGRES")
             model = t.struct(
                 {
-                    "id": t.integer().config("id", "auto"),
+                    "id": t.integer().as_id.config("auto"),
                     "name": t.string(),
                 }
             ).named("ModelA")
@@ -76,14 +76,14 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.integer().config("id"),
+                    "id": t.integer().as_id,
                     "posts": db.link(t.array(g("Post")), "postAuthor"),
                 }
             ).named("User")
 
             post = t.struct(
                 {
-                    "id": t.integer().config("id"),
+                    "id": t.integer().as_id,
                     "author": db.link(g("User"), "postAuthor"),
                 }
             ).named("Post")
@@ -97,11 +97,11 @@ class TestPrismaSchema:
             db = PrismaRuntime("test", "POSTGRES")
 
             user = t.struct(
-                {"id": t.integer().config("id", "auto"), "posts": t.array(g("Post"))}
+                {"id": t.integer().as_id.config("auto"), "posts": t.array(g("Post"))}
             ).named("User")
 
             post = t.struct(
-                {"id": t.integer().config("id", "auto"), "author": g("User")}
+                {"id": t.integer().as_id.config("auto"), "author": g("User")}
             ).named("Post")
 
             self.assert_snapshot(db, [user, post], "implicit-one-to-many.prisma")
@@ -113,11 +113,11 @@ class TestPrismaSchema:
             db = PrismaRuntime("test", "POSTGRES")
 
             user = t.struct(
-                {"id": t.integer().config("id", "auto"), "posts": t.array(g("Post"))}
+                {"id": t.integer().as_id.config("auto"), "posts": t.array(g("Post"))}
             ).named("User")
 
             post = t.struct(
-                {"id": t.integer().config("id", "auto"), "author": g("User").optional()}
+                {"id": t.integer().as_id.config("auto"), "author": g("User").optional()}
             ).named("Post")
 
             self.assert_snapshot(db, [user, post], "optional-one-to-many.prisma")
@@ -132,14 +132,14 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.integer().config("id"),
+                    "id": t.integer().as_id,
                     "profile": db.link(g("Profile").optional(), "userProfile"),
                 }
             ).named("User")
 
             profile = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "user": db.link(g("User"), "userProfile"),
                 }
             ).named("Profile")
@@ -155,13 +155,13 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.integer().config("id", "auto"),
+                    "id": t.integer().as_id.config("auto"),
                     "profile": g("Profile").optional().config("unique"),
                 }
             ).named("User")
 
             profile = t.struct(
-                {"id": t.uuid().config("id", "auto"), "user": g("User")}
+                {"id": t.uuid().as_id.config("auto"), "user": g("User")}
             ).named("Profile")
 
             self.assert_snapshot(db, [user, profile], "implicit-one-to-one.prisma")
@@ -176,14 +176,14 @@ class TestPrismaSchema:
 
                 user = t.struct(
                     {
-                        "id": t.integer().config("id", "auto"),
+                        "id": t.integer().as_id.config("auto"),
                         "profile": g("Profile").optional(),
                     }
                 ).named("User")
 
                 profile = t.struct(
                     {
-                        "id": t.uuid().config("id", "auto"),
+                        "id": t.uuid().as_id.config("auto"),
                         "user": g("User").optional(),
                     }
                 ).named("Profile")
@@ -195,14 +195,14 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.integer().config("id", "auto"),
+                    "id": t.integer().as_id.config("auto"),
                     "profile": g("Profile").optional(),
                 }
             ).named("User")
 
             profile = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "user": db.link(g("User").optional(), fkey=True),
                 }
             ).named("Profile")
@@ -218,13 +218,13 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.integer().config("id"),
+                    "id": t.integer().as_id,
                     "profile": db.link(g("Profile").optional(), "userProfile"),
                 }
             ).named("User")
 
             profile = t.struct(
-                {"id": t.uuid().config("id", "auto"), "user": g("User")}
+                {"id": t.uuid().as_id.config("auto"), "user": g("User")}
             ).named("Profile")
 
             self.assert_snapshot(db, [user, profile], "one-to-one.prisma")
@@ -235,14 +235,14 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.integer().config("id"),
+                    "id": t.integer().as_id,
                     "profile": g("Profile").optional(),
                 }
             ).named("User")
 
             profile = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "user": db.link(g("User"), "userProfile"),
                 }
             ).named("Profile")
@@ -258,7 +258,7 @@ class TestPrismaSchema:
 
             tree_node = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "parent": g("TreeNode"),
                     "children": t.array(g("TreeNode")),
                 }
@@ -271,7 +271,7 @@ class TestPrismaSchema:
 
             tree_node = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "parent": db.link(g("TreeNode"), field="children"),
                     "children": db.link(t.array(g("TreeNode")), field="parent"),
                 }
@@ -282,7 +282,7 @@ class TestPrismaSchema:
         with TypeGraph(name="test_one_to_many_self_1") as g:
             tree_node = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "children": t.array(g("TreeNode")),
                     "parent": g("TreeNode"),
                 }
@@ -293,7 +293,7 @@ class TestPrismaSchema:
         with TypeGraph(name="test_one_to_many_self_1_explicit") as g:
             tree_node = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "children": db.link(t.array(g("TreeNode")), field="parent"),
                     "parent": db.link(g("TreeNode"), field="children"),
                 }
@@ -310,7 +310,7 @@ class TestPrismaSchema:
             # single-link list node
             list_node = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "next": g("ListNode").optional().config("unique"),
                     "prev": g("ListNode").optional(),
                 }
@@ -321,7 +321,7 @@ class TestPrismaSchema:
             # alternative order of fields
             list_node2 = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "prev": g("ListNodeAlt").optional(),
                     "next": g("ListNodeAlt").optional().config("unique"),
                 }
@@ -338,7 +338,7 @@ class TestPrismaSchema:
 
                 user = t.struct(
                     {
-                        "id": t.uuid().config("id", "auto"),
+                        "id": t.uuid().as_id.config("auto"),
                         "email": t.email().config("unique"),
                         "posts": t.array(g("Post")),
                         "favorite_post": t.optional(g("Post")).config("unique"),
@@ -348,7 +348,7 @@ class TestPrismaSchema:
 
                 post = t.struct(
                     {
-                        "id": t.uuid().config("id", "auto"),
+                        "id": t.uuid().as_id.config("auto"),
                         "title": t.string().min(10).max(256),
                         "content": t.string().min(1000),
                         "author": g("User"),
@@ -364,7 +364,7 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "email": t.email().config("unique"),
                     "posts": db.link(t.array(g("Post")), field="author"),
                     "favorite_post": t.optional(g("Post")).config("unique"),
@@ -373,7 +373,7 @@ class TestPrismaSchema:
 
             post = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "title": t.string().min(10).max(256),
                     "content": t.string().min(1000),
                     "author": g("User"),
@@ -389,7 +389,7 @@ class TestPrismaSchema:
 
             user = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "email": t.email().config("unique"),
                     "posts": db.link(t.array(g("Post")), field="author"),
                     "published_posts": db.link(
@@ -401,7 +401,7 @@ class TestPrismaSchema:
 
             post = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "title": t.string().min(10).max(256),
                     "content": t.string().min(1000),
                     "author": g("User"),
@@ -422,7 +422,7 @@ class TestPrismaSchema:
 
             person = t.struct(
                 {
-                    "id": t.uuid().config("id", "auto"),
+                    "id": t.uuid().as_id.config("auto"),
                     "personal_hero": db.link(
                         g("Person").optional().config("unique"), field="hero_of"
                     ),
@@ -441,14 +441,14 @@ class TestPrismaSchema:
 
                 user = t.struct(
                     {
-                        "id": t.uuid().config("id", "auto"),
+                        "id": t.uuid().as_id.config("auto"),
                         "email": t.email().config("unique"),
                     }
                 ).named("User")
 
                 post = t.struct(
                     {
-                        "id": t.uuid().config("id", "auto"),
+                        "id": t.uuid().as_id.config("auto"),
                         "title": t.string().min(5),
                         "author": g("User"),
                     }

@@ -48,6 +48,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "item",
             "policies",
             "runtime",
@@ -108,6 +109,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "item": {
               "type": "integer",
               "format": "uint32",
@@ -119,6 +123,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "policies",
             "runtime",
             "title",
@@ -177,12 +182,16 @@
               "default": {},
               "type": "object",
               "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
             }
           }
         },
         {
           "type": "object",
           "required": [
+            "as_id",
             "policies",
             "runtime",
             "title",
@@ -242,6 +251,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "minimum": {
               "type": [
                 "number",
@@ -282,6 +294,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "policies",
             "runtime",
             "title",
@@ -341,6 +354,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "minimum": {
               "type": [
                 "integer",
@@ -381,6 +397,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "policies",
             "runtime",
             "title",
@@ -440,6 +457,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "minLength": {
               "type": [
                 "integer",
@@ -477,6 +497,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "policies",
             "runtime",
             "title",
@@ -536,6 +557,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "minSize": {
               "type": [
                 "integer",
@@ -566,6 +590,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "policies",
             "properties",
             "runtime",
@@ -626,6 +651,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "properties": {
               "type": "object",
               "additionalProperties": {
@@ -646,6 +674,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "items",
             "policies",
             "runtime",
@@ -706,6 +735,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "items": {
               "type": "integer",
               "format": "uint32",
@@ -738,6 +770,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "input",
             "materializer",
             "output",
@@ -801,6 +834,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "input": {
               "type": "integer",
               "format": "uint32",
@@ -833,6 +869,7 @@
           "type": "object",
           "required": [
             "anyOf",
+            "as_id",
             "policies",
             "runtime",
             "title",
@@ -892,6 +929,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "anyOf": {
               "description": "Array of indexes of the nodes that are used as subschemes in the anyOf field of JSON Schema.",
               "type": "array",
@@ -906,6 +946,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "oneOf",
             "policies",
             "runtime",
@@ -966,6 +1007,9 @@
               "type": "object",
               "additionalProperties": true
             },
+            "as_id": {
+              "type": "boolean"
+            },
             "oneOf": {
               "description": "Array of indexes of the nodes that are used as subschemes in the oneOf field of JSON Schema.",
               "type": "array",
@@ -980,6 +1024,7 @@
         {
           "type": "object",
           "required": [
+            "as_id",
             "policies",
             "runtime",
             "title",
@@ -1038,6 +1083,9 @@
               "default": {},
               "type": "object",
               "additionalProperties": true
+            },
+            "as_id": {
+              "type": "boolean"
             }
           }
         }
@@ -1228,6 +1276,7 @@
         "hostname",
         "ean",
         "date",
+        "date-time",
         "phone"
       ]
     },

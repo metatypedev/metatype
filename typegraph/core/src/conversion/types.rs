@@ -124,5 +124,6 @@ pub fn gen_base(name: String) -> TypeNodeBase {
         policies: Vec::new(),
         runtime: 0,
         title: name,
+        as_id: false,
     }
 }

@@ -44,6 +44,7 @@ class TestDependency:
                         "policies": [],
                         "type": "object",
                         "title": "single_runtime",
+                        "as_id": False,
                         "properties": {"test": 1},
                     },
                     {
@@ -53,6 +54,7 @@ class TestDependency:
                         "rate_calls": False,
                         "type": "function",
                         "title": "f",
+                        "as_id": False,
                         "input": 2,
                         "output": 3,
                         "materializer": 0,
@@ -62,6 +64,7 @@ class TestDependency:
                         "policies": [],
                         "type": "object",
                         "title": "no_arg",
+                        "as_id": False,
                         "properties": {},
                     },
                     {
@@ -69,6 +72,7 @@ class TestDependency:
                         "policies": [],
                         "type": "object",
                         "title": "res",
+                        "as_id": False,
                         "properties": {"b": 4, "a": 7},
                     },
                     {
@@ -78,6 +82,7 @@ class TestDependency:
                         "rate_calls": False,
                         "type": "function",
                         "title": "dep_a",
+                        "as_id": False,
                         "input": 5,
                         "output": 9,
                         "materializer": 0,
@@ -87,6 +92,7 @@ class TestDependency:
                         "policies": [],
                         "type": "object",
                         "title": "deps",
+                        "as_id": False,
                         "properties": {"a1": 6, "a2": 7, "new": 8},
                     },
                     {
@@ -102,14 +108,28 @@ class TestDependency:
                         "policies": [],
                         "type": "integer",
                         "title": "integer_2",
+                        "as_id": False,
                     },
-                    {"runtime": 0, "policies": [], "type": "integer", "title": "a"},
-                    {"runtime": 0, "policies": [], "type": "integer", "title": "new"},
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "integer",
+                        "title": "a",
+                        "as_id": False,
+                    },
+                    {
+                        "runtime": 0,
+                        "policies": [],
+                        "type": "integer",
+                        "title": "new",
+                        "as_id": False,
+                    },
                     {
                         "runtime": 0,
                         "policies": [],
                         "type": "integer",
                         "title": "integer_5",
+                        "as_id": False,
                     },
                 ],
                 "runtimes": [

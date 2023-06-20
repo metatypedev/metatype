@@ -30,6 +30,8 @@ pub mod wit {
 
     #[cfg(feature = "wasm")]
     export_typegraph!(Lib);
+
+    // pub use exports::default::typegraph::{core, runtimes};
 }
 
 pub struct Lib {}

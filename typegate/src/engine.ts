@@ -15,7 +15,7 @@ import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { sha1, unsafeExtractJWT } from "./crypto.ts";
-import { ResolverError } from "./errors.ts";
+import { BadContext, ResolverError } from "./errors.ts";
 import { RateLimit } from "./rate_limiter.ts";
 import {
   ComputeStageProps,
@@ -331,7 +331,6 @@ export class Engine {
       );
       const computeTime = performance.now();
 
-      //console.log("value computed", res);
       validator(res);
       const endTime = performance.now();
 
@@ -353,26 +352,24 @@ export class Engine {
 
       return { status: 200, data: res };
     } catch (e) {
-      // deno-lint-ignore no-prototype-builtins
-      if (e.hasOwnProperty("isErr")) {
+      if (e instanceof ResolverError) {
         // field error
-        console.error("field err:", e.unwrapErr());
+        logger.error(`field err: ${e.message}`);
         return {
-          status: 200, // or 502 is nested gateway
+          status: 502,
           errors: [
             {
-              message: e.unwrapErr(),
+              message: e.message,
               locations: [],
               path: [],
               extensions: { timestamp: new Date().toISOString() },
             },
           ],
         };
-      } else if (e instanceof ResolverError) {
-        // field error
-        console.error("field err:", e);
+      } else if (e instanceof BadContext) {
+        logger.error(`context err: ${e.message}`);
         return {
-          status: 200, // or 502 is nested gateway
+          status: 403,
           errors: [
             {
               message: e.message,
@@ -384,7 +381,7 @@ export class Engine {
         };
       } else {
         // request error
-        console.error("request err:", e);
+        logger.error(`request err: ${e}`);
         return {
           status: 400,
           errors: [

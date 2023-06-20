@@ -39,6 +39,7 @@
   },
   "languageToolLinter.languageTool.ignoredWordsInWorkspace": [
     "cockroachdb",
+    "declaratively",
     "deno",
     "faas",
     "idp",
@@ -49,6 +50,8 @@
     "openapi",
     "pbac",
     "prisma",
+    "strapi",
+    "trino",
     "typegate",
     "typegates",
     "typegraphs",

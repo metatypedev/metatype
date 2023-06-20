@@ -24,7 +24,9 @@ with TypeGraph("graphql") as g:
                         "name": t.string().optional(),
                         "email": t.string().optional(),
                     }
-                ).min(1),
+                )
+                .min(1)
+                .named("UserUpdate"),
             }
         ),
         g("User"),

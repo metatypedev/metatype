@@ -6,6 +6,7 @@ import * as jwt from "jwt";
 import { getLogger } from "../../log.ts";
 import { SecretManager } from "../../typegraph.ts";
 import { Protocol } from "./protocol.ts";
+import { DenoRuntime } from "../../runtimes/deno/deno.ts";
 
 const logger = getLogger(import.meta.url);
 const encoder = new TextEncoder();
@@ -15,6 +16,7 @@ export class JWTAuth extends Protocol {
     typegraphName: string,
     auth: AuthDS,
     secretManager: SecretManager,
+    _denoRuntime: DenoRuntime,
   ): Promise<Protocol> {
     const { format, algorithm } = auth.auth_data;
     const sourceEnv = secretManager.secretOrFail(`${auth.name}_JWT`);

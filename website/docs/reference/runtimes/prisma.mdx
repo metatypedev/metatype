@@ -122,6 +122,10 @@ A one-to-many relationship must be in one of these two variants.
 | 1..1 ↔ 0..n | `g("Model2")`            | `t.array(g("Model1"))` |
 | 0..1 ↔ 0..n | `g("Model2").optional()` | `t.array(g("Model1"))` |
 
+### Many-to-many relationships
+
+Many-to-many relationships must be modelled explicitly using a join model.
+
 ### Link
 
 Explicitly declare a relationship between models. The return value of

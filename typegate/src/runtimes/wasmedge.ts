@@ -24,9 +24,9 @@ export class WasmEdgeRuntime extends Runtime {
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const { materializer, inpType, outType } = stage.props;
+    const { materializer, argumentTypes, outType } = stage.props;
     const { wasm, func } = materializer?.data ?? {};
-    const order = Object.keys(inpType?.properties ?? {});
+    const order = Object.keys(argumentTypes ?? {});
 
     // always wasi
     const resolver: Resolver = async (args) => {

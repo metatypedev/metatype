@@ -10,6 +10,7 @@ use chrono::{Duration, Utc};
 use clap::Parser;
 use common::get_version;
 use self_update::{backends::github::Update, update::UpdateStatus};
+use semver::Version;
 
 #[derive(Parser, Debug, Clone)]
 pub struct Upgrade {
@@ -76,7 +77,7 @@ pub async fn upgrade_check() -> Result<()> {
         })
         .await??;
 
-        if latest.version != current_version {
+        if Version::parse(&latest.version)? > Version::parse(current_version)? {
             println!(
                 "New meta update available: {} -> {} (use: meta upgrade)",
                 current_version, latest.version

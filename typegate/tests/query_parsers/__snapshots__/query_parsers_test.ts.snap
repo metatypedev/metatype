@@ -3,6 +3,7 @@ export const snapshot = {};
 snapshot[`GraphQL parser 1`] = `
 [
   {
+    as_id: false,
     config: {},
     policies: [],
     properties: {
@@ -15,6 +16,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {},
     policies: [
       0,
@@ -31,6 +33,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {},
     input: 3,
     materializer: 1,
@@ -45,6 +48,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "function",
   },
   {
+    as_id: false,
     config: {},
     policies: [],
     properties: {
@@ -56,14 +60,15 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: true,
     config: {},
-    format: "uuid",
     policies: [],
     runtime: 1,
     title: "user_id",
     type: "string",
   },
   {
+    as_id: false,
     config: {},
     policies: [],
     properties: {
@@ -76,6 +81,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {},
     policies: [],
     runtime: 1,
@@ -83,6 +89,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "string",
   },
   {
+    as_id: false,
     config: {},
     input: 5,
     materializer: 2,
@@ -97,6 +104,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "function",
   },
   {
+    as_id: false,
     config: {},
     policies: [],
     properties: {
@@ -109,6 +117,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {},
     input: 10,
     materializer: 3,
@@ -123,6 +132,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "function",
   },
   {
+    as_id: false,
     config: {},
     policies: [],
     properties: {
@@ -134,6 +144,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {},
     policies: [],
     properties: {
@@ -146,6 +157,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {},
     format: "uri",
     policies: [],
@@ -154,6 +166,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "string",
   },
   {
+    as_id: false,
     config: {},
     input: 11,
     materializer: 4,
@@ -168,6 +181,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "function",
   },
   {
+    as_id: false,
     config: {
       __namespace: true,
     },
@@ -184,6 +198,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {
       __namespace: true,
     },
@@ -200,6 +215,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {
       __namespace: true,
     },
@@ -214,6 +230,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {
       __namespace: true,
     },
@@ -228,6 +245,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {
       __namespace: true,
     },
@@ -241,6 +259,7 @@ snapshot[`GraphQL parser 1`] = `
     type: "object",
   },
   {
+    as_id: false,
     config: {
       __namespace: true,
     },

@@ -96,6 +96,19 @@ const createTargetField = (
   );
 };
 
+const createArgs = (
+  argTypes: Record<string, string>,
+): ReadonlyArray<ArgumentNode> => {
+  return Object.keys(argTypes).map((name) => ({
+    kind: Kind.ARGUMENT,
+    name: { kind: Kind.NAME, value: name },
+    value: {
+      kind: Kind.VARIABLE,
+      name: { kind: Kind.NAME, value: name },
+    },
+  }));
+};
+
 const createVarDef = (name: string, type: string): VariableDefinitionNode => {
   return {
     kind: Kind.VARIABLE_DEFINITION,
@@ -120,50 +133,100 @@ export interface RebuiltGraphQuery {
   vars: Array<VariableDefinitionNode>;
 }
 
-export function rebuildGraphQuery(
-  { stages, renames }: RebuildQueryParam,
-): RebuiltGraphQuery {
-  const rootSelections: Array<FieldNode> = [];
-  const forwaredVars: Array<VariableDefinitionNode> = [];
-  const forwardVar = (name: string) => {
-    if (!forwaredVars.find((varDef) => varDef.variable.name.value === name)) {
-      forwaredVars.push(createVarDef(name, stages[0].varType(name)));
-    }
-  };
+export class QueryRebuilder {
+  #rootSelections: Array<FieldNode> = [];
+  #forwardedVars: Array<VariableDefinitionNode> = [];
+  readonly #level: number;
 
-  iterParentStages(stages, (stage, children) => {
-    const field = stage.props.path[stage.props.path.length - 1];
+  constructor(
+    private stages: ComputeStage[],
+    private renames: Record<string, string>,
+  ) {
+    this.#level = stages[0].props.path.length;
+  }
+
+  #forwardVar(name: string, type?: string) {
+    if (
+      !this.#forwardedVars.find((varDef) => varDef.variable.name.value === name)
+    ) {
+      this.#forwardedVars.push(
+        createVarDef(name, type ?? this.stages[0].varType(name)),
+      );
+    }
+  }
+
+  #visitParentStage(stage: ComputeStage, children: ComputeStage[]) {
+    const isTopLevel = stage.props.path.length === this.#level;
+    const node = stage.props.path[stage.props.path.length - 1];
+    const field = isTopLevel ? this.renames[node] ?? node : node;
     const path = stage.props.materializer?.data["path"] as string[] ?? [field];
     ensure(path.length > 0, "unexpeced empty path");
 
+    const { argumentTypes } = stage.props;
+
+    // For top level selections, arguments (and referenced variables) are
+    // not forwarded. They are replaced by generated variables matching to the
+    // computed argument values. This is to ensure that injected values are
+    // properly set.
+    // Is this also necessary for non top level selections??
+    const argumentNodes: ReadonlyArray<ArgumentNode> = isTopLevel
+      ? (argumentTypes == null ? [] : createArgs(argumentTypes))
+      : (stage.props.argumentNodes ?? []);
+
     const targetField = createTargetField(
       path,
-      rootSelections,
+      this.#rootSelections,
       children.length > 0,
-      stage.props.argumentNodes ?? [],
+      argumentNodes,
     );
 
-    if (stage.props.argumentNodes) {
-      for (const argNode of stage.props.argumentNodes) {
+    if (isTopLevel) {
+      for (const [name, type] of Object.entries(argumentTypes ?? {})) {
+        this.#forwardVar(name, type);
+      }
+    } else {
+      for (const argNode of argumentNodes) {
         GraphQL.visit(argNode, {
           [Kind.VARIABLE]: (node) => {
-            forwardVar(node.name.value);
+            this.#forwardVar(node.name.value);
           },
         });
       }
     }
 
-    // children
+    if (targetField.selectionSet == null) {
+      return;
+    }
+
+    const targetSelections = targetField.selectionSet.selections as Array<
+      SelectionNode
+    >;
+
     if (children.length > 0) {
-      const { selections, vars } = rebuildGraphQuery({
-        stages: children,
-        renames,
-      });
-      (targetField.selectionSet!.selections as Array<SelectionNode>).push(
+      const { selections, vars } = QueryRebuilder.rebuild(
+        children,
+        this.renames,
+      );
+      targetSelections.push(
         ...selections,
       );
-      forwaredVars.push(...vars);
+      this.#forwardedVars.push(...vars);
     }
-  });
-  return { selections: rootSelections, vars: forwaredVars };
+  }
+
+  static rebuild(
+    stages: ComputeStage[],
+    renames: Record<string, string>,
+  ): RebuiltGraphQuery {
+    const builder = new QueryRebuilder(stages, renames);
+    iterParentStages(
+      stages,
+      (stage, children) => builder.#visitParentStage(stage, children),
+    );
+
+    return {
+      selections: builder.#rootSelections,
+      vars: builder.#forwardedVars,
+    };
+  }
 }

@@ -126,14 +126,16 @@ snapshot[`Auto-tests for graphql 2`] = `
 
 snapshot[`Auto-tests for graphql 3`] = `
 {
-  errors: [
-    {
-      extensions: {},
-      locations: [],
-      message: "Invalid state",
-      path: [],
-    },
-  ],
+  data: {
+    messages: [
+      {
+        title: "Hey",
+        user: {
+          name: "Leanne Graham",
+        },
+      },
+    ],
+  },
 }
 `;
 

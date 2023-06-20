@@ -161,13 +161,13 @@ export class ComputationEngine {
       );
     }
 
-    const { path, node, batcher } = stage.props;
+    const { path, node, batcher, excludeResult = false } = stage.props;
 
     this.cache[stageId] = batcher(res);
 
     const field = path[path.length - 1];
     // only root??
-    if (node !== "") {
+    if (node !== "" && !excludeResult) {
       (lens as Array<Record<string, unknown>>).forEach((l, i) => {
         // Objects are replaced by empty objects `{}`.
         // It will be populated by child compute stages using values in `cache`.
