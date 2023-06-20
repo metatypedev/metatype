@@ -108,6 +108,19 @@ test("Deno runtime: permissions", async (t) => {
   });
 });
 
+test("Deno runtime: import local imports", async (t) => {
+  const e = await t.pythonFile("runtimes/deno/deno_dep.py");
+  await t.should("work for local imports", async () => {
+    await gql`
+      query {
+        doAddition(a: 1, b: 2)
+      }
+    `.expectData({
+      doAddition: 3,
+    }).on(e);
+  });
+});
+
 test("Deno runtime: reloading", async (t) => {
   const tmpDir = join(testDir, "tmp");
   await Deno.mkdir(tmpDir, { recursive: true });
