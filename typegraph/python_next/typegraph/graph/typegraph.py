@@ -36,6 +36,9 @@ class typegraph:
             raise Exception("No active typegraph")
         return cls._context[-1]
 
+    def __call__(self, **kwargs: "t.func"):
+        self.expose(**kwargs)
+
     def expose(self, **kwargs: "t.func"):
         lst = list((name, fn.id) for (name, fn) in kwargs.items())
         res = core.expose(store, lst, [])

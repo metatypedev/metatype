@@ -2,16 +2,21 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from typegraph.gen.exports.core import (
+    PolicySpecSimple,
     TypeInteger,
     TypeStruct,
     TypeFunc,
     TypeBase,
     TypeProxy,
+    TypePolicy,
+    PolicyPerEffect as WitPolicyPerEffect,
+    PolicySpecPerEffect,
 )
 from typegraph.gen.types import Err
-from typing import Optional, Dict
+from typing import Optional, Dict, Self, Union, Tuple
 from typegraph.graph.typegraph import core, store
 from typegraph.runtimes.deno import Materializer
+from typegraph.policy import Policy, PolicyPerEffect
 
 
 class typedef:
@@ -25,6 +30,52 @@ class typedef:
         if isinstance(res, Err):
             raise Exception(res.value)
         return res.value
+
+    def with_policy(self, *policies: Union[Policy, PolicyPerEffect]) -> Self:
+        res = core.with_policy(
+            store,
+            TypePolicy(
+                tpe=self.id,
+                chain=[
+                    PolicySpecSimple(value=p.id)
+                    if isinstance(p, Policy)
+                    else PolicySpecPerEffect(
+                        value=WitPolicyPerEffect(
+                            create=p.create and p.create.id,
+                            update=p.update and p.update.id,
+                            delete=p.delete and p.delete.id,
+                            none=p.none and p.none.id,
+                        )
+                    )
+                    for p in policies
+                ],
+            ),
+        )
+
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        return _TypeWithPolicy(res.value, self, policies)
+
+
+class _TypeWithPolicy(typedef):
+    base: "typedef"
+    policy: Tuple[Union[Policy, PolicyPerEffect], ...]
+
+    def __init__(
+        self,
+        id: int,
+        base: "typedef",
+        policy: Tuple[Union[Policy, PolicyPerEffect], ...],
+    ):
+        super().__init__(id)
+        self.base = base
+        self.policy = policy
+
+    def __getattr__(self, name):
+        if name == "policy":
+            return self.policy
+        return getattr(self.base, name)
 
 
 class ref(typedef):

@@ -7,7 +7,7 @@ import {
 } from "../gen/exports/core.d.ts";
 import { Materializer } from "./runtimes/deno.ts";
 import { mapValues } from "std/collections/map_values.ts";
-import Policy from "./policies.ts";
+import Policy from "./policy.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;

@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import t, typegraph
+from typegraph import t, typegraph, g
 from typegraph.runtimes.deno import DenoRuntime
 
 a = t.integer()
@@ -14,11 +14,17 @@ user = t.struct({"id": t.integer(), "post": t.ref("Post")}, name="User")
 
 post = t.struct({"id": t.integer(), "author": t.ref("User")}, name="Post")
 
-with typegraph(name="test-types") as g:
+with typegraph(name="test-types") as expose:
     deno = DenoRuntime()
+    public = g.Policy.public()
+    internal = g.Policy.internal()
 
-    g.expose(
-        one=deno.func(s1, b, code="() => 12"),
-        two=deno.func(user, post, code="(user) => ({ id: 12, user })"),
-        three=deno.import_(s1, s1, name="three", module="scripts/three.ts"),
+    expose(
+        one=deno.func(s1, b, code="() => 12").with_policy(internal),
+        two=deno.func(user, post, code="(user) => ({ id: 12, user })").with_policy(
+            deno.policy("deny", "() => false")
+        ),
+        three=deno.import_(s1, s1, name="three", module="scripts/three.ts").with_policy(
+            public
+        ),
     )

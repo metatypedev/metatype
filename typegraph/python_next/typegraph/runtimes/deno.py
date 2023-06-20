@@ -8,9 +8,12 @@ from typegraph.gen.exports.runtimes import (
     Effect,
     MaterializerDenoFunc,
     MaterializerDenoImport,
+    MaterializerDenoPredefined,
 )
 from typegraph.gen.types import Err
 from typegraph.wit import runtimes, store
+from typegraph.policy import Policy
+import re
 
 
 if TYPE_CHECKING:
@@ -92,6 +95,60 @@ class DenoRuntime(Runtime):
             ),
         )
 
+    def identity(self, inp: "t.struct") -> "t.func":
+        from typegraph import t
+
+        res = runtimes.get_predefined_deno_func(
+            store, MaterializerDenoPredefined(name="identity")
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        return t.func(
+            inp,
+            inp,
+            PredefinedFunMat(id=res.value, name="identity"),
+        )
+
+    def policy(
+        self, name: str, code: str, secrets: Optional[List[str]] = None
+    ) -> Policy:
+        secrets = secrets or []
+        mat_id = runtimes.register_deno_func(
+            store,
+            MaterializerDenoFunc(code=code, secrets=secrets),
+            EffectNone(),
+        )
+
+        if isinstance(mat_id, Err):
+            raise Exception(mat_id.value)
+
+        return Policy.create(
+            name,
+            mat_id.value,
+        )
+
+    def import_policy(
+        self,
+        func_name: str,
+        module: str,
+        secrets: Optional[List[str]] = None,
+        name: Optional[str] = None,
+    ) -> Policy:
+        name = name or re.sub("[^a-zA-Z0-9_]", "_", f"__imp_{module}_{name}")
+
+        res = runtimes.import_deno_function(
+            store,
+            MaterializerDenoImport(
+                func_name=func_name, module=module, secrets=secrets or []
+            ),
+            EffectNone(),
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        return Policy.create(name, res.value)
+
 
 @dataclass
 class FunMat(Materializer):
@@ -106,3 +163,8 @@ class ImportMat(Materializer):
     name: str
     effect: Effect
     secrets: List[str]
+
+
+@dataclass
+class PredefinedFunMat(Materializer):
+    name: str

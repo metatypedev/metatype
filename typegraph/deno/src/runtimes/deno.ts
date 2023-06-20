@@ -2,7 +2,7 @@ import * as t from "../types.ts";
 // @deno-types="../../gen/typegraph_core.d.ts"
 import { runtimes } from "../../gen/typegraph_core.js";
 import { Effect } from "../../gen/exports/runtimes.d.ts";
-import Policy from "../policies.ts";
+import Policy from "../policy.ts";
 
 export class Runtime {
   constructor(public readonly id: number) {}
@@ -68,20 +68,14 @@ export class DenoRuntime extends Runtime {
   policy(name: string, _code: string): Policy;
   policy(name: string, data: Omit<DenoFunc, "effect">): Policy;
   policy(name: string, data: string | Omit<DenoFunc, "effect">): Policy {
-    if (typeof data === "string") {
-      return Policy.create(
-        name,
-        runtimes.registerDenoFunc({ code: data, secrets: [] }, { tag: "none" }),
-      );
-    } else {
-      return Policy.create(
-        name,
-        runtimes.registerDenoFunc({
-          code: data.code,
-          secrets: data.secrets ?? [],
-        }, { tag: "none" }),
-      );
-    }
+    const params = typeof data === "string"
+      ? { code: data, secrets: [] }
+      : { secrets: [], ...data };
+
+    return Policy.create(
+      name,
+      runtimes.registerDenoFunc(params, { tag: "none" }),
+    );
   }
 
   importPolicy(data: Omit<DenoImport, "effect">, name?: string): Policy {
