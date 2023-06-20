@@ -11,13 +11,17 @@ mod validation;
 
 use std::collections::HashSet;
 
-use crate::wit::core::{
-    TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy, TypeStruct, TypegraphInitParams,
-};
 use errors::Result;
 use global_store::{with_store, with_store_mut};
-use types::{Func, Integer, Proxy, Struct, Type, WithPolicy};
+use indoc::formatdoc;
+use regex::Regex;
+use types::{Boolean, Func, Integer, Proxy, Struct, Type, TypeBoolean, WithPolicy};
 use validation::validate_name;
+use wit::core::{
+    ContextCheck, Policy, PolicyId, TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy,
+    TypeStruct, TypegraphInitParams,
+};
+use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
 pub mod wit {
     use super::*;
@@ -60,6 +64,18 @@ impl wit::core::Core for Lib {
         }))
     }
 
+    fn booleanb(base: TypeBase) -> Result<TypeId> {
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| {
+                Type::Boolean(Boolean {
+                    id,
+                    base,
+                    data: TypeBoolean,
+                })
+            })
+        }))
+    }
+
     fn structb(data: TypeStruct, base: TypeBase) -> Result<TypeId> {
         let mut prop_names = HashSet::new();
         for (name, _) in data.props.iter() {
@@ -91,6 +107,60 @@ impl wit::core::Core for Lib {
 
     fn with_policy(data: TypePolicy) -> Result<TypeId> {
         with_store_mut(|s| Ok(s.add_type(|id| Type::WithPolicy(WithPolicy { id, data }))))
+    }
+
+    fn register_policy(pol: Policy) -> Result<PolicyId> {
+        with_store_mut(|s| s.register_policy(pol))
+    }
+
+    fn register_context_policy(key: String, check: ContextCheck) -> Result<(PolicyId, String)> {
+        let name = match &check {
+            ContextCheck::Value(v) => format!("__ctx_{}_{}", key, v),
+            ContextCheck::Pattern(p) => format!("__ctx_p_{}_{}", key, p),
+        };
+        let name = Regex::new("[^a-zA-Z0-9_]")
+            .unwrap()
+            .replace_all(&name, "_")
+            .to_string();
+
+        let check = match check {
+            ContextCheck::Value(val) => {
+                format!("value === {}", serde_json::to_string(&val).unwrap())
+            }
+            ContextCheck::Pattern(pattern) => {
+                format!(
+                    "new RegExp({}).test(value)",
+                    serde_json::to_string(&pattern).unwrap()
+                )
+            }
+        };
+
+        let key = serde_json::to_string(&key).unwrap();
+
+        let code = formatdoc! {r#"
+            (_, {{ context }}) => {{
+                const chunks = {key}.split(".");
+                let value = context;
+                for (const chunk of chunks) {{
+                    value = value?.[chunk];
+                }}
+                return {check};
+            }}
+        "# };
+
+        let mat_id = Lib::register_deno_func(
+            MaterializerDenoFunc {
+                code,
+                secrets: vec![],
+            },
+            wit::runtimes::Effect::None,
+        )?;
+
+        Lib::register_policy(Policy {
+            name: name.clone(),
+            materializer: mat_id,
+        })
+        .map(|id| (id, name))
     }
 
     fn get_type_repr(type_id: TypeId) -> Result<String> {

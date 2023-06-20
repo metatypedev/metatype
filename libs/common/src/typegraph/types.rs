@@ -284,6 +284,24 @@ impl TypeNode {
         }
     }
 
+    pub fn base_mut(&mut self) -> &mut TypeNodeBase {
+        use TypeNode::*;
+        match self {
+            Optional { base, .. }
+            | Boolean { base, .. }
+            | Number { base, .. }
+            | Integer { base, .. }
+            | String { base, .. }
+            | File { base, .. }
+            | Object { base, .. }
+            | Array { base, .. }
+            | Function { base, .. }
+            | Union { base, .. }
+            | Either { base, .. }
+            | Any { base, .. } => base,
+        }
+    }
+
     pub fn type_name(&self) -> &'static str {
         use TypeNode::*;
         match self {

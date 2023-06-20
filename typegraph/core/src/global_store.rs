@@ -1,13 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::{
-    errors::{self, Result},
-    runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime},
-    types::{Type, TypeFun},
-    wit::core::{Error as TgError, RuntimeId, TypeId},
-    wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId},
-};
+use crate::errors::{self, Result};
+use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
+use crate::types::{Type, TypeFun};
+use crate::wit::core::{Error as TgError, Policy, PolicyId, RuntimeId, TypeId};
+use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use std::{cell::RefCell, collections::HashMap};
 
 #[derive(Default)]
@@ -17,6 +15,8 @@ pub struct Store {
 
     pub runtimes: Vec<Runtime>,
     pub materializers: Vec<Materializer>,
+    pub policies: Vec<Policy>,
+
     deno_runtime: RuntimeId,
     predefined_deno_functions: HashMap<String, MaterializerId>,
     deno_modules: HashMap<String, MaterializerId>,
@@ -67,7 +67,7 @@ impl Store {
     pub fn get_type(&self, type_id: TypeId) -> Result<&Type, TgError> {
         self.types
             .get(type_id as usize)
-            .ok_or_else(|| errors::type_not_found(type_id))
+            .ok_or_else(|| errors::object_not_found("type", type_id))
     }
 
     pub fn get_type_by_name(&self, name: &str) -> Option<TypeId> {
@@ -97,7 +97,7 @@ impl Store {
     pub fn get_runtime(&self, id: RuntimeId) -> Result<&Runtime> {
         self.runtimes
             .get(id as usize)
-            .ok_or_else(|| errors::runtime_not_found(id))
+            .ok_or_else(|| errors::object_not_found("runtime", id))
     }
 
     pub fn get_deno_runtime(&self) -> RuntimeId {
@@ -110,10 +110,26 @@ impl Store {
         id
     }
 
-    pub fn get_materializer(&self, id: MaterializerId) -> Result<&Materializer, TgError> {
+    pub fn get_materializer(&self, id: MaterializerId) -> Result<&Materializer> {
         self.materializers
             .get(id as usize)
-            .ok_or_else(|| errors::materializer_not_found(id))
+            .ok_or_else(|| errors::object_not_found("materializer", id))
+    }
+
+    pub fn register_policy(&mut self, policy: Policy) -> Result<PolicyId> {
+        let id = self.policies.len() as u32;
+        if self.policies.iter().any(|p| p.name == policy.name) {
+            Err(errors::duplicate_policy_name(&policy.name))
+        } else {
+            self.policies.push(policy);
+            Ok(id)
+        }
+    }
+
+    pub fn get_policy(&self, id: PolicyId) -> Result<&Policy> {
+        self.policies
+            .get(id as usize)
+            .ok_or_else(|| errors::object_not_found("policy", id))
     }
 
     pub fn get_predefined_deno_function(&mut self, name: String) -> Result<MaterializerId> {

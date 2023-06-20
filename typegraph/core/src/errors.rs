@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::core::{Error as TgError, MaterializerId, RuntimeId, TypeId};
+use crate::wit::core::Error as TgError;
 
 pub type Result<T, E = TgError> = std::result::Result<T, E>;
 
@@ -43,22 +43,18 @@ pub fn duplicate_export_name(name: &str) -> TgError {
     format!("duplicate export name '{name}'")
 }
 
-pub fn type_not_found(type_id: TypeId) -> TgError {
-    format!("type #{type_id} not found")
-}
-
 pub fn unregistered_type_name(name: &str) -> TgError {
     format!("type name '{name}' has not been registered")
 }
 
-pub fn runtime_not_found(id: RuntimeId) -> TgError {
-    format!("runtime #{id} not found")
-}
-
-pub fn materializer_not_found(id: MaterializerId) -> TgError {
-    format!("materializer #{id} not found")
+pub fn object_not_found(kind: &str, id: u32) -> TgError {
+    format!("{kind} #{id} not found")
 }
 
 pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {
     format!("unknown predefined function {name} for runtime {runtime}")
+}
+
+pub fn duplicate_policy_name(name: &str) -> TgError {
+    format!("duplicate policy name '{name}'")
 }

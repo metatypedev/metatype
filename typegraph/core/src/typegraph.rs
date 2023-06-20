@@ -4,25 +4,31 @@
 use crate::conversion::runtimes::{convert_materializer, convert_runtime};
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::with_store;
-use crate::types::{Type, TypeFun};
+use crate::types::{Type, TypeFun, WrapperTypeData};
 use crate::validation::validate_name;
 use crate::{
     errors::{self, Result},
     global_store::Store,
 };
-use common::typegraph::{Materializer, ObjectTypeData, TGRuntime, TypeMeta, TypeNode, Typegraph};
+use common::typegraph::{
+    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, TGRuntime,
+    TypeMeta, TypeNode, Typegraph,
+};
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
-use crate::wit::core::{Error as TgError, MaterializerId, RuntimeId, TypeId, TypegraphInitParams};
+use crate::wit::core::{
+    Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypeId, TypegraphInitParams,
+};
 
 #[derive(Default)]
 struct IdMapping {
     types: HashMap<u32, u32>,
     runtimes: HashMap<u32, u32>,
     materializers: HashMap<u32, u32>,
+    policies: HashMap<u32, u32>,
 }
 
 #[derive(Default)]
@@ -32,6 +38,7 @@ pub struct TypegraphContext {
     types: Vec<Option<TypeNode>>,
     runtimes: Vec<TGRuntime>,
     materializers: Vec<Option<Materializer>>,
+    policies: Vec<Policy>,
     mapping: IdMapping,
 }
 
@@ -115,7 +122,7 @@ pub fn finalize() -> Result<String> {
             .collect::<Result<Vec<_>>>()?,
         runtimes: ctx.runtimes,
         materializers: ctx.materializers.into_iter().map(|m| m.unwrap()).collect(),
-        policies: Vec::new(),
+        policies: ctx.policies,
         meta: ctx.meta,
         path: None,
         deps: Default::default(),
@@ -154,6 +161,10 @@ impl TypegraphContext {
             }
             let type_id = s.resolve_proxy(type_id)?;
             let tpe = s.get_type(type_id)?;
+            let tpe = match tpe {
+                Type::WithPolicy(t) => t.data.get_wrapped_type(s).unwrap(),
+                _ => tpe,
+            };
             if !matches!(tpe, Type::Func(_)) {
                 return Err(errors::invalid_export_type(&name, &tpe.to_string()));
             }
@@ -207,6 +218,52 @@ impl TypegraphContext {
                 Ok(idx as MaterializerId)
             }
             Entry::Occupied(e) => Ok(*e.get()),
+        }
+    }
+
+    pub fn register_policy_chain(&mut self, chain: &[PolicySpec]) -> Result<Vec<PolicyIndices>> {
+        chain
+            .iter()
+            .map(|p| -> Result<_> {
+                Ok(match p {
+                    PolicySpec::Simple(id) => PolicyIndices::Policy(self.register_policy(*id)?),
+                    PolicySpec::PerEffect(policies) => {
+                        PolicyIndices::EffectPolicies(PolicyIndicesByEffect {
+                            none: policies
+                                .none
+                                .as_ref()
+                                .map(|id| self.register_policy(*id))
+                                .transpose()?,
+                            create: policies
+                                .create
+                                .as_ref()
+                                .map(|id| self.register_policy(*id))
+                                .transpose()?,
+                            delete: policies
+                                .delete
+                                .as_ref()
+                                .map(|id| self.register_policy(*id))
+                                .transpose()?,
+                            update: policies
+                                .update
+                                .as_ref()
+                                .map(|id| self.register_policy(*id))
+                                .transpose()?,
+                        })
+                    }
+                })
+            })
+            .collect()
+    }
+
+    pub fn register_policy(&mut self, id: u32) -> Result<PolicyId> {
+        if let Some(idx) = self.mapping.policies.get(&id) {
+            Ok(*idx)
+        } else {
+            let converted = with_store(|s| s.get_policy(id)?.convert(self))?;
+            let idx = self.policies.len();
+            self.policies.push(converted);
+            Ok(idx as PolicyId)
         }
     }
 

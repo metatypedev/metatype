@@ -2,6 +2,7 @@ import * as t from "../types.ts";
 // @deno-types="../../gen/typegraph_core.d.ts"
 import { runtimes } from "../../gen/typegraph_core.js";
 import { Effect } from "../../gen/exports/runtimes.d.ts";
+import Policy from "../policies.ts";
 
 export class Runtime {
   constructor(public readonly id: number) {}
@@ -49,6 +50,54 @@ export class DenoRuntime extends Runtime {
       new ImportMat(matId, name, module, secrets, effect),
     );
   }
+
+  identity<
+    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
+    I extends t.Struct<P> = t.Struct<P>,
+  >(inp: I): t.Func<P, I, I, PredefinedFuncMat> {
+    return t.func(
+      inp,
+      inp,
+      new PredefinedFuncMat(
+        runtimes.getPredefinedDenoFunc({ name: "identity" }),
+        "identity",
+      ),
+    );
+  }
+
+  policy(name: string, _code: string): Policy;
+  policy(name: string, data: Omit<DenoFunc, "effect">): Policy;
+  policy(name: string, data: string | Omit<DenoFunc, "effect">): Policy {
+    if (typeof data === "string") {
+      return Policy.create(
+        name,
+        runtimes.registerDenoFunc({ code: data, secrets: [] }, { tag: "none" }),
+      );
+    } else {
+      return Policy.create(
+        name,
+        runtimes.registerDenoFunc({
+          code: data.code,
+          secrets: data.secrets ?? [],
+        }, { tag: "none" }),
+      );
+    }
+  }
+
+  importPolicy(data: Omit<DenoImport, "effect">, name?: string): Policy {
+    const policyName = name ?? `__imp_${data.module}_${data.name}`.replace(
+      /[^a-zA-Z0-9_]/g,
+      "_",
+    );
+    return Policy.create(
+      policyName,
+      runtimes.importDenoFunction({
+        funcName: data.name,
+        module: data.module,
+        secrets: data.secrets ?? [],
+      }, { tag: "none" }),
+    );
+  }
 }
 
 export class FunMat extends Materializer {
@@ -70,6 +119,12 @@ export class ImportMat extends Materializer {
     public readonly secrets: Array<string>,
     public readonly effect: Effect,
   ) {
+    super(id);
+  }
+}
+
+export class PredefinedFuncMat extends Materializer {
+  constructor(id: number, public readonly name: string) {
     super(id);
   }
 }

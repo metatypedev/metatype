@@ -1,4 +1,4 @@
-import { t, typegraph } from "../../../deno/src/mod.ts";
+import { g, t, typegraph } from "../../../deno/src/mod.ts";
 import { DenoRuntime } from "../../../deno/src/runtimes/deno.ts";
 
 const a = t.integer();
@@ -17,19 +17,22 @@ const post = t.struct({
   author: user,
 }, { name: "Post" });
 
-typegraph("test-types", (g) => {
+typegraph("test-types", (expose) => {
   const deno = new DenoRuntime();
-  g.expose({
+  const pub = g.Policy.public_();
+  const internal = g.Policy.internal();
+
+  expose({
     one: deno.func(s1, b, {
       code: "() => 12",
-    }),
+    }).withPolicy(internal),
     two: deno.func(user, post, {
       code: "(user) => ({ id: 12, user })",
-    }),
+    }).withPolicy(deno.policy("deny", "() => false")),
     three: deno.import(
       s1,
       s1,
       { name: "three", module: "scripts/three.ts" },
-    ),
+    ).withPolicy(pub),
   });
 });

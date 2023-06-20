@@ -9,7 +9,7 @@ use crate::errors::Result;
 use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy, TypeStruct,
+    PolicySpec, TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy, TypeStruct,
 };
 
 pub trait TypeData {
@@ -182,8 +182,35 @@ impl TypeData for TypeFunc {
 }
 
 impl TypeData for TypePolicy {
-    fn get_display_params_into(&self, _params: &mut Vec<String>) {
-        todo!()
+    fn get_display_params_into(&self, params: &mut Vec<String>) {
+        params.push(format!(
+            "policy='[{}]'",
+            self.chain
+                .iter()
+                .map(|p| match p {
+                    PolicySpec::Simple(pol_id) => format!(
+                        "'{}'",
+                        with_store(|s| s.get_policy(*pol_id).unwrap().name.clone())
+                    ),
+                    PolicySpec::PerEffect(p) => with_store(|s| format!(
+                        "{{create='{}', update='{}', delete='{}', none='{}'}}",
+                        p.create
+                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
+                            .unwrap_or("null"),
+                        p.update
+                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
+                            .unwrap_or("null"),
+                        p.delete
+                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
+                            .unwrap_or("null"),
+                        p.none
+                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
+                            .unwrap_or("null"),
+                    )),
+                })
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
     }
 
     fn variant_name(&self) -> String {

@@ -29,6 +29,8 @@ interface core {
 
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
 
+    booleanb: func(base: type-base) -> result<type-id, error>
+
     record type-struct {
         props: list<tuple<string, type-id>>,
     }
@@ -44,24 +46,40 @@ interface core {
     }
     funcb: func(data: type-func) -> result<type-id, error>
 
-    record policy-per-effect {
-        none: materializer-id,
-        create: materializer-id,
-        update: materializer-id,
-        delete: materializer-id,
+
+    type policy-id = u32
+
+    record policy {
+        name: string,
+        materializer: materializer-id,
     }
 
-    variant policy {
-        single(materializer-id),
+    record policy-per-effect {
+        none: option<policy-id>,
+        create: option<policy-id>,
+        update: option<policy-id>,
+        delete: option<policy-id>,
+    }
+
+    variant policy-spec {
+        simple(policy-id),
         per-effect(policy-per-effect),
     }
 
-    with-policy: func(data: type-policy) -> result<type-id, error>
-
     record type-policy {
         tpe: type-id,
-        policy: type-id,
+        chain: list<policy-spec>,
     }
+
+    register-policy: func(pol: policy) -> result<policy-id, error>
+
+    with-policy: func(data: type-policy) -> result<type-id, error>
+
+    variant context-check {
+        value(string),
+        pattern(string),
+    }
+    register-context-policy: func(key: string, check: context-check) -> result<tuple<policy-id, string>, error>
 
     expose: func(fns: list<tuple<string, type-id>>, namespace: list<string>) -> result<_, error>
     

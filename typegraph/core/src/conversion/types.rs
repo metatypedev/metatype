@@ -95,14 +95,23 @@ impl TypeConversion for Func {
 }
 
 impl TypeConversion for Proxy {
-    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
-        todo!()
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        with_store(|s| -> Result<_> {
+            let tpe = s.resolve_proxy(self.id).and_then(|id| s.get_type(id))?;
+            tpe.convert(ctx)
+        })
     }
 }
 
 impl TypeConversion for WithPolicy {
-    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
-        todo!()
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        with_store(|s| -> Result<_> {
+            let tpe = s.get_type(self.data.tpe)?;
+            let mut type_node = tpe.convert(ctx)?;
+            let base = type_node.base_mut();
+            base.policies = ctx.register_policy_chain(&self.data.chain)?;
+            Ok(type_node)
+        })
     }
 }
 
