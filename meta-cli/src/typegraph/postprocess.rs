@@ -8,10 +8,11 @@ use crate::config::Config;
 use super::utils::{map_from_object, object_from_map};
 use anyhow::{bail, Result};
 use colored::Colorize;
+use common::archive::archive;
 use common::typegraph::validator::validate_typegraph;
 use common::typegraph::{Materializer, Typegraph};
 use log::error;
-use typescript::parser::{transform_module, transform_script};
+use typescript::parser::transform_script;
 
 pub trait PostProcessor {
     fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()>;
@@ -101,6 +102,15 @@ pub mod deno_rt {
         }
     }
 
+    fn compress_and_encode(main_path: &Path) -> String {
+        let parent = main_path.parent().unwrap().display().to_string();
+        let enc_content = match archive(parent).unwrap() {
+            Some(b64) => b64,
+            None => "".to_string(),
+        };
+        format!("base64:{}", enc_content)
+    }
+
     fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
         match mat.name.as_str() {
             "function" => {
@@ -113,7 +123,9 @@ pub mod deno_rt {
                 let mut mat_data: ModuleMatData = object_from_map(std::mem::take(&mut mat.data))?;
                 if !mat_data.code.starts_with("file:") {
                     // TODO check imported functions exist
-                    mat_data.code = transform_module(mat_data.code)?;
+                    let path = mat_data.code.strip_prefix("file:").unwrap();
+                    let path = Path::new(path);
+                    mat_data.code = compress_and_encode(path);
                 }
                 mat.data = map_from_object(mat_data)?;
             }
@@ -155,8 +167,7 @@ pub mod deno_rt {
                 };
 
                 let path = Path::new(path).to_owned();
-                let code = std::fs::read_to_string(&path)?;
-                mat_data.code = transform_module(code)?;
+                mat_data.code = compress_and_encode(&path);
                 mat.data = map_from_object(mat_data)?;
                 tg.deps.push(path);
             }
