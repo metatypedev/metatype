@@ -140,18 +140,34 @@ jobs:
           poetry install
           pytest -s tests
 
-  test-typegraph2:
+  test-typegraph-next:
     needs:
       - changes
     if: ${{ needs.changes.outputs.typegraph == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - run: cargo test --package typegraph_core
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: ${{ env.DENO_VERSION }}
+      - run: |
+          cd typegraph/python_next
+          python3 -m venv .venv
+          source .venv/bin/activate
+          poetry install
+          cd ../..
+          cargo run --package meta-cli --feature typegraph-next
+          cargo test --package typegraph_core
 
   test-meta-cli:
     needs: changes
@@ -349,7 +365,7 @@ jobs:
           cd typegraph/python
           poetry install --sync
           cd ../..
-          cargo test --locked --exclude meta-cli --exclude native --workspace
+          cargo test --locked --exclude meta-cli --exclude native --exclude typegraph_core --workspace
 
   test-docker:
     needs: changes
