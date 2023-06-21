@@ -16,6 +16,8 @@ env:
   DENO_VERSION: "1.34.3"
   PNPM_VERSION: "8.6.0"
   NODE_VERSION: "19.8.1"
+  WASM_TOOLS_VERSION: "1.0.33"
+  JCO_VERSION: "0.7.0"
 
 jobs:
   changes:
@@ -160,14 +162,25 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: ${{ env.DENO_VERSION }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - run: |
+          cargo install wasm-tools --version ${{ env.WASM_TOOLS_VERSION }} --locked
+          npm install --global @bytecodealliance/jco@${{ env.JCO_VERSION }}
+          cargo build --package typegraph_core --target wasm32-unknown-unknown --features wasm
+          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o target/debug/typegraph_core.wasm
+          jco transpile target/debug/typegraph_core.wasm -o typegraph/deno/gen --no-nodejs-compat
+          deno run -A typegraph/deno/dev/fix-declarations.ts
+          bash typegraph/deno/fix-declarations.sh
           cd typegraph/python_next
           python3 -m venv .venv
           source .venv/bin/activate
-          poetry install
+          poetry install --sync
+          python3 -m wasmtime.bindgen ../../target/debug/typegraph_core.wasm --out-dir typegraph/gen
           cd ../..
-          cargo run --package meta-cli --feature typegraph-next
-          cargo test --package typegraph_core
+          cargo run --locked --package meta-cli --feature typegraph-next -- --help
+          cargo test --locked --package typegraph_core
 
   test-meta-cli:
     needs: changes
