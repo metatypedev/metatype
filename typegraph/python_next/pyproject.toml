@@ -16,6 +16,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 wasmtime = "^9.0.0"
+typing-extensions = "^4.6.3"
 
 [tool.pyright]
 venvPath = "."

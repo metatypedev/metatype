@@ -13,7 +13,8 @@ from typegraph.gen.exports.core import (
     PolicySpecPerEffect,
 )
 from typegraph.gen.types import Err
-from typing import Optional, Dict, Self, Union, Tuple
+from typing import Optional, Dict, Union, Tuple
+from typing_extensions import Self
 from typegraph.graph.typegraph import core, store
 from typegraph.runtimes.deno import Materializer
 from typegraph.policy import Policy, PolicyPerEffect

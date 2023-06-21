@@ -3,7 +3,7 @@
 [[package]]
 name = "typegraph"
 version = "0.1.10-dev.0"
-description = "Open source, low-code backend platform for developers — build modular APIs with zero-trust and serverless deployment, no matter where and how (legacy) systems are."
+description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
 category = "main"
 optional = false
 python-versions = ">=3.8,<4.0"
@@ -11,11 +11,24 @@ files = []
 develop = true
 
 [package.dependencies]
+typing-extensions = "^4.6.3"
 wasmtime = "^9.0.0"
 
 [package.source]
 type = "directory"
 url = "../../python_next"
+
+[[package]]
+name = "typing-extensions"
+version = "4.6.3"
+description = "Backported and Experimental Type Hints for Python 3.7+"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "typing_extensions-4.6.3-py3-none-any.whl", hash = "sha256:88a4153d8505aabbb4e13aacb7c486c2b4a33ca3b3f807914a9b4c844c471c26"},
+    {file = "typing_extensions-4.6.3.tar.gz", hash = "sha256:d91d5919357fe7f681a9f2b5b4cb2a5f1ef0a1e9f59c4d8ff0d3491e05c0ffd5"},
+]
 
 [[package]]
 name = "wasmtime"
