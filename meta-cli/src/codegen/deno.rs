@@ -466,6 +466,7 @@ mod tests {
     use std::sync::Arc;
 
     use normpath::PathExt;
+    use pathdiff::diff_paths;
 
     use super::*;
     use crate::config::Config;
