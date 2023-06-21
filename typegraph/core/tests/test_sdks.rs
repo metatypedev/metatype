@@ -4,7 +4,7 @@
 use insta::{assert_snapshot, glob};
 use pathdiff::diff_paths;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 fn serialize(path: &Path) -> String {
     let out = Command::new("cargo")
@@ -22,6 +22,7 @@ fn serialize(path: &Path) -> String {
         ])
         .arg(path)
         .current_dir(&get_test_dir())
+        .stderr(Stdio::inherit())
         .output()
         .expect("failed to execute process")
         .stdout;

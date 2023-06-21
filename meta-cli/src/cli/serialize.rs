@@ -89,6 +89,9 @@ impl Action for Serialize {
         for path in paths {
             match loader.load_file(&path).await {
                 LoaderResult::Loaded(tgs) => {
+                    if tgs.is_empty() {
+                        log::warn!("no typegraph");
+                    }
                     for tg in tgs.into_iter() {
                         loaded.push(tg);
                     }
