@@ -5,7 +5,6 @@ use anyhow::{bail, Context, Result};
 use colored::Colorize;
 use common::typegraph::{TypeNode, Typegraph};
 use log::{info, trace};
-use pathdiff::diff_paths;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::cell::RefCell;
@@ -39,10 +38,10 @@ where
     let cg = Codegen::new(tg, base_dir);
     let codes = cg.codegen()?;
     if codes.is_empty() {
+        info!("Codegen has generated no code.");
         return Ok(false);
     }
 
-    let current_dir = std::env::current_dir().unwrap();
     for code in codes.into_iter() {
         let parent_folder = Path::new(&code.path).parent().unwrap();
         fs::create_dir_all(parent_folder).unwrap();
@@ -53,16 +52,17 @@ where
             .open(&code.path)
             .context(format!("could not open output file: {:?}", code.path))?;
         write!(file, "\n{code}\n", code = code.code)?;
-        let rel_path = diff_paths(&code.path, &current_dir).unwrap();
+
         info!(
             "{} Successfully added new function(s) in {:?}.",
             "✓".green(),
-            rel_path
+            code.path,
         );
     }
     Ok(true)
 }
 
+#[derive(Debug)]
 struct ModuleCode {
     path: PathBuf,
     code: String,
@@ -153,8 +153,9 @@ impl<'a> Codegen<'a> {
                 }
                 if mat.name == "import_function" {
                     let mat_data: ImportFuncMatData =
-                        serde_json::from_value(serde_json::to_value(mat.data)?)
-                            .expect("invalid materializer data for function materializer");
+                        serde_json::from_value(serde_json::to_value(mat.data).with_context(
+                            || "invalid materializer data for function import".to_string(),
+                        )?)?;
                     let module_mat = &self.tg.materializers[mat_data.module as usize];
                     let path: String =
                         serde_json::from_value(module_mat.data.get("code").unwrap().clone())
@@ -167,14 +168,7 @@ impl<'a> Codegen<'a> {
                             gen_list.push(GenItem {
                                 input: data.input,
                                 output: data.output,
-                                path: self
-                                    .ts_modules
-                                    .get(path)
-                                    .unwrap()
-                                    .path
-                                    .to_str()
-                                    .unwrap()
-                                    .to_string(),
+                                path: path.to_string(),
                                 name: mat_data.name.clone(),
                             });
                         }
@@ -472,6 +466,7 @@ mod tests {
     use std::sync::Arc;
 
     use normpath::PathExt;
+    use pathdiff::diff_paths;
 
     use super::*;
     use crate::config::Config;

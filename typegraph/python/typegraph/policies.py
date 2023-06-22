@@ -64,7 +64,6 @@ effect_values = ["none"] + [e.value for e in EffectType]
 class EffectPolicies(Node):
     none: Optional[Policy]
     update: Optional[Policy]
-    upsert: Optional[Policy]
     create: Optional[Policy]
     delete: Optional[Policy]
 

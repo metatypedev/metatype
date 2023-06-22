@@ -35,7 +35,7 @@ pub struct Typegraph {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Cors {
     pub allow_origin: Vec<String>,
     pub allow_headers: Vec<String>,
@@ -74,7 +74,7 @@ pub struct Rate {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct TypeMeta {
     pub secrets: Vec<String>,
     pub cors: Cors,
@@ -89,7 +89,6 @@ pub struct TypeMeta {
 pub enum EffectType {
     Create,
     Update,
-    Upsert,
     Delete,
     None,
 }
@@ -97,8 +96,8 @@ pub enum EffectType {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Effect {
-    effect: Option<EffectType>,
-    idempotent: bool,
+    pub effect: Option<EffectType>,
+    pub idempotent: bool,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -132,7 +131,6 @@ pub struct PolicyIndicesByEffect {
     pub create: Option<u32>,
     pub delete: Option<u32>,
     pub update: Option<u32>,
-    pub upsert: Option<u32>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

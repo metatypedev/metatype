@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::{
-    config::{Config, ModuleType},
+    config::{Config, ModuleType, TypegraphLoaderConfig},
     fs::is_hidden,
 };
 use anyhow::Result;
@@ -14,7 +14,7 @@ use ignore::{gitignore::Gitignore, Match, WalkBuilder};
 use log::{debug, info};
 use pathdiff::diff_paths;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashSet,
     path::{Path, PathBuf},
     sync::Arc,
 };
@@ -71,44 +71,76 @@ impl Discovery {
     }
 }
 
+impl TryFrom<&Path> for ModuleType {
+    type Error = ();
+
+    fn try_from(path: &Path) -> std::result::Result<Self, Self::Error> {
+        match path.extension() {
+            Some(ext) if ext == "ts" => Ok(ModuleType::Deno),
+            Some(ext) if ext == "py" => Ok(ModuleType::Python),
+            _ => Err(()),
+        }
+    }
+}
+
 pub struct GlobFilter {
     include_set: GlobSet,
     exclude_set: GlobSet,
 }
 
+struct SpecificFilters {
+    matcher: RegexMatcher,
+    globs: GlobFilter,
+}
+
 pub struct FileFilter {
     base_dir: PathBuf,
-    globs: HashMap<ModuleType, GlobFilter>,
     gitignore: Option<Gitignore>,
     exclude_hidden: bool,
-    matcher: RegexMatcher,
+    python: SpecificFilters,
+    deno: SpecificFilters,
 }
 
 impl FileFilter {
-    pub fn new(config: &Config) -> Result<Self> {
-        let mut globs = HashMap::new();
-        let python_loader_config = config.loader(ModuleType::Python);
-        globs.insert(
-            ModuleType::Python,
-            GlobFilter {
-                include_set: python_loader_config.get_include_set()?,
-                exclude_set: python_loader_config.get_exclude_set()?,
+    fn python_filters(config: &TypegraphLoaderConfig) -> Result<SpecificFilters> {
+        #[cfg(feature = "typegraph-next")]
+        let matcher = RegexMatcher::new_line_matcher("with\\s+typegraph")?;
+        #[cfg(not(feature = "typegraph-next"))]
+        let matcher = RegexMatcher::new_line_matcher("with\\s+TypeGraph")?;
+
+        Ok(SpecificFilters {
+            matcher,
+            globs: GlobFilter {
+                include_set: config.get_include_set()?,
+                exclude_set: config.get_exclude_set()?,
             },
-        );
+        })
+    }
+
+    fn deno_filters(config: &TypegraphLoaderConfig) -> Result<SpecificFilters> {
+        Ok(SpecificFilters {
+            matcher: RegexMatcher::new_line_matcher("^typegraph\\(")?,
+            globs: GlobFilter {
+                include_set: config.get_include_set()?,
+                exclude_set: config.get_exclude_set()?,
+            },
+        })
+    }
+
+    pub fn new(config: &Config) -> Result<Self> {
         let ignore = config.base_dir.join(".gitignore");
         let gitignore = if ignore.exists() {
             Some(Gitignore::new(ignore).0)
         } else {
             None
         };
-        let matcher = RegexMatcher::new_line_matcher("with\\s+TypeGraph")?;
 
         Ok(Self {
             base_dir: config.base_dir.clone(),
-            globs,
             gitignore,
             exclude_hidden: true,
-            matcher,
+            python: Self::python_filters(config.loader(ModuleType::Python))?,
+            deno: Self::deno_filters(config.loader(ModuleType::Deno))?,
         })
     }
 
@@ -132,20 +164,66 @@ impl FileFilter {
             return true;
         }
 
-        let globs = self.globs.get(&ModuleType::Python).unwrap();
+        match ModuleType::try_from(path) {
+            Ok(ModuleType::Python) => self.is_python_module_excluded(path, &rel_path, searcher),
 
-        if !globs.include_set.is_empty() && !globs.include_set.is_match(&rel_path) {
+            Ok(ModuleType::Deno) => self.is_deno_module_excluded(path, &rel_path, searcher),
+            Err(_) => true,
+        }
+    }
+
+    fn is_python_module_excluded(
+        &self,
+        path: &Path,
+        rel_path: &Path,
+        searcher: &mut Searcher,
+    ) -> bool {
+        let globs = &self.python.globs;
+
+        if !globs.include_set.is_empty() && !globs.include_set.is_match(rel_path) {
             return true;
         }
 
-        if !globs.exclude_set.is_empty() && globs.exclude_set.is_match(&rel_path) {
+        if !globs.exclude_set.is_empty() && globs.exclude_set.is_match(rel_path) {
             return true;
         }
 
         let mut ret = true;
         searcher
             .search_path(
-                &self.matcher,
+                &self.python.matcher,
+                path,
+                UTF8(|_, _| {
+                    ret = false;
+                    Ok(true)
+                }),
+            )
+            .unwrap();
+
+        ret
+    }
+
+    fn is_deno_module_excluded(
+        &self,
+        path: &Path,
+        rel_path: &Path,
+        searcher: &mut Searcher,
+    ) -> bool {
+        let globs = &self.deno.globs;
+
+        if !globs.include_set.is_empty() && !globs.include_set.is_match(rel_path) {
+            return true;
+        }
+
+        if !globs.exclude_set.is_empty() && globs.exclude_set.is_match(rel_path) {
+            return true;
+        }
+
+        let mut ret = true;
+
+        searcher
+            .search_path(
+                &self.deno.matcher,
                 path,
                 UTF8(|_, _| {
                     ret = false;

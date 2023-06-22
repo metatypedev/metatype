@@ -1,7 +1,7 @@
 from typegraph import TypeGraph, effects, injection, policies, t
+from typegraph.providers.prisma import PrismaRuntime
 from typegraph.runtimes import deno
 from typegraph.runtimes.graphql import GraphQLRuntime
-from typegraph.providers.prisma import PrismaRuntime
 
 with TypeGraph("injection") as g:
     req = t.struct(
@@ -93,7 +93,7 @@ with TypeGraph("injection") as g:
             req2, req2, deno.PredefinedFunMat("identity", effect=effects.update())
         ),
         effect_upsert=t.func(
-            req2, req2, deno.PredefinedFunMat("identity", effect=effects.upsert())
+            req2, req2, deno.PredefinedFunMat("identity", effect=effects.update())
         ),
         user=gql.query(
             t.struct({"id": t.integer()}),
