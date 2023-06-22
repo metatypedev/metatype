@@ -126,6 +126,7 @@ pub fn finalize() -> Result<String> {
         meta: ctx.meta,
         path: None,
         deps: Default::default(),
+        prefix: None,
     };
 
     serde_json::to_string(&tg).map_err(|e| e.to_string())
