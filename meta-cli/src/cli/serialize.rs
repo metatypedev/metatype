@@ -64,6 +64,12 @@ impl Action for Serialize {
         if self.deploy {
             loader = loader.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
         }
+
+        #[cfg(feature = "typegraph-next")]
+        {
+            loader = loader.with_postprocessor(postprocess::DenoModules::default());
+        }
+
         let loader = loader;
 
         let paths = if self.files.is_empty() {
@@ -83,6 +89,9 @@ impl Action for Serialize {
         for path in paths {
             match loader.load_file(&path).await {
                 LoaderResult::Loaded(tgs) => {
+                    if tgs.is_empty() {
+                        log::warn!("no typegraph");
+                    }
                     for tg in tgs.into_iter() {
                         loaded.push(tg);
                     }

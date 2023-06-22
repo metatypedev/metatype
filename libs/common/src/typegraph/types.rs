@@ -93,11 +93,12 @@ pub struct NumberTypeData {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct IntegerTypeData {
-    pub minimum: Option<i64>,
-    pub maximum: Option<i64>,
-    pub exclusive_minimum: Option<i64>,
-    pub exclusive_maximum: Option<i64>,
-    pub multiple_of: Option<i64>,
+    // we use i32 as GraphQL spec only support 32-bit integers (Int)
+    pub minimum: Option<i32>,
+    pub maximum: Option<i32>,
+    pub exclusive_minimum: Option<i32>,
+    pub exclusive_maximum: Option<i32>,
+    pub multiple_of: Option<i32>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -267,6 +268,24 @@ pub enum TypeNode {
 
 impl TypeNode {
     pub fn base(&self) -> &TypeNodeBase {
+        use TypeNode::*;
+        match self {
+            Optional { base, .. }
+            | Boolean { base, .. }
+            | Number { base, .. }
+            | Integer { base, .. }
+            | String { base, .. }
+            | File { base, .. }
+            | Object { base, .. }
+            | Array { base, .. }
+            | Function { base, .. }
+            | Union { base, .. }
+            | Either { base, .. }
+            | Any { base, .. } => base,
+        }
+    }
+
+    pub fn base_mut(&mut self) -> &mut TypeNodeBase {
         use TypeNode::*;
         match self {
             Optional { base, .. }

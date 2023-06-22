@@ -233,7 +233,7 @@ impl Typegraph {
         let Value::Number(n) = value else {
             bail!("Expected number got '{}'", to_string(value));
         };
-        let Some(value) = n.as_i64() else {
+        let Some(value) = n.as_i64().map(|value| value.try_into()).transpose()? else {
             bail!("Number value {value:?} cannot be stored in f64");
         };
         if let Some(min) = data.minimum {

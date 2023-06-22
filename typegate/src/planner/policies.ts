@@ -107,7 +107,6 @@ export class OperationPolicies {
       "create": new Set(),
       "update": new Set(),
       "delete": new Set(),
-      "upsert": new Set(),
     };
 
     const cache = new Map<PolicyIdx, boolean | null>();

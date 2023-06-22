@@ -11,7 +11,6 @@ from strenum import LowercaseStrEnum
 class EffectType(LowercaseStrEnum):
     CREATE = auto()
     UPDATE = auto()
-    UPSERT = auto()
     DELETE = auto()
 
 
@@ -35,10 +34,6 @@ def create(idempotent=False):
 
 def update(idempotent=False):
     return Effect(EffectType.UPDATE, idempotent)
-
-
-def upsert(idempotent=True):
-    return Effect(EffectType.UPSERT, idempotent)
 
 
 def delete(idempotent=True):

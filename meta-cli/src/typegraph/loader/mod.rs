@@ -16,11 +16,11 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::{bail, Context, Error, Result};
+use anyhow::{Context, Error, Result};
 use colored::Colorize;
 use common::typegraph::Typegraph;
 
-use crate::config::Config;
+use crate::config::{Config, ModuleType};
 
 use super::postprocess::{self, apply_all, PostProcessorWrapper};
 
@@ -33,6 +33,7 @@ pub struct Loader {
 
 pub enum LoaderResult {
     Loaded(Vec<Typegraph>),
+    #[cfg_attr(feature = "typegraph-next", allow(dead_code))]
     Rewritten(PathBuf),
     Error(LoaderError),
 }
@@ -59,8 +60,14 @@ impl Loader {
         self
     }
 
+    #[cfg(not(feature = "typegraph-next"))]
     pub async fn load_file(&self, path: &Path) -> LoaderResult {
-        match self.load_python_module(path).await {
+        // we passed through the filters, so we can unwrap safely
+        let res = match ModuleType::try_from(path).unwrap() {
+            ModuleType::Python => self.load_python_module(path).await,
+            ModuleType::Deno => self.load_deno_module(path).await,
+        };
+        match res {
             Ok(json) if json.is_empty() => LoaderResult::Rewritten(path.to_path_buf()),
             Ok(json) => match self.load_string(path, json) {
                 Err(err) => LoaderResult::Error(err),
@@ -73,6 +80,80 @@ impl Loader {
         }
     }
 
+    #[cfg(feature = "typegraph-next")]
+    pub async fn load_file(&self, path: &Path) -> LoaderResult {
+        let command = Self::get_load_command(path.try_into().unwrap(), path);
+        match self.load_command(command, path).await {
+            Ok(tgs) => LoaderResult::Loaded(tgs),
+            Err(e) => LoaderResult::Error(e),
+        }
+    }
+
+    #[cfg(feature = "typegraph-next")]
+    async fn load_command(
+        &self,
+        mut command: Command,
+        path: &Path,
+    ) -> Result<Vec<Typegraph>, LoaderError> {
+        let p = command
+            .current_dir(&self.config.base_dir)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .output()
+            .await
+            .map_err(|e| LoaderError::LoaderProcess {
+                path: path.to_owned(),
+                error: e.into(),
+            })?;
+
+        if p.status.success() {
+            #[cfg(debug_assertions)]
+            eprintln!(
+                "{}",
+                std::str::from_utf8(&p.stderr).expect("invalid utf-8 on stderr")
+            );
+
+            std::str::from_utf8(&p.stdout)
+                .with_context(|| "invalid utf-8 on stdout")
+                .map_err(|e| LoaderError::Unknown {
+                    error: e,
+                    path: path.to_owned(),
+                })?
+                .lines()
+                .map(|line| {
+                    serde_json::from_str::<Typegraph>(line)
+                        .map_err(|e| LoaderError::SerdeJson {
+                            path: path.to_owned(),
+                            error: e,
+                        })
+                        .and_then(|mut tg| {
+                            tg.path = Some(path.to_owned());
+                            apply_all(self.postprocessors.iter(), &mut tg, &self.config).map_err(
+                                |e| LoaderError::PostProcessingError {
+                                    path: path.to_owned(),
+                                    typegraph_name: tg.name().unwrap(),
+                                    error: e,
+                                },
+                            )?;
+                            Ok(tg)
+                        })
+                })
+                .collect()
+        } else {
+            Err(LoaderError::LoaderProcess {
+                path: path.to_owned(),
+                error: anyhow::anyhow!(
+                    "{}",
+                    String::from_utf8(p.stderr).map_err(|e| LoaderError::Unknown {
+                        error: e.into(),
+                        path: path.to_owned()
+                    })?
+                ),
+            })
+        }
+    }
+
+    #[cfg(not(feature = "typegraph-next"))]
     fn load_string(&self, path: &Path, json: String) -> Result<Vec<Typegraph>, LoaderError> {
         let mut tgs =
             serde_json::from_str::<Vec<Typegraph>>(&json).map_err(|e| LoaderError::SerdeJson {
@@ -92,6 +173,7 @@ impl Loader {
         Ok(tgs)
     }
 
+    #[cfg(not(feature = "typegraph-next"))]
     pub async fn load_python_module(&self, path: &Path) -> Result<String> {
         // Search in PATH does not work on Windows
         // See: https://doc.rust-lang.org/std/process/struct.Command.html#method.new
@@ -123,7 +205,38 @@ impl Loader {
             Ok(String::from_utf8(p.stdout)?)
         } else {
             let stderr = String::from_utf8(p.stderr)?;
-            bail!("Python error:\n{}", stderr.red())
+            anyhow::bail!("Python error:\n{}", stderr.red())
+        }
+    }
+
+    #[cfg(not(feature = "typegraph-next"))]
+    pub async fn load_deno_module(&self, _path: &Path) -> Result<String> {
+        anyhow::bail!("deno modules not supported yet")
+    }
+
+    #[cfg(feature = "typegraph-next")]
+    fn get_load_command(module_type: ModuleType, path: &Path) -> Command {
+        let vars: HashMap<_, _> = env::vars().collect();
+        match module_type {
+            ModuleType::Python => {
+                let mut command = Command::new("python3");
+                command
+                    .arg(path.to_str().unwrap())
+                    .envs(vars)
+                    .env("PYTHONUNBUFFERED", "1")
+                    .env("PYTHONDONTWRITEBYTECODE", "1");
+                command
+            }
+            ModuleType::Deno => {
+                let mut command = Command::new("deno");
+                command
+                    .arg("run")
+                    .arg("--allow-read")
+                    .arg("--check")
+                    .arg(path.to_str().unwrap())
+                    .envs(vars);
+                command
+            }
         }
     }
 }
@@ -138,6 +251,11 @@ pub enum LoaderError {
     SerdeJson {
         path: PathBuf,
         error: serde_json::Error,
+    },
+    #[cfg_attr(not(feature = "typegraph-next"), allow(dead_code))]
+    LoaderProcess {
+        path: PathBuf,
+        error: Error,
     },
     Unknown {
         path: PathBuf,
@@ -160,6 +278,9 @@ impl ToString for LoaderError {
             }
             Self::SerdeJson { path, error } => {
                 format!("Error while parsing raw typegraph JSON from {path:?}: {error:?}")
+            }
+            Self::LoaderProcess { path, error } => {
+                format!("Error while loading typegraph(s) from {path:?}: {error:?}")
             }
             Self::Unknown { path, error } => {
                 format!("Error while loading typegraph(s) from {path:?}: {error:?}")
