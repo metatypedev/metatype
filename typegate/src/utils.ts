@@ -13,6 +13,11 @@ import { z } from "zod";
 import { Type } from "./type_node.ts";
 import { TypeGraph } from "./typegraph.ts";
 
+import { ensureDir, ensureFile } from "std/fs/mod.ts";
+import { Untar } from "tar";
+import * as conversion from "conversion";
+import { path } from "compress/deps.ts";
+
 export const maxi32 = 2_147_483_647;
 
 export const configOrExit = async <T extends z.ZodRawShape>(
@@ -213,4 +218,34 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
     return { title: typ.title, fields: Object.keys(typ.properties ?? {}) };
   }
   return { title: typ?.title, fields: [] };
+}
+
+/**
+ * base64 decode and untar at metatype_root/{baseDir}
+ */
+export async function uncompress(baseDir: string, tarb64: string) {
+  const prefix = "base64:";
+  if (tarb64.startsWith(prefix)) {
+    tarb64 = tarb64.substring(prefix.length);
+  }
+  const basePath = path.join(Deno.cwd(), "tmp", baseDir);
+  const buffer = base64.decode(tarb64);
+  const streamReader = new Blob([buffer])
+    .stream()
+    .pipeThrough(new DecompressionStream("gzip"))
+    .getReader();
+  const denoReader = conversion.readerFromStreamReader(streamReader);
+
+  const untar = new Untar(denoReader);
+  for await (const entry of untar) {
+    if (entry.type === "directory") {
+      const resDirPath = path.join(basePath, entry.fileName);
+      await ensureDir(resDirPath);
+      continue;
+    }
+    const resFilePath = path.join(basePath, entry.fileName);
+    await ensureFile(resFilePath);
+    const file = await Deno.open(resFilePath, { write: true });
+    await conversion.copy(entry, file);
+  }
 }

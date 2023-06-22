@@ -10,6 +10,7 @@ import * as ast from "graphql/ast";
 import { InternalAuth } from "../../auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
+import { uncompress } from "../../utils.ts";
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => (args),
@@ -196,7 +197,10 @@ export class DenoRuntime extends Runtime {
 
     if (mat.name === "import_function") {
       const modMat = this.tg.materializers[mat.data.mod as number];
-      const op = this.registry.get(modMat.data.code as string)!;
+      const tarb64 = modMat.data.code as string;
+      const op = this.registry.get(tarb64)!;
+      // clean
+      uncompress(modMat.name, tarb64);
 
       return async (
         { _: { context, parent, info: { url, headers } }, ...args },
