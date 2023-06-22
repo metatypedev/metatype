@@ -3,6 +3,20 @@ sidebar_label: types
 title: typegraph.types
 ---
 
+## typedef Objects
+
+```python
+@frozen
+class typedef(Node)
+```
+
+```
+# from typegraph import t
+class t.typedef
+```
+
+Base class for all the types
+
 ## number Objects
 
 ```python
@@ -54,3 +68,4 @@ An `either` type represents a disjoint union with the variants provided.
 
 The `either` type is equivalent to the `oneOf` field in JSON Schema where
 the given data must be valid against exactly one of the given subschemas.
+

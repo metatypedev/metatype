@@ -105,6 +105,15 @@ reserved_types = [
 
 @frozen
 class typedef(Node):
+    """
+    ```
+    # from typegraph import t
+    class t.typedef
+    ```
+
+    Base class for all the types
+    """
+
     graph: TypeGraph = field(
         kw_only=True,
         factory=TypegraphContext.get_active,

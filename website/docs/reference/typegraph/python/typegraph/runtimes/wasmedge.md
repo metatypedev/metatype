@@ -11,3 +11,4 @@ class WasmEdgeRuntime(Runtime)
 ```
 
 [Documentation](https://metatype.dev/docs/reference/runtimes/wasmedge)
+
