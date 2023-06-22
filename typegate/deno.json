@@ -7,14 +7,14 @@
   "tasks": {
     "comment1": "echo cwd is by default the directory of deno.json",
     "comment2": "echo cannot restrict ffi to a lib https://github.com/denoland/deno/issues/15511",
-    "run": "cd .. && deno run --config=typegate/deno.json --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=.  --allow-net typegate/src/main.ts",
-    "test": "cd .. && deno test --config=typegate/deno.json --unstable --allow-run=cargo,hostname,target/debug/meta,git --allow-sys --allow-env --allow-hrtime --allow-write=tmp,typegate/tests --allow-ffi --allow-read=. --allow-net"
+    "run": "cd .. && deno run --config=typegate/deno.json --unstable --allow-run --allow-sys --allow-env --allow-hrtime --allow-write --allow-ffi --allow-read  --allow-net typegate/src/main.ts",
+    "test": "cd .. && deno test --config=typegate/deno.json --unstable --allow-run --allow-sys --allow-env --allow-hrtime --allow-write --allow-ffi --allow-read --allow-net"
   },
   "lock": "deno.lock",
   "imports": {
     "native": "../bindings/bindings.ts",
     "std/": "https://deno.land/std@0.192.0/",
-    "compress": "https://deno.land/x/compress@v0.4.5/mod.ts",
+    "compress/": "https://deno.land/x/compress@v0.4.5/",
     "graphql": "https://cdn.skypack.dev/graphql@16.6.0?dts",
     "graphql/ast": "https://cdn.skypack.dev/graphql@16.6.0/language/ast?dts",
     "graphql/characters": "https://cdn.skypack.dev/graphql@16.6.0/language/characterClasses?dts",
@@ -34,6 +34,8 @@
     "levenshtein": "https://deno.land/x/levenshtein@v1.0.1/mod.ts",
     "aws-sdk/client-s3": "https://esm.sh/@aws-sdk/client-s3@3.335.0?pin=v124",
     "aws-sdk/s3-request-presigner": "https://esm.sh/@aws-sdk/s3-request-presigner@3.335.0?pin=v124",
-    "outdent": "https://deno.land/x/outdent@v0.8.0/mod.ts"
+    "outdent": "https://deno.land/x/outdent@v0.8.0/mod.ts",
+    "tar": "https://deno.land/std@0.128.0/archive/tar.ts",
+    "conversion": "https://deno.land/std@0.153.0/streams/conversion.ts"
   }
 }

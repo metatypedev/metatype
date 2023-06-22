@@ -31,8 +31,9 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
               ...permissions,
               // non-overridable permissions (security between typegraphs)
               run: false,
-              read: false,
-              write: false,
+              // TODO: specify folder
+              read: true,
+              write: true,
               ffi: false,
               env: envSharedWithWorkers, // use secrets on the materializer instead
             },

@@ -86,7 +86,7 @@ impl PostProcessor for Validator {
 }
 
 pub mod deno_rt {
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
 
@@ -102,16 +102,46 @@ pub mod deno_rt {
         }
     }
 
-    fn compress_and_encode(main_path: &Path) -> String {
-        let parent = main_path.parent().unwrap().display().to_string();
-        let enc_content = match archive(parent).unwrap() {
+    fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> String {
+        // Note: main_path and tg_path are all absolute
+        let mut script_path = main_path.display().to_string();
+        let base_path = match tg_path {
+            Some(path) => {
+                let tg_folder = path.parent();
+                if let Some(tg_folder) = tg_folder {
+                    // let relpath = main_path.strip_prefix(tg_folder).unwrap();
+                    // let relparts: Vec<_> = relpath.components().collect();
+                    // let chunk = relparts[0].as_os_str().to_str().unwrap();
+                    // let last = Path::new(chunk);
+
+                    let ret = tg_folder.display().to_string();
+                    // script_path = tg_folder.join(last).display().to_string();
+                    script_path = tg_folder.display().to_string();
+                    ret
+                } else {
+                    return "".to_string();
+                }
+            }
+            None => "".to_string(),
+        };
+
+        let enc_content = match archive(script_path).unwrap() {
             Some(b64) => b64,
             None => "".to_string(),
         };
-        format!("base64:{}", enc_content)
+
+        format!(
+            "file:{};tg_folder:{};base64:{}",
+            main_path.display(),
+            base_path,
+            enc_content
+        )
     }
 
-    fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
+    fn reformat_materializer_script(
+        mat: &mut Materializer,
+        tg_path: &Option<PathBuf>,
+    ) -> Result<()> {
         match mat.name.as_str() {
             "function" => {
                 let mut mat_data: FunctionMatData = object_from_map(std::mem::take(&mut mat.data))?;
@@ -125,7 +155,7 @@ pub mod deno_rt {
                     // TODO check imported functions exist
                     let path = mat_data.code.strip_prefix("file:").unwrap();
                     let path = Path::new(path);
-                    mat_data.code = compress_and_encode(path);
+                    mat_data.code = compress_and_encode(path, tg_path);
                 }
                 mat.data = map_from_object(mat_data)?;
             }
@@ -137,7 +167,10 @@ pub mod deno_rt {
     fn reformat_scripts(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
         for rt_idx in get_runtimes(typegraph, "deno").into_iter() {
             for mat_idx in get_materializers(typegraph, rt_idx as u32) {
-                reformat_materializer_script(&mut typegraph.materializers[mat_idx])?;
+                reformat_materializer_script(
+                    &mut typegraph.materializers[mat_idx],
+                    &typegraph.path,
+                )?;
             }
         }
         Ok(())
@@ -167,7 +200,7 @@ pub mod deno_rt {
                 };
 
                 let path = Path::new(path).to_owned();
-                mat_data.code = compress_and_encode(&path);
+                mat_data.code = compress_and_encode(&path, &tg.path);
                 mat.data = map_from_object(mat_data)?;
                 tg.deps.push(path);
             }

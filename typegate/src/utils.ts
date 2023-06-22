@@ -44,6 +44,12 @@ export type JSONValue =
   | JSONValue[]
   | { [key: string]: JSONValue };
 
+type FolderRepr = {
+  entryPoint: string;
+  base64: string;
+  hash: string; // root/tmp/deno/{hash}
+};
+
 // Map undefined | null to None
 export const forceAnyToOption = (v: any): Option<any> => {
   return v === undefined || v === null ? None : Some(v);
@@ -221,14 +227,10 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
 }
 
 /**
- * base64 decode and untar at metatype_root/{baseDir}
+ * base64 decode and untar at cwd/tmp/{dir}
  */
-export async function uncompress(baseDir: string, tarb64: string) {
-  const prefix = "base64:";
-  if (tarb64.startsWith(prefix)) {
-    tarb64 = tarb64.substring(prefix.length);
-  }
-  const basePath = path.join(Deno.cwd(), "tmp", baseDir);
+export async function uncompress(dir: string, tarb64: string) {
+  const baseDir = path.join(Deno.cwd(), "tmp", dir);
   const buffer = base64.decode(tarb64);
   const streamReader = new Blob([buffer])
     .stream()
@@ -237,15 +239,53 @@ export async function uncompress(baseDir: string, tarb64: string) {
   const denoReader = conversion.readerFromStreamReader(streamReader);
 
   const untar = new Untar(denoReader);
+  const entries = [];
   for await (const entry of untar) {
+    entries.push(entry.fileName);
     if (entry.type === "directory") {
-      const resDirPath = path.join(basePath, entry.fileName);
+      const resDirPath = path.join(baseDir, entry.fileName);
       await ensureDir(resDirPath);
       continue;
     }
-    const resFilePath = path.join(basePath, entry.fileName);
+    const resFilePath = path.join(baseDir, entry.fileName);
     await ensureFile(resFilePath);
     const file = await Deno.open(resFilePath, { write: true });
     await conversion.copy(entry, file);
   }
+  return baseDir;
+}
+
+export async function structureRepr(str: string): Promise<FolderRepr> {
+  const [fileStr, tgFolderStr, base64Str] = str.split(";");
+  if (!tgFolderStr || !base64Str) {
+    throw Error("given string is malformed");
+  }
+  const filePrefix = "file:", b64Prefix = "base64:", tgPrefix = "tg_folder:";
+
+  if (!fileStr.startsWith(filePrefix)) {
+    throw Error(`${filePrefix} prefix not specified`);
+  }
+  if (!base64Str.startsWith(b64Prefix)) {
+    throw Error(`${b64Prefix} prefix not specified`);
+  }
+  if (!tgPrefix.startsWith(tgPrefix)) {
+    throw Error(`${b64Prefix} prefix not specified`);
+  }
+
+  const userMainFile = fileStr.substring(filePrefix.length);
+  const userTgFolder = tgFolderStr.substring(tgPrefix.length);
+
+  const entryPoint = userMainFile.split(userTgFolder).pop();
+  if (!entryPoint) {
+    throw Error(`Unable to determine entry point from ${userMainFile}`);
+  }
+  const base64 = base64Str.substring(b64Prefix.length);
+
+  const data = new TextEncoder().encode(userMainFile);
+  const buffer = await crypto.subtle.digest("SHA-1", data);
+  const hash = Array.from(new Uint8Array(buffer))
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join("");
+
+  return { entryPoint, base64, hash };
 }

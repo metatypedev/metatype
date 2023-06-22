@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { getLogger } from "../../log.ts";
+import { structureRepr, uncompress } from "../../utils.ts";
 import { Answer, Message } from "../patterns/messenger/types.ts";
+import { path } from "compress/deps.ts";
+
 import {
   FuncTask,
   ImportFuncTask,
@@ -91,12 +94,13 @@ async function func(op: number, task: FuncTask) {
 async function register_import_func(_: null, task: RegisterImportFuncTask) {
   const { moduleCode, verbose, op } = task;
   verbose && logger.info(`register import func "${op}"`);
-
+  const repr = await structureRepr(moduleCode);
+  const baseDir = await uncompress(path.join("deno", repr.hash), repr.base64);
   registry.set(
     op,
     await import(
-      `data:text/javascript,${encodeURIComponent(moduleCode)}`
-    ),
+      path.join(baseDir, repr.entryPoint)
+    ) as any,
   );
 }
 
