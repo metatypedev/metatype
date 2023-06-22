@@ -89,6 +89,10 @@ pub trait Action {
 
 #[derive(Parser, Debug, Clone)]
 pub struct CommonArgs {
+    /// Target typegate (cf config)
+    #[clap(short, long)]
+    pub target: Option<String>,
+
     /// Address of the typegate.
     #[clap(short, long, value_parser = UrlValueParser::new().http())]
     pub gate: Option<Url>,

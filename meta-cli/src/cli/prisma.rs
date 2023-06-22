@@ -14,7 +14,7 @@ use async_recursion::async_recursion;
 use async_trait::async_trait;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
-use common::archive::{self};
+use common::archive;
 use indoc::indoc;
 use log::{error, info};
 use prisma_models::psl;
@@ -80,16 +80,11 @@ pub struct PrismaArgs {
     /// Default: the unique prisma runtime of the typegraph.
     #[clap(long)]
     pub runtime: Option<String>,
-
-    /// Path to the migrations directory.
-    #[clap(long)]
-    pub migrations: Option<PathBuf>,
 }
 
 impl PrismaArgs {
     pub fn fill(&self, config: &Config) -> Result<Option<PrismaArgsFull>> {
-        let prisma_config = &config.typegraphs.materializers.prisma;
-        let migpath = prisma_config.base_migrations_path(self, config);
+        let migpath = config.prisma_migrations_dir(&self.typegraph);
         let runtime_name = utils::find_runtime_name(&migpath).context("Finding runtime name")?;
 
         runtime_name
@@ -131,7 +126,7 @@ impl Action for Dev {
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
 
-        let node_config = config.node("dev").with_args(&self.node);
+        let node_config = config.node(&self.node, "dev");
         let node = node_config.build(dir).await?;
 
         let mut migrate = PrismaMigrate::new(&self.prisma, &config, node)?;
@@ -144,7 +139,7 @@ impl Action for Dev {
         migrate.runtime_name.replace(rt_name);
 
         if changes {
-            println!("A migration will be created and applied for the changes.");
+            log::info!("A migration will be created and applied for the changes.");
             let ans = Question::new("Name of the migration to create (an empty string to skip):")
                 .ask()
                 .unwrap();
@@ -179,9 +174,7 @@ impl Action for Deploy {
             .prisma
             .fill(&config)?
             .ok_or_else(|| anyhow!("No migrations in the migration directory"))?;
-
-        let node_config = config.node("deploy");
-
+        let node_config = config.node(&self.node, "deploy");
         let node: Node = node_config.build(dir).await?;
 
         let res = node
@@ -260,7 +253,7 @@ impl Action for Diff {
         let dir = &args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
-        let node_config = config.node("dev").with_args(&self.node);
+        let node_config = config.node(&self.node, "dev");
         let node = node_config.build(dir).await?;
         PrismaMigrate::new(&self.prisma, &config, node)?
             .diff(self.script)
@@ -317,7 +310,7 @@ impl Action for Format {
 }
 
 pub struct PrismaMigrate {
-    typegraph: String,
+    full_tg_name: String,
     runtime_name: Option<String>,
     migrations: Option<String>,
     base_migration_path: PathBuf,
@@ -326,23 +319,22 @@ pub struct PrismaMigrate {
 
 impl PrismaMigrate {
     fn new(args: &PrismaArgs, config: &Config, node: Node) -> Result<Self> {
-        let prisma_config = &config.typegraphs.materializers.prisma;
-        let base_migpath = prisma_config.base_migrations_path(args, config);
+        let base_migration_path = config.prisma_migrations_dir(args.typegraph.as_str());
         let runtime_name =
-            utils::find_runtime_name(&base_migpath).context("Finding runtime name")?;
+            utils::find_runtime_name(&base_migration_path).context("Finding runtime name")?;
         let migrations = runtime_name
             .as_ref()
-            .map(|rt_name| archive::archive(base_migpath.join(rt_name)))
+            .map(|rt_name| archive::archive(base_migration_path.join(rt_name)))
             .transpose()
             .context("Archiving migrations")?
             .flatten();
 
         Ok(Self {
-            typegraph: args.typegraph.clone(),
+            full_tg_name: node.tg_name(&args.typegraph).to_string(),
             runtime_name,
             node,
             migrations,
-            base_migration_path: base_migpath,
+            base_migration_path,
         })
     }
 
@@ -356,6 +348,7 @@ impl PrismaMigrate {
             .as_ref()
             .expect("migrations should have been updated"); // migrations should have been set
 
+        log::info!("Writing migrations to {}", migrations_path.display());
         common::archive::unpack(migrations_path, self.migrations)?;
         Ok(())
     }
@@ -382,7 +375,7 @@ impl PrismaMigrate {
             "}
                 .to_string(),
                 Some(json!({
-                    "tg": self.typegraph,
+                    "tg": self.full_tg_name,
                     "rt": self.runtime_name,
                     "mig": self.migrations,
                     "reset": reset_database,
@@ -470,7 +463,7 @@ impl PrismaMigrate {
                 "}
             .to_string(),
             Some(json!({
-                "tg": self.typegraph,
+                "tg": self.full_tg_name,
                 "rt": self.runtime_name,
                 "mig": self.migrations,
                 "name": name,
@@ -529,7 +522,7 @@ impl PrismaMigrate {
                 "}
                 .to_string(),
                 Some(json!({
-                    "tg": self.typegraph,
+                    "tg": self.full_tg_name,
                     "rt": self.runtime_name,
                     "script": script,
                 })),

@@ -9,6 +9,14 @@ typegates:
     env:
       TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
 
+  with_prefix:
+    url: "http://localhost:7895"
+    username: admin
+    password: password
+    env:
+      TG_PRISMA_POSTGRES: "postgresql://postgres:password@localhost:5432/db?schema=e2e"
+    prefix: pref-
+
 typegraphs:
   python:
     include: "**/*.py"

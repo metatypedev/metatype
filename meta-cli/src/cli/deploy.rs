@@ -7,7 +7,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use super::{Action, CommonArgs, GenArgs};
-use crate::config::{tg_migrations_dir, Config};
+use crate::config::Config;
 use crate::typegraph::dependency_graph::DependencyGraph;
 use crate::typegraph::loader::discovery::FileFilter;
 use crate::typegraph::loader::queue::Queue;
@@ -83,10 +83,6 @@ pub struct DeployOptions {
     /// Run in watch mode
     #[clap(long, default_value_t = false)]
     pub watch: bool,
-
-    /// Typegate target (in metatype.yaml)
-    #[clap(short, long)]
-    pub target: String,
 }
 
 pub struct DefaultModeData;
@@ -154,7 +150,7 @@ impl Deploy<DefaultModeData> {
             );
         }
 
-        let node_config = config.node(&options.target).with_args(&deploy.node);
+        let node_config = config.node(&deploy.node, "deploy");
         let node = node_config.build(&dir).await?;
         let push_config = PushConfig::new(node, config.base_dir.clone());
 
@@ -201,7 +197,7 @@ impl Deploy<DefaultModeData> {
             let mut tgs: VecDeque<_> = tgs.into_iter().collect();
 
             while let Some(tg) = tgs.pop_front() {
-                let tg_name = tg.name().unwrap().cyan();
+                let tg_name = tg.full_name().unwrap().cyan();
                 info!("Pushing typegraph {tg_name}...");
                 match self.push_config.push(&tg).await {
                     Ok(res) => {
@@ -308,12 +304,9 @@ where
     fn handle_push_result(&self, mut res: PushResult) -> HandlePushResult {
         let name = res.tg_name().to_string();
         res.print_messages();
-        let prisma_config = &self.config.typegraphs.materializers.prisma;
-        let migdir = tg_migrations_dir(
-            &self.base_dir,
-            prisma_config.migrations_path.as_deref(),
-            &name,
-        );
+        let migdir = self
+            .config
+            .prisma_migrations_dir(res.original_name.as_ref().unwrap());
         for migrations in res.take_migrations() {
             let dest = migdir.join(&migrations.runtime);
             if let Err(e) = unpack(&dest, Some(migrations.migrations)) {
@@ -324,8 +317,8 @@ where
                 error!("{e:?}");
             } else {
                 info!(
-                    "Successfully unpacked migrations for {name}/{}!",
-                    migrations.runtime
+                    "Successfully unpacked migrations for {name}/{} at {:?}!",
+                    migrations.runtime, dest
                 );
             }
         }
@@ -451,7 +444,7 @@ impl Deploy<WatchModeData> {
         if !w.file_filter.is_excluded(&path, &mut searcher) {
             let rel_path = diff_paths(&path, &self.base_dir).unwrap();
             info!("Reloading: file modified {:?}...", rel_path);
-            w.retry_manager.cancell_all(&path);
+            w.retry_manager.cancel_all(&path);
             w.queue.push(path);
         }
         Ok(WatchModeRestart(false))
@@ -463,7 +456,7 @@ impl Deploy<WatchModeData> {
 
     #[async_recursion]
     async fn push_typegraph(&mut self, tg: Typegraph, retry_no: u32) {
-        let tg_name = tg.name().unwrap().cyan();
+        let tg_name = tg.full_name().unwrap().cyan();
 
         info!(
             "Pushing typegraph {tg_name}{}...",
@@ -532,7 +525,7 @@ impl Deploy<WatchModeData> {
             trace!(
                 "Retry #{} has been cancelled for typegraph {} at {:?}",
                 retry.id.as_u32(),
-                retry.tg.name().unwrap().cyan(),
+                retry.tg.full_name().unwrap().cyan(),
                 diff_paths(retry.tg.path.as_ref().unwrap(), &self.base_dir).unwrap()
             );
         } else {

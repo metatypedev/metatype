@@ -321,7 +321,7 @@ export async function recreateMigrations(engine: Engine) {
 }
 
 export async function removeMigrations(engine: Engine) {
-  await Deno.remove(join(testDir, "prisma-migrations", engine.name), {
+  await Deno.remove(join(testDir, "prisma-migrations", engine.rawName), {
     recursive: true,
   }).catch(() => {});
 }

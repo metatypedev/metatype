@@ -15,10 +15,6 @@ pub struct Dev {
     #[command(flatten)]
     node: CommonArgs,
 
-    /// Typegate target (in metatype.yaml)
-    #[clap(short, long, default_value_t = String::from("dev"))]
-    target: String,
-
     #[clap(long, default_value_t = false)]
     run_destructive_migrations: bool,
 }
@@ -31,7 +27,6 @@ impl Action for Dev {
             allow_dirty: true,
             allow_destructive: self.run_destructive_migrations,
             watch: true,
-            target: self.target.clone(),
             no_migration: false,
             create_migration: true,
         };

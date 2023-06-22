@@ -153,7 +153,15 @@ export class TypeGraph {
   }
 
   get name() {
+    return (this.tg.prefix ?? "") + this.root.title;
+  }
+
+  get rawName() {
     return this.root.title;
+  }
+
+  static formatName(tg: TypeGraphDS): string {
+    return (tg.prefix ?? "") + tg.types[0].title;
   }
 
   static async init(
@@ -162,7 +170,7 @@ export class TypeGraph {
     staticReference: RuntimeResolver,
     introspection: TypeGraph | null,
   ): Promise<TypeGraph> {
-    const typegraphName = typegraph.types[0].title;
+    const typegraphName = TypeGraph.formatName(typegraph);
     const { meta, runtimes } = typegraph;
 
     // check mandatory secrets for injection

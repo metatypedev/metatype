@@ -18,6 +18,7 @@ import {
 } from "../types/typegraph.ts";
 import { getLogger } from "../log.ts";
 import { registerHook } from "../hooks.ts";
+import { TypeGraph } from "../typegraph.ts";
 
 const logger = getLogger(import.meta);
 
@@ -199,7 +200,7 @@ export class PrismaRuntime extends GraphQLRuntime {
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     const { typegraph, args, secretManager } = params;
-    const typegraphName = typegraph.types[0].title;
+    const typegraphName = TypeGraph.formatName(typegraph);
 
     const datasource = makeDatasource(secretManager.secretOrFail(
       args.connection_string_secret as string,

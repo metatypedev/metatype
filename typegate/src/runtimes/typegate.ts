@@ -6,7 +6,7 @@ import { ComputeStage } from "../engine.ts";
 import { Register } from "../register.ts";
 import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
-import { TypeGraphDS } from "../typegraph.ts";
+import { TypeGraph, TypeGraphDS } from "../typegraph.ts";
 import { typegraph_validate } from "native";
 import { ensure } from "../utils.ts";
 import { getLogger } from "../log.ts";
@@ -116,7 +116,7 @@ export class TypeGateRuntime extends Runtime {
         );
       }
     });
-    const name = (JSON.parse(json) as TypeGraphDS).types[0].title;
+    const name = TypeGraph.formatName(JSON.parse(json) as TypeGraphDS);
 
     if (SystemTypegraph.check(name)) {
       throw new Error(`Typegraph name ${name} cannot be used`);
