@@ -93,7 +93,7 @@ with TypeGraph("injection") as g:
             req2, req2, deno.PredefinedFunMat("identity", effect=effects.update())
         ),
         effect_upsert=t.func(
-            req2, req2, deno.PredefinedFunMat("identity", effect=effects.upsert())
+            req2, req2, deno.PredefinedFunMat("identity", effect=effects.update())
         ),
         user=gql.query(
             t.struct({"id": t.integer()}),
