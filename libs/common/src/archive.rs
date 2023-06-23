@@ -45,9 +45,7 @@ pub fn archive_entries(dir_walker: Walk, suffix: Option<&Path>) -> Result<Option
         match result {
             Ok(entry) => {
                 let path = entry.path();
-                println!("DEBUG {}", path.display());
                 if suffix.is_some() && !path.ends_with(suffix.unwrap()) {
-                    println!("SKIP {}", path.display());
                     continue;
                 }
                 // Note: tar automatically removes the common prefix

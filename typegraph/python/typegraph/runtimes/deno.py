@@ -13,6 +13,7 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always
+import os
 
 
 @frozen
@@ -133,7 +134,8 @@ class ModuleMat(Materializer):
 
             from typegraph.graph.typegraph import get_absolute_path
 
-            path = get_absolute_path(self.file)
+            rel_path = os.path.join("scripts", "deno", self.file)
+            path = get_absolute_path(rel_path)
             object.__setattr__(self, "code", f"file:{path}")
 
             # if os.environ.get("DONT_READ_EXTERNAL_TS_FILES"):

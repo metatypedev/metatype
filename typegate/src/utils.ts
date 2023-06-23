@@ -286,13 +286,20 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
 
   const userMainFile = fileStr.substring(filePrefix.length);
   const userTgFolder = tgFolderStr.substring(tgPrefix.length);
-
-  const entryPoint = userMainFile.split(userTgFolder).pop();
-  if (!entryPoint) {
-    throw Error(`Unable to determine entry point from ${userMainFile}`);
+  const relativeTg = userMainFile.split(userTgFolder).pop();
+  if (relativeTg == undefined) {
+    throw Error(`${userMainFile} not at same directory as ${userTgFolder}`);
   }
-  const base64 = base64Str.substring(b64Prefix.length);
+  const sep = relativeTg.indexOf("\\") >= 0 ? "\\" : "/";
+  const prefixReg = new RegExp(`^${sep}?scripts${sep}deno(.*)`);
+  const entryPoint = relativeTg.match(prefixReg)?.[1];
+  if (!entryPoint) {
+    throw Error(
+      `unable to determine script entry point relative to ${relativeTg}`,
+    );
+  }
 
+  const base64 = base64Str.substring(b64Prefix.length);
   const hash = await digestPath(userMainFile);
   return { entryPoint, base64, hash };
 }
