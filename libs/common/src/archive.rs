@@ -37,7 +37,7 @@ pub fn archive<P: AsRef<Path>>(folder: P) -> Result<Option<String>> {
     }
 }
 
-pub fn archive_entries(dir_walker: Walk) -> Result<Option<String>> {
+pub fn archive_entries(dir_walker: Walk, suffix: Option<&Path>) -> Result<Option<String>> {
     let encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar = tar::Builder::new(encoder);
     let mut count = 0;
@@ -45,6 +45,11 @@ pub fn archive_entries(dir_walker: Walk) -> Result<Option<String>> {
         match result {
             Ok(entry) => {
                 let path = entry.path();
+                println!("DEBUG {}", path.display());
+                if suffix.is_some() && !path.ends_with(suffix.unwrap()) {
+                    println!("SKIP {}", path.display());
+                    continue;
+                }
                 // Note: tar automatically removes the common prefix
                 // a/b/c/a.ts, a/b, a/b/d.ts => c/a.ts, .,  d.ts
                 if path.is_dir() {

@@ -258,6 +258,15 @@ export async function uncompress(dir: string, tarb64: string) {
   return baseDir;
 }
 
+export async function digestPath(path: string) {
+  const data = new TextEncoder().encode(path);
+  const buffer = await crypto.subtle.digest("SHA-1", data);
+  const hash = Array.from(new Uint8Array(buffer))
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join("");
+  return hash;
+}
+
 export async function structureRepr(str: string): Promise<FolderRepr> {
   const [fileStr, tgFolderStr, base64Str] = str.split(";");
   if (!tgFolderStr || !base64Str) {
@@ -284,11 +293,6 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
   }
   const base64 = base64Str.substring(b64Prefix.length);
 
-  const data = new TextEncoder().encode(userMainFile);
-  const buffer = await crypto.subtle.digest("SHA-1", data);
-  const hash = Array.from(new Uint8Array(buffer))
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join("");
-
+  const hash = await digestPath(userMainFile);
   return { entryPoint, base64, hash };
 }

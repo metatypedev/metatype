@@ -105,37 +105,23 @@ pub mod deno_rt {
 
     fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> String {
         // Note: main_path and tg_path are all absolute
-        // Consider the following structure
-        // ./my_typegraph.py    (has Mat(./deno/A.ts) and Mat(./B.ts))
-        // ./deno/A.ts
-        // ./B.ts
-        // ./cat.jpg            (processed in A.ts)
-        // ./other_tg.py
-        // => produces tar1:./deno and tar2:./ (later is == tg_folder)
-        let mut script_path = main_path.display().to_string();
+        // tg_root/tg.py
+        // tg_root/scripts/deno/* <= script location
         let base_path = match tg_path {
             Some(path) => {
                 let tg_folder = path.parent();
                 if let Some(tg_folder) = tg_folder {
-                    let ret = tg_folder.display().to_string();
-                    if let Ok(relpath) = main_path.strip_prefix(tg_folder) {
-                        let relparts: Vec<_> = relpath.components().collect();
-                        let chunk = relparts[0].as_os_str().to_str().unwrap();
-                        let last = Path::new(chunk);
-                        script_path = tg_folder.join(last).display().to_string();
-                    } else {
-                        script_path = tg_folder.display().to_string();
-                    }
-                    ret
+                    tg_folder.display().to_string()
                 } else {
-                    return "".to_string();
+                    "".to_string()
                 }
             }
             None => "".to_string(),
         };
 
-        let dir_walker = WalkBuilder::new(script_path).standard_filters(true).build();
-        let enc_content = match archive_entries(dir_walker).unwrap() {
+        let dir_walker = WalkBuilder::new(&base_path).standard_filters(true).build();
+        let suffix = Path::new("scripts/deno");
+        let enc_content = match archive_entries(dir_walker, Some(suffix)).unwrap() {
             Some(b64) => b64,
             None => "".to_string(),
         };
