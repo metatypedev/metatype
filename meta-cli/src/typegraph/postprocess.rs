@@ -8,7 +8,7 @@ use crate::config::Config;
 use super::utils::{map_from_object, object_from_map};
 use anyhow::{bail, Result};
 use colored::Colorize;
-use common::archive::archive;
+use common::archive::archive_entries;
 use common::typegraph::validator::validate_typegraph;
 use common::typegraph::{Materializer, Typegraph};
 use log::error;
@@ -89,6 +89,7 @@ pub mod deno_rt {
     use std::path::{Path, PathBuf};
 
     use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
+    use ignore::WalkBuilder;
 
     use crate::typegraph::utils::{get_materializers, get_runtimes};
 
@@ -104,19 +105,27 @@ pub mod deno_rt {
 
     fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> String {
         // Note: main_path and tg_path are all absolute
+        // Consider the following structure
+        // ./my_typegraph.py    (has Mat(./deno/A.ts) and Mat(./B.ts))
+        // ./deno/A.ts
+        // ./B.ts
+        // ./cat.jpg            (processed in A.ts)
+        // ./other_tg.py
+        // => produces tar1:./deno and tar2:./ (later is == tg_folder)
         let mut script_path = main_path.display().to_string();
         let base_path = match tg_path {
             Some(path) => {
                 let tg_folder = path.parent();
                 if let Some(tg_folder) = tg_folder {
-                    // let relpath = main_path.strip_prefix(tg_folder).unwrap();
-                    // let relparts: Vec<_> = relpath.components().collect();
-                    // let chunk = relparts[0].as_os_str().to_str().unwrap();
-                    // let last = Path::new(chunk);
-
                     let ret = tg_folder.display().to_string();
-                    // script_path = tg_folder.join(last).display().to_string();
-                    script_path = tg_folder.display().to_string();
+                    if let Ok(relpath) = main_path.strip_prefix(tg_folder) {
+                        let relparts: Vec<_> = relpath.components().collect();
+                        let chunk = relparts[0].as_os_str().to_str().unwrap();
+                        let last = Path::new(chunk);
+                        script_path = tg_folder.join(last).display().to_string();
+                    } else {
+                        script_path = tg_folder.display().to_string();
+                    }
                     ret
                 } else {
                     return "".to_string();
@@ -125,7 +134,8 @@ pub mod deno_rt {
             None => "".to_string(),
         };
 
-        let enc_content = match archive(script_path).unwrap() {
+        let dir_walker = WalkBuilder::new(script_path).standard_filters(true).build();
+        let enc_content = match archive_entries(dir_walker).unwrap() {
             Some(b64) => b64,
             None => "".to_string(),
         };

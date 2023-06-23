@@ -4,6 +4,7 @@
 use anyhow::{Context, Result};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
+use ignore::Walk;
 use std::fs;
 use std::path::Path;
 use tar::Archive;
@@ -34,4 +35,38 @@ pub fn archive<P: AsRef<Path>>(folder: P) -> Result<Option<String>> {
         let bytes = tar.into_inner()?.finish()?;
         Ok(Some(STANDARD.encode(bytes)))
     }
+}
+
+pub fn archive_entries(dir_walker: Walk) -> Result<Option<String>> {
+    let encoder = GzEncoder::new(Vec::new(), Compression::default());
+    let mut tar = tar::Builder::new(encoder);
+    let mut count = 0;
+    for result in dir_walker {
+        match result {
+            Ok(entry) => {
+                let path = entry.path();
+                // Note: tar automatically removes the common prefix
+                // a/b/c/a.ts, a/b, a/b/d.ts => c/a.ts, .,  d.ts
+                if path.is_dir() {
+                    tar.append_dir_all(".", path)
+                        .context("Adding directory to tarball")?;
+                } else {
+                    let mut file = fs::File::open(path)
+                        .context(format!("failed to open file {}", path.display()))?;
+                    tar.append_file(".", &mut file)
+                        .context("Adding file to tarball")?;
+                }
+                count += 1;
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }?;
+    }
+
+    if count > 0 {
+        let bytes = tar.into_inner()?.finish()?;
+        return Ok(Some(STANDARD.encode(bytes)));
+    }
+
+    Ok(None)
 }

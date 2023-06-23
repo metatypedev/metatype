@@ -242,6 +242,9 @@ export async function uncompress(dir: string, tarb64: string) {
   const entries = [];
   for await (const entry of untar) {
     entries.push(entry.fileName);
+    if (entry.fileName == ".") {
+      continue;
+    }
     if (entry.type === "directory") {
       const resDirPath = path.join(baseDir, entry.fileName);
       await ensureDir(resDirPath);
