@@ -227,10 +227,10 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
 }
 
 /**
- * base64 decode and untar at cwd/tmp/{dir}
+ * base64 decode and untar at cwd/{dir}
  */
 export async function uncompress(dir: string, tarb64: string) {
-  const baseDir = path.join(Deno.cwd(), "tmp", dir);
+  const baseDir = path.join(Deno.cwd(), dir);
   const buffer = base64.decode(tarb64);
   const streamReader = new Blob([buffer])
     .stream()
