@@ -407,7 +407,9 @@ class PrismaRuntime(Runtime):
                 }
             ),
             typegen.get_out_type(tpe).named(_pref("Output")),
-            PrismaOperationMat(self, tpe.name, "upsertOne", effect=effects.upsert()),
+            PrismaOperationMat(
+                self, tpe.name, "upsertOne", effect=effects.update(True)
+            ),
         )
 
     def delete(self, tpe: Union[t.struct, t.NodeProxy], where=None) -> t.func:
@@ -467,14 +469,14 @@ class PrismaMigrationRuntime(Runtime):
 class PrismaApplyMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("apply")
-    effect: Effect = always(effects.upsert())
+    effect: Effect = always(effects.update())
 
 
 @frozen
 class PrismaDeployMat(Materializer):
     runtime: Runtime = PrismaMigrationRuntime()
     materializer_name: str = always("deploy")
-    effect: Effect = always(effects.upsert())
+    effect: Effect = always(effects.update())
 
 
 @frozen

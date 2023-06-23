@@ -15,9 +15,13 @@ dev:
       '(  PNPM_VERSION: ").+(")': PNPM_VERSION
       '(  NODE_VERSION: ").+(")': NODE_VERSION
       '(  PROTOC_VERSION: ").+(")': PROTOC_VERSION
+      '(  WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
+      '(  JCO_VERSION: ").+(")': JCO_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/python/pyproject.toml:
+      (description = ").+("): TAGLINE
+    typegraph/python_next/pyproject.toml:
       (description = ").+("): TAGLINE
     '**/*/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
@@ -51,8 +55,8 @@ dev:
     DENO_VERSION: 1.34.3
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.6.0
-    WASM_TOOLS_VERSION: 1.0.35
-    JCO_VERSION: 0.8.0
+    WASM_TOOLS_VERSION: 1.0.33
+    JCO_VERSION: 0.7.0
     TYPEGRAPH_VERSION: 0.0.1
     METATYPE_VERSION: 0.1.10-dev.0
     TAGLINE: >-

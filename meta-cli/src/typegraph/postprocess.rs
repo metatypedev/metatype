@@ -172,7 +172,7 @@ pub mod deno_rt {
         Ok(())
     }
 
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct DenoModules {
         codegen: bool,
     }
@@ -197,6 +197,7 @@ pub mod deno_rt {
 
                 let path = Path::new(path).to_owned();
                 mat_data.code = compress_and_encode(&path, &tg.path);
+
                 mat.data = map_from_object(mat_data)?;
                 tg.deps.push(path);
             }

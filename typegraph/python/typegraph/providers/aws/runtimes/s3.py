@@ -115,7 +115,7 @@ class UploadMat(Materializer):
     runtime: S3Runtime
     bucket: str
     materializer_name: str = always("upload")
-    effect: Effect = always(effects.upsert())
+    effect: Effect = always(effects.update(True))
 
 
 @frozen
@@ -123,4 +123,4 @@ class UploadAllMat(Materializer):
     runtime: S3Runtime
     bucket: str
     materializer_name: str = always("upload_all")
-    effect: Effect = always(effects.upsert())
+    effect: Effect = always(effects.update(True))
