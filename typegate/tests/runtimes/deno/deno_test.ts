@@ -1,10 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-// import { path } from "https://deno.land/x/compress@v0.4.5/deps.ts";
-import { gql, test /*testDir*/ } from "../../utils.ts";
-// import { join, resolve } from "std/path/mod.ts";
-// import { digestPath } from "../../../src/utils.ts";
+import { gql, test } from "../../utils.ts";
 
 test("Deno runtime", async (t) => {
   const e = await t.pythonFile("runtimes/deno/deno.py");
@@ -133,58 +130,5 @@ test("Deno runtime: use local imports", async (t) => {
   });
 });
 
-// TODO
-// test("Deno runtime: reloading", async (t) => {
-//   const tmpDir = "test_tmp";
-//   await Deno.mkdir(tmpDir, { recursive: true });
-//   const tmpFilePath = await Deno.makeTempFile({
-//     dir: tmpDir,
-//     suffix: ".ts",
-//   });
-//   const hash = await digestPath(tmpFilePath);
-//   const dynamicPath = path.join(hash, tmpFilePath);
-//   console.log("DYN PATH", dynamicPath);
-
-//   const load = async () => {
-//     Deno.env.set("DYNAMIC", dynamicPath);
-//     const e = await t.pythonFile("runtimes/deno/deno_reload.py");
-//     Deno.env.delete("DYNAMIC");
-//     return e;
-//   };
-
-//   await Deno.writeTextFile(
-//     dynamicPath,
-//     `export function fire() { return 1; }`,
-//   );
-//   const v1 = await load();
-
-//   await t.should("work with v1", async () => {
-//     await gql`
-//       query {
-//         fire
-//       }
-//     `.expectData({
-//       fire: 1,
-//     }).on(v1);
-//   });
-
-//   t.unregister(v1);
-
-//   await Deno.writeTextFile(
-//     dynamicPath,
-//     `export function fire() { return 2; }`,
-//   );
-//   const v2 = await load();
-
-//   await t.should("work with v2", async () => {
-//     await gql`
-//       query {
-//         fire
-//       }
-//     `
-//       .expectData({
-//         fire: 2,
-//       })
-//       .on(v2);
-//   });
-// });
+// Note: deno files are uploaded when meta-cli is run (only once)
+// with the current implementation reloading at runtime (post meta-cli) does not really make sense
