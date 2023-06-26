@@ -3,22 +3,20 @@ syntax = "proto3";
 package geography;
 
 service Demography {
-  rpc Country (CountryRequest) returns (CountryReply) {}
+  rpc Country(CountryRequest) returns (CountryReply) {}
 }
 
-message CountryRequest {
-  string name = 1;
-}
+message CountryRequest { string name = 1; }
 
 message Currency {
-	string code = 1;
-	string name = 2;
-	string symbol = 3;
+  string code = 1;
+  string name = 2;
+  string symbol = 3;
 }
 
 message CountryReply {
   string name = 1;
   string capital = 2;
   int32 population = 3;
-	repeated Currency currencies = 4;
+  repeated Currency currencies = 4;
 }
