@@ -39,7 +39,7 @@ test("Grpc runtime", async (t) => {
   const e = await t.pythonFile("runtimes/grpc/grpc.py");
 
   await withMockServer(async () => {
-    await t.should("works", async () => {
+    await t.should("work with variables", async () => {
       await gql`
         query {
           greet(name: "Metatype") {
@@ -55,7 +55,7 @@ test("Grpc runtime", async (t) => {
         .on(e);
     });
 
-    await t.should("works 2", async () => {
+    await t.should("work with arguments of list of values", async () => {
       await gql`
         query {
           sum(list: [1, 2, 3, 4, 5]) {
@@ -71,7 +71,7 @@ test("Grpc runtime", async (t) => {
         .on(e);
     });
 
-    await t.should("works 3", async () => {
+    await t.should("work with nested objects", async () => {
       await gql`
         query {
           country(name: "France") {
@@ -108,7 +108,7 @@ test("Grpc runtime", async (t) => {
         .on(e);
     });
 
-    await t.should("works 4", async () => {
+    await t.should("work with booleans", async () => {
       await gql`
         query {
           is_prime(number: 17) {
