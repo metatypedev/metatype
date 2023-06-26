@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 use crate::RT;
+use anyhow::Context;
 use macros::deno;
 
 use std::ops::Deref;
@@ -78,22 +79,22 @@ impl Decoder for DynCodec {
         let response_message =
             get_relative_message_name(self.method_descriptor_proto.output_type()).unwrap();
 
-        let ret = buf2response(buf, response_message, self.file_descriptor.clone())
+        let response = buf2response(buf, response_message, self.file_descriptor.clone())
             .map(Some)
             .map_err(|err| Status::internal(format!("{:?}", err)));
         src.advance(length);
-        ret
+        response
     }
 }
 
 fn json2request(
     json: String,
-    name: String,
+    input_message: String,
     file_descriptor: FileDescriptor,
 ) -> anyhow::Result<DynRequest> {
     let msg_descriptor = file_descriptor
-        .message_by_package_relative_name(&name)
-        .unwrap();
+        .message_by_package_relative_name(&input_message)
+        .with_context(|| format!("Input message {input_message} not found"))?;
     let mut msg = msg_descriptor.new_instance();
     protobuf_json_mapping::merge_from_str(&mut *msg, &json)?;
 
@@ -102,12 +103,12 @@ fn json2request(
 
 fn buf2response(
     buffer: &[u8],
-    name: String,
+    output_message: String,
     file_descriptor: FileDescriptor,
 ) -> anyhow::Result<DynResponse> {
     let msg_descriptor = file_descriptor
-        .message_by_package_relative_name(&name)
-        .unwrap();
+        .message_by_package_relative_name(&output_message)
+        .with_context(|| format!("Output message {output_message} not found"))?;
 
     let mut msg = msg_descriptor.new_instance();
     msg.merge_from_bytes_dyn(buffer)?;
@@ -116,7 +117,9 @@ fn buf2response(
 }
 
 fn get_file_descriptor(proto_file: &Path) -> anyhow::Result<FileDescriptor> {
-    let proto_folder = proto_file.parent().unwrap();
+    let proto_folder = proto_file
+        .parent()
+        .expect("Proto file to be within a folder");
 
     let mut file_descriptor_protos = protobuf_parse::Parser::new()
         .include(proto_folder)
@@ -136,30 +139,29 @@ fn get_method_descriptor_proto(
     file_descriptor: FileDescriptor,
     method_name: &str,
 ) -> anyhow::Result<MethodDescriptorProto> {
-    let mut method_descriptor_proto = None;
+    let method = file_descriptor
+        .proto()
+        .service
+        .iter()
+        .flat_map(|service| &service.method)
+        .find(|method| method.name.as_ref().is_some_and(|name| name == method_name))
+        .expect("Method descriptor");
 
-    file_descriptor.proto().service.iter().for_each(|service| {
-        service.method.iter().for_each(|method| {
-            if method.name == Some(method_name.to_string()) {
-                method_descriptor_proto = Some(method);
-            }
-        })
-    });
-
-    Ok(method_descriptor_proto.unwrap().clone())
+    Ok(method.clone())
 }
 
 fn get_relative_message_name(absolute_message_name: &str) -> anyhow::Result<String> {
-    let relative_message_name = absolute_message_name.split('.').collect::<Vec<_>>()[2];
+    let path: Vec<&str> = absolute_message_name.split('.').collect();
+    let message = path.get(2).expect("Valid path");
 
-    Ok(relative_message_name.to_string())
+    Ok(message.to_string())
 }
 
 fn get_relative_method_name(absolute_method_name: &str) -> anyhow::Result<String> {
-    let method_path_vec: Vec<&str> = absolute_method_name.split('/').collect();
-    let method_name = method_path_vec[2];
+    let path: Vec<&str> = absolute_method_name.split('/').collect();
+    let method = path.get(2).expect("Valid path");
 
-    Ok(method_name.to_string())
+    Ok(method.to_string())
 }
 
 fn get_gprc_client(endpoint: &str) -> anyhow::Result<Grpc<Channel>> {
@@ -173,28 +175,22 @@ fn get_gprc_client(endpoint: &str) -> anyhow::Result<Grpc<Channel>> {
     Ok(client)
 }
 
-type JsonResponse = String;
-type JsonRequest = String;
-type MethodPath = String;
-
 fn call_method(
     endpoint: &str,
     proto_file: &Path,
-    method_path: MethodPath,
-    json_payload: JsonRequest,
-) -> JsonResponse {
+    method_path: String,
+    json_payload: String,
+) -> anyhow::Result<String> {
     let mut client = get_gprc_client(endpoint).unwrap();
 
     let file_descriptor = get_file_descriptor(proto_file).unwrap();
 
     let method_name = get_relative_method_name(&method_path).unwrap();
     let method_descriptor_proto =
-        get_method_descriptor_proto(file_descriptor.clone(), &method_name).unwrap();
+        get_method_descriptor_proto(file_descriptor.clone(), &method_name)?;
 
-    let request_message = get_relative_message_name(method_descriptor_proto.input_type()).unwrap();
-    let req = json2request(json_payload, request_message, file_descriptor.clone())
-        .unwrap()
-        .into_request();
+    let request_message = get_relative_message_name(method_descriptor_proto.input_type())?;
+    let req = json2request(json_payload, request_message, file_descriptor.clone())?.into_request();
 
     let path = PathAndQuery::from_str(method_path.as_str()).unwrap();
 
@@ -207,7 +203,8 @@ fn call_method(
 
     let response = RT.block_on(client.unary(req, path, codec)).unwrap();
     let response = response.get_ref().deref();
-    protobuf_json_mapping::print_to_string(response).unwrap()
+    let json_response = protobuf_json_mapping::print_to_string(response).unwrap();
+    Ok(json_response)
 }
 
 #[deno]
@@ -215,5 +212,11 @@ fn call_grpc_method(input: GrpcInput) -> GrpcOutput {
     let proto_file = PathBuf::from_str(&input.proto_file).unwrap();
 
     let response = call_method(&input.endpoint, &proto_file, input.method, input.payload);
-    GrpcOutput::Ok { res: response }
+
+    match response {
+        Ok(json) => GrpcOutput::Ok { res: json },
+        Err(error) => GrpcOutput::Err {
+            message: error.to_string(),
+        },
+    }
 }
