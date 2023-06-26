@@ -10,8 +10,15 @@ message CountryRequest {
   string name = 1;
 }
 
+message Currency {
+	string code = 1;
+	string name = 2;
+	string symbol = 3;
+}
+
 message CountryReply {
   string name = 1;
   string capital = 2;
   int32 population = 3;
+	repeated Currency currencies = 4;
 }

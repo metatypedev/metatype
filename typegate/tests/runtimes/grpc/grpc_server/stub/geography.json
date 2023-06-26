@@ -10,7 +10,19 @@
     "data": {
       "name": "France",
       "capital": "Paris",
-      "population": 68035000
+      "population": 68035000,
+      "currencies": [
+        {
+          "code": "EUR",
+          "name": "Euro",
+          "symbol": "€"
+        },
+        {
+          "code": "XPF",
+          "name": "CFP franc",
+          "symbol": "F"
+        }
+      ]
     }
   }
 }

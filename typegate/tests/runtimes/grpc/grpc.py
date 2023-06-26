@@ -38,7 +38,20 @@ with TypeGraph("Grpc") as g:
             "/geography.Demography/Country",
             t.struct({"name": t.string()}),
             t.struct(
-                {"name": t.string(), "capital": t.string(), "population": t.integer()}
+                {
+                    "name": t.string(),
+                    "capital": t.string(),
+                    "population": t.integer(),
+                    "currencies": t.array(
+                        t.struct(
+                            {
+                                "code": t.string(),
+                                "name": t.string(),
+                                "symbol": t.string(),
+                            }
+                        )
+                    ),
+                }
             ),
         ),
         is_prime=grpc.call_method(

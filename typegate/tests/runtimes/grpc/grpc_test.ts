@@ -78,6 +78,11 @@ test("Grpc runtime", async (t) => {
             name
             capital
             population
+            currencies {
+							code
+							name
+							symbol
+						}
           }
         }
       `
@@ -86,6 +91,18 @@ test("Grpc runtime", async (t) => {
             name: "France",
             capital: "Paris",
             population: 68_035_000,
+            currencies: [
+              {
+                code: "EUR",
+                name: "Euro",
+                symbol: "€",
+              },
+              {
+                code: "XPF",
+                name: "CFP franc",
+                symbol: "F",
+              },
+            ],
           },
         })
         .on(e);

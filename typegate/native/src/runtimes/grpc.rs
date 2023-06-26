@@ -119,7 +119,7 @@ fn buf2response(
 fn get_file_descriptor(proto_file: &Path) -> anyhow::Result<FileDescriptor> {
     let proto_folder = proto_file
         .parent()
-        .expect("Proto file to be within a folder");
+        .context("Proto file is not within a folder")?;
 
     let mut file_descriptor_protos = protobuf_parse::Parser::new()
         .include(proto_folder)
@@ -145,21 +145,21 @@ fn get_method_descriptor_proto(
         .iter()
         .flat_map(|service| &service.method)
         .find(|method| method.name.as_ref().is_some_and(|name| name == method_name))
-        .expect("Method descriptor");
+        .context("Method descriptor not found")?;
 
     Ok(method.clone())
 }
 
 fn get_relative_message_name(absolute_message_name: &str) -> anyhow::Result<String> {
     let path: Vec<&str> = absolute_message_name.split('.').collect();
-    let message = path.get(2).expect("Valid path");
+    let message = path.get(2).context("Invalid path")?;
 
     Ok(message.to_string())
 }
 
 fn get_relative_method_name(absolute_method_name: &str) -> anyhow::Result<String> {
     let path: Vec<&str> = absolute_method_name.split('/').collect();
-    let method = path.get(2).expect("Valid path");
+    let method = path.get(2).context("Invalid path")?;
 
     Ok(method.to_string())
 }
