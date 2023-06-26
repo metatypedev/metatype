@@ -79,10 +79,10 @@ test("Grpc runtime", async (t) => {
             capital
             population
             currencies {
-							code
-							name
-							symbol
-						}
+              code
+              name
+              symbol
+            }
           }
         }
       `
