@@ -194,8 +194,7 @@ pub mod deno_rt {
                 let Some(path) = mat_data.code.strip_prefix("file:") else {
                     continue;
                 };
-
-                let path = Path::new(path).to_owned();
+                let path = tg.path.as_ref().unwrap().parent().unwrap().join(path);
                 mat_data.code = compress_and_encode(&path, &tg.path);
 
                 mat.data = map_from_object(mat_data)?;
