@@ -95,11 +95,13 @@ async function register_import_func(_: null, task: RegisterImportFuncTask) {
   const { moduleCode, verbose, op } = task;
   verbose && logger.info(`register import func "${op}"`);
   const repr = await structureRepr(moduleCode);
-  const destPath = path.join("tmp", repr.hash, "scripts", "deno");
+
+  const basePath = path.join("tmp", repr.hash);
   try {
-    await Deno.remove(destPath, { recursive: true }); // cleanup
+    await Deno.remove(basePath, { recursive: true }); // cleanup
   } catch (_) { /* not exist yet */ }
-  const baseDir = await uncompress(destPath, repr.base64);
+  const baseDir = await uncompress(basePath, repr.base64);
+
   registry.set(
     op,
     await import(

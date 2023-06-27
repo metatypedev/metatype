@@ -47,7 +47,7 @@ export type JSONValue =
 type FolderRepr = {
   entryPoint: string;
   base64: string;
-  hash: string; // root/tmp/deno/{hash}
+  hash: string; // root/tmp/{hash}
 };
 
 // Map undefined | null to None
