@@ -254,6 +254,7 @@ export async function uncompress(dir: string, tarb64: string) {
     await ensureFile(resFilePath);
     const file = await Deno.open(resFilePath, { write: true });
     await conversion.copy(entry, file);
+    file.close();
   }
   return baseDir;
 }
@@ -277,10 +278,10 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
   if (!fileStr.startsWith(filePrefix)) {
     throw Error(`${filePrefix} prefix not specified`);
   }
-  if (!base64Str.startsWith(b64Prefix)) {
-    throw Error(`${b64Prefix} prefix not specified`);
-  }
   if (!tgPrefix.startsWith(tgPrefix)) {
+    throw Error(`${tgPrefix} prefix not specified`);
+  }
+  if (!base64Str.startsWith(b64Prefix)) {
     throw Error(`${b64Prefix} prefix not specified`);
   }
 

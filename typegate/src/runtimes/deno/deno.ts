@@ -10,6 +10,8 @@ import * as ast from "graphql/ast";
 import { InternalAuth } from "../../auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
+import { structureRepr, uncompress } from "../../utils.ts";
+import { path } from "compress/deps.ts";
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => (args),
@@ -93,9 +95,16 @@ export class DenoRuntime extends Runtime {
       } else if (mat.name === "module") {
         const code = mat.data.code as string;
 
+        const repr = await structureRepr(code);
+        const basePath = path.join("tmp", "scripts", "deno", repr.hash);
+        try {
+          await Deno.remove(basePath, { recursive: true }); // cleanup
+        } catch (_) { /* not exist yet */ }
+        const baseDir = await uncompress(basePath, repr.base64);
+
         ops.set(registryCount, {
           type: "register_import_func",
-          moduleCode: code,
+          modulePath: path.join(baseDir, repr.entryPoint),
           op: registryCount,
           verbose: false,
         });
