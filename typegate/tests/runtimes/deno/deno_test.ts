@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { gql, test } from "../../utils.ts";
+import { resolve } from "std/path/mod.ts";
 
 test("Deno runtime", async (t) => {
   const e = await t.pythonFile("runtimes/deno/deno.py");
@@ -107,28 +108,50 @@ test("Deno runtime: permissions", async (t) => {
   });
 });
 
-test("Deno runtime: use local imports", async (t) => {
-  const e = await t.pythonFile("runtimes/deno/deno_dep.py");
-  await t.should("work for local imports", async () => {
+test("Deno runtime: reloading", async (t) => {
+  const tmpDir = "typegate/tests/runtimes/deno/scripts/deno/tmp";
+
+  const load = async (value: number) => {
+    await Deno.mkdir(tmpDir, { recursive: true });
+    const dynamicPath = await Deno.makeTempFile({
+      dir: tmpDir,
+      suffix: ".ts",
+    });
+    await Deno.writeTextFile(
+      dynamicPath,
+      `export function fire() { return ${value}; }`,
+    );
+    Deno.env.set("DYNAMIC", resolve(dynamicPath));
+    const e = await t.pythonFile("runtimes/deno/deno_reload.py");
+    Deno.env.delete("DYNAMIC");
+    return e;
+  };
+
+  const v1 = await load(1);
+  await t.should("work with v1", async () => {
     await gql`
       query {
-        doAddition(a: 1, b: 2)
+        fire
       }
     `.expectData({
-      doAddition: 3,
-    }).on(e);
+      fire: 1,
+    }).on(v1);
   });
 
-  await t.should("work with direct code", async () => {
+  t.unregister(v1);
+
+  const v2 = await load(2);
+  await t.should("work with v2", async () => {
     await gql`
       query {
-        simple(a: 1, b: 2)
+        fire
       }
-    `.expectData({
-      simple: 3,
-    }).on(e);
+    `
+      .expectData({
+        fire: 2,
+      })
+      .on(v2);
   });
+
+  await Deno.remove(tmpDir, { recursive: true });
 });
-
-// Note: deno files are uploaded when meta-cli is run (only once)
-// with the current implementation reloading at runtime (post meta-cli) does not really make sense
