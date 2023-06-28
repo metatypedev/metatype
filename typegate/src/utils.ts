@@ -276,31 +276,22 @@ export async function digestPath(path: string) {
 }
 
 export async function structureRepr(str: string): Promise<FolderRepr> {
-  const [fileStr, tgFolderStr, base64Str] = str.split(";");
-  if (!tgFolderStr || !base64Str) {
+  const [fileStr, base64Str] = str.split(";");
+  if (!base64Str) {
     throw Error("given string is malformed");
   }
-  const filePrefix = "file:", b64Prefix = "base64:", tgPrefix = "tg_folder:";
+  const filePrefix = "file:", b64Prefix = "base64:";
 
   if (!fileStr.startsWith(filePrefix)) {
     throw Error(`${filePrefix} prefix not specified`);
   }
-  if (!tgPrefix.startsWith(tgPrefix)) {
-    throw Error(`${tgPrefix} prefix not specified`);
-  }
+
   if (!base64Str.startsWith(b64Prefix)) {
     throw Error(`${b64Prefix} prefix not specified`);
   }
-  // absolute path to the script
-  const userMainFile = fileStr.substring(filePrefix.length);
-  // absolute path to the typegraph
-  const userTgFolder = tgFolderStr.substring(tgPrefix.length);
-  // script path is guaranteed to be a level above typegraph path
-  // strip the prefix and use the resulting path to preserve the layout in tmp folder
-  const relativeTg = userMainFile.split(userTgFolder).pop();
-  if (relativeTg == undefined) {
-    throw Error(`${userMainFile} not at same directory as ${userTgFolder}`);
-  }
+  // path to the script (relative from typegraph)
+  const relativeTg = fileStr.substring(filePrefix.length);
+
   const sep = relativeTg.indexOf("\\") >= 0 ? "\\" : "/";
   const prefixReg = new RegExp(`^${sep}?scripts${sep}deno(.*)`);
   const entryPoint = relativeTg.match(prefixReg)?.[1];
@@ -311,6 +302,6 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
   }
 
   const base64 = base64Str.substring(b64Prefix.length);
-  const hash = await digestPath(userMainFile);
+  const hash = await digestPath(relativeTg);
   return { entryPoint, base64, hash };
 }

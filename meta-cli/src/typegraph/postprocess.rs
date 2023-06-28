@@ -107,7 +107,7 @@ pub mod deno_rt {
         // Note: main_path and tg_path are all absolute
         // tg_root/tg.py
         // tg_root/scripts/deno/* <= script location
-        let base_path = match tg_path {
+        let base_rel_path = match tg_path {
             Some(path) => {
                 let tg_folder = path.parent();
                 if let Some(tg_folder) = tg_folder {
@@ -119,19 +119,25 @@ pub mod deno_rt {
             None => "".to_string(),
         };
 
-        let dir_walker = WalkBuilder::new(&base_path).standard_filters(true).build();
+        let dir_walker = WalkBuilder::new(&base_rel_path)
+            .standard_filters(true)
+            .build();
         let suffix = Path::new("scripts/deno");
         let enc_content = match archive_entries(dir_walker, Some(suffix)).unwrap() {
             Some(b64) => b64,
             None => "".to_string(),
         };
+        // main_path: /abs/path/to/my_typegraphs/scripts/deno/ts/dep/main.ts
+        // base_path: relative/my_typegraphs (based on cwd)
+        let file = main_path
+            .display()
+            .to_string()
+            .split(&base_rel_path)
+            .last() // TODO: what if user use a subpath == base_rel_path ?
+            .unwrap()
+            .to_owned();
 
-        format!(
-            "file:{};tg_folder:{};base64:{}",
-            main_path.display(),
-            base_path,
-            enc_content
-        )
+        format!("file:{};base64:{}", file, enc_content)
     }
 
     fn reformat_materializer_script(
