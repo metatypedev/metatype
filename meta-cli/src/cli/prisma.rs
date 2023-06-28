@@ -111,6 +111,10 @@ pub struct Dev {
     #[command(flatten)]
     node: super::CommonArgs,
 
+    /// Target typegate (cf config)
+    #[clap(short, long)]
+    pub target: String,
+
     #[command(flatten)]
     prisma: PrismaArgs,
 
@@ -126,7 +130,7 @@ impl Action for Dev {
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
 
-        let node_config = config.node(&self.node, "dev");
+        let node_config = config.node(&self.node, &self.target);
         let node = node_config.build(dir).await?;
 
         let mut migrate = PrismaMigrate::new(&self.prisma, &config, node)?;
@@ -160,6 +164,10 @@ pub struct Deploy {
     #[command(flatten)]
     node: CommonArgs,
 
+    /// Target typegate (cf config)
+    #[clap(short, long)]
+    pub target: String,
+
     #[command(flatten)]
     prisma: PrismaArgs,
 }
@@ -174,7 +182,7 @@ impl Action for Deploy {
             .prisma
             .fill(&config)?
             .ok_or_else(|| anyhow!("No migrations in the migration directory"))?;
-        let node_config = config.node(&self.node, "deploy");
+        let node_config = config.node(&self.node, &self.target);
         let node: Node = node_config.build(dir).await?;
 
         let res = node
@@ -239,6 +247,10 @@ pub struct Diff {
     #[command(flatten)]
     node: CommonArgs,
 
+    /// Target typegate (cf config)
+    #[clap(short, long)]
+    pub target: String,
+
     #[command(flatten)]
     prisma: PrismaArgs,
 
@@ -253,7 +265,7 @@ impl Action for Diff {
         let dir = &args.dir()?;
         let config_path = args.config;
         let config = Config::load_or_find(config_path, dir)?;
-        let node_config = config.node(&self.node, "dev");
+        let node_config = config.node(&self.node, &self.target);
         let node = node_config.build(dir).await?;
         PrismaMigrate::new(&self.prisma, &config, node)?
             .diff(self.script)

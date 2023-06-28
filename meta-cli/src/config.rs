@@ -221,9 +221,9 @@ impl Config {
         }
     }
 
-    pub fn node(&self, args: &CommonArgs, default_target: &str) -> NodeConfig {
+    pub fn node(&self, args: &CommonArgs, target: &str) -> NodeConfig {
         self.typegates
-            .get(args.target.as_deref().unwrap_or(default_target))
+            .get(target)
             .unwrap_or(&DEFAULT_NODE_CONFIG)
             .with_args(args)
     }

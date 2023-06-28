@@ -15,6 +15,10 @@ pub struct Dev {
     #[command(flatten)]
     node: CommonArgs,
 
+    /// Target typegate (cf config)
+    #[clap(short, long)]
+    pub target: Option<String>,
+
     #[clap(long, default_value_t = false)]
     run_destructive_migrations: bool,
 }
@@ -31,7 +35,12 @@ impl Action for Dev {
             create_migration: true,
         };
 
-        let deploy = DeploySubcommand::new(self.node.clone(), options, None);
+        let deploy = DeploySubcommand::new(
+            self.node.clone(),
+            self.target.clone().unwrap_or("dev".to_string()),
+            options,
+            None,
+        );
         deploy.run(args).await
     }
 }

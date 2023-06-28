@@ -39,6 +39,10 @@ pub struct DeploySubcommand {
     #[command(flatten)]
     node: CommonArgs,
 
+    /// Target typegate (cf config)
+    #[clap(short, long)]
+    pub target: String,
+
     /// Load specific typegraph from a file
     #[clap(short, long)]
     file: Option<PathBuf>,
@@ -48,9 +52,15 @@ pub struct DeploySubcommand {
 }
 
 impl DeploySubcommand {
-    pub fn new(node: CommonArgs, options: DeployOptions, file: Option<PathBuf>) -> Self {
+    pub fn new(
+        node: CommonArgs,
+        target: String,
+        options: DeployOptions,
+        file: Option<PathBuf>,
+    ) -> Self {
         Self {
             node,
+            target,
             options,
             file,
         }
@@ -150,7 +160,7 @@ impl Deploy<DefaultModeData> {
             );
         }
 
-        let node_config = config.node(&deploy.node, "deploy");
+        let node_config = config.node(&deploy.node, &deploy.target);
         let node = node_config.build(&dir).await?;
         let push_config = PushConfig::new(node, config.base_dir.clone());
 
