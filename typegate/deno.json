@@ -36,6 +36,6 @@
     "aws-sdk/s3-request-presigner": "https://esm.sh/@aws-sdk/s3-request-presigner@3.335.0?pin=v124",
     "outdent": "https://deno.land/x/outdent@v0.8.0/mod.ts",
     "tar": "https://deno.land/std@0.128.0/archive/tar.ts",
-    "conversion": "https://deno.land/std@0.153.0/streams/conversion.ts"
+    "streams": "https://deno.land/std@0.192.0/streams/mod.ts"
   }
 }

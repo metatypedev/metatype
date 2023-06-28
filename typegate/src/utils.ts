@@ -15,7 +15,7 @@ import { TypeGraph } from "./typegraph.ts";
 
 import { ensureDir, ensureFile } from "std/fs/mod.ts";
 import { Untar } from "tar";
-import * as conversion from "conversion";
+import * as streams from "streams";
 import { path } from "compress/deps.ts";
 
 export const maxi32 = 2_147_483_647;
@@ -236,7 +236,7 @@ export async function uncompress(dir: string, tarb64: string) {
     .stream()
     .pipeThrough(new DecompressionStream("gzip"))
     .getReader();
-  const denoReader = conversion.readerFromStreamReader(streamReader);
+  const denoReader = streams.readerFromStreamReader(streamReader);
 
   const untar = new Untar(denoReader);
   const entries = [];
@@ -245,16 +245,23 @@ export async function uncompress(dir: string, tarb64: string) {
     if (entry.fileName == ".") {
       continue;
     }
-    if (entry.type === "directory") {
-      const resDirPath = path.join(baseDir, entry.fileName);
-      await ensureDir(resDirPath);
-      continue;
+    let file: Deno.FsFile | undefined;
+    try {
+      if (entry.type === "directory") {
+        const resDirPath = path.join(baseDir, entry.fileName);
+        await ensureDir(resDirPath);
+        continue;
+      }
+      const resFilePath = path.join(baseDir, entry.fileName);
+      await ensureFile(resFilePath);
+
+      file = await Deno.open(resFilePath, { write: true });
+      await streams.copy(entry, file);
+    } catch (e) {
+      throw e;
+    } finally {
+      file?.close();
     }
-    const resFilePath = path.join(baseDir, entry.fileName);
-    await ensureFile(resFilePath);
-    const file = await Deno.open(resFilePath, { write: true });
-    await conversion.copy(entry, file);
-    file.close();
   }
   return baseDir;
 }
@@ -284,9 +291,12 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
   if (!base64Str.startsWith(b64Prefix)) {
     throw Error(`${b64Prefix} prefix not specified`);
   }
-
+  // absolute path to the script
   const userMainFile = fileStr.substring(filePrefix.length);
+  // absolute path to the typegraph
   const userTgFolder = tgFolderStr.substring(tgPrefix.length);
+  // script path is guaranteed to be a level above typegraph path
+  // strip the prefix and use the resulting path to preserve the layout in tmp folder
   const relativeTg = userMainFile.split(userTgFolder).pop();
   if (relativeTg == undefined) {
     throw Error(`${userMainFile} not at same directory as ${userTgFolder}`);

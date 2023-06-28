@@ -1,7 +1,7 @@
 ---
 source: typegraph/core/tests/test_sdks.rs
 expression: tg
-input_file: typegraph/core/tests/typegraphs/simple.py
+input_file: typegraph/core/tests/typegraphs/simple.ts
 ---
 [
   {
@@ -219,7 +219,7 @@ input_file: typegraph/core/tests/typegraphs/simple.py
           "idempotent": true
         },
         "data": {
-          "code": "export function three({a,b},{context}){return{a:0,b:0};}"
+          "code": "file:/home/afmika/dev-env/metatype/typegraph/core/tests/typegraphs/three.ts;tg_folder:/home/afmika/dev-env/metatype/typegraph/core/tests/typegraphs;base64:H4sIAAAAAAAA/+2SzWrDMAzHfc5T6LhB6JT6C7Kx+65jL+Bk7hbG7OLYrBD87rMD2XIZO5QWSv27CEm2/LekzR05OYgMpeTJYiM5ru0CaRhjEilSIXJcsgYJJ2cgjF45AHIsy0cWeyH4d6f1xo/khGCDKAT7c/50S+f5cyoYlzneoKRbcpYmXvn8q8F47Xaq1/CSV+HJ7IOHqQLoWjDhs9PuPjnq14lVpQ976zzsgun9YA3MS3Qzgaqhg9iuKtXp7gS9TY8cfE79OC08696614fRu8G81RDMh7Ff5hFiddvOCtRawUpOnLNO++BMKpiOYZ3zCDHLI4VCoVD4n29LYIBPAAoAAA=="
         }
       },
       {
