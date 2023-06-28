@@ -6,7 +6,7 @@ import { DenoRuntime } from "./runtimes/deno.ts";
 export default class Policy {
   constructor(public readonly id: number, public readonly name: string) {}
 
-  static public_(): Policy {
+  static public(): Policy {
     return Policy.create(
       "__public",
       runtimes.getPredefinedDenoFunc({ name: "true" }),

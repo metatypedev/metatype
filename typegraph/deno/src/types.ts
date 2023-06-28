@@ -6,7 +6,7 @@ import {
   TypeInteger,
 } from "../gen/exports/core.d.ts";
 import { Materializer } from "./runtimes/deno.ts";
-import { mapValues } from "std/collections/map_values.ts";
+import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
 
 export type PolicySpec = Policy | {

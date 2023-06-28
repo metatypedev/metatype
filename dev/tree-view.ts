@@ -12,11 +12,11 @@
  *                  Default: 0
  */
 
-import * as flags from "https://deno.land/std@0.170.0/flags/mod.ts";
+import { parseFlags } from "./deps.ts";
 import { TypeGraphDS } from "../typegate/src/typegraph.ts";
 import { treeView } from "../typegate/src/typegraph/utils.ts";
 
-const args = flags.parse(Deno.args, {
+const args = parseFlags(Deno.args, {
   string: ["depth", "root"],
 });
 

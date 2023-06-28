@@ -1,23 +1,23 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+import re
 from dataclasses import dataclass
-from typing import List, TYPE_CHECKING, Optional
-from typegraph.gen.exports.runtimes import (
-    EffectNone,
+from typing import TYPE_CHECKING, List, Optional
+
+from typegraph_next.gen.exports.runtimes import (
     Effect,
+    EffectNone,
     MaterializerDenoFunc,
     MaterializerDenoImport,
     MaterializerDenoPredefined,
 )
-from typegraph.gen.types import Err
-from typegraph.wit import runtimes, store
-from typegraph.policy import Policy
-import re
-
+from typegraph_next.gen.types import Err
+from typegraph_next.policy import Policy
+from typegraph_next.wit import runtimes, store
 
 if TYPE_CHECKING:
-    from typegraph import t
+    from typegraph_next import t
 
 
 @dataclass
@@ -54,7 +54,7 @@ class DenoRuntime(Runtime):
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        from typegraph import t
+        from typegraph_next import t
 
         return t.func(
             inp, out, FunMat(mat_id.value, code=code, secrets=secrets, effect=effect)
@@ -81,7 +81,7 @@ class DenoRuntime(Runtime):
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        from typegraph import t
+        from typegraph_next import t
 
         return t.func(
             inp,
@@ -96,7 +96,7 @@ class DenoRuntime(Runtime):
         )
 
     def identity(self, inp: "t.struct") -> "t.func":
-        from typegraph import t
+        from typegraph_next import t
 
         res = runtimes.get_predefined_deno_func(
             store, MaterializerDenoPredefined(name="identity")

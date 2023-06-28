@@ -62,10 +62,10 @@ fn test_files(glob: &str) {
 
 #[test]
 fn test_python_sdk() {
-    test_files("typegraphs/*.py");
+    test_files("typegraphs/python/*.py");
 }
 
 #[test]
 fn test_deno_sdk() {
-    test_files("typegraphs/*.ts");
+    test_files("typegraphs/deno/*.ts");
 }

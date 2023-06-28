@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from wasmtime import Store
-from typegraph.gen import TypegraphCore
-from typegraph.gen.exports.core import Core
-from typegraph.gen.exports.runtimes import Runtimes
 
+from typegraph_next.gen import TypegraphCore
+from typegraph_next.gen.exports.core import Core
+from typegraph_next.gen.exports.runtimes import Runtimes
 
 store = Store()
 _typegraph_core = TypegraphCore(store)

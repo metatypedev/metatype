@@ -1,13 +1,14 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph.gen.exports.core import TypegraphInitParams
-from typegraph.gen.types import Err
-from typing import List, Optional, TYPE_CHECKING
-from typegraph.wit import store, core
+from typing import TYPE_CHECKING, List, Optional
+
+from typegraph_next.gen.exports.core import TypegraphInitParams
+from typegraph_next.gen.types import Err
+from typegraph_next.wit import core, store
 
 if TYPE_CHECKING:
-    from typegraph import t
+    from typegraph_next import t
 
 
 class typegraph:

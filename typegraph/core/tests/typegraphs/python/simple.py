@@ -1,8 +1,8 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph import t, typegraph, g
-from typegraph.runtimes.deno import DenoRuntime
+from typegraph_next import g, t, typegraph
+from typegraph_next.runtimes.deno import DenoRuntime
 
 a = t.integer()
 
@@ -24,7 +24,7 @@ with typegraph(name="test-types") as expose:
         two=deno.func(user, post, code="(user) => ({ id: 12, user })").with_policy(
             deno.policy("deny", "() => false")
         ),
-        three=deno.import_(s1, s1, name="three", module="scripts/three.ts").with_policy(
-            public
-        ),
+        three=deno.import_(
+            s1, s1, name="three", module="../scripts/three.ts"
+        ).with_policy(public),
     )

@@ -1,7 +1,7 @@
 ---
 source: typegraph/core/tests/test_sdks.rs
 expression: tg
-input_file: typegraph/core/tests/typegraphs/simple.py
+input_file: typegraph/core/tests/typegraphs/deno/simple.ts
 ---
 [
   {

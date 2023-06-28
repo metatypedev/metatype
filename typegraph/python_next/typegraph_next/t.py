@@ -1,23 +1,27 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph.gen.exports.core import (
-    PolicySpecSimple,
-    TypeInteger,
-    TypeStruct,
-    TypeFunc,
-    TypeBase,
-    TypeProxy,
-    TypePolicy,
-    PolicyPerEffect as WitPolicyPerEffect,
-    PolicySpecPerEffect,
-)
-from typegraph.gen.types import Err
-from typing import Optional, Dict, Union, Tuple
+from typing import Dict, Optional, Tuple, Union
+
 from typing_extensions import Self
-from typegraph.graph.typegraph import core, store
-from typegraph.runtimes.deno import Materializer
-from typegraph.policy import Policy, PolicyPerEffect
+
+from typegraph_next.gen.exports.core import (
+    PolicyPerEffect as WitPolicyPerEffect,
+)
+from typegraph_next.gen.exports.core import (
+    PolicySpecPerEffect,
+    PolicySpecSimple,
+    TypeBase,
+    TypeFunc,
+    TypeInteger,
+    TypePolicy,
+    TypeProxy,
+    TypeStruct,
+)
+from typegraph_next.gen.types import Err
+from typegraph_next.graph.typegraph import core, store
+from typegraph_next.policy import Policy, PolicyPerEffect
+from typegraph_next.runtimes.deno import Materializer
 
 
 class typedef:

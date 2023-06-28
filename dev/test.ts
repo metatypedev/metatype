@@ -25,10 +25,10 @@ import {
   expandGlobSync,
   mergeReadableStreams,
   parseFlags,
-  projectDir,
   resolve,
   TextLineStream,
-} from "./mod.ts";
+} from "./deps.ts";
+import { projectDir } from "./utils.ts";
 
 const flags = parseFlags(Deno.args, { "--": true, string: ["threads"] });
 

@@ -1,18 +1,21 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Union, Optional
-from typegraph.wit import store, runtimes, core
-from typegraph.gen.exports.runtimes import MaterializerDenoPredefined
-from typegraph.gen.exports.core import (
+from dataclasses import dataclass
+from re import Pattern
+from typing import Optional, Union
+
+from typegraph_next.gen.exports.core import (
+    ContextCheckPattern,
+    ContextCheckValue,
     Err,
     MaterializerId,
-    Policy as WitPolicy,
-    ContextCheckValue,
-    ContextCheckPattern,
 )
-from re import Pattern
-from dataclasses import dataclass
+from typegraph_next.gen.exports.core import (
+    Policy as WitPolicy,
+)
+from typegraph_next.gen.exports.runtimes import MaterializerDenoPredefined
+from typegraph_next.wit import core, runtimes, store
 
 
 class Policy:
@@ -52,7 +55,7 @@ class Policy:
     # TODO implement in Rust for the Guest wasm
     @classmethod
     def internal(cls) -> "Policy":
-        from typegraph.runtimes.deno import DenoRuntime
+        from typegraph_next.runtimes.deno import DenoRuntime
 
         return DenoRuntime().policy(
             "__internal", "(_, { context }) => context.provider === 'internal'"

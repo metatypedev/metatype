@@ -146,9 +146,11 @@ install:
     DENO_BINDGEN_URL: "https://deno.land/x/deno_bindgen@0.8.1/cli.ts"
     WASM_TOOLS_VERSION: "1.0.33"
     JCO_VERSION: "0.7.0"
+    CARGO_INSTA_VERSION: "1.30.0"
   command: |
     set -e
     cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+    cargo install cargo-insta --version $CARGO_INSTA_VERSION --locked
     deno install --allow-all --force -n deno_bindgen $DENO_BINDGEN_URL
     npm install --global @bytecodealliance/jco@$JCO_VERSION
     [ -d .venv ] || python3 -m venv .venv

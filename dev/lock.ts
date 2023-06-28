@@ -1,23 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import {
-  expandGlobSync,
-  parseFlags,
-  projectDir,
-  relPath,
-  resolve,
-  semver,
-  yaml,
-} from "./mod.ts";
-
-interface Lockfile {
-  [channel: string]: {
-    files: Record<string, string[]>;
-    rules: Record<string, Record<string, string>>;
-    lock: Record<string, string>;
-  };
-}
+import { expandGlobSync, parseFlags, resolve, semver, yaml } from "./deps.ts";
+import { getLockfile, lockfileUrl, projectDir, relPath } from "./utils.ts";
 
 const args = parseFlags(Deno.args, {
   boolean: ["version", "check"],
@@ -29,10 +14,7 @@ const ignores = Deno.readTextFileSync(resolve(projectDir, ".gitignore")).split(
   "\n",
 ).map((l) => l.trim()).filter((line) => line.length > 0);
 
-const lockfileUrl = resolve(projectDir, "dev/lock.yml");
-const lockfile = yaml.parse(
-  Deno.readTextFileSync(lockfileUrl),
-) as Lockfile;
+const lockfile = await getLockfile();
 
 const version = lockfile.dev.lock.METATYPE_VERSION;
 if (args.version) {
@@ -55,12 +37,12 @@ if (args.bump) {
     Deno.exit(1);
   }
 
-  const newVersion = semver.inc(
-    version,
+  const newVersion = semver.format(semver.increment(
+    semver.parse(version),
     args.bump as semver.ReleaseType,
     undefined,
     "dev",
-  )!;
+  ));
   lockfile.dev.lock.METATYPE_VERSION = newVersion;
   console.log(`Bumping ${version} → ${newVersion}`);
 }

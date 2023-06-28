@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "typegraph"
+name = "typegraph_next"
 version = "0.1.10"
 description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
@@ -16,7 +16,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 wasmtime = "^9.0.0"
-typing-extensions = "^4.6.3"
+typing-extensions = "^4.7.0"
 
 [tool.pyright]
 venvPath = "."
