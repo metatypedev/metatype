@@ -1,7 +1,7 @@
 ---
 source: typegraph/core/tests/test_sdks.rs
 expression: tg
-input_file: typegraph/core/tests/typegraphs/simple.ts
+input_file: typegraph/core/tests/typegraphs/simple.py
 ---
 [
   {
@@ -269,6 +269,7 @@ input_file: typegraph/core/tests/typegraphs/simple.ts
       "auths": [],
       "rate": null,
       "version": "0.0.1"
-    }
+    },
+    "prefix": null
   }
 ]
