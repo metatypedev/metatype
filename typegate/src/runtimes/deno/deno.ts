@@ -95,15 +95,23 @@ export class DenoRuntime extends Runtime {
         const code = mat.data.code as string;
 
         const repr = await structureRepr(code);
-        const basePath = path.join("tmp", "scripts", "deno", repr.hash);
+        //    (user) scripts/deno/*
+        // => (gate) tmp/scripts/{tgname}/deno/*
+        const basePath = path.join(
+          "tmp",
+          "scripts",
+          typegraphName,
+          "deno",
+          repr.hash,
+        );
         try {
           await Deno.remove(basePath, { recursive: true }); // cleanup
         } catch (_) { /* not exist yet */ }
-        const baseDir = await uncompress(basePath, repr.base64);
+        const outDir = await uncompress(basePath, repr.base64);
 
         ops.set(registryCount, {
           type: "register_import_func",
-          modulePath: path.join(baseDir, repr.entryPoint),
+          modulePath: path.join(outDir, repr.entryPoint),
           op: registryCount,
           verbose: false,
         });
