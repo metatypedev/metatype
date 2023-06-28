@@ -1,0 +1,58 @@
+# Type System Overview
+
+Types are used to describe the data to be processed.
+They constrains the range of value that can be accepted as input data
+or expected as result on each computation running in a runtime.
+
+## Scalar types
+
+|Type|GraphQL type|Description|
+|---|---|---|
+|[`t.integer()`](/docs/reference/type-system/integer)|`Int`|Represents signed 32-bit integers.|
+|[`t.number()`](/docs/reference/type-system/number)|`Float`|Represents signed double-precision values as specified by [IEEE 754](https://en.wikipedia.org/wiki/IEEE_754).|
+|[`t.float()`](/docs/reference/type-system/number)|`Float`|Alias to `t.number()`.|
+|[`t.boolean()`](/docs/reference/type-system/boolean)|`Boolean`|Represents `true` or `false`.|
+|[`t.string()`](/docs/reference/type-system/string)|`String`|Represents textual data as UTF-8 character sequences.|
+|[`t.file()`](/docs/reference/type-system/file)|&mdash;|Represents a file for upload.|
+
+The following scalar types are [aliases](/docs/reference/type-system/string#aliases) to a `t.string()` type with a specific format.
+
+- `t.uuid()`
+- `t.json()`
+- `t.email()`
+- `t.uri()`
+- `t.hostname()`
+- `t.ean()`
+- `t.phone()`
+- `t.date()`
+- `t.datetime()`
+
+
+## Non-scalar types
+|Type|GraphQL type|Description|
+|---|---|---|
+|`optional`|nullable|Represents a value that may be `null`.|
+|`list`|list|Represents a list of values.|
+|`struct`|interface|Represents a structured data value, consisting of fields which map to dynamically typed values.|
+|`union`|union|Represents a value which can be one of a set of specified types.|
+|`either`|union|Represents a value which can be one of a set of specified types.|
+
+
+## Type constraints
+
+Type constraints define an additional narrowing of the range of values
+that can be accepted for the type.
+
+**Example:**
+The `min` constraint on the type `t.integer()`
+
+```python
+from typegraph import t
+
+# represents integers greater than or equal to `12`
+t.integer().min(12)  
+```
+
+
+## Injection
+

@@ -1,0 +1,32 @@
+# `t.file()`
+
+```python
+from typegraph import t
+
+t.file()
+```
+
+The `t.file()` represents files for upload.
+
+
+## Type Constraints
+
+|Constraint|Type|Description|
+|----------|----|-----------|
+|`min`|Integer|Minimum size of the file in bytes.|
+|`max`|Integer|Maximum size of the file in bytes.|
+|`allow`|Array of strings|List of allowed `content-type`s|
+
+
+## Examples
+
+```python
+from typegraph import t
+
+# A file of a minimum size of 1KB
+t.file().min(1024)
+
+# A JPEG or PNG file less than 2KB
+t.file().max(2048).allow(["image/jpeg", "image/png"])
+```
+

@@ -10,11 +10,6 @@ title: typegraph.types
 class typedef(Node)
 ```
 
-```
-# from typegraph import t
-class t.typedef
-```
-
 Base class for all the types
 
 ## number Objects

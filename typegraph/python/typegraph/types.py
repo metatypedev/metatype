@@ -105,15 +105,6 @@ reserved_types = [
 
 @frozen
 class typedef(Node):
-    """
-    ```
-    # from typegraph import t
-    class t.typedef
-    ```
-
-    Base class for all the types
-    """
-
     graph: TypeGraph = field(
         kw_only=True,
         factory=TypegraphContext.get_active,
@@ -431,15 +422,7 @@ class boolean(typedef):
 @with_constraints
 @frozen
 class number(typedef):
-    """Represents a generic number.
-
-    Args:
-        _min (float, optional): minimum constraint
-        _max (float, optional): maximum constraint
-        _x_min (float, optional): exclusive minimum constraint
-        _x_max (float, optional): exclusive maximum constraint
-        _multiple_of (float, optional): number must be a multiple of
-    """
+    """See [`t.number()`](/docs/reference/type-system/number)"""
 
     _min: Optional[float] = constraint("minimum")
     _max: Optional[float] = constraint("maximum")
@@ -454,7 +437,7 @@ def float() -> number:
 
 @frozen
 class integer(number):
-    """An integer."""
+    """See [`t.integer()`](/docs/reference/type-system/integer)"""
 
     pass
 

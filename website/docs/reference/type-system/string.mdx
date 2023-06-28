@@ -1,0 +1,62 @@
+# `t.string()`
+
+```python
+from typegraph import t
+
+t.string()
+```
+
+The `t.string()` type represents textual data represented as UTF-8 character sequences.
+
+## Type Constraints
+
+|Constraint|Type|Description|
+|----------|----|-----------|
+|`min`|Integer|Minimum length of the string.|
+|`max`|Integer|Maximum length of the string.|
+|`pattern`|String|Regular expression pattern that the string must match.|
+|`format`|String|[JSON schema format](http://json-schema.org/draft/2020-12/json-schema-validation.html#name-defined-formats) that the string must match. See [below](#supported-formats) for the list of supported formats.|
+
+### Supported formats
+
+Here is the list of supported formats:
+- `uuid`
+- `json`
+- `email`
+- `uri`
+- `hostname`
+- `ean`
+- `phone`
+- `date`
+- `date-time`
+
+## Examples
+
+```python
+from typegraph import t
+
+# a non-empty string of maximum 64 characters
+t.string().min(1).max(64)
+
+# a email address
+t.string().format("email")
+
+# a json data
+t.string().format("json")
+```
+
+
+## Aliases
+
+|Alias|Equivalent declaration|
+|-----|----------------------|
+|`t.uuid()`|`t.string().format("uuid")`|
+|`t.email()`|`t.string().format("email")`|
+|`t.uri()`|`t.string().format("uri")`|
+|`t.json`|`t.string().format("json")`|
+|`t.ean()`|`t.string().format("ean")`|
+|`t.phone()`|`t.string().format("phone")`|
+|`t.date()`|`t.string().format("date")`|
+|`t.datetime()`|`t.string().format("date-time")`|
+
+
