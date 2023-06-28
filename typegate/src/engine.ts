@@ -437,8 +437,8 @@ export class Engine {
         } else {
           auth = this.tg.auths.get(provider as string);
         }
-      } catch {
-        logger.warning("no malformed jwt");
+      } catch (e) {
+        logger.warning(`malformed jwt: ${e}`);
       }
     }
 

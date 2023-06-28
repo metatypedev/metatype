@@ -20,7 +20,9 @@ export function upgradeTypegraph(typegraph: TypeGraphDS): TypeGraphDS {
   const { meta } = typegraph;
 
   let currentVersion = meta.version;
-  while (semver.neq(typegraphVersion, currentVersion)) {
+  while (
+    semver.neq(semver.parse(typegraphVersion), semver.parse(currentVersion))
+  ) {
     const migration = typegraphChangelog[currentVersion];
     if (!migration) {
       throw Error(

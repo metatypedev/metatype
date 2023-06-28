@@ -24,7 +24,7 @@ FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
 
 FROM base AS builder
 
-ARG DENO_BINDGEN_URL=https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts
+ARG DENO_BINDGEN_URL=https://deno.land/x/deno_bindgen@0.8.1/cli.ts
 
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno

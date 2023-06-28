@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph-tests"
-version = "0.1.10-dev.0"
+version = "0.1.10"
 description = ""
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license = "MPL-2.0"
