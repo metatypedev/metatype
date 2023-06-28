@@ -11,6 +11,7 @@ import { typegraph_validate } from "native";
 import { ensure } from "../utils.ts";
 import { getLogger } from "../log.ts";
 import config from "../config.ts";
+import * as semver from "std/semver/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -102,9 +103,9 @@ export class TypeGateRuntime extends Runtime {
   };
 
   addTypegraph: Resolver = async ({ fromString, secrets, cliVersion }) => {
-    if (cliVersion !== config.version) {
+    if (!semver.gte(semver.parse(cliVersion), semver.parse(config.version))) {
       throw new Error(
-        `Meta CLI version ${cliVersion} must match typegate version ${config.version} (until the releases are stable)`,
+        `Meta CLI version ${cliVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
       );
     }
     const json = await typegraph_validate({ json: fromString }).then((res) => {

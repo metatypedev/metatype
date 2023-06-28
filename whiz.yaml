@@ -101,10 +101,9 @@ typegraph_python:
   env:
     VIRTUAL_ENV: "$PWD/.venv"
     PATH: "$PWD/.venv/bin:$PATH"
-  command: .venv/bin/python3 -m wasmtime.bindgen ../../target/debug/typegraph_core.wasm --out-dir typegraph/gen
+  command: ../../.venv/bin/python3 -m wasmtime.bindgen ../../target/debug/typegraph_core.wasm --out-dir typegraph/gen
   depends_on:
     - typegraph
-
 
 website:
   workdir: website
@@ -144,11 +143,13 @@ install:
     - typegraph/python/pyproject.toml
     - website/package.json
   env:
+    DENO_BINDGEN_URL: "https://deno.land/x/deno_bindgen@0.8.1/cli.ts"
     WASM_TOOLS_VERSION: "1.0.33"
     JCO_VERSION: "0.7.0"
   command: |
     set -e
     cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+    deno install --allow-all --force -n deno_bindgen $DENO_BINDGEN_URL
     npm install --global @bytecodealliance/jco@$JCO_VERSION
     [ -d .venv ] || python3 -m venv .venv
     poetry install

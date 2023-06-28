@@ -1,6 +1,6 @@
 [package]
 name = "typegraph"
-version = "0.1.10-dev.0"
+version = "0.1.10"
 edition = "2021"
 license-file = "../../dev/LICENSE-MPL-2.0.md"
 
