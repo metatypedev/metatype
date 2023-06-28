@@ -40,6 +40,12 @@
     },
     "meta": {
       "$ref": "#/definitions/TypeMeta"
+    },
+    "prefix": {
+      "type": [
+        "string",
+        "null"
+      ]
     }
   },
   "definitions": {

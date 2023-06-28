@@ -268,6 +268,7 @@ export interface Typegraph {
   runtimes: TGRuntime[];
   policies: Policy[];
   meta: TypeMeta;
+  prefix?: string | null;
 }
 export interface PolicyIndicesByEffect {
   none?: number | null;

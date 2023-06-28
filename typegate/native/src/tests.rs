@@ -161,7 +161,7 @@ impl TestContext {
         let datasource = make_datasource(secret)?;
         let engine_id = crate::prisma::register_engine(
             format!("{}{}", datasource, runtime.datamodel),
-            tg.types[0].base().title.clone(),
+            tg.name()?,
         )
         .await?;
 

@@ -171,10 +171,7 @@ pub mod prisma_rt {
         typegraph::runtimes::{MigrationOptions, PrismaRuntimeData},
     };
 
-    use crate::{
-        cli::prisma::PrismaArgs,
-        typegraph::utils::{map_from_object, object_from_map},
-    };
+    use crate::typegraph::utils::{map_from_object, object_from_map};
 
     #[derive(Default, Debug)]
     pub struct EmbedPrismaMigrations {
@@ -196,22 +193,14 @@ pub mod prisma_rt {
 
     impl PostProcessor for EmbedPrismaMigrations {
         fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()> {
-            let prisma_config = &config.typegraphs.materializers.prisma;
             let tg_name = tg.name().context("Getting typegraph name")?;
+            let base_migration_path = config.prisma_migrations_dir(&tg_name);
 
             let mut runtimes = std::mem::take(&mut tg.runtimes);
             for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
                 let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
                 let rt_name = &rt_data.name;
-                let base_path = prisma_config.base_migrations_path(
-                    &PrismaArgs {
-                        typegraph: tg_name.clone(),
-                        runtime: Some(rt_data.name.clone()),
-                        migrations: None,
-                    },
-                    config,
-                );
-                let path = base_path.join(rt_name);
+                let path = base_migration_path.join(rt_name);
                 rt_data.migration_options = Some(MigrationOptions {
                     migration_files: archive::archive(path)?,
                     create: self.create_migration,

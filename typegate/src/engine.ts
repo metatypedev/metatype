@@ -130,6 +130,10 @@ export class Engine {
   queryCache: QueryCache;
   logger: log.Logger;
 
+  get rawName(): string {
+    return this.tg.rawName;
+  }
+
   private constructor(
     public tg: TypeGraph,
   ) {
@@ -147,11 +151,12 @@ export class Engine {
     customRuntime: RuntimeResolver = {},
     introspectionDefPayload: string | null = introspectionDefStatic,
   ) {
-    const typegraph = JSON.parse(payload);
-    const typegraphName = typegraph.types[0].title;
+    const typegraph: TypeGraphDS = JSON.parse(payload);
+    const typegraphName = TypeGraph.formatName(typegraph);
     response.typegraphName(typegraphName);
 
-    const secretManager = new SecretManager(typegraphName, secrets);
+    // not prefixed!
+    const secretManager = new SecretManager(typegraph.types[0].title, secrets);
 
     const typegraphDS = sync ? typegraph : await handleOnPushHooks(
       typegraph,
