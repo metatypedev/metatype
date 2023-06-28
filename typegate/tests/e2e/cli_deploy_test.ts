@@ -24,14 +24,7 @@ test("cli:deploy - automatic migrations", async (t) => {
   await dropSchemas(e);
   await removeMigrations(e);
 
-  const nodeConfigs = [
-    "--gate",
-    `http://localhost:${port}`,
-    "--username",
-    "admin",
-    "--password",
-    "password",
-  ];
+  const nodeConfigs = ["-t", "deploy"];
 
   const prismaConfigs = [
     e.name,
@@ -75,8 +68,6 @@ test("cli:deploy - automatic migrations", async (t) => {
     await meta(
       "deploy",
       ...nodeConfigs,
-      "-t",
-      "deploy",
       "-f",
       "runtimes/prisma/prisma.py",
     );
