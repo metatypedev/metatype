@@ -42,6 +42,9 @@ pub struct Serialize {
     /// simulate serializing the typegraph for deployment
     #[clap(long, default_value_t = false)]
     deploy: bool,
+
+    #[clap(short, long)]
+    prefix: Option<String>,
 }
 
 #[async_trait]
@@ -98,6 +101,12 @@ impl Action for Serialize {
                 LoaderResult::Error(e) => {
                     bail!("{}", e.to_string());
                 }
+            }
+        }
+
+        if let Some(prefix) = self.prefix.as_ref() {
+            for tg in loaded.iter_mut() {
+                tg.prefix = Some(prefix.clone());
             }
         }
 

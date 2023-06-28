@@ -13,7 +13,6 @@ use std::path::{Path, PathBuf};
 use std::slice;
 use std::str::FromStr;
 
-use crate::cli::prisma::PrismaArgs;
 use crate::cli::CommonArgs;
 use crate::fs::find_in_parents;
 use crate::utils::{BasicAuth, Node};
@@ -133,31 +132,6 @@ pub struct PrismaConfig {
     pub migrations_path: Option<PathBuf>,
 }
 
-impl PrismaConfig {
-    pub fn base_migrations_path(&self, args: &PrismaArgs, parent_config: &Config) -> PathBuf {
-        parent_config
-            .base_dir
-            .join(
-                args.migrations
-                    .clone()
-                    .or(self.migrations_path.clone())
-                    .as_deref()
-                    .unwrap_or_else(|| Path::new("prisma/migrations")),
-            )
-            .join(&args.typegraph)
-    }
-}
-
-pub fn tg_migrations_dir(
-    base_dir: &Path,
-    migrations_root: Option<&Path>,
-    tg_name: &str,
-) -> PathBuf {
-    base_dir
-        .join(migrations_root.unwrap_or_else(|| Path::new("prisma/migrations")))
-        .join(tg_name)
-}
-
 #[derive(Deserialize, Debug, Default, Clone)]
 pub struct Materializers {
     pub prisma: PrismaConfig,
@@ -247,8 +221,11 @@ impl Config {
         }
     }
 
-    pub fn node(&self, profile: &str) -> &NodeConfig {
-        self.typegates.get(profile).unwrap_or(&DEFAULT_NODE_CONFIG)
+    pub fn node(&self, args: &CommonArgs, target: &str) -> NodeConfig {
+        self.typegates
+            .get(target)
+            .unwrap_or(&DEFAULT_NODE_CONFIG)
+            .with_args(args)
     }
 
     pub fn loader(&self, module_type: ModuleType) -> &TypegraphLoaderConfig {
@@ -256,6 +233,21 @@ impl Config {
             .loaders
             .get(&module_type)
             .unwrap_or(&DEFAULT_LOADER_CONFIG)
+    }
+
+    pub fn prisma_migrations_dir(&self, typegraph: &str) -> PathBuf {
+        let mut path = self.base_dir.join(
+            self.typegraphs
+                .materializers
+                .prisma
+                .migrations_path
+                .as_deref()
+                .unwrap_or_else(|| Path::new("prisma/migrations")),
+        );
+
+        path.push(typegraph);
+
+        path
     }
 }
 

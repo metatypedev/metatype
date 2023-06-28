@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeGraphDS, typegraphVersion } from "../typegraph.ts";
+import { TypeGraph, TypeGraphDS, typegraphVersion } from "../typegraph.ts";
 import config from "../config.ts";
 import * as semver from "std/semver/mod.ts";
 
@@ -16,7 +16,7 @@ const typegraphChangelog: Record<
 };
 
 export function upgradeTypegraph(typegraph: TypeGraphDS): TypeGraphDS {
-  const typegraphName = typegraph.types[0].title;
+  const typegraphName = TypeGraph.formatName(typegraph);
   const { meta } = typegraph;
 
   let currentVersion = meta.version;

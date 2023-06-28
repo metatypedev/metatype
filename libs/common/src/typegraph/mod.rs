@@ -32,6 +32,7 @@ pub struct Typegraph {
     pub path: Option<PathBuf>,
     #[serde(skip)]
     pub deps: Vec<PathBuf>,
+    pub prefix: Option<String>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -150,22 +151,18 @@ impl Typegraph {
         }
     }
 
-    pub fn with_prefix(&self, prefix: &String) -> Result<Self> {
-        match &self.types[0] {
-            TypeNode::Object { base, data } => {
-                let new_type = TypeNode::Object {
-                    base: TypeNodeBase {
-                        title: format!("{}{}", prefix, base.title),
-                        ..base.clone()
-                    },
-                    data: data.clone(),
-                };
-                let mut tg = self.clone();
-                tg.types[0] = new_type;
-                Ok(tg)
-            }
-            _ => bail!("invalid variant for root type"),
-        }
+    pub fn full_name(&self) -> Result<String> {
+        Ok(format!(
+            "{}{}",
+            self.prefix.as_deref().unwrap_or(""),
+            self.name()?
+        ))
+    }
+
+    pub fn with_prefix(&self, prefix: String) -> Result<Self> {
+        let mut tg = self.clone();
+        tg.prefix = Some(prefix);
+        Ok(tg)
     }
 }
 

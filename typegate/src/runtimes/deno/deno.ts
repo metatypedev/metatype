@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { ComputeStage } from "../../engine.ts";
-import type { TypeGraphDS, TypeMaterializer } from "../../typegraph.ts";
+import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../../typegraph.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { DenoRuntimeData } from "../../type_node.ts";
@@ -53,7 +53,7 @@ export class DenoRuntime extends Runtime {
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
     const { typegraph: tg, args, materializers, secretManager } = params;
-    const typegraphName = tg.types[0].title;
+    const typegraphName = TypeGraph.formatName(tg);
 
     const { worker: name } = args as unknown as DenoRuntimeData;
     if (name == null) {
@@ -62,8 +62,7 @@ export class DenoRuntime extends Runtime {
       );
     }
 
-    const tgName = tg.types[0].title;
-    const tgRuntimes = DenoRuntime.getInstancesIn(tgName);
+    const tgRuntimes = DenoRuntime.getInstancesIn(typegraphName);
     const runtime = tgRuntimes[name];
     if (runtime != null) {
       return runtime;
@@ -138,7 +137,7 @@ export class DenoRuntime extends Runtime {
 
   async deinit(): Promise<void> {
     await this.w.terminate();
-    const tgName = this.tg.types[0].title;
+    const tgName = TypeGraph.formatName(this.tg);
     delete DenoRuntime.getInstancesIn(tgName)[this.name];
   }
 

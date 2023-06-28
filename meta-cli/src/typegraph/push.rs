@@ -46,7 +46,7 @@ pub struct PushResult {
     migrations: Vec<Migrations>,
     reset_required: Vec<String>,
     #[serde(skip)]
-    pub path: Option<PathBuf>,
+    pub original_name: Option<String>,
 }
 
 impl PushResult {
@@ -101,7 +101,7 @@ impl PushConfig {
             .await
             .context("while fetching secrets")?;
         let tg = match &self.node.prefix {
-            Some(prefix) => tg.with_prefix(prefix)?,
+            Some(prefix) => tg.with_prefix(prefix.clone())?,
             None => tg.clone(),
         };
         let res = self.node
@@ -121,9 +121,11 @@ impl PushConfig {
         )
         .await?;
 
-        println!("Pushing typegraph {}", tg.name()?);
-        res.data("addTypegraph")
-            .context("addTypegraph field in the response")
+        let mut res: PushResult = res
+            .data("addTypegraph")
+            .context("addTypegraph field in the response")?;
+        res.original_name = Some(tg.name()?);
+        Ok(res)
     }
 }
 
@@ -172,7 +174,7 @@ impl RetryManager {
         }
     }
 
-    pub fn cancell_all(&mut self, path: &Path) {
+    pub fn cancel_all(&mut self, path: &Path) {
         if let Some(ids) = self.retry_paths.remove(path) {
             for id in ids {
                 self.cancelled_retries.push(id)

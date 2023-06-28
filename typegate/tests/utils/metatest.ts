@@ -24,6 +24,7 @@ export interface ParseOptions {
   // ports on which this typegraph will be exposed
   ports?: number[];
   secrets?: Record<string, string>;
+  prefix?: string;
 }
 
 function serve(register: Register, port: number): () => void {
@@ -94,8 +95,11 @@ export class MetaTest {
   }
 
   async parseTypegraph(path: string, opts: ParseOptions = {}): Promise<Engine> {
-    const { deploy = false, typegraph = null } = opts;
+    const { deploy = false, typegraph = null, prefix = null } = opts;
     const cmd = [metaCli, "serialize", "-f", path];
+    if (prefix != null) {
+      cmd.push("--prefix", prefix);
+    }
 
     if (typegraph == null) {
       cmd.push("-1");
@@ -163,7 +167,7 @@ export class MetaTest {
       },
     });
     if (!res) {
-      Deno.exit(1);
+      console.error(`step ${fact} failed unexpectedly`);
     }
 
     return true;
