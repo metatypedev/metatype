@@ -40,6 +40,10 @@ pub fn archive<P: AsRef<Path>>(folder: P) -> Result<Option<String>> {
 pub fn archive_entries(dir_walker: Walk, suffix: Option<&Path>) -> Result<Option<String>> {
     let encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar = tar::Builder::new(encoder);
+
+    // skip non-relevant fs metadata
+    tar.mode(tar::HeaderMode::Deterministic);
+
     let mut count = 0;
     for result in dir_walker {
         match result {
@@ -65,6 +69,7 @@ pub fn archive_entries(dir_walker: Walk, suffix: Option<&Path>) -> Result<Option
             Err(e) => Err(e),
         }?;
     }
+    tar.mode(tar::HeaderMode::Deterministic);
 
     if count > 0 {
         let bytes = tar.into_inner()?.finish()?;
