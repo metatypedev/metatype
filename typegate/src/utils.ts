@@ -6,9 +6,6 @@ import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
 import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
-import { deepMerge } from "std/collections/deep_merge.ts";
-
-import { z } from "zod";
 
 import { Type } from "./type_node.ts";
 import { TypeGraph } from "./typegraph.ts";
@@ -17,24 +14,9 @@ import { ensureDir, ensureFile } from "std/fs/mod.ts";
 import { Untar } from "tar";
 import * as streams from "streams";
 import { path } from "compress/deps.ts";
+import { sha1 } from "./crypto.ts";
 
 export const maxi32 = 2_147_483_647;
-
-export const configOrExit = async <T extends z.ZodRawShape>(
-  sources: Record<string, unknown>[],
-  schema: T,
-) => {
-  const parsing = await z.object(schema).safeParse(
-    sources.reduce((a, b) => deepMerge(a, b), {}),
-  );
-
-  if (!parsing.success) {
-    console.error(parsing.error);
-    Deno.exit(1);
-  }
-
-  return parsing.data;
-};
 
 export type JSONValue =
   | string
@@ -266,15 +248,6 @@ export async function uncompress(dir: string, tarb64: string) {
   return baseDir;
 }
 
-export async function digestPath(path: string) {
-  const data = new TextEncoder().encode(path);
-  const buffer = await crypto.subtle.digest("SHA-1", data);
-  const hash = Array.from(new Uint8Array(buffer))
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join("");
-  return hash;
-}
-
 export async function structureRepr(str: string): Promise<FolderRepr> {
   const [fileStr, base64Str] = str.split(";");
   if (!base64Str) {
@@ -302,6 +275,6 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
   }
 
   const base64 = base64Str.substring(b64Prefix.length);
-  const hash = await digestPath(relativeTg);
+  const hash = await sha1(relativeTg);
   return { entryPoint, base64, hash };
 }

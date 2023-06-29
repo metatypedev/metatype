@@ -156,7 +156,7 @@ test("Deno runtime: reloading", async (t) => {
   await Deno.remove(tmpDir, { recursive: true });
 });
 
-test("Deno runtime: import local imports", async (t) => {
+test("Deno runtime: use local imports", async (t) => {
   const e = await t.pythonFile("runtimes/deno/deno_dep.py");
   await t.should("work for local imports", async () => {
     await gql`
