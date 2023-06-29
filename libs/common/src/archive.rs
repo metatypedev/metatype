@@ -44,7 +44,7 @@ pub fn archive_entries(dir_walker: Walk, suffix: Option<&Path>) -> Result<Option
     // skip non-relevant fs metadata
     tar.mode(tar::HeaderMode::Deterministic);
 
-    let mut count = 0;
+    let mut empty = true;
     for result in dir_walker {
         match result {
             Ok(entry) => {
@@ -58,20 +58,16 @@ pub fn archive_entries(dir_walker: Walk, suffix: Option<&Path>) -> Result<Option
                     tar.append_dir_all(".", path)
                         .context("Adding directory to tarball")?;
                 } else {
-                    let mut file = fs::File::open(path)
-                        .context(format!("failed to open file {}", path.display()))?;
-                    tar.append_file(".", &mut file)
-                        .context("Adding file to tarball")?;
+                    tar.append_path(path).context("Adding file to tarball")?;
                 }
-                count += 1;
+                empty = false;
                 Ok(())
             }
             Err(e) => Err(e),
         }?;
     }
-    tar.mode(tar::HeaderMode::Deterministic);
 
-    if count > 0 {
+    if !empty {
         let bytes = tar.into_inner()?.finish()?;
         return Ok(Some(STANDARD.encode(bytes)));
     }
