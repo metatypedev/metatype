@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "metatype"
-version = "0.1.10-dev.0"
+version = "0.1.10"
 description = ""
 authors = []
 
@@ -8,6 +8,7 @@ authors = []
 python = ">=3.8,<4.0"
 typegraph = { path = "typegraph/python", develop = true }
 typegraph-std = "^0.0.1"
+wasmtime = "^9.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pydoc-markdown = { git = "https://github.com/metatypedev/pydoc-markdown", branch = "develop" }

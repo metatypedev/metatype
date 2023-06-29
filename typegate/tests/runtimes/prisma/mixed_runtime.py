@@ -5,7 +5,7 @@ from typegraph.runtimes.random import RandomMat, RandomRuntime
 
 with TypeGraph("prisma") as g:
     db = PrismaRuntime("prisma", "POSTGRES")
-    gql_1 = GraphQLRuntime("https://graphqlzero.almansi.me/api")
+    gql_1 = GraphQLRuntime("http://mocked/api")
     rand = RandomRuntime(seed=1)
 
     public = policies.public()
@@ -15,12 +15,14 @@ with TypeGraph("prisma") as g:
             "title": t.string(),
         },
     ).named("Post")
+
     user = t.struct(
         {
             "name": t.string().config(gen="name"),
             "age": t.integer().config(gen="age", type="adult"),
         }
     ).named("Album")
+
     record = t.struct(
         {
             "id": t.integer().as_id.config("auto"),

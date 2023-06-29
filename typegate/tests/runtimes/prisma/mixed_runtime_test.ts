@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
+import * as mf from "test/mock_fetch";
+
+mf.install();
 
 test("prisma mixed runtime", async (t) => {
   const e = await t.pythonFile("runtimes/prisma/mixed_runtime.py", {
@@ -41,6 +44,24 @@ test("prisma mixed runtime", async (t) => {
   );
 
   await t.should("work with different runtimes", async () => {
+    mf.mock("POST@/api", () => {
+      mf.reset();
+      const res = {
+        data: {
+          post: {
+            id: "1",
+            title: "Test",
+          },
+        },
+      };
+      return new Response(JSON.stringify(res), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    });
+
     await gql`
         query {
           findUniqueRecord(where: {
@@ -60,8 +81,7 @@ test("prisma mixed runtime", async (t) => {
         description: "Some description",
         post: {
           id: "1",
-          title:
-            "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+          title: "Test",
         },
       },
     })
@@ -71,6 +91,24 @@ test("prisma mixed runtime", async (t) => {
   await t.should(
     "work with more than two runtimes",
     async () => {
+      mf.mock("POST@/api", () => {
+        mf.reset();
+        const res = {
+          data: {
+            post: {
+              id: "1",
+              title: "Test",
+            },
+          },
+        };
+        return new Response(JSON.stringify(res), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+      });
+
       await gql`
         query {
           findUniqueRecord(where: {
@@ -94,8 +132,7 @@ test("prisma mixed runtime", async (t) => {
           description: "Some description",
           post: {
             id: "1",
-            title:
-              "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+            title: "Test",
           },
           user: { name: "Landon Glover", age: 62 },
         },
