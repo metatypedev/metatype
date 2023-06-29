@@ -23,7 +23,7 @@ dev:
       (description = ").+("): TAGLINE
     typegraph/python_next/pyproject.toml:
       (description = ").+("): TAGLINE
-    '**/*/Cargo.toml':
+    '**/Cargo.toml':
       (version = ").+("): METATYPE_VERSION
       (description = ").+("): TAGLINE
     dev/Dockerfile:
@@ -36,13 +36,14 @@ dev:
       (typegraph_version = ").*("): TYPEGRAPH_VERSION
     whiz.yaml:
       '(  TYPEGRAPH_VERSION: ").+(")': TYPEGRAPH_VERSION
+      '(    DENO_BINDGEN_URL: ").+(")': DENO_BINDGEN_URL
       '(    WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
       '(    JCO_VERSION: ").+(")': JCO_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
     examples/**/compose.yml:
       '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
-    '**/*/pyproject.toml':
+    '**/pyproject.toml':
       (version = ").+("): METATYPE_VERSION
     examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
@@ -51,14 +52,14 @@ dev:
     POETRY_VERSION: 1.4.1
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.70.0
-    DENO_BINDGEN_URL: 'https://github.com/metatypedev/deno_bindgen/raw/main/cli.ts'
+    DENO_BINDGEN_URL: 'https://deno.land/x/deno_bindgen@0.8.1/cli.ts'
     DENO_VERSION: 1.34.3
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.6.0
     WASM_TOOLS_VERSION: 1.0.33
     JCO_VERSION: 0.7.0
     TYPEGRAPH_VERSION: 0.0.1
-    METATYPE_VERSION: 0.1.10-dev.0
+    METATYPE_VERSION: 0.1.10
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems

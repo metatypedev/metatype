@@ -3,7 +3,8 @@
 ## Helm
 
 [Helm](https://helm.sh) must be installed to use the charts. Please refer to
-Helm's [documentation](https://helm.sh/docs) to get started.
+Helm's documentation to get started. The chart can be accessed on the dedicated
+[repository](https://github.com/metatypedev/charts).
 
 Once Helm has been set up correctly, add the repo as follows:
 
