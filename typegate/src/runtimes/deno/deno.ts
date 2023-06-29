@@ -120,6 +120,9 @@ export class DenoRuntime extends Runtime {
       }
     }
 
+    const tgSCriptFolder = path.join("tmp", "scripts", typegraphName);
+    (args.permissions as Deno.PermissionOptionsObject).read = [tgSCriptFolder];
+
     const w = new DenoMessenger(
       name,
       (args.permissions ?? {}) as Deno.PermissionOptionsObject,

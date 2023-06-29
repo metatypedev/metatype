@@ -28,10 +28,10 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
               hrtime: false,
               net: true,
               // on request permissions
+              // read: ["tmp"], // default read permission
               ...permissions,
               // non-overridable permissions (security between typegraphs)
               run: false,
-              read: ["tmp"],
               write: false,
               ffi: false,
               env: envSharedWithWorkers, // use secrets on the materializer instead
