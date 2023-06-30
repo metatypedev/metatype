@@ -11,7 +11,7 @@ import { Type } from "./type_node.ts";
 import { TypeGraph } from "./typegraph.ts";
 
 import { ensureDir, ensureFile } from "std/fs/mod.ts";
-import { Untar } from "tar";
+import { Untar } from "archive/untar.ts";
 import * as streams from "streams";
 import { path } from "compress/deps.ts";
 import { sha1 } from "./crypto.ts";
