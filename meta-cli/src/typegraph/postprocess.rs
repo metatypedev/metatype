@@ -121,6 +121,7 @@ pub mod deno_rt {
 
         let dir_walker = WalkBuilder::new(&base_rel_path)
             .standard_filters(true)
+            .sort_by_file_path(|a, b| a.cmp(b))
             .build();
         let suffix = Path::new("scripts/deno");
         let enc_content = match archive_entries(dir_walker, Some(suffix)).unwrap() {
@@ -140,28 +141,12 @@ pub mod deno_rt {
         format!("file:{};base64:{}", file, enc_content)
     }
 
-    fn reformat_materializer_script(
-        mat: &mut Materializer,
-        tg_path: &Option<PathBuf>,
-    ) -> Result<()> {
-        match mat.name.as_str() {
-            "function" => {
-                let mut mat_data: FunctionMatData = object_from_map(std::mem::take(&mut mat.data))?;
-                // TODO check variable `_my_lambda` exists and is a function expression/lambda
-                mat_data.script = transform_script(mat_data.script)?;
-                mat.data = map_from_object(mat_data)?;
-            }
-            "module" => {
-                let mut mat_data: ModuleMatData = object_from_map(std::mem::take(&mut mat.data))?;
-                if !mat_data.code.starts_with("file:") {
-                    // TODO check imported functions exist
-                    let path = mat_data.code.strip_prefix("file:").unwrap();
-                    let path = Path::new(path);
-                    mat_data.code = compress_and_encode(path, tg_path);
-                }
-                mat.data = map_from_object(mat_data)?;
-            }
-            _ => {}
+    fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
+        if mat.name.as_str() == "function" {
+            let mut mat_data: FunctionMatData = object_from_map(std::mem::take(&mut mat.data))?;
+            // TODO check variable `_my_lambda` exists and is a function expression/lambda
+            mat_data.script = transform_script(mat_data.script)?;
+            mat.data = map_from_object(mat_data)?;
         }
         Ok(())
     }
@@ -169,10 +154,7 @@ pub mod deno_rt {
     fn reformat_scripts(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
         for rt_idx in get_runtimes(typegraph, "deno").into_iter() {
             for mat_idx in get_materializers(typegraph, rt_idx as u32) {
-                reformat_materializer_script(
-                    &mut typegraph.materializers[mat_idx],
-                    &typegraph.path,
-                )?;
+                reformat_materializer_script(&mut typegraph.materializers[mat_idx])?;
             }
         }
         Ok(())

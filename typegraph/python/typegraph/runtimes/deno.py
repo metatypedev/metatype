@@ -138,12 +138,6 @@ class ModuleMat(Materializer):
             path = get_absolute_path(rel_path)
             object.__setattr__(self, "code", f"file:{path}")
 
-            # if os.environ.get("DONT_READ_EXTERNAL_TS_FILES"):
-            #     object.__setattr__(self, "code", f"file:{path}")
-            # else:
-            #     with open(path) as f:
-            #         object.__setattr__(self, "code", f.read())
-
     def imp(
         self, name: str = "default", *, effect: Effect = effects.none(), **kwargs
     ) -> ImportFunMat:

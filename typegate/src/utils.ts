@@ -248,6 +248,13 @@ export async function uncompress(dir: string, tarb64: string) {
   return baseDir;
 }
 
+/**
+ * Convert string `file:SCRIPT,base64:TARBALL` to FolderRepr object.
+ * * `SCRIPT`: refers to a file relative to the typegraph path
+ * * `TARBALL`: base64 encoded tarball of scripts/(deno|python)
+ * `FolderRepr` is expected to provide all the minimum information necessary
+ * to extract the tarball to typegate
+ */
 export async function structureRepr(str: string): Promise<FolderRepr> {
   const [fileStr, base64Str] = str.split(";");
   if (!base64Str) {
@@ -262,15 +269,15 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
   if (!base64Str.startsWith(b64Prefix)) {
     throw Error(`${b64Prefix} prefix not specified`);
   }
-  // path to the script (relative from typegraph)
+  // path to the script (relative to typegraph path)
   const relativeTg = fileStr.substring(filePrefix.length);
 
   const sep = relativeTg.indexOf("\\") >= 0 ? "\\" : "/";
-  const prefixReg = new RegExp(`^${sep}?scripts${sep}deno(.*)`);
-  const entryPoint = relativeTg.match(prefixReg)?.[1];
+  const prefixReg = new RegExp(`^${sep}?scripts${sep}(deno|python)(.*)`);
+  const entryPoint = relativeTg.match(prefixReg)?.[2];
   if (!entryPoint) {
     throw Error(
-      `unable to determine script entry point relative to ${relativeTg}`,
+      `unable to determine script path relative to ${relativeTg}`,
     );
   }
 
