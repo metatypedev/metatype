@@ -57,3 +57,4 @@ def gen_input_type(op_spec: Box) -> Tuple[t.typedef, Box]
 ```
 
 Returns a tuple of t.typedef and a box of kwargs
+

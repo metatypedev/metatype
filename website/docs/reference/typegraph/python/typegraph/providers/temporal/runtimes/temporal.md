@@ -11,3 +11,4 @@ class TemporalRuntime(Runtime)
 ```
 
 [Documentation](https://metatype.dev/docs/reference/runtimes/temporal)
+
