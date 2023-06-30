@@ -422,7 +422,7 @@ class boolean(typedef):
 @with_constraints
 @frozen
 class number(typedef):
-    """See [`t.number()`](/docs/reference/type-system/number)"""
+    """See [`t.number()`](/docs/reference/type-system#tnumber)"""
 
     _min: Optional[float] = constraint("minimum")
     _max: Optional[float] = constraint("maximum")
@@ -437,7 +437,7 @@ def float() -> number:
 
 @frozen
 class integer(number):
-    """See [`t.integer()`](/docs/reference/type-system/integer)"""
+    """See [`t.integer()`](/docs/reference/type-system#tinteger)"""
 
     pass
 

@@ -3,15 +3,6 @@ sidebar_label: types
 title: typegraph.types
 ---
 
-## typedef Objects
-
-```python
-@frozen
-class typedef(Node)
-```
-
-Base class for all the types
-
 ## number Objects
 
 ```python
@@ -21,15 +12,7 @@ Base class for all the types
 class number(typedef)
 ```
 
-Represents a generic number.
-
-**Arguments**:
-
-- `_min` _float, optional_ - minimum constraint
-- `_max` _float, optional_ - maximum constraint
-- `_x_min` _float, optional_ - exclusive minimum constraint
-- `_x_max` _float, optional_ - exclusive maximum constraint
-- `_multiple_of` _float, optional_ - number must be a multiple of
+See [`t.number()`](/docs/reference/type-system#tnumber)
 
 ## integer Objects
 
@@ -38,7 +21,7 @@ Represents a generic number.
 class integer(number)
 ```
 
-An integer.
+See [`t.integer()`](/docs/reference/type-system#tinteger)
 
 ## union Objects
 

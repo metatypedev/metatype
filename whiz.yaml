@@ -130,7 +130,9 @@ website_docgen:
   watch:
     - "../typegraph/**/*.py"
   command: |
-    pydoc-markdown
+    set -v
+    set -e
+    poetry run pydoc-markdown
     npx docusaurus docs:generate:graphql:typegate
     npx docusaurus docs:generate:graphql:prisma-migration
     npx docusaurus docs:generate:changelog
