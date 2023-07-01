@@ -68,7 +68,7 @@ async-trait = "0.1.68"
 async-recursion = "1.0.4"
 clap-verbosity-flag = "2.0.1"
 clap_complete = "4.3.1"
-itertools = "0.10.5"
+itertools = "0.11.0"
 enum_dispatch = "0.3.11"
 git2 = { version = "0.17.2", features = ["vendored-libgit2"], default-features = false }
 normpath = "1.1.1"
