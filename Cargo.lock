@@ -6623,10 +6623,26 @@ dependencies = [
 ]
 
 [[package]]
-name = "swc_ecma_codegen"
-version = "0.129.10"
+name = "swc_ecma_ast"
+version = "0.106.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02094481926efe130d49adfe339b2b3dd76824cfc20afc26d09f2eaac219f6ae"
+checksum = "dd5b138534f6f673afa83b6168d67158ad0fff54b4071287e83cfe87a82cfb04"
+dependencies = [
+ "bitflags 2.3.2",
+ "is-macro",
+ "num-bigint",
+ "scoped-tls",
+ "string_enum 0.4.0",
+ "swc_atoms 0.5.6",
+ "swc_common 0.31.12",
+ "unicode-id",
+]
+
+[[package]]
+name = "swc_ecma_codegen"
+version = "0.141.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9a17597b9d82fc035044224f213e2978cba6d071cbb0ad8e78fc18064411e36"
 dependencies = [
  "memchr",
  "num-bigint",
@@ -6634,9 +6650,9 @@ dependencies = [
  "rustc-hash",
  "serde",
  "sourcemap",
- "swc_atoms 0.4.34",
- "swc_common 0.29.29",
- "swc_ecma_ast 0.96.3",
+ "swc_atoms 0.5.6",
+ "swc_common 0.31.12",
+ "swc_ecma_ast 0.106.2",
  "swc_ecma_codegen_macros",
  "tracing",
 ]
