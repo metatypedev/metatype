@@ -28,11 +28,12 @@ pub struct Typegraph {
     pub runtimes: Vec<TGRuntime>,
     pub policies: Vec<Policy>,
     pub meta: TypeMeta,
+
+    // TODO: factor out non-essential fields into a separate struct
     #[serde(skip)]
     pub path: Option<PathBuf>,
     #[serde(skip)]
     pub deps: Vec<PathBuf>,
-    pub prefix: Option<String>,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -76,8 +77,17 @@ pub struct Rate {
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct Queries {
+    pub dynamic: bool,
+    pub endpoints: Vec<String>,
+}
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct TypeMeta {
+    pub prefix: Option<String>,
     pub secrets: Vec<String>,
+    pub queries: Queries,
     pub cors: Cors,
     pub auths: Vec<Auth>,
     pub rate: Option<Rate>,
@@ -154,14 +164,14 @@ impl Typegraph {
     pub fn full_name(&self) -> Result<String> {
         Ok(format!(
             "{}{}",
-            self.prefix.as_deref().unwrap_or(""),
+            self.meta.prefix.as_deref().unwrap_or(""),
             self.name()?
         ))
     }
 
     pub fn with_prefix(&self, prefix: String) -> Result<Self> {
         let mut tg = self.clone();
-        tg.prefix = Some(prefix);
+        tg.meta.prefix = Some(prefix);
         Ok(tg)
     }
 }

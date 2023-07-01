@@ -156,6 +156,10 @@ class TypeGraph:
 
         ret["meta"] = {
             "secrets": ret.pop("secrets") if "secrets" in ret else [],
+            "queries": {  # only in new SDK
+                "dynamic": True,
+                "endpoints": [],
+            },
             "auths": self.auths,
             "rate": self.rate,
             "cors": self.cors,

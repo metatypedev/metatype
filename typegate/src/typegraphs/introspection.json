@@ -960,7 +960,12 @@
     }
   ],
   "meta": {
+    "prefix": null,
     "secrets": [],
+    "queries": {
+      "dynamic": true,
+      "endpoints": []
+    },
     "cors": {
       "allow_origin": [],
       "allow_headers": [],
@@ -972,6 +977,5 @@
     "auths": [],
     "rate": null,
     "version": "0.0.1"
-  },
-  "prefix": null
+  }
 }

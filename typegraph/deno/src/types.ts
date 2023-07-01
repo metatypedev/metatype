@@ -20,18 +20,18 @@ export class Typedef {
   readonly name?: string;
   policy: Policy[] | null = null;
 
-  constructor(public readonly id: number, base: TypeBase) {
+  constructor(public readonly _id: number, base: TypeBase) {
     this.name = base.name;
   }
 
   get repr(): string | null {
-    return core.getTypeRepr(this.id);
+    return core.getTypeRepr(this._id);
   }
 
   withPolicy(policy: PolicySpec[] | PolicySpec): this {
     const chain = Array.isArray(policy) ? policy : [policy];
     const id = core.withPolicy({
-      tpe: this.id,
+      tpe: this._id,
       chain: chain.map((p) => {
         if (p instanceof Policy) return { tag: "simple", val: p.id } as const;
         return {
@@ -55,7 +55,7 @@ export class Typedef {
   }
 
   asTypedef(): Typedef {
-    return new Typedef(this.id, { name: this.name });
+    return new Typedef(this._id, { name: this.name });
   }
 }
 
@@ -108,7 +108,7 @@ export function struct<P extends { [key: string]: Typedef }>(
 ): Struct<P> {
   return new Struct(
     core.structb({
-      props: Object.entries(props).map(([name, typ]) => [name, typ.id]),
+      props: Object.entries(props).map(([name, typ]) => [name, typ._id]),
     }, base),
     {
       props,
@@ -142,7 +142,7 @@ export function func<
   M extends Materializer = Materializer,
 >(inp: I, out: O, mat: M) {
   return new Func<P, I, O, M>(
-    core.funcb({ inp: inp.id, out: out.id, mat: mat.id }) as number,
+    core.funcb({ inp: inp._id, out: out._id, mat: mat.id }) as number,
     inp,
     out,
     mat,

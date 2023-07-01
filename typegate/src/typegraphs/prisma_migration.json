@@ -534,7 +534,12 @@
     }
   ],
   "meta": {
+    "prefix": null,
     "secrets": [],
+    "queries": {
+      "dynamic": true,
+      "endpoints": []
+    },
     "cors": {
       "allow_origin": [],
       "allow_headers": [],
@@ -562,6 +567,5 @@
       "local_excess": 5
     },
     "version": "0.0.1"
-  },
-  "prefix": null
+  }
 }

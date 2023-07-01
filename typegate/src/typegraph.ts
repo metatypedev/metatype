@@ -153,7 +153,7 @@ export class TypeGraph {
   }
 
   get name() {
-    return (this.tg.prefix ?? "") + this.root.title;
+    return (this.tg.meta.prefix ?? "") + this.root.title;
   }
 
   get rawName() {
@@ -161,7 +161,7 @@ export class TypeGraph {
   }
 
   static formatName(tg: TypeGraphDS): string {
-    return (tg.prefix ?? "") + tg.types[0].title;
+    return (tg.meta.prefix ?? "") + tg.types[0].title;
   }
 
   static async init(

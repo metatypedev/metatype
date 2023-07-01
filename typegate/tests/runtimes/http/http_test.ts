@@ -31,7 +31,7 @@ const getComments = (postId: number) =>
 const NEW_COMMENT_ID = 123;
 
 test("Rest queries", async (t) => {
-  const e = await t.pythonFile("runtimes/rest/rest.py");
+  const e = await t.pythonFile("runtimes/http/http.py");
 
   mf.mock("GET@/api/posts", (req) => {
     const tags = new URL(req.url).searchParams.getAll("tags");

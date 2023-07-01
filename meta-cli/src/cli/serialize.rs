@@ -111,7 +111,7 @@ impl Action for Serialize {
 
         if let Some(prefix) = self.prefix.as_ref() {
             for tg in loaded.iter_mut() {
-                tg.prefix = Some(prefix.clone());
+                tg.meta.prefix = Some(prefix.clone());
             }
         }
 
