@@ -91,6 +91,7 @@ interface core {
 
 interface runtimes {
     use self.core.{error, runtime-id, materializer-id}
+    // use core.{error, runtime-id, materializer-id}
 
     get-deno-runtime: func() -> runtime-id
 
@@ -129,8 +130,13 @@ interface runtimes {
 }
 
 default world typegraph {
-    import print: func(msg: string)
-
     export core: self.core
     export runtimes: self.runtimes
 }
+
+/*
+world typegraph {
+    export core
+    export runtimes
+}
+*/

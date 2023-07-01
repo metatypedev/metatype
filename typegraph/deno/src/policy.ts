@@ -1,6 +1,5 @@
 import { MaterializerId } from "../gen/exports/core.d.ts";
-// @deno-types="../gen/typegraph_core.d.ts"
-import { core, runtimes } from "../gen/typegraph_core.js";
+import { core, runtimes } from "./wit.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";
 
 export default class Policy {

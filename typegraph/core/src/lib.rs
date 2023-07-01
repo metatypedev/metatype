@@ -28,16 +28,30 @@ pub mod wit {
 
     wit_bindgen::generate!("typegraph");
 
-    #[cfg(feature = "wasm")]
     export_typegraph!(Lib);
 
-    // pub use exports::default::typegraph::{core, runtimes};
+    //pub use exports::default::typegraph::{core, runtimes};
+}
+
+#[cfg(feature = "wasm")]
+pub mod host {
+    wit_bindgen::generate!("host");
+}
+
+#[cfg(not(feature = "wasm"))]
+pub mod host {
+    pub mod host {
+        pub fn read_file(path: &str) -> Result<String, String> {
+            Ok(path.to_string())
+        }
+    }
 }
 
 pub struct Lib {}
 
 impl wit::core::Core for Lib {
     fn init_typegraph(params: TypegraphInitParams) -> Result<()> {
+        println!("{:?}", host::host::read_file("stest"));
         typegraph::init(params)
     }
 

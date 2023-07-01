@@ -9,7 +9,6 @@ python = ">=3.8,<4.0"
 typegraph = { path = "typegraph/python", develop = true }
 typegraph_next = { path = "typegraph/python_next", develop = true }
 typegraph-std = "^0.0.1"
-wasmtime = "^9.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pydoc-markdown = { git = "https://github.com/metatypedev/pydoc-markdown", branch = "develop" }

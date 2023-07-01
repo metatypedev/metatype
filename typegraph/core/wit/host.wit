@@ -1,0 +1,5 @@
+default world host {
+    import host: interface {
+        read-file: func(path: string) -> result<string, string>
+    }
+}

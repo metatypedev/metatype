@@ -32,6 +32,20 @@ export interface ShellOptions {
 
 let compiled = false;
 
+export async function metaNext(...args: string[]): Promise<string> {
+  return await shell([
+    "cargo",
+    "run",
+    "--package",
+    "meta-cli",
+    "--quiet",
+    "--features",
+    "typegraph-next",
+    "--",
+    ...args,
+  ]);
+}
+
 export async function meta(...args: string[]): Promise<void>;
 export async function meta(
   options: ShellOptions,

@@ -35,10 +35,10 @@ temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core" }
 connection-string = "0.2.0"
 url = "2.4.0"
 thiserror = "1.0.40"
-tokio = { version = "1.28.2", features = ["full"] }
+tokio = { version = "1.29.1", features = ["full"] }
 log = "0.4.19"
 env_logger = "0.10.0"
-serde_json = "1.0.97"
+serde_json = "1.0.99"
 dashmap = "5.4.0"
 common = { path = "../../libs/common" }
 macros = { path = "../../libs/macros" }

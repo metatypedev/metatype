@@ -1,3 +1,3 @@
-export function print(s: string) {
-  console.log(s);
+export function readFile(path: string): string {
+  return "test";
 }

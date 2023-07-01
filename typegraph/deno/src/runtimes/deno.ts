@@ -1,6 +1,5 @@
 import * as t from "../types.ts";
-// @deno-types="../../gen/typegraph_core.d.ts"
-import { runtimes } from "../../gen/typegraph_core.js";
+import { runtimes } from "../wit.ts";
 import { Effect } from "../../gen/exports/runtimes.d.ts";
 import Policy from "../policy.ts";
 

@@ -958,13 +958,13 @@ files = [
 
 [[package]]
 name = "strenum"
-version = "0.4.10"
+version = "0.4.15"
 description = "An Enum that inherits from str."
 optional = false
 python-versions = "*"
 files = [
-    {file = "StrEnum-0.4.10-py3-none-any.whl", hash = "sha256:aebf04bba8e5af435937c452d69a86798b6f8d5ca5f20ba18561dbfad571ccdd"},
-    {file = "StrEnum-0.4.10.tar.gz", hash = "sha256:898cc0ebb5054ee07400341ac1d75fdfee489d76d6df3fbc1c2eaf95971e3916"},
+    {file = "StrEnum-0.4.15-py3-none-any.whl", hash = "sha256:a30cda4af7cc6b5bf52c8055bc4bf4b2b6b14a93b574626da33df53cf7740659"},
+    {file = "StrEnum-0.4.15.tar.gz", hash = "sha256:878fb5ab705442070e4dd1929bb5e2249511c0bcf2b0eeacf3bcd80875c82eff"},
 ]
 
 [package.extras]
@@ -1008,16 +1008,16 @@ astunparse = "^1.6.3"
 attrs = "^22.2.0"
 black = "^23.3.0"
 deepmerge = "^1.1.0"
-frozendict = "^2.3.7"
+frozendict = "^2.3.8"
 graphql-core = "^3.2.3"
-httpx = {version = "^0.24.0", extras = ["http2"]}
+httpx = {version = "^0.24.1", extras = ["http2"]}
 ordered-set = "^4.1.0"
 python-box = "^7.0.1"
 PyYAML = "^6.0"
 redbaron = "^0.9.2"
-semver = "^3.0.0"
+semver = "^3.0.1"
 strenum = "^0.4.10"
-typing-extensions = "^4.5.0"
+typing-extensions = "^4.7.0"
 
 [package.source]
 type = "directory"
@@ -1033,7 +1033,7 @@ files = []
 develop = true
 
 [package.dependencies]
-typing-extensions = "^4.6.3"
+typing-extensions = "^4.7.0"
 wasmtime = "^9.0.0"
 
 [package.source]
@@ -1271,4 +1271,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "607eb1d1164fcf881a4c19e690c802933566ef31bb8285fccef0f9f74002aa32"
+content-hash = "c621d39e2890d040408e343e334b744f93693756a0bbc53b0a9cbb7d87123b6a"

@@ -1,5 +1,4 @@
-// @deno-types="../gen/typegraph_core.d.ts"
-import { core } from "../gen/typegraph_core.js";
+import { core } from "./wit.ts";
 import {
   PolicyPerEffect,
   TypeBase,
