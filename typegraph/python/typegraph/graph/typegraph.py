@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 OperationTable = Dict[str, Union["t.func", "t.struct"]]
 
-typegraph_version = "0.0.1"
+typegraph_version = "0.0.2"
 
 
 class TypeGraph:

@@ -65,7 +65,7 @@ const runtimeInit: RuntimeInit = {
   python_wasi: PythonWasiRuntime.init,
 };
 
-export const typegraphVersion = "0.0.1";
+export const typegraphVersion = "0.0.2";
 
 export class SecretManager {
   constructor(

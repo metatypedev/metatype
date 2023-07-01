@@ -40,12 +40,6 @@
     },
     "meta": {
       "$ref": "#/definitions/TypeMeta"
-    },
-    "prefix": {
-      "type": [
-        "string",
-        "null"
-      ]
     }
   },
   "definitions": {
@@ -1371,15 +1365,25 @@
       "required": [
         "auths",
         "cors",
+        "queries",
         "secrets",
         "version"
       ],
       "properties": {
+        "prefix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "secrets": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "queries": {
+          "$ref": "#/definitions/Queries"
         },
         "cors": {
           "$ref": "#/definitions/Cors"
@@ -1402,6 +1406,24 @@
         },
         "version": {
           "type": "string"
+        }
+      }
+    },
+    "Queries": {
+      "type": "object",
+      "required": [
+        "dynamic",
+        "endpoints"
+      ],
+      "properties": {
+        "dynamic": {
+          "type": "boolean"
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },

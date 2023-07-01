@@ -1,9 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
-// SPDX-License-Identifier: MPL-2.0
-
 import { expandGlob } from "std/fs/expand_glob.ts";
 import { metaNext, test } from "../../utils.ts";
 import { MetaTest } from "../../utils/metatest.ts";

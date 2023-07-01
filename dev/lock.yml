@@ -9,7 +9,6 @@ dev:
     .github/*/*.yml:
       '(  PYTHON_VERSION: ").+(")': PYTHON_VERSION
       '(  POETRY_VERSION: ").+(")': POETRY_VERSION
-      '(  RUST_VERSION: ").+(")': RUST_VERSION
       '(  DENO_BINDGEN_URL: ).+()': DENO_BINDGEN_URL
       '(  DENO_VERSION: ").+(")': DENO_VERSION
       '(  PNPM_VERSION: ").+(")': PNPM_VERSION
@@ -33,9 +32,11 @@ dev:
       (ARG DENO_BINDGEN_URL=).*(): DENO_BINDGEN_URL
       (ARG RUST_VERSION=).*(): RUST_VERSION
     typegate/src/typegraph.ts:
-      (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
+      (export const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/python/typegraph/graph/typegraph.py:
       (typegraph_version = ").*("): TYPEGRAPH_VERSION
+    typegraph/core/src/typegraph.rs:
+      '(static TYPEGRAPH_VERSION: &str = ").*(";)': TYPEGRAPH_VERSION
     whiz.yaml:
       '(  TYPEGRAPH_VERSION: ").+(")': TYPEGRAPH_VERSION
       '(    DENO_BINDGEN_URL: ").+(")': DENO_BINDGEN_URL
@@ -62,7 +63,7 @@ dev:
     WASM_TOOLS_VERSION: 1.0.34
     CARGO_INSTA_VERSION: 1.30.0
     JCO_VERSION: 0.7.0
-    TYPEGRAPH_VERSION: 0.0.1
+    TYPEGRAPH_VERSION: 0.0.2
     METATYPE_VERSION: 0.1.10
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with

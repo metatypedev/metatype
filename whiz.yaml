@@ -1,5 +1,5 @@
 env:
-  TYPEGRAPH_VERSION: "0.0.1"
+  TYPEGRAPH_VERSION: "0.0.2"
 
 meta:
   watch:

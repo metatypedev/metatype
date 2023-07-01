@@ -46,7 +46,7 @@ thread_local! {
     static TG: RefCell<Option<TypegraphContext>> = RefCell::new(None);
 }
 
-static VERSION: &str = "0.0.1";
+static TYPEGRAPH_VERSION: &str = "0.0.2";
 
 // pub fn with_tg<T>(f: impl FnOnce(&TypegraphContext) -> T) -> Result<T> {
 //     TG.with(|tg| {
@@ -81,7 +81,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     let mut ctx = TypegraphContext {
         name: params.name.clone(),
         meta: TypeMeta {
-            version: VERSION.to_string(),
+            version: TYPEGRAPH_VERSION.to_string(),
             ..Default::default()
         },
         types: vec![Some(TypeNode::Object {
@@ -113,7 +113,7 @@ pub fn finalize() -> Result<String> {
     })?;
 
     let tg = Typegraph {
-        id: format!("https://metatype.dev/specs/{VERSION}.json"),
+        id: format!("https://metatype.dev/specs/{TYPEGRAPH_VERSION}.json"),
         types: ctx
             .types
             .into_iter()

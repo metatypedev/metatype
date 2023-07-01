@@ -5,7 +5,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   "  {
 " +
-  '    "\$id": "https://metatype.dev/specs/0.0.1.json",
+  '    "\$id": "https://metatype.dev/specs/0.0.2.json",
 ' +
   '    "types": [
 ' +
@@ -433,7 +433,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "data": {
 ' +
-  '          "code": "export function three({a,b},{context}){return{a:0,b:0};}"
+  '          "code": "export function three({a,b},{}){return{a,b};}"
 ' +
   "        }
 " +
@@ -541,7 +541,7 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '      "rate": null,
 ' +
-  '      "version": "0.0.1"
+  '      "version": "0.0.2"
 ' +
   "    }
 " +
@@ -555,7 +555,7 @@ snapshot[`typegraphs creation 2`] = `
 " +
   "  {
 " +
-  '    "\$id": "https://metatype.dev/specs/0.0.1.json",
+  '    "\$id": "https://metatype.dev/specs/0.0.2.json",
 ' +
   '    "types": [
 ' +
@@ -927,7 +927,7 @@ snapshot[`typegraphs creation 2`] = `
 " +
   '        "data": {
 ' +
-  '          "code": "export function three({a,b},{context}){return{a:0,b:0};}"
+  '          "code": "export function three({a,b},{}){return{a,b};}"
 ' +
   "        }
 " +
@@ -987,7 +987,7 @@ snapshot[`typegraphs creation 2`] = `
 ' +
   '      "rate": null,
 ' +
-  '      "version": "0.0.1"
+  '      "version": "0.0.2"
 ' +
   "    }
 " +

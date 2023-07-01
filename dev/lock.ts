@@ -66,6 +66,8 @@ for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
       Deno.exit(1);
     }
 
+    const matches = Object.fromEntries(Object.keys(lookups).map((k) => [k, 0]));
+
     for (
       const { path } of paths
     ) {
@@ -74,7 +76,12 @@ for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
 
       for (const [pattern, replacement] of Object.entries(lookups)) {
         const regex = new RegExp(`^${pattern}$`);
+
         for (let i = 0; i < rewrite.length; i += 1) {
+          if (regex.test(rewrite[i])) {
+            matches[pattern] += 1;
+          }
+
           rewrite[i] = rewrite[i].replace(
             regex,
             `$1${lock[replacement]}$2`,
@@ -89,6 +96,15 @@ for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
         dirty = true;
       } else {
         console.log(`- No change ${relPath(path)}`);
+      }
+    }
+
+    for (const [pattern, count] of Object.entries(matches)) {
+      if (count == 0) {
+        console.error(
+          `No matches found for ${pattern} in ${glob}, please check and retry.`,
+        );
+        Deno.exit(1);
       }
     }
   }
