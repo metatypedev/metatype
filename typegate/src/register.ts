@@ -43,11 +43,10 @@ export class ReplicatedRegister extends Register {
         return JSON.stringify([engine.tg.tg, encryptedSecrets]);
       },
       async (json: string) => {
-        const [payload, encryptedSecrets] = JSON.parse(json) as [
-          string,
+        const [tg, encryptedSecrets] = JSON.parse(json) as [
+          TypeGraphDS,
           string,
         ];
-        const tg = JSON.parse(payload) as TypeGraphDS;
         const secrets = JSON.parse(await decrypt(encryptedSecrets));
         const secretManager = new SecretManager(tg.types[0].title, secrets);
         return Engine.init(
