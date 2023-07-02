@@ -119,7 +119,7 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      const reg = new MemoryRegister(opts.introspection);
+      const reg = new MemoryRegister();
       const { systemTypegraphs = false, cleanGitRepo = false } = opts;
       if (systemTypegraphs) {
         await SystemTypegraph.loadAll(reg);

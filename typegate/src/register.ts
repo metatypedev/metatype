@@ -6,7 +6,7 @@ import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import { decrypt, encrypt } from "./crypto.ts";
-import { PushResponse } from "./hooks.ts";
+import { SecretManager, TypeGraphDS } from "./typegraph.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -18,18 +18,8 @@ export interface Migrations {
   migrations: string;
 }
 
-export interface RegistrationResult {
-  typegraphName: string;
-  messages: Array<MessageEntry>;
-  migrations: Array<Migrations>;
-  resetRequired: Array<string>;
-}
-
 export abstract class Register {
-  abstract set(
-    payload: string,
-    secrets: Record<string, string>,
-  ): Promise<RegistrationResult>;
+  abstract add(engine: Engine): Promise<void>;
 
   abstract remove(name: string): Promise<void>;
 
@@ -53,13 +43,18 @@ export class ReplicatedRegister extends Register {
         return JSON.stringify([engine.tg.tg, encryptedSecrets]);
       },
       async (json: string) => {
-        const [payload, encryptedSecrets] = JSON.parse(json);
+        const [payload, encryptedSecrets] = JSON.parse(json) as [
+          string,
+          string,
+        ];
+        const tg = JSON.parse(payload) as TypeGraphDS;
         const secrets = JSON.parse(await decrypt(encryptedSecrets));
+        const secretManager = new SecretManager(tg.types[0].title, secrets);
         return Engine.init(
-          JSON.stringify(payload),
-          secrets,
+          tg,
+          secretManager,
           true,
-          new PushResponse(),
+          // SystemTypegraph.getCustomRuntimes(this),
         );
       },
     );
@@ -71,46 +66,13 @@ export class ReplicatedRegister extends Register {
     super();
   }
 
-  async set(
-    payload: string,
-    secrets: Record<string, string>,
-  ): Promise<RegistrationResult> {
-    const response = new PushResponse();
-
-    let engine = null;
-    try {
-      engine = await Engine.init(
-        payload,
-        secrets,
-        false,
-        response,
-        SystemTypegraph.getCustomRuntimes(this),
-      );
-    } catch (err) {
-      console.error(err);
-      response.error(err.message);
+  async add(engine: Engine): Promise<void> {
+    if (SystemTypegraph.check(engine.name)) {
+      // no need for a sync
+      this.replicatedMap.memory.set(engine.name, engine);
+    } else {
+      await this.replicatedMap.set(engine.name, engine);
     }
-    if (engine != null && !response.hasError()) {
-      if (SystemTypegraph.check(engine.name)) {
-        // no need for a sync
-        this.replicatedMap.memory.set(engine.name, engine);
-      } else {
-        await this.replicatedMap.set(engine.name, engine);
-      }
-      return {
-        typegraphName: engine.name,
-        messages: response.messages,
-        migrations: response.migrations,
-        resetRequired: response.resetRequired,
-      };
-    }
-
-    return {
-      typegraphName: response.tgName!,
-      messages: response.messages,
-      migrations: response.migrations,
-      resetRequired: response.resetRequired,
-    };
   }
 
   async remove(name: string): Promise<void> {

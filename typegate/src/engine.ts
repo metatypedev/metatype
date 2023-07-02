@@ -29,7 +29,7 @@ import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { Option } from "monads";
 import { getLogger } from "./log.ts";
-import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
+import { handleOnInitHooks } from "./hooks.ts";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./engine/computation_engine.ts";
@@ -144,26 +144,12 @@ export class Engine {
   }
 
   static async init(
-    payload: string,
-    secrets: Record<string, string>,
+    typegraphDS: TypeGraphDS,
+    secretManager: SecretManager,
     sync: boolean, // redis synchronization?
-    response: PushResponse,
     customRuntime: RuntimeResolver = {},
     introspectionDefPayload: string | null = introspectionDefStatic,
   ) {
-    const typegraph: TypeGraphDS = JSON.parse(payload);
-    const typegraphName = TypeGraph.formatName(typegraph);
-    response.typegraphName(typegraphName);
-
-    // not prefixed!
-    const secretManager = new SecretManager(typegraph.types[0].title, secrets);
-
-    const typegraphDS = sync ? typegraph : await handleOnPushHooks(
-      typegraph,
-      secretManager,
-      response,
-    );
-
     let introspection = null;
 
     if (introspectionDefPayload) {

@@ -10,6 +10,7 @@ import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "./utils.ts";
+import { typegraph_validate } from "native";
 
 import {
   initAuth,
@@ -134,6 +135,7 @@ export class TypeGraph {
 
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
+  name: string;
 
   private constructor(
     public tg: TypeGraphDS,
@@ -144,6 +146,7 @@ export class TypeGraph {
     public introspection: TypeGraph | null,
   ) {
     this.root = this.type(0);
+    this.name = TypeGraph.formatName(tg);
     // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
     const typeByName: Record<string, TypeNode> = {};
     tg.types.forEach((tpe) => {
@@ -152,16 +155,29 @@ export class TypeGraph {
     this.typeByName = typeByName;
   }
 
-  get name() {
-    return (this.tg.prefix ?? "") + this.root.title;
-  }
-
   get rawName() {
     return this.root.title;
   }
 
   static formatName(tg: TypeGraphDS): string {
     return (tg.prefix ?? "") + tg.types[0].title;
+  }
+
+  static async parseJson(json: string): Promise<TypeGraphDS> {
+    const validatedJson: string = await typegraph_validate({ json })
+      .then(
+        (res) => {
+          if ("Valid" in res) {
+            return res.Valid.json;
+          } else {
+            return Promise.reject(
+              new Error(`Invalid typegraph definition: ${res.NotValid.reason}`),
+            );
+          }
+        },
+      );
+
+    return JSON.parse(validatedJson) as TypeGraphDS;
   }
 
   static async init(

@@ -2,16 +2,15 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine.ts";
+import { ComputeStage, Engine } from "../engine.ts";
 import { Register } from "../register.ts";
 import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
-import { TypeGraph, TypeGraphDS } from "../typegraph.ts";
-import { typegraph_validate } from "native";
-import { ensure } from "../utils.ts";
+import { SecretManager, TypeGraph } from "../typegraph.ts";
 import { getLogger } from "../log.ts";
 import config from "../config.ts";
 import * as semver from "std/semver/mod.ts";
+import { handleOnPushHooks, PushResponse } from "../hooks.ts";
 
 const logger = getLogger(import.meta);
 
@@ -22,7 +21,7 @@ export class TypeGateRuntime extends Runtime {
     super();
   }
 
-  static init(register: Register): Runtime {
+  static init(register: Register): TypeGateRuntime {
     if (!TypeGateRuntime.singleton) {
       TypeGateRuntime.singleton = new TypeGateRuntime(register);
     }
@@ -103,36 +102,25 @@ export class TypeGateRuntime extends Runtime {
   };
 
   addTypegraph: Resolver = async ({ fromString, secrets, cliVersion }) => {
+    logger.info("Adding typegraph");
     if (!semver.gte(semver.parse(cliVersion), semver.parse(config.version))) {
       throw new Error(
         `Meta CLI version ${cliVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
       );
     }
-    const json = await typegraph_validate({ json: fromString }).then((res) => {
-      if ("Valid" in res) {
-        return res.Valid.json;
-      } else {
-        return Promise.reject(
-          new Error(`Invalid typegraph definition: ${res.NotValid.reason}`),
-        );
-      }
-    });
-    const name = TypeGraph.formatName(JSON.parse(json) as TypeGraphDS);
 
-    if (SystemTypegraph.check(name)) {
-      throw new Error(`Typegraph name ${name} cannot be used`);
-    }
+    const [engine, pushResponse] = await pushTypegraph(
+      fromString,
+      JSON.parse(secrets),
+      this.register,
+    );
 
-    const { typegraphName, messages, migrations, resetRequired } = await this
-      .register
-      .set(
-        json,
-        JSON.parse(secrets),
-      );
-    logger.info(`Typegraph ${typegraphName} registered`);
-    ensure(typegraphName == null || name === typegraphName, "unexpected");
-
-    return { name, messages, migrations, resetRequired };
+    return {
+      name: engine.name,
+      messages: pushResponse.messages,
+      migrations: pushResponse.migrations,
+      resetRequired: pushResponse.resetRequired,
+    };
   };
 
   removeTypegraph: Resolver = ({ name }) => {
@@ -142,4 +130,41 @@ export class TypeGateRuntime extends Runtime {
 
     return this.register.remove(name);
   };
+}
+
+export async function pushTypegraph(
+  tgJson: string,
+  secrets: Record<string, string>,
+  register: Register,
+): Promise<[Engine, PushResponse]> {
+  const tgDS = await TypeGraph.parseJson(tgJson);
+  const name = TypeGraph.formatName(tgDS);
+
+  // if (SystemTypegraph.check(name)) {
+  //   throw new Error(`Typegraph name ${name} cannot be used`);
+  // }
+
+  // name without prefix!
+  const secretManager = new SecretManager(tgDS.types[0].title, secrets);
+
+  const pushResponse = new PushResponse(name);
+  logger.info("Handling onPush hooks");
+  const tg = await handleOnPushHooks(
+    tgDS,
+    secretManager,
+    pushResponse,
+  );
+
+  logger.info(`Initializing engine '${name}'`);
+  const engine = await Engine.init(
+    tg,
+    secretManager,
+    false,
+    SystemTypegraph.getCustomRuntimes(register),
+  );
+
+  logger.info(`Registering engine '${name}'`);
+  await register.add(engine);
+
+  return [engine, pushResponse];
 }

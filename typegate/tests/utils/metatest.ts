@@ -11,6 +11,7 @@ import { ConnInfo } from "std/http/server.ts";
 import { NoLimiter } from "./no_limiter.ts";
 import { SingleRegister } from "./single_register.ts";
 import { metaCli, shell } from "../utils.ts";
+import { pushTypegraph } from "../../src/runtimes/typegate.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -116,17 +117,12 @@ export class MetaTest {
       throw new Error("No typegraph");
     }
 
-    const { typegraphName, messages } = await this.register.set(
+    const [engine, _] = await pushTypegraph(
       stdout,
       opts.secrets ?? {},
+      this.register,
     );
-    if (typegraphName == null) {
-      throw new Error("Could not register typegraph");
-    }
-    for (const m of messages) {
-      console.info(m);
-    }
-    const engine = this.register.get(typegraphName)!;
+
     this.cleanups.push(
       ...(opts.ports ?? []).map((port) => exposeOnPort(engine, port)),
     );

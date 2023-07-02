@@ -7,7 +7,7 @@ import { Register } from "./register.ts";
 import { PrismaMigrationRuntime } from "./runtimes/prisma_migration.ts";
 import { RuntimeResolver } from "./typegraph.ts";
 import { getLogger } from "./log.ts";
-import { TypeGateRuntime } from "./runtimes/typegate.ts";
+import { pushTypegraph, TypeGateRuntime } from "./runtimes/typegate.ts";
 
 const logger = getLogger();
 const localDir = dirname(fromFileUrl(import.meta.url));
@@ -42,7 +42,7 @@ export class SystemTypegraph {
     const reload = async (paths: string[]) => {
       for await (const path of paths) {
         logger.info(`reloading system graph ${basename(path)}`);
-        await register.set(await Deno.readTextFile(path), {});
+        await pushTypegraph(await Deno.readTextFile(path), {}, register);
       }
     };
 
