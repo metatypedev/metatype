@@ -136,13 +136,24 @@ export async function pushTypegraph(
   tgJson: string,
   secrets: Record<string, string>,
   register: Register,
+  system = false,
 ): Promise<[Engine, PushResponse]> {
   const tgDS = await TypeGraph.parseJson(tgJson);
   const name = TypeGraph.formatName(tgDS);
 
-  // if (SystemTypegraph.check(name)) {
-  //   throw new Error(`Typegraph name ${name} cannot be used`);
-  // }
+  if (SystemTypegraph.check(name)) {
+    if (!system) {
+      throw new Error(
+        `Typegraph name ${name} cannot be used for non-system typegraphs`,
+      );
+    }
+  } else {
+    if (system) {
+      throw new Error(
+        `Typegraph name ${name} cannot be used for system typegraphs`,
+      );
+    }
+  }
 
   // name without prefix!
   const secretManager = new SecretManager(tgDS.types[0].title, secrets);
