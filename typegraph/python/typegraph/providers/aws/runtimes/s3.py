@@ -21,7 +21,7 @@ class S3Runtime(Runtime):
     access_key_secret: str
     secret_key_secret: str
     path_style_secret: Optional[str] = field(default=None, kw_only=True)
-    runtime_name: str = always("s3")
+    runtime_name: str = field(default="s3", init=False)
 
     def data(self, collector):
         data = super().data(collector)

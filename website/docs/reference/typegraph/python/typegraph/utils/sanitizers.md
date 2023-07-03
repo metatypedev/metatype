@@ -28,3 +28,4 @@ Convert a string into valid attribute
 
   
   `root:some complicated/Name` => `root_some_complicated_Name`
+

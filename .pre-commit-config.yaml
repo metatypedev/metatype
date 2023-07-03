@@ -12,7 +12,8 @@ repos:
       - id: check-executables-have-shebangs
       - id: check-merge-conflict
       - id: end-of-file-fixer
-        exclude: (typegate/deno.lock|.*\.snap$|__snapshots__)
+        # exclude all generated files
+        exclude: (typegate/deno.lock|.*\.snap$|typegate/src/typegraphs/.*\.json|website/docs/reference/)
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: "v0.0.272"
     hooks:
