@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage } from "../engine.ts";
+import { ComputeStage, Engine } from "../engine.ts";
 import { Register } from "../typegate/register.ts";
 import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
@@ -10,7 +10,7 @@ import { SecretManager, TypeGraph } from "../typegraph.ts";
 import { getLogger } from "../log.ts";
 import config from "../config.ts";
 import * as semver from "std/semver/mod.ts";
-import { handleOnPushHooks, PushResponse } from "../hooks.ts";
+import { handleOnPushHooks, PushResponse } from "../hooks/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -163,7 +163,7 @@ export async function pushTypegraph(
   // name without prefix!
   const secretManager = new SecretManager(tgDS.types[0].title, secrets);
 
-  const pushResponse = new PushResponse(name);
+  const pushResponse = new PushResponse();
   logger.info("Handling onPush hooks");
   const tg = await handleOnPushHooks(
     tgDS,

@@ -2,9 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Engine } from "../../src/engine.ts";
-import { PushResponse } from "../../src/hooks/mod.ts";
-import { Register, RegistrationResult } from "../../src/typegate/register.ts";
-import { SystemTypegraph } from "../../src/system_typegraphs.ts";
+import { Register } from "../../src/typegate/register.ts";
 
 export class MemoryRegister extends Register {
   private map = new Map<string, Engine>();

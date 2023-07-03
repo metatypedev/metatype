@@ -29,7 +29,7 @@ import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { Option } from "monads";
 import { getLogger } from "./log.ts";
-import { handleOnInitHooks } from "./hooks.ts";
+import { handleOnInitHooks } from "./hooks/mod.ts";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./engine/computation_engine.ts";
