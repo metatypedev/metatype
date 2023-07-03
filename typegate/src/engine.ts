@@ -16,7 +16,7 @@ import * as log from "std/log/mod.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { BadContext, ResolverError } from "./errors.ts";
-import { RateLimit } from "./rate_limiter.ts";
+import { RateLimit } from "./typegate/rate_limiter.ts";
 import {
   ComputeStageProps,
   Context,

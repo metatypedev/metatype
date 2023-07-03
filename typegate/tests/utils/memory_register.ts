@@ -3,7 +3,7 @@
 
 import { Engine } from "../../src/engine.ts";
 import { PushResponse } from "../../src/hooks/mod.ts";
-import { Register, RegistrationResult } from "../../src/register.ts";
+import { Register, RegistrationResult } from "../../src/typegate/register.ts";
 import { SystemTypegraph } from "../../src/system_typegraphs.ts";
 
 export class MemoryRegister extends Register {

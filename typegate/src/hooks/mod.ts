@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { parseGraphQLTypeGraph } from "../graphql/graphql.ts";
-import { MessageEntry, Migrations } from "../register.ts";
+import { MessageEntry, Migrations } from "../typegate/register.ts";
 import { SecretManager, TypeGraph, TypeGraphDS } from "../typegraph.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
 

@@ -1,12 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { serve } from "std/http/server.ts";
 import { init_native } from "native";
 
 import { ReplicatedRegister } from "./register.ts";
 import config, { redisConfig } from "./config.ts";
-import { typegate } from "./typegate.ts";
+import { Typegate } from "./typegate.ts";
 import { RedisRateLimiter } from "./rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
@@ -49,12 +48,10 @@ await SystemTypegraph.loadAll(register, !config.packaged);
 
 const limiter = await RedisRateLimiter.init(redisConfig);
 
+const typegate = new Typegate(register, limiter);
 registerHook("onPush", runMigrations);
 
-const server = serve(
-  typegate(register, limiter),
-  { port: config.tg_port },
-);
+const server = typegate.start();
 
 if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
   // deno-lint-ignore no-inner-declarations

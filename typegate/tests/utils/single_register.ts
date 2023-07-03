@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Engine } from "../../src/engine.ts";
-import { Register } from "../../src/register.ts";
+import { Register, RegistrationResult } from "../../src/typegate/register.ts";
 
 export class SingleRegister extends Register {
   constructor(private name: string, private engine: Engine) {

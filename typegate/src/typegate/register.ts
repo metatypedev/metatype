@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Engine } from "./engine.ts";
-import { RedisReplicatedMap } from "./replicated_map.ts";
+import { Engine } from "../engine.ts";
+import { RedisReplicatedMap } from "../replicated_map.ts";
 import { RedisConnectOptions } from "redis";
-import { SystemTypegraph } from "./system_typegraphs.ts";
-import { decrypt, encrypt } from "./crypto.ts";
-import { PushResponse } from "./hooks/mod.ts";
+import { SystemTypegraph } from "../system_typegraphs.ts";
+import { decrypt, encrypt } from "../crypto.ts";
+import { PushResponse } from "../hooks/mod.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";

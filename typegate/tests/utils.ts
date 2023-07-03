@@ -14,7 +14,7 @@ import { Q } from "./utils/q.ts";
 import { MetaTest } from "./utils/metatest.ts";
 import { SingleRegister } from "./utils/single_register.ts";
 import { NoLimiter } from "./utils/no_limiter.ts";
-import { typegate } from "../src/typegate.ts";
+import { Typegate } from "../src/typegate/mod.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { ensure } from "../src/utils.ts";
 import { expandGlob } from "std/fs/expand_glob.ts";
@@ -259,8 +259,8 @@ export async function execute(
 ): Promise<Response> {
   const register = new SingleRegister(engine.name, engine);
   const limiter = new NoLimiter();
-  const server = typegate(register, limiter);
-  return await server(request, {
+  const typegate = new Typegate(register, limiter);
+  return await typegate.handle(request, {
     remoteAddr: { hostname: "localhost" },
   } as ConnInfo);
 }

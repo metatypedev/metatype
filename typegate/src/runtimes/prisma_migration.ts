@@ -4,7 +4,7 @@
 import { Runtime } from "./Runtime.ts";
 import { Resolver, ResolverArgs } from "../types.ts";
 import { ComputeStage, Engine } from "../engine.ts";
-import { Register } from "../register.ts";
+import { Register } from "../typegate/register.ts";
 import * as native from "native";
 import { nativeResult } from "../utils.ts";
 import { makeDatasource, PrismaRuntimeDS } from "./prisma.ts";

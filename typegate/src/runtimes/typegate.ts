@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage, Engine } from "../engine.ts";
-import { Register } from "../register.ts";
+import { ComputeStage } from "../engine.ts";
+import { Register } from "../typegate/register.ts";
 import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { SecretManager, TypeGraph } from "../typegraph.ts";

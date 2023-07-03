@@ -1,12 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Server } from "std/http/server.ts";
+import { ConnInfo, Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { Engine } from "../../src/engine.ts";
-import { Register } from "../../src/register.ts";
-import { typegate } from "../../src/typegate.ts";
-import { ConnInfo } from "std/http/server.ts";
+import { Register } from "../../src/typegate/register.ts";
+import { Typegate } from "../../src/typegate/mod.ts";
 
 import { NoLimiter } from "./no_limiter.ts";
 import { SingleRegister } from "./single_register.ts";
@@ -29,17 +28,16 @@ export interface ParseOptions {
 }
 
 function serve(register: Register, port: number): () => void {
-  const handler = async (req: Request) => {
-    const server = typegate(register, new NoLimiter());
-    return await server(req, {
-      remoteAddr: { hostname: "localhost" },
-    } as ConnInfo);
-  };
+  const typegate = new Typegate(register, new NoLimiter());
 
   const server = new Server({
     port,
     hostname: "localhost",
-    handler,
+    handler(req) {
+      return typegate.handle(req, {
+        remoteAddr: { hostname: "localhost" },
+      } as ConnInfo);
+    },
   });
 
   const listener = server.listenAndServe();

@@ -1,17 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "./config.ts";
+import config from "../config.ts";
 import { Register } from "./register.ts";
-import { renderPlayground } from "./web/playground.ts";
+import { renderPlayground } from "../web/playground.ts";
 import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
-import { getLogger } from "./log.ts";
-import { forceAnyToOption } from "./utils.ts";
-import { Operations, parseRequest } from "./graphql/request_parser.ts";
-import { handleAuthService } from "./auth/auth.ts";
-import { Engine } from "./engine.ts";
+import { getLogger } from "../log.ts";
+import { forceAnyToOption } from "../utils.ts";
+import { Operations, parseRequest } from "../graphql/request_parser.ts";
+import { handleAuthService } from "../auth/auth.ts";
+import { Engine } from "../engine.ts";
 
 const logger = getLogger("http");
 
@@ -35,9 +35,10 @@ const parsePath = (
   return [engineName ?? "", serviceName];
 };
 
-export const typegate =
-  (register: Register, limiter: RateLimiter) =>
-  async (request: Request, connInfo: ConnInfo): Promise<Response> => {
+export class Typegate {
+  constructor(private register: Register, private limiter: RateLimiter) {}
+
+  async handle(request: Request, connInfo: ConnInfo): Promise<Response> {
     try {
       const url = new URL(request.url);
 
@@ -54,7 +55,7 @@ export const typegate =
 
       const [engineName, serviceName] = parsePath(url.pathname);
 
-      const engine = register.get(engineName);
+      const engine = this.register.get(engineName);
       if (!engine) {
         if (!silenceList.has(engineName)) {
           logger.info(`typegraph not found: ${engineName}`);
@@ -94,7 +95,7 @@ export const typegate =
           : url.origin;
         const playground = renderPlayground(
           `${targetUrl}/${engineName}`,
-          register.list().map((e) => e.name),
+          this.register.list().map((e) => e.name),
         );
         return new Response(playground, {
           headers: { "content-type": "text/html" },
@@ -125,7 +126,7 @@ export const typegate =
       // FIX bad serialization of rate (current: array if no object)
       const limit = engine.tg.tg.meta.rate &&
           !Array.isArray(engine.tg.tg.meta.rate)
-        ? await limiter.limit(
+        ? await this.limiter.limit(
           `${engine.name}:${identifier}`,
           engine.tg.tg.meta.rate.query_limit,
           engine.tg.tg.meta.rate.window_sec,
@@ -176,4 +177,5 @@ export const typegate =
       console.error(e);
       return new Response("ko", { status: 500 });
     }
-  };
+  }
+}

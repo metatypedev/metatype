@@ -3,7 +3,7 @@
 
 import { basename, dirname, fromFileUrl, join } from "std/path/mod.ts";
 
-import { Register } from "./register.ts";
+import { Register } from "./typegate/register.ts";
 import { PrismaMigrationRuntime } from "./runtimes/prisma_migration.ts";
 import { RuntimeResolver } from "./typegraph.ts";
 import { getLogger } from "./log.ts";
