@@ -11,6 +11,8 @@ import { RedisRateLimiter } from "./rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
+import { registerHook } from "./hooks/mod.ts";
+import { runMigrations } from "./hooks/prisma/migrations.ts";
 
 const logger = getLogger(import.meta);
 logger.info(`typegate v${config.version} starting`);
@@ -46,6 +48,8 @@ register.startSync();
 await SystemTypegraph.loadAll(register, !config.packaged);
 
 const limiter = await RedisRateLimiter.init(redisConfig);
+
+registerHook("onPush", runMigrations);
 
 const server = serve(
   typegate(register, limiter),

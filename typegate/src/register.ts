@@ -6,7 +6,7 @@ import { RedisReplicatedMap } from "./replicated_map.ts";
 import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import { decrypt, encrypt } from "./crypto.ts";
-import { SecretManager, TypeGraphDS } from "./typegraph.ts";
+import { PushResponse } from "./hooks/mod.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
