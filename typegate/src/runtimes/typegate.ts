@@ -113,6 +113,7 @@ export class TypeGateRuntime extends Runtime {
       fromString,
       JSON.parse(secrets),
       this.register,
+      true, // introspection
     );
 
     return {
@@ -136,6 +137,7 @@ export async function pushTypegraph(
   tgJson: string,
   secrets: Record<string, string>,
   register: Register,
+  introspection: boolean,
   system = false,
 ): Promise<[Engine, PushResponse]> {
   const tgDS = await TypeGraph.parseJson(tgJson);
@@ -172,6 +174,7 @@ export async function pushTypegraph(
     secretManager,
     false,
     SystemTypegraph.getCustomRuntimes(register),
+    introspection ? undefined : null,
   );
 
   logger.info(`Registering engine '${name}'`);

@@ -120,12 +120,16 @@ export const test = ((name, fn, opts = {}): void => {
     name,
     async fn(t) {
       const reg = new MemoryRegister();
-      const { systemTypegraphs = false, cleanGitRepo = false } = opts;
+      const {
+        systemTypegraphs = false,
+        cleanGitRepo = false,
+        introspection = false,
+      } = opts;
       if (systemTypegraphs) {
         await SystemTypegraph.loadAll(reg);
       }
 
-      const mt = new MetaTest(t, reg, opts.port ?? null);
+      const mt = new MetaTest(t, reg, introspection, opts.port ?? null);
 
       try {
         if (cleanGitRepo) {

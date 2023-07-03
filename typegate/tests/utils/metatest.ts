@@ -62,6 +62,7 @@ export class MetaTest {
   constructor(
     public t: Deno.TestContext,
     public register: Register,
+    private introspection: boolean,
     port: number | null,
   ) {
     if (port != null) {
@@ -121,6 +122,7 @@ export class MetaTest {
       stdout,
       opts.secrets ?? {},
       this.register,
+      this.introspection,
     );
 
     this.cleanups.push(

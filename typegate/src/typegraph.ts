@@ -263,7 +263,7 @@ export class TypeGraph {
           materializers.push(...additionnalAuthMaterializers);
         }
 
-        //logger.debug(`init ${runtime.name} (${idx})`);
+        // logger.debug(`init ${runtime.name} (${idx})`);
         return runtimeInit[runtime.name]({
           typegraph,
           materializers,
