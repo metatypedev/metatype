@@ -302,21 +302,15 @@ export class TypeGraph {
   }
 
   async deinit(): Promise<void> {
-    for await (
-      const runtime of this.runtimeReferences
-    ) {
-      //logger.debug(`deinit runtime ${idx}`);
-      await runtime.deinit();
-    }
+    await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
     if (this.introspection) {
       await this.introspection.deinit();
     }
 
-    for await (
-      const runtime of Object.values(DenoRuntime.getInstancesIn(this.name))
-    ) {
-      await runtime.deinit();
-    }
+    await Promise.all(
+      Object.values(DenoRuntime.getInstancesIn(this.name))
+        .map((rt) => rt.deinit()),
+    );
   }
 
   type(idx: number): TypeNode;

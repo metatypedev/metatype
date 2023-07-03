@@ -28,7 +28,10 @@ export class TypeGateRuntime extends Runtime {
     return TypeGateRuntime.singleton;
   }
 
-  async deinit(): Promise<void> {}
+  deinit(): Promise<void> {
+    TypeGateRuntime.singleton = null;
+    return Promise.resolve();
+  }
 
   materialize(
     stage: ComputeStage,
