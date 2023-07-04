@@ -40,6 +40,9 @@ const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
   join(localDir, "typegraphs/introspection.json"),
 );
+const introspectionDef = parseGraphQLTypeGraph(
+  await TypeGraph.parseJson(introspectionDefStatic),
+);
 
 /**
  * Processed graphql node to be evaluated against a Runtime
@@ -148,16 +151,10 @@ export class Engine {
     secretManager: SecretManager,
     sync: boolean, // redis synchronization?
     customRuntime: RuntimeResolver = {},
-    introspectionDefPayload: string | null = introspectionDefStatic,
+    enableIntrospection: boolean,
   ) {
-    let introspection = null;
-
-    if (introspectionDefPayload) {
-      const introspectionDefRaw = JSON.parse(
-        introspectionDefPayload,
-      ) as TypeGraphDS;
-      const introspectionDef = parseGraphQLTypeGraph(introspectionDefRaw);
-      introspection = await TypeGraph.init(
+    const introspection = enableIntrospection
+      ? await TypeGraph.init(
         introspectionDef,
         new SecretManager(introspectionDef.types[0].title, {}),
         {
@@ -168,8 +165,8 @@ export class Engine {
           ),
         },
         null,
-      );
-    }
+      )
+      : null;
 
     const tg = await TypeGraph.init(
       typegraphDS,

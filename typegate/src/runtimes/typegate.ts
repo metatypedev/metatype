@@ -177,7 +177,7 @@ export async function pushTypegraph(
     secretManager,
     false,
     SystemTypegraph.getCustomRuntimes(register),
-    introspection ? undefined : null,
+    introspection,
   );
 
   logger.info(`Registering engine '${name}'`);
