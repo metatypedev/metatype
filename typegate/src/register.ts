@@ -7,6 +7,7 @@ import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import { decrypt, encrypt } from "./crypto.ts";
 import { SecretManager, TypeGraphDS } from "./typegraph.ts";
+import { deferred } from "std/async/deferred.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -33,6 +34,7 @@ export class ReplicatedRegister extends Register {
   static async init(
     redisConfig: RedisConnectOptions,
   ): Promise<ReplicatedRegister> {
+    const deferredRegister = deferred<ReplicatedRegister>();
     const replicatedMap = await RedisReplicatedMap.init<Engine>(
       "typegraph",
       redisConfig,
@@ -53,12 +55,14 @@ export class ReplicatedRegister extends Register {
           tg,
           secretManager,
           true,
-          // SystemTypegraph.getCustomRuntimes(this),
+          SystemTypegraph.getCustomRuntimes(await deferredRegister) ?? {},
         );
       },
     );
 
-    return new ReplicatedRegister(replicatedMap);
+    const register = new ReplicatedRegister(replicatedMap);
+    deferredRegister.resolve(register);
+    return register;
   }
 
   constructor(private replicatedMap: RedisReplicatedMap<Engine>) {
