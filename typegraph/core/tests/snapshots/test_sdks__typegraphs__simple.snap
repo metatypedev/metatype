@@ -1,7 +1,7 @@
 ---
 source: typegraph/core/tests/test_sdks.rs
 expression: tg
-input_file: typegraph/core/tests/typegraphs/simple.py
+input_file: typegraph/core/tests/typegraphs/simple.ts
 ---
 [
   {
@@ -219,7 +219,7 @@ input_file: typegraph/core/tests/typegraphs/simple.py
           "idempotent": true
         },
         "data": {
-          "code": "file:/three.ts;base64:H4sIAAAAAAAA/+2SwUrEMBCGc85TzFGhrGnTbKGKd6/iC6Q1q0VMlnSCCyXvbpKDloIISgvL5rtMJjOZTPLP7oasDgs0QiQbWNq0Llm9L1nFKp72G14JIsgGuBGlBSD/Zfm4MwFHsjp/0V/wJuu/AfhqldqtOwXxP/Z1/aP+vOIL/cuQH+aFbMCF608HjcoeZK/gKY7Cgz46hIkCdC1o994pexsc+e14StXpaCzCwekeB6MhDdHVBLKADnw7q1SEsxP0Jlxywhj6clp4VL2xz3cj2kG/FOD0mzYf+h48vW5TB3Lewawdn6JWobM6FAxprIhxBj62RzKZTCbzO58H2mKzAAwAAA=="
+          "code": "tmp/unpacked,tmp/unpacked/three.ts"
         }
       },
       {

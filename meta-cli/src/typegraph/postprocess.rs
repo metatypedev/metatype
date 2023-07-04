@@ -121,6 +121,7 @@ pub mod deno_rt {
 
         let dir_walker = WalkBuilder::new(&base_rel_path)
             .standard_filters(true)
+            // .add_custom_ignore_filename(".DStore")
             .sort_by_file_path(|a, b| a.cmp(b))
             .build();
         let suffix = Path::new("scripts/deno");

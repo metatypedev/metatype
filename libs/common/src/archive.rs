@@ -4,9 +4,8 @@
 use anyhow::{Context, Result};
 use base64::{engine::general_purpose::STANDARD, Engine};
 use flate2::{read::GzDecoder, write::GzEncoder, Compression};
-use ignore::Walk;
-use std::fs;
-use std::path::Path;
+use ignore::{Walk, WalkBuilder};
+use std::{fs, path::Path};
 use tar::Archive;
 
 pub fn unpack<P: AsRef<Path>>(dest: P, migrations: Option<impl AsRef<[u8]>>) -> Result<()> {
@@ -73,4 +72,31 @@ pub fn archive_entries(dir_walker: Walk, suffix: Option<&Path>) -> Result<Option
     }
 
     Ok(None)
+}
+
+pub fn unpack_tar_base64<P: AsRef<Path>>(b64: String, dest: P) -> Result<()> {
+    let buffer = STANDARD
+        .decode(b64)
+        .context("Decoding base64 encoded tarball")?;
+    let tar = GzDecoder::new(&buffer[..]);
+    let mut archive = Archive::new(tar);
+    archive.unpack(dest).context("Unpacking tarball")?;
+    Ok(())
+}
+
+pub fn flat_list_dir<P: AsRef<Path>>(dir: P) -> Result<Vec<String>> {
+    let dir_walker = WalkBuilder::new(&dir)
+        .sort_by_file_path(|a, b| a.cmp(b))
+        .build();
+    let mut ret: Vec<String> = vec![];
+    for result in dir_walker {
+        match result {
+            Ok(entry) => {
+                ret.push(entry.path().display().to_string());
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }?;
+    }
+    Ok(ret)
 }
