@@ -12,6 +12,19 @@ import { forceAnyToOption } from "../utils.ts";
 import { Operations, parseRequest } from "../graphql/request_parser.ts";
 import { handleAuthService } from "../auth/auth.ts";
 import { Engine } from "../engine.ts";
+import { InitHandler, PushHandler, PushResponse } from "../hooks/mod.ts";
+import { upgradeTypegraph } from "../typegraph/versions.ts";
+import { parseGraphQLTypeGraph } from "../graphql/graphql.ts";
+import { runMigrations } from "../hooks/prisma/migrations.ts";
+import {
+  RuntimeResolver,
+  SecretManager,
+  TypeGraph,
+  TypeGraphDS,
+} from "../typegraph.ts";
+import { SystemTypegraph } from "../system_typegraphs.ts";
+import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
+import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 
 const logger = getLogger("http");
 
@@ -35,8 +48,57 @@ const parsePath = (
   return [engineName ?? "", serviceName];
 };
 
+const localDir = dirname(fromFileUrl(import.meta.url));
+const introspectionDefStatic = await Deno.readTextFile(
+  join(localDir, "../typegraphs/introspection.json"),
+);
+
 export class Typegate {
-  constructor(private register: Register, private limiter: RateLimiter) {}
+  #onPushHooks: PushHandler[] = [];
+  #onInitHooks: InitHandler[] = [];
+
+  constructor(
+    public readonly register: Register,
+    private limiter: RateLimiter,
+  ) {
+    this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
+    this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
+    this.#onPush(runMigrations);
+  }
+
+  #onPush(handler: PushHandler) {
+    this.#onPushHooks.push(handler);
+  }
+
+  #onInit(handler: InitHandler) {
+    this.#onInitHooks.push(handler);
+  }
+
+  async #handleOnPushHooks(
+    typegraph: TypeGraphDS,
+    secretManager: SecretManager,
+    response: PushResponse,
+  ): Promise<TypeGraphDS> {
+    let res = typegraph;
+
+    for (const handler of this.#onPushHooks) {
+      res = await handler(res, secretManager, response);
+    }
+
+    return res;
+  }
+
+  async #handleOnInitHooks(
+    typegraph: TypeGraph,
+    secretManager: SecretManager,
+    sync: boolean,
+  ): Promise<void> {
+    await Promise.all(
+      this.#onInitHooks.map((handler) =>
+        handler(typegraph, secretManager, sync)
+      ),
+    );
+  }
 
   async handle(request: Request, connInfo: ConnInfo): Promise<Response> {
     try {
@@ -177,5 +239,94 @@ export class Typegate {
       console.error(e);
       return new Response("ko", { status: 500 });
     }
+  }
+
+  async pushTypegraph(
+    tgJson: string,
+    secrets: Record<string, string>,
+    introspection: boolean,
+    system = false,
+  ): Promise<[Engine, PushResponse]> {
+    const tgDS = await TypeGraph.parseJson(tgJson);
+    const name = TypeGraph.formatName(tgDS);
+
+    if (SystemTypegraph.check(name)) {
+      if (!system) {
+        throw new Error(
+          `Typegraph name ${name} cannot be used for non-system typegraphs`,
+        );
+      }
+    } else {
+      if (system) {
+        throw new Error(
+          `Typegraph name ${name} cannot be used for system typegraphs`,
+        );
+      }
+    }
+
+    // name without prefix!
+    const secretManager = new SecretManager(tgDS.types[0].title, secrets);
+
+    const pushResponse = new PushResponse();
+    logger.info("Handling onPush hooks");
+    const tg = await this.#handleOnPushHooks(
+      tgDS,
+      secretManager,
+      pushResponse,
+    );
+
+    logger.info(`Initializing engine '${name}'`);
+    const engine = await this.initEngine(
+      tg,
+      secretManager,
+      false,
+      SystemTypegraph.getCustomRuntimes(this),
+      introspection ? undefined : null,
+    );
+
+    logger.info(`Registering engine '${name}'`);
+    await this.register.add(engine);
+
+    return [engine, pushResponse];
+  }
+
+  async initEngine(
+    tgDS: TypeGraphDS,
+    secretManager: SecretManager,
+    sync: boolean, // redis synchronization ??
+    customRuntime: RuntimeResolver = {},
+    introspectionDefPayload: string | null = introspectionDefStatic,
+  ): Promise<Engine> {
+    let introspection = null;
+
+    if (introspectionDefPayload) {
+      const introspectionDefRaw = JSON.parse(
+        introspectionDefPayload,
+      ) as TypeGraphDS;
+      const introspectionDef = parseGraphQLTypeGraph(introspectionDefRaw);
+      introspection = await TypeGraph.init(
+        introspectionDef,
+        new SecretManager(introspectionDef.types[0].title, {}),
+        {
+          typegraph: TypeGraphRuntime.init(
+            tgDS,
+            [],
+            {},
+          ),
+        },
+        null,
+      );
+    }
+
+    const tg = await TypeGraph.init(
+      tgDS,
+      secretManager,
+      customRuntime,
+      introspection,
+    );
+
+    this.#handleOnInitHooks(tg, secretManager, sync);
+
+    return new Engine(tg);
   }
 }

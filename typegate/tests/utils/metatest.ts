@@ -4,13 +4,11 @@
 import { ConnInfo, Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { Engine } from "../../src/engine.ts";
-import { Register } from "../../src/typegate/register.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 
 import { NoLimiter } from "./no_limiter.ts";
 import { SingleRegister } from "./single_register.ts";
 import { metaCli, shell } from "../utils.ts";
-import { pushTypegraph } from "../../src/runtimes/typegate.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -27,9 +25,7 @@ export interface ParseOptions {
   prefix?: string;
 }
 
-function serve(register: Register, port: number): () => void {
-  const typegate = new Typegate(register, new NoLimiter());
-
+function serve(typegate: Typegate, port: number): () => void {
   const server = new Server({
     port,
     hostname: "localhost",
@@ -49,7 +45,7 @@ function serve(register: Register, port: number): () => void {
 
 function exposeOnPort(engine: Engine, port: number): () => void {
   const register = new SingleRegister(engine.name, engine);
-  return serve(register, port);
+  return serve(new Typegate(register, new NoLimiter()), port);
 }
 
 type MetaTestCleanupFn = () => void | Promise<void>;
@@ -59,13 +55,17 @@ export class MetaTest {
 
   constructor(
     public t: Deno.TestContext,
-    public register: Register,
+    public typegate: Typegate,
     private introspection: boolean,
     port: number | null,
   ) {
     if (port != null) {
-      this.cleanups.push(serve(register, port));
+      this.cleanups.push(serve(typegate, port));
     }
+  }
+
+  private get register() {
+    return this.typegate.register;
   }
 
   addCleanup(fn: MetaTestCleanupFn) {
@@ -116,10 +116,9 @@ export class MetaTest {
       throw new Error("No typegraph");
     }
 
-    const [engine, _] = await pushTypegraph(
+    const [engine, _] = await this.typegate.pushTypegraph(
       stdout,
       opts.secrets ?? {},
-      this.register,
       this.introspection,
     );
 

@@ -7,6 +7,7 @@ import { RedisConnectOptions } from "redis";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { decrypt, encrypt } from "../crypto.ts";
 import { SecretManager, TypeGraphDS } from "../typegraph.ts";
+import { Typegate } from "./mod.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -31,6 +32,7 @@ export abstract class Register {
 }
 export class ReplicatedRegister extends Register {
   static async init(
+    getTypegate: () => Promise<Typegate>,
     redisConfig: RedisConnectOptions,
   ): Promise<ReplicatedRegister> {
     const replicatedMap = await RedisReplicatedMap.init<Engine>(
@@ -43,13 +45,14 @@ export class ReplicatedRegister extends Register {
         return JSON.stringify([engine.tg.tg, encryptedSecrets]);
       },
       async (json: string) => {
+        const typegate = await getTypegate();
         const [tg, encryptedSecrets] = JSON.parse(json) as [
           TypeGraphDS,
           string,
         ];
         const secrets = JSON.parse(await decrypt(encryptedSecrets));
         const secretManager = new SecretManager(tg.types[0].title, secrets);
-        return Engine.init(
+        return typegate.initEngine(
           tg,
           secretManager,
           true,

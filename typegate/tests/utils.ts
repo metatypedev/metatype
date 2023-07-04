@@ -119,17 +119,17 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      const reg = new MemoryRegister();
+      const typegate = new Typegate(new MemoryRegister(), new NoLimiter());
       const {
         systemTypegraphs = false,
         cleanGitRepo = false,
         introspection = false,
       } = opts;
       if (systemTypegraphs) {
-        await SystemTypegraph.loadAll(reg);
+        await SystemTypegraph.loadAll(typegate);
       }
 
-      const mt = new MetaTest(t, reg, introspection, opts.port ?? null);
+      const mt = new MetaTest(t, typegate, introspection, opts.port ?? null);
 
       try {
         if (cleanGitRepo) {

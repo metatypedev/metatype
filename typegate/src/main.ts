@@ -1,17 +1,17 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { serve } from "std/http/server.ts";
+import { deferred } from "std/async/deferred.ts";
 import { init_native } from "native";
 
-import { ReplicatedRegister } from "./register.ts";
+import { ReplicatedRegister } from "./typegate/register.ts";
 import config, { redisConfig } from "./config.ts";
-import { Typegate } from "./typegate.ts";
-import { RedisRateLimiter } from "./rate_limiter.ts";
+import { Typegate } from "./typegate/mod.ts";
+import { RedisRateLimiter } from "./typegate/rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
-import { registerHook } from "./hooks/mod.ts";
-import { runMigrations } from "./hooks/prisma/migrations.ts";
 
 const logger = getLogger(import.meta);
 logger.info(`typegate v${config.version} starting`);
@@ -42,16 +42,23 @@ addEventListener("unhandledrejection", (e) => {
 // init rust native libs
 init_native();
 
-const register = await ReplicatedRegister.init(redisConfig);
+const deferredTypegate = deferred<Typegate>();
+const register = await ReplicatedRegister.init(
+  () => deferredTypegate,
+  redisConfig,
+);
 register.startSync();
-await SystemTypegraph.loadAll(register, !config.packaged);
 
 const limiter = await RedisRateLimiter.init(redisConfig);
 
 const typegate = new Typegate(register, limiter);
-registerHook("onPush", runMigrations);
+deferredTypegate.resolve(typegate);
+await SystemTypegraph.loadAll(typegate, !config.packaged);
 
-const server = typegate.start();
+const server = serve(
+  (req, connInfo) => typegate.handle(req, connInfo),
+  { port: config.tg_port },
+);
 
 if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
   // deno-lint-ignore no-inner-declarations
