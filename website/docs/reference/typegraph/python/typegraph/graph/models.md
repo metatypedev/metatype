@@ -84,3 +84,4 @@ class Rate()
 ```
 
 Rate limiting options
+

@@ -11,3 +11,4 @@ class GraphQLRuntime(Runtime)
 ```
 
 [Documentation](https://metatype.dev/docs/reference/runtimes/graphql)
+

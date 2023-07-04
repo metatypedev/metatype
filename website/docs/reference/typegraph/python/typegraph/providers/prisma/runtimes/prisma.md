@@ -32,3 +32,4 @@ def link(typ: Union[t.TypeNode, str],
 
 - `name` - name of the relationship
 - `field` - name of the target field on the target model
+

@@ -6,25 +6,29 @@ import CodeBlock from "@theme-original/CodeBlock";
 ## Typegraph
 
 ```ini
-TG_RETREND_ACCESS_KEY=minio
-TG_RETREND_SECRET_KEY=password
+TG_RETREND_S3_HOST=http://localhost:9000
+TG_RETREND_S3_REGION=local
+TG_RETREND_S3_ACCESS_KEY=minio
+TG_RETREND_S3_SECRET_KEY=password
+TG_RETREND_S3_PATH_STYLE=true
 ```
 
 <CodeBlock language="python">{require("./typegraph.py").content}</CodeBlock>
 
-## Usage
+## Uploading file using presigned url
 
 ```ts
 const image = await Deno.readFile("website/static/images/logo.png");
 
+// Get a presigned url
 const {
-  data: { presigned },
+  data: { signUploadUrl: presigned },
 } = await fetch("http://localhost:7891/retrend", {
   method: "POST",
   body: JSON.stringify({
     query: `
-        query sign($length: Int) {
-            presigned(length: $length, path: "my-super-image.png")
+        query SignUploadUrl($length: Int) {
+            signUploadUrl(length: $length, path: "my-super-image.png")
         }
     `,
     variables: {
@@ -33,6 +37,7 @@ const {
   }),
 }).then((r) => r.json());
 
+// Upload the file
 const upload = await fetch(presigned, {
   method: "PUT",
   body: image,
@@ -43,4 +48,45 @@ const upload = await fetch(presigned, {
 });
 
 console.log(upload.status);
+```
+
+## Uploading file using GraphQL multipart request
+
+Metatype supports
+[GraphQL multipart request](https://github.com/jaydenseric/graphql-multipart-request-spec)
+for uploading files.
+You may use one of the clients in this
+[list](https://github.com/jaydenseric/graphql-multipart-request-spec#client)
+that support GraphQL multipart request.
+
+```ts
+const image = await Deno.readFile("website/static/images/logo.png");
+
+const formData = new FormData();
+formData.append(
+  "operations",
+  JSON.stringify({
+    query: `
+        mutation UploadImage($file: Upload!) {
+            upload(file: $file) {
+                id
+                path
+                size
+                contentType
+            }
+        }
+    `,
+    variables: {
+      file: null,
+    },
+  }),
+);
+formData.append("map", JSON.stringify({ 0: ["variables.file"] }));
+formData.append("0", image, "logo.png");
+
+const upload = await fetch("http://localhost:7891/retrend", {
+  method: "POST",
+  body: formData,
+});
+console.log(await upload.json());
 ```
