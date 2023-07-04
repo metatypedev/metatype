@@ -5,7 +5,7 @@ import {
   decrPosCmd,
   RateLimit,
   RedisRateLimiter,
-} from "../../src/rate_limiter.ts";
+} from "../../src/typegate/rate_limiter.ts";
 import { redisConfig } from "../../src/config.ts";
 import { assertEquals, assertThrows } from "std/testing/asserts.ts";
 import { connect, Raw } from "redis";
