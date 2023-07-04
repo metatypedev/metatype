@@ -51,12 +51,14 @@ export class ReplicatedRegister extends Register {
           string,
         ];
         const secrets = JSON.parse(await decrypt(encryptedSecrets));
+        // typegraph name without prefix
         const secretManager = new SecretManager(tg.types[0].title, secrets);
         return typegate.initEngine(
           tg,
           secretManager,
           true,
-          // SystemTypegraph.getCustomRuntimes(this),
+          SystemTypegraph.getCustomRuntimes(typegate),
+          true,
         );
       },
     );

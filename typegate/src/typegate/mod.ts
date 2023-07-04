@@ -49,8 +49,11 @@ const parsePath = (
 };
 
 const localDir = dirname(fromFileUrl(import.meta.url));
-const introspectionDefStatic = await Deno.readTextFile(
-  join(localDir, "../typegraphs/introspection.json"),
+
+const introspectionDef = parseGraphQLTypeGraph(
+  await TypeGraph.parseJson(
+    await Deno.readTextFile(join(localDir, "../typegraphs/introspection.json")),
+  ),
 );
 
 export class Typegate {
@@ -244,7 +247,7 @@ export class Typegate {
   async pushTypegraph(
     tgJson: string,
     secrets: Record<string, string>,
-    introspection: boolean,
+    enableIntrospection: boolean,
     system = false,
   ): Promise<[Engine, PushResponse]> {
     const tgDS = await TypeGraph.parseJson(tgJson);
@@ -264,7 +267,7 @@ export class Typegate {
       }
     }
 
-    // name without prefix!
+    // name without prefix
     const secretManager = new SecretManager(tgDS.types[0].title, secrets);
 
     const pushResponse = new PushResponse();
@@ -281,7 +284,7 @@ export class Typegate {
       secretManager,
       false,
       SystemTypegraph.getCustomRuntimes(this),
-      introspection ? undefined : null,
+      enableIntrospection,
     );
 
     logger.info(`Registering engine '${name}'`);
@@ -295,16 +298,10 @@ export class Typegate {
     secretManager: SecretManager,
     sync: boolean, // redis synchronization ??
     customRuntime: RuntimeResolver = {},
-    introspectionDefPayload: string | null = introspectionDefStatic,
+    enableIntrospection: boolean,
   ): Promise<Engine> {
-    let introspection = null;
-
-    if (introspectionDefPayload) {
-      const introspectionDefRaw = JSON.parse(
-        introspectionDefPayload,
-      ) as TypeGraphDS;
-      const introspectionDef = parseGraphQLTypeGraph(introspectionDefRaw);
-      introspection = await TypeGraph.init(
+    const introspection = enableIntrospection
+      ? await TypeGraph.init(
         introspectionDef,
         new SecretManager(introspectionDef.types[0].title, {}),
         {
@@ -315,8 +312,8 @@ export class Typegate {
           ),
         },
         null,
-      );
-    }
+      )
+      : null;
 
     const tg = await TypeGraph.init(
       tgDS,

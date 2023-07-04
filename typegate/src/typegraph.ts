@@ -164,20 +164,12 @@ export class TypeGraph {
   }
 
   static async parseJson(json: string): Promise<TypeGraphDS> {
-    const validatedJson: string = await typegraph_validate({ json })
-      .then(
-        (res) => {
-          if ("Valid" in res) {
-            return res.Valid.json;
-          } else {
-            return Promise.reject(
-              new Error(`Invalid typegraph definition: ${res.NotValid.reason}`),
-            );
-          }
-        },
-      );
-
-    return JSON.parse(validatedJson) as TypeGraphDS;
+    const res = await typegraph_validate({ json });
+    if ("Valid" in res) {
+      return JSON.parse(res.Valid.json) as TypeGraphDS;
+    } else {
+      throw new Error(`Invalid typegraph definition: ${res.NotValid.reason}`);
+    }
   }
 
   static async init(
@@ -306,11 +298,6 @@ export class TypeGraph {
     if (this.introspection) {
       await this.introspection.deinit();
     }
-
-    await Promise.all(
-      Object.values(DenoRuntime.getInstancesIn(this.name))
-        .map((rt) => rt.deinit()),
-    );
   }
 
   type(idx: number): TypeNode;
