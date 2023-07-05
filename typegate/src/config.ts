@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { z } from "zod";
-import { configOrExit } from "./utils.ts";
 import { mapKeys } from "std/collections/map_keys.ts";
 
 import * as base64 from "std/encoding/base64.ts";
@@ -10,7 +9,7 @@ import { parse } from "std/flags/mod.ts";
 import { RedisConnectOptions } from "redis";
 import { join } from "std/path/mod.ts";
 // This import ensure log loads before config, important for the version hydration
-import { zBooleanString } from "./log.ts";
+import { configOrExit, zBooleanString } from "./log.ts";
 
 const schema = {
   debug: zBooleanString,

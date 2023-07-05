@@ -1,7 +1,7 @@
 ---
 source: typegraph/core/tests/test_sdks.rs
 expression: tg
-input_file: typegraph/core/tests/typegraphs/simple.py
+input_file: typegraph/core/tests/typegraphs/simple.ts
 ---
 [
   {
@@ -219,7 +219,7 @@ input_file: typegraph/core/tests/typegraphs/simple.py
           "idempotent": true
         },
         "data": {
-          "code": "export function three({a,b},{context}){return{a:0,b:0};}"
+          "code": "tmp/unpacked,tmp/unpacked/three.ts"
         }
       },
       {
