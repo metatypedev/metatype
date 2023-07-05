@@ -15,7 +15,7 @@ repos:
         # exclude all generated files
         exclude: (typegate/deno.lock|.*\.snap$|typegate/src/typegraphs/.*\.json|website/docs/reference/)
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.272"
+    rev: "v0.0.277"
     hooks:
       - id: ruff
   - repo: https://github.com/psf/black
@@ -23,7 +23,7 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: 3.3.0
+    rev: 3.5.2
     hooks:
       - id: commitizen
         stages: [commit-msg]
@@ -40,7 +40,7 @@ repos:
       - id: deno-fmt
         name: Deno format
         language: system
-        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs && cd ../dev && deno fmt'
+        entry: bash -c 'cd typegate && deno fmt --ignore=native,src/typegraphs,tmp && cd ../dev && deno fmt'
         pass_filenames: false
         types:
           - ts
@@ -48,7 +48,7 @@ repos:
       - id: deno-lint
         name: Deno lint
         language: system
-        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native && cd ../dev && deno lint'
+        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native,tmp && cd ../dev && deno lint'
         pass_filenames: false
         types:
           - ts

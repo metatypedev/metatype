@@ -40,18 +40,18 @@ tokio = { version = "1.29.1", features = ["full"] }
 futures = "0.3.28"
 log = "0.4.19"
 env_logger = "0.10.0"
-clap = { version = "4.3.10", features = ["derive", "env"] }
+clap = { version = "4.3.11", features = ["derive", "env"] }
 crossbeam-channel = "0.5.8"
 notify-debouncer-mini = { version = "0.3.0", default-features = false }
 tiny_http = "0.12.0"
 ignore = "0.4.20"
 globset = "0.4.10"
 anyhow = "1.0.71"
-indoc = "2.0.1"
-serde = { version = "1.0.164", features = ["derive"] }
-serde_json = { version = "1.0.99", features = ["preserve_order"] }
+indoc = "2.0.2"
+serde = { version = "1.0.166", features = ["derive"] }
+serde_json = { version = "1.0.100", features = ["preserve_order"] }
 reqwest = { version = "0.11.18", features = ["json"] }
-colored = "2.0.0"
+colored = "2.0.4"
 question = "0.2.2"
 dialoguer = "0.10.4"
 flate2 = "1.0.26"
@@ -64,10 +64,10 @@ pathdiff = "0.2.1"
 openssl = { version = "0.10.55", features = ["vendored"] }
 indexmap = { version = "1.9.3", features = ["serde"] }
 lade-sdk = "0.7.0"
-async-trait = "0.1.68"
+async-trait = "0.1.71"
 async-recursion = "1.0.4"
 clap-verbosity-flag = "2.0.1"
-clap_complete = "4.3.1"
+clap_complete = "4.3.2"
 itertools = "0.11.0"
 enum_dispatch = "0.3.11"
 git2 = { version = "0.17.2", features = ["vendored-libgit2"], default-features = false }

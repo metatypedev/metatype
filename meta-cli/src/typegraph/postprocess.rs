@@ -103,7 +103,7 @@ pub mod deno_rt {
         }
     }
 
-    fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> String {
+    fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> Result<String> {
         // Note: main_path and tg_path are all absolute
         // tg_root/tg.py
         // tg_root/scripts/deno/* <= script location
@@ -124,11 +124,10 @@ pub mod deno_rt {
             // .add_custom_ignore_filename(".DStore")
             .sort_by_file_path(|a, b| a.cmp(b))
             .build();
-        let enc_content =
-            match archive_entries(dir_walker, Some(script_folder_path.as_path())).unwrap() {
-                Some(b64) => b64,
-                None => "".to_string(),
-            };
+        let enc_content = match archive_entries(dir_walker, Some(script_folder_path.as_path()))? {
+            Some(b64) => b64,
+            None => "".to_string(),
+        };
         // main_path: /abs/path/to/my_typegraphs/scripts/deno/ts/dep/main.ts
         // base_path: relative/my_typegraphs (based on cwd)
         let file = main_path
@@ -139,7 +138,7 @@ pub mod deno_rt {
             .unwrap()
             .to_owned();
 
-        format!("file:{};base64:{}", file, enc_content)
+        Ok(format!("file:{};base64:{}", file, enc_content))
     }
 
     fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
@@ -184,7 +183,7 @@ pub mod deno_rt {
                     continue;
                 };
                 let path = tg.path.as_ref().unwrap().parent().unwrap().join(path);
-                mat_data.code = compress_and_encode(&path, &tg.path);
+                mat_data.code = compress_and_encode(&path, &tg.path)?;
 
                 mat.data = map_from_object(mat_data)?;
                 tg.deps.push(path);
