@@ -35,7 +35,7 @@ typegraph("test-types", (expose) => {
     three: deno.import(
       s1,
       s1,
-      { name: "three", module: "../scripts/three.ts" },
+      { name: "three", module: "three.ts" },
     ).withPolicy(pub),
   });
 });

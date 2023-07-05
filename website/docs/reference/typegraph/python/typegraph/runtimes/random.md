@@ -11,3 +11,4 @@ class RandomRuntime(Runtime)
 ```
 
 [Documentation](https://metatype.dev/docs/reference/runtimes/random)
+

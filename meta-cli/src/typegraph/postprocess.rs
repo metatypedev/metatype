@@ -8,10 +8,11 @@ use crate::config::Config;
 use super::utils::{map_from_object, object_from_map};
 use anyhow::{bail, Result};
 use colored::Colorize;
+use common::archive::archive_entries;
 use common::typegraph::validator::validate_typegraph;
 use common::typegraph::{Materializer, Typegraph};
 use log::error;
-use typescript::parser::{transform_module, transform_script};
+use typescript::parser::transform_script;
 
 pub trait PostProcessor {
     fn postprocess(&self, tg: &mut Typegraph, config: &Config) -> Result<()>;
@@ -85,7 +86,10 @@ impl PostProcessor for Validator {
 }
 
 pub mod deno_rt {
+    use std::path::{Path, PathBuf};
+
     use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
+    use ignore::WalkBuilder;
 
     use crate::typegraph::utils::{get_materializers, get_runtimes};
 
@@ -99,23 +103,51 @@ pub mod deno_rt {
         }
     }
 
-    fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
-        match mat.name.as_str() {
-            "function" => {
-                let mut mat_data: FunctionMatData = object_from_map(std::mem::take(&mut mat.data))?;
-                // TODO check variable `_my_lambda` exists and is a function expression/lambda
-                mat_data.script = transform_script(mat_data.script)?;
-                mat.data = map_from_object(mat_data)?;
-            }
-            "module" => {
-                let mut mat_data: ModuleMatData = object_from_map(std::mem::take(&mut mat.data))?;
-                if !mat_data.code.starts_with("file:") {
-                    // TODO check imported functions exist
-                    mat_data.code = transform_module(mat_data.code)?;
+    fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> String {
+        // Note: main_path and tg_path are all absolute
+        // tg_root/tg.py
+        // tg_root/scripts/deno/* <= script location
+        let base_rel_path = match tg_path {
+            Some(path) => {
+                if let Some(parent) = path.parent() {
+                    parent
+                } else {
+                    path
                 }
-                mat.data = map_from_object(mat_data)?;
             }
-            _ => {}
+            None => Path::new(""),
+        };
+
+        let script_folder_path = base_rel_path.join("scripts/deno");
+        let dir_walker = WalkBuilder::new(script_folder_path.clone())
+            .standard_filters(true)
+            // .add_custom_ignore_filename(".DStore")
+            .sort_by_file_path(|a, b| a.cmp(b))
+            .build();
+        let enc_content =
+            match archive_entries(dir_walker, Some(script_folder_path.as_path())).unwrap() {
+                Some(b64) => b64,
+                None => "".to_string(),
+            };
+        // main_path: /abs/path/to/my_typegraphs/scripts/deno/ts/dep/main.ts
+        // base_path: relative/my_typegraphs (based on cwd)
+        let file = main_path
+            .display()
+            .to_string()
+            .split(&base_rel_path.display().to_string())
+            .last() // TODO: what if user use a subpath == base_rel_path ?
+            .unwrap()
+            .to_owned();
+
+        format!("file:{};base64:{}", file, enc_content)
+    }
+
+    fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
+        if mat.name.as_str() == "function" {
+            let mut mat_data: FunctionMatData = object_from_map(std::mem::take(&mut mat.data))?;
+            // TODO check variable `_my_lambda` exists and is a function expression/lambda
+            mat_data.script = transform_script(mat_data.script)?;
+            mat.data = map_from_object(mat_data)?;
         }
         Ok(())
     }
@@ -151,10 +183,9 @@ pub mod deno_rt {
                 let Some(path) = mat_data.code.strip_prefix("file:") else {
                     continue;
                 };
-
                 let path = tg.path.as_ref().unwrap().parent().unwrap().join(path);
-                let code = std::fs::read_to_string(&path)?;
-                mat_data.code = transform_module(code)?;
+                mat_data.code = compress_and_encode(&path, &tg.path);
+
                 mat.data = map_from_object(mat_data)?;
                 tg.deps.push(path);
             }

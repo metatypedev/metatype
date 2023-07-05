@@ -13,3 +13,4 @@ class StaticInjection(Injection)
 #### value
 
 json serialized
+

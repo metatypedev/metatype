@@ -10,6 +10,8 @@ import * as ast from "graphql/ast";
 import { InternalAuth } from "../../auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
+import { structureRepr, uncompress } from "../../utils.ts";
+import { path } from "compress/deps.ts";
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => (args),
@@ -92,9 +94,24 @@ export class DenoRuntime extends Runtime {
       } else if (mat.name === "module") {
         const code = mat.data.code as string;
 
+        const repr = await structureRepr(code);
+        //    (user) scripts/deno/*
+        // => (gate) tmp/scripts/{tgname}/deno/*
+        const basePath = path.join(
+          "tmp",
+          "scripts",
+          typegraphName,
+          "deno",
+          repr.hash,
+        );
+        try {
+          await Deno.remove(basePath, { recursive: true }); // cleanup
+        } catch (_) { /* not exist yet */ }
+        const outDir = await uncompress(basePath, repr.base64);
+
         ops.set(registryCount, {
           type: "register_import_func",
-          moduleCode: code,
+          modulePath: path.join(outDir, repr.entryPoint),
           op: registryCount,
           verbose: false,
         });
@@ -103,9 +120,14 @@ export class DenoRuntime extends Runtime {
       }
     }
 
+    const tgScriptFolder = path.join("tmp", "scripts", typegraphName);
+
     const w = new DenoMessenger(
       name,
-      (args.permissions ?? {}) as Deno.PermissionOptionsObject,
+      {
+        ...(args.permissions ?? {}),
+        read: [tgScriptFolder],
+      } as Deno.PermissionOptionsObject,
       false,
       ops,
     );
@@ -196,7 +218,6 @@ export class DenoRuntime extends Runtime {
     if (mat.name === "import_function") {
       const modMat = this.tg.materializers[mat.data.mod as number];
       const op = this.registry.get(modMat.data.code as string)!;
-
       return async (
         { _: { context, parent, info: { url, headers } }, ...args },
       ) => {

@@ -6,30 +6,17 @@ import * as ast from "graphql/ast";
 import * as base64 from "std/encoding/base64.ts";
 import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
-import { deepMerge } from "std/collections/deep_merge.ts";
-
-import { z } from "zod";
 
 import { Type } from "./type_node.ts";
 import { TypeGraph } from "./typegraph.ts";
 
+import { ensureDir, ensureFile } from "std/fs/mod.ts";
+import { Untar } from "std/archive/untar.ts";
+import * as streams from "std/streams/mod.ts";
+import { path } from "compress/deps.ts";
+import { sha1 } from "./crypto.ts";
+
 export const maxi32 = 2_147_483_647;
-
-export const configOrExit = async <T extends z.ZodRawShape>(
-  sources: Record<string, unknown>[],
-  schema: T,
-) => {
-  const parsing = await z.object(schema).safeParse(
-    sources.reduce((a, b) => deepMerge(a, b), {}),
-  );
-
-  if (!parsing.success) {
-    console.error(parsing.error);
-    Deno.exit(1);
-  }
-
-  return parsing.data;
-};
 
 export type JSONValue =
   | string
@@ -38,6 +25,12 @@ export type JSONValue =
   | null
   | JSONValue[]
   | { [key: string]: JSONValue };
+
+type FolderRepr = {
+  entryPoint: string;
+  base64: string;
+  hash: string; // root/tmp/{hash}
+};
 
 // Map undefined | null to None
 export const forceAnyToOption = (v: any): Option<any> => {
@@ -213,4 +206,82 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
     return { title: typ.title, fields: Object.keys(typ.properties ?? {}) };
   }
   return { title: typ?.title, fields: [] };
+}
+
+/**
+ * base64 decode and untar at cwd/{dir}
+ */
+export async function uncompress(dir: string, tarb64: string) {
+  const baseDir = path.join(Deno.cwd(), dir);
+  const buffer = base64.decode(tarb64);
+  const streamReader = new Blob([buffer])
+    .stream()
+    .pipeThrough(new DecompressionStream("gzip"))
+    .getReader();
+  const denoReader = streams.readerFromStreamReader(streamReader);
+
+  const untar = new Untar(denoReader);
+  const entries = [];
+  for await (const entry of untar) {
+    entries.push(entry.fileName);
+    if (entry.fileName == ".") {
+      continue;
+    }
+    let file: Deno.FsFile | undefined;
+    try {
+      if (entry.type === "directory") {
+        const resDirPath = path.join(baseDir, entry.fileName);
+        await ensureDir(resDirPath);
+        continue;
+      }
+      const resFilePath = path.join(baseDir, entry.fileName);
+      await ensureFile(resFilePath);
+
+      file = await Deno.open(resFilePath, { write: true });
+      await streams.copy(entry, file);
+    } catch (e) {
+      throw e;
+    } finally {
+      file?.close();
+    }
+  }
+  return baseDir;
+}
+
+/**
+ * Convert string `file:SCRIPT,base64:TARBALL` to FolderRepr object.
+ * * `SCRIPT`: refers to a file relative to the typegraph path
+ * * `TARBALL`: base64 encoded tarball of scripts/(deno|python)
+ * `FolderRepr` is expected to provide all the minimum information necessary
+ * to extract the tarball to typegate
+ */
+export async function structureRepr(str: string): Promise<FolderRepr> {
+  const [fileStr, base64Str] = str.split(";");
+  if (!base64Str) {
+    throw Error("given string is malformed");
+  }
+  const filePrefix = "file:", b64Prefix = "base64:";
+
+  if (!fileStr.startsWith(filePrefix)) {
+    throw Error(`${filePrefix} prefix not specified`);
+  }
+
+  if (!base64Str.startsWith(b64Prefix)) {
+    throw Error(`${b64Prefix} prefix not specified`);
+  }
+  // path to the script (relative to typegraph path)
+  const relativeTg = fileStr.substring(filePrefix.length);
+
+  const sep = relativeTg.indexOf("\\") >= 0 ? "\\" : "/";
+  const prefixReg = new RegExp(`^${sep}?scripts${sep}(deno|python)(.*)`);
+  const entryPoint = relativeTg.match(prefixReg)?.[2];
+  if (!entryPoint) {
+    throw Error(
+      `unable to determine script path relative to ${relativeTg}`,
+    );
+  }
+
+  const base64 = base64Str.substring(b64Prefix.length);
+  const hash = await sha1(relativeTg);
+  return { entryPoint, base64, hash };
 }

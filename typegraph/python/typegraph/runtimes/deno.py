@@ -1,7 +1,6 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-import os
 from typing import Any, Dict, List, Optional, Tuple
 
 from attrs import field, frozen
@@ -14,6 +13,7 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always
+import os
 
 
 @frozen
@@ -134,12 +134,9 @@ class ModuleMat(Materializer):
 
             from typegraph.graph.typegraph import get_absolute_path
 
-            path = get_absolute_path(self.file)
-            if os.environ.get("DONT_READ_EXTERNAL_TS_FILES"):
-                object.__setattr__(self, "code", f"file:{path}")
-            else:
-                with open(path) as f:
-                    object.__setattr__(self, "code", f.read())
+            rel_path = os.path.join("scripts", "deno", self.file)
+            path = get_absolute_path(rel_path)
+            object.__setattr__(self, "code", f"file:{path}")
 
     def imp(
         self, name: str = "default", *, effect: Effect = effects.none(), **kwargs
