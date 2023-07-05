@@ -4,13 +4,8 @@
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
 import { DenoRuntime } from "./runtimes/deno/deno.ts";
-import { GraphQLRuntime } from "./runtimes/graphql.ts";
-import { HTTPRuntime } from "./runtimes/http.ts";
-import { PrismaRuntime } from "./runtimes/prisma.ts";
-import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "./utils.ts";
-import { typegraph_validate } from "native";
 
 import {
   initAuth,
@@ -32,8 +27,7 @@ import {
   Type,
   TypeNode,
 } from "./type_node.ts";
-import { Batcher, RuntimeInit } from "./types.ts";
-import { S3Runtime } from "./runtimes/s3.ts";
+import { Batcher } from "./types.ts";
 
 import type {
   Cors,
@@ -43,28 +37,14 @@ import type {
   TGRuntime as TypeRuntime,
   Typegraph as TypeGraphDS,
 } from "./types/typegraph.ts";
-import { TemporalRuntime } from "./runtimes/temporal.ts";
 import { InternalAuth } from "./auth/protocols/internal.ts";
-import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
-import { PythonWasiRuntime } from "./runtimes/python_wasi/python_wasi.ts";
 import { Protocol } from "./auth/protocols/protocol.ts";
 import { OAuth2Auth } from "./auth/protocols/oauth2.ts";
+import { Typegate } from "./typegate/mod.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
 export type RuntimeResolver = Record<string, Runtime>;
-
-const runtimeInit: RuntimeInit = {
-  s3: S3Runtime.init,
-  graphql: GraphQLRuntime.init,
-  prisma: PrismaRuntime.init,
-  http: HTTPRuntime.init,
-  deno: DenoRuntime.init,
-  temporal: TemporalRuntime.init,
-  random: RandomRuntime.init,
-  wasmedge: WasmEdgeRuntime.init,
-  python_wasi: PythonWasiRuntime.init,
-};
 
 export const typegraphVersion = "0.0.1";
 
@@ -163,15 +143,6 @@ export class TypeGraph {
     return (tg.prefix ?? "") + tg.types[0].title;
   }
 
-  static async parseJson(json: string): Promise<TypeGraphDS> {
-    const res = await typegraph_validate({ json });
-    if ("Valid" in res) {
-      return JSON.parse(res.Valid.json) as TypeGraphDS;
-    } else {
-      throw new Error(`Invalid typegraph definition: ${res.NotValid.reason}`);
-    }
-  }
-
   static async init(
     typegraph: TypeGraphDS,
     secretManager: SecretManager,
@@ -237,15 +208,6 @@ export class TypeGraph {
           return staticReference[runtime.name];
         }
 
-        ensure(
-          runtime.name in runtimeInit,
-          `cannot find runtime "${runtime.name}" in ${
-            Object.keys(
-              runtimeInit,
-            ).join(", ")
-          }`,
-        );
-
         const materializers = typegraph.materializers.filter(
           (mat) => mat.runtime === idx,
         );
@@ -256,7 +218,7 @@ export class TypeGraph {
         }
 
         // logger.debug(`init ${runtime.name} (${idx})`);
-        return runtimeInit[runtime.name]({
+        return Typegate.initRuntime(runtime.name, {
           typegraph,
           materializers,
           args: runtime.data,

@@ -1,23 +1,20 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Runtime } from "./Runtime.ts";
+import { Runtime } from "../Runtime.ts";
 import * as native from "native";
-import { FromVars, GraphQLRuntime } from "./graphql.ts";
-import { ResolverError } from "../errors.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
-import { nativeResult, nativeVoid } from "../utils.ts";
-import { ComputeStage } from "../engine.ts";
+import { FromVars, GraphQLRuntime } from "../graphql.ts";
+import { ResolverError } from "../../errors.ts";
+import { Resolver, RuntimeInitParams } from "../../types.ts";
+import { nativeResult, nativeVoid } from "../../utils.ts";
+import { ComputeStage } from "../../engine.ts";
 import * as ast from "graphql/ast";
-import { ComputeArg } from "../planner/args.ts";
-import { buildRawQuery } from "./utils/graphql_inline_vars.ts";
-import {
-  Materializer,
-  PrismaRuntimeData,
-  TGRuntime,
-} from "../types/typegraph.ts";
-import { getLogger } from "../log.ts";
-import { TypeGraph } from "../typegraph.ts";
+import { ComputeArg } from "../../planner/args.ts";
+import { buildRawQuery } from "./../utils/graphql_inline_vars.ts";
+import { Materializer } from "../../types/typegraph.ts";
+import { getLogger } from "../../log.ts";
+// import { TypeGraph } from "../../typegraph.ts";
+import * as PrismaRT from "./types.ts";
 
 const logger = getLogger(import.meta);
 
@@ -43,9 +40,7 @@ function isPrismaOperationMat(mat: Materializer): mat is PrismaOperationMat {
   return mat.name === "prisma_operation";
 }
 
-export interface PrismaRuntimeDS extends Omit<TGRuntime, "data"> {
-  data: PrismaRuntimeData;
-}
+type PrismaRuntimeData = PrismaRT.DataFinal;
 
 export class PrismaRuntime extends GraphQLRuntime {
   private constructor(
@@ -57,9 +52,13 @@ export class PrismaRuntime extends GraphQLRuntime {
     this.disableVariables();
   }
 
-  static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { typegraph, args, secretManager } = params;
-    const typegraphName = TypeGraph.formatName(typegraph);
+  static async init(
+    params: RuntimeInitParams,
+  ): Promise<Runtime> {
+    const { typegraph, args, secretManager } =
+      params as unknown as RuntimeInitParams<PrismaRuntimeData>;
+    // const typegraphName = TypeGraph.formatName(typegraph);
+    const typegraphName = typegraph.types[0].title;
 
     const datasource = makeDatasource(secretManager.secretOrFail(
       args.connection_string_secret as string,
@@ -67,7 +66,7 @@ export class PrismaRuntime extends GraphQLRuntime {
     const datamodel = `${datasource}${args.datamodel}`;
     const engine_name = `${typegraphName}_${args.name}`;
     const instance = new PrismaRuntime(
-      args.name as string,
+      args.name,
       engine_name,
       datamodel,
     );

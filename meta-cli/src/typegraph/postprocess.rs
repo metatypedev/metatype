@@ -85,7 +85,7 @@ impl PostProcessor for Validator {
 }
 
 pub mod deno_rt {
-    use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
+    use common::typegraph::runtimes::deno::{FunctionMatData, ModuleMatData};
 
     use crate::typegraph::utils::{get_materializers, get_runtimes};
 
@@ -168,7 +168,7 @@ pub mod prisma_rt {
     use anyhow::{anyhow, Context};
     use common::{
         archive,
-        typegraph::runtimes::{MigrationOptions, PrismaRuntimeData},
+        typegraph::runtimes::prisma::{MigrationOptions, PrismaRuntimeData},
     };
 
     use crate::typegraph::utils::{map_from_object, object_from_map};

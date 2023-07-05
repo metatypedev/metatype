@@ -5,11 +5,16 @@ import { ComputeStage } from "../../engine.ts";
 import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../../typegraph.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
-import { DenoRuntimeData } from "../../type_node.ts";
+import { DenoRuntimeData, TGRuntime } from "../../types/typegraph.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
+
+export interface DenoRuntimeDS extends TGRuntime {
+  name: "deno";
+  data: DenoRuntimeData & Record<string, unknown>;
+}
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => (args),
@@ -49,8 +54,11 @@ export class DenoRuntime extends Runtime {
     return ret;
   }
 
-  static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { typegraph: tg, args, materializers, secretManager } = params;
+  static async init(
+    params: RuntimeInitParams,
+  ): Promise<Runtime> {
+    const { typegraph: tg, args, materializers, secretManager } =
+      params as RuntimeInitParams<DenoRuntimeData>;
     const typegraphName = TypeGraph.formatName(tg);
 
     const { worker: name } = args as unknown as DenoRuntimeData;

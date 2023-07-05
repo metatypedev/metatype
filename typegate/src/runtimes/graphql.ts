@@ -3,7 +3,8 @@
 
 import { ComputeStage } from "../engine.ts";
 import { gq } from "../gq.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
+import type { GraphQLRuntimeData } from "../types/typegraph.ts";
 import { Runtime } from "./Runtime.ts";
 import * as GraphQL from "graphql";
 import { Kind } from "graphql";
@@ -11,6 +12,8 @@ import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
 import { QueryRebuilder } from "./utils/graphql_forward_vars.ts";
 import { withInlinedVars } from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";
+
+console.log("runtimes graphql.ts");
 
 const logger = getLogger(import.meta);
 
@@ -31,8 +34,10 @@ export class GraphQLRuntime extends Runtime {
     this.inlineVars = true;
   }
 
-  static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { args } = params;
+  static async init(
+    params: RuntimeInitParams,
+  ): Promise<Runtime> {
+    const { args } = params as RuntimeInitParams<GraphQLRuntimeData>;
     return await new GraphQLRuntime(args.endpoint as string);
   }
 

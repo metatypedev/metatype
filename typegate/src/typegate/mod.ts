@@ -12,10 +12,10 @@ import { forceAnyToOption } from "../utils.ts";
 import { Operations, parseRequest } from "../graphql/request_parser.ts";
 import { handleAuthService } from "../auth/auth.ts";
 import { Engine } from "../engine.ts";
-import { InitHandler, PushHandler, PushResponse } from "../hooks/mod.ts";
+import { InitHandler, PushHandler, PushResponse } from "../typegate/hooks.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../graphql/graphql.ts";
-import { runMigrations } from "../hooks/prisma/migrations.ts";
+import { runMigrations } from "../runtimes/prisma/hooks/run_migrations.ts";
 import {
   RuntimeResolver,
   SecretManager,
@@ -25,6 +25,18 @@ import {
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { RuntimeInit, RuntimeInitParams } from "../types.ts";
+import { Runtime } from "../runtimes/Runtime.ts";
+import { S3Runtime } from "../runtimes/s3.ts";
+import { GraphQLRuntime } from "../runtimes/graphql.ts";
+import { PrismaRuntime } from "../runtimes/prisma/prisma.ts";
+import { HTTPRuntime } from "../runtimes/http.ts";
+import { DenoRuntime } from "../runtimes/deno/deno.ts";
+import { TemporalRuntime } from "../runtimes/temporal.ts";
+import { RandomRuntime } from "../runtimes/random.ts";
+import { WasmEdgeRuntime } from "../runtimes/wasmedge.ts";
+import { PythonWasiRuntime } from "../runtimes/python_wasi/python_wasi.ts";
+import { parseTypegraph } from "../typegraph/parser.ts";
 
 const logger = getLogger("http");
 
@@ -51,12 +63,41 @@ const parsePath = (
 const localDir = dirname(fromFileUrl(import.meta.url));
 
 const introspectionDef = parseGraphQLTypeGraph(
-  await TypeGraph.parseJson(
+  await parseTypegraph(
     await Deno.readTextFile(join(localDir, "../typegraphs/introspection.json")),
   ),
 );
 
 export class Typegate {
+  static #registeredRuntimes: Map<string, RuntimeInit> = new Map();
+
+  static #registerRuntime(name: string, init: RuntimeInit) {
+    this.#registeredRuntimes.set(name, init);
+  }
+
+  static #registerRuntimes() {
+    this.#registerRuntime("s3", S3Runtime.init);
+    this.#registerRuntime("graphql", GraphQLRuntime.init);
+    this.#registerRuntime("prisma", PrismaRuntime.init);
+    this.#registerRuntime("http", HTTPRuntime.init);
+    this.#registerRuntime("deno", DenoRuntime.init);
+    this.#registerRuntime("temporal", TemporalRuntime.init);
+    this.#registerRuntime("random", RandomRuntime.init);
+    this.#registerRuntime("wasmedge", WasmEdgeRuntime.init);
+    this.#registerRuntime("python_wasi", PythonWasiRuntime.init);
+  }
+
+  static async initRuntime(
+    name: string,
+    params: RuntimeInitParams,
+  ): Promise<Runtime> {
+    const init = this.#registeredRuntimes.get(name);
+    if (!init) {
+      throw new Error(`Runtime ${name} is not registered`);
+    }
+    return await init(params);
+  }
+
   #onPushHooks: PushHandler[] = [];
   #onInitHooks: InitHandler[] = [];
 
@@ -67,6 +108,7 @@ export class Typegate {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
     this.#onPush(runMigrations);
+    Typegate.#registerRuntimes();
   }
 
   #onPush(handler: PushHandler) {
@@ -250,7 +292,7 @@ export class Typegate {
     enableIntrospection: boolean,
     system = false,
   ): Promise<[Engine, PushResponse]> {
-    const tgDS = await TypeGraph.parseJson(tgJson);
+    const tgDS = await parseTypegraph(tgJson);
     const name = TypeGraph.formatName(tgDS);
 
     if (SystemTypegraph.check(name)) {

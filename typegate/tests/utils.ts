@@ -4,11 +4,12 @@
 import { Engine } from "../src/engine.ts";
 import { dirname, fromFileUrl, join, resolve } from "std/path/mod.ts";
 import { SystemTypegraph } from "../src/system_typegraphs.ts";
-import { PrismaMigrate } from "../src/runtimes/prisma_migration.ts";
+import { PrismaMigrate } from "../src/runtimes/prisma/migration.ts";
+import { PrismaRuntime } from "../src/runtimes/prisma/prisma.ts";
+import * as PrismaRT from "../src/runtimes/prisma/types.ts";
 import { copy } from "std/streams/copy.ts";
 import * as native from "native";
 import { init_native } from "native";
-import { PrismaRuntime, PrismaRuntimeDS } from "../src/runtimes/prisma.ts";
 import { MemoryRegister } from "./utils/memory_register.ts";
 import { Q } from "./utils/q.ts";
 import { MetaTest } from "./utils/metatest.ts";
@@ -23,6 +24,8 @@ import * as yaml from "std/yaml/mod.ts";
 import * as graphql from "graphql";
 export const testDir = dirname(fromFileUrl(import.meta.url));
 export const metaCli = resolve(testDir, "../../target/debug/meta");
+
+console.log("test utils.ts");
 
 init_native();
 
@@ -307,7 +310,7 @@ export async function dropSchemas(engine: Engine) {
 export async function recreateMigrations(engine: Engine) {
   const runtimes = engine.tg.tg.runtimes.filter(
     (rt) => rt.name === "prisma",
-  ) as unknown[] as PrismaRuntimeDS[];
+  ) as PrismaRT.DS[];
   const migrationsBaseDir = join(testDir, "prisma-migrations");
 
   for (const runtime of runtimes) {

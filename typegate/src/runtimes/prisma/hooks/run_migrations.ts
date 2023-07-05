@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { PushHandler } from "../mod.ts";
-import { makeDatasource, PrismaRuntimeDS } from "../../runtimes/prisma.ts";
+import { PushHandler } from "../../../typegate/hooks.ts";
+import { makeDatasource } from "../prisma.ts";
+import { PrismaRT } from "../mod.ts";
 import * as native from "native";
-import { nativeResult, pluralSuffix } from "../../utils.ts";
+import { nativeResult, pluralSuffix } from "../../../utils.ts";
 
 export const runMigrations: PushHandler = async (
   typegraph,
@@ -13,10 +14,11 @@ export const runMigrations: PushHandler = async (
 ) => {
   const runtimes = typegraph.runtimes.filter((rt) =>
     rt.name === "prisma"
-  ) as unknown[] as PrismaRuntimeDS[];
+  ) as PrismaRT.DS<PrismaRT.DataWithDatamodel>[];
 
   for (const rt of runtimes) {
-    const { connection_string_secret, datamodel, migration_options } = rt.data;
+    const { connection_string_secret, datamodel, migration_options } = rt
+      .data;
     if (migration_options == null) {
       continue;
     }

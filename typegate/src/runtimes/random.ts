@@ -5,8 +5,8 @@ import { Runtime } from "./Runtime.ts";
 import { ComputeStage } from "../engine.ts";
 import { TypeNode } from "../type_node.ts";
 import Chance from "chance";
-// import { ensure } from "../utils.ts";
 import { Resolver, RuntimeInitParams } from "../types.ts";
+import { RandomRuntimeData } from "../types/typegraph.ts";
 
 export class RandomRuntime extends Runtime {
   seed: number | null;
@@ -24,9 +24,8 @@ export class RandomRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { seed } = params.args as {
-      seed: number | null;
-    };
+    const { args } = params as RuntimeInitParams<RandomRuntimeData>;
+    const { seed } = args;
     const runtime = await new RandomRuntime(seed);
     runtime.setTgTypes(params.typegraph.types);
     return runtime;

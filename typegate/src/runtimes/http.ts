@@ -9,6 +9,7 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import * as base64 from "std/encoding/base64.ts";
 import { getLogger } from "../log.ts";
 import { Logger } from "std/log/logger.ts";
+import { HTTPRuntimeData } from "../types/typegraph.ts";
 
 const encodeRequestBody = (
   body: Record<string, any>,
@@ -46,8 +47,12 @@ export class HTTPRuntime extends Runtime {
     this.logger = getLogger(`http:${new URL(endpoint).hostname}`);
   }
 
-  static init(params: RuntimeInitParams): Runtime {
-    const { args, secretManager } = params;
+  static init(
+    params: RuntimeInitParams,
+  ): Runtime {
+    const { args, secretManager } = params as RuntimeInitParams<
+      HTTPRuntimeData
+    >;
 
     const caCerts = args.cert_secret
       ? [secretManager.secretOrFail(args.cert_secret as string)]

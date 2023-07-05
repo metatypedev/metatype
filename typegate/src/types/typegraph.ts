@@ -232,6 +232,7 @@ export type StringFormat =
   | "date-time"
   | "phone";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
+export type Cardinality = "Optional" | "One" | "Many";
 export type S3Materializer = {
   name: "presign_get";
   data: {
@@ -335,23 +336,52 @@ export interface Rate {
   context_identifier?: string | null;
   local_excess: number;
 }
+export interface DenoRuntimeData {
+  worker: string;
+  permissions: {
+    [k: string]: unknown;
+  };
+}
 export interface FunctionMatData {
   script: string;
 }
 export interface ModuleMatData {
   code: string;
 }
+export interface GraphQLRuntimeData {
+  endpoint: string;
+}
+export interface HTTPRuntimeData {
+  endpoint: string;
+  cert_secret?: string | null;
+  basic_auth_secret?: string | null;
+}
 export interface PrismaRuntimeData {
   name: string;
-  datamodel: string;
+  datamodel?: string | null;
   connection_string_secret: string;
   models: number[];
+  relationships: Relationship[];
   migration_options?: MigrationOptions | null;
+}
+export interface Relationship {
+  name: string;
+  left: RelationshipModel;
+  right: RelationshipModel;
+}
+export interface RelationshipModel {
+  type_idx: number;
+  field: string;
+  cardinality: Cardinality;
 }
 export interface MigrationOptions {
   migration_files?: string | null;
   create: boolean;
   reset: boolean;
+}
+export interface RandomRuntimeData {
+  seed: number;
+  reset?: string | null;
 }
 export interface S3RuntimeData {
   host_secret: string;
@@ -359,4 +389,8 @@ export interface S3RuntimeData {
   access_key_secret: string;
   secret_key_secret: string;
   path_style_secret: string;
+}
+export interface TemporalRuntimeData {
+  name: string;
+  host: string;
 }

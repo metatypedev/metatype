@@ -1,18 +1,21 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { Runtime } from "./Runtime.ts";
-import { Resolver, ResolverArgs } from "../types.ts";
-import { ComputeStage, Engine } from "../engine.ts";
-import { Register } from "../typegate/register.ts";
+import { Runtime } from "../Runtime.ts";
+import { Resolver, ResolverArgs } from "../../types.ts";
+import { ComputeStage, Engine } from "../../engine.ts";
+import { Register } from "../../typegate/register.ts";
 import * as native from "native";
-import { nativeResult } from "../utils.ts";
-import { makeDatasource, PrismaRuntimeDS } from "./prisma.ts";
+import { nativeResult } from "../../utils.ts";
+import { makeDatasource } from "./prisma.ts";
+import type { PrismaRT } from "./mod.ts";
+
+type PrismaRuntimeDS = PrismaRT.DS<PrismaRT.DataWithDatamodel>;
 
 function findPrismaRuntime(engine: Engine, name: string | null) {
   const prismaRuntimes = engine.tg.tg.runtimes.filter(
     (rt) => rt.name == "prisma",
-  ) as unknown[] as Array<PrismaRuntimeDS>;
+  ) as Array<PrismaRuntimeDS>;
 
   if (prismaRuntimes.length == 0) {
     throw new Error("no prisma runtime found in the selected typegraph");
@@ -43,8 +46,9 @@ function findPrismaRuntime(engine: Engine, name: string | null) {
 
 export class PrismaMigrate {
   private datasource: string;
+
   constructor(
-    private engine: Engine,
+    engine: Engine,
     private runtime: PrismaRuntimeDS,
     private migrations: string | null,
   ) {

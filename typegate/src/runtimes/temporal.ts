@@ -7,14 +7,19 @@ import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult, nativeVoid } from "../utils.ts";
 import { ComputeStage } from "../engine.ts";
 import { TypeGraph } from "../typegraph.ts";
+import { TemporalRuntimeData } from "../types/typegraph.ts";
 
 export class TemporalRuntime extends Runtime {
   private constructor(private client_id: string) {
     super();
   }
 
-  static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { typegraph, args } = params;
+  static async init(
+    params: RuntimeInitParams,
+  ): Promise<Runtime> {
+    const { typegraph, args } = params as RuntimeInitParams<
+      TemporalRuntimeData
+    >;
     const typegraphName = TypeGraph.formatName(typegraph);
     const client_id = `${typegraphName}_${args.name}`;
 

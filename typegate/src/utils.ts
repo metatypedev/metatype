@@ -11,7 +11,7 @@ import { deepMerge } from "std/collections/deep_merge.ts";
 import { z } from "zod";
 
 import { Type } from "./type_node.ts";
-import { TypeGraph } from "./typegraph.ts";
+import type { TypeGraph } from "./typegraph.ts";
 
 export const maxi32 = 2_147_483_647;
 

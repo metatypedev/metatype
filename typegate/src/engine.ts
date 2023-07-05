@@ -3,14 +3,14 @@
 
 import { parse } from "graphql";
 import * as ast from "graphql/ast";
-import { TypeGraph } from "./typegraph.ts";
+import type { TypeGraph } from "./typegraph.ts";
 import { JSONValue } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import * as log from "std/log/mod.ts";
 import { sha1, unsafeExtractJWT } from "./crypto.ts";
 import { BadContext, ResolverError } from "./errors.ts";
 import { RateLimit } from "./typegate/rate_limiter.ts";
-import {
+import type {
   ComputeStageProps,
   Context,
   Info,
