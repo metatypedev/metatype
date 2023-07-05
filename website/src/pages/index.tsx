@@ -406,7 +406,7 @@ function Landscape(): JSX.Element {
         </h2>
         <p className="text-xl">
           Metatype fills a gap in the tech landscape by introducing a new way to
-          build fast and developper-friendly APIs that are{" "}
+          build fast and developer-friendly APIs that are{" "}
           <strong>interoperable</strong> with your existing (legacy) systems.
         </p>
       </div>
@@ -419,7 +419,7 @@ function Landscape(): JSX.Element {
 const profiles = {
   leader: "I'm an engineering leader",
   developer: "I'm a developer",
-  business: "I'm non-technical",
+  business: "I'm not familiar with APIs",
 };
 
 type Profile = keyof typeof profiles;
