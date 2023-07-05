@@ -36,7 +36,8 @@ pub fn archive<P: AsRef<Path>>(folder: P) -> Result<Option<String>> {
     }
 }
 
-pub fn archive_entries(dir_walker: Walk, suffix: Option<&Path>) -> Result<Option<String>> {
+/// Note: empty directories will be excluded
+pub fn archive_entries(dir_walker: Walk, prefix: Option<&Path>) -> Result<Option<String>> {
     let encoder = GzEncoder::new(Vec::new(), Compression::default());
     let mut tar = tar::Builder::new(encoder);
 
@@ -48,16 +49,19 @@ pub fn archive_entries(dir_walker: Walk, suffix: Option<&Path>) -> Result<Option
         match result {
             Ok(entry) => {
                 let path = entry.path();
-                if suffix.is_some() && !path.ends_with(suffix.unwrap()) {
-                    continue;
-                }
-                // Note: tar automatically removes the common prefix
-                // a/b/c/a.ts, a/b, a/b/d.ts => c/a.ts, .,  d.ts
-                if path.is_dir() {
-                    tar.append_dir_all(".", path)
-                        .context("Adding directory to tarball")?;
-                } else {
-                    tar.append_path(path).context("Adding file to tarball")?;
+                if path.is_file() {
+                    let mut file = fs::File::open(path)
+                        .context(format!("failed to open file {}", path.display()))?;
+                    let mut archive_path = path;
+                    if let Some(prefix) = prefix {
+                        archive_path = match path.strip_prefix(prefix) {
+                            Ok(ret) => ret,
+                            Err(_) => archive_path,
+                        };
+                    }
+                    // println!("file {} => {}", path.display(), archive_path.display());
+                    tar.append_file(archive_path, &mut file)
+                        .context("Adding file to tarball")?;
                 }
                 empty = false;
                 Ok(())

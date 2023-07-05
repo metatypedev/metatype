@@ -109,32 +109,32 @@ pub mod deno_rt {
         // tg_root/scripts/deno/* <= script location
         let base_rel_path = match tg_path {
             Some(path) => {
-                let tg_folder = path.parent();
-                if let Some(tg_folder) = tg_folder {
-                    tg_folder.display().to_string()
+                if let Some(parent) = path.parent() {
+                    parent
                 } else {
-                    "".to_string()
+                    path
                 }
             }
-            None => "".to_string(),
+            None => Path::new(""),
         };
 
-        let dir_walker = WalkBuilder::new(&base_rel_path)
+        let script_folder_path = base_rel_path.join("scripts/deno");
+        let dir_walker = WalkBuilder::new(script_folder_path.clone())
             .standard_filters(true)
             // .add_custom_ignore_filename(".DStore")
             .sort_by_file_path(|a, b| a.cmp(b))
             .build();
-        let suffix = Path::new("scripts/deno");
-        let enc_content = match archive_entries(dir_walker, Some(suffix)).unwrap() {
-            Some(b64) => b64,
-            None => "".to_string(),
-        };
+        let enc_content =
+            match archive_entries(dir_walker, Some(script_folder_path.as_path())).unwrap() {
+                Some(b64) => b64,
+                None => "".to_string(),
+            };
         // main_path: /abs/path/to/my_typegraphs/scripts/deno/ts/dep/main.ts
         // base_path: relative/my_typegraphs (based on cwd)
         let file = main_path
             .display()
             .to_string()
-            .split(&base_rel_path)
+            .split(&base_rel_path.display().to_string())
             .last() // TODO: what if user use a subpath == base_rel_path ?
             .unwrap()
             .to_owned();
