@@ -86,7 +86,10 @@ impl PostProcessor for Validator {
 }
 
 pub mod deno_rt {
-    use std::path::{Path, PathBuf};
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+    };
 
     use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
     use ignore::WalkBuilder;
@@ -104,42 +107,33 @@ pub mod deno_rt {
     }
 
     fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> String {
-        // Note: main_path and tg_path are all absolute
+        // Note: main_path is absolute, tg_path is relative
         // tg_root/tg.py
-        // tg_root/scripts/deno/* <= script location
-        let base_rel_path = match tg_path {
+        // tg_root/* <= script location
+        let tg_root = match tg_path {
             Some(path) => {
                 if let Some(parent) = path.parent() {
-                    parent
+                    // make absolute
+                    fs::canonicalize(parent).unwrap()
                 } else {
-                    path
+                    panic!("invalid state: typegraph file does not have parent");
                 }
             }
-            None => Path::new(""),
+            None => panic!("invalid state: typegraph path is undefined"),
         };
 
-        let script_folder_path = base_rel_path.join("scripts/deno");
-        let dir_walker = WalkBuilder::new(script_folder_path.clone())
+        let dir_walker = WalkBuilder::new(tg_root.clone())
             .standard_filters(true)
             // .add_custom_ignore_filename(".DStore")
             .sort_by_file_path(|a, b| a.cmp(b))
             .build();
-        let enc_content =
-            match archive_entries(dir_walker, Some(script_folder_path.as_path())).unwrap() {
-                Some(b64) => b64,
-                None => "".to_string(),
-            };
-        // main_path: /abs/path/to/my_typegraphs/scripts/deno/ts/dep/main.ts
-        // base_path: relative/my_typegraphs (based on cwd)
-        let file = main_path
-            .display()
-            .to_string()
-            .split(&base_rel_path.display().to_string())
-            .last() // TODO: what if user use a subpath == base_rel_path ?
-            .unwrap()
-            .to_owned();
+        let enc_content = match archive_entries(dir_walker, Some(tg_root.as_path())).unwrap() {
+            Some(b64) => b64,
+            None => "".to_string(),
+        };
 
-        format!("file:{};base64:{}", file, enc_content)
+        let file = main_path.strip_prefix(tg_root).unwrap();
+        format!("file:{};base64:{}", file.display(), enc_content)
     }
 
     fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {

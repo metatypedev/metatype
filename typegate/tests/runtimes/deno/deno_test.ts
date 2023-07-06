@@ -138,7 +138,7 @@ test("Deno runtime: reloading", async (t) => {
     }).on(v1);
   });
 
-  t.unregister(v1);
+  await t.unregister(v1);
 
   const v2 = await load(2);
   await t.should("work with v2", async () => {

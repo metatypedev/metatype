@@ -8,7 +8,7 @@ with TypeGraph("deno_dep") as g:
         doAddition=t.func(
             t.struct({"a": t.number(), "b": t.number()}),
             t.number(),
-            ModuleMat("ts/dep/main.ts").imp("doAddition"),
+            ModuleMat("scripts/deno/ts/dep/main.ts").imp("doAddition"),
         ),
         simple=t.func(
             t.struct({"a": t.number(), "b": t.number()}),
