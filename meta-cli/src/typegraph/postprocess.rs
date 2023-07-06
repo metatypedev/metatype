@@ -86,10 +86,7 @@ impl PostProcessor for Validator {
 }
 
 pub mod deno_rt {
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-    };
+    use std::{fs, path::Path};
 
     use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
     use ignore::WalkBuilder;
@@ -106,36 +103,44 @@ pub mod deno_rt {
         }
     }
 
-    fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> Result<String> {
-        // Note: main_path is absolute, tg_path is relative
+    fn compress_and_encode(main_path: &Path, tg_path: &Path) -> Result<String> {
+        // Note: tg_path and main_path are all absolute
         // tg_root/tg.py
         // tg_root/* <= script location
-        let tg_root = match tg_path {
-            Some(path) => {
-                if let Some(parent) = path.parent() {
-                    // make absolute
-                    fs::canonicalize(parent).unwrap()
-                } else {
-                    bail!(
-                        "invalid state: typegraph path {:?} does not have parent",
-                        path.display()
-                    );
-                }
-            }
-            None => bail!("invalid state: typegraph path is undefined"),
+        if main_path.is_relative() {
+            bail!(
+                "script path {:?} is relative, absolute expected",
+                main_path.display()
+            );
+        }
+
+        if tg_path.is_relative() {
+            bail!(
+                "typegraph path {:?} is relative, absolute expected",
+                tg_path.display()
+            );
+        }
+
+        let tg_root = if let Some(parent) = tg_path.parent() {
+            parent
+        } else {
+            bail!(
+                "invalid state: typegraph path {:?} does not have parent",
+                tg_path.display()
+            );
         };
 
-        let dir_walker = WalkBuilder::new(tg_root.clone())
+        let dir_walker = WalkBuilder::new(tg_root)
             .standard_filters(true)
             // .add_custom_ignore_filename(".DStore")
             .sort_by_file_path(|a, b| a.cmp(b))
             .build();
-        let enc_content = match archive_entries(dir_walker, Some(tg_root.as_path())).unwrap() {
+        let enc_content = match archive_entries(dir_walker, Some(tg_root)).unwrap() {
             Some(b64) => b64,
             None => "".to_string(),
         };
 
-        let file = match main_path.strip_prefix(&tg_root) {
+        let file = match main_path.strip_prefix(tg_root) {
             Ok(ret) => ret,
             Err(_) => bail!(
                 "{:?} does not contain script {:?}",
@@ -188,11 +193,14 @@ pub mod deno_rt {
                 let Some(path) = mat_data.code.strip_prefix("file:") else {
                     continue;
                 };
-                let path = tg.path.as_ref().unwrap().parent().unwrap().join(path);
-                mat_data.code = compress_and_encode(&path, &tg.path)?;
+
+                // make sure tg_path is absolute
+                let tg_path = fs::canonicalize(tg.path.to_owned().unwrap()).unwrap();
+                let main_path = tg_path.parent().unwrap().join(path);
+                mat_data.code = compress_and_encode(&main_path, &tg_path)?;
 
                 mat.data = map_from_object(mat_data)?;
-                tg.deps.push(path);
+                tg.deps.push(main_path);
             }
             Ok(())
         }
