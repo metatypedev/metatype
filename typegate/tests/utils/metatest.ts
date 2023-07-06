@@ -10,7 +10,7 @@ import { ConnInfo } from "std/http/server.ts";
 
 import { NoLimiter } from "./no_limiter.ts";
 import { SingleRegister } from "./single_register.ts";
-import { metaCli, shell } from "../utils.ts";
+import { meta } from "../utils.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -96,7 +96,7 @@ export class MetaTest {
 
   async parseTypegraph(path: string, opts: ParseOptions = {}): Promise<Engine> {
     const { deploy = false, typegraph = null, prefix = null } = opts;
-    const cmd = [metaCli, "serialize", "-f", path];
+    const cmd = ["serialize", "-f", path];
     if (prefix != null) {
       cmd.push("--prefix", prefix);
     }
@@ -111,7 +111,7 @@ export class MetaTest {
       cmd.push("--deploy");
     }
 
-    const stdout = await shell(cmd);
+    const stdout = await meta(...cmd);
     if (stdout.length == 0) {
       throw new Error("No typegraph");
     }

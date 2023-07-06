@@ -22,7 +22,7 @@ import { exists } from "std/fs/mod.ts";
 import * as yaml from "std/yaml/mod.ts";
 import * as graphql from "graphql";
 export const testDir = dirname(fromFileUrl(import.meta.url));
-export const metaCli = resolve(testDir, "../../target/debug/meta");
+const metaCli = resolve(testDir, "../../target/debug/meta");
 
 init_native();
 
@@ -46,32 +46,33 @@ export async function metaNext(...args: string[]): Promise<string> {
   ]);
 }
 
-export async function meta(...args: string[]): Promise<void>;
+export async function meta(...args: string[]): Promise<string>;
 export async function meta(
   options: ShellOptions,
   ...args: string[]
-): Promise<void>;
+): Promise<string>;
 export async function meta(
   first: string | ShellOptions,
   ...input: string[]
-): Promise<void> {
+): Promise<string> {
   if (!compiled) {
     await shell(["cargo", "build", "--package", "meta-cli"]);
     compiled = true;
   }
 
-  if (typeof first === "string") {
-    console.log(await shell([metaCli, first, ...input]));
-  } else {
-    console.log(await shell([metaCli, ...input], first));
-  }
+  const res =
+    await (typeof first === "string"
+      ? shell([metaCli, first, ...input])
+      : shell([metaCli, ...input], first));
+
+  console.log(res);
+  return res;
 }
 
 export async function shell(
   cmd: string[],
   options: ShellOptions = {},
 ): Promise<string> {
-  console.log("shell", cmd);
   const { stdin = null } = options;
   const p = new Deno.Command(cmd[0], {
     cwd: testDir,
