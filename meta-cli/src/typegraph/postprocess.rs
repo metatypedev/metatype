@@ -106,7 +106,7 @@ pub mod deno_rt {
         }
     }
 
-    fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> String {
+    fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> Result<String> {
         // Note: main_path is absolute, tg_path is relative
         // tg_root/tg.py
         // tg_root/* <= script location
@@ -116,10 +116,13 @@ pub mod deno_rt {
                     // make absolute
                     fs::canonicalize(parent).unwrap()
                 } else {
-                    panic!("invalid state: typegraph file does not have parent");
+                    bail!(
+                        "invalid state: typegraph path {:?} does not have parent",
+                        path.display()
+                    );
                 }
             }
-            None => panic!("invalid state: typegraph path is undefined"),
+            None => bail!("invalid state: typegraph path is undefined"),
         };
 
         let dir_walker = WalkBuilder::new(tg_root.clone())
@@ -132,8 +135,16 @@ pub mod deno_rt {
             None => "".to_string(),
         };
 
-        let file = main_path.strip_prefix(tg_root).unwrap();
-        format!("file:{};base64:{}", file.display(), enc_content)
+        let file = match main_path.strip_prefix(&tg_root) {
+            Ok(ret) => ret,
+            Err(_) => bail!(
+                "{:?} does not contain script {:?}",
+                tg_root.display(),
+                main_path.display(),
+            ),
+        };
+
+        Ok(format!("file:{};base64:{}", file.display(), enc_content))
     }
 
     fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
@@ -178,7 +189,7 @@ pub mod deno_rt {
                     continue;
                 };
                 let path = tg.path.as_ref().unwrap().parent().unwrap().join(path);
-                mat_data.code = compress_and_encode(&path, &tg.path);
+                mat_data.code = compress_and_encode(&path, &tg.path)?;
 
                 mat.data = map_from_object(mat_data)?;
                 tg.deps.push(path);
