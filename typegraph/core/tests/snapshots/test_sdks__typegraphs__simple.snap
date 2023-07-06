@@ -219,7 +219,7 @@ input_file: typegraph/core/tests/typegraphs/simple.ts
           "idempotent": true
         },
         "data": {
-          "code": "tmp/unpacked,tmp/unpacked/three.ts"
+          "code": "tmp/unpacked,tmp/unpacked/scripts,tmp/unpacked/scripts/deno,tmp/unpacked/scripts/deno/three.ts,tmp/unpacked/simple.py,tmp/unpacked/simple.ts"
         }
       },
       {
