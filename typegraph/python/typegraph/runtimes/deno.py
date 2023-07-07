@@ -133,7 +133,11 @@ class ModuleMat(Materializer):
 
             from typegraph.graph.typegraph import get_absolute_path
 
-            path = get_absolute_path(self.file)
+            # depth 0: typegraph.py (definition)
+            # depth 1: this file (immediate caller)
+            # depth 2: infos about the current instance
+            # depth 3: tg (caller of this file)
+            path = get_absolute_path(self.file, 3)
             object.__setattr__(self, "code", f"file:{path}")
 
     def imp(
