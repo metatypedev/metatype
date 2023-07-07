@@ -108,8 +108,21 @@ test("Deno runtime: permissions", async (t) => {
   });
 });
 
+test("Deno runtime: use local imports", async (t) => {
+  const e = await t.pythonFile("runtimes/deno/deno_dep.py");
+  await t.should("work for local imports", async () => {
+    await gql`
+      query {
+        doAddition(a: 1, b: 2)
+      }
+    `.expectData({
+      doAddition: 3,
+    }).on(e);
+  });
+});
+
 test("Deno runtime: reloading", async (t) => {
-  const tmpDir = "typegate/tests/runtimes/deno/scripts/deno/tmp";
+  const tmpDir = "typegate/tests/runtimes/deno/tmp";
 
   const load = async (value: number) => {
     await Deno.mkdir(tmpDir, { recursive: true });
@@ -154,17 +167,4 @@ test("Deno runtime: reloading", async (t) => {
   });
 
   await Deno.remove(tmpDir, { recursive: true });
-});
-
-test("Deno runtime: use local imports", async (t) => {
-  const e = await t.pythonFile("runtimes/deno/deno_dep.py");
-  await t.should("work for local imports", async () => {
-    await gql`
-      query {
-        doAddition(a: 1, b: 2)
-      }
-    `.expectData({
-      doAddition: 3,
-    }).on(e);
-  });
 });
