@@ -56,6 +56,26 @@ export async function meta(
   }
 }
 
+interface SerializeOptions {
+  unique?: boolean;
+  typegraph?: string;
+}
+
+export function serialize(
+  tg: string,
+  options: SerializeOptions = {},
+): Promise<string> {
+  const cmd = [metaCli, "serialize", "-f", tg];
+  if (options.unique) {
+    cmd.push("-1");
+  }
+  if (options.typegraph) {
+    cmd.push("-t", options.typegraph);
+  }
+
+  return shell(cmd);
+}
+
 export async function shell(
   cmd: string[],
   options: ShellOptions = {},

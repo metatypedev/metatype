@@ -1,11 +1,12 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any, Dict
 
 from attrs import field, frozen
+from frozendict import frozendict
 
-from typegraph import effects
+from typegraph import effects, utils
 from typegraph import types as t
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
@@ -452,8 +453,27 @@ class PrismaRuntime(Runtime):
             datamodel=self.__datamodel(),
             connection_string_secret=self.connection_string_secret,
             models=[collector.index(tp) for tp in self.reg.managed.values()],
+            relationships=tuple(
+                frozendict(
+                    name=name,
+                    left=frozendict(
+                        type_idx=collector.index(rel.left.typ),
+                        field=rel.left.field,
+                        cardinality=rel.left.cardinality,
+                    ),
+                    right=frozendict(
+                        type_idx=collector.index(rel.right.typ),
+                        field=rel.right.field,
+                        cardinality=rel.right.cardinality,
+                    ),
+                )
+                for name, rel in self.reg.relationships.items()
+            ),
         )
         return data
+
+    def get_type_config(self, tpe: "t.typedef") -> Dict[str, Any]:
+        return utils.pick(tpe.runtime_config, "auto")
 
     @property
     def edges(self) -> List[Node]:

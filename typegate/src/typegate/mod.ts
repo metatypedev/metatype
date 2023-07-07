@@ -15,7 +15,7 @@ import { Engine } from "../engine.ts";
 import { InitHandler, PushHandler, PushResponse } from "../typegate/hooks.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../graphql/graphql.ts";
-import { runMigrations } from "../runtimes/prisma/hooks/run_migrations.ts";
+import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
 import {
   RuntimeResolver,
   SecretManager,
@@ -107,7 +107,8 @@ export class Typegate {
   ) {
     this.#onPush((tg) => Promise.resolve(upgradeTypegraph(tg)));
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
-    this.#onPush(runMigrations);
+    this.#onPush(PrismaHooks.generateSchema);
+    this.#onPush(PrismaHooks.runMigrations);
     Typegate.#registerRuntimes();
   }
 

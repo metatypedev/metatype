@@ -13,8 +13,6 @@ import { QueryRebuilder } from "./utils/graphql_forward_vars.ts";
 import { withInlinedVars } from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";
 
-console.log("runtimes graphql.ts");
-
 const logger = getLogger(import.meta);
 
 export interface FromVars<T> {

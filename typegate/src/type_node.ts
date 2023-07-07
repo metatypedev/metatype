@@ -74,6 +74,10 @@ export function isString(t: TypeNode): t is StringNode {
   return t.type === Type.STRING;
 }
 
+export function isUuid(t: TypeNode): t is StringNode {
+  return isString(t) && t.format === "uuid";
+}
+
 export function isFile(t: TypeNode): t is FileNode {
   return t.type === Type.FILE;
 }

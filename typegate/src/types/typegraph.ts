@@ -232,7 +232,7 @@ export type StringFormat =
   | "date-time"
   | "phone";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
-export type Cardinality = "Optional" | "One" | "Many";
+export type Cardinality = "optional" | "one" | "many";
 export type S3Materializer = {
   name: "presign_get";
   data: {
@@ -358,7 +358,6 @@ export interface HTTPRuntimeData {
 }
 export interface PrismaRuntimeData {
   name: string;
-  datamodel?: string | null;
   connection_string_secret: string;
   models: number[];
   relationships: Relationship[];

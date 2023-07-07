@@ -69,6 +69,7 @@ pub mod prisma {
 
     #[cfg_attr(feature = "codegen", derive(JsonSchema))]
     #[derive(Serialize, Deserialize, Clone, Debug)]
+    #[serde(rename_all = "lowercase")]
     pub enum Cardinality {
         Optional, // 0..1
         One,      // 1..1
@@ -98,7 +99,7 @@ pub mod prisma {
     #[derive(Serialize, Deserialize, Clone, Debug)]
     pub struct PrismaRuntimeData {
         pub name: String,
-        pub datamodel: Option<String>, // to be set by a hook on the typegate
+        // pub datamodel: Option<String>, // to be set by a hook on the typegate
         pub connection_string_secret: String,
         pub models: Vec<u32>,
         pub relationships: Vec<Relationship>,

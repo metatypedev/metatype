@@ -1607,12 +1607,6 @@
         "name": {
           "type": "string"
         },
-        "datamodel": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
         "connection_string_secret": {
           "type": "string"
         },
@@ -1686,9 +1680,9 @@
     "Cardinality": {
       "type": "string",
       "enum": [
-        "Optional",
-        "One",
-        "Many"
+        "optional",
+        "one",
+        "many"
       ]
     },
     "MigrationOptions": {
