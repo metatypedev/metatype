@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../../utils.ts";
-import { resolve } from "std/path/mod.ts";
+import { gql, test, testDir } from "../../utils.ts";
+import { join, resolve } from "std/path/mod.ts";
 
 test("Deno runtime", async (t) => {
   const e = await t.pythonFile("runtimes/deno/deno.py");
@@ -122,7 +122,7 @@ test("Deno runtime: use local imports", async (t) => {
 });
 
 test("Deno runtime: reloading", async (t) => {
-  const tmpDir = "typegate/tests/runtimes/deno/tmp";
+  const tmpDir = join(testDir, "runtimes/deno/tmp");
 
   const load = async (value: number) => {
     await Deno.mkdir(tmpDir, { recursive: true });
