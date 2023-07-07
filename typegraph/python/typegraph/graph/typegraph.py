@@ -192,8 +192,8 @@ class TypegraphContext:
 
 def get_absolute_path(relative: str, stack_depth: int = 1) -> Path:
     """
-    Concat caller_depth-th immediate caller path with `relative`.
-    By default, `caller_depth` is set to 1, this ensure that the file
+    Concat stack_depth-th immediate caller path with `relative`.
+    By default, `stack_depth` is set to 1, this ensure that the file
     holding the definition of this function is not considered.
     """
     path = Path(inspect.stack()[stack_depth].filename)
