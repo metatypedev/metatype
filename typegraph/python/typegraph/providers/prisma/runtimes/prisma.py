@@ -473,7 +473,7 @@ class PrismaRuntime(Runtime):
         return data
 
     def get_type_config(self, tpe: "t.typedef") -> Dict[str, Any]:
-        return utils.pick(tpe.runtime_config, "auto")
+        return utils.pick(tpe.runtime_config, "auto", "unique")
 
     @property
     def edges(self) -> List[Node]:

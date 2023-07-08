@@ -172,7 +172,12 @@ class FieldBuilder {
     const [rel, side] = found;
     switch (side) {
       case "left": {
-        const [tag, fkeys] = this.#getRelationTagAndFkeys(name, typeNode, rel);
+        const [tag, fkeys] = this.#getRelationTagAndFkeys(
+          name,
+          typeNode,
+          rel,
+          quant === "?",
+        );
         const modelField = new ModelField(name, typeNode.title + quant, [tag]);
         // additional tags??
         modelField.fkeys = fkeys;
@@ -194,7 +199,7 @@ class FieldBuilder {
     field: string,
     type: TypeNode,
     relationship: Relationship,
-    // optional: boolean,
+    optional: boolean,
   ): [string, ModelField[]] {
     const toPascalCase = (s: string) => s[0].toUpperCase() + s.slice(1);
 
@@ -207,6 +212,8 @@ class FieldBuilder {
     });
     const fields = ids.map((id) => `${field}${toPascalCase(id)}`);
 
+    const typeNameSuffix = optional ? "?" : "";
+
     const fkeys = fields.map((field, i) => {
       const [typeIdx, _quant] = this.#unwrapQuantifier(
         type.properties[ids[i]],
@@ -215,7 +222,7 @@ class FieldBuilder {
       const r = this.#getScalarTypeNameAndTags(typeNode);
       ensureNonNullable(r, "invalid scalar type");
       const [typeName, tags] = r;
-      const modelField = new ModelField(field, typeName, tags);
+      const modelField = new ModelField(field, typeName + typeNameSuffix, tags);
       modelField.tags = modelField.tags.filter((tag) =>
         tag !== "@id" && !tag.startsWith("@default")
       );
@@ -313,7 +320,7 @@ function generateSingleModel(
     modelFields.push(...field.fkeys);
     if (field.fkeysUnique) {
       const fieldNames = field.fkeys.map((fkey) => fkey.name);
-      tags.push(`@@unique([${fieldNames.join(", ")}])`);
+      tags.push(`@@unique(${fieldNames.join(", ")})`);
     }
   }
 

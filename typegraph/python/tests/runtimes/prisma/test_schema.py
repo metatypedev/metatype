@@ -17,14 +17,6 @@ from typegraph.providers.prisma.relations import (
 from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
 from typegraph.providers.prisma.schema import build_model
 
-# import debugpy
-
-
-# if environ.get("DEBUG", False):
-#     debugpy.listen(5678)
-#     print("Waiting for debugger attach...")
-#     debugpy.wait_for_client()
-
 
 META_BIN = str(Path(getcwd()) / "../../target/debug/meta")
 

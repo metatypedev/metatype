@@ -26,11 +26,79 @@ async function assertGeneratedSchema(tgName: string) {
 }
 
 test("schema generation", async (t) => {
-  await t.should("simple model", async () => {
-    await assertGeneratedSchema("test-simple-model");
+  await t.should("generate datamodel for simple model", async () => {
+    await assertGeneratedSchema("simple-model");
   });
 
-  await t.should("one to many relationship", async () => {
-    await assertGeneratedSchema("test-one-to-many");
+  await t.should(
+    "generate datamodel with one to many relationship",
+    async () => {
+      await assertGeneratedSchema("one-to-many");
+      await assertGeneratedSchema("implicit-one-to-many");
+      // TODO also reversed order version
+    },
+  );
+
+  await t.should(
+    "generate datamodel with optional one to many relationship",
+    async () => {
+      await assertGeneratedSchema("optional-one-to-many");
+      // TODO revered order
+    },
+  );
+
+  await t.should(
+    "generate datamodel with one to one relationship",
+    async () => {
+      await assertGeneratedSchema("one-to-one");
+      await assertGeneratedSchema("implicit-one-to-one");
+      // TODO also reversed order version
+    },
+  );
+
+  await t.should(
+    "generate datamodel with optional one to one relationship",
+    async () => {
+      await assertGeneratedSchema("optional-one-to-one");
+      // TODO revered order
+    },
+  );
+
+  // TODO fails optional one-to-one with ambiguous direction
+  //
+
+  await t.should(
+    "generate datamodel with semi-implicit one to one relationship",
+    async () => {
+      await assertGeneratedSchema("semi-implicit-one-to-one");
+      await assertGeneratedSchema("semi-implicit-one-to-one-2");
+      // TODO revered order
+    },
+  );
+
+  await t.should(
+    "generate datamodel with one to many self",
+    async () => {
+      await assertGeneratedSchema("one-to-many-self");
+      await assertGeneratedSchema("explicit-one-to-many-self");
+      await assertGeneratedSchema("one-to-many-self-2");
+      await assertGeneratedSchema("explicit-one-to-many-self-2");
+    },
+  );
+
+  await t.should("generate datamodel with one to one self", async () => {
+    await assertGeneratedSchema("one-to-one-self");
+    await assertGeneratedSchema("one-to-one-self-2");
   });
+
+  await t.should(
+    "generate typegraph with multiple relationships",
+    async () => {
+      await assertGeneratedSchema("multiple-relationships");
+      await assertGeneratedSchema("multiple-relationships-2");
+      await assertGeneratedSchema("multiple-self-relationships");
+    },
+  );
+
+  // TODO test missing target
 });
