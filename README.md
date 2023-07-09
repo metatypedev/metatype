@@ -30,7 +30,7 @@ Support us by <a href="https://github.com/metatypedev/metatype/stargazers">starr
     </a>
 </p>
 
-# [Metatype](https://metatype.dev/?utm_source=github&utm_medium=readme&utm_campaign=metatype) - Serverless backends with zero-trust and less code.
+<h1 align="center"><a href="https://metatype.dev/?utm_source=github&utm_medium=readme&utm_campaign=metatype">Metatype</a> • declarative API development platform</h1>
 
 <table>
     <tr>
@@ -39,12 +39,12 @@ Support us by <a href="https://github.com/metatypedev/metatype/stargazers">starr
             <p>And castle building is hard. Even the best teams can struggle to build according to the plans, especially with the ever evolving needs and the tech landscape complexities.</p>
         </td>
         <td>
-            <img src="website/static/images/castles/building.png"  />
+            <img src="website/static/images/castles/building.png" alt="Castle building" />
         </td>
     </tr>
     <tr>
         <td>
-            <img src="website/static/images/castles/stable.png"  />
+            <img src="website/static/images/castles/stable.png" alt="Stable castle" />
         </td>
         <td>
             <h3>Build stable castle with typegraphs</h3>
@@ -57,12 +57,12 @@ Support us by <a href="https://github.com/metatypedev/metatype/stargazers">starr
             <p>Typegate is a distributed GraphQL/REST query engine that compiles, optimizes, runs and caches queries over typegraphs. It enforces authentication, authorization and security for you.</p>
         </td>
         <td>
-            <img src="website/static/images/castles/modulable.png"  />
+            <img src="website/static/images/castles/modulable.png" alt="Modulable castle" />
         </td>
     </tr>
     <tr>
         <td>
-            <img src="website/static/images/castles/reusable.png"  />
+            <img src="website/static/images/castles/reusable.png" alt="Reusable castle" />
         </td>
         <td>
             <h3>Build reusable castle with Metatype</h3>
@@ -110,7 +110,7 @@ in databases/S3, connecting to third-party/internal APIs and running business
 logic in Deno/Python/WebAssembly.
 
 <p align="center">
-    <img src="website/docs/concepts/overview/image.drawio.svg" alt="architectural overview" width="400px" />
+    <img src="website/docs/concepts/overview/image.drawio.svg" alt="Architectural overview" width="400px" />
 </p>
 
 <p>
