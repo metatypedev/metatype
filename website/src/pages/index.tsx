@@ -124,7 +124,7 @@ function Modularity(): JSX.Element {
           <span className="text-metared">typegate</span>
         </h2>
         <p>
-          Typegate is a distributed HTTP/GraphQL <strong>query engine</strong>{" "}
+          Typegate is a distributed GraphQL/REST <strong>query engine</strong>{" "}
           that compiles, optimizes, runs and caches queries over typegraphs. It
           enforces authentication, authorization and security for you.
         </p>

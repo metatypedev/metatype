@@ -10,13 +10,14 @@ from typegraph.runtimes.http import HTTPRuntime
 with TypeGraph(
     # skip:next-line
     "homepage",
-    auths=[oauth2.github("openid email")],  # out of the box authenfication support
+    # out of the box authenfication support
+    auths=[oauth2.github("openid email")],
     # skip:start
     rate=TypeGraph.Rate(window_limit=2000, window_sec=60, query_limit=200),
     cors=TypeGraph.Cors(allow_origin=["https://metatype.dev", "http://localhost:3000"]),
     # skip:end
 ) as g:
-    # every field can be controlled by a policy
+    # every field may be controlled by a policy
     public = policies.public()
     meta_only = policies.ctx("email", re.compile(".+@metatype.dev"))
     public_write_only = {"create": public, "none": meta_only}
@@ -25,7 +26,8 @@ with TypeGraph(
     github = HTTPRuntime("https://api.github.com")
     db = PrismaRuntime("demo", "POSTGRES_CONN")
 
-    feedback = t.struct(  # a feedback object stored in Postgres
+    # a feedback object stored in Postgres
+    feedback = t.struct(
         {
             "id": t.uuid().as_id.config("auto"),
             "email": t.email().add_policy(public_write_only),
@@ -33,20 +35,21 @@ with TypeGraph(
         }
     ).named("feedback")
 
-    stargazer = t.struct(  # a stargazer object from Github
+    # a stargazer object from Github
+    stargazer = t.struct(
         {
             "login": t.string().named("login"),
-            "user": github.get(  # link with the feedback across runtimes
+            # link with the feedback across runtimes
+            "user": github.get(
                 "/users/{user}",
-                t.struct(
-                    {"user": t.string().from_parent(g("login"))}
-                ),  # feed the login value from the parent object
+                t.struct({"user": t.string().from_parent(g("login"))}),
                 t.struct({"name": t.string().optional()}),
             ),
         }
     )
 
-    g.expose(  # expose part of the graph for queries
+    # expose part of the graph for queries
+    g.expose(
         stargazers=github.get(
             "/repos/metatypedev/metatype/stargazers?per_page=2",
             t.struct({}),

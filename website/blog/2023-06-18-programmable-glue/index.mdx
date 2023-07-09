@@ -1,5 +1,6 @@
-import { CompareLandscape } from "../../src/components/CompareLandscape";
-import Metatype from "../../shared/metatype-intro.mdx";
+import { CompareLandscape } from "@site/src/components/CompareLandscape";
+import Metatype from "@site/shared/metatype-intro.mdx";
+import TGExample from "@site/src/components/TGExample";
 
 # Introducing Metatype: programmable glue for developers
 
@@ -10,6 +11,14 @@ import Metatype from "../../shared/metatype-intro.mdx";
 ## What are virtual graphs?
 
 Typegraphs are a declarative way to expose all APIs, storage and business logic of your stack as a single graph. They take inspiration from domain-driven design principles and in the idea that the relation between of the data is as important as data itself, even though they might be in different locations or shapes.
+
+<TGExample
+  python={require("../../src/pages/index.py")}
+  typegraph="homepage"
+  variables={{ email: "fill-me", message: "Great tool!" }}
+  defaultMode="typegraph"
+  query={require("../../src/pages/index.graphql")}
+/>
 
 These elements can then be combined and composed together similarly on how you would compose web components to create an interface in modern frontend practices. This allows developers to build modular and strongly typed APIs using typegraph as a programmable glue.
 

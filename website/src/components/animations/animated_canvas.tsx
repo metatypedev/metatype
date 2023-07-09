@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Stage } from "react-konva";
 import { useEffect, useRef, useState } from "react";
-import { useGifScroll, useVirtualScroll } from "./hooks";
-import { SpringValue, useSpringValue } from "@react-spring/konva";
+import { useVirtualScroll } from "./hooks";
+import { SpringValue } from "@react-spring/konva";
 
 interface ResponsiveCanvasP {
   scene: (value: SpringValue<number>) => React.ReactNode;

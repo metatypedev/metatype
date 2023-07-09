@@ -42,7 +42,7 @@ export function relPath(path: string) {
 interface Lockfile {
   [channel: string]: {
     files: Record<string, string[]>;
-    rules: Record<string, Record<string, string>>;
+    lines: Record<string, Record<string, string>>;
     lock: Record<string, string>;
   };
 }

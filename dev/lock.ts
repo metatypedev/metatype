@@ -50,10 +50,10 @@ Deno.writeTextFileSync(lockfileUrl, yaml.stringify(lockfile));
 
 let dirty = false;
 
-for (const [channel, { files, rules, lock }] of Object.entries(lockfile)) {
+for (const [channel, { files, lines, lock }] of Object.entries(lockfile)) {
   console.log(`Updating channel ${channel}:`);
 
-  for (const [glob, lookups] of Object.entries(rules)) {
+  for (const [glob, lookups] of Object.entries(lines)) {
     const url = resolve(projectDir, glob);
     const paths = Array.from(expandGlobSync(url, {
       includeDirs: false,
