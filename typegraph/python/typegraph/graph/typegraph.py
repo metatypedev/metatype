@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import inspect
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
 
@@ -193,9 +194,17 @@ class TypegraphContext:
             return None
 
 
-def get_absolute_path(relative: str) -> Path:
-    tg_path = TypegraphContext.get_active().path
-    return tg_path.parent / relative
+def get_absolute_path(relative: str, stack_depth: int = 1) -> Path:
+    """
+    Concat stack_depth-th immediate caller path with `relative`.
+    By default, `stack_depth` is set to 1, this ensure that the file
+    holding the definition of this function is not considered.
+    """
+    path = Path(inspect.stack()[stack_depth].filename)
+    ret = path.parent.absolute().joinpath(relative)
+    if os.path.exists(ret):
+        return ret
+    raise Exception(f'path "{ret}" infered from "{path}" does not exist')
 
 
 def find(node: str) -> Optional["t.typedef"]:

@@ -269,19 +269,10 @@ export async function structureRepr(str: string): Promise<FolderRepr> {
   if (!base64Str.startsWith(b64Prefix)) {
     throw Error(`${b64Prefix} prefix not specified`);
   }
-  // path to the script (relative to typegraph path)
-  const relativeTg = fileStr.substring(filePrefix.length);
 
-  const sep = relativeTg.indexOf("\\") >= 0 ? "\\" : "/";
-  const prefixReg = new RegExp(`^${sep}?scripts${sep}(deno|python)(.*)`);
-  const entryPoint = relativeTg.match(prefixReg)?.[2];
-  if (!entryPoint) {
-    throw Error(
-      `unable to determine script path relative to ${relativeTg}`,
-    );
-  }
+  const entryPoint = fileStr.substring(filePrefix.length);
 
   const base64 = base64Str.substring(b64Prefix.length);
-  const hash = await sha1(relativeTg);
+  const hash = await sha1(entryPoint);
   return { entryPoint, base64, hash };
 }

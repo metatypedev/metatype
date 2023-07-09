@@ -95,7 +95,7 @@ export class DenoRuntime extends Runtime {
         const code = mat.data.code as string;
 
         const repr = await structureRepr(code);
-        //    (user) scripts/deno/*
+        //    (user) tg_root/*
         // => (gate) tmp/scripts/{tgname}/deno/*
         const basePath = path.join(
           "tmp",

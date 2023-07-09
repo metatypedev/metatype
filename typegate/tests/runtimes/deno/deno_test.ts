@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../../utils.ts";
-import { resolve } from "std/path/mod.ts";
+import { gql, test, testDir } from "../../utils.ts";
+import { join, resolve } from "std/path/mod.ts";
 
 test("Deno runtime", async (t) => {
   const e = await t.pythonFile("runtimes/deno/deno.py");
@@ -108,8 +108,21 @@ test("Deno runtime: permissions", async (t) => {
   });
 });
 
+test("Deno runtime: use local imports", async (t) => {
+  const e = await t.pythonFile("runtimes/deno/deno_dep.py");
+  await t.should("work for local imports", async () => {
+    await gql`
+      query {
+        doAddition(a: 1, b: 2)
+      }
+    `.expectData({
+      doAddition: 3,
+    }).on(e);
+  });
+});
+
 test("Deno runtime: reloading", async (t) => {
-  const tmpDir = "typegate/tests/runtimes/deno/scripts/deno/tmp";
+  const tmpDir = join(testDir, "runtimes/deno/tmp");
 
   const load = async (value: number) => {
     await Deno.mkdir(tmpDir, { recursive: true });
@@ -138,7 +151,7 @@ test("Deno runtime: reloading", async (t) => {
     }).on(v1);
   });
 
-  t.unregister(v1);
+  await t.unregister(v1);
 
   const v2 = await load(2);
   await t.should("work with v2", async () => {
@@ -154,17 +167,4 @@ test("Deno runtime: reloading", async (t) => {
   });
 
   await Deno.remove(tmpDir, { recursive: true });
-});
-
-test("Deno runtime: use local imports", async (t) => {
-  const e = await t.pythonFile("runtimes/deno/deno_dep.py");
-  await t.should("work for local imports", async () => {
-    await gql`
-      query {
-        doAddition(a: 1, b: 2)
-      }
-    `.expectData({
-      doAddition: 3,
-    }).on(e);
-  });
 });
