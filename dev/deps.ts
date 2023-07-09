@@ -5,6 +5,7 @@ export {
   basename,
   dirname,
   fromFileUrl,
+  join,
   resolve,
 } from "https://deno.land/std@0.192.0/path/mod.ts";
 export { parse as parseFlags } from "https://deno.land/std@0.192.0/flags/mod.ts";

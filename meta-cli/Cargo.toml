@@ -19,9 +19,6 @@ categories = [
   "wasm",
 ]
 
-[features]
-typegraph-next = []
-
 [[bin]]
 name = "meta"
 path = "src/main.rs"

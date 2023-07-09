@@ -2,9 +2,13 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import inspect
+import json
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
+
+import attrs
+from frozendict import frozendict
 
 from typegraph.graph.builder import Collector
 from typegraph.graph.models import Auth, Cors, Rate
@@ -19,6 +23,15 @@ if TYPE_CHECKING:
 OperationTable = Dict[str, Union["t.func", "t.struct"]]
 
 typegraph_version = "0.0.2"
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if attrs.has(o):
+            return attrs.asdict(o)
+        if isinstance(o, frozendict):
+            return dict(o)
+        return super().default(o)
 
 
 class TypeGraph:
@@ -67,6 +80,15 @@ class TypeGraph:
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         TypegraphContext.pop()
+        if (
+            os.environ.get("PY_TG_COMPATIBILITY") is not None
+            and TypegraphContext.is_empty()
+            and not TypegraphContext.building
+        ):
+            TypegraphContext.building = True
+            tg = self.build()
+            output = json.dumps(tg, cls=JSONEncoder)
+            print(output)
 
     def __call__(
         self, node: str, after_apply: Callable[["t.typedef"], "t.typdef"] = lambda x: x
@@ -174,6 +196,7 @@ class TypeGraph:
 
 class TypegraphContext:
     typegraphs: List[TypeGraph] = []
+    building = False
 
     @classmethod
     def push(cls, tg: TypeGraph):
@@ -185,6 +208,10 @@ class TypegraphContext:
             return cls.typegraphs.pop()
         except IndexError:
             return None
+
+    @classmethod
+    def is_empty(cls) -> bool:
+        return len(cls.typegraphs) == 0
 
     @classmethod
     def get_active(cls) -> Optional[TypeGraph]:

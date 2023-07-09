@@ -23,6 +23,7 @@
 import {
   basename,
   expandGlobSync,
+  join,
   mergeReadableStreams,
   parseFlags,
   resolve,
@@ -72,6 +73,8 @@ if (flags._.length === 0) {
   }
 }
 
+const cwd = resolve(projectDir, "typegate");
+const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
   "NO_COLOR": "true",
   "DEBUG": "true",
@@ -81,12 +84,22 @@ const env: Record<string, string> = {
   "TG_ADMIN_PASSWORD": "password",
   "REDIS_URL": "redis://:password@localhost:6379/0",
   "DENO_TESTING": "true",
+  "TMP_DIR": tmpDir,
 };
+
+await Deno.mkdir(tmpDir, { recursive: true });
+// remove non-vendored caches
+for await (const cache of Deno.readDir(tmpDir)) {
+  if (cache.name.endsWith(".wasm")) {
+    continue;
+  }
+  await Deno.remove(join(tmpDir, cache.name), { recursive: true });
+}
 
 const libPath = Deno.build.os === "darwin"
   ? "DYLD_LIBRARY_PATH"
   : "LD_LIBRARY_PATH";
-const wasmEdgeLib = `${Deno.env.get("HOME")}/.wasmedge/lib`;
+const wasmEdgeLib = join(Deno.env.get("HOME")!, "/.wasmedge/lib");
 
 if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
   env[libPath] = `${wasmEdgeLib}:${Deno.env.get(libPath) ?? ""}`;
@@ -108,7 +121,7 @@ for (let i = 0; i < testFiles.length; i += threads) {
         testFile,
         ...flags["--"],
       ],
-      cwd: resolve(projectDir, "typegate"),
+      cwd,
       stdout: "piped",
       stderr: "piped",
       env: { ...Deno.env.toObject(), ...env },

@@ -74,11 +74,6 @@ test("http custom content-type queries", async (t) => {
 
   mf.mock("POST@/api/celcius_to_farenheit", async (req) => {
     const formData: FormData = await req.formData();
-    console.log(
-      "content-type assigned: ",
-      req.headers.get("content-type"),
-    );
-
     const url = new URL(req.url);
     console.info("> query params:", url.search);
     console.info("> formData:", formData);

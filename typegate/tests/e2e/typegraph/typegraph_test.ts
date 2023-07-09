@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { expandGlob } from "std/fs/expand_glob.ts";
-import { metaNext, test } from "../../utils.ts";
+import { meta, test } from "../../utils.ts";
 import { MetaTest } from "../../utils/metatest.ts";
 import { dirname, fromFileUrl } from "std/path/mod.ts";
 
@@ -17,7 +17,7 @@ async function testSerializeAll(t: MetaTest, path: string) {
     })
   ) {
     await t.should(`serialize ${file.name}`, async () => {
-      const tg = await metaNext("serialize", "--pretty", "-f", file.path);
+      const tg = await meta("serialize", "--pretty", "-f", file.path);
       await t.assertSnapshot(tg);
     });
   }

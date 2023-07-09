@@ -28,9 +28,6 @@ test("input validator compiler", async (t) => {
       source: generatedCode,
     })).formatted_code;
 
-    console.log("-- BEGIN code");
-    console.log(code);
-    console.log("-- END code");
     t.assertSnapshot(code);
   });
 
@@ -83,9 +80,6 @@ test("input validator compiler", async (t) => {
       source: generatedCode,
     })).formatted_code;
 
-    console.log("-- BEGIN code");
-    console.log(code);
-    console.log("-- END code");
     t.assertSnapshot(code);
   });
 
@@ -137,9 +131,6 @@ test("input validator compiler", async (t) => {
       source: generatedCode,
     })).formatted_code;
 
-    console.log("-- BEGIN code");
-    console.log(code);
-    console.log("-- END code");
     t.assertSnapshot(code);
   });
 

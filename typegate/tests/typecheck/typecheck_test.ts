@@ -54,8 +54,6 @@ test("typecheck", async (t) => {
       "Unexpected property 'postis' at 'Query1'",
     );
 
-    console.log("Q2");
-
     assertThrows(
       () =>
         getValidationCode(graphql`
@@ -91,9 +89,7 @@ test("typecheck", async (t) => {
     const formattedCode = nativeResult(native.typescript_format_code({
       source: code,
     })).formatted_code;
-    console.log("-- START code --");
-    console.log(formattedCode);
-    console.log("-- END code --");
+
     t.assertSnapshot(formattedCode);
   });
 

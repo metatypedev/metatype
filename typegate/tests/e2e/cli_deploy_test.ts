@@ -98,7 +98,6 @@ test("cli:deploy - with prefix", async (t) => {
     prefix: "pref-",
   });
 
-  console.log("starting...");
   await dropSchemas(e);
   await removeMigrations(e);
 

@@ -32,20 +32,6 @@ export interface ShellOptions {
 
 let compiled = false;
 
-export async function metaNext(...args: string[]): Promise<string> {
-  return await shell([
-    "cargo",
-    "run",
-    "--package",
-    "meta-cli",
-    "--quiet",
-    "--features",
-    "typegraph-next",
-    "--",
-    ...args,
-  ]);
-}
-
 export async function meta(...args: string[]): Promise<string>;
 export async function meta(
   options: ShellOptions,
@@ -65,7 +51,6 @@ export async function meta(
       ? shell([metaCli, first, ...input])
       : shell([metaCli, ...input], first));
 
-  console.log(res);
   return res;
 }
 
@@ -101,8 +86,7 @@ export async function shell(
   const { code, success } = await p.status;
 
   if (!success) {
-    console.log(out);
-    throw new Error(`Command failed with ${code}: ${cmd.join(" ")}`);
+    throw new Error(`Command "${cmd.join(" ")}" failed with ${code}: "${out}"`);
   }
 
   return out;

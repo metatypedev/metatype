@@ -39,7 +39,5 @@ test("request parser: multipart/form-data", async (t) => {
     assertEquals(operations.query, q.query);
     assertExists(operations.variables.file);
     assertEquals(fileContent, await (operations.variables.file as File).text());
-
-    console.log({ operations });
   });
 });

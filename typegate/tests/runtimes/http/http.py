@@ -2,7 +2,7 @@ from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.http import HTTPRuntime
 
 with TypeGraph("blog") as g:
-    remote = HTTPRuntime("https://blog.example.com/api")
+    remote = HTTPRuntime("http://localhost/api")
 
     public = policies.public()
 

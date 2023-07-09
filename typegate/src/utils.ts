@@ -211,8 +211,10 @@ export function collectFieldNames(tg: TypeGraph, typeIdx: number) {
 /**
  * base64 decode and untar at cwd/{dir}
  */
-export async function uncompress(dir: string, tarb64: string) {
-  const baseDir = path.join(Deno.cwd(), dir);
+export async function uncompress(
+  dir: string,
+  tarb64: string,
+): Promise<string[]> {
   const buffer = base64.decode(tarb64);
   const streamReader = new Blob([buffer])
     .stream()
@@ -230,11 +232,11 @@ export async function uncompress(dir: string, tarb64: string) {
     let file: Deno.FsFile | undefined;
     try {
       if (entry.type === "directory") {
-        const resDirPath = path.join(baseDir, entry.fileName);
+        const resDirPath = path.join(dir, entry.fileName);
         await ensureDir(resDirPath);
         continue;
       }
-      const resFilePath = path.join(baseDir, entry.fileName);
+      const resFilePath = path.join(dir, entry.fileName);
       await ensureFile(resFilePath);
 
       file = await Deno.open(resFilePath, { write: true });
@@ -245,7 +247,7 @@ export async function uncompress(dir: string, tarb64: string) {
       file?.close();
     }
   }
-  return baseDir;
+  return entries;
 }
 
 /**

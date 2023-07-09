@@ -1,8 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertRejects } from "std/testing/asserts.ts";
-import { copyFile, gql, test } from "../utils.ts";
+import { copyFile, gql, shell, test } from "../utils.ts";
 import * as mf from "test/mock_fetch";
 import { MetaTest } from "../utils/metatest.ts";
 import { Q } from "../utils/q.ts";
@@ -40,7 +39,7 @@ async function testImporter(t: MetaTest, name: string, testQuery?: Q) {
   });
 
   await t.should("run the importer", async () => {
-    await assertRejects(() => t.pythonFile(file), "No typegraph");
+    await shell(["python3", file]);
   });
 
   await t.should("load typegraph and execute query", async () => {
@@ -57,7 +56,7 @@ async function testImporter(t: MetaTest, name: string, testQuery?: Q) {
 test("GraphQL importer", async (t) => {
   await testImporter(
     t,
-    "graphql",
+    "gql",
     gql`
       query {
         mutationPrevalenceSubtypes {
