@@ -13,9 +13,6 @@ classifiers = [
     "Programming Language :: Python",
 ]
 
-[tool.poetry.scripts]
-py-tg = "typegraph.utils.loaders:cmd"
-
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
 httpx = { extras = ["http2"], version = "^0.24.1" }
