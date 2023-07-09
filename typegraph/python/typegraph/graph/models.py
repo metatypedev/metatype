@@ -8,10 +8,6 @@ from attrs import define, field, frozen
 
 @define
 class Auth:
-    """
-    Authentication options
-    """
-
     name: str
     protocol: str
     auth_data: Dict[str, str]
@@ -27,7 +23,7 @@ class Auth:
         profiler: Optional[str] = None,
     ) -> "Auth":
         """
-        OAuth2 authentication
+        [Documentation](http://localhost:3000/docs/guides/authentication#oauth2-authorization)
         """
         return Auth(
             name,
@@ -43,22 +39,8 @@ class Auth:
 
     @classmethod
     def jwt(cls, name: str, format: str, algorithm: None) -> "Auth":
-        """Import a JSON Web Token for authentication.
-
-        Args:
-            name (str): Name of the authentication
-            format (str): Format of the key. Can be "jwk", "raw", "pkcs8" or "spki".
-            algorithm (Dict[str, str], optional): Arguments for the authentication. Defaults to None. See `algorithm` parameters in [SubtleCrypto.importKey()](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey) for more information.
-
-        Example:
-            Generate a private/public ECDSA key pair using Deno:
-                deno eval '
-                    const keys = await crypto.subtle.generateKey({name: "ECDSA", namedCurve: "P-384"}, true, ["sign", "verify"]);
-                    const publicKey = await crypto.subtle.exportKey("jwk", keys.publicKey);
-                    // save keys.privateKey for later use
-                    console.log(JSON.stringify(publicKey));
-                    // Auth.jwt("keycloak", "jwk", {"name": "ECDSA", "namedCurve": "P-384"})
-                '
+        """
+        [Documentation](http://localhost:3000/docs/guides/authentication#jwt-authentication)
         """
         if algorithm is None:
             algorithm = {}
@@ -66,11 +48,6 @@ class Auth:
 
     @classmethod
     def hmac256(cls, name: str) -> "Auth":
-        """Import a HMAC SHA-256 for authentication.
-
-        Args:
-            name (str): Name of the authentication
-        """
         return Auth.jwt(name, "raw", {"name": "HMAC", "hash": {"name": "SHA-256"}})
 
     @classmethod
@@ -80,10 +57,6 @@ class Auth:
 
 @define
 class Cors:
-    """
-    CORS options
-    """
-
     allow_origin: List[str] = field(factory=list)
     allow_headers: List[str] = field(factory=list)
     expose_headers: List[str] = field(factory=list)
@@ -93,10 +66,6 @@ class Cors:
 
 @define
 class Rate:
-    """
-    Rate limiting options
-    """
-
     window_limit: int
     window_sec: int
     query_limit: int

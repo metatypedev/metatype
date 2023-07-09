@@ -205,8 +205,6 @@ export class Engine {
     stages: ComputeStage[],
     verbose: boolean,
   ): ComputeStage[] {
-    //verbose && console.log(stages);
-
     const stagesMat: ComputeStage[] = [];
     const waitlist = [...stages];
 
@@ -221,10 +219,8 @@ export class Engine {
   }
 
   optimize(stages: ComputeStage[], _verbose: boolean): ComputeStage[] {
-    //verbose && console.log(stages);
-
     for (const _stage of stages) {
-      //verbose && console.log("opti", stage.id());
+      // optimize
     }
 
     return stages;

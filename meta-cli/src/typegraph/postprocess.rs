@@ -88,6 +88,7 @@ impl PostProcessor for Validator {
 pub mod deno_rt {
     use std::{fs, path::Path};
 
+    use anyhow::Context;
     use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
     use ignore::WalkBuilder;
 
@@ -121,14 +122,12 @@ pub mod deno_rt {
             );
         }
 
-        let tg_root = if let Some(parent) = tg_path.parent() {
-            parent
-        } else {
-            bail!(
+        let tg_root = tg_path.parent().with_context(|| {
+            format!(
                 "invalid state: typegraph path {:?} does not have parent",
                 tg_path.display()
-            );
-        };
+            )
+        })?;
 
         let dir_walker = WalkBuilder::new(tg_root)
             .standard_filters(true)

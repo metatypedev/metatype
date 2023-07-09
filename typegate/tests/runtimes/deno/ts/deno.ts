@@ -4,7 +4,6 @@
 let count = 0;
 
 export function counter(): number {
-  //console.log("counter", { count });
   return ++count;
 }
 

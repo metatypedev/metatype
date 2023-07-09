@@ -9,6 +9,7 @@ export {
 } from "https://deno.land/std@0.192.0/path/mod.ts";
 export { parse as parseFlags } from "https://deno.land/std@0.192.0/flags/mod.ts";
 export { expandGlobSync } from "https://deno.land/std@0.192.0/fs/mod.ts";
+export { cyan, green } from "https://deno.land/std@0.192.0/fmt/colors.ts";
 export {
   mergeReadableStreams,
   TextLineStream,
