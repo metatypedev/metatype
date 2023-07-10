@@ -3840,6 +3840,8 @@ dependencies = [
  "migration-connector",
  "migration-core",
  "mongodb-introspection-connector",
+ "num-derive",
+ "num-traits",
  "once_cell",
  "prisma-models",
  "query-connector",
@@ -3860,6 +3862,8 @@ dependencies = [
  "url",
  "user-facing-errors",
  "wasmedge-sdk",
+ "wasmedge-sys",
+ "wasmedge-types",
 ]
 
 [[package]]
