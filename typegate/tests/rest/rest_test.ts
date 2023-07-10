@@ -4,7 +4,7 @@
 import { gql, test } from "../utils.ts";
 
 test("Rest queries", async (t) => {
-  const e = await t.pythonFile("runtimes/http/http.py");
+  const e = await t.pythonFile("rest/custom.py");
 
   await t.should("work with simple request", async () => {
     await gql`

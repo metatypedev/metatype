@@ -38,11 +38,21 @@ pub mod host {
     wit_bindgen::generate!("host");
 }
 
+// native stubs to make the test compilation work
 #[cfg(not(feature = "wasm"))]
 pub mod host {
-    pub mod host {
+    pub mod abi {
+        pub fn log(message: &str) {
+            println!("{}", message);
+        }
+        pub fn glob(_pattern: &str, _exts: &[&str]) -> Result<Vec<String>, String> {
+            Ok(vec![])
+        }
         pub fn read_file(path: &str) -> Result<String, String> {
             Ok(path.to_string())
+        }
+        pub fn write_file(_path: &str, _data: &str) -> Result<(), String> {
+            Ok(())
         }
     }
 }
@@ -51,7 +61,15 @@ pub struct Lib {}
 
 impl wit::core::Core for Lib {
     fn init_typegraph(params: TypegraphInitParams) -> Result<()> {
-        println!("{:?}", host::host::read_file("stest"));
+        /*
+        let file = host::host::read_file(
+            "/Users/teostocco/Documents/triage/metatypedev/metatype/whiz.yaml",
+        )?;
+        host::host::write_file(
+            "/Users/teostocco/Documents/triage/metatypedev/metatype/whiz2.yaml",
+            &file,
+        )?;
+        */
         typegraph::init(params)
     }
 

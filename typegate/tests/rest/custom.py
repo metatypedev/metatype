@@ -3,10 +3,8 @@ from typegraph_next.runtimes.deno import DenoRuntime
 
 with typegraph(
     name="custom",
-    queries={
-        "dynamic": False,
-        "folder": "custom_dir",
-    },
+    dynamic=False,
+    folder="custom_dir",
 ) as expose:
     deno = DenoRuntime()
     pub = g.Policy.public()
@@ -14,13 +12,9 @@ with typegraph(
     ping = deno.func(
         t.struct({}),
         t.integer(),
-        {
-            "code": "() => 1",
-        },
-    ).withPolicy(pub)
+        code="() => 1",
+    ).with_policy(pub)
 
     expose(
-        {
-            ping,
-        }
+        ping=ping,
     )

@@ -178,7 +178,7 @@ jobs:
           poetry install --sync
           python3 -m wasmtime.bindgen ../../target/debug/typegraph_core.wasm --out-dir typegraph/gen
           cd ../..
-          cargo run --locked --package meta-cli --features typegraph-next -- --help
+          cargo run --locked --package meta-cli -- --help
           cargo test --locked --package typegraph_core
 
   test-meta-cli:

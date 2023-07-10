@@ -1,9 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use typegraph_core::wit::core::{
-    Core, TypeBase, TypeFunc, TypeInteger, TypeStruct, TypegraphInitParams,
-};
+use typegraph_core::wit::core::{Core, TypeBase, TypeFunc, TypeInteger, TypeStruct};
 use typegraph_core::wit::runtimes::{MaterializerDenoFunc, Runtimes};
 use typegraph_core::Lib as t;
 
@@ -51,10 +49,12 @@ fn main() -> Result<(), String> {
     .unwrap();
     println!("{}", t::get_type_repr(f)?);
 
-    t::init_typegraph(TypegraphInitParams {
-        name: "test".to_string(),
-    })
-    .unwrap();
+    /*
+        t::init_typegraph(TypegraphInitParams {
+            name: "test".to_string(),
+        })
+        .unwrap();
+    */
     t::expose(vec![("one".to_string(), f)], vec![]).unwrap();
     println!("{}", t::finalize_typegraph().unwrap());
 

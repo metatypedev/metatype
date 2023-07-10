@@ -102,6 +102,7 @@ impl Loader {
                     serde_json::from_str::<Typegraph>(line)
                         .map_err(|e| LoaderError::SerdeJson {
                             path: path.to_owned(),
+                            content: line.to_string(),
                             error: e,
                         })
                         .and_then(|mut tg| {
@@ -149,6 +150,7 @@ impl Loader {
                 command
                     .arg("run")
                     .arg("--allow-read")
+                    .arg("--allow-write")
                     .arg("--check")
                     .arg(path.to_str().unwrap())
                     .envs(vars);
@@ -167,6 +169,7 @@ pub enum LoaderError {
     },
     SerdeJson {
         path: PathBuf,
+        content: String,
         error: serde_json::Error,
     },
     LoaderProcess {
@@ -188,18 +191,22 @@ impl ToString for LoaderError {
                 error,
             } => {
                 format!(
-                    "Error while post processing typegraph {name} from {path:?}: {error:?}",
+                    "error while post processing typegraph {name} from {path:?}: {error:?}",
                     name = typegraph_name.blue()
                 )
             }
-            Self::SerdeJson { path, error } => {
-                format!("Error while parsing raw typegraph JSON from {path:?}: {error:?}")
+            Self::SerdeJson {
+                path,
+                content,
+                error,
+            } => {
+                format!("error while parsing raw typegraph JSON from {path:?}: {error:?} in \"{content}\"")
             }
             Self::LoaderProcess { path, error } => {
-                format!("Error while loading typegraph(s) from {path:?}: {error:?}")
+                format!("error while loading typegraph(s) from {path:?}: {error:?}")
             }
             Self::Unknown { path, error } => {
-                format!("Error while loading typegraph(s) from {path:?}: {error:?}")
+                format!("error while loading typegraph(s) from {path:?}: {error:?}")
             }
         }
     }

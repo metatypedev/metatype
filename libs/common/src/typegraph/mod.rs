@@ -75,6 +75,7 @@ pub struct Rate {
     pub local_excess: u32,
 }
 
+// TODO: remove default, as they should all be explicity set in the core SDK
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Queries {

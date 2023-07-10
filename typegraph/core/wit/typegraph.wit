@@ -6,6 +6,9 @@ interface core {
 
     record typegraph-init-params {
         name: string,
+        dynamic: option<bool>,
+        folder: option<string>,
+        path: string,
     }
 
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>

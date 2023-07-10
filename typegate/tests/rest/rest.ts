@@ -22,10 +22,14 @@ typegraph("rest", (expose) => {
     code: "(user) => ({ id: 12, user })",
   }).withPolicy(pub);
 
-  const readPost = deno.func(post.id, t.boolean(), {
-    code: "() => true",
-    effect: { tag: "update" },
-  }).withPolicy(pub);
+  const readPost = deno.func(
+    /*post.id*/ t.struct({ id: t.integer() }),
+    t.boolean(),
+    {
+      code: "() => true",
+      effect: { tag: "update" } as any,
+    },
+  ).withPolicy(pub);
 
   expose({
     postFromUser,

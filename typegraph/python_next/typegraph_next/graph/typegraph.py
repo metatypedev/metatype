@@ -1,6 +1,8 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+import inspect
+from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional
 
 from typegraph_next.gen.exports.core import TypegraphInitParams
@@ -13,14 +15,27 @@ if TYPE_CHECKING:
 
 class typegraph:
     name: str
+    dynamic: Optional[bool]
+    folder: Optional[str]
+    path: str
     _context: List["typegraph"] = []
 
-    def __init__(self, name: str):
+    def __init__(
+        self, name: str, dynamic: Optional[bool] = None, folder: Optional[str] = None
+    ):
         self.name = name
+        self.dynamic = dynamic
+        self.folder = folder
+        self.path = str(Path(inspect.stack()[1].filename).resolve().parent)
 
     def __enter__(self):
         self._context.append(self)
-        core.init_typegraph(store, TypegraphInitParams(self.name))
+        core.init_typegraph(
+            store,
+            TypegraphInitParams(
+                name=self.name, dynamic=self.dynamic, folder=self.folder, path=self.path
+            ),
+        )
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):

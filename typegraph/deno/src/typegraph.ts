@@ -1,17 +1,13 @@
 import * as t from "./types.ts";
 import { core } from "../gen/typegraph_core.js";
+import { caller, dirname, fromFileUrl } from "./deps.ts";
 
 type Exports = Record<string, t.Func>;
 
-interface QueriesDef {
-  dynamic: boolean;
-  folder?: string;
-  operations?: string[];
-}
-
 interface TypegraphArgs {
   name: string;
-  queries?: QueriesDef;
+  dynamic?: boolean;
+  folder?: string;
   builder: TypegraphBuilder;
 }
 
@@ -36,17 +32,18 @@ export function typegraph(
     ? { name: nameOrArgs }
     : nameOrArgs;
 
-  const { name } = args;
+  const { name, dynamic, folder } = args;
   const builder = "builder" in args
     ? args.builder as TypegraphBuilder
     : maybeBuilder!;
 
-  const queries = args.queries ?? {
-    dynamic: false,
-    endpoints: [],
-  };
+  const file = caller();
+  if (!file) {
+    throw new Error("Could not determine caller file");
+  }
+  const path = dirname(fromFileUrl(file));
 
-  core.initTypegraph({ name });
+  core.initTypegraph({ name, dynamic, path, folder });
 
   builder((exports) => {
     core.expose(

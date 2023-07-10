@@ -4,6 +4,7 @@
 use crate::conversion::runtimes::{convert_materializer, convert_runtime};
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::with_store;
+use crate::host::abi;
 use crate::types::{Type, TypeFun, WrapperTypeData};
 use crate::validation::validate_name;
 use crate::{
@@ -11,13 +12,15 @@ use crate::{
     global_store::Store,
 };
 use common::typegraph::{
-    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, TGRuntime,
+    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TGRuntime,
     TypeMeta, TypeNode, Typegraph,
 };
+use graphql_parser::parse_query;
 use indexmap::IndexMap;
 use std::cell::RefCell;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::path::Path;
 
 use crate::wit::core::{
     Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypeId, TypegraphInitParams,
@@ -78,10 +81,39 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
         }
     })?;
 
+    let glob = format!(
+        "{}/**/*",
+        Path::new(&params.path)
+            .join(params.folder.unwrap_or(params.name.clone()))
+            .to_str()
+            .expect("Invalid path")
+    );
+
+    let endpoints = abi::glob(&glob, &["graphql", "gql"])?
+        .into_iter()
+        .flat_map(|p| {
+            let data = abi::read_file(&p).unwrap();
+            let ast = parse_query::<&str>(&data).unwrap();
+            ast.definitions
+                .into_iter()
+                .map(|op| {
+                    format!("{}", op)
+                        .split_whitespace()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect::<Vec<_>>();
+
     let mut ctx = TypegraphContext {
         name: params.name.clone(),
         meta: TypeMeta {
             version: TYPEGRAPH_VERSION.to_string(),
+            queries: Queries {
+                dynamic: params.dynamic.unwrap_or(true),
+                endpoints,
+            },
             ..Default::default()
         },
         types: vec![Some(TypeNode::Object {
