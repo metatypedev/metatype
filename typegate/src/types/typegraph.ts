@@ -231,8 +231,31 @@ export type StringFormat =
   | "date"
   | "date-time"
   | "phone";
-export type AuthProtocol = "oauth2" | "jwt" | "basic";
+export type TGRuntime = KnownRuntime | UnknownRuntime;
+export type KnownRuntime = {
+  name: "deno";
+  data: DenoRuntimeData;
+} | {
+  name: "graphql";
+  data: GraphQLRuntimeData;
+} | {
+  name: "http";
+  data: HTTPRuntimeData;
+} | {
+  name: "random";
+  data: RandomRuntimeData;
+} | {
+  name: "prisma";
+  data: PrismaRuntimeData;
+} | {
+  name: "s3";
+  data: S3RuntimeData;
+} | {
+  name: "temporal";
+  data: TemporalRuntimeData;
+};
 export type Cardinality = "optional" | "one" | "many";
+export type AuthProtocol = "oauth2" | "jwt" | "basic";
 export type S3Materializer = {
   name: "presign_get";
   data: {
@@ -297,7 +320,58 @@ export interface Effect {
   effect?: EffectType | null;
   idempotent: boolean;
 }
-export interface TGRuntime {
+export interface DenoRuntimeData {
+  worker: string;
+  permissions: {
+    [k: string]: unknown;
+  };
+}
+export interface GraphQLRuntimeData {
+  endpoint: string;
+}
+export interface HTTPRuntimeData {
+  endpoint: string;
+  cert_secret?: string | null;
+  basic_auth_secret?: string | null;
+}
+export interface RandomRuntimeData {
+  seed: number;
+  reset?: string | null;
+}
+export interface PrismaRuntimeData {
+  name: string;
+  connection_string_secret: string;
+  models: number[];
+  relationships: Relationship[];
+  migration_options?: MigrationOptions | null;
+}
+export interface Relationship {
+  name: string;
+  left: RelationshipModel;
+  right: RelationshipModel;
+}
+export interface RelationshipModel {
+  type_idx: number;
+  field: string;
+  cardinality: Cardinality;
+}
+export interface MigrationOptions {
+  migration_files?: string | null;
+  create: boolean;
+  reset: boolean;
+}
+export interface S3RuntimeData {
+  host_secret: string;
+  region_secret: string;
+  access_key_secret: string;
+  secret_key_secret: string;
+  path_style_secret: string;
+}
+export interface TemporalRuntimeData {
+  name: string;
+  host: string;
+}
+export interface UnknownRuntime {
   name: string;
   data: {
     [k: string]: unknown;
@@ -336,60 +410,9 @@ export interface Rate {
   context_identifier?: string | null;
   local_excess: number;
 }
-export interface DenoRuntimeData {
-  worker: string;
-  permissions: {
-    [k: string]: unknown;
-  };
-}
 export interface FunctionMatData {
   script: string;
 }
 export interface ModuleMatData {
   code: string;
-}
-export interface GraphQLRuntimeData {
-  endpoint: string;
-}
-export interface HTTPRuntimeData {
-  endpoint: string;
-  cert_secret?: string | null;
-  basic_auth_secret?: string | null;
-}
-export interface PrismaRuntimeData {
-  name: string;
-  connection_string_secret: string;
-  models: number[];
-  relationships: Relationship[];
-  migration_options?: MigrationOptions | null;
-}
-export interface Relationship {
-  name: string;
-  left: RelationshipModel;
-  right: RelationshipModel;
-}
-export interface RelationshipModel {
-  type_idx: number;
-  field: string;
-  cardinality: Cardinality;
-}
-export interface MigrationOptions {
-  migration_files?: string | null;
-  create: boolean;
-  reset: boolean;
-}
-export interface RandomRuntimeData {
-  seed: number;
-  reset?: string | null;
-}
-export interface S3RuntimeData {
-  host_secret: string;
-  region_secret: string;
-  access_key_secret: string;
-  secret_key_secret: string;
-  path_style_secret: string;
-}
-export interface TemporalRuntimeData {
-  name: string;
-  host: string;
 }

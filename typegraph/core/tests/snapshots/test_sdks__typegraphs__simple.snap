@@ -238,7 +238,8 @@ input_file: typegraph/core/tests/typegraphs/simple.py
       {
         "name": "deno",
         "data": {
-          "worker": "default"
+          "worker": "default",
+          "permissions": {}
         }
       }
     ],

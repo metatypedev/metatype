@@ -11,8 +11,8 @@ use crate::{
     global_store::Store,
 };
 use common::typegraph::{
-    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, TGRuntime,
-    TypeMeta, TypeNode, Typegraph,
+    runtimes::TGRuntime, Materializer, ObjectTypeData, Policy, PolicyIndices,
+    PolicyIndicesByEffect, TypeMeta, TypeNode, Typegraph,
 };
 use indexmap::IndexMap;
 use std::cell::RefCell;
