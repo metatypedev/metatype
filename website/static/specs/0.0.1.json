@@ -1582,7 +1582,8 @@
             }
           ]
         }
-      }
+      },
+      "additionalProperties": false
     },
     "Relationship": {
       "type": "object",

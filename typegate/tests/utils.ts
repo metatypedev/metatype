@@ -22,6 +22,7 @@ import { expandGlob } from "std/fs/expand_glob.ts";
 import { exists } from "std/fs/mod.ts";
 import * as yaml from "std/yaml/mod.ts";
 import * as graphql from "graphql";
+import { KnownRuntime } from "../src/types/typegraph.ts";
 export const testDir = dirname(fromFileUrl(import.meta.url));
 export const metaCli = resolve(testDir, "../../target/debug/meta");
 
@@ -291,15 +292,17 @@ export async function execute(
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+type PrismaRuntimeDS = KnownRuntime & { name: "prisma" };
+
 export async function dropSchemas(engine: Engine) {
   const runtimes = engine.tg.runtimeReferences.filter((r) =>
     r instanceof PrismaRuntime
   ) as PrismaRuntime[];
 
   for (const runtime of runtimes) {
-    const secret = engine.tg.tg.runtimes.find((rt) =>
-      rt.data.name === runtime.name
-    )?.data.connection_string_secret;
+    const secret = (engine.tg.tg.runtimes.find((rt) =>
+      rt.name === "prisma" && rt.data.name === runtime.name
+    ) as PrismaRuntimeDS | undefined)?.data.connection_string_secret;
     ensure(!!secret, `no secret for runtime ${runtime.name}`);
 
     const connection_string = engine.tg.secretManager.secretOrFail(

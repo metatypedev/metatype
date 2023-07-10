@@ -47,9 +47,9 @@ pub struct Relationship {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct PrismaRuntimeData {
     pub name: String,
-    // pub datamodel: Option<String>, // to be set by a hook on the typegate
     pub connection_string_secret: String,
     pub models: Vec<u32>,
     pub relationships: Vec<Relationship>,

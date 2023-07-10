@@ -13,7 +13,6 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.providers.prisma.relations import LinkProxy, Registry
-from typegraph.providers.prisma.schema import build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always, required
@@ -442,15 +441,9 @@ class PrismaRuntime(Runtime):
         tpe._propagate_runtime(self)
         self.reg.manage(tpe)
 
-    def __datamodel(self):
-        models = [build_model(ty, self.reg) for ty in self.reg.managed.values()]
-        return "\n\n".join(models)
-        # return PrismaSchema(self.managed_types.values()).build()
-
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
         data["data"].update(
-            datamodel=self.__datamodel(),
             connection_string_secret=self.connection_string_secret,
             models=[collector.index(tp) for tp in self.reg.managed.values()],
             relationships=tuple(

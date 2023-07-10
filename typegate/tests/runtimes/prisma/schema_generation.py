@@ -6,7 +6,7 @@ with TypeGraph("simple-model") as g1:
 
     user = t.struct(
         {
-            "id": t.integer().as_id.config("auto", hello="world"),
+            "id": t.integer().as_id.config("auto"),
             "name": t.string(),
         }
     ).named("User")

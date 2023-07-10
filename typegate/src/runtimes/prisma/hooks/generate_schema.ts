@@ -26,7 +26,8 @@ export const generateSchema: PushHandler = async (
     if (err != null) {
       throw new Error(`Invalid Prisma runtime data: ${err}`);
     }
-    // TODO: generate schema
+    const data = runtime.data as PrismaRT.DataWithDatamodel;
+    data.datamodel = generateDatamodel(typegraph, runtime.data);
     return runtime;
   });
 
@@ -44,7 +45,8 @@ class ModelField {
   ) {}
 
   stringify(): string {
-    return `${this.name} ${this.type} ${this.tags.join(" ")}`;
+    const tags = this.tags.length > 0 ? ` ${this.tags.join(" ")}` : "";
+    return `${this.name} ${this.type}${tags}`;
   }
 }
 
@@ -311,8 +313,15 @@ function generateSingleModel(
 
   const tags: string[] = [];
   const modelFields: ModelField[] = [];
-  for (const [name, _idx] of Object.entries(typeNode.properties)) {
+  for (const [name, idx] of Object.entries(typeNode.properties)) {
     // TODO check runtime
+
+    const fieldNode = typegraph.types[idx];
+    switch (fieldNode.type) {
+      case Type.FUNCTION:
+        continue;
+      default:
+    }
 
     const field = fieldBuilder.build(name, typeIdx);
     modelFields.push(field);
@@ -339,9 +348,11 @@ function generateSingleModel(
     `    ${field.stringify()}\n`
   )
     .join("");
-  const formattedTags = tags.map((tag) => `    ${tag}\n`).join("");
+  const formattedTags = tags.length > 0
+    ? "\n" + tags.map((tag) => `    ${tag}\n`).join("")
+    : "";
 
-  return `model ${typeNode.title} {\n${formattedFields}\n${formattedTags}}\n`;
+  return `model ${typeNode.title} {\n${formattedFields}${formattedTags}}`;
 }
 
 export function generateDatamodel(

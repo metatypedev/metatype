@@ -5,16 +5,11 @@ import { ComputeStage } from "../../engine.ts";
 import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../../typegraph.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
-import { DenoRuntimeData, TGRuntime } from "../../types/typegraph.ts";
+import { DenoRuntimeData } from "../../types/typegraph.ts";
 import * as ast from "graphql/ast";
 import { InternalAuth } from "../../auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
-
-export interface DenoRuntimeDS extends TGRuntime {
-  name: "deno";
-  data: DenoRuntimeData & Record<string, unknown>;
-}
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => (args),
