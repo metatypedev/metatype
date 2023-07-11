@@ -47,11 +47,7 @@ export class PythonWasiRuntime extends Runtime {
   ): ComputeStage[] {
     const { name } = stage.props.materializer?.data ?? {};
     return [
-      stage.withResolver((args) =>
-        this.w.execute(name as string, JSON.stringify(args)).then((x) =>
-          JSON.parse(x as string)
-        )
-      ),
+      stage.withResolver((args) => this.w.execute(name as string, args)),
     ];
   }
 }

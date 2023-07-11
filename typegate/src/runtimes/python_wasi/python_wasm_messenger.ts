@@ -32,7 +32,13 @@ export class PythonWasmMessenger extends AsyncMessenger<
     super(
       vm,
       (vm, { id, op, data }) => {
-        vm.apply(id, op as string, [data]);
+        vm.apply(id, op as string, [data])
+          .then((res) => {
+            this.receive({ id, data: res });
+          })
+          .catch((err) => {
+            this.receive({ id, error: err });
+          });
       },
       () => {},
     );
