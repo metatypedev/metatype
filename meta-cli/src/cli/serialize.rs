@@ -68,12 +68,7 @@ impl Action for Serialize {
             loader = loader.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
         }
 
-        #[cfg(feature = "typegraph-next")]
-        {
-            loader = loader.with_postprocessor(postprocess::DenoModules::default());
-        }
-
-        let loader = loader;
+        loader = loader.with_postprocessor(postprocess::DenoModules::default());
 
         let paths = if self.files.is_empty() {
             Discovery::new(Arc::clone(&config), dir.clone())

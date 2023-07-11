@@ -4,8 +4,23 @@
 import { handlers, LevelName, Logger } from "std/log/mod.ts";
 import { basename, extname, fromFileUrl } from "std/path/mod.ts";
 import { z } from "zod";
+import { deepMerge } from "std/collections/deep_merge.ts";
 
-import { configOrExit } from "./utils.ts";
+export const configOrExit = async <T extends z.ZodRawShape>(
+  sources: Record<string, unknown>[],
+  schema: T,
+) => {
+  const parsing = await z.object(schema).safeParse(
+    sources.reduce((a, b) => deepMerge(a, b), {}),
+  );
+
+  if (!parsing.success) {
+    console.error(parsing.error);
+    Deno.exit(1);
+  }
+
+  return parsing.data;
+};
 
 if (!Deno.env.has("VERSION")) {
   // set version for config and workers, only running in main engine

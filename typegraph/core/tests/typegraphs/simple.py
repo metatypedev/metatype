@@ -24,7 +24,5 @@ with typegraph(name="test-types") as expose:
         two=deno.func(user, post, code="(user) => ({ id: 12, user })").with_policy(
             deno.policy("deny", "() => false")
         ),
-        three=deno.import_(s1, s1, name="three", module="scripts/three.ts").with_policy(
-            public
-        ),
+        three=deno.import_(s1, s1, name="three", module="three.ts").with_policy(public),
     )

@@ -48,7 +48,7 @@ export interface FuncTask extends TaskApply {
 
 export interface RegisterImportFuncTask {
   type: "register_import_func";
-  moduleCode: string;
+  modulePath: string;
   op: number;
   verbose: boolean;
 }

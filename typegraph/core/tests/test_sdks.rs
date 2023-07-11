@@ -1,8 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use common::archive::{flat_list_dir, unpack_tar_base64};
+use common::typegraph::{Materializer, Typegraph};
 use insta::{assert_snapshot, glob};
 use pathdiff::diff_paths;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -47,6 +50,39 @@ fn get_test_dir() -> PathBuf {
         .into()
 }
 
+fn replace_b64_to_entries(tg: String) -> String {
+    let mut arr: Vec<Typegraph> = serde_json::from_str(&tg).unwrap();
+    let object = arr.get_mut(0).unwrap();
+    let new_list: Vec<Materializer> = object
+        .materializers
+        .iter()
+        .map(|value| {
+            let mut new_value = value.clone();
+            if let Some(code) = value.data.get("code") {
+                let base64 = code
+                    .as_str()
+                    .unwrap()
+                    .split(&"base64:")
+                    .last()
+                    .unwrap()
+                    .to_owned();
+                let tmp = "tmp/unpacked";
+                // clean
+                fs::remove_dir_all(tmp).ok();
+                // unpack
+                unpack_tar_base64(base64, tmp).unwrap();
+                // then read
+                let content = flat_list_dir(tmp).unwrap().join(",");
+                // now replace
+                new_value.data["code"] = serde_json::from_str(&format!("\"{}\"", content)).unwrap();
+            }
+            new_value
+        })
+        .collect();
+    object.materializers = new_list;
+    return serde_json::to_string_pretty(&arr).unwrap();
+}
+
 fn test_files(glob: &str) {
     glob!(&get_test_dir(), glob, |path| {
         // use the same snapshots for different sdks
@@ -56,6 +92,7 @@ fn test_files(glob: &str) {
         let name = name.to_str().unwrap();
         println!("testing '{name}' {path:?}...");
         let tg = serialize(path);
+        let tg = replace_b64_to_entries(tg);
         assert_snapshot!(name, tg);
     });
 }
