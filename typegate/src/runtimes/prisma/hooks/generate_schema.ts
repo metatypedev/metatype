@@ -3,7 +3,7 @@
 
 import { ObjectNode, Type, TypeNode } from "../../../type_node.ts";
 import { PushHandler } from "../../../typegate/hooks.ts";
-import { TypeGraphDS } from "../../../typegraph.ts";
+import { SecretManager, TypeGraphDS } from "../../../typegraph.ts";
 import { Relationship } from "../../../types/typegraph.ts";
 import { ensure, ensureNonNullable } from "../../../utils.ts";
 import { PrismaRT } from "../mod.ts";
@@ -14,7 +14,7 @@ type QuantifierSuffix = "" | "?" | "[]";
 
 export const generateSchema: PushHandler = async (
   typegraph,
-  _secretManager,
+  secretManager,
   _pushResponse,
 ) => {
   typegraph.runtimes = typegraph.runtimes.map((rt) => {
@@ -27,7 +27,8 @@ export const generateSchema: PushHandler = async (
       throw new Error(`Invalid Prisma runtime data: ${err}`);
     }
     const data = runtime.data as PrismaRT.DataWithDatamodel;
-    data.datamodel = generateDatamodel(typegraph, runtime.data);
+    const schemaGenerator = new SchemaGenerator(typegraph, data, secretManager);
+    data.datamodel = schemaGenerator.generate();
     return runtime;
   });
 
@@ -301,69 +302,93 @@ class FieldBuilder {
   }
 }
 
-function generateSingleModel(
-  typegraph: TypeGraphDS,
-  fieldBuilder: FieldBuilder,
-  typeIdx: number,
-): string {
-  const typeNode = typegraph.types[typeIdx];
-  if (typeNode.type !== Type.OBJECT) {
-    throw new Error("type must be object");
+const SUPPORTED_PROVIDERS = ["postgresql", "mysql", "mongodb"] as const;
+type Provider = typeof SUPPORTED_PROVIDERS[number];
+
+class SchemaGenerator {
+  #provider: Provider;
+  #fieldBuilder: FieldBuilder;
+  #models: number[];
+
+  constructor(
+    private readonly typegraph: TypeGraphDS,
+    runtimeData: PrismaRT.DataRaw,
+    secretManager: SecretManager,
+  ) {
+    const connectionString = secretManager.secretOrFail(
+      runtimeData.connection_string_secret,
+    );
+    // TODO other way to get provider? cockroachdb, sqlserver, sqlite(???)
+    const provider = new URL(connectionString).protocol.slice(0, -1);
+    if (!SUPPORTED_PROVIDERS.includes(provider as Provider)) {
+      throw new Error(`unsupported provider: ${provider}`);
+    }
+    this.#provider = provider as Provider;
+    this.#fieldBuilder = new FieldBuilder(typegraph, runtimeData.relationships);
+    this.#models = runtimeData.models;
   }
 
-  const tags: string[] = [];
-  const modelFields: ModelField[] = [];
-  for (const [name, idx] of Object.entries(typeNode.properties)) {
-    // TODO check runtime
-
-    const fieldNode = typegraph.types[idx];
-    switch (fieldNode.type) {
-      case Type.FUNCTION:
-        continue;
-      default:
-    }
-
-    const field = fieldBuilder.build(name, typeIdx);
-    modelFields.push(field);
-
-    modelFields.push(...field.fkeys);
-    if (field.fkeysUnique) {
-      const fieldNames = field.fkeys.map((fkey) => fkey.name);
-      tags.push(`@@unique(${fieldNames.join(", ")})`);
-    }
+  #type(idx: number): TypeNode {
+    const typeNode = this.typegraph.types[idx];
+    ensureNonNullable(typeNode, `type not found, idx=${idx}`);
+    return typeNode;
   }
 
-  const idFields = modelFields.filter((field) => field.tags.includes("@id"));
-  ensure(idFields.length > 0, "no @id field found");
-
-  if (idFields.length > 1) {
-    const names = idFields.map((field) => field.name).join(", ");
-    tags.push(`@@id([${names}])`);
-    for (const field of idFields) {
-      field.tags = field.tags.filter((tag) => tag !== "@id");
+  generateModel(typeIdx: number): string {
+    const typeNode = this.#type(typeIdx);
+    if (typeNode.type !== Type.OBJECT) {
+      throw new Error("type must be object");
     }
+
+    const tags: string[] = [];
+    const modelFields: ModelField[] = [];
+    for (const [name, idx] of Object.entries(typeNode.properties)) {
+      // TODO check runtime
+
+      const fieldNode = this.#type(idx);
+      switch (fieldNode.type) {
+        case Type.FUNCTION:
+          continue;
+        default:
+      }
+
+      const field = this.#fieldBuilder.build(name, typeIdx);
+      modelFields.push(field);
+
+      modelFields.push(...field.fkeys);
+      if (field.fkeysUnique) {
+        const fieldNames = field.fkeys.map((fkey) => fkey.name);
+        tags.push(`@@unique(${fieldNames.join(", ")})`);
+      }
+    }
+
+    const idFields = modelFields.filter((field) => field.tags.includes("@id"));
+    ensure(idFields.length > 0, "no @id field found");
+
+    if (idFields.length > 1) {
+      const names = idFields.map((field) => field.name).join(", ");
+      tags.push(`@@id([${names}])`);
+      for (const field of idFields) {
+        field.tags = field.tags.filter((tag) => tag !== "@id");
+      }
+    }
+
+    const formattedFields = modelFields.map((field) =>
+      `    ${field.stringify()}\n`
+    )
+      .join("");
+    const formattedTags = tags.length > 0
+      ? "\n" + tags.map((tag) => `    ${tag}\n`).join("")
+      : "";
+
+    return `model ${typeNode.title} {\n${formattedFields}${formattedTags}}`;
   }
 
-  const formattedFields = modelFields.map((field) =>
-    `    ${field.stringify()}\n`
-  )
-    .join("");
-  const formattedTags = tags.length > 0
-    ? "\n" + tags.map((tag) => `    ${tag}\n`).join("")
-    : "";
-
-  return `model ${typeNode.title} {\n${formattedFields}${formattedTags}}`;
-}
-
-export function generateDatamodel(
-  typegraph: TypeGraphDS,
-  runtimeData: PrismaRT.DataRaw,
-): string {
-  const fieldBuilder = new FieldBuilder(typegraph, runtimeData.relationships);
-
-  return runtimeData.models.map((modelIdx) =>
-    generateSingleModel(typegraph, fieldBuilder, modelIdx)
-  ).join("\n\n");
+  generate() {
+    return this.#models.map((modelIdx) => this.generateModel(modelIdx)).join(
+      "\n\n",
+    );
+  }
 }
 
 function toPrismaString(s: string) {

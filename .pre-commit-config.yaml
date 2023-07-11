@@ -48,7 +48,7 @@ repos:
       - id: deno-lint
         name: Deno lint
         language: system
-        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native && cd ../dev && deno lint'
+        entry: bash -c 'cd typegate && deno lint --rules-exclude=no-explicit-any --ignore=native,tmp && cd ../dev && deno lint'
         pass_filenames: false
         types:
           - ts
