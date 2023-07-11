@@ -26,8 +26,6 @@ import { KnownRuntime } from "../src/types/typegraph.ts";
 export const testDir = dirname(fromFileUrl(import.meta.url));
 export const metaCli = resolve(testDir, "../../target/debug/meta");
 
-console.log("test utils.ts");
-
 init_native();
 
 export interface ShellOptions {

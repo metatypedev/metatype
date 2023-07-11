@@ -7,6 +7,7 @@ import { TypeNode } from "../type_node.ts";
 import Chance from "chance";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { RandomRuntimeData } from "../types/typegraph.ts";
+import { Typegate } from "../typegate/mod.ts";
 
 export class RandomRuntime extends Runtime {
   seed: number | null;
@@ -116,3 +117,5 @@ export class RandomRuntime extends Runtime {
     }
   }
 }
+
+Typegate.registerRuntime("random", RandomRuntime.init);

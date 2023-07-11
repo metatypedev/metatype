@@ -24,18 +24,9 @@ import {
 } from "../typegraph.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
-import { dirname, fromFileUrl, join } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join, resolve } from "std/path/mod.ts";
 import { RuntimeInit, RuntimeInitParams } from "../types.ts";
 import { Runtime } from "../runtimes/Runtime.ts";
-import { S3Runtime } from "../runtimes/s3.ts";
-import { GraphQLRuntime } from "../runtimes/graphql.ts";
-import { PrismaRuntime } from "../runtimes/prisma/prisma.ts";
-import { HTTPRuntime } from "../runtimes/http.ts";
-import { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { TemporalRuntime } from "../runtimes/temporal.ts";
-import { RandomRuntime } from "../runtimes/random.ts";
-import { WasmEdgeRuntime } from "../runtimes/wasmedge.ts";
-import { PythonWasiRuntime } from "../runtimes/python_wasi/python_wasi.ts";
 import { parseTypegraph } from "../typegraph/parser.ts";
 
 const logger = getLogger("http");
@@ -71,20 +62,8 @@ const introspectionDef = parseGraphQLTypeGraph(
 export class Typegate {
   static #registeredRuntimes: Map<string, RuntimeInit> = new Map();
 
-  static #registerRuntime(name: string, init: RuntimeInit) {
+  static registerRuntime(name: string, init: RuntimeInit) {
     this.#registeredRuntimes.set(name, init);
-  }
-
-  static #registerRuntimes() {
-    this.#registerRuntime("s3", S3Runtime.init);
-    this.#registerRuntime("graphql", GraphQLRuntime.init);
-    this.#registerRuntime("prisma", PrismaRuntime.init);
-    this.#registerRuntime("http", HTTPRuntime.init);
-    this.#registerRuntime("deno", DenoRuntime.init);
-    this.#registerRuntime("temporal", TemporalRuntime.init);
-    this.#registerRuntime("random", RandomRuntime.init);
-    this.#registerRuntime("wasmedge", WasmEdgeRuntime.init);
-    this.#registerRuntime("python_wasi", PythonWasiRuntime.init);
   }
 
   static async initRuntime(
@@ -109,7 +88,6 @@ export class Typegate {
     this.#onPush((tg) => Promise.resolve(parseGraphQLTypeGraph(tg)));
     this.#onPush(PrismaHooks.generateSchema);
     this.#onPush(PrismaHooks.runMigrations);
-    Typegate.#registerRuntimes();
   }
 
   #onPush(handler: PushHandler) {
@@ -368,5 +346,14 @@ export class Typegate {
     this.#handleOnInitHooks(tg, secretManager, sync);
 
     return new Engine(tg);
+  }
+}
+
+// register runtimes
+const runtimesDir = resolve(localDir, "../runtimes");
+for await (const file of Deno.readDir(runtimesDir)) {
+  if (file.isFile && file.name.endsWith(".ts")) {
+    // no await: await fails
+    import(resolve(runtimesDir, file.name));
   }
 }

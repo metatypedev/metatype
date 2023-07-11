@@ -12,6 +12,7 @@ import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
 import { QueryRebuilder } from "./utils/graphql_forward_vars.ts";
 import { withInlinedVars } from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";
+import { Typegate } from "../typegate/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -181,3 +182,5 @@ export class GraphQLRuntime extends Runtime {
     return {};
   }
 }
+
+Typegate.registerRuntime("graphql", GraphQLRuntime.init);
