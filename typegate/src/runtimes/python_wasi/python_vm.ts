@@ -17,22 +17,22 @@ export class PythonVirtualMachine {
   #config: WasiVmInitConfig;
   #lambdas: Set<string>;
 
-  constructor(
-    vm: string,
-    appDirectoryPath: string,
-  ) {
+  constructor() {
     this.#config = {
-      vm_name: vm,
-      preopens: [
-        `/app:${appDirectoryPath}:readonly`,
-      ],
+      vm_name: "defaultName",
+      preopens: [],
       pylib_path: "./tmp/libpython/usr/local/lib",
       wasi_mod_path: "./tmp/python-wasi-reactor.wasm",
     };
     this.#lambdas = new Set<string>();
   }
 
-  async setup() {
+  async setup(vmName: string, appDirectoryPath: string) {
+    this.#config = {
+      ...this.#config,
+      vm_name: vmName,
+      preopens: [`/app:${appDirectoryPath}:readonly`],
+    };
     await register_virtual_machine(this.#config);
   }
 

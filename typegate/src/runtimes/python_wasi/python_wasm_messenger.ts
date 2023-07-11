@@ -21,14 +21,8 @@ export class PythonWasmMessenger extends AsyncMessenger<
 > {
   vm: PythonVirtualMachine;
 
-  private constructor(
-    appDirectoryPath: string,
-  ) {
-    const vm = new PythonVirtualMachine(
-      "testVm",
-      appDirectoryPath,
-    );
-
+  private constructor() {
+    const vm = new PythonVirtualMachine();
     super(
       vm,
       (vm, { id, op, data }) => {
@@ -57,8 +51,6 @@ export class PythonWasmMessenger extends AsyncMessenger<
       await tar.uncompress(archivePath, config.tmp_dir);
     }
 
-    const messenger = new PythonWasmMessenger(cachePath);
-    await messenger.vm.setup();
-    return messenger;
+    return new PythonWasmMessenger();
   }
 }

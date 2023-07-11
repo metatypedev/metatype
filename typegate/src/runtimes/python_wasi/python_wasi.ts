@@ -18,10 +18,14 @@ export class PythonWasiRuntime extends Runtime {
   }
 
   static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { materializers } = params;
+    const { materializers, typegraph } = params;
     const w = await PythonWasmMessenger.init();
 
     const fnNames = [];
+
+    // TODO:
+    // change tmp to custom script folder
+    await w.vm.setup(typegraph.types[0].title, "tmp");
 
     for (const m of materializers) {
       fnNames.push(m.data.name as string);

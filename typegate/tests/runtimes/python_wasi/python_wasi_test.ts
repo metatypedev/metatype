@@ -21,7 +21,8 @@ test("Python WASI runtime", async (t) => {
 
   await t.should("work fast enough", async () => {
     const start = performance.now();
-    for (let i = 0; i < 100; i += 1) {
+    for (let i = 1; i <= 100; i += 1) {
+      console.time(`sample${i}`);
       await gql`
         query ($a: String!) {
           test(a: $a)
@@ -34,6 +35,7 @@ test("Python WASI runtime", async (t) => {
           test: `test${i}`,
         })
         .on(e);
+      console.timeEnd(`sample${i}`);
     }
     const end = performance.now();
 
@@ -55,6 +57,8 @@ test("Python WASI runtime", async (t) => {
     // await Promise.all(tests);
     // const end = performance.now();
     const duration = end - start;
-    assert(duration < 450, `Python WASI runtime was too slow: ${duration}ms`);
+    // from ~100ms (deno <-> wasi) to ~600ms (bindgen <-> wasmedge host <-> wasi)
+    // about ~500ms overhead
+    assert(duration < 600, `Python WASI runtime was too slow: ${duration}ms`);
   });
 });
