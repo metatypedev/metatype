@@ -10,7 +10,7 @@ import * as native from "native";
 import { init_native } from "native";
 import { PrismaRuntime, PrismaRuntimeDS } from "../src/runtimes/prisma.ts";
 import { MemoryRegister } from "./utils/memory_register.ts";
-import { Q } from "./utils/q.ts";
+import { GraphQLQuery, RestQuery } from "./utils/q.ts";
 import { MetaTest } from "./utils/metatest.ts";
 import { SingleRegister } from "./utils/single_register.ts";
 import { NoLimiter } from "./utils/no_limiter.ts";
@@ -230,7 +230,7 @@ export async function runAuto(rootDir: string, target = "dev") {
             const doc = graphql.parse(graphqlFile);
             for (const operation of doc.definitions) {
               const query = graphql.print(operation);
-              await new Q(query, {}, {}, {}, [])
+              await new GraphQLQuery(query, {}, {}, {}, [])
                 .matchSnapshot(t)
                 .on(e);
             }
@@ -245,8 +245,15 @@ export function gql(query: readonly string[], ...args: any[]) {
   const template = query
     .map((q, i) => `${q}${args[i] ? JSON.stringify(args[i]) : ""}`)
     .join("");
-  return new Q(template, {}, {}, {}, []);
+  return new GraphQLQuery(template, {}, {}, {}, []);
 }
+
+export const rest = {
+  get: (path: string) => new RestQuery("GET", path, {}, {}, {}, []),
+  post: (path: string) => new RestQuery("POST", path, {}, {}, {}, []),
+  put: (path: string) => new RestQuery("PUT", path, {}, {}, {}, []),
+  delete: (path: string) => new RestQuery("DELETE", path, {}, {}, {}, []),
+};
 
 export async function execute(
   engine: Engine,

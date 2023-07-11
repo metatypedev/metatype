@@ -81,30 +81,32 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
         }
     })?;
 
-    let glob = format!(
-        "{}/**/*",
-        Path::new(&params.path)
-            .join(params.folder.unwrap_or(params.name.clone()))
-            .to_str()
-            .expect("Invalid path")
-    );
+    let endpoints = {
+        let glob = format!(
+            "{}/**/*",
+            Path::new(&params.path)
+                .join(params.folder.unwrap_or(params.name.clone()))
+                .to_str()
+                .expect("Invalid path")
+        );
 
-    let endpoints = abi::glob(&glob, &["graphql", "gql"])?
-        .into_iter()
-        .flat_map(|p| {
-            let data = abi::read_file(&p).unwrap();
-            let ast = parse_query::<&str>(&data).unwrap();
-            ast.definitions
-                .into_iter()
-                .map(|op| {
-                    format!("{}", op)
-                        .split_whitespace()
-                        .collect::<Vec<_>>()
-                        .join(" ")
-                })
-                .collect::<Vec<_>>()
-        })
-        .collect::<Vec<_>>();
+        abi::glob(&glob, &["graphql", "gql"])?
+            .into_iter()
+            .flat_map(|p| {
+                let data = abi::read_file(&p).unwrap();
+                let ast = parse_query::<&str>(&data).unwrap();
+                ast.definitions
+                    .into_iter()
+                    .map(|op| {
+                        format!("{}", op)
+                            .split_whitespace()
+                            .collect::<Vec<_>>()
+                            .join(" ")
+                    })
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>()
+    };
 
     let mut ctx = TypegraphContext {
         name: params.name.clone(),

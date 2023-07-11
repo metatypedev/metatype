@@ -88,49 +88,37 @@ class FileExtractor {
   }
 }
 
-export class Q {
+abstract class Query {
   constructor(
-    public query: string,
-    private context: Context,
-    private variables: Variables,
-    private headers: Record<string, string>,
-    private expects: Expect[],
-    private contextEncoder: ContextEncoder = defaultContextEncoder,
+    protected context: Context,
+    protected variables: Variables,
+    protected headers: Record<string, string>,
+    protected expects: Expect[],
+    protected contextEncoder: ContextEncoder,
   ) {}
 
-  private clone(patch: (q: Q) => void = (_q) => {}): Q {
-    const q = new Q(
-      this.query,
-      this.context,
-      this.variables,
-      this.headers,
-      this.expects,
-      this.contextEncoder,
-    );
-    patch(q);
-    return q;
-  }
+  protected abstract clone(patch: (q: this) => void): this;
 
-  withContext(context: Context, contextEncoder?: ContextEncoder) {
+  withContext(context: Context, contextEncoder?: ContextEncoder): this {
     return this.clone((q) => {
       q.context = deepMerge(q.context, context);
       q.contextEncoder = contextEncoder || q.contextEncoder;
     });
   }
 
-  withVars(variables: Variables) {
+  withVars(variables: Variables): this {
     return this.clone((q) => {
       q.variables = deepMerge(q.variables, variables);
     });
   }
 
-  withHeaders(headers: Record<string, string>) {
+  withHeaders(headers: Record<string, string>): this {
     return this.clone((q) => {
       q.headers = deepMerge(q.headers, headers);
     });
   }
 
-  withoutHeaders(headers: Array<string>) {
+  withoutHeaders(headers: Array<string>): this {
     return this.clone((q) => {
       for (const name of headers) {
         q.headers[name] = "NULL";
@@ -138,19 +126,19 @@ export class Q {
     });
   }
 
-  expect(expect: Expect) {
+  expect(expect: Expect): this {
     return this.clone((q) => {
       q.expects = [...q.expects, expect];
     });
   }
 
-  expectStatus(status: number) {
+  expectStatus(status: number): this {
     return this.expect((res) => {
       assertEquals(res.status, status);
     });
   }
 
-  expectBody(expect: (body: any) => Promise<void> | void) {
+  expectBody(expect: (body: any) => Promise<void> | void): this {
     return this.expect(async (res) => {
       try {
         if (res.headers.get("Content-Type") === "application/json") {
@@ -169,7 +157,7 @@ export class Q {
     });
   }
 
-  matchSnapshot(testContext: MetaTest): Q {
+  matchSnapshot(testContext: MetaTest): this {
     return this.expectBody(async (body: ResponseBody) => {
       if (body.errors) {
         body.errors.forEach((error) => {
@@ -180,7 +168,7 @@ export class Q {
     });
   }
 
-  matchErrorSnapshot(testContext: MetaTest): Q {
+  matchErrorSnapshot(testContext: MetaTest): this {
     return this.expectBody(async (body: ResponseBody) => {
       if (body.errors === undefined) {
         throw new AssertionError(
@@ -194,7 +182,7 @@ export class Q {
     });
   }
 
-  matchOkSnapshot(testContext: MetaTest): Q {
+  matchOkSnapshot(testContext: MetaTest): this {
     return this.expectBody(async (body: ResponseBody) => {
       if (body.data === undefined) {
         throw new AssertionError(
@@ -207,17 +195,17 @@ export class Q {
     });
   }
 
-  expectValue(result: JSONValue) {
+  expectValue(result: JSONValue): this {
     return this.expectBody((body) => {
       assertEquals(body, result);
     });
   }
 
-  expectData(data: JSONValue) {
+  expectData(data: JSONValue): this {
     return this.expectValue({ data });
   }
 
-  expectErrorContains(partial: string) {
+  expectErrorContains(partial: string): this {
     return this.expectBody((body) => {
       assertEquals(
         Array.isArray(body.errors),
@@ -227,6 +215,105 @@ export class Q {
       assert(body.errors.length > 0);
       assertStringIncludes(body.errors[0].message, partial);
     });
+  }
+
+  abstract getRequest(url: string): Promise<Request>;
+
+  async on(engine: Engine, host = "http://typegate.local"): Promise<void> {
+    const request = await this.getRequest(`${host}/${engine.name}`);
+    const response = await execute(engine, request);
+
+    for (const expect of this.expects) {
+      await expect(response);
+    }
+  }
+}
+
+export class RestQuery extends Query {
+  constructor(
+    public method: string,
+    public name: string,
+    context: Context,
+    variables: Variables,
+    headers: Record<string, string>,
+    expects: Expect[],
+    contextEncoder: ContextEncoder = defaultContextEncoder,
+  ) {
+    super(context, variables, headers, expects, contextEncoder);
+  }
+
+  protected clone(patch: (q: this) => void = (_q) => {}): this {
+    const q = new (this.constructor as any)(
+      this.method,
+      this.name,
+      this.context,
+      this.variables,
+      this.headers,
+      this.expects,
+      this.contextEncoder,
+    );
+    patch(q);
+    return q;
+  }
+
+  private mapStringify(obj: Record<string, unknown>): Record<string, string> {
+    return Object.fromEntries(
+      Object.entries(obj).map((
+        [key, value],
+      ) => [key, typeof value === "string" ? value : JSON.stringify(value)]),
+    );
+  }
+
+  async getRequest(url: string): Promise<Request> {
+    const { method, name, headers, context } = this;
+    let uri = `${url}/rest/${name}`;
+
+    const defaults: Record<string, string> = {};
+
+    if (method === "GET") {
+      uri += `?${new URLSearchParams(this.mapStringify(this.variables))}`;
+    } else {
+      defaults["Content-Type"] = "application/json";
+    }
+
+    if (Object.keys(context).length > 0) {
+      defaults["Authorization"] = await this.contextEncoder(context);
+    }
+
+    return new Request(uri, {
+      method,
+      body: method === "GET" ? undefined : JSON.stringify(this.variables),
+      headers: {
+        ...defaults,
+        ...headers,
+      },
+    });
+  }
+}
+
+export class GraphQLQuery extends Query {
+  constructor(
+    public query: string,
+    context: Context,
+    variables: Variables,
+    headers: Record<string, string>,
+    expects: Expect[],
+    contextEncoder: ContextEncoder = defaultContextEncoder,
+  ) {
+    super(context, variables, headers, expects, contextEncoder);
+  }
+
+  protected clone(patch: (q: this) => void = (_q) => {}): this {
+    const q = new (this.constructor as any)(
+      this.query,
+      this.context,
+      this.variables,
+      this.headers,
+      this.expects,
+      this.contextEncoder,
+    );
+    patch(q);
+    return q;
   }
 
   json() {
@@ -309,15 +396,6 @@ export class Q {
           // "Content-Type": "multipart/form-data",
         }),
       });
-    }
-  }
-
-  async on(engine: Engine, host = "http://typegate.local") {
-    const request = await this.getRequest(`${host}/${engine.name}`);
-    const response = await execute(engine, request);
-
-    for (const expect of this.expects) {
-      await expect(response);
     }
   }
 }

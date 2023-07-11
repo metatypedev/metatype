@@ -27,7 +27,7 @@ import {
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
-import { Option } from "monads";
+import { None, Option } from "monads";
 import { getLogger } from "./log.ts";
 import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
 import { Validator } from "./typecheck/common.ts";
@@ -125,10 +125,62 @@ class QueryCache {
   }
 }
 
+const effectToMethod = {
+  "none": "GET",
+  "create": "POST",
+  "update": "PUT",
+  "delete": "DELETE",
+};
+
+export async function handleRest(
+  req: Request,
+  engine: Engine,
+): Promise<Response> {
+  const queries = engine.rest[req.method];
+  const url = new URL(req.url);
+
+  const variables = req.method === "GET"
+    ? Object.fromEntries(url.searchParams.entries())
+    : await req.json();
+
+  // TODO is this needed?
+  //engine.checkVariablesPresence(
+  //   unwrappedOperation.variableDefinitions ?? [],
+  //  variables,
+  //);
+
+  const name = url.pathname.split("/").slice(
+    3,
+  ).join("/");
+  const plan = queries[name];
+  if (!plan) {
+    return new Response(`query not found: ${name}`, { status: 404 });
+  }
+
+  logger.info(`rest: ${name}`);
+
+  const { stages, policies, validator } = plan;
+
+  //logger.info("dag:", stages);
+  const res = await ComputationEngine.compute(
+    stages,
+    policies,
+    {}, //context,
+    { url, headers: {} }, //info,
+    variables,
+    null, //limit,
+    true,
+  );
+
+  validator(res);
+  return new Response(JSON.stringify(res));
+}
+
 export class Engine {
   name: string;
   queryCache: QueryCache;
   logger: log.Logger;
+  rest: Record<string, Record<string, Plan>>;
 
   get rawName(): string {
     return this.tg.rawName;
@@ -141,6 +193,12 @@ export class Engine {
     this.name = tg.name;
     this.queryCache = new QueryCache();
     this.logger = log.getLogger("engine");
+    this.rest = {
+      "GET": {},
+      "POST": {},
+      "PUT": {},
+      "DELETE": {},
+    };
   }
 
   static async init(
@@ -194,7 +252,40 @@ export class Engine {
 
     handleOnInitHooks(tg, secretManager, sync);
 
-    return new Engine(tg);
+    const engine = new Engine(tg);
+    await engine.registerEndpoints();
+    return engine;
+  }
+
+  private async registerEndpoints() {
+    for (const query of this.tg.tg.meta.queries.endpoints) {
+      const document = parse(query);
+
+      const [operation, fragments] = findOperation(document, None);
+      const unwrappedOperation = operation.unwrap();
+      const name = unwrappedOperation.name?.value;
+      if (!name) {
+        throw new Error("query name is required");
+      }
+
+      const [plan] = await this.getPlan(
+        unwrappedOperation,
+        fragments,
+        false,
+        false,
+      );
+
+      const effects = Array.from(new Set(
+        plan.stages.filter((s) => s.props.parent == null).map((s) =>
+          s.props.effect
+        ),
+      ).values());
+      if (effects.length !== 1) {
+        throw new Error("root fields in query must be of the same effect");
+      }
+      const [effect] = effects;
+      this.rest[effectToMethod[effect!]][name] = plan;
+    }
   }
 
   async terminate() {
@@ -293,7 +384,7 @@ export class Engine {
       }
       const unwrappedOperation = operation.unwrap();
 
-      this.validateVariables(
+      this.checkVariablesPresence(
         unwrappedOperation.variableDefinitions ?? [],
         variables,
       );
@@ -398,7 +489,7 @@ export class Engine {
     }
   }
 
-  validateVariables(
+  checkVariablesPresence(
     defs: Readonly<Array<ast.VariableDefinitionNode>>,
     variables: Record<string, unknown>,
   ) {

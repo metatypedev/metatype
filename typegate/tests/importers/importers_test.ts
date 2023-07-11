@@ -4,7 +4,7 @@
 import { copyFile, gql, shell, test } from "../utils.ts";
 import * as mf from "test/mock_fetch";
 import { MetaTest } from "../utils/metatest.ts";
-import { Q } from "../utils/q.ts";
+import { GraphQLQuery } from "../utils/q.ts";
 
 mf.install();
 
@@ -31,7 +31,11 @@ mf.mock("POST@/graphql", () => {
   );
 });
 
-async function testImporter(t: MetaTest, name: string, testQuery?: Q) {
+async function testImporter(
+  t: MetaTest,
+  name: string,
+  testQuery?: GraphQLQuery,
+) {
   const file = `importers/copy/${name}.py`;
 
   await t.should("copy source typegraph definition", async () => {

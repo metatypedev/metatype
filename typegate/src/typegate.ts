@@ -11,7 +11,7 @@ import { getLogger } from "./log.ts";
 import { forceAnyToOption } from "./utils.ts";
 import { Operations, parseRequest } from "./graphql/request_parser.ts";
 import { handleAuthService } from "./auth/auth.ts";
-import { Engine } from "./engine.ts";
+import { Engine, handleRest } from "./engine.ts";
 
 const logger = getLogger("http");
 
@@ -19,6 +19,7 @@ type Service = (req: Request, engine: Engine) => Promise<Response | null>;
 
 const services: Record<string, Service> = {
   auth: handleAuthService,
+  rest: handleRest,
 };
 
 const silenceList = new Set(["favicon.ico"]);
