@@ -30,6 +30,7 @@ export abstract class Register {
 
   abstract has(name: string): boolean;
 }
+
 export class ReplicatedRegister extends Register {
   static async init(
     getTypegate: () => Promise<Typegate>,

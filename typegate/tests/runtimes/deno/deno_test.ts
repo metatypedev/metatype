@@ -109,7 +109,7 @@ test("Deno runtime: permissions", async (t) => {
 });
 
 test("Deno runtime: reloading", async (t) => {
-  const tmpDir = "typegate/tests/runtimes/deno/scripts/deno/tmp";
+  const tmpDir = "typegate/tests/runtimes/deno/scripts/deno/tmpDir";
 
   const load = async (value: number) => {
     await Deno.mkdir(tmpDir, { recursive: true });
