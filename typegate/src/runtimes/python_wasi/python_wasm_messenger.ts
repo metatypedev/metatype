@@ -3,7 +3,7 @@
 
 import Context from "std/wasi/snapshot_preview1.ts";
 import { Memory, RustResult } from "./memory.ts";
-import { gunzip, tar } from "compress";
+import { gunzip, tar } from "compress/mod.ts";
 import { AsyncMessenger } from "../patterns/messenger/async_messenger.ts";
 import config from "../../config.ts";
 import { join } from "std/path/mod.ts";

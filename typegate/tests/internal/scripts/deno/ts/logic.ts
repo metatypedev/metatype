@@ -3,8 +3,8 @@
 
 export const remoteSum = async (
   { first, second }: any,
-  _context,
-  { gql },
+  _context: any,
+  { gql }: any,
 ): Promise<any> => {
   const { data } = await gql`
     query q($first: Float!, $second: Float!) {

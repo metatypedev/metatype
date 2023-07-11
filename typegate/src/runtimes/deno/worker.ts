@@ -3,6 +3,7 @@
 
 import { getLogger } from "../../log.ts";
 import { Answer, Message } from "../patterns/messenger/types.ts";
+
 import {
   FuncTask,
   ImportFuncTask,
@@ -89,14 +90,11 @@ async function func(op: number, task: FuncTask) {
 }
 
 async function register_import_func(_: null, task: RegisterImportFuncTask) {
-  const { moduleCode, verbose, op } = task;
+  const { modulePath, verbose, op } = task;
   verbose && logger.info(`register import func "${op}"`);
-
   registry.set(
     op,
-    await import(
-      `data:text/javascript,${encodeURIComponent(moduleCode)}`
-    ),
+    await import(modulePath),
   );
 }
 

@@ -994,6 +994,7 @@ dependencies = [
  "anyhow",
  "base64 0.21.2",
  "flate2",
+ "ignore",
  "indexmap",
  "schemars",
  "serde",
