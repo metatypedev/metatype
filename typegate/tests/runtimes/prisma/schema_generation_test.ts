@@ -3,10 +3,11 @@
 
 import { parseTypegraph } from "../../../src/typegraph/parser.ts";
 import { serialize, test } from "../../utils.ts";
-import { generateDatamodel } from "../../../src/runtimes/prisma/hooks/generate_schema.ts";
+import { SchemaGenerator } from "../../../src/runtimes/prisma/hooks/generate_schema.ts";
 import * as PrismaRT from "../../../src/runtimes/prisma/types.ts";
 import { assertEquals } from "std/testing/asserts.ts";
 import outdent from "outdent";
+import { SecretManager } from "../../../src/typegraph.ts";
 
 async function assertGeneratedSchema(tgName: string, schema: string) {
   const tg = await parseTypegraph(
@@ -20,8 +21,20 @@ async function assertGeneratedSchema(tgName: string, schema: string) {
     rt.name === "prisma"
   )[0] as PrismaRT.DS<PrismaRT.DataRaw>;
 
+  const secretKey = `TG_${
+    tgName.toUpperCase().replaceAll(/[^\w]/g, "_")
+  }_POSTGRES`;
+
+  const schemaGenerator = new SchemaGenerator(
+    tg,
+    runtime.data,
+    new SecretManager(tgName, {
+      [secretKey]: "postgresql://postgres:postgres@localhost:5432/postgres",
+    }),
+  );
+
   assertEquals(
-    generateDatamodel(tg, runtime.data),
+    schemaGenerator.generate(),
     schema,
   );
 }
@@ -33,7 +46,7 @@ test("schema generation", async (t) => {
       outdent`
         model User {
             id Int @id @default(autoincrement())
-            name String
+            name String @db.Text
         }
       `,
     );
@@ -306,7 +319,7 @@ test("schema generation", async (t) => {
         outdent`
           model User {
               id String @db.Uuid @id @default(uuid())
-              email String @unique
+              email String @db.Text @unique
               posts Post[] @relation(name: "__rel_Post_User_1")
               favorite_post Post? @relation(name: "__rel_User_Post_2", fields: [favorite_postId], references: [id])
               favorite_postId String? @db.Uuid
@@ -314,8 +327,8 @@ test("schema generation", async (t) => {
 
           model Post {
               id String @db.Uuid @id @default(uuid())
-              title String
-              content String
+              title String @db.VarChar(256)
+              content String @db.Text
               author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId String @db.Uuid
               favorite_of User[] @relation(name: "__rel_User_Post_2")
@@ -328,7 +341,7 @@ test("schema generation", async (t) => {
         outdent`
           model User {
               id String @db.Uuid @id @default(uuid())
-              email String @unique
+              email String @db.Text @unique
               posts Post[] @relation(name: "__rel_Post_User_1")
               published_posts Post[] @relation(name: "PostPublisher")
               favorite_post Post? @relation(name: "__rel_User_Post_3", fields: [favorite_postId], references: [id])
@@ -337,8 +350,8 @@ test("schema generation", async (t) => {
 
           model Post {
               id String @db.Uuid @id @default(uuid())
-              title String
-              content String
+              title String @db.VarChar(256)
+              content String @db.Text
               author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
               authorId String @db.Uuid
               publisher User? @relation(name: "PostPublisher", fields: [publisherId], references: [id])

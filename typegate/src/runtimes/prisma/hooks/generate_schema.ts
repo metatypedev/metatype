@@ -4,7 +4,7 @@
 import { ObjectNode, Type, TypeNode } from "../../../type_node.ts";
 import { PushHandler } from "../../../typegate/hooks.ts";
 import { SecretManager, TypeGraphDS } from "../../../typegraph.ts";
-import { Relationship } from "../../../types/typegraph.ts";
+import { Relationship, StringNode } from "../../../types/typegraph.ts";
 import { ensure, ensureNonNullable } from "../../../utils.ts";
 import { PrismaRT } from "../mod.ts";
 import { validate_prisma_runtime_data } from "native";
@@ -55,6 +55,8 @@ class FieldBuilder {
   constructor(
     private typegraph: TypeGraphDS,
     private relationships: Relationship[],
+    private provider: Provider,
+    private source = "db", // datasource name in the .prisma file
   ) {}
 
   build(field: string, parentTypeIdx: number): ModelField {
@@ -131,16 +133,7 @@ class FieldBuilder {
   ): [string, string[]] | null {
     switch (typeNode.type) {
       case Type.STRING:
-        switch (typeNode.format) {
-          case "uuid":
-            return ["String", ["@db.Uuid"]];
-          case "date":
-          case "date-time":
-            return ["DateTime", []];
-          default:
-            return ["String", []];
-        }
-        break;
+        return this.#getStringTypeAndTags(typeNode);
 
       case Type.BOOLEAN:
         return ["Boolean", []];
@@ -156,6 +149,42 @@ class FieldBuilder {
 
       default:
         throw new Error(`unsupported type: ${typeNode.type}`);
+    }
+  }
+
+  #getStringTypeAndTags(typeNode: StringNode): [string, string[]] {
+    const tags: string[] = [];
+    const src = this.source;
+    switch (this.provider) {
+      case "postgresql":
+      case "mysql":
+        switch (typeNode.format) {
+          case "uuid":
+            tags.push(`@${src}.Uuid`);
+            return ["String", [`@${src}.Uuid`]];
+
+          // TODO date-time
+
+          // TODO json -- needs a dedicated ticket
+
+          default:
+            if (typeNode.maxLength != null) {
+              if (typeNode.minLength === typeNode.maxLength) {
+                return ["String", [`@${src}.Char(${typeNode.minLength})`]];
+              } else {
+                return ["String", [`@${src}.VarChar(${typeNode.maxLength})`]];
+              }
+            } else {
+              return ["String", [`@${src}.Text`]];
+            }
+        }
+
+      case "mongodb":
+        // TODO mongodb ObjectId
+        return ["String", []];
+
+      default:
+        throw new Error(`unsupported provider: ${this.provider}`);
     }
   }
 
@@ -305,7 +334,7 @@ class FieldBuilder {
 const SUPPORTED_PROVIDERS = ["postgresql", "mysql", "mongodb"] as const;
 type Provider = typeof SUPPORTED_PROVIDERS[number];
 
-class SchemaGenerator {
+export class SchemaGenerator {
   #provider: Provider;
   #fieldBuilder: FieldBuilder;
   #models: number[];
@@ -324,7 +353,11 @@ class SchemaGenerator {
       throw new Error(`unsupported provider: ${provider}`);
     }
     this.#provider = provider as Provider;
-    this.#fieldBuilder = new FieldBuilder(typegraph, runtimeData.relationships);
+    this.#fieldBuilder = new FieldBuilder(
+      typegraph,
+      runtimeData.relationships,
+      this.#provider,
+    );
     this.#models = runtimeData.models;
   }
 
