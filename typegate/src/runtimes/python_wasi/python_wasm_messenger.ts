@@ -1,13 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import Context from "std/wasi/snapshot_preview1.ts";
-import { Memory, RustResult } from "./memory.ts";
 import { gunzip, tar } from "compress/mod.ts";
 import { AsyncMessenger } from "../patterns/messenger/async_messenger.ts";
 import config from "../../config.ts";
 import { join } from "std/path/mod.ts";
 import { exists } from "std/fs/exists.ts";
+
+import { PythonVirtualMachine } from "./python_vm.ts";
 
 const pythonWasiReactorUrl =
   "https://github.com/metatypedev/python-wasi-reactor/releases/download/v0.1.0/python3.11.1-wasi-reactor.wasm.tar.gz";
@@ -15,54 +15,28 @@ const pythonWasiReactorUrl =
 const cachePath = join(config.tmp_dir, "python3.11.1-wasi-reactor.wasm");
 
 export class PythonWasmMessenger extends AsyncMessenger<
-  [WebAssembly.Instance, Memory],
+  PythonVirtualMachine,
   unknown,
   unknown
 > {
-  instance: WebAssembly.Instance;
-  memory: Memory;
+  vm: PythonVirtualMachine;
 
   private constructor(
-    module: WebAssembly.Module,
+    appDirectoryPath: string,
   ) {
-    const context = new Context({
-      env: {},
-      args: [],
-      preopens: {},
-    });
-    const instance = new WebAssembly.Instance(module, {
-      wasi_snapshot_preview1: {
-        sock_accept(fd: any, _flags: any) {
-          return fd;
-        },
-        ...context.exports,
-      },
-      host: {
-        callback: (id: number, ptr: number) => {
-          const res = memory.decode(ptr);
-          this.receive({ id, ...res });
-        },
-      },
-    });
-    const memory = new Memory(instance.exports);
-
-    context.initialize(instance);
-    const { init } = instance.exports as Record<
-      string,
-      CallableFunction
-    >;
-    init();
+    const vm = new PythonVirtualMachine(
+      "testVm",
+      appDirectoryPath,
+    );
 
     super(
-      [instance, memory],
-      ([instance, memory], { id, op, data }) => {
-        const apply = instance.exports.apply as CallableFunction;
-        apply(...memory.encode(id, op, data));
+      vm,
+      (vm, { id, op, data }) => {
+        vm.apply(id, op as string, [data]);
       },
       () => {},
     );
-    this.instance = instance;
-    this.memory = memory;
+    this.vm = vm;
   }
 
   static async init(): Promise<PythonWasmMessenger> {
@@ -72,22 +46,13 @@ export class PythonWasmMessenger extends AsyncMessenger<
         dir: config.tmp_dir,
       });
       const buffer = await res.arrayBuffer();
-      const archive = await gunzip(new Uint8Array(buffer));
+      const archive = gunzip(new Uint8Array(buffer));
       await Deno.writeFile(archivePath, archive);
       await tar.uncompress(archivePath, config.tmp_dir);
     }
 
-    const binary = await Deno.readFile(cachePath);
-    const module = await WebAssembly.compile(binary);
-
-    return new PythonWasmMessenger(module);
-  }
-
-  executeSync(exportName: string, ...args: unknown[]): RustResult {
-    const fn = this.instance.exports[exportName] as CallableFunction | null;
-    if (!fn) {
-      throw new Error(`export ${exportName} not found`);
-    }
-    return this.memory.decode(fn(...this.memory.encode(...args)));
+    const messenger = new PythonWasmMessenger(cachePath);
+    await messenger.vm.setup();
+    return messenger;
   }
 }

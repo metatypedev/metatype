@@ -32,6 +32,13 @@ type FolderRepr = {
   hash: string; // root/tmp/{hash}
 };
 
+type Tag = "ok" | "err";
+
+export type PythonOutput = {
+  value: string; // json string
+  tag: Tag;
+};
+
 // Map undefined | null to None
 export const forceAnyToOption = (v: any): Option<any> => {
   return v === undefined || v === null ? None : Some(v);
@@ -140,6 +147,20 @@ export function nativeResult<R>(
     throw new Error(res.Err.message);
   }
   return res.Ok;
+}
+
+export function nativePythonResult(
+  res: { Ok: { res?: string } } | { Err: { message: string } },
+) {
+  const ret = nativeResult(res)?.res;
+  if (ret) {
+    const py = JSON.parse(ret) as PythonOutput;
+    if (py.tag == "err") {
+      throw new Error(py.value);
+    }
+    return py.value;
+  }
+  return null;
 }
 
 export function nativeVoid(res: "Ok" | { Err: { message: string } }): void {

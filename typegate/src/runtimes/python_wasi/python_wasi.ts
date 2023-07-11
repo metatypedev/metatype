@@ -7,7 +7,7 @@ import { RuntimeInitParams } from "../../types.ts";
 import { ComputeStage } from "../../engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 
-const logger = getLogger(import.meta);
+const _logger = getLogger(import.meta);
 
 export class PythonWasiRuntime extends Runtime {
   private constructor(
@@ -25,10 +25,9 @@ export class PythonWasiRuntime extends Runtime {
 
     for (const m of materializers) {
       fnNames.push(m.data.name as string);
-      const register = await w.executeSync("register", m.data.name, m.data.fn);
-      if (register.error) {
-        throw new Error(register.error);
-      }
+      // todo:
+      // differentiate between lambda, def and module ?
+      await w.vm.registerLambda(m.data.name as string, m.data.fn as string);
     }
 
     return new PythonWasiRuntime(
@@ -38,13 +37,7 @@ export class PythonWasiRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
-    for (const name of this.fnNames) {
-      const unregister = await this.w.executeSync("unregister", name);
-      if (unregister.error) {
-        logger.error(unregister.error);
-      }
-    }
-    await this.w.terminate();
+    await this.w.vm.destroy();
   }
 
   materialize(
