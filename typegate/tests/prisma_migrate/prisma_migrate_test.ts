@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, gql, removeMigrations, test, testDir } from "../utils.ts";
 import {
   assert,
   assertArrayIncludes,
@@ -11,8 +10,11 @@ import {
 import { join } from "std/path/mod.ts";
 import * as native from "native";
 import { nativeResult } from "../../src/utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
+import { dropSchemas, removeMigrations } from "../utils/migrations.ts";
+import { testDir } from "../utils/dir.ts";
 
-test("prisma migrations", async (t) => {
+Meta.test("prisma migrations", async (t) => {
   const tgPath = "runtimes/prisma/prisma.py";
   const migrations = t.getTypegraph("typegate/prisma_migration")!;
   assertExists(migrations);

@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { expandGlobSync } from "std/fs/expand_glob.ts";
-import { test, testDir } from "../utils.ts";
+import { Meta } from "../utils/mod.ts";
 import { join } from "std/path/mod.ts";
 import { JSONSchemaFaker } from "json-schema-faker";
 import Ajv from "ajv";
 import { assertNotStrictEquals } from "std/testing/asserts.ts";
 import { upgradeTypegraph } from "../../src/typegraph/versions.ts";
+import { testDir } from "../utils/dir.ts";
 
 const ajv = new Ajv({ allErrors: true, useDefaults: true, strict: false });
 ajv.addFormat("uint32", (x) => typeof x === "number" && x >= 0 && x <= 2 ** 32);
@@ -24,7 +25,7 @@ JSONSchemaFaker.option({
   maxLength: 20,
 });
 
-test("typegraphs creation", async (t) => {
+Meta.test("typegraphs creation", async (t) => {
   const folder = join(testDir, "../../website/static/specs");
   const specs = Array.from(
     expandGlobSync("*.json", {

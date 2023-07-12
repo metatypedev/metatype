@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { findOperation } from "../../src/graphql.ts";
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 import { None } from "monads";
 import { parse } from "graphql";
 import { mapValues } from "std/collections/map_values.ts";
 import { filterKeys } from "std/collections/filter_keys.ts";
-import { MetaTest } from "../utils/metatest.ts";
 import { Engine } from "../../src/engine.ts";
+import { MetaTest } from "../utils/test.ts";
 
 async function assertPlanSnapshot(t: MetaTest, e: Engine, query: string) {
   const [op, frags] = findOperation(parse(query), None);
@@ -35,7 +35,7 @@ async function assertPlanSnapshot(t: MetaTest, e: Engine, query: string) {
   }
 }
 
-test("planner", async (t) => {
+Meta.test("planner", async (t) => {
   const e = await t.pythonFile("planner/planner.py");
   const query = `
       query {
@@ -155,7 +155,7 @@ test("planner", async (t) => {
   });
 });
 
-test("planner: dependencies", async (t) => {
+Meta.test("planner: dependencies", async (t) => {
   const e = await t.pythonFile("planner/planner.py");
 
   await t.should("get the right plan", async () => {
@@ -243,7 +243,7 @@ test("planner: dependencies", async (t) => {
   });
 });
 
-test("planner: dependencies in union/either", async (t) => {
+Meta.test("planner: dependencies in union/either", async (t) => {
   const e = await t.pythonFile("planner/planner.py");
 
   await t.should("get the right plan", async () => {

@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { assert } from "std/testing/asserts.ts";
-import { gql, test } from "../../utils.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 
-test("Python WASI runtime", async (t) => {
+Meta.test("Python WASI runtime", async (t) => {
   const e = await t.pythonFile("runtimes/python_wasi/python_wasi.py");
 
   await t.should("work once", async () => {

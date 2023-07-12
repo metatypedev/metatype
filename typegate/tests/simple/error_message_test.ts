@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
-test("Proposition on error thrown", async (t) => {
+Meta.test("Proposition on error thrown", async (t) => {
   const e = await t.pythonFile("simple/error_message.py");
 
   await t.should("propose closest name ", async () => {

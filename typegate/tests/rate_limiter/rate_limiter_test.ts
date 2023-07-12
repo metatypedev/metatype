@@ -9,7 +9,7 @@ import {
 import { redisConfig } from "../../src/config.ts";
 import { assertEquals, assertThrows } from "std/testing/asserts.ts";
 import { connect, Raw } from "redis";
-import { sleep } from "../utils.ts";
+import { sleep } from "../utils/mod.ts";
 
 const assertRateLimited = (l: RateLimit, n: number) =>
   assertThrows(

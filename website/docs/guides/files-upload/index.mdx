@@ -13,7 +13,7 @@ TG_RETREND_S3_SECRET_KEY=password
 TG_RETREND_S3_PATH_STYLE=true
 ```
 
-<CodeBlock language="python">{require("./typegraph.py").content}</CodeBlock>
+<CodeBlock language="python">{require("./t.py").content}</CodeBlock>
 
 ## Uploading file using presigned url
 
@@ -79,7 +79,7 @@ formData.append(
     variables: {
       file: null,
     },
-  }),
+  })
 );
 formData.append("map", JSON.stringify({ 0: ["variables.file"] }));
 formData.append("0", image, "logo.png");

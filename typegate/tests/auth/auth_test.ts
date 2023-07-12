@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { assertEquals, assertStringIncludes } from "std/testing/asserts.ts";
-import { execute, gql, sleep, test } from "../utils.ts";
+import { execute, gql, Meta, sleep } from "../utils/mod.ts";
 
 import * as mf from "test/mock_fetch";
 import {
@@ -19,7 +19,7 @@ import { b64decode } from "../../src/utils.ts";
 
 mf.install();
 
-test("Auth", async (t) => {
+Meta.test("Auth", async (t) => {
   const clientId = "client_id_1";
   const clientSecret = "client_secret_1";
   const e = await t.pythonFile("auth/auth.py", {

@@ -86,8 +86,6 @@ typegraph:
     - "typegraph/core/src/**/*.rs"
     - "typegraph/core/wit/*.wit"
   env:
-    VIRTUAL_ENV: $PWD/.venv
-    PATH: $PWD/.venv/bin:$PATH
     WASM_FILE: target/debug/typegraph_core.wasm
   command: |
     set -e
@@ -99,7 +97,7 @@ typegraph:
     bash typegraph/deno/dev/fix-declarations.sh
 
     rm -rf typegraph/python_next/typegraph_next/gen
-    python3 -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+    poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
   depends_on:
     - libs
 
@@ -119,8 +117,6 @@ website_meta:
   command: "cargo run --color always -p meta-cli -- -C website dev --run-destructive-migrations"
   #command: "cargo run -p meta-cli -- -C website deploy --allow-dirty --gate http://localhost:7890 --username admin --password password"
   env:
-    VIRTUAL_ENV: $PWD/.venv
-    PATH: $PWD/.venv/bin:$PATH
     CLICOLOR_FORCE: "1"
 
 website_docgen:

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { assertEquals, assertExists } from "std/testing/asserts.ts";
-import { gql, test } from "../../utils.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 import {
   CreateBucketCommand,
   DeleteObjectsCommand,
@@ -49,7 +49,7 @@ async function initBucket() {
   }
 }
 
-test("s3", async (t) => {
+Meta.test("s3", async (t) => {
   const e = await t.pythonFile("runtimes/s3/s3.py", {
     secrets: {
       TG_S3_TEST_HOST: HOST,

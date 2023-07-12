@@ -3,9 +3,10 @@
 
 import { v4 } from "std/uuid/mod.ts";
 import { assert } from "std/testing/asserts.ts";
-import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
+import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 
-test("prisma", async (t) => {
+Meta.test("prisma", async (t) => {
   const e = await t.pythonFile("runtimes/prisma/prisma.py", {
     secrets: {
       TG_PRISMA_POSTGRES:

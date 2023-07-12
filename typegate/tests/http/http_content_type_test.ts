@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
 
 mf.install();
@@ -52,7 +52,7 @@ function parseBool(str: string | undefined | null) {
   throw Error(`cannot convert "${str}" as boolean`);
 }
 
-test("http custom content-type queries", async (t) => {
+Meta.test("http custom content-type queries", async (t) => {
   const e = await t.pythonFile("http/http_content_type.py");
 
   mf.mock("POST@/api/sum_range", async (req) => {

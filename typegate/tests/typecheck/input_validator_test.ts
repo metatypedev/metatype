@@ -1,14 +1,15 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { gql, Meta } from "../utils/mod.ts";
+
 import { Type } from "../../src/type_node.ts";
 import { InputValidationCompiler } from "../../src/typecheck/input.ts";
 import { nativeResult } from "../../src/utils.ts";
-import { gql, test } from "../utils.ts";
 import * as native from "native";
 import { assert, assertEquals } from "std/testing/asserts.ts";
 
-test("input validator compiler", async (t) => {
+Meta.test("input validator compiler", async (t) => {
   const e = await t.pythonFile("typecheck/typecheck.py");
   const { tg } = e;
 

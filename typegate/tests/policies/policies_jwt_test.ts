@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 import * as jwt from "jwt";
 
-test("JWT with various formats", async (t) => {
+Meta.test("JWT with various formats", async (t) => {
   const secret = "mysupersecretkey";
   const e = await t.pythonFile("policies/policies_jwt_format.py", {
     secrets: {

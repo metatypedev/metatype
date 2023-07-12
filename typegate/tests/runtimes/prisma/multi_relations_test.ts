@@ -1,9 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
+import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 
-test("multiple relationships", async (t) => {
+Meta.test("multiple relationships", async (t) => {
   const e = await t.pythonFile("runtimes/prisma/multi_relations.py", {
     secrets: {
       TG_PRISMA_MULTI_POSTGRES:

@@ -1,9 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, recreateMigrations, test } from "../utils.ts";
+import { recreateMigrations } from "../utils/migrations.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
-test("Typename", async (t) => {
+Meta.test("Typename", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
@@ -24,7 +25,7 @@ test("Typename", async (t) => {
   });
 });
 
-test("Typename in deno runtime", async (t) => {
+Meta.test("Typename in deno runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
@@ -49,7 +50,7 @@ test("Typename in deno runtime", async (t) => {
   });
 });
 
-test("Typename in random runtime", async (t) => {
+Meta.test("Typename in random runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
@@ -74,7 +75,7 @@ test("Typename in random runtime", async (t) => {
   });
 });
 
-test("Typename in prisma runtime", async (t) => {
+Meta.test("Typename in prisma runtime", async (t) => {
   const e = await t.pythonFile("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:

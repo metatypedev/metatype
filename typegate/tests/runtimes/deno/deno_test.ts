@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../../utils.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 import { join } from "std/path/mod.ts";
 
-test("Deno runtime", async (t) => {
+Meta.test("Deno runtime", async (t) => {
   const e = await t.pythonFile("runtimes/deno/deno.py");
 
   await t.should("work on the default worker", async () => {
@@ -82,7 +82,7 @@ test("Deno runtime", async (t) => {
   });
 });
 
-test("Deno runtime: permissions", async (t) => {
+Meta.test("Deno runtime: permissions", async (t) => {
   const e = await t.pythonFile("runtimes/deno/deno.py");
 
   await t.should("success for allowed network access", async () => {
@@ -108,7 +108,7 @@ test("Deno runtime: permissions", async (t) => {
   });
 });
 
-test("Deno runtime: use local imports", async (t) => {
+Meta.test("Deno runtime: use local imports", async (t) => {
   const e = await t.pythonFile("runtimes/deno/deno_dep.py");
   await t.should("work for local imports", async () => {
     await gql`
@@ -121,7 +121,7 @@ test("Deno runtime: use local imports", async (t) => {
   });
 });
 
-test("Deno runtime: reloading", async (t) => {
+Meta.test("Deno runtime: reloading", async (t) => {
   const load = async (value: number) => {
     Deno.env.set("DYNAMIC", join("dynamic", `${value}.ts`));
     const e = await t.pythonFile("runtimes/deno/deno_reload.py");

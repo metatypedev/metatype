@@ -1,6 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { SystemTypegraph } from "../../src/system_typegraphs.ts";
+import { MemoryRegister } from "./memory_register.ts";
+import { join } from "std/path/mod.ts";
+import { testDir } from "./dir.ts";
+import { shell } from "./shell.ts";
+
 import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
 import { Engine } from "../../src/engine.ts";
@@ -10,7 +16,7 @@ import { ConnInfo } from "std/http/server.ts";
 
 import { NoLimiter } from "./no_limiter.ts";
 import { SingleRegister } from "./single_register.ts";
-import { meta } from "../utils.ts";
+import { meta } from "./meta.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -191,3 +197,69 @@ export class MetaTest {
     await this.assertSnapshot(err.message);
   }
 }
+
+interface TestConfig {
+  systemTypegraphs?: boolean;
+  introspection?: boolean;
+  // port on which the typegate instance will be exposed on expose the typegate instance
+  port?: number;
+  // create a temporary clean git repo for the tests
+  cleanGitRepo?: boolean;
+}
+
+interface Test {
+  (
+    name: string,
+    fn: (t: MetaTest) => void | Promise<void>,
+    opts?: Omit<Deno.TestDefinition, "name" | "fn"> & TestConfig,
+  ): void;
+}
+
+interface TestExt extends Test {
+  only: Test;
+  ignore: Test;
+}
+
+export const test = ((name, fn, opts = {}): void => {
+  return Deno.test({
+    name,
+    async fn(t) {
+      const reg = new MemoryRegister(opts.introspection);
+      const { systemTypegraphs = false, cleanGitRepo = false } = opts;
+      if (systemTypegraphs) {
+        await SystemTypegraph.loadAll(reg);
+      }
+
+      const mt = new MetaTest(t, reg, opts.port ?? null);
+
+      try {
+        if (cleanGitRepo) {
+          await Deno.remove(join(testDir, ".git"), { recursive: true }).catch(
+            () => {},
+          );
+          await shell(["git", "init"]);
+          await shell(["git", "config", "user.name", "user"]);
+          await shell(["git", "config", "user.email", "user@example.com"]);
+          await shell(["git", "add", "."]);
+          await shell(["git", "commit", "-m", "Initial commit"]);
+          mt.addCleanup(() =>
+            Deno.remove(join(testDir, ".git"), { recursive: true })
+          );
+        }
+
+        await fn(mt);
+      } catch (error) {
+        console.error(error);
+        throw error;
+      } finally {
+        await mt.terminate();
+      }
+    },
+    ...opts,
+  });
+}) as TestExt;
+
+test.only = (name, fn, opts = {}) => test(name, fn, { ...opts, only: true });
+
+test.ignore = (name, fn, opts = {}) =>
+  test(name, fn, { ...opts, ignore: true });

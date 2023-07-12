@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
 import { buildSchema, graphql } from "graphql";
 
@@ -84,7 +84,7 @@ mf.mock("POST@/api/graphql", async (req) => {
   });
 });
 
-test("GraphQL parser", async (t) => {
+Meta.test("GraphQL parser", async (t) => {
   const e = await t.pythonFile("query_parsers/graphql_namespaces.py");
 
   await t.should("split typgraph into queries and mutations", () => {

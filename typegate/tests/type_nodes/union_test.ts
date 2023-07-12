@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { JSONValue } from "../../src/utils.ts";
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
-test(
+Meta.test(
   "Union type",
   async (t) => {
     const e = await t.pythonFile("type_nodes/union_node.py");
@@ -172,7 +172,7 @@ test(
   { introspection: true },
 );
 
-test("nested unions", async (t) => {
+Meta.test("nested unions", async (t) => {
   const e = await t.pythonFile("type_nodes/union_node.py");
 
   await t.should("support nested unions", async () => {
@@ -214,7 +214,7 @@ test("nested unions", async (t) => {
   });
 });
 
-test("multilevel unions", async (t) => {
+Meta.test("multilevel unions", async (t) => {
   const e = await t.pythonFile("type_nodes/union_node.py");
 
   await t.should("success", async () => {
@@ -249,7 +249,7 @@ test("multilevel unions", async (t) => {
   });
 });
 
-test("scalar unions", async (t) => {
+Meta.test("scalar unions", async (t) => {
   const e = await t.pythonFile("type_nodes/union_node.py");
 
   await t.should("succeed", async () => {

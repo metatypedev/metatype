@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
-test("circular test", async (t) => {
+Meta.test("circular test", async (t) => {
   const tgPath = "schema_validation/circular.py";
   const e = await t.pythonFile(tgPath);
 

@@ -1,9 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
-test("Internal test", async (t) => {
+Meta.test("Internal test", async (t) => {
   const port = 7895;
   const e = await t.pythonFile("internal/internal.py", { ports: [port] });
 

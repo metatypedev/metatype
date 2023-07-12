@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { copyFile, gql, shell, test } from "../utils.ts";
+import { copyFile, gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
-import { MetaTest } from "../utils/metatest.ts";
-import { GraphQLQuery } from "../utils/q.ts";
+import { GraphQLQuery } from "../utils/query/graphql_query.ts";
+import { MetaTest } from "../utils/test.ts";
+import { shell } from "../utils/shell.ts";
 
 mf.install();
 
@@ -57,7 +58,7 @@ async function testImporter(
   });
 }
 
-test("GraphQL importer", async (t) => {
+Meta.test("GraphQL importer", async (t) => {
   await testImporter(
     t,
     "gql",
@@ -71,7 +72,7 @@ test("GraphQL importer", async (t) => {
   );
 });
 
-test("OpenAPI importer", async (t) => {
+Meta.test("OpenAPI importer", async (t) => {
   await testImporter(
     t,
     "openapi",

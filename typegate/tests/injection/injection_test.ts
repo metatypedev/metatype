@@ -1,12 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, gql, recreateMigrations, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 import { assertRejects } from "std/testing/asserts.ts";
 import { buildSchema, graphql } from "graphql";
 import * as mf from "test/mock_fetch";
+import { dropSchemas, recreateMigrations } from "../utils/migrations.ts";
 
-test("Missing env var", async (t) => {
+Meta.test("Missing env var", async (t) => {
   await assertRejects(
     () => t.pythonFile("injection/injection.py"),
     "cannot find env",
@@ -28,7 +29,7 @@ const schema = buildSchema(`
 const TG_INJECTION_POSTGRES =
   "postgresql://postgres:password@localhost:5432/db?schema=prisma";
 
-test("Injected values", async (t) => {
+Meta.test("Injected values", async (t) => {
   const e = await t.pythonFile("injection/injection.py", {
     secrets: { TG_INJECTION_TEST_VAR: "3", TG_INJECTION_POSTGRES },
   });
@@ -147,7 +148,7 @@ mf.mock("POST@/api/graphql", async (req) => {
   });
 });
 
-test("Injection from/into graphql", async (t) => {
+Meta.test("Injection from/into graphql", async (t) => {
   const e = await t.pythonFile("injection/injection.py", {
     secrets: { TG_INJECTION_TEST_VAR: "3", TG_INJECTION_POSTGRES },
   });

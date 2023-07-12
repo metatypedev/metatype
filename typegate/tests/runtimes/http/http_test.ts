@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../../utils.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 import * as mf from "test/mock_fetch";
 
 mf.install();
@@ -30,7 +30,7 @@ const getComments = (postId: number) =>
   [12, 34, 95, 203].map((id) => generateComment(id, postId));
 const NEW_COMMENT_ID = 123;
 
-test("Rest queries", async (t) => {
+Meta.test("Rest queries", async (t) => {
   const e = await t.pythonFile("runtimes/http/http.py");
 
   mf.mock("GET@/api/posts", (req) => {

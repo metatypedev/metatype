@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
+import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 
 function runTest(tgPath: string, name: string) {
-  test(name, async (t) => {
+  Meta.test(name, async (t) => {
     const e = await t.pythonFile(tgPath, {
       secrets: {
         TG_PRISMA_POSTGRES:
