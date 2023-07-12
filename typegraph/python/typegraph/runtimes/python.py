@@ -15,21 +15,25 @@ from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import always
 
 
-class LambdaCollector(ast.NodeTransformer):
+class DefinitionCollector(ast.NodeTransformer):
     @classmethod
     def collect(cls, function):
         source = inspect.getsource(function).lstrip()
         tree = ast.parse(source)
         ret = cls()
         ret.visit(tree)
-        return ret.lambdas
+        return ret.lambdas, ret.defs
 
     def __init__(self):
         super().__init__()
         self.lambdas = []
+        self.defs = []
 
     def visit_Lambda(self, node):
         self.lambdas.append(unparse(node).strip())
+
+    def visit_FunctionDef(self, node):
+        self.defs.append((node.name, unparse(node).strip()))
 
 
 @frozen
@@ -41,12 +45,18 @@ class Python(Runtime):
     runtime_name: str = always("python_wasi")
 
     def from_lambda(self, function):
-        lambdas = LambdaCollector.collect(function)
+        lambdas, _defs = DefinitionCollector.collect(function)
         assert len(lambdas) == 1
         fn = str(lambdas[0])
         m = hashlib.sha256()
         m.update(fn.encode("utf-8"))
         return LambdaMat(self, m.hexdigest(), fn)
+
+    def from_def(self, function):
+        _lambdas, defs = DefinitionCollector.collect(function)
+        assert len(defs) == 1
+        name, fn = defs[0]
+        return DefMat(self, name, fn)
 
 
 @frozen
@@ -55,4 +65,13 @@ class LambdaMat(Materializer):
     name: str
     fn: str
     materializer_name: str = always("lambda")
+    effect: Effect = field(kw_only=True, default=effects.none())
+
+
+@frozen
+class DefMat(Materializer):
+    runtime: Runtime
+    name: str
+    fn: str
+    materializer_name: str = always("def")
     effect: Effect = field(kw_only=True, default=effects.none())

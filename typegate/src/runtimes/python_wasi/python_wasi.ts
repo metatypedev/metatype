@@ -28,10 +28,24 @@ export class PythonWasiRuntime extends Runtime {
     await w.vm.setup(typegraph.types[0].title, "tmp");
 
     for (const m of materializers) {
+      switch (m.name) {
+        case "lambda":
+          await w.vm.registerLambda(m.data.name as string, m.data.fn as string);
+          break;
+        case "def":
+          await w.vm.registerDef(m.data.name as string, m.data.fn as string);
+          break;
+          // TODO:
+          // case "module":
+          // await w.vm.registerModule(
+          //   m.data.name as string,
+          //   m.data.code as string,
+          // );
+          // break;
+        default:
+          throw new Error(`materializer name "${m.name}" not supported`);
+      }
       fnNames.push(m.data.name as string);
-      // todo:
-      // differentiate between lambda, def and module ?
-      await w.vm.registerLambda(m.data.name as string, m.data.fn as string);
     }
 
     return new PythonWasiRuntime(

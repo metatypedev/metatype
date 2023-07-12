@@ -29,9 +29,16 @@ test("Python WASI VM performance", async (t) => {
   });
 
   await t.should("work with low latency for defs", async () => {
-    await vm.registerDef("test", "def test(x):\n\treturn x['a']");
+    await vm.registerDef(
+      "test",
+      "def test(x):\n\treturn x['a']",
+    );
     const samples = [...Array(100).keys()].map((i) =>
-      vm.applyDef(i, "test", [{ a: "test" }])
+      vm.applyDef(
+        i,
+        "test",
+        [{ a: "test" }],
+      )
     );
     const start = performance.now();
     const items = await Promise.all(samples);
@@ -50,7 +57,7 @@ test("Python WASI VM performance", async (t) => {
 test("Python WASI runtime", async (t) => {
   const e = await t.pythonFile("runtimes/python_wasi/python_wasi.py");
 
-  await t.should("work once", async () => {
+  await t.should("work once (lambda)", async () => {
     await gql`
       query {
         test(a: "test")
@@ -58,6 +65,18 @@ test("Python WASI runtime", async (t) => {
     `
       .expectData({
         test: "test",
+      })
+      .on(e);
+  });
+
+  await t.should("work once (def)", async () => {
+    await gql`
+      query {
+        testDef(a: "test")
+      }
+    `
+      .expectData({
+        testDef: "test",
       })
       .on(e);
   });
