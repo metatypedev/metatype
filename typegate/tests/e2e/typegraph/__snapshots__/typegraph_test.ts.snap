@@ -515,7 +515,7 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '      "queries": {
 ' +
-  '        "dynamic": false,
+  '        "dynamic": true,
 ' +
   '        "endpoints": []
 ' +
@@ -961,7 +961,7 @@ snapshot[`typegraphs creation 2`] = `
 ' +
   '      "queries": {
 ' +
-  '        "dynamic": false,
+  '        "dynamic": true,
 ' +
   '        "endpoints": []
 ' +

@@ -165,19 +165,23 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: |
-          cargo install wasm-tools --version ${{ env.WASM_TOOLS_VERSION }} --locked
-          npm install --global @bytecodealliance/jco@${{ env.JCO_VERSION }}
-          cargo build --package typegraph_core --target wasm32-unknown-unknown --features wasm
-          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o target/debug/typegraph_core.wasm
-          jco transpile target/debug/typegraph_core.wasm -o typegraph/deno/gen --no-nodejs-compat
+      - env:
+          WASM_FILE: target/debug/typegraph_core.wasm
+        run: |
+          poetry install
+          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+          npm install --global @bytecodealliance/jco@$JCO_VERSION
+
+          cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
+          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+
+          rm -rf typegraph/deno/gen
+          jco transpile $WASM_FILE -o typegraph/deno/gen --no-nodejs-compat --map "*=../src/imports.ts"
           bash typegraph/deno/dev/fix-declarations.sh
-          cd typegraph/python_next
-          python3 -m venv .venv
-          source .venv/bin/activate
-          poetry install --sync
-          python3 -m wasmtime.bindgen ../../target/debug/typegraph_core.wasm --out-dir typegraph/gen
-          cd ../..
+
+          rm -rf typegraph/python_next/typegraph_next/gen
+          python3 -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+
           cargo run --locked --package meta-cli -- --help
           cargo test --locked --package typegraph_core
 

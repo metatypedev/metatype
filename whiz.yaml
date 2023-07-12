@@ -91,7 +91,6 @@ typegraph:
     WASM_FILE: target/debug/typegraph_core.wasm
   command: |
     set -e
-    rm -rf typegraph/deno/gen
     cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
     wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
 
