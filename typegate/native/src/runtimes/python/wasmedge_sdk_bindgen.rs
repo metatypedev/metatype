@@ -27,6 +27,7 @@ use std::any::Any;
 use wasmedge_sdk::*;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum Param<'a> {
     I8(i8),
     U8(u8),

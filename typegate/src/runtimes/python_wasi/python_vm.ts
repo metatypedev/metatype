@@ -13,14 +13,14 @@ import {
 } from "native";
 
 type Tag = "ok" | "err";
-
+type NativeWasiOutput = { Ok: { res?: string } } | { Err: { message: string } };
 type PythonOutput = {
   value: string; // json string
   tag: Tag;
 };
 
 function nativePythonResult(
-  res: { Ok: { res?: string } } | { Err: { message: string } },
+  res: NativeWasiOutput,
 ) {
   if ("Err" in res) {
     throw new Error(res.Err.message);
@@ -34,6 +34,16 @@ function nativePythonResult(
     return py.value;
   }
   return null;
+}
+
+function promisify<T>(fn: CallableFunction): Promise<T> {
+  return new Promise((resolve, reject) => {
+    try {
+      resolve(fn());
+    } catch (e) {
+      reject(e);
+    }
+  });
 }
 
 export class PythonVirtualMachine {
@@ -50,19 +60,25 @@ export class PythonVirtualMachine {
     this.#lambdas = new Set<string>();
   }
 
-  async setup(vmName: string, appDirectoryPath: string) {
+  async setup(vmName: string, appDirectoryPath?: string) {
+    const preopens = [];
+    if (appDirectoryPath) {
+      preopens.push(`/app:${appDirectoryPath}:readonly`);
+    }
     this.#config = {
       ...this.#config,
+      preopens,
       vm_name: vmName,
-      preopens: [`/app:${appDirectoryPath}:readonly`],
     };
-    await register_virtual_machine(this.#config);
+    await promisify(() => register_virtual_machine(this.#config));
   }
 
   async destroy() {
-    await unregister_virtual_machine({
-      vm_name: this.getVmName(),
-    });
+    await promisify(() =>
+      unregister_virtual_machine({
+        vm_name: this.getVmName(),
+      })
+    );
     this.#lambdas.clear();
   }
 
@@ -72,55 +88,65 @@ export class PythonVirtualMachine {
 
   async registerLambda(name: string, code: string) {
     nativePythonResult(
-      await register_lambda({
-        name,
-        code,
-        vm: this.getVmName(),
-      }),
+      await promisify(() =>
+        register_lambda({
+          name,
+          code,
+          vm: this.getVmName(),
+        })
+      ),
     );
     this.#lambdas.add(name);
   }
 
   async registerDef(name: string, code: string) {
     nativePythonResult(
-      await register_def({
-        name,
-        code,
-        vm: this.getVmName(),
-      }),
+      await promisify(() =>
+        register_def({
+          name,
+          code,
+          vm: this.getVmName(),
+        })
+      ),
     );
   }
 
   async registerModule(name: string, code: string) {
     nativePythonResult(
-      await register_module({
-        name,
-        code,
-        vm: this.getVmName(),
-      }),
+      await promisify(() =>
+        register_module({
+          name,
+          code,
+          vm: this.getVmName(),
+        })
+      ),
     );
   }
 
   async applyLambda(id: number, name: string, args: unknown[]) {
     const pyRet = nativePythonResult(
-      await apply_lambda({
-        id,
-        name,
-        args: JSON.stringify(args),
-        vm: this.getVmName(),
-      }),
+      await promisify(() =>
+        apply_lambda({
+          id,
+          name,
+          args: JSON.stringify(args),
+          vm: this.getVmName(),
+        })
+      ),
     );
     return JSON.parse(pyRet ?? "null");
   }
 
   async applyDef(id: number, name: string, args: unknown[]) {
     const pyRet = nativePythonResult(
-      await apply_def({
-        id,
-        name,
-        args: JSON.stringify(args),
-        vm: this.getVmName(),
-      }),
+      await promisify(() =>
+        apply_def({
+          id,
+          name,
+          args: JSON.stringify(args),
+          vm: this.getVmName(),
+        })
+      ),
     );
     return JSON.parse(pyRet ?? "null");
   }

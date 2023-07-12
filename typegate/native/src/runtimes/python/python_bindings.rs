@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use dashmap::{mapref::one::Ref, DashMap};
-use macros::deno;
+use deno_bindgen::deno_bindgen;
 use once_cell::sync::Lazy;
 use wasmedge_sdk::{params, Vm};
 
@@ -22,7 +22,7 @@ fn get_virtual_machine(name: String) -> Result<Ref<'static, String, Vm>, String>
     }
 }
 
-#[deno]
+#[deno_bindgen]
 struct WasiVmInitConfig {
     vm_name: String,
     pylib_path: String,
@@ -30,13 +30,13 @@ struct WasiVmInitConfig {
     preopens: Vec<String>,
 }
 
-#[deno]
+#[deno_bindgen]
 enum WasiVmSetupOut {
     Ok,
     Err { message: String },
 }
 
-#[deno]
+#[deno_bindgen]
 fn register_virtual_machine(config: WasiVmInitConfig) -> WasiVmSetupOut {
     if VIRTUAL_MACHINES.get(&config.vm_name).is_none() {
         let ret = wasi_vm::init_reactor_vm(
@@ -62,12 +62,12 @@ fn register_virtual_machine(config: WasiVmInitConfig) -> WasiVmSetupOut {
     WasiVmSetupOut::Ok
 }
 
-#[deno]
+#[deno_bindgen]
 struct WasiVmUnregisterInp {
     vm_name: String,
 }
 
-#[deno]
+#[deno_bindgen]
 fn unregister_virtual_machine(input: WasiVmUnregisterInp) -> WasiVmSetupOut {
     match VIRTUAL_MACHINES.remove(&input.vm_name) {
         Some(_) => WasiVmSetupOut::Ok,
@@ -80,26 +80,26 @@ fn unregister_virtual_machine(input: WasiVmUnregisterInp) -> WasiVmSetupOut {
     }
 }
 
-#[deno]
+#[deno_bindgen]
 enum WasiReactorOut {
     Ok { res: String },
     Err { message: String },
 }
 
-#[deno]
+#[deno_bindgen]
 struct PythonRegisterInp {
     vm: String,
     name: String,
     code: String,
 }
 
-#[deno]
+#[deno_bindgen]
 struct PythonUnregisterInp {
     vm: String,
     name: String,
 }
 
-#[deno]
+#[deno_bindgen]
 struct PythonApplyInp {
     vm: String,
     id: i32,
@@ -161,46 +161,46 @@ fn apply_entity(wasi_fn_callee: String, entity: PythonApplyInp) -> WasiReactorOu
 
 // lambda
 
-#[deno]
+#[deno_bindgen]
 fn register_lambda(entity: PythonRegisterInp) -> WasiReactorOut {
     register_entity("register_lambda".to_string(), entity)
 }
 
-#[deno]
+#[deno_bindgen]
 fn unregister_lambda(entity: PythonUnregisterInp) -> WasiReactorOut {
     unregister_entity("unregister_lambda".to_string(), entity)
 }
 
-#[deno]
+#[deno_bindgen]
 fn apply_lambda(entity: PythonApplyInp) -> WasiReactorOut {
     apply_entity("apply_lambda".to_string(), entity)
 }
 
 // defun
 
-#[deno]
+#[deno_bindgen]
 fn register_def(entity: PythonRegisterInp) -> WasiReactorOut {
     register_entity("register_def".to_string(), entity)
 }
 
-#[deno]
+#[deno_bindgen]
 fn unregister_def(entity: PythonUnregisterInp) -> WasiReactorOut {
     unregister_entity("unregister_def".to_string(), entity)
 }
 
-#[deno]
+#[deno_bindgen]
 fn apply_def(entity: PythonApplyInp) -> WasiReactorOut {
     apply_entity("apply_def".to_string(), entity)
 }
 
 // module
 
-#[deno]
+#[deno_bindgen]
 fn register_module(entity: PythonRegisterInp) -> WasiReactorOut {
     register_entity("register_module".to_string(), entity)
 }
 
-#[deno]
+#[deno_bindgen]
 fn unregister_module(entity: PythonUnregisterInp) -> WasiReactorOut {
     unregister_entity("unregister_module".to_string(), entity)
 }
