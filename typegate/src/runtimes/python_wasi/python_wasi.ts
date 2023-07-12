@@ -42,6 +42,7 @@ export class PythonWasiRuntime extends Runtime {
 
   async deinit(): Promise<void> {
     await this.w.vm.destroy();
+    await this.w.terminate();
   }
 
   materialize(

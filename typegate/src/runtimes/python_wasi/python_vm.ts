@@ -11,7 +11,30 @@ import {
   unregister_virtual_machine,
   WasiVmInitConfig,
 } from "native";
-import { nativePythonResult } from "../../tmp/common.ts";
+
+type Tag = "ok" | "err";
+
+type PythonOutput = {
+  value: string; // json string
+  tag: Tag;
+};
+
+function nativePythonResult(
+  res: { Ok: { res?: string } } | { Err: { message: string } },
+) {
+  if ("Err" in res) {
+    throw new Error(res.Err.message);
+  }
+  const ret = res.Ok?.res;
+  if (ret) {
+    const py = JSON.parse(ret) as PythonOutput;
+    if (py.tag == "err") {
+      throw new Error(py.value);
+    }
+    return py.value;
+  }
+  return null;
+}
 
 export class PythonVirtualMachine {
   #config: WasiVmInitConfig;
