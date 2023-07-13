@@ -6,7 +6,7 @@ import { DenoRuntime } from "../../../typegraph/deno/src/runtimes/deno.ts";
 
 const user = t.struct({
   id: t.integer(),
-  post: t.proxy("Post"),
+  //post: t.proxy("Post"),
 }, { name: "User" });
 
 const post = t.struct({

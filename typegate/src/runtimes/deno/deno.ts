@@ -91,7 +91,7 @@ export class DenoRuntime extends Runtime {
       "deno",
       name.replaceAll(" ", "_"), // TODO: improve sanitization
     );
-    console.log(basePath);
+
     try {
       // clean up old files
       logger.info(`removes files at ${basePath}`);

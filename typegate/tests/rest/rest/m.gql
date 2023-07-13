@@ -1,6 +1,3 @@
 mutation read_post($id: ID!) {
-  postFromUser(id: $id) {
-    id
-  }
   read: readPost(id: $id)
 }

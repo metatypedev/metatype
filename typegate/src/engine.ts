@@ -139,25 +139,19 @@ export async function handleRest(
   const queries = engine.rest[req.method];
   const url = new URL(req.url);
 
-  const variables = req.method === "GET"
-    ? Object.fromEntries(url.searchParams.entries())
-    : await req.json();
-
-  // TODO is this needed?
-  //engine.checkVariablesPresence(
-  //   unwrappedOperation.variableDefinitions ?? [],
-  //  variables,
-  //);
-
   const name = url.pathname.split("/").slice(
     3,
   ).join("/");
-  const plan = queries[name];
+  const [plan, checkVariables] = queries[name];
   if (!plan) {
     return new Response(`query not found: ${name}`, { status: 404 });
   }
 
-  logger.info(`rest: ${name}`);
+  const variables = req.method === "GET"
+    ? checkVariables(Object.fromEntries(url.searchParams.entries()))
+    : await req.json();
+
+  logger.info(`rest: ${name} with ${JSON.stringify(variables)}`);
 
   const { stages, policies, validator } = plan;
 
@@ -183,7 +177,13 @@ export class Engine {
   name: string;
   queryCache: QueryCache;
   logger: log.Logger;
-  rest: Record<string, Record<string, Plan>>;
+  rest: Record<
+    string,
+    Record<
+      string,
+      [Plan, (v: Record<string, unknown>) => Record<string, unknown>]
+    >
+  >;
 
   get rawName(): string {
     return this.tg.rawName;
@@ -287,7 +287,50 @@ export class Engine {
         throw new Error("root fields in query must be of the same effect");
       }
       const [effect] = effects;
-      this.rest[effectToMethod[effect!]][name] = plan;
+
+      const casting = (v: ast.TypeNode): (_: any) => unknown => {
+        if (v.kind === "NonNullType") {
+          return casting(v.type);
+        }
+        if (v.kind === "ListType") {
+          return JSON.parse;
+        }
+        const name = v.name.value;
+        if (name === "Integer") {
+          return parseInt;
+        }
+        if (name === "Float") {
+          return parseFloat;
+        }
+        if (name === "Boolean") {
+          return Boolean;
+        }
+        if (name === "String" || name == "ID") {
+          return String;
+        }
+        return JSON.parse;
+      };
+
+      const parsingVariables = Object.fromEntries(
+        (unwrappedOperation.variableDefinitions ?? []).map((varDef) => {
+          const name = varDef.variable.name.value;
+          return [name, casting(varDef.type)];
+        }),
+      );
+
+      const checkVariables = (vars: Record<string, unknown>) => {
+        const variables = Object.fromEntries(
+          Object.entries(vars).map(([k, v]) => [k, parsingVariables[k](v)]),
+        );
+
+        this.checkVariablesPresence(
+          unwrappedOperation.variableDefinitions ?? [],
+          variables,
+        );
+        return variables;
+      };
+
+      this.rest[effectToMethod[effect!]][name] = [plan, checkVariables];
     }
   }
 

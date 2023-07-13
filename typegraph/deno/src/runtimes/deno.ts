@@ -4,11 +4,11 @@ import { Effect } from "../../gen/exports/runtimes.d.ts";
 import Policy from "../policy.ts";
 
 export class Runtime {
-  constructor(public readonly id: number) {}
+  constructor(public readonly _id: number) {}
 }
 
 export class Materializer {
-  constructor(public readonly id: number) {}
+  constructor(public readonly _id: number) {}
 }
 
 export class DenoRuntime extends Runtime {
@@ -95,30 +95,30 @@ export class DenoRuntime extends Runtime {
 
 export class FunMat extends Materializer {
   constructor(
-    id: number,
+    _id: number,
     private code: string,
     public readonly secrets: Array<string>,
     public readonly effect: Effect,
   ) {
-    super(id);
+    super(_id);
   }
 }
 
 export class ImportMat extends Materializer {
   constructor(
-    id: number,
+    _id: number,
     public readonly name: string,
     public readonly module: string,
     public readonly secrets: Array<string>,
     public readonly effect: Effect,
   ) {
-    super(id);
+    super(_id);
   }
 }
 
 export class PredefinedFuncMat extends Materializer {
-  constructor(id: number, public readonly name: string) {
-    super(id);
+  constructor(_id: number, public readonly name: string) {
+    super(_id);
   }
 }
 

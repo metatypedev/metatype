@@ -3,7 +3,7 @@ import { core, runtimes } from "./wit.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";
 
 export default class Policy {
-  constructor(public readonly id: number, public readonly name: string) {}
+  constructor(public readonly _id: number, public readonly name: string) {}
 
   static public(): Policy {
     return Policy.create(
@@ -23,7 +23,7 @@ export default class Policy {
   }
 
   static internal(): Policy {
-    return new DenoRuntime().policy(
+    return new DenoRuntime().policy( // TODO move those defs in core
       "__internal",
       "(_, { context }) => context.provider === 'internal'",
     );

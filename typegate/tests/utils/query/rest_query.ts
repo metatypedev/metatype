@@ -37,22 +37,19 @@ export class RestQuery extends Query {
     return q;
   }
 
-  private mapStringify(obj: Record<string, unknown>): Record<string, string> {
-    return Object.fromEntries(
-      Object.entries(obj).map((
-        [key, value],
-      ) => [key, typeof value === "string" ? value : JSON.stringify(value)]),
-    );
-  }
-
   async getRequest(url: string): Promise<Request> {
     const { method, name, headers, context } = this;
-    let uri = `${url}/rest/${name}`;
+    const uri = new URL(`${url}/rest/${name}`);
 
     const defaults: Record<string, string> = {};
 
     if (method === "GET") {
-      uri += `?${new URLSearchParams(this.mapStringify(this.variables))}`;
+      Object.entries(this.variables).forEach(([key, value]) => {
+        uri.searchParams.append(
+          key,
+          typeof value === "string" ? value : JSON.stringify(value),
+        );
+      });
     } else {
       defaults["Content-Type"] = "application/json";
     }

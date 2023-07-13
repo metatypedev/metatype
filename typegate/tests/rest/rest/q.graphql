@@ -1,7 +1,7 @@
 query get_post($id: Integer) {
   postFromUser(id: $id) {
     id
-    user {
+    author {
       id
     }
   }
