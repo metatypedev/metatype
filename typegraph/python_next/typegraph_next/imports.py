@@ -12,7 +12,7 @@ class Abi(imports.Abi):
     def log(self, message: str) -> None:
         print(message)
 
-    def glob(self, pattern: str, exts: List[str]) -> Result[list[str], str]:
+    def glob(self, pattern: str, exts: List[str]) -> Result[List[str], str]:
         files = []
         for ext in exts:
             files += glob.glob(f"{pattern}.{ext}", recursive=True)

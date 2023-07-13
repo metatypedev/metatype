@@ -61,15 +61,6 @@ pub struct Lib {}
 
 impl wit::core::Core for Lib {
     fn init_typegraph(params: TypegraphInitParams) -> Result<()> {
-        /*
-        let file = host::host::read_file(
-            "/Users/teostocco/Documents/triage/metatypedev/metatype/whiz.yaml",
-        )?;
-        host::host::write_file(
-            "/Users/teostocco/Documents/triage/metatypedev/metatype/whiz2.yaml",
-            &file,
-        )?;
-        */
         typegraph::init(params)
     }
 
