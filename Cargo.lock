@@ -7501,13 +7501,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "typegraph"
-version = "0.1.10"
-dependencies = [
- "typegraph_core",
-]
-
-[[package]]
 name = "typegraph_core"
 version = "0.1.10"
 dependencies = [
