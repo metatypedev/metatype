@@ -4,7 +4,7 @@
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("Class Syntax", async (t) => {
-  const e = await t.pythonFile("simple/class_syntax.py");
+  const e = await t.engine("simple/class_syntax.py");
   await t.should("work using the class syntax", async () => {
     await gql`
       query {

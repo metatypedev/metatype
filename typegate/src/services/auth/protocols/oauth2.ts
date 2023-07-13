@@ -1,28 +1,27 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { AuthDS, nextAuthorizationHeader } from "../auth.ts";
-import config from "../../config.ts";
+import config from "../../../config.ts";
 import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
-import { encrypt, randomUUID, signJWT, verifyJWT } from "../../crypto.ts";
-import { JWTClaims } from "../auth.ts";
-import { getLogger } from "../../log.ts";
-import { SecretManager } from "../../typegraph.ts";
+import { encrypt, randomUUID, signJWT, verifyJWT } from "../../../crypto.ts";
+import { JWTClaims } from "../mod.ts";
+import { getLogger } from "../../../log.ts";
+import { SecretManager } from "../../../typegraph.ts";
 import {
   clearCookie,
   getEncryptedCookie,
   setEncryptedSessionCookie,
 } from "../cookies.ts";
 import { Protocol } from "./protocol.ts";
-import { DenoRuntime } from "../../runtimes/deno/deno.ts";
-import { Materializer } from "../../types/typegraph.ts";
+import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
+import { Auth, Materializer } from "../../../types/typegraph.ts";
 
 const logger = getLogger(import.meta.url);
 
 export class OAuth2Auth extends Protocol {
   static init(
     typegraphName: string,
-    auth: AuthDS,
+    auth: Auth,
     secretManager: SecretManager,
     denoRuntime: DenoRuntime,
   ): Promise<Protocol> {
@@ -115,7 +114,11 @@ export class OAuth2Auth extends Protocol {
         });
       } catch (e) {
         logger.warning(e);
-        const headers = clearCookie(url.hostname, this.typegraphName);
+        const headers = clearCookie(
+          url.hostname,
+          this.typegraphName,
+          new Headers(),
+        );
         // https://github.com/cmd-johnson/deno-oauth2-client/issues/25
         return new Response(`invalid oauth2, check your credentials: ${e}`, {
           status: 400,
@@ -156,7 +159,7 @@ export class OAuth2Auth extends Protocol {
   async tokenMiddleware(
     token: string,
     url: URL,
-  ): Promise<[Record<string, unknown>, Headers]> {
+  ): Promise<[Record<string, unknown>, string | null]> {
     const typegraphPath = `/${this.typegraphName}`;
     const client = new OAuth2Client({
       ...this.clientData,
@@ -165,7 +168,7 @@ export class OAuth2Auth extends Protocol {
     });
 
     if (!token) {
-      return [{}, new Headers()];
+      return [{}, null];
     }
     const jwt = await verifyJWT(token).catch((e) => {
       logger.info(`invalid auth: ${e}`);
@@ -173,7 +176,7 @@ export class OAuth2Auth extends Protocol {
     }) as JWTClaims | null;
 
     if (!jwt) {
-      return [{}, new Headers({ [nextAuthorizationHeader]: "" })];
+      return [{}, ""]; // clear
     }
 
     const { refreshToken, ...claims } = jwt;
@@ -183,15 +186,15 @@ export class OAuth2Auth extends Protocol {
         const token = await this.createJWT(newClaims);
         return [
           claims,
-          new Headers({ [nextAuthorizationHeader]: token ?? "" }),
+          token ?? "", // token or clear
         ];
       } catch (e) {
         logger.info(`expired auth: ${e}`);
-        return [{}, new Headers({ [nextAuthorizationHeader]: "" })];
+        return [{}, ""]; // clear
       }
     }
 
-    return [claims, new Headers()];
+    return [claims, null];
   }
 
   private async getProfile(

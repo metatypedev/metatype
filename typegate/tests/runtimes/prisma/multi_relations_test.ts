@@ -5,7 +5,7 @@ import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 
 Meta.test("multiple relationships", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/multi_relations.py", {
+  const e = await t.engine("runtimes/prisma/multi_relations.py", {
     secrets: {
       TG_PRISMA_MULTI_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-multi",

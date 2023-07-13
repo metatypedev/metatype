@@ -14,7 +14,7 @@ import * as native from "native";
 import { nativeResult } from "../../src/utils.ts";
 
 Meta.test("typecheck", async (t) => {
-  const e = await t.pythonFile("typecheck/typecheck.py");
+  const e = await t.engine("typecheck/typecheck.py");
   const { tg } = e;
 
   // for syntax highlighting

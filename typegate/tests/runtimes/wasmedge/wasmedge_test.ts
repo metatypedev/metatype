@@ -4,7 +4,7 @@
 import { gql, Meta } from "../../utils/mod.ts";
 
 Meta.test("WasmEdge runtime", async (t) => {
-  const e = await t.pythonFile("runtimes/wasmedge/wasmedge.py");
+  const e = await t.engine("runtimes/wasmedge/wasmedge.py");
 
   await t.should("works", async () => {
     await gql`

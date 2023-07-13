@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { deleteCookie, getCookies, setCookie } from "std/http/cookie.ts";
-import { decrypt, encrypt } from "../crypto.ts";
-import config from "../config.ts";
+import { decrypt, encrypt } from "../../crypto.ts";
+import config from "../../config.ts";
 
 export async function getEncryptedCookie(
   headers: Headers,
@@ -41,8 +41,8 @@ export async function setEncryptedSessionCookie(
 export function clearCookie(
   domain: string,
   name: string,
+  headers: Headers,
 ): Headers {
-  const headers = new Headers();
   deleteCookie(headers, name, {
     path: `/${name}`,
     domain,

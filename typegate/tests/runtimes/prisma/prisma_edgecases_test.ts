@@ -5,7 +5,7 @@ import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 
 Meta.test("prisma critical edgecases", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/prisma_edgecases.py", {
+  const e = await t.engine("runtimes/prisma/prisma_edgecases.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-edgecases",

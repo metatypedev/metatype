@@ -8,7 +8,7 @@ import * as mf from "test/mock_fetch";
 mf.install();
 
 Meta.test("prisma mixed runtime", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/mixed_runtime.py", {
+  const e = await t.engine("runtimes/prisma/mixed_runtime.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-mixed",

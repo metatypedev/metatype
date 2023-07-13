@@ -6,7 +6,7 @@ import { gql, Meta } from "../utils/mod.ts";
 Meta.test(
   "Either type",
   async (t) => {
-    const e = await t.pythonFile("type_nodes/either_node.py");
+    const e = await t.engine("type_nodes/either_node.py");
 
     await t.should("allow query with kid variant", async () => {
       await gql`

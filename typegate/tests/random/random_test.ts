@@ -4,7 +4,7 @@
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("Random", async (t) => {
-  const e = await t.pythonFile("random/random.py");
+  const e = await t.engine("random/random.py");
 
   await t.should("work", async () => {
     await gql`

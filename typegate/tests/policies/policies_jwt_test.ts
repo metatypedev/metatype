@@ -6,7 +6,7 @@ import * as jwt from "jwt";
 
 Meta.test("JWT with various formats", async (t) => {
   const secret = "mysupersecretkey";
-  const e = await t.pythonFile("policies/policies_jwt_format.py", {
+  const e = await t.engine("policies/policies_jwt_format.py", {
     secrets: {
       TG_POLICIES_JWT_FORMAT_NATIVE_JWT: secret,
     },

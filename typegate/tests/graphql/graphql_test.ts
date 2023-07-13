@@ -65,7 +65,7 @@ mf.mock("POST@/api/graphql", async (req) => {
 });
 
 Meta.test("GraphQL queries", async (t) => {
-  const e = await t.pythonFile("graphql/graphql.py");
+  const e = await t.engine("graphql/graphql.py");
 
   await t.should("work with queries", async () => {
     await gql`
@@ -85,7 +85,7 @@ Meta.test("GraphQL queries", async (t) => {
 });
 
 Meta.test("GraphQL variables", async (t) => {
-  const e = await t.pythonFile("graphql/graphql.py");
+  const e = await t.engine("graphql/graphql.py");
 
   await t.should("work", async () => {
     await gql`

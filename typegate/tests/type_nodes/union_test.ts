@@ -7,7 +7,7 @@ import { gql, Meta } from "../utils/mod.ts";
 Meta.test(
   "Union type",
   async (t) => {
-    const e = await t.pythonFile("type_nodes/union_node.py");
+    const e = await t.engine("type_nodes/union_node.py");
 
     await t.should(
       "allow query with variant colorName of type string in union value Color",
@@ -173,7 +173,7 @@ Meta.test(
 );
 
 Meta.test("nested unions", async (t) => {
-  const e = await t.pythonFile("type_nodes/union_node.py");
+  const e = await t.engine("type_nodes/union_node.py");
 
   await t.should("support nested unions", async () => {
     const data: JSONValue = [
@@ -215,7 +215,7 @@ Meta.test("nested unions", async (t) => {
 });
 
 Meta.test("multilevel unions", async (t) => {
-  const e = await t.pythonFile("type_nodes/union_node.py");
+  const e = await t.engine("type_nodes/union_node.py");
 
   await t.should("success", async () => {
     const data: JSONValue = [
@@ -250,7 +250,7 @@ Meta.test("multilevel unions", async (t) => {
 });
 
 Meta.test("scalar unions", async (t) => {
-  const e = await t.pythonFile("type_nodes/union_node.py");
+  const e = await t.engine("type_nodes/union_node.py");
 
   await t.should("succeed", async () => {
     const data: JSONValue = [1, "hello", 12, false];

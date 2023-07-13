@@ -5,7 +5,7 @@ import { assert } from "std/testing/asserts.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 
 Meta.test("Python WASI runtime", async (t) => {
-  const e = await t.pythonFile("runtimes/python_wasi/python_wasi.py");
+  const e = await t.engine("runtimes/python_wasi/python_wasi.py");
 
   await t.should("work once", async () => {
     await gql`

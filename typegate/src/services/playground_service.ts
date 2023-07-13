@@ -1,24 +1,28 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-export const renderPlayground = (
-  url: string,
-  typegraphList: string[],
-) => {
-  const options = typegraphList.map((name) => `
-    <option key="${name}" value="${name}" ${
-    url.endsWith("/" + name) ? "selected" : ""
-  }>${name}</option>)
-  `);
+import { Engine } from "../engine.ts";
+import { baseUrl } from "./middlewares.ts";
 
-  return `
+export const handlePlayground = (
+  request: Request,
+  engine: Engine,
+): Response => {
+  const url = `${baseUrl(request)}/${engine.name}`;
+
+  const html = `
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
       <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
+        <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+        <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.min.css" />
         <style>
           body {
-            height: 100%;
             margin: 0;
+            height: 100%;
             width: 100%;
             overflow: hidden;
           }
@@ -43,7 +47,7 @@ export const renderPlayground = (
             padding: 0 !important;
             margin: 0 15px 0 0;
           }
-          .graphiql-container .graphiql-logo a{
+          .graphiql-container .graphiql-logo a {
             text-decoration: none;
             color: inherit;
           }
@@ -51,6 +55,7 @@ export const renderPlayground = (
             width: 40px;
             height: 40px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             margin-left: auto;
           }
@@ -63,9 +68,6 @@ export const renderPlayground = (
             margin-top: 20px;
           }
         </style>
-        <script crossorigin src="https://unpkg.com/react@17/umd/react.development.js"></script>
-        <script crossorigin src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
-        <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.min.css" />
       </head>
       <body>
         <div id="graphiql">Loading...</div>
@@ -75,19 +77,25 @@ export const renderPlayground = (
           const fetcher = GraphiQL.createFetcher({
             url: "${url}"
           });
-
-          ReactDOM.render(<GraphiQL shouldPersistHeaders={true} fetcher={fetcher}>
-            <GraphiQL.Logo>
-              <select className="graphiql-ddl-typegraphs" onChange={(e => window.location = e.target.value)}>
-                ${options}
-              </select>
-              <a href="https://metatype.dev" target="_blank" rel="noreferrer">
-                <span className="graphiql-logo-link"><img src="https://metatype.dev/images/logo.svg" alt="logo" className="Metatype logo" /></span>
-              </a>
-            </GraphiQL.Logo>
-          </GraphiQL>, document.getElementById('graphiql'));
+          const app = (
+            <GraphiQL shouldPersistHeaders={true} fetcher={fetcher}>
+              <GraphiQL.Logo>
+                <a href="https://metatype.dev/docs/reference" target="_blank">
+                  <div className="graphiql-logo-link">
+                    <img src="https://metatype.dev/images/logo.svg" alt="Metatype logo" />
+                    <div>Docs</div>
+                  </div>
+                </a>
+              </GraphiQL.Logo>
+            </GraphiQL>
+          );
+          ReactDOM.render(app, document.getElementById('graphiql'));
         </script>
       </body>
     </html>
     `;
+
+  return new Response(html, {
+    headers: { "content-type": "text/html" },
+  });
 };

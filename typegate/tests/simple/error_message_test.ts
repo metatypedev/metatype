@@ -4,7 +4,7 @@
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("Proposition on error thrown", async (t) => {
-  const e = await t.pythonFile("simple/error_message.py");
+  const e = await t.engine("simple/error_message.py");
 
   await t.should("propose closest name ", async () => {
     await gql`

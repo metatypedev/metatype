@@ -50,7 +50,7 @@ async function initBucket() {
 }
 
 Meta.test("s3", async (t) => {
-  const e = await t.pythonFile("runtimes/s3/s3.py", {
+  const e = await t.engine("runtimes/s3/s3.py", {
     secrets: {
       TG_S3_TEST_HOST: HOST,
       TG_S3_TEST_REGION: REGION,

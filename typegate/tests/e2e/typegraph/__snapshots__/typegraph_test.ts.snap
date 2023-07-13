@@ -603,8 +603,12 @@ snapshot[`typegraphs creation 2`] = `
 ' +
   '        "runtime": 0,
 ' +
-  '        "policies": [],
+  '        "policies": [
 ' +
+  "          0
+" +
+  "        ],
+" +
   '        "config": {},
 ' +
   '        "as_id": false,
@@ -709,8 +713,12 @@ snapshot[`typegraphs creation 2`] = `
 ' +
   '        "runtime": 0,
 ' +
-  '        "policies": [],
+  '        "policies": [
 ' +
+  "          1
+" +
+  "        ],
+" +
   '        "config": {},
 ' +
   '        "as_id": false,
@@ -719,7 +727,7 @@ snapshot[`typegraphs creation 2`] = `
 ' +
   '        "output": 9,
 ' +
-  '        "materializer": 1,
+  '        "materializer": 2,
 ' +
   '        "rate_weight": null,
 ' +
@@ -819,8 +827,12 @@ snapshot[`typegraphs creation 2`] = `
 ' +
   '        "runtime": 0,
 ' +
-  '        "policies": [],
+  '        "policies": [
 ' +
+  "          2
+" +
+  "        ],
+" +
   '        "config": {},
 ' +
   '        "as_id": false,
@@ -829,7 +841,7 @@ snapshot[`typegraphs creation 2`] = `
 ' +
   '        "output": 2,
 ' +
-  '        "materializer": 2,
+  '        "materializer": 4,
 ' +
   '        "rate_weight": null,
 ' +
@@ -879,7 +891,51 @@ snapshot[`typegraphs creation 2`] = `
 " +
   '        "data": {
 ' +
+  '          "script": "var _my_lambda=(_,{context})=>context.provider===\\\\"internal\\\\";"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
   '          "script": "var _my_lambda=user=>({id:12,user});"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>false;"
 ' +
   "        }
 " +
@@ -901,7 +957,7 @@ snapshot[`typegraphs creation 2`] = `
 " +
   '        "data": {
 ' +
-  '          "mod": 3,
+  '          "mod": 5,
 ' +
   '          "name": "three",
 ' +
@@ -931,6 +987,28 @@ snapshot[`typegraphs creation 2`] = `
 ' +
   "        }
 " +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "predefined_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "name": "true"
+' +
+  "        }
+" +
   "      }
 " +
   "    ],
@@ -951,8 +1029,34 @@ snapshot[`typegraphs creation 2`] = `
 " +
   "    ],
 " +
-  '    "policies": [],
+  '    "policies": [
 ' +
+  "      {
+" +
+  '        "name": "__internal",
+' +
+  '        "materializer": 1
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "deny",
+' +
+  '        "materializer": 3
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "__public",
+' +
+  '        "materializer": 6
+' +
+  "      }
+" +
+  "    ],
+" +
   '    "meta": {
 ' +
   '      "prefix": null,

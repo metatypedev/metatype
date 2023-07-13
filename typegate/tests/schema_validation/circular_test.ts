@@ -5,7 +5,7 @@ import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("circular test", async (t) => {
   const tgPath = "schema_validation/circular.py";
-  const e = await t.pythonFile(tgPath);
+  const e = await t.engine(tgPath);
 
   await t.should("validate self-refering type", async () => {
     await gql`

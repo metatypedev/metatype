@@ -25,7 +25,7 @@ function generatePost(id: number) {
 }
 
 Meta.test("Rest queries", async (t) => {
-  const e = await t.pythonFile("nesting/nesting.py");
+  const e = await t.engine("nesting/nesting.py");
 
   mf.mock("GET@/api/users/:id", (_req, params) => {
     const userId = Number(params.id);

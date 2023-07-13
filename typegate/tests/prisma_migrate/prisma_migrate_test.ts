@@ -25,7 +25,7 @@ Meta.test("prisma migrations", async (t) => {
   );
   const createdMigrations: string[] = [];
 
-  const e = await t.pythonFile(tgPath, {
+  const e = await t.engine(tgPath, {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-migrate",

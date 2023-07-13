@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { AuthDS } from "../auth.ts";
-import { SystemTypegraph } from "../../system_typegraphs.ts";
-import { b64decode } from "../../utils.ts";
-import { SecretManager } from "../../typegraph.ts";
-import config from "../../config.ts";
+import { SystemTypegraph } from "../../../system_typegraphs.ts";
+import { b64decode } from "../../../utils.ts";
+import { SecretManager } from "../../../typegraph.ts";
+import config from "../../../config.ts";
 import { Protocol } from "./protocol.ts";
-import { DenoRuntime } from "../../runtimes/deno/deno.ts";
+import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
+import { Auth } from "../../../types/typegraph.ts";
 
 export class BasicAuth extends Protocol {
   static init(
     typegraphName: string,
-    auth: AuthDS,
+    auth: Auth,
     secretManager: SecretManager,
     _denoRuntime: DenoRuntime,
   ): Promise<Protocol> {
@@ -36,7 +36,7 @@ export class BasicAuth extends Protocol {
   tokenMiddleware(
     jwt: string,
     _url: URL,
-  ): Promise<[Record<string, unknown>, Headers]> {
+  ): Promise<[Record<string, unknown>, string | null]> {
     try {
       const [username, token] = b64decode(jwt).split(
         ":",
@@ -49,9 +49,9 @@ export class BasicAuth extends Protocol {
         }
         : {};
 
-      return Promise.resolve([claims, new Headers()]);
+      return Promise.resolve([claims, null]);
     } catch {
-      return Promise.resolve([{}, new Headers()]);
+      return Promise.resolve([{}, null]);
     }
   }
 }

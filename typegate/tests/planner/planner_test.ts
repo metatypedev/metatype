@@ -36,7 +36,7 @@ async function assertPlanSnapshot(t: MetaTest, e: Engine, query: string) {
 }
 
 Meta.test("planner", async (t) => {
-  const e = await t.pythonFile("planner/planner.py");
+  const e = await t.engine("planner/planner.py");
   const query = `
       query {
         one {
@@ -156,7 +156,7 @@ Meta.test("planner", async (t) => {
 });
 
 Meta.test("planner: dependencies", async (t) => {
-  const e = await t.pythonFile("planner/planner.py");
+  const e = await t.engine("planner/planner.py");
 
   await t.should("get the right plan", async () => {
     await assertPlanSnapshot(
@@ -244,7 +244,7 @@ Meta.test("planner: dependencies", async (t) => {
 });
 
 Meta.test("planner: dependencies in union/either", async (t) => {
-  const e = await t.pythonFile("planner/planner.py");
+  const e = await t.engine("planner/planner.py");
 
   await t.should("get the right plan", async () => {
     await assertPlanSnapshot(

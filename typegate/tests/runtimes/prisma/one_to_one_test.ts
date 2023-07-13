@@ -45,7 +45,7 @@ async function runCommonTestSteps(t: MetaTest, e: Engine) {
 }
 
 Meta.test("required 1-1 relationships", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/normal_1_1.py", {
+  const e = await t.engine("runtimes/prisma/normal_1_1.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
@@ -70,7 +70,7 @@ Meta.test("required 1-1 relationships", async (t) => {
 });
 
 Meta.test("optional 1-1 relationships", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/optional_1_1.py", {
+  const e = await t.engine("runtimes/prisma/optional_1_1.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",

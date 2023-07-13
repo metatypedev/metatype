@@ -6,7 +6,7 @@ import { gql, Meta } from "../utils/mod.ts";
 Meta.test(
   "Union type",
   async (t) => {
-    const e = await t.pythonFile("type_nodes/union_node_quantifier.py");
+    const e = await t.engine("type_nodes/union_node_quantifier.py");
 
     await t.should("work with optionals and list arguments", async () => {
       await gql`

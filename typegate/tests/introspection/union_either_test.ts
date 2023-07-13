@@ -6,7 +6,7 @@ import { gql, Meta } from "../utils/mod.ts";
 // https://github.com/graphql/graphql-js/blob/main/src/__tests__/starWarsIntrospection-test.ts
 
 Meta.test("Basic introspection", async (t) => {
-  const e = await t.pythonFile("introspection/union_either.py");
+  const e = await t.engine("introspection/union_either.py");
   await t.should("allow querying the schema for query type", async () => {
     await gql`
       query IntrospectionQuery {

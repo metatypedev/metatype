@@ -85,7 +85,7 @@ mf.mock("POST@/api/graphql", async (req) => {
 });
 
 Meta.test("GraphQL parser", async (t) => {
-  const e = await t.pythonFile("query_parsers/graphql_namespaces.py");
+  const e = await t.engine("query_parsers/graphql_namespaces.py");
 
   await t.should("split typgraph into queries and mutations", () => {
     /**

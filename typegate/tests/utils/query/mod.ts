@@ -143,14 +143,14 @@ export abstract class Query {
     });
   }
 
-  expectValue(result: JSONValue): this {
+  expectJSON(result: JSONValue): this {
     return this.expectBody((body) => {
       assertEquals(body, result);
     });
   }
 
   expectData(data: JSONValue): this {
-    return this.expectValue({ data });
+    return this.expectJSON({ data });
   }
 
   expectErrorContains(partial: string): this {

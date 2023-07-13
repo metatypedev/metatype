@@ -7,7 +7,7 @@ import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 
 Meta.test("GraphQL variables", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/prisma.py", {
+  const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-vars",

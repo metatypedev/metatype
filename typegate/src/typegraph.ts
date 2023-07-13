@@ -15,7 +15,7 @@ import {
   initAuth,
   internalAuthName,
   nextAuthorizationHeader,
-} from "./auth/auth.ts";
+} from "./services/auth/mod.ts";
 
 import {
   isArray,
@@ -43,11 +43,11 @@ import type {
   Typegraph as TypeGraphDS,
 } from "./types/typegraph.ts";
 import { TemporalRuntime } from "./runtimes/temporal.ts";
-import { InternalAuth } from "./auth/protocols/internal.ts";
+import { InternalAuth } from "./services/auth/protocols/internal.ts";
 import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
 import { PythonWasiRuntime } from "./runtimes/python_wasi/python_wasi.ts";
-import { Protocol } from "./auth/protocols/protocol.ts";
-import { OAuth2Auth } from "./auth/protocols/oauth2.ts";
+import { Protocol } from "./services/auth/protocols/protocol.ts";
+import { OAuth2Auth } from "./services/auth/protocols/oauth2.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 

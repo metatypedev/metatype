@@ -48,7 +48,7 @@ async function testImporter(
   });
 
   await t.should("load typegraph and execute query", async () => {
-    const e = await t.pythonFile(file);
+    const e = await t.engine(file);
     if (testQuery != null) {
       await testQuery
         .expectStatus(200)

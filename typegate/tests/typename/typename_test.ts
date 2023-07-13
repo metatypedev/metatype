@@ -5,7 +5,7 @@ import { recreateMigrations } from "../utils/migrations.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("Typename", async (t) => {
-  const e = await t.pythonFile("typename/typename.py", {
+  const e = await t.engine("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=typename",
@@ -26,7 +26,7 @@ Meta.test("Typename", async (t) => {
 });
 
 Meta.test("Typename in deno runtime", async (t) => {
-  const e = await t.pythonFile("typename/typename.py", {
+  const e = await t.engine("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=typename",
@@ -51,7 +51,7 @@ Meta.test("Typename in deno runtime", async (t) => {
 });
 
 Meta.test("Typename in random runtime", async (t) => {
-  const e = await t.pythonFile("typename/typename.py", {
+  const e = await t.engine("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=typename",
@@ -76,7 +76,7 @@ Meta.test("Typename in random runtime", async (t) => {
 });
 
 Meta.test("Typename in prisma runtime", async (t) => {
-  const e = await t.pythonFile("typename/typename.py", {
+  const e = await t.engine("typename/typename.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=typename",

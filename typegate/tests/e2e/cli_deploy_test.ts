@@ -10,7 +10,7 @@ import { shell } from "../utils/shell.ts";
 const port = 7895;
 
 Meta.test("cli:deploy - automatic migrations", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/prisma.py", {
+  const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=e2e",
@@ -86,7 +86,7 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
 }, { systemTypegraphs: true, port, cleanGitRepo: true });
 
 Meta.test("cli:deploy - with prefix", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/prisma.py", {
+  const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=e2e",

@@ -10,7 +10,7 @@ import * as native from "native";
 import { assert, assertEquals } from "std/testing/asserts.ts";
 
 Meta.test("input validator compiler", async (t) => {
-  const e = await t.pythonFile("typecheck/typecheck.py");
+  const e = await t.engine("typecheck/typecheck.py");
   const { tg } = e;
 
   const root = tg.type(0, Type.OBJECT);

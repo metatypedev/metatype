@@ -9,7 +9,7 @@ import { dropSchemas, recreateMigrations } from "../utils/migrations.ts";
 
 Meta.test("Missing env var", async (t) => {
   await assertRejects(
-    () => t.pythonFile("injection/injection.py"),
+    () => t.engine("injection/injection.py"),
     "cannot find env",
   );
 });
@@ -30,7 +30,7 @@ const TG_INJECTION_POSTGRES =
   "postgresql://postgres:password@localhost:5432/db?schema=prisma";
 
 Meta.test("Injected values", async (t) => {
-  const e = await t.pythonFile("injection/injection.py", {
+  const e = await t.engine("injection/injection.py", {
     secrets: { TG_INJECTION_TEST_VAR: "3", TG_INJECTION_POSTGRES },
   });
 
@@ -149,7 +149,7 @@ mf.mock("POST@/api/graphql", async (req) => {
 });
 
 Meta.test("Injection from/into graphql", async (t) => {
-  const e = await t.pythonFile("injection/injection.py", {
+  const e = await t.engine("injection/injection.py", {
     secrets: { TG_INJECTION_TEST_VAR: "3", TG_INJECTION_POSTGRES },
   });
 

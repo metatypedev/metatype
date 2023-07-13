@@ -4,7 +4,7 @@
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("GraphQL variables", async (t) => {
-  const e = await t.pythonFile("vars/vars.py");
+  const e = await t.engine("vars/vars.py");
 
   await t.should("work with root vars", async () => {
     await gql`
@@ -53,7 +53,7 @@ Meta.test("GraphQL variables", async (t) => {
 });
 
 Meta.test("GraphQL variable types", async (t) => {
-  const e = await t.pythonFile("vars/vars.py");
+  const e = await t.engine("vars/vars.py");
 
   await t.should("reject invalid types", async () => {
     await gql`

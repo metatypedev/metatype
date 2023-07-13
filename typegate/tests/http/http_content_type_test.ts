@@ -53,7 +53,7 @@ function parseBool(str: string | undefined | null) {
 }
 
 Meta.test("http custom content-type queries", async (t) => {
-  const e = await t.pythonFile("http/http_content_type.py");
+  const e = await t.engine("http/http_content_type.py");
 
   mf.mock("POST@/api/sum_range", async (req) => {
     const formData: FormData = await req.formData();

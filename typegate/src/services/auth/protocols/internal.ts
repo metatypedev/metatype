@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { signJWT, verifyJWT } from "../../crypto.ts";
+import { signJWT, verifyJWT } from "../../../crypto.ts";
 import { Protocol } from "./protocol.ts";
 
 export class InternalAuth extends Protocol {
@@ -25,15 +25,15 @@ export class InternalAuth extends Protocol {
   async tokenMiddleware(
     token: string,
     _url: URL,
-  ): Promise<[Record<string, unknown>, Headers]> {
+  ): Promise<[Record<string, unknown>, string | null]> {
     try {
       const claims = await verifyJWT(token);
       if (claims.provider === "internal") {
-        return [claims, new Headers()];
+        return [claims, null];
       }
     } catch {
       // invalid jwt
     }
-    return [{}, new Headers()];
+    return [{}, null];
   }
 }

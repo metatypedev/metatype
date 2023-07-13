@@ -14,8 +14,7 @@ import { findOperation, FragmentDefs } from "./graphql.ts";
 import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
-import { sha1, unsafeExtractJWT } from "./crypto.ts";
-import { BadContext, ResolverError } from "./errors.ts";
+import { sha1 } from "./crypto.ts";
 import { RateLimit } from "./rate_limiter.ts";
 import {
   ComputeStageProps,
@@ -27,14 +26,12 @@ import {
 import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
-import { None, Option } from "monads";
-import { getLogger } from "./log.ts";
+import { None } from "monads";
 import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./engine/computation_engine.ts";
-
-const logger = getLogger(import.meta);
+import { isIntrospectionQuery } from "./services/graphql_service.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -91,13 +88,6 @@ export class ComputeStage {
   }
 }
 
-function isIntrospectionQuery(
-  operation: ast.OperationDefinitionNode,
-  _fragments: FragmentDefs,
-) {
-  return operation.name?.value === "IntrospectionQuery";
-}
-
 // See `planner/mod.ts` on how the graphql is processed to build the plan
 interface Plan {
   // matching to each selection in the graphql query
@@ -131,47 +121,6 @@ const effectToMethod = {
   "update": "PUT",
   "delete": "DELETE",
 };
-
-export async function handleRest(
-  req: Request,
-  engine: Engine,
-): Promise<Response> {
-  const queries = engine.rest[req.method];
-  const url = new URL(req.url);
-
-  const name = url.pathname.split("/").slice(
-    3,
-  ).join("/");
-  const [plan, checkVariables] = queries[name] ?? [];
-  if (!plan) {
-    return new Response(`query not found: ${name}`, { status: 404 });
-  }
-
-  const variables = req.method === "GET"
-    ? checkVariables(Object.fromEntries(url.searchParams.entries()))
-    : await req.json();
-
-  logger.info(`rest: ${name} with ${JSON.stringify(variables)}`);
-
-  const { stages, policies, validator } = plan;
-
-  //logger.info("dag:", stages);
-  const res = await ComputationEngine.compute(
-    stages,
-    policies,
-    {}, //context,
-    { url, headers: {} }, //info,
-    variables,
-    null, //limit,
-    true,
-  );
-
-  validator(res);
-  return new Response(JSON.stringify({ data: res }), {
-    status: 200,
-    headers: { "content-type": "application/json" },
-  });
-}
 
 export class Engine {
   name: string;
@@ -413,126 +362,30 @@ export class Engine {
     return [plan, false];
   }
 
-  async execute(
-    query: string,
-    operationName: Option<string>,
+  async computePlan(
+    plan: Plan,
     variables: Variables,
     context: Context,
     info: Info,
     limit: RateLimit | null,
-  ): Promise<{ status: number; [key: string]: JSONValue }> {
-    try {
-      const document = parse(query);
+    verbose: boolean,
+  ): Promise<JSONValue> {
+    const { stages, policies, validator } = plan;
 
-      const [operation, fragments] = findOperation(document, operationName);
-      if (operation.isNone()) {
-        throw Error(`operation ${operationName.unwrapOr("<none>")} not found`);
-      }
-      const unwrappedOperation = operation.unwrap();
+    //logger.info("dag:", stages);
+    const res = await ComputationEngine.compute(
+      stages,
+      policies,
+      context,
+      info,
+      variables,
+      limit,
+      verbose,
+    );
 
-      this.checkVariablesPresence(
-        unwrappedOperation.variableDefinitions ?? [],
-        variables,
-      );
+    validator(res);
 
-      const isIntrospection = isIntrospectionQuery(
-        unwrappedOperation,
-        fragments,
-      );
-      const verbose = !isIntrospection;
-
-      if (verbose) {
-        this.logger.info("———");
-        this.logger.info("op:", operationName);
-      }
-
-      const startTime = performance.now();
-      const [plan, cacheHit] = await this.getPlan(
-        unwrappedOperation,
-        fragments,
-        true,
-        verbose,
-      );
-      const planTime = performance.now();
-
-      const { stages, policies, validator } = plan;
-
-      //logger.info("dag:", stages);
-      const res = await ComputationEngine.compute(
-        stages,
-        policies,
-        context,
-        info,
-        variables,
-        limit,
-        verbose,
-      );
-      const computeTime = performance.now();
-
-      validator(res);
-      const endTime = performance.now();
-
-      if (verbose) {
-        this.logger.info(
-          `${cacheHit ? "fetched" : "planned"}  in ${
-            (
-              planTime - startTime
-            ).toFixed(2)
-          }ms`,
-        );
-        this.logger.info(
-          `computed in ${(computeTime - planTime).toFixed(2)}ms`,
-        );
-        this.logger.info(
-          `validated in ${(endTime - computeTime).toFixed(2)}ms`,
-        );
-      }
-
-      return { status: 200, data: res };
-    } catch (e) {
-      if (e instanceof ResolverError) {
-        // field error
-        logger.error(`field err: ${e.message}`);
-        return {
-          status: 502,
-          errors: [
-            {
-              message: e.message,
-              locations: [],
-              path: [],
-              extensions: { timestamp: new Date().toISOString() },
-            },
-          ],
-        };
-      } else if (e instanceof BadContext) {
-        logger.error(`context err: ${e.message}`);
-        return {
-          status: 403,
-          errors: [
-            {
-              message: e.message,
-              locations: [],
-              path: [],
-              extensions: { timestamp: new Date().toISOString() },
-            },
-          ],
-        };
-      } else {
-        // request error
-        logger.error(`request err: ${e}`);
-        return {
-          status: 400,
-          errors: [
-            {
-              message: e.message,
-              locations: [],
-              path: [],
-              extensions: { timestamp: new Date().toISOString() },
-            },
-          ],
-        };
-      }
-    }
+    return res;
   }
 
   checkVariablesPresence(
@@ -547,38 +400,5 @@ export class Engine {
       }
       // variable values are validated with the argument validator
     }
-  }
-
-  async ensureJWT(
-    headers: Headers,
-    url: URL,
-  ): Promise<[Record<string, unknown>, Headers]> {
-    const [kind, token] = (headers.get("Authorization") ?? "").split(" ");
-    if (!token) {
-      return [{}, new Headers()];
-    }
-
-    let auth = null;
-    if (kind.toLowerCase() === "basic") {
-      auth = this.tg.auths.get("basic");
-    } else {
-      try {
-        const { provider } = await unsafeExtractJWT(token);
-        if (!provider) {
-          // defaulting to first auth
-          auth = this.tg.auths.values().next().value;
-        } else {
-          auth = this.tg.auths.get(provider as string);
-        }
-      } catch (e) {
-        logger.warning(`malformed jwt: ${e}`);
-      }
-    }
-
-    if (!auth) {
-      return [{}, new Headers()];
-    }
-
-    return await auth.tokenMiddleware(token, url);
   }
 }

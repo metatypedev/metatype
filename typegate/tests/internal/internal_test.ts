@@ -5,7 +5,7 @@ import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("Internal test", async (t) => {
   const port = 7895;
-  const e = await t.pythonFile("internal/internal.py", { ports: [port] });
+  const e = await t.engine("internal/internal.py", { ports: [port] });
 
   await t.should("work on the default worker", async () => {
     await gql`

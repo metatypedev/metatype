@@ -4,7 +4,7 @@
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("Random", async (t) => {
-  const e = await t.pythonFile("typecheck/type_alias.py");
+  const e = await t.engine("typecheck/type_alias.py");
 
   await t.should("validate and work with a basic alias", async () => {
     await gql`

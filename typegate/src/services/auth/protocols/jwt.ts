@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { AuthDS } from "../auth.ts";
 import * as jwt from "jwt";
-import { getLogger } from "../../log.ts";
-import { SecretManager } from "../../typegraph.ts";
+import { getLogger } from "../../../log.ts";
+import { SecretManager } from "../../../typegraph.ts";
 import { Protocol } from "./protocol.ts";
-import { DenoRuntime } from "../../runtimes/deno/deno.ts";
+import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
+import { Auth } from "../../../types/typegraph.ts";
 
 const logger = getLogger(import.meta.url);
 const encoder = new TextEncoder();
@@ -14,7 +14,7 @@ const encoder = new TextEncoder();
 export class JWTAuth extends Protocol {
   static async init(
     typegraphName: string,
-    auth: AuthDS,
+    auth: Auth,
     secretManager: SecretManager,
     _denoRuntime: DenoRuntime,
   ): Promise<Protocol> {
@@ -48,13 +48,13 @@ export class JWTAuth extends Protocol {
   async tokenMiddleware(
     token: string,
     _url: URL,
-  ): Promise<[Record<string, unknown>, Headers]> {
+  ): Promise<[Record<string, unknown>, string | null]> {
     try {
       const claims = await jwt.verify(token, this.signKey);
-      return [claims, new Headers()];
+      return [claims, null];
     } catch (e) {
       logger.warning(`jwt auth failed: ${e}`);
-      return [{}, new Headers()];
+      return [{}, null];
     }
   }
 }

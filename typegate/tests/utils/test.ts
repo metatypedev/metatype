@@ -86,21 +86,7 @@ export class MetaTest {
     return engine;
   }
 
-  async pythonCode(code: string): Promise<Engine> {
-    const path = await Deno.makeTempFile({ suffix: ".py" });
-    try {
-      await Deno.writeTextFile(path, code);
-      return this.pythonFile(path);
-    } finally {
-      await Deno.remove(path);
-    }
-  }
-
-  async pythonFile(path: string, opts: ParseOptions = {}): Promise<Engine> {
-    return await this.parseTypegraph(path, opts);
-  }
-
-  async parseTypegraph(path: string, opts: ParseOptions = {}): Promise<Engine> {
+  async engine(path: string, opts: ParseOptions = {}): Promise<Engine> {
     const { deploy = false, typegraph = null, prefix = null } = opts;
     const cmd = ["serialize", "-f", path];
     if (prefix != null) {

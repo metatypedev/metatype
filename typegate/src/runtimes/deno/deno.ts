@@ -7,7 +7,7 @@ import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { DenoRuntimeData } from "../../type_node.ts";
 import * as ast from "graphql/ast";
-import { InternalAuth } from "../../auth/protocols/internal.ts";
+import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
 import { structureRepr, uncompress } from "../../utils.ts";

@@ -4,7 +4,7 @@
 import { gql, Meta } from "../utils/mod.ts";
 
 Meta.test("Simple graph", async (t) => {
-  const e = await t.pythonFile("simple/simple.py");
+  const e = await t.engine("simple/simple.py");
 
   await t.should("work", async () => {
     await gql`

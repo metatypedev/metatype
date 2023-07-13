@@ -4,11 +4,11 @@
 import { gql, Meta, rest } from "../utils/mod.ts";
 
 Meta.test("Rest queries in Python", async (t) => {
-  const e = await t.pythonFile("rest/custom.py");
+  const e = await t.engine("rest/custom.py");
 
   await t.should("work with simple rest requests", async () => {
     await rest.get("ping")
-      .expectData({
+      .expectJSON({
         ping: 1,
       })
       .on(e);
@@ -27,11 +27,11 @@ Meta.test("Rest queries in Python", async (t) => {
 });
 
 Meta.test("Rest queries in Deno", async (t) => {
-  const e = await t.pythonFile("rest/rest.ts");
+  const e = await t.engine("rest/rest.ts");
 
   await t.should("work with simple rest requests", async () => {
     await rest.get("get_post_id?id=1")
-      .expectData({
+      .expectJSON({
         postFromUser: {
           id: 12,
         },
@@ -39,7 +39,7 @@ Meta.test("Rest queries in Deno", async (t) => {
       .on(e);
 
     await rest.get("get_post_id")
-      .expectData({
+      .expectJSON({
         postFromUser: {
           id: 12,
         },
@@ -69,7 +69,7 @@ Meta.test("Rest queries in Deno", async (t) => {
   await t.should("split multiple queries on same file", async () => {
     await rest.get("get_post")
       .withVars({ id: 1 })
-      .expectData({
+      .expectJSON({
         postFromUser: {
           id: 12,
           author: {
@@ -87,7 +87,7 @@ Meta.test("Rest queries in Deno", async (t) => {
 
     await rest.put("read_post")
       .withVars({ id: 1 })
-      .expectData({
+      .expectJSON({
         read: true,
       })
       .on(e);

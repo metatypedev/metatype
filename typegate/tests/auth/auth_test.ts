@@ -12,8 +12,8 @@ import {
   signJWT,
   verifyJWT,
 } from "../../src/crypto.ts";
-import { nextAuthorizationHeader } from "../../src/auth/auth.ts";
-import { JWTClaims } from "../../src/auth/auth.ts";
+import { nextAuthorizationHeader } from "../../src/services/auth/mod.ts";
+import { JWTClaims } from "../../src/services/auth/mod.ts";
 import { getSetCookies } from "std/http/cookie.ts";
 import { b64decode } from "../../src/utils.ts";
 
@@ -22,7 +22,7 @@ mf.install();
 Meta.test("Auth", async (t) => {
   const clientId = "client_id_1";
   const clientSecret = "client_secret_1";
-  const e = await t.pythonFile("auth/auth.py", {
+  const e = await t.engine("auth/auth.py", {
     secrets: {
       TG_TEST_AUTH_GITHUB_CLIENT_ID: clientId,
       TG_TEST_AUTH_GITHUB_CLIENT_SECRET: clientSecret,

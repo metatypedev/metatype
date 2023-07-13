@@ -5,7 +5,7 @@ import { gql, Meta } from "../../utils/mod.ts";
 import { join } from "std/path/mod.ts";
 
 Meta.test("Deno runtime", async (t) => {
-  const e = await t.pythonFile("runtimes/deno/deno.py");
+  const e = await t.engine("runtimes/deno/deno.py");
 
   await t.should("work on the default worker", async () => {
     await gql`
@@ -83,7 +83,7 @@ Meta.test("Deno runtime", async (t) => {
 });
 
 Meta.test("Deno runtime: permissions", async (t) => {
-  const e = await t.pythonFile("runtimes/deno/deno.py");
+  const e = await t.engine("runtimes/deno/deno.py");
 
   await t.should("success for allowed network access", async () => {
     await gql`
@@ -109,7 +109,7 @@ Meta.test("Deno runtime: permissions", async (t) => {
 });
 
 Meta.test("Deno runtime: use local imports", async (t) => {
-  const e = await t.pythonFile("runtimes/deno/deno_dep.py");
+  const e = await t.engine("runtimes/deno/deno_dep.py");
   await t.should("work for local imports", async () => {
     await gql`
       query {
@@ -124,7 +124,7 @@ Meta.test("Deno runtime: use local imports", async (t) => {
 Meta.test("Deno runtime: reloading", async (t) => {
   const load = async (value: number) => {
     Deno.env.set("DYNAMIC", join("dynamic", `${value}.ts`));
-    const e = await t.pythonFile("runtimes/deno/deno_reload.py");
+    const e = await t.engine("runtimes/deno/deno_reload.py");
     Deno.env.delete("DYNAMIC");
     return e;
   };

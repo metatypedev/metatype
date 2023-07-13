@@ -73,7 +73,7 @@ export async function autoTest(rootDir: string, target = "dev") {
     const secrets = config.typegates[target]?.env ?? {};
 
     test(`Auto-tests for ${name}`, async (t) => {
-      const e = await t.pythonFile(pythonFile.path, { secrets });
+      const e = await t.engine(pythonFile.path, { secrets });
       await dropSchemas(e);
       await recreateMigrations(e);
 
