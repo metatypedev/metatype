@@ -142,47 +142,19 @@ jobs:
           poetry install
           pytest -s tests
 
-  test-typegraph-next:
+  test-typegraph-core:
     needs:
       - changes
     if: ${{ needs.changes.outputs.typegraph == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
       - uses: dsherret/rust-toolchain-file@v1
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: ${{ env.DENO_VERSION }}
-      - uses: actions/setup-node@v3
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - env:
-          WASM_FILE: target/debug/typegraph_core.wasm
-        run: |
-          poetry install
-          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
-          npm install --global @bytecodealliance/jco@$JCO_VERSION
-
-          cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
-          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
-
-          rm -rf typegraph/deno/gen
-          jco transpile $WASM_FILE -o typegraph/deno/gen --no-nodejs-compat --map "*=../src/imports.ts"
-          bash typegraph/deno/dev/fix-declarations.sh
-
-          rm -rf typegraph/python_next/typegraph_next/gen
-          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
-
-          cargo run --locked --package meta-cli -- --help
+      - run: |
+          # test in native rust, not in wasm for a future rust SDK
           cargo test --locked --package typegraph_core
 
   test-meta-cli:
@@ -330,18 +302,29 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: meta
-      - run: |
+      - env:
+          WASM_FILE: target/debug/typegraph_core.wasm
+        run: |
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
-          cd typegraph/python
           poetry install --sync
-          cd ../..
+
+          cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+          npm install --global @bytecodealliance/jco@$JCO_VERSION
+          cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
+          wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+          rm -rf typegraph/deno/gen
+          jco transpile $WASM_FILE -o typegraph/deno/gen --no-nodejs-compat --map "*=../src/imports.ts"
+          bash typegraph/deno/dev/fix-declarations.sh
+          rm -rf typegraph/python_next/typegraph_next/gen
+          poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
+
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
-          which py-tg
           deno run -A dev/test.ts -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
+
           cargo test --locked --package native
       - uses: codecov/codecov-action@v3
         with:
