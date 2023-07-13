@@ -61,7 +61,7 @@ jobs:
             suffix: ".exe"
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dsherret/rust-toolchain-file@v1
         with:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
