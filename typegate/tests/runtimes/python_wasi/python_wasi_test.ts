@@ -81,6 +81,18 @@ test("Python WASI runtime", async (t) => {
       .on(e);
   });
 
+  await t.should("work once (module)", async () => {
+    await gql`
+      query {
+        testMod(name: "Loyd")
+      }
+    `
+      .expectData({
+        testMod: "Hello Loyd",
+      })
+      .on(e);
+  });
+
   await t.should("work fast enough", async () => {
     const tests = [...Array(100).keys()].map((i) =>
       gql`
