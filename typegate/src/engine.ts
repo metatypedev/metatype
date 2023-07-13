@@ -142,7 +142,7 @@ export async function handleRest(
   const name = url.pathname.split("/").slice(
     3,
   ).join("/");
-  const [plan, checkVariables] = queries[name];
+  const [plan, checkVariables] = queries[name] ?? [];
   if (!plan) {
     return new Response(`query not found: ${name}`, { status: 404 });
   }

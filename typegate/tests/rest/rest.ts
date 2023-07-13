@@ -19,7 +19,7 @@ typegraph("rest", (expose) => {
   const pub = g.Policy.public();
 
   const postFromUser = deno.func(user, post, {
-    code: "(user) => ({ id: 12, user })",
+    code: "() => ({ id: 12, author: {id: 1} })",
   }).withPolicy(pub);
 
   const readPost = deno.func(

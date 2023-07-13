@@ -108,6 +108,12 @@ export const typegate =
         });
       }
 
+      if (!engine.tg.tg.meta.queries.dynamic) {
+        return new Response("not found", {
+          status: 404,
+        });
+      }
+
       const [context, headers] = await engine.ensureJWT(
         request.headers,
         url,
