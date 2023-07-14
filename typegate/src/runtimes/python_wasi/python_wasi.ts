@@ -8,8 +8,18 @@ import { ComputeStage } from "../../engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
 import { TypeGraph } from "../../typegraph.ts";
+import { PythonVirtualMachine } from "./python_vm.ts";
+import { Materializer } from "../../types/typegraph.ts";
 
 const logger = getLogger(import.meta);
+
+function generateVmIdentifier(mat?: Materializer) {
+  const { mod } = mat?.data ?? {};
+  if (mod !== undefined) {
+    return `pymod_${mod}`;
+  }
+  return "default";
+}
 
 export class PythonWasiRuntime extends Runtime {
   private constructor(
@@ -34,54 +44,59 @@ export class PythonWasiRuntime extends Runtime {
     //   "python",
     // );
 
-    // TODO:
-    // customize path per entry point per vm(worker?) per repr.hash
-    logger.info(`initializing python vm: ${typegraphName}`);
-    await w.vm.setup(typegraphName, "tmp");
+    logger.info(`initializing default vm: ${typegraphName}`);
+
+    // add default vm for lambda/def
+    const defaultVm = new PythonVirtualMachine();
+    await defaultVm.setup("default");
+    w.vmMap.set("default", defaultVm);
 
     const mods = materializers
       .filter((m) => m.name == "import_function")
       .map((m) => {
-        const modMat = typegraph.materializers[m.data.mod as number];
-        const code = modMat.data.code as string;
-        const file = modMat.data.file as string;
+        const pyModMat = typegraph.materializers[m.data.mod as number];
+        const code = pyModMat.data.code as string;
+        const file = pyModMat.data.file as string;
         const modName = path.parse(file).name;
-
+        const vmId = generateVmIdentifier(m);
         // TODO: move this logic to postprocess or python runtime
         m.data.name = `${modName}.${m.data.name as string}`;
 
-        return { modName, file, code };
+        return { modName, vmId, file, code };
       });
 
-    for (const imp of mods) {
-      console.info("[!] module", imp);
-      // TODO:
-      // Can we bind multiple paths ?
-      // - /app => [dir1, dir2, ... ]
-      // - if not then create /app1, /app2, .. then update syspath ?
-      // 1. uncompress base64 et generate the directories to bind
-      // 2. const repr = await structureRepr(imp.code);
-      // repr.entryPoint: full path to main module
-      // imp.name: name of the function to be exported (must be within entryPoint module)
-      const testPath = path.join("tmp", imp.file);
-      const sourceCode = Deno.readTextFileSync(testPath);
-      await w.vm.registerModule(imp.modName, sourceCode);
+    for (const { modName, vmId, file /*, code*/ } of mods) {
+      const appDir = "tmp";
+      const entryPoint = path.join("tmp", file);
 
-      // TODO: add this change in postprocess
+      logger.info(`setup vm "${vmId}" for module ${modName}`);
+      const vm = new PythonVirtualMachine();
+      await vm.setup(vmId, appDir);
+      w.vmMap.set(vmId, vm);
 
-      console.log(imp.modName, ":\n", sourceCode);
-      logger.info(`registered module: ${imp.modName} at ${testPath}`);
+      const sourceCode = Deno.readTextFileSync(entryPoint);
+      await vm.registerModule(modName, sourceCode);
+
+      logger.info(
+        `register module ${modName} to vm ${vmId} at ${entryPoint}`,
+      );
     }
 
     for (const m of materializers) {
       switch (m.name) {
         case "lambda":
           logger.info(`registering lambda: ${m.data.name}`);
-          await w.vm.registerLambda(m.data.name as string, m.data.fn as string);
+          await defaultVm.registerLambda(
+            m.data.name as string,
+            m.data.fn as string,
+          );
           break;
         case "def":
           logger.info(`registering def: ${m.data.name}`);
-          await w.vm.registerDef(m.data.name as string, m.data.fn as string);
+          await defaultVm.registerDef(
+            m.data.name as string,
+            m.data.fn as string,
+          );
           break;
       }
     }
@@ -90,11 +105,11 @@ export class PythonWasiRuntime extends Runtime {
   }
 
   async deinit(): Promise<void> {
-    await this.w.vm.destroy();
+    for (const vm of this.w.vmMap.values()) {
+      logger.info(`unregister vm: ${vm.getVmName()}`);
+      await vm.destroy();
+    }
     await this.w.terminate();
-  }
-
-  async collect() {
   }
 
   materialize(
@@ -102,9 +117,13 @@ export class PythonWasiRuntime extends Runtime {
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const { name } = stage.props.materializer?.data ?? {};
+    const mat = stage.props.materializer;
+    const { name } = mat?.data ?? {};
+    const vmId = generateVmIdentifier(mat);
     return [
-      stage.withResolver((args) => this.w.execute(name as string, args)),
+      stage.withResolver((args) => {
+        return this.w.execute(name as string, { vmId, args });
+      }),
     ];
   }
 }

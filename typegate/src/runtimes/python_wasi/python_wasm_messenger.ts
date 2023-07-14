@@ -13,30 +13,38 @@ const pythonWasiReactorUrl =
   "https://github.com/metatypedev/python-wasi-reactor/releases/download/v0.1.0/python3.11.1-wasi-reactor.wasm.tar.gz";
 
 const cachePath = join(config.tmp_dir, "python3.11.1-wasi-reactor.wasm");
+// TODO: add pythonlib
 
 export class PythonWasmMessenger extends AsyncMessenger<
-  PythonVirtualMachine,
+  Map<string, PythonVirtualMachine>,
   unknown,
   unknown
 > {
-  vm: PythonVirtualMachine;
+  vmMap: Map<string, PythonVirtualMachine>;
 
   private constructor() {
-    const vm = new PythonVirtualMachine();
+    const vmMap = new Map<string, PythonVirtualMachine>();
     super(
-      vm,
-      (vm, { id, op, data }) => {
-        vm.apply(id, op as string, [data])
-          .then((res) => {
-            this.receive({ id, data: res });
-          })
-          .catch((err) => {
-            this.receive({ id, error: err });
-          });
+      vmMap,
+      (vmMap, { id, op, data }) => {
+        const { vmId, args } = data as any;
+        const vm = vmMap.get(vmId);
+        if (!vm) {
+          this.receive({ id, error: `vm "${vmId}" does not exist` });
+        } else {
+          vm.apply(id, op as string, [args])
+            .then((res) => {
+              this.receive({ id, data: res });
+            })
+            .catch((err) => {
+              this.receive({ id, error: err });
+            });
+        }
       },
       () => {},
     );
-    this.vm = vm;
+
+    this.vmMap = vmMap;
   }
 
   static async init(): Promise<PythonWasmMessenger> {
