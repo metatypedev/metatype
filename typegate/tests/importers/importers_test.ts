@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertRejects } from "std/testing/asserts.ts";
-import { copyFile, gql, test } from "../utils.ts";
+import { copyFile, gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
-import { MetaTest } from "../utils/metatest.ts";
-import { Q } from "../utils/q.ts";
+import { GraphQLQuery } from "../utils/query/graphql_query.ts";
+import { MetaTest } from "../utils/test.ts";
+import { shell } from "../utils/shell.ts";
 
 mf.install();
 
@@ -32,7 +32,11 @@ mf.mock("POST@/graphql", () => {
   );
 });
 
-async function testImporter(t: MetaTest, name: string, testQuery?: Q) {
+async function testImporter(
+  t: MetaTest,
+  name: string,
+  testQuery?: GraphQLQuery,
+) {
   const file = `importers/copy/${name}.py`;
 
   await t.should("copy source typegraph definition", async () => {
@@ -40,11 +44,11 @@ async function testImporter(t: MetaTest, name: string, testQuery?: Q) {
   });
 
   await t.should("run the importer", async () => {
-    await assertRejects(() => t.pythonFile(file), "No typegraph");
+    await shell(["python3", file]);
   });
 
   await t.should("load typegraph and execute query", async () => {
-    const e = await t.pythonFile(file);
+    const e = await t.engine(file);
     if (testQuery != null) {
       await testQuery
         .expectStatus(200)
@@ -54,10 +58,10 @@ async function testImporter(t: MetaTest, name: string, testQuery?: Q) {
   });
 }
 
-test("GraphQL importer", async (t) => {
+Meta.test("GraphQL importer", async (t) => {
   await testImporter(
     t,
-    "graphql",
+    "gql",
     gql`
       query {
         mutationPrevalenceSubtypes {
@@ -68,7 +72,7 @@ test("GraphQL importer", async (t) => {
   );
 });
 
-test("OpenAPI importer", async (t) => {
+Meta.test("OpenAPI importer", async (t) => {
   await testImporter(
     t,
     "openapi",

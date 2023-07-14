@@ -1,7 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { expandGlobSync, projectDir, runOrExit } from "./mod.ts";
+import { expandGlobSync } from "./deps.ts";
+import { projectDir, runOrExit } from "./utils.ts";
 
 const typegraphs = Array.from(
   expandGlobSync("typegate/src/typegraphs/**/*.py", {

@@ -1,15 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { gql, Meta } from "../utils/mod.ts";
+
 import { Type } from "../../src/type_node.ts";
 import { InputValidationCompiler } from "../../src/typecheck/input.ts";
 import { nativeResult } from "../../src/utils.ts";
-import { gql, test } from "../utils.ts";
 import * as native from "native";
 import { assert, assertEquals } from "std/testing/asserts.ts";
 
-test("input validator compiler", async (t) => {
-  const e = await t.pythonFile("typecheck/typecheck.py");
+Meta.test("input validator compiler", async (t) => {
+  const e = await t.engine("typecheck/typecheck.py");
   const { tg } = e;
 
   const root = tg.type(0, Type.OBJECT);
@@ -28,9 +29,6 @@ test("input validator compiler", async (t) => {
       source: generatedCode,
     })).formatted_code;
 
-    console.log("-- BEGIN code");
-    console.log(code);
-    console.log("-- END code");
     t.assertSnapshot(code);
   });
 
@@ -83,9 +81,6 @@ test("input validator compiler", async (t) => {
       source: generatedCode,
     })).formatted_code;
 
-    console.log("-- BEGIN code");
-    console.log(code);
-    console.log("-- END code");
     t.assertSnapshot(code);
   });
 
@@ -137,9 +132,6 @@ test("input validator compiler", async (t) => {
       source: generatedCode,
     })).formatted_code;
 
-    console.log("-- BEGIN code");
-    console.log(code);
-    console.log("-- END code");
     t.assertSnapshot(code);
   });
 

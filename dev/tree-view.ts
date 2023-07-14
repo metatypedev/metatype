@@ -12,11 +12,21 @@
  *                  Default: 0
  */
 
-import * as flags from "https://deno.land/std@0.170.0/flags/mod.ts";
+import { cyan, green, parseFlags } from "./deps.ts";
 import { TypeGraphDS } from "../typegate/src/typegraph.ts";
-import { treeView } from "../typegate/src/typegraph/utils.ts";
+import { visitType } from "../typegate/src/typegraph/visitor.ts";
 
-const args = flags.parse(Deno.args, {
+export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {
+  visitType(tg, rootIdx, ({ type, idx, path }) => {
+    const indent = "    ".repeat(path.edges.length);
+    const edge = cyan(`${path.edges[path.edges.length - 1] ?? "[root]"}`);
+    const idxStr = green(`${idx}`);
+    console.log(`${indent}${edge} → ${idxStr} ${type.type}:${type.title}`);
+    return path.edges.length < depth;
+  }, { allowCircular: true });
+}
+
+const args = parseFlags(Deno.args, {
   string: ["depth", "root"],
 });
 

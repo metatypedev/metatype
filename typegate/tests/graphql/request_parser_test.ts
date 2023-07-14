@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { FormDataParser } from "../../src/graphql/request_parser.ts";
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
 import { assertEquals, assertExists } from "std/testing/asserts.ts";
 
 mf.install();
 
-test("request parser: multipart/form-data", async (t) => {
+Meta.test("request parser: multipart/form-data", async (t) => {
   let request: Request | null = null;
   mf.mock("POST@/api/graphql", (req) => {
     request = req;
@@ -39,7 +39,5 @@ test("request parser: multipart/form-data", async (t) => {
     assertEquals(operations.query, q.query);
     assertExists(operations.variables.file);
     assertEquals(fileContent, await (operations.variables.file as File).text());
-
-    console.log({ operations });
   });
 });

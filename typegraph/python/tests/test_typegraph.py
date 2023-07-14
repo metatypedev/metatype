@@ -106,6 +106,7 @@ class TestTypegraph:
                 "policies": [],
                 "meta": {
                     "secrets": [],
+                    "queries": {"dynamic": True, "endpoints": []},
                     "auths": [],
                     "rate": None,
                     "cors": Cors(
@@ -115,9 +116,9 @@ class TestTypegraph:
                         allow_credentials=True,
                         max_age_sec=None,
                     ),
-                    "version": "0.0.1",
+                    "version": "0.0.2",
                 },
-                "$id": "https://metatype.dev/specs/0.0.1.json",
+                "$id": "https://metatype.dev/specs/0.0.2.json",
             }
         )
 
@@ -256,6 +257,7 @@ class TestTypegraph:
                 "policies": [],
                 "meta": {
                     "secrets": [],
+                    "queries": {"dynamic": True, "endpoints": []},
                     "auths": [],
                     "rate": None,
                     "cors": Cors(
@@ -265,9 +267,9 @@ class TestTypegraph:
                         allow_credentials=True,
                         max_age_sec=None,
                     ),
-                    "version": "0.0.1",
+                    "version": "0.0.2",
                 },
-                "$id": "https://metatype.dev/specs/0.0.1.json",
+                "$id": "https://metatype.dev/specs/0.0.2.json",
             }
         )
 
@@ -350,6 +352,7 @@ class TestTypegraph:
                 "policies": [{"name": "__public", "materializer": 0}],
                 "meta": {
                     "secrets": [],
+                    "queries": {"dynamic": True, "endpoints": []},
                     "auths": [],
                     "rate": None,
                     "cors": Cors(
@@ -359,8 +362,8 @@ class TestTypegraph:
                         allow_credentials=True,
                         max_age_sec=None,
                     ),
-                    "version": "0.0.1",
+                    "version": "0.0.2",
                 },
-                "$id": "https://metatype.dev/specs/0.0.1.json",
+                "$id": "https://metatype.dev/specs/0.0.2.json",
             }
         )

@@ -18,10 +18,8 @@ fn test_invalid_injections() {
         .env("RUST_LOG", "error")
         .output()
         .expect("failed to execute process");
+    let stderr = String::from_utf8(output.stderr).expect("failed to decode output");
 
     assert!(!output.status.success());
-    insta::assert_snapshot!(
-        "invalid_injections",
-        String::from_utf8(output.stderr).expect("failed to decode output")
-    );
+    insta::assert_snapshot!("invalid_injections", stderr);
 }

@@ -16,7 +16,7 @@ import {
   initAuth,
   internalAuthName,
   nextAuthorizationHeader,
-} from "./auth/auth.ts";
+} from "./services/auth/mod.ts";
 
 import {
   isArray,
@@ -44,11 +44,11 @@ import type {
   Typegraph as TypeGraphDS,
 } from "./types/typegraph.ts";
 import { TemporalRuntime } from "./runtimes/temporal.ts";
-import { InternalAuth } from "./auth/protocols/internal.ts";
+import { InternalAuth } from "./services/auth/protocols/internal.ts";
 import { WasmEdgeRuntime } from "./runtimes/wasmedge.ts";
 import { PythonWasiRuntime } from "./runtimes/python_wasi/python_wasi.ts";
-import { Protocol } from "./auth/protocols/protocol.ts";
-import { OAuth2Auth } from "./auth/protocols/oauth2.ts";
+import { Protocol } from "./services/auth/protocols/protocol.ts";
+import { OAuth2Auth } from "./services/auth/protocols/oauth2.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -66,7 +66,7 @@ const runtimeInit: RuntimeInit = {
   python_wasi: PythonWasiRuntime.init,
 };
 
-export const typegraphVersion = "0.0.1";
+export const typegraphVersion = "0.0.2";
 
 export class SecretManager {
   constructor(
@@ -160,7 +160,7 @@ export class TypeGraph {
   }
 
   static formatName(tg: TypeGraphDS): string {
-    return (tg.prefix ?? "") + tg.types[0].title;
+    return (tg.meta.prefix ?? "") + tg.types[0].title;
   }
 
   static async parseJson(json: string): Promise<TypeGraphDS> {

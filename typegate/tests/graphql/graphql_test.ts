@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
 import { buildSchema, graphql } from "graphql";
 import { withInlinedVars } from "../../src/runtimes/utils/graphql_inline_vars.ts";
@@ -64,8 +64,8 @@ mf.mock("POST@/api/graphql", async (req) => {
   });
 });
 
-test("GraphQL queries", async (t) => {
-  const e = await t.pythonFile("graphql/graphql.py");
+Meta.test("GraphQL queries", async (t) => {
+  const e = await t.engine("graphql/graphql.py");
 
   await t.should("work with queries", async () => {
     await gql`
@@ -84,8 +84,8 @@ test("GraphQL queries", async (t) => {
   });
 });
 
-test("GraphQL variables", async (t) => {
-  const e = await t.pythonFile("graphql/graphql.py");
+Meta.test("GraphQL variables", async (t) => {
+  const e = await t.engine("graphql/graphql.py");
 
   await t.should("work", async () => {
     await gql`
@@ -124,7 +124,7 @@ test("GraphQL variables", async (t) => {
   });
 });
 
-test("GraphQL: variable inlining", async (t) => {
+Meta.test("GraphQL: variable inlining", async (t) => {
   await t.should("work", () => {
     const getQuery = withInlinedVars(
       outdent`

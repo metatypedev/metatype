@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
 
 mf.install();
@@ -24,8 +24,8 @@ function generatePost(id: number) {
   };
 }
 
-test("Rest queries", async (t) => {
-  const e = await t.pythonFile("nesting/nesting.py");
+Meta.test("Rest queries", async (t) => {
+  const e = await t.engine("nesting/nesting.py");
 
   mf.mock("GET@/api/users/:id", (_req, params) => {
     const userId = Number(params.id);

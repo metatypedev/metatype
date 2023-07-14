@@ -63,7 +63,11 @@ function splitGraphQLOperations(
         const childMaterializer =
           typegraph.materializers[childNode.materializer];
 
-        if (childMaterializer.effect.effect == null) {
+        if (
+          // TODO effect should always be defined
+          childMaterializer.effect.effect === null ||
+          childMaterializer.effect.effect === "none"
+        ) {
           queryProperties[propertyName] = typeIndex;
           // TODO additional checks
         } else {

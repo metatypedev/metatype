@@ -1,12 +1,12 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
 // https://github.com/graphql/graphql-js/blob/main/src/__tests__/starWarsIntrospection-test.ts
 
-test("Basic introspection", async (t) => {
-  const e = await t.pythonFile("simple/simple.py");
+Meta.test("Basic introspection", async (t) => {
+  const e = await t.engine("simple/simple.py");
 
   await t.should("allow querying the schema for types", async () => {
     await gql`
@@ -234,8 +234,8 @@ test("Basic introspection", async (t) => {
   });
 }, { introspection: true });
 
-test("Full introspection", async (t) => {
-  const e = await t.pythonFile("simple/simple.py");
+Meta.test("Full introspection", async (t) => {
+  const e = await t.engine("simple/simple.py");
 
   await t.should("not fail", async () => {
     await gql`

@@ -10,7 +10,9 @@
   "deno.importMap": "typegate/deno.json",
   "deno.enablePaths": [
     "typegate",
-    "dev"
+    "dev",
+    "typegraph/core/tests/typegraphs/deno",
+    "typegraph/deno"
   ],
   "deno.unstable": true,
   "deno.suggest.completeFunctionCalls": true,

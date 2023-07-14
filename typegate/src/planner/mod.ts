@@ -410,7 +410,11 @@ export class Planner {
     const mat = this.tg.materializer(schema.materializer);
     const effect = mat.effect.effect ?? null;
     const runtime = this.tg.runtimeReferences[mat.runtime];
-    if (this.operation.operation === "query" && mat.effect.effect != null) {
+    if (
+      this.operation.operation === "query" &&
+      // TODO: effect should always be non-null
+      (mat.effect.effect != null && mat.effect.effect != "none")
+    ) {
       throw new Error(
         `'${schema.title}' via '${mat.name}' can only be executed in mutation`,
       );

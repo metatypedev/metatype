@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { test } from "../utils.ts";
+import { Meta } from "../utils/mod.ts";
 import { assertThrows } from "std/testing/asserts.ts";
 import { findOperation } from "../../src/graphql.ts";
 import { parse } from "graphql";
@@ -13,8 +13,8 @@ import {
 import * as native from "native";
 import { nativeResult } from "../../src/utils.ts";
 
-test("typecheck", async (t) => {
-  const e = await t.pythonFile("typecheck/typecheck.py");
+Meta.test("typecheck", async (t) => {
+  const e = await t.engine("typecheck/typecheck.py");
   const { tg } = e;
 
   // for syntax highlighting
@@ -54,8 +54,6 @@ test("typecheck", async (t) => {
       "Unexpected property 'postis' at 'Query1'",
     );
 
-    console.log("Q2");
-
     assertThrows(
       () =>
         getValidationCode(graphql`
@@ -91,9 +89,7 @@ test("typecheck", async (t) => {
     const formattedCode = nativeResult(native.typescript_format_code({
       source: code,
     })).formatted_code;
-    console.log("-- START code --");
-    console.log(formattedCode);
-    console.log("-- END code --");
+
     t.assertSnapshot(formattedCode);
   });
 

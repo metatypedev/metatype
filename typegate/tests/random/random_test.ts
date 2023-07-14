@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
-test("Random", async (t) => {
-  const e = await t.pythonFile("random/random.py");
+Meta.test("Random", async (t) => {
+  const e = await t.engine("random/random.py");
 
   await t.should("work", async () => {
     await gql`

@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { JSONValue } from "../../src/utils.ts";
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
-test(
+Meta.test(
   "Union type",
   async (t) => {
-    const e = await t.pythonFile("type_nodes/union_node.py");
+    const e = await t.engine("type_nodes/union_node.py");
 
     await t.should(
       "allow query with variant colorName of type string in union value Color",
@@ -172,8 +172,8 @@ test(
   { introspection: true },
 );
 
-test("nested unions", async (t) => {
-  const e = await t.pythonFile("type_nodes/union_node.py");
+Meta.test("nested unions", async (t) => {
+  const e = await t.engine("type_nodes/union_node.py");
 
   await t.should("support nested unions", async () => {
     const data: JSONValue = [
@@ -214,8 +214,8 @@ test("nested unions", async (t) => {
   });
 });
 
-test("multilevel unions", async (t) => {
-  const e = await t.pythonFile("type_nodes/union_node.py");
+Meta.test("multilevel unions", async (t) => {
+  const e = await t.engine("type_nodes/union_node.py");
 
   await t.should("success", async () => {
     const data: JSONValue = [
@@ -249,8 +249,8 @@ test("multilevel unions", async (t) => {
   });
 });
 
-test("scalar unions", async (t) => {
-  const e = await t.pythonFile("type_nodes/union_node.py");
+Meta.test("scalar unions", async (t) => {
+  const e = await t.engine("type_nodes/union_node.py");
 
   await t.should("succeed", async () => {
     const data: JSONValue = [1, "hello", 12, false];
