@@ -6,7 +6,7 @@ on:
 env:
   PYTHON_VERSION: "3.8"
   POETRY_VERSION: "1.4.1"
-  DENO_VERSION: "1.34.3"
+  DENO_VERSION: "1.35.1"
 
 jobs:
   check-bump:
@@ -61,7 +61,7 @@ jobs:
             suffix: ".exe"
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dsherret/rust-toolchain-file@v1
         with:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2

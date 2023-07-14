@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import config from "../../src/config.ts";
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
 async function genSecretKey(
   typegraphName: string,
@@ -19,8 +19,8 @@ async function genSecretKey(
   return { [envVar]: jwk };
 }
 
-test("Policies", async (t) => {
-  const e = await t.pythonFile("policies/policies.py", {
+Meta.test("Policies", async (t) => {
+  const e = await t.engine("policies/policies.py", {
     secrets: await genSecretKey("policies"),
   });
 
@@ -82,11 +82,11 @@ test("Policies", async (t) => {
   });
 });
 
-test("Role jwt policy access", async (t) => {
-  const e_norm = await t.pythonFile("policies/policies_jwt.py", {
+Meta.test("Role jwt policy access", async (t) => {
+  const e_norm = await t.engine("policies/policies_jwt.py", {
     secrets: await genSecretKey("policies_jwt"),
   });
-  const e_inject = await t.pythonFile("policies/policies_jwt_injection.py", {
+  const e_inject = await t.engine("policies/policies_jwt_injection.py", {
     secrets: await genSecretKey("policies_jwt_injection"),
   });
 
@@ -173,8 +173,8 @@ test("Role jwt policy access", async (t) => {
   );
 });
 
-test("Namespace policies", async (t) => {
-  const e = await t.pythonFile("policies/policies.py", {
+Meta.test("Namespace policies", async (t) => {
+  const e = await t.engine("policies/policies.py", {
     secrets: await genSecretKey("policies"),
   });
 
@@ -191,8 +191,8 @@ test("Namespace policies", async (t) => {
   });
 });
 
-test("Policies for effects", async (t) => {
-  const e = await t.pythonFile("policies/effects.py", {
+Meta.test("Policies for effects", async (t) => {
+  const e = await t.engine("policies/effects.py", {
     secrets: await genSecretKey("effects"),
   });
 

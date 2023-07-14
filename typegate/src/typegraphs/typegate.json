@@ -1,5 +1,5 @@
 {
-  "$id": "https://metatype.dev/specs/0.0.1.json",
+  "$id": "https://metatype.dev/specs/0.0.2.json",
   "types": [
     {
       "type": "object",
@@ -468,7 +468,12 @@
     }
   ],
   "meta": {
+    "prefix": null,
     "secrets": [],
+    "queries": {
+      "dynamic": true,
+      "endpoints": []
+    },
     "cors": {
       "allow_origin": [
         "*"
@@ -497,7 +502,6 @@
       "context_identifier": "user",
       "local_excess": 5
     },
-    "version": "0.0.1"
-  },
-  "prefix": null
+    "version": "0.0.2"
+  }
 }

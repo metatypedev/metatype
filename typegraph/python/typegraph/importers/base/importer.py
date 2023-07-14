@@ -95,7 +95,7 @@ class Importer:
         if len(reserved) > 0:
             raise Exception(f"Cannot use reserved types: {', '.join(reserved)}")
 
-        self.tg = TypeGraph(name="__importer__")
+        self.tg = TypeGraph(name="_importer_")
         self.type_hint = []
 
     def __enter__(self):

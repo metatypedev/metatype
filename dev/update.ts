@@ -5,13 +5,11 @@ import {
   expandGlobSync,
   groupBy,
   parseFlags,
-  projectDir,
-  relPath,
   resolve,
-  runOrExit,
   udd,
   WalkEntry,
-} from "./mod.ts";
+} from "./deps.ts";
+import { projectDir, relPath, runOrExit } from "./utils.ts";
 
 const denoConfigPath = resolve(projectDir, "typegate/deno.json");
 const devConfigPath = resolve(projectDir, "dev/mod.ts");

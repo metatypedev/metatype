@@ -34,21 +34,4 @@ with TypeGraph(name="math") as g:
             t.string(),
             PureFunMat(random_item_fn, runtime=worker),
         ).add_policy(public),
-        randomIntInRange=t.func(
-            t.struct({"from": t.integer(), "to": t.integer()}),
-            t.integer(),
-            ModuleMat(
-                code="""
-                    export default function(
-                        { from, to }: { from: number, to: number },
-                        context: Record<string, string>,
-                    ) {
-                        const extent = to - from;
-                        if (extent <= 0) throw new Error("invalid range");
-                        return from + Math.floor(Math.random() * extent);
-                    }
-                    """,
-                runtime=worker,
-            ).imp("default"),
-        ).add_policy(public),
     )

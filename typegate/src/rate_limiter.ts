@@ -3,6 +3,7 @@
 
 import { connect, Redis, RedisConnectOptions } from "redis";
 import { Deferred, deferred } from "std/async/deferred.ts";
+import { Engine } from "./engine.ts";
 
 // keys: tokens, latest
 // args: n
@@ -57,7 +58,27 @@ export abstract class RateLimiter {
     maxLocalHit: number,
   ): Promise<number>;
 
-  async limit(
+  getLimitForEngine(
+    engine: Engine,
+    identifier: string,
+  ): Promise<RateLimit | null> {
+    if (
+      !engine.tg.tg.meta.rate ||
+      // FIX bad serialization of rate (current: array if no object)
+      Array.isArray(engine.tg.tg.meta.rate)
+    ) {
+      return Promise.resolve(null);
+    }
+    return this.getLimit(
+      `${engine.name}:${identifier}`,
+      engine.tg.tg.meta.rate.query_limit,
+      engine.tg.tg.meta.rate.window_sec,
+      engine.tg.tg.meta.rate.window_limit,
+      engine.tg.tg.meta.rate.local_excess,
+    );
+  }
+
+  async getLimit(
     id: string,
     queryBudget: number,
     windowSec: number,

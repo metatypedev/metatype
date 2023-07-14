@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
-test("array of optional", async (t) => {
-  const e = await t.pythonFile("type_nodes/array_of_optional.py");
+Meta.test("array of optional", async (t) => {
+  const e = await t.engine("type_nodes/array_of_optional.py");
   await t.should("work with array of optional scalars", async () => {
     await gql`
         query {

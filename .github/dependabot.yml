@@ -4,19 +4,39 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    groups:
+      deps:
+        patterns:
+          - "*"
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: monthly
-  - package-ecosystem: docker
-    directory: /
-    schedule:
-      interval: monthly
+    groups:
+      deps:
+        patterns:
+          - "*"
   - package-ecosystem: pip
     directory: /typegraph
     schedule:
       interval: monthly
+    groups:
+      deps:
+        patterns:
+          - "*"
   - package-ecosystem: pip
-    directory: /examples
+    directory: /
     schedule:
       interval: monthly
+    groups:
+      deps:
+        patterns:
+          - "*"
+  - package-ecosystem: npm
+    directory: /website
+    schedule:
+      interval: monthly
+    groups:
+      deps:
+        patterns:
+          - "*"

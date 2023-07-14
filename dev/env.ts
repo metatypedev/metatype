@@ -10,7 +10,8 @@
  *    name of the docker-compose file / runtime dependency
  */
 
-import { basename, expandGlobSync, projectDir, runOrExit } from "./mod.ts";
+import { basename, expandGlobSync } from "./deps.ts";
+import { projectDir, runOrExit } from "./utils.ts";
 
 const dcs = [
   ...expandGlobSync("dev/envs/compose.*.yml", {

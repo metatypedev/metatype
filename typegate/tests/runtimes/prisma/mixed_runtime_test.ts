@@ -1,13 +1,14 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
+import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 import * as mf from "test/mock_fetch";
 
 mf.install();
 
-test("prisma mixed runtime", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/mixed_runtime.py", {
+Meta.test("prisma mixed runtime", async (t) => {
+  const e = await t.engine("runtimes/prisma/mixed_runtime.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-mixed",

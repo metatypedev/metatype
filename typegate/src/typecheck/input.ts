@@ -19,8 +19,6 @@ export function generateValidator(tg: TypeGraph, typeIdx: number): Validator {
     const errors: ErrorEntry[] = [];
     validator(value, "<value>", errors, validationContext);
     if (errors.length > 0) {
-      console.log("validating input", value);
-      console.log(errors);
       const messages = errors.map(([path, msg]) => `  - at ${path}: ${msg}\n`)
         .join("");
       throw new Error(`Validation errors:\n${messages}`);

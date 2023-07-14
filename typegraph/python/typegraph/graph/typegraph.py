@@ -2,8 +2,13 @@
 # SPDX-License-Identifier: MPL-2.0
 
 import inspect
+import json
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Dict, List, Optional, Set, Union
+
+import attrs
+from frozendict import frozendict
 
 from typegraph.graph.builder import Collector
 from typegraph.graph.models import Auth, Cors, Rate
@@ -17,7 +22,16 @@ if TYPE_CHECKING:
 
 OperationTable = Dict[str, Union["t.func", "t.struct"]]
 
-typegraph_version = "0.0.1"
+typegraph_version = "0.0.2"
+
+
+class JSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if attrs.has(o):
+            return attrs.asdict(o)
+        if isinstance(o, frozendict):
+            return dict(o)
+        return super().default(o)
 
 
 class TypeGraph:
@@ -66,6 +80,15 @@ class TypeGraph:
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         TypegraphContext.pop()
+        if (
+            os.environ.get("PY_TG_COMPATIBILITY") is not None
+            and TypegraphContext.is_empty()
+            and not TypegraphContext.building
+        ):
+            TypegraphContext.building = True
+            tg = self.build()
+            output = json.dumps(tg, cls=JSONEncoder)
+            print(output)
 
     def __call__(
         self, node: str, after_apply: Callable[["t.typedef"], "t.typdef"] = lambda x: x
@@ -156,6 +179,10 @@ class TypeGraph:
 
         ret["meta"] = {
             "secrets": ret.pop("secrets") if "secrets" in ret else [],
+            "queries": {  # only in new SDK
+                "dynamic": True,
+                "endpoints": [],
+            },
             "auths": self.auths,
             "rate": self.rate,
             "cors": self.cors,
@@ -169,6 +196,7 @@ class TypeGraph:
 
 class TypegraphContext:
     typegraphs: List[TypeGraph] = []
+    building = False
 
     @classmethod
     def push(cls, tg: TypeGraph):
@@ -182,6 +210,10 @@ class TypegraphContext:
             return None
 
     @classmethod
+    def is_empty(cls) -> bool:
+        return len(cls.typegraphs) == 0
+
+    @classmethod
     def get_active(cls) -> Optional[TypeGraph]:
         try:
             return cls.typegraphs[-1]
@@ -189,9 +221,17 @@ class TypegraphContext:
             return None
 
 
-def get_absolute_path(relative: str) -> Path:
-    tg_path = TypegraphContext.get_active().path
-    return tg_path.parent / relative
+def get_absolute_path(relative: str, stack_depth: int = 1) -> Path:
+    """
+    Concat stack_depth-th immediate caller path with `relative`.
+    By default, `stack_depth` is set to 1, this ensure that the file
+    holding the definition of this function is not considered.
+    """
+    path = Path(inspect.stack()[stack_depth].filename)
+    ret = path.parent.absolute().joinpath(relative)
+    if os.path.exists(ret):
+        return ret
+    raise Exception(f'path "{ret}" infered from "{path}" does not exist')
 
 
 def find(node: str) -> Optional["t.typedef"]:

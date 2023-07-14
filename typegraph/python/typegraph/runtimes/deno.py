@@ -13,7 +13,6 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always
-import os
 
 
 @frozen
@@ -132,10 +131,17 @@ class ModuleMat(Materializer):
             if self.code is not None:
                 raise Exception("you must only give either source file or source code")
 
-            from typegraph.graph.typegraph import get_absolute_path
+            # from typegraph.graph.typegraph import get_absolute_path
 
-            rel_path = os.path.join("scripts", "deno", self.file)
-            path = get_absolute_path(rel_path)
+            # depth 0: typegraph.py (definition)
+            # depth 1: this file (immediate caller)
+            # depth 2: infos about the current instance
+            # depth 3: tg (caller of this file)
+            # path = get_absolute_path(self.file, 3)
+
+            # assume file is relative by default
+            path = self.file
+
             object.__setattr__(self, "code", f"file:{path}")
 
     def imp(

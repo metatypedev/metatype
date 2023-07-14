@@ -1,9 +1,36 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { KeyboardEvent, useEffect } from "react";
-import { useSpring, SpringValue } from "@react-spring/konva";
+import { KeyboardEvent, useEffect, useRef, useState } from "react";
+import { useSpring, SpringValue, useSpringValue } from "@react-spring/konva";
 import { each } from "@react-spring/shared";
+
+export function useGifScroll(delta = 0.01, saveDelay = 100) {
+  const stageRef = useRef(null);
+  const progress = useSpringValue(0);
+  const [play, setPlay] = useState(-1);
+  useEffect(() => {
+    if (stageRef.current && 0 <= play && play < 1 + delta) {
+      const link = document.createElement("a");
+      link.download = `${Math.round(play * 100)}.png`;
+      link.href = stageRef.current.toDataURL({
+        mimeType: "image/png",
+        pixelRatio: 2,
+      });
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => {
+        progress.set(play + delta);
+        setPlay(play + delta);
+      }, saveDelay);
+    }
+  }, [play]);
+  const start = () => {
+    setPlay(0);
+  };
+  return { stageRef, progress, start };
+}
 
 export function useVirtualScroll(
   [min, max]: [number, number],

@@ -33,7 +33,7 @@ pub struct Loader {
 
 pub enum LoaderResult {
     Loaded(Vec<Typegraph>),
-    #[cfg_attr(feature = "typegraph-next", allow(dead_code))]
+    #[allow(dead_code)]
     Rewritten(PathBuf),
     Error(LoaderError),
 }
@@ -60,27 +60,6 @@ impl Loader {
         self
     }
 
-    #[cfg(not(feature = "typegraph-next"))]
-    pub async fn load_file(&self, path: &Path) -> LoaderResult {
-        // we passed through the filters, so we can unwrap safely
-        let res = match ModuleType::try_from(path).unwrap() {
-            ModuleType::Python => self.load_python_module(path).await,
-            ModuleType::Deno => self.load_deno_module(path).await,
-        };
-        match res {
-            Ok(json) if json.is_empty() => LoaderResult::Rewritten(path.to_path_buf()),
-            Ok(json) => match self.load_string(path, json) {
-                Err(err) => LoaderResult::Error(err),
-                Ok(tgs) => LoaderResult::Loaded(tgs),
-            },
-            Err(err) => LoaderResult::Error(LoaderError::Unknown {
-                path: path.to_owned(),
-                error: err,
-            }),
-        }
-    }
-
-    #[cfg(feature = "typegraph-next")]
     pub async fn load_file(&self, path: &Path) -> LoaderResult {
         let command = Self::get_load_command(path.try_into().unwrap(), path);
         match self.load_command(command, path).await {
@@ -89,7 +68,6 @@ impl Loader {
         }
     }
 
-    #[cfg(feature = "typegraph-next")]
     async fn load_command(
         &self,
         mut command: Command,
@@ -124,6 +102,7 @@ impl Loader {
                     serde_json::from_str::<Typegraph>(line)
                         .map_err(|e| LoaderError::SerdeJson {
                             path: path.to_owned(),
+                            content: line.to_string(),
                             error: e,
                         })
                         .and_then(|mut tg| {
@@ -153,68 +132,6 @@ impl Loader {
         }
     }
 
-    #[cfg(not(feature = "typegraph-next"))]
-    fn load_string(&self, path: &Path, json: String) -> Result<Vec<Typegraph>, LoaderError> {
-        let mut tgs =
-            serde_json::from_str::<Vec<Typegraph>>(&json).map_err(|e| LoaderError::SerdeJson {
-                path: path.to_owned(),
-                error: e,
-            })?;
-        for tg in tgs.iter_mut() {
-            tg.path = Some(path.to_owned());
-            apply_all(self.postprocessors.iter(), tg, &self.config).map_err(|e| {
-                LoaderError::PostProcessingError {
-                    path: path.to_owned(),
-                    typegraph_name: tg.name().unwrap(),
-                    error: e,
-                }
-            })?;
-        }
-        Ok(tgs)
-    }
-
-    #[cfg(not(feature = "typegraph-next"))]
-    pub async fn load_python_module(&self, path: &Path) -> Result<String> {
-        // Search in PATH does not work on Windows
-        // See: https://doc.rust-lang.org/std/process/struct.Command.html#method.new
-        #[cfg(target_os = "windows")]
-        let program_name = Path::new(&env::var("VIRTUAL_ENV")?).join("Scripts/py-tg.exe");
-        #[cfg(not(target_os = "windows"))]
-        let program_name = Path::new("py-tg").to_path_buf();
-
-        let vars: HashMap<_, _> = env::vars().collect();
-
-        let p = Command::new(program_name.clone())
-            .arg(path.to_str().unwrap())
-            // .args(args)
-            .current_dir(&self.config.base_dir)
-            .envs(vars)
-            .env("PYTHONUNBUFFERED", "1")
-            .env("PYTHONDONTWRITEBYTECODE", "1")
-            .env(
-                "DONT_READ_EXTERNAL_TS_FILES",
-                if self.skip_deno_modules { "1" } else { "" },
-            )
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .output()
-            .await
-            .with_context(|| format!("Running the command '{:?} {:?}'", program_name, path))?;
-
-        if p.status.success() {
-            Ok(String::from_utf8(p.stdout)?)
-        } else {
-            let stderr = String::from_utf8(p.stderr)?;
-            anyhow::bail!("Python error:\n{}", stderr.red())
-        }
-    }
-
-    #[cfg(not(feature = "typegraph-next"))]
-    pub async fn load_deno_module(&self, _path: &Path) -> Result<String> {
-        anyhow::bail!("deno modules not supported yet")
-    }
-
-    #[cfg(feature = "typegraph-next")]
     fn get_load_command(module_type: ModuleType, path: &Path) -> Command {
         let vars: HashMap<_, _> = env::vars().collect();
         match module_type {
@@ -224,7 +141,8 @@ impl Loader {
                     .arg(path.to_str().unwrap())
                     .envs(vars)
                     .env("PYTHONUNBUFFERED", "1")
-                    .env("PYTHONDONTWRITEBYTECODE", "1");
+                    .env("PYTHONDONTWRITEBYTECODE", "1")
+                    .env("PY_TG_COMPATIBILITY", "1");
                 command
             }
             ModuleType::Deno => {
@@ -232,6 +150,7 @@ impl Loader {
                 command
                     .arg("run")
                     .arg("--allow-read")
+                    .arg("--allow-write")
                     .arg("--check")
                     .arg(path.to_str().unwrap())
                     .envs(vars);
@@ -250,9 +169,9 @@ pub enum LoaderError {
     },
     SerdeJson {
         path: PathBuf,
+        content: String,
         error: serde_json::Error,
     },
-    #[cfg_attr(not(feature = "typegraph-next"), allow(dead_code))]
     LoaderProcess {
         path: PathBuf,
         error: Error,
@@ -272,18 +191,22 @@ impl ToString for LoaderError {
                 error,
             } => {
                 format!(
-                    "Error while post processing typegraph {name} from {path:?}: {error:?}",
+                    "error while post processing typegraph {name} from {path:?}: {error:?}",
                     name = typegraph_name.blue()
                 )
             }
-            Self::SerdeJson { path, error } => {
-                format!("Error while parsing raw typegraph JSON from {path:?}: {error:?}")
+            Self::SerdeJson {
+                path,
+                content,
+                error,
+            } => {
+                format!("error while parsing raw typegraph JSON from {path:?}: {error:?} in \"{content}\"")
             }
             Self::LoaderProcess { path, error } => {
-                format!("Error while loading typegraph(s) from {path:?}: {error:?}")
+                format!("error while loading typegraph(s) from {path:?}: {error:?}")
             }
             Self::Unknown { path, error } => {
-                format!("Error while loading typegraph(s) from {path:?}: {error:?}")
+                format!("error while loading typegraph(s) from {path:?}: {error:?}")
             }
         }
     }

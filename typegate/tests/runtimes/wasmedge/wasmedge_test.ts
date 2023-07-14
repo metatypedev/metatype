@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../../utils.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 
-test("WasmEdge runtime", async (t) => {
-  const e = await t.pythonFile("runtimes/wasmedge/wasmedge.py");
+Meta.test("WasmEdge runtime", async (t) => {
+  const e = await t.engine("runtimes/wasmedge/wasmedge.py");
 
   await t.should("works", async () => {
     await gql`

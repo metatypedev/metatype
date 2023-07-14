@@ -544,13 +544,13 @@ files = [
 
 [[package]]
 name = "importlib-metadata"
-version = "6.6.0"
+version = "6.7.0"
 description = "Read metadata from Python packages"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "importlib_metadata-6.6.0-py3-none-any.whl", hash = "sha256:43dd286a2cd8995d5eaef7fee2066340423b818ed3fd70adf0bad5f1fac53fed"},
-    {file = "importlib_metadata-6.6.0.tar.gz", hash = "sha256:92501cdf9cc66ebd3e612f1b4f0c0765dfa42f0fa38ffb319b6bd84dd675d705"},
+    {file = "importlib_metadata-6.7.0-py3-none-any.whl", hash = "sha256:cb52082e659e97afc5dac71e79de97d8681de3aa07ff18578330904a9d18e5b5"},
+    {file = "importlib_metadata-6.7.0.tar.gz", hash = "sha256:1aaf550d4f73e5d6783e7acb77aec43d49da8017410afae93822cc9cca98c4d4"},
 ]
 
 [package.dependencies]
@@ -559,7 +559,7 @@ zipp = ">=0.5"
 [package.extras]
 docs = ["furo", "jaraco.packaging (>=9)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
 perf = ["ipython"]
-testing = ["flake8 (<5)", "flufl.flake8", "importlib-resources (>=1.3)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-flake8", "pytest-mypy (>=0.9.1)", "pytest-perf (>=0.9.2)"]
+testing = ["flufl.flake8", "importlib-resources (>=1.3)", "packaging", "pyfakefs", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=1.3)", "pytest-mypy (>=0.9.1)", "pytest-perf (>=0.9.2)", "pytest-ruff"]
 
 [[package]]
 name = "jinja2"
@@ -701,13 +701,13 @@ files = [
 
 [[package]]
 name = "platformdirs"
-version = "3.6.0"
+version = "3.8.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-3.6.0-py3-none-any.whl", hash = "sha256:ffa199e3fbab8365778c4a10e1fbf1b9cd50707de826eb304b50e57ec0cc8d38"},
-    {file = "platformdirs-3.6.0.tar.gz", hash = "sha256:57e28820ca8094678b807ff529196506d7a21e17156cb1cddb3e74cebce54640"},
+    {file = "platformdirs-3.8.0-py3-none-any.whl", hash = "sha256:ca9ed98ce73076ba72e092b23d3c93ea6c4e186b3f1c3dad6edd98ff6ffcca2e"},
+    {file = "platformdirs-3.8.0.tar.gz", hash = "sha256:b0cabcb11063d21a0b261d557acb0a9d2126350e63b70cdf7db6347baea456dc"},
 ]
 
 [package.extras]
@@ -958,13 +958,13 @@ files = [
 
 [[package]]
 name = "strenum"
-version = "0.4.10"
+version = "0.4.15"
 description = "An Enum that inherits from str."
 optional = false
 python-versions = "*"
 files = [
-    {file = "StrEnum-0.4.10-py3-none-any.whl", hash = "sha256:aebf04bba8e5af435937c452d69a86798b6f8d5ca5f20ba18561dbfad571ccdd"},
-    {file = "StrEnum-0.4.10.tar.gz", hash = "sha256:898cc0ebb5054ee07400341ac1d75fdfee489d76d6df3fbc1c2eaf95971e3916"},
+    {file = "StrEnum-0.4.15-py3-none-any.whl", hash = "sha256:a30cda4af7cc6b5bf52c8055bc4bf4b2b6b14a93b574626da33df53cf7740659"},
+    {file = "StrEnum-0.4.15.tar.gz", hash = "sha256:878fb5ab705442070e4dd1929bb5e2249511c0bcf2b0eeacf3bcd80875c82eff"},
 ]
 
 [package.extras]
@@ -996,7 +996,7 @@ files = [
 
 [[package]]
 name = "typegraph"
-version = "0.1.10-dev.0"
+version = "0.1.10"
 description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
 optional = false
 python-versions = ">=3.8,<4.0"
@@ -1008,20 +1008,37 @@ astunparse = "^1.6.3"
 attrs = "^22.2.0"
 black = "^23.3.0"
 deepmerge = "^1.1.0"
-frozendict = "^2.3.7"
+frozendict = "^2.3.8"
 graphql-core = "^3.2.3"
-httpx = {version = "^0.24.0", extras = ["http2"]}
+httpx = {version = "^0.24.1", extras = ["http2"]}
 ordered-set = "^4.1.0"
 python-box = "^7.0.1"
 PyYAML = "^6.0"
 redbaron = "^0.9.2"
-semver = "^3.0.0"
+semver = "^3.0.1"
 strenum = "^0.4.10"
-typing-extensions = "^4.5.0"
+typing-extensions = "^4.7.0"
 
 [package.source]
 type = "directory"
 url = "typegraph/python"
+
+[[package]]
+name = "typegraph-next"
+version = "0.1.10"
+description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
+optional = false
+python-versions = ">=3.8,<4.0"
+files = []
+develop = true
+
+[package.dependencies]
+typing-extensions = "^4.7.0"
+wasmtime = "^9.0.0"
+
+[package.source]
+type = "directory"
+url = "typegraph/python_next"
 
 [[package]]
 name = "typegraph-std"
@@ -1039,13 +1056,13 @@ typegraph = ">=0.1.9,<0.2.0"
 
 [[package]]
 name = "typing-extensions"
-version = "4.6.3"
+version = "4.7.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "typing_extensions-4.6.3-py3-none-any.whl", hash = "sha256:88a4153d8505aabbb4e13aacb7c486c2b4a33ca3b3f807914a9b4c844c471c26"},
-    {file = "typing_extensions-4.6.3.tar.gz", hash = "sha256:d91d5919357fe7f681a9f2b5b4cb2a5f1ef0a1e9f59c4d8ff0d3491e05c0ffd5"},
+    {file = "typing_extensions-4.7.0-py3-none-any.whl", hash = "sha256:5d8c9dac95c27d20df12fb1d97b9793ab8b2af8a3a525e68c80e21060c161771"},
+    {file = "typing_extensions-4.7.0.tar.gz", hash = "sha256:935ccf31549830cda708b42289d44b6f74084d616a00be651601a4f968e77c82"},
 ]
 
 [[package]]
@@ -1222,13 +1239,13 @@ files = [
 
 [[package]]
 name = "yapf"
-version = "0.40.0"
+version = "0.40.1"
 description = "A formatter for Python code."
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "yapf-0.40.0-py3-none-any.whl", hash = "sha256:63386557876c2686cb29d8c422b2d1e484f29f7a278821f91515b5c5adf569a7"},
-    {file = "yapf-0.40.0.tar.gz", hash = "sha256:7eeb8c404e386f16e24cbd785103dbc573f51cbb68e65a35f4392e0233f3d7bc"},
+    {file = "yapf-0.40.1-py3-none-any.whl", hash = "sha256:b8bfc1f280949153e795181768ca14ef43d7312629a06c43e7abd279323af313"},
+    {file = "yapf-0.40.1.tar.gz", hash = "sha256:958587eb5c8ec6c860119a9c25d02addf30a44f75aa152a4220d30e56a98037c"},
 ]
 
 [package.dependencies]
@@ -1254,4 +1271,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "f7d3b6126c86f277610d8fa6050a804d9cb6151ba5122f865b7508db713bef21"
+content-hash = "c621d39e2890d040408e343e334b744f93693756a0bbc53b0a9cbb7d87123b6a"
