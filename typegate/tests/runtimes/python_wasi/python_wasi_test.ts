@@ -1,10 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assert } from "std/testing/asserts.ts";
+import { assert, assertEquals } from "std/testing/asserts.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { PythonVirtualMachine } from "../../../src/runtimes/python_wasi/python_vm.ts";
-import { assertEquals } from "https://deno.land/std@0.129.0/testing/asserts.ts";
 
 Meta.test("Python WASI VM performance", async (t) => {
   const vm = new PythonVirtualMachine();
@@ -113,9 +112,7 @@ Meta.test("Python WASI runtime", async (t) => {
     await Promise.all(tests);
     const end = performance.now();
     const duration = end - start;
-    // from ~100ms (deno <-> wasi) to ~350ms (bindgen <-> wasmedge host <-> wasi)
-    // we still have ~0ms on raw tests
-    // so we have about ~310ms, ~400ms pure overhead
+
     assert(duration < 400, `Python WASI runtime was too slow: ${duration}ms`);
   });
 });

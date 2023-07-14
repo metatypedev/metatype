@@ -52,7 +52,6 @@ envconfig = "0.10.0"
 once_cell = "1.18.0"
 base64 = "0.21.2"
 tap = "1.0.1"
-colored = "2.0.0"
 num-traits = "0.2"
 num-derive = "0.3"
 wasmedge-sdk = { version = "0.8.1", features = ["standalone"] }
