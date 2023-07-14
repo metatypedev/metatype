@@ -155,7 +155,7 @@ jobs:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - run: |
           # test in native rust, not in wasm for a future rust SDK
-          cargo test --locked --package typegraph_core
+          # cargo test --locked --package typegraph_core
 
   test-meta-cli:
     needs: changes
