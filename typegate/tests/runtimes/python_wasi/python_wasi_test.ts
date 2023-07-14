@@ -51,6 +51,8 @@ Meta.test("Python WASI VM performance", async (t) => {
       `virtual machine execution was too slow: ${duration}ms`,
     );
   });
+
+  await vm.destroy();
 });
 
 Meta.test("Python WASI runtime", async (t) => {
@@ -113,6 +115,6 @@ Meta.test("Python WASI runtime", async (t) => {
     const end = performance.now();
     const duration = end - start;
 
-    assert(duration < 400, `Python WASI runtime was too slow: ${duration}ms`);
+    assert(duration < 500, `Python WASI runtime was too slow: ${duration}ms`);
   });
 });

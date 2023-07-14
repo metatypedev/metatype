@@ -6,12 +6,15 @@ use std::sync::{Arc, RwLock};
 use crate::config::Config;
 
 use super::utils::{map_from_object, object_from_map};
+use anyhow::Context;
 use anyhow::{bail, Result};
 use colored::Colorize;
 use common::archive::archive_entries;
 use common::typegraph::validator::validate_typegraph;
 use common::typegraph::{Materializer, Typegraph};
+use ignore::WalkBuilder;
 use log::error;
+use std::path::Path;
 use typescript::parser::transform_script;
 
 pub trait PostProcessor {
@@ -60,10 +63,59 @@ pub fn apply_all<'a>(
     Ok(())
 }
 
+fn compress_and_encode(main_path: &Path, tg_path: &Path) -> Result<String> {
+    // Note: tg_path and main_path are all absolute
+    // tg_root/tg.py
+    // tg_root/* <= script location
+    if main_path.is_relative() {
+        bail!(
+            "script path {:?} is relative, absolute expected",
+            main_path.display()
+        );
+    }
+
+    if tg_path.is_relative() {
+        bail!(
+            "typegraph path {:?} is relative, absolute expected",
+            tg_path.display()
+        );
+    }
+
+    let tg_root = tg_path.parent().with_context(|| {
+        format!(
+            "invalid state: typegraph path {:?} does not have parent",
+            tg_path.display()
+        )
+    })?;
+
+    let dir_walker = WalkBuilder::new(tg_root)
+        .standard_filters(true)
+        // .add_custom_ignore_filename(".DStore")
+        .sort_by_file_path(|a, b| a.cmp(b))
+        .build();
+
+    let enc_content = match archive_entries(dir_walker, Some(tg_root)).unwrap() {
+        Some(b64) => b64,
+        None => "".to_string(),
+    };
+
+    let file = match main_path.strip_prefix(tg_root) {
+        Ok(ret) => ret,
+        Err(_) => bail!(
+            "{:?} does not contain script {:?}",
+            tg_root.display(),
+            main_path.display(),
+        ),
+    };
+
+    Ok(format!("file:{};base64:{}", file.display(), enc_content))
+}
+
 pub use deno_rt::DenoModules;
 pub use deno_rt::ReformatScripts;
 pub use prisma_rt::EmbedPrismaMigrations;
 pub use prisma_rt::EmbeddedPrismaMigrationOptionsPatch;
+pub use python_rt::PythonModules;
 
 pub struct Validator;
 impl PostProcessor for Validator {
@@ -86,11 +138,9 @@ impl PostProcessor for Validator {
 }
 
 pub mod deno_rt {
-    use std::{fs, path::Path};
+    use std::fs;
 
-    use anyhow::Context;
     use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
-    use ignore::WalkBuilder;
 
     use crate::typegraph::utils::{get_materializers, get_runtimes};
 
@@ -102,54 +152,6 @@ pub mod deno_rt {
         fn from(_val: ReformatScripts) -> Self {
             PostProcessorWrapper::generic(reformat_scripts)
         }
-    }
-
-    fn compress_and_encode(main_path: &Path, tg_path: &Path) -> Result<String> {
-        // Note: tg_path and main_path are all absolute
-        // tg_root/tg.py
-        // tg_root/* <= script location
-        if main_path.is_relative() {
-            bail!(
-                "script path {:?} is relative, absolute expected",
-                main_path.display()
-            );
-        }
-
-        if tg_path.is_relative() {
-            bail!(
-                "typegraph path {:?} is relative, absolute expected",
-                tg_path.display()
-            );
-        }
-
-        let tg_root = tg_path.parent().with_context(|| {
-            format!(
-                "invalid state: typegraph path {:?} does not have parent",
-                tg_path.display()
-            )
-        })?;
-
-        let dir_walker = WalkBuilder::new(tg_root)
-            .standard_filters(true)
-            // .add_custom_ignore_filename(".DStore")
-            .sort_by_file_path(|a, b| a.cmp(b))
-            .build();
-
-        let enc_content = match archive_entries(dir_walker, Some(tg_root)).unwrap() {
-            Some(b64) => b64,
-            None => "".to_string(),
-        };
-
-        let file = match main_path.strip_prefix(tg_root) {
-            Ok(ret) => ret,
-            Err(_) => bail!(
-                "{:?} does not contain script {:?}",
-                tg_root.display(),
-                main_path.display(),
-            ),
-        };
-
-        Ok(format!("file:{};base64:{}", file.display(), enc_content))
     }
 
     fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
@@ -193,6 +195,36 @@ pub mod deno_rt {
                 let Some(path) = mat_data.code.strip_prefix("file:") else {
                     continue;
                 };
+
+                // make sure tg_path is absolute
+                let tg_path = fs::canonicalize(tg.path.to_owned().unwrap()).unwrap();
+                let main_path = tg_path.parent().unwrap().join(path);
+                mat_data.code = compress_and_encode(&main_path, &tg_path)?;
+
+                mat.data = map_from_object(mat_data)?;
+                tg.deps.push(main_path);
+            }
+            Ok(())
+        }
+    }
+}
+
+pub mod python_rt {
+    use super::*;
+    use common::typegraph::runtimes::ModuleMatData;
+    use std::fs;
+
+    #[derive(Default, Debug)]
+    pub struct PythonModules {}
+
+    impl PostProcessor for PythonModules {
+        fn postprocess(&self, tg: &mut Typegraph, _config: &Config) -> Result<()> {
+            for mat in tg.materializers.iter_mut().filter(|m| m.name == "pymodule") {
+                let mut mat_data: ModuleMatData = object_from_map(std::mem::take(&mut mat.data))?;
+                let path = mat_data
+                    .code
+                    .strip_prefix("file:")
+                    .context("\"file:\" prefix is not present")?;
 
                 // make sure tg_path is absolute
                 let tg_path = fs::canonicalize(tg.path.to_owned().unwrap()).unwrap();
