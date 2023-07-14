@@ -51,53 +51,49 @@ export class PythonWasiRuntime extends Runtime {
     await defaultVm.setup("default");
     w.vmMap.set("default", defaultVm);
 
-    const mods = materializers
-      .filter((m) => m.name == "import_function")
-      .map((m) => {
-        const pyModMat = typegraph.materializers[m.data.mod as number];
-        const code = pyModMat.data.code as string;
-        const file = pyModMat.data.file as string;
-        const modName = path.parse(file).name;
-        const vmId = generateVmIdentifier(m);
-        // TODO: move this logic to postprocess or python runtime
-        m.data.name = `${modName}.${m.data.name as string}`;
-
-        return { modName, vmId, file, code };
-      });
-
-    for (const { modName, vmId, file /*, code*/ } of mods) {
-      const appDir = "tmp";
-      const entryPoint = path.join("tmp", file);
-
-      logger.info(`setup vm "${vmId}" for module ${modName}`);
-      const vm = new PythonVirtualMachine();
-      await vm.setup(vmId, appDir);
-      w.vmMap.set(vmId, vm);
-
-      const sourceCode = Deno.readTextFileSync(entryPoint);
-      await vm.registerModule(modName, sourceCode);
-
-      logger.info(
-        `register module ${modName} to vm ${vmId} at ${entryPoint}`,
-      );
-    }
-
     for (const m of materializers) {
       switch (m.name) {
-        case "lambda":
+        case "lambda": {
           logger.info(`registering lambda: ${m.data.name}`);
           await defaultVm.registerLambda(
             m.data.name as string,
             m.data.fn as string,
           );
           break;
-        case "def":
+        }
+        case "def": {
           logger.info(`registering def: ${m.data.name}`);
           await defaultVm.registerDef(
             m.data.name as string,
             m.data.fn as string,
           );
           break;
+        }
+        case "import_function": {
+          const pyModMat = typegraph.materializers[m.data.mod as number];
+          // const code = pyModMat.data.code as string;
+          const file = pyModMat.data.file as string;
+          const modName = path.parse(file).name;
+          const vmId = generateVmIdentifier(m);
+          // TODO: move this logic to postprocess or python runtime
+          m.data.name = `${modName}.${m.data.name as string}`;
+
+          const appDir = "tmp";
+          const entryPoint = path.join("tmp", file);
+
+          logger.info(`setup vm "${vmId}" for module ${modName}`);
+          const vm = new PythonVirtualMachine();
+          await vm.setup(vmId, appDir);
+          w.vmMap.set(vmId, vm);
+
+          const sourceCode = Deno.readTextFileSync(entryPoint);
+          await vm.registerModule(modName, sourceCode);
+
+          logger.info(
+            `register module "${modName}" to vm "${vmId}" located at ${entryPoint}`,
+          );
+          break;
+        }
       }
     }
 
