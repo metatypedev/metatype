@@ -52,14 +52,14 @@ colored = "2.0.4"
 question = "0.2.2"
 dialoguer = "0.10.4"
 flate2 = "1.0.26"
-tar = "0.4.38"
+tar = "0.4.39"
 base64 = "0.21.2"
 common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
 serde_yaml = "0.9.22"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.55", features = ["vendored"] }
-indexmap = { version = "1.9.3", features = ["serde"] }
+indexmap = { version = "2.0.0", features = ["serde"] }
 lade-sdk = "0.7.0"
 async-trait = "0.1.71"
 async-recursion = "1.0.4"
