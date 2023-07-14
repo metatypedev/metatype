@@ -12,11 +12,12 @@ import { PythonVirtualMachine } from "./python_vm.ts";
 import { Materializer } from "../../types/typegraph.ts";
 import { structureRepr } from "../../utils.ts";
 import { uncompress } from "../../utils.ts";
+import * as ast from "graphql/ast";
 
 const logger = getLogger(import.meta);
 
-function generateVmIdentifier(mat?: Materializer) {
-  const { mod } = mat?.data ?? {};
+function generateVmIdentifier(mat: Materializer) {
+  const { mod } = mat.data ?? {};
   if (mod !== undefined) {
     return `pymod_${mod}`;
   }
@@ -121,13 +122,46 @@ export class PythonWasiRuntime extends Runtime {
     _waitlist: ComputeStage[],
     _verbose: boolean,
   ): ComputeStage[] {
-    const mat = stage.props.materializer;
-    const { name } = mat?.data ?? {};
-    const vmId = generateVmIdentifier(mat);
-    return [
-      stage.withResolver((args) => {
-        return this.w.execute(name as string, { vmId, args });
-      }),
-    ];
+    if (stage.props.node === "__typename") {
+      return [stage.withResolver(() => {
+        const { parent: parentStage } = stage.props;
+        if (parentStage != null) {
+          return parentStage.props.outType.title;
+        }
+        switch (stage.props.operationType) {
+          case ast.OperationTypeNode.QUERY:
+            return "Query";
+          case ast.OperationTypeNode.MUTATION:
+            return "Mutation";
+          default:
+            throw new Error(
+              `Unsupported operation type '${stage.props.operationType}'`,
+            );
+        }
+      })];
+    }
+
+    if (stage.props.materializer != null) {
+      const mat = stage.props.materializer;
+      const { name } = mat.data ?? {};
+      const vmId = generateVmIdentifier(mat);
+      return [
+        stage.withResolver((args) =>
+          this.w.execute(name as string, { vmId, args })
+        ),
+      ];
+    }
+
+    if (stage.props.outType.config?.__namespace) {
+      return [stage.withResolver(() => ({}))];
+    }
+
+    return [stage.withResolver(({ _: { parent } }) => {
+      if (stage.props.parent == null) { // namespace
+        return {};
+      }
+      const resolver = parent[stage.props.node];
+      return typeof resolver === "function" ? resolver() : resolver;
+    })];
   }
 }

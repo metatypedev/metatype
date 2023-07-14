@@ -6,9 +6,15 @@ def test(x):
     return x["a"]
 
 
+def identity(x):
+    return x["input"]
+
+
 with TypeGraph("python_wasi") as g:
     public = policies.public()
     python = Python()
+
+    tpe = t.struct({"a": t.integer(), "b": t.struct({"c": t.array(t.string())})})
 
     g.expose(
         test=t.func(
@@ -25,6 +31,11 @@ with TypeGraph("python_wasi") as g:
             t.struct({"name": t.string()}),
             t.string(),
             PyModuleMat("py/hello.py").imp("sayHello"),
+        ),
+        identity=t.func(
+            t.struct({"input": tpe}),
+            tpe,
+            python.from_def(identity),
         ),
         default_policy=[public],
     )

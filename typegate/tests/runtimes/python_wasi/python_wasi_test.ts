@@ -94,6 +94,29 @@ Meta.test("Python WASI runtime", async (t) => {
       .on(e);
   });
 
+  await t.should("return same object", async () => {
+    await gql`
+      query {
+        identity(
+          input: {
+            a: 1234, 
+            b: { c: ["one", "two", "three" ] }
+          }
+        ) {
+          a
+          b { c }
+        }
+      }
+    `
+      .expectData({
+        identity: {
+          a: 1234,
+          b: { c: ["one", "two", "three"] },
+        },
+      })
+      .on(e);
+  });
+
   await t.should("work fast enough", async () => {
     const tests = [...Array(100).keys()].map((i) =>
       gql`
