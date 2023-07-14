@@ -1,2 +1,5 @@
+from nested.dep import hello
+
+
 def sayHello(x: any):
-    return f"Hello {x['name']}"
+    return hello(x["name"])

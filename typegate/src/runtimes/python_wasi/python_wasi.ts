@@ -10,6 +10,8 @@ import { path } from "compress/deps.ts";
 import { TypeGraph } from "../../typegraph.ts";
 import { PythonVirtualMachine } from "./python_vm.ts";
 import { Materializer } from "../../types/typegraph.ts";
+import { structureRepr } from "../../utils.ts";
+import { uncompress } from "../../utils.ts";
 
 const logger = getLogger(import.meta);
 
@@ -33,16 +35,6 @@ export class PythonWasiRuntime extends Runtime {
     const w = await PythonWasmMessenger.init();
 
     const typegraphName = TypeGraph.formatName(typegraph);
-
-    // TODO:
-    // change tmp to config.tmp_dir
-    // customize
-    // const basePath = path.join(
-    //   "tmp",
-    //   "scripts",
-    //   typegraphName,
-    //   "python",
-    // );
 
     logger.info(`initializing default vm: ${typegraphName}`);
 
@@ -71,26 +63,42 @@ export class PythonWasiRuntime extends Runtime {
         }
         case "import_function": {
           const pyModMat = typegraph.materializers[m.data.mod as number];
-          // const code = pyModMat.data.code as string;
-          const file = pyModMat.data.file as string;
-          const modName = path.parse(file).name;
+          const code = pyModMat.data.code as string;
+
+          const repr = await structureRepr(code);
+          const basePath = path.join(
+            "tmp",
+            "scripts",
+            typegraphName,
+            "python",
+          );
+          const outDir = path.join(basePath, repr.hash);
+          const entries = await uncompress(
+            outDir,
+            repr.base64,
+          );
+          logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
+
+          const modName = path.parse(repr.entryPoint).name;
           const vmId = generateVmIdentifier(m);
+
           // TODO: move this logic to postprocess or python runtime
           m.data.name = `${modName}.${m.data.name as string}`;
 
-          const appDir = "tmp";
-          const entryPoint = path.join("tmp", file);
-
           logger.info(`setup vm "${vmId}" for module ${modName}`);
           const vm = new PythonVirtualMachine();
-          await vm.setup(vmId, appDir);
-          w.vmMap.set(vmId, vm);
 
-          const sourceCode = Deno.readTextFileSync(entryPoint);
+          // for python modules, imports must be inside a folder above or same directory
+          const entryPointFullPath = path.join(outDir, repr.entryPoint);
+          const sourceCode = Deno.readTextFileSync(entryPointFullPath);
+
+          // prepare vm
+          await vm.setup(vmId, path.parse(entryPointFullPath).dir);
+          w.vmMap.set(vmId, vm);
           await vm.registerModule(modName, sourceCode);
 
           logger.info(
-            `register module "${modName}" to vm "${vmId}" located at ${entryPoint}`,
+            `register module "${modName}" to vm "${vmId}" located at "${entryPointFullPath}"`,
           );
           break;
         }
