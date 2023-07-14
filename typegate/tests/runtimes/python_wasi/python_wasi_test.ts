@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { assert } from "std/testing/asserts.ts";
-import { gql, test } from "../../utils.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 import { PythonVirtualMachine } from "../../../src/runtimes/python_wasi/python_vm.ts";
 import { assertEquals } from "https://deno.land/std@0.129.0/testing/asserts.ts";
 
-test("Python WASI VM performance", async (t) => {
+Meta.test("Python WASI VM performance", async (t) => {
   const vm = new PythonVirtualMachine();
   await vm.setup("myVm");
 
@@ -54,8 +54,8 @@ test("Python WASI VM performance", async (t) => {
   });
 });
 
-test("Python WASI runtime", async (t) => {
-  const e = await t.pythonFile("runtimes/python_wasi/python_wasi.py");
+Meta.test("Python WASI runtime", async (t) => {
+  const e = await t.engine("runtimes/python_wasi/python_wasi.py");
 
   await t.should("work once (lambda)", async () => {
     await gql`

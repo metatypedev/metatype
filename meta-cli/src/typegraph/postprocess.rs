@@ -86,8 +86,9 @@ impl PostProcessor for Validator {
 }
 
 pub mod deno_rt {
-    use std::path::{Path, PathBuf};
+    use std::{fs, path::Path};
 
+    use anyhow::Context;
     use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
     use ignore::WalkBuilder;
 
@@ -103,43 +104,52 @@ pub mod deno_rt {
         }
     }
 
-    fn compress_and_encode(main_path: &Path, tg_path: &Option<PathBuf>) -> String {
-        // Note: main_path and tg_path are all absolute
+    fn compress_and_encode(main_path: &Path, tg_path: &Path) -> Result<String> {
+        // Note: tg_path and main_path are all absolute
         // tg_root/tg.py
-        // tg_root/scripts/deno/* <= script location
-        let base_rel_path = match tg_path {
-            Some(path) => {
-                if let Some(parent) = path.parent() {
-                    parent
-                } else {
-                    path
-                }
-            }
-            None => Path::new(""),
-        };
+        // tg_root/* <= script location
+        if main_path.is_relative() {
+            bail!(
+                "script path {:?} is relative, absolute expected",
+                main_path.display()
+            );
+        }
 
-        let script_folder_path = base_rel_path.join("scripts/deno");
-        let dir_walker = WalkBuilder::new(script_folder_path.clone())
+        if tg_path.is_relative() {
+            bail!(
+                "typegraph path {:?} is relative, absolute expected",
+                tg_path.display()
+            );
+        }
+
+        let tg_root = tg_path.parent().with_context(|| {
+            format!(
+                "invalid state: typegraph path {:?} does not have parent",
+                tg_path.display()
+            )
+        })?;
+
+        let dir_walker = WalkBuilder::new(tg_root)
             .standard_filters(true)
             // .add_custom_ignore_filename(".DStore")
             .sort_by_file_path(|a, b| a.cmp(b))
             .build();
-        let enc_content =
-            match archive_entries(dir_walker, Some(script_folder_path.as_path())).unwrap() {
-                Some(b64) => b64,
-                None => "".to_string(),
-            };
-        // main_path: /abs/path/to/my_typegraphs/scripts/deno/ts/dep/main.ts
-        // base_path: relative/my_typegraphs (based on cwd)
-        let file = main_path
-            .display()
-            .to_string()
-            .split(&base_rel_path.display().to_string())
-            .last() // TODO: what if user use a subpath == base_rel_path ?
-            .unwrap()
-            .to_owned();
 
-        format!("file:{};base64:{}", file, enc_content)
+        let enc_content = match archive_entries(dir_walker, Some(tg_root)).unwrap() {
+            Some(b64) => b64,
+            None => "".to_string(),
+        };
+
+        let file = match main_path.strip_prefix(tg_root) {
+            Ok(ret) => ret,
+            Err(_) => bail!(
+                "{:?} does not contain script {:?}",
+                tg_root.display(),
+                main_path.display(),
+            ),
+        };
+
+        Ok(format!("file:{};base64:{}", file.display(), enc_content))
     }
 
     fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
@@ -183,11 +193,14 @@ pub mod deno_rt {
                 let Some(path) = mat_data.code.strip_prefix("file:") else {
                     continue;
                 };
-                let path = tg.path.as_ref().unwrap().parent().unwrap().join(path);
-                mat_data.code = compress_and_encode(&path, &tg.path);
+
+                // make sure tg_path is absolute
+                let tg_path = fs::canonicalize(tg.path.to_owned().unwrap()).unwrap();
+                let main_path = tg_path.parent().unwrap().join(path);
+                mat_data.code = compress_and_encode(&main_path, &tg_path)?;
 
                 mat.data = map_from_object(mat_data)?;
-                tg.deps.push(path);
+                tg.deps.push(main_path);
             }
             Ok(())
         }

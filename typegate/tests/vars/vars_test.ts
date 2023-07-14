@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
+import { gql, Meta } from "../utils/mod.ts";
 
-test("GraphQL variables", async (t) => {
-  const e = await t.pythonFile("vars/vars.py");
+Meta.test("GraphQL variables", async (t) => {
+  const e = await t.engine("vars/vars.py");
 
   await t.should("work with root vars", async () => {
     await gql`
@@ -52,8 +52,8 @@ test("GraphQL variables", async (t) => {
   });
 });
 
-test("GraphQL variable types", async (t) => {
-  const e = await t.pythonFile("vars/vars.py");
+Meta.test("GraphQL variable types", async (t) => {
+  const e = await t.engine("vars/vars.py");
 
   await t.should("reject invalid types", async () => {
     await gql`

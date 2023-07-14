@@ -125,7 +125,6 @@ export function visitType(
       visited.add(idx);
     }
     if (visitorFn(node)) {
-      // console.log({ node });
       for (const [edgeName, childIdx] of Object.entries(getEdges(node.type))) {
         const child = tg.types[childIdx];
         visit({

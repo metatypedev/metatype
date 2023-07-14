@@ -1,20 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import {
-  dropSchemas,
-  gql,
-  meta,
-  removeMigrations,
-  shell,
-  test,
-} from "../utils.ts";
+import { gql } from "../utils/mod.ts";
 import { assertRejects } from "std/testing/asserts.ts";
+import { Meta } from "../utils/mod.ts";
+import { dropSchemas, removeMigrations } from "../utils/migrations.ts";
+import { shell } from "../utils/shell.ts";
 
 const port = 7895;
 
-test("cli:deploy - automatic migrations", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/prisma.py", {
+Meta.test("cli:deploy - automatic migrations", async (t) => {
+  const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=e2e",
@@ -43,7 +39,7 @@ test("cli:deploy - automatic migrations", async (t) => {
   });
 
   await t.should("create migrations", async () => {
-    await meta(
+    await Meta.cli(
       { stdin: "initial_migration\n" },
       "prisma",
       "dev",
@@ -55,7 +51,7 @@ test("cli:deploy - automatic migrations", async (t) => {
 
   await t.should("fail on dirty repo", async () => {
     await assertRejects(() =>
-      meta("deploy", "-t", "deploy", "-f", "prisma/prisma.py")
+      Meta.cli("deploy", "-t", "deploy", "-f", "prisma/prisma.py")
     );
   });
 
@@ -65,7 +61,7 @@ test("cli:deploy - automatic migrations", async (t) => {
   });
 
   await t.should("run migrations with `meta deploy`", async () => {
-    await meta(
+    await Meta.cli(
       "deploy",
       ...nodeConfigs,
       "-f",
@@ -89,8 +85,8 @@ test("cli:deploy - automatic migrations", async (t) => {
   });
 }, { systemTypegraphs: true, port, cleanGitRepo: true });
 
-test("cli:deploy - with prefix", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/prisma.py", {
+Meta.test("cli:deploy - with prefix", async (t) => {
+  const e = await t.engine("runtimes/prisma/prisma.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=e2e",
@@ -98,7 +94,6 @@ test("cli:deploy - with prefix", async (t) => {
     prefix: "pref-",
   });
 
-  console.log("starting...");
   await dropSchemas(e);
   await removeMigrations(e);
 
@@ -124,7 +119,7 @@ test("cli:deploy - with prefix", async (t) => {
   });
 
   await t.should("create migrations", async () => {
-    await meta(
+    await Meta.cli(
       { stdin: "initial_migration\n" },
       "prisma",
       "dev",
@@ -136,7 +131,7 @@ test("cli:deploy - with prefix", async (t) => {
 
   await t.should("fail on dirty repo", async () => {
     await assertRejects(() =>
-      meta(
+      Meta.cli(
         "deploy",
         "-t",
         "with_prefix",
@@ -152,7 +147,7 @@ test("cli:deploy - with prefix", async (t) => {
   });
 
   await t.should("run migrations with `meta deploy`", async () => {
-    await meta(
+    await Meta.cli(
       "deploy",
       ...nodeConfigs,
       "-f",

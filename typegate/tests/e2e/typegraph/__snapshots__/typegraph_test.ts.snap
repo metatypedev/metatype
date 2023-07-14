@@ -1,0 +1,1101 @@
+export const snapshot = {};
+
+snapshot[`typegraphs creation 1`] = `
+"[
+" +
+  "  {
+" +
+  '    "\$id": "https://metatype.dev/specs/0.0.2.json",
+' +
+  '    "types": [
+' +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "test-types",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "one": 1,
+' +
+  '          "two": 6,
+' +
+  '          "three": 11
+' +
+  "        },
+" +
+  '        "required": [
+' +
+  '          "one",
+' +
+  '          "two",
+' +
+  '          "three"
+' +
+  "        ]
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_9",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          0
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 5,
+' +
+  '        "materializer": 0,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_2",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "a": 3,
+' +
+  '          "b": 4
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_0",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_1",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 12
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_3",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 12,
+' +
+  '        "maximum": 43
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_11",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          1
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 7,
+' +
+  '        "output": 9,
+' +
+  '        "materializer": 2,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_6",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "id": 8,
+' +
+  '          "post": 9
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_4",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_8",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "id": 10,
+' +
+  '          "author": 7
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_7",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_13",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          2
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 2,
+' +
+  '        "materializer": 4,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "materializers": [
+' +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>12;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=(_,{context})=>context.provider===\\\\"internal\\\\";"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=user=>({id:12,user});"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>false;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "import_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "mod": 5,
+' +
+  '          "name": "three",
+' +
+  '          "secrets": []
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "module",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1WzW7bMAzO2U9BuBcbcFzbCXLw5l7WHQq0WND9YLdCsZVEmC0Zkow2C/wme5u92CgrP06wrRiGdliRD0gskdRHihJpq1yyWqtzvZSUhloNngARYjIed0/E8TMaT0aDGP/jKImSkZHHyWgcD6LBM6BRmkiAwd/ieHP/Cc7P4Y2oV5ItlhpuqCZ6VVN49/1bACXLKVe0gIYXVIJeUnhbEqVZDtdWBUkYhQ5SvJ9efh5uhMOrgnLN5ozKdLtgiIaOw7imck5yCh/MbbvidaNh7QDMUuBNNaPyFU7IftI6Dn2ohdQwb3iumeDQ3VMPzdZAAphBm/bIAiNHyRpygb4edAq3NBeyeK20ZHwR4Fa+cHHPL6ANHD/tnJO+814kbaeVVDeS77yZmAYvCYpVdUnDejV4OjxS//FkkhzXP06jU/0/A87+pPxvxFdWlgSmzazsdYFPVCpTm103OPt1M7iZXttGMJeiAuNpIUm9vONYqYD30BQ61qgO9rqfmYayQcqKqhC5xXbhJY5vrcJxCGSgQ9NvFlR6vuOouJNgG2hy7a1d4qamot0ZPveGFeNZnPgtLpgdMFhFABV5yMYjVDcKU3LAyIoDKh/Ja6F0J5R07rlTM/PbADipaOZ+RAYXmYzRo0yk0Ush91x28Y7LUjvOPdPLfbI8q9RU6aERKtcHosB0VEVT7G0AXQKzfu4wWUZR2xPOYBFOBY5WoZVs1F0n56TsG2xlJt3GxvrxurGB4DQz/kLTyz0VYz8NsE8XGKLnQ3YBceL6odnCXd0xeltGP9iR6HvRIzGnEIDJ4I7JiDo2bw2sSMGcWndYrX/EvuPcJiLcKFycrFzMug1rTkpFXX9n3o/GvHlsPPYW3nX7Mr9N7o0BUlWiaEqcq6Ovrd+FZBN+7NZ/Wa+fE0444R/iB2//lUgADgAA"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "predefined_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "name": "true"
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "runtimes": [
+' +
+  "      {
+" +
+  '        "name": "deno",
+' +
+  '        "data": {
+' +
+  '          "worker": "default"
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "policies": [
+' +
+  "      {
+" +
+  '        "name": "__internal",
+' +
+  '        "materializer": 1
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "deny",
+' +
+  '        "materializer": 3
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "__public",
+' +
+  '        "materializer": 6
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "meta": {
+' +
+  '      "prefix": null,
+' +
+  '      "secrets": [],
+' +
+  '      "queries": {
+' +
+  '        "dynamic": true,
+' +
+  '        "endpoints": []
+' +
+  "      },
+" +
+  '      "cors": {
+' +
+  '        "allow_origin": [],
+' +
+  '        "allow_headers": [],
+' +
+  '        "expose_headers": [],
+' +
+  '        "allow_methods": [],
+' +
+  '        "allow_credentials": false,
+' +
+  '        "max_age_sec": null
+' +
+  "      },
+" +
+  '      "auths": [],
+' +
+  '      "rate": null,
+' +
+  '      "version": "0.0.2"
+' +
+  "    }
+" +
+  "  }
+" +
+  "]"
+`;
+
+snapshot[`typegraphs creation 2`] = `
+"[
+" +
+  "  {
+" +
+  '    "\$id": "https://metatype.dev/specs/0.0.2.json",
+' +
+  '    "types": [
+' +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "test-types",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "one": 1,
+' +
+  '          "two": 6,
+' +
+  '          "three": 11
+' +
+  "        },
+" +
+  '        "required": [
+' +
+  '          "one",
+' +
+  '          "two",
+' +
+  '          "three"
+' +
+  "        ]
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_9",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          0
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 5,
+' +
+  '        "materializer": 0,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_2",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "a": 3,
+' +
+  '          "b": 4
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_0",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_1",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 12
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_3",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 12,
+' +
+  '        "maximum": 43
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_11",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          1
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 7,
+' +
+  '        "output": 9,
+' +
+  '        "materializer": 2,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_6",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "id": 8,
+' +
+  '          "post": 9
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_4",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_8",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "id": 10,
+' +
+  '          "author": 7
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_7",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_13",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          2
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 2,
+' +
+  '        "materializer": 4,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "materializers": [
+' +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>12;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=(_,{context})=>context.provider===\\\\"internal\\\\";"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=user=>({id:12,user});"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>false;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "import_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "mod": 5,
+' +
+  '          "name": "three",
+' +
+  '          "secrets": []
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "module",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1WzW7bMAz22U9B+GQDjv+S9eCtvaw7FNiwotuAXRVbSYzFkiHRSILAb7K32YuNkhPXTQdsw9ACK0I4cURR30eRIhVdqKpBHeNKcR6hdp5AEpKL2cy+SU7fyexi6qT0nSZZkk2NPs2ms9RJnGeQViNTAM6/yunm/hOJY3grm52qliuEDxwZ7hoOH398D2FdFVxoXkIrSq4AVxzerZnGqoD3/RRkURK5BPHp9vrr5KCc3JRcYLWouMqPCyZk6LqVQK4WrODw2Zy2G9G0CHsXYJ6DaOs5V69pwO4HnevybSMVwqIVBVZSgD2nPpntgYUwhy4fgYVGT5o9FJK4tpjDHS+kKt9oVJVYhrSVb0JuxBV0oRvklpyNyUeedHZWcWyVGNiMT85LEl3VzfqpCv8gv6n/LHl1cVr/aTKdnev/GeRZ67+2tbwHKkSkh5iWijUr6GChZA1eFMUnz2ATE6iMtSriWpZ0XL3X93DXNHXXEmfN/w5K9Yu01fSgLnUOjcDgEjAyDWvJlR8Mep3aCWonbYF+3xXykeUe6krkkGbQBfQM6+YP8AarEGq2zWE2Hdu2mqI9ZqE2VJVjlsA0ukZqNMpGye3O925p6NFEF1JEBKt5Dt4XQvLG0GbNH0CzFleSsmc8eYhoWXrEIZ6+h1zjxIy1F4JvWrbmAVxe2Q7aM5sIE7Pgm3G6TGSPFk1rgrSMbiUdvF1EQ3qPDez1Idh6bHXU2RQB9NR2WwBSkMc2s+b28HVKuQqhnzOYpdmQb/1MMy+0+i6INhWuenT/iB70k7iRY0AbHRvSx6hmziJTrk2ATaptXrvgl0wWtel/ezTYUSAPvi3YWnMvOPpgLruDF30B+Adq2t+jX0Pe7DLCpOJp10ahT/73eeZGNEseuEVJsLwm4ebjnOUsZznLWV6I/AR5omcaABAAAA=="
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "predefined_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "name": "true"
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "runtimes": [
+' +
+  "      {
+" +
+  '        "name": "deno",
+' +
+  '        "data": {
+' +
+  '          "worker": "default"
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "policies": [
+' +
+  "      {
+" +
+  '        "name": "__internal",
+' +
+  '        "materializer": 1
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "deny",
+' +
+  '        "materializer": 3
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "__public",
+' +
+  '        "materializer": 6
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "meta": {
+' +
+  '      "prefix": null,
+' +
+  '      "secrets": [],
+' +
+  '      "queries": {
+' +
+  '        "dynamic": true,
+' +
+  '        "endpoints": []
+' +
+  "      },
+" +
+  '      "cors": {
+' +
+  '        "allow_origin": [],
+' +
+  '        "allow_headers": [],
+' +
+  '        "expose_headers": [],
+' +
+  '        "allow_methods": [],
+' +
+  '        "allow_credentials": false,
+' +
+  '        "max_age_sec": null
+' +
+  "      },
+" +
+  '      "auths": [],
+' +
+  '      "rate": null,
+' +
+  '      "version": "0.0.2"
+' +
+  "    }
+" +
+  "  }
+" +
+  "]"
+`;

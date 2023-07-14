@@ -152,6 +152,7 @@ class TestDependency:
                 "policies": [],
                 "meta": {
                     "secrets": [],
+                    "queries": {"dynamic": True, "endpoints": []},
                     "auths": [],
                     "rate": None,
                     "cors": Cors(
@@ -161,8 +162,8 @@ class TestDependency:
                         allow_credentials=True,
                         max_age_sec=None,
                     ),
-                    "version": "0.0.1",
+                    "version": "0.0.2",
                 },
-                "$id": "https://metatype.dev/specs/0.0.1.json",
+                "$id": "https://metatype.dev/specs/0.0.2.json",
             }
         )

@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Engine } from "../../../src/engine.ts";
-import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
-import { MetaTest } from "../../utils/metatest.ts";
+import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
+import { gql, Meta } from "../../utils/mod.ts";
+import { MetaTest } from "../../utils/test.ts";
 
 async function runCommonTestSteps(t: MetaTest, e: Engine) {
   await t.should("create a record with a nested object", async () => {
@@ -43,8 +44,8 @@ async function runCommonTestSteps(t: MetaTest, e: Engine) {
   });
 }
 
-test("required 1-1 relationships", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/normal_1_1.py", {
+Meta.test("required 1-1 relationships", async (t) => {
+  const e = await t.engine("runtimes/prisma/normal_1_1.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",
@@ -68,8 +69,8 @@ test("required 1-1 relationships", async (t) => {
   });
 });
 
-test("optional 1-1 relationships", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/optional_1_1.py", {
+Meta.test("optional 1-1 relationships", async (t) => {
+  const e = await t.engine("runtimes/prisma/optional_1_1.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-1-1",

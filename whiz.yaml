@@ -1,5 +1,5 @@
 env:
-  TYPEGRAPH_VERSION: "0.0.1"
+  TYPEGRAPH_VERSION: "0.0.2"
 
 meta:
   watch:
@@ -85,25 +85,21 @@ typegraph:
   watch:
     - "typegraph/core/src/**/*.rs"
     - "typegraph/core/wit/*.wit"
+  env:
+    WASM_FILE: target/debug/typegraph_core.wasm
   command: |
     set -e
-    rm -rf typegraph/deno/gen
     cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm
-    wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o target/debug/typegraph_core.wasm
-    jco transpile target/debug/typegraph_core.wasm -o typegraph/deno/gen --no-nodejs-compat --map print=../src/imports.ts
-    deno run -A typegraph/deno/dev/fix-declarations.ts
+    wasm-tools component new target/wasm32-unknown-unknown/debug/typegraph_core.wasm -o $WASM_FILE
+
+    rm -rf typegraph/deno/gen
+    jco transpile $WASM_FILE -o typegraph/deno/gen --no-nodejs-compat --map "*=../src/imports.ts"
     bash typegraph/deno/dev/fix-declarations.sh
+
+    rm -rf typegraph/python_next/typegraph_next/gen
+    poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
   depends_on:
     - libs
-
-typegraph_python:
-  workdir: typegraph/python_next
-  env:
-    VIRTUAL_ENV: "$PWD/.venv"
-    PATH: "$PWD/.venv/bin:$PATH"
-  command: ../../.venv/bin/python3 -m wasmtime.bindgen ../../target/debug/typegraph_core.wasm --out-dir typegraph/gen
-  depends_on:
-    - typegraph
 
 website:
   workdir: website
@@ -121,8 +117,6 @@ website_meta:
   command: "cargo run --color always -p meta-cli -- -C website dev --run-destructive-migrations"
   #command: "cargo run -p meta-cli -- -C website deploy --allow-dirty --gate http://localhost:7890 --username admin --password password"
   env:
-    VIRTUAL_ENV: $PWD/.venv
-    PATH: $PWD/.venv/bin:$PATH
     CLICOLOR_FORCE: "1"
 
 website_docgen:
@@ -146,11 +140,13 @@ install:
     - website/package.json
   env:
     DENO_BINDGEN_URL: "https://deno.land/x/deno_bindgen@0.8.1/cli.ts"
-    WASM_TOOLS_VERSION: "1.0.33"
+    WASM_TOOLS_VERSION: "1.0.34"
     JCO_VERSION: "0.7.0"
+    CARGO_INSTA_VERSION: "1.30.0"
   command: |
     set -e
     cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
+    cargo install cargo-insta --version $CARGO_INSTA_VERSION --locked
     deno install --allow-all --force -n deno_bindgen $DENO_BINDGEN_URL
     npm install --global @bytecodealliance/jco@$JCO_VERSION
     [ -d .venv ] || python3 -m venv .venv

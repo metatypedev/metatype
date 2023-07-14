@@ -76,10 +76,13 @@ export function AnimatedCanvas({
   }
 
   const { progress } = useVirtualScroll([min, max], slowMotion);
+  //const { stageRef, start, progress } = useGifScroll();
 
   return (
     <div ref={ref}>
       <Stage
+        //ref={stageRef}
+        //onClick={start}
         className={className}
         width={width}
         height={height}

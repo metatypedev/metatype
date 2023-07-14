@@ -7,11 +7,23 @@ import * as semver from "std/semver/mod.ts";
 
 const typegraphChangelog: Record<
   string,
-  { next: string; transform: (x: TypeGraphDS) => TypeGraphDS }
+  { next: string; transform: (x: any) => TypeGraphDS }
 > = {
   "0.0.0": {
     "next": "0.0.1",
     "transform": (x) => x,
+  },
+  "0.0.1": {
+    "next": "0.0.2",
+    "transform": (x) => {
+      x.meta.prefix = x.prefix;
+      delete x.prefix;
+      x.meta.queries = {
+        dynamic: true,
+        endpoints: [],
+      };
+      return x;
+    },
   },
 };
 
