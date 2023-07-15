@@ -93,11 +93,11 @@ function MiniQLBrowser({
       >
         <div
           className={`${
-            defaultMode ? "" : "grid @2xl:grid-cols-2"
+            defaultMode ? "" : "md:grid @2xl:grid-cols-2"
           } gap-2 w-full order-first`}
         >
           {!defaultMode || mode === "typegraph" ? (
-            <div className=" bg-slate-100 rounded-lg flex flex-col">
+            <div className=" bg-slate-100 rounded-lg flex flex-col mb-2 md:mb-0">
               {codeFileUrl ? (
                 <div className="p-2 text-xs font-light">
                   See/edit full code on{" "}
