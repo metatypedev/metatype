@@ -32,6 +32,7 @@ import {
   PrettifyIcon,
   QueryEditor,
   ToolbarButton,
+  Tooltip,
   useCopyQuery,
   useEditorContext,
   usePrettifyEditors,
@@ -103,94 +104,99 @@ export default function GraphiQLInterface(
   }, [headerEditor]);
 
   return (
-    <div className="graphiql-editors">
-      <section
-        className="graphiql-query-editor shadow-sm"
-        aria-label="Query Editor"
-      >
-        <div className="graphiql-query-editor-wrapper">
-          <QueryEditor
-            editorTheme={props.editorTheme}
-            keyMap={props.keyMap}
-            onCopyQuery={props.onCopyQuery}
-            onEdit={props.onEditQuery}
-            readOnly={props.readOnly}
-          />
-        </div>
-        <div
-          className="graphiql-toolbar"
-          role="toolbar"
-          aria-label="Editor Commands"
+    <Tooltip.Provider>
+      <div className="graphiql-editors">
+        <section
+          className="graphiql-query-editor shadow-sm"
+          aria-label="Query Editor"
         >
-          <ExecuteButton />
-          <ToolbarButton
-            onClick={() => prettify()}
-            label="Prettify query (Shift-Ctrl-P)"
-          >
-            <PrettifyIcon
-              className="graphiql-toolbar-icon"
-              aria-hidden="true"
+          <div className="graphiql-query-editor-wrapper">
+            <QueryEditor
+              editorTheme={props.editorTheme}
+              keyMap={props.keyMap}
+              onCopyQuery={props.onCopyQuery}
+              onEdit={props.onEditQuery}
+              readOnly={props.readOnly}
             />
-          </ToolbarButton>
-          <ToolbarButton
-            onClick={() => copy()}
-            label="Copy query (Shift-Ctrl-C)"
-          >
-            <CopyIcon className="graphiql-toolbar-icon" aria-hidden="true" />
-          </ToolbarButton>
-        </div>
-      </section>
-
-      {props.noTool ? null : (
-        <>
-          <div className="graphiql-editor-tools p-0 text-sm ">
-            <div className="graphiql-editor-tools-tabs">
-              <div
-                className={`${
-                  tab === "variables" ? "text-slate-800" : ""
-                } p-2 hover:text-slate-800 cursor-pointer`}
-                onClick={() => {
-                  setTab(tab === "variables" ? "" : "variables");
-                }}
+            <div
+              className="graphiql-toolbar"
+              role="toolbar"
+              aria-label="Editor Commands"
+            >
+              <ExecuteButton />
+              <ToolbarButton
+                onClick={() => prettify()}
+                label="Prettify query (Shift-Ctrl-P)"
               >
-                Variables
-              </div>
-              <div
-                className={`${
-                  tab === "headers" ? "text-slate-800" : ""
-                } p-2 hover:text-slate-800 cursor-pointer`}
-                onClick={() => {
-                  setTab(tab === "headers" ? "" : "headers");
-                }}
+                <PrettifyIcon
+                  className="graphiql-toolbar-icon"
+                  aria-hidden="true"
+                />
+              </ToolbarButton>
+              <ToolbarButton
+                onClick={() => copy()}
+                label="Copy query (Shift-Ctrl-C)"
               >
-                Headers
-              </div>
+                <CopyIcon
+                  className="graphiql-toolbar-icon"
+                  aria-hidden="true"
+                />
+              </ToolbarButton>
             </div>
           </div>
+        </section>
 
-          <section
-            className={`graphiql-editor-tool ${
-              tab && tab.length > 0 ? "pt-0" : "hidden p-0"
-            }`}
-            aria-label={tab === "variables" ? "Variables" : "Headers"}
-          >
-            <VariableEditor
-              editorTheme={props.editorTheme}
-              isHidden={tab !== "variables"}
-              keyMap={props.keyMap}
-              onEdit={props.onEditVariables}
-              readOnly={props.readOnly}
-            />
-            <HeaderEditor
-              editorTheme={props.editorTheme}
-              isHidden={tab !== "headers"}
-              keyMap={props.keyMap}
-              onEdit={props.onEditHeaders}
-              readOnly={props.readOnly}
-            />
-          </section>
-        </>
-      )}
-    </div>
+        {props.noTool ? null : (
+          <>
+            <div className="graphiql-editor-tools p-0 text-sm ">
+              <div className="graphiql-editor-tools-tabs">
+                <div
+                  className={`${
+                    tab === "variables" ? "text-slate-800" : ""
+                  } p-2 hover:text-slate-800 cursor-pointer`}
+                  onClick={() => {
+                    setTab(tab === "variables" ? "" : "variables");
+                  }}
+                >
+                  Variables
+                </div>
+                <div
+                  className={`${
+                    tab === "headers" ? "text-slate-800" : ""
+                  } p-2 hover:text-slate-800 cursor-pointer`}
+                  onClick={() => {
+                    setTab(tab === "headers" ? "" : "headers");
+                  }}
+                >
+                  Headers
+                </div>
+              </div>
+            </div>
+
+            <section
+              className={`graphiql-editor-tool ${
+                tab && tab.length > 0 ? "pt-0" : "hidden p-0"
+              }`}
+              aria-label={tab === "variables" ? "Variables" : "Headers"}
+            >
+              <VariableEditor
+                editorTheme={props.editorTheme}
+                isHidden={tab !== "variables"}
+                keyMap={props.keyMap}
+                onEdit={props.onEditVariables}
+                readOnly={props.readOnly}
+              />
+              <HeaderEditor
+                editorTheme={props.editorTheme}
+                isHidden={tab !== "headers"}
+                keyMap={props.keyMap}
+                onEdit={props.onEditHeaders}
+                readOnly={props.readOnly}
+              />
+            </section>
+          </>
+        )}
+      </div>
+    </Tooltip.Provider>
   );
 }

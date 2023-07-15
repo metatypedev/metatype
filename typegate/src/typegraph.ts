@@ -10,6 +10,7 @@ import { PrismaRuntime } from "./runtimes/prisma.ts";
 import { RandomRuntime } from "./runtimes/random.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "./utils.ts";
+import { typegraph_validate } from "native";
 
 import {
   initAuth,
@@ -134,6 +135,7 @@ export class TypeGraph {
 
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
+  name: string;
 
   private constructor(
     public tg: TypeGraphDS,
@@ -144,6 +146,7 @@ export class TypeGraph {
     public introspection: TypeGraph | null,
   ) {
     this.root = this.type(0);
+    this.name = TypeGraph.formatName(tg);
     // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
     const typeByName: Record<string, TypeNode> = {};
     tg.types.forEach((tpe) => {
@@ -152,16 +155,21 @@ export class TypeGraph {
     this.typeByName = typeByName;
   }
 
-  get name() {
-    return (this.tg.meta.prefix ?? "") + this.root.title;
-  }
-
   get rawName() {
     return this.root.title;
   }
 
   static formatName(tg: TypeGraphDS): string {
     return (tg.meta.prefix ?? "") + tg.types[0].title;
+  }
+
+  static async parseJson(json: string): Promise<TypeGraphDS> {
+    const res = await typegraph_validate({ json });
+    if ("Valid" in res) {
+      return JSON.parse(res.Valid.json) as TypeGraphDS;
+    } else {
+      throw new Error(`Invalid typegraph definition: ${res.NotValid.reason}`);
+    }
   }
 
   static async init(
@@ -247,7 +255,7 @@ export class TypeGraph {
           materializers.push(...additionnalAuthMaterializers);
         }
 
-        //logger.debug(`init ${runtime.name} (${idx})`);
+        // logger.debug(`init ${runtime.name} (${idx})`);
         return runtimeInit[runtime.name]({
           typegraph,
           materializers,
@@ -286,20 +294,9 @@ export class TypeGraph {
   }
 
   async deinit(): Promise<void> {
-    for await (
-      const runtime of this.runtimeReferences
-    ) {
-      //logger.debug(`deinit runtime ${idx}`);
-      await runtime.deinit();
-    }
+    await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
     if (this.introspection) {
       await this.introspection.deinit();
-    }
-
-    for await (
-      const runtime of Object.values(DenoRuntime.getInstancesIn(this.name))
-    ) {
-      await runtime.deinit();
     }
   }
 

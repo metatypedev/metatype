@@ -2,36 +2,18 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Engine } from "../../src/engine.ts";
-import { PushResponse } from "../../src/hooks.ts";
-import { Register, RegistrationResult } from "../../src/register.ts";
-import { SystemTypegraph } from "../../src/system_typegraphs.ts";
+import { Register } from "../../src/register.ts";
 
 export class MemoryRegister extends Register {
   private map = new Map<string, Engine>();
 
-  constructor(private introspection: boolean = false) {
+  constructor() {
     super();
   }
 
-  async set(
-    payload: string,
-    secrets: Record<string, string>,
-  ): Promise<RegistrationResult> {
-    const engine = await Engine.init(
-      payload,
-      secrets,
-      false,
-      new PushResponse(),
-      SystemTypegraph.getCustomRuntimes(this),
-      this.introspection ? undefined : null, // no need to have introspection for tests
-    );
+  add(engine: Engine): Promise<void> {
     this.map.set(engine.name, engine);
-    return {
-      typegraphName: engine.name,
-      messages: [],
-      migrations: [],
-      resetRequired: [],
-    };
+    return Promise.resolve();
   }
   remove(name: string): Promise<void> {
     this.map.delete(name);

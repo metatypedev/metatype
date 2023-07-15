@@ -17,6 +17,7 @@ import { ConnInfo } from "std/http/server.ts";
 import { NoLimiter } from "./no_limiter.ts";
 import { SingleRegister } from "./single_register.ts";
 import { meta } from "./meta.ts";
+import { pushTypegraph } from "../../src/runtimes/typegate.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -67,6 +68,7 @@ export class MetaTest {
   constructor(
     public t: Deno.TestContext,
     public register: Register,
+    private introspection: boolean,
     port: number | null,
   ) {
     if (port != null) {
@@ -108,17 +110,13 @@ export class MetaTest {
       throw new Error("No typegraph");
     }
 
-    const { typegraphName, messages } = await this.register.set(
+    const [engine, _] = await pushTypegraph(
       stdout,
       opts.secrets ?? {},
+      this.register,
+      this.introspection,
     );
-    if (typegraphName == null) {
-      throw new Error("Could not register typegraph");
-    }
-    for (const m of messages) {
-      console.info(m);
-    }
-    const engine = this.register.get(typegraphName)!;
+
     this.cleanups.push(
       ...(opts.ports ?? []).map((port) => exposeOnPort(engine, port)),
     );
@@ -210,13 +208,17 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      const reg = new MemoryRegister(opts.introspection);
-      const { systemTypegraphs = false, cleanGitRepo = false } = opts;
+      const reg = new MemoryRegister();
+      const {
+        systemTypegraphs = false,
+        cleanGitRepo = false,
+        introspection = false,
+      } = opts;
       if (systemTypegraphs) {
         await SystemTypegraph.loadAll(reg);
       }
 
-      const mt = new MetaTest(t, reg, opts.port ?? null);
+      const mt = new MetaTest(t, reg, introspection, opts.port ?? null);
 
       try {
         if (cleanGitRepo) {

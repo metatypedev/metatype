@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 // @ts-check
 
-const lightCodeTheme = require("prism-react-renderer/themes/github");
-const darkCodeTheme = require("prism-react-renderer/themes/dracula");
+const lightCodeTheme = require("prism-react-renderer").themes.github;
+const darkCodeTheme = require("prism-react-renderer").themes.dracula;
 
 const organizationName = "metatypedev";
 const projectName = "metatype";

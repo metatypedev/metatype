@@ -60,14 +60,13 @@ Meta.test("cli:deploy - automatic migrations", async (t) => {
     await shell(["git", "commit", "-m", "create migrations"]);
   });
 
-  await t.should("run migrations with `meta deploy`", async () => {
-    await Meta.cli(
-      "deploy",
-      ...nodeConfigs,
-      "-f",
-      "runtimes/prisma/prisma.py",
-    );
-  });
+  // not in t.should because it creates a worker that will not be closed
+  await Meta.cli(
+    "deploy",
+    ...nodeConfigs,
+    "-f",
+    "runtimes/prisma/prisma.py",
+  );
 
   await t.should("succeed to query database", async () => {
     await gql`
@@ -146,14 +145,14 @@ Meta.test("cli:deploy - with prefix", async (t) => {
     await shell(["git", "commit", "-m", "create migrations"]);
   });
 
-  await t.should("run migrations with `meta deploy`", async () => {
-    await Meta.cli(
-      "deploy",
-      ...nodeConfigs,
-      "-f",
-      "runtimes/prisma/prisma.py",
-    );
-  });
+  // not in t.should because it creates a worker that will not be closed
+  await Meta.cli(
+    "deploy",
+    ...nodeConfigs,
+    "-f",
+    "runtimes/prisma/prisma.py",
+  );
+  //
 
   await t.should("succeed to query database", async () => {
     await gql`
