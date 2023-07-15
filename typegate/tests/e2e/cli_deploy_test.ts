@@ -145,7 +145,6 @@ Meta.test("cli:deploy - with prefix", async (t) => {
     await shell(["git", "commit", "-m", "create migrations"]);
   });
 
-  // HEAD
   // not in t.should because it creates a worker that will not be closed
   await Meta.cli(
     "deploy",
@@ -154,15 +153,7 @@ Meta.test("cli:deploy - with prefix", async (t) => {
     "runtimes/prisma/prisma.py",
   );
   //
-  await t.should("run migrations with `meta deploy`", async () => {
-    await Meta.cli(
-      "deploy",
-      ...nodeConfigs,
-      "-f",
-      "runtimes/prisma/prisma.py",
-    );
-  });
-  //main
+
   await t.should("succeed to query database", async () => {
     await gql`
       query {
