@@ -416,3 +416,7 @@ export interface FunctionMatData {
 export interface ModuleMatData {
   code: string;
 }
+export interface PrismaOperationMatData {
+  table: string;
+  operation: string;
+}

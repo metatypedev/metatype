@@ -5,8 +5,8 @@
 
 mod engine;
 mod engine_import;
-mod introspection;
-use introspection::Introspection;
+// mod introspection;
+// use introspection::Introspection;
 use once_cell::sync::Lazy;
 mod migration;
 use crate::RT;
@@ -23,30 +23,29 @@ static ENGINES: Lazy<DashMap<String, engine_import::QueryEngine>> = Lazy::new(Da
 
 // introspection
 
-#[deno]
-struct PrismaIntrospectionInp {
-    datamodel: String,
-}
+// #[deno]
+// struct PrismaIntrospectionInp {
+//     datamodel: String,
+// }
+//
+// #[deno]
+// enum PrismaIntrospectionOut {
+//     Ok { introspection: String },
+//     Err { message: String },
+// }
 
-#[deno]
-enum PrismaIntrospectionOut {
-    Ok { introspection: String },
-    Err { message: String },
-}
-
-#[deno]
-fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut {
-    let fut = Introspection::introspect(input.datamodel);
-    match RT.block_on(fut) {
-        Ok(res) => PrismaIntrospectionOut::Ok { introspection: res },
-        Err(e) => PrismaIntrospectionOut::Err {
-            message: e.to_string(),
-        },
-    }
-}
+// #[deno]
+// fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut {
+//     let fut = Introspection::introspect(input.datamodel);
+//     match RT.block_on(fut) {
+//         Ok(res) => PrismaIntrospectionOut::Ok { introspection: res },
+//         Err(e) => PrismaIntrospectionOut::Err {
+//             message: e.to_string(),
+//         },
+//     }
+// }
 
 // register engine
-
 #[deno]
 struct PrismaRegisterEngineInp {
     datamodel: String,
@@ -87,7 +86,7 @@ fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregiste
     let Some((_, engine)) = ENGINES.remove(&input.engine_name) else {
         return PrismaUnregisterEngineOut::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.engine_name})};
     };
-    match RT.block_on(engine.disconnect()) {
+    match RT.block_on(engine.disconnect("".to_string())) {
         Ok(()) => PrismaUnregisterEngineOut::Ok,
         Err(e) => PrismaUnregisterEngineOut::Err {
             message: format!("{:?}", e),

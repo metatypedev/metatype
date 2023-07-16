@@ -73,7 +73,7 @@ if (flags._.length === 0) {
 }
 
 const env: Record<string, string> = {
-  "NO_COLOR": "true",
+  // "NO_COLOR": "true",
   "DEBUG": "true",
   "PACKAGED": "false",
   "TG_SECRET":

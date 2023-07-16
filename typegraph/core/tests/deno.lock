@@ -1,0 +1,6 @@
+{
+  "version": "2",
+  "remote": {
+    "https://deno.land/std@0.190.0/collections/map_values.ts": "431b78fd770c72cc978ca7bbfa08cdc0805e69c7d2b69ad19859e093467bd46d"
+  }
+}

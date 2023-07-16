@@ -312,16 +312,18 @@ export async function dropSchemas(engine: Engine) {
       `no schema for connection string ${connection_string![1]}`,
     );
 
-    const res = await runtime.query(`
-        mutation { 
-          executeRaw(
-            query: "DROP SCHEMA IF EXISTS \\"${schema}\\" CASCADE",
-            parameters: "[]",
-          )
-        }
-      `);
+    const res = await runtime.query({
+      action: "executeRaw",
+      query: {
+        arguments: {
+          query: `DROP SCHEMA IF EXISTS "${schema}" CASCADE`,
+          parameters: "[]",
+        },
+        selection: {},
+      },
+    });
 
-    if (res.errors) {
+    if ("errors" in res) {
       console.error(JSON.stringify(res.errors));
       throw new Error(`cannot drop schema ${schema}`);
     }

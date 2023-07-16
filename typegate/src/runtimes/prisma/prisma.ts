@@ -3,18 +3,19 @@
 
 import { Runtime } from "../Runtime.ts";
 import * as native from "native";
-import { FromVars, GraphQLRuntime } from "../graphql.ts";
 import { ResolverError } from "../../errors.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
-import { nativeResult, nativeVoid } from "../../utils.ts";
+import { iterParentStages, nativeResult, nativeVoid } from "../../utils.ts";
 import { ComputeStage } from "../../engine.ts";
 import * as ast from "graphql/ast";
-import { ComputeArg } from "../../planner/args.ts";
-import { buildRawQuery } from "./../utils/graphql_inline_vars.ts";
-import { Materializer } from "../../types/typegraph.ts";
+import { ComputeArg, ComputeArgParams } from "../../planner/args.ts";
+import { Materializer, PrismaOperationMatData } from "../../types/typegraph.ts";
 import { getLogger } from "../../log.ts";
 // import { TypeGraph } from "../../typegraph.ts";
 import * as PrismaRT from "./types.ts";
+import { FromVars } from "../graphql.ts";
+import { filterKeys } from "https://deno.land/std@0.192.0/collections/filter_keys.ts";
+import { filterValues } from "https://deno.land/std@0.192.0/collections/filter_values.ts";
 
 const logger = getLogger(import.meta);
 
@@ -28,12 +29,25 @@ export const makeDatasource = (uri: string) => {
   `;
 };
 
+interface PrismaError {
+  error: string;
+  user_facing_error: {
+    is_panic: false;
+    message: string;
+    meta: Record<string, unknown>;
+    error_code: string;
+  };
+}
+
+type PrismaResult = {
+  data: Record<string, any>;
+} | {
+  errors: PrismaError[];
+};
+
 interface PrismaOperationMat extends Materializer {
   name: "prisma_operation";
-  data: {
-    operation: string;
-    table: string;
-  };
+  data: PrismaOperationMatData & Record<string, unknown>;
 }
 
 function isPrismaOperationMat(mat: Materializer): mat is PrismaOperationMat {
@@ -42,15 +56,35 @@ function isPrismaOperationMat(mat: Materializer): mat is PrismaOperationMat {
 
 type PrismaRuntimeData = PrismaRT.DataFinal;
 
-export class PrismaRuntime extends GraphQLRuntime {
+type SelectionSet = Record<string, SelectionSetValue>;
+
+type SelectionSetValue = boolean | FieldQuery;
+interface FieldQuery {
+  selection: SelectionSet;
+  arguments?: Record<string, unknown>;
+}
+
+interface SingleQuery {
+  modelName?: string;
+  action: string;
+  query: FieldQuery;
+}
+
+interface BatchQuery {
+  batch: SingleQuery[];
+  // transaction
+}
+
+interface GenQuery {
+  (params: ComputeArgParams): SingleQuery | BatchQuery;
+}
+
+export class PrismaRuntime {
   private constructor(
     readonly name: string,
     private engine_name: string,
     private datamodel: string,
-  ) {
-    super(""); // no endpoint
-    this.disableVariables();
-  }
+  ) {}
 
   static async init(
     params: RuntimeInitParams,
@@ -78,15 +112,6 @@ export class PrismaRuntime extends GraphQLRuntime {
     await this.unregisterEngine();
   }
 
-  static async introspection(uri: string): Promise<string> {
-    const intro = nativeResult(
-      await native.prisma_introspection({
-        datamodel: makeDatasource(uri),
-      }),
-    );
-    return intro.introspection;
-  }
-
   async registerEngine(): Promise<void> {
     nativeVoid(
       await native.prisma_register_engine({
@@ -104,60 +129,105 @@ export class PrismaRuntime extends GraphQLRuntime {
     );
   }
 
-  async query(query: string) {
+  async query(query: SingleQuery | BatchQuery) {
     const { res } = nativeResult(
       await native.prisma_query({
         engine_name: this.engine_name,
-        query: {
-          query,
-          variables: {}, // TODO: remove this
-        },
+        query: query,
         datamodel: this.datamodel,
       }),
     );
-    return JSON.parse(res);
+    return JSON.parse(res) as PrismaResult;
   }
 
-  override execute(query: FromVars<string>, path: string[]): Resolver {
-    return async ({ _: { variables }, ...args }) => {
-      const q = query({ ...variables, ...args });
-      logger.debug(`remote graphql: ${q}`);
+  execute(
+    q: GenQuery,
+    path: string[],
+    renames: Record<string, string>,
+  ): Resolver {
+    return async ({ _: { variables, context, effect, parent }, ...args }) => {
+      path[0] = renames[path[0]] ?? path[0];
 
       const startTime = performance.now();
-      const res = await this.query(q);
+      const generatedQuery = q({ variables, context, effect, parent });
+      console.log("remote prisma query", generatedQuery);
+      const res = await this.query(generatedQuery);
       const endTime = performance.now();
       logger.debug(`queried prisma in ${(endTime - startTime).toFixed(2)}ms`);
 
       if ("errors" in res) {
-        throw new ResolverError(
-          `Error from the prisma engine: ${
-            res.errors
-              .map((e: any) => e.user_facing_error?.message ?? e.error)
-              .join("\n")
-          }`,
-        );
+        console.error("remote prisma errors", res.errors);
+        throw new ResolverError(res.errors[0].user_facing_error.message);
       }
+
       return path.reduce((r, field) => r[field], res.data);
     };
   }
 
-  raw(
-    materializer: PrismaOperationMat,
-    args: ComputeArg<Record<string, unknown>> | null,
-  ): Resolver {
-    const operationType = materializer?.effect.effect != null
-      ? ast.OperationTypeNode.MUTATION
-      : ast.OperationTypeNode.QUERY;
-    const query: FromVars<string> = (variables) =>
-      `${operationType} { ${
-        buildRawQuery(
-          materializer.data.operation as "queryRaw" | "executeRaw",
-          materializer.data.table,
-          args,
-          variables,
-        )
-      } }`;
-    return this.execute(query, [materializer.data.operation]);
+  static buildSelectionSet(stages: ComputeStage[]): SelectionSet {
+    const selectionSet: SelectionSet = {};
+    iterParentStages(stages, (stage, children) => {
+      if (children.length === 0) {
+        selectionSet[stage.props.node] = true;
+      } else {
+        selectionSet[stage.props.node] = {
+          selection: PrismaRuntime.buildSelectionSet(
+            children,
+          ),
+        };
+      }
+    });
+    return selectionSet;
+  }
+
+  buildQuery(stages: ComputeStage[]): [GenQuery, Record<string, string>] {
+    const queries: ((p: ComputeArgParams) => SingleQuery)[] = [];
+    const renames: Record<string, string> = {};
+    iterParentStages(stages, (stage, children) => {
+      const mat = stage.props.materializer;
+      if (mat == null) {
+        throw new Error("");
+      }
+      const matData = mat.data as unknown as PrismaOperationMatData;
+
+      if (
+        matData.operation === "queryRaw" || matData.operation === "executeRaw"
+      ) {
+        renames[stage.props.node] = matData.operation;
+        queries.push((p) => ({
+          action: matData.operation,
+          query: {
+            arguments: {
+              query: matData.table,
+              // TODO params
+            },
+            // arguments: stage.props.args?.(p),
+            selection: {},
+          },
+        }));
+      } else {
+        renames[stage.props.node] = matData.operation + matData.table;
+        queries.push((p) => ({
+          modelName: matData.table,
+          action: matData.operation,
+          query: {
+            selection: PrismaRuntime.buildSelectionSet(children),
+            arguments: filterValues(
+              stage.props.args?.(p) ?? {},
+              (v) => v != null,
+            ),
+          },
+        }));
+      }
+    });
+
+    if (queries.length === 1) {
+      return [queries[0], renames];
+    } else {
+      return [(p) => ({
+        batch: queries.map((q) => q(p)),
+      }), renames];
+    }
   }
 
   materialize(
@@ -165,38 +235,66 @@ export class PrismaRuntime extends GraphQLRuntime {
     waitlist: ComputeStage[],
     verbose: boolean,
   ): ComputeStage[] {
-    const { materializer: mat } = stage.props;
-
-    if (mat && isPrismaOperationMat(mat)) {
-      const { operation } = mat.data;
-      if (operation === "queryRaw" || operation === "executeRaw") {
-        return [stage.withResolver(
-          this.raw(
-            mat,
-            stage.props.args,
-          ),
-        )];
-      }
+    const path = stage.props.path;
+    const node = path[path.length - 1];
+    if (node == null) {
+      throw new Error("GraphQL cannot be used at the root of the typegraph");
     }
 
-    return super.materialize(stage, waitlist, verbose);
-  }
+    const fields = [stage, ...Runtime.collectRelativeStages(stage, waitlist)];
 
-  override getRenames(stages: ComputeStage[]): Record<string, string> {
-    const operationLevel = stages[0].props.path.length;
+    const [query, renames] = this.buildQuery(fields);
 
-    const renames: Record<string, string> = {};
-    for (const stage of stages) {
-      const { node, path, materializer: mat } = stage.props;
-      if (mat != null && path.length === operationLevel) {
-        const { operation, table } = mat.data as {
-          operation: string;
-          table: string;
+    const queryStage = stage.withResolver(
+      this.execute(
+        query,
+        stage.props.materializer?.data.path as string[] ??
+          [node],
+        renames,
+      ),
+    );
+    const stagesMat: ComputeStage[] = [];
+    stagesMat.push(queryStage);
+
+    console.error("## fields", fields.map((s) => s.id()));
+
+    fields.shift();
+    // TODO renames
+
+    for (const field of fields) {
+      if (field.props.parent?.id() === stage.props.parent?.id()) {
+        const resolver: Resolver = ({
+          _: ctx,
+        }) => {
+          const { [queryStage.id()]: queryRes } = ctx;
+          const fieldName = field.props.path[field.props.path.length - 1];
+          const resolver = (queryRes as any)[0][fieldName];
+          const ret = typeof resolver === "function" ? resolver() : resolver;
+          return ret;
         };
-        renames[node] = operation + table;
+        stagesMat.push(
+          new ComputeStage({
+            ...field.props,
+            dependencies: [...field.props.dependencies, queryStage.id()],
+            resolver,
+          }),
+        );
+      } else {
+        const resolver: Resolver = ({ _: { parent } }) => {
+          const resolver = parent[field.props.node];
+          const ret = typeof resolver === "function" ? resolver() : resolver;
+          return ret;
+        };
+        stagesMat.push(
+          new ComputeStage({
+            ...field.props,
+            dependencies: [...field.props.dependencies, queryStage.id()],
+            resolver,
+          }),
+        );
       }
     }
 
-    return renames;
+    return stagesMat;
   }
 }

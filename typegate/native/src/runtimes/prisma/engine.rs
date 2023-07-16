@@ -4,7 +4,7 @@
 use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 
 use anyhow::{Context, Result};
-use request_handlers::GraphqlBody;
+use query_core::protocol::EngineProtocol;
 
 pub async fn register_engine(datamodel: String, engine_name: String) -> Result<()> {
     let conf = super::engine_import::ConstructorOptions {
@@ -15,6 +15,7 @@ pub async fn register_engine(datamodel: String, engine_name: String) -> Result<(
         env: serde_json::json!({}),
         config_dir: PathBuf::from_str(".")?,
         ignore_env_var_errors: false,
+        engine_protocol: Some(EngineProtocol::Json),
     };
     let engine = super::engine_import::QueryEngine::new(conf)
         .with_context(|| format!("Error while registering engine {engine_name}"))?;
@@ -24,11 +25,11 @@ pub async fn register_engine(datamodel: String, engine_name: String) -> Result<(
 }
 
 pub async fn query(engine_name: String, query: serde_json::Value) -> Result<String> {
-    let body = serde_json::from_value::<GraphqlBody>(query)?;
     let engine = super::ENGINES
         .get(&engine_name)
         .with_context(|| format!("Cound not find engine '{engine_name}"))?;
-    let res = engine.query(body.into(), None).await?;
-    serde_json::to_string(&res)
-        .context("Error while deserializing GraphQL response from the prisma engine")
+    let res = engine.query(serde_json::to_string(&query)?, None).await?;
+    // serde_json::to_string(&res)
+    //     .context("Error while deserializing GraphQL response from the prisma engine")
+    Ok(res)
 }

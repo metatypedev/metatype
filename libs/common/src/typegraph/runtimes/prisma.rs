@@ -57,3 +57,10 @@ pub struct PrismaRuntimeData {
     #[serde(default)]
     pub migration_options: Option<MigrationOptions>,
 }
+
+#[cfg_attr(feature = "codegen", derive(JsonSchema))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PrismaOperationMatData {
+    pub table: String,
+    pub operation: String,
+}

@@ -2060,6 +2060,22 @@
           }
         }
       ]
+    },
+    "PrismaOperationMatData": {
+      "title": "PrismaOperationMatData",
+      "type": "object",
+      "required": [
+        "operation",
+        "table"
+      ],
+      "properties": {
+        "table": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        }
+      }
     }
   }
 }
