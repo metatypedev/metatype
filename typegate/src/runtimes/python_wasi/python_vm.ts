@@ -10,6 +10,7 @@ import {
   register_virtual_machine,
   unregister_virtual_machine,
   WasiVmInitConfig,
+  WasiVmSetupOut,
 } from "native";
 
 import { getLogger } from "../../log.ts";
@@ -28,8 +29,11 @@ type PythonOutput = {
 };
 
 function nativePythonResult(
-  res: NativeWasiOutput,
+  res: NativeWasiOutput | WasiVmSetupOut,
 ) {
+  if (res == "Ok") {
+    return null;
+  }
   if ("Err" in res) {
     throw new Error(res.Err.message);
   }
@@ -54,13 +58,12 @@ function promisify<T>(fn: CallableFunction): Promise<T> {
   });
 }
 
-// TODO: update to new version
 const pythonWasiReactorUrl =
-  "https://github.com/metatypedev/python-wasi-reactor/releases/download/v0.1.0/python3.11.1-wasi-reactor.wasm.tar.gz";
+  "https://github.com/metatypedev/python-wasi-reactor/releases/download/v0.2.0/python3.11.1-wasi-reactor.wasm.tar.gz";
 const cachePathReactor = join(config.tmp_dir, "python3.11.1-wasi-reactor.wasm");
 
 const libPythonUrl =
-  "https://github.com/assambar/webassembly-language-runtimes/releases/download/python%2F3.11.1%2B20230223-8a6223c/libpython-3.11.1.tar.gz";
+  "https://github.com/vmware-labs/webassembly-language-runtimes/releases/download/python%2F3.11.4%2B20230714-11be424/libpython-3.11.4-wasi-sdk-20.0.tar.gz";
 const cachePathLibPython = join(config.tmp_dir, "libpython");
 
 async function download(url: string, innerDir?: string) {
@@ -85,8 +88,7 @@ export class PythonVirtualMachine {
       vm_name: "defaultName",
       preopens: [],
       pylib_path: join(config.tmp_dir, "libpython/usr/local/lib"),
-      // TODO: update to new version
-      wasi_mod_path: join(config.tmp_dir, "python-wasi-reactor.wasm"),
+      wasi_mod_path: join(config.tmp_dir, "python3.11.1-wasi-reactor.wasm"),
     };
     this.#lambdas = new Set<string>();
   }
@@ -110,14 +112,18 @@ export class PythonVirtualMachine {
       preopens,
       vm_name: vmName,
     };
-    await promisify(() => register_virtual_machine(this.#config));
+    nativePythonResult(
+      await promisify(() => register_virtual_machine(this.#config)),
+    );
   }
 
   async destroy() {
-    await promisify(() =>
-      unregister_virtual_machine({
-        vm_name: this.getVmName(),
-      })
+    nativePythonResult(
+      await promisify(() =>
+        unregister_virtual_machine({
+          vm_name: this.getVmName(),
+        })
+      ),
     );
     this.#lambdas.clear();
   }

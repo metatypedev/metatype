@@ -67,11 +67,13 @@ export class PythonWasiRuntime extends Runtime {
           const code = pyModMat.data.code as string;
 
           const repr = await structureRepr(code);
+          const vmId = generateVmIdentifier(m);
           const basePath = path.join(
             "tmp",
             "scripts",
             typegraphName,
             "python",
+            vmId,
           );
           const outDir = path.join(basePath, repr.hash);
           const entries = await uncompress(
@@ -81,7 +83,6 @@ export class PythonWasiRuntime extends Runtime {
           logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
 
           const modName = path.parse(repr.entryPoint).name;
-          const vmId = generateVmIdentifier(m);
 
           // TODO: move this logic to postprocess or python runtime
           m.data.name = `${modName}.${m.data.name as string}`;

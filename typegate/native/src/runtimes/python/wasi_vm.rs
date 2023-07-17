@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+use anyhow::bail;
 use std::path::PathBuf;
 use wasmedge_sdk::{
     config::{CommonConfigOptions, ConfigBuilder, HostRegistrationConfigOptions},
@@ -48,11 +49,18 @@ pub fn init_reactor_vm(
         "/usr/local/lib:{}:readonly",
         pythonlib_path.display()
     )];
+
     preopens.extend(inp_preopens);
-    let preopens = preopens.iter().map(|s| &s[..]).collect();
+    let preopens = preopens.iter().map(|s| s.as_ref()).collect();
     wasi_module.initialize(None, None, Some(preopens));
 
-    println!("wasi_module: {:?}", wasi_module.exit_code());
+    let exit_code = wasi_module.exit_code();
+    if exit_code != 0 {
+        bail!(
+            "wasi_module.initialize failed and returned exit code: {:?}",
+            exit_code
+        )
+    }
 
     // if wasi-vfs is not used, initialize the reactor as not done automatically
     let _init = vm.run_func(None, "_initialize", params!())?;
