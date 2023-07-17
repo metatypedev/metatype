@@ -1,0 +1,282 @@
+export const snapshot = {};
+
+snapshot[`Rest queries in Deno 1`] = `
+{
+  components: {
+    schemas: {
+      Error: {
+        properties: {
+          extensions: {
+            properties: {
+              timestamp: {
+                type: "string",
+              },
+            },
+            type: "object",
+          },
+          locations: {
+            items: {
+              type: "string",
+            },
+            type: "array",
+          },
+          message: {
+            type: "integer",
+          },
+          path: {
+            items: {
+              type: "string",
+            },
+            type: "array",
+          },
+        },
+        required: [
+          "message",
+          "extensions",
+        ],
+        type: "object",
+      },
+      GraphQLOutput: {},
+      OpenAPISpec: {},
+    },
+  },
+  info: {
+    description: 'Rest endpoint for typegraph "rest"',
+    license: {
+      name: "MIT",
+    },
+    title: "rest",
+    version: "1.0.0",
+  },
+  openapi: "3.0.3",
+  paths: {
+    "/rest/rest/__rest": {
+      get: {
+        operationId: "get_rest___rest",
+        responses: {
+          "200": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/OpenAPISpec",
+                },
+              },
+            },
+            description: "Get __rest OK",
+          },
+          "400": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform __rest: Bad Request",
+          },
+          "403": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform __rest: Forbidden",
+          },
+          "500": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform __rest: Service unavailable",
+          },
+        },
+        summary: "Get OpenAPI spec",
+      },
+    },
+    "/rest/rest/get_post": {
+      get: {
+        operationId: "get_rest_get_post",
+        parameters: [
+          {
+            in: "query",
+            name: "id",
+            required: true,
+            schema: {
+              type: "string",
+            },
+          },
+        ],
+        responses: {
+          "200": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/GraphQLOutput",
+                },
+              },
+            },
+            description: "Perform get_post OK",
+          },
+          "400": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform get_post: Bad Request",
+          },
+          "403": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform get_post: Forbidden",
+          },
+          "500": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform get_post: Service unavailable",
+          },
+        },
+        summary: "Perform get_post",
+      },
+    },
+    "/rest/rest/get_post_id": {
+      get: {
+        operationId: "get_rest_get_post_id",
+        parameters: [
+          {
+            in: "query",
+            name: "id",
+            required: true,
+            schema: {
+              type: "string",
+            },
+          },
+        ],
+        responses: {
+          "200": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/GraphQLOutput",
+                },
+              },
+            },
+            description: "Perform get_post_id OK",
+          },
+          "400": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform get_post_id: Bad Request",
+          },
+          "403": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform get_post_id: Forbidden",
+          },
+          "500": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform get_post_id: Service unavailable",
+          },
+        },
+        summary: "Perform get_post_id",
+      },
+    },
+    "/rest/rest/read_post": {
+      put: {
+        operationId: "put_rest_read_post",
+        parameters: [
+          {
+            in: "query",
+            name: "id",
+            required: true,
+            schema: {
+              type: "string",
+            },
+          },
+        ],
+        responses: {
+          "200": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/GraphQLOutput",
+                },
+              },
+            },
+            description: "Perform read_post OK",
+          },
+          "400": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform read_post: Bad Request",
+          },
+          "403": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform read_post: Forbidden",
+          },
+          "500": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform read_post: Service unavailable",
+          },
+        },
+        summary: "Perform read_post",
+      },
+    },
+  },
+  servers: [
+    {
+      url: "http://typegate.local",
+    },
+  ],
+}
+`;

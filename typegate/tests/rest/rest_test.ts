@@ -95,9 +95,7 @@ Meta.test("Rest queries in Deno", async (t) => {
 
   await t.should("fetch openapi spec", async () => {
     await rest.get("__schema")
-      .expectBody((body) => {
-        console.log("BODY", body);
-      })
+      .matchSnapshot(t)
       .on(e);
   });
 });

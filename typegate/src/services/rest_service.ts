@@ -31,11 +31,18 @@ export async function handleRest(
     const name = url.pathname.split("/").slice(
       3,
     ).join("/");
+
+    if (name == "__schema") {
+      logger.info(`rest: ${name} fetch openapi schema`);
+      const res = buildOpenAPISpecFrom(url.origin, engine);
+      headers.set("Content-Type", "application/json");
+      return new Response(res, {
+        status: 200,
+        headers,
+      });
+    }
+
     const [plan, checkVariables] = queries[name] ?? [];
-
-    const json = buildOpenAPISpecFrom(url.origin, engine);
-    console.log("SPEC", json);
-
     if (!plan) {
       return new Response(`query not found: ${name}`, { status: 404 });
     }
@@ -148,6 +155,7 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
     schemas: {
       Error: errorSchema,
       GraphQLOutput: {},
+      OpenAPISpec: {},
     },
   };
 
@@ -177,7 +185,7 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
         schema: { type: "string" },
       }));
 
-      spec.paths[`/rest/${title}/${name}`] = {
+      spec.paths[`/${title}/rest/${name}`] = {
         [method.toLowerCase()]: {
           summary: `Perform ${name}`,
           operationId: [method, title, name].join("_").toLowerCase(),
@@ -199,5 +207,26 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
       };
     }
   }
+
+  spec.paths[`/${title}/rest/__rest`] = {
+    "get": {
+      summary: `Get OpenAPI spec`,
+      operationId: ["get", title, "__rest"].join("_").toLowerCase(),
+      responses: {
+        200: {
+          description: `Get __rest OK`,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/OpenAPISpec" },
+            },
+          },
+        },
+        500: genericErrorResponse("__rest", 500),
+        403: genericErrorResponse("__rest", 403),
+        400: genericErrorResponse("__rest", 400),
+      },
+    },
+  };
+
   return JSON.stringify(spec, null, 2);
 }
