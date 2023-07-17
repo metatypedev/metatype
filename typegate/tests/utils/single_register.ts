@@ -2,20 +2,15 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Engine } from "../../src/engine.ts";
-import { Register, RegistrationResult } from "../../src/register.ts";
+import { Register } from "../../src/register.ts";
 
 export class SingleRegister extends Register {
   constructor(private name: string, private engine: Engine) {
     super();
   }
 
-  set(_payload: string): Promise<RegistrationResult> {
-    return Promise.resolve({
-      typegraphName: this.name,
-      messages: [],
-      migrations: [],
-      resetRequired: [],
-    });
+  add(_engine: Engine): Promise<void> {
+    return Promise.resolve();
   }
 
   remove(_name: string): Promise<void> {

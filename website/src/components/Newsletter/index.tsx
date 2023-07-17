@@ -64,7 +64,7 @@ export default function Newsletter() {
       />
       <input
         type="submit"
-        className="py-2 px-2 border-none cursor-pointer text-base bg-transparent bg-slate-500 text-white"
+        className="py-2 px-2 border-none cursor-pointer text-base bg-slate-500 text-white"
         value="Submit"
       />
     </form>

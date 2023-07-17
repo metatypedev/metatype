@@ -5,6 +5,8 @@ import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { MessageEntry, Migrations } from "./register.ts";
 import { SecretManager, TypeGraph, TypeGraphDS } from "./typegraph.ts";
 import { upgradeTypegraph } from "./typegraph/versions.ts";
+import { getLogger } from "./log.ts";
+import { Logger } from "std/log/mod.ts";
 
 const Message = {
   INFO: "info",
@@ -13,26 +15,27 @@ const Message = {
 } as const;
 
 export class PushResponse {
-  tgName?: string;
   messages: MessageEntry[] = [];
   migrations: Migrations[] = [];
   resetRequired: string[] = [];
+  logger: Logger;
 
-  constructor() {}
-
-  typegraphName(name: string) {
-    this.tgName = name;
+  constructor(public readonly tgName: string) {
+    this.logger = getLogger(`hooks:${tgName}`);
   }
 
   info(text: string) {
+    this.logger.info(text);
     this.messages.push({ type: Message.INFO, text });
   }
 
   warn(text: string) {
+    this.logger.warning(text);
     this.messages.push({ type: Message.WARNING, text });
   }
 
   error(text: string) {
+    this.logger.error(text);
     this.messages.push({ type: Message.ERROR, text });
   }
 

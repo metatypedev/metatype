@@ -12,8 +12,8 @@ typegraph-std = "^0.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pydoc-markdown = { git = "https://github.com/metatypedev/pydoc-markdown", branch = "develop" }
-ruff = "^0.0.261"
-black = "^23.3.0"
+ruff = "^0.0.278"
+black = "^23.7.0"
 respx = "^0.20.1"
 
 [build-system]

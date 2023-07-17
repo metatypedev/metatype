@@ -27,7 +27,7 @@ import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { None } from "monads";
-import { handleOnInitHooks, handleOnPushHooks, PushResponse } from "./hooks.ts";
+import { handleOnInitHooks } from "./hooks.ts";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./engine/computation_engine.ts";
@@ -36,6 +36,9 @@ import { isIntrospectionQuery } from "./services/graphql_service.ts";
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
   join(localDir, "typegraphs/introspection.json"),
+);
+const introspectionDef = parseGraphQLTypeGraph(
+  await TypeGraph.parseJson(introspectionDefStatic),
 );
 
 /**
@@ -154,34 +157,14 @@ export class Engine {
   }
 
   static async init(
-    payload: string,
-    secrets: Record<string, string>,
+    typegraphDS: TypeGraphDS,
+    secretManager: SecretManager,
     sync: boolean, // redis synchronization?
-    response: PushResponse,
     customRuntime: RuntimeResolver = {},
-    introspectionDefPayload: string | null = introspectionDefStatic,
+    enableIntrospection: boolean,
   ) {
-    const typegraph: TypeGraphDS = JSON.parse(payload);
-    const typegraphName = TypeGraph.formatName(typegraph);
-    response.typegraphName(typegraphName);
-
-    // not prefixed!
-    const secretManager = new SecretManager(typegraph.types[0].title, secrets);
-
-    const typegraphDS = sync ? typegraph : await handleOnPushHooks(
-      typegraph,
-      secretManager,
-      response,
-    );
-
-    let introspection = null;
-
-    if (introspectionDefPayload) {
-      const introspectionDefRaw = JSON.parse(
-        introspectionDefPayload,
-      ) as TypeGraphDS;
-      const introspectionDef = parseGraphQLTypeGraph(introspectionDefRaw);
-      introspection = await TypeGraph.init(
+    const introspection = enableIntrospection
+      ? await TypeGraph.init(
         introspectionDef,
         new SecretManager(introspectionDef.types[0].title, {}),
         {
@@ -192,8 +175,8 @@ export class Engine {
           ),
         },
         null,
-      );
-    }
+      )
+      : null;
 
     const tg = await TypeGraph.init(
       typegraphDS,

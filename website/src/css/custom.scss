@@ -71,6 +71,11 @@
 
         .graphiql-query-editor {
           @apply pb-4 border-none;
+
+          .graphiql-query-editor-wrapper {
+            width: 100%;
+            display: flex;
+          }
         }
 
         .graphiql-editor-tool {
@@ -79,6 +84,11 @@
 
         .graphiql-editor-tools {
           @apply p-0 px-1 text-slate-500;
+
+          .graphiql-editor-tools-tabs {
+            display: flex;
+            flex-direction: row;
+          }
         }
       }
       .CodeMirror {
