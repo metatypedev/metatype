@@ -145,9 +145,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.71"
+version = "1.0.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c7d0618f0e0b7e8ff11427422b64564d5fb0be1940354bfe2e0529b18a9d9b8"
+checksum = "3b13c32d80ecc7ab747b80c3784bce54ee8a7a0cc4fbda9bf4cda2cf6fe90854"
 dependencies = [
  "backtrace",
 ]
@@ -172,9 +172,9 @@ checksum = "d92bec98840b8f03a5ff5413de5293bfcd8bf96467cf5452609f939ec6f5de16"
 
 [[package]]
 name = "assert_cmd"
-version = "2.0.11"
+version = "2.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86d6b683edf8d1119fe420a94f8a7e389239666aa72e65495d91c00462510151"
+checksum = "88903cb14723e4d4003335bb7f8a14f27691649105346a0f0957466c096adfe6"
 dependencies = [
  "anstyle",
  "bstr",
@@ -874,9 +874,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.3.11"
+version = "4.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1640e5cc7fb47dbb8338fd471b105e7ed6c3cb2aeb00c2e067127ffd3764a05d"
+checksum = "98330784c494e49850cb23b8e2afcca13587d2500b2e3f1f78ae20248059c9be"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -895,9 +895,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.3.11"
+version = "4.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98c59138d527eeaf9b53f35a77fcc1fad9d883116070c63d5de1c7dc7b00c72b"
+checksum = "e182eb5f2562a67dda37e2c57af64d720a9e010c5e860ed87c056586aeafa52e"
 dependencies = [
  "anstream",
  "anstyle",
@@ -916,9 +916,9 @@ dependencies = [
 
 [[package]]
 name = "clap_derive"
-version = "4.3.2"
+version = "4.3.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b8cd2b2a819ad6eec39e8f1d6b53001af1e5469f8c177579cdaeb313115b825f"
+checksum = "54a9bb5758fc5dfe728d1019941681eccaf0cf8a4189b692a0ee2f2ecf90a050"
 dependencies = [
  "heck 0.4.1",
  "proc-macro2",
@@ -2722,9 +2722,9 @@ checksum = "bfa799dd5ed20a7e349f3b4639aa80d74549c81716d9ec4f994c9b5815598306"
 
 [[package]]
 name = "indoc"
-version = "2.0.2"
+version = "2.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "761cde40c27e2a9877f8c928fd248b7eec9dd48623dd514b256858ca593fbba7"
+checksum = "2c785eefb63ebd0e33416dfcb8d6da0bf27ce752843a45632a67bf10d4d4b5c4"
 
 [[package]]
 name = "inotify"
@@ -2748,9 +2748,9 @@ dependencies = [
 
 [[package]]
 name = "insta"
-version = "1.30.0"
+version = "1.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28491f7753051e5704d4d0ae7860d45fae3238d7d235bc4289dcd45c48d3cec3"
+checksum = "a0770b0a3d4c70567f0d58331f3088b0e4c4f56c9b8d764efe654b4a5d46de3a"
 dependencies = [
  "console",
  "globset",
@@ -3364,7 +3364,7 @@ dependencies = [
  "ignore",
  "include_dir",
  "indexmap 1.9.3",
- "indoc 2.0.2",
+ "indoc 2.0.3",
  "insta",
  "itertools 0.11.0",
  "lade-sdk",
@@ -3379,7 +3379,7 @@ dependencies = [
  "question",
  "reqwest",
  "self_update",
- "semver 1.0.17",
+ "semver 1.0.18",
  "serde",
  "serde_json",
  "serde_yaml",
@@ -5528,7 +5528,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
- "semver 1.0.17",
+ "semver 1.0.18",
 ]
 
 [[package]]
@@ -5787,7 +5787,7 @@ dependencies = [
  "quick-xml 0.23.1",
  "regex",
  "reqwest",
- "semver 1.0.17",
+ "semver 1.0.18",
  "serde_json",
  "tar",
  "tempfile",
@@ -5806,9 +5806,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.17"
+version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bebd363326d05ec3e2f532ab7660680f3b02130d780c299bca73469d521bc0ed"
+checksum = "b0293b4b29daaf487284529cc2f5675b8e57c61f70167ba415a463651fd6a918"
 
 [[package]]
 name = "semver-parser"
@@ -5978,9 +5978,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.102"
+version = "1.0.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5062a995d481b2308b6064e9af76011f2921c35f97b0468811ed9f6cd91dfed"
+checksum = "d03b412469450d4404fe8499a268edd7f8b79fecb074b0d812ad64ca21f4031b"
 dependencies = [
  "indexmap 2.0.0",
  "itoa",
@@ -6072,9 +6072,9 @@ dependencies = [
 
 [[package]]
 name = "serde_yaml"
-version = "0.9.22"
+version = "0.9.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "452e67b9c20c37fa79df53201dc03839651086ed9bbe92b3ca585ca9fdaa7d85"
+checksum = "da6075b41c7e3b079e5f246eb6094a44850d3a4c25a67c581c80796c80134012"
 dependencies = [
  "indexmap 2.0.0",
  "itoa",
@@ -6836,9 +6836,9 @@ checksum = "55937e1799185b12863d447f42597ed69d9928686b8d88a1df17376a097d8369"
 
 [[package]]
 name = "tar"
-version = "0.4.38"
+version = "0.4.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b55807c0344e1e6c04d7c965f5289c39a8d94ae23ed5c0b57aabac549f871c6"
+checksum = "ec96d2ffad078296368d46ff1cb309be1c23c513b4ab0e22a45de0185275ac96"
 dependencies = [
  "filetime",
  "libc",
@@ -7508,7 +7508,7 @@ dependencies = [
  "enum_dispatch",
  "graphql-parser 0.4.0",
  "indexmap 1.9.3",
- "indoc 2.0.2",
+ "indoc 2.0.3",
  "insta",
  "once_cell",
  "pathdiff",
