@@ -91,7 +91,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
                 .expect("Invalid path")
         );
 
-        abi::glob(&glob, &["graphql", "gql"])?
+        abi::glob(&glob, &["graphql".to_string(), "gql".to_string()])?
             .into_iter()
             .flat_map(|p| {
                 let data = abi::read_file(&p).unwrap();

@@ -1030,8 +1030,8 @@ files = []
 develop = true
 
 [package.dependencies]
-typing-extensions = "^4.7.0"
-wasmtime = "^9.0.0"
+typing-extensions = "^4.7.1"
+wasmtime = "^10.0.0"
 
 [package.source]
 type = "directory"
@@ -1053,13 +1053,13 @@ typegraph = ">=0.1.9,<0.2.0"
 
 [[package]]
 name = "typing-extensions"
-version = "4.7.0"
+version = "4.7.1"
 description = "Backported and Experimental Type Hints for Python 3.7+"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "typing_extensions-4.7.0-py3-none-any.whl", hash = "sha256:5d8c9dac95c27d20df12fb1d97b9793ab8b2af8a3a525e68c80e21060c161771"},
-    {file = "typing_extensions-4.7.0.tar.gz", hash = "sha256:935ccf31549830cda708b42289d44b6f74084d616a00be651601a4f968e77c82"},
+    {file = "typing_extensions-4.7.1-py3-none-any.whl", hash = "sha256:440d5dd3af93b060174bf433bccd69b0babc3b15b1a8dca43789fd7f61514b36"},
+    {file = "typing_extensions-4.7.1.tar.gz", hash = "sha256:b75ddc264f0ba5615db7ba217daeb99701ad295353c45f9e95963337ceeeffb2"},
 ]
 
 [[package]]
@@ -1081,17 +1081,17 @@ zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
 name = "wasmtime"
-version = "9.0.0"
+version = "10.0.0"
 description = "A WebAssembly runtime powered by Wasmtime"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "wasmtime-9.0.0-py3-none-any.whl", hash = "sha256:08f74faa950b6180ec149164b84f463854d6423260cb5b4725b05746aaa92f6e"},
-    {file = "wasmtime-9.0.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:6dad1b1ccfb93b8f3f75679104941dfa9cba17214068964d638b66eee8f93a73"},
-    {file = "wasmtime-9.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:51c3ce94d46febcae8797ac1bc90be3d5c2dce48186284ea2735ad431bea2587"},
-    {file = "wasmtime-9.0.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:5e0a64b2ef708c107e418c7741c8be0de0cc152efc1d51264e77fcf4f977cef0"},
-    {file = "wasmtime-9.0.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:e798ff868ea21a250d5382e54c15866720e8d9ff0b0d2b8728fe1f2f5b9469b6"},
-    {file = "wasmtime-9.0.0-py3-none-win_amd64.whl", hash = "sha256:2f81805c9bda88792363eaf7104270989c5b1e17ccec398b56dfb5f91d2e84f2"},
+    {file = "wasmtime-10.0.0-py3-none-any.whl", hash = "sha256:8952d802404fb6c63bdb307becae7d24fab4044db4ba61f184fc9d666057ffd6"},
+    {file = "wasmtime-10.0.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:0c8d0a078efcb49044e021200fa25716d865d1c82780522c4babed43b197f37d"},
+    {file = "wasmtime-10.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:7a3b3ae870006208c83589baee4e8a6e9b781de1712b665b627c1d3b5fc721ce"},
+    {file = "wasmtime-10.0.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:7fc2223b66b520677af0a62e3e8255f6b363e60f1ed4ee17a91307a72ee36c67"},
+    {file = "wasmtime-10.0.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:629ac3605e2e0c9d3d0963e6ae3194da0205b80b5e0f00fd31a4ff921051d559"},
+    {file = "wasmtime-10.0.0-py3-none-win_amd64.whl", hash = "sha256:40cb02a3974c0f88da7a0e99c16574f600912c41ab6d93259daa47e6c98e100b"},
 ]
 
 [package.extras]
@@ -1268,4 +1268,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "f6dca008ee6e5a29b9c3aeee60f3539f0c91477a9ddaee11208544e5616a21dc"
+content-hash = "b7e9162ce0be37e0f303e402994ed104dcb6be70e2c2ed4030234d106f2d8703"
