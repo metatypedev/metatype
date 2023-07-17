@@ -112,8 +112,8 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
   // https://github.com/OAI/OpenAPI-Specification/blob/main/examples/v3.0/petstore.json
   const title = engine.tg.type(0).title;
   const spec = {
-    openapi: "3.0.0",
-    infos: {
+    openapi: "3.0.3",
+    info: {
       title: title,
       license: { name: "MIT" },
       description: `Rest endpoint for typegraph "${title}"`,
@@ -125,8 +125,6 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
     paths: {} as Record<string, unknown>,
     // hold various schema for the document
     components: {},
-    // declare which security mechanisms can be used across the API
-    security: {} as Record<string, unknown>,
   };
 
   // 502, 400, 403
@@ -140,7 +138,7 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
       extensions: {
         type: "object",
         properties: {
-          timestamp: "string",
+          timestamp: { type: "string" },
         },
       },
     },
@@ -153,8 +151,12 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
     },
   };
 
-  const genericErrorResponse = (name: string) => ({
-    description: `Perform ${name} FAILED`,
+  const genericErrorResponse = (name: string, code: number) => ({
+    description: {
+      400: `Perform ${name}: Bad Request`,
+      403: `Perform ${name}: Forbidden`,
+      500: `Perform ${name}: Service unavailable`,
+    }[code] ?? `Perform ${name}: FAILED`,
     content: {
       "application/json": {
         schema: { $ref: "#/components/schemas/Error" },
@@ -170,11 +172,13 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
 
       const parameters = getVariables().map((v) => ({
         name: v,
+        in: "query",
         required: true,
+        schema: { type: "string" },
       }));
 
       spec.paths[`/rest/${title}/${name}`] = {
-        [method]: {
+        [method.toLowerCase()]: {
           summary: `Perform ${name}`,
           operationId: [method, title, name].join("_").toLowerCase(),
           parameters,
@@ -187,9 +191,9 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
                 },
               },
             },
-            500: genericErrorResponse(name),
-            403: genericErrorResponse(name),
-            400: genericErrorResponse(name),
+            500: genericErrorResponse(name, 500),
+            403: genericErrorResponse(name, 403),
+            400: genericErrorResponse(name, 400),
           },
         },
       };

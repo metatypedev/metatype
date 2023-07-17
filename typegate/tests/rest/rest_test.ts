@@ -92,4 +92,12 @@ Meta.test("Rest queries in Deno", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("fetch openapi spec", async () => {
+    await rest.get("__schema")
+      .expectBody((body) => {
+        console.log("BODY", body);
+      })
+      .on(e);
+  });
 });
