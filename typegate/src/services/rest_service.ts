@@ -50,12 +50,10 @@ export async function handleRest(
           headers,
         });
       }
-    } else {
-      if (name == "__schema") {
-        throw new Error(
-          `${url.pathname} does not support ${req.method} method`,
-        );
-      }
+    } else if (name == "__schema") {
+      throw new Error(
+        `${url.pathname} does not support ${req.method} method`,
+      );
     }
 
     const [plan, checkVariables] = queries[name] ?? [];
