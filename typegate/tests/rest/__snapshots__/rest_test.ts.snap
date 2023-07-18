@@ -50,54 +50,6 @@ snapshot[`Rest queries in Deno 1`] = `
   },
   openapi: "3.0.3",
   paths: {
-    "/rest/rest/__rest": {
-      get: {
-        operationId: "get_rest___rest",
-        responses: {
-          "200": {
-            content: {
-              "application/json": {
-                schema: {
-                  "\$ref": "#/components/schemas/OpenAPISpec",
-                },
-              },
-            },
-            description: "Get __rest OK",
-          },
-          "400": {
-            content: {
-              "application/json": {
-                schema: {
-                  "\$ref": "#/components/schemas/Error",
-                },
-              },
-            },
-            description: "Perform __rest: Bad Request",
-          },
-          "403": {
-            content: {
-              "application/json": {
-                schema: {
-                  "\$ref": "#/components/schemas/Error",
-                },
-              },
-            },
-            description: "Perform __rest: Forbidden",
-          },
-          "500": {
-            content: {
-              "application/json": {
-                schema: {
-                  "\$ref": "#/components/schemas/Error",
-                },
-              },
-            },
-            description: "Perform __rest: Service unavailable",
-          },
-        },
-        summary: "Get OpenAPI spec",
-      },
-    },
     "/rest/rest/get_post": {
       get: {
         operationId: "get_rest_get_post",

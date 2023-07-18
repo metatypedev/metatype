@@ -33,13 +33,19 @@ export async function handleRest(
     ).join("/");
 
     if (name == "__schema") {
-      logger.info(`rest: ${name} fetch openapi schema`);
-      const res = buildOpenAPISpecFrom(url.origin, engine);
-      headers.set("Content-Type", "application/json");
-      return new Response(res, {
-        status: 200,
-        headers,
-      });
+      if (req.method === "GET") {
+        logger.info(`rest: ${name} fetch openapi schema`);
+        const res = buildOpenAPISpecFrom(url.origin, engine);
+        headers.set("Content-Type", "application/json");
+        return new Response(res, {
+          status: 200,
+          headers,
+        });
+      } else {
+        throw new Error(
+          `${url.pathname} does not support ${req.method} method`,
+        );
+      }
     }
 
     const [plan, checkVariables] = queries[name] ?? [];
@@ -68,6 +74,7 @@ export async function handleRest(
       headers,
     });
   } catch (e) {
+    headers.set("Content-Type", "application/json");
     if (e instanceof ResolverError) {
       logger.error(`field err: ${e.message}`);
       return new Response(
@@ -176,9 +183,9 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
   for (const method of Object.keys(engine.rest)) {
     const queries = engine.rest[method];
     for (const name of Object.keys(queries)) {
-      const [, , getVariables] = queries[name];
+      const [, , variableNames] = queries[name];
 
-      const parameters = getVariables().map((v) => ({
+      const parameters = variableNames.map((v) => ({
         name: v,
         in: "query",
         required: true,
@@ -207,26 +214,6 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
       };
     }
   }
-
-  spec.paths[`/${title}/rest/__rest`] = {
-    "get": {
-      summary: `Get OpenAPI spec`,
-      operationId: ["get", title, "__rest"].join("_").toLowerCase(),
-      responses: {
-        200: {
-          description: `Get __rest OK`,
-          content: {
-            "application/json": {
-              schema: { $ref: "#/components/schemas/OpenAPISpec" },
-            },
-          },
-        },
-        500: genericErrorResponse("__rest", 500),
-        403: genericErrorResponse("__rest", 403),
-        400: genericErrorResponse("__rest", 400),
-      },
-    },
-  };
 
   return JSON.stringify(spec, null, 2);
 }

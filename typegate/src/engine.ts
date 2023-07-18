@@ -136,7 +136,7 @@ export class Engine {
       [
         Plan,
         (v: Record<string, unknown>) => Record<string, unknown>,
-        () => Array<string>,
+        Array<string>,
       ]
     >
   >;
@@ -266,15 +266,15 @@ export class Engine {
         return variables;
       };
 
-      const getVariableNames = () => {
-        const defs = unwrappedOperation.variableDefinitions ?? [];
-        return defs.map((v) => v.variable.name.value);
-      };
+      const varDefs = unwrappedOperation.variableDefinitions ?? [];
+      const variableNames = varDefs.map(
+        (v) => v.variable.name.value,
+      );
 
       this.rest[effectToMethod[effect!]][name] = [
         plan,
         checkVariables,
-        getVariableNames,
+        variableNames,
       ];
     }
   }

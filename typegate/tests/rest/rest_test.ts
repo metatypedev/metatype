@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { assertEquals } from "std/testing/asserts.ts";
 import { gql, Meta, rest } from "../utils/mod.ts";
 
 Meta.test("Rest queries in Python", async (t) => {
@@ -96,6 +97,17 @@ Meta.test("Rest queries in Deno", async (t) => {
   await t.should("fetch openapi spec", async () => {
     await rest.get("__schema")
       .matchSnapshot(t)
+      .on(e);
+  });
+
+  await t.should("fail when method is not get", async () => {
+    await rest.post("__schema")
+      .expectBody((body) => {
+        assertEquals(
+          body.message,
+          "/rest/rest/__schema does not support POST method",
+        );
+      })
       .on(e);
   });
 });
