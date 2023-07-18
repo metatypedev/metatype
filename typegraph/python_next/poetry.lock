@@ -13,17 +13,17 @@ files = [
 
 [[package]]
 name = "wasmtime"
-version = "10.0.0"
+version = "10.0.1"
 description = "A WebAssembly runtime powered by Wasmtime"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "wasmtime-10.0.0-py3-none-any.whl", hash = "sha256:8952d802404fb6c63bdb307becae7d24fab4044db4ba61f184fc9d666057ffd6"},
-    {file = "wasmtime-10.0.0-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:0c8d0a078efcb49044e021200fa25716d865d1c82780522c4babed43b197f37d"},
-    {file = "wasmtime-10.0.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:7a3b3ae870006208c83589baee4e8a6e9b781de1712b665b627c1d3b5fc721ce"},
-    {file = "wasmtime-10.0.0-py3-none-manylinux1_x86_64.whl", hash = "sha256:7fc2223b66b520677af0a62e3e8255f6b363e60f1ed4ee17a91307a72ee36c67"},
-    {file = "wasmtime-10.0.0-py3-none-manylinux2014_aarch64.whl", hash = "sha256:629ac3605e2e0c9d3d0963e6ae3194da0205b80b5e0f00fd31a4ff921051d559"},
-    {file = "wasmtime-10.0.0-py3-none-win_amd64.whl", hash = "sha256:40cb02a3974c0f88da7a0e99c16574f600912c41ab6d93259daa47e6c98e100b"},
+    {file = "wasmtime-10.0.1-py3-none-any.whl", hash = "sha256:cfa1766001567a412ef9934893acfe87fe55ed54945721d7a3a287e97e00fa85"},
+    {file = "wasmtime-10.0.1-py3-none-macosx_10_13_x86_64.whl", hash = "sha256:8a68facd6a24f165ea87c22c2f817f6344d7bb91e5d9aec515ec7881402e2cb3"},
+    {file = "wasmtime-10.0.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:5768ba1e33188406123ae6a58f4b326351a67d81c17def4f71784a425db13418"},
+    {file = "wasmtime-10.0.1-py3-none-manylinux1_x86_64.whl", hash = "sha256:064d202286c7637913ecc4b95e0f5507ffe8acda6cc011d38b7d52e066a85cd5"},
+    {file = "wasmtime-10.0.1-py3-none-manylinux2014_aarch64.whl", hash = "sha256:6df367783b716d701d3628db515d001abd512aa284519c913f3d24ac1045458a"},
+    {file = "wasmtime-10.0.1-py3-none-win_amd64.whl", hash = "sha256:1d3b8aef4c19118323fbcff23bb74375be217aea4b19c15ae56d5f6a7b1372e1"},
 ]
 
 [package.extras]
@@ -32,4 +32,4 @@ testing = ["coverage", "flake8 (==4.0.1)", "pycparser", "pytest", "pytest-flake8
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4.0"
-content-hash = "11bf2ca5556d57d952d1398e51f30b2a4d61c0a6162607315295cf8b4a0e32cf"
+content-hash = "32abce19ccf005d3a557cecf23f3e5b0eed0f1c71f5708051696bcf8624f1672"

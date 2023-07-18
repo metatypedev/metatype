@@ -1,4 +1,4 @@
-import { MaterializerId } from "../gen/exports/core.d.ts";
+import { MaterializerId } from "../gen/exports/metatype-typegraph-core.d.ts";
 import { core, runtimes } from "./wit.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";
 
