@@ -37,7 +37,15 @@ snapshot[`Rest queries in Deno 1`] = `
         type: "object",
       },
       GraphQLOutput: {},
-      OpenAPISpec: {},
+      GraphQLParam: {
+        oneOf: [
+          {},
+          {
+            items: {},
+            type: "array",
+          },
+        ],
+      },
     },
   },
   info: {
@@ -59,7 +67,7 @@ snapshot[`Rest queries in Deno 1`] = `
             name: "id",
             required: true,
             schema: {
-              type: "string",
+              "\$ref": "#/components/schemas/GraphQLParam",
             },
           },
         ],
@@ -117,7 +125,7 @@ snapshot[`Rest queries in Deno 1`] = `
             name: "id",
             required: true,
             schema: {
-              type: "string",
+              "\$ref": "#/components/schemas/GraphQLParam",
             },
           },
         ],
@@ -175,7 +183,7 @@ snapshot[`Rest queries in Deno 1`] = `
             name: "id",
             required: true,
             schema: {
-              type: "string",
+              "\$ref": "#/components/schemas/GraphQLParam",
             },
           },
         ],
@@ -242,9 +250,7 @@ snapshot[`Rest queries in Deno 2`] = `
 " +
   "      <head>
 " +
-  "        <title>Redoc</title>
-" +
-  "        <!-- needed for adaptive design -->
+  "        <title>Redoc rest</title>
 " +
   '        <meta charset="utf-8"/>
 ' +
@@ -252,14 +258,6 @@ snapshot[`Rest queries in Deno 2`] = `
 ' +
   '        <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
 ' +
-  "    
-" +
-  "        <!--
-" +
-  "        Redoc doesn't change outer page styles
-" +
-  "        -->
-" +
   "        <style>
 " +
   "          body {

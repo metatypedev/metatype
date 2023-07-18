@@ -30,14 +30,18 @@ export async function handleRest(
     const queries = engine.rest[req.method];
     const url = new URL(req.url);
 
-    const parts = url.pathname.split("/");
-    const name = parts.slice(
-      3,
-    ).join("/");
-    const typegraphName = parts[1];
+    const [, typegraphName, _rest, ...remainder] = url.pathname.split("/");
+    const name = remainder.join("/");
 
-    if (name == "__schema") {
-      if (req.method === "GET") {
+    if (req.method === "GET" && config.debug) {
+      if (name === "/" || !name) {
+        return handlePlaygroundRestAPI(
+          `Redoc ${typegraphName}`,
+          `${url.origin}/${typegraphName}/rest/__schema`,
+        );
+      }
+
+      if (name == "__schema") {
         logger.info(`rest: ${name} fetch openapi schema`);
         const res = buildOpenAPISpecFrom(url.origin, engine);
         headers.set("Content-Type", "application/json");
@@ -45,17 +49,13 @@ export async function handleRest(
           status: 200,
           headers,
         });
-      } else {
+      }
+    } else {
+      if (name == "__schema") {
         throw new Error(
           `${url.pathname} does not support ${req.method} method`,
         );
       }
-    }
-
-    if (req.method === "GET" && config.debug && (name === "/" || !name)) {
-      return handlePlaygroundRestAPI(
-        `${url.origin}/${typegraphName}/rest/__schema`,
-      );
     }
 
     const [plan, checkVariables] = queries[name] ?? [];
@@ -171,8 +171,14 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
   spec.components = {
     schemas: {
       Error: errorSchema,
+      // TODO: compute non-generic input/output
       GraphQLOutput: {},
-      OpenAPISpec: {},
+      GraphQLParam: {
+        oneOf: [
+          {},
+          { type: "array", items: {} },
+        ],
+      },
     },
   };
 
@@ -199,7 +205,7 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
         name: v,
         in: "query",
         required: true,
-        schema: { type: "string" },
+        schema: { $ref: "#/components/schemas/GraphQLParam" },
       }));
 
       spec.paths[`/${title}/rest/${name}`] = {
