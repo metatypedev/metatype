@@ -136,7 +136,7 @@ export class Engine {
       [
         Plan,
         (v: Record<string, unknown>) => Record<string, unknown>,
-        Array<string>,
+        Array<{ name: string; schema: unknown }>,
       ]
     >
   >;
@@ -247,6 +247,27 @@ export class Engine {
         return JSON.parse;
       };
 
+      const toJSONSchema = (v: ast.TypeNode): unknown => {
+        if (v.kind === "NonNullType") {
+          return toJSONSchema(v.type);
+        }
+        if (v.kind === "ListType") {
+          return { type: "array", items: toJSONSchema(v.type) };
+        }
+        const name = v.name.value;
+        if (name === "Integer") {
+          return { type: "integer" };
+        }
+        if (name === "Float") {
+          return { type: "number" };
+        }
+        if (name === "Boolean") {
+          return { type: "boolean" };
+        }
+        // String, ID
+        return { type: "string" };
+      };
+
       const parsingVariables = Object.fromEntries(
         (unwrappedOperation.variableDefinitions ?? []).map((varDef) => {
           const name = varDef.variable.name.value;
@@ -268,7 +289,7 @@ export class Engine {
 
       const varDefs = unwrappedOperation.variableDefinitions ?? [];
       const variableNames = varDefs.map(
-        (v) => v.variable.name.value,
+        (v) => ({ name: v.variable.name.value, schema: toJSONSchema(v.type) }),
       );
 
       this.rest[effectToMethod[effect!]][name] = [

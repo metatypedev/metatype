@@ -36,8 +36,7 @@ snapshot[`Rest queries in Deno 1`] = `
         ],
         type: "object",
       },
-      GraphQLOutput: {},
-      GraphQLParam: {
+      GraphQLOutput: {
         oneOf: [
           {},
           {
@@ -49,7 +48,7 @@ snapshot[`Rest queries in Deno 1`] = `
     },
   },
   info: {
-    description: 'Rest endpoint for typegraph "rest"',
+    description: 'Rest endpoints for typegraph "rest"',
     license: {
       name: "MIT",
     },
@@ -67,7 +66,7 @@ snapshot[`Rest queries in Deno 1`] = `
             name: "id",
             required: true,
             schema: {
-              "\$ref": "#/components/schemas/GraphQLParam",
+              type: "integer",
             },
           },
         ],
@@ -125,7 +124,7 @@ snapshot[`Rest queries in Deno 1`] = `
             name: "id",
             required: true,
             schema: {
-              "\$ref": "#/components/schemas/GraphQLParam",
+              type: "integer",
             },
           },
         ],
@@ -177,16 +176,21 @@ snapshot[`Rest queries in Deno 1`] = `
     "/rest/rest/read_post": {
       put: {
         operationId: "put_rest_read_post",
-        parameters: [
-          {
-            in: "query",
-            name: "id",
-            required: true,
-            schema: {
-              "\$ref": "#/components/schemas/GraphQLParam",
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: {
+                properties: {
+                  id: {
+                    type: "string",
+                  },
+                },
+                type: "object",
+              },
             },
           },
-        ],
+          required: true,
+        },
         responses: {
           "200": {
             content: {

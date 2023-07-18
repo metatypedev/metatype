@@ -138,7 +138,7 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
     info: {
       title: title,
       license: { name: "MIT" },
-      description: `Rest endpoint for typegraph "${title}"`,
+      description: `Rest endpoints for typegraph "${title}"`,
       version: "1.0.0",
     },
     // list server objects
@@ -169,9 +169,8 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
   spec.components = {
     schemas: {
       Error: errorSchema,
-      // TODO: compute non-generic input/output
-      GraphQLOutput: {},
-      GraphQLParam: {
+      // TODO: compute non-generic output
+      GraphQLOutput: {
         oneOf: [
           {},
           { type: "array", items: {} },
@@ -193,39 +192,67 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
     },
   });
 
-  // construct paths
-  for (const method of Object.keys(engine.rest)) {
-    const queries = engine.rest[method];
+  // build paths
+  for (const m of Object.keys(engine.rest)) {
+    const queries = engine.rest[m];
+    const method = m.toLowerCase();
     for (const name of Object.keys(queries)) {
-      const [, , variableNames] = queries[name];
-
-      const parameters = variableNames.map((v) => ({
-        name: v,
-        in: "query",
-        required: true,
-        schema: { $ref: "#/components/schemas/GraphQLParam" },
-      }));
-
-      spec.paths[`/${title}/rest/${name}`] = {
-        [method.toLowerCase()]: {
-          summary: `Perform ${name}`,
-          operationId: [method, title, name].join("_").toLowerCase(),
-          parameters,
-          responses: {
-            200: {
-              description: `Perform ${name} OK`,
-              content: {
-                "application/json": {
-                  schema: { $ref: "#/components/schemas/GraphQLOutput" },
-                },
-              },
+      const [, , variables] = queries[name];
+      const responses = {
+        200: {
+          description: `Perform ${name} OK`,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/GraphQLOutput" },
             },
-            500: genericErrorResponse(name, 500),
-            403: genericErrorResponse(name, 403),
-            400: genericErrorResponse(name, 400),
           },
         },
+        500: genericErrorResponse(name, 500),
+        403: genericErrorResponse(name, 403),
+        400: genericErrorResponse(name, 400),
       };
+
+      const getRequestBody = () => {
+        const body = {
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {} as Record<string, unknown>,
+              },
+            },
+          },
+          required: true,
+        };
+        for (const v of variables) {
+          const schema = body.content["application/json"].schema;
+          schema.properties[v.name] = v.schema;
+        }
+        return body;
+      };
+
+      const getParameters = () => {
+        return variables.map((v) => ({
+          name: v.name,
+          in: "query",
+          required: true,
+          schema: v.schema,
+        }));
+      };
+
+      const path = `/${title}/rest/${name}`;
+      spec.paths[path] = {
+        [method]: {
+          summary: `Perform ${name}`,
+          operationId: [method, title, name].join("_").toLowerCase(),
+          responses,
+        },
+      };
+      if (method == "get") {
+        (spec.paths[path] as any)[method]["parameters"] = getParameters();
+      } else {
+        (spec.paths[path] as any)[method]["requestBody"] = getRequestBody();
+      }
     }
   }
 
