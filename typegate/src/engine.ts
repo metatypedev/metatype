@@ -264,8 +264,11 @@ export class Engine {
         if (name === "Boolean") {
           return { type: "boolean" };
         }
-        // String, ID
-        return { type: "string" };
+        if (name === "String" || name === "ID") {
+          return { type: "string" };
+        }
+        // any
+        return {};
       };
 
       const parsingVariables = Object.fromEntries(
@@ -288,14 +291,14 @@ export class Engine {
       };
 
       const varDefs = unwrappedOperation.variableDefinitions ?? [];
-      const variableNames = varDefs.map(
+      const variables = varDefs.map(
         (v) => ({ name: v.variable.name.value, schema: toJSONSchema(v.type) }),
       );
 
       this.rest[effectToMethod[effect!]][name] = [
         plan,
         checkVariables,
-        variableNames,
+        variables,
       ];
     }
   }
