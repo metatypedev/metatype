@@ -6,7 +6,7 @@ import { Register } from "./register.ts";
 import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
 import { ConnInfo } from "std/http/server.ts";
-import { handlePlayground } from "./services/playground_service.ts";
+import { handlePlaygroundGraphQL } from "./services/playground_service.ts";
 import { handleAuth } from "./services/auth/mod.ts";
 import { handleInfo } from "./services/info_service.ts";
 import { methodNotAllowed, notFound } from "./services/responses.ts";
@@ -81,7 +81,7 @@ export const typegate =
       // default to graphql service
 
       if (request.method === "GET" && config.debug) {
-        return handlePlayground(request, engine);
+        return handlePlaygroundGraphQL(request, engine);
       }
 
       if (!engine.tg.tg.meta.queries.dynamic) {

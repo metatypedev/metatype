@@ -6,6 +6,8 @@ import { BadContext, ResolverError } from "../errors.ts";
 import { getLogger } from "../log.ts";
 import { RateLimit } from "../rate_limiter.ts";
 import { Context, Info } from "../types.ts";
+import { handlePlaygroundRestAPI } from "./playground_service.ts";
+import config from "../config.ts";
 
 const logger = getLogger("rest");
 
@@ -28,9 +30,11 @@ export async function handleRest(
     const queries = engine.rest[req.method];
     const url = new URL(req.url);
 
-    const name = url.pathname.split("/").slice(
+    const parts = url.pathname.split("/");
+    const name = parts.slice(
       3,
     ).join("/");
+    const typegraphName = parts[1];
 
     if (name == "__schema") {
       if (req.method === "GET") {
@@ -46,6 +50,12 @@ export async function handleRest(
           `${url.pathname} does not support ${req.method} method`,
         );
       }
+    }
+
+    if (req.method === "GET" && config.debug && (name === "/" || !name)) {
+      return handlePlaygroundRestAPI(
+        `${url.origin}/${typegraphName}/rest/__schema`,
+      );
     }
 
     const [plan, checkVariables] = queries[name] ?? [];

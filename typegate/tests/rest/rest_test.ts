@@ -100,6 +100,12 @@ Meta.test("Rest queries in Deno", async (t) => {
       .on(e);
   });
 
+  await t.should("fetch api playground", async () => {
+    await rest.get("/")
+      .matchSnapshot(t)
+      .on(e);
+  });
+
   await t.should("fail when method is not get", async () => {
     await rest.post("__schema")
       .expectBody((body) => {
