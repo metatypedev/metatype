@@ -88,5 +88,6 @@ export class RestSchemaGenerator {
     const typeNode = this.tg.type(typeIdx);
     const outputSchema = this.generateFromNode(typeNode);
     this.cache.set(typeIdx, outputSchema);
+    return outputSchema;
   }
 }
