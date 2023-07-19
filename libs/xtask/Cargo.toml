@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.72"
-clap = { version = "4.3.14", features = ["derive"] }
+clap = { version = "4.3.16", features = ["derive"] }
 common = { path = "../common", features = ["codegen"] }
 typescript = { path = "../typescript" }
 schemars = { version = "0.8.12", features = [] }
