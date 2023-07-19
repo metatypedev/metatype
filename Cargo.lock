@@ -1374,7 +1374,7 @@ dependencies = [
  "serde",
  "swc_atoms",
  "swc_common",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.104.5",
  "swc_ecma_parser",
  "text_lines",
 ]
@@ -1649,7 +1649,7 @@ dependencies = [
  "rustc-hash",
  "swc_atoms",
  "swc_common",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.104.5",
  "swc_ecma_parser",
  "text_lines",
 ]
@@ -6584,6 +6584,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "swc_ecma_ast"
+version = "0.106.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd5b138534f6f673afa83b6168d67158ad0fff54b4071287e83cfe87a82cfb04"
+dependencies = [
+ "bitflags 2.3.3",
+ "is-macro",
+ "num-bigint",
+ "scoped-tls",
+ "string_enum",
+ "swc_atoms",
+ "swc_common",
+ "unicode-id",
+]
+
+[[package]]
 name = "swc_ecma_codegen"
 version = "0.139.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6597,7 +6613,7 @@ dependencies = [
  "sourcemap",
  "swc_atoms",
  "swc_common",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.104.5",
  "swc_ecma_codegen_macros",
  "tracing",
 ]
@@ -6630,7 +6646,7 @@ dependencies = [
  "stacker",
  "swc_atoms",
  "swc_common",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.104.5",
  "tracing",
  "typed-arena",
 ]
@@ -6651,7 +6667,7 @@ dependencies = [
  "smallvec",
  "swc_atoms",
  "swc_common",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.104.5",
  "swc_ecma_parser",
  "swc_ecma_utils",
  "swc_ecma_visit",
@@ -6688,7 +6704,7 @@ dependencies = [
  "swc_atoms",
  "swc_common",
  "swc_config",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.104.5",
  "swc_ecma_parser",
  "swc_ecma_transforms_base",
  "swc_ecma_transforms_macros",
@@ -6705,7 +6721,7 @@ dependencies = [
  "serde",
  "swc_atoms",
  "swc_common",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.104.5",
  "swc_ecma_transforms_base",
  "swc_ecma_transforms_react",
  "swc_ecma_utils",
@@ -6724,7 +6740,7 @@ dependencies = [
  "rustc-hash",
  "swc_atoms",
  "swc_common",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.104.5",
  "swc_ecma_visit",
  "tracing",
  "unicode-id",
@@ -6739,7 +6755,7 @@ dependencies = [
  "num-bigint",
  "swc_atoms",
  "swc_common",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.104.5",
  "swc_visit",
  "tracing",
 ]
@@ -7543,7 +7559,7 @@ dependencies = [
  "lazy_static",
  "string_cache",
  "swc_common",
- "swc_ecma_ast",
+ "swc_ecma_ast 0.106.2",
  "swc_ecma_codegen",
  "swc_ecma_parser",
  "swc_ecma_transforms_typescript",
