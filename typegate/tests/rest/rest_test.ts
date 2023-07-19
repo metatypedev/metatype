@@ -94,6 +94,23 @@ Meta.test("Rest queries in Deno", async (t) => {
       .on(e);
   });
 
+  await t.should("work with object", async () => {
+    await rest.get("get_identity")
+      .withVars({
+        obj: {
+          a: 1,
+          b: { c: 2 },
+        },
+      })
+      .expectJSON({
+        identity: {
+          a: 1,
+          b: { c: 2 },
+        },
+      })
+      .on(e);
+  });
+
   await t.should("fetch openapi spec", async () => {
     await rest.get("__schema")
       .matchSnapshot(t)

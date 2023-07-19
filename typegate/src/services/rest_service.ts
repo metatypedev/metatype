@@ -75,6 +75,7 @@ export async function handleRest(
       limit,
       true,
     );
+    plan.validator(res);
 
     headers.set("Content-Type", "application/json");
     return new Response(JSON.stringify(res), {
@@ -169,13 +170,6 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
   spec.components = {
     schemas: {
       Error: errorSchema,
-      // TODO: compute non-generic output
-      GraphQLOutput: {
-        oneOf: [
-          {},
-          { type: "array", items: {} },
-        ],
-      },
     },
   };
 
@@ -197,13 +191,15 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
     const queries = engine.rest[m];
     const method = m.toLowerCase();
     for (const name of Object.keys(queries)) {
-      const [, , variables] = queries[name];
+      const [, , variables, schemaPerEndpoint] = queries[name];
+      const fn = schemaPerEndpoint[name];
+
       const responses = {
         200: {
           description: `Perform ${name} OK`,
           content: {
             "application/json": {
-              schema: { $ref: "#/components/schemas/GraphQLOutput" },
+              schema: fn.outputSchema,
             },
           },
         },
@@ -224,9 +220,9 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
           },
           required: true,
         };
-        for (const v of variables) {
+        for (const variable of variables) {
           const schema = body.content["application/json"].schema;
-          schema.properties[v.name] = v.schema;
+          schema.properties[name] = variable.schema;
         }
         return body;
       };

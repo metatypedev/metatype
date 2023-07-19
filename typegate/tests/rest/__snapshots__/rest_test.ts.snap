@@ -36,15 +36,6 @@ snapshot[`Rest queries in Deno 1`] = `
         ],
         type: "object",
       },
-      GraphQLOutput: {
-        oneOf: [
-          {},
-          {
-            items: {},
-            type: "array",
-          },
-        ],
-      },
     },
   },
   info: {
@@ -57,6 +48,60 @@ snapshot[`Rest queries in Deno 1`] = `
   },
   openapi: "3.0.3",
   paths: {
+    "/rest/rest/get_identity": {
+      get: {
+        operationId: "get_rest_get_identity",
+        parameters: [
+          {
+            in: "query",
+            name: "obj",
+            required: true,
+            schema: {
+              type: "string",
+            },
+          },
+        ],
+        responses: {
+          "200": {
+            content: {
+              "application/json": {},
+            },
+            description: "Perform get_identity OK",
+          },
+          "400": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform get_identity: Bad Request",
+          },
+          "403": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform get_identity: Forbidden",
+          },
+          "500": {
+            content: {
+              "application/json": {
+                schema: {
+                  "\$ref": "#/components/schemas/Error",
+                },
+              },
+            },
+            description: "Perform get_identity: Service unavailable",
+          },
+        },
+        summary: "Perform get_identity",
+      },
+    },
     "/rest/rest/get_post": {
       get: {
         operationId: "get_rest_get_post",
@@ -66,18 +111,14 @@ snapshot[`Rest queries in Deno 1`] = `
             name: "id",
             required: true,
             schema: {
-              type: "integer",
+              type: "number",
             },
           },
         ],
         responses: {
           "200": {
             content: {
-              "application/json": {
-                schema: {
-                  "\$ref": "#/components/schemas/GraphQLOutput",
-                },
-              },
+              "application/json": {},
             },
             description: "Perform get_post OK",
           },
@@ -124,18 +165,14 @@ snapshot[`Rest queries in Deno 1`] = `
             name: "id",
             required: true,
             schema: {
-              type: "integer",
+              type: "number",
             },
           },
         ],
         responses: {
           "200": {
             content: {
-              "application/json": {
-                schema: {
-                  "\$ref": "#/components/schemas/GraphQLOutput",
-                },
-              },
+              "application/json": {},
             },
             description: "Perform get_post_id OK",
           },
@@ -181,7 +218,7 @@ snapshot[`Rest queries in Deno 1`] = `
             "application/json": {
               schema: {
                 properties: {
-                  id: {
+                  read_post: {
                     type: "string",
                   },
                 },
@@ -194,11 +231,7 @@ snapshot[`Rest queries in Deno 1`] = `
         responses: {
           "200": {
             content: {
-              "application/json": {
-                schema: {
-                  "\$ref": "#/components/schemas/GraphQLOutput",
-                },
-              },
+              "application/json": {},
             },
             description: "Perform read_post OK",
           },
