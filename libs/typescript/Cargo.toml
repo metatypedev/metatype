@@ -14,5 +14,5 @@ swc_common = { version = "=0.31.12", features = ["tty-emitter"] }
 swc_ecma_ast = "=0.104.5"
 swc_ecma_parser = "=0.134.12"
 swc_ecma_codegen = "=0.139.17"
-swc_ecma_visit = "=0.90.5"
+swc_ecma_visit = "=0.92.1"
 swc_ecma_transforms_typescript = "=0.177.23"
