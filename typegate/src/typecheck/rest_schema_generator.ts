@@ -41,10 +41,14 @@ export class RestSchemaGenerator {
             outputSchema = this.generate(typeNode.item);
           } else if ("anyOf" in schema || "oneOf" in schema) {
             const variantKey = "anyOf" in schema ? "anyOf" : "oneOf";
-            const types = (schema[variantKey] as Array<any>).map((s: any) =>
-              Array.isArray(s.type) ? s.type : [s.type]
-            ).flat();
-            outputSchema = { type: ["null", ...types] };
+            const variantItems = schema[variantKey];
+            const types = (variantItems as Array<any>)
+              .map((s: any) => s.type)
+              .flat();
+            outputSchema = {
+              type: ["null", ...types],
+              [variantKey]: variantItems,
+            };
           } else {
             outputSchema = { type: ["null", schema.type] };
           }
