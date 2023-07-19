@@ -35,10 +35,16 @@ export class RestSchemaGenerator {
         }
         case "optional": {
           const schema = this.generate(typeNode.item) as any;
-          if (schema.item == "object" || schema.item == "object") {
+          if (schema.item == "object") {
             outputSchema = { ...schema, type: ["null", schema.type] };
           } else if (schema.item == "optional") {
             outputSchema = this.generate(typeNode.item);
+          } else if ("anyOf" in schema || "oneOf" in schema) {
+            const variantKey = "anyOf" in schema ? "anyOf" : "oneOf";
+            const types = (schema[variantKey] as Array<any>).map((s: any) =>
+              Array.isArray(s.type) ? s.type : [s.type]
+            ).flat();
+            outputSchema = { type: ["null", ...types] };
           } else {
             outputSchema = { type: ["null", schema.type] };
           }
@@ -77,7 +83,8 @@ export class RestSchemaGenerator {
           throw new Error(`Unsupported type: ${typeNode.type}`);
       }
     }
-    return outputSchema;
+
+    return { title: typeNode.title, ...outputSchema };
   }
   generate(
     typeIdx: number,

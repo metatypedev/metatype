@@ -64,7 +64,28 @@ snapshot[`Rest queries in Deno 1`] = `
         responses: {
           "200": {
             content: {
-              "application/json": {},
+              "application/json": {
+                schema: {
+                  properties: {
+                    a: {
+                      title: "integer_4",
+                      type: "integer",
+                    },
+                    b: {
+                      properties: {
+                        c: {
+                          title: "integer_5",
+                          type: "integer",
+                        },
+                      },
+                      title: "object_6",
+                      type: "object",
+                    },
+                  },
+                  title: "object_7",
+                  type: "object",
+                },
+              },
             },
             description: "Perform get_identity OK",
           },
@@ -118,7 +139,28 @@ snapshot[`Rest queries in Deno 1`] = `
         responses: {
           "200": {
             content: {
-              "application/json": {},
+              "application/json": {
+                schema: {
+                  properties: {
+                    author: {
+                      properties: {
+                        id: {
+                          title: "integer_0",
+                          type: "integer",
+                        },
+                      },
+                      title: "object_1",
+                      type: "object",
+                    },
+                    id: {
+                      title: "integer_2",
+                      type: "integer",
+                    },
+                  },
+                  title: "object_3",
+                  type: "object",
+                },
+              },
             },
             description: "Perform get_post OK",
           },
@@ -172,7 +214,28 @@ snapshot[`Rest queries in Deno 1`] = `
         responses: {
           "200": {
             content: {
-              "application/json": {},
+              "application/json": {
+                schema: {
+                  properties: {
+                    author: {
+                      properties: {
+                        id: {
+                          title: "integer_0",
+                          type: "integer",
+                        },
+                      },
+                      title: "object_1",
+                      type: "object",
+                    },
+                    id: {
+                      title: "integer_2",
+                      type: "integer",
+                    },
+                  },
+                  title: "object_3",
+                  type: "object",
+                },
+              },
             },
             description: "Perform get_post_id OK",
           },
@@ -231,7 +294,12 @@ snapshot[`Rest queries in Deno 1`] = `
         responses: {
           "200": {
             content: {
-              "application/json": {},
+              "application/json": {
+                schema: {
+                  title: "boolean_12",
+                  type: "boolean",
+                },
+              },
             },
             description: "Perform read_post OK",
           },
