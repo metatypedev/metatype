@@ -14,6 +14,11 @@ const post = t.struct({
   author: user,
 }, { name: "Post" });
 
+const complexType = t.struct({
+  a: t.integer(),
+  b: t.struct({ c: t.integer() }),
+}, { name: "ComplexType" });
+
 typegraph("rest", (expose) => {
   const deno = new DenoRuntime();
   const pub = g.Policy.public();
@@ -31,8 +36,20 @@ typegraph("rest", (expose) => {
     },
   ).withPolicy(pub);
 
+  const identity = deno.func(
+    t.struct({
+      input: complexType,
+    }),
+    complexType,
+    {
+      code: "(x) => x['input']",
+      effect: { tag: "none" } as any,
+    },
+  ).withPolicy(pub);
+
   expose({
     postFromUser,
     readPost,
+    identity,
   });
 });

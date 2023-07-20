@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import { assertEquals, assertStringIncludes } from "std/testing/asserts.ts";
 import { gql, Meta, rest } from "../utils/mod.ts";
+import { RestSchemaGenerator } from "../../src/typecheck/rest_schema_generator.ts";
 
 Meta.test("Rest queries in Python", async (t) => {
   const e = await t.engine("rest/custom.py");
@@ -91,5 +93,86 @@ Meta.test("Rest queries in Deno", async (t) => {
         read: true,
       })
       .on(e);
+  });
+
+  await t.should("work with object", async () => {
+    await rest.get("get_identity")
+      .withVars({
+        obj: {
+          a: 1,
+          b: { c: 2 },
+        },
+      })
+      .expectJSON({
+        identity: {
+          a: 1,
+          b: { c: 2 },
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("not validate argument type", async () => {
+    await rest.get("get_identity")
+      .withVars({
+        obj: {
+          a: 1,
+          b: { c: "string" },
+        },
+      })
+      .expectBody((res) => {
+        assertStringIncludes(
+          res["message"],
+          "at <value>.input.b.c: expected number, got string",
+        );
+      })
+      .on(e);
+  });
+
+  await t.should(
+    "throw an error upon missing variable in parameters",
+    async () => {
+      await rest.get("get_identity")
+        .withVars({ badField: {} })
+        .expectBody((res) => {
+          assertStringIncludes(
+            res["message"],
+            'missing variable "obj" value',
+          );
+        })
+        .on(e);
+    },
+  );
+
+  await t.should("fetch openapi spec", async () => {
+    await rest.get("__schema")
+      .matchSnapshot(t)
+      .on(e);
+  });
+
+  await t.should("fetch api playground", async () => {
+    await rest.get("/")
+      .matchSnapshot(t)
+      .on(e);
+  });
+
+  await t.should("fail when method is not get", async () => {
+    await rest.post("__schema")
+      .expectBody((body) => {
+        assertEquals(
+          body.message,
+          "/rest/rest/__schema does not support POST method",
+        );
+      })
+      .on(e);
+  });
+});
+
+Meta.test("Rest schema generator", async (t) => {
+  const e = await t.engine("rest/rest_schema.ts");
+  const generator = new RestSchemaGenerator(e.tg);
+  await t.should("generate schema with circular types", async () => {
+    const res = generator.generateAll();
+    await t.assertSnapshot(res);
   });
 });

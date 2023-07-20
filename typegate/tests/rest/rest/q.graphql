@@ -12,3 +12,10 @@ query get_post_id($id: Integer) {
     id
   }
 }
+
+query get_identity($obj: ComplexObject) {
+  identity(input: $obj) {
+    a
+    b { c }
+  }
+}
