@@ -16,6 +16,8 @@ updates:
       deps:
         patterns:
           - "*"
+        exclude-patterns:
+          - "swc_*"
   - package-ecosystem: pip
     directory: /typegraph
     schedule:
@@ -40,3 +42,5 @@ updates:
       deps:
         patterns:
           - "*"
+        exclude-patterns:
+          - "@mdx-js/react"

@@ -1,6 +1,6 @@
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
-import { Effect } from "../../gen/exports/runtimes.d.ts";
+import { Effect } from "../../gen/exports/metatype-typegraph-runtimes.d.ts";
 import Policy from "../policy.ts";
 
 export class Runtime {
