@@ -67,22 +67,27 @@ snapshot[`Rest queries in Deno 1`] = `
               "application/json": {
                 schema: {
                   properties: {
-                    a: {
-                      title: "integer_4",
-                      type: "integer",
-                    },
-                    b: {
+                    identity: {
                       properties: {
-                        c: {
-                          title: "integer_5",
+                        a: {
+                          title: "integer_4",
                           type: "integer",
                         },
+                        b: {
+                          properties: {
+                            c: {
+                              title: "integer_5",
+                              type: "integer",
+                            },
+                          },
+                          title: "object_6",
+                          type: "object",
+                        },
                       },
-                      title: "object_6",
+                      title: "object_7",
                       type: "object",
                     },
                   },
-                  title: "object_7",
                   type: "object",
                 },
               },
@@ -142,22 +147,27 @@ snapshot[`Rest queries in Deno 1`] = `
               "application/json": {
                 schema: {
                   properties: {
-                    author: {
+                    postFromUser: {
                       properties: {
+                        author: {
+                          properties: {
+                            id: {
+                              title: "integer_0",
+                              type: "integer",
+                            },
+                          },
+                          title: "object_1",
+                          type: "object",
+                        },
                         id: {
-                          title: "integer_0",
+                          title: "integer_2",
                           type: "integer",
                         },
                       },
-                      title: "object_1",
+                      title: "object_3",
                       type: "object",
                     },
-                    id: {
-                      title: "integer_2",
-                      type: "integer",
-                    },
                   },
-                  title: "object_3",
                   type: "object",
                 },
               },
@@ -217,22 +227,27 @@ snapshot[`Rest queries in Deno 1`] = `
               "application/json": {
                 schema: {
                   properties: {
-                    author: {
+                    postFromUser: {
                       properties: {
+                        author: {
+                          properties: {
+                            id: {
+                              title: "integer_0",
+                              type: "integer",
+                            },
+                          },
+                          title: "object_1",
+                          type: "object",
+                        },
                         id: {
-                          title: "integer_0",
+                          title: "integer_2",
                           type: "integer",
                         },
                       },
-                      title: "object_1",
+                      title: "object_3",
                       type: "object",
                     },
-                    id: {
-                      title: "integer_2",
-                      type: "integer",
-                    },
                   },
-                  title: "object_3",
                   type: "object",
                 },
               },
@@ -296,8 +311,13 @@ snapshot[`Rest queries in Deno 1`] = `
             content: {
               "application/json": {
                 schema: {
-                  title: "boolean_12",
-                  type: "boolean",
+                  properties: {
+                    readPost: {
+                      title: "boolean_12",
+                      type: "boolean",
+                    },
+                  },
+                  type: "object",
                 },
               },
             },

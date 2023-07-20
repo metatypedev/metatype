@@ -127,6 +127,10 @@ const effectToMethod = {
   "delete": "DELETE",
 };
 
+export interface EndpointToSchemaMap {
+  [index: string]: { fnName: string; outputSchema: unknown };
+}
+
 export class Engine {
   name: string;
   queryCache: QueryCache;
@@ -135,12 +139,12 @@ export class Engine {
     string,
     Record<
       string,
-      [
-        Plan,
-        (v: Record<string, unknown>) => Record<string, unknown>,
-        Array<{ name: string; schema: unknown }>,
-        Record<string, { outputSchema: unknown }>,
-      ]
+      {
+        plan: Plan;
+        checkVariables: (v: Record<string, unknown>) => Record<string, unknown>;
+        variables: Array<{ name: string; schema: unknown }>;
+        endpointToSchema: EndpointToSchemaMap;
+      }
     >
   >;
 
@@ -238,10 +242,7 @@ export class Engine {
 
       const schemaGenerator = new RestSchemaGenerator(this.tg);
 
-      const schemaPerEndpoint = {} as Record<
-        string,
-        { /*inputSchema: unknown;*/ outputSchema: unknown }
-      >;
+      const endpointToSchema = {} as EndpointToSchemaMap;
 
       for (const selection of unwrappedOperation.selectionSet.selections) {
         const fnName = (selection as any)?.name?.value as string;
@@ -268,9 +269,8 @@ export class Engine {
             );
           }
 
-          // console.log("full path:", name, fnName);
-          schemaPerEndpoint[name] = {
-            // inputSchema: schemaGenerator.generate(endpointFunc.input),
+          endpointToSchema[name] = {
+            fnName,
             outputSchema: schemaGenerator.generate(endpointFunc.output),
           };
         }
@@ -287,7 +287,6 @@ export class Engine {
         const variables = Object.fromEntries(
           Object.entries(vars).map(([k, v]) => [k, parsingVariables[k]?.(v)]),
         );
-
         this.checkVariablesPresence(
           unwrappedOperation.variableDefinitions ?? [],
           variables,
@@ -303,7 +302,6 @@ export class Engine {
           return { type: "array", items: toJSONSchema(v.type) };
         }
         const name = v.name.value;
-        // TODO:
         const schema = {
           "Integer": { type: "number" },
           "Float": { type: "number" },
@@ -314,11 +312,7 @@ export class Engine {
         if (schema) {
           return schema;
         }
-        // const candidate = this.tg.tg.types.filter((tpe) => tpe.title == name)
-        //   .shift();
-        // if (candidate) {
-        //   return schemaGenerator.generateFromNode(candidate);
-        // }
+        // fallback objects
         return { type: "string" };
       };
 
@@ -328,12 +322,12 @@ export class Engine {
         schema: toJSONSchema(v.type),
       }));
 
-      this.rest[effectToMethod[effect!]][name] = [
+      this.rest[effectToMethod[effect!]][name] = {
         plan,
-        checkVariables,
-        variables,
-        schemaPerEndpoint,
-      ];
+        checkVariables, // variable existence checker
+        variables, // variable in query/body
+        endpointToSchema, // schema according to tg
+      };
     }
   }
 

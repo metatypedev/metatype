@@ -56,7 +56,7 @@ export async function handleRest(
       );
     }
 
-    const [plan, checkVariables] = queries[name] ?? [];
+    const { plan, checkVariables } = queries[name] ?? [];
     if (!plan) {
       return new Response(`query not found: ${name}`, { status: 404 });
     }
@@ -191,15 +191,20 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
     const queries = engine.rest[m];
     const method = m.toLowerCase();
     for (const name of Object.keys(queries)) {
-      const [, , variables, schemaPerEndpoint] = queries[name];
-      const fn = schemaPerEndpoint[name];
+      const { variables, endpointToSchema } = queries[name];
+      const fn = endpointToSchema[name];
 
       const responses = {
         200: {
           description: `Perform ${name} OK`,
           content: {
             "application/json": {
-              schema: fn.outputSchema,
+              schema: {
+                type: "object",
+                properties: {
+                  [fn.fnName]: fn.outputSchema,
+                },
+              },
             },
           },
         },
@@ -251,6 +256,8 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
       }
     }
   }
+
+  // console.log(JSON.stringify(spec, null, 2));
 
   return JSON.stringify(spec, null, 2);
 }
