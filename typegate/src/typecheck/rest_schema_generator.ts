@@ -1,17 +1,45 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeNode } from "../type_node.ts";
 import { TypeGraph } from "../typegraph.ts";
 
 export class RestSchemaGenerator {
-  cache: Map<number, string> = new Map();
+  schema: Map<number, unknown> = new Map();
+  refs: Map<string, unknown> = new Map();
+
+  refered: Set<string> = new Set<string>();
+
   constructor(private tg: TypeGraph) {}
-  generateFromNode(typeNode: TypeNode) {
+
+  asRef(idx: number) {
+    const name = this.tg.type(idx).title;
+    this.refered.add(name);
+    return { $ref: `#/components/schemas/${name}` };
+  }
+
+  generate(root: number) {
+    const inProgress = new Set<number>();
+    return this.#generateHelper(root, inProgress);
+  }
+
+  #generateHelper(
+    typeIdx: number,
+    inProgress: Set<number>,
+  ): unknown {
+    if (this.schema.has(typeIdx)) {
+      return this.schema.get(typeIdx);
+    }
+
+    const typeNode = this.tg.type(typeIdx);
+
     let outputSchema = null;
     if (typeNode.enum != null) {
       outputSchema = { enum: typeNode.enum! };
+    } else if (inProgress.has(typeIdx)) {
+      outputSchema = this.asRef(typeIdx);
     } else {
+      inProgress.add(typeIdx);
+
       switch (typeNode.type) {
         case "boolean": {
           outputSchema = { type: "boolean" };
@@ -34,16 +62,15 @@ export class RestSchemaGenerator {
           break;
         }
         case "optional": {
-          const schema = this.generate(typeNode.item) as any;
+          const itemIdx = typeNode.item;
+          const schema: any = this.#generateHelper(itemIdx, inProgress);
           if (schema.item == "object") {
             outputSchema = { ...schema, type: ["null", schema.type] };
-          } else if (schema.item == "optional") {
-            outputSchema = this.generate(typeNode.item);
           } else if ("anyOf" in schema || "oneOf" in schema) {
             const variantKey = "anyOf" in schema ? "anyOf" : "oneOf";
             const variantItems = schema[variantKey];
             const types = (variantItems as Array<any>)
-              .map((s: any) => s.type)
+              .map((s) => s.type)
               .flat();
             outputSchema = {
               type: ["null", ...types],
@@ -55,50 +82,52 @@ export class RestSchemaGenerator {
           break;
         }
         case "array": {
-          const schema = this.generate(typeNode.items);
+          const itemsIdx = typeNode.items;
+          const schema = this.#generateHelper(itemsIdx, inProgress);
           outputSchema = { type: "array", items: schema };
           break;
         }
         case "object": {
           const properties = {} as any;
           for (const [key, idx] of Object.entries(typeNode.properties)) {
-            properties[key] = this.generate(idx);
+            properties[key] = this.#generateHelper(idx, inProgress);
           }
           outputSchema = { type: "object", properties };
           break;
         }
         case "function": {
-          outputSchema = this.generate(typeNode.output);
+          outputSchema = this.#generateHelper(typeNode.output, inProgress);
           break;
         }
         case "union": {
           outputSchema = {
-            anyOf: typeNode.anyOf.map((tpe) => this.generate(tpe)),
+            anyOf: typeNode.anyOf.map((idx) =>
+              this.#generateHelper(idx, inProgress)
+            ),
           };
           break;
         }
         case "either": {
           outputSchema = {
-            oneOf: typeNode.oneOf.map((tpe) => this.generate(tpe)),
+            oneOf: typeNode.oneOf.map((idx) =>
+              this.#generateHelper(idx, inProgress)
+            ),
           };
           break;
         }
         default:
           throw new Error(`Unsupported type: ${typeNode.type}`);
       }
+
+      inProgress.delete(typeIdx);
     }
 
-    return { title: typeNode.title, ...outputSchema };
-  }
-  generate(
-    typeIdx: number,
-  ): unknown {
-    if (this.cache.has(typeIdx)) {
-      return this.cache.get(typeIdx);
+    if (!("$ref" in outputSchema)) {
+      outputSchema = { title: typeNode.title, ...outputSchema };
+      this.refs.set(outputSchema.title, outputSchema);
     }
-    const typeNode = this.tg.type(typeIdx);
-    const outputSchema = this.generateFromNode(typeNode);
-    this.cache.set(typeIdx, outputSchema);
+
+    this.schema.set(typeIdx, outputSchema);
     return outputSchema;
   }
 }

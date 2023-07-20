@@ -36,6 +36,86 @@ snapshot[`Rest queries in Deno 1`] = `
         ],
         type: "object",
       },
+      boolean_12: {
+        title: "boolean_12",
+        type: "boolean",
+      },
+      integer_0: {
+        title: "integer_0",
+        type: "integer",
+      },
+      integer_2: {
+        title: "integer_2",
+        type: "integer",
+      },
+      integer_4: {
+        title: "integer_4",
+        type: "integer",
+      },
+      integer_5: {
+        title: "integer_5",
+        type: "integer",
+      },
+      object_1: {
+        properties: {
+          id: {
+            title: "integer_0",
+            type: "integer",
+          },
+        },
+        title: "object_1",
+        type: "object",
+      },
+      object_3: {
+        properties: {
+          author: {
+            properties: {
+              id: {
+                title: "integer_0",
+                type: "integer",
+              },
+            },
+            title: "object_1",
+            type: "object",
+          },
+          id: {
+            title: "integer_2",
+            type: "integer",
+          },
+        },
+        title: "object_3",
+        type: "object",
+      },
+      object_6: {
+        properties: {
+          c: {
+            title: "integer_5",
+            type: "integer",
+          },
+        },
+        title: "object_6",
+        type: "object",
+      },
+      object_7: {
+        properties: {
+          a: {
+            title: "integer_4",
+            type: "integer",
+          },
+          b: {
+            properties: {
+              c: {
+                title: "integer_5",
+                type: "integer",
+              },
+            },
+            title: "object_6",
+            type: "object",
+          },
+        },
+        title: "object_7",
+        type: "object",
+      },
     },
   },
   info: {

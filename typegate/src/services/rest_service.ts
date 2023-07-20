@@ -147,7 +147,7 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
     // available paths and operations for the API.
     paths: {} as Record<string, unknown>,
     // hold various schema for the document
-    components: {},
+    components: {} as Record<string, unknown>,
   };
 
   // 502, 400, 403
@@ -191,8 +191,13 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
     const queries = engine.rest[m];
     const method = m.toLowerCase();
     for (const name of Object.keys(queries)) {
-      const { variables, endpointToSchema } = queries[name];
+      const { variables, endpointToSchema, refSchemas } = queries[name];
       const fn = endpointToSchema[name];
+
+      // update refs in spec
+      for (const [name, schema] of refSchemas.entries()) {
+        (spec.components.schemas as any)[name] = schema;
+      }
 
       const responses = {
         200: {
@@ -256,8 +261,6 @@ export function buildOpenAPISpecFrom(baseUrl: string, engine: Engine): string {
       }
     }
   }
-
-  // console.log(JSON.stringify(spec, null, 2));
 
   return JSON.stringify(spec, null, 2);
 }

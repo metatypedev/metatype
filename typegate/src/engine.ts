@@ -144,6 +144,7 @@ export class Engine {
         checkVariables: (v: Record<string, unknown>) => Record<string, unknown>;
         variables: Array<{ name: string; schema: unknown }>;
         endpointToSchema: EndpointToSchemaMap;
+        refSchemas: Map<string, unknown>;
       }
     >
   >;
@@ -236,7 +237,10 @@ export class Engine {
         if (v.kind === "NonNullType") {
           return casting(v.type);
         }
-        // assume request is always string | number | boolean
+        if (name === "String" || name == "ID") {
+          return String;
+        }
+        // ListType | Object | boolean | number: stringified
         return JSON.parse;
       };
 
@@ -247,7 +251,7 @@ export class Engine {
       for (const selection of unwrappedOperation.selectionSet.selections) {
         const fnName = (selection as any)?.name?.value as string;
         if (fnName) {
-          // Note: (query | mutation) > endpointName > [<fn1>, <fn2>, ..]
+          // Note: (query | mutation) <endpointName> { <fnName1>, <fnName2>, .. }
           const match = this.tg.tg.types
             .filter((tpe) =>
               tpe.type == "object" &&
@@ -327,6 +331,7 @@ export class Engine {
         checkVariables, // variable existence checker
         variables, // variable in query/body
         endpointToSchema, // schema according to tg
+        refSchemas: schemaGenerator.refs,
       };
     }
   }
