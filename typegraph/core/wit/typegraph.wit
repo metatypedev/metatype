@@ -1,4 +1,4 @@
-// package default:typegraph
+package metatype:typegraph
 
 interface core {
 
@@ -91,11 +91,9 @@ interface core {
     type materializer-id = u32
 }
 
-
 interface runtimes {
-    use self.core.{error, runtime-id, materializer-id}
-    // use core.{error, runtime-id, materializer-id}
-
+    use core.{error, runtime-id, materializer-id}
+    
     get-deno-runtime: func() -> runtime-id
 
     type idempotency = bool
@@ -132,14 +130,7 @@ interface runtimes {
     import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>
 }
 
-default world typegraph {
-    export core: self.core
-    export runtimes: self.runtimes
-}
-
-/*
 world typegraph {
     export core
     export runtimes
 }
-*/

@@ -49,6 +49,7 @@ dev:
       '(    image: ghcr.io/metatypedev/typegate:v).+()': METATYPE_VERSION
     '**/pyproject.toml':
       (version = ").+("): METATYPE_VERSION
+      (wasmtime = "\^).+("): WASMTIME_VERSION
     examples/**/pyproject.toml:
       (typegraph = ").+("): METATYPE_VERSION
   lock:
@@ -60,9 +61,10 @@ dev:
     DENO_VERSION: 1.35.1
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.6.0
-    WASM_TOOLS_VERSION: 1.0.34
     CARGO_INSTA_VERSION: 1.30.0
-    JCO_VERSION: 0.7.0
+    WASM_TOOLS_VERSION: 1.0.37
+    JCO_VERSION: 0.9.4
+    WASMTIME_VERSION: 10.0.0
     TYPEGRAPH_VERSION: 0.0.2
     METATYPE_VERSION: 0.1.10
     TAGLINE: >-

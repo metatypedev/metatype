@@ -30,12 +30,14 @@ pub mod wit {
 
     export_typegraph!(Lib);
 
-    //pub use exports::default::typegraph::{core, runtimes};
+    pub use exports::metatype::typegraph::{core, runtimes};
 }
 
 #[cfg(feature = "wasm")]
 pub mod host {
     wit_bindgen::generate!("host");
+
+    pub use metatype::typegraph::abi;
 }
 
 // native stubs to make the test compilation work
@@ -45,7 +47,7 @@ pub mod host {
         pub fn log(message: &str) {
             println!("{}", message);
         }
-        pub fn glob(_pattern: &str, _exts: &[&str]) -> Result<Vec<String>, String> {
+        pub fn glob(_pattern: &str, _exts: &[String]) -> Result<Vec<String>, String> {
             Ok(vec![])
         }
         pub fn read_file(path: &str) -> Result<String, String> {
