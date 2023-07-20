@@ -4,7 +4,7 @@
 import { Engine } from "../engine.ts";
 import { baseUrl } from "./middlewares.ts";
 
-export const handlePlayground = (
+export const handlePlaygroundGraphQL = (
   request: Request,
   engine: Engine,
 ): Response => {
@@ -95,6 +95,36 @@ export const handlePlayground = (
     </html>
     `;
 
+  return new Response(html, {
+    headers: { "content-type": "text/html" },
+  });
+};
+
+export const handlePlaygroundRestAPI = (
+  pageTitle: string,
+  specUrl: string,
+): Response => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>${pageTitle}</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+        <style>
+          body {
+            margin: 0;
+            padding: 0;
+          }
+        </style>
+      </head>
+      <body>
+        <redoc spec-url='${specUrl}'></redoc>
+        <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
+      </body>
+    </html>
+    `;
   return new Response(html, {
     headers: { "content-type": "text/html" },
   });

@@ -32,6 +32,8 @@ import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./engine/computation_engine.ts";
 import { isIntrospectionQuery } from "./services/graphql_service.ts";
+import { ObjectNode } from "./type_node.ts";
+import { RestSchemaGenerator } from "./typecheck/rest_schema_generator.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const introspectionDefStatic = await Deno.readTextFile(
@@ -125,6 +127,10 @@ const effectToMethod = {
   "delete": "DELETE",
 };
 
+export interface EndpointToSchemaMap {
+  [index: string]: { fnName: string; outputSchema: unknown };
+}
+
 export class Engine {
   name: string;
   queryCache: QueryCache;
@@ -133,7 +139,13 @@ export class Engine {
     string,
     Record<
       string,
-      [Plan, (v: Record<string, unknown>) => Record<string, unknown>]
+      {
+        plan: Plan;
+        checkVariables: (v: Record<string, unknown>) => Record<string, unknown>;
+        variables: Array<{ name: string; schema: unknown }>;
+        endpointToSchema: EndpointToSchemaMap;
+        refSchemas: Map<string, unknown>;
+      }
     >
   >;
 
@@ -215,6 +227,7 @@ export class Engine {
           s.props.effect
         ),
       ).values());
+
       if (effects.length !== 1) {
         throw new Error("root fields in query must be of the same effect");
       }
@@ -224,24 +237,48 @@ export class Engine {
         if (v.kind === "NonNullType") {
           return casting(v.type);
         }
-        if (v.kind === "ListType") {
-          return JSON.parse;
-        }
-        const name = v.name.value;
-        if (name === "Integer") {
-          return parseInt;
-        }
-        if (name === "Float") {
-          return parseFloat;
-        }
-        if (name === "Boolean") {
-          return Boolean;
-        }
         if (name === "String" || name == "ID") {
           return String;
         }
+        // ListType | Object | boolean | number: stringified
         return JSON.parse;
       };
+
+      const schemaGenerator = new RestSchemaGenerator(this.tg);
+
+      const endpointToSchema = {} as EndpointToSchemaMap;
+
+      for (const selection of unwrappedOperation.selectionSet.selections) {
+        const fnName = (selection as any)?.name?.value as string;
+        if (fnName) {
+          // Note: (query | mutation) <endpointName> { <fnName1>, <fnName2>, .. }
+          const match = this.tg.tg.types
+            .filter((tpe) =>
+              tpe.type == "object" &&
+              (tpe.title == "Query" || tpe.title == "Mutation") &&
+              tpe.properties[fnName] != undefined
+            ).shift() as ObjectNode;
+
+          if (!match) {
+            throw new Error(
+              `invalid state: "${name}" in query definition not found in type list`,
+            );
+          }
+
+          const typeIdx = match.properties?.[fnName];
+          const endpointFunc = this.tg.type(typeIdx);
+          if (endpointFunc.type != "function") {
+            throw new Error(
+              `invalid state: function expected, got "${endpointFunc.type}"`,
+            );
+          }
+
+          endpointToSchema[name] = {
+            fnName,
+            outputSchema: schemaGenerator.generate(endpointFunc.output),
+          };
+        }
+      }
 
       const parsingVariables = Object.fromEntries(
         (unwrappedOperation.variableDefinitions ?? []).map((varDef) => {
@@ -252,9 +289,8 @@ export class Engine {
 
       const checkVariables = (vars: Record<string, unknown>) => {
         const variables = Object.fromEntries(
-          Object.entries(vars).map(([k, v]) => [k, parsingVariables[k](v)]),
+          Object.entries(vars).map(([k, v]) => [k, parsingVariables[k]?.(v)]),
         );
-
         this.checkVariablesPresence(
           unwrappedOperation.variableDefinitions ?? [],
           variables,
@@ -262,7 +298,41 @@ export class Engine {
         return variables;
       };
 
-      this.rest[effectToMethod[effect!]][name] = [plan, checkVariables];
+      const toJSONSchema = (v: ast.TypeNode): unknown => {
+        if (v.kind === "NonNullType") {
+          return toJSONSchema(v.type);
+        }
+        if (v.kind === "ListType") {
+          return { type: "array", items: toJSONSchema(v.type) };
+        }
+        const name = v.name.value;
+        const schema = {
+          "Integer": { type: "number" },
+          "Float": { type: "number" },
+          "Boolean": { type: "boolean" },
+          "String": { type: "string" },
+          "ID": { type: "string" },
+        }?.[name];
+        if (schema) {
+          return schema;
+        }
+        // fallback objects
+        return { type: "string" };
+      };
+
+      const varDefs = unwrappedOperation.variableDefinitions ?? [];
+      const variables = varDefs.map((v) => ({
+        name: v.variable.name.value,
+        schema: toJSONSchema(v.type),
+      }));
+
+      this.rest[effectToMethod[effect!]][name] = {
+        plan,
+        checkVariables, // variable existence checker
+        variables, // variable in query/body
+        endpointToSchema, // schema according to tg
+        refSchemas: schemaGenerator.refs,
+      };
     }
   }
 
