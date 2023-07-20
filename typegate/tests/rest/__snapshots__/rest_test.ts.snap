@@ -489,3 +489,336 @@ snapshot[`Rest queries in Deno 2`] = `
 " +
   "    "
 `;
+
+snapshot[`Rest schema generator 1`] = `
+{
+  refs: Map(7) {
+    "Query" => {
+      properties: {
+        identity: {
+          properties: {
+            a: {
+              title: "integer_0",
+              type: "integer",
+            },
+            b: {
+              properties: {
+                c: {
+                  title: "integer_1",
+                  type: "integer",
+                },
+                d: {
+                  "\$ref": "#/components/schemas/object_5",
+                },
+              },
+              title: "object_3",
+              type: "object",
+            },
+            e: {
+              "\$ref": "#/components/schemas/object_5",
+            },
+          },
+          title: "object_5",
+          type: "object",
+        },
+      },
+      title: "Query",
+      type: "object",
+    },
+    "integer_0" => {
+      title: "integer_0",
+      type: "integer",
+    },
+    "integer_1" => {
+      title: "integer_1",
+      type: "integer",
+    },
+    "object_3" => {
+      properties: {
+        c: {
+          title: "integer_1",
+          type: "integer",
+        },
+        d: {
+          "\$ref": "#/components/schemas/object_5",
+        },
+      },
+      title: "object_3",
+      type: "object",
+    },
+    "object_5" => {
+      properties: {
+        a: {
+          title: "integer_0",
+          type: "integer",
+        },
+        b: {
+          properties: {
+            c: {
+              title: "integer_1",
+              type: "integer",
+            },
+            d: {
+              "\$ref": "#/components/schemas/object_5",
+            },
+          },
+          title: "object_3",
+          type: "object",
+        },
+        e: {
+          "\$ref": "#/components/schemas/object_5",
+        },
+      },
+      title: "object_5",
+      type: "object",
+    },
+    "object_6" => {
+      properties: {
+        input: {
+          properties: {
+            a: {
+              title: "integer_0",
+              type: "integer",
+            },
+            b: {
+              properties: {
+                c: {
+                  title: "integer_1",
+                  type: "integer",
+                },
+                d: {
+                  "\$ref": "#/components/schemas/object_5",
+                },
+              },
+              title: "object_3",
+              type: "object",
+            },
+            e: {
+              "\$ref": "#/components/schemas/object_5",
+            },
+          },
+          title: "object_5",
+          type: "object",
+        },
+      },
+      title: "object_6",
+      type: "object",
+    },
+    "rest_schema" => {
+      properties: {
+        query: {
+          properties: {
+            identity: {
+              properties: {
+                a: {
+                  title: "integer_0",
+                  type: "integer",
+                },
+                b: {
+                  properties: {
+                    c: {
+                      title: "integer_1",
+                      type: "integer",
+                    },
+                    d: {
+                      "\$ref": "#/components/schemas/object_5",
+                    },
+                  },
+                  title: "object_3",
+                  type: "object",
+                },
+                e: {
+                  "\$ref": "#/components/schemas/object_5",
+                },
+              },
+              title: "object_5",
+              type: "object",
+            },
+          },
+          title: "Query",
+          type: "object",
+        },
+      },
+      title: "rest_schema",
+      type: "object",
+    },
+  },
+  schema: Map(8) {
+    0 => {
+      properties: {
+        query: {
+          properties: {
+            identity: {
+              properties: {
+                a: {
+                  title: "integer_0",
+                  type: "integer",
+                },
+                b: {
+                  properties: {
+                    c: {
+                      title: "integer_1",
+                      type: "integer",
+                    },
+                    d: {
+                      "\$ref": "#/components/schemas/object_5",
+                    },
+                  },
+                  title: "object_3",
+                  type: "object",
+                },
+                e: {
+                  "\$ref": "#/components/schemas/object_5",
+                },
+              },
+              title: "object_5",
+              type: "object",
+            },
+          },
+          title: "Query",
+          type: "object",
+        },
+      },
+      title: "rest_schema",
+      type: "object",
+    },
+    1 => {
+      properties: {
+        a: {
+          title: "integer_0",
+          type: "integer",
+        },
+        b: {
+          properties: {
+            c: {
+              title: "integer_1",
+              type: "integer",
+            },
+            d: {
+              "\$ref": "#/components/schemas/object_5",
+            },
+          },
+          title: "object_3",
+          type: "object",
+        },
+        e: {
+          "\$ref": "#/components/schemas/object_5",
+        },
+      },
+      title: "object_5",
+      type: "object",
+    },
+    2 => {
+      properties: {
+        input: {
+          properties: {
+            a: {
+              title: "integer_0",
+              type: "integer",
+            },
+            b: {
+              properties: {
+                c: {
+                  title: "integer_1",
+                  type: "integer",
+                },
+                d: {
+                  "\$ref": "#/components/schemas/object_5",
+                },
+              },
+              title: "object_3",
+              type: "object",
+            },
+            e: {
+              "\$ref": "#/components/schemas/object_5",
+            },
+          },
+          title: "object_5",
+          type: "object",
+        },
+      },
+      title: "object_6",
+      type: "object",
+    },
+    3 => {
+      properties: {
+        a: {
+          title: "integer_0",
+          type: "integer",
+        },
+        b: {
+          properties: {
+            c: {
+              title: "integer_1",
+              type: "integer",
+            },
+            d: {
+              "\$ref": "#/components/schemas/object_5",
+            },
+          },
+          title: "object_3",
+          type: "object",
+        },
+        e: {
+          "\$ref": "#/components/schemas/object_5",
+        },
+      },
+      title: "object_5",
+      type: "object",
+    },
+    4 => {
+      title: "integer_0",
+      type: "integer",
+    },
+    5 => {
+      properties: {
+        c: {
+          title: "integer_1",
+          type: "integer",
+        },
+        d: {
+          "\$ref": "#/components/schemas/object_5",
+        },
+      },
+      title: "object_3",
+      type: "object",
+    },
+    6 => {
+      title: "integer_1",
+      type: "integer",
+    },
+    7 => {
+      properties: {
+        identity: {
+          properties: {
+            a: {
+              title: "integer_0",
+              type: "integer",
+            },
+            b: {
+              properties: {
+                c: {
+                  title: "integer_1",
+                  type: "integer",
+                },
+                d: {
+                  "\$ref": "#/components/schemas/object_5",
+                },
+              },
+              title: "object_3",
+              type: "object",
+            },
+            e: {
+              "\$ref": "#/components/schemas/object_5",
+            },
+          },
+          title: "object_5",
+          type: "object",
+        },
+      },
+      title: "Query",
+      type: "object",
+    },
+  },
+}
+`;

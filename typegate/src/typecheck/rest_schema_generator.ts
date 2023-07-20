@@ -7,14 +7,21 @@ export class RestSchemaGenerator {
   schema: Map<number, unknown> = new Map();
   refs: Map<string, unknown> = new Map();
 
-  refered: Set<string> = new Set<string>();
-
   constructor(private tg: TypeGraph) {}
 
   asRef(idx: number) {
     const name = this.tg.type(idx).title;
-    this.refered.add(name);
     return { $ref: `#/components/schemas/${name}` };
+  }
+
+  generateAll() {
+    for (let idx = 0; idx < this.tg.tg.types.length; idx += 1) {
+      this.generate(idx);
+    }
+    return {
+      schema: this.schema,
+      refs: this.refs,
+    };
   }
 
   generate(root: number) {

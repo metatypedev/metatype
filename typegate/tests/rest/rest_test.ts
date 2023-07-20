@@ -3,6 +3,7 @@
 
 import { assertEquals, assertStringIncludes } from "std/testing/asserts.ts";
 import { gql, Meta, rest } from "../utils/mod.ts";
+import { RestSchemaGenerator } from "../../src/typecheck/rest_schema_generator.ts";
 
 Meta.test("Rest queries in Python", async (t) => {
   const e = await t.engine("rest/custom.py");
@@ -164,5 +165,14 @@ Meta.test("Rest queries in Deno", async (t) => {
         );
       })
       .on(e);
+  });
+});
+
+Meta.test("Rest schema generator", async (t) => {
+  const e = await t.engine("rest/rest_schema.ts");
+  const generator = new RestSchemaGenerator(e.tg);
+  await t.should("generate schema with circular types", async () => {
+    const res = generator.generateAll();
+    await t.assertSnapshot(res);
   });
 });
