@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals } from "std/testing/asserts.ts";
+import { assertEquals, assertStringIncludes } from "std/testing/asserts.ts";
 import { gql, Meta, rest } from "../utils/mod.ts";
 
 Meta.test("Rest queries in Python", async (t) => {
@@ -110,6 +110,38 @@ Meta.test("Rest queries in Deno", async (t) => {
       })
       .on(e);
   });
+
+  await t.should("not validate argument type", async () => {
+    await rest.get("get_identity")
+      .withVars({
+        obj: {
+          a: 1,
+          b: { c: "string" },
+        },
+      })
+      .expectBody((res) => {
+        assertStringIncludes(
+          res["message"],
+          "at <value>.input.b.c: expected number, got string",
+        );
+      })
+      .on(e);
+  });
+
+  await t.should(
+    "throw an error upon missing variable in parameters",
+    async () => {
+      await rest.get("get_identity")
+        .withVars({ badField: {} })
+        .expectBody((res) => {
+          assertStringIncludes(
+            res["message"],
+            'missing variable "obj" value',
+          );
+        })
+        .on(e);
+    },
+  );
 
   await t.should("fetch openapi spec", async () => {
     await rest.get("__schema")
