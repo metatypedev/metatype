@@ -143,9 +143,11 @@ install:
     WASM_TOOLS_VERSION: "1.0.37"
     JCO_VERSION: "0.9.4"
     CARGO_INSTA_VERSION: "1.30.0"
+    WASMEDGE_VERSION: "0.13.2"
   command: |
     set -e
     poetry install --sync
+    ~/.wasmedge/bin/wasmedge --version | grep -q $WASMEDGE_VERSION || curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
     cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
     cargo install cargo-insta --version $CARGO_INSTA_VERSION --locked
     deno install --allow-all --force -n deno_bindgen $DENO_BINDGEN_URL
