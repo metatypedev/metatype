@@ -23,6 +23,10 @@ FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
 
 #
 
+FROM wasmedge/slim-runtime:${WASMEDGE_VERSION} AS wasmedge-bin
+
+#
+
 FROM base AS builder
 
 ARG DENO_BINDGEN_URL=https://deno.land/x/deno_bindgen@0.8.1/cli.ts
@@ -33,6 +37,7 @@ ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 ENV OUT_DIR target
 
 COPY --from=deno-bin /deno /bin/deno
+COPY --from=wasmedge-bin /usr/local/lib/* /usr/local/lib/
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -42,8 +47,7 @@ RUN apt-get update \
     # wasmedge
     libclang-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL \
-    && curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+    && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
 
 COPY --from=plan /app/recipe.json recipe.json
 
