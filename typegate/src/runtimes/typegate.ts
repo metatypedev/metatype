@@ -30,6 +30,10 @@ export class TypeGateRuntime extends Runtime {
     TypeGateRuntime.singleton = null;
     return Promise.resolve();
   }
+  deinit(): Promise<void> {
+    TypeGateRuntime.singleton = null;
+    return Promise.resolve();
+  }
 
   materialize(
     stage: ComputeStage,
@@ -104,6 +108,7 @@ export class TypeGateRuntime extends Runtime {
 
   addTypegraph: Resolver = async ({ fromString, secrets, cliVersion }) => {
     logger.info("Adding typegraph");
+    logger.info("Adding typegraph");
     if (!semver.gte(semver.parse(cliVersion), semver.parse(config.version))) {
       throw new Error(
         `Meta CLI version ${cliVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
@@ -122,6 +127,12 @@ export class TypeGateRuntime extends Runtime {
       migrations: pushResponse.migrations,
       resetRequired: pushResponse.resetRequired,
     };
+    return {
+      name: engine.name,
+      messages: pushResponse.messages,
+      migrations: pushResponse.migrations,
+      resetRequired: pushResponse.resetRequired,
+    };
   };
 
   removeTypegraph: Resolver = ({ name }) => {
@@ -131,4 +142,54 @@ export class TypeGateRuntime extends Runtime {
 
     return this.typegate.register.remove(name);
   };
+}
+
+export async function pushTypegraph(
+  tgJson: string,
+  secrets: Record<string, string>,
+  register: Register,
+  introspection: boolean,
+  system = false,
+): Promise<[Engine, PushResponse]> {
+  const tgDS = await TypeGraph.parseJson(tgJson);
+  const name = TypeGraph.formatName(tgDS);
+
+  if (SystemTypegraph.check(name)) {
+    if (!system) {
+      throw new Error(
+        `Typegraph name ${name} cannot be used for non-system typegraphs`,
+      );
+    }
+  } else {
+    if (system) {
+      throw new Error(
+        `Typegraph name ${name} cannot be used for system typegraphs`,
+      );
+    }
+  }
+
+  // name without prefix!
+  const secretManager = new SecretManager(tgDS.types[0].title, secrets);
+
+  const pushResponse = new PushResponse(name);
+  logger.info("Handling onPush hooks");
+  const tg = await handleOnPushHooks(
+    tgDS,
+    secretManager,
+    pushResponse,
+  );
+
+  logger.info(`Initializing engine '${name}'`);
+  const engine = await Engine.init(
+    tg,
+    secretManager,
+    false,
+    SystemTypegraph.getCustomRuntimes(register),
+    introspection,
+  );
+
+  logger.info(`Registering engine '${name}'`);
+  await register.add(engine);
+
+  return [engine, pushResponse];
 }

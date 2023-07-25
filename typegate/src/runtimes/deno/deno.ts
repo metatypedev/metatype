@@ -7,11 +7,15 @@ import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { DenoRuntimeData } from "../../types/typegraph.ts";
 import * as ast from "graphql/ast";
-import { InternalAuth } from "../../auth/protocols/internal.ts";
+import { InternalAuth } from "../../services/auth/protocols/internal.ts";
 import { DenoMessenger } from "./deno_messenger.ts";
 import { Task } from "./shared_types.ts";
 import { structureRepr, uncompress } from "../../utils.ts";
 import { path } from "compress/deps.ts";
+import config from "../../config.ts";
+import { getLogger } from "../../log.ts";
+
+const logger = getLogger(import.meta);
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
   identity: ({ _, ...args }) => (args),
@@ -81,6 +85,24 @@ export class DenoRuntime extends Runtime {
     const registry = new Map<string, number>();
     const ops = new Map<number, Task>();
 
+    //    (user) tg_root/*
+    // => (gate) tmp/scripts/{tgname}/deno/*
+    const basePath = path.join(
+      config.tmp_dir,
+      "scripts",
+      typegraphName,
+      "deno",
+      name.replaceAll(" ", "_"), // TODO: improve sanitization
+    );
+
+    try {
+      // clean up old files
+      logger.info(`removes files at ${basePath}`);
+      await Deno.remove(basePath, { recursive: true });
+    } catch {
+      // ignore non-existent files
+    }
+
     let registryCount = 0;
     for (const mat of materializers) {
       if (mat.name === "function") {
@@ -98,19 +120,13 @@ export class DenoRuntime extends Runtime {
         const code = mat.data.code as string;
 
         const repr = await structureRepr(code);
-        //    (user) scripts/deno/*
-        // => (gate) tmp/scripts/{tgname}/deno/*
-        const basePath = path.join(
-          "tmp",
-          "scripts",
-          typegraphName,
-          "deno",
-          repr.hash,
+        const outDir = path.join(basePath, repr.hash);
+        const entries = await uncompress(
+          outDir,
+          repr.base64,
         );
-        try {
-          await Deno.remove(basePath, { recursive: true }); // cleanup
-        } catch (_) { /* not exist yet */ }
-        const outDir = await uncompress(basePath, repr.base64);
+
+        logger.info(`uncompressed ${entries.join(", ")} at ${outDir}`);
 
         ops.set(registryCount, {
           type: "register_import_func",
@@ -123,13 +139,11 @@ export class DenoRuntime extends Runtime {
       }
     }
 
-    const tgScriptFolder = path.join("tmp", "scripts", typegraphName);
-
     const w = new DenoMessenger(
       name,
       {
         ...(args.permissions ?? {}),
-        read: [tgScriptFolder],
+        read: [basePath],
       } as Deno.PermissionOptionsObject,
       false,
       ops,

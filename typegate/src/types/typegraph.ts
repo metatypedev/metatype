@@ -292,7 +292,6 @@ export interface Typegraph {
   runtimes: TGRuntime[];
   policies: Policy[];
   meta: TypeMeta;
-  prefix?: string | null;
 }
 export interface PolicyIndicesByEffect {
   none?: number | null;
@@ -382,11 +381,17 @@ export interface Policy {
   materializer: number;
 }
 export interface TypeMeta {
+  prefix?: string | null;
   secrets: string[];
+  queries: Queries;
   cors: Cors;
   auths: Auth[];
   rate?: Rate | null;
   version: string;
+}
+export interface Queries {
+  dynamic: boolean;
+  endpoints: string[];
 }
 export interface Cors {
   allow_origin: string[];

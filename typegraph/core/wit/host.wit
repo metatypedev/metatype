@@ -1,0 +1,13 @@
+package metatype:typegraph
+
+interface abi {
+    // future/async are not yet fully standardized
+    log: func(message: string) -> ()
+    glob: func(pattern: string, exts: list<string>) -> result<list<string>, string>
+    read-file: func(path: string) -> result<string, string>
+    write-file: func(path: string, data: string) -> result<_, string>
+}
+
+world host {
+    import abi
+}

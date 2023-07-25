@@ -1,12 +1,11 @@
-import { MaterializerId } from "../gen/exports/core.d.ts";
-// @deno-types="../gen/typegraph_core.d.ts"
-import { core, runtimes } from "../gen/typegraph_core.js";
+import { MaterializerId } from "../gen/exports/metatype-typegraph-core.d.ts";
+import { core, runtimes } from "./wit.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";
 
 export default class Policy {
-  constructor(public readonly id: number, public readonly name: string) {}
+  constructor(public readonly _id: number, public readonly name: string) {}
 
-  static public_(): Policy {
+  static public(): Policy {
     return Policy.create(
       "__public",
       runtimes.getPredefinedDenoFunc({ name: "true" }),
@@ -24,7 +23,7 @@ export default class Policy {
   }
 
   static internal(): Policy {
-    return new DenoRuntime().policy(
+    return new DenoRuntime().policy( // TODO move those defs in core
       "__internal",
       "(_, { context }) => context.provider === 'internal'",
     );

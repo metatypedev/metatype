@@ -1,0 +1,21 @@
+query get_post($id: Integer) {
+  postFromUser(id: $id) {
+    id
+    author {
+      id
+    }
+  }
+}
+
+query get_post_id($id: Integer) {
+  postFromUser(id: $id) {
+    id
+  }
+}
+
+query get_identity($obj: ComplexObject) {
+  identity(input: $obj) {
+    a
+    b { c }
+  }
+}

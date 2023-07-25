@@ -6,12 +6,13 @@ import { Kind } from "graphql";
 import { DenoRuntime } from "./runtimes/deno/deno.ts";
 import { Runtime } from "./runtimes/Runtime.ts";
 import { ensure, ensureNonNullable } from "./utils.ts";
+import { typegraph_validate } from "native";
 
 import {
   initAuth,
   internalAuthName,
   nextAuthorizationHeader,
-} from "./auth/auth.ts";
+} from "./services/auth/mod.ts";
 
 import {
   isArray,
@@ -116,6 +117,7 @@ export class TypeGraph {
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
   name: string;
+  name: string;
 
   private constructor(
     public tg: TypeGraphDS,
@@ -126,6 +128,7 @@ export class TypeGraph {
     public introspection: TypeGraph | null,
   ) {
     this.root = this.type(0);
+    this.name = TypeGraph.formatName(tg);
     this.name = TypeGraph.formatName(tg);
     // this.typeByName = this.tg.types.reduce((agg, tpe) => ({ ...agg, [tpe.name]: tpe }), {});
     const typeByName: Record<string, TypeNode> = {};
@@ -140,7 +143,16 @@ export class TypeGraph {
   }
 
   static formatName(tg: TypeGraphDS): string {
-    return (tg.prefix ?? "") + tg.types[0].title;
+    return (tg.meta.prefix ?? "") + tg.types[0].title;
+  }
+
+  static async parseJson(json: string): Promise<TypeGraphDS> {
+    const res = await typegraph_validate({ json });
+    if ("Valid" in res) {
+      return JSON.parse(res.Valid.json) as TypeGraphDS;
+    } else {
+      throw new Error(`Invalid typegraph definition: ${res.NotValid.reason}`);
+    }
   }
 
   static async init(
@@ -256,6 +268,7 @@ export class TypeGraph {
   }
 
   async deinit(): Promise<void> {
+    await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
     await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
     if (this.introspection) {
       await this.introspection.deinit();

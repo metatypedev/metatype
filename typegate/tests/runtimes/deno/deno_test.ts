@@ -1,11 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../../utils.ts";
-import { resolve } from "std/path/mod.ts";
+import { gql, Meta } from "../../utils/mod.ts";
+import { join } from "std/path/mod.ts";
 
-test("Deno runtime", async (t) => {
-  const e = await t.pythonFile("runtimes/deno/deno.py");
+Meta.test("Deno runtime", async (t) => {
+  const e = await t.engine("runtimes/deno/deno.py");
 
   await t.should("work on the default worker", async () => {
     await gql`
@@ -82,8 +82,8 @@ test("Deno runtime", async (t) => {
   });
 });
 
-test("Deno runtime: permissions", async (t) => {
-  const e = await t.pythonFile("runtimes/deno/deno.py");
+Meta.test("Deno runtime: permissions", async (t) => {
+  const e = await t.engine("runtimes/deno/deno.py");
 
   await t.should("success for allowed network access", async () => {
     await gql`
@@ -108,21 +108,23 @@ test("Deno runtime: permissions", async (t) => {
   });
 });
 
-test("Deno runtime: reloading", async (t) => {
-  const tmpDir = "typegate/tests/runtimes/deno/scripts/deno/tmpDir";
+Meta.test("Deno runtime: use local imports", async (t) => {
+  const e = await t.engine("runtimes/deno/deno_dep.py");
+  await t.should("work for local imports", async () => {
+    await gql`
+      query {
+        doAddition(a: 1, b: 2)
+      }
+    `.expectData({
+      doAddition: 3,
+    }).on(e);
+  });
+});
 
+Meta.test("Deno runtime: reloading", async (t) => {
   const load = async (value: number) => {
-    await Deno.mkdir(tmpDir, { recursive: true });
-    const dynamicPath = await Deno.makeTempFile({
-      dir: tmpDir,
-      suffix: ".ts",
-    });
-    await Deno.writeTextFile(
-      dynamicPath,
-      `export function fire() { return ${value}; }`,
-    );
-    Deno.env.set("DYNAMIC", resolve(dynamicPath));
-    const e = await t.pythonFile("runtimes/deno/deno_reload.py");
+    Deno.env.set("DYNAMIC", join("dynamic", `${value}.ts`));
+    const e = await t.engine("runtimes/deno/deno_reload.py");
     Deno.env.delete("DYNAMIC");
     return e;
   };
@@ -138,7 +140,7 @@ test("Deno runtime: reloading", async (t) => {
     }).on(v1);
   });
 
-  t.unregister(v1);
+  await t.unregister(v1);
 
   const v2 = await load(2);
   await t.should("work with v2", async () => {
@@ -151,20 +153,5 @@ test("Deno runtime: reloading", async (t) => {
         fire: 2,
       })
       .on(v2);
-  });
-
-  await Deno.remove(tmpDir, { recursive: true });
-});
-
-test("Deno runtime: use local imports", async (t) => {
-  const e = await t.pythonFile("runtimes/deno/deno_dep.py");
-  await t.should("work for local imports", async () => {
-    await gql`
-      query {
-        doAddition(a: 1, b: 2)
-      }
-    `.expectData({
-      doAddition: 3,
-    }).on(e);
   });
 });

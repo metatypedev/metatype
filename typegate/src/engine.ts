@@ -24,8 +24,9 @@ import { getLogger } from "./log.ts";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./engine/computation_engine.ts";
-
-const logger = getLogger(import.meta);
+import { isIntrospectionQuery } from "./services/graphql_service.ts";
+import { ObjectNode } from "./type_node.ts";
+import { RestSchemaGenerator } from "./typecheck/rest_schema_generator.ts";
 
 /**
  * Processed graphql node to be evaluated against a Runtime
@@ -77,13 +78,6 @@ export class ComputeStage {
   }
 }
 
-function isIntrospectionQuery(
-  operation: ast.OperationDefinitionNode,
-  _fragments: FragmentDefs,
-) {
-  return operation.name?.value === "IntrospectionQuery";
-}
-
 // See `planner/mod.ts` on how the graphql is processed to build the plan
 interface Plan {
   // matching to each selection in the graphql query
@@ -111,10 +105,34 @@ class QueryCache {
   }
 }
 
+const effectToMethod = {
+  "none": "GET",
+  "create": "POST",
+  "update": "PUT",
+  "delete": "DELETE",
+};
+
+export interface EndpointToSchemaMap {
+  [index: string]: { fnName: string; outputSchema: unknown };
+}
+
 export class Engine {
   name: string;
   queryCache: QueryCache;
   logger: log.Logger;
+  rest: Record<
+    string,
+    Record<
+      string,
+      {
+        plan: Plan;
+        checkVariables: (v: Record<string, unknown>) => Record<string, unknown>;
+        variables: Array<{ name: string; schema: unknown }>;
+        endpointToSchema: EndpointToSchemaMap;
+        refSchemas: Map<string, unknown>;
+      }
+    >
+  >;
 
   get rawName(): string {
     return this.tg.rawName;
@@ -127,6 +145,12 @@ export class Engine {
     this.name = tg.name;
     this.queryCache = new QueryCache();
     this.logger = log.getLogger("engine");
+    this.rest = {
+      "GET": {},
+      "POST": {},
+      "PUT": {},
+      "DELETE": {},
+    };
   }
 
   async terminate() {
@@ -137,8 +161,6 @@ export class Engine {
     stages: ComputeStage[],
     verbose: boolean,
   ): ComputeStage[] {
-    //verbose && console.log(stages);
-
     const stagesMat: ComputeStage[] = [];
     const waitlist = [...stages];
 
@@ -153,10 +175,8 @@ export class Engine {
   }
 
   optimize(stages: ComputeStage[], _verbose: boolean): ComputeStage[] {
-    //verbose && console.log(stages);
-
     for (const _stage of stages) {
-      //verbose && console.log("opti", stage.id());
+      // optimize
     }
 
     return stages;
@@ -212,129 +232,33 @@ export class Engine {
     return [plan, false];
   }
 
-  async execute(
-    query: string,
-    operationName: Option<string>,
+  async computePlan(
+    plan: Plan,
     variables: Variables,
     context: Context,
     info: Info,
     limit: RateLimit | null,
-  ): Promise<{ status: number; [key: string]: JSONValue }> {
-    try {
-      const document = parse(query);
+    verbose: boolean,
+  ): Promise<JSONValue> {
+    const { stages, policies, validator } = plan;
 
-      const [operation, fragments] = findOperation(document, operationName);
-      if (operation.isNone()) {
-        throw Error(`operation ${operationName.unwrapOr("<none>")} not found`);
-      }
-      const unwrappedOperation = operation.unwrap();
+    //logger.info("dag:", stages);
+    const res = await ComputationEngine.compute(
+      stages,
+      policies,
+      context,
+      info,
+      variables,
+      limit,
+      verbose,
+    );
 
-      this.validateVariables(
-        unwrappedOperation.variableDefinitions ?? [],
-        variables,
-      );
+    validator(res);
 
-      const isIntrospection = isIntrospectionQuery(
-        unwrappedOperation,
-        fragments,
-      );
-      const verbose = !isIntrospection;
-
-      if (verbose) {
-        this.logger.info("———");
-        this.logger.info("op:", operationName);
-      }
-
-      const startTime = performance.now();
-      const [plan, cacheHit] = await this.getPlan(
-        unwrappedOperation,
-        fragments,
-        true,
-        verbose,
-      );
-      const planTime = performance.now();
-
-      const { stages, policies, validator } = plan;
-
-      //logger.info("dag:", stages);
-      const res = await ComputationEngine.compute(
-        stages,
-        policies,
-        context,
-        info,
-        variables,
-        limit,
-        verbose,
-      );
-      const computeTime = performance.now();
-
-      validator(res);
-      const endTime = performance.now();
-
-      if (verbose) {
-        this.logger.info(
-          `${cacheHit ? "fetched" : "planned"}  in ${
-            (
-              planTime - startTime
-            ).toFixed(2)
-          }ms`,
-        );
-        this.logger.info(
-          `computed in ${(computeTime - planTime).toFixed(2)}ms`,
-        );
-        this.logger.info(
-          `validated in ${(endTime - computeTime).toFixed(2)}ms`,
-        );
-      }
-
-      return { status: 200, data: res };
-    } catch (e) {
-      if (e instanceof ResolverError) {
-        // field error
-        logger.error(`field err: ${e.message}`);
-        return {
-          status: 502,
-          errors: [
-            {
-              message: e.message,
-              locations: [],
-              path: [],
-              extensions: { timestamp: new Date().toISOString() },
-            },
-          ],
-        };
-      } else if (e instanceof BadContext) {
-        logger.error(`context err: ${e.message}`);
-        return {
-          status: 403,
-          errors: [
-            {
-              message: e.message,
-              locations: [],
-              path: [],
-              extensions: { timestamp: new Date().toISOString() },
-            },
-          ],
-        };
-      } else {
-        // request error
-        logger.error(`request err: ${e}`);
-        return {
-          status: 400,
-          errors: [
-            {
-              message: e.message,
-              locations: [],
-              path: [],
-              extensions: { timestamp: new Date().toISOString() },
-            },
-          ],
-        };
-      }
-    }
+    return res;
   }
 
-  validateVariables(
+  checkVariablesPresence(
     defs: Readonly<Array<ast.VariableDefinitionNode>>,
     variables: Record<string, unknown>,
   ) {
@@ -346,38 +270,5 @@ export class Engine {
       }
       // variable values are validated with the argument validator
     }
-  }
-
-  async ensureJWT(
-    headers: Headers,
-    url: URL,
-  ): Promise<[Record<string, unknown>, Headers]> {
-    const [kind, token] = (headers.get("Authorization") ?? "").split(" ");
-    if (!token) {
-      return [{}, new Headers()];
-    }
-
-    let auth = null;
-    if (kind.toLowerCase() === "basic") {
-      auth = this.tg.auths.get("basic");
-    } else {
-      try {
-        const { provider } = await unsafeExtractJWT(token);
-        if (!provider) {
-          // defaulting to first auth
-          auth = this.tg.auths.values().next().value;
-        } else {
-          auth = this.tg.auths.get(provider as string);
-        }
-      } catch (e) {
-        logger.warning(`malformed jwt: ${e}`);
-      }
-    }
-
-    if (!auth) {
-      return [{}, new Headers()];
-    }
-
-    return await auth.tokenMiddleware(token, url);
   }
 }

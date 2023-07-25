@@ -36,5 +36,8 @@ recipe.json
 tmp/
 coverage*
 
+typegraph/node
 typegraph/deno/gen
-typegraph/python_next/typegraph/gen
+typegraph/python_next/typegraph_next/gen
+
+*.egg-info/

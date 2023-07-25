@@ -28,10 +28,35 @@ pub mod wit {
 
     wit_bindgen::generate!("typegraph");
 
-    #[cfg(feature = "wasm")]
     export_typegraph!(Lib);
 
-    // pub use exports::default::typegraph::{core, runtimes};
+    pub use exports::metatype::typegraph::{core, runtimes};
+}
+
+#[cfg(feature = "wasm")]
+pub mod host {
+    wit_bindgen::generate!("host");
+
+    pub use metatype::typegraph::abi;
+}
+
+// native stubs to make the test compilation work
+#[cfg(not(feature = "wasm"))]
+pub mod host {
+    pub mod abi {
+        pub fn log(message: &str) {
+            println!("{}", message);
+        }
+        pub fn glob(_pattern: &str, _exts: &[String]) -> Result<Vec<String>, String> {
+            Ok(vec![])
+        }
+        pub fn read_file(path: &str) -> Result<String, String> {
+            Ok(path.to_string())
+        }
+        pub fn write_file(_path: &str, _data: &str) -> Result<(), String> {
+            Ok(())
+        }
+    }
 }
 
 pub struct Lib {}
@@ -317,10 +342,16 @@ mod tests {
         with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test-1".to_string(),
+            dynamic: None,
+            folder: None,
+            path: ".".to_string(),
         })?;
         assert_eq!(
             Lib::init_typegraph(TypegraphInitParams {
                 name: "test-2".to_string(),
+                dynamic: None,
+                folder: None,
+                path: ".".to_string(),
             }),
             Err(errors::nested_typegraph_context("test-1"))
         );
@@ -349,6 +380,9 @@ mod tests {
         with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
+            dynamic: None,
+            folder: None,
+            path: ".".to_string(),
         })
         .unwrap();
         let tpe = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
@@ -370,6 +404,9 @@ mod tests {
         // with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
+            dynamic: None,
+            folder: None,
+            path: ".".to_string(),
         })?;
 
         let mat = Lib::register_deno_func(
@@ -413,6 +450,9 @@ mod tests {
         // with_store_mut(|s| s.reset());
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
+            dynamic: None,
+            folder: None,
+            path: ".".to_string(),
         })?;
 
         let mat =
@@ -457,6 +497,9 @@ mod tests {
         )?;
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
+            dynamic: None,
+            folder: None,
+            path: ".".to_string(),
         })?;
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;

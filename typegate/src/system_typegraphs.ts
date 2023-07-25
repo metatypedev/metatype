@@ -46,7 +46,7 @@ export class SystemTypegraph {
         await typegate.pushTypegraph(
           await Deno.readTextFile(path),
           {},
-          false, // introspection
+          true, // introspection
           true, // system
         );
       }

@@ -1,375 +1,178 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, test } from "../utils.ts";
-import * as mf from "test/mock_fetch";
+import { assertEquals, assertStringIncludes } from "std/testing/asserts.ts";
+import { gql, Meta, rest } from "../utils/mod.ts";
+import { RestSchemaGenerator } from "../../src/typecheck/rest_schema_generator.ts";
 
-mf.install();
+Meta.test("Rest queries in Python", async (t) => {
+  const e = await t.engine("rest/custom.py");
 
-function generatePost(id: number) {
-  return {
-    id,
-    title: "My first post",
-    summary: "This is my first post",
-    content: "Lorem ipsum dolor sit amet, in sit docendi constituto.",
-  };
-}
-
-type Post = ReturnType<typeof generatePost>;
-
-function generateComment(id: number, postId: number) {
-  return {
-    id,
-    postId,
-    content: "Hahah",
-  };
-}
-
-const ALL_POSTS = [1, 2, 4, 7, 12, 34, 67].map(generatePost);
-const getComments = (postId: number) =>
-  [12, 34, 95, 203].map((id) => generateComment(id, postId));
-const NEW_COMMENT_ID = 123;
-
-test("Rest queries", async (t) => {
-  const e = await t.pythonFile("rest/rest.py");
-
-  mf.mock("GET@/api/posts", (req) => {
-    const tags = new URL(req.url).searchParams.getAll("tags");
-    const posts = tags.reduce((list, tag) => {
-      switch (tag) {
-        case "even":
-          return list.filter((p) => p.id % 2 === 0);
-        case "m3":
-          return list.filter((p) => p.id % 3 === 0);
-        default:
-          return list;
-      }
-    }, ALL_POSTS);
-    return new Response(JSON.stringify(posts), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  });
-
-  await t.should("work with simple request", async () => {
-    await gql`
-      query {
-        posts {
-          id
-          title
-          summary
-          content
-        }
-      }
-    `
-      .expectData({
-        posts: ALL_POSTS,
+  await t.should("work with simple rest requests", async () => {
+    await rest.get("ping")
+      .expectJSON({
+        ping: 1,
       })
       .on(e);
   });
 
-  await t.should("work with simple request and filtered fields", async () => {
+  await t.should("not allow dynamic requests", async () => {
     await gql`
-      query {
-        posts {
-          id
-          title
-          summary
-        }
+      query ping {
+        ping
       }
     `
-      .expectData({
-        posts: ALL_POSTS.map((post) => {
-          const { content: _, ...postWithoutContent } = post;
-          return postWithoutContent as Omit<Post, "content">;
-          // I don't know why I get a TS error without that cast
-        }),
-      })
+      .withVars({ id: 1 })
+      .expectStatus(404)
       .on(e);
   });
+});
 
-  await t.should("work with array args", async () => {
-    await gql`
-      query {
-        postsByTags(tags: ["even", "m3"]) {
-          id
-          title
-          summary
-          content
-        }
-      }
-    `
-      .expectData({
-        postsByTags: ALL_POSTS.filter((p) => p.id % 2 === 0).filter(
-          (p) => p.id % 3 === 0,
-        ),
-      })
-      .on(e);
-  });
+Meta.test("Rest queries in Deno", async (t) => {
+  const e = await t.engine("rest/rest.ts");
 
-  mf.mock("GET@/api/posts/:id", (_req, params) => {
-    const postId = Number(params.id);
-    if (postId > 1000) {
-      return new Response(null, {
-        status: 404,
-      });
-    }
-    return new Response(JSON.stringify(generatePost(postId)), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  });
-
-  await t.should("work with dynamic path params", async () => {
-    await gql`
-      query {
-        post(id: 12) {
-          id
-          title
-          summary
-          content
-        }
-      }
-    `
-      .expectData({
-        post: generatePost(12),
-      })
-      .on(e);
-  });
-
-  await t.should("return null on 404", async () => {
-    await gql`
-      query {
-        post(id: 1234) {
-          id
-          title
-          summary
-          content
-        }
-      }
-    `
-      .expectData({
-        post: null,
-      })
-      .on(e);
-  });
-
-  const AUTH_TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789";
-  mf.mock("PUT@/api/posts/:id/approved", (req, params) => {
-    const postId = Number(params.id);
-    if (Number.isNaN(postId)) {
-      return new Response(null, { status: 404 });
-    }
-    const auth = req.headers.get("authorization");
-    if (auth === `Bearer ${AUTH_TOKEN}`) {
-      return new Response(JSON.stringify({ approved: true }), {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    } else {
-      return new Response(null, {
-        status: 403,
-      });
-    }
-  });
-
-  await t.should("work with bearer auth", async () => {
-    await gql`
-      mutation {
-        approvePost(id: 12, approved: true, authToken: ${AUTH_TOKEN}) {
-          approved
-        }
-      }
-    `
-      .expectData({
-        approvePost: {
-          approved: true,
-        },
-      })
-      .on(e);
-  });
-
-  mf.mock("PATCH@/api/posts/:id", async (req, params) => {
-    const postId = Number(params.id);
-    if (Number.isNaN(postId)) {
-      return new Response(null, { status: 404 });
-    }
-    return new Response(
-      JSON.stringify({
-        ...generatePost(postId),
-        ...(await req.json()),
-      }),
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-  });
-
-  await t.should("work with PATCH", async () => {
-    await gql`
-      mutation {
-        updatePost(id: 12, content: "New post content") {
-          id
-          title
-          summary
-          content
-        }
-      }
-    `
-      .expectData({
-        updatePost: { ...generatePost(12), content: "New post content" },
-      })
-      .on(e);
-  });
-
-  mf.mock("GET@/api/comments", (req) => {
-    const params = new URL(req.url).searchParams;
-    const postId = Number(params.get("postId") ?? NaN);
-    if (Number.isNaN(postId)) {
-      return new Response("not found", { status: 404 });
-    }
-    return new Response(JSON.stringify(getComments(postId)), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  });
-
-  await t.should("work with query params", async () => {
-    await gql`
-      query {
-        comments(postId: 14) {
-          id
-          content
-          postId
-        }
-      }
-    `
-      .expectData({
-        comments: getComments(14),
-      })
-      .on(e);
-  });
-
-  mf.mock("POST@/api/comments", async (req) => {
-    const params = new URL(req.url).searchParams;
-    const postId = Number(params.get("postId") ?? NaN);
-    if (Number.isNaN(postId)) {
-      return new Response(JSON.stringify({ error: "not found" }), {
-        status: 404,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    }
-    return new Response(
-      JSON.stringify({
-        id: NEW_COMMENT_ID,
-        postId,
-        ...(await req.json()),
-      }),
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-  });
-
-  await t.should("work with query params and body", async () => {
-    await gql`
-      mutation {
-        postComment(postId: 12, content: "Right!") {
-          id
-          postId
-          content
-        }
-      }
-    `
-      .expectData({
-        postComment: {
-          id: NEW_COMMENT_ID,
-          postId: 12,
-          content: "Right!",
-        },
-      })
-      .on(e);
-  });
-
-  mf.mock("PUT@/api/comments/:id", async (req, params) => {
-    const id = Number(params.id);
-    if (Number.isNaN(id)) {
-      return new Response(JSON.stringify({ error: "bad request" }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-    }
-
-    return new Response(
-      JSON.stringify({
-        id,
-        ...(await req.json()),
-      }),
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-  });
-
-  await t.should("work with PUT", async () => {
-    await gql`
-      mutation {
-        replaceComment(id: 12, postId: 123, content: "Some comment") {
-          id
-          content
-        }
-      }
-    `
-      .expectData({
-        replaceComment: {
+  await t.should("work with simple rest requests", async () => {
+    await rest.get("get_post_id?id=1")
+      .expectJSON({
+        postFromUser: {
           id: 12,
-          content: "Some comment",
         },
       })
       .on(e);
-  });
 
-  mf.mock("DELETE@/api/comments/:id", (_req, params) => {
-    const postId = Number(params.id);
-    if (Number.isNaN(postId)) {
-      return new Response(JSON.stringify({ error: "bad request" }), {
-        status: 400,
-        headers: {
-          "Content-Type": "application/json",
+    await rest.get("get_post_id")
+      .expectJSON({
+        postFromUser: {
+          id: 12,
         },
-      });
-    }
-    return new Response(null, {
-      status: 204,
-    });
+      })
+      .withVars({ id: 1 })
+      .on(e);
   });
 
-  await t.should("work with DELETE method", async () => {
+  await t.should("allow dynamic requests", async () => {
     await gql`
-      mutation {
-        deleteComment(id: 12)
+      query get_post_id($id: Integer) {
+        postFromUser(id: $id) {
+          id
+        }
       }
     `
+      .withVars({ id: 1 })
+      .expectStatus(200)
       .expectData({
-        deleteComment: true,
+        postFromUser: {
+          id: 12,
+        },
       })
       .on(e);
+  });
+
+  await t.should("split multiple queries on same file", async () => {
+    await rest.get("get_post")
+      .withVars({ id: 1 })
+      .expectJSON({
+        postFromUser: {
+          id: 12,
+          author: {
+            id: 1,
+          },
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("split mutation by on their effect", async () => {
+    await rest.get("read_post")
+      .expectStatus(404)
+      .on(e);
+
+    await rest.put("read_post")
+      .withVars({ id: 1 })
+      .expectJSON({
+        read: true,
+      })
+      .on(e);
+  });
+
+  await t.should("work with object", async () => {
+    await rest.get("get_identity")
+      .withVars({
+        obj: {
+          a: 1,
+          b: { c: 2 },
+        },
+      })
+      .expectJSON({
+        identity: {
+          a: 1,
+          b: { c: 2 },
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("not validate argument type", async () => {
+    await rest.get("get_identity")
+      .withVars({
+        obj: {
+          a: 1,
+          b: { c: "string" },
+        },
+      })
+      .expectBody((res) => {
+        assertStringIncludes(
+          res["message"],
+          "at <value>.input.b.c: expected number, got string",
+        );
+      })
+      .on(e);
+  });
+
+  await t.should(
+    "throw an error upon missing variable in parameters",
+    async () => {
+      await rest.get("get_identity")
+        .withVars({ badField: {} })
+        .expectBody((res) => {
+          assertStringIncludes(
+            res["message"],
+            'missing variable "obj" value',
+          );
+        })
+        .on(e);
+    },
+  );
+
+  await t.should("fetch openapi spec", async () => {
+    await rest.get("__schema")
+      .matchSnapshot(t)
+      .on(e);
+  });
+
+  await t.should("fetch api playground", async () => {
+    await rest.get("/")
+      .matchSnapshot(t)
+      .on(e);
+  });
+
+  await t.should("fail when method is not get", async () => {
+    await rest.post("__schema")
+      .expectBody((body) => {
+        assertEquals(
+          body.message,
+          "/rest/rest/__schema does not support POST method",
+        );
+      })
+      .on(e);
+  });
+});
+
+Meta.test("Rest schema generator", async (t) => {
+  const e = await t.engine("rest/rest_schema.ts");
+  const generator = new RestSchemaGenerator(e.tg);
+  await t.should("generate schema with circular types", async () => {
+    const res = generator.generateAll();
+    await t.assertSnapshot(res);
   });
 });

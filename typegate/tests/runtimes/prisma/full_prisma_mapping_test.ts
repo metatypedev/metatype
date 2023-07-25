@@ -1,10 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { dropSchemas, gql, recreateMigrations, test } from "../../utils.ts";
+import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
+import { gql, Meta } from "../../utils/mod.ts";
 
-test("prisma full mapping", async (t) => {
-  const e = await t.pythonFile("runtimes/prisma/full_prisma_mapping.py", {
+Meta.test("prisma full mapping", async (t) => {
+  const e = await t.engine("runtimes/prisma/full_prisma_mapping.py", {
     secrets: {
       TG_PRISMA_POSTGRES:
         "postgresql://postgres:password@localhost:5432/db?schema=prisma-full",

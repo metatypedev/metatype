@@ -1,7 +1,7 @@
 from typegraph import TypeGraph, policies, t
 from typegraph.runtimes.deno import ModuleMat
 
-with TypeGraph("union") as g:
+with TypeGraph("union_quantifier") as g:
     metadata = t.struct(
         {
             "label": t.string(),
