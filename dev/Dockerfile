@@ -11,8 +11,13 @@ RUN cargo install cargo-chef --locked
 
 # 
 
+FROM wasmedge/slim-runtime:${WASMEDGE_VERSION} AS wasmedge-bin
+
+#
+
 FROM base as plan
 
+COPY --from=wasmedge-bin /usr/local/lib/* /usr/local/lib/
 COPY . .
 
 RUN cargo chef prepare --recipe-path recipe.json
@@ -20,10 +25,6 @@ RUN cargo chef prepare --recipe-path recipe.json
 #
 
 FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
-
-#
-
-FROM wasmedge/slim-runtime:${WASMEDGE_VERSION} AS wasmedge-bin
 
 #
 
