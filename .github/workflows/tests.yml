@@ -76,6 +76,7 @@ jobs:
         with:
           deno-version: ${{ env.DENO_VERSION }}
       - run: |
+          curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
           cd website
           pnpm install --frozen-lockfile
           cd ..

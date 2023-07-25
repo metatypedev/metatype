@@ -1,5 +1,6 @@
 ARG RUST_VERSION=1.70.0
 ARG DENO_VERSION=1.35.1
+ARG WASMEDGE_VERSION=0.12.1
 ARG DISTROLESS_TAG=nonroot
 
 FROM rust:${RUST_VERSION} AS base
@@ -41,7 +42,8 @@ RUN apt-get update \
     # wasmedge
     libclang-dev \
     && rm -rf /var/lib/apt/lists/* \
-    && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
+    && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL \
+    && curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
 
 COPY --from=plan /app/recipe.json recipe.json
 
