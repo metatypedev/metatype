@@ -1,1 +1,38 @@
 # Deno runtime
+Example:
+```python
+# my_typegraph.py
+
+from typegraph import TypeGraph, policies, t
+from typegraph.runtimes.deno import ModuleMat, PureFunMat
+
+with TypeGraph("deno") as g:
+    public = policies.public()
+
+    g.expose(
+        add=t.func(
+            t.struct({"a": t.number(), "b": t.number()}),
+            t.number(),
+            ModuleMat("main.ts").imp("doAddition"),
+        ),
+        simple=t.func(
+            t.struct({"a": t.number(), "b": t.number()}),
+            t.number(),
+            PureFunMat("({ a, b }) => a + b"),
+        ),
+        default_policy=[public],
+    )
+```
+
+```typescript
+// main.ts
+
+interface AddInput {
+  a: number;
+  b: number;
+}
+export function doAddition({ a, b }: AddInput) {
+  return a + b;
+}
+
+```
