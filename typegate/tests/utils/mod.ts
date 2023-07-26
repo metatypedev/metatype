@@ -7,7 +7,7 @@ import { copy } from "std/streams/copy.ts";
 import { init_native } from "native";
 import { SingleRegister } from "./single_register.ts";
 import { NoLimiter } from "./no_limiter.ts";
-import { typegate } from "../../src/typegate.ts";
+import { Typegate } from "../../src/typegate/mod.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";
@@ -42,8 +42,8 @@ export async function execute(
 ): Promise<Response> {
   const register = new SingleRegister(engine.name, engine);
   const limiter = new NoLimiter();
-  const server = typegate(register, limiter);
-  return await server(request, {
+  const typegate = new Typegate(register, limiter);
+  return await typegate.handle(request, {
     remoteAddr: { hostname: "localhost" },
   } as ConnInfo);
 }

@@ -762,7 +762,7 @@ dependencies = [
  "connection-string 0.2.0",
  "either",
  "enumflags2",
- "indoc 2.0.1",
+ "indoc 2.0.3",
  "lsp-types",
  "once_cell",
  "psl-core 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
@@ -1499,7 +1499,7 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
 dependencies = [
  "colored",
- "indoc 2.0.1",
+ "indoc 2.0.3",
  "pest",
 ]
 
@@ -1618,7 +1618,7 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
 dependencies = [
  "bigdecimal",
- "indexmap",
+ "indexmap 1.9.3",
  "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
  "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
  "schema",
@@ -3572,8 +3572,8 @@ dependencies = [
  "chrono",
  "cuid",
  "futures",
- "indexmap",
- "itertools",
+ "indexmap 1.9.3",
+ "itertools 0.10.5",
  "mongodb",
  "mongodb-client",
  "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
@@ -3583,11 +3583,14 @@ dependencies = [
  "query-engine-metrics",
  "rand 0.7.3",
  "regex",
- "schema-connector",
+ "serde",
  "serde_json",
+ "thiserror",
  "tokio",
  "tracing",
+ "tracing-futures",
  "user-facing-errors",
+ "uuid",
 ]
 
 [[package]]
@@ -3599,7 +3602,7 @@ dependencies = [
  "datamodel-renderer",
  "enumflags2",
  "futures",
- "indoc 2.0.1",
+ "indoc 2.0.3",
  "mongodb",
  "mongodb-client",
  "mongodb-schema-describer",
@@ -4225,7 +4228,7 @@ dependencies = [
  "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=4.11.0)",
  "either",
  "enumflags2",
- "indexmap",
+ "indexmap 1.9.3",
  "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=4.11.0)",
 ]
 
@@ -4237,7 +4240,7 @@ dependencies = [
  "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
  "either",
  "enumflags2",
- "indexmap",
+ "indexmap 1.9.3",
  "rustc-hash",
  "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
 ]
@@ -4609,7 +4612,7 @@ dependencies = [
  "bigdecimal",
  "chrono",
  "dml",
- "itertools",
+ "itertools 0.10.5",
  "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=4.11.0)",
  "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=4.11.0)",
  "serde",
@@ -4625,7 +4628,7 @@ dependencies = [
  "bigdecimal",
  "chrono",
  "cuid",
- "itertools",
+ "itertools 0.10.5",
  "nanoid",
  "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
  "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
@@ -4841,7 +4844,7 @@ dependencies = [
  "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=4.11.0)",
  "enumflags2",
  "indoc 1.0.9",
- "itertools",
+ "itertools 0.10.5",
  "lsp-types",
  "once_cell",
  "parser-database 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=4.11.0)",
@@ -4862,8 +4865,8 @@ dependencies = [
  "chrono",
  "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
  "enumflags2",
- "indoc 2.0.1",
- "itertools",
+ "indoc 2.0.3",
+ "itertools 0.10.5",
  "lsp-types",
  "once_cell",
  "parser-database 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
@@ -4979,8 +4982,8 @@ dependencies = [
  "async-trait",
  "chrono",
  "futures",
- "indexmap",
- "itertools",
+ "indexmap 1.9.3",
+ "itertools 0.10.5",
  "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
  "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
  "serde",
@@ -5279,9 +5282,9 @@ dependencies = [
  "connection-string 0.2.0",
  "dmmf",
  "futures",
- "graphql-parser",
- "indexmap",
- "itertools",
+ "graphql-parser 0.3.0",
+ "indexmap 1.9.3",
+ "itertools 0.10.5",
  "mongodb-query-connector",
  "once_cell",
  "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
@@ -5395,7 +5398,7 @@ version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "549b9d036d571d42e6e85d1c1425e2ac83491075078ca9a15be021c56b1641f2"
 dependencies = [
- "bitflags 2.3.2",
+ "bitflags 2.3.3",
  "chrono",
  "fallible-iterator",
  "fallible-streaming-iterator",
@@ -6310,7 +6313,7 @@ dependencies = [
  "chrono",
  "cuid",
  "futures",
- "itertools",
+ "itertools 0.10.5",
  "once_cell",
  "opentelemetry 0.17.0",
  "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
@@ -6340,7 +6343,7 @@ dependencies = [
  "datamodel-renderer",
  "either",
  "enumflags2",
- "indoc 2.0.1",
+ "indoc 2.0.3",
  "once_cell",
  "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
  "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
@@ -6370,8 +6373,8 @@ dependencies = [
  "bigdecimal",
  "either",
  "enumflags2",
- "indexmap",
- "indoc 2.0.1",
+ "indexmap 1.9.3",
+ "indoc 2.0.3",
  "once_cell",
  "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
  "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
@@ -7491,7 +7494,6 @@ checksum = "97fee6b57c6a41524a810daee9286c02d7752c4253064d0b05472833a438f675"
 dependencies = [
  "cfg-if",
  "rand 0.8.5",
- "rand 0.8.5",
  "static_assertions",
 ]
 
@@ -7725,8 +7727,8 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
 dependencies = [
  "backtrace",
- "indoc 2.0.1",
- "itertools",
+ "indoc 2.0.3",
+ "itertools 0.10.5",
  "quaint",
  "serde",
  "serde_json",

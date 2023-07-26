@@ -7,8 +7,7 @@ import type { TypeGraph } from "./typegraph.ts";
 import { JSONValue } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import * as log from "std/log/mod.ts";
-import { sha1, unsafeExtractJWT } from "./crypto.ts";
-import { BadContext, ResolverError } from "./errors.ts";
+import { sha1 } from "./crypto.ts";
 import { RateLimit } from "./typegate/rate_limiter.ts";
 import type {
   ComputeStageProps,
@@ -19,8 +18,7 @@ import type {
 } from "./types.ts";
 import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
-import { Option } from "monads";
-import { getLogger } from "./log.ts";
+import { None } from "monads";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./engine/computation_engine.ts";
@@ -151,6 +149,138 @@ export class Engine {
       "PUT": {},
       "DELETE": {},
     };
+  }
+
+  async registerEndpoints() {
+    for (const query of this.tg.tg.meta.queries.endpoints) {
+      const document = parse(query);
+
+      const [operation, fragments] = findOperation(document, None);
+      const unwrappedOperation = operation.unwrap();
+      const name = unwrappedOperation.name?.value;
+      if (!name) {
+        throw new Error("query name is required");
+      }
+
+      const [plan] = await this.getPlan(
+        unwrappedOperation,
+        fragments,
+        false,
+        false,
+      );
+
+      const effects = Array.from(new Set(
+        plan.stages.filter((s) => s.props.parent == null).map((s) =>
+          s.props.effect
+        ),
+      ).values());
+
+      if (effects.length !== 1) {
+        throw new Error("root fields in query must be of the same effect");
+      }
+      const [effect] = effects;
+
+      const casting = (v: ast.TypeNode): (_: any) => unknown => {
+        if (v.kind === "NonNullType") {
+          return casting(v.type);
+        }
+        if (name === "String" || name == "ID") {
+          return String;
+        }
+        // ListType | Object | boolean | number: stringified
+        return JSON.parse;
+      };
+
+      const schemaGenerator = new RestSchemaGenerator(this.tg);
+
+      const endpointToSchema = {} as EndpointToSchemaMap;
+
+      for (const selection of unwrappedOperation.selectionSet.selections) {
+        const fnName = (selection as any)?.name?.value as string;
+        if (fnName) {
+          // Note: (query | mutation) <endpointName> { <fnName1>, <fnName2>, .. }
+          const match = this.tg.tg.types
+            .filter((tpe) =>
+              tpe.type == "object" &&
+              (tpe.title == "Query" || tpe.title == "Mutation") &&
+              tpe.properties[fnName] != undefined
+            ).shift() as ObjectNode;
+
+          if (!match) {
+            throw new Error(
+              `invalid state: "${name}" in query definition not found in type list`,
+            );
+          }
+
+          const typeIdx = match.properties?.[fnName];
+          const endpointFunc = this.tg.type(typeIdx);
+          if (endpointFunc.type != "function") {
+            throw new Error(
+              `invalid state: function expected, got "${endpointFunc.type}"`,
+            );
+          }
+
+          endpointToSchema[name] = {
+            fnName,
+            outputSchema: schemaGenerator.generate(endpointFunc.output),
+          };
+        }
+      }
+
+      const parsingVariables = Object.fromEntries(
+        (unwrappedOperation.variableDefinitions ?? []).map((varDef) => {
+          const name = varDef.variable.name.value;
+          return [name, casting(varDef.type)];
+        }),
+      );
+
+      const checkVariables = (vars: Record<string, unknown>) => {
+        const variables = Object.fromEntries(
+          Object.entries(vars).map(([k, v]) => [k, parsingVariables[k]?.(v)]),
+        );
+        this.checkVariablesPresence(
+          unwrappedOperation.variableDefinitions ?? [],
+          variables,
+        );
+        return variables;
+      };
+
+      const toJSONSchema = (v: ast.TypeNode): unknown => {
+        if (v.kind === "NonNullType") {
+          return toJSONSchema(v.type);
+        }
+        if (v.kind === "ListType") {
+          return { type: "array", items: toJSONSchema(v.type) };
+        }
+        const name = v.name.value;
+        const schema = {
+          "Integer": { type: "number" },
+          "Float": { type: "number" },
+          "Boolean": { type: "boolean" },
+          "String": { type: "string" },
+          "ID": { type: "string" },
+        }?.[name];
+        if (schema) {
+          return schema;
+        }
+        // fallback objects
+        return { type: "string" };
+      };
+
+      const varDefs = unwrappedOperation.variableDefinitions ?? [];
+      const variables = varDefs.map((v) => ({
+        name: v.variable.name.value,
+        schema: toJSONSchema(v.type),
+      }));
+
+      this.rest[effectToMethod[effect!]][name] = {
+        plan,
+        checkVariables, // variable existence checker
+        variables, // variable in query/body
+        endpointToSchema, // schema according to tg
+        refSchemas: schemaGenerator.refs,
+      };
+    }
   }
 
   async terminate() {

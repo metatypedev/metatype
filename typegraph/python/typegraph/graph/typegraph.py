@@ -83,9 +83,8 @@ class TypeGraph:
         if (
             os.environ.get("PY_TG_COMPATIBILITY") is not None
             and TypegraphContext.is_empty()
-            and not TypegraphContext.building
+            and not TypegraphContext.no_build
         ):
-            TypegraphContext.building = True
             tg = self.build()
             output = json.dumps(tg, cls=JSONEncoder)
             print(output)
@@ -147,9 +146,12 @@ class TypeGraph:
                 else:
                     assert_no_effect_materializers(e)
 
+        TypegraphContext.no_build = True
         with self:
             # allow all characters for the root entry-point
             root = t.struct(self.exposed).named(self.name, validate=False)
+
+        TypegraphContext.no_build = False
 
         root._propagate_runtime(DenoRuntime())
 
@@ -196,7 +198,7 @@ class TypeGraph:
 
 class TypegraphContext:
     typegraphs: List[TypeGraph] = []
-    building = False
+    no_build = False
 
     @classmethod
     def push(cls, tg: TypeGraph):

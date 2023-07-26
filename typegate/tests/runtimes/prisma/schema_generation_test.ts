@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { parseTypegraph } from "../../../src/typegraph/parser.ts";
-import { serialize, test } from "../../utils.ts";
+import { Meta } from "../../utils/mod.ts";
+import { serialize } from "../../utils/meta.ts";
 import { SchemaGenerator } from "../../../src/runtimes/prisma/hooks/generate_schema.ts";
 import * as PrismaRT from "../../../src/runtimes/prisma/types.ts";
 import { assertEquals } from "std/testing/asserts.ts";
@@ -39,7 +40,7 @@ async function assertGeneratedSchema(tgName: string, schema: string) {
   );
 }
 
-test("schema generation", async (t) => {
+Meta.test("schema generation", async (t) => {
   await t.should("generate datamodel for simple model", async () => {
     await assertGeneratedSchema(
       "simple-model",

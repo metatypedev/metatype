@@ -3,7 +3,7 @@
 
 import { connect, Redis, RedisConnectOptions } from "redis";
 import { Deferred, deferred } from "std/async/deferred.ts";
-import { Engine } from "./engine.ts";
+import { Engine } from "../engine.ts";
 
 // keys: tokens, latest
 // args: n

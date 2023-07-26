@@ -89,10 +89,11 @@ pub mod deno_rt {
     use std::{fs, path::Path};
 
     use anyhow::Context;
-    use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
+    use common::typegraph::runtimes::deno::{FunctionMatData, ModuleMatData};
+    use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
     use ignore::WalkBuilder;
 
-    use crate::typegraph::utils::{get_materializers, get_runtimes};
+    use crate::typegraph::utils::{find_runtimes, get_materializers};
 
     use super::*;
 

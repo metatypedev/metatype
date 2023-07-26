@@ -38,16 +38,16 @@ import type {
   TGRuntime as TypeRuntime,
   Typegraph as TypeGraphDS,
 } from "./types/typegraph.ts";
-import { InternalAuth } from "./auth/protocols/internal.ts";
-import { Protocol } from "./auth/protocols/protocol.ts";
-import { OAuth2Auth } from "./auth/protocols/oauth2.ts";
+import { InternalAuth } from "./services/auth/protocols/internal.ts";
+import { Protocol } from "./services/auth/protocols/protocol.ts";
+import { OAuth2Auth } from "./services/auth/protocols/oauth2.ts";
 import { Typegate } from "./typegate/mod.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
 export type RuntimeResolver = Record<string, Runtime>;
 
-export const typegraphVersion = "0.0.1";
+export const typegraphVersion = "0.0.2";
 
 export class SecretManager {
   constructor(
@@ -116,7 +116,6 @@ export class TypeGraph {
 
   root: TypeNode;
   typeByName: Record<string, TypeNode>;
-  name: string;
   name: string;
 
   private constructor(
@@ -268,7 +267,6 @@ export class TypeGraph {
   }
 
   async deinit(): Promise<void> {
-    await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
     await Promise.all(this.runtimeReferences.map((r) => r.deinit()));
     if (this.introspection) {
       await this.introspection.deinit();

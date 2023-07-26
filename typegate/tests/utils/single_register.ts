@@ -11,8 +11,6 @@ export class SingleRegister extends Register {
 
   add(_engine: Engine): Promise<void> {
     return Promise.resolve();
-  add(_engine: Engine): Promise<void> {
-    return Promise.resolve();
   }
 
   remove(_name: string): Promise<void> {

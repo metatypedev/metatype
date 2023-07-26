@@ -18,16 +18,11 @@
 // https://github.com/prisma/prisma-engines/blob/main/query-engine/query-engine-node-api/src/engine.rs
 
 use core::fmt;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::RwLock};
 use tracing::{
     field::{Field, Visit},
     level_filters::LevelFilter,
-    Dispatch, Level, Subscriber,
-};
-use tracing_subscriber::{
-    filter::{filter_fn, FilterExt},
-    layer::SubscriberExt,
-    Layer, Registry,
+    Level,
 };
 
 use futures::FutureExt;
@@ -38,19 +33,9 @@ use query_core::CoreError;
 use query_core::{
     protocol::EngineProtocol,
     schema::{self, QuerySchema},
-    telemetry, QueryExecutor, TransactionOptions, TxId,
+    QueryExecutor, TransactionOptions, TxId,
 };
-use query_engine_metrics::{MetricFormat, MetricRegistry};
-use request_handlers::{dmmf, load_executor, render_graphql_schema, RequestBody, RequestHandler};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
-use std::os::raw::c_void;
-use std::sync::{Arc, Mutex};
-use std::{collections::HashMap, future::Future, panic::AssertUnwindSafe, path::PathBuf};
-use thiserror::Error;
-use tokio::sync::RwLock;
-use tracing::{field, instrument::WithSubscriber, Instrument, Span};
-use user_facing_errors::Error;
+use query_engine_metrics::MetricFormat;
 
 type Result<T> = std::result::Result<T, ApiError>;
 type Executor = Box<dyn query_core::QueryExecutor + Send + Sync>;
@@ -606,8 +591,8 @@ where
     match AssertUnwindSafe(fut).catch_unwind().await {
         Ok(result) => result,
         Err(err) => match Error::extract_panic_message(err) {
-            Some(message) => Err(ApiError::Panic(message).into()),
-            None => Err(ApiError::Panic("unknown panic".to_string()).into()),
+            Some(message) => Err(ApiError::Panic(message)),
+            None => Err(ApiError::Panic("unknown panic".to_string())),
         },
     }
 }

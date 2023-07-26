@@ -7,14 +7,10 @@ import { ResolverError } from "../../errors.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { iterParentStages, nativeResult, nativeVoid } from "../../utils.ts";
 import { ComputeStage } from "../../engine.ts";
-import * as ast from "graphql/ast";
-import { ComputeArg, ComputeArgParams } from "../../planner/args.ts";
+import { ComputeArgParams } from "../../planner/args.ts";
 import { Materializer, PrismaOperationMatData } from "../../types/typegraph.ts";
 import { getLogger } from "../../log.ts";
-// import { TypeGraph } from "../../typegraph.ts";
 import * as PrismaRT from "./types.ts";
-import { FromVars } from "../graphql.ts";
-import { filterKeys } from "https://deno.land/std@0.192.0/collections/filter_keys.ts";
 import { filterValues } from "https://deno.land/std@0.192.0/collections/filter_values.ts";
 
 const logger = getLogger(import.meta);
@@ -48,10 +44,6 @@ type PrismaResult = {
 interface PrismaOperationMat extends Materializer {
   name: "prisma_operation";
   data: PrismaOperationMatData & Record<string, unknown>;
-}
-
-function isPrismaOperationMat(mat: Materializer): mat is PrismaOperationMat {
-  return mat.name === "prisma_operation";
 }
 
 type PrismaRuntimeData = PrismaRT.DataFinal;
@@ -145,7 +137,7 @@ export class PrismaRuntime {
     path: string[],
     renames: Record<string, string>,
   ): Resolver {
-    return async ({ _: { variables, context, effect, parent }, ...args }) => {
+    return async ({ _: { variables, context, effect, parent }, ..._args }) => {
       path[0] = renames[path[0]] ?? path[0];
 
       const startTime = performance.now();
@@ -194,14 +186,14 @@ export class PrismaRuntime {
         matData.operation === "queryRaw" || matData.operation === "executeRaw"
       ) {
         renames[stage.props.node] = matData.operation;
-        queries.push((p) => ({
+        queries.push((_p) => ({
           action: matData.operation,
           query: {
             arguments: {
               query: matData.table,
               // TODO params
+              parameters: "[]",
             },
-            // arguments: stage.props.args?.(p),
             selection: {},
           },
         }));
@@ -233,7 +225,7 @@ export class PrismaRuntime {
   materialize(
     stage: ComputeStage,
     waitlist: ComputeStage[],
-    verbose: boolean,
+    _verbose: boolean,
   ): ComputeStage[] {
     const path = stage.props.path;
     const node = path[path.length - 1];
