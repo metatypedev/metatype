@@ -86,7 +86,7 @@ fn prisma_unregister_engine(input: PrismaUnregisterEngineInp) -> PrismaUnregiste
     let Some((_, engine)) = ENGINES.remove(&input.engine_name) else {
         return PrismaUnregisterEngineOut::Err { message: format!("Could not remove engine {:?}: entry not found.", {input.engine_name})};
     };
-    match RT.block_on(engine.disconnect("".to_string())) {
+    match RT.block_on(engine.disconnect()) {
         Ok(()) => PrismaUnregisterEngineOut::Ok,
         Err(e) => PrismaUnregisterEngineOut::Err {
             message: format!("{:?}", e),
