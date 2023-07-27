@@ -20,6 +20,7 @@ with TypeGraph("injection") as g:
             # "alt_context_missing": t.string().inject(injection.context("inexistent")), # fail
             "alt_context_opt": t.string().optional().from_context("userId"),
             "alt_context_opt_missing": t.string().optional().from_context("userId"),
+            "date": t.datetime().inject("now"),
         }
     )
 

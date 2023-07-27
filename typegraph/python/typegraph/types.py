@@ -24,6 +24,7 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypeGraph, TypegraphContext, find
 from typegraph.injection import (
+    DynamicValueInjection,
     Injection,
     InjectionDataInit,
     ContextInjection,
@@ -221,7 +222,7 @@ class typedef(Node):
             if isinstance(e, NodeProxy):
                 e.get()._propagate_runtime(self.runtime, visited)
 
-    def inject(self, injection: Injection) -> Self:
+    def _set_injection(self, injection: Injection) -> Self:
         if self.injection is not None:
             raise Exception(f"{self.name} can only have one injection")
         return self.replace(injection=injection)
@@ -229,16 +230,16 @@ class typedef(Node):
     def set(self, value: InjectionDataInit[Any]):
         import json
 
-        return self.inject(
+        return self._set_injection(
             StaticInjection(init_injection_data(value, str, lambda x: json.dumps(x)))
         )
 
     def from_secret(self, value: InjectionDataInit[str]):
-        return self.inject(SecretInjection(init_injection_data(value)))
+        return self._set_injection(SecretInjection(init_injection_data(value)))
 
     def from_parent(self, value: InjectionDataInit[Union["NodeProxy", str]]):
         # TODO: check for same type and value in same context
-        return self.inject(
+        return self._set_injection(
             ParentInjection(
                 init_injection_data(
                     value, NodeProxy, lambda x: proxy(x) if isinstance(x, str) else x
@@ -247,7 +248,10 @@ class typedef(Node):
         )
 
     def from_context(self, value: InjectionDataInit[str]):
-        return self.inject(ContextInjection(init_injection_data(value)))
+        return self._set_injection(ContextInjection(init_injection_data(value)))
+
+    def inject(self, value: InjectionDataInit[str]):
+        return self._set_injection(DynamicValueInjection(init_injection_data(value)))
 
     def add_policy(
         self,

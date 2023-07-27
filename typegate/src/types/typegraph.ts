@@ -219,6 +219,9 @@ export type Injection = {
 } | {
   source: "parent";
   data: InjectionDataForUint32;
+} | {
+  source: "dynamic";
+  data: InjectionDataFor_String;
 };
 export type InjectionDataFor_String = SingleValueFor_String | {
   [k: string]: string;

@@ -42,6 +42,7 @@ pub enum Injection {
     Context(InjectionData<String>),
     Secret(InjectionData<String>),
     Parent(InjectionData<u32>),
+    Dynamic(InjectionData<String>),
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

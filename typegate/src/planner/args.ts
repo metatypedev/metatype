@@ -143,6 +143,11 @@ export function collectArgs(
   };
 }
 
+const GENERATORS = {
+  "now": () => new Date().toISOString(),
+  // "uuid": () =>
+} as const;
+
 interface Dependencies {
   context: Set<string>;
   parent: Set<string>;
@@ -612,6 +617,20 @@ class ArgumentCollector {
           return null;
         }
         return this.collectParentInjection(typ, parentTypeIdx);
+      }
+
+      case "dynamic": {
+        const generatorName = selectInjection(injection.data, this.effect);
+        if (generatorName == null) {
+          return null;
+        }
+        const generator = GENERATORS[generatorName as keyof typeof GENERATORS];
+        if (generator == null) {
+          throw new Error(
+            `Unknown generator '${generatorName}' for dynamic injection`,
+          );
+        }
+        return generator;
       }
     }
   }

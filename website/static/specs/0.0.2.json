@@ -1213,6 +1213,24 @@
               "$ref": "#/definitions/InjectionData_for_uint32"
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "dynamic"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/InjectionData_for_String"
+            }
+          }
         }
       ]
     },

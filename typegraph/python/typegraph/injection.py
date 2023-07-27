@@ -77,6 +77,32 @@ class StaticInjection(Injection):
         )
 
 
+GENERATORS = [
+    "now",
+    # "uuid"
+]
+
+
+def ensure_valid_generator(name: str):
+    if name not in GENERATORS:
+        raise Exception(f"Invalid generator name: {name}")
+    return name
+
+
+@frozen
+class DynamicValueInjection(Injection):
+    value: InjectionData[str]  # generator name
+    source: str = always("dynamic")
+
+    def data(self, _collector: Collector) -> frozendict:
+        return frozendict(
+            {
+                "source": "dynamic",
+                "data": serialize_injection_data(self.value, ensure_valid_generator),
+            }
+        )
+
+
 @frozen
 class ContextInjection(Injection):
     value: InjectionData[str]  # context name
