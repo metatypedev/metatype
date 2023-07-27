@@ -319,32 +319,6 @@ impl QueryEngine {
         }
     }
 
-    // pub async fn dmmf(&self, trace: String) -> Result<String> {
-    //         let inner = self.inner.read().await;
-    //         let engine = inner.as_engine()?;
-    //
-    //         // TODO
-    //         Ok("".to_string())
-    //
-    //         // let dispatcher = self.logger.dispatcher();
-    //
-    //         // tracing::dispatcher::with_default(&dispatcher, || {
-    //         //     let span = tracing::info_span!("prisma:engine:dmmf");
-    //         //     let _ = telemetry::helpers::set_parent_context_from_json_str(&span, &trace);
-    //         //     let _guard = span.enter();
-    //         //     let dmmf = dmmf::render_dmmf(&engine.query_schema);
-    //         //
-    //         //     let json = {
-    //         //         let _span = tracing::info_span!("prisma:engine:dmmf_to_json").entered();
-    //         //         serde_json::to_string(&dmmf)?
-    //         //     };
-    //         //
-    //         //     Ok(json)
-    //         // })
-    //     })
-    //     .await
-    // }
-
     /// If connected, attempts to roll back a transaction with id `tx_id` in the core.
     #[allow(dead_code)]
     pub async fn rollback_transaction(&self, tx_id: String, _trace: String) -> Result<String> {

@@ -5,8 +5,6 @@
 
 mod engine;
 mod engine_import;
-// mod introspection;
-// use introspection::Introspection;
 use once_cell::sync::Lazy;
 mod migration;
 use crate::RT;
@@ -20,30 +18,6 @@ use self::migration::{
 };
 
 static ENGINES: Lazy<DashMap<String, engine_import::QueryEngine>> = Lazy::new(DashMap::new);
-
-// introspection
-
-// #[deno]
-// struct PrismaIntrospectionInp {
-//     datamodel: String,
-// }
-//
-// #[deno]
-// enum PrismaIntrospectionOut {
-//     Ok { introspection: String },
-//     Err { message: String },
-// }
-
-// #[deno]
-// fn prisma_introspection(input: PrismaIntrospectionInp) -> PrismaIntrospectionOut {
-//     let fut = Introspection::introspect(input.datamodel);
-//     match RT.block_on(fut) {
-//         Ok(res) => PrismaIntrospectionOut::Ok { introspection: res },
-//         Err(e) => PrismaIntrospectionOut::Err {
-//             message: e.to_string(),
-//         },
-//     }
-// }
 
 // register engine
 #[deno]
