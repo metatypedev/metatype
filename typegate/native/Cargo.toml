@@ -24,9 +24,6 @@ query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag =
 schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
 psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
 schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
-tracing = "0.1"
-tracing-subscriber = "0.3"
-tracing-opentelemetry = "0.17.3"
 futures = "0.3"
 temporal-client = { git = "https://github.com/temporalio/sdk-core" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core" }
