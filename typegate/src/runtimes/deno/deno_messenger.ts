@@ -94,8 +94,6 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
 
     const interval = setInterval(() => {
       const currentDate = Date.now();
-      // TODO: use priority queue and get last item
-      // if btree, just get min Date and compute delta
       const item = this.pendingOperations.peek();
       if (item !== undefined) {
         const delta = currentDate - item.date;
