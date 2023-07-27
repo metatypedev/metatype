@@ -73,10 +73,9 @@ export class GraphQLRuntime extends Runtime {
     const fields = [stage, ...sameRuntime];
     const renames = this.getRenames(fields);
 
-    // TODO extract function: build query
-    const operationType = mat?.effect.effect != null
-      ? OperationTypeNode.MUTATION
-      : OperationTypeNode.QUERY;
+    const operationType = mat!.name === "query"
+      ? OperationTypeNode.QUERY
+      : OperationTypeNode.MUTATION;
 
     const query = this.buildQuery(fields, operationType, renames);
 
