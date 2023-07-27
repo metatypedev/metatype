@@ -145,6 +145,7 @@ export async function handleGraphQL(
         },
       );
     } else {
+      // console.error(e);
       logger.error(`request err: ${e}`);
       return new Response(
         JSON.stringify({
