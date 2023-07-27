@@ -14,6 +14,7 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.models import Auth, Cors, Rate
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.runtimes.deno import DenoRuntime
+from typegraph.effects import EffectType
 
 if TYPE_CHECKING:
     from typegraph import types as t
@@ -31,6 +32,8 @@ class JSONEncoder(json.JSONEncoder):
             return attrs.asdict(o)
         if isinstance(o, frozendict):
             return dict(o)
+        if isinstance(o, EffectType):
+            return str(o)
         return super().default(o)
 
 
