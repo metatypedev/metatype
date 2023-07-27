@@ -31,6 +31,11 @@ export class PulseHandle {
 
   static sleep(ms = 100) {
     return new Promise((resolve) => {
+      // BUG:
+      // still leaking => stopped prematurely without being resolved ?
+      // IDEA:
+      // move pulse logic to separate worker
+      // worker.terminate() should be safer
       setTimeout(resolve, ms);
     });
   }
@@ -117,13 +122,13 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
       },
     );
 
-    const tickMs = 1000;
+    const tickMs = 0;
     const maxDurationMs = 5000;
 
     const pulse = new PulseHandle(tickMs);
     pulse.loop(async () => {
       const currentDate = Date.now();
-      const item = this.pendingOperations.peek();
+      const item = this.pendingOperations.peek(); // O(1)
       if (item !== undefined) {
         const delta = currentDate - item.date;
         if (this.doneIds.has(item.message.id)) {
