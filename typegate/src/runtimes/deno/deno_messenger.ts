@@ -13,6 +13,42 @@ import { BinaryHeap } from "std/collections/binary_heap.ts";
 const localDir = dirname(fromFileUrl(import.meta.url));
 const workerFile = toFileUrl(resolve(localDir, "./worker.ts"));
 
+export interface TickCallback {
+  (): Promise<void>;
+}
+
+export class PulseHandle {
+  static createdCount = 0;
+  #stop = false;
+  constructor(
+    private tickMs = 1000,
+  ) {
+    PulseHandle.createdCount++;
+  }
+
+  // raw setInterval tends to trigger Leaking async ops errors
+  // the idea is to wrap the timer logic inside promises
+
+  static sleep(ms = 100) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  stop() {
+    this.#stop = true;
+  }
+
+  async loop(fn: TickCallback) {
+    while (!this.#stop) {
+      await Promise.resolve(fn());
+      await PulseHandle.sleep(this.tickMs);
+    }
+    PulseHandle.createdCount--;
+    console.log("stopped safely, remaining ", PulseHandle.createdCount);
+  }
+}
+
 export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
   pendingOperations: BinaryHeap<
     { date: number; worker: Worker; message: Message<Task> }
@@ -74,14 +110,6 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
           worker: broker,
           message: message,
         });
-        // console.log(
-        //   "register id",
-        //   message.id,
-        //   "op",
-        //   message.op,
-        //   "pending",
-        //   this.pendingOperations.length,
-        // );
         broker.postMessage(message);
       },
       (broker) => {
@@ -92,7 +120,8 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
     const tickMs = 1000;
     const maxDurationMs = 5000;
 
-    const interval = setInterval(() => {
+    const pulse = new PulseHandle(tickMs);
+    pulse.loop(async () => {
       const currentDate = Date.now();
       const item = this.pendingOperations.peek();
       if (item !== undefined) {
@@ -109,16 +138,16 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
           // );
 
           if (this.pendingOperations.length == 0) {
-            clearInterval(interval);
+            pulse.stop();
           }
         } else if (delta >= maxDurationMs) {
           this.receive({
             id: item.message.id,
             error: `timeout exceeded for id ${item.message.id}`,
           });
-          item.worker.terminate();
 
           this.pendingOperations.pop(); // O(log N)
+          await this.terminate();
 
           // console.log(
           //   "Removing id",
@@ -130,11 +159,11 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
           // );
 
           if (this.pendingOperations.length == 0) {
-            clearInterval(interval);
+            pulse.stop();
           }
         }
       }
-    }, tickMs);
+    });
 
     if (lazy) {
       this.enableLazyness();
