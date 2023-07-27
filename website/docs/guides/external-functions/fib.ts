@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Elastic License 2.0.
+// SPDX-License-Identifier: Elastic-2.0
+
 const CACHE = [1, 1];
 const MAX_CACHE_SIZE = 1000;
 

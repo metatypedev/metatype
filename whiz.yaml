@@ -1,18 +1,6 @@
 env:
   TYPEGRAPH_VERSION: "0.0.2"
 
-meta:
-  watch:
-    - "meta-cli/src/**/*.rs"
-    - "typegraph/python/typegraph/**/*.py"
-  command: "cargo run --color always -p meta-cli -- -C examples dev"
-  env:
-    VIRTUAL_ENV: $PWD/.venv
-    PATH: $PWD/.venv/bin:$PATH
-    CLICOLOR_FORCE: "1"
-  depends_on:
-    - libs
-
 typegate1: &tp
   workdir: typegate
   watch: "src/**/*.ts"

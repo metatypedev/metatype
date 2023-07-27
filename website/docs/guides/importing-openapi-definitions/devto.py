@@ -16,6 +16,7 @@ def import_devto(params=None):
     target_url = inject_params("https://dev.to/api", params)
     devto = HTTPRuntime(target_url)
 
+    # skip:start
     renames = {
         "Article": "_devto_1_Article",
         "ArticleFlareTag": "_devto_2_ArticleFlareTag",
@@ -61,6 +62,8 @@ def import_devto(params=None):
             "text_color_hex": t.string().optional(),
         }
     ).named(renames["ArticleFlareTag"])
+    # skip:end
+    # ...
     types["ArticleIndex"] = t.struct(
         {
             "canonical_url": t.string(),
@@ -90,6 +93,7 @@ def import_devto(params=None):
             "user": t.proxy(renames["SharedUser"]),
         }
     ).named(renames["ArticleIndex"])
+    # skip:start
     types["Comment"] = t.struct(
         {
             "created_at": t.string().optional(),
@@ -256,11 +260,14 @@ def import_devto(params=None):
         ),
         t.array(t.proxy(renames["ArticleIndex"])),
     )
+    # skip:end
+    # ...
     functions["getLatestArticles"] = devto.get(
         "/api/articles/latest",
         t.struct({"page": t.integer(), "per_page": t.integer()}),
         t.array(t.proxy(renames["ArticleIndex"])),
     )
+    # skip:start
     functions["getUserArticles"] = devto.get(
         "/api/articles/me",
         t.struct({"page": t.integer(), "per_page": t.integer()}),
@@ -441,7 +448,8 @@ def import_devto(params=None):
         t.struct({"page": t.integer(), "per_page": t.integer()}),
         t.array(t.proxy(renames["VideoArticle"])),
     )
-
+    # skip:end
+    # ...
     return Import(
         importer="devto", renames=renames, types=Box(types), functions=Box(functions)
     )
