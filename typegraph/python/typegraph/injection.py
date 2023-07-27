@@ -34,7 +34,11 @@ def init_injection_data(
     value_class: Optional[Type] = None,
     mapper: Callable[[T], Any] = lambda x: x,
 ) -> InjectionData[T]:
-    if isinstance(init, dict) and all(isinstance(k, EffectType) for k in init.keys()):
+    if (
+        isinstance(init, dict)
+        and len(init) > 0
+        and all(isinstance(k, EffectType) for k in init.keys())
+    ):
         values = {str(k): mapper(v) for k, v in init.items()}
         if value_class is not None:
             assert all(isinstance(v, value_class) for v in values.values())
