@@ -136,7 +136,6 @@ export const b64encode = (v: string): string => {
 export function nativeResult<R>(
   res: { Ok: R } | { Err: { message: string } },
 ): R {
-  console.log("raw res", res);
   if ("Err" in res) {
     throw new Error(res.Err.message);
   }

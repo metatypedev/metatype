@@ -29,7 +29,5 @@ pub async fn query(engine_name: String, query: serde_json::Value) -> Result<Stri
         .get(&engine_name)
         .with_context(|| format!("Cound not find engine '{engine_name}"))?;
     let res = engine.query(serde_json::to_string(&query)?, None).await?;
-    // serde_json::to_string(&res)
-    //     .context("Error while deserializing GraphQL response from the prisma engine")
     Ok(res)
 }
