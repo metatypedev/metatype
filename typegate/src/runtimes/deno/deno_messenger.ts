@@ -21,7 +21,7 @@ export class PulseHandle {
   static createdCount = 0;
   #stop = false;
   constructor(
-    private tickMs = 1000,
+    private tickSec = 1,
   ) {
     PulseHandle.createdCount++;
   }
@@ -29,16 +29,19 @@ export class PulseHandle {
   // raw setInterval tends to trigger Leaking async ops errors in tests
   // the idea is to wrap the timer logic inside promises
 
-  static sleep(ms = 100) {
-    return new Promise((resolve) => {
-      // BUG:
-      // same issue as setInterval
-      // leaking ops in tests
-      // => timeout/interval stopped prematurely without being resolved ?
-      // IDEA:
-      // maybe use external sleep source for a pulse ? (example: command `sleep 1s`)
-      setTimeout(resolve, ms);
-    });
+  static async sleep(seconds = 1) {
+    // BUG:
+    // not working either
+    // "A child process stdout (rid {RID}) was opened before the test started,
+    // but was closed during the test. Do not close resources
+    // in a test that were not created during that test.""
+
+    // setInterval/setTimeout/worker with setTimeout => leaking ops
+    // external sleep source => leaking ressources
+
+    const cmd = new Deno.Command("sleep", { args: [`${seconds}s`] });
+    await cmd.output();
+    console.log("tick");
   }
 
   stop() {
@@ -48,7 +51,7 @@ export class PulseHandle {
   async loop(fn: TickCallback) {
     while (!this.#stop) {
       await Promise.resolve(fn());
-      await PulseHandle.sleep(this.tickMs);
+      await PulseHandle.sleep(this.tickSec);
     }
     PulseHandle.createdCount--;
     console.log("stopped safely, remaining ", PulseHandle.createdCount);
@@ -123,7 +126,7 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
       },
     );
 
-    const tickMs = 0;
+    const tickMs = 1;
     const maxDurationMs = 5000;
 
     const pulse = new PulseHandle(tickMs);
