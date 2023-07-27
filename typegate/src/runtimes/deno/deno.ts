@@ -283,6 +283,6 @@ export class DenoRuntime extends Runtime {
       };
     }
 
-    throw new Error("unsupported materializer ${mat.name}");
+    throw new Error(`unsupported materializer ${mat.name}`);
   }
 }

@@ -13,7 +13,7 @@
   "lock": "deno.lock",
   "imports": {
     "native": "../bindings/bindings.ts",
-    "std/": "https://deno.land/std@0.192.0/",
+    "std/": "https://deno.land/std@0.196.0/",
     "compress/": "https://deno.land/x/compress@v0.4.5/",
     "graphql": "https://cdn.skypack.dev/graphql@16.6.0?dts",
     "graphql/ast": "https://cdn.skypack.dev/graphql@16.6.0/language/ast?dts",
