@@ -26,16 +26,17 @@ export class PulseHandle {
     PulseHandle.createdCount++;
   }
 
-  // raw setInterval tends to trigger Leaking async ops errors
+  // raw setInterval tends to trigger Leaking async ops errors in tests
   // the idea is to wrap the timer logic inside promises
 
   static sleep(ms = 100) {
     return new Promise((resolve) => {
       // BUG:
-      // still leaking => stopped prematurely without being resolved ?
+      // same issue as setInterval
+      // leaking ops in tests
+      // => timeout/interval stopped prematurely without being resolved ?
       // IDEA:
-      // move pulse logic to separate worker
-      // worker.terminate() should be safer
+      // maybe use external sleep source for a pulse ? (example: command `sleep 1s`)
       setTimeout(resolve, ms);
     });
   }
