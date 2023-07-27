@@ -7,6 +7,7 @@ from typegraph import TypeGraph, t
 from typegraph import policies as p
 from typegraph.graph.models import Cors
 from typegraph.runtimes.deno import PureFunMat
+from typegraph.effects import EffectType
 
 
 class TestTypegraph:
@@ -99,7 +100,7 @@ class TestTypegraph:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "effect": {"effect": None, "idempotent": True},
+                        "effect": {"effect": EffectType.NONE, "idempotent": True},
                         "data": {"script": "var _my_lambda = (args) => args.a * 2;"},
                     }
                 ],
@@ -244,13 +245,13 @@ class TestTypegraph:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "effect": {"effect": None, "idempotent": True},
+                        "effect": {"effect": EffectType.NONE, "idempotent": True},
                         "data": {"script": "var _my_lambda = () => 1;"},
                     },
                     {
                         "name": "function",
                         "runtime": 0,
-                        "effect": {"effect": None, "idempotent": True},
+                        "effect": {"effect": EffectType.NONE, "idempotent": True},
                         "data": {"script": "var _my_lambda = (args) => args.a;"},
                     },
                 ],
@@ -300,7 +301,7 @@ class TestTypegraph:
                     },
                     {
                         "runtime": 0,
-                        "policies": [{"none": 0, "create": 0, "update": 0}],
+                        "policies": [{"create": 0, "update": 0, "none": 0}],
                         "safe": True,
                         "rate_calls": False,
                         "type": "function",
@@ -339,13 +340,13 @@ class TestTypegraph:
                     {
                         "name": "predefined_function",
                         "runtime": 0,
-                        "effect": {"effect": None, "idempotent": True},
+                        "effect": {"effect": EffectType.NONE, "idempotent": True},
                         "data": {"name": "true"},
                     },
                     {
                         "name": "function",
                         "runtime": 0,
-                        "effect": {"effect": None, "idempotent": True},
+                        "effect": {"effect": EffectType.NONE, "idempotent": True},
                         "data": {"script": "var _my_lambda = () => 1;"},
                     },
                 ],

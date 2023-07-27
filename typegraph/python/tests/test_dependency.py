@@ -6,6 +6,7 @@ import frozendict
 from typegraph import TypeGraph, t
 from typegraph.graph.models import Cors
 from typegraph.runtimes import deno
+from typegraph.effects import EffectType
 
 
 class TestDependency:
@@ -99,10 +100,8 @@ class TestDependency:
                         "runtime": 0,
                         "injection": frozendict.frozendict(
                             {
-                                "cases": (),
-                                "default": frozendict.frozendict(
-                                    {"source": "parent", "data": 7}
-                                ),
+                                "source": "parent",
+                                "data": frozendict.frozendict({"value": 7}),
                             }
                         ),
                         "policies": [],
@@ -145,7 +144,7 @@ class TestDependency:
                     {
                         "name": "function",
                         "runtime": 0,
-                        "effect": {"effect": None, "idempotent": True},
+                        "effect": {"effect": EffectType.NONE, "idempotent": True},
                         "data": {"script": "var _my_lambda = x2;"},
                     }
                 ],
