@@ -77,7 +77,7 @@ const cwd = resolve(projectDir, "typegate");
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
   "LOG_LEVEL": "DEBUG",
-  // "NO_COLOR": "true",
+  "NO_COLOR": "true",
   "DEBUG": "true",
   "PACKAGED": "false",
   "TG_SECRET":

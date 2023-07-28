@@ -17,7 +17,6 @@ export async function shell(
     args: cmd.slice(1),
     stdout: "piped",
     stderr: "inherit",
-    // stderr: "piped",
     stdin: "piped",
     env: { RUST_LOG: "info,meta=trace" },
   }).spawn();
@@ -34,8 +33,6 @@ export async function shell(
   for await (const l of p.stdout.pipeThrough(new TextDecoderStream())) {
     out += l;
   }
-
-  // await p.stderr.pipeTo(Deno.stderr.writable, { preventClose: true });
 
   const { code, success } = await p.status;
 

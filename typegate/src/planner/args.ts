@@ -582,7 +582,7 @@ class ArgumentCollector {
       case "static": {
         const jsonString = selectInjection(injection.data, this.effect);
         if (jsonString == null) {
-          return jsonString;
+          return null;
         }
         return () => JSON.parse(jsonString);
       }
