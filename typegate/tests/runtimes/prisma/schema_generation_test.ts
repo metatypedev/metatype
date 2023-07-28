@@ -10,7 +10,15 @@ import { assertEquals } from "std/testing/asserts.ts";
 import outdent from "outdent";
 import { SecretManager } from "../../../src/typegraph.ts";
 
-async function assertGeneratedSchema(tgName: string, schema: string) {
+interface Permutation<T> {
+  (arr: T[]): T[];
+}
+
+async function assertGeneratedSchema(
+  tgName: string,
+  schema: string,
+  reorderModels?: Permutation<number>,
+) {
   const tg = await parseTypegraph(
     await serialize("runtimes/prisma/schema_generation.py", {
       unique: true,
@@ -25,6 +33,10 @@ async function assertGeneratedSchema(tgName: string, schema: string) {
   const secretKey = `TG_${
     tgName.toUpperCase().replaceAll(/[^\w]/g, "_")
   }_POSTGRES`;
+
+  if (reorderModels) {
+    runtime.data.models = reorderModels(runtime.data.models);
+  }
 
   const schemaGenerator = new SchemaGenerator(
     tg,
@@ -88,7 +100,22 @@ Meta.test("schema generation", async (t) => {
         `,
       );
 
-      // TODO also reversed order version
+      await assertGeneratedSchema(
+        "implicit-one-to-many",
+        outdent`
+          model Post {
+              id Int @id @default(autoincrement())
+              author User @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
+              authorId Int
+          }
+
+          model User {
+              id Int @id @default(autoincrement())
+              posts Post[] @relation(name: "__rel_Post_User_1")
+          }
+        `,
+        ([a, b]) => [b, a],
+      );
     },
   );
 
@@ -111,7 +138,22 @@ Meta.test("schema generation", async (t) => {
         `,
       );
 
-      // TODO revered order
+      await assertGeneratedSchema(
+        "optional-one-to-many",
+        outdent`
+          model Post {
+              id Int @id @default(autoincrement())
+              author User? @relation(name: "__rel_Post_User_1", fields: [authorId], references: [id])
+              authorId Int?
+          }
+
+          model User {
+              id Int @id @default(autoincrement())
+              posts Post[] @relation(name: "__rel_Post_User_1")
+          }
+        `,
+        ([a, b]) => [b, a],
+      );
     },
   );
 
@@ -154,7 +196,24 @@ Meta.test("schema generation", async (t) => {
         `,
       );
 
-      // TODO also reversed order version
+      await assertGeneratedSchema(
+        "implicit-one-to-one",
+        outdent`
+          model Profile {
+              id String @db.Uuid @id @default(uuid())
+              user User @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
+              userId Int
+
+              @@unique(userId)
+          }
+
+          model User {
+              id Int @id @default(autoincrement())
+              profile Profile? @relation(name: "__rel_Profile_User_1")
+          }
+        `,
+        ([a, b]) => [b, a],
+      );
     },
   );
 
@@ -179,7 +238,24 @@ Meta.test("schema generation", async (t) => {
         `,
       );
 
-      // TODO revered order
+      await assertGeneratedSchema(
+        "optional-one-to-one",
+        outdent`
+          model Profile {
+              id String @db.Uuid @id @default(uuid())
+              user User? @relation(name: "__rel_Profile_User_1", fields: [userId], references: [id])
+              userId Int?
+
+              @@unique(userId)
+          }
+
+          model User {
+              id Int @id @default(autoincrement())
+              profile Profile? @relation(name: "__rel_Profile_User_1")
+          }
+        `,
+        ([a, b]) => [b, a],
+      );
     },
   );
 
@@ -225,7 +301,24 @@ Meta.test("schema generation", async (t) => {
         `,
       );
 
-      // TODO revered order
+      await assertGeneratedSchema(
+        "semi-implicit-one-to-one-2",
+        outdent`
+          model Profile {
+              id String @db.Uuid @id @default(uuid())
+              user User @relation(name: "userProfile", fields: [userId], references: [id])
+              userId Int
+
+              @@unique(userId)
+          }
+
+          model User {
+              id Int @id
+              profile Profile? @relation(name: "userProfile")
+          }
+        `,
+        ([a, b]) => [b, a],
+      );
     },
   );
 

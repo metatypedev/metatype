@@ -31,7 +31,7 @@ self_update = { version = "0.37.0", features = [
   "compression-zip-deflate",
   "compression-zip-bzip2",
 ] }
-prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0"  }
 lazy_static = "1.4.0"
 tokio = { version = "1.29.1", features = ["full"] }
 futures = "0.3.28"
@@ -59,7 +59,7 @@ typescript = { path = "../libs/typescript" }
 serde_yaml = "0.9.23"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.55", features = ["vendored"] }
-indexmap = { version = "1.9.3", features = ["serde"] }
+indexmap = { version = "2.0.0", features = ["serde"] }
 lade-sdk = "0.7.0"
 async-trait = "0.1.71"
 async-recursion = "1.0.4"

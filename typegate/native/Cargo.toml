@@ -45,7 +45,7 @@ rust-s3 = "0.33.0"
 http = "0.2.9"
 envconfig = "0.10.0"
 once_cell = "1.18.0"
-wasmedge-sdk = { version = "0.8.1" }
+wasmedge-sdk = { version = "0.10.1", features = ["standalone"] }
 base64 = "0.21.2"
 tap = "1.0.1"
 colored = "2.0.4"
