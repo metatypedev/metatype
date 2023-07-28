@@ -66,7 +66,8 @@ export class AsyncMessenger<Broker, M, A> {
           });
 
           this.#pendingOperations.pop(); // O(log N)
-          // this.#stop(broker);
+          // this.terminate(); // cpu stats implies blocking task still running at 100%?
+          stop(broker); // force abort
         }
       }
     }, tickMs);
