@@ -48,34 +48,25 @@ export class AsyncMessenger<Broker, M, A> {
       const currentDate = Date.now();
       const item = this.#pendingOperations.peek(); // O(1)
       if (item !== undefined) {
+        // safe removal
         const delta = currentDate - item.date;
         if (this.#doneIds.has(item.message.id)) {
           this.#pendingOperations.pop(); // O(log N)
           this.#doneIds.delete(item.message.id); // O(1)
+          return;
+        }
 
-          console.log(
-            "done safely",
-            item.message.id,
-            "currentSize",
-            this.#pendingOperations.length,
-          );
-        } else if (delta >= maxDurationMs) {
+        // force removal
+        if (delta >= maxDurationMs) {
           this.receive({
             id: item.message.id,
-            error: `timeout exceeded for id ${item.message.id}`,
+            error: `${maxDurationMs / 1000}s timeout exceeded (+${
+              (delta - maxDurationMs) / 1000
+            }s)`,
           });
 
           this.#pendingOperations.pop(); // O(log N)
           // this.#stop(broker);
-
-          console.log(
-            "Removing id",
-            item.message.id,
-            "op",
-            item.message.op,
-            "currentSize",
-            this.#pendingOperations.length,
-          );
         }
       }
     }, tickMs);
@@ -109,13 +100,7 @@ export class AsyncMessenger<Broker, M, A> {
   async receive(answer: Answer<A>): Promise<void> {
     const { id } = answer;
     const { promise, hooks } = this.#tasks.get(id)!;
-    this.#doneIds.add(answer.id);
-    console.log(
-      "Removing id",
-      answer.id,
-      "currentSize",
-      this.#pendingOperations.length,
-    );
+    this.#doneIds.add(answer.id); // safe remove
     if (answer.error) {
       promise.reject(new Error(answer.error));
     } else {

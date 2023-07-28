@@ -37,8 +37,8 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
             },
           },
         } as WorkerOptions);
-        worker.onmessage = (event) => {
-          receive(event.data);
+        worker.onmessage = async (event) => {
+          await receive(event.data);
         };
         worker.onerror = (error) => {
           console.error(error.message);
@@ -64,13 +64,6 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
         broker.terminate();
       },
     );
-    // this.pendingOperations.push({
-    //   date: Date.now(),
-    //   worker: broker,
-    //   message: message,
-    // });
-    // this.doneIds.add(event.data.id);
-    // console.log("Removing id", event.data.id);
 
     if (lazy) {
       this.enableLazyness();

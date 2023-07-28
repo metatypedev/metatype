@@ -159,16 +159,6 @@ Meta.test("Deno runtime: reloading", async (t) => {
 Meta.test("Deno runtime: infinite loop or similar", async (t) => {
   const e = await t.engine("runtimes/deno/deno.py");
 
-  await t.should("safely fail upon an infinite loop", async () => {
-    await gql`
-      query {
-        infiniteLoop(enable: true)
-      }
-    `
-      .expectErrorContains("timeout exceeded")
-      .on(e);
-  });
-
   await t.should("safely fail upon stack oferflow", async () => {
     await gql`
       query {
@@ -178,4 +168,19 @@ Meta.test("Deno runtime: infinite loop or similar", async (t) => {
       .expectErrorContains("Maximum call stack size exceeded")
       .on(e);
   });
+
+  for (let count = 1; count <= 3; count += 1) {
+    await t.should(
+      `safely fail upon an infinite loop, sample #${count}`,
+      async () => {
+        await gql`
+        query {
+          infiniteLoop(enable: true)
+        }
+      `
+          .expectErrorContains("timeout exceeded")
+          .on(e);
+      },
+    );
+  }
 });
