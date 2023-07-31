@@ -7,7 +7,7 @@ edition = "2021"
 anyhow = "1.0.72"
 base64 = "0.21.2"
 flate2 = "1.0.26"
-indexmap = { version = "2.0.0", features = ["serde"] }
+indexmap = { version = "1.9.3", features = ["serde"] }
 schemars = { version = "0.8.12", features = ["derive", "preserve_order"], optional = true }
 serde = { version = "1.0.171", features = ["derive"] }
 serde_json = { version = "1.0.103", features = ["preserve_order"] }

@@ -59,7 +59,7 @@ typescript = { path = "../libs/typescript" }
 serde_yaml = "0.9.23"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.55", features = ["vendored"] }
-indexmap = { version = "2.0.0", features = ["serde"] }
+indexmap = { version = "1.9.3", features = ["serde"] }
 lade-sdk = "0.7.0"
 async-trait = "0.1.71"
 async-recursion = "1.0.4"
