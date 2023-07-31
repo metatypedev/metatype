@@ -6,6 +6,7 @@ import { getLogger } from "../../../log.ts";
 import { Answer, Message, TaskData } from "./types.ts";
 import { maxi32 } from "../../../utils.ts";
 import { BinaryHeap } from "std/collections/binary_heap.ts";
+import config from "../../../config.ts";
 
 const logger = getLogger(import.meta);
 
@@ -27,7 +28,7 @@ export class AsyncMessenger<Broker, M, A> {
   #send: MessengerSend<Broker, M>;
   #stop: MessengerStop<Broker>;
 
-  #timer: ReturnType<typeof setInterval>;
+  #timer?: ReturnType<typeof setInterval>;
   #pendingOperations: BinaryHeap<
     { date: number; message: Message<M> }
   > = new BinaryHeap((a, b) => a.date - b.date); // min date always at top
@@ -41,36 +42,7 @@ export class AsyncMessenger<Broker, M, A> {
     this.broker = broker;
     this.#send = send;
     this.#stop = stop;
-
-    const tickMs = 100;
-    const maxDurationMs = 5000;
-    this.#timer = setInterval(() => {
-      const currentDate = Date.now();
-      const item = this.#pendingOperations.peek(); // O(1)
-      if (item !== undefined) {
-        // safe removal
-        const delta = currentDate - item.date;
-        if (this.#doneIds.has(item.message.id)) {
-          this.#pendingOperations.pop(); // O(log N)
-          this.#doneIds.delete(item.message.id); // O(1)
-          return;
-        }
-
-        // force removal
-        if (delta >= maxDurationMs) {
-          this.receive({
-            id: item.message.id,
-            error: `${maxDurationMs / 1000}s timeout exceeded (+${
-              (delta - maxDurationMs) / 1000
-            }s)`,
-          });
-
-          this.#pendingOperations.pop(); // O(log N)
-          // this.terminate(); // cpu stats implies blocking task still running at 100%?
-          stop(broker); // force abort
-        }
-      }
-    }, tickMs);
+    this.initTimer();
   }
 
   async terminate(): Promise<void> {
@@ -78,6 +50,40 @@ export class AsyncMessenger<Broker, M, A> {
     logger.info(`close worker ${this.constructor.name}`);
     this.#stop(this.broker);
     clearInterval(this.#timer);
+  }
+
+  initTimer() {
+    if (this.#timer === undefined) {
+      this.#timer = setInterval(() => {
+        const currentDate = Date.now();
+        const item = this.#pendingOperations.peek(); // O(1)
+        if (item !== undefined) {
+          // safe removal
+          const delta = currentDate - item.date;
+          if (this.#doneIds.has(item.message.id)) {
+            this.#pendingOperations.pop(); // O(log N)
+            this.#doneIds.delete(item.message.id); // O(1)
+            return;
+          }
+
+          // force removal
+          const maxDurationMs = config.timer_max_timeout_ms;
+          if (delta >= maxDurationMs) {
+            this.receive({
+              id: item.message.id,
+              error: `${maxDurationMs / 1000}s timeout exceeded (+${
+                (delta - maxDurationMs) / 1000
+              }s)`,
+            });
+            this.#pendingOperations.pop(); // O(log N)
+
+            if (config.timer_destroy_ressources) {
+              this.#stop(this.broker); // force abort
+            } // else: let the process owner destroy the ressources
+          }
+        }
+      }, config.timer_tick_ms);
+    }
   }
 
   execute(
