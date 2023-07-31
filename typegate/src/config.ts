@@ -40,7 +40,7 @@ const schema = {
     return bytes;
   }),
   timer_tick_ms: z.number().positive().max(100),
-  timer_max_timeout_ms: z.number().positive().max(5000),
+  timer_max_timeout_ms: z.number().positive().max(60000), // 1min
   timer_destroy_ressources: z.boolean().default(true),
   tg_admin_password: z.string(),
   tmp_dir: z.string(),
