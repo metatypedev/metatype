@@ -84,7 +84,7 @@ const config = await configOrExit([
     trust_header_ip: "X-Forwarded-For",
     tg_port: "7890",
     timer_tick_ms: 100,
-    timer_max_timeout_ms: 1000,
+    timer_max_timeout_ms: 5000,
     timer_destroy_ressources: true,
   },
   mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
