@@ -1,8 +1,0 @@
-model ListNode {
-  id     String    @id @default(uuid()) @db.Uuid
-  next   ListNode? @relation(name: "__rel_ListNode_ListNode_2", fields: [nextId], references: [id])
-  nextId String?   @db.Uuid
-  prev   ListNode? @relation(name: "__rel_ListNode_ListNode_2")
-
-  @@unique(nextId)
-}
