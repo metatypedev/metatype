@@ -11,6 +11,7 @@ GraphQLImporter("hivdb", "https://hivdb.stanford.edu/graphql").imp(False)
 def import_hivdb():
     hivdb = GraphQLRuntime("https://hivdb.stanford.edu/graphql")
 
+    # skip:start
     renames = {
         "AAReads": "_hivdb_1_AAReads",
         "ASIAlgorithm": "_hivdb_2_ASIAlgorithm",
@@ -832,14 +833,18 @@ def import_hivdb():
         ),
         t.array(t.proxy(renames["Gene"]).optional()).optional(),
     )
+    # skip:end
+    # ...
     functions["mutationPrevalenceSubtypes"] = hivdb.query(
         t.struct({}),
         t.array(t.proxy(renames["MutationPrevalenceSubtype"]).optional()).optional(),
     )
+    # skip:start
     functions["viewer"] = hivdb.query(
         t.struct({}), t.proxy(renames["Viewer"]).optional()
     )
-
+    # skip:end
+    # ...
     return Import(
         importer="hivdb", renames=renames, types=Box(types), functions=Box(functions)
     )
