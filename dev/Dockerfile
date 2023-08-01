@@ -17,6 +17,8 @@ FROM wasmedge/slim-runtime:${WASMEDGE_VERSION} AS wasmedge-bin
 
 FROM base as plan
 
+ENV LD_LIBRARY_PATH "/usr/local/lib/:${LD_LIBRARY_PATH}"
+
 COPY --from=wasmedge-bin /usr/local/lib/* /usr/local/lib/
 COPY . .
 
@@ -32,6 +34,7 @@ FROM base AS builder
 
 ARG DENO_BINDGEN_URL=https://deno.land/x/deno_bindgen@0.8.1/cli.ts
 
+ENV LD_LIBRARY_PATH "/usr/local/lib/:${LD_LIBRARY_PATH}"
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
 ENV PATH "${DENO_INSTALL}/bin:${PATH}"
