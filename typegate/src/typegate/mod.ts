@@ -54,6 +54,15 @@ const introspectionDef = parseGraphQLTypeGraph(
   ),
 );
 
+// register runtimes
+const runtimesDir = resolve(localDir, "../runtimes");
+for await (const file of Deno.readDir(runtimesDir)) {
+  if (file.isFile && file.name.endsWith(".ts")) {
+    // no await: await fails
+    import(resolve(runtimesDir, file.name));
+  }
+}
+
 export class Typegate {
   static #registeredRuntimes: Map<string, RuntimeInit> = new Map();
 
@@ -280,14 +289,5 @@ export class Typegate {
     const engine = new Engine(tg);
     await engine.registerEndpoints();
     return engine;
-  }
-}
-
-// register runtimes
-const runtimesDir = resolve(localDir, "../runtimes");
-for await (const file of Deno.readDir(runtimesDir)) {
-  if (file.isFile && file.name.endsWith(".ts")) {
-    // no await: await fails
-    import(resolve(runtimesDir, file.name));
   }
 }
