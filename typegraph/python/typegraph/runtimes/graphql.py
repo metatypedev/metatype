@@ -3,7 +3,7 @@
 
 from typing import Optional, Tuple
 
-from attrs import frozen
+from attrs import frozen, field
 
 from typegraph import effects
 from typegraph import types as t
@@ -19,7 +19,7 @@ class GraphQLRuntime(Runtime):
     """
 
     endpoint: str
-    runtime_name: str = always("graphql")
+    runtime_name: str = field(default="graphql", init=False)
 
     def query(
         self, inp: t.struct, out: t.typedef, *, path: Optional[Tuple[str, ...]] = None

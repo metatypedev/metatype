@@ -9,8 +9,8 @@ use serde_json::Value;
 
 use super::{
     visitor::{Path, PathSegment, TypeVisitor, VisitResult},
-    ArrayTypeData, EitherTypeData, InjectionSource, IntegerTypeData, NumberTypeData,
-    ObjectTypeData, StringTypeData, UnionTypeData,
+    ArrayTypeData, EitherTypeData, Injection, IntegerTypeData, NumberTypeData, ObjectTypeData,
+    StringTypeData, UnionTypeData,
 };
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
@@ -158,36 +158,32 @@ impl TypeVisitor for Validator {
         }
 
         if let Some(injection) = &node.base().injection {
-            if injection.cases.is_empty() && injection.default.is_none() {
-                self.push_error(path, "Invalid injection: Injection has no case".to_string());
-            } else {
-                for (eff, inj) in injection.cases() {
-                    match inj {
-                        InjectionSource::Static(value) => {
-                            match serde_json::from_str::<Value>(value) {
-                                Ok(val) => match tg.validate_value(type_idx, &val) {
-                                    Ok(_) => {}
-                                    Err(err) => self.push_error(path, err.to_string()),
-                                },
-                                Err(e) => {
-                                    self.push_error(
-                                        path,
-                                        format!(
-                                            "Error while parsing static injection value {value:?} for {}: {e:?}",
-                                            eff.map(|eff| format!("{:?}", eff)).unwrap_or_else(|| "default".to_string())
-                                        ),
-                                    );
-                                }
+            match injection {
+                Injection::Static(data) => {
+                    for value in data.values().iter() {
+                        match serde_json::from_str::<Value>(value) {
+                            Ok(val) => match tg.validate_value(type_idx, &val) {
+                                Ok(_) => {}
+                                Err(err) => self.push_error(path, err.to_string()),
+                            },
+                            Err(e) => {
+                                self.push_error(
+                                    path,
+                                    format!(
+                                    "Error while parsing static injection value {value:?}: {e:?}",
+                                    value = value
+                                ),
+                                );
                             }
                         }
-                        InjectionSource::Parent(_type_idx) => {
-                            // TODO match type to parent type
-                            // each valid parent value should be valid
-                        }
-                        _ => (),
                     }
                 }
+                Injection::Parent(_data) => {
+                    // TODO match type to parent type
+                }
+                _ => (),
             }
+
             //
             VisitResult::Continue(false)
         } else {

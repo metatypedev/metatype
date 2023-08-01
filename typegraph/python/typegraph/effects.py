@@ -1,40 +1,51 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from enum import auto
-from typing import Optional
+from enum import auto, Enum
 
 from attrs import frozen
-from strenum import LowercaseStrEnum
 
 
-class EffectType(LowercaseStrEnum):
+class EffectType(Enum):
     CREATE = auto()
     UPDATE = auto()
     DELETE = auto()
+    NONE = auto()
+
+    def __str__(self):
+        return self.name.lower()
+
+    def __repr__(self):
+        return f"EffectType.{self.name}"
 
 
 @frozen
 class Effect:
-    effect: Optional[EffectType]
+    effect: EffectType
     # see: https://developer.mozilla.org/en-US/docs/Glossary/Idempotent
     idempotent: bool
 
     def is_none(self) -> bool:
-        return self.effect is None
+        return self.effect == EffectType.NONE
+
+
+CREATE = EffectType.CREATE
+UPDATE = EffectType.UPDATE
+DELETE = EffectType.DELETE
+NONE = EffectType.NONE
 
 
 def none():
-    return Effect(None, True)
+    return Effect(NONE, True)
 
 
 def create(idempotent=False):
-    return Effect(EffectType.CREATE, idempotent)
+    return Effect(CREATE, idempotent)
 
 
 def update(idempotent=False):
-    return Effect(EffectType.UPDATE, idempotent)
+    return Effect(UPDATE, idempotent)
 
 
 def delete(idempotent=True):
-    return Effect(EffectType.DELETE, idempotent)
+    return Effect(DELETE, idempotent)

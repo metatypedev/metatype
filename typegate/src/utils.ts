@@ -8,7 +8,7 @@ import levenshtein from "levenshtein";
 import { None, Option, Some } from "monads";
 
 import { Type } from "./type_node.ts";
-import { TypeGraph } from "./typegraph.ts";
+import type { TypeGraph } from "./typegraph.ts";
 
 import { ensureDir, ensureFile } from "std/fs/mod.ts";
 import { Untar } from "std/archive/untar.ts";

@@ -14,6 +14,7 @@ from typegraph.graph.builder import Collector
 from typegraph.graph.models import Auth, Cors, Rate
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.runtimes.deno import DenoRuntime
+from typegraph.effects import EffectType
 
 if TYPE_CHECKING:
     from typegraph import types as t
@@ -31,6 +32,8 @@ class JSONEncoder(json.JSONEncoder):
             return attrs.asdict(o)
         if isinstance(o, frozendict):
             return dict(o)
+        if isinstance(o, EffectType):
+            return str(o)
         return super().default(o)
 
 
@@ -83,9 +86,8 @@ class TypeGraph:
         if (
             os.environ.get("PY_TG_COMPATIBILITY") is not None
             and TypegraphContext.is_empty()
-            and not TypegraphContext.building
+            and not TypegraphContext.no_build
         ):
-            TypegraphContext.building = True
             tg = self.build()
             output = json.dumps(tg, cls=JSONEncoder)
             print(output)
@@ -147,9 +149,12 @@ class TypeGraph:
                 else:
                     assert_no_effect_materializers(e)
 
+        TypegraphContext.no_build = True
         with self:
             # allow all characters for the root entry-point
             root = t.struct(self.exposed).named(self.name, validate=False)
+
+        TypegraphContext.no_build = False
 
         root._propagate_runtime(DenoRuntime())
 
@@ -196,7 +201,7 @@ class TypeGraph:
 
 class TypegraphContext:
     typegraphs: List[TypeGraph] = []
-    building = False
+    no_build = False
 
     @classmethod
     def push(cls, tg: TypeGraph):

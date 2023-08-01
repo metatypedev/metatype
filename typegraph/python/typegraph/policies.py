@@ -23,7 +23,7 @@ def policy_name_factory():
     return f"policy_{tg.next_type_id()}"
 
 
-EFFECTS = [eff.value for eff in EffectType]
+EFFECTS = [str(eff) for eff in EffectType]
 
 
 @frozen
@@ -54,11 +54,8 @@ class Policy(Node):
         if isinstance(p, cls):
             return p
         if isinstance(p, dict):
-            return EffectPolicies(**p)
+            return EffectPolicies(**{str(eff): pol for eff, pol in p.items()})
         raise Exception(f"Cannot create Policy from a {type(p).__name__}")
-
-
-effect_values = ["none"] + [e.value for e in EffectType]
 
 
 class EffectPolicies(Node):
@@ -67,36 +64,36 @@ class EffectPolicies(Node):
     create: Optional[Policy]
     delete: Optional[Policy]
 
-    def __init__(self, **kwargs):
+    def __init__(self, **policies: Policy):
         super().__init__(None)  # collector_target is none
         count = 0
-        for eff in effect_values:
-            arg = kwargs.pop(eff, None)
+        for eff in EFFECTS:
+            arg = policies.pop(str(eff), None)
             if arg is None:
-                setattr(self, eff, None)
+                setattr(self, str(eff), None)
                 continue
 
             p = Policy.create_from(arg)
             if not isinstance(p, Policy):
                 raise Exception(f"Cannot create Policy from type '{type(p).__name__}'")
-            setattr(self, eff, p)
+            setattr(self, str(eff), p)
             count += 1
 
         if count == 0:
             raise Exception("EffectPolicies: Must set at least one policy")
 
-        if len(kwargs) > 0:
-            args = ", ".join(map(lambda name: f"'{name}'", kwargs))
+        if len(policies) > 0:
+            args = ", ".join(map(lambda name: f"'{name}'", policies))
             raise Exception(f"EffectPolicies: Unexpected keyword arguments: {args}")
 
     @property
     def edges(self) -> List[Node]:
-        return list(filter(None, map(lambda e: getattr(self, e), effect_values)))
+        return list(filter(None, map(lambda e: getattr(self, e), EFFECTS)))
 
     def data(self, collector):
         return {
             eff: collector.index(getattr(self, eff))
-            for eff in effect_values
+            for eff in EFFECTS
             if getattr(self, eff) is not None
         }
 

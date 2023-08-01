@@ -46,8 +46,7 @@
               "label": "typegraph.providers.prisma.runtimes",
               "type": "category"
             },
-            "docs/reference/typegraph/python/typegraph/providers/prisma/relations",
-            "docs/reference/typegraph/python/typegraph/providers/prisma/schema"
+            "docs/reference/typegraph/python/typegraph/providers/prisma/relations"
           ],
           "label": "typegraph.providers.prisma",
           "type": "category"

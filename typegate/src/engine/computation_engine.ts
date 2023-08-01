@@ -4,7 +4,7 @@
 import { distinct } from "std/collections/distinct.ts";
 import { ComputeStage } from "../engine.ts";
 import { OperationPolicies } from "../planner/policies.ts";
-import { RateLimit } from "../rate_limiter.ts";
+import { RateLimit } from "../typegate/rate_limiter.ts";
 import { Context, Info, Parents } from "../types.ts";
 import { JSONValue } from "../utils.ts";
 

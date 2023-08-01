@@ -3,7 +3,8 @@
 
 import { ComputeStage } from "../engine.ts";
 import { gq } from "../gq.ts";
-import { Resolver, RuntimeInitParams } from "../types.ts";
+import type { Resolver, RuntimeInitParams } from "../types.ts";
+import type { GraphQLRuntimeData } from "../types/typegraph.ts";
 import { Runtime } from "./Runtime.ts";
 import * as GraphQL from "graphql";
 import { Kind } from "graphql";
@@ -11,6 +12,7 @@ import { OperationDefinitionNode, OperationTypeNode } from "graphql/ast";
 import { QueryRebuilder } from "./utils/graphql_forward_vars.ts";
 import { withInlinedVars } from "./utils/graphql_inline_vars.ts";
 import { getLogger } from "../log.ts";
+import { Typegate } from "../typegate/mod.ts";
 
 const logger = getLogger(import.meta);
 
@@ -31,8 +33,10 @@ export class GraphQLRuntime extends Runtime {
     this.inlineVars = true;
   }
 
-  static async init(params: RuntimeInitParams): Promise<Runtime> {
-    const { args } = params;
+  static async init(
+    params: RuntimeInitParams,
+  ): Promise<Runtime> {
+    const { args } = params as RuntimeInitParams<GraphQLRuntimeData>;
     return await new GraphQLRuntime(args.endpoint as string);
   }
 
@@ -69,10 +73,9 @@ export class GraphQLRuntime extends Runtime {
     const fields = [stage, ...sameRuntime];
     const renames = this.getRenames(fields);
 
-    // TODO extract function: build query
-    const operationType = mat?.effect.effect != null
-      ? OperationTypeNode.MUTATION
-      : OperationTypeNode.QUERY;
+    const operationType = mat!.name === "query"
+      ? OperationTypeNode.QUERY
+      : OperationTypeNode.MUTATION;
 
     const query = this.buildQuery(fields, operationType, renames);
 
@@ -178,3 +181,5 @@ export class GraphQLRuntime extends Runtime {
     return {};
   }
 }
+
+Typegate.registerRuntime("graphql", GraphQLRuntime.init);

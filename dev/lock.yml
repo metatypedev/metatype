@@ -60,7 +60,7 @@ dev:
     DENO_BINDGEN_URL: 'https://deno.land/x/deno_bindgen@0.8.1/cli.ts'
     DENO_VERSION: 1.35.1
     NODE_VERSION: 19.8.1
-    PNPM_VERSION: 8.6.0
+    PNPM_VERSION: 8.6.11
     CARGO_INSTA_VERSION: 1.30.0
     WASM_TOOLS_VERSION: 1.0.37
     JCO_VERSION: 0.9.4

@@ -76,6 +76,7 @@ if (flags._.length === 0) {
 const cwd = resolve(projectDir, "typegate");
 const tmpDir = join(projectDir, "tmp");
 const env: Record<string, string> = {
+  "LOG_LEVEL": "DEBUG",
   "NO_COLOR": "true",
   "DEBUG": "true",
   "PACKAGED": "false",
@@ -106,6 +107,7 @@ if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
 }
 
 const threads = flags.threads ? parseInt(flags.threads) : 4;
+console.log(`Testing with ${threads} threads`);
 const failures = [];
 
 for (let i = 0; i < testFiles.length; i += threads) {

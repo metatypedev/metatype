@@ -40,6 +40,8 @@ async function testImporter(
   const file = `importers/copy/${name}.py`;
 
   await t.should("copy source typegraph definition", async () => {
+    await shell(["rm", "-rf", "importers/copy"]);
+    await shell(["mkdir", "-p", "importers/copy"]);
     await copyFile(`importers/${name}_original.py`, file);
   });
 
