@@ -1,6 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+pub mod deno;
+pub mod prisma;
+
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store_mut, Store};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
@@ -9,6 +12,8 @@ use crate::{
     wit::runtimes::{self as wit, Error as TgError},
 };
 use enum_dispatch::enum_dispatch;
+
+pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
 
@@ -23,27 +28,6 @@ pub struct Materializer {
     pub effect: wit::Effect,
     pub data: MaterializerData,
 }
-
-#[derive(Debug)]
-pub struct MaterializerDenoModule {
-    pub file: String,
-}
-
-#[derive(Debug)]
-pub struct MaterializerDenoImport {
-    pub func_name: String,
-    pub module: wit::MaterializerId,
-    pub secrets: Vec<String>,
-}
-
-#[derive(Debug)]
-pub enum DenoMaterializer {
-    Inline(wit::MaterializerDenoFunc),
-    Predefined(wit::MaterializerDenoPredefined),
-    Module(MaterializerDenoModule),
-    Import(MaterializerDenoImport),
-}
-
 impl Materializer {
     // fn new(base: wit::BaseMaterializer, data: impl Into<MaterializerData>) -> Self {
     //     Self {
