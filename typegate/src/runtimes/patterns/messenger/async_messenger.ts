@@ -5,7 +5,6 @@ import { deferred } from "std/async/deferred.ts";
 import { getLogger } from "../../../log.ts";
 import { Answer, Message, TaskData } from "./types.ts";
 import { maxi32 } from "../../../utils.ts";
-import { BinaryHeap } from "std/collections/binary_heap.ts";
 import config from "../../../config.ts";
 
 const logger = getLogger(import.meta);
@@ -21,6 +20,11 @@ export type MessengerSend<Broker, M> = (
 
 export type MessengerStop<Broker> = (broker: Broker) => Promise<void> | void;
 
+export type PendingOperation<M> = {
+  date: number;
+  message: Message<M>;
+};
+
 export class AsyncMessenger<Broker, M, A> {
   protected broker: Broker;
   #counter = 0;
@@ -29,10 +33,12 @@ export class AsyncMessenger<Broker, M, A> {
   #stop: MessengerStop<Broker>;
 
   #timer?: ReturnType<typeof setInterval>;
-  #pendingOperations: BinaryHeap<
-    { date: number; message: Message<M> }
-  > = new BinaryHeap((a, b) => a.date - b.date); // min date always at top
-  #doneIds: Set<number> = new Set<number>();
+
+  #operationQueues: Array<Array<PendingOperation<M>>> = [
+    [],
+    [],
+  ];
+  #queueIndex = 0;
 
   protected constructor(
     broker: Broker,
@@ -55,31 +61,32 @@ export class AsyncMessenger<Broker, M, A> {
   initTimer() {
     if (this.#timer === undefined) {
       this.#timer = setInterval(() => {
-        const currentDate = Date.now();
-        const item = this.#pendingOperations.peek(); // O(1)
+        const currentQueue = this.#operationQueues[this.#queueIndex];
+        this.#queueIndex = this.#queueIndex == 0 ? 1 : 0;
+
+        const item = currentQueue[0];
         if (item !== undefined) {
-          // safe removal
-          const delta = currentDate - item.date;
-          if (this.#doneIds.has(item.message.id)) {
-            this.#pendingOperations.pop(); // O(log N)
-            this.#doneIds.delete(item.message.id); // O(1)
-            return;
-          }
-
-          // force removal
-          const maxDurationMs = config.timer_max_timeout_ms;
-          if (delta >= maxDurationMs) {
-            this.receive({
-              id: item.message.id,
-              error: `${maxDurationMs / 1000}s timeout exceeded (+${
-                (delta - maxDurationMs) / 1000
-              }s)`,
-            });
-            this.#pendingOperations.pop(); // O(log N)
-
-            if (config.timer_destroy_ressources) {
-              this.#stop(this.broker); // force abort
-            } // else: let the process owner destroy the ressources
+          if (!this.#tasks.has(item.message.id)) {
+            console.log(this.#operationQueues.map((q) => q.length));
+            // safe removal
+            currentQueue.shift();
+          } else {
+            const delta = Date.now() - item.date;
+            // force removal
+            const maxDurationMs = config.timer_max_timeout_ms;
+            if (delta >= maxDurationMs) {
+              console.log(this.#operationQueues.map((q) => q.length));
+              currentQueue.shift();
+              this.receive({
+                id: item.message.id,
+                error: `${maxDurationMs / 1000}s timeout exceeded (+${
+                  (delta - maxDurationMs) / 1000
+                }s)`,
+              });
+              if (config.timer_destroy_ressources) {
+                this.#stop(this.broker); // force abort
+              } // else: let the process owner destroy the ressources
+            }
           }
         }
       }, config.timer_tick_ms);
@@ -96,7 +103,9 @@ export class AsyncMessenger<Broker, M, A> {
     this.#tasks.set(id, { promise, hooks });
 
     const message = { id, op, data };
-    this.#pendingOperations.push({
+    // keep the queues evenly balanced
+    this.#queueIndex = this.#queueIndex == 0 ? 1 : 0;
+    this.#operationQueues[this.#queueIndex].push({
       date: Date.now(),
       message,
     });
@@ -107,7 +116,6 @@ export class AsyncMessenger<Broker, M, A> {
   async receive(answer: Answer<A>): Promise<void> {
     const { id } = answer;
     const { promise, hooks } = this.#tasks.get(id)!;
-    this.#doneIds.add(answer.id); // safe remove
     if (answer.error) {
       promise.reject(new Error(answer.error));
     } else {
