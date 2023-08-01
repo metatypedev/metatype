@@ -17,14 +17,15 @@
 
 // https://github.com/prisma/prisma-engines/blob/main/query-engine/query-engine-node-api/src/engine.rs
 
-use prisma_models::psl;
 use psl::diagnostics::Diagnostics;
 use query_connector::error::ConnectorError;
-use query_core::executor::TransactionOptions;
-use query_core::protocol::EngineProtocol;
 use query_core::CoreError;
-use query_core::{executor, schema::QuerySchema, schema_builder, QueryExecutor, TxId};
-use request_handlers::{PrismaResponse, RequestBody, RequestHandler};
+use query_core::{
+    protocol::EngineProtocol,
+    schema::{self, QuerySchema},
+    QueryExecutor, TransactionOptions, TxId,
+};
+use request_handlers::{load_executor, render_graphql_schema, RequestBody, RequestHandler};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
@@ -35,15 +36,13 @@ use std::{
 use thiserror::Error;
 use tokio::sync::RwLock;
 
-/// The main engine, that can be cloned between threads when using JavaScript
-/// promises.
-#[derive(Clone)]
-pub struct QueryEngine {
-    inner: Arc<RwLock<Inner>>,
-}
-
-type Executor = Box<dyn query_core::QueryExecutor + Send + Sync>;
 type Result<T> = std::result::Result<T, ApiError>;
+type Executor = Box<dyn query_core::QueryExecutor + Send + Sync>;
+
+/// The main query engine used by JS
+pub struct QueryEngine {
+    inner: RwLock<Inner>,
+}
 
 /// The state of the engine.
 pub enum Inner {
@@ -52,6 +51,69 @@ pub enum Inner {
     /// A connected engine, holding all data to disconnect and form a new
     /// connection. Allows querying when on this state.
     Connected(ConnectedEngine),
+}
+
+/// Everything needed to connect to the database and have the core running.
+pub struct EngineBuilder {
+    schema: Arc<psl::ValidatedSchema>,
+    config_dir: PathBuf,
+    env: HashMap<String, String>,
+    engine_protocol: EngineProtocol,
+}
+
+/// Internal structure for querying and reconnecting with the engine.
+pub struct ConnectedEngine {
+    schema: Arc<psl::ValidatedSchema>,
+    query_schema: Arc<QuerySchema>,
+    executor: Executor,
+    config_dir: PathBuf,
+    env: HashMap<String, String>,
+    // metrics: Option<MetricRegistry>,
+    engine_protocol: EngineProtocol,
+}
+
+/// Returned from the `serverInfo` method in javascript.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ServerInfo {
+    commit: String,
+    version: String,
+    primary_connector: Option<String>,
+}
+
+impl ConnectedEngine {
+    /// The schema AST for Query Engine core.
+    pub fn query_schema(&self) -> &Arc<QuerySchema> {
+        &self.query_schema
+    }
+
+    /// The query executor.
+    pub fn executor(&self) -> &(dyn QueryExecutor + Send + Sync) {
+        self.executor.as_ref()
+    }
+
+    pub fn engine_protocol(&self) -> EngineProtocol {
+        self.engine_protocol
+    }
+}
+
+/// Parameters defining the construction of an engine.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConstructorOptions {
+    pub datamodel: String,
+    pub log_level: String,
+    #[serde(default)]
+    pub log_queries: bool,
+    #[serde(default)]
+    pub datasource_overrides: BTreeMap<String, String>,
+    #[serde(default)]
+    pub env: serde_json::Value,
+    pub config_dir: PathBuf,
+    #[serde(default)]
+    pub ignore_env_var_errors: bool,
+    #[serde(default)]
+    pub engine_protocol: Option<EngineProtocol>,
 }
 
 impl Inner {
@@ -72,68 +134,12 @@ impl Inner {
     }
 }
 
-/// Everything needed to connect to the database and have the core running.
-pub struct EngineBuilder {
-    schema: Arc<psl::ValidatedSchema>,
-    config_dir: PathBuf,
-    env: HashMap<String, String>,
-    engine_protocol: EngineProtocol,
-}
-
-/// Internal structure for querying and reconnecting with the engine.
-pub struct ConnectedEngine {
-    schema: Arc<psl::ValidatedSchema>,
-    query_schema: Arc<QuerySchema>,
-    executor: Executor,
-    config_dir: PathBuf,
-    env: HashMap<String, String>,
-    engine_protocol: EngineProtocol,
-}
-
-/// Returned from the `serverInfo` method in javascript.
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ServerInfo {
-    commit: String,
-    version: String,
-    primary_connector: Option<String>,
-}
-
-impl ConnectedEngine {
-    pub fn query_schema(&self) -> &Arc<QuerySchema> {
-        &self.query_schema
-    }
-
-    pub fn executor(&self) -> &(dyn QueryExecutor + Send + Sync) {
-        &*self.executor
-    }
-
-    pub fn engine_protocol(&self) -> EngineProtocol {
-        self.engine_protocol
-    }
-}
-
-/// Parameters defining the construction of an engine.
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ConstructorOptions {
-    pub datamodel: String,
-    pub log_level: String,
-    #[serde(default)]
-    pub log_queries: bool,
-    #[serde(default)]
-    pub datasource_overrides: BTreeMap<String, String>,
-    #[serde(default)]
-    pub env: serde_json::Value,
-    #[serde(default)]
-    pub config_dir: PathBuf,
-    #[serde(default)]
-    pub ignore_env_var_errors: bool,
-}
-
 impl QueryEngine {
     /// Parse a validated datamodel and configuration to allow connecting later on.
-    pub fn new(opts: ConstructorOptions) -> Result<Self> {
+    /// Note: any new method added to this struct should be added to
+    /// `query_engine_node_api::node_drivers::engine::QueryEngineNodeDrivers` as well.
+    /// Unfortunately the `#[napi]` macro does not support deriving traits.
+    pub fn new(options: ConstructorOptions) -> Result<Self> {
         let ConstructorOptions {
             datamodel,
             log_level: _,
@@ -142,9 +148,10 @@ impl QueryEngine {
             env,
             config_dir,
             ignore_env_var_errors,
-        } = opts;
+            engine_protocol,
+        } = options;
 
-        let env = stringify_env_values(env)?; // we cannot trust anything JS sends us from process.env
+        let env = stringify_env_values(env)?;
         let overrides: Vec<(_, _)> = datasource_overrides.into_iter().collect();
         let mut schema = psl::validate(datamodel.into());
         let config = &mut schema.configuration;
@@ -166,15 +173,19 @@ impl QueryEngine {
             .validate_that_one_datasource_is_provided()
             .map_err(|errors| ApiError::conversion(errors, schema.db.source()))?;
 
+        // let enable_metrics = config.preview_features().contains(PreviewFeature::Metrics);
+        // let enable_tracing = config.preview_features().contains(PreviewFeature::Tracing);
+        let engine_protocol = engine_protocol.unwrap_or(EngineProtocol::Json);
+
         let builder = EngineBuilder {
             schema: Arc::new(schema),
             config_dir,
+            engine_protocol,
             env,
-            engine_protocol: EngineProtocol::Graphql,
         };
 
         Ok(Self {
-            inner: Arc::new(RwLock::new(Inner::Builder(builder))),
+            inner: RwLock::new(Inner::Builder(builder)),
         })
     }
 
@@ -182,40 +193,57 @@ impl QueryEngine {
     pub async fn connect(&self) -> Result<()> {
         let mut inner = self.inner.write().await;
         let builder = inner.as_builder()?;
+        let arced_schema = Arc::clone(&builder.schema);
+        let arced_schema_2 = Arc::clone(&builder.schema);
 
-        let engine = async move {
-            // We only support one data source & generator at the moment, so take the first one (default not exposed yet).
+        let url = {
             let data_source = builder
                 .schema
                 .configuration
                 .datasources
                 .first()
                 .ok_or_else(|| ApiError::configuration("No valid data source found"))?;
-
-            let preview_features = builder.schema.configuration.preview_features();
-            let url = data_source
+            data_source
                 .load_url_with_config_dir(&builder.config_dir, |key| {
                     builder.env.get(key).map(ToString::to_string)
                 })
-                .map_err(|err| ApiError::Conversion(err, builder.schema.db.source().to_owned()))?;
+                .map_err(|err| ApiError::Conversion(err, builder.schema.db.source().to_owned()))?
+        };
 
-            let executor = executor::load(data_source, preview_features, &url).await?;
-            let connector = executor.primary_connector();
-            connector.get_connection().await?;
+        let engine = async move {
+            // We only support one data source & generator at the moment, so take the first one (default not exposed yet).
+            let data_source = arced_schema
+                .configuration
+                .datasources
+                .first()
+                .ok_or_else(|| ApiError::configuration("No valid data source found"))?;
 
-            // Build internal data model
-            let internal_data_model = prisma_models::convert(Arc::clone(&builder.schema));
+            let preview_features = arced_schema.configuration.preview_features();
 
-            let query_schema = schema_builder::build(internal_data_model, true);
+            let executor_fut = async {
+                let executor = load_executor(data_source, preview_features, &url).await?;
+                let connector = executor.primary_connector();
 
-            Result::Ok(ConnectedEngine {
+                connector.get_connection().await?;
+
+                Result::<_>::Ok(executor)
+            };
+
+            let query_schema_fut = tokio::runtime::Handle::current().spawn_blocking(move || {
+                let enable_raw_queries = true;
+                schema::build(arced_schema_2, enable_raw_queries)
+            });
+
+            let (query_schema, executor) = tokio::join!(query_schema_fut, executor_fut);
+
+            Ok(ConnectedEngine {
                 schema: builder.schema.clone(),
-                query_schema: Arc::new(query_schema),
-                executor,
+                query_schema: Arc::new(query_schema.unwrap()),
+                executor: executor?,
                 config_dir: builder.config_dir.clone(),
                 env: builder.env.clone(),
                 engine_protocol: builder.engine_protocol,
-            })
+            }) as Result<ConnectedEngine>
         }
         .await?;
 
@@ -242,69 +270,74 @@ impl QueryEngine {
     }
 
     /// If connected, sends a query to the core and returns the response.
-    pub async fn query(&self, query: RequestBody, tx_id: Option<String>) -> Result<PrismaResponse> {
-        match *self.inner.read().await {
-            Inner::Connected(ref engine) => {
-                let handler = RequestHandler::new(
-                    engine.executor(),
-                    engine.query_schema(),
-                    engine.engine_protocol(),
-                );
-                Ok(handler.handle(query, tx_id.map(TxId::from), None).await)
-            }
-            Inner::Builder(_) => Err(ApiError::NotConnected),
-        }
+    pub async fn query(&self, body: String, tx_id: Option<String>) -> Result<String> {
+        let inner = self.inner.read().await;
+        let engine = inner.as_engine()?;
+
+        let query = RequestBody::try_from_str(&body, engine.engine_protocol())?;
+
+        let handler = RequestHandler::new(
+            engine.executor(),
+            engine.query_schema(),
+            engine.engine_protocol(),
+        );
+        let response = handler.handle(query, tx_id.map(TxId::from), None).await;
+
+        Ok(serde_json::to_string(&response)?)
     }
 
     /// If connected, attempts to start a transaction in the core and returns its ID.
     #[allow(dead_code)]
-    pub async fn start_tx(&self, input: String) -> Result<String> {
-        match *self.inner.read().await {
-            Inner::Connected(ref engine) => {
-                let tx_opts: TransactionOptions = serde_json::from_str(&input)?;
-                match engine
-                    .executor()
-                    .start_tx(
-                        engine.query_schema().clone(),
-                        engine.engine_protocol(),
-                        tx_opts,
-                    )
-                    .await
-                {
-                    Ok(tx_id) => Ok(json!({ "id": tx_id.to_string() }).to_string()),
-                    Err(err) => Ok(map_known_error(err)?),
-                }
-            }
-            Inner::Builder(_) => Err(ApiError::NotConnected),
+    pub async fn start_transaction(&self, input: String) -> Result<String> {
+        let inner = self.inner.read().await;
+        let engine = inner.as_engine()?;
+
+        let tx_opts: TransactionOptions = serde_json::from_str(&input)?;
+        match engine
+            .executor()
+            .start_tx(
+                engine.query_schema().clone(),
+                engine.engine_protocol(),
+                tx_opts,
+            )
+            .await
+        {
+            Ok(tx_id) => Ok(json!({ "id": tx_id.to_string() }).to_string()),
+            Err(err) => Ok(map_known_error(err)?),
         }
     }
 
     /// If connected, attempts to commit a transaction with id `tx_id` in the core.
     #[allow(dead_code)]
-    pub async fn commit_tx(&self, tx_id: String) -> Result<String> {
-        match *self.inner.read().await {
-            Inner::Connected(ref engine) => {
-                match engine.executor().commit_tx(TxId::from(tx_id)).await {
-                    Ok(_) => Ok("{}".to_string()),
-                    Err(err) => Ok(map_known_error(err)?),
-                }
-            }
-            Inner::Builder(_) => Err(ApiError::NotConnected),
+    pub async fn commit_transaction(&self, tx_id: String, _trace: String) -> Result<String> {
+        let inner = self.inner.read().await;
+        let engine = inner.as_engine()?;
+
+        match engine.executor().commit_tx(TxId::from(tx_id)).await {
+            Ok(_) => Ok("{}".to_string()),
+            Err(err) => Ok(map_known_error(err)?),
         }
     }
 
     /// If connected, attempts to roll back a transaction with id `tx_id` in the core.
     #[allow(dead_code)]
-    pub async fn rollback_tx(&self, tx_id: String) -> Result<String> {
-        match *self.inner.read().await {
-            Inner::Connected(ref engine) => {
-                match engine.executor().rollback_tx(TxId::from(tx_id)).await {
-                    Ok(_) => Ok("{}".to_string()),
-                    Err(err) => Ok(map_known_error(err)?),
-                }
-            }
-            Inner::Builder(_) => Err(ApiError::NotConnected),
+    pub async fn rollback_transaction(&self, tx_id: String, _trace: String) -> Result<String> {
+        let inner = self.inner.read().await;
+        let engine = inner.as_engine()?;
+
+        match engine.executor().rollback_tx(TxId::from(tx_id)).await {
+            Ok(_) => Ok("{}".to_string()),
+            Err(err) => Ok(map_known_error(err)?),
         }
+    }
+
+    /// Loads the query schema. Only available when connected.
+    #[allow(dead_code)]
+    pub async fn sdl_schema(&self) -> Result<String> {
+        let inner = self.inner.read().await;
+        let engine = inner.as_engine()?;
+
+        Ok(render_graphql_schema(engine.query_schema()))
     }
 }
 
@@ -427,18 +460,18 @@ impl From<ConnectorError> for ApiError {
 
 impl From<url::ParseError> for ApiError {
     fn from(e: url::ParseError) -> Self {
-        Self::configuration(format!("Error parsing connection string: {}", e))
+        Self::configuration(format!("Error parsing connection string: {e}"))
     }
 }
 
 impl From<connection_string::Error> for ApiError {
     fn from(e: connection_string::Error) -> Self {
-        Self::configuration(format!("Error parsing connection string: {}", e))
+        Self::configuration(format!("Error parsing connection string: {e}"))
     }
 }
 
 impl From<serde_json::Error> for ApiError {
     fn from(e: serde_json::Error) -> Self {
-        Self::JsonDecode(format!("{}", e))
+        Self::JsonDecode(format!("{e}"))
     }
 }

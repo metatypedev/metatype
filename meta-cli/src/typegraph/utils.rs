@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use anyhow::{bail, Result};
-use common::typegraph::Typegraph;
+use common::typegraph::{runtimes::TGRuntime, Typegraph};
 use indexmap::IndexMap;
 use serde::{de::DeserializeOwned, ser::Serialize};
 use serde_json::{from_value, to_value, Value};
@@ -21,12 +21,12 @@ pub fn map_from_object<T: Serialize>(obj: T) -> Result<IndexMap<String, Value>> 
     }
 }
 
-pub fn get_runtimes(typegraph: &Typegraph, rt_name: &str) -> Vec<usize> {
+pub fn find_runtimes(typegraph: &Typegraph, predicate: impl Fn(&TGRuntime) -> bool) -> Vec<usize> {
     typegraph
         .runtimes
         .iter()
         .enumerate()
-        .filter(|(_, rt)| rt.name == rt_name)
+        .filter(|(_, rt)| predicate(rt))
         .map(|(idx, _)| idx)
         .collect()
 }

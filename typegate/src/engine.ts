@@ -3,45 +3,28 @@
 
 import { parse } from "graphql";
 import * as ast from "graphql/ast";
-import {
-  RuntimeResolver,
-  SecretManager,
-  TypeGraph,
-  TypeGraphDS,
-} from "./typegraph.ts";
+import type { TypeGraph } from "./typegraph.ts";
 import { JSONValue } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
-import { TypeGraphRuntime } from "./runtimes/typegraph.ts";
 import * as log from "std/log/mod.ts";
-import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { sha1 } from "./crypto.ts";
-import { RateLimit } from "./rate_limiter.ts";
-import {
+import { RateLimit } from "./typegate/rate_limiter.ts";
+import type {
   ComputeStageProps,
   Context,
   Info,
   Resolver,
   Variables,
 } from "./types.ts";
-import { parseGraphQLTypeGraph } from "./graphql/graphql.ts";
 import { Planner } from "./planner/mod.ts";
 import { OperationPolicies } from "./planner/policies.ts";
 import { None } from "monads";
-import { handleOnInitHooks } from "./hooks.ts";
 import { Validator } from "./typecheck/common.ts";
 import { generateValidator } from "./typecheck/result.ts";
 import { ComputationEngine } from "./engine/computation_engine.ts";
 import { isIntrospectionQuery } from "./services/graphql_service.ts";
 import { ObjectNode } from "./type_node.ts";
 import { RestSchemaGenerator } from "./typecheck/rest_schema_generator.ts";
-
-const localDir = dirname(fromFileUrl(import.meta.url));
-const introspectionDefStatic = await Deno.readTextFile(
-  join(localDir, "typegraphs/introspection.json"),
-);
-const introspectionDef = parseGraphQLTypeGraph(
-  await TypeGraph.parseJson(introspectionDefStatic),
-);
 
 /**
  * Processed graphql node to be evaluated against a Runtime
@@ -153,7 +136,7 @@ export class Engine {
     return this.tg.rawName;
   }
 
-  private constructor(
+  public constructor(
     public tg: TypeGraph,
   ) {
     this.tg = tg;
@@ -168,43 +151,7 @@ export class Engine {
     };
   }
 
-  static async init(
-    typegraphDS: TypeGraphDS,
-    secretManager: SecretManager,
-    sync: boolean, // redis synchronization?
-    customRuntime: RuntimeResolver = {},
-    enableIntrospection: boolean,
-  ) {
-    const introspection = enableIntrospection
-      ? await TypeGraph.init(
-        introspectionDef,
-        new SecretManager(introspectionDef.types[0].title, {}),
-        {
-          typegraph: TypeGraphRuntime.init(
-            typegraphDS,
-            [],
-            {},
-          ),
-        },
-        null,
-      )
-      : null;
-
-    const tg = await TypeGraph.init(
-      typegraphDS,
-      secretManager,
-      customRuntime,
-      introspection,
-    );
-
-    handleOnInitHooks(tg, secretManager, sync);
-
-    const engine = new Engine(tg);
-    await engine.registerEndpoints();
-    return engine;
-  }
-
-  private async registerEndpoints() {
+  async registerEndpoints() {
     for (const query of this.tg.tg.meta.queries.endpoints) {
       const document = parse(query);
 

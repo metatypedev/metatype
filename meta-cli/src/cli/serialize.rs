@@ -115,10 +115,18 @@ impl Action for Serialize {
         let tgs = loaded;
 
         if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
+            if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
                 self.write(&self.to_string(&tg)?).await?;
             } else {
-                bail!("typegraph \"{}\" not found", tg_name);
+                let suggestions = tgs
+                    .iter()
+                    .map(|tg| tg.name().unwrap())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                bail!(
+                    "typegraph \"{}\" not found; available typegraphs are: {suggestions}",
+                    tg_name
+                );
             }
         } else if self.unique {
             if tgs.len() == 1 {

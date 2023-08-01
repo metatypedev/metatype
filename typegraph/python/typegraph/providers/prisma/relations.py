@@ -8,7 +8,7 @@ from typegraph import t, TypeGraph
 from attrs import define, frozen
 from typing import Any, Optional, Tuple, List, Dict
 from enum import auto
-from strenum import StrEnum
+from strenum import StrEnum, LowercaseStrEnum
 from typegraph.graph.nodes import NodeProxy
 
 from typegraph.graph.typegraph import resolve_proxy
@@ -90,7 +90,7 @@ class Registry:
         return model_name in self.models and prop_name in self.models[model_name]
 
 
-class Cardinality(StrEnum):
+class Cardinality(LowercaseStrEnum):
     OPTIONAL = auto()
     ONE = auto()
     MANY = auto()

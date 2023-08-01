@@ -3,11 +3,12 @@
 
 import { basename, dirname, fromFileUrl, join } from "std/path/mod.ts";
 
-import { Register } from "./register.ts";
-import { PrismaMigrationRuntime } from "./runtimes/prisma_migration.ts";
+import { Register } from "./typegate/register.ts";
+import { PrismaMigrationRuntime } from "./runtimes/prisma/mod.ts";
 import { RuntimeResolver } from "./typegraph.ts";
 import { getLogger } from "./log.ts";
-import { pushTypegraph, TypeGateRuntime } from "./runtimes/typegate.ts";
+import { TypeGateRuntime } from "./runtimes/typegate.ts";
+import { Typegate } from "./typegate/mod.ts";
 
 const logger = getLogger();
 const localDir = dirname(fromFileUrl(import.meta.url));
@@ -38,15 +39,14 @@ export class SystemTypegraph {
       null;
   }
 
-  static async loadAll(register: Register, watch = false) {
+  static async loadAll(typegate: Typegate, watch = false) {
     const reload = async (paths: string[]) => {
       for await (const path of paths) {
         logger.info(`reloading system graph ${basename(path)}`);
-        await pushTypegraph(
+        await typegate.pushTypegraph(
           await Deno.readTextFile(path),
           {},
-          register,
-          false, // introspection
+          true, // introspection
           true, // system
         );
       }
@@ -67,17 +67,19 @@ export class SystemTypegraph {
     }
   }
 
-  static getCustomRuntimes(register: Register) {
-    const resolver = SystemTypegraph.customRuntimesByRegister.get(register);
+  static getCustomRuntimes(typegate: Typegate) {
+    const resolver = SystemTypegraph.customRuntimesByRegister.get(
+      typegate.register,
+    );
     if (resolver != null) {
       return resolver;
     }
 
-    SystemTypegraph.customRuntimesByRegister.set(register, {
-      typegate: TypeGateRuntime.init(register),
-      prisma_migration: PrismaMigrationRuntime.init(register),
+    SystemTypegraph.customRuntimesByRegister.set(typegate.register, {
+      typegate: TypeGateRuntime.init(typegate),
+      prisma_migration: PrismaMigrationRuntime.init(typegate.register),
     });
 
-    return SystemTypegraph.customRuntimesByRegister.get(register);
+    return SystemTypegraph.customRuntimesByRegister.get(typegate.register);
   }
 }
