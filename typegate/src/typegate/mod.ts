@@ -54,15 +54,6 @@ const introspectionDef = parseGraphQLTypeGraph(
   ),
 );
 
-// register runtimes
-const runtimesDir = resolve(localDir, "../runtimes");
-for await (const file of Deno.readDir(runtimesDir)) {
-  if (file.isFile && file.name.endsWith(".ts")) {
-    // no await: await fails
-    import(resolve(runtimesDir, file.name));
-  }
-}
-
 export class Typegate {
   static #registeredRuntimes: Map<string, RuntimeInit> = new Map();
 
@@ -70,10 +61,23 @@ export class Typegate {
     this.#registeredRuntimes.set(name, init);
   }
 
+  static async registerRuntimes() {
+    const runtimesDir = resolve(localDir, "../runtimes");
+    for await (const file of Deno.readDir(runtimesDir)) {
+      if (file.isFile && file.name.endsWith(".ts")) {
+        await import(resolve(runtimesDir, file.name));
+      }
+    }
+  }
+
   static async initRuntime(
     name: string,
     params: RuntimeInitParams,
   ): Promise<Runtime> {
+    if (this.#registeredRuntimes.size === 0) {
+      await this.registerRuntimes();
+    }
+
     const init = this.#registeredRuntimes.get(name);
     if (!init) {
       throw new Error(`Runtime ${name} is not registered`);
