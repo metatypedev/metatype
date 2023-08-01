@@ -107,6 +107,7 @@ if (!Deno.env.get(libPath)?.includes(wasmEdgeLib)) {
 }
 
 const threads = flags.threads ? parseInt(flags.threads) : 4;
+console.log(`Testing with ${threads} threads`);
 const failures = [];
 
 for (let i = 0; i < testFiles.length; i += threads) {
