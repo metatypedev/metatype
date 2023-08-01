@@ -17,7 +17,11 @@ const post = t.struct({
 const complexType = t.struct({
   a: t.integer(),
   b: t.struct({ c: t.integer() }),
-  d: t.string(),
+  d: t.string({
+    // format: "email",
+    pattern: "[a-z]+",
+    max: 10,
+  }),
 }, { name: "ComplexType" });
 
 typegraph("rest", (expose) => {

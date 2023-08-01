@@ -170,6 +170,13 @@ impl TypeData for TypeString {
         if let Some(max) = self.max {
             params.push(format!("max={}", max));
         }
+        if let Some(pattern) = self.pattern.to_owned() {
+            params.push(format!("pattern={}", pattern));
+        }
+        if let Some(format) = self.format.to_owned() {
+            // FIXME: format is an enum, so integer ?
+            params.push(format!("format={}", format));
+        }
     }
 
     fn variant_name(&self) -> String {
