@@ -15,7 +15,11 @@ import { resolveIdentifier } from "./services/middlewares.ts";
 import { ensureJWT } from "./services/auth/mod.ts";
 import { handleGraphQL } from "./services/graphql_service.ts";
 
-const ignoreList = new Set(["favicon.ico"]);
+const ignoreList = new Set([
+  "favicon.ico",
+  "apple-touch-icon-precomposed.png",
+  "apple-touch-icon.png",
+]);
 
 function parsePath(pathname: string): [string, string | undefined] {
   const [engineName, serviceName] = pathname.split("/").slice(1, 3);
