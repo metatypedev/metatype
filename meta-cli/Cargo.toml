@@ -37,16 +37,16 @@ tokio = { version = "1.29.1", features = ["full"] }
 futures = "0.3.28"
 log = "0.4.19"
 env_logger = "0.10.0"
-clap = { version = "4.3.14", features = ["derive", "env"] }
+clap = { version = "4.3.19", features = ["derive", "env"] }
 crossbeam-channel = "0.5.8"
 notify-debouncer-mini = { version = "0.3.0", default-features = false }
 tiny_http = "0.12.0"
 ignore = "0.4.20"
-globset = "0.4.11"
+globset = "0.4.12"
 anyhow = "1.0.72"
 indoc = "2.0.3"
-serde = { version = "1.0.171", features = ["derive"] }
-serde_json = { version = "1.0.103", features = ["preserve_order"] }
+serde = { version = "1.0.179", features = ["derive"] }
+serde_json = { version = "1.0.104", features = ["preserve_order"] }
 reqwest = { version = "0.11.18", features = ["json"] }
 colored = "2.0.4"
 question = "0.2.2"
@@ -56,12 +56,12 @@ tar = "0.4.39"
 base64 = "0.21.2"
 common = { path = "../libs/common" }
 typescript = { path = "../libs/typescript" }
-serde_yaml = "0.9.23"
+serde_yaml = "0.9.25"
 pathdiff = "0.2.1"
 openssl = { version = "0.10.55", features = ["vendored"] }
-indexmap = { version = "1.9.3", features = ["serde"] }
+indexmap = { version = "2.0.0", features = ["serde"] }
 lade-sdk = "0.7.0"
-async-trait = "0.1.71"
+async-trait = "0.1.72"
 async-recursion = "1.0.4"
 clap-verbosity-flag = "2.0.1"
 clap_complete = "4.3.2"

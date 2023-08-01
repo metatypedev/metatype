@@ -13,7 +13,7 @@ deno = []
 [dependencies]
 anyhow = "1.0"
 deno_bindgen = "0.8.1"
-serde = { version = "1.0.171", features = ["derive"] }
+serde = { version = "1.0.179", features = ["derive"] }
 # Some crates has been removed from prisma-engines:
 # instrospection-connector, introspection-core, sql-introspectcion-connector,
 # mongodb-introspection-connector, migration-core, migration-connector
@@ -34,23 +34,23 @@ temporal-client = { git = "https://github.com/temporalio/sdk-core" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core" }
 connection-string = "0.2.0"
 url = "2.4.0"
-thiserror = "1.0.43"
+thiserror = "1.0.44"
 tokio = { version = "1.29.1", features = ["full"] }
 log = "0.4.19"
 env_logger = "0.10.0"
-serde_json = "1.0.103"
+serde_json = "1.0.104"
 dashmap = "5.5.0"
 common = { path = "../../libs/common" }
 macros = { path = "../../libs/macros" }
 typescript = { path = "../../libs/typescript" }
 sentry = { version = "0.31.5", features = ["anyhow"] }
-tempfile = "3.6.0"
+tempfile = "3.7.0"
 convert_case = "0.6.0"
 rust-s3 = "0.33.0"
 http = "0.2.9"
 envconfig = "0.10.0"
 once_cell = "1.18.0"
-wasmedge-sdk = { version = "0.8.1", features = ["standalone"] }
+wasmedge-sdk = { version = "0.10.1", features = ["standalone"] }
 base64 = "0.21.2"
 tap = "1.0.1"
 colored = "2.0.4"
