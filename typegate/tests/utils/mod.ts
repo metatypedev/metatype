@@ -14,7 +14,9 @@ import { GraphQLQuery } from "./query/graphql_query.ts";
 import { test } from "./test.ts";
 import { meta } from "./meta.ts";
 import { testDir } from "./dir.ts";
+import { autoTest } from "./autotest.ts";
 
+// native must load first to avoid import race conditions and panic
 init_native();
 
 export function gql(query: readonly string[], ...args: any[]) {
@@ -33,6 +35,7 @@ export const rest = {
 
 export const Meta = {
   test,
+  autoTest,
   cli: meta,
 };
 
