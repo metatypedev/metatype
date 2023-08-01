@@ -97,11 +97,15 @@ export function integer(data: TypeInteger = {}, base: TypeBase = {}) {
 export class String extends Typedef implements Readonly<TypeString> {
   readonly min?: number;
   readonly max?: number;
+  readonly format?: string;
+  readonly pattern?: string;
 
   constructor(_id: number, data: TypeString, base: TypeBase) {
     super(_id, base);
     this.min = data.min;
     this.max = data.max;
+    this.pattern = data.pattern;
+    this.format = data.format;
   }
 }
 
