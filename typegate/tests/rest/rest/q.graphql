@@ -17,5 +17,6 @@ query get_identity($obj: ComplexObject) {
   identity(input: $obj) {
     a
     b { c }
+    d
   }
 }

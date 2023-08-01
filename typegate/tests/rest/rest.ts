@@ -17,6 +17,7 @@ const post = t.struct({
 const complexType = t.struct({
   a: t.integer(),
   b: t.struct({ c: t.integer() }),
+  d: t.string(),
 }, { name: "ComplexType" });
 
 typegraph("rest", (expose) => {

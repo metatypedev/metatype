@@ -35,6 +35,15 @@ interface core {
 
     booleanb: func(base: type-base) -> result<type-id, error>
 
+    record type-string {
+        min: option<u32>,
+        max: option<u32>,
+        format: option<string>,
+        pattern: option<string>,
+    }
+
+    stringb: func(data: type-string, base: type-base) -> result<type-id, error>
+
     record type-struct {
         props: list<tuple<string, type-id>>,
     }

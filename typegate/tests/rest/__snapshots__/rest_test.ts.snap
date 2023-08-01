@@ -36,8 +36,8 @@ snapshot[`Rest queries in Deno 1`] = `
         ],
         type: "object",
       },
-      boolean_12: {
-        title: "boolean_12",
+      boolean_13: {
+        title: "boolean_13",
         type: "boolean",
       },
       integer_0: {
@@ -96,7 +96,7 @@ snapshot[`Rest queries in Deno 1`] = `
         title: "object_6",
         type: "object",
       },
-      object_7: {
+      object_8: {
         properties: {
           a: {
             title: "integer_4",
@@ -112,9 +112,17 @@ snapshot[`Rest queries in Deno 1`] = `
             title: "object_6",
             type: "object",
           },
+          d: {
+            title: "string_7",
+            type: "string",
+          },
         },
-        title: "object_7",
+        title: "object_8",
         type: "object",
+      },
+      string_7: {
+        title: "string_7",
+        type: "string",
       },
     },
   },
@@ -163,8 +171,12 @@ snapshot[`Rest queries in Deno 1`] = `
                           title: "object_6",
                           type: "object",
                         },
+                        d: {
+                          title: "string_7",
+                          type: "string",
+                        },
                       },
-                      title: "object_7",
+                      title: "object_8",
                       type: "object",
                     },
                   },
@@ -393,7 +405,7 @@ snapshot[`Rest queries in Deno 1`] = `
                 schema: {
                   properties: {
                     readPost: {
-                      title: "boolean_12",
+                      title: "boolean_13",
                       type: "boolean",
                     },
                   },

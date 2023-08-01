@@ -2,14 +2,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use common::typegraph::{
-    FunctionTypeData, IntegerTypeData, ObjectTypeData, TypeNode, TypeNodeBase,
+    FunctionTypeData, IntegerTypeData, ObjectTypeData, StringTypeData, TypeNode, TypeNodeBase,
 };
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 
 use crate::errors::{self, Result};
 use crate::global_store::with_store;
-use crate::types::{Boolean, Integer, Proxy, Struct, Type, WithPolicy};
+use crate::types::{Boolean, Integer, Proxy, StringT, Struct, Type, WithPolicy};
 use crate::wit::core::TypeId;
 use crate::{typegraph::TypegraphContext, types::Func};
 
@@ -37,6 +37,20 @@ impl TypeConversion for Boolean {
     fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
         Ok(TypeNode::Boolean {
             base: gen_base(format!("boolean_{}", self.id)),
+        })
+    }
+}
+
+impl TypeConversion for StringT {
+    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        Ok(TypeNode::String {
+            base: gen_base(format!("string_{}", self.id)),
+            data: StringTypeData {
+                min_length: self.data.min,
+                max_length: self.data.max,
+                format: None,
+                pattern: self.data.pattern.to_owned(),
+            },
         })
     }
 }

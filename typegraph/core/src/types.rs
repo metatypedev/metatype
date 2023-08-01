@@ -9,7 +9,8 @@ use crate::errors::Result;
 use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    PolicySpec, TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy, TypeStruct,
+    PolicySpec, TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy, TypeString,
+    TypeStruct,
 };
 
 pub trait TypeData {
@@ -49,6 +50,7 @@ pub type Struct = ConcreteType<TypeStruct>;
 pub type Integer = ConcreteType<TypeInteger>;
 pub type Func = ConcreteType<TypeFunc>;
 pub type Boolean = ConcreteType<TypeBoolean>;
+pub type StringT = ConcreteType<TypeString>;
 pub type WithPolicy = WrapperType<TypePolicy>;
 
 #[derive(Debug)]
@@ -59,6 +61,7 @@ pub enum Type {
     Integer(Integer),
     Func(Func),
     Boolean(Boolean),
+    String(StringT),
     WithPolicy(WithPolicy),
 }
 
@@ -156,6 +159,21 @@ impl TypeData for TypeBoolean {
 
     fn variant_name(&self) -> String {
         "boolean".to_string()
+    }
+}
+
+impl TypeData for TypeString {
+    fn get_display_params_into(&self, params: &mut Vec<String>) {
+        if let Some(min) = self.min {
+            params.push(format!("min={}", min));
+        }
+        if let Some(max) = self.max {
+            params.push(format!("max={}", max));
+        }
+    }
+
+    fn variant_name(&self) -> String {
+        "string".to_string()
     }
 }
 

@@ -15,11 +15,11 @@ use errors::Result;
 use global_store::{with_store, with_store_mut};
 use indoc::formatdoc;
 use regex::Regex;
-use types::{Boolean, Func, Integer, Proxy, Struct, Type, TypeBoolean, WithPolicy};
+use types::{Boolean, Func, Integer, Proxy, StringT, Struct, Type, TypeBoolean, WithPolicy};
 use validation::validate_name;
 use wit::core::{
     ContextCheck, Policy, PolicyId, TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy,
-    TypeStruct, TypegraphInitParams,
+    TypeString, TypeStruct, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -100,6 +100,17 @@ impl wit::core::Core for Lib {
                     data: TypeBoolean,
                 })
             })
+        }))
+    }
+
+    fn stringb(data: TypeString, base: TypeBase) -> Result<TypeId> {
+        if let (Some(min), Some(max)) = (data.min, data.max) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::String(StringT { id, base, data }))
         }))
     }
 

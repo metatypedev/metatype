@@ -3,6 +3,7 @@ import {
   PolicyPerEffect,
   TypeBase,
   TypeInteger,
+  TypeString,
 } from "../gen/exports/metatype-typegraph-core.d.ts";
 import { Materializer } from "./runtimes/deno.ts";
 import { mapValues } from "./deps.ts";
@@ -91,6 +92,21 @@ export class Integer extends Typedef implements Readonly<TypeInteger> {
 
 export function integer(data: TypeInteger = {}, base: TypeBase = {}) {
   return new Integer(core.integerb(data, base), data, base);
+}
+
+export class String extends Typedef implements Readonly<TypeString> {
+  readonly min?: number;
+  readonly max?: number;
+
+  constructor(_id: number, data: TypeString, base: TypeBase) {
+    super(_id, base);
+    this.min = data.min;
+    this.max = data.max;
+  }
+}
+
+export function string(data: TypeString = {}, base: TypeBase = {}) {
+  return new String(core.stringb(data, base), data, base);
 }
 
 export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
