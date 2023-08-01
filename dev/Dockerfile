@@ -3,23 +3,21 @@ ARG DENO_VERSION=1.35.3
 ARG WASMEDGE_VERSION=0.12.1
 ARG DISTROLESS_TAG=nonroot
 
+#
+
 FROM rust:${RUST_VERSION} AS base
 
 WORKDIR /app
 
-RUN cargo install cargo-chef --locked
+ENV LD_LIBRARY_PATH "/usr/local/lib/:${LD_LIBRARY_PATH}"
 
-# 
-
-FROM wasmedge/slim-runtime:${WASMEDGE_VERSION} AS wasmedge-bin
+RUN cargo install cargo-chef --locked && \
+    curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
 
 #
 
 FROM base as plan
 
-ENV LD_LIBRARY_PATH "/usr/local/lib/:${LD_LIBRARY_PATH}"
-
-COPY --from=wasmedge-bin /usr/local/lib/* /usr/local/lib/
 COPY . .
 
 RUN cargo chef prepare --recipe-path recipe.json
@@ -34,14 +32,12 @@ FROM base AS builder
 
 ARG DENO_BINDGEN_URL=https://deno.land/x/deno_bindgen@0.8.1/cli.ts
 
-ENV LD_LIBRARY_PATH "/usr/local/lib/:${LD_LIBRARY_PATH}"
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
 ENV PATH "${DENO_INSTALL}/bin:${PATH}"
 ENV OUT_DIR target
 
 COPY --from=deno-bin /deno /bin/deno
-COPY --from=wasmedge-bin /usr/local/lib/* /usr/local/lib/
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

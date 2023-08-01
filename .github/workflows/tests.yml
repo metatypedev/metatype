@@ -308,7 +308,6 @@ jobs:
       - env:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
-          export $HOME/.wasmedge/lib:$LD_LIBRARY_PATH
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
