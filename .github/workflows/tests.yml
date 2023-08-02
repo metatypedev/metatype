@@ -313,6 +313,7 @@ jobs:
           source .venv/bin/activate
           poetry install --sync
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+          export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
           npm install --global @bytecodealliance/jco@$JCO_VERSION
           cargo build -p typegraph_core --target wasm32-unknown-unknown -F wasm

@@ -10,8 +10,6 @@ ARG WASMEDGE_VERSION=0.12.1
 
 WORKDIR /app
 
-ENV LD_LIBRARY_PATH "/usr/local/lib/:${LD_LIBRARY_PATH}"
-
 RUN cargo install cargo-chef --locked && \
     curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
 
