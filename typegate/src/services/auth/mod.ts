@@ -98,7 +98,7 @@ export async function handleAuth(
   headers: Headers,
 ): Promise<Response> {
   if (request.method !== "GET") {
-    return methodNotAllowed;
+    return methodNotAllowed();
   }
 
   const url = new URL(request.url);

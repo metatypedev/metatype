@@ -142,12 +142,12 @@ export class Typegate {
 
       const [engineName, serviceName] = parsePath(url.pathname);
       if (!engineName || ignoreList.has(engineName)) {
-        return notFound;
+        return notFound();
       }
 
       const engine = this.register.get(engineName);
       if (!engine) {
-        return notFound;
+        return notFound();
       }
 
       const cors = engine.tg.cors(request);
@@ -179,7 +179,7 @@ export class Typegate {
       }
 
       if (serviceName !== undefined) {
-        return notFound;
+        return notFound();
       }
       // default to graphql service
 
@@ -188,11 +188,11 @@ export class Typegate {
       }
 
       if (!engine.tg.tg.meta.queries.dynamic) {
-        return notFound;
+        return notFound();
       }
 
       if (request.method !== "POST") {
-        return methodNotAllowed;
+        return methodNotAllowed();
       }
 
       return handleGraphQL(

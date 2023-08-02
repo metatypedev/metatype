@@ -22,7 +22,17 @@ export function resolveIdentifier(
   connInfo: ConnInfo,
 ): string {
   if (engine.tg.tg.meta.rate?.context_identifier) {
-    return context[engine.tg.tg.meta.rate?.context_identifier] as string;
+    const contextId = context[engine.tg.tg.meta.rate?.context_identifier] as
+      | string
+      | undefined;
+    if (contextId) {
+      if (typeof contextId !== "string") {
+        throw new Error(
+          `invalid context identifier type at ${engine.tg.tg.meta.rate?.context_identifier}, only string is supported, got: ${contextId}`,
+        );
+      }
+      return contextId;
+    }
   }
 
   if (config.trust_proxy) {

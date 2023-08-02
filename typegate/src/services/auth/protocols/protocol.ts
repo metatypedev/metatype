@@ -7,7 +7,7 @@ export abstract class Protocol {
   protected constructor(public typegraphName: string) {}
 
   authMiddleware(_request: Request): Promise<Response> {
-    return Promise.resolve(notFound);
+    return Promise.resolve(notFound());
   }
 
   abstract tokenMiddleware(
