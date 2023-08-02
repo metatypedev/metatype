@@ -16,6 +16,7 @@ dev:
       '(  PROTOC_VERSION: ").+(")': PROTOC_VERSION
       '(  WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
       '(  JCO_VERSION: ").+(")': JCO_VERSION
+      '(  WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
     typegraph/python/typegraph/__init__.py:
       (version = ").+("): METATYPE_VERSION
     typegraph/python_next/typegraph_next/__init__.py:
@@ -31,6 +32,7 @@ dev:
       (ARG DENO_VERSION=).*(): DENO_VERSION
       (ARG DENO_BINDGEN_URL=).*(): DENO_BINDGEN_URL
       (ARG RUST_VERSION=).*(): RUST_VERSION
+      (ARG WASMEDGE_VERSION=).*(): WASMEDGE_VERSION
     typegate/src/typegraph.ts:
       (export const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/python/typegraph/graph/typegraph.py:
@@ -43,6 +45,8 @@ dev:
       '(    WASM_TOOLS_VERSION: ").+(")': WASM_TOOLS_VERSION
       '(    CARGO_INSTA_VERSION: ").+(")': CARGO_INSTA_VERSION
       '(    JCO_VERSION: ").+(")': JCO_VERSION
+      '(    WASMEDGE_VERSION: ").+(")': WASMEDGE_VERSION
+      '(    DENO_VERSION: ").+(")': DENO_VERSION
     website/docusaurus.config.js:
       '(  tagline: ").+(",)': TAGLINE
     examples/**/compose.yml:
@@ -58,15 +62,16 @@ dev:
     PROTOC_VERSION: 3.x
     RUST_VERSION: 1.70.0
     DENO_BINDGEN_URL: 'https://deno.land/x/deno_bindgen@0.8.1/cli.ts'
-    DENO_VERSION: 1.35.1
+    DENO_VERSION: 1.35.3
     NODE_VERSION: 19.8.1
     PNPM_VERSION: 8.6.11
     CARGO_INSTA_VERSION: 1.30.0
     WASM_TOOLS_VERSION: 1.0.37
     JCO_VERSION: 0.9.4
-    WASMTIME_VERSION: 10.0.0
+    WASMTIME_VERSION: 10.0.1
+    WASMEDGE_VERSION: 0.12.1
     TYPEGRAPH_VERSION: 0.0.2
-    METATYPE_VERSION: 0.1.10
+    METATYPE_VERSION: 0.1.12-0+dev
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems

@@ -91,7 +91,9 @@ const env: Record<string, string> = {
 await Deno.mkdir(tmpDir, { recursive: true });
 // remove non-vendored caches
 for await (const cache of Deno.readDir(tmpDir)) {
-  if (cache.name.endsWith(".wasm")) {
+  if (
+    cache.name.endsWith(".wasm") || cache.name == "libpython"
+  ) {
     continue;
   }
   await Deno.remove(join(tmpDir, cache.name), { recursive: true });
