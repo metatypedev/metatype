@@ -9,7 +9,7 @@ export type OptionalNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -24,7 +24,7 @@ export type BooleanNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -37,7 +37,7 @@ export type NumberNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -55,7 +55,7 @@ export type IntegerNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -73,7 +73,7 @@ export type StringNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -90,7 +90,7 @@ export type FileNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -106,7 +106,7 @@ export type ObjectNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -123,7 +123,7 @@ export type ArrayNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -140,7 +140,7 @@ export type FunctionNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -158,7 +158,7 @@ export type UnionNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -172,7 +172,7 @@ export type EitherNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -186,7 +186,7 @@ export type AnyNode = {
   runtime: number;
   policies: PolicyIndices[];
   description?: string | null;
-  injection?: InjectionSwitch | null;
+  injection?: Injection | null;
   enum?: string[] | null;
   config?: {
     [k: string]: unknown;
@@ -207,19 +207,27 @@ export type TypeNode =
   | EitherNode
   | AnyNode;
 export type PolicyIndices = number | PolicyIndicesByEffect;
-export type EffectType = "create" | "update" | "delete" | "none";
-export type InjectionSource = {
+export type Injection = {
   source: "static";
-  data: string;
+  data: InjectionDataFor_String;
 } | {
   source: "context";
-  data: string;
+  data: InjectionDataFor_String;
 } | {
   source: "secret";
-  data: string;
+  data: InjectionDataFor_String;
 } | {
   source: "parent";
-  data: number;
+  data: InjectionDataForUint32;
+} | {
+  source: "dynamic";
+  data: InjectionDataFor_String;
+};
+export type InjectionDataFor_String = SingleValueFor_String | {
+  [k: string]: string;
+};
+export type InjectionDataForUint32 = SingleValueForUint32 | {
+  [k: string]: number;
 };
 export type StringFormat =
   | "uuid"
@@ -231,6 +239,31 @@ export type StringFormat =
   | "date"
   | "date-time"
   | "phone";
+export type EffectType = "create" | "update" | "delete" | "none";
+export type TGRuntime = KnownRuntime | UnknownRuntime;
+export type KnownRuntime = {
+  name: "deno";
+  data: DenoRuntimeData;
+} | {
+  name: "graphql";
+  data: GraphQLRuntimeData;
+} | {
+  name: "http";
+  data: HTTPRuntimeData;
+} | {
+  name: "random";
+  data: RandomRuntimeData;
+} | {
+  name: "prisma";
+  data: PrismaRuntimeData;
+} | {
+  name: "s3";
+  data: S3RuntimeData;
+} | {
+  name: "temporal";
+  data: TemporalRuntimeData;
+};
+export type Cardinality = "optional" | "one" | "many";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
 export type S3Materializer = {
   name: "presign_get";
@@ -275,13 +308,11 @@ export interface PolicyIndicesByEffect {
   delete?: number | null;
   update?: number | null;
 }
-export interface InjectionSwitch {
-  cases: InjectionCase[];
-  default?: InjectionSource | null;
+export interface SingleValueFor_String {
+  value: string;
 }
-export interface InjectionCase {
-  effect: EffectType;
-  injection: InjectionSource;
+export interface SingleValueForUint32 {
+  value: number;
 }
 export interface Materializer {
   name: string;
@@ -295,7 +326,58 @@ export interface Effect {
   effect?: EffectType | null;
   idempotent: boolean;
 }
-export interface TGRuntime {
+export interface DenoRuntimeData {
+  worker: string;
+  permissions: {
+    [k: string]: unknown;
+  };
+}
+export interface GraphQLRuntimeData {
+  endpoint: string;
+}
+export interface HTTPRuntimeData {
+  endpoint: string;
+  cert_secret?: string | null;
+  basic_auth_secret?: string | null;
+}
+export interface RandomRuntimeData {
+  seed: number;
+  reset?: string | null;
+}
+export interface PrismaRuntimeData {
+  name: string;
+  connection_string_secret: string;
+  models: number[];
+  relationships: Relationship[];
+  migration_options?: MigrationOptions | null;
+}
+export interface Relationship {
+  name: string;
+  left: RelationshipModel;
+  right: RelationshipModel;
+}
+export interface RelationshipModel {
+  type_idx: number;
+  field: string;
+  cardinality: Cardinality;
+}
+export interface MigrationOptions {
+  migration_files?: string | null;
+  create: boolean;
+  reset: boolean;
+}
+export interface S3RuntimeData {
+  host_secret: string;
+  region_secret: string;
+  access_key_secret: string;
+  secret_key_secret: string;
+  path_style_secret: string;
+}
+export interface TemporalRuntimeData {
+  name: string;
+  host: string;
+}
+export interface UnknownRuntime {
   name: string;
   data: {
     [k: string]: unknown;
@@ -346,22 +428,7 @@ export interface FunctionMatData {
 export interface ModuleMatData {
   code: string;
 }
-export interface PrismaRuntimeData {
-  name: string;
-  datamodel: string;
-  connection_string_secret: string;
-  models: number[];
-  migration_options?: MigrationOptions | null;
-}
-export interface MigrationOptions {
-  migration_files?: string | null;
-  create: boolean;
-  reset: boolean;
-}
-export interface S3RuntimeData {
-  host_secret: string;
-  region_secret: string;
-  access_key_secret: string;
-  secret_key_secret: string;
-  path_style_secret: string;
+export interface PrismaOperationMatData {
+  table: string;
+  operation: string;
 }

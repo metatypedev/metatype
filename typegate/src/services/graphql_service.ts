@@ -4,7 +4,7 @@
 import { getLogger } from "../log.ts";
 import { parse } from "graphql";
 import { Context, Info } from "../types.ts";
-import { RateLimit } from "../rate_limiter.ts";
+import { RateLimit } from "../typegate/rate_limiter.ts";
 import { Operations, parseRequest } from "../graphql/request_parser.ts";
 import { findOperation, FragmentDefs } from "../graphql.ts";
 import { forceAnyToOption } from "../utils.ts";
@@ -145,6 +145,7 @@ export async function handleGraphQL(
         },
       );
     } else {
+      // console.error(e);
       logger.error(`request err: ${e}`);
       return new Response(
         JSON.stringify({

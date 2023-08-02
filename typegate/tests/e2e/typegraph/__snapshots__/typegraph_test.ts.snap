@@ -471,7 +471,9 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '        "data": {
 ' +
-  '          "worker": "default"
+  '          "worker": "default",
+' +
+  '          "permissions": {}
 ' +
   "        }
 " +
@@ -1021,7 +1023,9 @@ snapshot[`typegraphs creation 2`] = `
 ' +
   '        "data": {
 ' +
-  '          "worker": "default"
+  '          "worker": "default",
+' +
+  '          "permissions": {}
 ' +
   "        }
 " +

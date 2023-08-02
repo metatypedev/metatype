@@ -1,18 +1,18 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any, Dict
 
 from attrs import field, frozen
+from frozendict import frozendict
 
-from typegraph import effects
+from typegraph import effects, utils
 from typegraph import types as t
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypegraphContext
 from typegraph.providers.prisma.relations import LinkProxy, Registry
-from typegraph.providers.prisma.schema import build_model
 from typegraph.providers.prisma.type_generator import TypeGenerator
 from typegraph.runtimes.base import Materializer, Runtime
 from typegraph.utils.attrs import SKIP, always, required
@@ -441,19 +441,32 @@ class PrismaRuntime(Runtime):
         tpe._propagate_runtime(self)
         self.reg.manage(tpe)
 
-    def __datamodel(self):
-        models = [build_model(ty, self.reg) for ty in self.reg.managed.values()]
-        return "\n\n".join(models)
-        # return PrismaSchema(self.managed_types.values()).build()
-
     def data(self, collector: Collector) -> dict:
         data = super().data(collector)
         data["data"].update(
-            datamodel=self.__datamodel(),
             connection_string_secret=self.connection_string_secret,
             models=[collector.index(tp) for tp in self.reg.managed.values()],
+            relationships=tuple(
+                frozendict(
+                    name=name,
+                    left=frozendict(
+                        type_idx=collector.index(rel.left.typ),
+                        field=rel.left.field,
+                        cardinality=rel.left.cardinality,
+                    ),
+                    right=frozendict(
+                        type_idx=collector.index(rel.right.typ),
+                        field=rel.right.field,
+                        cardinality=rel.right.cardinality,
+                    ),
+                )
+                for name, rel in self.reg.relationships.items()
+            ),
         )
         return data
+
+    def get_type_config(self, tpe: "t.typedef") -> Dict[str, Any]:
+        return utils.pick(tpe.runtime_config, "auto", "unique")
 
     @property
     def edges(self) -> List[Node]:

@@ -56,23 +56,6 @@ export type ScalarNode =
 export type QuantifierNode = OptionalNode | ArrayNode;
 
 //
-// Runtimes
-
-export interface DenoRuntimeData {
-  worker: string;
-}
-
-export interface TypeRuntimeBase {
-  name: string;
-  data: unknown;
-}
-
-export interface DenoRuntimeDS extends TypeRuntimeBase {
-  name: "deno";
-  data: DenoRuntimeData;
-}
-
-//
 // Type utils
 
 export function isBoolean(t: TypeNode): t is BooleanNode {
@@ -89,6 +72,10 @@ export function isInteger(t: TypeNode): t is IntegerNode {
 
 export function isString(t: TypeNode): t is StringNode {
   return t.type === Type.STRING;
+}
+
+export function isUuid(t: TypeNode): t is StringNode {
+  return isString(t) && t.format === "uuid";
 }
 
 export function isFile(t: TypeNode): t is FileNode {

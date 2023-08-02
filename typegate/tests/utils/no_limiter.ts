@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { RateLimiter } from "../../src/rate_limiter.ts";
+import { RateLimiter } from "../../src/typegate/rate_limiter.ts";
 
 export class NoLimiter extends RateLimiter {
   constructor() {

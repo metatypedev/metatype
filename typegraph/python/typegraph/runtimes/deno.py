@@ -86,7 +86,7 @@ class PredefinedFunMat(Materializer):
     name: str
     effect: Effect = field(kw_only=True, default=effects.none())
     runtime: DenoRuntime = field(kw_only=True, factory=DenoRuntime)
-    materializer_name: str = always("predefined_function")
+    materializer_name: str = field(default="predefined_function", init=False)
 
 
 # Import function from a module

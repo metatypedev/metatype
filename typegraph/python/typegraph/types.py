@@ -14,24 +14,25 @@ from typing import (
     Union,
     get_args,
     get_origin,
-    overload,
 )
 
 from attrs import evolve, field, frozen
 from frozendict import frozendict
 from typing_extensions import Self
-from typegraph.effects import EffectType
 
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node, NodeProxy
 from typegraph.graph.typegraph import TypeGraph, TypegraphContext, find
 from typegraph.injection import (
+    DynamicValueInjection,
     Injection,
-    InjectionSwitch,
-    context,
-    parent,
-    secret,
-    static,
+    InjectionDataInit,
+    ContextInjection,
+    ParentInjection,
+    SecretInjection,
+    StaticInjection,
+    SingleValue,
+    init_injection_data,
 )
 from typegraph.policies import Policy, EffectPolicies
 from typegraph.runtimes.base import Materializer, Runtime
@@ -114,7 +115,7 @@ class typedef(Node):
     name: str = field(kw_only=True, default="")
     description: Optional[str] = field(kw_only=True, default=None)
     runtime: Optional["Runtime"] = field(kw_only=True, default=None)
-    injection: InjectionSwitch = field(kw_only=True, default=None)
+    injection: Optional[Injection] = field(kw_only=True, default=None)
     policies: Tuple[Policy, ...] = field(kw_only=True, factory=tuple)
     runtime_config: Dict[str, Any] = field(
         kw_only=True, factory=frozendict, hash=False, metadata={SKIP: True}
@@ -142,11 +143,14 @@ class typedef(Node):
 
     @property
     def edges(self) -> List[Node]:
-        secrets = (
-            [Secret(s) for s in self.injection.secrets()]
-            if self.injection is not None
-            else []
-        )
+        if isinstance(self.injection, SecretInjection):
+            if isinstance(self.injection.value, SingleValue):
+                secrets = [Secret(self.injection.value.value)]
+            else:
+                secrets = [secret for secret in self.injection.value.switch.values()]
+        else:
+            secrets = []
+
         return (
             super().edges
             + list(self.policies)
@@ -218,33 +222,36 @@ class typedef(Node):
             if isinstance(e, NodeProxy):
                 e.get()._propagate_runtime(self.runtime, visited)
 
-    @overload
-    def inject(self, injection: Injection) -> Self:
-        pass
-
-    @overload
-    def inject(self, injection: Dict[Optional[EffectType], Injection]) -> Self:
-        pass
-
-    def inject(self, injection) -> Self:
+    def _set_injection(self, injection: Injection) -> Self:
         if self.injection is not None:
             raise Exception(f"{self.name} can only have one injection")
-        if isinstance(injection, dict):
-            return self.replace(injection=InjectionSwitch.from_dict(injection))
-        return self.replace(injection=InjectionSwitch(default=injection))
+        return self.replace(injection=injection)
 
-    def set(self, value):
-        return self.inject(static(value))
+    def set(self, value: InjectionDataInit[Any]):
+        import json
 
-    def from_secret(self, secret_name: str):
-        return self.inject(secret(secret_name))
+        return self._set_injection(
+            StaticInjection(init_injection_data(value, str, lambda x: json.dumps(x)))
+        )
 
-    def from_parent(self, sibling: "NodeProxy"):
+    def from_secret(self, value: InjectionDataInit[str]):
+        return self._set_injection(SecretInjection(init_injection_data(value)))
+
+    def from_parent(self, value: InjectionDataInit[Union["NodeProxy", str]]):
         # TODO: check for same type and value in same context
-        return self.inject(parent(sibling))
+        return self._set_injection(
+            ParentInjection(
+                init_injection_data(
+                    value, NodeProxy, lambda x: proxy(x) if isinstance(x, str) else x
+                )
+            )
+        )
 
-    def from_context(self, claim: str):
-        return self.inject(context(claim))
+    def from_context(self, value: InjectionDataInit[str]):
+        return self._set_injection(ContextInjection(init_injection_data(value)))
+
+    def inject(self, value: InjectionDataInit[str]):
+        return self._set_injection(DynamicValueInjection(init_injection_data(value)))
 
     def add_policy(
         self,

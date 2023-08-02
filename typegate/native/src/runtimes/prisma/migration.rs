@@ -8,11 +8,11 @@ use anyhow::Result;
 use convert_case::{Case, Casing};
 use log::{error, trace};
 use macros::deno;
-use migration_core::json_rpc::types::{
+use schema_core::json_rpc::types::{
     ApplyMigrationsInput, CreateMigrationInput, DevAction, DevDiagnosticInput, DevDiagnosticOutput,
     DiffParams, DiffTarget, EvaluateDataLossInput, ListMigrationDirectoriesInput, SchemaContainer,
 };
-use migration_core::{CoreError, CoreResult, GenericApi};
+use schema_core::{CoreError, CoreResult, GenericApi};
 use std::io::Write;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -28,7 +28,7 @@ pub async fn loss(
     migration_folder: String,
 ) -> Result<String, CoreError> {
     let schema = format!("{datasource}{datamodel}");
-    let api = migration_core::migration_api(Some(datasource.clone()), None)?;
+    let api = schema_core::schema_api(Some(datasource.clone()), None)?;
     let data_loss = EvaluateDataLossInput {
         migrations_directory_path: migration_folder.to_string(),
         prisma_schema: schema.to_string(),
@@ -70,7 +70,7 @@ impl MigrationContextBuilder {
     }
 
     fn build(self) -> Result<MigrationContext, String> {
-        let api = migration_core::migration_api(Some(self.datasource.clone()), None)
+        let api = schema_core::schema_api(Some(self.datasource.clone()), None)
             .tap_err(|e| error!("{e:?}"))
             .map_err(err_to_string)?;
         let migrations_dir = MigrationsFolder::from(self.migrations.as_ref())
@@ -259,7 +259,7 @@ pub async fn diff(datasource: String, datamodel: String, script: bool) -> Result
     trace!("diff");
     let schema = format!("{datasource}{datamodel}");
     let buffer = Arc::new(Mutex::new(Some(String::default())));
-    let api = migration_core::migration_api(
+    let api = schema_core::schema_api(
         Some(datasource.clone()),
         Some(Arc::new(super::utils::StringBuffer::new(Arc::clone(
             &buffer,

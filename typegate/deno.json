@@ -8,7 +8,7 @@
     "comment1": "echo cwd is by default the directory of deno.json",
     "comment2": "echo cannot restrict ffi to a lib https://github.com/denoland/deno/issues/15511",
     "run": "cd .. && deno run --config=typegate/deno.json --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=.  --allow-net typegate/src/main.ts",
-    "test": "cd .. && deno test --trace-ops --config=typegate/deno.json --unstable --allow-run=cargo,hostname,target/debug/meta,git,python3 --allow-sys --allow-env --allow-hrtime --allow-write=tmp,typegate/tests --allow-ffi --allow-read=. --allow-net"
+    "test": "cd .. && deno test --trace-ops --config=typegate/deno.json --unstable --allow-run=cargo,hostname,target/debug/meta,git,python3,rm,mkdir --allow-sys --allow-env --allow-hrtime --allow-write=tmp,typegate/tests --allow-ffi --allow-read=. --allow-net"
   },
   "lock": "deno.lock",
   "imports": {

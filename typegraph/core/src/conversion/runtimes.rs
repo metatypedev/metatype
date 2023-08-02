@@ -6,7 +6,9 @@ use crate::global_store::Store;
 use crate::runtimes::{DenoMaterializer, Materializer as RawMaterializer, Runtime};
 use crate::wit::core::RuntimeId;
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
-use common::typegraph::{Effect, EffectType, Materializer, TGRuntime};
+use common::typegraph::runtimes::deno::DenoRuntimeData;
+use common::typegraph::runtimes::KnownRuntime::Deno;
+use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 use serde_json::json;
@@ -112,15 +114,11 @@ pub fn convert_runtime(
 ) -> Result<TGRuntime> {
     match runtime {
         Runtime::Deno => {
-            let mut data = IndexMap::new();
-            data.insert(
-                "worker".to_string(),
-                serde_json::Value::String("default".to_string()),
-            );
-            Ok(TGRuntime {
-                name: "deno".to_string(),
-                data,
-            })
+            let data = DenoRuntimeData {
+                worker: "default".to_string(),
+                permissions: Default::default(),
+            };
+            Ok(TGRuntime::Known(Deno(data)))
         }
     }
 }
