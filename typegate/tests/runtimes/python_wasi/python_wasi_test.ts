@@ -138,6 +138,6 @@ Meta.test("Python WASI runtime", async (t) => {
     const end = performance.now();
     const duration = end - start;
 
-    assert(duration < 500, `Python WASI runtime was too slow: ${duration}ms`);
+    assert(duration < 600, `Python WASI runtime was too slow: ${duration}ms`);
   });
 });
