@@ -1,14 +1,19 @@
 ARG RUST_VERSION=1.70.0
-ARG DENO_VERSION=1.35.1
+ARG DENO_VERSION=1.35.3
 ARG DISTROLESS_TAG=nonroot
+
+#
 
 FROM rust:${RUST_VERSION} AS base
 
+ARG WASMEDGE_VERSION=0.12.1
+
 WORKDIR /app
 
-RUN cargo install cargo-chef --locked
+RUN cargo install cargo-chef --locked && \
+    curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
 
-# 
+#
 
 FROM base as plan
 

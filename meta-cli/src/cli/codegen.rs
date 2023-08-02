@@ -60,7 +60,8 @@ impl Action for Deno {
         ensure_venv(&dir)?;
         let loader = Loader::new(config)
             .skip_deno_modules(true)
-            .with_postprocessor(postprocess::DenoModules::default().codegen(true));
+            .with_postprocessor(postprocess::DenoModules::default().codegen(true))
+            .with_postprocessor(postprocess::PythonModules::default());
 
         match loader.load_file(&self.file).await {
             LoaderResult::Loaded(_) => {

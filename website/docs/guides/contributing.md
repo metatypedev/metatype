@@ -30,8 +30,8 @@ cargo install whiz
 pipx install pre-commit
 # maange python dependencies
 pipx install poetry
-# generate Deno/Rust bindings
-deno install -Afq -n deno_bindgen https://deno.land/x/deno_bindgen/cli.ts
+# clang
+sudo apt-get install libclang-dev
 # wasm runtime
 curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash
 ```
