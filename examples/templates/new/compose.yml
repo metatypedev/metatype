@@ -1,6 +1,6 @@
 services:
   typegate:
-    image: ghcr.io/metatypedev/typegate:v0.1.11
+    image: ghcr.io/metatypedev/typegate:v0.1.12-0+dev
     platform: linux/amd64
     restart: always
     ports:
