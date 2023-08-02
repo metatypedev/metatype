@@ -15,6 +15,7 @@ LATEST_VERSION=$(curl "$RELEASE_URL/latest" -s -L -I -o /dev/null -w '%{url_effe
 LATEST_VERSION="${LATEST_VERSION##*v}"
 
 PLATFORM="${PLATFORM:-}"
+OUT_DIR="${OUT_DIR:-/usr/local/bin}"
 VERSION="${VERSION:-$LATEST_VERSION}"
 MACHINE=$(uname -m)
 
@@ -83,9 +84,32 @@ tar -xzf "$ASSET.$EXT" "$EXE"
 rm "$ASSET.$EXT"
 chmod +x "$EXE"
 
-cat <<EOF
+if [ "${OUT_DIR}" = "." ]; then
+  printf "\n\n%s has been extracted to your current directory\n" "$EXE"
+else
+  cat <<EOF
 
-$NAME has been extracted to your folder, please move it to /usr/local/bin (or any other folder on your PATH):
-$ sudo mv $EXE /usr/local/bin
-$ $EXE
+$EXE will be moved to $OUT_DIR
+Set the OUT_DIR environment variable to change the installation directory:
+$ curl -fsSL $INSTALLER_URL | OUT_DIR=. bash
+
 EOF
+  if [ -w "${OUT_DIR}" ]; then
+    read -p "Press enter to continue (or cancel with Ctrl+C):"
+    mv "$EXE" "$OUT_DIR"
+  else
+    printf "Your password is required to run \"sudo mv %s %s\":\n" "$EXE" "$OUT_DIR"
+    sudo mv "$EXE" "$OUT_DIR"
+  fi
+fi
+
+OUT_DIR=$(realpath $OUT_DIR)
+if [[ ":$PATH:" != *":$OUT_DIR:"* ]]; then
+  cat <<EOF
+
+The installation directory is not in your PATH, consider adding it:
+$ export PATH="\$PATH:$OUT_DIR"
+Or moving the executable to another directory in your PATH:
+$ sudo mv $EXE /usr/local/bin
+EOF
+fi
