@@ -1,5 +1,5 @@
 from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.python import Python, PyModuleMat
+from typegraph.runtimes.python import PyModuleMat, Python
 
 
 def test(x):
@@ -36,6 +36,11 @@ with TypeGraph("python_wasi") as g:
             t.struct({"input": tpe}),
             tpe,
             python.from_def(identity),
+        ),
+        hello=t.func(
+            t.struct({"world": t.string()}),
+            t.struct({"test": t.string()}),
+            python.from_lambda(lambda x: {"test": x["world"]}),
         ),
         default_policy=[public],
     )

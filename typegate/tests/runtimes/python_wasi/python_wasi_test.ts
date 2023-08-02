@@ -117,6 +117,22 @@ Meta.test("Python WASI runtime", async (t) => {
       .on(e);
   });
 
+  await t.should("support nested reeturn", async () => {
+    await gql`
+        query {
+          hello (world :"test"){
+            test
+          }
+        }
+      `
+      .expectData({
+        hello: {
+          test: "test",
+        },
+      })
+      .on(e);
+  });
+
   await t.should("work fast enough", async () => {
     const tests = [...Array(100).keys()].map((i) =>
       gql`
@@ -138,6 +154,7 @@ Meta.test("Python WASI runtime", async (t) => {
     const end = performance.now();
     const duration = end - start;
 
+    console.log(`duration: ${duration}ms`);
     assert(duration < 600, `Python WASI runtime was too slow: ${duration}ms`);
   });
 });

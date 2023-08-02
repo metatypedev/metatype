@@ -64,7 +64,7 @@ typegate_native:
   env:
     OUT_DIR: "target"
   command: |
-    rm -rfv $(deno info --json | jq -r .denoDir)/plug/file native/bindings.json
+    rm -rfv $(deno info --json | jq -r .denoDir)/plug/file typegate/native/bindings.json
     deno_bindgen -- -p native -F deno
   depends_on:
     - libs
