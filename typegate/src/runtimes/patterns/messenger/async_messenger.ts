@@ -20,11 +20,6 @@ export type MessengerSend<Broker, M> = (
 
 export type MessengerStop<Broker> = (broker: Broker) => Promise<void> | void;
 
-export type PendingOperation<M> = {
-  date: number;
-  message: Message<M>;
-};
-
 export class AsyncMessenger<Broker, M, A> {
   protected broker: Broker;
   #counter = 0;
@@ -34,7 +29,7 @@ export class AsyncMessenger<Broker, M, A> {
 
   #timer?: ReturnType<typeof setInterval>;
 
-  #operationQueues: Array<Array<PendingOperation<M>>> = [
+  #operationQueues: Array<Array<Message<M>>> = [
     [],
     [],
   ];
@@ -59,37 +54,29 @@ export class AsyncMessenger<Broker, M, A> {
   }
 
   initTimer() {
+    const maxDurationMs = config.timer_max_timeout_ms;
     if (this.#timer === undefined) {
       this.#timer = setInterval(() => {
         const currentQueue = this.#operationQueues[this.#queueIndex];
-        this.#queueIndex = this.#queueIndex == 0 ? 1 : 0;
+        this.#queueIndex = 1 - this.#queueIndex;
 
-        const item = currentQueue[0];
-        if (item !== undefined) {
-          if (!this.#tasks.has(item.message.id)) {
-            console.log(this.#operationQueues.map((q) => q.length));
-            // safe removal
-            currentQueue.shift();
-          } else {
-            const delta = Date.now() - item.date;
-            // force removal
-            const maxDurationMs = config.timer_max_timeout_ms;
-            if (delta >= maxDurationMs) {
-              console.log(this.#operationQueues.map((q) => q.length));
-              currentQueue.shift();
-              this.receive({
-                id: item.message.id,
-                error: `${maxDurationMs / 1000}s timeout exceeded (+${
-                  (delta - maxDurationMs) / 1000
-                }s)`,
-              });
-              if (config.timer_destroy_ressources) {
-                this.#stop(this.broker); // force abort
-              } // else: let the process owner destroy the ressources
-            }
+        let shouldStop = false;
+        for (const item of currentQueue) {
+          if (this.#tasks.has(item.id)) {
+            this.receive({
+              id: item.id,
+              error: `${maxDurationMs / 1000}s timeout exceeded`,
+            });
+            shouldStop = true;
           }
         }
-      }, config.timer_tick_ms);
+
+        if (shouldStop && config.timer_destroy_ressources) {
+          this.#stop(this.broker);
+          // TODO:
+          // restart()
+        }
+      }, maxDurationMs);
     }
   }
 
@@ -103,12 +90,7 @@ export class AsyncMessenger<Broker, M, A> {
     this.#tasks.set(id, { promise, hooks });
 
     const message = { id, op, data };
-    // keep the queues evenly balanced
-    this.#queueIndex = this.#queueIndex == 0 ? 1 : 0;
-    this.#operationQueues[this.#queueIndex].push({
-      date: Date.now(),
-      message,
-    });
+    this.#operationQueues[this.#queueIndex].push(message);
     void this.#send(this.broker, message);
     return promise;
   }

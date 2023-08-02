@@ -39,7 +39,6 @@ const schema = {
     }
     return bytes;
   }),
-  timer_tick_ms: z.number().positive().max(100),
   timer_max_timeout_ms: z.number().positive().max(60000), // 1min
   timer_destroy_ressources: z.boolean().default(true),
   tg_admin_password: z.string(),
@@ -83,8 +82,7 @@ const config = await configOrExit([
     trust_proxy: false,
     trust_header_ip: "X-Forwarded-For",
     tg_port: "7890",
-    timer_tick_ms: 100,
-    timer_max_timeout_ms: 10000,
+    timer_max_timeout_ms: 3000,
     timer_destroy_ressources: true,
   },
   mapKeys(Deno.env.toObject(), (k: string) => k.toLowerCase()),
