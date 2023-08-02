@@ -23,6 +23,10 @@ pub fn invalid_input_type(got: &str) -> TgError {
     format!("expected a Struct as input type but got {got}")
 }
 
+pub fn invalid_type(expected: &str, got: &str) -> TgError {
+    format!("expected {expected} but got {got}")
+}
+
 pub fn nested_typegraph_context(active: &str) -> TgError {
     format!("cannot init typegraph: typegraph '{active}' is still active")
 }

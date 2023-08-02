@@ -126,8 +126,18 @@ interface runtimes {
     }
 
     register-deno-func: func(data: materializer-deno-func, effect: effect) -> result<materializer-id, error>
+
+
     get-predefined-deno-func: func(data: materializer-deno-predefined) -> result<materializer-id, error>
     import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>
+
+
+    record prisma-runtime-data {
+        name: string,
+        connection-string-secret: string,
+    }
+
+    // create-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
 }
 
 world typegraph {

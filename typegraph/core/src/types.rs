@@ -5,7 +5,7 @@ use common::typegraph::TypeNode;
 use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
-use crate::errors::Result;
+use crate::errors::{self, Result};
 use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
@@ -221,5 +221,14 @@ impl TypeData for TypePolicy {
 impl WrapperTypeData for TypePolicy {
     fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
         store.get_type(self.tpe).ok()
+    }
+}
+
+impl Store {
+    pub fn type_as_struct(&self, type_id: TypeId) -> Result<&Struct> {
+        match self.get_type(type_id)? {
+            Type::Struct(s) => Ok(s),
+            _ => Err(errors::invalid_type("Struct", self.get_type_repr(type_id))),
+        }
     }
 }
