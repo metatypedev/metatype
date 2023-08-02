@@ -81,7 +81,6 @@ impl Action for Serialize {
         };
 
         if paths.is_empty() {
-            warn!("No typegraph definition module found.");
             bail!("No typegraph definition module found.");
         }
 
@@ -90,7 +89,7 @@ impl Action for Serialize {
             match loader.load_file(&path).await {
                 LoaderResult::Loaded(tgs) => {
                     if tgs.is_empty() {
-                        log::warn!("no typegraph");
+                        log::warn!("no typegraph in {path:?}");
                     }
                     for tg in tgs.into_iter() {
                         loaded.push(tg);
