@@ -1,7 +1,8 @@
-from typegraph import TypeGraph, effects, injection, policies, t
+from typegraph import TypeGraph, effects, policies, t
 from typegraph.providers.prisma import PrismaRuntime
 from typegraph.runtimes import deno
 from typegraph.runtimes.graphql import GraphQLRuntime
+from typegraph.effects import CREATE, UPDATE, DELETE, NONE
 
 with TypeGraph("injection") as g:
     req = t.struct(
@@ -13,27 +14,24 @@ with TypeGraph("injection") as g:
             "context": t.string().from_context("userId"),
             "optional_context": t.string().optional().from_context("inexistent"),
             "raw_obj": t.struct({"in": t.integer()}).set({"in": -1}),
-            "alt_raw": t.string().inject(injection.static("2")),
-            "alt_secret": t.string().inject(injection.secret("TEST_VAR")),
-            "alt_context": t.string().inject(injection.context("userId")),
+            "alt_raw": t.string().set("2"),
+            "alt_secret": t.string().from_secret("TEST_VAR"),
+            "alt_context": t.string().from_context("userId"),
             # "alt_context_missing": t.string().inject(injection.context("inexistent")), # fail
-            "alt_context_opt": t.string()
-            .optional()
-            .inject(injection.context("userId")),
-            "alt_context_opt_missing": t.string()
-            .optional()
-            .inject(injection.context("userId")),
+            "alt_context_opt": t.string().optional().from_context("userId"),
+            "alt_context_opt_missing": t.string().optional().from_context("userId"),
+            "date": t.datetime().inject("now"),
         }
     )
 
     req2 = t.struct(
         {
-            "operation": t.enum(["insert", "modify", "remove", "read"]).inject(
+            "operation": t.enum(["insert", "modify", "remove", "read"]).set(
                 {
-                    "create": injection.static("insert"),
-                    "update": injection.static("modify"),
-                    "delete": injection.static("remove"),
-                    None: injection.static("read"),
+                    CREATE: "insert",
+                    UPDATE: "modify",
+                    DELETE: "remove",
+                    NONE: "read",
                 }
             )
         }

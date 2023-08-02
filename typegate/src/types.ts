@@ -50,16 +50,21 @@ export type Resolver<T = Record<string, any>> = (
 
 export type Batcher = (x: any) => any;
 
-export interface RuntimeInitParams {
+// deno-lint-ignore no-empty-interface
+export interface RuntimeDataBase {}
+
+export interface RuntimeInitParams<
+  RTData extends RuntimeDataBase = RuntimeDataBase,
+> {
   typegraph: TypeGraphDS;
   materializers: TypeMaterializer[];
-  args: Record<string, unknown>;
+  args: RTData;
   secretManager: SecretManager;
 }
-export type RuntimeInit = Record<
-  string,
-  (params: RuntimeInitParams) => Promise<Runtime> | Runtime
->;
+
+export interface RuntimeInit {
+  (params: RuntimeInitParams): Promise<Runtime> | Runtime;
+}
 
 export interface ComputeStageProps {
   operationName: string;

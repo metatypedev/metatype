@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
-import { autoTest } from "../utils/autotest.ts";
+import { Meta } from "../utils/mod.ts";
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 
-await autoTest(localDir);
+await Meta.autoTest(localDir);
 
 const websiteDir = join(localDir, "../../../website");
 
-await autoTest(websiteDir);
+await Meta.autoTest(websiteDir);

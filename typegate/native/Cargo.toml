@@ -1,6 +1,6 @@
 [package]
 name = "native"
-version = "0.1.10"
+version = "0.1.12-0+dev"
 edition = "2021"
 
 [lib]
@@ -14,22 +14,17 @@ deno = []
 anyhow = "1.0"
 deno_bindgen = "0.8.1"
 serde = { version = "1.0.171", features = ["derive"] }
-# Some crates has been removed from prisma-engines:
-# instrospection-connector, introspection-core, sql-introspectcion-connector,
-# mongodb-introspection-connector, migration-core, migration-connector
-# Keep the tags until we update to the new implementation
-query-core = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0" }
-query-connector = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-introspection-connector = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-introspection-core = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-sql-introspection-connector = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-mongodb-introspection-connector = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-migration-core = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
-migration-connector = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
+query-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+query-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+request-handlers = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+datamodel-renderer = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+user-facing-errors = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+query-engine-metrics = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+schema-core = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+psl = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+schema-connector = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0" }
+futures = "0.3"
 temporal-client = { git = "https://github.com/temporalio/sdk-core" }
 temporal-sdk-core-protos = { git = "https://github.com/temporalio/sdk-core" }
 connection-string = "0.2.0"
@@ -50,7 +45,11 @@ rust-s3 = "0.33.0"
 http = "0.2.9"
 envconfig = "0.10.0"
 once_cell = "1.18.0"
-wasmedge-sdk = { version = "0.8.1", features = ["standalone"] }
 base64 = "0.21.2"
 tap = "1.0.1"
+num-traits = "0.2"
+num-derive = "0.3"
+wasmedge-sdk = "0.8.1"
+wasmedge-sys = "0.13.1"
+wasmedge-types = "0.4.1"
 colored = "2.0.4"

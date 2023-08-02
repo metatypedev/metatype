@@ -3,7 +3,5 @@ meta new your-folder
 cd your-folder
 docker compose up --detach
 
-curl -X POST http://localhost:7890/typegate \
-  -H 'Authorization: Basic YWRtaW46cGFzc3dvcmQ=' \ # base64 encoded "admin:password"
-  --data '{"query":"query list { typegraphs { name } }"}'
+docker compose logs typegate -f # to see the logs
 ```

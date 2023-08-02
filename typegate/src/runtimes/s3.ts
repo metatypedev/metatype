@@ -19,6 +19,7 @@ import {
   S3Materializer,
   S3RuntimeData,
 } from "../types/typegraph.ts";
+import { Typegate } from "../typegate/mod.ts";
 
 export class S3Runtime extends Runtime {
   private constructor(
@@ -173,3 +174,5 @@ export class S3Runtime extends Runtime {
     });
   }
 }
+
+Typegate.registerRuntime("s3", S3Runtime.init);

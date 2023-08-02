@@ -1,6 +1,0 @@
-model TreeNode {
-  id       String     @id @default(uuid()) @db.Uuid
-  children TreeNode[] @relation(name: "__rel_TreeNode_TreeNode_2")
-  parent   TreeNode   @relation(name: "__rel_TreeNode_TreeNode_2", fields: [parentId], references: [id])
-  parentId String     @db.Uuid
-}
