@@ -5,7 +5,7 @@ import { connect, Redis, RedisConnectOptions, XIdInput } from "redis";
 import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
 
-const logger = getLogger("sync");
+const logger = getLogger(import.meta);
 
 type SyncContext = {
   start: (cursor: XIdInput) => AsyncIterableIterator<Record<string, string>>;

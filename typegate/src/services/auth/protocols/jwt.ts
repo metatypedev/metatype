@@ -8,7 +8,7 @@ import { Protocol } from "./protocol.ts";
 import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
 import { Auth } from "../../../types/typegraph.ts";
 
-const logger = getLogger(import.meta.url);
+const logger = getLogger(import.meta);
 const encoder = new TextEncoder();
 
 export class JWTAuth extends Protocol {
