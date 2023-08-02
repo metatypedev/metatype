@@ -12,6 +12,7 @@ import { RedisRateLimiter } from "./typegate/rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
+import { init_runtimes } from "./runtimes/mod.ts";
 
 const logger = getLogger(import.meta);
 logger.info(`typegate v${config.version} starting`);
@@ -41,6 +42,9 @@ addEventListener("unhandledrejection", (e) => {
 
 // init rust native libs
 init_native();
+
+// load all runtimes
+await init_runtimes();
 
 const deferredTypegate = deferred<Typegate>();
 const register = await ReplicatedRegister.init(

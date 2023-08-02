@@ -24,7 +24,7 @@ import {
 } from "../typegraph.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
-import { dirname, fromFileUrl, join, resolve } from "std/path/mod.ts";
+import { dirname, fromFileUrl, join } from "std/path/mod.ts";
 import { RuntimeInit, RuntimeInitParams } from "../types.ts";
 import { Runtime } from "../runtimes/Runtime.ts";
 import { parseTypegraph } from "../typegraph/parser.ts";
@@ -61,23 +61,10 @@ export class Typegate {
     this.#registeredRuntimes.set(name, init);
   }
 
-  static async registerRuntimes() {
-    const runtimesDir = resolve(localDir, "../runtimes");
-    for await (const file of Deno.readDir(runtimesDir)) {
-      if (file.isFile && file.name.endsWith(".ts")) {
-        await import(resolve(runtimesDir, file.name));
-      }
-    }
-  }
-
   static async initRuntime(
     name: string,
     params: RuntimeInitParams,
   ): Promise<Runtime> {
-    if (this.#registeredRuntimes.size === 0) {
-      await this.registerRuntimes();
-    }
-
     const init = this.#registeredRuntimes.get(name);
     if (!init) {
       throw new Error(`Runtime ${name} is not registered`);
