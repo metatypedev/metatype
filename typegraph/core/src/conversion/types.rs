@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use common::typegraph::{
-    FunctionTypeData, IntegerTypeData, ObjectTypeData, StringTypeData, TypeNode, TypeNodeBase,
+    FunctionTypeData, IntegerTypeData, ObjectTypeData, StringFormat, StringTypeData, TypeNode,
+    TypeNodeBase,
 };
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
@@ -43,13 +44,21 @@ impl TypeConversion for Boolean {
 
 impl TypeConversion for StringT {
     fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        let format: Option<StringFormat> = match self.data.format.clone() {
+            Some(format) => {
+                let ret =
+                    serde_json::from_str(&format!("{:?}", format)).map_err(|e| e.to_string())?;
+                Some(ret)
+            }
+            None => None,
+        };
         Ok(TypeNode::String {
             base: gen_base(format!("string_{}", self.id)),
             data: StringTypeData {
                 min_length: self.data.min,
                 max_length: self.data.max,
-                format: None,
                 pattern: self.data.pattern.to_owned(),
+                format,
             },
         })
     }
