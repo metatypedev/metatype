@@ -47,8 +47,6 @@ export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
 export type RuntimeResolver = Record<string, Runtime>;
 
-export const typegraphVersion = "0.0.2";
-
 export class SecretManager {
   constructor(
     private typegraph: string,

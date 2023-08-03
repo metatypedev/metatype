@@ -158,7 +158,8 @@ jobs:
           shared-key: ${{ runner.os }}-rust-${{ hashFiles('**/rust-toolchain.toml') }}-${{ hashFiles('**/Cargo.lock') }}
       - run: |
           # test in native rust, not in wasm for a future rust SDK
-          # cargo test --locked --package typegraph_core
+          # without --tests, the --doc is causing a link error "syntax error in VERSION script"
+          cargo test --locked --package typegraph_core --tests
 
   test-meta-cli:
     needs: changes
