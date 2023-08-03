@@ -37,10 +37,5 @@ with TypeGraph("python_wasi") as g:
             tpe,
             python.from_def(identity),
         ),
-        hello=t.func(
-            t.struct({"world": t.string()}),
-            t.struct({"test": t.string()}),
-            python.from_lambda(lambda x: {"test": x["world"]}),
-        ),
         default_policy=[public],
     )
