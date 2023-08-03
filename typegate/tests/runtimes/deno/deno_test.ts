@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta, sleep } from "../../utils/mod.ts";
 import { join } from "std/path/mod.ts";
 
 Meta.test("Deno runtime", async (t) => {
@@ -181,4 +181,6 @@ Meta.test("Deno runtime: infinite loop or similar", async (t) => {
         .on(e);
     },
   );
+
+  await sleep(2000); // cooldown
 }, { sanitizeOps: false });
