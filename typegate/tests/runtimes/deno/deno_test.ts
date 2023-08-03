@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import config from "../../../src/config.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { join } from "std/path/mod.ts";
 
@@ -170,11 +169,6 @@ Meta.test("Deno runtime: infinite loop or similar", async (t) => {
       .on(e);
   });
 
-  // hack for avoiding leaking ops in test context
-  // This    --- OpOpen ---- [TestOpen --- OpClose --- TestClose]
-  // becomes --- OpOpen ---- [TestOpen --- TestClose] --- OpClose
-  const configValue = config.timer_destroy_ressources;
-  config.timer_destroy_ressources = false;
   await t.should(
     "safely fail upon an infinite loop",
     async () => {
@@ -187,5 +181,4 @@ Meta.test("Deno runtime: infinite loop or similar", async (t) => {
         .on(e);
     },
   );
-  config.timer_destroy_ressources = configValue;
-});
+}, { sanitizeOps: false });
