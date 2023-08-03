@@ -24,6 +24,7 @@ export class AsyncMessenger<Broker, M, A> {
   protected broker: Broker;
   #counter = 0;
   #tasks: Map<number, TaskData> = new Map();
+  #start: MessengerStart<Broker, A>;
   #send: MessengerSend<Broker, M>;
   #stop: MessengerStop<Broker>;
 
@@ -36,13 +37,15 @@ export class AsyncMessenger<Broker, M, A> {
   #queueIndex = 0;
 
   protected constructor(
-    broker: Broker,
+    start: MessengerStart<Broker, A>,
     send: MessengerSend<Broker, M>,
     stop: MessengerStop<Broker>,
   ) {
-    this.broker = broker;
+    this.#start = start;
     this.#send = send;
     this.#stop = stop;
+    // init broker
+    this.broker = start(this.receive.bind(this));
     this.initTimer();
   }
 
@@ -73,8 +76,7 @@ export class AsyncMessenger<Broker, M, A> {
 
         if (shouldStop && config.timer_destroy_ressources) {
           this.#stop(this.broker);
-          // TODO:
-          // restart()
+          this.broker = this.#start(this.receive.bind(this));
         }
       }, maxDurationMs);
     }
