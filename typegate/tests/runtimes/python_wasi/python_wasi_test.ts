@@ -99,7 +99,7 @@ Meta.test("Python WASI runtime", async (t) => {
       query {
         identity(
           input: {
-            a: 1234, 
+            a: 1234,
             b: { c: ["one", "two", "three" ] }
           }
         ) {
@@ -139,5 +139,19 @@ Meta.test("Python WASI runtime", async (t) => {
     const duration = end - start;
 
     assert(duration < 600, `Python WASI runtime was too slow: ${duration}ms`);
+  });
+});
+
+Meta.test("Python WASI runtime", async (t) => {
+  const e = await t.engine("runtimes/python_wasi/python_wasi.py");
+
+  await t.should("work once (lambda)", async () => {
+    await gql`
+      query {
+        stackoverflow(enable: true)
+      }
+    `
+      .expectErrorContains("maximum recursion depth exceeded")
+      .on(e);
   });
 });
