@@ -77,7 +77,6 @@ export const handlePlaygroundGraphQL = (
         <div id="graphiql">Loading...</div>
         <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
         <script src="https://unpkg.com/graphiql/graphiql.min.js" type="application/javascript"></script>
-        <script src="https://unpkg.com/react-use-cookie/index.js" type="application/javascript"></script>
         <script data-plugins="transform-es2015-modules-umd" type="text/babel">
           const fetcher = GraphiQL.createFetcher({
             url: "${url}"
