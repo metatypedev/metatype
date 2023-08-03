@@ -23,13 +23,10 @@ pub(crate) mod serialize;
 pub(crate) mod upgrade;
 
 #[derive(Parser, Debug)]
-#[clap(name="meta", about, long_about = None, disable_version_flag = true, disable_help_flag = true)]
+#[clap(name="meta", about, long_about = None, disable_version_flag = true)]
 pub(crate) struct Args {
     #[clap(long, value_parser)]
     pub version: bool,
-
-    #[clap(short, long, value_parser)]
-    pub help: bool,
 
     #[command(flatten)]
     pub verbose: Verbosity,
