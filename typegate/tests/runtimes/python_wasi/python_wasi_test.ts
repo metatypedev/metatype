@@ -142,13 +142,13 @@ Meta.test("Python WASI runtime", async (t) => {
   });
 });
 
-Meta.test("Python WASI runtime", async (t) => {
+Meta.test("Python WASI: infinite loop or similar", async (t) => {
   const e = await t.engine("runtimes/python_wasi/python_wasi.py");
 
-  await t.should("work once (lambda)", async () => {
+  await t.should("safely fail upon stackoverflow", async () => {
     await gql`
       query {
-        stackoverflow(enable: true)
+        stackOverflow(enable: true)
       }
     `
       .expectErrorContains("maximum recursion depth exceeded")

@@ -52,10 +52,15 @@ with TypeGraph("python_wasi") as g:
             tpe,
             python.from_def(identity),
         ),
-        stackoverflow=t.func(
+        stackOverflow=t.func(
             t.struct({"enable": t.boolean()}),
             t.boolean(),
             python.from_def(stackoverflow),
+        ),
+        infiniteLoop=t.func(
+            t.struct({"enable": t.boolean()}),
+            t.boolean(),
+            python.from_def(infinite_loop),
         ),
         default_policy=[public],
     )
