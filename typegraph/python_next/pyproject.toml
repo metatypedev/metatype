@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "typegraph_next"
-version = "0.1.12"
+version = "0.1.13-0+dev"
 description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
 authors = ["Metatype Contributors <support@metatype.dev>"]
 license = "MPL-2.0"
