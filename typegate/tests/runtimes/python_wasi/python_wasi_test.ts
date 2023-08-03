@@ -154,4 +154,21 @@ Meta.test("Python WASI: infinite loop or similar", async (t) => {
       .expectErrorContains("maximum recursion depth exceeded")
       .on(e);
   });
-});
+
+  // let tic = 0;
+  // setTimeout(() => console.log("hearbeat", tic++), 100);
+
+  // FIXME: blocks main deno thread
+  // current approach on deno_bindgen apply/applyDef needs to run on
+  // separate threads
+  // #[deno] works for applys but still manages to block the current thread
+  // await t.should("safely fail upon infinite loop", async () => {
+  //   await gql`
+  //     query {
+  //       infiniteLoop(enable: true)
+  //     }
+  //   `
+  //     .expectErrorContains("timeout exceeded")
+  //     .on(e);
+  // });
+}, { sanitizeOps: false });

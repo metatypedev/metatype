@@ -20,8 +20,12 @@ def stackoverflow(x):
 
 
 def infinite_loop(x):
-    while x["enable"]:
-        pass
+    import time
+
+    # while x["enable"]:
+    #     print("tic tac")
+    # blocking
+    time.sleep(20000)  # still blocking main thread
     return x["enable"]
 
 
