@@ -33,8 +33,8 @@ dev:
       (ARG DENO_BINDGEN_URL=).*(): DENO_BINDGEN_URL
       (ARG RUST_VERSION=).*(): RUST_VERSION
       (ARG WASMEDGE_VERSION=).*(): WASMEDGE_VERSION
-    typegate/src/typegraph.ts:
-      (export const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
+    typegate/src/typegraph/versions.ts:
+      (const typegraphVersion = ").*(";): TYPEGRAPH_VERSION
     typegraph/python/typegraph/graph/typegraph.py:
       (typegraph_version = ").*("): TYPEGRAPH_VERSION
     typegraph/core/src/typegraph.rs:

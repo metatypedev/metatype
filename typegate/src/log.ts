@@ -93,10 +93,18 @@ if (!config.rust_log) {
 const consoleHandler = new handlers.ConsoleHandler(
   config.log_level as LevelName,
   {
-    formatter: (log) =>
-      `${log.datetime.toISOString()} ${log.levelName.padEnd(5)} ${
-        log.loggerName.padEnd(12)
-      } ${log.msg}`,
+    formatter: (log) => {
+      let msg = log.msg;
+      for (const arg of log.args) {
+        msg = msg.replace(
+          "{}",
+          typeof arg === "string" ? arg : JSON.stringify(arg),
+        );
+      }
+      return `${log.datetime.toISOString()} ${log.levelName.padEnd(5)} ${
+        log.loggerName.padEnd(16)
+      } ${msg}`;
+    },
   },
 );
 

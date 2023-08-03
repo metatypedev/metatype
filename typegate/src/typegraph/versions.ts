@@ -1,9 +1,11 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeGraph, TypeGraphDS, typegraphVersion } from "../typegraph.ts";
+import { TypeGraph, TypeGraphDS } from "../typegraph.ts";
 import config from "../config.ts";
 import * as semver from "std/semver/mod.ts";
+
+const typegraphVersion = "0.0.2";
 
 const typegraphChangelog: Record<
   string,
@@ -26,6 +28,11 @@ const typegraphChangelog: Record<
     },
   },
 };
+
+export function isTypegraphUpToDate(typegraph: TypeGraphDS): boolean {
+  const { meta } = typegraph;
+  return semver.eq(semver.parse(typegraphVersion), semver.parse(meta.version));
+}
 
 export function upgradeTypegraph(typegraph: TypeGraphDS): TypeGraphDS {
   const typegraphName = TypeGraph.formatName(typegraph);

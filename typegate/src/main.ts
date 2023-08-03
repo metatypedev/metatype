@@ -27,7 +27,7 @@ Sentry.init({
     new Sentry.Integrations.Context({
       app: true,
       os: true,
-      device: false, // off due to buggy/unstable "TypeError: DenoOsUptime is not a function"
+      device: true,
       culture: true,
     }),
   ],
@@ -48,15 +48,19 @@ await init_runtimes();
 
 const deferredTypegate = deferred<Typegate>();
 const register = await ReplicatedRegister.init(
-  () => deferredTypegate,
+  deferredTypegate,
   redisConfig,
 );
-register.startSync();
-
 const limiter = await RedisRateLimiter.init(redisConfig);
-
 const typegate = new Typegate(register, limiter);
 deferredTypegate.resolve(typegate);
+
+const lastSync = await register.historySync().catch((err) => {
+  logger.error(err);
+  throw new Error(`failed to load history at boot, aborting: {err.message}`);
+});
+register.startSync(lastSync);
+
 await SystemTypegraph.loadAll(typegate, !config.packaged);
 
 const server = serve(

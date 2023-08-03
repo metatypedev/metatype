@@ -27,6 +27,9 @@ redis.call('HDEL', KEYS[1], ARGV[1])
 redis.call('XADD', KEYS[2], 'MAXLEN', '~', '10000', '*', 'name', ARGV[1], 'event', '${RM}', 'instance', ARGV[2])
 `.trim();
 
+type Serializer<T> = (elem: T) => Promise<string> | string;
+type Deserializer<T> = (value: string, initialLoad: boolean) => Promise<T> | T;
+
 export class RedisReplicatedMap<T> {
   instance: string;
   redis: Redis;
@@ -34,16 +37,16 @@ export class RedisReplicatedMap<T> {
   memory: Map<string, T>;
   key: string;
   ekey: string;
-  serializer: (elem: T) => Promise<string> | string;
-  deserializer: (value: string) => Promise<T> | T;
+  serializer: Serializer<T>;
+  deserializer: Deserializer<T>;
   sync: SyncContext | null;
 
   private constructor(
     name: string,
     redis: Redis,
     redisObs: Redis,
-    serializer: (elem: T) => Promise<string> | string,
-    deserializer: (value: string) => Promise<T> | T,
+    serializer: Serializer<T>,
+    deserializer: Deserializer<T>,
   ) {
     this.instance = crypto.randomUUID();
     this.redis = redis;
@@ -59,8 +62,8 @@ export class RedisReplicatedMap<T> {
   static async init<T>(
     name: string,
     connection: RedisConnectOptions,
-    serializer: (elem: T) => Promise<string> | string,
-    deserializer: (value: string) => Promise<T> | T,
+    serializer: Serializer<T>,
+    deserializer: Deserializer<T>,
   ) {
     // needs two connections because
     // 1. xread with block delays other commands
@@ -77,25 +80,37 @@ export class RedisReplicatedMap<T> {
     );
   }
 
-  async startSync() {
+  async historySync(): Promise<XIdInput> {
+    const { key, redis, memory, deserializer } = this;
+
+    // get last received message before loading history
+    const [lastMessage] = await redis.xrevrange(this.ekey, "+", "-", 1);
+    const lastId = lastMessage ? lastMessage.xid : 0;
+    logger.debug("last message loaded: {}", lastId);
+
+    const all = await redis.hgetall(key);
+    logger.debug("history load start: {} elements", all.length);
+    for (let i = 0; i < all.length; i += 2) {
+      const name = all[i];
+      const payload = all[i + 1];
+      logger.info(`reloaded addition: ${name}`);
+      memory.set(name, await deserializer(payload, true));
+    }
+    logger.debug("history load end");
+    return lastId;
+  }
+
+  // never ending function
+  async startSync(xid: XIdInput): Promise<void> {
     if (this.sync) {
       return;
     }
     const { key, redis, memory, deserializer } = this;
     this.sync = this.subscribe();
 
-    const [lastMessage] = await redis.xrevrange(this.ekey, "+", "-", 1);
-    const all = await redis.hgetall(key);
-    for (let i = 0; i < all.length; i += 2) {
-      const name = all[i];
-      const payload = all[i + 1];
-      logger.info(`reloaded addition: ${name}`);
-      memory.set(name, await deserializer(payload));
-    }
-
     for await (
       const { name, event, instance } of this.sync.start(
-        lastMessage ? lastMessage.xid : 0,
+        xid,
       )
     ) {
       if (this.instance == instance) {
@@ -108,7 +123,7 @@ export class RedisReplicatedMap<T> {
         }
         logger.info(`received addition: ${name}`);
 
-        memory.set(name, await deserializer(payload));
+        memory.set(name, await deserializer(payload, false));
       } else if (event === RM) {
         logger.info(`received removal: ${name}`);
         memory.delete(name);
