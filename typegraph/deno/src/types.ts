@@ -1,8 +1,10 @@
 import { core } from "./wit.ts";
 import {
   PolicyPerEffect,
+  TypeArray,
   TypeBase,
   TypeInteger,
+  TypeOptional,
   TypeString,
 } from "../gen/exports/metatype-typegraph-core.d.ts";
 import { Materializer } from "./runtimes/deno.ts";
@@ -94,7 +96,7 @@ export function integer(data: TypeInteger = {}, base: TypeBase = {}) {
   return new Integer(core.integerb(data, base), data, base);
 }
 
-export class String extends Typedef implements Readonly<TypeString> {
+export class StringT extends Typedef implements Readonly<TypeString> {
   readonly min?: number;
   readonly max?: number;
   readonly format?: string;
@@ -110,7 +112,65 @@ export class String extends Typedef implements Readonly<TypeString> {
 }
 
 export function string(data: TypeString = {}, base: TypeBase = {}) {
-  return new String(core.stringb(data, base), data, base);
+  return new StringT(core.stringb(data, base), data, base);
+}
+
+export class ArrayT extends Typedef {
+  readonly min?: number;
+  readonly max?: number;
+  readonly items?: number;
+  readonly uniqueItems?: boolean;
+
+  constructor(_id: number, data: TypeArray, base: TypeBase) {
+    super(_id, base);
+    this.min = data.min;
+    this.max = data.max;
+    this.items = data.of;
+    this.uniqueItems = data.uniqueItems;
+  }
+}
+
+export function array(
+  variant: Typedef,
+  data: Omit<TypeArray, "of"> = {},
+  base: TypeBase = {},
+) {
+  const completeData = {
+    of: variant._id,
+    ...data,
+  } as TypeArray;
+  return new ArrayT(
+    core.arrayb(completeData, base),
+    completeData,
+    base,
+  );
+}
+
+export class Optional extends Typedef {
+  readonly item?: number;
+  readonly defaultItem?: string;
+
+  constructor(_id: number, data: TypeOptional, base: TypeBase) {
+    super(_id, base);
+    this.item = data.of;
+    this.defaultItem = data.defaultItem;
+  }
+}
+
+export function optional(
+  variant: Typedef,
+  data: Omit<TypeOptional, "of"> = {},
+  base: TypeBase = {},
+) {
+  const completeData = {
+    of: variant._id,
+    ...data,
+  } as TypeOptional;
+  return new Optional(
+    core.optionalb(completeData, base),
+    completeData,
+    base,
+  );
 }
 
 export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
