@@ -3,4 +3,4 @@
 
 from typegraph_next.graph.typegraph import typegraph  # noqa
 
-version = "0.1.12-0+dev"
+version = "0.1.13-0+dev"

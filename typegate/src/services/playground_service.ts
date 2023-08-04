@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+import config from "../config.ts";
 import { Engine } from "../engine.ts";
 import { baseUrl } from "./middlewares.ts";
 
@@ -9,6 +10,9 @@ export const handlePlaygroundGraphQL = (
   engine: Engine,
 ): Response => {
   const url = `${baseUrl(request)}/${engine.name}`;
+  const auth = engine.name === "typegate" && config.debug
+    ? "Basic YWRtaW46cGFzc3dvcmQ="
+    : "";
 
   const html = `
     <!DOCTYPE html>
@@ -77,8 +81,15 @@ export const handlePlaygroundGraphQL = (
           const fetcher = GraphiQL.createFetcher({
             url: "${url}"
           });
+          const headers = localStorage.getItem("graphiql:headers") || JSON.stringify({
+            Authorization: "${auth}",
+          }, null, 2);
           const app = (
-            <GraphiQL shouldPersistHeaders={true} fetcher={fetcher}>
+            <GraphiQL 
+              fetcher={fetcher}
+              shouldPersistHeaders={true}
+              headers={headers}
+            >
               <GraphiQL.Logo>
                 <a href="https://metatype.dev/docs/reference" target="_blank">
                   <div className="graphiql-logo-link">
