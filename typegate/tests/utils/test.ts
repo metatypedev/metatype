@@ -208,8 +208,6 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      await Typegate.registerRuntimes();
-
       const typegate = new Typegate(new MemoryRegister(), new NoLimiter());
       const {
         systemTypegraphs = false,

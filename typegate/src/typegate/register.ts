@@ -3,11 +3,15 @@
 
 import { Engine } from "../engine.ts";
 import { RedisReplicatedMap } from "../replicated_map.ts";
-import { RedisConnectOptions } from "redis";
+import { RedisConnectOptions, XIdInput } from "redis";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { decrypt, encrypt } from "../crypto.ts";
 import { SecretManager, TypeGraphDS } from "../typegraph.ts";
 import { Typegate } from "./mod.ts";
+import {
+  isTypegraphUpToDate,
+  upgradeTypegraph,
+} from "../typegraph/versions.ts";
 
 export interface MessageEntry {
   type: "info" | "warning" | "error";
@@ -33,7 +37,7 @@ export abstract class Register {
 
 export class ReplicatedRegister extends Register {
   static async init(
-    getTypegate: () => Promise<Typegate>,
+    deferredTypegate: Promise<Typegate>,
     redisConfig: RedisConnectOptions,
   ): Promise<ReplicatedRegister> {
     const replicatedMap = await RedisReplicatedMap.init<Engine>(
@@ -45,22 +49,33 @@ export class ReplicatedRegister extends Register {
         );
         return JSON.stringify([engine.tg.tg, encryptedSecrets]);
       },
-      async (json: string) => {
-        const typegate = await getTypegate();
+      async (json: string, initialLoad: boolean) => {
+        const typegate = await deferredTypegate;
         const [tg, encryptedSecrets] = JSON.parse(json) as [
           TypeGraphDS,
           string,
         ];
         const secrets = JSON.parse(await decrypt(encryptedSecrets));
-        // typegraph name without prefix
+
+        // typegraph is updated while being pushed, this is only for iniial load
+        const hasUpgrade = initialLoad && isTypegraphUpToDate(tg);
+
+        // name without prefix
         const secretManager = new SecretManager(tg.types[0].title, secrets);
-        return typegate.initEngine(
-          tg,
+        const engine = await typegate.initEngine(
+          hasUpgrade ? upgradeTypegraph(tg) : tg,
           secretManager,
           true,
           SystemTypegraph.getCustomRuntimes(typegate),
           true,
         );
+
+        if (hasUpgrade) {
+          // update typegraph in storage, will trigger replica reloads but that's ok
+          replicatedMap.set(engine.name, engine);
+        }
+
+        return engine;
       },
     );
 
@@ -100,7 +115,11 @@ export class ReplicatedRegister extends Register {
     return this.replicatedMap.has(name);
   }
 
-  startSync(): void {
-    this.replicatedMap.startSync();
+  historySync(): Promise<XIdInput> {
+    return this.replicatedMap.historySync();
+  }
+
+  startSync(xid: XIdInput): void {
+    void this.replicatedMap.startSync(xid);
   }
 }

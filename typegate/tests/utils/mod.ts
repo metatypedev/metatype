@@ -15,9 +15,13 @@ import { test } from "./test.ts";
 import { meta } from "./meta.ts";
 import { testDir } from "./dir.ts";
 import { autoTest } from "./autotest.ts";
+import { init_runtimes } from "../../src/runtimes/mod.ts";
 
 // native must load first to avoid import race conditions and panic
 init_native();
+
+// same for loading runtimes
+await init_runtimes();
 
 export function gql(query: readonly string[], ...args: any[]) {
   const template = query

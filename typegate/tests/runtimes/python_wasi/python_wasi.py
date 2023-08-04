@@ -1,5 +1,5 @@
 from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.python import Python, PyModuleMat
+from typegraph.runtimes.python import PyModuleMat, Python
 
 
 def test(x):
