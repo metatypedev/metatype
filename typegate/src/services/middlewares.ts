@@ -4,6 +4,10 @@
 import { ConnInfo } from "std/http/server.ts";
 import config from "../config.ts";
 import { Engine } from "../engine.ts";
+import { getLogger } from "../log.ts";
+
+const logger = getLogger(import.meta);
+
 export function baseUrl(request: Request): string {
   const { headers, url } = request;
 
@@ -22,7 +26,17 @@ export function resolveIdentifier(
   connInfo: ConnInfo,
 ): string {
   if (engine.tg.tg.meta.rate?.context_identifier) {
-    return context[engine.tg.tg.meta.rate?.context_identifier] as string;
+    const contextId = context[engine.tg.tg.meta.rate?.context_identifier] as
+      | string
+      | undefined;
+    if (contextId) {
+      if (typeof contextId === "string") {
+        return contextId;
+      }
+      logger.warning(
+        `invalid context identifier type at ${engine.tg.tg.meta.rate?.context_identifier}, only string is supported, got: ${contextId}`,
+      );
+    }
   }
 
   if (config.trust_proxy) {

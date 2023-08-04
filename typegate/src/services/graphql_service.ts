@@ -12,7 +12,7 @@ import { Engine } from "../engine.ts";
 import * as ast from "graphql/ast";
 import { BadContext, ResolverError } from "../errors.ts";
 
-const logger = getLogger("graphql");
+const logger = getLogger(import.meta);
 
 export function isIntrospectionQuery(
   operation: ast.OperationDefinitionNode,
