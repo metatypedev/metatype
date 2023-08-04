@@ -9,8 +9,8 @@ use crate::errors::Result;
 use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    PolicySpec, TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy, TypeString,
-    TypeStruct,
+    PolicySpec, TypeArray, TypeBase, TypeFunc, TypeId, TypeInteger, TypeOptional, TypePolicy,
+    TypeProxy, TypeString, TypeStruct,
 };
 
 pub trait TypeData {
@@ -51,6 +51,8 @@ pub type Integer = ConcreteType<TypeInteger>;
 pub type Func = ConcreteType<TypeFunc>;
 pub type Boolean = ConcreteType<TypeBoolean>;
 pub type StringT = ConcreteType<TypeString>;
+pub type Array = ConcreteType<TypeArray>;
+pub type Optional = ConcreteType<TypeOptional>;
 pub type WithPolicy = WrapperType<TypePolicy>;
 
 #[derive(Debug)]
@@ -62,6 +64,8 @@ pub enum Type {
     Func(Func),
     Boolean(Boolean),
     String(StringT),
+    Array(Array),
+    Optional(Optional),
     WithPolicy(WithPolicy),
 }
 
@@ -181,6 +185,34 @@ impl TypeData for TypeString {
 
     fn variant_name(&self) -> String {
         "string".to_string()
+    }
+}
+
+impl TypeData for TypeArray {
+    fn get_display_params_into(&self, params: &mut Vec<String>) {
+        params.push(format!("items={}", self.of));
+        if let Some(min) = self.min {
+            params.push(format!("minItems={}", min));
+        }
+        if let Some(max) = self.max {
+            params.push(format!("maxItems={}", max));
+        }
+        // TODO: unique
+    }
+
+    fn variant_name(&self) -> String {
+        "array".to_string()
+    }
+}
+
+impl TypeData for TypeOptional {
+    fn get_display_params_into(&self, params: &mut Vec<String>) {
+        params.push(format!("item={}", self.of));
+        // TODO: default
+    }
+
+    fn variant_name(&self) -> String {
+        "optional".to_string()
     }
 }
 

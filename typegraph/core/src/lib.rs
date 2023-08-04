@@ -15,11 +15,13 @@ use errors::Result;
 use global_store::{with_store, with_store_mut};
 use indoc::formatdoc;
 use regex::Regex;
-use types::{Boolean, Func, Integer, Proxy, StringT, Struct, Type, TypeBoolean, WithPolicy};
+use types::{
+    Array, Boolean, Func, Integer, Optional, Proxy, StringT, Struct, Type, TypeBoolean, WithPolicy,
+};
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy,
-    TypeString, TypeStruct, TypegraphInitParams,
+    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeFunc, TypeId, TypeInteger,
+    TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -111,6 +113,23 @@ impl wit::core::Core for Lib {
         }
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::String(StringT { id, base, data }))
+        }))
+    }
+
+    fn arrayb(data: TypeArray, base: TypeBase) -> Result<TypeId> {
+        if let (Some(min), Some(max)) = (data.min, data.max) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Array(Array { id, base, data }))
+        }))
+    }
+
+    fn optionalb(data: TypeOptional, base: TypeBase) -> Result<TypeId> {
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Optional(Optional { id, base, data }))
         }))
     }
 

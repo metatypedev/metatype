@@ -23,14 +23,12 @@ interface core {
     record type-proxy {
         name: string,
     }
-
     proxyb: func(data: type-proxy) -> result<type-id, error>
 
     record type-integer {
         min: option<s32>,
         max: option<s32>,
     }
-
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
 
     booleanb: func(base: type-base) -> result<type-id, error>
@@ -41,13 +39,25 @@ interface core {
         format: option<string>,
         pattern: option<string>,
     }
-
     stringb: func(data: type-string, base: type-base) -> result<type-id, error>
+
+    record type-array {
+        of: type-id,
+        min: option<u32>,
+        max: option<u32>,
+        unique-items: option<bool>
+    }
+    arrayb: func(data: type-array, base: type-base) -> result<type-id, error>
+
+    record type-optional {
+        of: type-id,
+        default-item: option<string>
+    }
+    optionalb: func(data: type-optional, base: type-base) -> result<type-id, error>
 
     record type-struct {
         props: list<tuple<string, type-id>>,
     }
-
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
 
     get-type-repr: func(id: type-id) -> result<string, error>

@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use common::typegraph::{
-    FunctionTypeData, IntegerTypeData, ObjectTypeData, StringFormat, StringTypeData, TypeNode,
-    TypeNodeBase,
+    ArrayTypeData, FunctionTypeData, IntegerTypeData, ObjectTypeData, OptionalTypeData,
+    StringFormat, StringTypeData, TypeNode, TypeNodeBase,
 };
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 
 use crate::errors::{self, Result};
 use crate::global_store::with_store;
-use crate::types::{Boolean, Integer, Proxy, StringT, Struct, Type, WithPolicy};
+use crate::types::{Array, Boolean, Integer, Optional, Proxy, StringT, Struct, Type, WithPolicy};
 use crate::wit::core::TypeId;
 use crate::{typegraph::TypegraphContext, types::Func};
 
@@ -59,6 +59,32 @@ impl TypeConversion for StringT {
                 max_length: self.data.max,
                 pattern: self.data.pattern.to_owned(),
                 format,
+            },
+        })
+    }
+}
+
+impl TypeConversion for Array {
+    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        Ok(TypeNode::Array {
+            base: gen_base(format!("array_{}", self.id)),
+            data: ArrayTypeData {
+                items: self.data.of,
+                max_items: self.data.max,
+                min_items: self.data.min,
+                unique_items: self.data.unique_items,
+            },
+        })
+    }
+}
+
+impl TypeConversion for Optional {
+    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        Ok(TypeNode::Optional {
+            base: gen_base(format!("optional_{}", self.id)),
+            data: OptionalTypeData {
+                item: self.data.of,
+                default_value: None, // TODO
             },
         })
     }
