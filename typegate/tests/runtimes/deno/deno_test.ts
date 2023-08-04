@@ -182,5 +182,7 @@ Meta.test("Deno runtime: infinite loop or similar", async (t) => {
     },
   );
 
-  await sleep(2000); // cooldown
+  const cooldownTime = 5;
+  console.log(`cooldown ${cooldownTime}s`);
+  await sleep(cooldownTime * 1000);
 }, { sanitizeOps: false });

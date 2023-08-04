@@ -81,9 +81,7 @@ async function download(url: string, innerDir?: string) {
 
 export class PythonVirtualMachine {
   #config: WasiVmInitConfig;
-  #moduleRegister: Map<string, string>;
-  #lambdaRegister: Map<string, string>;
-  #defRegister: Map<string, string>;
+  #lambdas: Set<string>;
 
   constructor() {
     this.#config = {
@@ -92,9 +90,7 @@ export class PythonVirtualMachine {
       pylib_path: join(config.tmp_dir, "libpython/usr/local/lib"),
       wasi_mod_path: join(config.tmp_dir, "python3.11.1-wasi-reactor.wasm"),
     };
-    this.#moduleRegister = new Map<string, string>();
-    this.#lambdaRegister = new Map<string, string>();
-    this.#defRegister = new Map<string, string>();
+    this.#lambdas = new Set<string>();
   }
 
   async setup(vmName: string, appDirectoryPath?: string) {
@@ -129,33 +125,7 @@ export class PythonVirtualMachine {
         })
       ),
     );
-    this.#moduleRegister.clear();
-    this.#lambdaRegister.clear();
-    this.#defRegister.clear();
-  }
-
-  async restart() {
-    // destroy vm first
-    nativePythonResult(
-      await promisify(() =>
-        unregister_virtual_machine({
-          vm_name: this.getVmName(),
-        })
-      ),
-    );
-    // replay register
-    for (const [id, code] of this.#lambdaRegister.entries()) {
-      logger.info(`register ${id} back`);
-      await this.registerLambda(id, code);
-    }
-    for (const [name, code] of this.#defRegister.entries()) {
-      logger.info(`register ${name} back`);
-      await this.registerDef(name, code);
-    }
-    for (const [name, code] of this.#moduleRegister.entries()) {
-      logger.info(`register ${name} back`);
-      await this.registerModule(name, code);
-    }
+    this.#lambdas.clear();
   }
 
   getVmName() {
@@ -172,7 +142,7 @@ export class PythonVirtualMachine {
         })
       ),
     );
-    this.#lambdaRegister.set(name, code);
+    this.#lambdas.add(name);
   }
 
   async registerDef(name: string, code: string) {
@@ -185,7 +155,6 @@ export class PythonVirtualMachine {
         })
       ),
     );
-    this.#defRegister.set(name, code);
   }
 
   async registerModule(name: string, code: string) {
@@ -198,7 +167,6 @@ export class PythonVirtualMachine {
         })
       ),
     );
-    this.#moduleRegister.set(name, code);
   }
 
   async applyLambda(id: number, name: string, args: unknown[]) {
@@ -230,41 +198,14 @@ export class PythonVirtualMachine {
   }
 
   async apply(id: number, name: string, args: unknown[]) {
-    const resetErrorSignal = "timeout exceeded";
-    let timeoutRef;
-    const errorOnTimeout = new Promise((_, reject) => {
-      timeoutRef = setTimeout(() => {
-        reject(new Error(resetErrorSignal));
-      }, config.timer_max_timeout_ms);
-    });
-
-    try {
-      // FIXME: time.sleep, infinite loops are still an issue
-      // Notes:
-      // 1. if #[deno_bindgen], apply* runs on main thread => blocking
-      // 2. if #[deno], apply* runs on main separate thread? => still blocking
-      // alternative solution:
-      // timeout at wasm level
-      if (this.#lambdaRegister.has(name)) {
-        return await Promise.race([
-          errorOnTimeout,
-          this.applyLambda(id, name, args),
-        ]);
-      }
-      return await Promise.race([
-        errorOnTimeout,
-        this.applyDef(id, name, args),
-      ]);
-    } catch (err) {
-      if (err.message === resetErrorSignal) {
-        logger.info(
-          `force restart vm "${this.getVmName()}" due to "${err.message}"`,
-        );
-        await this.restart();
-      }
-      throw err;
-    } finally {
-      clearTimeout(timeoutRef);
+    // Notes:
+    // 1. if #[deno_bindgen], apply* runs on main thread => blocking
+    // 2. if #[deno], apply* runs on main separate thread? => still blocking
+    // alternative solution:
+    // timeout at wasm level
+    if (this.#lambdas.has(name)) {
+      return await this.applyLambda(id, name, args);
     }
+    return await this.applyDef(id, name, args);
   }
 }
