@@ -237,7 +237,7 @@ jobs:
       - changes
       - test-meta-cli
     if: ${{ needs.changes.outputs.typegate == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 60
     services:
       redis:
