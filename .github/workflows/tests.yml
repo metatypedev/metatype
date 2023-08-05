@@ -302,6 +302,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Set up GCC
+        uses: egor-tensin/setup-gcc@v1
       - uses: actions/cache@v3
         with:
           path: .venv
