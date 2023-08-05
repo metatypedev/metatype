@@ -312,6 +312,7 @@ jobs:
       - env:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
+          sudo apt update
           sudo apt install -y --no-install-recommends gcc
           tar -xvf meta.tar
           python3 -m venv .venv

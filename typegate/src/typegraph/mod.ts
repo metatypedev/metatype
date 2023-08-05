@@ -63,7 +63,7 @@ export class SecretManager {
     if (valueFromSecrets) {
       ensure(
         !valueFromEnv,
-        `secret ${secretName} cannot override env defined secret`,
+        `secret "${secretName}" from metatype.yaml cannot override a secret defined by environment variable in the typegate: choose one of those two options`,
       );
       return valueFromSecrets;
     }
