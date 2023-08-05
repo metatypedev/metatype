@@ -237,7 +237,7 @@ jobs:
       - changes
       - test-meta-cli
     if: ${{ needs.changes.outputs.typegate == 'true' }}
-    runs-on: self-hosted
+    runs-on: self-ubuntu-latest
     timeout-minutes: 60
     services:
       redis:
@@ -299,6 +299,10 @@ jobs:
         with:
           version: ${{ env.PROTOC_VERSION }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
       - uses: actions/cache@v3
         with:
           path: .venv
