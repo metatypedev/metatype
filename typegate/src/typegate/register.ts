@@ -65,7 +65,6 @@ export class ReplicatedRegister extends Register {
         const engine = await typegate.initEngine(
           hasUpgrade ? upgradeTypegraph(tg) : tg,
           secretManager,
-          true,
           SystemTypegraph.getCustomRuntimes(typegate),
           true,
         );

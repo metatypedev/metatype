@@ -12,7 +12,7 @@ import { handleInfo } from "../services/info_service.ts";
 import { methodNotAllowed, notFound } from "../services/responses.ts";
 import { handleRest } from "../services/rest_service.ts";
 import { Engine } from "../engine.ts";
-import { InitHandler, PushHandler, PushResponse } from "../typegate/hooks.ts";
+import { PushHandler, PushResponse } from "../typegate/hooks.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../graphql/graphql.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
@@ -73,7 +73,6 @@ export class Typegate {
   }
 
   #onPushHooks: PushHandler[] = [];
-  #onInitHooks: InitHandler[] = [];
 
   constructor(
     public readonly register: Register,
@@ -89,10 +88,6 @@ export class Typegate {
     this.#onPushHooks.push(handler);
   }
 
-  #onInit(handler: InitHandler) {
-    this.#onInitHooks.push(handler);
-  }
-
   async #handleOnPushHooks(
     typegraph: TypeGraphDS,
     secretManager: SecretManager,
@@ -105,18 +100,6 @@ export class Typegate {
     }
 
     return res;
-  }
-
-  async #handleOnInitHooks(
-    typegraph: TypeGraph,
-    secretManager: SecretManager,
-    sync: boolean,
-  ): Promise<void> {
-    await Promise.all(
-      this.#onInitHooks.map((handler) =>
-        handler(typegraph, secretManager, sync)
-      ),
-    );
   }
 
   async handle(request: Request, connInfo: ConnInfo): Promise<Response> {
@@ -235,7 +218,6 @@ export class Typegate {
     const engine = await this.initEngine(
       tg,
       secretManager,
-      false,
       SystemTypegraph.getCustomRuntimes(this),
       enableIntrospection,
     );
@@ -249,7 +231,6 @@ export class Typegate {
   async initEngine(
     tgDS: TypeGraphDS,
     secretManager: SecretManager,
-    sync: boolean, // redis synchronization ??
     customRuntime: RuntimeResolver = {},
     enableIntrospection: boolean,
   ): Promise<Engine> {
@@ -274,8 +255,6 @@ export class Typegate {
       customRuntime,
       introspection,
     );
-
-    this.#handleOnInitHooks(tg, secretManager, sync);
 
     const engine = new Engine(tg);
     await engine.registerEndpoints();
