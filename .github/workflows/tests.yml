@@ -331,6 +331,7 @@ jobs:
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
 
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
+          cargo build --locked --package native -F deno
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
           deno run -A dev/test.ts --threads 2 -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
