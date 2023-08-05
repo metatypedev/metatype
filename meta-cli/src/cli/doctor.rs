@@ -42,6 +42,8 @@ impl Action for Doctor {
         - gitignore ignore correct folder
         */
 
+        println!("————— SDKs ——————\n");
+
         let version_cli = get_version();
         let metatype_file = find_in_parents(dir, METATYPE_FILES)?;
         let venv_folder = find_in_parents(dir, VENV_FOLDERS)?;
