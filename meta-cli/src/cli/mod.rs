@@ -12,6 +12,8 @@ use normpath::PathExt;
 use reqwest::Url;
 use std::path::PathBuf;
 
+mod ui;
+
 pub(crate) mod codegen;
 pub(crate) mod completion;
 pub(crate) mod deploy;

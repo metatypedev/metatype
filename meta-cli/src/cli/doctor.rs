@@ -1,28 +1,28 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{
-    cmp::{self},
-    path::PathBuf,
-};
+use std::{path::PathBuf, sync::Arc};
 
 use crate::{
-    config::{METATYPE_FILES, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS},
+    cli::ui,
+    config::{Config, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS},
     fs::{clean_path, find_in_parents},
     global_config::GlobalConfig,
+    typegraph::loader::Discovery,
 };
 
 use super::{Action, GenArgs};
-use anyhow::{Ok, Result};
+use anyhow::Result;
 use async_trait::async_trait;
 use clap::Parser;
+use colored::Colorize;
 use common::get_version;
-use terminal_size::terminal_size;
+use std::process::Command;
 
 #[derive(Parser, Debug)]
 pub struct Doctor {}
 
-fn str_or_not_found(dir: &PathBuf, path: &Option<PathBuf>) -> Result<String> {
+fn str_or_ko(dir: &PathBuf, path: &Option<PathBuf>) -> Result<String> {
     let str = match path {
         Some(p) => clean_path(dir, p)?,
         None => "not found".to_string(),
@@ -30,59 +30,169 @@ fn str_or_not_found(dir: &PathBuf, path: &Option<PathBuf>) -> Result<String> {
     Ok(str)
 }
 
-fn print_box(title: &str, content: &str, target_width: usize) {
-    let width = cmp::min(
-        target_width,
-        terminal_size().map(|(w, _)| w.0).unwrap_or(80) as usize,
-    );
-    let wrap_width = width - 4;
-    println!("┌{}┐", "-".repeat(width - 2));
-    println!("| {} {}|", title, " ".repeat(wrap_width - title.len()),);
-    for line in textwrap::wrap(content.trim(), wrap_width - 2) {
-        println!("| > {} {}|", line, " ".repeat(wrap_width - 2 - line.len()),);
-    }
-    println!("└{}┘", "-".repeat(width - 2));
+fn shell(cmds: Vec<&str>) -> Result<String> {
+    let output = Command::new(cmds[0]).args(&cmds[1..]).output()?;
+    let ret = String::from_utf8(output.stdout).unwrap().trim().to_string();
+    Ok(ret)
 }
 
 #[async_trait]
 impl Action for Doctor {
     async fn run(&self, args: GenArgs) -> Result<()> {
         let dir = &args.dir()?;
-        println!("Current directory: {}", dir.display());
-        println!("Global config: {}", GlobalConfig::default_path()?.display());
 
-        /*
-        - docker-compose
-        - container running
-        - typegate targets reacheable
-        - secrets access
-        - runtime healtcheck
-        - gitignore ignore correct folder
-        */
+        let w = 60;
+        let c = 20;
 
-        println!("————— SDKs ——————\n");
-
-        print_box("SDKs", "Python", 40);
-
-        let version_cli = get_version();
-        let metatype_file = find_in_parents(dir, METATYPE_FILES)?;
-        let venv_folder = find_in_parents(dir, VENV_FOLDERS)?;
-        let pyproject_file = find_in_parents(dir, PYPROJECT_FILES)?;
-        let pipfile_file = find_in_parents(dir, PIPFILE_FILES)?;
-        let requirements_file = find_in_parents(dir, REQUIREMENTS_FILES)?;
-
-        println!("Metatype file: {}", str_or_not_found(dir, &metatype_file)?);
-        println!("venv folder: {}", str_or_not_found(dir, &venv_folder)?);
-        println!(
-            "pyproject file: {}",
-            str_or_not_found(dir, &pyproject_file)?
+        ui::title("Global", w);
+        ui::cols(c, "curr. directory", &dir.display().to_string());
+        ui::cols(
+            c,
+            "global config",
+            &GlobalConfig::default_path()?.display().to_string(),
         );
-        println!("pipfile file: {}", str_or_not_found(dir, &pipfile_file)?);
-        println!(
-            "requirements file: {}",
-            str_or_not_found(dir, &requirements_file)?
+        ui::cols(c, "meta-cli version", get_version());
+        match shell(vec!["docker", "--version"]) {
+            Ok(s) => {
+                ui::cols(c, "docker version", &s);
+                let containers = shell(vec![
+                    "docker",
+                    "container",
+                    "ls",
+                    "--format",
+                    "{{.Image}} ({{.Status}})",
+                ])?;
+                let containers = containers
+                    .split('\n')
+                    .map(|l| l.trim())
+                    .filter(|l| !l.is_empty())
+                    .collect::<Vec<&str>>()
+                    .join(", ");
+                ui::cols(
+                    20,
+                    "containers",
+                    if containers.is_empty() {
+                        "none"
+                    } else {
+                        &containers
+                    },
+                );
+            }
+            Err(_) => {
+                ui::cols(c, "docker version", "none");
+            }
+        }
+        println!();
+
+        let config = Config::load_or_find(args.config.clone(), dir);
+
+        ui::title("Project", w);
+        match config {
+            Ok(config) => {
+                ui::cols(c, "metatype file", &str_or_ko(dir, &config.path)?);
+
+                let targets = config
+                    .typegates
+                    .clone()
+                    .into_iter()
+                    .map(|(target, info)| {
+                        let url = info.url.to_string();
+                        let kind = if url.contains("//localhost") || url.contains("//127.0.0.1") {
+                            "local"
+                        } else if url.contains("metatype.cloud") {
+                            "cloud"
+                        } else {
+                            "remote"
+                        };
+
+                        format!(
+                            "{}{} ({}, {} secrets)",
+                            info.prefix.unwrap_or("".to_string()).italic(),
+                            target,
+                            kind,
+                            info.env.len()
+                        )
+                    })
+                    .collect::<Vec<_>>();
+
+                let base_dir = config.base_dir.clone();
+                let tgs = Discovery::new(Arc::new(config), base_dir, true)
+                    .get_all()
+                    .await?
+                    .into_iter()
+                    .map(|p| clean_path(dir, p).unwrap_or("".to_string()))
+                    .collect::<Vec<_>>();
+
+                ui::cols(
+                    c,
+                    "targets",
+                    &format!("[{}] {}", targets.len(), targets.join(", ")),
+                );
+                ui::cols(
+                    c,
+                    "typegraphs",
+                    &format!("[{}] {}", tgs.len(), tgs.join(", ")),
+                );
+            }
+            Err(e) => {
+                ui::cols(c, "metatype file", &e.to_string());
+            }
+        }
+
+        println!();
+        let python_version = shell(vec!["python", "--version"]).ok();
+        let deno_version = shell(vec!["deno", "-V"]).ok();
+        let node_version = shell(vec!["node", "--version"]).ok();
+
+        ui::title("Python SDK", w);
+        if let Some(v) = python_version {
+            let venv_folder = find_in_parents(dir, VENV_FOLDERS)?;
+            let pyproject_file = find_in_parents(dir, PYPROJECT_FILES)?;
+            let pipfile_file = find_in_parents(dir, PIPFILE_FILES)?;
+            let requirements_file = find_in_parents(dir, REQUIREMENTS_FILES)?;
+
+            ui::cols(c, "python version", &v);
+            ui::cols(
+                c,
+                "python bin",
+                &clean_path(dir, shell(vec!["which", "python"])?)?,
+            );
+            ui::cols(c, "venv folder", &str_or_ko(dir, &venv_folder)?);
+            ui::cols(c, "pyproject file", &str_or_ko(dir, &pyproject_file)?);
+            ui::cols(c, "pipfile file", &str_or_ko(dir, &pipfile_file)?);
+            ui::cols(c, "requirements file", &str_or_ko(dir, &requirements_file)?);
+            ui::cols(
+                c,
+                "typegraph version",
+                &shell(vec![
+                    "python",
+                    "-c",
+                    "import typegraph; print(typegraph.version)",
+                ])?,
+            );
+        } else {
+            ui::cols(c, "python version", "not installed");
+        }
+
+        println!();
+        ui::title("Typescript SDK", w);
+        if let Some(v) = deno_version {
+            ui::cols(c, "deno version", &v);
+        } else {
+            ui::cols(c, "deno version", "none");
+        }
+        if let Some(v) = node_version {
+            ui::cols(c, "node version", &v);
+        } else {
+            ui::cols(c, "node version", "none");
+        }
+
+        println!();
+        ui::print_box(
+            "Check that all versions match.",
+            "In case of issue or question, please raise a ticket on:\nhttps://github.com/metatypedev/metatype/issues\nOr browse the documentation:\nhttps://metatype.dev/docs/reference",
+            w + 2,
         );
-        println!("Meta CLI version: {version_cli}");
         Ok(())
     }
 }
