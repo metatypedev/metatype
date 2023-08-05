@@ -75,6 +75,7 @@ directories = "5.0.1"
 grep = "0.2.12"
 semver = "1.0.18"
 ratatui = "0.22.0"
+crossterm = "0.26.1"
 
 [dev-dependencies]
 assert_cmd = "2.0.12"

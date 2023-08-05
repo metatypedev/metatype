@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::path::PathBuf;
+use std::{io, path::PathBuf};
 
 use crate::{
     config::{METATYPE_FILES, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS},
@@ -14,6 +14,12 @@ use anyhow::{Ok, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use common::get_version;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
+use ratatui::{
+    prelude::CrosstermBackend,
+    widgets::{Block, Borders},
+    Terminal,
+};
 
 #[derive(Parser, Debug)]
 pub struct Doctor {}
@@ -43,6 +49,17 @@ impl Action for Doctor {
         */
 
         println!("————— SDKs ——————\n");
+
+        let stdout = io::stdout();
+        let backend = CrosstermBackend::new(stdout);
+        let mut terminal = Terminal::new(backend)?;
+        enable_raw_mode()?;
+        terminal.draw(|f| {
+            let size = f.size();
+            let block = Block::default().title("Block").borders(Borders::ALL);
+            f.render_widget(block, size);
+        })?;
+        disable_raw_mode()?;
 
         let version_cli = get_version();
         let metatype_file = find_in_parents(dir, METATYPE_FILES)?;
