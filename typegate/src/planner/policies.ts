@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { TypeGraph } from "../typegraph.ts";
+import { TypeGraph } from "../typegraph/mod.ts";
 import {
   Context,
   Info,

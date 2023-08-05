@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { ComputeStage } from "../../engine.ts";
-import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../../typegraph.ts";
+import {
+  TypeGraph,
+  TypeGraphDS,
+  TypeMaterializer,
+} from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { DenoRuntimeData } from "../../types/typegraph.ts";

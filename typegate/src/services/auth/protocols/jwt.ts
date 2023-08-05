@@ -3,7 +3,7 @@
 
 import * as jwt from "jwt";
 import { getLogger } from "../../../log.ts";
-import { SecretManager } from "../../../typegraph.ts";
+import { SecretManager } from "../../../typegraph/mod.ts";
 import { Protocol } from "./protocol.ts";
 import { DenoRuntime } from "../../../runtimes/deno/deno.ts";
 import { Auth } from "../../../types/typegraph.ts";

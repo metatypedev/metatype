@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { MessageEntry, Migrations } from "../typegate/register.ts";
-import { SecretManager, TypeGraph, TypeGraphDS } from "../typegraph.ts";
+import { SecretManager, TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
 
 const Message = {
   INFO: "info",

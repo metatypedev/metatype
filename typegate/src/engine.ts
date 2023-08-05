@@ -3,7 +3,7 @@
 
 import { parse } from "graphql";
 import * as ast from "graphql/ast";
-import type { TypeGraph } from "./typegraph.ts";
+import type { TypeGraph } from "./typegraph/mod.ts";
 import { JSONValue } from "./utils.ts";
 import { findOperation, FragmentDefs } from "./graphql.ts";
 import * as log from "std/log/mod.ts";

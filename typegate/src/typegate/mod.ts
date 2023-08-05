@@ -21,7 +21,7 @@ import {
   SecretManager,
   TypeGraph,
   TypeGraphDS,
-} from "../typegraph.ts";
+} from "../typegraph/mod.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";

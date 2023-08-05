@@ -5,7 +5,7 @@ import * as ast from "graphql/ast";
 import { FieldNode, Kind } from "graphql";
 import { ComputeStage } from "../engine.ts";
 import { FragmentDefs, resolveSelection } from "../graphql.ts";
-import { TypeGraph } from "../typegraph.ts";
+import { TypeGraph } from "../typegraph/mod.ts";
 import { ComputeStageProps } from "../types.ts";
 import { ensureNonNullable, getReverseMapNameToQuery } from "../utils.ts";
 import { getWrappedType, isQuantifier, Type, UnionNode } from "../type_node.ts";
