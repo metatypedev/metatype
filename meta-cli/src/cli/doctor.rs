@@ -1,7 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::{io, path::PathBuf};
+use std::{
+    cmp::{self},
+    path::PathBuf,
+};
 
 use crate::{
     config::{METATYPE_FILES, PIPFILE_FILES, PYPROJECT_FILES, REQUIREMENTS_FILES, VENV_FOLDERS},
@@ -14,12 +17,7 @@ use anyhow::{Ok, Result};
 use async_trait::async_trait;
 use clap::Parser;
 use common::get_version;
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode};
-use ratatui::{
-    prelude::CrosstermBackend,
-    widgets::{Block, Borders},
-    Terminal,
-};
+use terminal_size::terminal_size;
 
 #[derive(Parser, Debug)]
 pub struct Doctor {}
@@ -30,6 +28,20 @@ fn str_or_not_found(dir: &PathBuf, path: &Option<PathBuf>) -> Result<String> {
         None => "not found".to_string(),
     };
     Ok(str)
+}
+
+fn print_box(title: &str, content: &str, target_width: usize) {
+    let width = cmp::min(
+        target_width,
+        terminal_size().map(|(w, _)| w.0).unwrap_or(80) as usize,
+    );
+    let wrap_width = width - 4;
+    println!("┌{}┐", "-".repeat(width - 2));
+    println!("| {} {}|", title, " ".repeat(wrap_width - title.len()),);
+    for line in textwrap::wrap(content.trim(), wrap_width - 2) {
+        println!("| > {} {}|", line, " ".repeat(wrap_width - 2 - line.len()),);
+    }
+    println!("└{}┘", "-".repeat(width - 2));
 }
 
 #[async_trait]
@@ -50,16 +62,7 @@ impl Action for Doctor {
 
         println!("————— SDKs ——————\n");
 
-        let stdout = io::stdout();
-        let backend = CrosstermBackend::new(stdout);
-        let mut terminal = Terminal::new(backend)?;
-        enable_raw_mode()?;
-        terminal.draw(|f| {
-            let size = f.size();
-            let block = Block::default().title("Block").borders(Borders::ALL);
-            f.render_widget(block, size);
-        })?;
-        disable_raw_mode()?;
+        print_box("SDKs", "Python", 40);
 
         let version_cli = get_version();
         let metatype_file = find_in_parents(dir, METATYPE_FILES)?;
