@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Self
 
@@ -14,6 +14,12 @@ from typegraph_next.gen.exports.core import (
     TypeBase,
     TypeFunc,
     TypeInteger,
+    TypeNumber,
+    TypeArray,
+    TypeEither,
+    TypeUnion,
+    TypeOptional,
+    TypeString,
     TypePolicy,
     TypeProxy,
     TypeStruct,
@@ -97,6 +103,9 @@ class ref(typedef):
 class integer(typedef):
     min: Optional[int] = None
     max: Optional[int] = None
+    exclusive_minimum: Optional[int] = None
+    exclusive_maximum: Optional[int] = None
+    multiple_of: Optional[int] = None
 
     def __init__(
         self,
@@ -122,6 +131,181 @@ class integer(typedef):
         super().__init__(res.value)
         self.min = min
         self.max = max
+        self.exclusive_minimum = exclusive_minimum
+        self.exclusive_maximum = exclusive_maximum
+        self.multiple_of = multiple_of
+
+
+class number(typedef):
+    min: Optional[float] = None
+    max: Optional[float] = None
+    exclusive_minimum: Optional[float] = None
+    exclusive_maximum: Optional[float] = None
+    multiple_of: Optional[float] = None
+
+    def __init__(
+        self,
+        *,
+        min: Optional[float] = None,
+        max: Optional[float] = None,
+        exclusive_minimum: Optional[float] = None,
+        exclusive_maximum: Optional[float] = None,
+        multiple_of: Optional[float] = None,
+        name: Optional[float] = None,
+    ):
+        data = TypeNumber(
+            min=min,
+            max=max,
+            exclusive_minimum=exclusive_minimum,
+            exclusive_maximum=exclusive_maximum,
+            multiple_of=multiple_of,
+        )
+
+        res = core.numberb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.min = min
+        self.max = max
+        self.exclusive_minimum = exclusive_minimum
+        self.exclusive_maximum = exclusive_maximum
+        self.multiple_of = multiple_of
+
+
+class float(number):
+    pass
+
+
+class boolean(typedef):
+    def __init__(
+        self,
+        *,
+        name: Optional[float] = None,
+    ):
+        res = core.booleanb(store, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+
+
+class string(typedef):
+    min: Optional[int] = None
+    max: Optional[int] = None
+    pattern: Optional[str] = None
+    format: Optional[str] = None
+
+    def __init__(
+        self,
+        *,
+        min: Optional[float] = None,
+        max: Optional[float] = None,
+        pattern: Optional[float] = None,
+        format: Optional[str] = None,
+        name: Optional[float] = None,
+    ):
+        data = TypeString(
+            min=min,
+            max=max,
+            pattern=pattern,
+            format=format,
+        )
+
+        res = core.stringb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.min = min
+        self.max = max
+        self.pattern = pattern
+        self.format = format
+
+
+class array(typedef):
+    items: typedef = None
+    min: Optional[int] = None
+    max: Optional[int] = None
+    unique_items: Optional[bool] = None
+
+    def __init__(
+        self,
+        items: typedef,
+        min: Optional[int] = None,
+        max: Optional[int] = None,
+        unique_items: Optional[bool] = None,
+        name: Optional[float] = None,
+    ):
+        data = TypeArray(
+            of=items.id,
+            min=min,
+            max=max,
+            unique_items=unique_items,
+        )
+
+        res = core.arrayb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.min = min
+        self.max = max
+        self.items = items
+        self.unique_items = unique_items
+
+
+class optional(typedef):
+    item: Optional[typedef] = None
+    default_item: Optional[str] = None
+
+    def __init__(
+        self,
+        item: typedef,
+        default_item: Optional[str] = None,
+        name: Optional[float] = None,
+    ):
+        data = TypeOptional(
+            of=item.id,
+            default_item=default_item,
+        )
+
+        res = core.optionalb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.item = item
+        self.default_item = default_item
+
+
+class union(typedef):
+    variants: List[typedef] = []
+
+    def __init__(
+        self,
+        variants: List[typedef],
+        name: Optional[float] = None,
+    ):
+        data = TypeUnion(variants=list(map(lambda v: v.id, variants)))
+
+        res = core.unionb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.variants = variants
+
+
+class either(typedef):
+    variants: List[typedef] = []
+
+    def __init__(
+        self,
+        variants: List[typedef],
+        name: Optional[float] = None,
+    ):
+        data = TypeEither(variants=list(map(lambda v: v.id, variants)))
+
+        res = core.eitherb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.variants = variants
 
 
 class struct(typedef):
@@ -135,6 +319,17 @@ class struct(typedef):
             raise Exception(res.value)
         super().__init__(res.value)
         self.props = props
+
+
+class proxy(typedef):
+    def __init__(
+        self,
+        name: Optional[float] = None,
+    ):
+        res = core.proxyb(store, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
 
 
 class func(typedef):
