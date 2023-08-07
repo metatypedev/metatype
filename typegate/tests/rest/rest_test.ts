@@ -102,7 +102,7 @@ Meta.test("Rest queries in Deno", async (t) => {
           a: 1,
           b: { c: 2 },
           d: "string",
-          e: ["one", "two", "three"],
+          e: [1, 2, "three"],
         },
       })
       .expectJSON({
@@ -110,7 +110,7 @@ Meta.test("Rest queries in Deno", async (t) => {
           a: 1,
           b: { c: 2 },
           d: "string",
-          e: ["one", "two", "three"],
+          e: [1, 2, "three"],
         },
       })
       .on(e);

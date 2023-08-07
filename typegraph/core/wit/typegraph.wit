@@ -55,6 +55,16 @@ interface core {
     }
     optionalb: func(data: type-optional, base: type-base) -> result<type-id, error>
 
+    record type-union {
+        variants: list<type-id>,
+    }
+    unionb: func(data: type-union, base: type-base) -> result<type-id, error>
+
+    record type-either {
+        variants: list<type-id>,
+    }
+    eitherb: func(data: type-either, base: type-base) -> result<type-id, error>
+
     record type-struct {
         props: list<tuple<string, type-id>>,
     }

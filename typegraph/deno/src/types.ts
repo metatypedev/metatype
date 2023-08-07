@@ -3,9 +3,11 @@ import {
   PolicyPerEffect,
   TypeArray,
   TypeBase,
+  TypeEither,
   TypeInteger,
   TypeOptional,
   TypeString,
+  TypeUnion,
 } from "../gen/exports/metatype-typegraph-core.d.ts";
 import { Materializer } from "./runtimes/deno.ts";
 import { mapValues } from "./deps.ts";
@@ -169,6 +171,52 @@ export function optional(
   return new Optional(
     core.optionalb(completeData, base),
     completeData,
+    base,
+  );
+}
+
+export class Union extends Typedef {
+  readonly variants: Array<number>;
+
+  constructor(_id: number, data: TypeUnion, base: TypeBase) {
+    super(_id, base);
+    this.variants = Array.from(data.variants);
+  }
+}
+
+export function union(
+  variants: Array<Typedef>,
+  base: TypeBase = {},
+) {
+  const data = {
+    variants: new Uint32Array(variants.map((variant) => variant._id)),
+  };
+  return new Union(
+    core.unionb(data, base),
+    data,
+    base,
+  );
+}
+
+export class Either extends Typedef {
+  readonly variants: Array<number>;
+
+  constructor(_id: number, data: TypeEither, base: TypeBase) {
+    super(_id, base);
+    this.variants = Array.from(data.variants);
+  }
+}
+
+export function either(
+  variants: Array<Typedef>,
+  base: TypeBase = {},
+) {
+  const data = {
+    variants: new Uint32Array(variants.map((variant) => variant._id)),
+  };
+  return new Either(
+    core.eitherb(data, base),
+    data,
     base,
   );
 }

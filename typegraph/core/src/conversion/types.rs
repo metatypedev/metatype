@@ -2,15 +2,17 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use common::typegraph::{
-    ArrayTypeData, FunctionTypeData, IntegerTypeData, ObjectTypeData, OptionalTypeData,
-    StringFormat, StringTypeData, TypeNode, TypeNodeBase,
+    ArrayTypeData, EitherTypeData, FunctionTypeData, IntegerTypeData, ObjectTypeData,
+    OptionalTypeData, StringFormat, StringTypeData, TypeNode, TypeNodeBase, UnionTypeData,
 };
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
 
 use crate::errors::{self, Result};
 use crate::global_store::with_store;
-use crate::types::{Array, Boolean, Integer, Optional, Proxy, StringT, Struct, Type, WithPolicy};
+use crate::types::{
+    Array, Boolean, Either, Integer, Optional, Proxy, StringT, Struct, Type, Union, WithPolicy,
+};
 use crate::wit::core::TypeId;
 use crate::{typegraph::TypegraphContext, types::Func};
 
@@ -99,6 +101,48 @@ impl TypeConversion for Optional {
                     ctx.register_type(s, id)
                 })?,
                 default_value,
+            },
+        })
+    }
+}
+
+impl TypeConversion for Union {
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        Ok(TypeNode::Union {
+            base: gen_base(format!("union_{}", self.id)),
+            data: UnionTypeData {
+                any_of: self
+                    .data
+                    .variants
+                    .iter()
+                    .map(|vid| {
+                        with_store(|s| -> Result<_> {
+                            let id = s.resolve_proxy(*vid)?;
+                            ctx.register_type(s, id)
+                        })
+                    })
+                    .collect::<Result<Vec<_>>>()?,
+            },
+        })
+    }
+}
+
+impl TypeConversion for Either {
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        Ok(TypeNode::Either {
+            base: gen_base(format!("either_{}", self.id)),
+            data: EitherTypeData {
+                one_of: self
+                    .data
+                    .variants
+                    .iter()
+                    .map(|vid| {
+                        with_store(|s| -> Result<_> {
+                            let id = s.resolve_proxy(*vid)?;
+                            ctx.register_type(s, id)
+                        })
+                    })
+                    .collect::<Result<Vec<_>>>()?,
             },
         })
     }

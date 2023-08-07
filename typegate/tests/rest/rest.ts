@@ -22,7 +22,7 @@ const complexType = t.struct({
     pattern: "[a-z]+",
     max: 10,
   }),
-  e: t.optional(t.array(t.string())),
+  e: t.optional(t.array(t.either([t.string(), t.integer()]))),
 }, { name: "ComplexType" });
 
 typegraph("rest", (expose) => {

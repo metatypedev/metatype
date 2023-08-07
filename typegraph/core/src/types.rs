@@ -9,8 +9,8 @@ use crate::errors::Result;
 use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    PolicySpec, TypeArray, TypeBase, TypeFunc, TypeId, TypeInteger, TypeOptional, TypePolicy,
-    TypeProxy, TypeString, TypeStruct,
+    PolicySpec, TypeArray, TypeBase, TypeEither, TypeFunc, TypeId, TypeInteger, TypeOptional,
+    TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 
 pub trait TypeData {
@@ -53,6 +53,8 @@ pub type Boolean = ConcreteType<TypeBoolean>;
 pub type StringT = ConcreteType<TypeString>;
 pub type Array = ConcreteType<TypeArray>;
 pub type Optional = ConcreteType<TypeOptional>;
+pub type Union = ConcreteType<TypeUnion>;
+pub type Either = ConcreteType<TypeEither>;
 pub type WithPolicy = WrapperType<TypePolicy>;
 
 #[derive(Debug)]
@@ -66,6 +68,8 @@ pub enum Type {
     String(StringT),
     Array(Array),
     Optional(Optional),
+    Union(Union),
+    Either(Either),
     WithPolicy(WithPolicy),
 }
 
@@ -178,7 +182,6 @@ impl TypeData for TypeString {
             params.push(format!("pattern={}", pattern));
         }
         if let Some(format) = self.format.to_owned() {
-            // FIXME: format is an enum, so integer ?
             params.push(format!("format={}", format));
         }
     }
@@ -197,7 +200,9 @@ impl TypeData for TypeArray {
         if let Some(max) = self.max {
             params.push(format!("maxItems={}", max));
         }
-        // TODO: unique
+        if let Some(unique) = self.unique_items {
+            params.push(format!("uniqueItems={}", unique));
+        }
     }
 
     fn variant_name(&self) -> String {
@@ -208,11 +213,37 @@ impl TypeData for TypeArray {
 impl TypeData for TypeOptional {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         params.push(format!("item={}", self.of));
-        // TODO: default
+        if let Some(default) = self.default_item.clone() {
+            params.push(format!("defaultItem={}", default));
+        }
     }
 
     fn variant_name(&self) -> String {
         "optional".to_string()
+    }
+}
+
+impl TypeData for TypeUnion {
+    fn get_display_params_into(&self, params: &mut Vec<String>) {
+        for (i, tpe_id) in self.variants.iter().enumerate() {
+            params.push(format!("[u{}] => #{}", i, tpe_id));
+        }
+    }
+
+    fn variant_name(&self) -> String {
+        "union".to_string()
+    }
+}
+
+impl TypeData for TypeEither {
+    fn get_display_params_into(&self, params: &mut Vec<String>) {
+        for (i, tpe_id) in self.variants.iter().enumerate() {
+            params.push(format!("[e{}] => #{}", i, tpe_id));
+        }
+    }
+
+    fn variant_name(&self) -> String {
+        "either".to_string()
     }
 }
 

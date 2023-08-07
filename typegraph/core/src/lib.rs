@@ -16,12 +16,13 @@ use global_store::{with_store, with_store_mut};
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
-    Array, Boolean, Func, Integer, Optional, Proxy, StringT, Struct, Type, TypeBoolean, WithPolicy,
+    Array, Boolean, Either, Func, Integer, Optional, Proxy, StringT, Struct, Type, TypeBoolean,
+    Union, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeFunc, TypeId, TypeInteger,
-    TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypegraphInitParams,
+    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFunc, TypeId, TypeInteger,
+    TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -130,6 +131,18 @@ impl wit::core::Core for Lib {
     fn optionalb(data: TypeOptional, base: TypeBase) -> Result<TypeId> {
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Optional(Optional { id, base, data }))
+        }))
+    }
+
+    fn unionb(data: TypeUnion, base: TypeBase) -> Result<TypeId> {
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Union(Union { id, base, data }))
+        }))
+    }
+
+    fn eitherb(data: TypeEither, base: TypeBase) -> Result<TypeId> {
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Either(Either { id, base, data }))
         }))
     }
 
