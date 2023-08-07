@@ -65,11 +65,14 @@ impl TypeConversion for StringT {
 }
 
 impl TypeConversion for Array {
-    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
         Ok(TypeNode::Array {
             base: gen_base(format!("array_{}", self.id)),
             data: ArrayTypeData {
-                items: self.data.of,
+                items: with_store(|s| -> Result<_> {
+                    let id = s.resolve_proxy(self.data.of)?;
+                    ctx.register_type(s, id)
+                })?,
                 max_items: self.data.max,
                 min_items: self.data.min,
                 unique_items: self.data.unique_items,
@@ -79,12 +82,23 @@ impl TypeConversion for Array {
 }
 
 impl TypeConversion for Optional {
-    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        let default_value = match self.data.default_item.clone() {
+            Some(value) => {
+                let ret = serde_json::from_str(&value).map_err(|s| s.to_string())?;
+                Some(ret)
+            }
+            None => None,
+        };
+
         Ok(TypeNode::Optional {
             base: gen_base(format!("optional_{}", self.id)),
             data: OptionalTypeData {
-                item: self.data.of,
-                default_value: None, // TODO
+                item: with_store(|s| -> Result<_> {
+                    let id = s.resolve_proxy(self.data.of)?;
+                    ctx.register_type(s, id)
+                })?,
+                default_value,
             },
         })
     }
