@@ -3,11 +3,14 @@
 
 use crate::errors::Result;
 use crate::global_store::Store;
-use crate::runtimes::{DenoMaterializer, Materializer as RawMaterializer, Runtime};
+use crate::runtimes::{
+    DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, Runtime,
+};
 use crate::wit::core::RuntimeId;
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
-use common::typegraph::runtimes::KnownRuntime::Deno;
+use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
+use common::typegraph::runtimes::KnownRuntime;
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
@@ -99,6 +102,39 @@ impl MaterializerConverter for DenoMaterializer {
     }
 }
 
+impl MaterializerConverter for GraphqlMaterializer {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        s: &Store,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<common::typegraph::Materializer> {
+        let runtime = c.register_runtime(s, runtime_id)?;
+        let (name, data) = match self {
+            GraphqlMaterializer::Query(d) => {
+                let mut data = IndexMap::new();
+                data.insert("path".to_string(), serde_json::to_value(&d.path).unwrap());
+                ("query".to_string(), data)
+            }
+            GraphqlMaterializer::Mutation(d) => {
+                let mut data = IndexMap::new();
+                data.insert(
+                    "path".to_string(),
+                    serde_json::to_value(&d.path).unwrap(), // TODO error
+                );
+                ("mutation".to_string(), data)
+            }
+        };
+        Ok(Materializer {
+            name,
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
 pub fn convert_materializer(
     c: &mut TypegraphContext,
     s: &Store,
@@ -112,6 +148,8 @@ pub fn convert_runtime(
     _s: &Store,
     runtime: &Runtime,
 ) -> Result<TGRuntime> {
+    use KnownRuntime::*;
+
     match runtime {
         Runtime::Deno => {
             let data = DenoRuntimeData {
@@ -119,6 +157,12 @@ pub fn convert_runtime(
                 permissions: Default::default(),
             };
             Ok(TGRuntime::Known(Deno(data)))
+        }
+        Runtime::Graphql(d) => {
+            let data = GraphQLRuntimeData {
+                endpoint: d.endpoint.clone(),
+            };
+            Ok(TGRuntime::Known(GraphQL(data)))
         }
     }
 }
