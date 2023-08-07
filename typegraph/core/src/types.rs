@@ -9,8 +9,8 @@ use crate::errors::Result;
 use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    PolicySpec, TypeArray, TypeBase, TypeEither, TypeFunc, TypeId, TypeInteger, TypeOptional,
-    TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    PolicySpec, TypeArray, TypeBase, TypeEither, TypeFunc, TypeId, TypeInteger, TypeNumber,
+    TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 
 pub trait TypeData {
@@ -48,6 +48,7 @@ pub struct TypeBoolean;
 pub type Proxy = WrapperType<TypeProxy>;
 pub type Struct = ConcreteType<TypeStruct>;
 pub type Integer = ConcreteType<TypeInteger>;
+pub type Number = ConcreteType<TypeNumber>;
 pub type Func = ConcreteType<TypeFunc>;
 pub type Boolean = ConcreteType<TypeBoolean>;
 pub type StringT = ConcreteType<TypeString>;
@@ -63,6 +64,7 @@ pub enum Type {
     Proxy(Proxy),
     Struct(Struct),
     Integer(Integer),
+    Number(Number),
     Func(Func),
     Boolean(Boolean),
     String(StringT),
@@ -155,10 +157,43 @@ impl TypeData for TypeInteger {
         if let Some(max) = self.max {
             params.push(format!("max={}", max));
         }
+        if let Some(exclusive_minimum) = self.exclusive_minimum {
+            params.push(format!("exclusiveMin={}", exclusive_minimum));
+        }
+        if let Some(exclusive_maximum) = self.exclusive_maximum {
+            params.push(format!("exclusiveMax={}", exclusive_maximum));
+        }
+        if let Some(multiple_of) = self.multiple_of {
+            params.push(format!("multipleOf={}", multiple_of));
+        }
     }
 
     fn variant_name(&self) -> String {
         "integer".to_string()
+    }
+}
+
+impl TypeData for TypeNumber {
+    fn get_display_params_into(&self, params: &mut Vec<String>) {
+        if let Some(min) = self.min {
+            params.push(format!("min={}", min));
+        }
+        if let Some(max) = self.max {
+            params.push(format!("max={}", max));
+        }
+        if let Some(exclusive_minimum) = self.exclusive_minimum {
+            params.push(format!("exclusiveMin={}", exclusive_minimum));
+        }
+        if let Some(exclusive_maximum) = self.exclusive_maximum {
+            params.push(format!("exclusiveMax={}", exclusive_maximum));
+        }
+        if let Some(multiple_of) = self.multiple_of {
+            params.push(format!("multipleOf={}", multiple_of));
+        }
+    }
+
+    fn variant_name(&self) -> String {
+        "number".to_string()
     }
 }
 

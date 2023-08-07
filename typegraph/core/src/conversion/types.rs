@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use common::typegraph::{
-    ArrayTypeData, EitherTypeData, FunctionTypeData, IntegerTypeData, ObjectTypeData,
-    OptionalTypeData, StringFormat, StringTypeData, TypeNode, TypeNodeBase, UnionTypeData,
+    ArrayTypeData, EitherTypeData, FunctionTypeData, IntegerTypeData, NumberTypeData,
+    ObjectTypeData, OptionalTypeData, StringFormat, StringTypeData, TypeNode, TypeNodeBase,
+    UnionTypeData,
 };
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
@@ -11,7 +12,8 @@ use indexmap::IndexMap;
 use crate::errors::{self, Result};
 use crate::global_store::with_store;
 use crate::types::{
-    Array, Boolean, Either, Integer, Optional, Proxy, StringT, Struct, Type, Union, WithPolicy,
+    Array, Boolean, Either, Integer, Number, Optional, Proxy, StringT, Struct, Type, Union,
+    WithPolicy,
 };
 use crate::wit::core::TypeId;
 use crate::{typegraph::TypegraphContext, types::Func};
@@ -28,9 +30,24 @@ impl TypeConversion for Integer {
             data: IntegerTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,
-                exclusive_minimum: None,
-                exclusive_maximum: None,
-                multiple_of: None,
+                exclusive_minimum: self.data.exclusive_minimum,
+                exclusive_maximum: self.data.exclusive_maximum,
+                multiple_of: self.data.multiple_of,
+            },
+        })
+    }
+}
+
+impl TypeConversion for Number {
+    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        Ok(TypeNode::Number {
+            base: gen_base(format!("number_{}", self.id)),
+            data: NumberTypeData {
+                minimum: self.data.min,
+                maximum: self.data.max,
+                exclusive_minimum: self.data.exclusive_minimum,
+                exclusive_maximum: self.data.exclusive_maximum,
+                multiple_of: self.data.multiple_of,
             },
         })
     }

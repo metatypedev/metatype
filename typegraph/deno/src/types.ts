@@ -5,6 +5,7 @@ import {
   TypeBase,
   TypeEither,
   TypeInteger,
+  TypeNumber,
   TypeOptional,
   TypeString,
   TypeUnion,
@@ -86,16 +87,47 @@ export function boolean(base: TypeBase = {}) {
 export class Integer extends Typedef implements Readonly<TypeInteger> {
   readonly min?: number;
   readonly max?: number;
+  readonly exclusiveMinimum?: number;
+  readonly exclusiveMaximum?: number;
+  readonly multipleOf?: number;
 
   constructor(_id: number, data: TypeInteger, base: TypeBase) {
     super(_id, base);
     this.min = data.min;
     this.max = data.max;
+    this.exclusiveMinimum = data.exclusiveMinimum;
+    this.exclusiveMaximum = data.exclusiveMaximum;
+    this.multipleOf = data.multipleOf;
   }
 }
 
 export function integer(data: TypeInteger = {}, base: TypeBase = {}) {
   return new Integer(core.integerb(data, base), data, base);
+}
+
+export class Number extends Typedef implements Readonly<TypeNumber> {
+  readonly min?: number;
+  readonly max?: number;
+  readonly exclusiveMinimum?: number;
+  readonly exclusiveMaximum?: number;
+  readonly multipleOf?: number;
+
+  constructor(_id: number, data: TypeNumber, base: TypeBase) {
+    super(_id, base);
+    this.min = data.min;
+    this.max = data.max;
+    this.exclusiveMinimum = data.exclusiveMinimum;
+    this.exclusiveMaximum = data.exclusiveMaximum;
+    this.multipleOf = data.multipleOf;
+  }
+}
+
+export function number(data: TypeNumber = {}, base: TypeBase = {}) {
+  return new Number(core.numberb(data, base), data, base);
+}
+
+export function float(data: TypeNumber = {}, base: TypeBase = {}) {
+  return number(data, base);
 }
 
 export class StringT extends Typedef implements Readonly<TypeString> {

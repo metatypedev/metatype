@@ -103,9 +103,19 @@ class integer(typedef):
         *,
         min: Optional[int] = None,
         max: Optional[int] = None,
-        name: Optional[str] = None
+        exclusive_minimum: Optional[int] = None,
+        exclusive_maximum: Optional[int] = None,
+        multiple_of: Optional[int] = None,
+        name: Optional[str] = None,
     ):
-        data = TypeInteger(min=min, max=max)
+        data = TypeInteger(
+            min=min,
+            max=max,
+            exclusive_minimum=exclusive_minimum,
+            exclusive_maximum=exclusive_maximum,
+            multiple_of=multiple_of,
+        )
+
         res = core.integerb(store, data, TypeBase(name=name))
         if isinstance(res, Err):
             raise Exception(res.value)

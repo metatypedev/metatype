@@ -16,13 +16,14 @@ use global_store::{with_store, with_store_mut};
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
-    Array, Boolean, Either, Func, Integer, Optional, Proxy, StringT, Struct, Type, TypeBoolean,
-    Union, WithPolicy,
+    Array, Boolean, Either, Func, Integer, Number, Optional, Proxy, StringT, Struct, Type,
+    TypeBoolean, Union, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
     ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFunc, TypeId, TypeInteger,
-    TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion, TypegraphInitParams,
+    TypeNumber, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -89,8 +90,29 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
+        if let (Some(min), Some(max)) = (data.exclusive_minimum, data.exclusive_maximum) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Integer(Integer { id, base, data }))
+        }))
+    }
+
+    fn numberb(data: TypeNumber, base: TypeBase) -> Result<TypeId> {
+        if let (Some(min), Some(max)) = (data.min, data.max) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        if let (Some(min), Some(max)) = (data.exclusive_minimum, data.exclusive_maximum) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Number(Number { id, base, data }))
         }))
     }
 

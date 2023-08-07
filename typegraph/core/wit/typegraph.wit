@@ -28,8 +28,20 @@ interface core {
     record type-integer {
         min: option<s32>,
         max: option<s32>,
+        exclusive-minimum: option<s32>,
+        exclusive-maximum: option<s32>,
+        multiple-of: option<s32>
     }
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
+
+    record type-number {
+        min: option<float64>,
+        max: option<float64>,
+        exclusive-minimum: option<float64>,
+        exclusive-maximum: option<float64>,
+        multiple-of: option<float64>
+    }
+    numberb: func(data: type-number, base: type-base) -> result<type-id, error>
 
     booleanb: func(base: type-base) -> result<type-id, error>
 
