@@ -280,6 +280,9 @@ mod tests {
             Self {
                 min: None,
                 max: None,
+                exclusive_minimum: None,
+                exclusive_maximum: None,
+                multiple_of: None,
             }
         }
     }
