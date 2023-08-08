@@ -2,5 +2,6 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from typegraph_next.graph.typegraph import typegraph  # noqa
+from typegraph_next.policy import Policy  # noqa
 
 version = "0.1.13-0+dev"

@@ -5,6 +5,8 @@ import re
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional
 
+from typegraph_next.runtimes.base import Materializer, Runtime
+
 from typegraph_next.gen.exports.runtimes import (
     Effect,
     EffectNone,
@@ -18,16 +20,6 @@ from typegraph_next.wit import runtimes, store
 
 if TYPE_CHECKING:
     from typegraph_next import t
-
-
-@dataclass
-class Runtime:
-    id: int
-
-
-@dataclass
-class Materializer:
-    id: int
 
 
 class DenoRuntime(Runtime):
@@ -154,14 +146,12 @@ class DenoRuntime(Runtime):
 class FunMat(Materializer):
     code: str
     secrets: List[str]
-    effect: Effect
 
 
 @dataclass
 class ImportMat(Materializer):
     module: str
     name: str
-    effect: Effect
     secrets: List[str]
 
 
