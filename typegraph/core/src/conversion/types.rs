@@ -72,7 +72,7 @@ impl TypeConversion for StringT {
             None => None,
         };
         Ok(TypeNode::String {
-            base: gen_base(format!("string_{}", self.id)),
+            base: gen_base_enum(format!("string_{}", self.id), self.data.enumeration.clone()),
             data: StringTypeData {
                 min_length: self.data.min,
                 max_length: self.data.max,
@@ -244,6 +244,19 @@ pub fn gen_base(name: String) -> TypeNodeBase {
         config: Default::default(),
         description: None,
         enumeration: None,
+        injection: None,
+        policies: Vec::new(),
+        runtime: 0,
+        title: name,
+        as_id: false,
+    }
+}
+
+pub fn gen_base_enum(name: String, enumeration: Option<Vec<String>>) -> TypeNodeBase {
+    TypeNodeBase {
+        config: Default::default(),
+        description: None,
+        enumeration,
         injection: None,
         policies: Vec::new(),
         runtime: 0,

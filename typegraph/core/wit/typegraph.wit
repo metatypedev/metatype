@@ -50,6 +50,7 @@ interface core {
         max: option<u32>,
         format: option<string>,
         pattern: option<string>,
+        enumeration: option<list<string>>
     }
     stringb: func(data: type-string, base: type-base) -> result<type-id, error>
 

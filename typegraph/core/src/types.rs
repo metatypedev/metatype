@@ -261,7 +261,7 @@ impl TypeData for TypeOptional {
 impl TypeData for TypeUnion {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         for (i, tpe_id) in self.variants.iter().enumerate() {
-            params.push(format!("[u{}] => #{}", i, tpe_id));
+            params.push(format!("[v{}] => #{}", i, tpe_id));
         }
     }
 
@@ -273,7 +273,7 @@ impl TypeData for TypeUnion {
 impl TypeData for TypeEither {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         for (i, tpe_id) in self.variants.iter().enumerate() {
-            params.push(format!("[e{}] => #{}", i, tpe_id));
+            params.push(format!("[v{}] => #{}", i, tpe_id));
         }
     }
 

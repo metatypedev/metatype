@@ -197,6 +197,7 @@ class string(typedef):
     max: Optional[int] = None
     pattern: Optional[str] = None
     format: Optional[str] = None
+    enumeration: Optional[List[str]] = None
 
     def __init__(
         self,
@@ -205,13 +206,11 @@ class string(typedef):
         max: Optional[float] = None,
         pattern: Optional[str] = None,
         format: Optional[str] = None,
+        enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
     ):
         data = TypeString(
-            min=min,
-            max=max,
-            pattern=pattern,
-            format=format,
+            min=min, max=max, pattern=pattern, format=format, enumeration=enumeration
         )
 
         res = core.stringb(store, data, TypeBase(name=name))
@@ -222,6 +221,18 @@ class string(typedef):
         self.max = max
         self.pattern = pattern
         self.format = format
+        self.enumeration = enumeration
+
+
+def enum(
+    variants: List[str],
+    name: Optional[str] = None,
+):
+    import json
+
+    return string(
+        enumeration=list(json.dumps(variant) for variant in variants), name=name
+    )
 
 
 class array(typedef):

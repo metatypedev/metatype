@@ -139,6 +139,7 @@ export class StringT extends Typedef implements Readonly<TypeString> {
   readonly max?: number;
   readonly format?: string;
   readonly pattern?: string;
+  readonly enumeration?: string[];
 
   constructor(_id: number, data: TypeString, base: TypeBase) {
     super(_id, base);
@@ -146,11 +147,19 @@ export class StringT extends Typedef implements Readonly<TypeString> {
     this.max = data.max;
     this.pattern = data.pattern;
     this.format = data.format;
+    this.enumeration = data.enumeration;
   }
 }
 
 export function string(data: TypeString = {}, base: TypeBase = {}) {
   return new StringT(core.stringb(data, base), data, base);
+}
+
+// Note: enum is a reserved word
+export function enumerate(variants: string[], base: TypeBase = {}) {
+  return string({
+    enumeration: variants.map((variant) => JSON.stringify(variant)),
+  }, base);
 }
 
 export class ArrayT extends Typedef {
