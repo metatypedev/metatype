@@ -100,6 +100,10 @@ class ref(typedef):
         self.name = name
 
 
+class proxy(ref):
+    pass
+
+
 class integer(typedef):
     min: Optional[int] = None
     max: Optional[int] = None
@@ -151,7 +155,7 @@ class number(typedef):
         exclusive_minimum: Optional[float] = None,
         exclusive_maximum: Optional[float] = None,
         multiple_of: Optional[float] = None,
-        name: Optional[float] = None,
+        name: Optional[str] = None,
     ):
         data = TypeNumber(
             min=min,
@@ -199,9 +203,9 @@ class string(typedef):
         *,
         min: Optional[float] = None,
         max: Optional[float] = None,
-        pattern: Optional[float] = None,
+        pattern: Optional[str] = None,
         format: Optional[str] = None,
-        name: Optional[float] = None,
+        name: Optional[str] = None,
     ):
         data = TypeString(
             min=min,
@@ -232,7 +236,7 @@ class array(typedef):
         min: Optional[int] = None,
         max: Optional[int] = None,
         unique_items: Optional[bool] = None,
-        name: Optional[float] = None,
+        name: Optional[str] = None,
     ):
         data = TypeArray(
             of=items.id,
@@ -259,7 +263,7 @@ class optional(typedef):
         self,
         item: typedef,
         default_item: Optional[str] = None,
-        name: Optional[float] = None,
+        name: Optional[str] = None,
     ):
         data = TypeOptional(
             of=item.id,
@@ -319,17 +323,6 @@ class struct(typedef):
             raise Exception(res.value)
         super().__init__(res.value)
         self.props = props
-
-
-class proxy(typedef):
-    def __init__(
-        self,
-        name: Optional[float] = None,
-    ):
-        res = core.proxyb(store, TypeBase(name=name))
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        super().__init__(res.value)
 
 
 class func(typedef):

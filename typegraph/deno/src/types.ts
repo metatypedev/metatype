@@ -74,6 +74,10 @@ export function proxy<T extends Typedef = Typedef>(name: string) {
   return new TypeProxy<T>(core.proxyb({ name }), name);
 }
 
+export function ref<T extends Typedef = Typedef>(name: string) {
+  return proxy<T>(name);
+}
+
 export class Boolean extends Typedef {
   constructor(_id: number, base: TypeBase) {
     super(_id, base);
