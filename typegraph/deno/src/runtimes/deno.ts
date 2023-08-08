@@ -2,13 +2,48 @@ import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
 import { Effect } from "../../gen/exports/metatype-typegraph-runtimes.d.ts";
 import Policy from "../policy.ts";
+import { Materializer, Runtime } from "./mod.ts";
 
-export class Runtime {
-  constructor(public readonly _id: number) {}
+export class FunMat extends Materializer {
+  constructor(
+    _id: number,
+    private code: string,
+    public readonly secrets: Array<string>,
+    public readonly effect: Effect,
+  ) {
+    super(_id);
+  }
 }
 
-export class Materializer {
-  constructor(public readonly _id: number) {}
+export class ImportMat extends Materializer {
+  constructor(
+    _id: number,
+    public readonly name: string,
+    public readonly module: string,
+    public readonly secrets: Array<string>,
+    public readonly effect: Effect,
+  ) {
+    super(_id);
+  }
+}
+
+export class PredefinedFuncMat extends Materializer {
+  constructor(_id: number, public readonly name: string) {
+    super(_id);
+  }
+}
+
+export interface DenoFunc {
+  code: string;
+  secrets?: Array<string>;
+  effect?: Effect;
+}
+
+export interface DenoImport {
+  name: string;
+  module: string;
+  secrets?: Array<string>;
+  effect?: Effect;
 }
 
 export class DenoRuntime extends Runtime {
@@ -91,46 +126,4 @@ export class DenoRuntime extends Runtime {
       }, { tag: "none" }),
     );
   }
-}
-
-export class FunMat extends Materializer {
-  constructor(
-    _id: number,
-    private code: string,
-    public readonly secrets: Array<string>,
-    public readonly effect: Effect,
-  ) {
-    super(_id);
-  }
-}
-
-export class ImportMat extends Materializer {
-  constructor(
-    _id: number,
-    public readonly name: string,
-    public readonly module: string,
-    public readonly secrets: Array<string>,
-    public readonly effect: Effect,
-  ) {
-    super(_id);
-  }
-}
-
-export class PredefinedFuncMat extends Materializer {
-  constructor(_id: number, public readonly name: string) {
-    super(_id);
-  }
-}
-
-export interface DenoFunc {
-  code: string;
-  secrets?: Array<string>;
-  effect?: Effect;
-}
-
-export interface DenoImport {
-  name: string;
-  module: string;
-  secrets?: Array<string>;
-  effect?: Effect;
 }
