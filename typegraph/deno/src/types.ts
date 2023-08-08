@@ -21,6 +21,8 @@ export type PolicySpec = Policy | {
   delete: Policy;
 };
 
+export type Simplified<T> = Omit<T, "of">;
+
 export class Typedef {
   readonly name?: string;
   policy: Policy[] | null = null;
@@ -63,7 +65,7 @@ export class Typedef {
     return new Typedef(this._id, { name: this.name });
   }
 
-  optional(data: Omit<TypeOptional, "of"> = {}): Optional {
+  optional(data: Simplified<TypeOptional> = {}): Optional {
     if (this instanceof Optional) {
       return this;
     }
@@ -191,7 +193,7 @@ export function path() {
 }
 
 // Note: enum is a reserved word
-export function enumerate(variants: string[], base: TypeBase = {}) {
+export function enum_(variants: string[], base: TypeBase = {}) {
   return string({
     enumeration: variants.map((variant) => JSON.stringify(variant)),
   }, base);
@@ -214,7 +216,7 @@ export class ArrayT extends Typedef {
 
 export function array(
   variant: Typedef,
-  data: Omit<TypeArray, "of"> = {},
+  data: Simplified<TypeArray> = {},
   base: TypeBase = {},
 ) {
   const completeData = {
@@ -241,7 +243,7 @@ export class Optional extends Typedef {
 
 export function optional(
   variant: Typedef,
-  data: Omit<TypeOptional, "of"> = {},
+  data: Simplified<TypeOptional> = {},
   base: TypeBase = {},
 ) {
   const completeData = {

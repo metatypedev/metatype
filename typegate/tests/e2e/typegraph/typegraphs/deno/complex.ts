@@ -13,7 +13,7 @@ const someType = t.struct({
 const complexType = t.struct({
   a_string: t.string(),
   a_float: t.float({ min: 1, multipleOf: 2 }),
-  an_enum: t.enumerate(["one", "two"]),
+  an_enum: t.enum_(["one", "two"]),
   an_integer_enum: t.integer({ enumeration: ["1", "2"] }),
   a_struct: t.struct({ value: t.number() }),
   nested: t.array(t.either([t.string(), t.integer()])).optional(),
