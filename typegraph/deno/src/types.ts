@@ -94,6 +94,7 @@ export class Integer extends Typedef implements Readonly<TypeInteger> {
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
+  readonly enumeration?: string[];
 
   constructor(_id: number, data: TypeInteger, base: TypeBase) {
     super(_id, base);
@@ -102,6 +103,7 @@ export class Integer extends Typedef implements Readonly<TypeInteger> {
     this.exclusiveMinimum = data.exclusiveMinimum;
     this.exclusiveMaximum = data.exclusiveMaximum;
     this.multipleOf = data.multipleOf;
+    this.enumeration = data.enumeration;
   }
 }
 
@@ -115,6 +117,7 @@ export class Number extends Typedef implements Readonly<TypeNumber> {
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
+  readonly enumeration?: string[];
 
   constructor(_id: number, data: TypeNumber, base: TypeBase) {
     super(_id, base);
@@ -123,6 +126,7 @@ export class Number extends Typedef implements Readonly<TypeNumber> {
     this.exclusiveMinimum = data.exclusiveMinimum;
     this.exclusiveMaximum = data.exclusiveMaximum;
     this.multipleOf = data.multipleOf;
+    this.enumeration = data.enumeration;
   }
 }
 

@@ -1,6 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+import json
 from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Self
@@ -110,6 +111,7 @@ class integer(typedef):
     exclusive_minimum: Optional[int] = None
     exclusive_maximum: Optional[int] = None
     multiple_of: Optional[int] = None
+    enumeration: Optional[List[int]] = None
 
     def __init__(
         self,
@@ -119,14 +121,19 @@ class integer(typedef):
         exclusive_minimum: Optional[int] = None,
         exclusive_maximum: Optional[int] = None,
         multiple_of: Optional[int] = None,
+        enumeration: Optional[List[int]] = None,
         name: Optional[str] = None,
     ):
+        enum_variants = None
+        if enumeration is not None:
+            enum_variants = list(json.dumps(variant) for variant in enumeration)
         data = TypeInteger(
             min=min,
             max=max,
             exclusive_minimum=exclusive_minimum,
             exclusive_maximum=exclusive_maximum,
             multiple_of=multiple_of,
+            enumeration=enum_variants,
         )
 
         res = core.integerb(store, data, TypeBase(name=name))
@@ -138,6 +145,7 @@ class integer(typedef):
         self.exclusive_minimum = exclusive_minimum
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
+        self.enumeration = enumeration
 
 
 class number(typedef):
@@ -146,6 +154,7 @@ class number(typedef):
     exclusive_minimum: Optional[float] = None
     exclusive_maximum: Optional[float] = None
     multiple_of: Optional[float] = None
+    enumeration: Optional[List[float]] = None
 
     def __init__(
         self,
@@ -155,14 +164,19 @@ class number(typedef):
         exclusive_minimum: Optional[float] = None,
         exclusive_maximum: Optional[float] = None,
         multiple_of: Optional[float] = None,
+        enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
     ):
+        enum_variants = None
+        if enumeration is not None:
+            enum_variants = list(json.dumps(variant) for variant in enumeration)
         data = TypeNumber(
             min=min,
             max=max,
             exclusive_minimum=exclusive_minimum,
             exclusive_maximum=exclusive_maximum,
             multiple_of=multiple_of,
+            enumeration=enum_variants,
         )
 
         res = core.numberb(store, data, TypeBase(name=name))
@@ -174,6 +188,7 @@ class number(typedef):
         self.exclusive_minimum = exclusive_minimum
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
+        self.enumeration = enumeration
 
 
 class float(number):
@@ -209,8 +224,12 @@ class string(typedef):
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
     ):
+        enum_variants = None
+        if enumeration is not None:
+            enum_variants = list(json.dumps(variant) for variant in enumeration)
+
         data = TypeString(
-            min=min, max=max, pattern=pattern, format=format, enumeration=enumeration
+            min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
         )
 
         res = core.stringb(store, data, TypeBase(name=name))
@@ -228,11 +247,7 @@ def enum(
     variants: List[str],
     name: Optional[str] = None,
 ):
-    import json
-
-    return string(
-        enumeration=list(json.dumps(variant) for variant in variants), name=name
-    )
+    return string(enumeration=variants, name=name)
 
 
 class array(typedef):

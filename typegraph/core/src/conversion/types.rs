@@ -26,7 +26,10 @@ pub trait TypeConversion {
 impl TypeConversion for Integer {
     fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
         Ok(TypeNode::Integer {
-            base: gen_base(format!("integer_{}", self.id)),
+            base: gen_base_enum(
+                format!("integer_{}", self.id),
+                self.data.enumeration.clone(),
+            ),
             data: IntegerTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,
@@ -41,7 +44,7 @@ impl TypeConversion for Integer {
 impl TypeConversion for Number {
     fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
         Ok(TypeNode::Number {
-            base: gen_base(format!("number_{}", self.id)),
+            base: gen_base_enum(format!("number_{}", self.id), self.data.enumeration.clone()),
             data: NumberTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,

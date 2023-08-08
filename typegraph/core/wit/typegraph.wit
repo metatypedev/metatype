@@ -30,7 +30,8 @@ interface core {
         max: option<s32>,
         exclusive-minimum: option<s32>,
         exclusive-maximum: option<s32>,
-        multiple-of: option<s32>
+        multiple-of: option<s32>,
+        enumeration: option<list<string>>
     }
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
 
@@ -39,7 +40,8 @@ interface core {
         max: option<float64>,
         exclusive-minimum: option<float64>,
         exclusive-maximum: option<float64>,
-        multiple-of: option<float64>
+        multiple-of: option<float64>,
+        enumeration: option<list<string>>
     }
     numberb: func(data: type-number, base: type-base) -> result<type-id, error>
 
