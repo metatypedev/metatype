@@ -101,7 +101,7 @@ Meta.test("Rest queries in Deno", async (t) => {
         obj: {
           a: 1,
           b: { c: 2 },
-          d: "string",
+          d: "email@exanple.com",
           e: [1, 2, "three"],
         },
       })
@@ -109,7 +109,7 @@ Meta.test("Rest queries in Deno", async (t) => {
         identity: {
           a: 1,
           b: { c: 2 },
-          d: "string",
+          d: "email@exanple.com",
           e: [1, 2, "three"],
         },
       })

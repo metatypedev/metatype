@@ -166,6 +166,30 @@ export function string(data: TypeString = {}, base: TypeBase = {}) {
   return new StringT(core.stringb(data, base), data, base);
 }
 
+export function uuid() {
+  return string({ format: "uuid" });
+}
+
+export function email() {
+  return string({ format: "email" });
+}
+
+export function uri() {
+  return string({ format: "uri" });
+}
+
+export function json() {
+  return string({ format: "json" });
+}
+
+export function ean() {
+  return string({ format: "ean" });
+}
+
+export function path() {
+  return string({ format: "path" });
+}
+
 // Note: enum is a reserved word
 export function enumerate(variants: string[], base: TypeBase = {}) {
   return string({

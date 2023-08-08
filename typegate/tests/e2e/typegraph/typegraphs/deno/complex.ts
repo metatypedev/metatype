@@ -18,6 +18,7 @@ const complexType = t.struct({
   a_struct: t.struct({ value: t.number() }),
   nested: t.array(t.either([t.string(), t.integer()])).optional(),
   nested_with_ref: someType,
+  an_email: t.email(),
 }, { name: "ComplexType" });
 
 typegraph("test-complex-types", (expose) => {

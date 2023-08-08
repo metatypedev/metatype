@@ -1,7 +1,6 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-import json
 from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Self
@@ -223,6 +222,8 @@ class string(typedef):
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
     ):
+        import json
+
         enum_variants = None
         if enumeration is not None:
             enum_variants = list(json.dumps(variant) for variant in enumeration)
@@ -240,6 +241,30 @@ class string(typedef):
         self.pattern = pattern
         self.format = format
         self.enumeration = enumeration
+
+
+def uuid() -> string:
+    return string(format="uuid")
+
+
+def email() -> string:
+    return string(format="email")
+
+
+def uri() -> string:
+    return string(format="uri")
+
+
+def json() -> string:
+    return string(format="json")
+
+
+def ean() -> string:
+    return string(format="ean")
+
+
+def path() -> string:
+    return string(format="path")
 
 
 def enum(
