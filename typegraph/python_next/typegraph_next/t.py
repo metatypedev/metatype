@@ -193,7 +193,7 @@ class boolean(typedef):
     def __init__(
         self,
         *,
-        name: Optional[float] = None,
+        name: Optional[str] = None,
     ):
         res = core.booleanb(store, TypeBase(name=name))
         if isinstance(res, Err):
@@ -304,7 +304,7 @@ class union(typedef):
     def __init__(
         self,
         variants: List[typedef],
-        name: Optional[float] = None,
+        name: Optional[str] = None,
     ):
         data = TypeUnion(variants=list(map(lambda v: v.id, variants)))
 
@@ -321,7 +321,7 @@ class either(typedef):
     def __init__(
         self,
         variants: List[typedef],
-        name: Optional[float] = None,
+        name: Optional[str] = None,
     ):
         data = TypeEither(variants=list(map(lambda v: v.id, variants)))
 
