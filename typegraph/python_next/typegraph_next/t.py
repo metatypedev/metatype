@@ -111,7 +111,7 @@ class integer(typedef):
     exclusive_minimum: Optional[int] = None
     exclusive_maximum: Optional[int] = None
     multiple_of: Optional[int] = None
-    enumeration: Optional[List[int]] = None
+    enumeration: Optional[List[str]] = (None,)
 
     def __init__(
         self,
@@ -121,19 +121,16 @@ class integer(typedef):
         exclusive_minimum: Optional[int] = None,
         exclusive_maximum: Optional[int] = None,
         multiple_of: Optional[int] = None,
-        enumeration: Optional[List[int]] = None,
+        enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
     ):
-        enum_variants = None
-        if enumeration is not None:
-            enum_variants = list(json.dumps(variant) for variant in enumeration)
         data = TypeInteger(
             min=min,
             max=max,
             exclusive_minimum=exclusive_minimum,
             exclusive_maximum=exclusive_maximum,
             multiple_of=multiple_of,
-            enumeration=enum_variants,
+            enumeration=enumeration,
         )
 
         res = core.integerb(store, data, TypeBase(name=name))
@@ -154,7 +151,7 @@ class number(typedef):
     exclusive_minimum: Optional[float] = None
     exclusive_maximum: Optional[float] = None
     multiple_of: Optional[float] = None
-    enumeration: Optional[List[float]] = None
+    enumeration: Optional[List[str]] = (None,)
 
     def __init__(
         self,
@@ -164,19 +161,16 @@ class number(typedef):
         exclusive_minimum: Optional[float] = None,
         exclusive_maximum: Optional[float] = None,
         multiple_of: Optional[float] = None,
-        enumeration: Optional[List[float]] = None,
+        enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
     ):
-        enum_variants = None
-        if enumeration is not None:
-            enum_variants = list(json.dumps(variant) for variant in enumeration)
         data = TypeNumber(
             min=min,
             max=max,
             exclusive_minimum=exclusive_minimum,
             exclusive_maximum=exclusive_maximum,
             multiple_of=multiple_of,
-            enumeration=enum_variants,
+            enumeration=enumeration,
         )
 
         res = core.numberb(store, data, TypeBase(name=name))
