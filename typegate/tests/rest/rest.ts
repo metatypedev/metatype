@@ -6,7 +6,6 @@ import { DenoRuntime } from "../../../typegraph/deno/src/runtimes/deno.ts";
 
 const user = t.struct({
   id: t.integer(),
-  //post: t.proxy("Post"),
 }, { name: "User" });
 
 const post = t.struct({
@@ -18,11 +17,10 @@ const complexType = t.struct({
   a: t.integer(),
   b: t.struct({ c: t.integer() }),
   d: t.string({
-    // format: "email",
     pattern: "[a-z]+",
     max: 10,
   }),
-  e: t.optional(t.array(t.either([t.string(), t.integer()]))),
+  e: t.array(t.either([t.string(), t.integer()])).optional(),
 }, { name: "ComplexType" });
 
 typegraph("rest", (expose) => {

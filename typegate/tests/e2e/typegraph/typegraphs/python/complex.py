@@ -19,7 +19,7 @@ complexType = t.struct(
         "an_enum": t.enum(["one", "two"]),
         "an_integer_enum": t.integer(enumeration=["1", "2"]),
         "a_struct": t.struct({"value": t.number()}),
-        "nested": t.optional(t.array(t.either([t.string(), t.integer()]))),
+        "nested": t.array(t.either([t.string(), t.integer()])).optional(),
         "nested_with_ref": someType,
     },
     name="ComplexType",

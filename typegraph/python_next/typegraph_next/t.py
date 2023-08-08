@@ -69,6 +69,11 @@ class typedef:
 
         return _TypeWithPolicy(res.value, self, policies)
 
+    def optional(self, default_value: Optional[str] = None) -> "optional":
+        if isinstance(self, optional):
+            return self
+        return optional(self, default_item=default_value)
+
 
 class _TypeWithPolicy(typedef):
     base: "typedef"

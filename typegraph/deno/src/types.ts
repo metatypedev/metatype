@@ -62,6 +62,13 @@ export class Typedef {
   asTypedef(): Typedef {
     return new Typedef(this._id, { name: this.name });
   }
+
+  optional(data: Omit<TypeOptional, "of"> = {}): Optional {
+    if (this instanceof Optional) {
+      return this;
+    }
+    return optional(this, data);
+  }
 }
 
 export class TypeProxy<T extends Typedef = Typedef> extends Typedef {
