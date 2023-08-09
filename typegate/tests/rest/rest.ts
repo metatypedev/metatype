@@ -17,7 +17,7 @@ const complexType = t.struct({
   a: t.integer(),
   b: t.struct({ c: t.integer() }),
   d: t.email(),
-  e: t.array(t.either([t.string(), t.integer()])).optional_(),
+  e: t.array(t.either([t.string(), t.integer()])).optional(),
 }, { name: "ComplexType" });
 
 typegraph("rest", (expose) => {
@@ -25,7 +25,7 @@ typegraph("rest", (expose) => {
   const pub = g.Policy.public();
 
   const postFromUser = deno.func(user, post, {
-    code: "() => ({ id: 12, author: {id: 1} })",
+    code: "() => ({ id: 12, author: {id: 1}  })",
   }).withPolicy(pub);
 
   const readPost = deno.func(

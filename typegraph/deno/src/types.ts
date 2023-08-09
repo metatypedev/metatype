@@ -65,7 +65,7 @@ export class Typedef {
     return new Typedef(this._id, { name: this.name });
   }
 
-  optional_(data: Simplified<TypeOptional> = {}): Optional {
+  optional(data: Simplified<TypeOptional> = {}): Optional {
     if (this instanceof Optional) {
       return this;
     }
