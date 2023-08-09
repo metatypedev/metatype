@@ -269,7 +269,9 @@ mod tests {
     use crate::errors;
     use crate::global_store::{with_store, with_store_mut};
     use crate::wit::{
-        core::{Core, MaterializerId, TypeBase, TypeFunc, TypeId, TypeInteger, TypeStruct},
+        core::{
+            Core, MaterializerId, TypeBase, TypeFunc, TypeId, TypeInteger, TypeNumber, TypeStruct,
+        },
         runtimes::{Effect, MaterializerDenoFunc, Runtimes},
     };
     use crate::Lib;
@@ -295,6 +297,46 @@ mod tests {
         }
         fn max(mut self, max: i32) -> Self {
             self.max = Some(max);
+            self
+        }
+        fn x_min(mut self, x_min: i32) -> Self {
+            self.exclusive_minimum = Some(x_min);
+            self
+        }
+        fn x_max(mut self, x_max: i32) -> Self {
+            self.exclusive_maximum = Some(x_max);
+            self
+        }
+    }
+
+    impl Default for TypeNumber {
+        fn default() -> Self {
+            Self {
+                min: None,
+                max: None,
+                exclusive_minimum: None,
+                exclusive_maximum: None,
+                multiple_of: None,
+                enumeration: None,
+            }
+        }
+    }
+
+    impl TypeNumber {
+        fn min(mut self, min: f64) -> Self {
+            self.min = Some(min);
+            self
+        }
+        fn max(mut self, max: f64) -> Self {
+            self.max = Some(max);
+            self
+        }
+        fn x_min(mut self, x_min: f64) -> Self {
+            self.exclusive_minimum = Some(x_min);
+            self
+        }
+        fn x_max(mut self, x_max: f64) -> Self {
+            self.exclusive_maximum = Some(x_max);
             self
         }
     }
@@ -341,6 +383,25 @@ mod tests {
     #[test]
     fn test_integer_invalid_max() {
         let res = Lib::integerb(TypeInteger::default().min(12).max(10), TypeBase::default());
+        assert_eq!(res, Err(errors::invalid_max_value()));
+        let res = Lib::integerb(
+            TypeInteger::default().x_min(12).x_max(10),
+            TypeBase::default(),
+        );
+        assert_eq!(res, Err(errors::invalid_max_value()));
+    }
+
+    #[test]
+    fn test_number_invalid_max() {
+        let res = Lib::numberb(
+            TypeNumber::default().min(12.34).max(12.3399),
+            TypeBase::default(),
+        );
+        assert_eq!(res, Err(errors::invalid_max_value()));
+        let res = Lib::numberb(
+            TypeNumber::default().x_min(12.6).x_max(12.6),
+            TypeBase::default(),
+        );
         assert_eq!(res, Err(errors::invalid_max_value()));
     }
 
