@@ -5,6 +5,7 @@ mod conversion;
 mod errors;
 mod global_store;
 mod runtimes;
+mod typedef;
 mod typegraph;
 mod types;
 mod validation;
