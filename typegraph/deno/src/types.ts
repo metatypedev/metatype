@@ -73,7 +73,7 @@ export class Typedef {
   }
 }
 
-export class TypeProxy<T extends Typedef = Typedef> extends Typedef {
+class TypeProxy<T extends Typedef = Typedef> extends Typedef {
   constructor(_id: number, name: string) {
     super(_id, { name });
   }
@@ -87,7 +87,7 @@ export function ref<T extends Typedef = Typedef>(name: string) {
   return proxy<T>(name);
 }
 
-export class Boolean extends Typedef {
+class Boolean extends Typedef {
   constructor(_id: number, base: TypeBase) {
     super(_id, base);
   }
@@ -97,7 +97,7 @@ export function boolean(base: TypeBase = {}) {
   return new Boolean(core.booleanb(base), base);
 }
 
-export class Integer extends Typedef implements Readonly<TypeInteger> {
+class Integer extends Typedef implements Readonly<TypeInteger> {
   readonly min?: number;
   readonly max?: number;
   readonly exclusiveMinimum?: number;
@@ -120,7 +120,7 @@ export function integer(data: TypeInteger = {}, base: TypeBase = {}) {
   return new Integer(core.integerb(data, base), data, base);
 }
 
-export class Number extends Typedef implements Readonly<TypeNumber> {
+class Number extends Typedef implements Readonly<TypeNumber> {
   readonly min?: number;
   readonly max?: number;
   readonly exclusiveMinimum?: number;
@@ -147,7 +147,7 @@ export function float(data: TypeNumber = {}, base: TypeBase = {}) {
   return number(data, base);
 }
 
-export class StringT extends Typedef implements Readonly<TypeString> {
+class StringT extends Typedef implements Readonly<TypeString> {
   readonly min?: number;
   readonly max?: number;
   readonly format?: string;
@@ -199,7 +199,7 @@ export function enum_(variants: string[], base: TypeBase = {}) {
   }, base);
 }
 
-export class ArrayT extends Typedef {
+class ArrayT extends Typedef {
   readonly min?: number;
   readonly max?: number;
   readonly items?: number;
@@ -230,7 +230,7 @@ export function array(
   );
 }
 
-export class Optional extends Typedef {
+class Optional extends Typedef {
   readonly item?: number;
   readonly defaultItem?: string;
 
@@ -257,7 +257,7 @@ export function optional(
   );
 }
 
-export class Union extends Typedef {
+class Union extends Typedef {
   readonly variants: Array<number>;
 
   constructor(_id: number, data: TypeUnion, base: TypeBase) {
@@ -280,7 +280,7 @@ export function union(
   );
 }
 
-export class Either extends Typedef {
+class Either extends Typedef {
   readonly variants: Array<number>;
 
   constructor(_id: number, data: TypeEither, base: TypeBase) {
