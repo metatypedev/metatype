@@ -1,7 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph_next import t, typegraph, Policy, G
+from typegraph_next import t, typegraph, Policy, Graph
 from typegraph_next.runtimes.deno import DenoRuntime
 
 a = t.integer()
@@ -15,8 +15,8 @@ user = t.struct({"id": t.integer(), "post": t.ref("Post")}, name="User")
 post = t.struct({"id": t.integer(), "author": t.ref("User")}, name="Post")
 
 
-@typegraph
-def test_types(g: G):
+@typegraph()
+def test_types(g: Graph):
     deno = DenoRuntime()
     public = Policy.public()
     internal = Policy.internal()
@@ -30,3 +30,6 @@ def test_types(g: G):
             public
         ),
     )
+
+
+test_types
