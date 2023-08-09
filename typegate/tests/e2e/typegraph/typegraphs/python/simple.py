@@ -15,7 +15,7 @@ user = t.struct({"id": t.integer(), "post": t.ref("Post")}, name="User")
 post = t.struct({"id": t.integer(), "author": t.ref("User")}, name="Post")
 
 
-@typegraph("test-types")
+@typegraph
 def test_types(g: G):
     deno = DenoRuntime()
     public = Policy.public()
