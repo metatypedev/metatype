@@ -17,7 +17,7 @@ const complexType = t.struct({
   a: t.integer(),
   b: t.struct({ c: t.integer() }),
   d: t.email(),
-  e: t.array(t.either([t.string(), t.integer()])).optional(),
+  e: t.array(t.either([t.string(), t.integer()])).optional_(),
 }, { name: "ComplexType" });
 
 typegraph("rest", (expose) => {

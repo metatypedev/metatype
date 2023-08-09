@@ -7,7 +7,7 @@ import { DenoRuntime } from "../../../../../../typegraph/deno/src/runtimes/deno.
 
 const someType = t.struct({
   one: t.array(t.integer(), { min: 3 }, { name: "Two" }),
-  two: t.proxy("SomeType").optional(),
+  two: t.optional(t.proxy("SomeType")),
 }, { name: "SomeType" });
 
 const complexType = t.struct({
@@ -16,7 +16,7 @@ const complexType = t.struct({
   an_enum: t.enum_(["one", "two"]),
   an_integer_enum: t.integer({ enumeration: ["1", "2"] }),
   a_struct: t.struct({ value: t.number() }),
-  nested: t.array(t.either([t.string(), t.integer()])).optional(),
+  nested: t.array(t.either([t.string(), t.integer()])).optional_(),
   nested_with_ref: someType,
   an_email: t.email(),
 }, { name: "ComplexType" });
