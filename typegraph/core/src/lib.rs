@@ -270,7 +270,8 @@ mod tests {
     use crate::global_store::{with_store, with_store_mut};
     use crate::wit::{
         core::{
-            Core, MaterializerId, TypeBase, TypeFunc, TypeId, TypeInteger, TypeNumber, TypeStruct,
+            Core, MaterializerId, TypeArray, TypeBase, TypeFunc, TypeId, TypeInteger, TypeNumber,
+            TypeOptional, TypeStruct,
         },
         runtimes::{Effect, MaterializerDenoFunc, Runtimes},
     };
@@ -338,6 +339,26 @@ mod tests {
         fn x_max(mut self, x_max: f64) -> Self {
             self.exclusive_maximum = Some(x_max);
             self
+        }
+    }
+
+    impl TypeArray {
+        fn of(index: u32) -> Self {
+            Self {
+                of: index,
+                min: None,
+                max: None,
+                unique_items: None,
+            }
+        }
+    }
+
+    impl TypeOptional {
+        fn of(index: u32) -> Self {
+            Self {
+                of: index,
+                default_item: None,
+            }
         }
     }
 
@@ -621,8 +642,17 @@ mod tests {
         with_store_mut(|s| s.reset());
         let a = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
         let b = Lib::integerb(TypeInteger::default().min(12).max(44), TypeBase::default())?;
+        // -- optional(array(number))
+        let num_idx = Lib::numberb(TypeNumber::default(), TypeBase::default())?;
+        let array_idx = Lib::arrayb(TypeArray::of(num_idx), TypeBase::default())?;
+        let c = Lib::optionalb(TypeOptional::of(array_idx), TypeBase::default())?;
+        // --
+
         let s = Lib::structb(
-            TypeStruct::default().prop("one", a).prop("two", b),
+            TypeStruct::default()
+                .prop("one", a)
+                .prop("two", b)
+                .prop("three", c),
             TypeBase::default(),
         )?;
         Lib::init_typegraph(TypegraphInitParams {
