@@ -2,10 +2,7 @@ import { Effect } from "../../gen/exports/metatype-typegraph-runtimes.d.ts";
 import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
 import { Materializer, Runtime } from "./mod.ts";
-
-interface GraphQLQuery {
-  path: string[];
-}
+import * as effects from "../effects.ts";
 
 export class GraphQLRuntime extends Runtime {
   constructor(private endpoint: string) {
@@ -25,7 +22,11 @@ export class GraphQLRuntime extends Runtime {
     }, {
       path,
     });
-    return t.func(inp, out, new QueryMat(matId, path));
+    const mat: QueryMat = {
+      _id: matId,
+      path,
+    };
+    return t.func(inp, out, mat);
   }
 
   mutation<
@@ -44,22 +45,17 @@ export class GraphQLRuntime extends Runtime {
     }, {
       path,
     });
-    return t.func(inp, out, new MutationMat(matId, effect, path));
+    const mat: MutationMat = {
+      _id: matId,
+      path,
+    };
+    return t.func(inp, out, mat);
   }
 }
 
-export class QueryMat extends Materializer {
-  constructor(_id: number, public readonly path: string[]) {
-    super(_id);
-  }
+interface QueryMat extends Materializer {
+  path: string[];
 }
 
-export class MutationMat extends Materializer {
-  constructor(
-    _id: number,
-    public readonly effect: Effect,
-    public readonly path: string[],
-  ) {
-    super(_id);
-  }
+interface MutationMat extends QueryMat {
 }
