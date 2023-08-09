@@ -9,6 +9,7 @@ import { shell } from "./shell.ts";
 
 import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
+import { assertEquals, assertNotEquals } from "std/testing/asserts.ts";
 import { Engine } from "../../src/engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { ConnInfo } from "std/http/server.ts";
@@ -16,10 +17,6 @@ import { ConnInfo } from "std/http/server.ts";
 import { NoLimiter } from "./no_limiter.ts";
 import { SingleRegister } from "./single_register.ts";
 import { meta } from "./meta.ts";
-import {
-  assertEquals,
-  assertNotEquals,
-} from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
