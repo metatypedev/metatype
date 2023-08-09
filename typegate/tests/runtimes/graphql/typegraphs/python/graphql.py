@@ -4,7 +4,8 @@ from typegraph_next.runtimes.graphql import GraphQLRuntime
 user = t.struct(
     {
         "id": t.integer(),
-    }
+    },
+    name="User",
 )
 
 with typegraph(name="graphql") as expose:
