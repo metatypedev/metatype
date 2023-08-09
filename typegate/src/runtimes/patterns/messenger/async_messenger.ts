@@ -20,6 +20,10 @@ export type MessengerSend<Broker, M> = (
 
 export type MessengerStop<Broker> = (broker: Broker) => Promise<void> | void;
 
+const maxDurationMs = Deno.env.get("DENO_TESTING") === "true"
+  ? config.timer_max_timeout_test_ms
+  : config.timer_max_timeout_ms;
+
 export class AsyncMessenger<Broker, M, A> {
   protected broker: Broker;
   #counter = 0;
@@ -57,7 +61,6 @@ export class AsyncMessenger<Broker, M, A> {
   }
 
   initTimer() {
-    const maxDurationMs = config.timer_max_timeout_ms;
     if (this.#timer === undefined) {
       this.#timer = setInterval(() => {
         const currentQueue = this.#operationQueues[this.#queueIndex];
