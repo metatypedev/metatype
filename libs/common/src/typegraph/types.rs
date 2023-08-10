@@ -76,7 +76,7 @@ pub struct OptionalTypeData {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct NumberTypeData {
+pub struct FloatTypeData {
     pub minimum: Option<f64>,
     pub maximum: Option<f64>,
     pub exclusive_minimum: Option<f64>,
@@ -205,7 +205,7 @@ pub enum TypeNode {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: NumberTypeData,
+        data: FloatTypeData,
     },
     Integer {
         #[serde(flatten)]
@@ -303,7 +303,7 @@ impl TypeNode {
         use TypeNode::*;
         match self {
             Optional { .. } => "optional",
-            Boolean { .. } => "booleal",
+            Boolean { .. } => "boolean",
             Number { .. } => "number",
             Integer { .. } => "integer",
             String { .. } => "string",

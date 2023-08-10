@@ -9,7 +9,7 @@ use crate::errors::Result;
 use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    TypeArray, TypeBase, TypeEither, TypeFunc, TypeId, TypeInteger, TypeNumber, TypeOptional,
+    TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId, TypeInteger, TypeOptional,
     TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 
@@ -48,7 +48,7 @@ pub struct TypeBoolean;
 pub type Proxy = WrapperType<TypeProxy>;
 pub type Struct = ConcreteType<TypeStruct>;
 pub type Integer = ConcreteType<TypeInteger>;
-pub type Number = ConcreteType<TypeNumber>;
+pub type Float = ConcreteType<TypeFloat>;
 pub type Func = ConcreteType<TypeFunc>;
 pub type Boolean = ConcreteType<TypeBoolean>;
 pub type StringT = ConcreteType<TypeString>;
@@ -64,7 +64,7 @@ pub enum Type {
     Proxy(Proxy),
     Struct(Struct),
     Integer(Integer),
-    Number(Number),
+    Float(Float),
     Func(Func),
     Boolean(Boolean),
     String(StringT),

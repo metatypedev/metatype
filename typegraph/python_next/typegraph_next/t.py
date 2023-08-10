@@ -14,7 +14,7 @@ from typegraph_next.gen.exports.core import (
     TypeBase,
     TypeFunc,
     TypeInteger,
-    TypeNumber,
+    TypeFloat,
     TypeArray,
     TypeEither,
     TypeUnion,
@@ -149,7 +149,7 @@ class integer(typedef):
         self.enumeration = enumeration
 
 
-class number(typedef):
+class float(typedef):
     min: Optional[float] = None
     max: Optional[float] = None
     exclusive_minimum: Optional[float] = None
@@ -168,7 +168,7 @@ class number(typedef):
         enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
     ):
-        data = TypeNumber(
+        data = TypeFloat(
             min=min,
             max=max,
             exclusive_minimum=exclusive_minimum,
@@ -177,7 +177,7 @@ class number(typedef):
             enumeration=enumeration,
         )
 
-        res = core.numberb(store, data, TypeBase(name=name))
+        res = core.floatb(store, data, TypeBase(name=name))
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -187,10 +187,6 @@ class number(typedef):
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
         self.enumeration = enumeration
-
-
-class float(number):
-    pass
 
 
 class boolean(typedef):

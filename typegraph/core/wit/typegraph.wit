@@ -35,7 +35,7 @@ interface core {
     }
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
 
-    record type-number {
+    record type-float {
         min: option<float64>,
         max: option<float64>,
         exclusive-minimum: option<float64>,
@@ -43,7 +43,7 @@ interface core {
         multiple-of: option<float64>,
         enumeration: option<list<float64>>
     }
-    numberb: func(data: type-number, base: type-base) -> result<type-id, error>
+    floatb: func(data: type-float, base: type-base) -> result<type-id, error>
 
     booleanb: func(base: type-base) -> result<type-id, error>
 

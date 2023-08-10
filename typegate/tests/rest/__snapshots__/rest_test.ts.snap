@@ -70,6 +70,13 @@ snapshot[`Rest queries in Deno 1`] = `
         ],
         title: "either_10",
       },
+      float_13: {
+        enum: [
+          "1",
+          "2.5",
+        ],
+        title: "float_13",
+      },
       integer_0: {
         title: "integer_0",
         type: "integer",
@@ -89,13 +96,6 @@ snapshot[`Rest queries in Deno 1`] = `
       integer_9: {
         title: "integer_9",
         type: "integer",
-      },
-      number_13: {
-        enum: [
-          "1",
-          "2.5",
-        ],
-        title: "number_13",
       },
       object_14: {
         properties: {
@@ -129,7 +129,7 @@ snapshot[`Rest queries in Deno 1`] = `
               "1",
               "2.5",
             ],
-            title: "number_13",
+            title: "float_13",
           },
         },
         title: "object_14",
@@ -253,7 +253,7 @@ snapshot[`Rest queries in Deno 1`] = `
                             "1",
                             "2.5",
                           ],
-                          title: "number_13",
+                          title: "float_13",
                         },
                       },
                       title: "object_14",

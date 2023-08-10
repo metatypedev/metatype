@@ -1,18 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::{NumberTypeData, TypeNode};
+use common::typegraph::{FloatTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
     conversion::types::{gen_base_enum, TypeConversion},
     errors,
     typegraph::TypegraphContext,
-    types::{Number, TypeData},
-    wit::core::TypeNumber,
+    types::{Float, TypeData},
+    wit::core::TypeFloat,
 };
 
-impl TypeConversion for Number {
+impl TypeConversion for Float {
     fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
         let enumeration = self
             .data
@@ -20,8 +20,8 @@ impl TypeConversion for Number {
             .clone()
             .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
         Ok(TypeNode::Number {
-            base: gen_base_enum(format!("number_{}", self.id), enumeration),
-            data: NumberTypeData {
+            base: gen_base_enum(format!("float_{}", self.id), enumeration),
+            data: FloatTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,
                 exclusive_minimum: self.data.exclusive_minimum,
@@ -32,7 +32,7 @@ impl TypeConversion for Number {
     }
 }
 
-impl TypeData for TypeNumber {
+impl TypeData for TypeFloat {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
         if let Some(min) = self.min {
             params.push(format!("min={}", min));
@@ -52,6 +52,6 @@ impl TypeData for TypeNumber {
     }
 
     fn variant_name(&self) -> String {
-        "number".to_string()
+        "float".to_string()
     }
 }
