@@ -41,7 +41,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "function",
 ' +
-  '        "title": "func_19",
+  '        "title": "func_20",
 ' +
   '        "runtime": 0,
 ' +
@@ -57,7 +57,7 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '        "input": 2,
 ' +
-  '        "output": 19,
+  '        "output": 20,
 ' +
   '        "materializer": 0,
 ' +
@@ -71,7 +71,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "object",
 ' +
-  '        "title": "object_17",
+  '        "title": "object_18",
 ' +
   '        "runtime": 0,
 ' +
@@ -91,13 +91,15 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '          "an_integer_enum": 6,
 ' +
-  '          "a_struct": 7,
+  '          "a_float_enum": 7,
 ' +
-  '          "nested": 9,
+  '          "a_struct": 8,
 ' +
-  '          "nested_with_ref": 14,
+  '          "nested": 10,
 ' +
-  '          "an_email": 18
+  '          "nested_with_ref": 15,
+' +
+  '          "an_email": 19
 ' +
   "        },
 " +
@@ -191,9 +193,33 @@ snapshot[`typegraphs creation 1`] = `
 " +
   "      {
 " +
+  '        "type": "number",
+' +
+  '        "title": "number_9",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "enum": [
+' +
+  '          "1.5",
+' +
+  '          "2.5"
+' +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
   '        "type": "object",
 ' +
-  '        "title": "object_10",
+  '        "title": "object_11",
 ' +
   '        "runtime": 0,
 ' +
@@ -205,7 +231,7 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '        "properties": {
 ' +
-  '          "value": 8
+  '          "value": 9
 ' +
   "        },
 " +
@@ -217,7 +243,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "number",
 ' +
-  '        "title": "number_9",
+  '        "title": "number_10",
 ' +
   '        "runtime": 0,
 ' +
@@ -233,7 +259,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "optional",
 ' +
-  '        "title": "optional_15",
+  '        "title": "optional_16",
 ' +
   '        "runtime": 0,
 ' +
@@ -243,7 +269,7 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '        "as_id": false,
 ' +
-  '        "item": 10,
+  '        "item": 11,
 ' +
   '        "default_value": null
 ' +
@@ -253,7 +279,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "array",
 ' +
-  '        "title": "array_14",
+  '        "title": "array_15",
 ' +
   '        "runtime": 0,
 ' +
@@ -263,7 +289,7 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '        "as_id": false,
 ' +
-  '        "items": 11
+  '        "items": 12
 ' +
   "      },
 " +
@@ -271,7 +297,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "either",
 ' +
-  '        "title": "either_13",
+  '        "title": "either_14",
 ' +
   '        "runtime": 0,
 ' +
@@ -283,9 +309,9 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '        "oneOf": [
 ' +
-  "          12,
+  "          13,
 " +
-  "          13
+  "          14
 " +
   "        ]
 " +
@@ -295,7 +321,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "string",
 ' +
-  '        "title": "string_11",
+  '        "title": "string_12",
 ' +
   '        "runtime": 0,
 ' +
@@ -311,7 +337,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "integer",
 ' +
-  '        "title": "integer_12",
+  '        "title": "integer_13",
 ' +
   '        "runtime": 0,
 ' +
@@ -339,9 +365,9 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '        "properties": {
 ' +
-  '          "one": 15,
+  '          "one": 16,
 ' +
-  '          "two": 17
+  '          "two": 18
 ' +
   "        },
 " +
@@ -363,7 +389,7 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '        "as_id": false,
 ' +
-  '        "items": 16,
+  '        "items": 17,
 ' +
   '        "minItems": 3
 ' +
@@ -399,7 +425,7 @@ snapshot[`typegraphs creation 1`] = `
 ' +
   '        "as_id": false,
 ' +
-  '        "item": 14,
+  '        "item": 15,
 ' +
   '        "default_value": null
 ' +
@@ -409,7 +435,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "string",
 ' +
-  '        "title": "string_16",
+  '        "title": "string_17",
 ' +
   '        "runtime": 0,
 ' +
@@ -427,7 +453,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   '        "type": "boolean",
 ' +
-  '        "title": "boolean_18",
+  '        "title": "boolean_19",
 ' +
   '        "runtime": 0,
 ' +
@@ -995,7 +1021,7 @@ snapshot[`typegraphs creation 2`] = `
 " +
   '        "data": {
 ' +
-  '          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1X247bNhD1s75ioLxIgKy1bGcLuHVekj4EyKJGsi0KLAKBtmhbqEQKFNW1a/hP+jf9sc6QsnXJJotedoEEHsAWyeEcDoeXOVzJvMj4Liz2gyeTEcr1dGq+KP3vePTdy0E0ml5HWBxPqD2KxtHLwWjwDFKVmimAwX+V/uS+EnkBr2WxV+lmq+GGa6b3BYef/vozgCxdcVHyBCqRcAV6y+FG/pFmGYNFtUQtvLM94BeuylQKGIej0HkBHxZvfh3WuuHbhAudrlOuZnCzeDfEPo6zVjIHGmmjWLGNBd9pSPNCKg2bAHTQ6B7qGqoKIXNehogtT4ZvsPzeKhynlDm/pZnMQYelVtVKew6gHMw/iSsFd2eoZkqxvafDVGi+4crzA8hTMZ8EIFjO5+7tvXT9oLHTWCc7WWicNMvQtFByt/fcD/Worl/3P9qPxTlrA8d3nJU9d485yWJUpGJjRrRFr+0Mi9eZZNqoTckj36NwhJOoMp3iGLFczzHqHSsRc1HlxooK3p2JRmAn97HXtQ5MY3KKFDVwxSgM8zs3Ivtxzzq28zq5T1M8uL+zrLKxR4AlhfzYNhK81DzprA1Pcfsp764Vg5Yf/kffb5bjU6j4Hs1jxdeIedoZvWjkLM1sOKjkPbR+r5sVs0tIqM3W9GwvjSMO68UdkrJ0fWAl8F0hSz4zeGbbzts71vONoqiW2L4JFxKP1z4szDFDnVFaBO/sN400J6hwXYlV007S2l1BR6HDpZQZZ6IdJmuRoPeeD/NXgOtEUzyp/NDErzBOeehUbeo7g4t87VKuVFro8kpvFeehLgdPII/kf8z8k37+H0+m0SX/P4NcXf0TAvBjxkrdyvwm4yPEZ1N+bWDTPt3Xas1WHG5pt70VRaVNslvOwGaC77HCmsrRcejWw+xOVxzd72D2KV12B2ABLOE4a4HRvXTAlgNeZzjWTs/gPV9Jlfxg00aAU/lNyHvxiq52f2YGZ+3BW54cjVZxXSlxHo18GnxLUqaUKZ6U/j92/qPr6/En/H80HV3O/zPIt8n/meHUZ36ID4KozbIPLkOyhyfaXXYIreHOY2SjjrPsIFgFcmq2m08nqK5KDEkHMU06UEhQXeRrlvki9fTcBdX84+lZ8TMiuIhEnR5FYpXeStVgWeMzloX+EiP9F0yUVvghMkpqc5Mj2W53OLV9jq/iC6NFV8sI79OgQzujsdulmifEFlXF90kLhFYhAIrgGYmaDJp3gDSZAa2aWayj30Pv0F+DWStcrOzpMWPdWrOsxCddQ4db3lDmsf7YXRibedGvjj11QKhcJlWG9T7b+pJLNuD9YS+k+yIXucj/JX8DOhS5hQAWAAA="
+  '          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1XzY7bNhD2WU8xUC4SIGst2dmDW+eS9BAgixrJtiiwWBi0TdtCJVKgqK5dw2/St+mLdYaUrZ86WbTJLpLAA+xa5HA+DmdIzseFzPKUb8N813syGaBcj0bmF6X7G0fXcS8ajK6jQTyIh9QfRXEU9wa9Z5Cy0EwB9D5Xuov7RuQFvJb5TiXrjYYbrpne5Rx+/vuvANJkwUXBl1CKJVegNxxu5J9JmjKYlnPUwjs7An7lqkikgDgchM4L+DB981u/0vXfLrnQySrhagw303d9HOM4KyUzoJnWiuWbmeBbDUmWS6VhHYAOat25oaEqETLjRYjY8mj4Br/fW4XjFDLjt7SSCeiw0KpcaM8BlL35T+JKwd0xqplSbOfpMBGar7ny/ACyREyGAQiW8Yl7+yBdP6jtNLbJTuYaF81SNM2V3O4890M1q+tX4w/2x+KctIHjO87CnrvHnGQzVCRibWa0n17TGTZbpZJpozZfHvkehQNcRJnqBOeYydUEo96yEjMuysxY0Yd3Z6IR2MXdd4ZWgalNjpGiDq4YhWFyFwUQ359xrTaz/rWNwpdoFr7sGNpgHNdMcdm7f7C0tAlDgDnl6dA0ErzQfNlKKE9wzyrvrhG4hvP+ve/XOfw31OwBzWeKrxDzuJ06IcxYktoY0pd3Lumv6zTbvBNqvZ89O0rjjP1qR/RJWbg+sAL4NpcFHxs8s9cnzW3u+UaRl3PsX4dTiWdyF+bmbKLOKC2Cd/KbZpoQVLgqxaLuJ2lsyaCl0OFcypQz0QyTtVii954Pk1eAeaIlHlV+aOKXG6c8dKoy9Z3eRb4iKRYqyXVxpTeK81AXvSeQR+o/Vv5ht/7Hw1F0qf/PIFdX/4UA/JSyQjcqv6n4CPHRkl8Z2LJPV69asQWHW9ptb0VealPs5mOwl/oP2GB14+A4dIFhdafbiq5qMPuU7q09sADmcBg3wOiK2WPPHm8mnGurx/CeL6Ra/mgrQIBL+V3IB/GKbml/bCZnzckbnhyMVnFdKnGajXzqfU9SJHTpPyn9f+z8R9dn+P9gNLic/2eQ75P/M8OpT1QPHwRRk2XvXYa8DU+0O28RWsOdYySWjjNvIVgFcmq2nYyGqC4LDEkLMVm2oJBruki9LIlFFum5U2r5h+Oz4hdEcBGJBj2KxEq9karGssYnLAv9KXL5P0glZfgcryS1ucmRNzcHHPs+Rj3xhdFgngW+F+ZBi0FGsdtmjUfEBuvE90kDhLIQAEXwhERdBs3bQ7IcA2XNJOvgd9BbTNZgVgoXGzt6DFm3Viwt8ElXM9uGN1R5rD92F87Muuivij0NQKhMLssU21229SmXbMC7017480UucpEvJf8AOfs+5wAWAAA="
 ' +
   "        }
 " +
@@ -1155,7 +1181,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "function",
 ' +
-  '        "title": "func_19",
+  '        "title": "func_20",
 ' +
   '        "runtime": 0,
 ' +
@@ -1171,7 +1197,7 @@ snapshot[`typegraphs creation 3`] = `
 ' +
   '        "input": 2,
 ' +
-  '        "output": 19,
+  '        "output": 20,
 ' +
   '        "materializer": 0,
 ' +
@@ -1185,7 +1211,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "object",
 ' +
-  '        "title": "object_17",
+  '        "title": "object_18",
 ' +
   '        "runtime": 0,
 ' +
@@ -1205,13 +1231,15 @@ snapshot[`typegraphs creation 3`] = `
 ' +
   '          "an_integer_enum": 6,
 ' +
-  '          "a_struct": 7,
+  '          "a_float_enum": 7,
 ' +
-  '          "nested": 9,
+  '          "a_struct": 8,
 ' +
-  '          "nested_with_ref": 14,
+  '          "nested": 10,
 ' +
-  '          "an_email": 18
+  '          "nested_with_ref": 15,
+' +
+  '          "an_email": 19
 ' +
   "        },
 " +
@@ -1305,9 +1333,33 @@ snapshot[`typegraphs creation 3`] = `
 " +
   "      {
 " +
+  '        "type": "number",
+' +
+  '        "title": "number_9",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "enum": [
+' +
+  '          "1.5",
+' +
+  '          "2.5"
+' +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
   '        "type": "object",
 ' +
-  '        "title": "object_10",
+  '        "title": "object_11",
 ' +
   '        "runtime": 0,
 ' +
@@ -1319,7 +1371,7 @@ snapshot[`typegraphs creation 3`] = `
 ' +
   '        "properties": {
 ' +
-  '          "value": 8
+  '          "value": 9
 ' +
   "        },
 " +
@@ -1331,7 +1383,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "number",
 ' +
-  '        "title": "number_9",
+  '        "title": "number_10",
 ' +
   '        "runtime": 0,
 ' +
@@ -1347,7 +1399,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "optional",
 ' +
-  '        "title": "optional_15",
+  '        "title": "optional_16",
 ' +
   '        "runtime": 0,
 ' +
@@ -1357,7 +1409,7 @@ snapshot[`typegraphs creation 3`] = `
 ' +
   '        "as_id": false,
 ' +
-  '        "item": 10,
+  '        "item": 11,
 ' +
   '        "default_value": null
 ' +
@@ -1367,7 +1419,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "array",
 ' +
-  '        "title": "array_14",
+  '        "title": "array_15",
 ' +
   '        "runtime": 0,
 ' +
@@ -1377,7 +1429,7 @@ snapshot[`typegraphs creation 3`] = `
 ' +
   '        "as_id": false,
 ' +
-  '        "items": 11
+  '        "items": 12
 ' +
   "      },
 " +
@@ -1385,7 +1437,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "either",
 ' +
-  '        "title": "either_13",
+  '        "title": "either_14",
 ' +
   '        "runtime": 0,
 ' +
@@ -1397,9 +1449,9 @@ snapshot[`typegraphs creation 3`] = `
 ' +
   '        "oneOf": [
 ' +
-  "          12,
+  "          13,
 " +
-  "          13
+  "          14
 " +
   "        ]
 " +
@@ -1409,7 +1461,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "string",
 ' +
-  '        "title": "string_11",
+  '        "title": "string_12",
 ' +
   '        "runtime": 0,
 ' +
@@ -1425,7 +1477,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "integer",
 ' +
-  '        "title": "integer_12",
+  '        "title": "integer_13",
 ' +
   '        "runtime": 0,
 ' +
@@ -1453,9 +1505,9 @@ snapshot[`typegraphs creation 3`] = `
 ' +
   '        "properties": {
 ' +
-  '          "one": 15,
+  '          "one": 16,
 ' +
-  '          "two": 17
+  '          "two": 18
 ' +
   "        },
 " +
@@ -1477,7 +1529,7 @@ snapshot[`typegraphs creation 3`] = `
 ' +
   '        "as_id": false,
 ' +
-  '        "items": 16,
+  '        "items": 17,
 ' +
   '        "minItems": 3
 ' +
@@ -1513,7 +1565,7 @@ snapshot[`typegraphs creation 3`] = `
 ' +
   '        "as_id": false,
 ' +
-  '        "item": 14,
+  '        "item": 15,
 ' +
   '        "default_value": null
 ' +
@@ -1523,7 +1575,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "string",
 ' +
-  '        "title": "string_16",
+  '        "title": "string_17",
 ' +
   '        "runtime": 0,
 ' +
@@ -1541,7 +1593,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   '        "type": "boolean",
 ' +
-  '        "title": "boolean_18",
+  '        "title": "boolean_19",
 ' +
   '        "runtime": 0,
 ' +
@@ -2109,7 +2161,7 @@ snapshot[`typegraphs creation 4`] = `
 " +
   '        "data": {
 ' +
-  '          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1X74rjNhDP5zzF4E82OE7spFtwe8fBbT8ctOxyt4XCsgTFkRNTWzKy3CQEv0nfpi/WGflPnOzC9lo2tMVDgmV5NP81+imSWZ7yvaeL0ZvRDOlmsTBPpMtn4N98O/Jnixt/FsyCOc37fuB/M5qNrkBloZkCGP1TunTuP0LTKXyU+UElm62Gn7hm+pBzuPvjdxfSJOKi4GsoxZor0FsOP6Ss0EkEP9afIPBm3hhFfLm//WXSTE4+rbnQSZxwFbYLJsg4JsaHu9u7EEpcmmS5VBoylo+b4RE2Lmj8oQUbxfItVBArmYHledOLX8czRWVyWqhomsk1VrH13UncLX76XKItGf86UapeVJiZWug4kqLQUMiMP1CE3oH2Cq3KSNvHMYAUPMQZphQ72NpLhOYbrmzHRTOyRIQwh4rGgmXIaD3spAWV4+JKvZO0UuY6kYKluDhXcn+wrS+NKstBvv7i7gNK6AyL6n38km1siS+J2IT1NI5so5kt41QyTdNmYDem+i5kZaoTlHcXhxA0hjKx5KLMiJ2eS/vRQq8tFyx0wXpqeRrXO942FEegGa4Y+RnCo+XT0sB6asUva5PDnvHwG0tLE1hcuqJ4NsyCF5qv+xHnCdansh97LvaUO0+OcwpxT8Ryh+uWiqOfbWpbXzOWpMZZGtgXOfh4CneThq6MbEuj6EmTkAnNF+iqzfe5LLgD794DZaVOGxUY5kvwXb9abRTYcuTlChk23r3E/Xjw8BWfxIActUiTZCwk1BoagV5cisg2k9AvDLeZ0t5KypQzUUeC6Ng8iX9NDtrGUMwDZrj7xuOYU4aOoBmWkyWoAHBrsQIjdmj5qnrgeBTb2mwbzTa6KFT0Hw3076AiUkmui6neKs7fCAW8cv7jyT+/PP+D+cIfzv8r0DXPf+rGKmYRhweqtk8iL7XpPKsQ6gZPbY+dXqrxmFocHubU0ah7g6lT6m1HYC6soAp7wqjDHCvqT9g7Nd9jq/rMI6nW39eHgouu/CrkTrynJuWERjnrK+9ZUpmviutSiU4b2TT6P1GR0PHwpvD/Vfw/8xfP8P8suBn2/xXoqvv/NZz/4W/D+g9fheKZgcgdODyhe/8MO5s9f45ha4BMkLgPvldn8jouxNFsH8Ji3ufFu4+6ROjJuq/FACUEdgYKN5eBe3y1LjDozyjp7A5Aa/6CaFbqrVTmFqbOJRotL8PZN4OxLYM5HBCd97nauZfgrrlxndBugbeWldvh2DMU6wcNhq3OMGkrvQHB5iJ2EmiiY0L6XCp9M5Ix1xRgSrXJa+W8qMlIzeuxhS8HuvrUtsUsLeornrGBjrLGirreWxiP/j0bdXkzy1Am7pUypYlLVGcNoHyggQYaaKAz+hPJnYGYABgAAA=="
+  '          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1X74rjNhDP5zzF4E82OE7sZLfg9o6D2344aNnlbguFZQmKoySmtmRkuUkIfpO+TV+sM/KfONmF7bUkcIeHBMvy/NPMaPRTJNMs4TtP54OL0QTpdjYzT6TzZxDc+AN/Mrv1J8EkmNK87weTHwaTwRWoyDVTAIP/S+eL+0ZoPIaPMtureL3R8CvXTO8zDvd//+VCEkdc5HwJhVhyBXrD4eeE5TqO4JfqEwTexBuiii8Pd7+P6snRpyUXOl7FXIWNwAgZh8T4eH93H0KBonGaSaUhZdmwHh5g7YLGH3qwVizbQAkrJVOwPG989mt5xmhMjnMVjVO5xCq2fjyqu8NPnwv0JeVfp0pVQrmZqZQOIylyDblM+SNF6B1oL9eqiLR9GAJIwUOcYUqxva29WGi+5sp2XHQjjUUIUyhpLFiKjNbjVlpQOi5K6q0kSZnpWAqWoHCm5G5vW19qU5aDfF3h9gNqaB2Lqn38mm9sji+xWIfVNI5sY5nNV4lkmqbNwK5d9V1Ii0THqO9+FUJQO8rEnIsiJXZ6zu0nC1dtuWDhEqznhqdeesvbhOIANMMVo3WG8IRWgudGdeVJK9O4cybh3aCMd3OUqhYZdpYLf7KkMKlA0QVloGYWPNd82c0Rj7Gilf3UCUrHXefZcY5J6aiYb1FurjhGpimGJjopixMTHhrYZ1n7eExQnbi28GxLo+pRncIRzecYV5vvMplzB969B8pjlWgqScyw4NtufduosOHIigUyrL0HiTt47+ErPokBOSqVpiyw9NBqaBR6q0JEtpmEbim59ZT2FlImnIkqEkSH+kn8S1qgbRzFPGBNtN/4asUpQwfQDAvQElQyuBlZjhHbN3xlNXA8im3lto1uG1sUKvoPeroE5ZGKM52P9UZxfiEU8Mb5jyf/9Pz8D6Yzvz//r0DXPP+pt6oVizg8UrV9ElmhTR9ZhFC1a2pi7PhSDofUsPAwp/5EvRhMnVKnOgBzYQFl2FFG/eJQUrfBTqj5DhvPZx5JtfypavEuLuUPIbfiPbUcJzTGWdd4x5PSfFVcF0q01sinwfdEeUzN/qLw/038P/FnL/D/JLjt9/8V6Kr7/y2c/+E/w/oPX4XimYHILdQ7onv/BDubPX+KYSuATJC4C74XJ/paLsTRbBfCbNrlxbuPOkfo8bJrxcAehGkG2NaXgQd8tc4Q5W+o6eQOQDL/QjUr9EYqcwtTpxqNldfB6cVAacNgDgfE2l2uZu418GpuXEfsmuN9YuG2qPQEk/pBjUjLE4TZaK8hrbmIHRWa6JiQvtRK34xmzDUFmFJt8lo6r1oyWrNqbOHLnm5NlW8rluTVFc/4QEdZ7UVV7w0ox/W9GLV5M2KoE/dKkdDEOaqzeojdU0899dTTCf0DAhzTNgAYAAA="
 ' +
   "        }
 " +

@@ -22,6 +22,9 @@ export type PolicySpec = Policy | {
 };
 
 export type Simplified<T> = Omit<T, "of">;
+export type SimplifiedNumeric<T> =
+  & { enumeration?: number[] }
+  & Omit<T, "enumeration">;
 
 export class Typedef {
   readonly name?: string;
@@ -103,7 +106,7 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
-  readonly enumeration?: string[];
+  readonly enumeration?: Int32Array;
 
   constructor(_id: number, data: TypeInteger, base: TypeBase) {
     super(_id, base);
@@ -116,8 +119,17 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
   }
 }
 
-export function integer(data: TypeInteger = {}, base: TypeBase = {}) {
-  return new Integer(core.integerb(data, base), data, base);
+export function integer(
+  data: SimplifiedNumeric<TypeInteger> = {},
+  base: TypeBase = {},
+) {
+  const completeData = {
+    ...data,
+    enumeration: data.enumeration
+      ? new Int32Array(data.enumeration)
+      : undefined,
+  };
+  return new Integer(core.integerb(completeData, base), completeData, base);
 }
 
 class Number extends Typedef implements Readonly<TypeNumber> {
@@ -126,7 +138,7 @@ class Number extends Typedef implements Readonly<TypeNumber> {
   readonly exclusiveMinimum?: number;
   readonly exclusiveMaximum?: number;
   readonly multipleOf?: number;
-  readonly enumeration?: string[];
+  readonly enumeration?: Float64Array;
 
   constructor(_id: number, data: TypeNumber, base: TypeBase) {
     super(_id, base);
@@ -139,11 +151,27 @@ class Number extends Typedef implements Readonly<TypeNumber> {
   }
 }
 
-export function number(data: TypeNumber = {}, base: TypeBase = {}) {
-  return new Number(core.numberb(data, base), data, base);
+export function number(
+  data: SimplifiedNumeric<TypeNumber> = {},
+  base: TypeBase = {},
+) {
+  const completeData = {
+    ...data,
+    enumeration: data.enumeration
+      ? new Float64Array(data.enumeration)
+      : undefined,
+  };
+  return new Number(
+    core.numberb(completeData, base),
+    completeData,
+    base,
+  );
 }
 
-export function float(data: TypeNumber = {}, base: TypeBase = {}) {
+export function float(
+  data: SimplifiedNumeric<TypeNumber> = {},
+  base: TypeBase = {},
+) {
   return number(data, base);
 }
 
@@ -180,8 +208,8 @@ export function uri() {
   return string({ format: "uri" });
 }
 
-export function json() {
-  return string({ format: "json" });
+export function json(data: { min?: number; max?: number }) {
+  return string({ format: "json", ...data });
 }
 
 export function ean() {

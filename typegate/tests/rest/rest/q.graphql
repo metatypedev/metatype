@@ -19,5 +19,6 @@ query get_identity($obj: ComplexObject) {
     b { c }
     d
     e
+    f
   }
 }

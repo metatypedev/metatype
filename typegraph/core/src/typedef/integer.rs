@@ -14,11 +14,13 @@ use crate::{
 
 impl TypeConversion for Integer {
     fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+        let enumeration = self
+            .data
+            .enumeration
+            .clone()
+            .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
         Ok(TypeNode::Integer {
-            base: gen_base_enum(
-                format!("integer_{}", self.id),
-                self.data.enumeration.clone(),
-            ),
+            base: gen_base_enum(format!("integer_{}", self.id), enumeration),
             data: IntegerTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,

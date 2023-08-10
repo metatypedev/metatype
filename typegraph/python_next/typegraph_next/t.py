@@ -115,7 +115,7 @@ class integer(typedef):
     exclusive_minimum: Optional[int] = None
     exclusive_maximum: Optional[int] = None
     multiple_of: Optional[int] = None
-    enumeration: Optional[List[str]] = (None,)
+    enumeration: Optional[List[int]] = (None,)
 
     def __init__(
         self,
@@ -125,7 +125,7 @@ class integer(typedef):
         exclusive_minimum: Optional[int] = None,
         exclusive_maximum: Optional[int] = None,
         multiple_of: Optional[int] = None,
-        enumeration: Optional[List[str]] = None,
+        enumeration: Optional[List[int]] = None,
         name: Optional[str] = None,
     ):
         data = TypeInteger(
@@ -155,7 +155,7 @@ class number(typedef):
     exclusive_minimum: Optional[float] = None
     exclusive_maximum: Optional[float] = None
     multiple_of: Optional[float] = None
-    enumeration: Optional[List[str]] = (None,)
+    enumeration: Optional[List[float]] = (None,)
 
     def __init__(
         self,
@@ -165,7 +165,7 @@ class number(typedef):
         exclusive_minimum: Optional[float] = None,
         exclusive_maximum: Optional[float] = None,
         multiple_of: Optional[float] = None,
-        enumeration: Optional[List[str]] = None,
+        enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
     ):
         data = TypeNumber(
@@ -255,8 +255,8 @@ def uri() -> string:
     return string(format="uri")
 
 
-def json() -> string:
-    return string(format="json")
+def json(min: Optional[int] = None, max: Optional[int] = None) -> string:
+    return string(format="json", min=min, max=max)
 
 
 def ean() -> string:
