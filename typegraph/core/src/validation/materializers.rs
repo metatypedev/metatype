@@ -19,6 +19,7 @@ impl Materializer {
             }
             // TODO
             // _ => Err(errors::invalid_runtime_type("", "")),
+            _ => Ok(()), // TODO validate path components??
         }
     }
 
