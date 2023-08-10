@@ -27,7 +27,7 @@ class Typegraph:
         self.name = name
         self.dynamic = dynamic
         self.folder = folder
-        self.path = str(Path(inspect.stack()[1].filename).resolve().parent)
+        self.path = str(Path(inspect.stack()[2].filename).resolve().parent)
 
     @classmethod
     def get_active(cls) -> Optional["Typegraph"]:
@@ -68,6 +68,7 @@ def typegraph(
             actual_name = re.sub("_", "-", builder.__name__)
 
         tg = Typegraph(actual_name, dynamic, folder)
+
         Typegraph._context.append(tg)
         core.init_typegraph(
             store,

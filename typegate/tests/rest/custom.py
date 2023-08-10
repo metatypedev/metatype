@@ -1,13 +1,11 @@
-from typegraph_next import g, t, typegraph
+from typegraph_next import t, typegraph, Graph, Policy
 from typegraph_next.runtimes.deno import DenoRuntime
 
-with typegraph(
-    name="custom",
-    dynamic=False,
-    folder="custom_dir",
-) as expose:
+
+@typegraph(dynamic=False, folder="custom_dir")
+def custom(g: Graph):
     deno = DenoRuntime()
-    pub = g.Policy.public()
+    pub = Policy.public()
 
     ping = deno.func(
         t.struct({}),
@@ -15,6 +13,6 @@ with typegraph(
         code="() => 1",
     ).with_policy(pub)
 
-    expose(
+    g.expose(
         ping=ping,
     )

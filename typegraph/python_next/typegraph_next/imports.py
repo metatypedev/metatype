@@ -3,6 +3,7 @@
 
 import glob
 from typing import List
+import sys
 
 from typegraph_next.gen import imports
 from typegraph_next.gen.types import Err, Ok, Result
@@ -10,7 +11,8 @@ from typegraph_next.gen.types import Err, Ok, Result
 
 class Abi(imports.Abi):
     def log(self, message: str) -> None:
-        print(message)
+        # stdout is used for the typegraph
+        print(message, file=sys.stderr)
 
     def glob(self, pattern: str, exts: List[str]) -> Result[List[str], str]:
         files = []
