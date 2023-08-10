@@ -99,7 +99,7 @@ Meta.test("Python WASI runtime", async (t) => {
       query {
         identity(
           input: {
-            a: 1234, 
+            a: 1234,
             b: { c: ["one", "two", "three" ] }
           }
         ) {
@@ -142,3 +142,34 @@ Meta.test("Python WASI runtime", async (t) => {
     assert(duration < 600, `Python WASI runtime was too slow: ${duration}ms`);
   });
 });
+
+Meta.test("Python WASI: infinite loop or similar", async (t) => {
+  const e = await t.engine("runtimes/python_wasi/python_wasi.py");
+
+  await t.should("safely fail upon stackoverflow", async () => {
+    await gql`
+      query {
+        stackOverflow(enable: true)
+      }
+    `
+      .expectErrorContains("maximum recursion depth exceeded")
+      .on(e);
+  });
+
+  // let tic = 0;
+  // setTimeout(() => console.log("hearbeat", tic++), 100);
+
+  // FIXME: blocks main deno thread
+  // current approach on deno_bindgen apply/applyDef needs to run on
+  // separate threads
+  // #[deno] works for applys but still manages to block the current thread
+  // await t.should("safely fail upon infinite loop", async () => {
+  //   await gql`
+  //     query {
+  //       infiniteLoop(enable: true)
+  //     }
+  //   `
+  //     .expectErrorContains("timeout exceeded")
+  //     .on(e);
+  // });
+}, { sanitizeOps: false });

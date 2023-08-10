@@ -10,6 +10,25 @@ def identity(x):
     return x["input"]
 
 
+def stackoverflow(x):
+    def fn():
+        return fn()
+
+    if x["enable"]:
+        fn()
+    return x["enable"]
+
+
+def infinite_loop(x):
+    import time
+
+    # while x["enable"]:
+    #     print("tic tac")
+    # blocking
+    time.sleep(20000)  # still blocking main thread
+    return x["enable"]
+
+
 with TypeGraph("python_wasi") as g:
     public = policies.public()
     python = Python()
@@ -36,6 +55,16 @@ with TypeGraph("python_wasi") as g:
             t.struct({"input": tpe}),
             tpe,
             python.from_def(identity),
+        ),
+        stackOverflow=t.func(
+            t.struct({"enable": t.boolean()}),
+            t.boolean(),
+            python.from_def(stackoverflow),
+        ),
+        infiniteLoop=t.func(
+            t.struct({"enable": t.boolean()}),
+            t.boolean(),
+            python.from_def(infinite_loop),
         ),
         default_policy=[public],
     )
