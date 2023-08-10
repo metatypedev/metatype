@@ -1,0 +1,2229 @@
+export const snapshot = {};
+
+snapshot[`typegraphs creation 1`] = `
+"[
+" +
+  "  {
+" +
+  '    "\$id": "https://metatype.dev/specs/0.0.2.json",
+' +
+  '    "types": [
+' +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "test-complex-types",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "test": 1
+' +
+  "        },
+" +
+  '        "required": [
+' +
+  '          "test"
+' +
+  "        ]
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_19",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          0
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 19,
+' +
+  '        "materializer": 0,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_17",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "a_string": 3,
+' +
+  '          "a_float": 4,
+' +
+  '          "an_enum": 5,
+' +
+  '          "an_integer_enum": 6,
+' +
+  '          "a_struct": 7,
+' +
+  '          "nested": 9,
+' +
+  '          "nested_with_ref": 14,
+' +
+  '          "an_email": 18
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "string",
+' +
+  '        "title": "string_5",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "number",
+' +
+  '        "title": "number_6",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 1.0,
+' +
+  '        "multipleOf": 2.0
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "string",
+' +
+  '        "title": "string_7",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "enum": [
+' +
+  '          "\\\\"one\\\\"",
+' +
+  '          "\\\\"two\\\\""
+' +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_8",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "enum": [
+' +
+  '          "1",
+' +
+  '          "2"
+' +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_10",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "value": 8
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "number",
+' +
+  '        "title": "number_9",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "optional",
+' +
+  '        "title": "optional_15",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "item": 10,
+' +
+  '        "default_value": null
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "array",
+' +
+  '        "title": "array_14",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "items": 11
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "either",
+' +
+  '        "title": "either_13",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "oneOf": [
+' +
+  "          12,
+" +
+  "          13
+" +
+  "        ]
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "string",
+' +
+  '        "title": "string_11",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_12",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_4",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "one": 15,
+' +
+  '          "two": 17
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "array",
+' +
+  '        "title": "array_1",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "items": 16,
+' +
+  '        "minItems": 3
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_0",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "optional",
+' +
+  '        "title": "optional_3",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "item": 14,
+' +
+  '        "default_value": null
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "string",
+' +
+  '        "title": "string_16",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "format": "email"
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "boolean",
+' +
+  '        "title": "boolean_18",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "materializers": [
+' +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>true;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "predefined_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "name": "true"
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "runtimes": [
+' +
+  "      {
+" +
+  '        "name": "deno",
+' +
+  '        "data": {
+' +
+  '          "worker": "default",
+' +
+  '          "permissions": {}
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "policies": [
+' +
+  "      {
+" +
+  '        "name": "__public",
+' +
+  '        "materializer": 1
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "meta": {
+' +
+  '      "prefix": null,
+' +
+  '      "secrets": [],
+' +
+  '      "queries": {
+' +
+  '        "dynamic": true,
+' +
+  '        "endpoints": []
+' +
+  "      },
+" +
+  '      "cors": {
+' +
+  '        "allow_origin": [],
+' +
+  '        "allow_headers": [],
+' +
+  '        "expose_headers": [],
+' +
+  '        "allow_methods": [],
+' +
+  '        "allow_credentials": false,
+' +
+  '        "max_age_sec": null
+' +
+  "      },
+" +
+  '      "auths": [],
+' +
+  '      "rate": null,
+' +
+  '      "version": "0.0.2"
+' +
+  "    }
+" +
+  "  }
+" +
+  "]"
+`;
+
+snapshot[`typegraphs creation 2`] = `
+"[
+" +
+  "  {
+" +
+  '    "\$id": "https://metatype.dev/specs/0.0.2.json",
+' +
+  '    "types": [
+' +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "test-types",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "one": 1,
+' +
+  '          "two": 6,
+' +
+  '          "three": 11
+' +
+  "        },
+" +
+  '        "required": [
+' +
+  '          "one",
+' +
+  '          "two",
+' +
+  '          "three"
+' +
+  "        ]
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_9",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          0
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 5,
+' +
+  '        "materializer": 0,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_2",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "a": 3,
+' +
+  '          "b": 4
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_0",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_1",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 12
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_3",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 12,
+' +
+  '        "maximum": 43
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_11",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          1
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 7,
+' +
+  '        "output": 9,
+' +
+  '        "materializer": 2,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_6",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "id": 8,
+' +
+  '          "post": 9
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_4",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_8",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "id": 10,
+' +
+  '          "author": 7
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_7",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_13",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          2
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 2,
+' +
+  '        "materializer": 4,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "materializers": [
+' +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>12;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=(_,{context})=>context.provider===\\\\"internal\\\\";"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=user=>({id:12,user});"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>false;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "import_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "mod": 5,
+' +
+  '          "name": "three",
+' +
+  '          "secrets": []
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "module",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1X247bNhD1s75ioLxIgKy1bGcLuHVekj4EyKJGsi0KLAKBtmhbqEQKFNW1a/hP+jf9sc6QsnXJJotedoEEHsAWyeEcDoeXOVzJvMj4Liz2gyeTEcr1dGq+KP3vePTdy0E0ml5HWBxPqD2KxtHLwWjwDFKVmimAwX+V/uS+EnkBr2WxV+lmq+GGa6b3BYef/vozgCxdcVHyBCqRcAV6y+FG/pFmGYNFtUQtvLM94BeuylQKGIej0HkBHxZvfh3WuuHbhAudrlOuZnCzeDfEPo6zVjIHGmmjWLGNBd9pSPNCKg2bAHTQ6B7qGqoKIXNehogtT4ZvsPzeKhynlDm/pZnMQYelVtVKew6gHMw/iSsFd2eoZkqxvafDVGi+4crzA8hTMZ8EIFjO5+7tvXT9oLHTWCc7WWicNMvQtFByt/fcD/Worl/3P9qPxTlrA8d3nJU9d485yWJUpGJjRrRFr+0Mi9eZZNqoTckj36NwhJOoMp3iGLFczzHqHSsRc1HlxooK3p2JRmAn97HXtQ5MY3KKFDVwxSgM8zs3Ivtxzzq28zq5T1M8uL+zrLKxR4AlhfzYNhK81DzprA1Pcfsp764Vg5Yf/kffb5bjU6j4Hs1jxdeIedoZvWjkLM1sOKjkPbR+r5sVs0tIqM3W9GwvjSMO68UdkrJ0fWAl8F0hSz4zeGbbzts71vONoqiW2L4JFxKP1z4szDFDnVFaBO/sN400J6hwXYlV007S2l1BR6HDpZQZZ6IdJmuRoPeeD/NXgOtEUzyp/NDErzBOeehUbeo7g4t87VKuVFro8kpvFeehLgdPII/kf8z8k37+H0+m0SX/P4NcXf0TAvBjxkrdyvwm4yPEZ1N+bWDTPt3Xas1WHG5pt70VRaVNslvOwGaC77HCmsrRcejWw+xOVxzd72D2KV12B2ABLOE4a4HRvXTAlgNeZzjWTs/gPV9Jlfxg00aAU/lNyHvxiq52f2YGZ+3BW54cjVZxXSlxHo18GnxLUqaUKZ6U/j92/qPr6/En/H80HV3O/zPIt8n/meHUZ36ID4KozbIPLkOyhyfaXXYIreHOY2SjjrPsIFgFcmq2m08nqK5KDEkHMU06UEhQXeRrlvki9fTcBdX84+lZ8TMiuIhEnR5FYpXeStVgWeMzloX+EiP9F0yUVvghMkpqc5Mj2W53OLV9jq/iC6NFV8sI79OgQzujsdulmifEFlXF90kLhFYhAIrgGYmaDJp3gDSZAa2aWayj30Pv0F+DWStcrOzpMWPdWrOsxCddQ4db3lDmsf7YXRibedGvjj11QKhcJlWG9T7b+pJLNuD9YS+k+yIXucj/JX8DOhS5hQAWAAA="
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "predefined_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "name": "true"
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "runtimes": [
+' +
+  "      {
+" +
+  '        "name": "deno",
+' +
+  '        "data": {
+' +
+  '          "worker": "default",
+' +
+  '          "permissions": {}
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "policies": [
+' +
+  "      {
+" +
+  '        "name": "__internal",
+' +
+  '        "materializer": 1
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "deny",
+' +
+  '        "materializer": 3
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "__public",
+' +
+  '        "materializer": 6
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "meta": {
+' +
+  '      "prefix": null,
+' +
+  '      "secrets": [],
+' +
+  '      "queries": {
+' +
+  '        "dynamic": true,
+' +
+  '        "endpoints": []
+' +
+  "      },
+" +
+  '      "cors": {
+' +
+  '        "allow_origin": [],
+' +
+  '        "allow_headers": [],
+' +
+  '        "expose_headers": [],
+' +
+  '        "allow_methods": [],
+' +
+  '        "allow_credentials": false,
+' +
+  '        "max_age_sec": null
+' +
+  "      },
+" +
+  '      "auths": [],
+' +
+  '      "rate": null,
+' +
+  '      "version": "0.0.2"
+' +
+  "    }
+" +
+  "  }
+" +
+  "]"
+`;
+
+snapshot[`typegraphs creation 3`] = `
+"[
+" +
+  "  {
+" +
+  '    "\$id": "https://metatype.dev/specs/0.0.2.json",
+' +
+  '    "types": [
+' +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "test-complex-types",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "test": 1
+' +
+  "        },
+" +
+  '        "required": [
+' +
+  '          "test"
+' +
+  "        ]
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_19",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          0
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 19,
+' +
+  '        "materializer": 0,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_17",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "a_string": 3,
+' +
+  '          "a_float": 4,
+' +
+  '          "an_enum": 5,
+' +
+  '          "an_integer_enum": 6,
+' +
+  '          "a_struct": 7,
+' +
+  '          "nested": 9,
+' +
+  '          "nested_with_ref": 14,
+' +
+  '          "an_email": 18
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "string",
+' +
+  '        "title": "string_5",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "number",
+' +
+  '        "title": "number_6",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 1.0,
+' +
+  '        "multipleOf": 2.0
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "string",
+' +
+  '        "title": "string_7",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "enum": [
+' +
+  '          "\\\\"one\\\\"",
+' +
+  '          "\\\\"two\\\\""
+' +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_8",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "enum": [
+' +
+  '          "1",
+' +
+  '          "2"
+' +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_10",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "value": 8
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "number",
+' +
+  '        "title": "number_9",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "optional",
+' +
+  '        "title": "optional_15",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "item": 10,
+' +
+  '        "default_value": null
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "array",
+' +
+  '        "title": "array_14",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "items": 11
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "either",
+' +
+  '        "title": "either_13",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "oneOf": [
+' +
+  "          12,
+" +
+  "          13
+" +
+  "        ]
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "string",
+' +
+  '        "title": "string_11",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_12",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_4",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "one": 15,
+' +
+  '          "two": 17
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "array",
+' +
+  '        "title": "array_1",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "items": 16,
+' +
+  '        "minItems": 3
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_0",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "optional",
+' +
+  '        "title": "optional_3",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "item": 14,
+' +
+  '        "default_value": null
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "string",
+' +
+  '        "title": "string_16",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "format": "email"
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "boolean",
+' +
+  '        "title": "boolean_18",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "materializers": [
+' +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>true;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "predefined_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "name": "true"
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "runtimes": [
+' +
+  "      {
+" +
+  '        "name": "deno",
+' +
+  '        "data": {
+' +
+  '          "worker": "default",
+' +
+  '          "permissions": {}
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "policies": [
+' +
+  "      {
+" +
+  '        "name": "__public",
+' +
+  '        "materializer": 1
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "meta": {
+' +
+  '      "prefix": null,
+' +
+  '      "secrets": [],
+' +
+  '      "queries": {
+' +
+  '        "dynamic": true,
+' +
+  '        "endpoints": []
+' +
+  "      },
+" +
+  '      "cors": {
+' +
+  '        "allow_origin": [],
+' +
+  '        "allow_headers": [],
+' +
+  '        "expose_headers": [],
+' +
+  '        "allow_methods": [],
+' +
+  '        "allow_credentials": false,
+' +
+  '        "max_age_sec": null
+' +
+  "      },
+" +
+  '      "auths": [],
+' +
+  '      "rate": null,
+' +
+  '      "version": "0.0.2"
+' +
+  "    }
+" +
+  "  }
+" +
+  "]"
+`;
+
+snapshot[`typegraphs creation 4`] = `
+"[
+" +
+  "  {
+" +
+  '    "\$id": "https://metatype.dev/specs/0.0.2.json",
+' +
+  '    "types": [
+' +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "test-types",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "one": 1,
+' +
+  '          "two": 6,
+' +
+  '          "three": 11
+' +
+  "        },
+" +
+  '        "required": [
+' +
+  '          "one",
+' +
+  '          "two",
+' +
+  '          "three"
+' +
+  "        ]
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_9",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          0
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 5,
+' +
+  '        "materializer": 0,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_2",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "a": 3,
+' +
+  '          "b": 4
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_0",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_1",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 12
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_3",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "minimum": 12,
+' +
+  '        "maximum": 43
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_11",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          1
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 7,
+' +
+  '        "output": 9,
+' +
+  '        "materializer": 2,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_6",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "id": 8,
+' +
+  '          "post": 9
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_4",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "object",
+' +
+  '        "title": "object_8",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "properties": {
+' +
+  '          "id": 10,
+' +
+  '          "author": 7
+' +
+  "        },
+" +
+  '        "required": []
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "integer",
+' +
+  '        "title": "integer_7",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [],
+' +
+  '        "config": {},
+' +
+  '        "as_id": false
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "type": "function",
+' +
+  '        "title": "func_13",
+' +
+  '        "runtime": 0,
+' +
+  '        "policies": [
+' +
+  "          2
+" +
+  "        ],
+" +
+  '        "config": {},
+' +
+  '        "as_id": false,
+' +
+  '        "input": 2,
+' +
+  '        "output": 2,
+' +
+  '        "materializer": 4,
+' +
+  '        "rate_weight": null,
+' +
+  '        "rate_calls": false
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "materializers": [
+' +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>12;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=(_,{context})=>context.provider===\\\\"internal\\\\";"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=user=>({id:12,user});"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "script": "var _my_lambda=()=>false;"
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "import_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "mod": 5,
+' +
+  '          "name": "three",
+' +
+  '          "secrets": []
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "module",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1X74rjNhDP5zzF4E82OE7spFtwe8fBbT8ctOxyt4XCsgTFkRNTWzKy3CQEv0nfpi/WGflPnOzC9lo2tMVDgmV5NP81+imSWZ7yvaeL0ZvRDOlmsTBPpMtn4N98O/Jnixt/FsyCOc37fuB/M5qNrkBloZkCGP1TunTuP0LTKXyU+UElm62Gn7hm+pBzuPvjdxfSJOKi4GsoxZor0FsOP6Ss0EkEP9afIPBm3hhFfLm//WXSTE4+rbnQSZxwFbYLJsg4JsaHu9u7EEpcmmS5VBoylo+b4RE2Lmj8oQUbxfItVBArmYHledOLX8czRWVyWqhomsk1VrH13UncLX76XKItGf86UapeVJiZWug4kqLQUMiMP1CE3oH2Cq3KSNvHMYAUPMQZphQ72NpLhOYbrmzHRTOyRIQwh4rGgmXIaD3spAWV4+JKvZO0UuY6kYKluDhXcn+wrS+NKstBvv7i7gNK6AyL6n38km1siS+J2IT1NI5so5kt41QyTdNmYDem+i5kZaoTlHcXhxA0hjKx5KLMiJ2eS/vRQq8tFyx0wXpqeRrXO942FEegGa4Y+RnCo+XT0sB6asUva5PDnvHwG0tLE1hcuqJ4NsyCF5qv+xHnCdansh97LvaUO0+OcwpxT8Ryh+uWiqOfbWpbXzOWpMZZGtgXOfh4CneThq6MbEuj6EmTkAnNF+iqzfe5LLgD794DZaVOGxUY5kvwXb9abRTYcuTlChk23r3E/Xjw8BWfxIActUiTZCwk1BoagV5cisg2k9AvDLeZ0t5KypQzUUeC6Ng8iX9NDtrGUMwDZrj7xuOYU4aOoBmWkyWoAHBrsQIjdmj5qnrgeBTb2mwbzTa6KFT0Hw3076AiUkmui6neKs7fCAW8cv7jyT+/PP+D+cIfzv8r0DXPf+rGKmYRhweqtk8iL7XpPKsQ6gZPbY+dXqrxmFocHubU0ah7g6lT6m1HYC6soAp7wqjDHCvqT9g7Nd9jq/rMI6nW39eHgouu/CrkTrynJuWERjnrK+9ZUpmviutSiU4b2TT6P1GR0PHwpvD/Vfw/8xfP8P8suBn2/xXoqvv/NZz/4W/D+g9fheKZgcgdODyhe/8MO5s9f45ha4BMkLgPvldn8jouxNFsH8Ji3ufFu4+6ROjJuq/FACUEdgYKN5eBe3y1LjDozyjp7A5Aa/6CaFbqrVTmFqbOJRotL8PZN4OxLYM5HBCd97nauZfgrrlxndBugbeWldvh2DMU6wcNhq3OMGkrvQHB5iJ2EmiiY0L6XCp9M5Ix1xRgSrXJa+W8qMlIzeuxhS8HuvrUtsUsLeornrGBjrLGirreWxiP/j0bdXkzy1Am7pUypYlLVGcNoHyggQYaaKAz+hPJnYGYABgAAA=="
+' +
+  "        }
+" +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "predefined_function",
+' +
+  '        "runtime": 0,
+' +
+  '        "effect": {
+' +
+  '          "effect": "none",
+' +
+  '          "idempotent": true
+' +
+  "        },
+" +
+  '        "data": {
+' +
+  '          "name": "true"
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "runtimes": [
+' +
+  "      {
+" +
+  '        "name": "deno",
+' +
+  '        "data": {
+' +
+  '          "worker": "default",
+' +
+  '          "permissions": {}
+' +
+  "        }
+" +
+  "      }
+" +
+  "    ],
+" +
+  '    "policies": [
+' +
+  "      {
+" +
+  '        "name": "__internal",
+' +
+  '        "materializer": 1
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "deny",
+' +
+  '        "materializer": 3
+' +
+  "      },
+" +
+  "      {
+" +
+  '        "name": "__public",
+' +
+  '        "materializer": 6
+' +
+  "      }
+" +
+  "    ],
+" +
+  '    "meta": {
+' +
+  '      "prefix": null,
+' +
+  '      "secrets": [],
+' +
+  '      "queries": {
+' +
+  '        "dynamic": true,
+' +
+  '        "endpoints": []
+' +
+  "      },
+" +
+  '      "cors": {
+' +
+  '        "allow_origin": [],
+' +
+  '        "allow_headers": [],
+' +
+  '        "expose_headers": [],
+' +
+  '        "allow_methods": [],
+' +
+  '        "allow_credentials": false,
+' +
+  '        "max_age_sec": null
+' +
+  "      },
+" +
+  '      "auths": [],
+' +
+  '      "rate": null,
+' +
+  '      "version": "0.0.2"
+' +
+  "    }
+" +
+  "  }
+" +
+  "]"
+`;
