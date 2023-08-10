@@ -20,10 +20,6 @@ export type MessengerSend<Broker, M> = (
 
 export type MessengerStop<Broker> = (broker: Broker) => Promise<void> | void;
 
-const maxDurationMs = Deno.env.get("DENO_TESTING") === "true"
-  ? config.timer_max_timeout_test_ms
-  : config.timer_max_timeout_ms;
-
 export class AsyncMessenger<Broker, M, A> {
   protected broker: Broker;
   #counter = 0;
@@ -71,7 +67,7 @@ export class AsyncMessenger<Broker, M, A> {
           if (this.#tasks.has(item.id)) {
             this.receive({
               id: item.id,
-              error: `${maxDurationMs / 1000}s timeout exceeded`,
+              error: `${config.timer_max_timeout_ms / 1000}s timeout exceeded`,
             });
             shouldStop = true;
           }
@@ -82,7 +78,7 @@ export class AsyncMessenger<Broker, M, A> {
           logger.info("reset broker after timeout");
           this.broker = this.#start(this.receive.bind(this));
         }
-      }, maxDurationMs);
+      }, config.timer_max_timeout_ms);
     }
   }
 

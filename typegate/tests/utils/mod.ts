@@ -16,6 +16,7 @@ import { meta } from "./meta.ts";
 import { testDir } from "./dir.ts";
 import { autoTest } from "./autotest.ts";
 import { init_runtimes } from "../../src/runtimes/mod.ts";
+import config from "../../src/config.ts";
 
 // native must load first to avoid import race conditions and panic
 init_native();
@@ -69,3 +70,5 @@ export async function copyFile(src: string, dest: string) {
   srcFile.close();
   destFile.close();
 }
+
+config.timer_max_timeout_ms = 10000;
