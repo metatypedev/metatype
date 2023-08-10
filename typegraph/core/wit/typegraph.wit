@@ -128,6 +128,18 @@ interface runtimes {
     register-deno-func: func(data: materializer-deno-func, effect: effect) -> result<materializer-id, error>
     get-predefined-deno-func: func(data: materializer-deno-predefined) -> result<materializer-id, error>
     import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>
+
+    record graphql-runtime-data {
+        endpoint: string,
+    }
+
+    record materializer-graphql-query {
+        path: list<string>,
+    }
+
+    register-graphql-runtime: func(data: graphql-runtime-data) -> result<runtime-id, error>
+    graphql-query: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
+    graphql-mutation: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
 }
 
 world typegraph {

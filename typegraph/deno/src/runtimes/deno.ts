@@ -2,13 +2,36 @@ import * as t from "../types.ts";
 import { runtimes } from "../wit.ts";
 import { Effect } from "../../gen/exports/metatype-typegraph-runtimes.d.ts";
 import Policy from "../policy.ts";
+import { Materializer, Runtime } from "./mod.ts";
 
-export class Runtime {
-  constructor(public readonly _id: number) {}
+interface FunMat extends Materializer {
+  code: string;
+  secrets: string[];
+  effect: Effect;
 }
 
-export class Materializer {
-  constructor(public readonly _id: number) {}
+interface ImportMat extends Materializer {
+  name: string;
+  module: string;
+  secrets: string[];
+  effect: Effect;
+}
+
+interface PredefinedFuncMat extends Materializer {
+  name: string;
+}
+
+export interface DenoFunc {
+  code: string;
+  secrets?: Array<string>;
+  effect?: Effect;
+}
+
+export interface DenoImport {
+  name: string;
+  module: string;
+  secrets?: Array<string>;
+  effect?: Effect;
 }
 
 export class DenoRuntime extends Runtime {
@@ -26,7 +49,13 @@ export class DenoRuntime extends Runtime {
     { code, secrets = [], effect = { tag: "none" } }: DenoFunc,
   ): t.Func<P, I, O, FunMat> {
     const matId = runtimes.registerDenoFunc({ code, secrets }, effect);
-    return t.func(inp, out, new FunMat(matId, code, secrets, effect));
+    const mat: FunMat = {
+      _id: matId,
+      code,
+      secrets,
+      effect,
+    };
+    return t.func(inp, out, mat);
   }
 
   import<
@@ -43,24 +72,28 @@ export class DenoRuntime extends Runtime {
       module,
       secrets,
     }, effect);
-    return t.func(
-      inp,
-      out,
-      new ImportMat(matId, name, module, secrets, effect),
-    );
+    const mat: ImportMat = {
+      _id: matId,
+      name,
+      module,
+      secrets,
+      effect,
+    };
+    return t.func(inp, out, mat);
   }
 
   identity<
     P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
     I extends t.Struct<P> = t.Struct<P>,
   >(inp: I): t.Func<P, I, I, PredefinedFuncMat> {
+    const mat: PredefinedFuncMat = {
+      _id: runtimes.getPredefinedDenoFunc({ name: "identity" }),
+      name: "identity",
+    };
     return t.func(
       inp,
       inp,
-      new PredefinedFuncMat(
-        runtimes.getPredefinedDenoFunc({ name: "identity" }),
-        "identity",
-      ),
+      mat,
     );
   }
 
@@ -91,46 +124,4 @@ export class DenoRuntime extends Runtime {
       }, { tag: "none" }),
     );
   }
-}
-
-export class FunMat extends Materializer {
-  constructor(
-    _id: number,
-    private code: string,
-    public readonly secrets: Array<string>,
-    public readonly effect: Effect,
-  ) {
-    super(_id);
-  }
-}
-
-export class ImportMat extends Materializer {
-  constructor(
-    _id: number,
-    public readonly name: string,
-    public readonly module: string,
-    public readonly secrets: Array<string>,
-    public readonly effect: Effect,
-  ) {
-    super(_id);
-  }
-}
-
-export class PredefinedFuncMat extends Materializer {
-  constructor(_id: number, public readonly name: string) {
-    super(_id);
-  }
-}
-
-export interface DenoFunc {
-  code: string;
-  secrets?: Array<string>;
-  effect?: Effect;
-}
-
-export interface DenoImport {
-  name: string;
-  module: string;
-  secrets?: Array<string>;
-  effect?: Effect;
 }
