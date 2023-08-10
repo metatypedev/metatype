@@ -9,7 +9,8 @@ use crate::errors::Result;
 use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    PolicySpec, TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy, TypeStruct,
+    TypeArray, TypeBase, TypeEither, TypeFunc, TypeId, TypeInteger, TypeNumber, TypeOptional,
+    TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 
 pub trait TypeData {
@@ -47,8 +48,14 @@ pub struct TypeBoolean;
 pub type Proxy = WrapperType<TypeProxy>;
 pub type Struct = ConcreteType<TypeStruct>;
 pub type Integer = ConcreteType<TypeInteger>;
+pub type Number = ConcreteType<TypeNumber>;
 pub type Func = ConcreteType<TypeFunc>;
 pub type Boolean = ConcreteType<TypeBoolean>;
+pub type StringT = ConcreteType<TypeString>;
+pub type Array = ConcreteType<TypeArray>;
+pub type Optional = ConcreteType<TypeOptional>;
+pub type Union = ConcreteType<TypeUnion>;
+pub type Either = ConcreteType<TypeEither>;
 pub type WithPolicy = WrapperType<TypePolicy>;
 
 #[derive(Debug)]
@@ -57,8 +64,14 @@ pub enum Type {
     Proxy(Proxy),
     Struct(Struct),
     Integer(Integer),
+    Number(Number),
     Func(Func),
     Boolean(Boolean),
+    String(StringT),
+    Array(Array),
+    Optional(Optional),
+    Union(Union),
+    Either(Either),
     WithPolicy(WithPolicy),
 }
 
@@ -115,111 +128,5 @@ where
 
     fn get_base(&self) -> Option<&TypeBase> {
         None
-    }
-}
-
-impl TypeData for TypeProxy {
-    fn get_display_params_into(&self, params: &mut Vec<String>) {
-        params.push(format!("proxy_name='{}'", self.name));
-    }
-
-    fn variant_name(&self) -> String {
-        "proxy".to_string()
-    }
-}
-
-impl WrapperTypeData for TypeProxy {
-    fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
-        store
-            .get_type_by_name(&self.name)
-            .map(|id| store.get_type(id).unwrap())
-    }
-}
-
-impl TypeData for TypeInteger {
-    fn get_display_params_into(&self, params: &mut Vec<String>) {
-        if let Some(min) = self.min {
-            params.push(format!("min={}", min));
-        }
-        if let Some(max) = self.max {
-            params.push(format!("max={}", max));
-        }
-    }
-
-    fn variant_name(&self) -> String {
-        "integer".to_string()
-    }
-}
-
-impl TypeData for TypeBoolean {
-    fn get_display_params_into(&self, _params: &mut Vec<String>) {}
-
-    fn variant_name(&self) -> String {
-        "boolean".to_string()
-    }
-}
-
-impl TypeData for TypeStruct {
-    fn get_display_params_into(&self, params: &mut Vec<String>) {
-        for (name, tpe_id) in self.props.iter() {
-            params.push(format!("[{}] => #{}", name, tpe_id));
-        }
-    }
-
-    fn variant_name(&self) -> String {
-        "struct".to_string()
-    }
-}
-
-impl TypeData for TypeFunc {
-    fn get_display_params_into(&self, params: &mut Vec<String>) {
-        params.push(format!("#{} => #{}", self.inp, self.out));
-    }
-
-    fn variant_name(&self) -> String {
-        "func".to_string()
-    }
-}
-
-impl TypeData for TypePolicy {
-    fn get_display_params_into(&self, params: &mut Vec<String>) {
-        params.push(format!(
-            "policy='[{}]'",
-            self.chain
-                .iter()
-                .map(|p| match p {
-                    PolicySpec::Simple(pol_id) => format!(
-                        "'{}'",
-                        with_store(|s| s.get_policy(*pol_id).unwrap().name.clone())
-                    ),
-                    PolicySpec::PerEffect(p) => with_store(|s| format!(
-                        "{{create='{}', update='{}', delete='{}', none='{}'}}",
-                        p.create
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
-                        p.update
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
-                        p.delete
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
-                        p.none
-                            .map(|pol_id| s.get_policy(pol_id).unwrap().name.as_str())
-                            .unwrap_or("null"),
-                    )),
-                })
-                .collect::<Vec<_>>()
-                .join(", ")
-        ));
-    }
-
-    fn variant_name(&self) -> String {
-        "policy".to_string()
-    }
-}
-
-impl WrapperTypeData for TypePolicy {
-    fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
-        store.get_type(self.tpe).ok()
     }
 }

@@ -23,22 +23,66 @@ interface core {
     record type-proxy {
         name: string,
     }
-
     proxyb: func(data: type-proxy) -> result<type-id, error>
 
     record type-integer {
         min: option<s32>,
         max: option<s32>,
+        exclusive-minimum: option<s32>,
+        exclusive-maximum: option<s32>,
+        multiple-of: option<s32>,
+        enumeration: option<list<s32>>
     }
-
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
 
+    record type-number {
+        min: option<float64>,
+        max: option<float64>,
+        exclusive-minimum: option<float64>,
+        exclusive-maximum: option<float64>,
+        multiple-of: option<float64>,
+        enumeration: option<list<float64>>
+    }
+    numberb: func(data: type-number, base: type-base) -> result<type-id, error>
+
     booleanb: func(base: type-base) -> result<type-id, error>
+
+    record type-string {
+        min: option<u32>,
+        max: option<u32>,
+        format: option<string>,
+        pattern: option<string>,
+        enumeration: option<list<string>>
+    }
+    stringb: func(data: type-string, base: type-base) -> result<type-id, error>
+
+    record type-array {
+        of: type-id,
+        min: option<u32>,
+        max: option<u32>,
+        unique-items: option<bool>
+    }
+    arrayb: func(data: type-array, base: type-base) -> result<type-id, error>
+
+    record type-optional {
+        of: type-id,
+        default-item: option<string>
+    }
+    optionalb: func(data: type-optional, base: type-base) -> result<type-id, error>
+
+    record type-union {
+        variants: list<type-id>,
+    }
+    unionb: func(data: type-union, base: type-base) -> result<type-id, error>
+
+    record type-either {
+        variants: list<type-id>,
+    }
+    eitherb: func(data: type-either, base: type-base) -> result<type-id, error>
 
     record type-struct {
         props: list<tuple<string, type-id>>,
     }
-
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
 
     get-type-repr: func(id: type-id) -> result<string, error>
