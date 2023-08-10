@@ -1,7 +1,9 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typegraph_next import g, t, typegraph
+from typegraph_next import t, typegraph
+from typegraph_next.graph.typegraph import Graph
+from typegraph_next.policy import Policy
 from typegraph_next.runtimes.deno import DenoRuntime
 
 someType = t.struct(
@@ -27,11 +29,13 @@ complexType = t.struct(
     name="ComplexType",
 )
 
-with typegraph(name="test-complex-types") as expose:
-    deno = DenoRuntime()
-    pub = g.Policy.public()
 
-    expose(
+@typegraph()
+def test_complex_types(g: Graph):
+    deno = DenoRuntime()
+    pub = Policy.public()
+
+    g.expose(
         test=deno.func(
             complexType,
             t.boolean(),

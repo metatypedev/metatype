@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 // TODO: use import map
-import { g, t, typegraph } from "../../../../../../typegraph/deno/src/mod.ts";
-import { DenoRuntime } from "../../../../../../typegraph/deno/src/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
+import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
 
 const someType = t.struct({
   one: t.array(t.integer(), { min: 3 }, { name: "Two" }),
@@ -22,11 +22,11 @@ const complexType = t.struct({
   an_email: t.email(),
 }, { name: "ComplexType" });
 
-typegraph("test-complex-types", (expose) => {
+typegraph("test-complex-types", (g) => {
   const deno = new DenoRuntime();
-  const pub = g.Policy.public();
+  const pub = Policy.public();
 
-  expose({
+  g.expose({
     test: deno.func(
       complexType,
       t.boolean(),
