@@ -3,6 +3,7 @@
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store_mut, Store};
+use crate::wit::runtimes::{BaseMaterializer, GraphqlRuntimeData};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use crate::{
     wit::core::RuntimeId,
@@ -15,6 +16,7 @@ type Result<T, E = TgError> = std::result::Result<T, E>;
 #[derive(Debug)]
 pub enum Runtime {
     Deno,
+    Graphql(GraphqlRuntimeData),
 }
 
 #[derive(Debug)]
@@ -44,6 +46,12 @@ pub enum DenoMaterializer {
     Import(MaterializerDenoImport),
 }
 
+#[derive(Debug)]
+pub enum GraphqlMaterializer {
+    Query(wit::MaterializerGraphqlQuery),
+    Mutation(wit::MaterializerGraphqlQuery),
+}
+
 impl Materializer {
     // fn new(base: wit::BaseMaterializer, data: impl Into<MaterializerData>) -> Self {
     //     Self {
@@ -60,12 +68,21 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn graphql(runtime_id: RuntimeId, data: GraphqlMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug)]
 #[enum_dispatch]
 pub enum MaterializerData {
     Deno(DenoMaterializer),
+    GraphQL(GraphqlMaterializer),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -105,6 +122,29 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
             secrets: data.secrets,
         };
         let mat = Materializer::deno(DenoMaterializer::Import(data), effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn register_graphql_runtime(data: GraphqlRuntimeData) -> Result<RuntimeId> {
+        let runtime = Runtime::Graphql(data);
+        Ok(with_store_mut(|s| s.register_runtime(runtime)))
+    }
+
+    fn graphql_query(
+        base: BaseMaterializer,
+        data: wit::MaterializerGraphqlQuery,
+    ) -> Result<wit::MaterializerId> {
+        let data = GraphqlMaterializer::Query(data);
+        let mat = Materializer::graphql(base.runtime, data, base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn graphql_mutation(
+        base: BaseMaterializer,
+        data: wit::MaterializerGraphqlQuery,
+    ) -> Result<wit::MaterializerId> {
+        let data = GraphqlMaterializer::Mutation(data);
+        let mat = Materializer::graphql(base.runtime, data, base.effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }
