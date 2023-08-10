@@ -30,6 +30,3 @@ def test_types(g: Graph):
             public
         ),
     )
-
-
-test_types
