@@ -9,6 +9,7 @@ import { shell } from "./shell.ts";
 
 import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
+import { assertEquals, assertNotEquals } from "std/testing/asserts.ts";
 import { Engine } from "../../src/engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { ConnInfo } from "std/http/server.ts";
@@ -30,6 +31,7 @@ export interface ParseOptions {
   ports?: number[];
   secrets?: Record<string, string>;
   prefix?: string;
+  pretty?: boolean;
 }
 
 function serve(typegate: Typegate, port: number): () => void {
@@ -87,9 +89,15 @@ export class MetaTest {
     return engine;
   }
 
-  async engine(path: string, opts: ParseOptions = {}): Promise<Engine> {
-    const { deploy = false, typegraph = null, prefix = null } = opts;
+  async serialize(path: string, opts: ParseOptions = {}): Promise<string> {
+    const { deploy = false, typegraph = null, prefix = null, pretty = false } =
+      opts;
     const cmd = ["serialize", "-f", path];
+
+    if (pretty) {
+      cmd.push("--pretty");
+    }
+
     if (prefix != null) {
       cmd.push("--prefix", prefix);
     }
@@ -109,8 +117,13 @@ export class MetaTest {
       throw new Error("No typegraph");
     }
 
+    return stdout;
+  }
+
+  async engine(path: string, opts: ParseOptions = {}): Promise<Engine> {
+    const tgJson = await this.serialize(path, opts);
     const [engine, _] = await this.typegate.pushTypegraph(
-      stdout,
+      tgJson,
       opts.secrets ?? {},
       this.introspection,
     );
@@ -179,6 +192,21 @@ export class MetaTest {
       throw new Error("Assertion failure: function did not throw");
     }
     await this.assertSnapshot(err.message);
+  }
+
+  async assertSameTypegraphs(...paths: string[]) {
+    assertNotEquals(paths.length, 0);
+    const first = paths.shift()!;
+    const expected = await this.serialize(first, { pretty: true });
+    for (const path of paths) {
+      await this.should(
+        `serialize ${path} to the same typegraph as ${first}`,
+        async () => {
+          const actual = await this.serialize(path, { pretty: true });
+          assertEquals(actual, expected);
+        },
+      );
+    }
   }
 }
 

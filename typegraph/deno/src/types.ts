@@ -10,7 +10,7 @@ import {
   TypeString,
   TypeUnion,
 } from "../gen/exports/metatype-typegraph-core.d.ts";
-import { Materializer } from "./runtimes/deno.ts";
+import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
 
