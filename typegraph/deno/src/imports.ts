@@ -1,7 +1,8 @@
 import { expandGlobSync } from "./deps.ts";
 
 export function log(message: string): void {
-  console.log(message);
+  // stdout is used for the typegraph
+  console.error(message);
 }
 
 export function glob(pattern: string, exts: string[]): string[] {
