@@ -101,12 +101,18 @@ Meta.test("Rest queries in Deno", async (t) => {
         obj: {
           a: 1,
           b: { c: 2 },
+          d: "email@example.com",
+          e: [1, 2, "three"],
+          f: 2.5,
         },
       })
       .expectJSON({
         identity: {
           a: 1,
           b: { c: 2 },
+          d: "email@example.com",
+          e: [1, 2, "three"],
+          f: 2.5,
         },
       })
       .on(e);
@@ -118,6 +124,7 @@ Meta.test("Rest queries in Deno", async (t) => {
         obj: {
           a: 1,
           b: { c: "string" },
+          d: "string",
         },
       })
       .expectBody((res) => {
