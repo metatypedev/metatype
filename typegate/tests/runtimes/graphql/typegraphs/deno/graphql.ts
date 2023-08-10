@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { g, t, typegraph } from "@typegraph/deno/src/mod.ts";
+import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
 import { GraphQLRuntime } from "@typegraph/deno/src/runtimes/graphql.ts";
 import * as effects from "@typegraph/deno/src/effects.ts";
 
@@ -10,11 +10,11 @@ const user = t.struct({
   // TODO more fields with more types
 }, { name: "User" });
 
-typegraph("graphql", (expose) => {
+typegraph("graphql", (g) => {
   const graphql = new GraphQLRuntime("https://example.com/api/graphql");
-  const pub = g.Policy.public();
+  const pub = Policy.public();
 
-  expose({
+  g.expose({
     user: graphql.query(t.struct({ id: t.integer() }), user).withPolicy(pub),
     createUser: graphql.mutation(
       t.struct({ id: t.integer() }),

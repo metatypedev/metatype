@@ -1,9 +1,10 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+from dataclasses import dataclass
 import inspect
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from typegraph_next.gen.exports.core import TypegraphInitParams
 from typegraph_next.gen.types import Err
@@ -13,12 +14,12 @@ if TYPE_CHECKING:
     from typegraph_next import t
 
 
-class typegraph:
+class Typegraph:
     name: str
     dynamic: Optional[bool]
     folder: Optional[str]
     path: str
-    _context: List["typegraph"] = []
+    _context: List["Typegraph"] = []
 
     def __init__(
         self, name: str, dynamic: Optional[bool] = None, folder: Optional[str] = None
@@ -26,28 +27,10 @@ class typegraph:
         self.name = name
         self.dynamic = dynamic
         self.folder = folder
-        self.path = str(Path(inspect.stack()[1].filename).resolve().parent)
-
-    def __enter__(self):
-        self._context.append(self)
-        core.init_typegraph(
-            store,
-            TypegraphInitParams(
-                name=self.name, dynamic=self.dynamic, folder=self.folder, path=self.path
-            ),
-        )
-        return self
-
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        tg = self._context.pop()
-        assert tg == self
-        res = core.finalize_typegraph(store)
-        if isinstance(res, Err):
-            raise Exception(res.value)
-        print(res.value)
+        self.path = str(Path(inspect.stack()[2].filename).resolve().parent)
 
     @classmethod
-    def get_active(cls) -> Optional["typegraph"]:
+    def get_active(cls) -> Optional["Typegraph"]:
         if len(cls._context) == 0:
             raise Exception("No active typegraph")
         return cls._context[-1]
@@ -60,3 +43,51 @@ class typegraph:
         res = core.expose(store, lst, [])
         if isinstance(res, Err):
             raise Exception(res.value)
+
+
+@dataclass
+class Graph:
+    typegraph: Typegraph
+
+    def expose(self, **kwargs: "t.func"):
+        self.typegraph.expose(**kwargs)
+
+
+def typegraph(
+    name: Optional[str] = None,
+    *,
+    dynamic: Optional[bool] = None,
+    folder: Optional[str] = None,
+) -> Callable[[Callable[[Graph], None]], Typegraph]:
+    def decorator(builder: Callable[[Graph], None]) -> Typegraph:
+        actual_name = name
+        if name is None:
+            import re
+
+            # To kebab case
+            actual_name = re.sub("_", "-", builder.__name__)
+
+        tg = Typegraph(actual_name, dynamic, folder)
+
+        Typegraph._context.append(tg)
+        core.init_typegraph(
+            store,
+            TypegraphInitParams(
+                name=tg.name, dynamic=tg.dynamic, folder=tg.folder, path=tg.path
+            ),
+        )
+
+        builder(Graph(tg))
+
+        popped = Typegraph._context.pop()
+        assert tg == popped
+
+        res = core.finalize_typegraph(store)
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        print(res.value)
+
+        return tg
+
+    return decorator
