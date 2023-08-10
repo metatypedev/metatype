@@ -198,6 +198,11 @@ export class PythonVirtualMachine {
   }
 
   async apply(id: number, name: string, args: unknown[]) {
+    // Notes:
+    // 1. if #[deno_bindgen], apply* runs on main thread => blocking
+    // 2. if #[deno], apply* runs on main separate thread? => still blocking
+    // alternative solution:
+    // timeout at wasm level
     if (this.#lambdas.has(name)) {
       return await this.applyLambda(id, name, args);
     }

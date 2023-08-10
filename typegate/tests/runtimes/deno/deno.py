@@ -40,5 +40,23 @@ with TypeGraph("deno") as g:
             math_npm.imp("log"),
         ),
         static=DenoRuntime.static(t.struct({"x": t.array(t.integer())}), {"x": [1]}),
+        infiniteLoop=t.func(
+            t.struct({"enable": t.boolean()}),
+            t.boolean(),
+            PureFunMat("({ enable }) => { while(enable); return enable; }"),
+        ),
+        stackOverflow=t.func(
+            t.struct({"enable": t.boolean()}),
+            t.boolean(),
+            PureFunMat(
+                """
+                ({ enable }) => {
+                    const fn = () => fn();
+                    enable && fn();
+                    return enable;
+                }
+                """
+            ),
+        ),
         default_policy=[public],
     )

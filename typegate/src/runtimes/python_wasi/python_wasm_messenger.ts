@@ -14,7 +14,7 @@ export class PythonWasmMessenger extends AsyncMessenger<
   private constructor() {
     const vmMap = new Map<string, PythonVirtualMachine>();
     super(
-      vmMap,
+      () => vmMap,
       (vmMap, { id, op, data }) => {
         const { vmId, args } = data as any;
         const vm = vmMap.get(vmId);

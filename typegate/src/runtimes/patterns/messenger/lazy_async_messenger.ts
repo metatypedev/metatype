@@ -61,7 +61,7 @@ export class LazyAsyncMessenger<Broker, M, A>
       }
     };
 
-    super(null, lazySend, lazyStop);
+    super(() => null, lazySend, lazyStop);
     this.#start = start;
     this.#ops = ops;
   }
