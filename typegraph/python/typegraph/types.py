@@ -445,8 +445,8 @@ class float(number_base):
     pass
 
 
-def number():
-    return float()
+def number(**args):
+    return float(**args)
 
 
 @frozen

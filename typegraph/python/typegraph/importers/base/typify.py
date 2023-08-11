@@ -111,7 +111,7 @@ class Typify:
         return f"{self.ns}.func({self(typ.inp)}, {self(typ.out)}, {typ.mat.codegen}"
 
 
-simple_types = {"boolean", "number", "integer", "string"}
+simple_types = {"boolean", "float", "integer", "string"}
 
 
 def typify(typ: t.typedef, ns: str = "t") -> str:
