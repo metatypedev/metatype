@@ -201,10 +201,6 @@ export function uri() {
   return string({ format: "uri" });
 }
 
-export function json(data: { min?: number; max?: number }) {
-  return string({ format: "json", ...data });
-}
-
 export function ean() {
   return string({ format: "ean" });
 }
