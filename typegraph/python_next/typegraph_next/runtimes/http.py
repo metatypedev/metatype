@@ -14,7 +14,7 @@ from typegraph_next.gen.exports.runtimes import (
 from typegraph_next.gen.types import Err
 from typegraph_next.wit import runtimes, store
 from typegraph_next.runtimes.base import Materializer, Runtime
-from typegraph_next import t, effects as fx
+from typegraph_next import t, fx
 
 
 class HttpRequestKwargs(TypedDict):
