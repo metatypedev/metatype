@@ -1,6 +1,6 @@
 #!/usr/bin/sh
 
-CMD='/^import .* from \047.*\047;$/ { sub(/\/imports\//, "/exports/metatype-typegraph-") } { if (!/\.d\.ts\047;$/) sub(/\047;$/, ".d.ts\047;") } { print }'
+CMD='/^import .* from \047.*\047;$/ { sub(/\/imports\//, "/exports/metatype-typegraph-"); if (!/\.d\.ts\047;$/) sub(/\047;$/, ".d.ts\047;") } { print }'
 
 SCRIPT_DIR="$(cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P)"
 GEN_DIR="$(realpath "$SCRIPT_DIR/../gen")"

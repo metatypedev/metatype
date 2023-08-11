@@ -184,6 +184,34 @@ interface runtimes {
     register-graphql-runtime: func(data: graphql-runtime-data) -> result<runtime-id, error>
     graphql-query: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
     graphql-mutation: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
+
+    record http-runtime-data {
+        endpoint: string,
+        cert-secret: option<string>,
+        basic-auth-secret: option<string>,
+    }
+
+    enum http-method {
+        get,
+        post,
+        put,
+        patch,
+        delete,
+    }
+
+    record materializer-http-request {
+        method: http-method,
+        path: string,
+        content-type: option<string>,
+        header-prefix: option<string>,
+        query-fields: option<list<string>>,
+        rename-fields: option<list<tuple<string, string>>>,
+        body-fields: option<list<string>>,
+        auth-token-field: option<string>,
+    }
+
+    register-http-runtime: func(data: http-runtime-data) -> result<runtime-id, error>
+    http-request: func(base: base-materializer, data: materializer-http-request) -> result<materializer-id, error>
 }
 
 world typegraph {

@@ -114,6 +114,16 @@ repos:
           - ts
         files: ^(typegate|dev)/
       - id: insert-license
+        name: "License MPL-2.0 deno"
+        args:
+          #- --remove-header
+          - --license-filepath=dev/license-header-MPL-2.0.txt
+          - "--comment-style=//"
+          - "--skip-license-insertion-comment=no-auto-license-header"
+        types_or:
+          - ts
+        files: ^typegraph/
+      - id: insert-license
         name: "License Elastic-2.0 typescript"
         args:
           #- --remove-header

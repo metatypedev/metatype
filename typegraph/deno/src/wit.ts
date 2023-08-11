@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { ExportsMetatypeTypegraphCore } from "../gen/exports/metatype-typegraph-core.d.ts";
 import { ExportsMetatypeTypegraphRuntimes } from "../gen/exports/metatype-typegraph-runtimes.d.ts";
 import * as js from "../gen/typegraph_core.js";

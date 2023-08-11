@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import { MaterializerId } from "../gen/exports/metatype-typegraph-core.d.ts";
 import { core, runtimes } from "./wit.ts";
 import { DenoRuntime } from "./runtimes/deno.ts";

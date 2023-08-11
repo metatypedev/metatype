@@ -73,6 +73,7 @@ typegraph:
   watch:
     - "typegraph/core/src/**/*.rs"
     - "typegraph/core/wit/*.wit"
+    - "typegraph/deno/dev/fix-declarations.sh"
   env:
     WASM_FILE: target/debug/typegraph_core.wasm
   command: |

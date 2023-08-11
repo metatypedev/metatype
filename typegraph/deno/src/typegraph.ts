@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import * as t from "./types.ts";
 import { core } from "../gen/typegraph_core.js";
 import { caller, dirname, fromFileUrl } from "./deps.ts";
