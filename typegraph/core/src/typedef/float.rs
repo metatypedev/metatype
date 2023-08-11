@@ -19,7 +19,7 @@ impl TypeConversion for Float {
             .enumeration
             .clone()
             .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
-        Ok(TypeNode::Number {
+        Ok(TypeNode::Float {
             base: gen_base_enum(format!("float_{}", self.id), enumeration),
             data: FloatTypeData {
                 minimum: self.data.min,

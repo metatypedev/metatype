@@ -201,7 +201,7 @@ pub enum TypeNode {
         #[serde(flatten)]
         base: TypeNodeBase,
     },
-    Number {
+    Float {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
@@ -268,7 +268,7 @@ impl TypeNode {
         match self {
             Optional { base, .. }
             | Boolean { base, .. }
-            | Number { base, .. }
+            | Float { base, .. }
             | Integer { base, .. }
             | String { base, .. }
             | File { base, .. }
@@ -286,7 +286,7 @@ impl TypeNode {
         match self {
             Optional { base, .. }
             | Boolean { base, .. }
-            | Number { base, .. }
+            | Float { base, .. }
             | Integer { base, .. }
             | String { base, .. }
             | File { base, .. }
@@ -304,7 +304,7 @@ impl TypeNode {
         match self {
             Optional { .. } => "optional",
             Boolean { .. } => "boolean",
-            Number { .. } => "number",
+            Float { .. } => "number",
             Integer { .. } => "integer",
             String { .. } => "string",
             File { .. } => "file",
@@ -321,7 +321,7 @@ impl TypeNode {
         use TypeNode::*;
         matches!(
             self,
-            Boolean { .. } | Number { .. } | Integer { .. } | String { .. }
+            Boolean { .. } | Float { .. } | Integer { .. } | String { .. }
         )
     }
 }

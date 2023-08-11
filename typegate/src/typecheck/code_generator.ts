@@ -5,8 +5,8 @@ import {
   ArrayNode,
   BooleanNode,
   FileNode,
+  FloatNode,
   IntegerNode,
-  NumberNode,
   ObjectNode,
   OptionalNode,
   StringNode,
@@ -25,7 +25,7 @@ export class CodeGenerator {
     if (
       ([
         Type.BOOLEAN,
-        Type.NUMBER,
+        Type.FLOAT,
         Type.INTEGER,
         Type.STRING,
       ] as TypeNode["type"][])
@@ -55,7 +55,7 @@ export class CodeGenerator {
     );
   }
 
-  generateNumberValidator(typeNode: NumberNode | IntegerNode) {
+  generateNumberValidator(typeNode: FloatNode | IntegerNode) {
     this.validation(
       'typeof value !== "number"',
       "`expected number, got ${typeof value}`",

@@ -92,7 +92,7 @@ impl TypeVisitor for Validator {
                         match variant_type {
                             TypeNode::Object { .. } => object_count += 1,
                             TypeNode::Boolean { .. }
-                            | TypeNode::Number { .. }
+                            | TypeNode::Float { .. }
                             | TypeNode::Integer { .. }
                             | TypeNode::String { .. } => {
                                 // scalar
@@ -204,7 +204,7 @@ impl Typegraph {
         match type_node {
             TypeNode::Any { .. } => Ok(()),
             TypeNode::Integer { data, .. } => self.validate_integer(data, value),
-            TypeNode::Number { data, .. } => self.validate_float(data, value),
+            TypeNode::Float { data, .. } => self.validate_float(data, value),
             TypeNode::Boolean { .. } => value.as_bool().map(|_| ()).ok_or_else(|| {
                 anyhow!("Expected a boolean got '{value}'", value = to_string(value))
             }),

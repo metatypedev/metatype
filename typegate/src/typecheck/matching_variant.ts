@@ -103,7 +103,7 @@ class VariantMatcherCompiler {
           case "boolean":
             cg.generateBooleanValidator(typeNode);
             break;
-          case "number":
+          case "float":
           case "integer":
             cg.generateNumberValidator(typeNode);
             break;

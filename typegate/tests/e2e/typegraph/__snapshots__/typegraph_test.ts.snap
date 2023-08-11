@@ -125,7 +125,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   "      {
 " +
-  '        "type": "number",
+  '        "type": "float",
 ' +
   '        "title": "float_6",
 ' +
@@ -193,7 +193,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   "      {
 " +
-  '        "type": "number",
+  '        "type": "float",
 ' +
   '        "title": "float_9",
 ' +
@@ -241,7 +241,7 @@ snapshot[`typegraphs creation 1`] = `
 " +
   "      {
 " +
-  '        "type": "number",
+  '        "type": "float",
 ' +
   '        "title": "float_10",
 ' +
@@ -1265,7 +1265,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   "      {
 " +
-  '        "type": "number",
+  '        "type": "float",
 ' +
   '        "title": "float_6",
 ' +
@@ -1333,7 +1333,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   "      {
 " +
-  '        "type": "number",
+  '        "type": "float",
 ' +
   '        "title": "float_9",
 ' +
@@ -1381,7 +1381,7 @@ snapshot[`typegraphs creation 3`] = `
 " +
   "      {
 " +
-  '        "type": "number",
+  '        "type": "float",
 ' +
   '        "title": "float_10",
 ' +

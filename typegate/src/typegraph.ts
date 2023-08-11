@@ -93,7 +93,7 @@ export class SecretManager {
 const GRAPHQL_SCALAR_TYPES = {
   [Type.BOOLEAN]: "Boolean",
   [Type.INTEGER]: "Int",
-  [Type.NUMBER]: "Float",
+  [Type.FLOAT]: "Float",
   [Type.STRING]: "String",
 } as Partial<Record<TypeNode["type"], string>>;
 
