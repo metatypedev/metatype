@@ -17,6 +17,7 @@ type Result<T, E = TgError> = std::result::Result<T, E>;
 pub enum Runtime {
     Deno,
     Graphql(GraphqlRuntimeData),
+    Python,
 }
 
 #[derive(Debug)]
@@ -52,6 +53,12 @@ pub enum GraphqlMaterializer {
     Mutation(wit::MaterializerGraphqlQuery),
 }
 
+#[derive(Debug)]
+pub enum PythonMaterializer {
+    // TODO: def, module
+    Lambda(wit::MaterializerPythonLambda),
+}
+
 impl Materializer {
     // fn new(base: wit::BaseMaterializer, data: impl Into<MaterializerData>) -> Self {
     //     Self {
@@ -76,6 +83,14 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn python(runtime_id: RuntimeId, data: PythonMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -83,6 +98,7 @@ impl Materializer {
 pub enum MaterializerData {
     Deno(DenoMaterializer),
     GraphQL(GraphqlMaterializer),
+    Python(PythonMaterializer),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -92,6 +108,7 @@ pub enum MaterializerData {
 // }
 
 impl crate::wit::runtimes::Runtimes for crate::Lib {
+    // deno
     fn get_deno_runtime() -> RuntimeId {
         with_store_mut(|s| s.get_deno_runtime())
     }
@@ -125,6 +142,7 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 
+    // graphql
     fn register_graphql_runtime(data: GraphqlRuntimeData) -> Result<RuntimeId> {
         let runtime = Runtime::Graphql(data);
         Ok(with_store_mut(|s| s.register_runtime(runtime)))
@@ -145,6 +163,19 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
     ) -> Result<wit::MaterializerId> {
         let data = GraphqlMaterializer::Mutation(data);
         let mat = Materializer::graphql(base.runtime, data, base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    // python
+    fn register_python_runtime() -> Result<RuntimeId> {
+        Ok(with_store_mut(|s| s.register_runtime(Runtime::Python)))
+    }
+
+    fn from_python_lambda(
+        data: wit::MaterializerPythonLambda,
+        effect: wit::Effect,
+    ) -> Result<wit::MaterializerId> {
+        let mat = Materializer::python(data.runtime, PythonMaterializer::Lambda(data), effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }

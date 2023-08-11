@@ -154,6 +154,8 @@ interface runtimes {
         effect: effect,
     }
 
+
+    // deno
     record materializer-deno-func {
         code: string,
         secrets: list<string>,
@@ -173,6 +175,7 @@ interface runtimes {
     get-predefined-deno-func: func(data: materializer-deno-predefined) -> result<materializer-id, error>
     import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>
 
+    // graphql
     record graphql-runtime-data {
         endpoint: string,
     }
@@ -184,6 +187,31 @@ interface runtimes {
     register-graphql-runtime: func(data: graphql-runtime-data) -> result<runtime-id, error>
     graphql-query: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
     graphql-mutation: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
+
+    // python
+    record materializer-python-lambda {
+        runtime: runtime-id,
+        code: string,
+        secrets: list<string>,
+    }
+
+    record materializer-python-def {
+        runtime: runtime-id,
+        code: string,
+        secrets: list<string>,
+    }
+
+    record materializer-python-import {
+        runtime: runtime-id,
+        func-name: string,
+        module: string,
+        secrets: list<string>,
+    }
+
+    register-python-runtime: func() -> result<runtime-id, error>
+    from-python-lambda: func(data: materializer-python-lambda, effect: effect) -> result<materializer-id, error>
+    // from-python-def: func(data: materializer-python-def, effect: effect) -> result<materializer-id, error>
+    // import-python-module: func(data: materializer-python-import, effect: effect) -> result<materializer-id, error>
 }
 
 world typegraph {

@@ -1425,6 +1425,20 @@
         {
           "type": "object",
           "required": [
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "python"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
             "data",
             "name"
           ],

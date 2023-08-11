@@ -4,7 +4,8 @@
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::runtimes::{
-    DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, Runtime,
+    DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, PythonMaterializer,
+    Runtime,
 };
 use crate::wit::core::RuntimeId;
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
@@ -135,6 +136,39 @@ impl MaterializerConverter for GraphqlMaterializer {
     }
 }
 
+impl MaterializerConverter for PythonMaterializer {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        s: &Store,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<Materializer> {
+        use crate::runtimes::PythonMaterializer::*;
+        let runtime = c.register_runtime(s, runtime_id)?;
+        let (name, data) = match self {
+            Lambda(lambda_fun) => {
+                let mut data = IndexMap::new();
+                data.insert(
+                    "fn".to_string(),
+                    serde_json::to_value(&lambda_fun.code).unwrap(),
+                );
+                data.insert(
+                    "secrets".to_string(),
+                    serde_json::to_value(&lambda_fun.secrets).unwrap(),
+                );
+                ("lambda".to_string(), data)
+            }
+        };
+        Ok(Materializer {
+            name,
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
 pub fn convert_materializer(
     c: &mut TypegraphContext,
     s: &Store,
@@ -164,5 +198,6 @@ pub fn convert_runtime(
             };
             Ok(TGRuntime::Known(GraphQL(data)))
         }
+        Runtime::Python => Ok(TGRuntime::Known(Python)),
     }
 }

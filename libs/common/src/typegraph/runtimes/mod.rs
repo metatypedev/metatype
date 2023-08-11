@@ -27,6 +27,7 @@ pub enum KnownRuntime {
     Deno(DenoRuntimeData),
     GraphQL(GraphQLRuntimeData),
     HTTP(HTTPRuntimeData),
+    Python,
     Random(RandomRuntimeData),
     Prisma(PrismaRuntimeData),
     S3(S3RuntimeData),
