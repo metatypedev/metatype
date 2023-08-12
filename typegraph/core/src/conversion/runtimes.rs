@@ -7,9 +7,11 @@ use crate::runtimes::{
     DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, Runtime,
 };
 use crate::wit::core::RuntimeId;
+use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
+use common::typegraph::runtimes::http::HTTPRuntimeData;
 use common::typegraph::runtimes::KnownRuntime;
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
@@ -135,6 +137,69 @@ impl MaterializerConverter for GraphqlMaterializer {
     }
 }
 
+fn http_method(method: HttpMethod) -> &'static str {
+    match method {
+        HttpMethod::Get => "GET",
+        HttpMethod::Post => "POST",
+        HttpMethod::Put => "PUT",
+        HttpMethod::Delete => "DELETE",
+        HttpMethod::Patch => "PATCH",
+    }
+}
+
+impl MaterializerConverter for MaterializerHttpRequest {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        s: &Store,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<common::typegraph::Materializer> {
+        let runtime = c.register_runtime(s, runtime_id)?;
+
+        let mut data: IndexMap<String, serde_json::Value> = serde_json::from_value(json!({
+            "verb": http_method(self.method),
+            "path": self.path,
+            "content_type": self.content_type.as_deref().unwrap_or("application/json"),
+            "header_prefix": self.header_prefix.as_deref().unwrap_or("header#"),
+        }))
+        .unwrap();
+
+        if let Some(query_fields) = &self.query_fields {
+            data.insert(
+                "query_fields".to_string(),
+                serde_json::to_value(query_fields).unwrap(),
+            );
+        }
+        if let Some(rename_fields) = &self.rename_fields {
+            data.insert(
+                "rename_fields".to_string(),
+                serde_json::to_value(rename_fields).unwrap(),
+            );
+        }
+        if let Some(body_fields) = &self.body_fields {
+            data.insert(
+                "body_fields".to_string(),
+                serde_json::to_value(body_fields).unwrap(),
+            );
+        }
+        if let Some(auth_token_field) = &self.auth_token_field {
+            data.insert(
+                "auth_token_field".to_string(),
+                serde_json::to_value(auth_token_field).unwrap(),
+            );
+        }
+
+        Ok(Materializer {
+            // TODO rename to http for consistency
+            name: "rest".to_string(),
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
 pub fn convert_materializer(
     c: &mut TypegraphContext,
     s: &Store,
@@ -163,6 +228,14 @@ pub fn convert_runtime(
                 endpoint: d.endpoint.clone(),
             };
             Ok(TGRuntime::Known(GraphQL(data)))
+        }
+        Runtime::Http(d) => {
+            let data = HTTPRuntimeData {
+                endpoint: d.endpoint.clone(),
+                cert_secret: d.cert_secret.clone(),
+                basic_auth_secret: d.basic_auth_secret.clone(),
+            };
+            Ok(TGRuntime::Known(HTTP(data)))
         }
     }
 }

@@ -3,7 +3,9 @@
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store_mut, Store};
-use crate::wit::runtimes::{BaseMaterializer, GraphqlRuntimeData};
+use crate::wit::runtimes::{
+    BaseMaterializer, GraphqlRuntimeData, HttpRuntimeData, MaterializerHttpRequest,
+};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use crate::{
     wit::core::RuntimeId,
@@ -17,6 +19,7 @@ type Result<T, E = TgError> = std::result::Result<T, E>;
 pub enum Runtime {
     Deno,
     Graphql(GraphqlRuntimeData),
+    Http(HttpRuntimeData),
 }
 
 #[derive(Debug)]
@@ -76,6 +79,14 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn http(runtime_id: RuntimeId, data: MaterializerHttpRequest, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -83,6 +94,7 @@ impl Materializer {
 pub enum MaterializerData {
     Deno(DenoMaterializer),
     GraphQL(GraphqlMaterializer),
+    Http(MaterializerHttpRequest),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -145,6 +157,20 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
     ) -> Result<wit::MaterializerId> {
         let data = GraphqlMaterializer::Mutation(data);
         let mat = Materializer::graphql(base.runtime, data, base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn register_http_runtime(
+        data: crate::wit::runtimes::HttpRuntimeData,
+    ) -> Result<crate::wit::runtimes::RuntimeId, crate::wit::runtimes::Error> {
+        Ok(with_store_mut(|s| s.register_runtime(Runtime::Http(data))))
+    }
+
+    fn http_request(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerHttpRequest,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::http(base.runtime, data, base.effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }
