@@ -251,6 +251,8 @@ export type KnownRuntime = {
   name: "http";
   data: HTTPRuntimeData;
 } | {
+  name: "python";
+} | {
   name: "random";
   data: RandomRuntimeData;
 } | {

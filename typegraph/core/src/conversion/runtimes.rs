@@ -4,7 +4,8 @@
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::runtimes::{
-    DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, Runtime,
+    DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, PythonMaterializer,
+    Runtime,
 };
 use crate::wit::core::RuntimeId;
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
@@ -200,6 +201,51 @@ impl MaterializerConverter for MaterializerHttpRequest {
     }
 }
 
+impl MaterializerConverter for PythonMaterializer {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        s: &Store,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<Materializer> {
+        use crate::runtimes::PythonMaterializer::*;
+        let runtime = c.register_runtime(s, runtime_id)?;
+        let (name, data) = match self {
+            Lambda(lambda) => {
+                let mut data = IndexMap::new();
+                data.insert(
+                    "name".to_string(),
+                    serde_json::Value::String(lambda.name.clone()),
+                );
+                data.insert(
+                    "fn".to_string(),
+                    serde_json::Value::String(lambda.fn_.clone()),
+                );
+                ("lambda".to_string(), data)
+            }
+            Def(lambda) => {
+                let mut data = IndexMap::new();
+                data.insert(
+                    "name".to_string(),
+                    serde_json::Value::String(lambda.name.clone()),
+                );
+                data.insert(
+                    "fn".to_string(),
+                    serde_json::Value::String(lambda.fn_.clone()),
+                );
+                ("def".to_string(), data)
+            }
+        };
+        Ok(Materializer {
+            name,
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
 pub fn convert_materializer(
     c: &mut TypegraphContext,
     s: &Store,
@@ -237,5 +283,6 @@ pub fn convert_runtime(
             };
             Ok(TGRuntime::Known(HTTP(data)))
         }
+        Runtime::Python => Ok(TGRuntime::Known(Python)),
     }
 }

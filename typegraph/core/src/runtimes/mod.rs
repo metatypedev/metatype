@@ -20,6 +20,7 @@ pub enum Runtime {
     Deno,
     Graphql(GraphqlRuntimeData),
     Http(HttpRuntimeData),
+    Python,
 }
 
 #[derive(Debug)]
@@ -55,6 +56,13 @@ pub enum GraphqlMaterializer {
     Mutation(wit::MaterializerGraphqlQuery),
 }
 
+#[derive(Debug)]
+pub enum PythonMaterializer {
+    Lambda(wit::MaterializerPythonLambdaOrDef),
+    Def(wit::MaterializerPythonLambdaOrDef),
+    // Module(wit::MaterializerPythonImport),
+}
+
 impl Materializer {
     // fn new(base: wit::BaseMaterializer, data: impl Into<MaterializerData>) -> Self {
     //     Self {
@@ -87,6 +95,14 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn python(runtime_id: RuntimeId, data: PythonMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -95,6 +111,7 @@ pub enum MaterializerData {
     Deno(DenoMaterializer),
     GraphQL(GraphqlMaterializer),
     Http(MaterializerHttpRequest),
+    Python(PythonMaterializer),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -171,6 +188,27 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
         data: crate::wit::runtimes::MaterializerHttpRequest,
     ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
         let mat = Materializer::http(base.runtime, data, base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn register_python_runtime(
+    ) -> Result<crate::wit::runtimes::RuntimeId, crate::wit::runtimes::Error> {
+        Ok(with_store_mut(|s| s.register_runtime(Runtime::Python)))
+    }
+
+    fn from_python_lambda(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerPythonLambdaOrDef,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::python(base.runtime, PythonMaterializer::Lambda(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn from_python_def(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerPythonLambdaOrDef,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::python(base.runtime, PythonMaterializer::Lambda(data), base.effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }
