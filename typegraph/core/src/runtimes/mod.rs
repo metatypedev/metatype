@@ -208,7 +208,7 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
         base: crate::wit::runtimes::BaseMaterializer,
         data: crate::wit::runtimes::MaterializerPythonLambdaOrDef,
     ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
-        let mat = Materializer::python(base.runtime, PythonMaterializer::Lambda(data), base.effect);
+        let mat = Materializer::python(base.runtime, PythonMaterializer::Def(data), base.effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }

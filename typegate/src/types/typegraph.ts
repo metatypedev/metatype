@@ -251,7 +251,8 @@ export type KnownRuntime = {
   name: "http";
   data: HTTPRuntimeData;
 } | {
-  name: "python";
+  name: "python_wasi";
+  data: PythonRuntimeData;
 } | {
   name: "random";
   data: RandomRuntimeData;
@@ -341,6 +342,9 @@ export interface HTTPRuntimeData {
   endpoint: string;
   cert_secret?: string | null;
   basic_auth_secret?: string | null;
+}
+export interface PythonRuntimeData {
+  config?: string | null;
 }
 export interface RandomRuntimeData {
   seed: number;

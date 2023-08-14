@@ -1425,14 +1425,18 @@
         {
           "type": "object",
           "required": [
+            "data",
             "name"
           ],
           "properties": {
             "name": {
               "type": "string",
               "enum": [
-                "python"
+                "python_wasi"
               ]
+            },
+            "data": {
+              "$ref": "#/definitions/PythonRuntimeData"
             }
           }
         },
@@ -1553,6 +1557,17 @@
           ]
         },
         "basic_auth_secret": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "PythonRuntimeData": {
+      "type": "object",
+      "properties": {
+        "config": {
           "type": [
             "string",
             "null"

@@ -8,14 +8,15 @@ use serde::{Deserialize, Serialize};
 
 use self::{
     deno::DenoRuntimeData, graphql::GraphQLRuntimeData, http::HTTPRuntimeData,
-    prisma::PrismaRuntimeData, random::RandomRuntimeData, s3::S3RuntimeData,
-    temporal::TemporalRuntimeData,
+    prisma::PrismaRuntimeData, python::PythonRuntimeData, random::RandomRuntimeData,
+    s3::S3RuntimeData, temporal::TemporalRuntimeData,
 };
 
 pub mod deno;
 pub mod graphql;
 pub mod http;
 pub mod prisma;
+pub mod python;
 pub mod random;
 pub mod s3;
 pub mod temporal;
@@ -27,7 +28,8 @@ pub enum KnownRuntime {
     Deno(DenoRuntimeData),
     GraphQL(GraphQLRuntimeData),
     HTTP(HTTPRuntimeData),
-    Python,
+    #[serde(rename = "python_wasi")]
+    PythonWasi(PythonRuntimeData),
     Random(RandomRuntimeData),
     Prisma(PrismaRuntimeData),
     S3(S3RuntimeData),

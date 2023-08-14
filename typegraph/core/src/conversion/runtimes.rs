@@ -13,6 +13,7 @@ use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
 use common::typegraph::runtimes::http::HTTPRuntimeData;
+use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::KnownRuntime;
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
@@ -224,16 +225,13 @@ impl MaterializerConverter for PythonMaterializer {
                 );
                 ("lambda".to_string(), data)
             }
-            Def(lambda) => {
+            Def(def) => {
                 let mut data = IndexMap::new();
                 data.insert(
                     "name".to_string(),
-                    serde_json::Value::String(lambda.name.clone()),
+                    serde_json::Value::String(def.name.clone()),
                 );
-                data.insert(
-                    "fn".to_string(),
-                    serde_json::Value::String(lambda.fn_.clone()),
-                );
+                data.insert("fn".to_string(), serde_json::Value::String(def.fn_.clone()));
                 ("def".to_string(), data)
             }
         };
@@ -283,6 +281,8 @@ pub fn convert_runtime(
             };
             Ok(TGRuntime::Known(HTTP(data)))
         }
-        Runtime::Python => Ok(TGRuntime::Known(Python)),
+        Runtime::Python => Ok(TGRuntime::Known(PythonWasi(PythonRuntimeData {
+            config: None,
+        }))),
     }
 }
