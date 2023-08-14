@@ -3,5 +3,6 @@
 
 from typegraph_next.graph.typegraph import typegraph, Graph  # noqa
 from typegraph_next.policy import Policy  # noqa
+from typegraph_next import effects as fx  # noqa
 
 version = "0.1.13-0+dev"

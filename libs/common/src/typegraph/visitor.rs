@@ -67,7 +67,7 @@ impl<'a, V: TypeVisitor + Sized> TypegraphTraversal<'a, V> {
                     self.visit_function(type_idx, data.input, data.output)
                 }
                 TypeNode::Boolean { .. }
-                | TypeNode::Number { .. }
+                | TypeNode::Float { .. }
                 | TypeNode::Integer { .. }
                 | TypeNode::String { .. }
                 | TypeNode::File { .. }

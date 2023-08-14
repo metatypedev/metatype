@@ -1,10 +1,12 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.http import HTTPRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.runtimes.http import HttpRuntime
 
-with TypeGraph("blog") as g:
-    remote = HTTPRuntime("http://localhost/api")
 
-    public = policies.public()
+@typegraph()
+def blog(g: Graph):
+    remote = HttpRuntime("http://localhost/api")
+
+    public = Policy.public()
 
     post = t.struct(
         {
@@ -13,66 +15,70 @@ with TypeGraph("blog") as g:
             "title": t.string(),
             "summary": t.string(),
             "content": t.string(),
-        }
-    ).named("Post")
+        },
+        name="Post",
+    )
 
     comment = t.struct(
         {
             "id": t.integer(),
             "postId": t.integer(),
             "content": t.string(),
-        }
-    ).named("Comment")
+        },
+        name="Comment",
+    )
 
     post_by_id = remote.get(
-        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(g("Post"))
-    ).add_policy(public)
+        "/posts/{id}", t.struct({"id": t.integer()}), t.optional(t.ref("Post"))
+    ).with_policy(public)
 
     update_post = remote.patch(
-        "/posts/{id}", t.struct({"id": t.integer(), "content": t.string()}), g("Post")
-    ).add_policy(public)
+        "/posts/{id}",
+        t.struct({"id": t.integer(), "content": t.string()}),
+        post,
+    ).with_policy(public)
 
     approve_post = remote.put(
         "posts/{id}/approved",
         t.struct({"id": t.integer(), "approved": t.boolean(), "authToken": t.string()}),
         t.struct({"approved": t.boolean()}),
         auth_token_field="authToken",
-    ).add_policy(public)
+    ).with_policy(public)
 
-    get_posts = remote.get("/posts", t.struct({}), t.array(g("Post"))).add_policy(
+    get_posts = remote.get("/posts", t.struct({}), t.array(t.ref("Post"))).with_policy(
         public
     )
 
     get_posts_by_tags = remote.get(
-        "/posts", t.struct({"tags": t.array(t.string())}), t.array(g("Post"))
-    ).add_policy(public)
+        "/posts", t.struct({"tags": t.array(t.string())}), t.array(t.ref("Post"))
+    ).with_policy(public)
 
     delete_post = remote.delete(
         "/posts/{postId}",
         t.struct({"postId": t.integer()}),
         t.struct({"postId": t.integer()}),
-    ).add_policy(public)
+    ).with_policy(public)
 
     get_comments = remote.get(
-        "/comments", t.struct({"postId": t.integer()}), t.array(g("Comment"))
-    ).add_policy(public)
+        "/comments", t.struct({"postId": t.integer()}), t.array(t.ref("Comment"))
+    ).with_policy(public)
 
     post_comment = remote.post(
         "/comments",
         t.struct({"postId": t.integer(), "content": t.string()}),
-        g("Comment"),
+        t.ref("Comment"),
         query_fields=("postId",),
-    ).add_policy(public)
+    ).with_policy(public)
 
     replace_comment = remote.put(
         "/comments/{id}",
-        g("Comment"),
-        g("Comment"),
-    ).add_policy(public)
+        comment,
+        comment,
+    ).with_policy(public)
 
     delete_comment = remote.delete(
         "/comments/{id}", t.struct({"id": t.integer()}), t.boolean()
-    ).add_policy(public)
+    ).with_policy(public)
 
     g.expose(
         post=post_by_id,
@@ -80,6 +86,7 @@ with TypeGraph("blog") as g:
         approvePost=approve_post,
         posts=get_posts,
         postsByTags=get_posts_by_tags,
+        deletePost=delete_post,
         comments=get_comments,
         postComment=post_comment,
         replaceComment=replace_comment,

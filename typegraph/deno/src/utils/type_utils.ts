@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 type RequiredKeys<T> = {
   [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K;
 }[keyof T];

@@ -16,7 +16,7 @@ const complexType = t.struct({
   an_enum: t.enum_(["one", "two"]),
   an_integer_enum: t.integer({ enumeration: [1, 2] }),
   a_float_enum: t.float({ enumeration: [1.5, 2.5] }),
-  a_struct: t.struct({ value: t.number() }),
+  a_struct: t.struct({ value: t.float() }),
   nested: t.array(t.either([t.string(), t.integer()])).optional(),
   nested_with_ref: someType,
   an_email: t.email(),

@@ -35,7 +35,7 @@ interface core {
     }
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
 
-    record type-number {
+    record type-float {
         min: option<float64>,
         max: option<float64>,
         exclusive-minimum: option<float64>,
@@ -43,7 +43,7 @@ interface core {
         multiple-of: option<float64>,
         enumeration: option<list<float64>>
     }
-    numberb: func(data: type-number, base: type-base) -> result<type-id, error>
+    floatb: func(data: type-float, base: type-base) -> result<type-id, error>
 
     booleanb: func(base: type-base) -> result<type-id, error>
 
@@ -188,8 +188,36 @@ interface runtimes {
     graphql-query: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
     graphql-mutation: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
 
+    record http-runtime-data {
+        endpoint: string,
+        cert-secret: option<string>,
+        basic-auth-secret: option<string>,
+    }
+
+    enum http-method {
+        get,
+        post,
+        put,
+        patch,
+        delete,
+    }
+
+    record materializer-http-request {
+        method: http-method,
+        path: string,
+        content-type: option<string>,
+        header-prefix: option<string>,
+        query-fields: option<list<string>>,
+        rename-fields: option<list<tuple<string, string>>>,
+        body-fields: option<list<string>>,
+        auth-token-field: option<string>,
+    }
+
+    register-http-runtime: func(data: http-runtime-data) -> result<runtime-id, error>
+    http-request: func(base: base-materializer, data: materializer-http-request) -> result<materializer-id, error>
+
     // python
-    record materializer-python-lambda {
+    /*record materializer-python-lambda {
         runtime: runtime-id,
         code: string,
         secrets: list<string>,
@@ -210,6 +238,7 @@ interface runtimes {
 
     register-python-runtime: func() -> result<runtime-id, error>
     from-python-lambda: func(data: materializer-python-lambda, effect: effect) -> result<materializer-id, error>
+    */
     // from-python-def: func(data: materializer-python-def, effect: effect) -> result<materializer-id, error>
     // import-python-module: func(data: materializer-python-import, effect: effect) -> result<materializer-id, error>
 }

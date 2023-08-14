@@ -17,13 +17,13 @@ use global_store::{with_store, with_store_mut};
 use indoc::formatdoc;
 use regex::Regex;
 use types::{
-    Array, Boolean, Either, Func, Integer, Number, Optional, Proxy, StringT, Struct, Type,
+    Array, Boolean, Either, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
     TypeBoolean, Union, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFunc, TypeId, TypeInteger,
-    TypeNumber, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
+    TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
     TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
@@ -101,7 +101,7 @@ impl wit::core::Core for Lib {
         }))
     }
 
-    fn numberb(data: TypeNumber, base: TypeBase) -> Result<TypeId> {
+    fn floatb(data: TypeFloat, base: TypeBase) -> Result<TypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
@@ -113,7 +113,7 @@ impl wit::core::Core for Lib {
             }
         }
         Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::Number(Number { id, base, data }))
+            s.add_type(|id| Type::Float(Float { id, base, data }))
         }))
     }
 
@@ -271,7 +271,7 @@ mod tests {
     use crate::global_store::{with_store, with_store_mut};
     use crate::wit::{
         core::{
-            Core, MaterializerId, TypeArray, TypeBase, TypeFunc, TypeId, TypeInteger, TypeNumber,
+            Core, MaterializerId, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeId, TypeInteger,
             TypeOptional, TypeStruct,
         },
         runtimes::{Effect, MaterializerDenoFunc, Runtimes},
@@ -311,7 +311,7 @@ mod tests {
         }
     }
 
-    impl Default for TypeNumber {
+    impl Default for TypeFloat {
         fn default() -> Self {
             Self {
                 min: None,
@@ -324,7 +324,7 @@ mod tests {
         }
     }
 
-    impl TypeNumber {
+    impl TypeFloat {
         fn min(mut self, min: f64) -> Self {
             self.min = Some(min);
             self
@@ -415,13 +415,13 @@ mod tests {
 
     #[test]
     fn test_number_invalid_max() {
-        let res = Lib::numberb(
-            TypeNumber::default().min(12.34).max(12.3399),
+        let res = Lib::floatb(
+            TypeFloat::default().min(12.34).max(12.3399),
             TypeBase::default(),
         );
         assert_eq!(res, Err(errors::invalid_max_value()));
-        let res = Lib::numberb(
-            TypeNumber::default().x_min(12.6).x_max(12.6),
+        let res = Lib::floatb(
+            TypeFloat::default().x_min(12.6).x_max(12.6),
             TypeBase::default(),
         );
         assert_eq!(res, Err(errors::invalid_max_value()));
@@ -643,8 +643,8 @@ mod tests {
         with_store_mut(|s| s.reset());
         let a = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
         let b = Lib::integerb(TypeInteger::default().min(12).max(44), TypeBase::default())?;
-        // -- optional(array(number))
-        let num_idx = Lib::numberb(TypeNumber::default(), TypeBase::default())?;
+        // -- optional(array(float))
+        let num_idx = Lib::floatb(TypeFloat::default(), TypeBase::default())?;
         let array_idx = Lib::arrayb(TypeArray::of(num_idx), TypeBase::default())?;
         let c = Lib::optionalb(TypeOptional::of(array_idx), TypeBase::default())?;
         // --

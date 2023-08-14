@@ -9,7 +9,7 @@ use serde_json::Value;
 
 use super::{
     visitor::{Path, PathSegment, TypeVisitor, VisitResult},
-    ArrayTypeData, EitherTypeData, Injection, IntegerTypeData, NumberTypeData, ObjectTypeData,
+    ArrayTypeData, EitherTypeData, FloatTypeData, Injection, IntegerTypeData, ObjectTypeData,
     StringTypeData, UnionTypeData,
 };
 
@@ -92,7 +92,7 @@ impl TypeVisitor for Validator {
                         match variant_type {
                             TypeNode::Object { .. } => object_count += 1,
                             TypeNode::Boolean { .. }
-                            | TypeNode::Number { .. }
+                            | TypeNode::Float { .. }
                             | TypeNode::Integer { .. }
                             | TypeNode::String { .. } => {
                                 // scalar
@@ -204,7 +204,7 @@ impl Typegraph {
         match type_node {
             TypeNode::Any { .. } => Ok(()),
             TypeNode::Integer { data, .. } => self.validate_integer(data, value),
-            TypeNode::Number { data, .. } => self.validate_number(data, value),
+            TypeNode::Float { data, .. } => self.validate_float(data, value),
             TypeNode::Boolean { .. } => value.as_bool().map(|_| ()).ok_or_else(|| {
                 anyhow!("Expected a boolean got '{value}'", value = to_string(value))
             }),
@@ -252,12 +252,12 @@ impl Typegraph {
         Ok(())
     }
 
-    fn validate_number(&self, data: &NumberTypeData, value: &Value) -> Result<()> {
+    fn validate_float(&self, data: &FloatTypeData, value: &Value) -> Result<()> {
         let Value::Number(n) = value else {
-            bail!("Expected number got '{}'", to_string(value));
+            bail!("Expected float got '{}'", to_string(value));
         };
         let Some(value) = n.as_f64() else {
-            bail!("Number value {value:?} cannot be stored in f64");
+            bail!("Float value {value:?} cannot be stored in f64");
         };
         if let Some(min) = data.minimum {
             number_validator::expect_min(min, value)?;

@@ -3,7 +3,9 @@
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store_mut, Store};
-use crate::wit::runtimes::{BaseMaterializer, GraphqlRuntimeData};
+use crate::wit::runtimes::{
+    BaseMaterializer, GraphqlRuntimeData, HttpRuntimeData, MaterializerHttpRequest,
+};
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use crate::{
     wit::core::RuntimeId,
@@ -17,7 +19,7 @@ type Result<T, E = TgError> = std::result::Result<T, E>;
 pub enum Runtime {
     Deno,
     Graphql(GraphqlRuntimeData),
-    Python,
+    Http(HttpRuntimeData),
 }
 
 #[derive(Debug)]
@@ -53,12 +55,6 @@ pub enum GraphqlMaterializer {
     Mutation(wit::MaterializerGraphqlQuery),
 }
 
-#[derive(Debug)]
-pub enum PythonMaterializer {
-    // TODO: def, module
-    Lambda(wit::MaterializerPythonLambda),
-}
-
 impl Materializer {
     // fn new(base: wit::BaseMaterializer, data: impl Into<MaterializerData>) -> Self {
     //     Self {
@@ -84,7 +80,7 @@ impl Materializer {
         }
     }
 
-    fn python(runtime_id: RuntimeId, data: PythonMaterializer, effect: wit::Effect) -> Self {
+    fn http(runtime_id: RuntimeId, data: MaterializerHttpRequest, effect: wit::Effect) -> Self {
         Self {
             runtime_id,
             effect,
@@ -98,7 +94,7 @@ impl Materializer {
 pub enum MaterializerData {
     Deno(DenoMaterializer),
     GraphQL(GraphqlMaterializer),
-    Python(PythonMaterializer),
+    Http(MaterializerHttpRequest),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -108,7 +104,6 @@ pub enum MaterializerData {
 // }
 
 impl crate::wit::runtimes::Runtimes for crate::Lib {
-    // deno
     fn get_deno_runtime() -> RuntimeId {
         with_store_mut(|s| s.get_deno_runtime())
     }
@@ -142,7 +137,6 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 
-    // graphql
     fn register_graphql_runtime(data: GraphqlRuntimeData) -> Result<RuntimeId> {
         let runtime = Runtime::Graphql(data);
         Ok(with_store_mut(|s| s.register_runtime(runtime)))
@@ -166,16 +160,17 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 
-    // python
-    fn register_python_runtime() -> Result<RuntimeId> {
-        Ok(with_store_mut(|s| s.register_runtime(Runtime::Python)))
+    fn register_http_runtime(
+        data: crate::wit::runtimes::HttpRuntimeData,
+    ) -> Result<crate::wit::runtimes::RuntimeId, crate::wit::runtimes::Error> {
+        Ok(with_store_mut(|s| s.register_runtime(Runtime::Http(data))))
     }
 
-    fn from_python_lambda(
-        data: wit::MaterializerPythonLambda,
-        effect: wit::Effect,
-    ) -> Result<wit::MaterializerId> {
-        let mat = Materializer::python(data.runtime, PythonMaterializer::Lambda(data), effect);
+    fn http_request(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerHttpRequest,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::http(base.runtime, data, base.effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }

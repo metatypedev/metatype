@@ -428,7 +428,7 @@ class boolean(typedef):
 
 @with_constraints
 @frozen
-class number(typedef):
+class number_base(typedef):
     """See [`t.number()`](/docs/reference/type-system#tnumber)"""
 
     _min: Optional[float] = constraint("minimum")
@@ -438,12 +438,19 @@ class number(typedef):
     _multiple_of: Optional[float] = constraint("multipleOf")
 
 
-def float() -> number:
-    return number()
+# type title is retrieved from the class name
+@with_constraints
+@frozen
+class float(number_base):
+    pass
+
+
+def number(**args):
+    return float(**args)
 
 
 @frozen
-class integer(number):
+class integer(number_base):
     """See [`t.integer()`](/docs/reference/type-system#tinteger)"""
 
     pass

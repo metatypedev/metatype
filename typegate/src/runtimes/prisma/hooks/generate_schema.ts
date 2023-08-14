@@ -141,7 +141,7 @@ class FieldBuilder {
       case Type.INTEGER:
         return ["Int", []];
 
-      case Type.NUMBER:
+      case Type.FLOAT:
         return ["Float", []];
 
       case Type.OBJECT:
