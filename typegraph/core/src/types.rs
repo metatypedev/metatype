@@ -128,6 +128,14 @@ impl TypeData for TypeProxy {
     }
 }
 
+impl TypeProxy {
+    pub fn get_extra(&self, key: &str) -> Option<&str> {
+        self.extras
+            .iter()
+            .find_map(|(k, v)| if k == key { Some(v.as_str()) } else { None })
+    }
+}
+
 impl WrapperTypeData for TypeProxy {
     fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
         store
@@ -168,6 +176,14 @@ impl TypeData for TypeStruct {
 
     fn variant_name(&self) -> String {
         "struct".to_string()
+    }
+}
+
+impl TypeStruct {
+    pub fn get_prop_type(&self, name: &str) -> Option<TypeId> {
+        self.props
+            .iter()
+            .find_map(|(n, t)| if n == name { Some(*t) } else { None })
     }
 }
 
@@ -228,7 +244,10 @@ impl Store {
     pub fn type_as_struct(&self, type_id: TypeId) -> Result<&Struct> {
         match self.get_type(type_id)? {
             Type::Struct(s) => Ok(s),
-            _ => Err(errors::invalid_type("Struct", self.get_type_repr(type_id))),
+            _ => Err(errors::invalid_type(
+                "Struct",
+                &self.get_type_repr(type_id)?,
+            )),
         }
     }
 }

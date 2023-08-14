@@ -2,4 +2,4 @@
 // SPDX-License-Identifier: MPL-2.0
 
 pub mod errors;
-pub mod registry;
+pub mod relationship;
