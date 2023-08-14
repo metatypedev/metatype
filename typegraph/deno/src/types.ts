@@ -7,8 +7,8 @@ import {
   TypeArray,
   TypeBase,
   TypeEither,
+  TypeFloat,
   TypeInteger,
-  TypeNumber,
   TypeOptional,
   TypeString,
   TypeUnion,
@@ -135,7 +135,7 @@ export function integer(
   return new Integer(core.integerb(completeData, base), completeData, base);
 }
 
-class Number extends Typedef implements Readonly<TypeNumber> {
+class Float extends Typedef implements Readonly<TypeFloat> {
   readonly min?: number;
   readonly max?: number;
   readonly exclusiveMinimum?: number;
@@ -143,7 +143,7 @@ class Number extends Typedef implements Readonly<TypeNumber> {
   readonly multipleOf?: number;
   readonly enumeration?: Float64Array;
 
-  constructor(_id: number, data: TypeNumber, base: TypeBase) {
+  constructor(_id: number, data: TypeFloat, base: TypeBase) {
     super(_id, base);
     this.min = data.min;
     this.max = data.max;
@@ -154,8 +154,8 @@ class Number extends Typedef implements Readonly<TypeNumber> {
   }
 }
 
-export function number(
-  data: SimplifiedNumeric<TypeNumber> = {},
+export function float(
+  data: SimplifiedNumeric<TypeFloat> = {},
   base: TypeBase = {},
 ) {
   const completeData = {
@@ -164,18 +164,11 @@ export function number(
       ? new Float64Array(data.enumeration)
       : undefined,
   };
-  return new Number(
-    core.numberb(completeData, base),
+  return new Float(
+    core.floatb(completeData, base),
     completeData,
     base,
   );
-}
-
-export function float(
-  data: SimplifiedNumeric<TypeNumber> = {},
-  base: TypeBase = {},
-) {
-  return number(data, base);
 }
 
 class StringT extends Typedef implements Readonly<TypeString> {
@@ -209,10 +202,6 @@ export function email() {
 
 export function uri() {
   return string({ format: "uri" });
-}
-
-export function json(data: { min?: number; max?: number }) {
-  return string({ format: "json", ...data });
 }
 
 export function ean() {

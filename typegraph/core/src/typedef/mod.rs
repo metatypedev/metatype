@@ -4,9 +4,9 @@
 pub mod array;
 pub mod boolean;
 pub mod either;
+pub mod float;
 pub mod func;
 pub mod integer;
-pub mod number;
 pub mod optional;
 pub mod policy;
 pub mod proxy;

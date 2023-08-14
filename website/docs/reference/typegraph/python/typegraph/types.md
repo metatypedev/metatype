@@ -3,13 +3,13 @@ sidebar_label: types
 title: typegraph.types
 ---
 
-## number Objects
+## number\_base Objects
 
 ```python
 @with_constraints
 
 @frozen
-class number(typedef)
+class number_base(typedef)
 ```
 
 See [`t.number()`](/docs/reference/type-system#tnumber)
@@ -18,7 +18,7 @@ See [`t.number()`](/docs/reference/type-system#tnumber)
 
 ```python
 @frozen
-class integer(number)
+class integer(number_base)
 ```
 
 See [`t.integer()`](/docs/reference/type-system#tinteger)

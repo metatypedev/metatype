@@ -76,7 +76,7 @@ pub struct OptionalTypeData {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct NumberTypeData {
+pub struct FloatTypeData {
     pub minimum: Option<f64>,
     pub maximum: Option<f64>,
     pub exclusive_minimum: Option<f64>,
@@ -201,11 +201,11 @@ pub enum TypeNode {
         #[serde(flatten)]
         base: TypeNodeBase,
     },
-    Number {
+    Float {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: NumberTypeData,
+        data: FloatTypeData,
     },
     Integer {
         #[serde(flatten)]
@@ -268,7 +268,7 @@ impl TypeNode {
         match self {
             Optional { base, .. }
             | Boolean { base, .. }
-            | Number { base, .. }
+            | Float { base, .. }
             | Integer { base, .. }
             | String { base, .. }
             | File { base, .. }
@@ -286,7 +286,7 @@ impl TypeNode {
         match self {
             Optional { base, .. }
             | Boolean { base, .. }
-            | Number { base, .. }
+            | Float { base, .. }
             | Integer { base, .. }
             | String { base, .. }
             | File { base, .. }
@@ -303,8 +303,8 @@ impl TypeNode {
         use TypeNode::*;
         match self {
             Optional { .. } => "optional",
-            Boolean { .. } => "booleal",
-            Number { .. } => "number",
+            Boolean { .. } => "boolean",
+            Float { .. } => "number",
             Integer { .. } => "integer",
             String { .. } => "string",
             File { .. } => "file",
@@ -321,7 +321,7 @@ impl TypeNode {
         use TypeNode::*;
         matches!(
             self,
-            Boolean { .. } | Number { .. } | Integer { .. } | String { .. }
+            Boolean { .. } | Float { .. } | Integer { .. } | String { .. }
         )
     }
 }

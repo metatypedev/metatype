@@ -31,8 +31,8 @@ export type BooleanNode = {
   };
   as_id: boolean;
 };
-export type NumberNode = {
-  type: "number";
+export type FloatNode = {
+  type: "float";
   title: string;
   runtime: number;
   policies: PolicyIndices[];
@@ -196,7 +196,7 @@ export type AnyNode = {
 export type TypeNode =
   | OptionalNode
   | BooleanNode
-  | NumberNode
+  | FloatNode
   | IntegerNode
   | StringNode
   | FileNode

@@ -294,7 +294,7 @@ class ArgumentCollector {
         return () => value;
       }
 
-      case Type.NUMBER: {
+      case Type.FLOAT: {
         if (valueNode.kind !== Kind.FLOAT && valueNode.kind !== Kind.INT) {
           throw new TypeMismatchError(
             valueNode.kind,

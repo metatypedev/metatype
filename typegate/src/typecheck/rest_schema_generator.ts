@@ -52,7 +52,7 @@ export class RestSchemaGenerator {
           outputSchema = { type: "boolean" };
           break;
         }
-        case "number": {
+        case "float": {
           outputSchema = { type: "number" };
           break;
         }

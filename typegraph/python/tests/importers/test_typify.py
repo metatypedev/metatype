@@ -20,22 +20,22 @@ class TestImporterTypify:
         tp = Typify(importer)
         with TypeGraph(""):
             assert tp(t.boolean()) == overridable("t.boolean()")
-            assert tp(t.number()) == overridable("t.number()")
+            assert tp(t.float()) == overridable("t.float()")
             assert tp(t.integer()) == overridable("t.integer()")
             assert tp(t.string()) == overridable("t.string()")
 
     def test_simple_types_with_constraints(self, overridable):
         tp = Typify(importer)
         with TypeGraph(""):
-            assert tp(t.number(x_min=0, x_max=10)) == overridable(
-                "t.number().x_min(0).x_max(10)"
+            assert tp(t.float(x_min=0, x_max=10)) == overridable(
+                "t.float().x_min(0).x_max(10)"
             )
             assert tp(t.uuid()) == overridable("t.string().format('uuid')")
 
     def test_optional(self, overridable):
         tp = Typify(importer)
         with TypeGraph(""):
-            assert tp(t.optional(t.number())) == overridable("t.number().optional()")
+            assert tp(t.optional(t.float())) == overridable("t.float().optional()")
             assert tp(t.string(min=12)) == overridable("t.string().min(12)")
 
     def test_struct(self, overridable):

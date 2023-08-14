@@ -1,6 +1,7 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
+import json
 from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Self
@@ -14,7 +15,7 @@ from typegraph_next.gen.exports.core import (
     TypeBase,
     TypeFunc,
     TypeInteger,
-    TypeNumber,
+    TypeFloat,
     TypeArray,
     TypeEither,
     TypeUnion,
@@ -149,7 +150,7 @@ class integer(typedef):
         self.enumeration = enumeration
 
 
-class number(typedef):
+class float(typedef):
     min: Optional[float] = None
     max: Optional[float] = None
     exclusive_minimum: Optional[float] = None
@@ -168,7 +169,7 @@ class number(typedef):
         enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
     ):
-        data = TypeNumber(
+        data = TypeFloat(
             min=min,
             max=max,
             exclusive_minimum=exclusive_minimum,
@@ -177,7 +178,7 @@ class number(typedef):
             enumeration=enumeration,
         )
 
-        res = core.numberb(store, data, TypeBase(name=name))
+        res = core.floatb(store, data, TypeBase(name=name))
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -187,10 +188,6 @@ class number(typedef):
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
         self.enumeration = enumeration
-
-
-class float(number):
-    pass
 
 
 class boolean(typedef):
@@ -222,8 +219,6 @@ class string(typedef):
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
     ):
-        import json
-
         enum_variants = None
         if enumeration is not None:
             enum_variants = list(json.dumps(variant) for variant in enumeration)
@@ -253,10 +248,6 @@ def email() -> string:
 
 def uri() -> string:
     return string(format="uri")
-
-
-def json(min: Optional[int] = None, max: Optional[int] = None) -> string:
-    return string(format="json", min=min, max=max)
 
 
 def ean() -> string:

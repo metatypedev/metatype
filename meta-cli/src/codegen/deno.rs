@@ -309,7 +309,7 @@ impl<'a> Codegen<'a> {
             TypeNode::Optional { .. } => Ok("null".to_owned()),
             TypeNode::Array { .. } => Ok("[]".to_owned()),
             TypeNode::Boolean { .. } => Ok("false".to_owned()),
-            TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("0".to_owned()),
+            TypeNode::Float { .. } | TypeNode::Integer { .. } => Ok("0".to_owned()),
             TypeNode::String { .. } => Ok("\"\"".to_owned()),
             TypeNode::Object { data, .. } => {
                 let props = data.properties.clone();
@@ -426,7 +426,7 @@ impl<'a> Codegen<'a> {
                 Ok(format!("Array<{}>", self.get_typespec(data.items)?))
             }
             TypeNode::Boolean { .. } => Ok("boolean".to_owned()),
-            TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
+            TypeNode::Float { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
             TypeNode::String { base, .. } => {
                 if let Some(variants) = &base.enumeration {
                     // variants are valid strings in JSON (validated by the validator)
