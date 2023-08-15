@@ -1,8 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { g, t, typegraph } from "../../../../../../typegraph/deno/src/mod.ts";
-import { DenoRuntime } from "../../../../../../typegraph/deno/src/runtimes/deno.ts";
+import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
+import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
 
 const a = t.integer();
 
@@ -20,12 +20,12 @@ const post = t.struct({
   author: user,
 }, { name: "Post" });
 
-typegraph("test-types", (expose) => {
+typegraph("test-types", (g) => {
   const deno = new DenoRuntime();
-  const pub = g.Policy.public();
-  const internal = g.Policy.internal();
+  const pub = Policy.public();
+  const internal = Policy.internal();
 
-  expose({
+  g.expose({
     one: deno.func(s1, b, {
       code: "() => 12",
     }).withPolicy(internal),

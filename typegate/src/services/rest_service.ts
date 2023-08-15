@@ -4,7 +4,7 @@
 import { Engine } from "../engine.ts";
 import { BadContext, ResolverError } from "../errors.ts";
 import { getLogger } from "../log.ts";
-import { RateLimit } from "../rate_limiter.ts";
+import { RateLimit } from "../typegate/rate_limiter.ts";
 import { Context, Info } from "../types.ts";
 import { handlePlaygroundRestAPI } from "./playground_service.ts";
 import config from "../config.ts";

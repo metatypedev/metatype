@@ -34,7 +34,7 @@ type DeprecatedArg = { includeDeprecated?: boolean };
 const SCALAR_TYPE_MAP = {
   "boolean": "Boolean",
   "integer": "Int",
-  "number": "Float",
+  "float": "Float",
   "string": "String",
   "file": "File",
 };

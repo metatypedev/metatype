@@ -1,7 +1,8 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Dict, Optional, Tuple, Union
+import json
+from typing import Dict, List, Optional, Tuple, Union
 
 from typing_extensions import Self
 
@@ -14,6 +15,12 @@ from typegraph_next.gen.exports.core import (
     TypeBase,
     TypeFunc,
     TypeInteger,
+    TypeFloat,
+    TypeArray,
+    TypeEither,
+    TypeUnion,
+    TypeOptional,
+    TypeString,
     TypePolicy,
     TypeProxy,
     TypeStruct,
@@ -62,6 +69,11 @@ class typedef:
 
         return _TypeWithPolicy(res.value, self, policies)
 
+    def optional(self, default_value: Optional[str] = None) -> "optional":
+        if isinstance(self, optional):
+            return self
+        return optional(self, default_item=default_value)
+
 
 class _TypeWithPolicy(typedef):
     base: "typedef"
@@ -94,24 +106,251 @@ class ref(typedef):
         self.name = name
 
 
+class proxy(ref):
+    pass
+
+
 class integer(typedef):
     min: Optional[int] = None
     max: Optional[int] = None
+    exclusive_minimum: Optional[int] = None
+    exclusive_maximum: Optional[int] = None
+    multiple_of: Optional[int] = None
+    enumeration: Optional[List[int]] = (None,)
 
     def __init__(
         self,
         *,
         min: Optional[int] = None,
         max: Optional[int] = None,
-        name: Optional[str] = None
+        exclusive_minimum: Optional[int] = None,
+        exclusive_maximum: Optional[int] = None,
+        multiple_of: Optional[int] = None,
+        enumeration: Optional[List[int]] = None,
+        name: Optional[str] = None,
     ):
-        data = TypeInteger(min=min, max=max)
+        data = TypeInteger(
+            min=min,
+            max=max,
+            exclusive_minimum=exclusive_minimum,
+            exclusive_maximum=exclusive_maximum,
+            multiple_of=multiple_of,
+            enumeration=enumeration,
+        )
+
         res = core.integerb(store, data, TypeBase(name=name))
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
         self.min = min
         self.max = max
+        self.exclusive_minimum = exclusive_minimum
+        self.exclusive_maximum = exclusive_maximum
+        self.multiple_of = multiple_of
+        self.enumeration = enumeration
+
+
+class float(typedef):
+    min: Optional[float] = None
+    max: Optional[float] = None
+    exclusive_minimum: Optional[float] = None
+    exclusive_maximum: Optional[float] = None
+    multiple_of: Optional[float] = None
+    enumeration: Optional[List[float]] = (None,)
+
+    def __init__(
+        self,
+        *,
+        min: Optional[float] = None,
+        max: Optional[float] = None,
+        exclusive_minimum: Optional[float] = None,
+        exclusive_maximum: Optional[float] = None,
+        multiple_of: Optional[float] = None,
+        enumeration: Optional[List[float]] = None,
+        name: Optional[str] = None,
+    ):
+        data = TypeFloat(
+            min=min,
+            max=max,
+            exclusive_minimum=exclusive_minimum,
+            exclusive_maximum=exclusive_maximum,
+            multiple_of=multiple_of,
+            enumeration=enumeration,
+        )
+
+        res = core.floatb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.min = min
+        self.max = max
+        self.exclusive_minimum = exclusive_minimum
+        self.exclusive_maximum = exclusive_maximum
+        self.multiple_of = multiple_of
+        self.enumeration = enumeration
+
+
+class boolean(typedef):
+    def __init__(
+        self,
+        *,
+        name: Optional[str] = None,
+    ):
+        res = core.booleanb(store, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+
+
+class string(typedef):
+    min: Optional[int] = None
+    max: Optional[int] = None
+    pattern: Optional[str] = None
+    format: Optional[str] = None
+    enumeration: Optional[List[str]] = None
+
+    def __init__(
+        self,
+        *,
+        min: Optional[float] = None,
+        max: Optional[float] = None,
+        pattern: Optional[str] = None,
+        format: Optional[str] = None,
+        enumeration: Optional[List[str]] = None,
+        name: Optional[str] = None,
+    ):
+        enum_variants = None
+        if enumeration is not None:
+            enum_variants = list(json.dumps(variant) for variant in enumeration)
+
+        data = TypeString(
+            min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
+        )
+
+        res = core.stringb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.min = min
+        self.max = max
+        self.pattern = pattern
+        self.format = format
+        self.enumeration = enumeration
+
+
+def uuid() -> string:
+    return string(format="uuid")
+
+
+def email() -> string:
+    return string(format="email")
+
+
+def uri() -> string:
+    return string(format="uri")
+
+
+def ean() -> string:
+    return string(format="ean")
+
+
+def path() -> string:
+    return string(format="path")
+
+
+def enum(
+    variants: List[str],
+    name: Optional[str] = None,
+):
+    return string(enumeration=variants, name=name)
+
+
+class array(typedef):
+    items: typedef = None
+    min: Optional[int] = None
+    max: Optional[int] = None
+    unique_items: Optional[bool] = None
+
+    def __init__(
+        self,
+        items: typedef,
+        min: Optional[int] = None,
+        max: Optional[int] = None,
+        unique_items: Optional[bool] = None,
+        name: Optional[str] = None,
+    ):
+        data = TypeArray(
+            of=items.id,
+            min=min,
+            max=max,
+            unique_items=unique_items,
+        )
+
+        res = core.arrayb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.min = min
+        self.max = max
+        self.items = items
+        self.unique_items = unique_items
+
+
+class optional(typedef):
+    item: Optional[typedef] = None
+    default_item: Optional[str] = None
+
+    def __init__(
+        self,
+        item: typedef,
+        default_item: Optional[str] = None,
+        name: Optional[str] = None,
+    ):
+        data = TypeOptional(
+            of=item.id,
+            default_item=default_item,
+        )
+
+        res = core.optionalb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.item = item
+        self.default_item = default_item
+
+
+class union(typedef):
+    variants: List[typedef] = []
+
+    def __init__(
+        self,
+        variants: List[typedef],
+        name: Optional[str] = None,
+    ):
+        data = TypeUnion(variants=list(map(lambda v: v.id, variants)))
+
+        res = core.unionb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.variants = variants
+
+
+class either(typedef):
+    variants: List[typedef] = []
+
+    def __init__(
+        self,
+        variants: List[typedef],
+        name: Optional[str] = None,
+    ):
+        data = TypeEither(variants=list(map(lambda v: v.id, variants)))
+
+        res = core.eitherb(store, data, TypeBase(name=name))
+        if isinstance(res, Err):
+            raise Exception(res.value)
+        super().__init__(res.value)
+        self.variants = variants
 
 
 class struct(typedef):

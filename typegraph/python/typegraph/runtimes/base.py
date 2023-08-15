@@ -8,7 +8,7 @@ from attrs import frozen, field
 from typegraph.effects import Effect
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import Node
-from typegraph.utils.attrs import always, asdict
+from typegraph.utils.attrs import asdict
 
 if TYPE_CHECKING:
     from typegraph import types as t
@@ -32,7 +32,7 @@ class Runtime(Node):
 class Materializer(Node):
     runtime: Runtime
     effect: Effect
-    collector_target: Optional[str] = always(Collector.materializers)
+    collector_target: Optional[str] = field(default=Collector.materializers, init=False)
 
     @property
     def edges(self) -> List[Node]:

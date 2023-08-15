@@ -68,7 +68,9 @@ impl Action for Serialize {
             loader = loader.with_postprocessor(postprocess::EmbedPrismaMigrations::default());
         }
 
-        loader = loader.with_postprocessor(postprocess::DenoModules::default());
+        loader = loader
+            .with_postprocessor(postprocess::DenoModules::default())
+            .with_postprocessor(postprocess::PythonModules::default());
 
         let paths = if self.files.is_empty() {
             Discovery::new(Arc::clone(&config), dir.clone())
@@ -79,7 +81,6 @@ impl Action for Serialize {
         };
 
         if paths.is_empty() {
-            warn!("No typegraph definition module found.");
             bail!("No typegraph definition module found.");
         }
 
@@ -88,7 +89,7 @@ impl Action for Serialize {
             match loader.load_file(&path).await {
                 LoaderResult::Loaded(tgs) => {
                     if tgs.is_empty() {
-                        log::warn!("no typegraph");
+                        log::warn!("no typegraph in {path:?}");
                     }
                     for tg in tgs.into_iter() {
                         loaded.push(tg);
@@ -113,10 +114,18 @@ impl Action for Serialize {
         let tgs = loaded;
 
         if let Some(tg_name) = self.typegraph.as_ref() {
-            if let Some(tg) = tgs.into_iter().find(|tg| &tg.name().unwrap() == tg_name) {
+            if let Some(tg) = tgs.iter().find(|tg| &tg.name().unwrap() == tg_name) {
                 self.write(&self.to_string(&tg)?).await?;
             } else {
-                bail!("typegraph \"{}\" not found", tg_name);
+                let suggestions = tgs
+                    .iter()
+                    .map(|tg| tg.name().unwrap())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                bail!(
+                    "typegraph \"{}\" not found; available typegraphs are: {suggestions}",
+                    tg_name
+                );
             }
         } else if self.unique {
             if tgs.len() == 1 {

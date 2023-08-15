@@ -11,9 +11,10 @@ use crate::{
     errors::{self, Result},
     global_store::Store,
 };
+use common::typegraph::runtimes::TGRuntime;
 use common::typegraph::{
-    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TGRuntime,
-    TypeMeta, TypeNode, Typegraph,
+    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
+    TypeNode, Typegraph,
 };
 use graphql_parser::parse_query;
 use indexmap::IndexMap;

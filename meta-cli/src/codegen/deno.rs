@@ -3,6 +3,7 @@
 
 use anyhow::{bail, Context, Result};
 use colored::Colorize;
+use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
 use common::typegraph::{TypeNode, Typegraph};
 use log::{info, trace};
 use serde::{Deserialize, Serialize};
@@ -107,7 +108,7 @@ impl<'a> Codegen<'a> {
             let mut modules = HashMap::new();
             for mat in tg.materializers.iter() {
                 let runtime = &tg.runtimes[mat.runtime as usize];
-                if &runtime.name != "deno" && &runtime.name != "worker" {
+                if !matches!(runtime, TGRuntime::Known(KnownRuntime::Deno(_))) {
                     continue;
                 }
                 if mat.name != "module" {
@@ -148,7 +149,7 @@ impl<'a> Codegen<'a> {
             if let TypeNode::Function { base, data } = tpe {
                 let mat = self.tg.materializers[data.materializer as usize].clone();
                 let runtime = &self.tg.runtimes[base.runtime as usize];
-                if runtime.name != "deno" && runtime.name != "worker" {
+                if !matches!(runtime, TGRuntime::Known(KnownRuntime::Deno(_))) {
                     continue;
                 }
                 if mat.name == "import_function" {
@@ -308,7 +309,7 @@ impl<'a> Codegen<'a> {
             TypeNode::Optional { .. } => Ok("null".to_owned()),
             TypeNode::Array { .. } => Ok("[]".to_owned()),
             TypeNode::Boolean { .. } => Ok("false".to_owned()),
-            TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("0".to_owned()),
+            TypeNode::Float { .. } | TypeNode::Integer { .. } => Ok("0".to_owned()),
             TypeNode::String { .. } => Ok("\"\"".to_owned()),
             TypeNode::Object { data, .. } => {
                 let props = data.properties.clone();
@@ -425,7 +426,7 @@ impl<'a> Codegen<'a> {
                 Ok(format!("Array<{}>", self.get_typespec(data.items)?))
             }
             TypeNode::Boolean { .. } => Ok("boolean".to_owned()),
-            TypeNode::Number { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
+            TypeNode::Float { .. } | TypeNode::Integer { .. } => Ok("number".to_owned()),
             TypeNode::String { base, .. } => {
                 if let Some(variants) = &base.enumeration {
                     // variants are valid strings in JSON (validated by the validator)

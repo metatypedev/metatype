@@ -17,15 +17,15 @@ repos:
         # exclude all generated files
         exclude: (typegate/deno.lock|.*\.snap$|typegate/src/typegraphs/.*\.json|website/docs/reference/)
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.0.277"
+    rev: "v0.0.282"
     hooks:
       - id: ruff
   - repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.7.0
     hooks:
       - id: black
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: 3.5.2
+    rev: 3.6.0
     hooks:
       - id: commitizen
         stages: [commit-msg]
@@ -113,6 +113,16 @@ repos:
         types_or:
           - ts
         files: ^(typegate|dev)/
+      - id: insert-license
+        name: "License MPL-2.0 deno"
+        args:
+          #- --remove-header
+          - --license-filepath=dev/license-header-MPL-2.0.txt
+          - "--comment-style=//"
+          - "--skip-license-insertion-comment=no-auto-license-header"
+        types_or:
+          - ts
+        files: ^typegraph/
       - id: insert-license
         name: "License Elastic-2.0 typescript"
         args:

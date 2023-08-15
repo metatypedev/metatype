@@ -7,15 +7,22 @@ import { copy } from "std/streams/copy.ts";
 import { init_native } from "native";
 import { SingleRegister } from "./single_register.ts";
 import { NoLimiter } from "./no_limiter.ts";
-import { typegate } from "../../src/typegate.ts";
+import { Typegate } from "../../src/typegate/mod.ts";
 import { ConnInfo } from "std/http/server.ts";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";
 import { test } from "./test.ts";
 import { meta } from "./meta.ts";
 import { testDir } from "./dir.ts";
+import { autoTest } from "./autotest.ts";
+import { init_runtimes } from "../../src/runtimes/mod.ts";
+import config from "../../src/config.ts";
 
+// native must load first to avoid import race conditions and panic
 init_native();
+
+// same for loading runtimes
+await init_runtimes();
 
 export function gql(query: readonly string[], ...args: any[]) {
   const template = query
@@ -33,6 +40,7 @@ export const rest = {
 
 export const Meta = {
   test,
+  autoTest,
   cli: meta,
 };
 
@@ -42,8 +50,8 @@ export async function execute(
 ): Promise<Response> {
   const register = new SingleRegister(engine.name, engine);
   const limiter = new NoLimiter();
-  const server = typegate(register, limiter);
-  return await server(request, {
+  const typegate = new Typegate(register, limiter);
+  return await typegate.handle(request, {
     remoteAddr: { hostname: "localhost" },
   } as ConnInfo);
 }
@@ -62,3 +70,5 @@ export async function copyFile(src: string, dest: string) {
   srcFile.close();
   destFile.close();
 }
+
+config.timer_max_timeout_ms = 10000;

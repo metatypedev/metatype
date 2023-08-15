@@ -87,7 +87,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -161,7 +161,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -201,7 +201,7 @@
             "type": {
               "type": "string",
               "enum": [
-                "number"
+                "float"
               ]
             },
             "title": {
@@ -229,7 +229,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -332,7 +332,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -435,7 +435,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -535,7 +535,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -629,7 +629,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -713,7 +713,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -812,7 +812,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -907,7 +907,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -985,7 +985,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -1062,7 +1062,7 @@
               "default": null,
               "anyOf": [
                 {
-                  "$ref": "#/definitions/InjectionSwitch"
+                  "$ref": "#/definitions/Injection"
                 },
                 {
                   "type": "null"
@@ -1140,55 +1140,7 @@
         }
       }
     },
-    "InjectionSwitch": {
-      "type": "object",
-      "required": [
-        "cases"
-      ],
-      "properties": {
-        "cases": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/InjectionCase"
-          }
-        },
-        "default": {
-          "anyOf": [
-            {
-              "$ref": "#/definitions/InjectionSource"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "InjectionCase": {
-      "type": "object",
-      "required": [
-        "effect",
-        "injection"
-      ],
-      "properties": {
-        "effect": {
-          "$ref": "#/definitions/EffectType"
-        },
-        "injection": {
-          "$ref": "#/definitions/InjectionSource"
-        }
-      }
-    },
-    "EffectType": {
-      "type": "string",
-      "enum": [
-        "create",
-        "update",
-        "delete",
-        "none"
-      ]
-    },
-    "InjectionSource": {
+    "Injection": {
       "oneOf": [
         {
           "type": "object",
@@ -1204,7 +1156,7 @@
               ]
             },
             "data": {
-              "type": "string"
+              "$ref": "#/definitions/InjectionData_for_String"
             }
           }
         },
@@ -1222,7 +1174,7 @@
               ]
             },
             "data": {
-              "type": "string"
+              "$ref": "#/definitions/InjectionData_for_String"
             }
           }
         },
@@ -1240,7 +1192,7 @@
               ]
             },
             "data": {
-              "type": "string"
+              "$ref": "#/definitions/InjectionData_for_String"
             }
           }
         },
@@ -1258,13 +1210,81 @@
               ]
             },
             "data": {
-              "type": "integer",
-              "format": "uint32",
-              "minimum": 0.0
+              "$ref": "#/definitions/InjectionData_for_uint32"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "source"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "enum": [
+                "dynamic"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/InjectionData_for_String"
             }
           }
         }
       ]
+    },
+    "InjectionData_for_String": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SingleValue_for_String"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "SingleValue_for_String": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "InjectionData_for_uint32": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/SingleValue_for_uint32"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          }
+        }
+      ]
+    },
+    "SingleValue_for_uint32": {
+      "type": "object",
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
     },
     "StringFormat": {
       "type": "string",
@@ -1327,7 +1347,379 @@
         }
       }
     },
+    "EffectType": {
+      "type": "string",
+      "enum": [
+        "create",
+        "update",
+        "delete",
+        "none"
+      ]
+    },
     "TGRuntime": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/KnownRuntime"
+        },
+        {
+          "$ref": "#/definitions/UnknownRuntime"
+        }
+      ]
+    },
+    "KnownRuntime": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "deno"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/DenoRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "graphql"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/GraphQLRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "http"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/HTTPRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "random"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/RandomRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "prisma"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/PrismaRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "s3"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/S3RuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "temporal"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/TemporalRuntimeData"
+            }
+          }
+        }
+      ]
+    },
+    "DenoRuntimeData": {
+      "type": "object",
+      "required": [
+        "permissions",
+        "worker"
+      ],
+      "properties": {
+        "worker": {
+          "type": "string"
+        },
+        "permissions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "GraphQLRuntimeData": {
+      "type": "object",
+      "required": [
+        "endpoint"
+      ],
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        }
+      }
+    },
+    "HTTPRuntimeData": {
+      "type": "object",
+      "required": [
+        "endpoint"
+      ],
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "cert_secret": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "basic_auth_secret": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "RandomRuntimeData": {
+      "type": "object",
+      "required": [
+        "seed"
+      ],
+      "properties": {
+        "seed": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "reset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "PrismaRuntimeData": {
+      "type": "object",
+      "required": [
+        "connection_string_secret",
+        "models",
+        "name",
+        "relationships"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "connection_string_secret": {
+          "type": "string"
+        },
+        "models": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint32",
+            "minimum": 0.0
+          }
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Relationship"
+          }
+        },
+        "migration_options": {
+          "default": null,
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MigrationOptions"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "Relationship": {
+      "type": "object",
+      "required": [
+        "left",
+        "name",
+        "right"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "left": {
+          "$ref": "#/definitions/RelationshipModel"
+        },
+        "right": {
+          "$ref": "#/definitions/RelationshipModel"
+        }
+      }
+    },
+    "RelationshipModel": {
+      "type": "object",
+      "required": [
+        "cardinality",
+        "field",
+        "type_idx"
+      ],
+      "properties": {
+        "type_idx": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0.0
+        },
+        "field": {
+          "type": "string"
+        },
+        "cardinality": {
+          "$ref": "#/definitions/Cardinality"
+        }
+      }
+    },
+    "Cardinality": {
+      "type": "string",
+      "enum": [
+        "optional",
+        "one",
+        "many"
+      ]
+    },
+    "MigrationOptions": {
+      "type": "object",
+      "required": [
+        "create",
+        "reset"
+      ],
+      "properties": {
+        "migration_files": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "create": {
+          "type": "boolean"
+        },
+        "reset": {
+          "type": "boolean"
+        }
+      }
+    },
+    "S3RuntimeData": {
+      "type": "object",
+      "required": [
+        "access_key_secret",
+        "host_secret",
+        "path_style_secret",
+        "region_secret",
+        "secret_key_secret"
+      ],
+      "properties": {
+        "host_secret": {
+          "type": "string"
+        },
+        "region_secret": {
+          "type": "string"
+        },
+        "access_key_secret": {
+          "type": "string"
+        },
+        "secret_key_secret": {
+          "type": "string"
+        },
+        "path_style_secret": {
+          "type": "string"
+        }
+      }
+    },
+    "TemporalRuntimeData": {
+      "type": "object",
+      "required": [
+        "host",
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        }
+      }
+    },
+    "UnknownRuntime": {
       "type": "object",
       "required": [
         "data",
@@ -1563,95 +1955,6 @@
         }
       }
     },
-    "PrismaRuntimeData": {
-      "title": "PrismaRuntimeData",
-      "type": "object",
-      "required": [
-        "connection_string_secret",
-        "datamodel",
-        "models",
-        "name"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "datamodel": {
-          "type": "string"
-        },
-        "connection_string_secret": {
-          "type": "string"
-        },
-        "models": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint32",
-            "minimum": 0.0
-          }
-        },
-        "migration_options": {
-          "default": null,
-          "anyOf": [
-            {
-              "$ref": "#/definitions/MigrationOptions"
-            },
-            {
-              "type": "null"
-            }
-          ]
-        }
-      }
-    },
-    "MigrationOptions": {
-      "type": "object",
-      "required": [
-        "create",
-        "reset"
-      ],
-      "properties": {
-        "migration_files": {
-          "type": [
-            "string",
-            "null"
-          ]
-        },
-        "create": {
-          "type": "boolean"
-        },
-        "reset": {
-          "type": "boolean"
-        }
-      }
-    },
-    "S3RuntimeData": {
-      "title": "S3RuntimeData",
-      "type": "object",
-      "required": [
-        "access_key_secret",
-        "host_secret",
-        "path_style_secret",
-        "region_secret",
-        "secret_key_secret"
-      ],
-      "properties": {
-        "host_secret": {
-          "type": "string"
-        },
-        "region_secret": {
-          "type": "string"
-        },
-        "access_key_secret": {
-          "type": "string"
-        },
-        "secret_key_secret": {
-          "type": "string"
-        },
-        "path_style_secret": {
-          "type": "string"
-        }
-      }
-    },
     "S3Materializer": {
       "title": "S3Materializer",
       "oneOf": [
@@ -1808,6 +2111,22 @@
           }
         }
       ]
+    },
+    "PrismaOperationMatData": {
+      "title": "PrismaOperationMatData",
+      "type": "object",
+      "required": [
+        "operation",
+        "table"
+      ],
+      "properties": {
+        "table": {
+          "type": "string"
+        },
+        "operation": {
+          "type": "string"
+        }
+      }
     }
   }
 }

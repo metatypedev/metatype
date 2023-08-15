@@ -1,6 +1,6 @@
 [package]
 name = "meta-cli"
-version = "0.1.10"
+version = "0.1.13-0+dev"
 edition = "2021"
 
 description = "Declarative API development platform. Build serverless backends with zero-trust and less code, no matter where and how your (legacy) systems are."
@@ -31,7 +31,7 @@ self_update = { version = "0.37.0", features = [
   "compression-zip-deflate",
   "compression-zip-bzip2",
 ] }
-prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "4.11.0"  }
+prisma-models = { git = "https://github.com/prisma/prisma-engines", tag = "5.0.0"  }
 lazy_static = "1.4.0"
 tokio = { version = "1.29.1", features = ["full"] }
 futures = "0.3.28"

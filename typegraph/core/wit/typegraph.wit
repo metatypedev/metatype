@@ -24,22 +24,66 @@ interface core {
         name: string,
         extras: list<tuple<string, string>>,
     }
-
     proxyb: func(data: type-proxy) -> result<type-id, error>
 
     record type-integer {
         min: option<s32>,
         max: option<s32>,
+        exclusive-minimum: option<s32>,
+        exclusive-maximum: option<s32>,
+        multiple-of: option<s32>,
+        enumeration: option<list<s32>>
     }
-
     integerb: func(data: type-integer, base: type-base) -> result<type-id, error>
 
+    record type-float {
+        min: option<float64>,
+        max: option<float64>,
+        exclusive-minimum: option<float64>,
+        exclusive-maximum: option<float64>,
+        multiple-of: option<float64>,
+        enumeration: option<list<float64>>
+    }
+    floatb: func(data: type-float, base: type-base) -> result<type-id, error>
+
     booleanb: func(base: type-base) -> result<type-id, error>
+
+    record type-string {
+        min: option<u32>,
+        max: option<u32>,
+        format: option<string>,
+        pattern: option<string>,
+        enumeration: option<list<string>>
+    }
+    stringb: func(data: type-string, base: type-base) -> result<type-id, error>
+
+    record type-array {
+        of: type-id,
+        min: option<u32>,
+        max: option<u32>,
+        unique-items: option<bool>
+    }
+    arrayb: func(data: type-array, base: type-base) -> result<type-id, error>
+
+    record type-optional {
+        of: type-id,
+        default-item: option<string>
+    }
+    optionalb: func(data: type-optional, base: type-base) -> result<type-id, error>
+
+    record type-union {
+        variants: list<type-id>,
+    }
+    unionb: func(data: type-union, base: type-base) -> result<type-id, error>
+
+    record type-either {
+        variants: list<type-id>,
+    }
+    eitherb: func(data: type-either, base: type-base) -> result<type-id, error>
 
     record type-struct {
         props: list<tuple<string, type-id>>,
     }
-
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
 
     get-type-repr: func(id: type-id) -> result<string, error>
@@ -132,6 +176,46 @@ interface runtimes {
     get-predefined-deno-func: func(data: materializer-deno-predefined) -> result<materializer-id, error>
     import-deno-function: func(data: materializer-deno-import, effect: effect) -> result<materializer-id, error>
 
+
+    record graphql-runtime-data {
+        endpoint: string,
+    }
+
+    record materializer-graphql-query {
+        path: list<string>,
+    }
+
+    register-graphql-runtime: func(data: graphql-runtime-data) -> result<runtime-id, error>
+    graphql-query: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
+    graphql-mutation: func(base: base-materializer, data: materializer-graphql-query) -> result<materializer-id, error>
+
+    record http-runtime-data {
+        endpoint: string,
+        cert-secret: option<string>,
+        basic-auth-secret: option<string>,
+    }
+
+    enum http-method {
+        get,
+        post,
+        put,
+        patch,
+        delete,
+    }
+
+    record materializer-http-request {
+        method: http-method,
+        path: string,
+        content-type: option<string>,
+        header-prefix: option<string>,
+        query-fields: option<list<string>>,
+        rename-fields: option<list<tuple<string, string>>>,
+        body-fields: option<list<string>>,
+        auth-token-field: option<string>,
+    }
+
+    register-http-runtime: func(data: http-runtime-data) -> result<runtime-id, error>
+    http-request: func(base: base-materializer, data: materializer-http-request) -> result<materializer-id, error>
 
     record prisma-runtime-data {
         name: string,

@@ -2,28 +2,26 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Runtime } from "./Runtime.ts";
-import { ComputeStage, Engine } from "../engine.ts";
-import { Register } from "../register.ts";
+import { ComputeStage } from "../engine.ts";
 import { Resolver } from "../types.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
-import { SecretManager, TypeGraph } from "../typegraph.ts";
 import { getLogger } from "../log.ts";
 import config from "../config.ts";
 import * as semver from "std/semver/mod.ts";
-import { handleOnPushHooks, PushResponse } from "../hooks.ts";
+import { Typegate } from "../typegate/mod.ts";
 
 const logger = getLogger(import.meta);
 
 export class TypeGateRuntime extends Runtime {
   static singleton: TypeGateRuntime | null = null;
 
-  private constructor(private register: Register) {
+  private constructor(private typegate: Typegate) {
     super();
   }
 
-  static init(register: Register): TypeGateRuntime {
+  static init(typegate: Typegate): TypeGateRuntime {
     if (!TypeGateRuntime.singleton) {
-      TypeGateRuntime.singleton = new TypeGateRuntime(register);
+      TypeGateRuntime.singleton = new TypeGateRuntime(typegate);
     }
     return TypeGateRuntime.singleton;
   }
@@ -74,7 +72,7 @@ export class TypeGateRuntime extends Runtime {
   }
 
   typegraphs: Resolver = ({ _: { info: { url } } }) => {
-    return this.register.list().map((e) => {
+    return this.typegate.register.list().map((e) => {
       return {
         name: e.name,
         url: () => `${url.protocol}//${url.host}/${e.name}`,
@@ -83,7 +81,7 @@ export class TypeGateRuntime extends Runtime {
   };
 
   typegraph: Resolver = ({ name, _: { info: { url } } }) => {
-    const tg = this.register.get(name);
+    const tg = this.typegate.register.get(name);
     if (!tg) {
       return null;
     }
@@ -96,7 +94,7 @@ export class TypeGateRuntime extends Runtime {
   serializedTypegraph: Resolver = (
     { _: { parent: typegraph } },
   ) => {
-    const tg = this.register.get(typegraph.name as string);
+    const tg = this.typegate.register.get(typegraph.name as string);
     if (!tg) {
       return null;
     }
@@ -106,16 +104,16 @@ export class TypeGateRuntime extends Runtime {
 
   addTypegraph: Resolver = async ({ fromString, secrets, cliVersion }) => {
     logger.info("Adding typegraph");
+    logger.info("Adding typegraph");
     if (!semver.gte(semver.parse(cliVersion), semver.parse(config.version))) {
       throw new Error(
         `Meta CLI version ${cliVersion} must be greater than typegate version ${config.version} (until the releases are stable)`,
       );
     }
 
-    const [engine, pushResponse] = await pushTypegraph(
+    const [engine, pushResponse] = await this.typegate.pushTypegraph(
       fromString,
       JSON.parse(secrets),
-      this.register,
       true, // introspection
     );
 
@@ -132,56 +130,6 @@ export class TypeGateRuntime extends Runtime {
       throw new Error(`Typegraph ${name} cannot be removed`);
     }
 
-    return this.register.remove(name);
+    return this.typegate.register.remove(name);
   };
-}
-
-export async function pushTypegraph(
-  tgJson: string,
-  secrets: Record<string, string>,
-  register: Register,
-  introspection: boolean,
-  system = false,
-): Promise<[Engine, PushResponse]> {
-  const tgDS = await TypeGraph.parseJson(tgJson);
-  const name = TypeGraph.formatName(tgDS);
-
-  if (SystemTypegraph.check(name)) {
-    if (!system) {
-      throw new Error(
-        `Typegraph name ${name} cannot be used for non-system typegraphs`,
-      );
-    }
-  } else {
-    if (system) {
-      throw new Error(
-        `Typegraph name ${name} cannot be used for system typegraphs`,
-      );
-    }
-  }
-
-  // name without prefix!
-  const secretManager = new SecretManager(tgDS.types[0].title, secrets);
-
-  const pushResponse = new PushResponse(name);
-  logger.info("Handling onPush hooks");
-  const tg = await handleOnPushHooks(
-    tgDS,
-    secretManager,
-    pushResponse,
-  );
-
-  logger.info(`Initializing engine '${name}'`);
-  const engine = await Engine.init(
-    tg,
-    secretManager,
-    false,
-    SystemTypegraph.getCustomRuntimes(register),
-    introspection,
-  );
-
-  logger.info(`Registering engine '${name}'`);
-  await register.add(engine);
-
-  return [engine, pushResponse];
 }

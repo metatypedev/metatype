@@ -9,8 +9,8 @@ use serde_json::Value;
 
 use super::{
     visitor::{Path, PathSegment, TypeVisitor, VisitResult},
-    ArrayTypeData, EitherTypeData, InjectionSource, IntegerTypeData, NumberTypeData,
-    ObjectTypeData, StringTypeData, UnionTypeData,
+    ArrayTypeData, EitherTypeData, FloatTypeData, Injection, IntegerTypeData, ObjectTypeData,
+    StringTypeData, UnionTypeData,
 };
 
 pub fn validate_typegraph(tg: &Typegraph) -> Vec<ValidatorError> {
@@ -92,7 +92,7 @@ impl TypeVisitor for Validator {
                         match variant_type {
                             TypeNode::Object { .. } => object_count += 1,
                             TypeNode::Boolean { .. }
-                            | TypeNode::Number { .. }
+                            | TypeNode::Float { .. }
                             | TypeNode::Integer { .. }
                             | TypeNode::String { .. } => {
                                 // scalar
@@ -158,36 +158,32 @@ impl TypeVisitor for Validator {
         }
 
         if let Some(injection) = &node.base().injection {
-            if injection.cases.is_empty() && injection.default.is_none() {
-                self.push_error(path, "Invalid injection: Injection has no case".to_string());
-            } else {
-                for (eff, inj) in injection.cases() {
-                    match inj {
-                        InjectionSource::Static(value) => {
-                            match serde_json::from_str::<Value>(value) {
-                                Ok(val) => match tg.validate_value(type_idx, &val) {
-                                    Ok(_) => {}
-                                    Err(err) => self.push_error(path, err.to_string()),
-                                },
-                                Err(e) => {
-                                    self.push_error(
-                                        path,
-                                        format!(
-                                            "Error while parsing static injection value {value:?} for {}: {e:?}",
-                                            eff.map(|eff| format!("{:?}", eff)).unwrap_or_else(|| "default".to_string())
-                                        ),
-                                    );
-                                }
+            match injection {
+                Injection::Static(data) => {
+                    for value in data.values().iter() {
+                        match serde_json::from_str::<Value>(value) {
+                            Ok(val) => match tg.validate_value(type_idx, &val) {
+                                Ok(_) => {}
+                                Err(err) => self.push_error(path, err.to_string()),
+                            },
+                            Err(e) => {
+                                self.push_error(
+                                    path,
+                                    format!(
+                                    "Error while parsing static injection value {value:?}: {e:?}",
+                                    value = value
+                                ),
+                                );
                             }
                         }
-                        InjectionSource::Parent(_type_idx) => {
-                            // TODO match type to parent type
-                            // each valid parent value should be valid
-                        }
-                        _ => (),
                     }
                 }
+                Injection::Parent(_data) => {
+                    // TODO match type to parent type
+                }
+                _ => (),
             }
+
             //
             VisitResult::Continue(false)
         } else {
@@ -208,7 +204,7 @@ impl Typegraph {
         match type_node {
             TypeNode::Any { .. } => Ok(()),
             TypeNode::Integer { data, .. } => self.validate_integer(data, value),
-            TypeNode::Number { data, .. } => self.validate_number(data, value),
+            TypeNode::Float { data, .. } => self.validate_float(data, value),
             TypeNode::Boolean { .. } => value.as_bool().map(|_| ()).ok_or_else(|| {
                 anyhow!("Expected a boolean got '{value}'", value = to_string(value))
             }),
@@ -256,12 +252,12 @@ impl Typegraph {
         Ok(())
     }
 
-    fn validate_number(&self, data: &NumberTypeData, value: &Value) -> Result<()> {
+    fn validate_float(&self, data: &FloatTypeData, value: &Value) -> Result<()> {
         let Value::Number(n) = value else {
-            bail!("Expected number got '{}'", to_string(value));
+            bail!("Expected float got '{}'", to_string(value));
         };
         let Some(value) = n.as_f64() else {
-            bail!("Number value {value:?} cannot be stored in f64");
+            bail!("Float value {value:?} cannot be stored in f64");
         };
         if let Some(min) = data.minimum {
             number_validator::expect_min(min, value)?;

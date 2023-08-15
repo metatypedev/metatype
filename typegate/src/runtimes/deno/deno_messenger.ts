@@ -9,7 +9,6 @@ import { LazyAsyncMessenger } from "../patterns/messenger/lazy_async_messenger.t
 
 const localDir = dirname(fromFileUrl(import.meta.url));
 const workerFile = toFileUrl(resolve(localDir, "./worker.ts"));
-
 export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
   constructor(
     name: string,
@@ -51,6 +50,7 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
           Sentry.captureException(error);
           throw error;
         };
+
         worker.postMessage({
           name,
         });
@@ -64,6 +64,7 @@ export class DenoMessenger extends LazyAsyncMessenger<Worker, Task, unknown> {
         broker.terminate();
       },
     );
+
     if (lazy) {
       this.enableLazyness();
     }

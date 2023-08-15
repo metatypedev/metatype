@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { gql, Meta } from "../../utils/mod.ts";
+import { gql, Meta, sleep } from "../../utils/mod.ts";
 import { join } from "std/path/mod.ts";
 
 Meta.test("Deno runtime", async (t) => {
@@ -155,3 +155,34 @@ Meta.test("Deno runtime: reloading", async (t) => {
       .on(v2);
   });
 });
+
+Meta.test("Deno runtime: infinite loop or similar", async (t) => {
+  const e = await t.engine("runtimes/deno/deno.py");
+
+  await t.should("safely fail upon stack oferflow", async () => {
+    await gql`
+      query {
+        stackOverflow(enable: true)
+      }
+    `
+      .expectErrorContains("Maximum call stack size exceeded")
+      .on(e);
+  });
+
+  await t.should(
+    "safely fail upon an infinite loop",
+    async () => {
+      await gql`
+          query {
+            infiniteLoop(enable: true)
+          }
+        `
+        .expectErrorContains("timeout exceeded")
+        .on(e);
+    },
+  );
+
+  const cooldownTime = 5;
+  console.log(`cooldown ${cooldownTime}s`);
+  await sleep(cooldownTime * 1000);
+}, { sanitizeOps: false });

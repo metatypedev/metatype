@@ -30,6 +30,7 @@ import { getChildTypes, visitTypes } from "../typegraph/visitor.ts";
 import { generateValidator } from "../typecheck/input.ts";
 import { getParentId } from "../utils/stage_id.ts";
 import { BadContext } from "../errors.ts";
+import { selectInjection } from "./injection_utils.ts";
 
 class MandatoryArgumentError extends Error {
   constructor(argDetails: string) {
@@ -142,6 +143,11 @@ export function collectArgs(
   };
 }
 
+const GENERATORS = {
+  "now": () => new Date().toISOString(),
+  // "uuid": () =>
+} as const;
+
 interface Dependencies {
   context: Set<string>;
   parent: Set<string>;
@@ -176,7 +182,7 @@ class ArgumentCollector {
   constructor(
     private tg: TypeGraph,
     private stageId: StageId,
-    private effect: EffectType | "none",
+    private effect: EffectType,
     private parentProps: Record<string, number>,
   ) {
     this.deps = {
@@ -229,7 +235,11 @@ class ArgumentCollector {
         );
       }
       const compute = this.collectInjection(typ);
-      return compute;
+      if (compute != null) {
+        return compute;
+      }
+      // missing injection for the effect
+      // fallthrough: the user provided value
     }
 
     // in case the argument node of the query is null,
@@ -284,7 +294,7 @@ class ArgumentCollector {
         return () => value;
       }
 
-      case Type.NUMBER: {
+      case Type.FLOAT: {
         if (valueNode.kind !== Kind.FLOAT && valueNode.kind !== Kind.INT) {
           throw new TypeMismatchError(
             valueNode.kind,
@@ -539,7 +549,12 @@ class ArgumentCollector {
     this.addPoliciesFrom(typeIdx);
 
     if ("injection" in typ) {
-      return this.collectInjection(typ);
+      const compute = this.collectInjection(typ);
+      if (compute != null) {
+        return compute;
+      }
+      // no injection for the effect
+      // fallthrough
     }
     if (typ.type != Type.OPTIONAL) {
       throw new Error(
@@ -555,48 +570,68 @@ class ArgumentCollector {
   /** Collect the value of an injected parameter. */
   private collectInjection(
     typ: TypeNode,
-  ): ComputeArg {
+  ): ComputeArg | null {
     visitTypes(this.tg.tg, getChildTypes(typ), (node) => {
       this.addPoliciesFrom(node.idx);
       return true;
     });
 
-    const source =
-      typ.injection!.cases.find((c) => c.effect == this.effect)?.injection ??
-        typ.injection!["default"];
+    const injection = typ.injection!;
 
-    if (source == null) {
-      if (typ.type === Type.OPTIONAL) {
-        const value = typ.default_value ?? null;
-        return () => value;
+    switch (injection.source) {
+      case "static": {
+        const jsonString = selectInjection(injection.data, this.effect);
+        if (jsonString == null) {
+          return null;
+        }
+        return () => JSON.parse(jsonString);
       }
-      throw new Error("Invalid injection");
-    }
-
-    switch (source.source) {
-      case "static":
-        return () => JSON.parse(source.data);
-      case "secret":
-        return () => this.tg.parseSecret(typ, source.data);
+      case "secret": {
+        const secretName = selectInjection(injection.data, this.effect);
+        if (secretName == null) {
+          return null;
+        }
+        return () => this.tg.parseSecret(typ, secretName);
+      }
       case "context": {
-        const name = source.data;
-        this.deps.context.add(name);
+        const contextKey = selectInjection(injection.data, this.effect);
+        if (contextKey == null) {
+          return null;
+        }
+        this.deps.context.add(contextKey);
         return ({ context }) => {
-          const { [name]: value = null } = context;
+          const { [contextKey]: value = null } = context;
           if (value === null && typ.type != Type.OPTIONAL) {
+            const suggestions = Object.keys(context).join(", ");
             throw new BadContext(
-              `Non optional injection '${name}' was not found in the context ${
-                JSON.stringify(context)
-              }`,
+              `Non optional injection '${contextKey}' was not found in the context, available context keys are ${suggestions}`,
             );
           }
           return value;
         };
       }
-      case "parent":
-        return this.collectParentInjection(typ, source.data);
-      default:
-        throw new Error("Unreachable");
+
+      case "parent": {
+        const parentTypeIdx = selectInjection(injection.data, this.effect);
+        if (parentTypeIdx == null) {
+          return null;
+        }
+        return this.collectParentInjection(typ, parentTypeIdx);
+      }
+
+      case "dynamic": {
+        const generatorName = selectInjection(injection.data, this.effect);
+        if (generatorName == null) {
+          return null;
+        }
+        const generator = GENERATORS[generatorName as keyof typeof GENERATORS];
+        if (generator == null) {
+          throw new Error(
+            `Unknown generator '${generatorName}' for dynamic injection`,
+          );
+        }
+        return generator;
+      }
     }
   }
 

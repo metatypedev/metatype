@@ -9,15 +9,14 @@ import { shell } from "./shell.ts";
 
 import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
+import { assertEquals, assertNotEquals } from "std/testing/asserts.ts";
 import { Engine } from "../../src/engine.ts";
-import { Register } from "../../src/register.ts";
-import { typegate } from "../../src/typegate.ts";
+import { Typegate } from "../../src/typegate/mod.ts";
 import { ConnInfo } from "std/http/server.ts";
 
 import { NoLimiter } from "./no_limiter.ts";
 import { SingleRegister } from "./single_register.ts";
 import { meta } from "./meta.ts";
-import { pushTypegraph } from "../../src/runtimes/typegate.ts";
 
 type AssertSnapshotParams = typeof assertSnapshot extends (
   ctx: Deno.TestContext,
@@ -32,20 +31,18 @@ export interface ParseOptions {
   ports?: number[];
   secrets?: Record<string, string>;
   prefix?: string;
+  pretty?: boolean;
 }
 
-function serve(register: Register, port: number): () => void {
-  const handler = async (req: Request) => {
-    const server = typegate(register, new NoLimiter());
-    return await server(req, {
-      remoteAddr: { hostname: "localhost" },
-    } as ConnInfo);
-  };
-
+function serve(typegate: Typegate, port: number): () => void {
   const server = new Server({
     port,
     hostname: "localhost",
-    handler,
+    handler(req) {
+      return typegate.handle(req, {
+        remoteAddr: { hostname: "localhost" },
+      } as ConnInfo);
+    },
   });
 
   const listener = server.listenAndServe();
@@ -57,7 +54,7 @@ function serve(register: Register, port: number): () => void {
 
 function exposeOnPort(engine: Engine, port: number): () => void {
   const register = new SingleRegister(engine.name, engine);
-  return serve(register, port);
+  return serve(new Typegate(register, new NoLimiter()), port);
 }
 
 type MetaTestCleanupFn = () => void | Promise<void>;
@@ -67,13 +64,17 @@ export class MetaTest {
 
   constructor(
     public t: Deno.TestContext,
-    public register: Register,
+    public typegate: Typegate,
     private introspection: boolean,
     port: number | null,
   ) {
     if (port != null) {
-      this.cleanups.push(serve(register, port));
+      this.cleanups.push(serve(typegate, port));
     }
+  }
+
+  private get register() {
+    return this.typegate.register;
   }
 
   addCleanup(fn: MetaTestCleanupFn) {
@@ -88,9 +89,15 @@ export class MetaTest {
     return engine;
   }
 
-  async engine(path: string, opts: ParseOptions = {}): Promise<Engine> {
-    const { deploy = false, typegraph = null, prefix = null } = opts;
+  async serialize(path: string, opts: ParseOptions = {}): Promise<string> {
+    const { deploy = false, typegraph = null, prefix = null, pretty = false } =
+      opts;
     const cmd = ["serialize", "-f", path];
+
+    if (pretty) {
+      cmd.push("--pretty");
+    }
+
     if (prefix != null) {
       cmd.push("--prefix", prefix);
     }
@@ -110,10 +117,14 @@ export class MetaTest {
       throw new Error("No typegraph");
     }
 
-    const [engine, _] = await pushTypegraph(
-      stdout,
+    return stdout;
+  }
+
+  async engine(path: string, opts: ParseOptions = {}): Promise<Engine> {
+    const tgJson = await this.serialize(path, opts);
+    const [engine, _] = await this.typegate.pushTypegraph(
+      tgJson,
       opts.secrets ?? {},
-      this.register,
       this.introspection,
     );
 
@@ -138,7 +149,9 @@ export class MetaTest {
 
   async terminate() {
     await Promise.all(this.cleanups.map((c) => c()));
-    await Promise.all(this.register.list().map((e) => e.terminate()));
+    await Promise.all(
+      this.register.list().map((e) => e.terminate()),
+    );
   }
 
   async should(
@@ -180,6 +193,21 @@ export class MetaTest {
     }
     await this.assertSnapshot(err.message);
   }
+
+  async assertSameTypegraphs(...paths: string[]) {
+    assertNotEquals(paths.length, 0);
+    const first = paths.shift()!;
+    const expected = await this.serialize(first, { pretty: true });
+    for (const path of paths) {
+      await this.should(
+        `serialize ${path} to the same typegraph as ${first}`,
+        async () => {
+          const actual = await this.serialize(path, { pretty: true });
+          assertEquals(actual, expected);
+        },
+      );
+    }
+  }
 }
 
 interface TestConfig {
@@ -208,17 +236,17 @@ export const test = ((name, fn, opts = {}): void => {
   return Deno.test({
     name,
     async fn(t) {
-      const reg = new MemoryRegister();
+      const typegate = new Typegate(new MemoryRegister(), new NoLimiter());
       const {
         systemTypegraphs = false,
         cleanGitRepo = false,
         introspection = false,
       } = opts;
       if (systemTypegraphs) {
-        await SystemTypegraph.loadAll(reg);
+        await SystemTypegraph.loadAll(typegate);
       }
 
-      const mt = new MetaTest(t, reg, introspection, opts.port ?? null);
+      const mt = new MetaTest(t, typegate, introspection, opts.port ?? null);
 
       try {
         if (cleanGitRepo) {

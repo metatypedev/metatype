@@ -4,7 +4,7 @@
 export const Type = {
   OPTIONAL: "optional",
   BOOLEAN: "boolean",
-  NUMBER: "number",
+  FLOAT: "float",
   INTEGER: "integer",
   STRING: "string",
   FILE: "file",
@@ -22,9 +22,9 @@ import type {
   BooleanNode,
   EitherNode,
   FileNode,
+  FloatNode,
   FunctionNode,
   IntegerNode,
-  NumberNode,
   ObjectNode,
   OptionalNode,
   StringNode,
@@ -37,9 +37,9 @@ export type {
   ArrayNode,
   BooleanNode,
   FileNode,
+  FloatNode,
   FunctionNode,
   IntegerNode,
-  NumberNode,
   ObjectNode,
   OptionalNode,
   StringNode,
@@ -50,27 +50,10 @@ export type {
 export type ScalarNode =
   | BooleanNode
   | IntegerNode
-  | NumberNode
+  | FloatNode
   | StringNode
   | FileNode;
 export type QuantifierNode = OptionalNode | ArrayNode;
-
-//
-// Runtimes
-
-export interface DenoRuntimeData {
-  worker: string;
-}
-
-export interface TypeRuntimeBase {
-  name: string;
-  data: unknown;
-}
-
-export interface DenoRuntimeDS extends TypeRuntimeBase {
-  name: "deno";
-  data: DenoRuntimeData;
-}
 
 //
 // Type utils
@@ -79,8 +62,8 @@ export function isBoolean(t: TypeNode): t is BooleanNode {
   return t.type === Type.BOOLEAN;
 }
 
-export function isNumber(t: TypeNode): t is NumberNode {
-  return t.type === Type.NUMBER;
+export function isNumber(t: TypeNode): t is FloatNode {
+  return t.type === Type.FLOAT;
 }
 
 export function isInteger(t: TypeNode): t is IntegerNode {
@@ -89,6 +72,10 @@ export function isInteger(t: TypeNode): t is IntegerNode {
 
 export function isString(t: TypeNode): t is StringNode {
   return t.type === Type.STRING;
+}
+
+export function isUuid(t: TypeNode): t is StringNode {
+  return isString(t) && t.format === "uuid";
 }
 
 export function isFile(t: TypeNode): t is FileNode {

@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 import * as t from "./types.ts";
 import { core } from "../gen/typegraph_core.js";
 import { caller, dirname, fromFileUrl } from "./deps.ts";
@@ -11,7 +14,11 @@ interface TypegraphArgs {
   builder: TypegraphBuilder;
 }
 
-type TypegraphBuilder = (expose: (exports: Exports) => void) => void;
+interface TypegraphBuilderArgs {
+  expose: (exports: Exports) => void;
+}
+
+type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
 export function typegraph(
   name: string,
@@ -45,12 +52,16 @@ export function typegraph(
 
   core.initTypegraph({ name, dynamic, path, folder });
 
-  builder((exports) => {
-    core.expose(
-      Object.entries(exports).map(([name, fn]) => [name, fn._id]),
-      [],
-    );
-  });
+  const g: TypegraphBuilderArgs = {
+    expose: (exports) => {
+      core.expose(
+        Object.entries(exports).map(([name, fn]) => [name, fn._id]),
+        [],
+      );
+    },
+  };
+
+  builder(g);
 
   console.log(core.finalizeTypegraph());
 }

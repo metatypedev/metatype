@@ -1,13 +1,63 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Generic, List, Callable, Union, TypeVar, Dict, Type, Optional
 from attrs import field, frozen
+from typegraph.effects import EffectType
 from typegraph.graph.builder import Collector
 from typegraph.graph.nodes import NodeProxy
 from typegraph.utils.attrs import always
 from typegraph.graph.nodes import Node
 from frozendict import frozendict
+
+
+T = TypeVar("T")
+
+
+@frozen
+class SingleValue(Generic[T]):
+    value: T
+
+
+@frozen
+class ValueByEffect(Generic[T]):
+    switch: Dict[str, T] = field(converter=frozendict)
+
+
+InjectionData = Union[SingleValue[T], ValueByEffect[T]]
+
+InjectionDataInit = Union[T, Dict[EffectType, T]]
+
+
+def init_injection_data(
+    init: InjectionDataInit[T],
+    value_class: Optional[Type] = None,
+    mapper: Callable[[T], Any] = lambda x: x,
+) -> InjectionData[T]:
+    if (
+        isinstance(init, dict)
+        and len(init) > 0
+        and all(isinstance(k, EffectType) for k in init.keys())
+    ):
+        values = {str(k): mapper(v) for k, v in init.items()}
+        if value_class is not None:
+            assert all(isinstance(v, value_class) for v in values.values())
+        return ValueByEffect(values)
+
+    value = mapper(init)
+    if value_class is not None:
+        assert isinstance(value, value_class)
+    return SingleValue(value)
+
+
+def serialize_injection_data(
+    data: InjectionData[T], mapper: Callable[[T], Any]
+) -> frozendict:
+    if isinstance(data, SingleValue):
+        return frozendict(value=mapper(data.value))
+    return frozendict(
+        {str(effect): mapper(value) for effect, value in data.switch.items()}
+    )
 
 
 @frozen
@@ -18,135 +68,90 @@ class Injection:
 
 @frozen
 class StaticInjection(Injection):
-    value: str  # json serialized
+    value: InjectionData[str]  # json serialized data
     source: str = always("static")
 
-    def data(self, _collector: Collector) -> Dict:
+    def data(self, _collector: Collector) -> frozendict:
         return frozendict(
             {
                 "source": "static",
-                "data": self.value,
+                # json serialized data
+                "data": serialize_injection_data(self.value, lambda x: x),
+            }
+        )
+
+
+GENERATORS = [
+    "now",
+    # "uuid"
+]
+
+
+def ensure_valid_generator(name: str):
+    if name not in GENERATORS:
+        raise Exception(f"Invalid generator name: {name}")
+    return name
+
+
+@frozen
+class DynamicValueInjection(Injection):
+    value: InjectionData[str]  # generator name
+    source: str = always("dynamic")
+
+    def data(self, _collector: Collector) -> frozendict:
+        return frozendict(
+            {
+                "source": "dynamic",
+                "data": serialize_injection_data(self.value, ensure_valid_generator),
             }
         )
 
 
 @frozen
 class ContextInjection(Injection):
-    name: str
+    value: InjectionData[str]  # context name
     source: str = always("context")
 
-    def data(self, _collector: Collector) -> Dict:
+    def data(self, _collector: Collector) -> frozendict:
         return frozendict(
             {
                 "source": "context",
-                "data": self.name,
+                "data": serialize_injection_data(self.value, lambda x: x),
             }
         )
 
 
 @frozen
 class ParentInjection(Injection):
-    tpe: NodeProxy
+    value: InjectionData[NodeProxy]  # parent type
     source: str = always("parent")
 
     @property
     def edges(self) -> List[Node]:
-        return [self.tpe]
+        if isinstance(self.value, SingleValue):
+            return [self.value.value]
+        return list(self.value.switch.values())
 
-    def data(self, collector: Collector) -> Dict:
+    def data(self, collector: Collector) -> frozendict:
         return frozendict(
             {
                 "source": "parent",
-                "data": collector.index(self.tpe),
+                "data": serialize_injection_data(
+                    self.value, lambda tpe: collector.index(tpe)
+                ),
             }
         )
 
 
 @frozen
 class SecretInjection(Injection):
-    name: str
+    value: InjectionData[str]  # secret name
     source: str = always("secret")
 
-    def data(self, _collector: Collector) -> Dict:
+    def data(self, _collector: Collector) -> frozendict:
         return frozendict(
             {
                 "source": "secret",
-                "data": self.name,
+                "data": serialize_injection_data(self.value, lambda x: x),
             }
         )
-
-
-InjectionEffect = Literal["create", "update", "delete", "none"]
-
-
-@frozen
-class InjectionCase:
-    effect: InjectionEffect
-    injection: Injection
-
-    def data(self, collector: Collector) -> frozendict:
-        return frozendict(
-            {"effect": self.effect, "injection": self.injection.data(collector)}
-        )
-
-
-@frozen
-class InjectionSwitch:
-    cases: Tuple[InjectionCase, ...] = field(factory=tuple)
-    default: Optional[Injection] = field(default=None)
-
-    @classmethod
-    def from_dict(cls, d: Dict[Optional[InjectionEffect], Injection]):
-        cases = tuple(
-            InjectionCase(effect, injection)
-            for effect, injection in d.items()
-            if effect is not None
-        )
-        if len(cases) == len(d):
-            return cls(cases)
-        assert len(cases) == len(d) - 1, "Multiple None cases (impossible)"
-        (def_cond, def_data) = list(d.items())[len(d) - 1]
-        assert def_cond is None, "None case is not the latest in the injection"
-        return cls(cases, def_data)
-
-    def data(self, collector: Collector) -> Dict:
-        return frozendict(
-            {
-                "cases": tuple(case.data(collector) for case in self.cases),
-                "default": self.default.data(collector)
-                if self.default is not None
-                else None,
-            }
-        )
-
-    def secrets(self) -> List[str]:
-        res = [
-            case.injection.name
-            for case in self.cases
-            if isinstance(case.injection, SecretInjection)
-        ]
-        if self.default is not None and isinstance(self.default, SecretInjection):
-            res.append(self.default.name)
-        return res
-
-
-def static(data: Any) -> StaticInjection:
-    import json
-
-    return StaticInjection(json.dumps(data))
-
-
-def context(name: str) -> ContextInjection:
-    return ContextInjection(name)
-
-
-def parent(tpe: Union[NodeProxy, str]) -> ParentInjection:
-    if isinstance(tpe, str):
-        from typegraph import t
-
-        tpe = t.proxy(tpe)
-    return ParentInjection(tpe)
-
-
-def secret(name: str) -> SecretInjection:
-    return SecretInjection(name)

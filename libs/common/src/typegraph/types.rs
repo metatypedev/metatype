@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
+use std::collections::HashMap;
+
 use indexmap::IndexMap;
 #[cfg(feature = "codegen")]
 use schemars::JsonSchema;
@@ -11,42 +13,36 @@ use super::{EffectType, PolicyIndices};
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct InjectionCase {
-    effect: EffectType,
-    injection: InjectionSource,
+pub struct SingleValue<T> {
+    value: T,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(rename_all = "camelCase", tag = "source", content = "data")]
-pub enum InjectionSource {
-    Static(String),
-    Context(String),
-    Secret(String),
-    Parent(u32),
+#[serde(untagged)]
+pub enum InjectionData<T> {
+    SingleValue(SingleValue<T>),
+    ValueByEffect(HashMap<EffectType, T>),
+}
+
+impl<T> InjectionData<T> {
+    pub fn values(&self) -> Vec<&T> {
+        match self {
+            InjectionData::SingleValue(v) => vec![&v.value],
+            InjectionData::ValueByEffect(m) => m.values().collect(),
+        }
+    }
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct InjectionSwitch {
-    pub cases: Vec<InjectionCase>,
-    pub default: Option<InjectionSource>,
-}
-
-impl InjectionSwitch {
-    pub fn sources(&self) -> impl Iterator<Item = &InjectionSource> {
-        self.cases
-            .iter()
-            .map(|c| &c.injection)
-            .chain(self.default.as_ref().into_iter())
-    }
-
-    pub fn cases(&self) -> impl Iterator<Item = (Option<EffectType>, &InjectionSource)> {
-        self.cases
-            .iter()
-            .map(|c| (Some(c.effect), &c.injection))
-            .chain(self.default.as_ref().map(|inj| (None, inj)))
-    }
+#[serde(tag = "source", content = "data", rename_all = "lowercase")]
+pub enum Injection {
+    Static(InjectionData<String>),
+    Context(InjectionData<String>),
+    Secret(InjectionData<String>),
+    Parent(InjectionData<u32>),
+    Dynamic(InjectionData<String>),
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
@@ -59,7 +55,7 @@ pub struct TypeNodeBase {
     #[serde(default)]
     pub description: Option<String>,
     #[serde(default)]
-    pub injection: Option<InjectionSwitch>,
+    pub injection: Option<Injection>,
     #[serde(default, rename = "enum")]
     pub enumeration: Option<Vec<String>>, // JSON-serialized values
     #[serde(default)]
@@ -80,7 +76,7 @@ pub struct OptionalTypeData {
 #[skip_serializing_none]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct NumberTypeData {
+pub struct FloatTypeData {
     pub minimum: Option<f64>,
     pub maximum: Option<f64>,
     pub exclusive_minimum: Option<f64>,
@@ -205,11 +201,11 @@ pub enum TypeNode {
         #[serde(flatten)]
         base: TypeNodeBase,
     },
-    Number {
+    Float {
         #[serde(flatten)]
         base: TypeNodeBase,
         #[serde(flatten)]
-        data: NumberTypeData,
+        data: FloatTypeData,
     },
     Integer {
         #[serde(flatten)]
@@ -272,7 +268,7 @@ impl TypeNode {
         match self {
             Optional { base, .. }
             | Boolean { base, .. }
-            | Number { base, .. }
+            | Float { base, .. }
             | Integer { base, .. }
             | String { base, .. }
             | File { base, .. }
@@ -290,7 +286,7 @@ impl TypeNode {
         match self {
             Optional { base, .. }
             | Boolean { base, .. }
-            | Number { base, .. }
+            | Float { base, .. }
             | Integer { base, .. }
             | String { base, .. }
             | File { base, .. }
@@ -307,8 +303,8 @@ impl TypeNode {
         use TypeNode::*;
         match self {
             Optional { .. } => "optional",
-            Boolean { .. } => "booleal",
-            Number { .. } => "number",
+            Boolean { .. } => "boolean",
+            Float { .. } => "number",
             Integer { .. } => "integer",
             String { .. } => "string",
             File { .. } => "file",
@@ -325,7 +321,7 @@ impl TypeNode {
         use TypeNode::*;
         matches!(
             self,
-            Boolean { .. } | Number { .. } | Integer { .. } | String { .. }
+            Boolean { .. } | Float { .. } | Integer { .. } | String { .. }
         )
     }
 }

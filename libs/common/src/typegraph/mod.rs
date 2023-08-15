@@ -18,6 +18,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_with::skip_serializing_none;
 
+use self::runtimes::TGRuntime;
+
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Typegraph {
@@ -96,7 +98,7 @@ pub struct TypeMeta {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[serde(rename_all = "lowercase")]
 pub enum EffectType {
     Create,
@@ -118,13 +120,6 @@ pub struct Materializer {
     pub name: String,
     pub runtime: u32,
     pub effect: Effect,
-    pub data: IndexMap<String, Value>,
-}
-
-#[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct TGRuntime {
-    pub name: String,
     pub data: IndexMap<String, Value>,
 }
 

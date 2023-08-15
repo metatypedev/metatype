@@ -151,7 +151,8 @@ impl Deploy<DefaultModeData> {
 
         let mut loader = Loader::new(Arc::clone(&config))
             .skip_deno_modules(true)
-            .with_postprocessor(postprocess::DenoModules::default().codegen(options.codegen));
+            .with_postprocessor(postprocess::DenoModules::default().codegen(options.codegen))
+            .with_postprocessor(postprocess::PythonModules::default());
         if !options.no_migration {
             loader = loader.with_postprocessor(
                 EmbedPrismaMigrations::default()
@@ -189,10 +190,8 @@ impl Deploy<DefaultModeData> {
 
         trace!("Loading typegraphs...");
         for path in paths.into_iter() {
-            info!(
-                "Loading typegraphs from {rel_path:?}.",
-                rel_path = diff_paths(&path, &self.base_dir).unwrap()
-            );
+            let rel_path = diff_paths(&path, &self.base_dir).unwrap();
+            info!("Loading typegraphs from {}.", rel_path.display());
             let tgs =
                 Self::load_typegraphs(&path, &self.base_dir, &self.loader, OnRewrite::Reload).await;
             let tgs = match tgs {
@@ -205,6 +204,11 @@ impl Deploy<DefaultModeData> {
             };
 
             let mut tgs: VecDeque<_> = tgs.into_iter().collect();
+
+            if tgs.is_empty() {
+                warn!("No typegraph found in {}.", rel_path.display());
+                continue;
+            }
 
             while let Some(tg) = tgs.pop_front() {
                 let tg_name = tg.full_name().unwrap().cyan();

@@ -6,12 +6,15 @@ use std::sync::{Arc, RwLock};
 use crate::config::Config;
 
 use super::utils::{map_from_object, object_from_map};
+use anyhow::Context;
 use anyhow::{bail, Result};
 use colored::Colorize;
 use common::archive::archive_entries;
 use common::typegraph::validator::validate_typegraph;
 use common::typegraph::{Materializer, Typegraph};
+use ignore::WalkBuilder;
 use log::error;
+use std::path::Path;
 use typescript::parser::transform_script;
 
 pub trait PostProcessor {
@@ -60,10 +63,59 @@ pub fn apply_all<'a>(
     Ok(())
 }
 
+fn compress_and_encode(main_path: &Path, tg_path: &Path) -> Result<String> {
+    // Note: tg_path and main_path are all absolute
+    // tg_root/tg.py
+    // tg_root/* <= script location
+    if main_path.is_relative() {
+        bail!(
+            "script path {:?} is relative, absolute expected",
+            main_path.display()
+        );
+    }
+
+    if tg_path.is_relative() {
+        bail!(
+            "typegraph path {:?} is relative, absolute expected",
+            tg_path.display()
+        );
+    }
+
+    let tg_root = tg_path.parent().with_context(|| {
+        format!(
+            "invalid state: typegraph path {:?} does not have parent",
+            tg_path.display()
+        )
+    })?;
+
+    let dir_walker = WalkBuilder::new(tg_root)
+        .standard_filters(true)
+        // .add_custom_ignore_filename(".DStore")
+        .sort_by_file_path(|a, b| a.cmp(b))
+        .build();
+
+    let enc_content = match archive_entries(dir_walker, Some(tg_root)).unwrap() {
+        Some(b64) => b64,
+        None => "".to_string(),
+    };
+
+    let file = match main_path.strip_prefix(tg_root) {
+        Ok(ret) => ret,
+        Err(_) => bail!(
+            "{:?} does not contain script {:?}",
+            tg_root.display(),
+            main_path.display(),
+        ),
+    };
+
+    Ok(format!("file:{};base64:{}", file.display(), enc_content))
+}
+
 pub use deno_rt::DenoModules;
 pub use deno_rt::ReformatScripts;
 pub use prisma_rt::EmbedPrismaMigrations;
 pub use prisma_rt::EmbeddedPrismaMigrationOptionsPatch;
+pub use python_rt::PythonModules;
 
 pub struct Validator;
 impl PostProcessor for Validator {
@@ -86,13 +138,12 @@ impl PostProcessor for Validator {
 }
 
 pub mod deno_rt {
-    use std::{fs, path::Path};
+    use std::fs;
 
-    use anyhow::Context;
-    use common::typegraph::runtimes::{FunctionMatData, ModuleMatData};
-    use ignore::WalkBuilder;
+    use common::typegraph::runtimes::deno::{FunctionMatData, ModuleMatData};
+    use common::typegraph::runtimes::{KnownRuntime, TGRuntime};
 
-    use crate::typegraph::utils::{get_materializers, get_runtimes};
+    use crate::typegraph::utils::{find_runtimes, get_materializers};
 
     use super::*;
 
@@ -102,54 +153,6 @@ pub mod deno_rt {
         fn from(_val: ReformatScripts) -> Self {
             PostProcessorWrapper::generic(reformat_scripts)
         }
-    }
-
-    fn compress_and_encode(main_path: &Path, tg_path: &Path) -> Result<String> {
-        // Note: tg_path and main_path are all absolute
-        // tg_root/tg.py
-        // tg_root/* <= script location
-        if main_path.is_relative() {
-            bail!(
-                "script path {:?} is relative, absolute expected",
-                main_path.display()
-            );
-        }
-
-        if tg_path.is_relative() {
-            bail!(
-                "typegraph path {:?} is relative, absolute expected",
-                tg_path.display()
-            );
-        }
-
-        let tg_root = tg_path.parent().with_context(|| {
-            format!(
-                "invalid state: typegraph path {:?} does not have parent",
-                tg_path.display()
-            )
-        })?;
-
-        let dir_walker = WalkBuilder::new(tg_root)
-            .standard_filters(true)
-            // .add_custom_ignore_filename(".DStore")
-            .sort_by_file_path(|a, b| a.cmp(b))
-            .build();
-
-        let enc_content = match archive_entries(dir_walker, Some(tg_root)).unwrap() {
-            Some(b64) => b64,
-            None => "".to_string(),
-        };
-
-        let file = match main_path.strip_prefix(tg_root) {
-            Ok(ret) => ret,
-            Err(_) => bail!(
-                "{:?} does not contain script {:?}",
-                tg_root.display(),
-                main_path.display(),
-            ),
-        };
-
-        Ok(format!("file:{};base64:{}", file.display(), enc_content))
     }
 
     fn reformat_materializer_script(mat: &mut Materializer) -> Result<()> {
@@ -163,7 +166,11 @@ pub mod deno_rt {
     }
 
     fn reformat_scripts(typegraph: &mut Typegraph, _c: &Config) -> Result<()> {
-        for rt_idx in get_runtimes(typegraph, "deno").into_iter() {
+        for rt_idx in find_runtimes(typegraph, |rt| {
+            matches!(rt, TGRuntime::Known(KnownRuntime::Deno(_)))
+        })
+        .into_iter()
+        {
             for mat_idx in get_materializers(typegraph, rt_idx as u32) {
                 reformat_materializer_script(&mut typegraph.materializers[mat_idx])?;
             }
@@ -207,15 +214,43 @@ pub mod deno_rt {
     }
 }
 
+pub mod python_rt {
+    use super::*;
+    use common::typegraph::runtimes::deno::ModuleMatData;
+    use std::fs;
+
+    #[derive(Default, Debug)]
+    pub struct PythonModules {}
+
+    impl PostProcessor for PythonModules {
+        fn postprocess(&self, tg: &mut Typegraph, _config: &Config) -> Result<()> {
+            for mat in tg.materializers.iter_mut().filter(|m| m.name == "pymodule") {
+                let mut mat_data: ModuleMatData = object_from_map(std::mem::take(&mut mat.data))?;
+                let path = mat_data
+                    .code
+                    .strip_prefix("file:")
+                    .context("\"file:\" prefix is not present")?;
+
+                // make sure tg_path is absolute
+                let tg_path = fs::canonicalize(tg.path.to_owned().unwrap()).unwrap();
+                let main_path = tg_path.parent().unwrap().join(path);
+                mat_data.code = compress_and_encode(&main_path, &tg_path)?;
+
+                mat.data = map_from_object(mat_data)?;
+                tg.deps.push(main_path);
+            }
+            Ok(())
+        }
+    }
+}
+
 pub mod prisma_rt {
     use super::*;
     use anyhow::{anyhow, Context};
     use common::{
         archive,
-        typegraph::runtimes::{MigrationOptions, PrismaRuntimeData},
+        typegraph::runtimes::{prisma::MigrationOptions, KnownRuntime::Prisma, TGRuntime},
     };
-
-    use crate::typegraph::utils::{map_from_object, object_from_map};
 
     #[derive(Default, Debug)]
     pub struct EmbedPrismaMigrations {
@@ -240,20 +275,17 @@ pub mod prisma_rt {
             let tg_name = tg.name().context("Getting typegraph name")?;
             let base_migration_path = config.prisma_migrations_dir(&tg_name);
 
-            let mut runtimes = std::mem::take(&mut tg.runtimes);
-            for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
-                let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
-                let rt_name = &rt_data.name;
-                let path = base_migration_path.join(rt_name);
-                rt_data.migration_options = Some(MigrationOptions {
-                    migration_files: archive::archive(path)?,
-                    create: self.create_migration,
-                    reset: self.reset_on_drift,
-                });
-                rt.data = map_from_object(rt_data)?;
+            for rt in tg.runtimes.iter_mut() {
+                if let TGRuntime::Known(Prisma(rt_data)) = rt {
+                    let rt_name = &rt_data.name;
+                    let path = base_migration_path.join(rt_name);
+                    rt_data.migration_options = Some(MigrationOptions {
+                        migration_files: archive::archive(path)?,
+                        create: self.create_migration,
+                        reset: self.reset_on_drift,
+                    });
+                }
             }
-
-            tg.runtimes = runtimes;
 
             Ok(())
         }
@@ -271,23 +303,20 @@ pub mod prisma_rt {
         }
 
         pub fn apply(&self, tg: &mut Typegraph, runtime_names: Vec<String>) -> Result<()> {
-            let mut runtimes = std::mem::take(&mut tg.runtimes);
-            for rt in runtimes.iter_mut().filter(|rt| rt.name == "prisma") {
-                let mut rt_data: PrismaRuntimeData = object_from_map(std::mem::take(&mut rt.data))?;
-                let rt_name = &rt_data.name;
-                if runtime_names.contains(rt_name) {
-                    let migration_options =
-                        rt_data.migration_options.as_mut().ok_or_else(|| {
-                            anyhow!("Runtime '{rt_name}' not configured to include migrations")
-                        })?;
-                    if let Some(reset_on_drift) = self.reset {
-                        migration_options.reset = reset_on_drift;
+            for rt in tg.runtimes.iter_mut() {
+                if let TGRuntime::Known(Prisma(rt_data)) = rt {
+                    let rt_name = &rt_data.name;
+                    if runtime_names.contains(rt_name) {
+                        let migration_options =
+                            rt_data.migration_options.as_mut().ok_or_else(|| {
+                                anyhow!("Runtime '{rt_name}' not configured to include migrations")
+                            })?;
+                        if let Some(reset_on_drift) = self.reset {
+                            migration_options.reset = reset_on_drift;
+                        }
                     }
                 }
-                rt.data = map_from_object(rt_data)?;
             }
-
-            tg.runtimes = runtimes;
 
             Ok(())
         }

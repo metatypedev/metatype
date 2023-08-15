@@ -6,6 +6,7 @@ import { assertRejects } from "std/testing/asserts.ts";
 import { buildSchema, graphql } from "graphql";
 import * as mf from "test/mock_fetch";
 import { dropSchemas, recreateMigrations } from "../utils/migrations.ts";
+import { freezeDate, unfreezeDate } from "../utils/date.ts";
 
 Meta.test("Missing env var", async (t) => {
   await assertRejects(
@@ -224,4 +225,30 @@ Meta.test("Injection from/into graphql", async (t) => {
       })
       .on(e);
   });
+});
+
+Meta.test("dynamic value injection", async (t) => {
+  const e = await t.engine("injection/injection.py", {
+    secrets: { TG_INJECTION_TEST_VAR: "3", TG_INJECTION_POSTGRES },
+  });
+
+  freezeDate();
+  await t.should("generate date", async () => {
+    await gql`
+      query {
+        test(a: 12) {
+          date
+        }
+      }`
+      .withContext({
+        userId: "123",
+      })
+      .expectData({
+        test: {
+          date: new Date().toISOString(),
+        },
+      })
+      .on(e);
+  });
+  unfreezeDate();
 });

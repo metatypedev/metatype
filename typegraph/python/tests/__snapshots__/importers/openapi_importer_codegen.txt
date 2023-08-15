@@ -10,8 +10,8 @@
     functions = {}
     functions['listUsers'] = test.get('/users', t.struct({}), t.array(t.proxy(renames['User'])), )
     functions['createuser'] = test.post('/users', t.struct({}), t.proxy(renames['User']), )
-    functions['deleteUser'] = test.delete('users/{userId}', t.struct({'userId': t.number()}), t.boolean().optional(), )
-    functions['getUserProfile'] = test.get('/profile/{userId}', t.struct({'userId': t.number()}), t.proxy(renames['UserProfile']).optional(), )
-    functions['updateUserProfile'] = test.patch('/profile/{userId}', t.struct({'userId': t.number()}), t.proxy(renames['UserProfile']), )
+    functions['deleteUser'] = test.delete('users/{userId}', t.struct({'userId': t.float()}), t.boolean().optional(), )
+    functions['getUserProfile'] = test.get('/profile/{userId}', t.struct({'userId': t.float()}), t.proxy(renames['UserProfile']).optional(), )
+    functions['updateUserProfile'] = test.patch('/profile/{userId}', t.struct({'userId': t.float()}), t.proxy(renames['UserProfile']), )
 
     return Import(importer='test', renames=renames, types=Box(types), functions=Box(functions))

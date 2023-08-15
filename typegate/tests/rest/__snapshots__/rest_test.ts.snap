@@ -36,9 +36,46 @@ snapshot[`Rest queries in Deno 1`] = `
         ],
         type: "object",
       },
-      boolean_12: {
-        title: "boolean_12",
+      array_11: {
+        items: {
+          oneOf: [
+            {
+              title: "string_8",
+              type: "string",
+            },
+            {
+              title: "integer_9",
+              type: "integer",
+            },
+          ],
+          title: "either_10",
+        },
+        title: "array_11",
+        type: "array",
+      },
+      boolean_19: {
+        title: "boolean_19",
         type: "boolean",
+      },
+      either_10: {
+        oneOf: [
+          {
+            title: "string_8",
+            type: "string",
+          },
+          {
+            title: "integer_9",
+            type: "integer",
+          },
+        ],
+        title: "either_10",
+      },
+      float_13: {
+        enum: [
+          "1",
+          "2.5",
+        ],
+        title: "float_13",
       },
       integer_0: {
         title: "integer_0",
@@ -55,6 +92,48 @@ snapshot[`Rest queries in Deno 1`] = `
       integer_5: {
         title: "integer_5",
         type: "integer",
+      },
+      integer_9: {
+        title: "integer_9",
+        type: "integer",
+      },
+      object_14: {
+        properties: {
+          a: {
+            title: "integer_4",
+            type: "integer",
+          },
+          b: {
+            properties: {
+              c: {
+                title: "integer_5",
+                type: "integer",
+              },
+            },
+            title: "object_6",
+            type: "object",
+          },
+          d: {
+            title: "string_7",
+            type: "string",
+          },
+          e: {
+            title: "optional_12",
+            type: [
+              "null",
+              "array",
+            ],
+          },
+          f: {
+            enum: [
+              "1",
+              "2.5",
+            ],
+            title: "float_13",
+          },
+        },
+        title: "object_14",
+        type: "object",
       },
       object_1: {
         properties: {
@@ -96,25 +175,20 @@ snapshot[`Rest queries in Deno 1`] = `
         title: "object_6",
         type: "object",
       },
-      object_7: {
-        properties: {
-          a: {
-            title: "integer_4",
-            type: "integer",
-          },
-          b: {
-            properties: {
-              c: {
-                title: "integer_5",
-                type: "integer",
-              },
-            },
-            title: "object_6",
-            type: "object",
-          },
-        },
-        title: "object_7",
-        type: "object",
+      optional_12: {
+        title: "optional_12",
+        type: [
+          "null",
+          "array",
+        ],
+      },
+      string_7: {
+        title: "string_7",
+        type: "string",
+      },
+      string_8: {
+        title: "string_8",
+        type: "string",
       },
     },
   },
@@ -163,8 +237,26 @@ snapshot[`Rest queries in Deno 1`] = `
                           title: "object_6",
                           type: "object",
                         },
+                        d: {
+                          title: "string_7",
+                          type: "string",
+                        },
+                        e: {
+                          title: "optional_12",
+                          type: [
+                            "null",
+                            "array",
+                          ],
+                        },
+                        f: {
+                          enum: [
+                            "1",
+                            "2.5",
+                          ],
+                          title: "float_13",
+                        },
                       },
-                      title: "object_7",
+                      title: "object_14",
                       type: "object",
                     },
                   },
@@ -393,7 +485,7 @@ snapshot[`Rest queries in Deno 1`] = `
                 schema: {
                   properties: {
                     readPost: {
-                      title: "boolean_12",
+                      title: "boolean_19",
                       type: "boolean",
                     },
                   },

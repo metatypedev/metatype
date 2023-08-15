@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-use migration_connector::{BoxFuture, ConnectorHost, ConnectorResult};
+use schema_connector::{BoxFuture, ConnectorHost, ConnectorResult};
 use std::sync::{Arc, Mutex};
 
 type StringBufferInner = Arc<Mutex<Option<String>>>;

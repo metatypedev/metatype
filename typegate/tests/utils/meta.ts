@@ -29,3 +29,23 @@ export async function meta(
 
   return res;
 }
+
+export interface SerializeOptions {
+  unique?: boolean;
+  typegraph?: string;
+}
+
+export function serialize(
+  tg: string,
+  options: SerializeOptions = {},
+): Promise<string> {
+  const cmd = ["cargo", "run", "-p", "meta-cli", "--", "serialize", "-f", tg];
+  if (options.unique) {
+    cmd.push("-1");
+  }
+  if (options.typegraph) {
+    cmd.push("-t", options.typegraph);
+  }
+
+  return shell(cmd);
+}

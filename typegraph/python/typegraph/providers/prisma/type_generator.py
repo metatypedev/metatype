@@ -272,7 +272,7 @@ class TypeGenerator:
 
     def promote_num_to_float(self, tpe: t.struct) -> t.struct:
         return self.deep_map(
-            tpe, lambda term: t.float() if isinstance(term, t.number) else term
+            tpe, lambda term: t.float() if isinstance(term, t.number_base) else term
         )
 
     def add_nested_count(self, tpe: t.typedef, seen=set()) -> t.struct:
@@ -322,7 +322,7 @@ class TypeGenerator:
             return t.struct({"set": t.boolean()})
         elif isinstance(terminal_node, t.array):
             return t.struct({"set": terminal_node})
-        elif isinstance(terminal_node, t.number):
+        elif isinstance(terminal_node, t.number_base):
             return t.union(
                 [
                     rename_with_idx(t.struct({"set": terminal_node}), "set"),
@@ -349,7 +349,7 @@ class TypeGenerator:
     def extract_number_types(self, tpe: t.struct) -> t.struct:
         fields = {}
         for key, value in tpe.props.items():
-            if isinstance(value, t.number):
+            if isinstance(value, t.number_base):
                 fields[key] = value
         return t.struct(fields)
 

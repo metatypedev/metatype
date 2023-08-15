@@ -5,6 +5,7 @@ mod conversion;
 mod errors;
 mod global_store;
 mod runtimes;
+mod typedef;
 mod typegraph;
 mod types;
 mod validation;
@@ -15,11 +16,15 @@ use errors::Result;
 use global_store::{with_store, with_store_mut};
 use indoc::formatdoc;
 use regex::Regex;
-use types::{Boolean, Func, Integer, Proxy, Struct, Type, TypeBoolean, WithPolicy};
+use types::{
+    Array, Boolean, Either, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
+    TypeBoolean, Union, WithPolicy,
+};
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, TypeBase, TypeFunc, TypeId, TypeInteger, TypePolicy, TypeProxy,
-    TypeStruct, TypegraphInitParams,
+    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
+    TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -86,8 +91,29 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
+        if let (Some(min), Some(max)) = (data.exclusive_minimum, data.exclusive_maximum) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Integer(Integer { id, base, data }))
+        }))
+    }
+
+    fn floatb(data: TypeFloat, base: TypeBase) -> Result<TypeId> {
+        if let (Some(min), Some(max)) = (data.min, data.max) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        if let (Some(min), Some(max)) = (data.exclusive_minimum, data.exclusive_maximum) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Float(Float { id, base, data }))
         }))
     }
 
@@ -100,6 +126,46 @@ impl wit::core::Core for Lib {
                     data: TypeBoolean,
                 })
             })
+        }))
+    }
+
+    fn stringb(data: TypeString, base: TypeBase) -> Result<TypeId> {
+        if let (Some(min), Some(max)) = (data.min, data.max) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::String(StringT { id, base, data }))
+        }))
+    }
+
+    fn arrayb(data: TypeArray, base: TypeBase) -> Result<TypeId> {
+        if let (Some(min), Some(max)) = (data.min, data.max) {
+            if min >= max {
+                return Err(errors::invalid_max_value());
+            }
+        }
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Array(Array { id, base, data }))
+        }))
+    }
+
+    fn optionalb(data: TypeOptional, base: TypeBase) -> Result<TypeId> {
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Optional(Optional { id, base, data }))
+        }))
+    }
+
+    fn unionb(data: TypeUnion, base: TypeBase) -> Result<TypeId> {
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Union(Union { id, base, data }))
+        }))
+    }
+
+    fn eitherb(data: TypeEither, base: TypeBase) -> Result<TypeId> {
+        Ok(with_store_mut(move |s| {
+            s.add_type(|id| Type::Either(Either { id, base, data }))
         }))
     }
 
@@ -204,7 +270,10 @@ mod tests {
     use crate::errors;
     use crate::global_store::{with_store, with_store_mut};
     use crate::wit::{
-        core::{Core, MaterializerId, TypeBase, TypeFunc, TypeId, TypeInteger, TypeStruct},
+        core::{
+            Core, MaterializerId, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeId, TypeInteger,
+            TypeOptional, TypeStruct,
+        },
         runtimes::{Effect, MaterializerDenoFunc, Runtimes},
     };
     use crate::Lib;
@@ -215,6 +284,10 @@ mod tests {
             Self {
                 min: None,
                 max: None,
+                exclusive_minimum: None,
+                exclusive_maximum: None,
+                multiple_of: None,
+                enumeration: None,
             }
         }
     }
@@ -227,6 +300,66 @@ mod tests {
         fn max(mut self, max: i32) -> Self {
             self.max = Some(max);
             self
+        }
+        fn x_min(mut self, x_min: i32) -> Self {
+            self.exclusive_minimum = Some(x_min);
+            self
+        }
+        fn x_max(mut self, x_max: i32) -> Self {
+            self.exclusive_maximum = Some(x_max);
+            self
+        }
+    }
+
+    impl Default for TypeFloat {
+        fn default() -> Self {
+            Self {
+                min: None,
+                max: None,
+                exclusive_minimum: None,
+                exclusive_maximum: None,
+                multiple_of: None,
+                enumeration: None,
+            }
+        }
+    }
+
+    impl TypeFloat {
+        fn min(mut self, min: f64) -> Self {
+            self.min = Some(min);
+            self
+        }
+        fn max(mut self, max: f64) -> Self {
+            self.max = Some(max);
+            self
+        }
+        fn x_min(mut self, x_min: f64) -> Self {
+            self.exclusive_minimum = Some(x_min);
+            self
+        }
+        fn x_max(mut self, x_max: f64) -> Self {
+            self.exclusive_maximum = Some(x_max);
+            self
+        }
+    }
+
+    impl TypeArray {
+        fn of(index: u32) -> Self {
+            Self {
+                of: index,
+                min: None,
+                max: None,
+                unique_items: None,
+            }
+        }
+    }
+
+    impl TypeOptional {
+        fn of(index: u32) -> Self {
+            Self {
+                of: index,
+                default_item: None,
+            }
         }
     }
 
@@ -272,6 +405,25 @@ mod tests {
     #[test]
     fn test_integer_invalid_max() {
         let res = Lib::integerb(TypeInteger::default().min(12).max(10), TypeBase::default());
+        assert_eq!(res, Err(errors::invalid_max_value()));
+        let res = Lib::integerb(
+            TypeInteger::default().x_min(12).x_max(10),
+            TypeBase::default(),
+        );
+        assert_eq!(res, Err(errors::invalid_max_value()));
+    }
+
+    #[test]
+    fn test_number_invalid_max() {
+        let res = Lib::floatb(
+            TypeFloat::default().min(12.34).max(12.3399),
+            TypeBase::default(),
+        );
+        assert_eq!(res, Err(errors::invalid_max_value()));
+        let res = Lib::floatb(
+            TypeFloat::default().x_min(12.6).x_max(12.6),
+            TypeBase::default(),
+        );
         assert_eq!(res, Err(errors::invalid_max_value()));
     }
 
@@ -491,8 +643,17 @@ mod tests {
         with_store_mut(|s| s.reset());
         let a = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
         let b = Lib::integerb(TypeInteger::default().min(12).max(44), TypeBase::default())?;
+        // -- optional(array(float))
+        let num_idx = Lib::floatb(TypeFloat::default(), TypeBase::default())?;
+        let array_idx = Lib::arrayb(TypeArray::of(num_idx), TypeBase::default())?;
+        let c = Lib::optionalb(TypeOptional::of(array_idx), TypeBase::default())?;
+        // --
+
         let s = Lib::structb(
-            TypeStruct::default().prop("one", a).prop("two", b),
+            TypeStruct::default()
+                .prop("one", a)
+                .prop("two", b)
+                .prop("three", c),
             TypeBase::default(),
         )?;
         Lib::init_typegraph(TypegraphInitParams {

@@ -2,15 +2,17 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { serve } from "std/http/server.ts";
+import { deferred } from "std/async/deferred.ts";
 import { init_native } from "native";
 
-import { ReplicatedRegister } from "./register.ts";
+import { ReplicatedRegister } from "./typegate/register.ts";
 import config, { redisConfig } from "./config.ts";
-import { typegate } from "./typegate.ts";
-import { RedisRateLimiter } from "./rate_limiter.ts";
+import { Typegate } from "./typegate/mod.ts";
+import { RedisRateLimiter } from "./typegate/rate_limiter.ts";
 import { SystemTypegraph } from "./system_typegraphs.ts";
 import * as Sentry from "sentry";
 import { getLogger } from "./log.ts";
+import { init_runtimes } from "./runtimes/mod.ts";
 
 const logger = getLogger(import.meta);
 logger.info(`typegate v${config.version} starting`);
@@ -25,7 +27,7 @@ Sentry.init({
     new Sentry.Integrations.Context({
       app: true,
       os: true,
-      device: false, // off due to buggy/unstable "TypeError: DenoOsUptime is not a function"
+      device: true,
       culture: true,
     }),
   ],
@@ -41,14 +43,28 @@ addEventListener("unhandledrejection", (e) => {
 // init rust native libs
 init_native();
 
-const register = await ReplicatedRegister.init(redisConfig);
-register.startSync();
-await SystemTypegraph.loadAll(register, !config.packaged);
+// load all runtimes
+await init_runtimes();
 
+const deferredTypegate = deferred<Typegate>();
+const register = await ReplicatedRegister.init(
+  deferredTypegate,
+  redisConfig,
+);
 const limiter = await RedisRateLimiter.init(redisConfig);
+const typegate = new Typegate(register, limiter);
+deferredTypegate.resolve(typegate);
+
+const lastSync = await register.historySync().catch((err) => {
+  logger.error(err);
+  throw new Error(`failed to load history at boot, aborting: {err.message}`);
+});
+register.startSync(lastSync);
+
+await SystemTypegraph.loadAll(typegate, !config.packaged);
 
 const server = serve(
-  typegate(register, limiter),
+  (req, connInfo) => typegate.handle(req, connInfo),
   { port: config.tg_port },
 );
 
