@@ -160,7 +160,7 @@ for them to get started and discover step by step the platform.
 ## License
 
 Copyright © Metatype OÜ. Distributed under various licenses, see
-[LICENSE](./license.md) for the details. Contributions are welcomed and subject
+[LICENSE](./LICENSE.md) for the details. Contributions are welcomed and subject
 to Contributor License Agreement (CLA).
 
 <p align="right"><a href="#top">back to top ↑</a></p>
