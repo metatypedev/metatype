@@ -234,6 +234,24 @@ impl MaterializerConverter for PythonMaterializer {
                 data.insert("fn".to_string(), serde_json::Value::String(def.fn_.clone()));
                 ("def".to_string(), data)
             }
+            Module(module) => {
+                let mut data = IndexMap::new();
+                data.insert(
+                    "code".to_string(),
+                    serde_json::Value::String(format!("file:{}", module.file)),
+                );
+                ("pymodule".to_string(), data)
+            }
+            Import(import) => {
+                let module_mat = c.register_materializer(s, import.module).unwrap();
+                let data = serde_json::from_value(json!({
+                    "mod": module_mat,
+                    "name": import.func_name,
+                    "secrets": import.secrets,
+                }))
+                .unwrap();
+                ("import_function".to_string(), data)
+            }
         };
         Ok(Materializer {
             name,

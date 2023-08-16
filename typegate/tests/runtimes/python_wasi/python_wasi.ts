@@ -24,5 +24,10 @@ typegraph("rest", (g) => {
       tpe,
       python.fromDef("def identity(x):\n\treturn x['input']"),
     ).withPolicy(pub),
+    identityMod: python.import(
+      t.struct({ input: tpe }),
+      tpe,
+      { name: "identity", module: "py/hello.py" },
+    ).withPolicy(pub),
   });
 });

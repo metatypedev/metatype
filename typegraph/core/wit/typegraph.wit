@@ -223,17 +223,22 @@ interface runtimes {
         fn: string,
     }
 
-    record materializer-python-import {
+    record materializer-python-module {
         runtime: runtime-id,
+        file: string,
+    }
+
+    record materializer-python-import {
+        module: u32,
         func-name: string,
-        module: string,
-        secrets: list<string>,
+        secrets: list<string>
     }
 
     register-python-runtime: func() -> result<runtime-id, error>
     from-python-lambda: func(base: base-materializer, data: materializer-python-lambda-or-def) -> result<materializer-id, error>
     from-python-def: func(base: base-materializer, data: materializer-python-lambda-or-def) -> result<materializer-id, error>
-    // import-python-module: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>
+    from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>
+    from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>
 }
 
 world typegraph {

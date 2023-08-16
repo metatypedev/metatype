@@ -60,7 +60,8 @@ pub enum GraphqlMaterializer {
 pub enum PythonMaterializer {
     Lambda(wit::MaterializerPythonLambdaOrDef),
     Def(wit::MaterializerPythonLambdaOrDef),
-    // Module(wit::MaterializerPythonImport),
+    Module(wit::MaterializerPythonModule),
+    Import(wit::MaterializerPythonImport),
 }
 
 impl Materializer {
@@ -209,6 +210,22 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
         data: crate::wit::runtimes::MaterializerPythonLambdaOrDef,
     ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
         let mat = Materializer::python(base.runtime, PythonMaterializer::Def(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn from_python_module(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerPythonModule,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::python(base.runtime, PythonMaterializer::Module(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn from_python_import(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerPythonImport,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::python(base.runtime, PythonMaterializer::Import(data), base.effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }

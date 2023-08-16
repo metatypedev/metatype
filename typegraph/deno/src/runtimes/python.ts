@@ -18,6 +18,18 @@ interface DefMat extends Materializer {
   effect: Effect;
 }
 
+interface PythonImport {
+  name: string;
+  module: string;
+  secrets?: Array<string>;
+  effect?: Effect;
+}
+
+interface ImportMat extends Materializer {
+  module: string;
+  name: string;
+}
+
 export class PythonRuntime extends Runtime {
   constructor() {
     super(runtimes.registerPythonRuntime());
@@ -68,5 +80,37 @@ export class PythonRuntime extends Runtime {
       name,
       fn: code,
     } as DefMat;
+  }
+
+  import<
+    P extends Record<string, t.Typedef> = Record<string, t.Typedef>,
+    I extends t.Struct<P> = t.Struct<P>,
+    O extends t.Typedef = t.Typedef,
+  >(
+    inp: I,
+    out: O,
+    { name, module, effect = { tag: "none" }, secrets = [] }: PythonImport,
+  ): t.Func<P, I, O, ImportMat> {
+    const base = {
+      runtime: this._id,
+      effect,
+    };
+
+    const matId = runtimes.fromPythonModule(base, {
+      file: module,
+      runtime: this._id,
+    });
+
+    const pyModMatId = runtimes.fromPythonImport(base, {
+      module: matId,
+      funcName: name,
+      secrets,
+    });
+
+    return t.func(inp, out, {
+      _id: pyModMatId,
+      module,
+      name,
+    });
   }
 }
