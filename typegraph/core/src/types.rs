@@ -57,6 +57,7 @@ pub type Optional = ConcreteType<TypeOptional>;
 pub type Union = ConcreteType<TypeUnion>;
 pub type Either = ConcreteType<TypeEither>;
 pub type WithPolicy = WrapperType<TypePolicy>;
+// pub type WithConfig = WrapperType<TypeWithConfig>;
 
 #[derive(Debug)]
 #[enum_dispatch(TypeFun, TypeConversion)]

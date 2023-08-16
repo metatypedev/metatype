@@ -47,3 +47,11 @@ impl TypeData for TypeStruct {
         "struct".to_string()
     }
 }
+
+impl TypeStruct {
+    pub fn get_prop_type(&self, name: &str) -> Option<TypeId> {
+        self.props
+            .iter()
+            .find_map(|(n, t)| if n == name { Some(*t) } else { None })
+    }
+}

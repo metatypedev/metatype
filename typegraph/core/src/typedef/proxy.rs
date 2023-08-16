@@ -39,3 +39,11 @@ impl WrapperTypeData for TypeProxy {
             .map(|id| store.get_type(id).unwrap())
     }
 }
+
+impl TypeProxy {
+    pub fn get_extra(&self, key: &str) -> Option<&str> {
+        self.extras
+            .iter()
+            .find_map(|(k, v)| if k == key { Some(v.as_str()) } else { None })
+    }
+}
