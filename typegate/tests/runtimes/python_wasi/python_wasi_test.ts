@@ -143,7 +143,7 @@ Meta.test("Python WASI runtime", async (t) => {
   });
 });
 
-Meta.test("sdk: def and lambda", async (t) => {
+Meta.test("Deno: def, lambda, import", async (t) => {
   const e = await t.engine("runtimes/python_wasi/python_wasi.ts");
   await t.should("work with def", async () => {
     await gql`
@@ -182,6 +182,27 @@ Meta.test("sdk: def and lambda", async (t) => {
     `
       .expectData({
         identityDef: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("work with module import", async () => {
+    await gql`
+      query {
+        identityMod(input: {
+          a: "hello",
+          b: [1, 2, "three"],
+        }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityMod: {
           a: "hello",
           b: [1, 2, "three"],
         },

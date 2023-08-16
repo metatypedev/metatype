@@ -135,6 +135,13 @@ class DefMat(Materializer):
     effect: Effect
 
 
+@dataclass
+class ImportMat(Materializer):
+    module: str
+    name: str
+    secrets: List[str]
+
+
 class DefinitionCollector(ast.NodeTransformer):
     @classmethod
     def collect(cls, function):
@@ -154,10 +161,3 @@ class DefinitionCollector(ast.NodeTransformer):
 
     def visit_FunctionDef(self, node):
         self.defs.append((node.name, unparse(node).strip()))
-
-
-@dataclass
-class ImportMat(Materializer):
-    module: str
-    name: str
-    secrets: List[str]

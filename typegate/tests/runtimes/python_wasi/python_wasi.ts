@@ -9,7 +9,7 @@ const tpe = t.struct({
   "b": t.array(t.either([t.integer(), t.string()])),
 });
 
-typegraph("rest", (g) => {
+typegraph("python_wasi", (g) => {
   const python = new PythonRuntime();
   const pub = Policy.public();
 
