@@ -19,8 +19,13 @@ impl TypeConversion for Integer {
             .enumeration
             .clone()
             .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
+
         Ok(TypeNode::Integer {
-            base: gen_base_enum(format!("integer_{}", self.id), enumeration),
+            base: gen_base_enum(
+                format!("integer_{}", self.id),
+                self.base.runtime_config.clone(),
+                enumeration,
+            ),
             data: IntegerTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,

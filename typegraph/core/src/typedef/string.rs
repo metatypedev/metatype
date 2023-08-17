@@ -23,7 +23,11 @@ impl TypeConversion for StringT {
             None => None,
         };
         Ok(TypeNode::String {
-            base: gen_base_enum(format!("string_{}", self.id), self.data.enumeration.clone()),
+            base: gen_base_enum(
+                format!("string_{}", self.id),
+                self.base.runtime_config.clone(),
+                self.data.enumeration.clone(),
+            ),
             data: StringTypeData {
                 min_length: self.data.min,
                 max_length: self.data.max,

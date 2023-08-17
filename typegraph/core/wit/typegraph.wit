@@ -18,6 +18,7 @@ interface core {
 
     record type-base {
         name: option<string>,
+        runtime-config: option<list<tuple<string, string>>>
     }
 
     record type-proxy {

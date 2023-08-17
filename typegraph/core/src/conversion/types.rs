@@ -3,6 +3,7 @@
 
 use common::typegraph::{TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
+use indexmap::IndexMap;
 
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
@@ -25,9 +26,22 @@ pub fn gen_base(name: String) -> TypeNodeBase {
     }
 }
 
-pub fn gen_base_enum(name: String, enumeration: Option<Vec<String>>) -> TypeNodeBase {
+pub fn gen_base_enum(
+    name: String,
+    runtime_config: Option<Vec<(String, String)>>,
+    enumeration: Option<Vec<String>>,
+) -> TypeNodeBase {
+    let mut config: Option<IndexMap<String, serde_json::Value>> = None;
+    if let Some(cfg_list) = runtime_config {
+        let mut map = IndexMap::new();
+        for (k, v) in cfg_list.iter() {
+            map.insert(k.to_string(), serde_json::Value::String(v.to_string()));
+        }
+        config = Some(map);
+    }
+
     TypeNodeBase {
-        config: Default::default(),
+        config: config.unwrap_or(Default::default()),
         description: None,
         enumeration,
         injection: None,
