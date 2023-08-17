@@ -5,7 +5,7 @@ use common::typegraph::{StringFormat, StringTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base_enum, TypeConversion},
+    conversion::types::{gen_base, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{StringT, TypeData},
@@ -23,7 +23,7 @@ impl TypeConversion for StringT {
             None => None,
         };
         Ok(TypeNode::String {
-            base: gen_base_enum(
+            base: gen_base(
                 format!("string_{}", self.id),
                 self.base.runtime_config.clone(),
                 self.data.enumeration.clone(),

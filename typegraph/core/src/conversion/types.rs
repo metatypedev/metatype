@@ -13,20 +13,7 @@ pub trait TypeConversion {
     fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode>;
 }
 
-pub fn gen_base(name: String) -> TypeNodeBase {
-    TypeNodeBase {
-        config: Default::default(),
-        description: None,
-        enumeration: None,
-        injection: None,
-        policies: Vec::new(),
-        runtime: 0,
-        title: name,
-        as_id: false,
-    }
-}
-
-pub fn gen_base_enum(
+pub fn gen_base(
     name: String,
     runtime_config: Option<Vec<(String, String)>>,
     enumeration: Option<Vec<String>>,
@@ -39,7 +26,6 @@ pub fn gen_base_enum(
         }
         config = Some(map);
     }
-
     TypeNodeBase {
         config: config.unwrap_or(Default::default()),
         description: None,

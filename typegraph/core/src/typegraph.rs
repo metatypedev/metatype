@@ -121,7 +121,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             ..Default::default()
         },
         types: vec![Some(TypeNode::Object {
-            base: gen_base(params.name),
+            base: gen_base(params.name, None, None),
             data: ObjectTypeData {
                 properties: IndexMap::new(),
                 required: vec![],

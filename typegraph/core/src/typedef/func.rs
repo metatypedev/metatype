@@ -32,7 +32,11 @@ impl TypeConversion for Func {
             with_store(|s| -> Result<_> { ctx.register_materializer(s, self.data.mat) })?;
 
         Ok(TypeNode::Function {
-            base: gen_base(format!("func_{}", self.id)),
+            base: gen_base(
+                format!("func_{}", self.id),
+                self.base.runtime_config.clone(),
+                None,
+            ),
             data: FunctionTypeData {
                 input,
                 output,

@@ -15,7 +15,11 @@ use crate::{
 impl TypeConversion for Array {
     fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
         Ok(TypeNode::Array {
-            base: gen_base(format!("array_{}", self.id)),
+            base: gen_base(
+                format!("array_{}", self.id),
+                self.base.runtime_config.clone(),
+                None,
+            ),
             data: ArrayTypeData {
                 items: with_store(|s| -> Result<_> {
                     let id = s.resolve_proxy(self.data.of)?;

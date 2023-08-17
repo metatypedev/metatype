@@ -16,7 +16,11 @@ use crate::{
 impl TypeConversion for Union {
     fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
         Ok(TypeNode::Union {
-            base: gen_base(format!("union_{}", self.id)),
+            base: gen_base(
+                format!("union_{}", self.id),
+                self.base.runtime_config.clone(),
+                None,
+            ),
             data: UnionTypeData {
                 any_of: self
                     .data
