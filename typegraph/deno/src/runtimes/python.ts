@@ -8,7 +8,6 @@ import { Materializer, Runtime } from "./mod.ts";
 
 interface LambdaMat extends Materializer {
   fn: string;
-  name: string;
   effect: Effect;
 }
 
@@ -36,15 +35,12 @@ export class PythonRuntime extends Runtime {
   }
 
   fromLambda(code: string) {
-    // TODO: hash sha256, digest utf8 sync
-    const name = code.replace(/[^A-Za-z0-9_]/g, "_");
     const matId = runtimes.fromPythonLambda(
       {
         runtime: this._id,
         effect: { tag: "none" },
       },
       {
-        name,
         fn: code, // not formatted
         runtime: this._id,
       },
@@ -52,12 +48,10 @@ export class PythonRuntime extends Runtime {
 
     return {
       _id: matId,
-      name,
       fn: code,
     } as LambdaMat;
   }
 
-  // unlike python, name must be provided in ts
   fromDef(code: string) {
     const name = code.trim().match(/def\s+([A-Za-z0-9_]+)/)?.[1];
     if (name == undefined) {

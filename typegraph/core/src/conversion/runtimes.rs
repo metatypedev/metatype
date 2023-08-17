@@ -18,6 +18,8 @@ use common::typegraph::runtimes::KnownRuntime;
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
+use sha2::{Digest, Sha256};
+
 use serde_json::json;
 
 fn effect(typ: EffectType, idempotent: bool) -> Effect {
@@ -215,10 +217,10 @@ impl MaterializerConverter for PythonMaterializer {
         let (name, data) = match self {
             Lambda(lambda) => {
                 let mut data = IndexMap::new();
-                data.insert(
-                    "name".to_string(),
-                    serde_json::Value::String(lambda.name.clone()),
-                );
+                let mut sha256 = Sha256::new();
+                sha256.update(lambda.fn_.clone());
+                let fn_hash: String = format!("sha256_{:x}", sha256.finalize());
+                data.insert("name".to_string(), serde_json::Value::String(fn_hash));
                 data.insert(
                     "fn".to_string(),
                     serde_json::Value::String(lambda.fn_.clone()),

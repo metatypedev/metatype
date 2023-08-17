@@ -217,9 +217,14 @@ interface runtimes {
     http-request: func(base: base-materializer, data: materializer-http-request) -> result<materializer-id, error>
 
     // python
-    record materializer-python-lambda-or-def {
+    record materializer-python-def {
         runtime: runtime-id,
         name: string,
+        fn: string,
+    }
+
+    record materializer-python-lambda {
+        runtime: runtime-id,
         fn: string,
     }
 
@@ -235,8 +240,8 @@ interface runtimes {
     }
 
     register-python-runtime: func() -> result<runtime-id, error>
-    from-python-lambda: func(base: base-materializer, data: materializer-python-lambda-or-def) -> result<materializer-id, error>
-    from-python-def: func(base: base-materializer, data: materializer-python-lambda-or-def) -> result<materializer-id, error>
+    from-python-lambda: func(base: base-materializer, data: materializer-python-lambda) -> result<materializer-id, error>
+    from-python-def: func(base: base-materializer, data: materializer-python-def) -> result<materializer-id, error>
     from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>
     from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>
 }

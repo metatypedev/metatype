@@ -1,7 +1,6 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 import ast
-import hashlib
 import inspect
 from astunparse import unparse
 
@@ -15,7 +14,8 @@ from typegraph_next.gen.exports.runtimes import (
     EffectNone,
     BaseMaterializer,
     MaterializerPythonImport,
-    MaterializerPythonLambdaOrDef,
+    MaterializerPythonLambda,
+    MaterializerPythonDef,
     MaterializerPythonModule,
 )
 from typegraph_next.gen.types import Err
@@ -26,8 +26,6 @@ if TYPE_CHECKING:
 
 
 class PythonRuntime(Runtime):
-    _id: int
-
     def __init__(self):
         super().__init__(runtimes.register_python_runtime(store))
 
@@ -39,20 +37,16 @@ class PythonRuntime(Runtime):
         lambdas, _defs = DefinitionCollector.collect(function)
         assert len(lambdas) == 1
         fn = str(lambdas[0])
-        m = hashlib.sha256()
-        m.update(fn.encode("utf-8"))
-        name = m.hexdigest()
-
         mat_id = runtimes.from_python_lambda(
             store,
             BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerPythonLambdaOrDef(runtime=self.id.value, name=name, fn=fn),
+            MaterializerPythonLambda(runtime=self.id.value, fn=fn),
         )
 
         if isinstance(mat_id, Err):
             raise Exception(mat_id.value)
 
-        return LambdaMat(id=mat_id.value, name=name, fn=fn, effect=effect)
+        return LambdaMat(id=mat_id.value, fn=fn, effect=effect)
 
     def from_def(
         self,
@@ -66,7 +60,7 @@ class PythonRuntime(Runtime):
         mat_id = runtimes.from_python_def(
             store,
             BaseMaterializer(runtime=self.id.value, effect=effect),
-            MaterializerPythonLambdaOrDef(runtime=self.id.value, name=name, fn=fn),
+            MaterializerPythonDef(runtime=self.id.value, name=name, fn=fn),
         )
 
         if isinstance(mat_id, Err):
@@ -124,7 +118,6 @@ class PythonRuntime(Runtime):
 @dataclass
 class LambdaMat(Materializer):
     fn: str
-    name: str
     effect: Effect
 
 
