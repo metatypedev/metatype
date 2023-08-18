@@ -7,7 +7,7 @@ use crate::{
     global_store::{with_store, Store},
     typegraph::TypegraphContext,
     types::{Type, TypeData, WithPolicy, WrapperTypeData},
-    wit::core::{PolicySpec, TypePolicy},
+    wit::core::{PolicySpec, TypeId, TypePolicy},
 };
 use common::typegraph::TypeNode;
 
@@ -61,7 +61,7 @@ impl TypeData for TypePolicy {
 }
 
 impl WrapperTypeData for TypePolicy {
-    fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
-        store.get_type(self.tpe).ok()
+    fn get_wrapped_type(&self, store: &Store) -> Option<TypeId> {
+        Some(self.tpe)
     }
 }

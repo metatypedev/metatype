@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::wit::core::TypeId;
 use common::typegraph::TypeNode;
 use errors::Result;
 
@@ -33,10 +34,8 @@ impl TypeData for TypeProxy {
 }
 
 impl WrapperTypeData for TypeProxy {
-    fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
-        store
-            .get_type_by_name(&self.name)
-            .map(|id| store.get_type(id).unwrap())
+    fn get_wrapped_type(&self, store: &Store) -> Option<TypeId> {
+        store.get_type_by_name(&self.name)
     }
 }
 

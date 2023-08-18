@@ -19,7 +19,7 @@ pub trait TypeData {
 }
 
 pub trait WrapperTypeData {
-    fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type>;
+    fn get_wrapped_type(&self, store: &Store) -> Option<TypeId>;
 }
 
 #[derive(Debug)]
@@ -79,8 +79,21 @@ pub enum Type {
 #[enum_dispatch]
 pub trait TypeFun {
     fn get_base(&self) -> Option<&TypeBase>;
-    fn get_concrete_type_name(&self) -> Option<String>;
+    fn get_data(&self) -> &dyn TypeData;
+    fn get_concrete_type(&self) -> Option<TypeId>;
     fn to_string(&self) -> String;
+
+    fn get_concrete_type_name(&self) -> Result<String> {
+        with_store(|s| {
+            let concrete_type = self.get_concrete_type().unwrap(); // TODO error
+            s.get_type(concrete_type)
+                .map(|t| t.get_data().variant_name())
+        })
+    }
+
+    fn as_wrapper_type(&self) -> Option<&dyn WrapperTypeData> {
+        None
+    }
 }
 
 impl<T> TypeFun for ConcreteType<T>
@@ -94,8 +107,12 @@ where
         format!("{}({})", self.data.variant_name(), params.join(", "))
     }
 
-    fn get_concrete_type_name(&self) -> Option<String> {
-        Some(self.data.variant_name())
+    fn get_data(&self) -> &dyn TypeData {
+        &self.data
+    }
+
+    fn get_concrete_type(&self) -> Option<TypeId> {
+        Some(self.id)
     }
 
     fn get_base(&self) -> Option<&TypeBase> {
@@ -114,21 +131,29 @@ where
         format!(
             "{}({})",
             self.get_concrete_type_name()
-                .unwrap_or_else(|| self.data.variant_name()),
+                .unwrap_or_else(|_| self.data.variant_name()),
             params.join(", ")
         )
     }
 
-    fn get_concrete_type_name(&self) -> Option<String> {
+    fn get_data(&self) -> &dyn TypeData {
+        &self.data
+    }
+
+    fn get_concrete_type(&self) -> Option<TypeId> {
         with_store(|s| {
             self.data
                 .get_wrapped_type(s)
-                .and_then(|t| t.get_concrete_type_name())
+                .map(|id| s.get_type(id).unwrap().get_concrete_type().unwrap())
         })
     }
 
     fn get_base(&self) -> Option<&TypeBase> {
         None
+    }
+
+    fn as_wrapper_type(&self) -> Option<&dyn WrapperTypeData> {
+        Some(&self.data)
     }
 }
 

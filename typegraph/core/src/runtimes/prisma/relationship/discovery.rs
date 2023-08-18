@@ -4,77 +4,36 @@
 use std::collections::HashSet;
 
 use crate::global_store::with_store;
-use crate::runtimes::prisma::type_utils::{self, has_fkey};
+use crate::runtimes::prisma::relationship::get_rel_name;
+use crate::runtimes::prisma::type_utils::{self, as_relationship_source, get_model_type, has_fkey};
 use crate::types::Type;
+use crate::types::TypeFun;
 use crate::wit::core::TypeId;
 use crate::{errors::Result, types::Struct};
 
-use super::RelationshipRegistry;
 use super::{Cardinality, Relationship, RelationshipModel};
+use super::{RelationshipRegistry, RelationshipSource};
 
 /// scan model `model` for relationships
 pub fn scan_model(model: &Struct, registry: &RelationshipRegistry) -> Result<Vec<Relationship>> {
     with_store(|s| {
         let mut result = Vec::new();
-        let mut self_relationships = HashSet::new();
+        // let mut self_relationships = HashSet::new();
 
         for (prop, ty) in model.data.props.iter() {
-            let ty = s.resolve_proxy(*ty)?;
-            // TODO why would it be possible to have self relationship?
-            if registry.has(ty, prop)
-            /* || self_relationships.contains(&ty) */
-            {
-                continue;
-            }
-
-            match s.get_type(ty)? {
-                Type::Struct(target_model) => {
-                    if model.id == target_model.id {
-                        self_relationships.insert(prop.to_string());
-                    } else {
-                        let source = RelationshipModel {
-                            model: model.id,
+            let source = as_relationship_source(*ty)?;
+            if let Some(source) = source {
+                if source.model_type == model.id {
+                    // self relationship
+                    todo!()
+                } else {
+                    result.push(Relationship::from(
+                        source,
+                        RelationshipTarget {
+                            model_type: model.id,
                             field: prop.to_string(),
-                            cardinality: Cardinality::One,
-                        };
-                        result.push(Relationship::from_one(source)?)
-                    }
-                }
-
-                Type::Optional(opt) => {
-                    let wrapped_type_id = s.resolve_proxy(opt.data.of)?;
-                    if let Type::Struct(target_model) = s.get_type(wrapped_type_id)? {
-                        if model.id == target_model.id {
-                            self_relationships.insert(prop.to_string());
-                        } else {
-                            let source = RelationshipModel {
-                                model: model.id,
-                                field: prop.to_string(),
-                                cardinality: Cardinality::Optional,
-                            };
-                            result.push(Relationship::from_optional(source)?)
-                        }
-                    }
-                }
-
-                Type::Array(arr) => {
-                    let wrapped_type_id = s.resolve_proxy(arr.data.of)?;
-                    if let Type::Struct(target_model) = s.get_type(wrapped_type_id)? {
-                        if model.id == target_model.id {
-                            self_relationships.insert(prop.to_string());
-                        } else {
-                            let source = RelationshipModel {
-                                model: model.id,
-                                field: prop.to_string(),
-                                cardinality: Cardinality::Many,
-                            };
-                            result.push(Relationship::from_many(source)?)
-                        }
-                    }
-                }
-
-                _ => {
-                    // scalar type - no relationship possible
+                        },
+                    )?);
                 }
             }
         }
@@ -85,48 +44,43 @@ pub fn scan_model(model: &Struct, registry: &RelationshipRegistry) -> Result<Vec
     })
 }
 
+use super::RelationshipTarget;
+
 impl RelationshipModel {
-    fn find_targets(source: &RelationshipModel) -> Result<Vec<RelationshipModel>> {
+    fn list_alternatives(source_type: TypeId, target_model: TypeId) {
         todo!()
     }
 
-    fn target_type(&self) -> Result<TypeId> {
-        with_store(|s| {
-            s.type_as_struct(self.model)?
-                .data
-                .get_prop_type(&self.field)
-                .ok_or_else(|| {
-                    // crate::errors::property_not_found_in(s.get_type_repr(self.model), &self.field)
-                    format!(
-                        "property {:?} not found in {:?}",
-                        self.field,
-                        s.get_type_repr(self.model)
-                    )
-                })
-        })
+    fn find_targets(source_type: TypeId, target_model: TypeId) -> Result<Vec<RelationshipModel>> {
+        todo!()
     }
 
-    fn target_field(&self) -> Result<Option<String>> {
-        with_store(|s| {
-            let target_type = self.target_type()?;
-            let target_type = s.get_type(target_type)?;
-            Ok(match target_type {
-                Type::Proxy(p) => p.data.get_extra("target_field").map(|s| s.to_string()),
-                _ => None,
-            })
-        })
-    }
+    // fn target_type(&self) -> Result<TypeId> {
+    //     with_store(|s| {
+    //         s.type_as_struct(self.model)?
+    //             .data
+    //             .get_prop_type(&self.field)
+    //             .ok_or_else(|| {
+    //                 // crate::errors::property_not_found_in(s.get_type_repr(self.model), &self.field)
+    //                 format!(
+    //                     "property {:?} not found in {:?}",
+    //                     self.field,
+    //                     s.get_type_repr(self.model)
+    //                 )
+    //             })
+    //     })
+    // }
 
-    pub fn rel_name(&self) -> Result<Option<String>> {
-        let target_type = self.target_type()?;
-        with_store(|s| {
-            let target_type = s.get_type(target_type)?;
-            Ok(match target_type {
-                Type::Proxy(p) => p.data.get_extra("rel_name").map(|s| s.to_string()),
-                _ => None,
-            })
-        })
-    }
+    // fn target_field(&self) -> Result<Option<String>> {
+    //     with_store(|s| {
+    //         let target_type = self.target_type()?;
+    //         let target_type = s.get_type(target_type)?;
+    //         Ok(match target_type {
+    //             Type::Proxy(p) => p.data.get_extra("target_field").map(|s| s.to_string()),
+    //             _ => None,
+    //         })
+    //     })
+    // }
 
     // fn name(&self) -> Result<String> {
     //     with_store(|s| {
@@ -141,158 +95,269 @@ impl RelationshipModel {
 }
 
 impl Relationship {
-    pub fn from_one(source: RelationshipModel) -> Result<Relationship> {
-        assert!(source.cardinality == Cardinality::One);
-
-        let alternatives = RelationshipModel::find_targets(&source)?;
-
-        let target = match alternatives.len() {
-            0 => return Err("relationship not found".to_string()),
-
-            1 => alternatives.into_iter().next().unwrap(),
-
-            _ => {
-                let rel_name = source.rel_name()?;
-
-                if let Some(rel_name) = rel_name {
-                    let alternatives: Vec<_> = alternatives
-                        .into_iter()
-                        .filter(|alt| {
-                            alt.rel_name()
-                                .ok()
-                                .flatten()
-                                .map(|r| &r == &rel_name)
-                                .unwrap_or(false)
-                        })
-                        .collect();
-
-                    match alternatives.len() {
-                        0 => {
-                            return Err(format!("no matching relationship found: name={rel_name}"))
-                        }
-                        1 => alternatives.into_iter().next().unwrap(),
-                        // cannot duplicate name
-                        _ => return Err("multiple matching relationships".to_string()),
-                    }
-                } else {
-                    // match target field
-                    let target_field = source.target_field()?;
-                    if let Some(target_field) = target_field {
-                        // find matching field
-                        let alternatives: Vec<_> = alternatives
-                            .into_iter()
-                            .filter(|alt| alt.field == target_field)
-                            .collect();
-                        match alternatives.len() {
-                            0 => {
-                                return Err(format!(
-                                    "no matching relationship found: field={target_field}"
-                                ))
-                            }
-                            1 => alternatives.into_iter().next().unwrap(),
-                            _ => {
-                                return Err("ambiguous multiple matching relationships".to_string())
-                            }
-                        }
-                    } else {
-                        // Err(errors::ambiguous_targets)
-                        return Err(format!("ambiguouse target: multiple matching targets"));
-                    }
-                }
-            }
-        };
-
-        match target.cardinality {
-            Cardinality::Optional => {
-                match (has_fkey(source.model)?, has_fkey(target.model)?) {
-                    (Some(true), Some(true)) => return Err("both sides have fkey".to_string()),
-                    (Some(false), Some(false)) => return Err("neither side has fkey".to_string()),
-                    (Some(true), _) | (_, Some(false)) => (source, target).try_into(),
-                    (_, Some(true)) | (Some(false), _) => (target, source).try_into(),
-                    (None, None) => {
-                        // check unique ref
-                        with_store(|s| {
-                            //
-                            match (
-                                type_utils::is_unique_ref(source.model)?,
-                                type_utils::is_unique_ref(target.model)?,
-                            ) {
-                                (true, true) => {
-                                    return Err("both sides are unique".to_string());
-                                }
-                                (true, false) => (source, target).try_into(),
-                                (false, true) => (target, source).try_into(),
-                                (false, false) => {
-                                    return Err(
-                                        "ambiguous target: neither side is unique".to_string()
-                                    );
-                                }
-                            }
-                        })
-                    }
-                }
-            }
-            Cardinality::One => todo!(),
-            Cardinality::Many => todo!(),
-        }
-    }
-
-    pub fn from_optional(source: RelationshipModel) -> Result<Relationship> {
-        todo!()
-    }
-
-    pub fn from_many(source: RelationshipModel) -> Result<Relationship> {
+    pub fn new(first: RelationshipModel, second: RelationshipModel) -> Self {
         todo!()
     }
 }
 
-fn find_named_relationship(
-    alternatives: Vec<RelationshipModel>,
-    source: &RelationshipModel,
-    target_model: TypeId,
-    rel_name: &str,
-) -> Result<RelationshipModel> {
-    let mut with_matching_name = None;
-    let mut unnamed = vec![];
+struct TargetAlternatives<'a> {
+    source: &'a RelationshipSource,
+    alternatives: Vec<(String, RelationshipSource)>,
+}
 
-    for alt in alternatives.into_iter() {
-        match alt.rel_name()? {
-            Some(rel_name) => {
-                if rel_name == rel_name {
-                    // with_matching_name.push(alt);
-                    if let Some(m) = with_matching_name {
-                        todo!();
-                        // return Err(errors::ambiguous_targets(
-                        //     source.model,
-                        //     source.field,
-                        //     target_model,
-                        //     rel_name,
-                        //     m,
-                        // ));
-                    } else {
-                        with_matching_name = Some(alt);
-                    }
-                } else {
-                    // no-op
-                }
-            }
-            None => unnamed.push(alt),
+impl<'a> TargetAlternatives<'a> {
+    fn check(&mut self) -> Result<Option<(String, RelationshipSource)>> {
+        match self.alternatives.len() {
+            0 => Err("no match".to_string()),
+            1 => Ok(std::mem::replace(&mut self.alternatives, vec![])
+                .into_iter()
+                .next()),
+            _ => Ok(None),
         }
     }
 
-    if let Some(found) = with_matching_name {
-        Ok(found)
-    } else {
-        match unnamed.len() {
-            0 => Err(format!("relationship target not found for {rel_name}")),
-            1 => Ok(unnamed.into_iter().next().unwrap()),
-            // TODO add more context on the error messages
-            _ => Err(format!(
-                "ambiguous target: cannot choose from multiple unnamed matching targets; please set an explicit relationship name on the target"
-            )),
-        }
+    // fn apply_filter(&mut self, filter: impl Fn(&RelationshipTarget) -> bool) {
+    //     self.alternatives.retain(filter);
+    // }
+
+    // return Ok(Some(_)) when a single match is found
+    // Ok(None) if the source has no rel_name
+    // Err(_) if no match or multiple match or error
+}
+
+fn get_unique_alternative(
+    alternatives: &mut Vec<(String, RelationshipModel)>,
+) -> Result<Option<(String, RelationshipModel)>> {
+    match alternatives.len() {
+        0 => Err("no match".to_string()),
+        1 => Ok(std::mem::replace(alternatives, vec![]).into_iter().next()),
+        _ => Ok(None),
     }
 }
+
+impl Relationship {
+    pub fn from(source: RelationshipSource, target: RelationshipTarget) -> Result<Self> {
+        with_store(|s| {
+            // TODO filter: runtime?
+            let mut alternatives: Vec<_> = s
+                .type_as_struct(source.model_type)?
+                .data
+                .props
+                .iter()
+                .filter_map(|(k, ty)| {
+                    // TODO runtime
+                    as_relationship_source(*ty)
+                        .unwrap()
+                        .filter(|s| s.model_type == target.model_type)
+                        .map(|s| {
+                            (
+                                k.to_owned(),
+                                RelationshipModel::from_source(s, target.field.clone()),
+                            )
+                        })
+                })
+                .collect();
+
+            if let Some((prop, target)) = get_unique_alternative(&mut alternatives)? {
+                return Ok(Self::new(
+                    RelationshipModel::from_source(source, prop),
+                    target,
+                ));
+            }
+
+            if let Some(rel_name) = get_rel_name(source.wrapper_type)? {
+                alternatives.retain(|(k, t)| {
+                    get_rel_name(t.wrapper_type).unwrap().as_deref() == Some(&rel_name)
+                });
+                if let Some((prop, target)) = get_unique_alternative(&mut alternatives)? {
+                    return Ok(Self::new(
+                        RelationshipModel::from_source(source, prop),
+                        target,
+                    ));
+                }
+            }
+
+            // TODO target field
+
+            return Err("Ambiguous target".to_string());
+        })
+    }
+
+    // fn get_target(
+    //     source: RelationshipSource,
+    //     alternatives: Vec<(String, RelationshipModel)>,
+    // ) -> Result<(String, RelationshipModel)> {
+    //     match alternatives.len() {
+    //         0 => Err("no target for relationship".to_string()),
+    //         1 => alternatives.into_iter().next().unwrap(),
+    //         _ => {
+    //             let mut alternatives = alternatives;
+    //             if let Some(rel_name) = get_rel_name(source.wrapper_type)? {
+    //                 alternatives = alternatives.into_iter().filter(|(k, target)| {
+    //                     get_rel_name(target.wrapper_type)
+    //                         .map(|name| name == rel_name)
+    //                         .unwrap_or(false)
+    //                 })
+    //             }
+    //         }
+    //     }
+    // }
+
+    // pub fn from_one(source: RelationshipModel) -> Result<Relationship> {
+    //     assert!(source.cardinality == Cardinality::One);
+    //
+    //     let alternatives = RelationshipModel::find_targets(&source)?;
+    //
+    //     let target = match alternatives.len() {
+    //         0 => return Err("relationship not found".to_string()),
+    //
+    //         1 => alternatives.into_iter().next().unwrap(),
+    //
+    //         _ => {
+    //             let rel_name = source.rel_name()?;
+    //
+    //             if let Some(rel_name) = rel_name {
+    //                 let alternatives: Vec<_> = alternatives
+    //                     .into_iter()
+    //                     .filter(|alt| {
+    //                         alt.rel_name()
+    //                             .ok()
+    //                             .flatten()
+    //                             .map(|r| &r == &rel_name)
+    //                             .unwrap_or(false)
+    //                     })
+    //                     .collect();
+    //
+    //                 match alternatives.len() {
+    //                     0 => {
+    //                         return Err(format!("no matching relationship found: name={rel_name}"))
+    //                     }
+    //                     1 => alternatives.into_iter().next().unwrap(),
+    //                     // cannot duplicate name
+    //                     _ => return Err("multiple matching relationships".to_string()),
+    //                 }
+    //             } else {
+    //                 // match target field
+    //                 let target_field = source.target_field()?;
+    //                 if let Some(target_field) = target_field {
+    //                     // find matching field
+    //                     let alternatives: Vec<_> = alternatives
+    //                         .into_iter()
+    //                         .filter(|alt| alt.field == target_field)
+    //                         .collect();
+    //                     match alternatives.len() {
+    //                         0 => {
+    //                             return Err(format!(
+    //                                 "no matching relationship found: field={target_field}"
+    //                             ))
+    //                         }
+    //                         1 => alternatives.into_iter().next().unwrap(),
+    //                         _ => {
+    //                             return Err("ambiguous multiple matching relationships".to_string())
+    //                         }
+    //                     }
+    //                 } else {
+    //                     // Err(errors::ambiguous_targets)
+    //                     return Err(format!("ambiguouse target: multiple matching targets"));
+    //                 }
+    //             }
+    //         }
+    //     };
+    //
+    //     match target.cardinality {
+    //         // TODO
+    //         Cardinality::Optional => (target, source).try_into(),
+    //
+    //         Cardinality::One => {
+    //             match (has_fkey(source.model)?, has_fkey(target.model)?) {
+    //                 (Some(true), Some(true)) => return Err("both sides have fkey".to_string()),
+    //                 (Some(false), Some(false)) => return Err("neither side has fkey".to_string()),
+    //                 (Some(true), _) | (_, Some(false)) => (source, target).try_into(),
+    //                 (_, Some(true)) | (Some(false), _) => (target, source).try_into(),
+    //                 (None, None) => {
+    //                     // check unique ref
+    //                     with_store(|s| {
+    //                         //
+    //                         match (
+    //                             type_utils::is_unique_ref(source.model)?,
+    //                             type_utils::is_unique_ref(target.model)?,
+    //                         ) {
+    //                             (true, true) => {
+    //                                 return Err("both sides are unique".to_string());
+    //                             }
+    //                             (true, false) => (source, target).try_into(),
+    //                             (false, true) => (target, source).try_into(),
+    //                             (false, false) => {
+    //                                 return Err(
+    //                                     "ambiguous target: neither side is unique".to_string()
+    //                                 );
+    //                             }
+    //                         }
+    //                     })
+    //                 }
+    //             }
+    //         }
+    //
+    //         Cardinality::Many => todo!(),
+    //     }
+    // }
+
+    // pub fn from_optional(source: RelationshipModel) -> Result<Relationship> {
+    //     todo!()
+    // }
+    //
+    // pub fn from_many(source: RelationshipModel) -> Result<Relationship> {
+    //     todo!()
+    // }
+}
+
+// fn find_named_relationship(
+//     alternatives: Vec<RelationshipModel>,
+//     source: &RelationshipModel,
+//     target_model: TypeId,
+//     rel_name: &str,
+// ) -> Result<RelationshipModel> {
+//     let mut with_matching_name = None;
+//     let mut unnamed = vec![];
+//
+//     for alt in alternatives.into_iter() {
+//         match alt.rel_name()? {
+//             Some(rel_name) => {
+//                 if rel_name == rel_name {
+//                     // with_matching_name.push(alt);
+//                     if let Some(m) = with_matching_name {
+//                         todo!();
+//                         // return Err(errors::ambiguous_targets(
+//                         //     source.model,
+//                         //     source.field,
+//                         //     target_model,
+//                         //     rel_name,
+//                         //     m,
+//                         // ));
+//                     } else {
+//                         with_matching_name = Some(alt);
+//                     }
+//                 } else {
+//                     // no-op
+//                 }
+//             }
+//             None => unnamed.push(alt),
+//         }
+//     }
+//
+//     if let Some(found) = with_matching_name {
+//         Ok(found)
+//     } else {
+//         match unnamed.len() {
+//             0 => Err(format!("relationship target not found for {rel_name}")),
+//             1 => Ok(unnamed.into_iter().next().unwrap()),
+//             // TODO add more context on the error messages
+//             _ => Err(format!(
+//                 "ambiguous target: cannot choose from multiple unnamed matching targets; please set an explicit relationship name on the target"
+//             )),
+//         }
+//     }
+// }
 
 #[cfg(test)]
 mod test {

@@ -198,9 +198,10 @@ impl TypegraphContext {
             let type_id = s.resolve_proxy(type_id)?;
             let tpe = s.get_type(type_id)?;
             let tpe = match tpe {
-                Type::WithPolicy(t) => t.data.get_wrapped_type(s).unwrap(),
+                Type::WithPolicy(t) => s.get_type(t.data.get_wrapped_type(s).unwrap())?,
                 _ => tpe,
             };
+
             if !matches!(tpe, Type::Func(_)) {
                 return Err(errors::invalid_export_type(&name, &tpe.to_string()));
             }
