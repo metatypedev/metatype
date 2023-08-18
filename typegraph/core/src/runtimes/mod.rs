@@ -5,6 +5,7 @@ use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store_mut, Store};
 use crate::wit::runtimes::{
     BaseMaterializer, GraphqlRuntimeData, HttpRuntimeData, MaterializerHttpRequest,
+    RandomRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use crate::{
@@ -21,6 +22,7 @@ pub enum Runtime {
     Graphql(GraphqlRuntimeData),
     Http(HttpRuntimeData),
     Python,
+    Random(RandomRuntimeData),
 }
 
 #[derive(Debug)]
@@ -64,6 +66,11 @@ pub enum PythonMaterializer {
     Import(wit::MaterializerPythonImport),
 }
 
+#[derive(Debug)]
+pub enum RandomMaterializer {
+    Runtime(wit::MaterializerRandom),
+}
+
 impl Materializer {
     // fn new(base: wit::BaseMaterializer, data: impl Into<MaterializerData>) -> Self {
     //     Self {
@@ -104,6 +111,14 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn random(runtime_id: RuntimeId, data: RandomMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -113,6 +128,7 @@ pub enum MaterializerData {
     GraphQL(GraphqlMaterializer),
     Http(MaterializerHttpRequest),
     Python(PythonMaterializer),
+    Random(RandomMaterializer),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -226,6 +242,23 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
         data: crate::wit::runtimes::MaterializerPythonImport,
     ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
         let mat = Materializer::python(base.runtime, PythonMaterializer::Import(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn register_random_runtime(
+        data: crate::wit::runtimes::RandomRuntimeData,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        Ok(with_store_mut(|s| {
+            s.register_runtime(Runtime::Random(data))
+        }))
+    }
+
+    fn create_random_mat(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerRandom,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat =
+            Materializer::random(base.runtime, RandomMaterializer::Runtime(data), base.effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }

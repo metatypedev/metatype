@@ -5,7 +5,7 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::runtimes::{
     DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, PythonMaterializer,
-    Runtime,
+    RandomMaterializer, Runtime,
 };
 use crate::wit::core::RuntimeId;
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
@@ -14,6 +14,7 @@ use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
 use common::typegraph::runtimes::http::HTTPRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
+use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::KnownRuntime;
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
@@ -264,6 +265,31 @@ impl MaterializerConverter for PythonMaterializer {
     }
 }
 
+impl MaterializerConverter for RandomMaterializer {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        s: &Store,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<Materializer> {
+        let runtime = c.register_runtime(s, runtime_id)?;
+        let RandomMaterializer::Runtime(ret) = self;
+        let data = serde_json::from_value(json!({
+            "runtime": ret.runtime,
+        }))
+        .map_err(|e| e.to_string())?;
+
+        let name = "random".to_string();
+        Ok(Materializer {
+            name,
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
 pub fn convert_materializer(
     c: &mut TypegraphContext,
     s: &Store,
@@ -303,6 +329,10 @@ pub fn convert_runtime(
         }
         Runtime::Python => Ok(TGRuntime::Known(PythonWasi(PythonRuntimeData {
             config: None,
+        }))),
+        Runtime::Random(d) => Ok(TGRuntime::Known(Random(RandomRuntimeData {
+            seed: d.seed,
+            reset: d.reset.clone(),
         }))),
     }
 }

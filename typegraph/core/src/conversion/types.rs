@@ -32,7 +32,7 @@ pub fn gen_base(
         enumeration,
         injection: None,
         policies: Vec::new(),
-        runtime: 0,
+        runtime: 0, // resp. BUG: always 0??
         title: name,
         as_id: false,
     }
