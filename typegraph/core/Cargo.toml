@@ -17,6 +17,7 @@ indexmap = { version = "1.9.3", features = ["serde"] }
 common = { path = "../../libs/common" }
 indoc = "2.0.3"
 graphql-parser = "0.4.0"
+sha2 = "0.10.7"
 
 [dev-dependencies]
 insta = { version = "1.31.0", features = ["glob"] }

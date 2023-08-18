@@ -4,7 +4,8 @@
 use crate::errors::Result;
 use crate::global_store::Store;
 use crate::runtimes::{
-    DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, Runtime,
+    DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, PythonMaterializer,
+    Runtime,
 };
 use crate::wit::core::RuntimeId;
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
@@ -12,10 +13,13 @@ use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
 use common::typegraph::runtimes::http::HTTPRuntimeData;
+use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::KnownRuntime;
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
 use indexmap::IndexMap;
+use sha2::{Digest, Sha256};
+
 use serde_json::json;
 
 fn effect(typ: EffectType, idempotent: bool) -> Effect {
@@ -200,6 +204,66 @@ impl MaterializerConverter for MaterializerHttpRequest {
     }
 }
 
+impl MaterializerConverter for PythonMaterializer {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        s: &Store,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<Materializer> {
+        use crate::runtimes::PythonMaterializer::*;
+        let runtime = c.register_runtime(s, runtime_id)?;
+        let (name, data) = match self {
+            Lambda(lambda) => {
+                let mut data = IndexMap::new();
+                let mut sha256 = Sha256::new();
+                sha256.update(lambda.fn_.clone());
+                let fn_hash: String = format!("sha256_{:x}", sha256.finalize());
+                data.insert("name".to_string(), serde_json::Value::String(fn_hash));
+                data.insert(
+                    "fn".to_string(),
+                    serde_json::Value::String(lambda.fn_.clone()),
+                );
+                ("lambda".to_string(), data)
+            }
+            Def(def) => {
+                let mut data = IndexMap::new();
+                data.insert(
+                    "name".to_string(),
+                    serde_json::Value::String(def.name.clone()),
+                );
+                data.insert("fn".to_string(), serde_json::Value::String(def.fn_.clone()));
+                ("def".to_string(), data)
+            }
+            Module(module) => {
+                let mut data = IndexMap::new();
+                data.insert(
+                    "code".to_string(),
+                    serde_json::Value::String(format!("file:{}", module.file)),
+                );
+                ("pymodule".to_string(), data)
+            }
+            Import(import) => {
+                let module_mat = c.register_materializer(s, import.module).unwrap();
+                let data = serde_json::from_value(json!({
+                    "mod": module_mat,
+                    "name": import.func_name,
+                    "secrets": import.secrets,
+                }))
+                .unwrap();
+                ("import_function".to_string(), data)
+            }
+        };
+        Ok(Materializer {
+            name,
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
 pub fn convert_materializer(
     c: &mut TypegraphContext,
     s: &Store,
@@ -237,5 +301,8 @@ pub fn convert_runtime(
             };
             Ok(TGRuntime::Known(HTTP(data)))
         }
+        Runtime::Python => Ok(TGRuntime::Known(PythonWasi(PythonRuntimeData {
+            config: None,
+        }))),
     }
 }

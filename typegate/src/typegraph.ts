@@ -230,7 +230,7 @@ export class TypeGraph {
         return Typegate.initRuntime(runtime.name, {
           typegraph,
           materializers,
-          args: runtime.data,
+          args: (runtime as any)?.data ?? {},
           secretManager,
         });
       }),
@@ -502,7 +502,7 @@ export class TypeGraph {
       return possibleSelections.flatMap(expandNestedUnions);
     };
 
-    const res = (entries).flatMap(expandNestedUnions);
+    const res = entries.flatMap(expandNestedUnions);
     return res;
   }
 
