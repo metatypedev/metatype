@@ -331,11 +331,11 @@ jobs:
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
 
           deno install -A -n deno_bindgen https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts
-          cargo build --locked --package native -F deno
           ls
           ls bindings || true
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
           echo $?
+          ls target
           ls
           ls bindings || true
           export OUT_DIR=target
