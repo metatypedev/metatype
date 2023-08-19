@@ -313,15 +313,12 @@ jobs:
           WASM_FILE: target/debug/typegraph_core.wasm
         run: |
           sudo apt update
-          sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev
+          sudo apt install -y --no-install-recommends gcc-multilib pkg-config libssl-dev libclang-dev
           tar -xvf meta.tar
           python3 -m venv .venv
           source .venv/bin/activate
           poetry install --sync
           curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
-          ls /home/runner/.bashrc
-          echo $LD_LIBRARY_PATH
-          source $HOME/.bashrc
           export LD_LIBRARY_PATH="$HOME/.wasmedge/lib:$LD_LIBRARY_PATH"
           cargo install wasm-tools --version $WASM_TOOLS_VERSION --locked
           npm install --global @bytecodealliance/jco@$JCO_VERSION
