@@ -22,7 +22,7 @@ import { getLogger } from "../../log.ts";
 const logger = getLogger(import.meta);
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
-  identity: ({ _, ...args }) => (args),
+  identity: ({ _, ...args }) => args,
   true: () => true,
   false: () => false,
 };

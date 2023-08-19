@@ -29,7 +29,7 @@ typegate2:
     TG_PORT: "7892"
 
 http:
-  command: ""
+  entrypoint: "/dev/null"
 
 system_graphs:
   watch:
@@ -133,7 +133,7 @@ install:
     JCO_VERSION: "0.9.4"
     CARGO_INSTA_VERSION: "1.30.0"
     WASMEDGE_VERSION: "0.12.1"
-    DENO_VERSION: "1.35.3"
+    DENO_VERSION: "1.36.1"
   command: |
     set -e
     deno --version | grep -q $DENO_VERSION || (echo "require deno upgrade to $DENO_VERSION" && exit 1)
