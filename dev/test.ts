@@ -86,6 +86,7 @@ const env: Record<string, string> = {
   "REDIS_URL": "redis://:password@localhost:6379/0",
   "DENO_TESTING": "true",
   "TMP_DIR": tmpDir,
+  "TIMER_MAX_TIMEOUT_MS": "15000",
 };
 
 await Deno.mkdir(tmpDir, { recursive: true });
