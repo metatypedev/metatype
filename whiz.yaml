@@ -16,7 +16,7 @@ typegate1: &tp
     TG_ADMIN_PASSWORD: "password"
   # https://github.com/denoland/deno/issues/18445
   # command: "deno task run"
-  command: "deno run --config=deno.json --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=.  --allow-net --v8-flags=--stack_size=2000 src/main.ts"
+  command: "deno run --config=deno.json --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=. --allow-net src/main.ts"
   depends_on:
     - typegate_native
   pipe:

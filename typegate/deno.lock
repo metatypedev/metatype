@@ -676,7 +676,7 @@
       "json-schema-faker@0.5.3": "json-schema-faker@0.5.3",
       "lodash": "lodash@4.17.21",
       "mathjs@11.8.0": "mathjs@11.8.0",
-      "validator": "validator@13.9.0"
+      "validator": "validator@13.11.0"
     },
     "packages": {
       "@babel/runtime@7.22.6": {
@@ -875,6 +875,10 @@
       },
       "typed-function@4.1.0": {
         "integrity": "sha512-DGwUl6cioBW5gw2L+6SMupGwH/kZOqivy17E4nsh1JI9fKF87orMmlQx3KISQPmg3sfnOUGlwVkroosvgddrlg==",
+        "dependencies": {}
+      },
+      "validator@13.11.0": {
+        "integrity": "sha512-Ii+sehpSfZy+At5nPdnyMhx78fEoPDkR2XW/zimHEL3MyGJQOCQ7WeP20jPYRz7ZCpcKLB21NxuXHF3bxjStBQ==",
         "dependencies": {}
       },
       "validator@13.9.0": {

@@ -330,21 +330,9 @@ jobs:
           rm -rf typegraph/python_next/typegraph_next/gen
           poetry run python -m wasmtime.bindgen $WASM_FILE --out-dir typegraph/python_next/typegraph_next/gen
 
-          deno install -A -n deno_bindgen https://raw.githubusercontent.com/Natoandro/deno_bindgen/main/cli.ts
-          ls
-          ls bindings || true
+          deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
-          echo $?
-          ls target
-          ls
-          ls bindings || true
-          export OUT_DIR=target
-          deno_bindgen -- --locked --package native -F deno
-          echo $?
-          ls
-          ls bindings || true
-
-          deno run -A dev/test.ts --threads 2 -- --coverage=coverage
+          deno run -A dev/test.ts --threads 8 -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 
           cargo test --locked --package native

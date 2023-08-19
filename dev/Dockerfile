@@ -2,59 +2,64 @@ ARG RUST_VERSION=1.70.0
 ARG DENO_VERSION=1.36.1
 ARG DISTROLESS_TAG=nonroot
 
-#
-
-FROM rust:${RUST_VERSION} AS base
-
-ARG WASMEDGE_VERSION=0.12.1
+# must match distroless version
+FROM rust:${RUST_VERSION}-slim-bullseye AS base
 
 WORKDIR /app
 
-RUN cargo install cargo-chef --locked && \
-    curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | bash -s -- -v $WASMEDGE_VERSION
+RUN cargo install cargo-chef --locked
 
 #
-
 FROM base as plan
 
 COPY . .
 
 RUN cargo chef prepare --recipe-path recipe.json
 
+# provides ARM binaries: https://github.com/LukeChannings/deno-arm64
+FROM lukechannings/deno:v${DENO_VERSION} AS deno-bin
+
 #
-
-FROM denoland/deno:bin-${DENO_VERSION} AS deno-bin
-
-#
-
 FROM base AS builder
 
+ARG WASMEDGE_VERSION=0.12.1
 ARG DENO_BINDGEN_URL=https://deno.land/x/deno_bindgen@0.8.1/cli.ts
 
 ENV DENO_DIR /deno-dir/
 ENV DENO_INSTALL /root/.deno
 ENV PATH "${DENO_INSTALL}/bin:${PATH}"
-ENV OUT_DIR target
 
-COPY --from=deno-bin /deno /bin/deno
+COPY --from=deno-bin /usr/bin/deno /bin/deno
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+    # base
+    git \
+    curl \
+    python3 \
     # grpc
     protobuf-compiler \
     libprotobuf-dev \
+    # openssl
+    pkg-config \
+    libssl-dev \
     # wasmedge
     libclang-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL
+    && rm -rf /var/lib/apt/lists/*
+
+RUN deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL \
+    && curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh \
+    && bash wasmedge.sh -v $WASMEDGE_VERSION \
+    && rm wasmedge.sh
 
 COPY --from=plan /app/recipe.json recipe.json
 
-RUN cargo chef cook --recipe-path recipe.json --release --package native --features deno
+RUN cargo chef cook --recipe-path recipe.json --release --package native --features deno \
+    && rm recipe.json
 
 COPY . .
 
-RUN deno_bindgen --release -- --locked --package native --features deno \
+RUN OUT_DIR=target deno_bindgen --release -- --locked --package native --features deno \
     && mv /app/target/release/libnative.so .
 
 WORKDIR /app/typegate
@@ -62,35 +67,50 @@ WORKDIR /app/typegate
 RUN deno cache --unstable src/main.ts \
     && mkdir -p tmp
 
-#
-
-FROM debian:stable-slim AS debian
-
-ARG TINI_VERSION=v0.19.0
-
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-
-RUN chmod +x /tini
 
 #
-
-FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG}
-
-ENV NO_COLOR true
-ENV DENO_DIR /deno-dir/
-ENV LD_LIBRARY_PATH /nonroot/.wasmedge/lib
+FROM builder as dev
 
 WORKDIR /app
 
+RUN mv target /tmp/target \
+    && rm -rf * \
+    && mv /tmp/target .
+
+#
+FROM builder AS runtime-bin
+
+ARG TARGETARCH
+ARG TINI_VERSION=v0.19.0
+
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH} /tini
+
+RUN chmod +x /tini \
+    && mkdir -p /lib/sym \
+    && ln -s /lib/aarch64-linux-gnu /lib/sym/arm64 \
+    && ln -s /lib/x86_64-linux-gnu /lib/sym/amd64
+
+#
+FROM gcr.io/distroless/cc-debian11:${DISTROLESS_TAG} as prd
+
+ARG TARGETARCH
+
+ENV NO_COLOR true
+ENV LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/nonroot/.wasmedge/lib"
+ENV DENO_DIR /deno-dir/
+
+WORKDIR /app
+
+COPY --from=runtime-bin /tini /tini
+COPY --from=runtime-bin /lib/sym /lib/sym
+COPY --from=deno-bin /usr/bin/deno /bin/deno
 COPY --from=builder /root/.wasmedge /nonroot/.wasmedge
-COPY --from=debian /tini /tini
-COPY --from=deno-bin /deno /bin/deno
-COPY --from=debian /lib/x86_64-linux-gnu/libz.so* /lib/x86_64-linux-gnu/
-COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
+COPY --from=builder /lib/*-linux-gnu/libz.so* /lib/sym/${TARGETARCH}
 COPY --from=builder /app/bindings/bindings.ts ./bindings/
 COPY --from=builder /app/libnative.so ./target/release/
 COPY --from=builder /app/typegate/deno.json ./typegate/
 COPY --from=builder /app/typegate/src ./typegate/src/
+COPY dev/LICENSE-Elastic-2.0.md LICENSE.md
 
 # writeable
 COPY --from=builder --chown=nonroot:nonroot /deno-dir /deno-dir
