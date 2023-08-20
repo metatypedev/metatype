@@ -9,31 +9,27 @@ use crate::typegraph::TypegraphContext;
 
 #[enum_dispatch]
 pub trait TypeConversion {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode>;
+    /// takes already converted runtime id
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode>;
 }
 
-pub fn gen_base(name: String) -> TypeNodeBase {
+/// takes converted runtime id
+pub fn gen_base(name: String, runtime_id: u32) -> TypeNodeBase {
     TypeNodeBase {
         config: Default::default(),
         description: None,
         enumeration: None,
         injection: None,
         policies: Vec::new(),
-        runtime: 0,
+        runtime: runtime_id,
         title: name,
         as_id: false,
     }
 }
 
-pub fn gen_base_enum(name: String, enumeration: Option<Vec<String>>) -> TypeNodeBase {
+pub fn gen_base_enum(name: String, runtime_id: u32, enumeration: Option<Vec<String>>) -> TypeNodeBase {
     TypeNodeBase {
-        config: Default::default(),
-        description: None,
         enumeration,
-        injection: None,
-        policies: Vec::new(),
-        runtime: 0,
-        title: name,
-        as_id: false,
+        ..gen_base(name, runtime_id)
     }
 }

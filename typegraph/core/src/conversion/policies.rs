@@ -9,7 +9,7 @@ use crate::typegraph::TypegraphContext;
 
 impl crate::wit::core::Policy {
     pub fn convert(&self, ctx: &mut TypegraphContext) -> Result<Policy> {
-        let mat_id = with_store(|s| ctx.register_materializer(s, self.materializer))?;
+        let (mat_id, _) = with_store(|s| ctx.register_materializer(s, self.materializer))?;
         Ok(Policy {
             name: self.name.clone(),
             materializer: mat_id,
