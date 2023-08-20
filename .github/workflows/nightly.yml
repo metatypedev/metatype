@@ -10,7 +10,6 @@ env:
 
 jobs:
   builder:
-    name: ${{ matrix.platform }}
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -82,6 +81,7 @@ jobs:
       - id: info
         run: |
           VAR="${{ matrix.target }}_IMAGE"
+          VAR=${VAR^^}
           echo "image=${!VAR}" >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@v2
         with:
@@ -90,6 +90,5 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - working-directory: /tmp/digests/${{ matrix.target }}
         run: |
-          echo $DOCKER_METADATA_OUTPUT_JSON
           docker buildx imagetools create --tag ${{ steps.info.outputs.image }}:${{ matrix.tag }} $(printf '${{ steps.info.outputs.image }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ steps.info.outputs.image }}:${{ matrix.tag }}
