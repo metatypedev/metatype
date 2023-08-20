@@ -90,5 +90,10 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - working-directory: /tmp/digests/${{ matrix.target }}
         run: |
+          pwd
+          ls -l
+          cd /tmp/digests/${{ matrix.target }}
+          pwd
+          ls -l
           docker buildx imagetools create --tag ${{ steps.info.outputs.image }}:${{ matrix.tag }} $(printf '${{ steps.info.outputs.image }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ steps.info.outputs.image }}:${{ matrix.tag }}

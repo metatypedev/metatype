@@ -6,6 +6,8 @@ use std::{collections::BTreeMap, path::PathBuf, str::FromStr};
 use anyhow::{Context, Result};
 use query_core::protocol::EngineProtocol;
 
+use crate::errors::RuntimeError;
+
 pub async fn register_engine(datamodel: String, engine_name: String) -> Result<()> {
     let conf = super::engine_import::ConstructorOptions {
         datamodel,
@@ -19,7 +21,14 @@ pub async fn register_engine(datamodel: String, engine_name: String) -> Result<(
     };
     let engine = super::engine_import::QueryEngine::new(conf)
         .with_context(|| format!("Error while registering engine {engine_name}"))?;
-    engine.connect().await?;
+    engine
+        .connect()
+        .await
+        .with_context(|| format!("Error while connecting engine {engine_name}"))
+        .map_err(|e| RuntimeError::Tolerable {
+            source: e,
+            runtime: "Prisma".to_string(),
+        })?;
     super::ENGINES.insert(engine_name, engine);
     Ok(())
 }
