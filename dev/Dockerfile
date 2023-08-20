@@ -45,9 +45,8 @@ RUN apt-get update \
     libssl-dev \
     # wasmedge
     libclang-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL \
+    && rm -rf /var/lib/apt/lists/* \
+    && deno install -Afq -n deno_bindgen $DENO_BINDGEN_URL \
     && curl -fsS https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh -o wasmedge.sh \
     && bash wasmedge.sh -v $WASMEDGE_VERSION \
     && rm wasmedge.sh
@@ -60,17 +59,12 @@ RUN cargo chef cook --recipe-path recipe.json --release --package native --featu
 COPY . .
 
 RUN OUT_DIR=target deno_bindgen --release -- --locked --package native --features deno \
-    && mv /app/target/release/libnative.so .
-
-WORKDIR /app/typegate
-
-RUN deno run -A dev/update.ts --cache-only \
-    && mkdir -p tmp
+    && mv /app/target/release/libnative.so . \
+    && deno run -A dev/update.ts --cache-only \
+    && mkdir -p typegate/tmp
 
 #
 FROM builder as dev
-
-WORKDIR /app
 
 RUN mv target /tmp/target \
     && rm -rf * \

@@ -2,6 +2,7 @@ on:
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
+  push:
 
 env:
   DEV_IMAGE: ghcr.io/${{ github.repository_owner }}/dev
