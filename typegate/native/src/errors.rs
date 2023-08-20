@@ -11,7 +11,7 @@ pub enum RuntimeError {
         runtime: String,
     },
     #[error("tolerable error in {runtime}: {}", source)]
-    Tolerable {
+    _Tolerable {
         source: anyhow::Error,
         runtime: String,
     },

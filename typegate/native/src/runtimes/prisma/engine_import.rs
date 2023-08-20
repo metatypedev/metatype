@@ -252,6 +252,10 @@ impl QueryEngine {
         Ok(())
     }
 
+    pub async fn is_connected(&self) -> bool {
+        matches!(*self.inner.read().await, Inner::Connected(_))
+    }
+
     /// Disconnect and drop the core. Can be reconnected later with `#connect`.
     pub async fn disconnect(&self) -> Result<()> {
         let mut inner = self.inner.write().await;

@@ -60,7 +60,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  merge:
+  merger:
     needs:
       - builder
     runs-on: ubuntu-latest
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: digests
-          path: /tmp/digests/${{ matrix.target }}
+          path: /tmp/digests
       - uses: docker/setup-buildx-action@v2
       - id: info
         run: |
@@ -92,8 +92,21 @@ jobs:
         run: |
           pwd
           ls -l
-          cd /tmp/digests/${{ matrix.target }}
-          pwd
-          ls -l
+          ls -l ..
           docker buildx imagetools create --tag ${{ steps.info.outputs.image }}:${{ matrix.tag }} $(printf '${{ steps.info.outputs.image }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ steps.info.outputs.image }}:${{ matrix.tag }}
+
+  cleaner:
+    needs:
+      - merger
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: "docker://us-docker.pkg.dev/gcr-cleaner/gcr-cleaner/gcr-cleaner-cli"
+        with:
+          args: -repo=${{ env.DEV_IMAGE }} -repo=${{ env.PRD_IMAGE }}
