@@ -361,8 +361,39 @@ impl Relationship {
 
 #[cfg(test)]
 mod test {
+    use crate::test_utils::*;
+
     #[test]
-    fn test_relationship_discovery() {
-        //
+    fn test_relationship_discovery() -> Result<(), String> {
+        let user = Lib::structb(
+            TypeStruct::default()
+                .prop(
+                    "id",
+                    Lib::integerb(TypeInteger::default(), TypeBase::default().as_id())?,
+                )
+                .prop(
+                    "name",
+                    Lib::stringb(TypeString::default(), TypeBase::default())?,
+                )
+                .prop("posts", ),
+                
+            TypeBase::named("User"),
+        )?;
+
+        let post = Lib::structb(
+            TypeStruct::default()
+                .prop(
+                    "id",
+                    Lib::integerb(TypeInteger::default(), TypeBase::default().as_id())?,
+                )
+                .prop(
+                    "title",
+                    Lib::stringb(TypeString::default(), TypeBase::default())?,
+                )
+                .prop("author", Lib::proxyb(TypeProxy::new("User"))),
+            TypeBase::named("Post"),
+        )?;
+
+        Ok(())
     }
 }

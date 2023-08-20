@@ -18,6 +18,7 @@ interface core {
 
     record type-base {
         name: option<string>,
+        as-id: bool,
     }
 
     record type-proxy {
