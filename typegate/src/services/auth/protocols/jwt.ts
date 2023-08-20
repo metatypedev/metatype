@@ -53,8 +53,14 @@ export class JWTAuth extends Protocol {
       const claims = await jwt.verify(token, this.signKey);
       return [claims, null];
     } catch (e) {
+      if (e.message.includes("jwt is expired")) {
+        throw new Error("jwt expired");
+      }
+      if (e.message.includes("jwt is used too early")) {
+        throw new Error("jwt used too early");
+      }
       logger.warning(`jwt auth failed: ${e}`);
-      return [{}, null];
+      throw new Error("jwt is invalid");
     }
   }
 }

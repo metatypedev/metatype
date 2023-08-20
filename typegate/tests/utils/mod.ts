@@ -8,7 +8,6 @@ import { init_native } from "native";
 import { SingleRegister } from "./single_register.ts";
 import { NoLimiter } from "./no_limiter.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
-import { ConnInfo } from "std/http/server.ts";
 import { RestQuery } from "./query/rest_query.ts";
 import { GraphQLQuery } from "./query/graphql_query.ts";
 import { test } from "./test.ts";
@@ -52,7 +51,7 @@ export async function execute(
   const typegate = new Typegate(register, limiter);
   return await typegate.handle(request, {
     remoteAddr: { hostname: "localhost" },
-  } as ConnInfo);
+  } as Deno.ServeHandlerInfo);
 }
 
 export const sleep = (ms: number) =>

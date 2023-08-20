@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { serve } from "std/http/server.ts";
 import { deferred } from "std/async/deferred.ts";
 import { init_native } from "native";
 
@@ -63,9 +62,9 @@ register.startSync(lastSync);
 
 await SystemTypegraph.loadAll(typegate, !config.packaged);
 
-const server = serve(
-  (req, connInfo) => typegate.handle(req, connInfo),
+const server = Deno.serve(
   { port: config.tg_port },
+  (req, connInfo) => typegate.handle(req, connInfo),
 );
 
 if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
