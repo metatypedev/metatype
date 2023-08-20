@@ -7,7 +7,7 @@ import { Type } from "../../src/type_node.ts";
 import { InputValidationCompiler } from "../../src/typecheck/input.ts";
 import { nativeResult } from "../../src/utils.ts";
 import * as native from "native";
-import { assert, assertEquals } from "std/testing/asserts.ts";
+import { assert, assertEquals } from "std/assert/mod.ts";
 
 Meta.test("input validator compiler", async (t) => {
   const e = await t.engine("typecheck/typecheck.py");

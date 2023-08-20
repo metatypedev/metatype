@@ -101,7 +101,7 @@ export class DenoRuntime extends Runtime {
 
     try {
       // clean up old files
-      logger.info(`removes files at ${basePath}`);
+      // logger.debug(`removes files at ${basePath}`);
       await Deno.remove(basePath, { recursive: true });
     } catch {
       // ignore non-existent files

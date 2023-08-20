@@ -6,7 +6,7 @@ import {
   assertEquals,
   AssertionError,
   assertStringIncludes,
-} from "std/testing/asserts.ts";
+} from "std/assert/mod.ts";
 import { Engine } from "../../../src/engine.ts";
 import { JSONValue } from "../../../src/utils.ts";
 import { deepMerge } from "std/collections/deep_merge.ts";

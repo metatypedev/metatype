@@ -259,7 +259,10 @@ impl QueryEngine {
     /// Disconnect and drop the core. Can be reconnected later with `#connect`.
     pub async fn disconnect(&self) -> Result<()> {
         let mut inner = self.inner.write().await;
-        let engine = inner.as_engine()?;
+        let engine = match *inner {
+            Inner::Builder(_) => return Ok(()),
+            Inner::Connected(ref e) => e,
+        };
 
         let builder = EngineBuilder {
             schema: engine.schema.clone(),

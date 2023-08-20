@@ -332,6 +332,8 @@ jobs:
 
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
+
+          deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
           deno run -A dev/test.ts -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 

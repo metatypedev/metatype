@@ -64,9 +64,8 @@ RUN OUT_DIR=target deno_bindgen --release -- --locked --package native --feature
 
 WORKDIR /app/typegate
 
-RUN deno cache --unstable src/main.ts \
+RUN deno run -A dev/update.ts --cache-only \
     && mkdir -p tmp
-
 
 #
 FROM builder as dev

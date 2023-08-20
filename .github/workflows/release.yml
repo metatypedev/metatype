@@ -139,7 +139,7 @@ jobs:
           file: dev/Dockerfile
           platforms: ${{ matrix.platform }}
           target: prd
-          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:nightly
           outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
       - run: |
           mkdir -p /tmp/digests
