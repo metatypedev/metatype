@@ -237,7 +237,7 @@ jobs:
       - changes
       - test-meta-cli
     if: ${{ needs.changes.outputs.typegate == 'true' }}
-    runs-on: self-ubuntu-latest
+    runs-on: custom-linux
     timeout-minutes: 60
     services:
       redis:
@@ -332,7 +332,7 @@ jobs:
 
           deno install -A -n deno_bindgen $DENO_BINDGEN_URL
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
-          deno run -A dev/test.ts --threads 8 -- --coverage=coverage
+          deno run -A dev/test.ts -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 
           cargo test --locked --package native

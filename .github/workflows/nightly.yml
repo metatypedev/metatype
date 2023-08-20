@@ -5,7 +5,7 @@ on:
   push:
 
 jobs:
-  typegate:
+  amd64:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,7 +18,7 @@ jobs:
       - uses: docker/build-push-action@v4
         with:
           file: dev/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           target: dev
           push: true
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/dev:latest
@@ -26,7 +26,34 @@ jobs:
       - uses: docker/build-push-action@v4
         with:
           file: dev/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
+          target: prd
+          push: true
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:nightly
+          tags: ghcr.io/${{ github.repository_owner }}/typegate:nightly
+
+  arm64:
+    runs-on: custom-macos
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v4
+        with:
+          file: dev/Dockerfile
+          platforms: linux/arm64
+          target: dev
+          push: true
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/dev:latest
+          tags: ghcr.io/${{ github.repository_owner }}/dev:latest
+      - uses: docker/build-push-action@v4
+        with:
+          file: dev/Dockerfile
+          platforms: linux/arm64
           target: prd
           push: true
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/typegate:nightly
