@@ -60,7 +60,7 @@ COPY . .
 
 RUN OUT_DIR=target deno_bindgen --release -- --locked --package native --features deno \
     && mv /app/target/release/libnative.so . \
-    && deno run -A dev/update.ts --cache-only \
+    && deno run -A dev/update.ts --cache-only --src-only \
     && mkdir -p typegate/tmp
 
 #

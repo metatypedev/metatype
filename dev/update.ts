@@ -15,8 +15,13 @@ const denoConfigPath = resolve(projectDir, "typegate/deno.json");
 const devConfigPath = resolve(projectDir, "dev/deps.ts");
 
 const flags = parseFlags(Deno.args, {
-  boolean: ["outdated", "upgrade", "cache-only"],
-  default: { outdated: false, upgrade: false, "cache-only": false },
+  boolean: ["outdated", "upgrade", "cache-only", "src-only"],
+  default: {
+    outdated: false,
+    upgrade: false,
+    "cache-only": false,
+    "src-only": false,
+  },
 });
 
 if (flags.outdated || flags.upgrade) {
@@ -57,10 +62,13 @@ if (flags.outdated || flags.upgrade) {
 }
 
 const tsFiles = [
-  ...expandGlobSync("typegate/{src,tests}/**/*.ts", {
-    root: projectDir,
-    globstar: true,
-  }),
+  ...expandGlobSync(
+    `typegate/{${flags["src-only"] ? "src" : "src,tests"}}/**/*.ts`,
+    {
+      root: projectDir,
+      globstar: true,
+    },
+  ),
 ].map((f: WalkEntry) => f.path);
 
 await runOrExit([
