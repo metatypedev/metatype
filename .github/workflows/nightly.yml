@@ -46,7 +46,6 @@ jobs:
           file: dev/Dockerfile
           platforms: ${{ matrix.platform }}
           target: prd
-          push: true
           cache-from: type=registry,ref=${{ env.PRD_IMAGE }}:nightly
           outputs: type=image,name=${{ env.PRD_IMAGE }},push-by-digest=true,name-canonical=true,push=true
       - run: |
@@ -90,9 +89,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - working-directory: /tmp/digests/${{ matrix.target }}
         run: |
-          pwd
-          ls -l
-          ls -l ..
           docker buildx imagetools create --tag ${{ steps.info.outputs.image }}:${{ matrix.tag }} $(printf '${{ steps.info.outputs.image }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ steps.info.outputs.image }}:${{ matrix.tag }}
 
@@ -110,3 +106,11 @@ jobs:
       - uses: "docker://us-docker.pkg.dev/gcr-cleaner/gcr-cleaner/gcr-cleaner-cli"
         with:
           args: -repo=${{ env.DEV_IMAGE }} -repo=${{ env.PRD_IMAGE }}
+      - uses: snok/container-retention-policy@v2
+        with:
+          account-type: org
+          org-name: metatypedev
+          image-names: dev, typegate
+          cut-off: 1 week ago UTC
+          untagged-only: true
+          token: ${{ secrets.PACKAGE_DELETER_TOKEN }}
