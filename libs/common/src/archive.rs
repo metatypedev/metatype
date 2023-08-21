@@ -104,3 +104,8 @@ pub fn flat_list_dir<P: AsRef<Path>>(dir: P) -> Result<Vec<String>> {
     }
     Ok(ret)
 }
+
+pub fn encode_to_base_64(file: &Path) -> Result<String> {
+    let bytes = fs::read(file).context(format!("reading file {:?}", file.display()))?;
+    Ok(STANDARD.encode(bytes))
+}

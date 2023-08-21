@@ -5,7 +5,7 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::runtimes::{
     DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, PythonMaterializer,
-    Runtime,
+    Runtime, WasiMaterializer,
 };
 use crate::wit::core::RuntimeId;
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
@@ -14,6 +14,7 @@ use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
 use common::typegraph::runtimes::http::HTTPRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
+use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
 use common::typegraph::runtimes::KnownRuntime;
 use common::typegraph::{runtimes::TGRuntime, Effect, EffectType, Materializer};
 use enum_dispatch::enum_dispatch;
@@ -264,6 +265,33 @@ impl MaterializerConverter for PythonMaterializer {
     }
 }
 
+impl MaterializerConverter for WasiMaterializer {
+    fn convert(
+        &self,
+        c: &mut TypegraphContext,
+        s: &Store,
+        runtime_id: RuntimeId,
+        effect: WitEffect,
+    ) -> Result<Materializer> {
+        let runtime = c.register_runtime(s, runtime_id)?;
+        let WasiMaterializer::Module(mat) = self;
+
+        let data = serde_json::from_value(json!({
+            "wasm": mat.module,
+            "func": mat.func_name
+        }))
+        .map_err(|e| e.to_string())?;
+
+        let name = "wasi".to_string();
+        Ok(Materializer {
+            name,
+            runtime,
+            effect: effect.into(),
+            data,
+        })
+    }
+}
+
 pub fn convert_materializer(
     c: &mut TypegraphContext,
     s: &Store,
@@ -302,6 +330,9 @@ pub fn convert_runtime(
             Ok(TGRuntime::Known(HTTP(data)))
         }
         Runtime::Python => Ok(TGRuntime::Known(PythonWasi(PythonRuntimeData {
+            config: None,
+        }))),
+        Runtime::WasmEdge => Ok(TGRuntime::Known(WasmEdge(WasmEdgeRuntimeData {
             config: None,
         }))),
     }
