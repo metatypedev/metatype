@@ -5,7 +5,7 @@ from typegraph_next.runtimes.wasmedge import WasmEdgeRuntime
 
 
 @typegraph()
-def test_complex_types(g: Graph):
+def wasmedge(g: Graph):
     pub = Policy.public()
     wasmedge = WasmEdgeRuntime()
 
