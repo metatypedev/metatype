@@ -110,6 +110,9 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             .collect::<Vec<_>>()
     };
 
+    // the default runtime is the deno runtime that will be registered below
+    let default_runtime_idx = 0;
+
     let mut ctx = TypegraphContext {
         name: params.name.clone(),
         meta: TypeMeta {
@@ -121,7 +124,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             ..Default::default()
         },
         types: vec![Some(TypeNode::Object {
-            base: gen_base(params.name, u32::MAX),
+            base: gen_base(params.name, default_runtime_idx), 
             data: ObjectTypeData {
                 properties: IndexMap::new(),
                 required: vec![],
@@ -129,6 +132,8 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
         })],
         ..Default::default()
     };
+
+    // register the deno runtime
     with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
 
     TG.with(move |tg| {
