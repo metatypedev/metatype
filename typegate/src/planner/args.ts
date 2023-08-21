@@ -3,7 +3,7 @@
 
 import * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { TypeGraph } from "../typegraph.ts";
+import { TypeGraph } from "../typegraph/mod.ts";
 import {
   Context,
   Parents,

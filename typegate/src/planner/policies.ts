@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { DenoRuntime } from "../runtimes/deno/deno.ts";
-import { TypeGraph } from "../typegraph.ts";
+import { TypeGraph } from "../typegraph/mod.ts";
 import {
   Context,
   Info,
@@ -17,6 +17,7 @@ import { ensure } from "../utils.ts";
 import { getLogger } from "../log.ts";
 import { Type } from "../type_node.ts";
 import { ArgPolicies } from "./args.ts";
+import { BadContext } from "../errors.ts";
 
 export interface FunctionSubtreeData {
   typeIdx: TypeIdx;
@@ -170,7 +171,7 @@ export class OperationPolicies {
           );
 
           if (policies.some((idx) => idx == null)) {
-            throw new Error(
+            throw new BadContext(
               this.getRejectionReason(stageId, typeIdx, effect, "__deny"),
             );
           }
@@ -193,7 +194,7 @@ export class OperationPolicies {
           }
 
           const policyName = this.tg.policy(res.policyIdx).name;
-          throw new Error(
+          throw new BadContext(
             this.getRejectionReason(stageId, typeIdx, effect, policyName),
           );
         }

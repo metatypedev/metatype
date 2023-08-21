@@ -24,15 +24,17 @@ pub struct Discovery {
     filter: FileFilter,
     #[allow(dead_code)]
     follow_symlinks: bool,
+    silence: bool,
 }
 
 impl Discovery {
-    pub fn new(config: Arc<Config>, dir: PathBuf) -> Self {
+    pub fn new(config: Arc<Config>, dir: PathBuf, silence: bool) -> Self {
         let filter = FileFilter::new(&config).expect("Could not load filters");
         Self {
             dir,
             filter,
             follow_symlinks: true,
+            silence,
         }
     }
 
@@ -60,10 +62,12 @@ impl Discovery {
             }
 
             let rel_path = diff_paths(path, &self.dir).unwrap();
-            info!(
-                "Found typegraph definition module at {}",
-                rel_path.display()
-            );
+            if !self.silence {
+                info!(
+                    "Found typegraph definition module at {}",
+                    rel_path.display()
+                );
+            }
             res.insert(path.to_path_buf());
         }
 

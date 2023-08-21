@@ -6,7 +6,7 @@ import { BasicAuth } from "./protocols/basic.ts";
 import { OAuth2Auth } from "./protocols/oauth2.ts";
 
 import type { Auth } from "../../types/typegraph.ts";
-import { SecretManager } from "../../typegraph.ts";
+import { SecretManager } from "../../typegraph/mod.ts";
 
 import { Protocol } from "./protocols/protocol.ts";
 import { DenoRuntime } from "../../runtimes/deno/deno.ts";

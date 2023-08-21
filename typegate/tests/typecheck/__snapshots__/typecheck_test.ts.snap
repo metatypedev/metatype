@@ -2,271 +2,153 @@ export const snapshot = {};
 
 snapshot[`typecheck 1`] = `
 "function validate_53_1(value, path, errors, context) {
-" +
-  '  if (typeof value !== "object") {
-' +
-  "    errors.push([path, \`expected an object, got \${typeof value}\`]);
-" +
-  "  } else if (value == null) {
-" +
-  '    errors.push([path, "exptected a non-null object, got null"]);
-' +
-  "  } else {
-" +
-  "    const keys = new Set(Object.keys(value));
-" +
-  '    keys.delete("posts");
-' +
-  '    validate_8_2(value["posts"], path + ".posts", errors, context);
-' +
-  "    if (keys.size > 0) {
-" +
-  '      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
-' +
-  "    }
-" +
-  "  }
-" +
-  "}
-" +
-  "function validate_8_2(value, path, errors, context) {
-" +
-  "  validate_27_3(value, path, errors, context);
-" +
-  "}
-" +
-  "function validate_27_3(value, path, errors, context) {
-" +
-  "  if (!Array.isArray(value)) {
-" +
-  "    errors.push([path, \`expected an array, got \${typeof value}\`]);
-" +
-  "  } else if (value.length > 20) {
-" +
-  "    errors.push([path, \`expected maximum items: 20, got \${value.length}\`]);
-" +
-  "  } else {
-" +
-  "    for (let i = 0; i < value.length; ++i) {
-" +
-  "      const item = value[i];
-" +
-  "      validate_28_4(value[i], path + \`[\${i}]\`, errors, context);
-" +
-  "    }
-" +
-  "  }
-" +
-  "}
-" +
-  "function validate_28_4(value, path, errors, context) {
-" +
-  '  if (typeof value !== "object") {
-' +
-  "    errors.push([path, \`expected an object, got \${typeof value}\`]);
-" +
-  "  } else if (value == null) {
-" +
-  '    errors.push([path, "exptected a non-null object, got null"]);
-' +
-  "  } else {
-" +
-  "    const keys = new Set(Object.keys(value));
-" +
-  '    keys.delete("id");
-' +
-  '    validate_29(value["id"], path + ".id", errors, context);
-' +
-  '    keys.delete("title");
-' +
-  '    validate_30(value["title"], path + ".title", errors, context);
-' +
-  '    keys.delete("author");
-' +
-  '    validate_2_5(value["author"], path + ".author", errors, context);
-' +
-  "    if (keys.size > 0) {
-" +
-  '      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
-' +
-  "    }
-" +
-  "  }
-" +
-  "}
-" +
-  "function validate_29(value, path, errors, context) {
-" +
-  '  if (typeof value !== "string") {
-' +
-  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
-" +
-  "  } else {
-" +
-  '    const formatValidator = context.formatValidators["uuid"];
-' +
-  "    if (formatValidator == null) {
-" +
-  \`      errors.push([path, "unknown format 'uuid'"]);
-\` +
-  "    } else if (!formatValidator(value)) {
-" +
-  "      errors.push([path,
-" +
-  \`        "string does not statisfy the required format 'uuid'"]);
-\` +
-  "    }
-" +
-  "  }
-" +
-  "}
-" +
-  "function validate_30(value, path, errors, context) {
-" +
-  '  if (typeof value !== "string") {
-' +
-  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
-" +
-  "  } else if (value.length < 10) {
-" +
-  "    errors.push([path, \`expected minimum length: 10, got \${value.length}\`]);
-" +
-  "  } else if (value.length > 200) {
-" +
-  "    errors.push([path, \`expected maximum length: 200, got \${value.length}\`]);
-" +
-  "  }
-" +
-  "}
-" +
-  "function validate_2_5(value, path, errors, context) {
-" +
-  '  if (typeof value !== "object") {
-' +
-  "    errors.push([path, \`expected an object, got \${typeof value}\`]);
-" +
-  "  } else if (value == null) {
-" +
-  '    errors.push([path, "exptected a non-null object, got null"]);
-' +
-  "  } else {
-" +
-  "    const keys = new Set(Object.keys(value));
-" +
-  '    keys.delete("id");
-' +
-  '    validate_3(value["id"], path + ".id", errors, context);
-' +
-  '    keys.delete("username");
-' +
-  '    validate_4(value["username"], path + ".username", errors, context);
-' +
-  "    if (keys.size > 0) {
-" +
-  '      errors.push([path, \`unexpected fields: \${[...keys].join(", ")}\`]);
-' +
-  "    }
-" +
-  "  }
-" +
-  "}
-" +
-  "function validate_3(value, path, errors, context) {
-" +
-  '  if (typeof value !== "string") {
-' +
-  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
-" +
-  "  } else {
-" +
-  '    const formatValidator = context.formatValidators["uuid"];
-' +
-  "    if (formatValidator == null) {
-" +
-  \`      errors.push([path, "unknown format 'uuid'"]);
-\` +
-  "    } else if (!formatValidator(value)) {
-" +
-  "      errors.push([path,
-" +
-  \`        "string does not statisfy the required format 'uuid'"]);
-\` +
-  "    }
-" +
-  "  }
-" +
-  "}
-" +
-  "function validate_4(value, path, errors, context) {
-" +
-  '  if (typeof value !== "string") {
-' +
-  "    errors.push([path, \`expected a string, got \${typeof value}\`]);
-" +
-  "  } else if (value.length < 4) {
-" +
-  "    errors.push([path, \`expected minimum length: 4, got \${value.length}\`]);
-" +
-  "  } else if (value.length > 63) {
-" +
-  "    errors.push([path, \`expected maximum length: 63, got \${value.length}\`]);
-" +
-  "  } else {
-" +
-  '    if (!new RegExp("^[a-z]+\$").test(value)) {
-' +
-  '      errors.push([path, "string does not match to the pattern /^[a-z]+\$/"]);
-' +
-  "    }
-" +
-  "  }
-" +
-  "}
-" +
-  "return validate_53_1;
+  if (typeof value !== \\"object\\") {
+    errors.push([path, \`expected an object, got \${typeof value}\`]);
+  } else if (value == null) {
+    errors.push([path, \\"exptected a non-null object, got null\\"]);
+  } else {
+    const keys = new Set(Object.keys(value));
+    keys.delete(\\"posts\\");
+    validate_8_2(value[\\"posts\\"], path + \\".posts\\", errors, context);
+    if (keys.size > 0) {
+      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
+    }
+  }
+}
+function validate_8_2(value, path, errors, context) {
+  validate_27_3(value, path, errors, context);
+}
+function validate_27_3(value, path, errors, context) {
+  if (!Array.isArray(value)) {
+    errors.push([path, \`expected an array, got \${typeof value}\`]);
+  } else if (value.length > 20) {
+    errors.push([path, \`expected maximum items: 20, got \${value.length}\`]);
+  } else {
+    for (let i = 0; i < value.length; ++i) {
+      const item = value[i];
+      validate_28_4(value[i], path + \`[\${i}]\`, errors, context);
+    }
+  }
+}
+function validate_28_4(value, path, errors, context) {
+  if (typeof value !== \\"object\\") {
+    errors.push([path, \`expected an object, got \${typeof value}\`]);
+  } else if (value == null) {
+    errors.push([path, \\"exptected a non-null object, got null\\"]);
+  } else {
+    const keys = new Set(Object.keys(value));
+    keys.delete(\\"id\\");
+    validate_29(value[\\"id\\"], path + \\".id\\", errors, context);
+    keys.delete(\\"title\\");
+    validate_30(value[\\"title\\"], path + \\".title\\", errors, context);
+    keys.delete(\\"author\\");
+    validate_2_5(value[\\"author\\"], path + \\".author\\", errors, context);
+    if (keys.size > 0) {
+      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
+    }
+  }
+}
+function validate_29(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else {
+    const formatValidator = context.formatValidators[\\"uuid\\"];
+    if (formatValidator == null) {
+      errors.push([path, \\"unknown format 'uuid'\\"]);
+    } else if (!formatValidator(value)) {
+      errors.push([path,
+        \\"string does not statisfy the required format 'uuid'\\"]);
+    }
+  }
+}
+function validate_30(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length < 10) {
+    errors.push([path, \`expected minimum length: 10, got \${value.length}\`]);
+  } else if (value.length > 200) {
+    errors.push([path, \`expected maximum length: 200, got \${value.length}\`]);
+  }
+}
+function validate_2_5(value, path, errors, context) {
+  if (typeof value !== \\"object\\") {
+    errors.push([path, \`expected an object, got \${typeof value}\`]);
+  } else if (value == null) {
+    errors.push([path, \\"exptected a non-null object, got null\\"]);
+  } else {
+    const keys = new Set(Object.keys(value));
+    keys.delete(\\"id\\");
+    validate_3(value[\\"id\\"], path + \\".id\\", errors, context);
+    keys.delete(\\"username\\");
+    validate_4(value[\\"username\\"], path + \\".username\\", errors, context);
+    if (keys.size > 0) {
+      errors.push([path, \`unexpected fields: \${[...keys].join(\\", \\")}\`]);
+    }
+  }
+}
+function validate_3(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else {
+    const formatValidator = context.formatValidators[\\"uuid\\"];
+    if (formatValidator == null) {
+      errors.push([path, \\"unknown format 'uuid'\\"]);
+    } else if (!formatValidator(value)) {
+      errors.push([path,
+        \\"string does not statisfy the required format 'uuid'\\"]);
+    }
+  }
+}
+function validate_4(value, path, errors, context) {
+  if (typeof value !== \\"string\\") {
+    errors.push([path, \`expected a string, got \${typeof value}\`]);
+  } else if (value.length < 4) {
+    errors.push([path, \`expected minimum length: 4, got \${value.length}\`]);
+  } else if (value.length > 63) {
+    errors.push([path, \`expected maximum length: 63, got \${value.length}\`]);
+  } else {
+    if (!new RegExp(\\"^[a-z]+\$\\").test(value)) {
+      errors.push([path, \\"string does not match to the pattern /^[a-z]+\$/\\"]);
+    }
+  }
+}
+return validate_53_1;
 "
 `;
 
 snapshot[`typecheck 2`] = `
 "Validation errors:
-" +
-  "  - at <value>.posts[0].author: expected an object, got undefined
+  - at <value>.posts[0].author: expected an object, got undefined
 "
 `;
 
 snapshot[`typecheck 3`] = `
 "Validation errors:
-" +
-  "  - at <value>.posts[0].author.username: expected a string, got undefined
+  - at <value>.posts[0].author.username: expected a string, got undefined
 "
 `;
 
 snapshot[`typecheck 4`] = `
 "Validation errors:
-" +
-  "  - at <value>.posts[1].author.username: expected a string, got undefined
+  - at <value>.posts[1].author.username: expected a string, got undefined
 "
 `;
 
 snapshot[`typecheck 5`] = `
 "Validation errors:
-" +
-  "  - at <value>.posts[0].author.id: string does not statisfy the required format 'uuid'
-" +
-  "  - at <value>.posts[0].author.email: string does not statisfy the required format 'email'
+  - at <value>.posts[0].author.id: string does not statisfy the required format 'uuid'
+  - at <value>.posts[0].author.email: string does not statisfy the required format 'email'
 "
 `;
 
 snapshot[`typecheck 6`] = `
 "Validation errors:
-" +
-  "  - at <value>.posts[0].author.email: string does not statisfy the required format 'email'
+  - at <value>.posts[0].author.email: string does not statisfy the required format 'email'
 "
 `;
 
 snapshot[`typecheck 7`] = `
 "Validation errors:
-" +
-  "  - at <value>.posts[0].author.website: string does not statisfy the required format 'uri'
+  - at <value>.posts[0].author.website: string does not statisfy the required format 'uri'
 "
 `;

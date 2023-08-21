@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { ConnInfo } from "std/http/server.ts";
 import config from "../config.ts";
 import { Engine } from "../engine.ts";
 import { getLogger } from "../log.ts";
@@ -23,7 +22,7 @@ export function resolveIdentifier(
   request: Request,
   engine: Engine,
   context: Record<string, unknown>,
-  connInfo: ConnInfo,
+  connInfo: Deno.ServeHandlerInfo,
 ): string {
   if (engine.tg.tg.meta.rate?.context_identifier) {
     const contextId = context[engine.tg.tg.meta.rate?.context_identifier] as

@@ -74,7 +74,9 @@ if (!config.rust_log) {
       set("off");
       break;
     case "DEBUG":
-      set("info,native=trace");
+      set(
+        "info,native=trace,quaint=warn,sql_schema_connector=warn,tracing=warn,schema_core=warn",
+      );
       break;
     case "WARNING":
       set("warn");

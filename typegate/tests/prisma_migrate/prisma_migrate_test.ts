@@ -6,7 +6,7 @@ import {
   assertArrayIncludes,
   assertEquals,
   assertExists,
-} from "std/testing/asserts.ts";
+} from "std/assert/mod.ts";
 import { join } from "std/path/mod.ts";
 import * as native from "native";
 import { nativeResult } from "../../src/utils.ts";
