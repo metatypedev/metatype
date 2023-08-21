@@ -11,6 +11,7 @@ import { forceAnyToOption } from "../utils.ts";
 import { Engine } from "../engine.ts";
 import * as ast from "graphql/ast";
 import { BadContext, ResolverError } from "../errors.ts";
+import { badRequest, jsonError, jsonOk } from "./responses.ts";
 
 const logger = getLogger(import.meta);
 
@@ -33,13 +34,10 @@ export async function handleGraphQL(
   try {
     content = await parseRequest(request);
   } catch (e) {
-    return new Response(`bad request: ${e.message}`, { status: 400 });
+    return badRequest(e.message);
   }
   const { query, operationName: operationNameRaw, variables } = content;
-
   const operationName = forceAnyToOption(operationNameRaw);
-
-  headers.set("content-type", "application/json");
 
   try {
     const document = parse(query);
@@ -103,66 +101,22 @@ export async function handleGraphQL(
       logger.debug({ req: { query, operationName, variables }, res });
     }
 
-    return new Response(JSON.stringify({ data: res }), {
-      headers,
-      status: 200,
-    });
+    return jsonOk(res, headers);
   } catch (e) {
     if (e instanceof ResolverError) {
       logger.error(`field err: ${e.message}`);
-      return new Response(
-        JSON.stringify({
-          errors: [
-            {
-              message: e.message,
-              locations: [],
-              path: [],
-              extensions: { timestamp: new Date().toISOString() },
-            },
-          ],
-        }),
-        {
-          headers,
-          status: 502,
-        },
-      );
+      return jsonError(e.message, headers, 502);
     } else if (e instanceof BadContext) {
       logger.error(`context err: ${e.message}`);
-      return new Response(
-        JSON.stringify({
-          errors: [
-            {
-              message: e.message,
-              locations: [],
-              path: [],
-              extensions: { timestamp: new Date().toISOString() },
-            },
-          ],
-        }),
-        {
-          headers,
-          status: 403,
-        },
+      return jsonError(
+        e.message,
+        headers,
+        Object.keys(context).length === 0 ? 401 : 403,
       );
     } else {
       console.error(e);
       logger.error(`request err: ${e}`);
-      return new Response(
-        JSON.stringify({
-          errors: [
-            {
-              message: e.message,
-              locations: [],
-              path: [],
-              extensions: { timestamp: new Date().toISOString() },
-            },
-          ],
-        }),
-        {
-          headers,
-          status: 400,
-        },
-      );
+      return jsonError(e.message, headers, 400);
     }
   }
 }

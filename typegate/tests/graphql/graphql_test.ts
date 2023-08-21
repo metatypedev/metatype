@@ -5,7 +5,7 @@ import { gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
 import { buildSchema, graphql } from "graphql";
 import { withInlinedVars } from "../../src/runtimes/utils/graphql_inline_vars.ts";
-import { assertEquals } from "std/testing/asserts.ts";
+import { assertEquals } from "std/assert/mod.ts";
 import outdent from "outdent";
 
 const schema = buildSchema(`

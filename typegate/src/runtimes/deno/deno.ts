@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { ComputeStage } from "../../engine.ts";
-import { TypeGraph, TypeGraphDS, TypeMaterializer } from "../../typegraph.ts";
+import {
+  TypeGraph,
+  TypeGraphDS,
+  TypeMaterializer,
+} from "../../typegraph/mod.ts";
 import { Runtime } from "../Runtime.ts";
 import { Resolver, RuntimeInitParams } from "../../types.ts";
 import { DenoRuntimeData } from "../../types/typegraph.ts";
@@ -18,7 +22,7 @@ import { getLogger } from "../../log.ts";
 const logger = getLogger(import.meta);
 
 const predefinedFuncs: Record<string, Resolver<Record<string, unknown>>> = {
-  identity: ({ _, ...args }) => (args),
+  identity: ({ _, ...args }) => args,
   true: () => true,
   false: () => false,
 };
@@ -97,7 +101,7 @@ export class DenoRuntime extends Runtime {
 
     try {
       // clean up old files
-      logger.info(`removes files at ${basePath}`);
+      // logger.debug(`removes files at ${basePath}`);
       await Deno.remove(basePath, { recursive: true });
     } catch {
       // ignore non-existent files

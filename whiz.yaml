@@ -16,7 +16,7 @@ typegate1: &tp
     TG_ADMIN_PASSWORD: "password"
   # https://github.com/denoland/deno/issues/18445
   # command: "deno task run"
-  command: "deno run --config=deno.json --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=.  --allow-net --v8-flags=--stack_size=2000 src/main.ts"
+  command: "deno run --config=deno.json --unstable --allow-run=hostname --allow-sys --allow-env --allow-hrtime --allow-write=tmp --allow-ffi --allow-read=. --allow-net src/main.ts"
   depends_on:
     - typegate_native
   pipe:
@@ -29,7 +29,7 @@ typegate2:
     TG_PORT: "7892"
 
 http:
-  command: ""
+  entrypoint: "/dev/null"
 
 system_graphs:
   watch:
@@ -133,7 +133,7 @@ install:
     JCO_VERSION: "0.9.4"
     CARGO_INSTA_VERSION: "1.30.0"
     WASMEDGE_VERSION: "0.12.1"
-    DENO_VERSION: "1.35.3"
+    DENO_VERSION: "1.36.1"
   command: |
     set -e
     deno --version | grep -q $DENO_VERSION || (echo "require deno upgrade to $DENO_VERSION" && exit 1)

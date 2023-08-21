@@ -13,7 +13,7 @@
  */
 
 import { cyan, green, parseFlags } from "./deps.ts";
-import { TypeGraphDS } from "../typegate/src/typegraph.ts";
+import { TypeGraphDS } from "../typegate/src/typegraph/mod.ts";
 import { visitType } from "../typegate/src/typegraph/visitor.ts";
 
 export function treeView(tg: TypeGraphDS, rootIdx = 0, depth = 4) {

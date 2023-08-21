@@ -6,9 +6,9 @@ import { Meta } from "../../utils/mod.ts";
 import { serialize } from "../../utils/meta.ts";
 import { SchemaGenerator } from "../../../src/runtimes/prisma/hooks/generate_schema.ts";
 import * as PrismaRT from "../../../src/runtimes/prisma/types.ts";
-import { assertEquals } from "std/testing/asserts.ts";
+import { assertEquals } from "std/assert/mod.ts";
 import outdent from "outdent";
-import { SecretManager } from "../../../src/typegraph.ts";
+import { SecretManager } from "../../../src/typegraph/mod.ts";
 
 interface Permutation<T> {
   (arr: T[]): T[];

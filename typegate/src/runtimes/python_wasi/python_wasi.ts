@@ -7,7 +7,7 @@ import { RuntimeInitParams } from "../../types.ts";
 import { ComputeStage } from "../../engine.ts";
 import { PythonWasmMessenger } from "./python_wasm_messenger.ts";
 import { path } from "compress/deps.ts";
-import { TypeGraph } from "../../typegraph.ts";
+import { TypeGraph } from "../../typegraph/mod.ts";
 import { PythonVirtualMachine } from "./python_vm.ts";
 import { Materializer } from "../../types/typegraph.ts";
 import { structureRepr } from "../../utils.ts";
