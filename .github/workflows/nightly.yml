@@ -110,6 +110,6 @@ jobs:
           account-type: org
           org-name: metatypedev
           image-names: dev,typegate
-          cut-off: now
+          cut-off: now UTC
           untagged-only: true
           token: ${{ secrets.PACKAGE_DELETER_TOKEN }}

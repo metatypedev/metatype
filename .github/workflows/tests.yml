@@ -33,18 +33,23 @@ jobs:
         with:
           filters: |
             website:
+              - '.github/workflows/tests.yml'
               - 'website/**'
             typegraph:
+              - '.github/workflows/tests.yml'
               - 'typegraph/**'
             meta-cli:
+              - '.github/workflows/tests.yml'
               - 'libs/**'
               - 'meta-cli/**'
               - 'Cargo.lock'
             typegate:
+              - '.github/workflows/tests.yml'
               - 'libs/**'
               - 'typegate/**'
               - 'Cargo.lock'
             rust:
+              - '.github/workflows/tests.yml'
               - 'libs/**'
               - 'typegate/native/**'
               - 'Cargo.lock'
@@ -334,7 +339,7 @@ jobs:
           OUT_DIR=target deno_bindgen -- --locked --package native -F deno
 
           deno run -A dev/update.ts --cache-only || deno run -A dev/update.ts --cache-only
-          deno run -A dev/test.ts -- --coverage=coverage
+          deno run -A dev/test.ts --threads 2 -- --coverage=coverage
           deno --unstable coverage ./coverage --lcov > coverage.lcov
 
           cargo test --locked --package native
