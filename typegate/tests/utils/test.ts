@@ -9,7 +9,7 @@ import { shell } from "./shell.ts";
 
 import { Server } from "std/http/server.ts";
 import { assertSnapshot } from "std/testing/snapshot.ts";
-import { assertEquals, assertNotEquals } from "std/testing/asserts.ts";
+import { assertEquals, assertNotEquals } from "std/assert/mod.ts";
 import { Engine } from "../../src/engine.ts";
 import { Typegate } from "../../src/typegate/mod.ts";
 import { ConnInfo } from "std/http/server.ts";
@@ -198,6 +198,7 @@ export class MetaTest {
     assertNotEquals(paths.length, 0);
     const first = paths.shift()!;
     const expected = await this.serialize(first, { pretty: true });
+    await this.assertSnapshot(expected);
     for (const path of paths) {
       await this.should(
         `serialize ${path} to the same typegraph as ${first}`,
