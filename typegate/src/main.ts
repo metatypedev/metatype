@@ -84,4 +84,4 @@ if (config.debug && (config.tg_port === 7890 || config.tg_port === 7891)) {
 
 getLogger().info(`typegate ready on ${config.tg_port}`);
 
-await server;
+await server.finished;
