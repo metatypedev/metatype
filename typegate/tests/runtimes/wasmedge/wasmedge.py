@@ -1,16 +1,19 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.wasmedge import WasmEdgeRuntime
+from typegraph_next import t, typegraph
+from typegraph_next.graph.typegraph import Graph
+from typegraph_next.policy import Policy
+from typegraph_next.runtimes.wasmedge import WasmEdgeRuntime
 
-with TypeGraph("wasmedge") as g:
-    public = policies.public()
+
+@typegraph()
+def test_complex_types(g: Graph):
+    pub = Policy.public()
     wasmedge = WasmEdgeRuntime()
 
     g.expose(
         test=wasmedge.wasi(
-            "rust.wasm",
-            "add",
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
-        ),
-        default_policy=[public],
+            wasm="rust.wasm",
+            func="add",
+        ).with_policy(pub),
     )
