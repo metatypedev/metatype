@@ -70,6 +70,17 @@ impl Store {
             .ok_or_else(|| errors::object_not_found("type", type_id))
     }
 
+    pub fn get_type_name(&self, type_id: TypeId) -> Result<Option<&str>, TgError> {
+        let ty = self.get_type(type_id)?;
+        match ty.get_base() {
+            Some(base) => Ok(base.name.as_deref()),
+            None => match ty {
+                Type::Proxy(p) => Ok(Some(p.data.name.as_str())),
+                _ => Ok(None),
+            },
+        }
+    }
+
     pub fn get_type_by_name(&self, name: &str) -> Option<TypeId> {
         self.type_by_names.get(name).copied()
     }

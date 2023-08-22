@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::{FloatTypeData, TypeNode};
+use common::typegraph::types::{FloatTypeData, TypeNode};
 use errors::Result;
 
 use crate::{

@@ -14,6 +14,16 @@ use crate::{
     wit::core::{TypeId, TypeStruct},
 };
 
+impl TypeStruct {
+    pub fn get_prop(&self, key: &str) -> Option<TypeId> {
+        self.props
+            .iter()
+            .filter(|(k, _)| k == key)
+            .map(|(_, v)| *v)
+            .next()
+    }
+}
+
 impl TypeConversion for Struct {
     fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
         Ok(TypeNode::Object {

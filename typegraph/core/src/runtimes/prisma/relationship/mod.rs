@@ -11,7 +11,7 @@ use crate::wit::runtimes::Error as TgError;
 mod discovery;
 mod registry;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Cardinality {
     Optional,
     One,
@@ -62,7 +62,7 @@ pub struct RelationshipTarget {
     // pub cardinality: Cardinality,
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RelationshipModel {
     pub model_type: TypeId,
     pub wrapper_type: TypeId,
@@ -79,6 +79,19 @@ impl RelationshipModel {
             field,
         }
     }
+
+    pub fn get_rel_name(&self) -> Result<Option<String>> {
+        with_store(|s| -> Result<_> {
+            let target_type = s
+                .type_as_struct(self.model_type)?
+                .data
+                .get_prop(&self.field);
+            target_type
+                .map(get_rel_name)
+                .transpose()
+                .map(|o| o.flatten())
+        })
+    }
 }
 
 /// Possible cardinalities are:
@@ -87,6 +100,7 @@ impl RelationshipModel {
 /// (Optional, Many) [Left] 0..1 --> 0..n [Right]
 /// (One, Many) [Left] 1..1 --> 0..n [Right]
 /// The model on the right will have the foreign key
+#[derive(Debug)]
 pub struct Relationship {
     pub name: String,
     pub left: RelationshipModel,
@@ -96,26 +110,105 @@ pub struct Relationship {
 impl TryFrom<(RelationshipModel, RelationshipModel)> for Relationship {
     type Error = TgError;
 
-    fn try_from(value: (RelationshipModel, RelationshipModel)) -> Result<Self, Self::Error> {
-        let (left, right) = value;
-        let left_name = get_rel_name(left.wrapper_type)?;
-        let right_name = get_rel_name(right.wrapper_type)?;
-        let name = match (left_name, right_name) {
-            (None, None) => {
-                // generate name
-                "".to_string()
+    fn try_from(pair: (RelationshipModel, RelationshipModel)) -> Result<Self, Self::Error> {
+        let (first, second) = pair;
+        let (left, right) = match (first.cardinality, second.cardinality) {
+            (Cardinality::One, Cardinality::One)
+            | (Cardinality::Optional, Cardinality::Optional) => {
+                todo!()
             }
-            (Some(n), None) | (None, Some(n)) => n,
-            (Some(n1), Some(n2)) => {
-                if n1 != n2 {
-                    return Err(format!("relationship names do not match: {} != {}", n1, n2));
+            (Cardinality::One, Cardinality::Optional)
+            | (Cardinality::One, Cardinality::Many)
+            | (Cardinality::Optional, Cardinality::Many) => (first, second),
+            (Cardinality::Optional, Cardinality::One)
+            | (Cardinality::Many, Cardinality::One)
+            | (Cardinality::Many, Cardinality::Optional) => (second, first),
+            (Cardinality::Many, Cardinality::Many) => {
+                return Err("Many to many relationship not supported".to_string());
+            }
+        };
+        let name = match (left.get_rel_name()?, right.get_rel_name()?) {
+            (None, None) => {
+                let left_name = with_store(|s| -> Result<_> {
+                    s.get_type_name(left.model_type)?
+                        .map(|s| s.to_string())
+                        .ok_or_else(|| "Prisma model must have explicit name".to_string())
+                })?;
+                let right_name = with_store(|s| -> Result<_> {
+                    s.get_type_name(right.model_type)?
+                        .map(|s| s.to_string())
+                        .ok_or_else(|| "Prisma model must have explicit name".to_string())
+                })?;
+                format!("{}To{}", left_name, right_name)
+            }
+            (Some(name), None) => name,
+            (None, Some(name)) => name,
+            (Some(name1), Some(name2)) => {
+                if name1 == name2 {
+                    name1
+                } else {
+                    return Err("Relationship names do not match".to_string());
                 }
-                n1
             }
         };
 
-        Ok(Self { name, left, right })
+        Ok(Relationship { name, left, right })
     }
 }
 
 use registry::RelationshipRegistry;
+
+#[cfg(test)]
+mod test {
+    use crate::errors::Result;
+    use crate::global_store::with_store;
+    use crate::runtimes::prisma::relationship::registry::RelationshipRegistry;
+    use crate::test_utils::*;
+
+    #[test]
+    fn test_relationship_discovery() -> Result<(), String> {
+        let user = Lib::structb(
+            TypeStruct::default()
+                .prop(
+                    "id",
+                    Lib::integerb(TypeInteger::default(), TypeBase::default().as_id())?,
+                )
+                .prop(
+                    "name",
+                    Lib::stringb(TypeString::default(), TypeBase::default())?,
+                )
+                .prop(
+                    "posts",
+                    Lib::arrayb(
+                        TypeArray::of(Lib::proxyb(TypeProxy::new("Post"))?),
+                        TypeBase::default(),
+                    )?,
+                ),
+            TypeBase::named("User"),
+        )?;
+
+        let post = Lib::structb(
+            TypeStruct::default()
+                .prop(
+                    "id",
+                    Lib::integerb(TypeInteger::default(), TypeBase::default().as_id())?,
+                )
+                .prop(
+                    "title",
+                    Lib::stringb(TypeString::default(), TypeBase::default())?,
+                )
+                .prop("author", Lib::proxyb(TypeProxy::new("User"))?),
+            TypeBase::named("Post"),
+        )?;
+
+        let registry = with_store(|s| -> Result<_> {
+            let models = [s.type_as_struct(user)?, s.type_as_struct(post)?];
+            let reg = RelationshipRegistry::from(&models)?;
+            Ok(reg)
+        });
+
+        insta::assert_debug_snapshot!(registry);
+
+        Ok(())
+    }
+}

@@ -6,7 +6,7 @@ use crate::{
     errors::Result,
     global_store::{with_store, Store},
     typegraph::TypegraphContext,
-    types::{Type, TypeData, WithPolicy, WrapperTypeData},
+    types::{TypeData, WithPolicy, WrapperTypeData},
     wit::core::{PolicySpec, TypeId, TypePolicy},
 };
 use common::typegraph::TypeNode;
@@ -61,7 +61,7 @@ impl TypeData for TypePolicy {
 }
 
 impl WrapperTypeData for TypePolicy {
-    fn get_wrapped_type(&self, store: &Store) -> Option<TypeId> {
+    fn get_wrapped_type(&self, _store: &Store) -> Option<TypeId> {
         Some(self.tpe)
     }
 }

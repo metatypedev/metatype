@@ -38,7 +38,10 @@ pub struct WrapperType<T: TypeData + WrapperTypeData> {
 #[allow(clippy::derivable_impls)]
 impl Default for TypeBase {
     fn default() -> Self {
-        Self { name: None, as_id: false }
+        Self {
+            name: None,
+            as_id: false,
+        }
     }
 }
 
@@ -78,6 +81,7 @@ pub enum Type {
 
 #[enum_dispatch]
 pub trait TypeFun {
+    fn get_id(&self) -> TypeId;
     fn get_base(&self) -> Option<&TypeBase>;
     fn get_data(&self) -> &dyn TypeData;
     fn get_concrete_type(&self) -> Option<TypeId>;
@@ -100,6 +104,10 @@ impl<T> TypeFun for ConcreteType<T>
 where
     T: TypeData,
 {
+    fn get_id(&self) -> TypeId {
+        self.id
+    }
+
     fn to_string(&self) -> String {
         let mut params = vec![];
         params.push(format!("#{}", self.id));
@@ -124,6 +132,10 @@ impl<T> TypeFun for WrapperType<T>
 where
     T: TypeData + WrapperTypeData,
 {
+    fn get_id(&self) -> TypeId {
+        self.id
+    }
+
     fn to_string(&self) -> String {
         let mut params = vec![];
         params.push(format!("#{}", self.id));

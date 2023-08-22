@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::errors::Result;
-use crate::global_store::{with_store, Store};
+use crate::global_store::with_store;
 use crate::types::Type;
 use crate::types::TypeFun;
 use crate::wit::core::TypeId;
@@ -14,9 +14,9 @@ pub fn is_unique_ref(id: TypeId) -> Result<bool> {
         Type::Proxy(p) => Ok(p
             .data
             .get_extra("unique")
-            .map(|u| serde_json::from_str::<bool>(u))
+            .map(serde_json::from_str::<bool>)
             .transpose()
-            .map_err(|e| "invalid 'unique' config: expected string".to_string())?
+            .map_err(|_e| "invalid 'unique' config: expected string".to_string())?
             .unwrap_or(false)),
         _ => Ok(false),
     })
@@ -27,9 +27,9 @@ pub fn has_fkey(id: TypeId) -> Result<Option<bool>> {
         Type::Proxy(p) => p
             .data
             .get_extra("fkey")
-            .map(|v| serde_json::from_str(v))
+            .map(serde_json::from_str)
             .transpose()
-            .map_err(|e| "invalid 'fkey' field".to_string()),
+            .map_err(|_| "invalid 'fkey' field".to_string()),
         _ => Ok(None),
     })
 }

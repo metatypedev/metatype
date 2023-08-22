@@ -1,9 +1,10 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::core::TypeProxy;
 pub(crate) use crate::wit::{
     core::{
         Core, MaterializerId, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeId, TypeInteger,
-        TypeOptional, TypeString, TypeStruct,
+        TypeOptional, TypeProxy, TypeString, TypeStruct,
     },
     runtimes::{Effect, MaterializerDenoFunc, Runtimes},
 };
@@ -16,7 +17,6 @@ impl TypeBase {
             name: Some(name.into()),
             ..Default::default()
         }
-
     }
 
     pub fn as_id(mut self) -> Self {
@@ -161,7 +161,10 @@ impl TypeFunc {
 
 impl TypeProxy {
     pub fn new(name: impl Into<String>) -> Self {
-        Self { name: name.into(), extras: vec![] }
+        Self {
+            name: name.into(),
+            extras: vec![],
+        }
     }
 }
 

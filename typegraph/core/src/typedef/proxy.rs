@@ -10,7 +10,7 @@ use crate::{
     errors,
     global_store::{with_store, Store},
     typegraph::TypegraphContext,
-    types::{Proxy, Type, TypeData, WrapperTypeData},
+    types::{Proxy, TypeData, WrapperTypeData},
     wit::core::TypeProxy,
 };
 

@@ -149,9 +149,20 @@ impl wit::core::Core for Lib {
                 return Err(errors::invalid_max_value());
             }
         }
-        Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::Array(Array { id, base, data }))
-        }))
+        with_store_mut(move |s| -> Result<_> {
+            let base = match s.get_type_name(data.of)? {
+                Some(name) => {
+                    // TODO
+                    let name = format!("{}[]", name);
+                    TypeBase {
+                        name: Some(name),
+                        ..base
+                    }
+                }
+                None => base,
+            };
+            Ok(s.add_type(|id| Type::Array(Array { id, base, data })))
+        })
     }
 
     fn optionalb(data: TypeOptional, base: TypeBase) -> Result<TypeId> {
@@ -410,7 +421,7 @@ mod tests {
         })
         .unwrap();
         let tpe = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
-        let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![]);
+        let res = Lib::expose(vec![("one".to_string(), tpe)], vec![]);
 
         assert_eq!(
             res,
@@ -445,8 +456,7 @@ mod tests {
                     Lib::structb(TypeStruct::default(), TypeBase::default())?,
                     Lib::integerb(TypeInteger::default(), TypeBase::default())?,
                     mat,
-                ))?
-                .into(),
+                ))?,
             )],
             vec![],
         );
@@ -459,8 +469,7 @@ mod tests {
                     Lib::structb(TypeStruct::default(), TypeBase::default())?,
                     Lib::integerb(TypeInteger::default(), TypeBase::default())?,
                     mat,
-                ))?
-                .into(),
+                ))?,
             )],
             vec![],
         );
@@ -490,8 +499,7 @@ mod tests {
                         Lib::structb(TypeStruct::default(), TypeBase::default())?,
                         Lib::integerb(TypeInteger::default(), TypeBase::default())?,
                         mat,
-                    ))?
-                    .into(),
+                    ))?,
                 ),
                 (
                     "one".to_string(),
@@ -499,8 +507,7 @@ mod tests {
                         Lib::structb(TypeStruct::default(), TypeBase::default())?,
                         Lib::integerb(TypeInteger::default(), TypeBase::default())?,
                         mat,
-                    ))?
-                    .into(),
+                    ))?,
                 ),
             ],
             vec![],
@@ -537,10 +544,7 @@ mod tests {
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
         Lib::expose(
-            vec![(
-                "one".to_string(),
-                Lib::funcb(TypeFunc::new(s, b, mat))?.into(),
-            )],
+            vec![("one".to_string(), Lib::funcb(TypeFunc::new(s, b, mat))?)],
             vec![],
         )?;
         let typegraph = Lib::finalize_typegraph()?;

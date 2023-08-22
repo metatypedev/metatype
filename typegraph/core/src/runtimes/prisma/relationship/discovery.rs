@@ -1,22 +1,18 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashSet;
-
 use crate::global_store::with_store;
 use crate::runtimes::prisma::relationship::get_rel_name;
-use crate::runtimes::prisma::type_utils::{self, as_relationship_source, get_model_type, has_fkey};
-use crate::types::Type;
-use crate::types::TypeFun;
+use crate::runtimes::prisma::type_utils::as_relationship_source;
 use crate::wit::core::TypeId;
 use crate::{errors::Result, types::Struct};
 
-use super::{Cardinality, Relationship, RelationshipModel};
+use super::{Relationship, RelationshipModel};
 use super::{RelationshipRegistry, RelationshipSource};
 
 /// scan model `model` for relationships
-pub fn scan_model(model: &Struct, registry: &RelationshipRegistry) -> Result<Vec<Relationship>> {
-    with_store(|s| {
+pub fn scan_model(model: &Struct, _registry: &RelationshipRegistry) -> Result<Vec<Relationship>> {
+    with_store(|_s| {
         let mut result = Vec::new();
         // let mut self_relationships = HashSet::new();
 
@@ -47,11 +43,11 @@ pub fn scan_model(model: &Struct, registry: &RelationshipRegistry) -> Result<Vec
 use super::RelationshipTarget;
 
 impl RelationshipModel {
-    fn list_alternatives(source_type: TypeId, target_model: TypeId) {
+    fn list_alternatives(_source_type: TypeId, _target_model: TypeId) {
         todo!()
     }
 
-    fn find_targets(source_type: TypeId, target_model: TypeId) -> Result<Vec<RelationshipModel>> {
+    fn find_targets(_source_type: TypeId, _target_model: TypeId) -> Result<Vec<RelationshipModel>> {
         todo!()
     }
 
@@ -94,12 +90,6 @@ impl RelationshipModel {
     // }
 }
 
-impl Relationship {
-    pub fn new(first: RelationshipModel, second: RelationshipModel) -> Self {
-        todo!()
-    }
-}
-
 struct TargetAlternatives<'a> {
     source: &'a RelationshipSource,
     alternatives: Vec<(String, RelationshipSource)>,
@@ -109,9 +99,7 @@ impl<'a> TargetAlternatives<'a> {
     fn check(&mut self) -> Result<Option<(String, RelationshipSource)>> {
         match self.alternatives.len() {
             0 => Err("no match".to_string()),
-            1 => Ok(std::mem::replace(&mut self.alternatives, vec![])
-                .into_iter()
-                .next()),
+            1 => Ok(std::mem::take(&mut self.alternatives).into_iter().next()),
             _ => Ok(None),
         }
     }
@@ -130,7 +118,7 @@ fn get_unique_alternative(
 ) -> Result<Option<(String, RelationshipModel)>> {
     match alternatives.len() {
         0 => Err("no match".to_string()),
-        1 => Ok(std::mem::replace(alternatives, vec![]).into_iter().next()),
+        1 => Ok(std::mem::take(alternatives).into_iter().next()),
         _ => Ok(None),
     }
 }
@@ -159,27 +147,21 @@ impl Relationship {
                 .collect();
 
             if let Some((prop, target)) = get_unique_alternative(&mut alternatives)? {
-                return Ok(Self::new(
-                    RelationshipModel::from_source(source, prop),
-                    target,
-                ));
+                return (RelationshipModel::from_source(source, prop), target).try_into();
             }
 
             if let Some(rel_name) = get_rel_name(source.wrapper_type)? {
-                alternatives.retain(|(k, t)| {
+                alternatives.retain(|(_k, t)| {
                     get_rel_name(t.wrapper_type).unwrap().as_deref() == Some(&rel_name)
                 });
                 if let Some((prop, target)) = get_unique_alternative(&mut alternatives)? {
-                    return Ok(Self::new(
-                        RelationshipModel::from_source(source, prop),
-                        target,
-                    ));
+                    return (RelationshipModel::from_source(source, prop), target).try_into();
                 }
             }
 
             // TODO target field
 
-            return Err("Ambiguous target".to_string());
+            Err("Ambiguous target".to_string())
         })
     }
 
@@ -358,42 +340,3 @@ impl Relationship {
 //         }
 //     }
 // }
-
-#[cfg(test)]
-mod test {
-    use crate::test_utils::*;
-
-    #[test]
-    fn test_relationship_discovery() -> Result<(), String> {
-        let user = Lib::structb(
-            TypeStruct::default()
-                .prop(
-                    "id",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default().as_id())?,
-                )
-                .prop(
-                    "name",
-                    Lib::stringb(TypeString::default(), TypeBase::default())?,
-                )
-                .prop("posts", ),
-                
-            TypeBase::named("User"),
-        )?;
-
-        let post = Lib::structb(
-            TypeStruct::default()
-                .prop(
-                    "id",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default().as_id())?,
-                )
-                .prop(
-                    "title",
-                    Lib::stringb(TypeString::default(), TypeBase::default())?,
-                )
-                .prop("author", Lib::proxyb(TypeProxy::new("User"))),
-            TypeBase::named("Post"),
-        )?;
-
-        Ok(())
-    }
-}
