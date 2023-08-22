@@ -71,7 +71,7 @@ dev:
     WASMTIME_VERSION: 10.0.1
     WASMEDGE_VERSION: 0.12.1
     TYPEGRAPH_VERSION: 0.0.2
-    METATYPE_VERSION: 0.1.14
+    METATYPE_VERSION: 0.1.15-0+dev
     TAGLINE: >-
       Declarative API development platform. Build serverless backends with
       zero-trust and less code, no matter where and how your (legacy) systems
