@@ -4,8 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  DEV_IMAGE: ghcr.io/${{ github.repository_owner }}/dev
-  PRD_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
+  REGISTRY_IMAGE: ghcr.io/${{ github.repository_owner }}/dev
 
 jobs:
   builder:
@@ -33,28 +32,28 @@ jobs:
           file: dev/Dockerfile
           platforms: ${{ matrix.platform }}
           target: dev
-          cache-from: type=registry,ref=${{ env.DEV_IMAGE }}:latest
-          outputs: type=image,name=${{ env.DEV_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:base
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
       - run: |
-          mkdir -p /tmp/digests/dev
+          mkdir -p tmp/digests/dev
           digest="${{ steps.dev.outputs.digest }}"
-          touch "/tmp/digests/dev/${digest#sha256:}"
+          touch "tmp/digests/dev/${digest#sha256:}"
       - uses: docker/build-push-action@v4
         id: prd
         with:
           file: dev/Dockerfile
           platforms: ${{ matrix.platform }}
           target: prd
-          cache-from: type=registry,ref=${{ env.PRD_IMAGE }}:nightly
-          outputs: type=image,name=${{ env.PRD_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          cache-from: type=registry,ref=${{ env.REGISTRY_IMAGE }}:nightly
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
       - run: |
-          mkdir -p /tmp/digests/prd
+          mkdir -p tmp/digests/prd
           digest="${{ steps.prd.outputs.digest }}"
-          touch "/tmp/digests/prd/${digest#sha256:}"
+          touch "tmp/digests/prd/${digest#sha256:}"
       - uses: actions/upload-artifact@v3
         with:
           name: digests
-          path: /tmp/digests/*
+          path: tmp/digests/*
           if-no-files-found: error
           retention-days: 1
 
@@ -67,14 +66,14 @@ jobs:
       matrix:
         include:
           - target: dev
-            tag: latest
+            tag: base
           - target: prd
             tag: nightly
     steps:
       - uses: actions/download-artifact@v3
         with:
           name: digests
-          path: /tmp/digests
+          path: tmp/digests
       - uses: docker/setup-buildx-action@v2
       - id: info
         run: |
@@ -86,8 +85,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - working-directory: /tmp/digests/${{ matrix.target }}
-        run: |
+      - run: |
+          cd tmp/digests/${{ matrix.target }}
           docker buildx imagetools create --tag ${{ steps.info.outputs.image }}:${{ matrix.tag }} $(printf '${{ steps.info.outputs.image }}@sha256:%s ' *)
           docker buildx imagetools inspect ${{ steps.info.outputs.image }}:${{ matrix.tag }}
 
@@ -102,14 +101,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: "docker://us-docker.pkg.dev/gcr-cleaner/gcr-cleaner/gcr-cleaner-cli"
-        with:
-          args: -repo=${{ env.DEV_IMAGE }} -repo=${{ env.PRD_IMAGE }}
       - uses: snok/container-retention-policy@v2
         with:
           account-type: org
           org-name: metatypedev
-          image-names: dev,typegate
-          cut-off: now UTC
+          image-names: dev,nightly
+          cut-off: 12 hours ago UTC
           untagged-only: true
           token: ${{ secrets.PACKAGE_DELETER_TOKEN }}
