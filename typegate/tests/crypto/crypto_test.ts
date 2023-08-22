@@ -8,7 +8,7 @@ import {
   unsafeExtractJWT,
   verifyJWT,
 } from "../../src/crypto.ts";
-import { assertEquals } from "std/testing/asserts.ts";
+import { assertEquals } from "std/assert/mod.ts";
 
 Deno.test("encrypt/decrypt", async () => {
   const message = "hello world! hello world! hello world!";

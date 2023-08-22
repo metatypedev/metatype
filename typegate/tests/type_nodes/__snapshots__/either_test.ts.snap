@@ -3,8 +3,7 @@ export const snapshot = {};
 snapshot[`Either type 1`] = `
 [
   "Validation errors:
-" +
-    "  - at <value>.user: Value does not match to any variant of the either type
+  - at <value>.user: Value does not match to any variant of the either type
 ",
 ]
 `;

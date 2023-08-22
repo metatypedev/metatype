@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeGraph, TypeGraphDS } from "../typegraph.ts";
+import { TypeGraph, TypeGraphDS } from "../typegraph/mod.ts";
 import config from "../config.ts";
 import * as semver from "std/semver/mod.ts";
 

@@ -12,19 +12,24 @@ import {
 import { projectDir, relPath, runOrExit } from "./utils.ts";
 
 const denoConfigPath = resolve(projectDir, "typegate/deno.json");
-const devConfigPath = resolve(projectDir, "dev/mod.ts");
+const devConfigPath = resolve(projectDir, "dev/deps.ts");
 
-const args = parseFlags(Deno.args, {
-  boolean: ["outdated", "upgrade"],
-  default: { outdated: false, upgrade: false },
+const flags = parseFlags(Deno.args, {
+  boolean: ["outdated", "upgrade", "cache-only", "src-only"],
+  default: {
+    outdated: false,
+    upgrade: false,
+    "cache-only": false,
+    "src-only": false,
+  },
 });
 
-if (args.outdated || args.upgrade) {
+if (flags.outdated || flags.upgrade) {
   for await (const configPath of [denoConfigPath, devConfigPath]) {
     console.log(
       `Checking for updates for ${relPath(configPath)}:`,
     );
-    const deps = await udd(configPath, { dryRun: args.outdated });
+    const deps = await udd(configPath, { dryRun: flags.outdated });
     console.log();
 
     const depCats = groupBy(deps, (d) => String(d.success));
@@ -57,10 +62,13 @@ if (args.outdated || args.upgrade) {
 }
 
 const tsFiles = [
-  ...expandGlobSync("typegate/{src,tests}/**/*.ts", {
-    root: projectDir,
-    globstar: true,
-  }),
+  ...expandGlobSync(
+    `typegate/{${flags["src-only"] ? "src" : "src,tests"}}/**/*.ts`,
+    {
+      root: projectDir,
+      globstar: true,
+    },
+  ),
 ].map((f: WalkEntry) => f.path);
 
 await runOrExit([
@@ -68,7 +76,6 @@ await runOrExit([
   "cache",
   `--config=${denoConfigPath}`,
   "--unstable",
-  "--reload",
-  "--lock-write",
+  ...flags["cache-only"] ? [] : ["--reload", "--lock-write"],
   ...tsFiles,
 ], projectDir);

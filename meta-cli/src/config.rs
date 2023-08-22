@@ -54,7 +54,7 @@ pub struct NodeConfig {
     username: Option<String>,
     password: Option<String>,
     #[serde(default)]
-    env: HashMap<String, String>,
+    pub env: HashMap<String, String>,
 }
 
 impl Default for NodeConfig {
@@ -159,7 +159,7 @@ pub struct Config {
     #[serde(skip)]
     pub base_dir: PathBuf,
     #[serde(default)]
-    typegates: HashMap<String, NodeConfig>,
+    pub typegates: HashMap<String, NodeConfig>,
     #[serde(default)]
     pub typegraphs: Typegraphs,
 }

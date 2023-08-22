@@ -6,7 +6,7 @@ import { Meta } from "../utils/mod.ts";
 import { join } from "std/path/mod.ts";
 import { JSONSchemaFaker } from "json-schema-faker";
 import Ajv from "ajv";
-import { assertNotStrictEquals } from "std/testing/asserts.ts";
+import { assertNotStrictEquals } from "std/assert/mod.ts";
 import { upgradeTypegraph } from "../../src/typegraph/versions.ts";
 import { testDir } from "../utils/dir.ts";
 

@@ -7,7 +7,7 @@ import type {
   SecretManager,
   TypeGraphDS,
   TypeMaterializer,
-} from "./typegraph.ts";
+} from "./typegraph/mod.ts";
 import { TypeNode } from "./type_node.ts";
 import * as ast from "graphql/ast";
 import { ComputeArg } from "./planner/args.ts";

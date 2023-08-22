@@ -4,7 +4,7 @@
 import { FormDataParser } from "../../src/graphql/request_parser.ts";
 import { gql, Meta } from "../utils/mod.ts";
 import * as mf from "test/mock_fetch";
-import { assertEquals, assertExists } from "std/testing/asserts.ts";
+import { assertEquals, assertExists } from "std/assert/mod.ts";
 
 mf.install();
 

@@ -1,0 +1,115 @@
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+env:
+  DEV_IMAGE: ghcr.io/${{ github.repository_owner }}/dev
+  PRD_IMAGE: ghcr.io/${{ github.repository_owner }}/typegate
+
+jobs:
+  builder:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: custom-macos
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/setup-buildx-action@v2
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v4
+        id: dev
+        with:
+          file: dev/Dockerfile
+          platforms: ${{ matrix.platform }}
+          target: dev
+          cache-from: type=registry,ref=${{ env.DEV_IMAGE }}:latest
+          outputs: type=image,name=${{ env.DEV_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+      - run: |
+          mkdir -p /tmp/digests/dev
+          digest="${{ steps.dev.outputs.digest }}"
+          touch "/tmp/digests/dev/${digest#sha256:}"
+      - uses: docker/build-push-action@v4
+        id: prd
+        with:
+          file: dev/Dockerfile
+          platforms: ${{ matrix.platform }}
+          target: prd
+          cache-from: type=registry,ref=${{ env.PRD_IMAGE }}:nightly
+          outputs: type=image,name=${{ env.PRD_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+      - run: |
+          mkdir -p /tmp/digests/prd
+          digest="${{ steps.prd.outputs.digest }}"
+          touch "/tmp/digests/prd/${digest#sha256:}"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merger:
+    needs:
+      - builder
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: dev
+            tag: latest
+          - target: prd
+            tag: nightly
+    steps:
+      - uses: actions/download-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests
+      - uses: docker/setup-buildx-action@v2
+      - id: info
+        run: |
+          VAR="${{ matrix.target }}_IMAGE"
+          VAR=${VAR^^}
+          echo "image=${!VAR}" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - working-directory: /tmp/digests/${{ matrix.target }}
+        run: |
+          docker buildx imagetools create --tag ${{ steps.info.outputs.image }}:${{ matrix.tag }} $(printf '${{ steps.info.outputs.image }}@sha256:%s ' *)
+          docker buildx imagetools inspect ${{ steps.info.outputs.image }}:${{ matrix.tag }}
+
+  cleaner:
+    needs:
+      - merger
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: "docker://us-docker.pkg.dev/gcr-cleaner/gcr-cleaner/gcr-cleaner-cli"
+        with:
+          args: -repo=${{ env.DEV_IMAGE }} -repo=${{ env.PRD_IMAGE }}
+      - uses: snok/container-retention-policy@v2
+        with:
+          account-type: org
+          org-name: metatypedev
+          image-names: dev,typegate
+          cut-off: now UTC
+          untagged-only: true
+          token: ${{ secrets.PACKAGE_DELETER_TOKEN }}

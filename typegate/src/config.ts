@@ -39,7 +39,7 @@ const schema = {
     }
     return bytes;
   }),
-  timer_max_timeout_ms: z.number().positive().max(60000),
+  timer_max_timeout_ms: z.coerce.number().positive().max(60000),
   timer_destroy_ressources: z.boolean(),
   tg_admin_password: z.string(),
   tmp_dir: z.string(),

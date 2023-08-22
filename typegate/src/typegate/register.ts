@@ -6,7 +6,7 @@ import { RedisReplicatedMap } from "../replicated_map.ts";
 import { RedisConnectOptions, XIdInput } from "redis";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { decrypt, encrypt } from "../crypto.ts";
-import { SecretManager, TypeGraphDS } from "../typegraph.ts";
+import { SecretManager, TypeGraphDS } from "../typegraph/mod.ts";
 import { Typegate } from "./mod.ts";
 import {
   isTypegraphUpToDate,
@@ -65,7 +65,6 @@ export class ReplicatedRegister extends Register {
         const engine = await typegate.initEngine(
           hasUpgrade ? upgradeTypegraph(tg) : tg,
           secretManager,
-          true,
           SystemTypegraph.getCustomRuntimes(typegate),
           true,
         );

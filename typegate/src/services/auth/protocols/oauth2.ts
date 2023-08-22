@@ -6,7 +6,7 @@ import { OAuth2Client, OAuth2ClientConfig, Tokens } from "oauth2_client";
 import { encrypt, randomUUID, signJWT, verifyJWT } from "../../../crypto.ts";
 import { JWTClaims } from "../mod.ts";
 import { getLogger } from "../../../log.ts";
-import { SecretManager } from "../../../typegraph.ts";
+import { SecretManager } from "../../../typegraph/mod.ts";
 import {
   clearCookie,
   getEncryptedCookie,

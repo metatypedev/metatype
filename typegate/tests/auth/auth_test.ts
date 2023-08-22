@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals, assertStringIncludes } from "std/testing/asserts.ts";
+import { assertEquals, assertStringIncludes } from "std/assert/mod.ts";
 import { execute, gql, Meta, sleep } from "../utils/mod.ts";
 
 import * as mf from "test/mock_fetch";

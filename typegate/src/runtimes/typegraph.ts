@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { TypeGraphDS, TypeMaterializer } from "../typegraph.ts";
+import { TypeGraphDS, TypeMaterializer } from "../typegraph/mod.ts";
 import { TypeKind } from "graphql";
 import { ensure } from "../utils.ts";
 import { Runtime } from "./Runtime.ts";

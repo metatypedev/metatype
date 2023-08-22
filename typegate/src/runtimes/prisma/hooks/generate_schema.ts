@@ -3,7 +3,7 @@
 
 import { ObjectNode, Type, TypeNode } from "../../../type_node.ts";
 import { PushHandler } from "../../../typegate/hooks.ts";
-import { SecretManager, TypeGraphDS } from "../../../typegraph.ts";
+import { SecretManager, TypeGraphDS } from "../../../typegraph/mod.ts";
 import { Relationship, StringNode } from "../../../types/typegraph.ts";
 import { ensure, ensureNonNullable } from "../../../utils.ts";
 import { PrismaRT } from "../mod.ts";
