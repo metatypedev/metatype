@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "metatype"
-version = "0.1.13-0+dev"
+version = "0.1.15-0+dev"
 description = ""
 authors = []
 
