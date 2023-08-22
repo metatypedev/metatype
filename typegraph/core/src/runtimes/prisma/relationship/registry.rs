@@ -3,6 +3,9 @@
 
 // use super::errors;
 use crate::{errors::Result, types::Struct, wit::core::TypeId};
+#[cfg(test)]
+use indexmap::{map::Entry, IndexMap as HashMap};
+#[cfg(not(test))]
 use std::collections::{hash_map::Entry, HashMap};
 
 use super::{discovery::scan_model, Relationship};
@@ -11,6 +14,7 @@ use super::{discovery::scan_model, Relationship};
 pub struct RelationshipRegistry {
     // type_id => [ property => relationship ]
     models: HashMap<TypeId, HashMap<String, String>>,
+
     // relationship_name => relationship
     relationships: HashMap<String, Relationship>,
     // model_ids: HashMap<String, TypeId>,

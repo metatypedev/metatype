@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::errors::Result;
 pub(crate) use crate::wit::{
     core::{
         Core, MaterializerId, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeId, TypeInteger,
@@ -11,12 +12,12 @@ pub(crate) use crate::wit::{
 pub(crate) use crate::Lib;
 pub(crate) use crate::TypegraphInitParams;
 
+pub struct TypeBoolean;
+
 impl TypeBase {
-    pub fn named(name: impl Into<String>) -> Self {
-        Self {
-            name: Some(name.into()),
-            ..Default::default()
-        }
+    pub fn named(mut self, name: impl Into<String>) -> Self {
+        self.name = Some(name.into());
+        self
     }
 
     pub fn as_id(mut self) -> Self {
@@ -185,5 +186,78 @@ impl MaterializerDenoFunc {
 impl Default for Effect {
     fn default() -> Self {
         Self::None
+    }
+}
+
+pub trait TypeBuilder: Sized {
+    fn build_impl(self, base: TypeBase) -> Result<u32>;
+
+    fn build(self) -> Result<u32> {
+        self.build_impl(TypeBase::default())
+    }
+
+    fn with_base(self, patch_base: impl Fn(TypeBase) -> TypeBase) -> Result<u32> {
+        let base = patch_base(TypeBase::default());
+        self.build_impl(base)
+    }
+}
+
+macro_rules! impl_builder {
+    ( $t:ty, $build_func:ident ) => {
+        impl TypeBuilder for $t {
+            fn build_impl(self, base: TypeBase) -> Result<u32> {
+                Lib::$build_func(self, base)
+            }
+        }
+    };
+}
+
+impl_builder!(TypeInteger, integerb);
+impl_builder!(TypeFloat, floatb);
+// impl_builder!(TypeBoolean, booleanb);
+impl_builder!(TypeString, stringb);
+impl_builder!(TypeArray, arrayb);
+impl_builder!(TypeOptional, optionalb);
+impl_builder!(TypeStruct, structb);
+
+impl TypeBuilder for TypeBoolean {
+    fn build_impl(self, base: TypeBase) -> Result<u32> {
+        Lib::booleanb(base)
+    }
+}
+
+pub mod t {
+    use super::*;
+
+    pub fn integer() -> TypeInteger {
+        TypeInteger::default()
+    }
+
+    pub fn float() -> TypeFloat {
+        TypeFloat::default()
+    }
+
+    pub fn string() -> TypeString {
+        TypeString::default()
+    }
+
+    pub fn boolean() -> TypeBoolean {
+        TypeBoolean
+    }
+
+    pub fn array(item: TypeId) -> TypeArray {
+        TypeArray::of(item)
+    }
+
+    pub fn optional(item: TypeId) -> TypeOptional {
+        TypeOptional::of(item)
+    }
+
+    pub fn struct_() -> TypeStruct {
+        TypeStruct::default()
+    }
+
+    pub fn proxy(name: impl Into<String>) -> Result<TypeId> {
+        Lib::proxyb(TypeProxy::new(name))
     }
 }

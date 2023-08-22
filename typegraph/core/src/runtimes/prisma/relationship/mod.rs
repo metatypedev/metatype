@@ -167,39 +167,17 @@ mod test {
 
     #[test]
     fn test_relationship_discovery() -> Result<(), String> {
-        let user = Lib::structb(
-            TypeStruct::default()
-                .prop(
-                    "id",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default().as_id())?,
-                )
-                .prop(
-                    "name",
-                    Lib::stringb(TypeString::default(), TypeBase::default())?,
-                )
-                .prop(
-                    "posts",
-                    Lib::arrayb(
-                        TypeArray::of(Lib::proxyb(TypeProxy::new("Post"))?),
-                        TypeBase::default(),
-                    )?,
-                ),
-            TypeBase::named("User"),
-        )?;
+        let user = t::struct_()
+            .prop("id", t::integer().with_base(|b| b.as_id())?)
+            .prop("name", t::string().build()?)
+            .prop("posts", t::array(t::proxy("Post")?).build()?)
+            .with_base(|b| b.named("User"))?;
 
-        let post = Lib::structb(
-            TypeStruct::default()
-                .prop(
-                    "id",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default().as_id())?,
-                )
-                .prop(
-                    "title",
-                    Lib::stringb(TypeString::default(), TypeBase::default())?,
-                )
-                .prop("author", Lib::proxyb(TypeProxy::new("User"))?),
-            TypeBase::named("Post"),
-        )?;
+        let post = t::struct_()
+            .prop("id", t::integer().with_base(|b| b.as_id())?)
+            .prop("title", t::string().build()?)
+            .prop("author", t::proxy("User")?)
+            .with_base(|b| b.named("Post"))?;
 
         let registry = with_store(|s| -> Result<_> {
             let models = [s.type_as_struct(user)?, s.type_as_struct(post)?];
