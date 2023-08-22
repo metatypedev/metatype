@@ -31,7 +31,6 @@ impl TypeConversion for Func {
             ctx.register_type(s, out_id, Some(runtime_id))
         })?;
 
-
         Ok(TypeNode::Function {
             base: gen_base(format!("func_{}", self.id), runtime_id),
             data: FunctionTypeData {

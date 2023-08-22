@@ -27,7 +27,11 @@ pub fn gen_base(name: String, runtime_id: u32) -> TypeNodeBase {
     }
 }
 
-pub fn gen_base_enum(name: String, runtime_id: u32, enumeration: Option<Vec<String>>) -> TypeNodeBase {
+pub fn gen_base_enum(
+    name: String,
+    runtime_id: u32,
+    enumeration: Option<Vec<String>>,
+) -> TypeNodeBase {
     TypeNodeBase {
         enumeration,
         ..gen_base(name, runtime_id)

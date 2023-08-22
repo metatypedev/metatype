@@ -125,16 +125,15 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     };
 
     // register the deno runtime
-        let default_runtime_idx = with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
+    let default_runtime_idx = with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
 
     ctx.types.push(Some(TypeNode::Object {
-        base: gen_base(params.name, default_runtime_idx), 
+        base: gen_base(params.name, default_runtime_idx),
         data: ObjectTypeData {
             properties: IndexMap::new(),
             required: vec![],
         },
     }));
-
 
     TG.with(move |tg| {
         tg.borrow_mut().replace(ctx);
@@ -260,7 +259,7 @@ impl TypegraphContext {
                 e.insert(idx as u32);
                 self.materializers.push(None);
                 let converted = convert_materializer(self, store, store.get_materializer(id)?)?;
-                let runtime_id = converted.runtime.clone();
+                let runtime_id = converted.runtime;
                 self.materializers[idx] = Some(converted);
                 Ok((idx as MaterializerId, runtime_id as RuntimeId))
             }
