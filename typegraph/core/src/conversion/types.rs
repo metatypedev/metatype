@@ -17,6 +17,9 @@ pub fn gen_base(name: String) -> TypeNodeBase {
         config: Default::default(),
         description: None,
         enumeration: None,
+        // injection: Some(Injection::Static(InjectionData::SingleValue(SingleValue {
+        //     value: "-1".to_owned(),
+        // }))),
         injection: None,
         policies: Vec::new(),
         runtime: 0,

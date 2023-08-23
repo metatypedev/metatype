@@ -38,7 +38,10 @@ pub struct WrapperType<T: TypeData + WrapperTypeData> {
 #[allow(clippy::derivable_impls)]
 impl Default for TypeBase {
     fn default() -> Self {
-        Self { name: None }
+        Self {
+            name: None,
+            injection: None,
+        }
     }
 }
 
@@ -82,6 +85,11 @@ pub trait TypeFun {
     fn to_string(&self) -> String;
 }
 
+#[enum_dispatch]
+pub trait Editable {
+    fn change_base(&mut self, base: TypeBase);
+}
+
 impl<T> TypeFun for ConcreteType<T>
 where
     T: TypeData,
@@ -99,6 +107,15 @@ where
 
     fn get_base(&self) -> Option<&TypeBase> {
         Some(&self.base)
+    }
+}
+
+impl<T> Editable for ConcreteType<T>
+where
+    T: TypeData,
+{
+    fn change_base(&mut self, base: TypeBase) {
+        self.base = base;
     }
 }
 

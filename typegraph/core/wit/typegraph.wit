@@ -15,10 +15,12 @@ interface core {
     finalize-typegraph: func() -> result<string, error>
 
     type type-id = u32
-
     record type-base {
         name: option<string>,
+        // json
+        injection: option<string>,
     }
+    injection-static: func(id: u32, value: string) -> result<_, error>
 
     record type-proxy {
         name: string,
