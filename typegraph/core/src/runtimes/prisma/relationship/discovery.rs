@@ -115,9 +115,10 @@ impl<'a> TargetAlternatives<'a> {
 
 fn get_unique_alternative(
     alternatives: &mut Vec<(String, RelationshipModel)>,
+    criteria: &str,
 ) -> Result<Option<(String, RelationshipModel)>> {
     match alternatives.len() {
-        0 => Err("no match".to_string()),
+        0 => Err(format!("no matching alternative: {criteria}")),
         1 => Ok(std::mem::take(alternatives).into_iter().next()),
         _ => Ok(None),
     }
@@ -146,7 +147,10 @@ impl Relationship {
                 })
                 .collect();
 
-            if let Some((prop, target)) = get_unique_alternative(&mut alternatives)? {
+            if let Some((prop, target)) = get_unique_alternative(
+                &mut alternatives,
+                &format!("all targets: source={source:?}, target={target:?}"),
+            )? {
                 return (RelationshipModel::from_source(source, prop), target).try_into();
             }
 
@@ -154,7 +158,10 @@ impl Relationship {
                 alternatives.retain(|(_k, t)| {
                     get_rel_name(t.wrapper_type).unwrap().as_deref() == Some(&rel_name)
                 });
-                if let Some((prop, target)) = get_unique_alternative(&mut alternatives)? {
+                if let Some((prop, target)) = get_unique_alternative(
+                    &mut alternatives,
+                    &format!("finding relationships matching relation name {rel_name}"),
+                )? {
                     return (RelationshipModel::from_source(source, prop), target).try_into();
                 }
             }

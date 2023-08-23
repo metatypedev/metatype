@@ -41,16 +41,20 @@ pub fn as_relationship_source(id: TypeId) -> Result<Option<RelationshipSource>> 
             .get_concrete_type()
             .ok_or_else(|| "cannot resolve ref".to_string())?;
         match s.get_type(concrete_type)? {
-            Type::Struct(_) => Ok(Some(RelationshipSource {
-                wrapper_type: id,
-                model_type: concrete_type,
-                cardinality: Cardinality::One,
-            })),
+            Type::Struct(s) => {
+                Ok(Some(RelationshipSource {
+                    wrapper_type: id,
+                    model_type: concrete_type,
+                    model_type_name: s.base.name.clone().unwrap(), // TODO err
+                    cardinality: Cardinality::One,
+                }))
+            }
             Type::Optional(o) => {
                 let inner = s.get_type(o.data.of)?.get_concrete_type().unwrap(); // TODO
                 match s.get_type(inner)? {
-                    Type::Struct(_) => Ok(Some(RelationshipSource {
+                    Type::Struct(s) => Ok(Some(RelationshipSource {
                         wrapper_type: id,
+                        model_type_name: s.base.name.clone().unwrap(), // TODO err
                         model_type: inner,
                         cardinality: Cardinality::Optional,
                     })),
@@ -66,8 +70,9 @@ pub fn as_relationship_source(id: TypeId) -> Result<Option<RelationshipSource>> 
             Type::Array(a) => {
                 let inner = s.get_type(a.data.of)?.get_concrete_type().unwrap(); // TODO
                 match s.get_type(inner)? {
-                    Type::Struct(_) => Ok(Some(RelationshipSource {
+                    Type::Struct(s) => Ok(Some(RelationshipSource {
                         wrapper_type: id,
+                        model_type_name: s.base.name.clone().unwrap(), // TODO err
                         model_type: inner,
                         cardinality: Cardinality::Many,
                     })),

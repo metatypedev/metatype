@@ -80,10 +80,10 @@ impl wit::core::Core for Lib {
 
     fn proxyb(data: TypeProxy) -> Result<TypeId> {
         with_store_mut(move |s| {
-            if let Some(type_id) = s.type_by_names.get(&data.name) {
-                Ok(*type_id)
-            } else {
-                Ok(s.add_type(|id| Type::Proxy(Proxy { id, data })))
+            let registered_type = s.type_by_names.get(&data.name);
+            match (data.extras.len(), registered_type) {
+                (0, Some(type_id)) => return Ok(*type_id),
+                _ => Ok(s.add_type(|id| Type::Proxy(Proxy { id, data }))),
             }
         })
     }

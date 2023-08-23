@@ -44,15 +44,16 @@ fn get_rel_name(wrapper_type: TypeId) -> Result<Option<String>> {
     })
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RelationshipSource {
     pub model_type: TypeId,
+    pub model_type_name: String,
     pub wrapper_type: TypeId,
     pub cardinality: Cardinality,
 }
 
 // no wrapper type; to be determined later
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct RelationshipTarget {
     pub model_type: TypeId,
     /// field of this model pointing to the other side of the relationship
@@ -65,6 +66,7 @@ pub struct RelationshipTarget {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RelationshipModel {
     pub model_type: TypeId,
+    pub model_name: String,
     pub wrapper_type: TypeId,
     pub cardinality: Cardinality,
     pub field: String,
@@ -74,6 +76,7 @@ impl RelationshipModel {
     pub fn from_source(source: RelationshipSource, field: String) -> Self {
         Self {
             model_type: source.model_type,
+            model_name: source.model_type_name,
             wrapper_type: source.wrapper_type,
             cardinality: source.cardinality,
             field,
@@ -127,6 +130,7 @@ impl TryFrom<(RelationshipModel, RelationshipModel)> for Relationship {
                 return Err("Many to many relationship not supported".to_string());
             }
         };
+
         let name = match (left.get_rel_name()?, right.get_rel_name()?) {
             (None, None) => {
                 let left_name = with_store(|s| -> Result<_> {
@@ -166,26 +170,51 @@ mod test {
     use crate::test_utils::*;
 
     #[test]
-    fn test_relationship_discovery() -> Result<(), String> {
+    fn test_implicit_relationships() -> Result<(), String> {
         let user = t::struct_()
             .prop("id", t::integer().with_base(|b| b.as_id())?)
             .prop("name", t::string().build()?)
-            .prop("posts", t::array(t::proxy("Post")?).build()?)
+            .prop("posts", t::array(t::proxy("Post").build()?).build()?)
             .with_base(|b| b.named("User"))?;
 
         let post = t::struct_()
             .prop("id", t::integer().with_base(|b| b.as_id())?)
             .prop("title", t::string().build()?)
-            .prop("author", t::proxy("User")?)
+            .prop("author", t::proxy("User").build()?)
             .with_base(|b| b.named("Post"))?;
 
         let registry = with_store(|s| -> Result<_> {
             let models = [s.type_as_struct(user)?, s.type_as_struct(post)?];
             let reg = RelationshipRegistry::from(&models)?;
             Ok(reg)
-        });
+        })?;
 
-        insta::assert_debug_snapshot!(registry);
+        insta::assert_debug_snapshot!("implicit relationship", registry);
+
+        Ok(())
+    }
+    
+    #[test]
+    fn test_explicit_relationships() -> Result<(), String> {
+        let user = t::struct_()
+            .prop("id", t::integer().with_base(|b| b.as_id())?)
+            .prop("name", t::string().build()?)
+            .prop("posts", t::array(t::proxy("Post").build()?).build()?)
+            .with_base(|b| b.named("User"))?;
+
+        let post = t::struct_()
+            .prop("id", t::integer().with_base(|b| b.as_id())?)
+            .prop("title", t::string().build()?)
+            .prop("author", prisma_linkn("User").name("PostAuthor").build()?)
+            .with_base(|b| b.named("Post"))?;
+
+        let registry = with_store(|s| -> Result<_> {
+            let models = [s.type_as_struct(user)?, s.type_as_struct(post)?];
+            let reg = RelationshipRegistry::from(&models)?;
+            Ok(reg)
+        })?;
+
+        insta::assert_debug_snapshot!("explicitly named relationship", registry);
 
         Ok(())
     }
