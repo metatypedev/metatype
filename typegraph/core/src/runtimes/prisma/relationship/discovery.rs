@@ -20,8 +20,7 @@ pub fn scan_model(model: &Struct, _registry: &RelationshipRegistry) -> Result<Ve
             let source = as_relationship_source(*ty)?;
             if let Some(source) = source {
                 if source.model_type == model.id {
-                    // self relationship
-                    todo!()
+                    result.push(Relationship::self_reference(source, prop)?);
                 } else {
                     result.push(Relationship::from(
                         source,
@@ -33,8 +32,6 @@ pub fn scan_model(model: &Struct, _registry: &RelationshipRegistry) -> Result<Ve
                 }
             }
         }
-
-        // TODO add self relationships
 
         Ok(result)
     })
@@ -147,29 +144,80 @@ impl Relationship {
                 })
                 .collect();
 
+            if let Some((prop, target)) = Self::filter_alternatives(
+                alternatives,
+                get_rel_name(source.wrapper_type)?.as_deref(),
+                &format!("from {source:?} to {target:?}"),
+            )? {
+                (RelationshipModel::from_source(source, prop), target).try_into()
+            } else {
+                Err("Ambiguous target".to_string())
+            }
+        })
+    }
+
+    pub fn self_reference(source: RelationshipSource, target_field: &str) -> Result<Self> {
+        with_store(|store| {
+            let mut alternatives: Vec<_> = store
+                .type_as_struct(source.model_type)?
+                .data
+                .props
+                .iter()
+                .filter_map(|(k, ty)| {
+                    eprintln!("k={:?}, ty={:?}", k, ty);
+                    if k == target_field {
+                        None
+                    } else {
+                        as_relationship_source(*ty)
+                            .unwrap()
+                            .filter(|s| s.model_type == source.model_type)
+                            .map(|s| {
+                                (
+                                    k.to_owned(),
+                                    RelationshipModel::from_source(s, target_field.to_string()),
+                                )
+                            })
+                    }
+                })
+                .collect();
+
+            if let Some((prop, target)) = Self::filter_alternatives(
+                alternatives,
+                get_rel_name(source.wrapper_type)?.as_deref(),
+                "self relations from {source:?}; target_field={target_field}",
+            )? {
+                (RelationshipModel::from_source(source, prop), target).try_into()
+            } else {
+                Err("Ambiguous target".to_string())
+            }
+        })
+    }
+
+    fn filter_alternatives(
+        mut alternatives: Vec<(String, RelationshipModel)>,
+        rel_name: Option<&str>,
+        description: &str,
+    ) -> Result<Option<(String, RelationshipModel)>> {
+        // let mut alternatives = alternatives;
+        if let Some((prop, target)) = get_unique_alternative(&mut alternatives, description)? {
+            return Ok(Some((prop.to_string(), target)));
+        }
+
+        if let Some(rel_name) = rel_name {
+            alternatives.retain(|(_k, t)| {
+                get_rel_name(t.wrapper_type).unwrap().as_deref() == Some(&rel_name)
+            });
             if let Some((prop, target)) = get_unique_alternative(
                 &mut alternatives,
-                &format!("all targets: source={source:?}, target={target:?}"),
+                &format!("finding relationships matching relation name {rel_name}"),
             )? {
-                return (RelationshipModel::from_source(source, prop), target).try_into();
+                return Ok(Some((prop.to_string(), target)));
             }
+        }
 
-            if let Some(rel_name) = get_rel_name(source.wrapper_type)? {
-                alternatives.retain(|(_k, t)| {
-                    get_rel_name(t.wrapper_type).unwrap().as_deref() == Some(&rel_name)
-                });
-                if let Some((prop, target)) = get_unique_alternative(
-                    &mut alternatives,
-                    &format!("finding relationships matching relation name {rel_name}"),
-                )? {
-                    return (RelationshipModel::from_source(source, prop), target).try_into();
-                }
-            }
+        // TODO target field
 
-            // TODO target field
-
-            Err("Ambiguous target".to_string())
-        })
+        Err("Ambiguous target".to_string())
     }
 
     // fn get_target(

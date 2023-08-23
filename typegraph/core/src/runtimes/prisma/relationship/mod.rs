@@ -29,6 +29,8 @@ fn get_rel_name(wrapper_type: TypeId) -> Result<Option<String>> {
                     if let Some(name) = p.data.get_extra("rel_name") {
                         return Ok(Some(name.to_string()));
                     }
+                    type_id = s.resolve_proxy(type_id)?;
+                    continue;
                 }
                 _ => {
                     if let Some(wrapper_type) = ty.as_wrapper_type() {
@@ -193,9 +195,9 @@ mod test {
 
         Ok(())
     }
-    
+
     #[test]
-    fn test_explicit_relationships() -> Result<(), String> {
+    fn test_explicit_relationship_name() -> Result<(), String> {
         let user = t::struct_()
             .prop("id", t::integer().with_base(|b| b.as_id())?)
             .prop("name", t::string().build()?)
@@ -215,6 +217,24 @@ mod test {
         })?;
 
         insta::assert_debug_snapshot!("explicitly named relationship", registry);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_self_relationship() -> Result<(), String> {
+        let node = t::struct_()
+            .prop("id", t::string().with_base(|b| b.as_id())?)
+            .prop("children", t::array(t::proxy("Node").build()?).build()?)
+            .prop("parent", t::proxy("Node").build()?)
+            .with_base(|b| b.named("Node"))?;
+
+        let registry = with_store(|s| -> Result<_> {
+            let models = [s.type_as_struct(node)?];
+            Ok(RelationshipRegistry::from(&models)?)
+        });
+
+        insta::assert_debug_snapshot!("self relationship", registry);
 
         Ok(())
     }

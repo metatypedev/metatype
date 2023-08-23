@@ -1,0 +1,33 @@
+---
+source: typegraph/core/src/runtimes/prisma/relationship/mod.rs
+expression: registry
+---
+Ok(
+    RelationshipRegistry {
+        models: {
+            4: {
+                "children": "NodeToNode",
+                "parent": "NodeToNode",
+            },
+        },
+        relationships: {
+            "NodeToNode": Relationship {
+                name: "NodeToNode",
+                left: RelationshipModel {
+                    model_type: 4,
+                    model_name: "Node",
+                    wrapper_type: 3,
+                    cardinality: One,
+                    field: "children",
+                },
+                right: RelationshipModel {
+                    model_type: 4,
+                    model_name: "Node",
+                    wrapper_type: 2,
+                    cardinality: Many,
+                    field: "parent",
+                },
+            },
+        },
+    },
+)
