@@ -18,7 +18,7 @@ use indoc::formatdoc;
 use regex::Regex;
 use types::{
     Array, Boolean, Either, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
-    TypeBoolean, Union, WithPolicy,
+    TypeBoolean, TypeFun, Union, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
@@ -75,18 +75,13 @@ impl wit::core::Core for Lib {
         typegraph::finalize()
     }
 
-    fn injection_static(_id: TypeId, _value: String) -> Result<()> {
-        // with_store_mut(|s| {
-        //     // let tpe_id = s.resolve_proxy(id)?;
-        //     // let mut tpe = s.get_type(tpe_id)?;
-        //     // let base = tpe.get_base();
-
-        //     // TODO:
-        //     // update base attribute ?
-
-        //     Ok(())
-        // })
-        Ok(())
+    fn update_type_injection(id: TypeId, value: String) -> Result<()> {
+        with_store_mut(|s| {
+            let tpe_id = s.resolve_proxy(id)?;
+            let tpe = s.get_type_mut(tpe_id)?;
+            tpe.update_injection(value);
+            Ok(())
+        })
     }
 
     fn proxyb(data: TypeProxy) -> Result<TypeId> {

@@ -83,11 +83,7 @@ pub trait TypeFun {
     fn get_base(&self) -> Option<&TypeBase>;
     fn get_concrete_type_name(&self) -> Option<String>;
     fn to_string(&self) -> String;
-}
-
-#[enum_dispatch]
-pub trait Editable {
-    fn change_base(&mut self, base: TypeBase);
+    fn update_injection(&mut self, injection: String);
 }
 
 impl<T> TypeFun for ConcreteType<T>
@@ -108,14 +104,9 @@ where
     fn get_base(&self) -> Option<&TypeBase> {
         Some(&self.base)
     }
-}
 
-impl<T> Editable for ConcreteType<T>
-where
-    T: TypeData,
-{
-    fn change_base(&mut self, base: TypeBase) {
-        self.base = base;
+    fn update_injection(&mut self, injection: String) {
+        self.base.injection = Some(injection);
     }
 }
 
@@ -146,4 +137,6 @@ where
     fn get_base(&self) -> Option<&TypeBase> {
         None
     }
+
+    fn update_injection(&mut self, _injection: String) {}
 }

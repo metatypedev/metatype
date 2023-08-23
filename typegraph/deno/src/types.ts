@@ -77,6 +77,16 @@ export class Typedef {
     }
     return optional(this, data);
   }
+
+  set(value: unknown) {
+    core.updateTypeInjection(this._id, JSON.stringify(value));
+    return this;
+  }
+
+  // config(key: string, value: unknown) {
+  //   // core.updateConfig(this._id, JSON.stringify({ [key]: value }));
+  //   return this;
+  // }
 }
 
 class TypeProxy<T extends Typedef = Typedef> extends Typedef {

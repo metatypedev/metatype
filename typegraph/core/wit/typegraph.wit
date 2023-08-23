@@ -20,7 +20,7 @@ interface core {
         // json
         injection: option<string>,
     }
-    injection-static: func(id: u32, value: string) -> result<_, error>
+    update-type-injection: func(id: u32, value: string) -> result<_, error>
 
     record type-proxy {
         name: string,

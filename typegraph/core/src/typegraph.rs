@@ -13,8 +13,8 @@ use crate::{
 };
 use common::typegraph::runtimes::TGRuntime;
 use common::typegraph::{
-    Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries, TypeMeta,
-    TypeNode, Typegraph,
+    Injection, Materializer, ObjectTypeData, Policy, PolicyIndices, PolicyIndicesByEffect, Queries,
+    SingleValue, TypeMeta, TypeNode, Typegraph,
 };
 use graphql_parser::parse_query;
 use indexmap::IndexMap;
@@ -229,7 +229,20 @@ impl TypegraphContext {
                 self.types.push(None);
 
                 let tpe = store.get_type(id)?;
-                let type_node = tpe.convert(self)?;
+
+                let mut type_node = tpe.convert(self)?;
+                if let Some(base) = tpe.get_base() {
+                    // TODO:
+                    // deserialize JSON
+                    // match Dynamic, Static... etc
+                    if let Some(injection) = base.injection.clone() {
+                        type_node.base_mut().injection = Some(Injection::Static(
+                            common::typegraph::InjectionData::SingleValue(SingleValue {
+                                value: injection,
+                            }),
+                        ));
+                    }
+                }
 
                 self.types[idx] = Some(type_node);
                 Ok(idx as TypeId)
