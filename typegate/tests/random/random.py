@@ -1,47 +1,49 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.random import RandomMat, RandomRuntime
+from typegraph_next import t, typegraph
+from typegraph_next.graph.typegraph import Graph
+from typegraph_next.policy import Policy
+from typegraph_next.runtimes.random import RandomRuntime
 
-with TypeGraph(name="random") as g:
+rec = t.struct(
+    {
+        "uuid": t.uuid(),
+        "int": t.integer(),
+        "str": t.string(),
+        "email": t.email(),
+    }
+)
+
+users = t.struct(
+    {
+        "id": t.uuid(),
+        "name": t.string(config={"gen": "name"}),
+        "age": t.integer(config={"gen": "age", "type": "adult"}),
+        "address": t.struct(
+            {
+                "street": t.string(config={"gen": "address"}),
+                "city": t.string(config={"gen": "city"}),
+                "postcode": t.string(config={"gen": "postcode"}),
+                "country": t.string(config={"gen": "country", "full": "true"}),
+            }
+        ),
+    }
+)
+
+list = t.struct(
+    {
+        "array_of_array_of_names": t.array(t.array(t.string(config={"gen": "name"}))),
+    }
+)
+
+
+@typegraph()
+def test_random(g: Graph):
     runtime_1 = RandomRuntime(seed=1)
     runtime_2 = RandomRuntime(seed=1)
 
-    rec = t.struct(
-        {
-            "uuid": t.uuid(),
-            "int": t.integer(),
-            "str": t.string(),
-            "email": t.email(),
-        }
-    )
-
-    users = t.struct(
-        {
-            "id": t.uuid(),
-            "name": t.string().config(gen="name"),
-            "age": t.integer().config(gen="age", type="adult"),
-            "address": t.struct(
-                {
-                    "street": t.string().config(gen="address"),
-                    "city": t.string().config(gen="city"),
-                    "postcode": t.string().config(gen="postcode"),
-                    "country": t.string().config(gen="country", full=True),
-                }
-            ),
-        }
-    ).named("User")
-
-    list = t.struct(
-        {
-            "array_of_array_of_names": t.array(t.array(t.string().config(gen="name"))),
-        }
-    ).named("RandomList")
-
-    public = policies.public()
+    pub = Policy.public()
 
     g.expose(
-        randomRec=t.gen(rec, RandomMat(runtime=runtime_1)).add_policy(public),
-        randomUser=t.gen(g("User"), RandomMat(runtime=runtime_1)).add_policy(public),
-        randomList=t.gen(g("RandomList"), RandomMat(runtime=runtime_2)).add_policy(
-            public
-        ),
+        randomRec=runtime_1.gen(rec).with_policy(pub),
+        randomUser=runtime_1.gen(users).with_policy(pub),
+        randomList=runtime_2.gen(list).with_policy(pub),
     )

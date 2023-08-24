@@ -1,0 +1,1573 @@
+export const snapshot = {};
+
+snapshot[`typegraphs creation 1`] = `
+'[
+  {
+    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "types": [
+      {
+        "type": "object",
+        "title": "test-complex-types",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "test": 1
+        },
+        "required": [
+          "test"
+        ]
+      },
+      {
+        "type": "function",
+        "title": "func_20",
+        "runtime": 0,
+        "policies": [
+          0
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 20,
+        "materializer": 0,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_18",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "a_string": 3,
+          "a_float": 4,
+          "an_enum": 5,
+          "an_integer_enum": 6,
+          "a_float_enum": 7,
+          "a_struct": 8,
+          "nested": 10,
+          "nested_with_ref": 15,
+          "an_email": 19
+        },
+        "required": []
+      },
+      {
+        "type": "string",
+        "title": "string_5",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_6",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "minimum": 1.0,
+        "multipleOf": 2.0
+      },
+      {
+        "type": "string",
+        "title": "string_7",
+        "runtime": 0,
+        "policies": [],
+        "enum": [
+          "\\\\"one\\\\"",
+          "\\\\"two\\\\""
+        ],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "integer",
+        "title": "integer_8",
+        "runtime": 0,
+        "policies": [],
+        "enum": [
+          "1",
+          "2"
+        ],
+        "config": {
+          "key": "value"
+        },
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_9",
+        "runtime": 0,
+        "policies": [],
+        "enum": [
+          "1.5",
+          "2.5"
+        ],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "object",
+        "title": "object_11",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "value": 9
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_10",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "optional",
+        "title": "optional_16",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 11,
+        "default_value": null
+      },
+      {
+        "type": "array",
+        "title": "array_15",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "items": 12
+      },
+      {
+        "type": "either",
+        "title": "either_14",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "oneOf": [
+          13,
+          14
+        ]
+      },
+      {
+        "type": "string",
+        "title": "string_12",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "integer",
+        "title": "integer_13",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "object",
+        "title": "object_4",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "one": 16,
+          "two": 18
+        },
+        "required": []
+      },
+      {
+        "type": "array",
+        "title": "array_1",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "items": 17,
+        "minItems": 3
+      },
+      {
+        "type": "integer",
+        "title": "integer_0",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "optional",
+        "title": "optional_3",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 15,
+        "default_value": null
+      },
+      {
+        "type": "string",
+        "title": "string_17",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "format": "email"
+      },
+      {
+        "type": "boolean",
+        "title": "boolean_19",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      }
+    ],
+    "materializers": [
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=()=>true;"
+        }
+      },
+      {
+        "name": "predefined_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "true"
+        }
+      }
+    ],
+    "runtimes": [
+      {
+        "name": "deno",
+        "data": {
+          "worker": "default",
+          "permissions": {}
+        }
+      }
+    ],
+    "policies": [
+      {
+        "name": "__public",
+        "materializer": 1
+      }
+    ],
+    "meta": {
+      "prefix": null,
+      "secrets": [],
+      "queries": {
+        "dynamic": true,
+        "endpoints": []
+      },
+      "cors": {
+        "allow_origin": [],
+        "allow_headers": [],
+        "expose_headers": [],
+        "allow_methods": [],
+        "allow_credentials": false,
+        "max_age_sec": null
+      },
+      "auths": [],
+      "rate": null,
+      "version": "0.0.2"
+    }
+  }
+]'
+`;
+
+snapshot[`typegraphs creation 2`] = `
+\`[
+  {
+    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "types": [
+      {
+        "type": "object",
+        "title": "test-multiple-runtimes",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "add": 1,
+          "multiply": 6
+        },
+        "required": [
+          "add",
+          "multiply"
+        ]
+      },
+      {
+        "type": "function",
+        "title": "func_4",
+        "runtime": 1,
+        "policies": [
+          0
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 5,
+        "materializer": 0,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_2",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "first": 3,
+          "second": 4
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_0",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_1",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_3",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "function",
+        "title": "func_10",
+        "runtime": 0,
+        "policies": [
+          1
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 7,
+        "output": 10,
+        "materializer": 2,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_8",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "first": 8,
+          "second": 9
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_6",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_7",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_9",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      }
+    ],
+    "materializers": [
+      {
+        "name": "lambda",
+        "runtime": 1,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "sha256_ca4c84007bbe1e2253363df3d2da8605fc21e36c4c280cbb335b7daf5ce0dc73",
+          "fn": "(lambda x: (x['first'] + x['second']))"
+        }
+      },
+      {
+        "name": "predefined_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "true"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=({first,second})=>first*second;"
+        }
+      }
+    ],
+    "runtimes": [
+      {
+        "name": "deno",
+        "data": {
+          "worker": "default",
+          "permissions": {}
+        }
+      },
+      {
+        "name": "python_wasi",
+        "data": {
+          "config": null
+        }
+      }
+    ],
+    "policies": [
+      {
+        "name": "__public",
+        "materializer": 1
+      },
+      {
+        "name": "__public",
+        "materializer": 1
+      }
+    ],
+    "meta": {
+      "prefix": null,
+      "secrets": [],
+      "queries": {
+        "dynamic": true,
+        "endpoints": []
+      },
+      "cors": {
+        "allow_origin": [],
+        "allow_headers": [],
+        "expose_headers": [],
+        "allow_methods": [],
+        "allow_credentials": false,
+        "max_age_sec": null
+      },
+      "auths": [],
+      "rate": null,
+      "version": "0.0.2"
+    }
+  }
+]\`
+`;
+
+snapshot[`typegraphs creation 3`] = `
+'[
+  {
+    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "types": [
+      {
+        "type": "object",
+        "title": "test-types",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "one": 1,
+          "two": 6,
+          "three": 11
+        },
+        "required": [
+          "one",
+          "two",
+          "three"
+        ]
+      },
+      {
+        "type": "function",
+        "title": "func_9",
+        "runtime": 0,
+        "policies": [
+          0
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 5,
+        "materializer": 0,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_2",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "a": 3,
+          "b": 4
+        },
+        "required": []
+      },
+      {
+        "type": "integer",
+        "title": "integer_0",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "integer",
+        "title": "integer_1",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "minimum": 12
+      },
+      {
+        "type": "integer",
+        "title": "integer_3",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "minimum": 12,
+        "maximum": 43
+      },
+      {
+        "type": "function",
+        "title": "func_11",
+        "runtime": 0,
+        "policies": [
+          1
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 7,
+        "output": 9,
+        "materializer": 2,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_6",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "id": 8,
+          "post": 9
+        },
+        "required": []
+      },
+      {
+        "type": "integer",
+        "title": "integer_4",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "object",
+        "title": "object_8",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "id": 10,
+          "author": 7
+        },
+        "required": []
+      },
+      {
+        "type": "integer",
+        "title": "integer_7",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "function",
+        "title": "func_13",
+        "runtime": 0,
+        "policies": [
+          2
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 2,
+        "materializer": 4,
+        "rate_weight": null,
+        "rate_calls": false
+      }
+    ],
+    "materializers": [
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=()=>12;"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=(_,{context})=>context.provider===\\\\"internal\\\\";"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=user=>({id:12,user});"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=()=>false;"
+        }
+      },
+      {
+        "name": "import_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "mod": 5,
+          "name": "three",
+          "secrets": []
+        }
+      },
+      {
+        "name": "module",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y727bNhD3Zz3FQf0ibYpi2U4GeFMxoB2GAg0WtNkwIAgE2qJsofoHilrsGX6Tvc1ebEdS/23H6ZYEa+EDEos83o/HI3l3vHkaZxFd2dl68Gw0RLqcTOQvUv93NB5PBs5wcukMR9gQ/Y4zcsaD4eAFqMg5YQCD/0r9xX0h9ArepNmahYslhyvKCV9nFH75+y8LonBOk5z6UCQ+ZcCXFK7SP8MoInBdzJAL79UI+I2yPEwTGNlDW3sFH6/f/n5W8s7e+TThYRBSNoWr6/dnOEbTApbGIGZaMJItvYSuOIRxljIO3GoY+8bZ8tOuOyu5nw8KZCnquq7GXcvW3oGsQE1jmtuoclqNf4vfHxRD0/I0pjfCQC5wO+esmHNDA6SN/C9ITxOqT5FNGCNrg9thwumCMsO0IA4Td2xBQmLq6jf3qW5ajRzHtpBLM462JBGKZixdrQ39Yzmrbpbjt+pH4dRcSzM1ba6u8zEliYeMMFnIGdWn0VaGeEGUEi7Z8ssQujv2EBdRRDzEObw0cHEzO1KJR5MillLiw7iV1rDU4u56Q0vDNCKVpUQHZUSYwb11LBjdWTBPkyBcuBv9E13jYP0PEhVU3+7RucFTinfR7AvEsy+6unjKSpUxhME25QwNjtmZLKE5p35no2mIV4QZty2DthZl3plms7e7UN49inuMBohZHbOeaWMSRsq24svYdxjeNNuvzoP2Y33IDVPzaQAcp/PKY+IJZm4spur6mFMJJY+/2z75KCoYWTHDfnWD7Ez6AORI1sKmqyzNqVGrLOZxBZQdFMm86RfUOqVWh8HtWZpGlCRtCykJH5dnmOC+BtwhsbqKZdrSdOqaG6hWKWpqgxMdpfo6197v6TOBI/HfucCY34v/4/FodIr/L0CPDMXWkwbYbM2XmC9UErJVBdl/F5kP+Lmd0933dcqL7fFqDztCpb/bVf2wLyS+7/I9frAbn9u02emRYSAIWd6Oyj0vWY/LKQZM/+GB206P2XfEe+XUwm2xR15E4plPDPUDqymsbkv97uBb0SiVaMfaHV+Nvy12uV3rQ3GjFZ53LbFv1dvHLauMLhuQqBYoINjKcCP74JuyU3/UYr6c2JPPWZjx/JwvGaU2zwfPQEf8P3r+cd//j8YT5+T/X4DOzz/nAfhTRHLeevnJFx9CHHzylQLq2SdyYRaQOYUbcdreJVnBpaebTQGz9Bll32ODNI2tpglXis5e+AKRO4M8p8IrbIBYMIPttAUmLt8GezbivcAxckzhA95a5v+gUnILl/IpSe+T1yJtNqdyctKevKXJVnIZ5QVL6tmEToOvifJQpOLPWv45mv9dXn63U/8ZTi5O9/8F6P9c/7HKrOyh5PN4akhkIaR+h2MVx2mXRjY6wYwBb7c+61QhZMFjhBmEps06CIqBhRCycidjZBc5mqeDGPodKJGbYEKo0hV84hv6tWiZ26oW9Csi6IgkBh1FIgXmYKzBUsI1loI+mBF/9ov/cHos3TlWMxp21XM4E8Z6UCu5y7G6M7M6j3tnpHfzqgqzlbJhNakFIsxvgTBdjSS6JBqmdKE/BbFdcpe2Zg+9kwZKzJKhY2MtSldKrYBEORbgtD3psoxISh91/Dy5LvGndkQOQKg49YsI2/2U6yGVlMH7055KGyc60YmegP4B3B1ICAAcAAA="
+        }
+      },
+      {
+        "name": "predefined_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "true"
+        }
+      }
+    ],
+    "runtimes": [
+      {
+        "name": "deno",
+        "data": {
+          "worker": "default",
+          "permissions": {}
+        }
+      }
+    ],
+    "policies": [
+      {
+        "name": "__internal",
+        "materializer": 1
+      },
+      {
+        "name": "deny",
+        "materializer": 3
+      },
+      {
+        "name": "__public",
+        "materializer": 6
+      }
+    ],
+    "meta": {
+      "prefix": null,
+      "secrets": [],
+      "queries": {
+        "dynamic": true,
+        "endpoints": []
+      },
+      "cors": {
+        "allow_origin": [],
+        "allow_headers": [],
+        "expose_headers": [],
+        "allow_methods": [],
+        "allow_credentials": false,
+        "max_age_sec": null
+      },
+      "auths": [],
+      "rate": null,
+      "version": "0.0.2"
+    }
+  }
+]'
+`;
+
+snapshot[`typegraphs creation 4`] = `
+'[
+  {
+    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "types": [
+      {
+        "type": "object",
+        "title": "test-complex-types",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "test": 1
+        },
+        "required": [
+          "test"
+        ]
+      },
+      {
+        "type": "function",
+        "title": "func_20",
+        "runtime": 0,
+        "policies": [
+          0
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 20,
+        "materializer": 0,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_18",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "a_string": 3,
+          "a_float": 4,
+          "an_enum": 5,
+          "an_integer_enum": 6,
+          "a_float_enum": 7,
+          "a_struct": 8,
+          "nested": 10,
+          "nested_with_ref": 15,
+          "an_email": 19
+        },
+        "required": []
+      },
+      {
+        "type": "string",
+        "title": "string_5",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_6",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "minimum": 1.0,
+        "multipleOf": 2.0
+      },
+      {
+        "type": "string",
+        "title": "string_7",
+        "runtime": 0,
+        "policies": [],
+        "enum": [
+          "\\\\"one\\\\"",
+          "\\\\"two\\\\""
+        ],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "integer",
+        "title": "integer_8",
+        "runtime": 0,
+        "policies": [],
+        "enum": [
+          "1",
+          "2"
+        ],
+        "config": {
+          "key": "value"
+        },
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_9",
+        "runtime": 0,
+        "policies": [],
+        "enum": [
+          "1.5",
+          "2.5"
+        ],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "object",
+        "title": "object_11",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "value": 9
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_10",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "optional",
+        "title": "optional_16",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 11,
+        "default_value": null
+      },
+      {
+        "type": "array",
+        "title": "array_15",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "items": 12
+      },
+      {
+        "type": "either",
+        "title": "either_14",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "oneOf": [
+          13,
+          14
+        ]
+      },
+      {
+        "type": "string",
+        "title": "string_12",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "integer",
+        "title": "integer_13",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "object",
+        "title": "object_4",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "one": 16,
+          "two": 18
+        },
+        "required": []
+      },
+      {
+        "type": "array",
+        "title": "array_1",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "items": 17,
+        "minItems": 3
+      },
+      {
+        "type": "integer",
+        "title": "integer_0",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "optional",
+        "title": "optional_3",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "item": 15,
+        "default_value": null
+      },
+      {
+        "type": "string",
+        "title": "string_17",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "format": "email"
+      },
+      {
+        "type": "boolean",
+        "title": "boolean_19",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      }
+    ],
+    "materializers": [
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=()=>true;"
+        }
+      },
+      {
+        "name": "predefined_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "true"
+        }
+      }
+    ],
+    "runtimes": [
+      {
+        "name": "deno",
+        "data": {
+          "worker": "default",
+          "permissions": {}
+        }
+      }
+    ],
+    "policies": [
+      {
+        "name": "__public",
+        "materializer": 1
+      }
+    ],
+    "meta": {
+      "prefix": null,
+      "secrets": [],
+      "queries": {
+        "dynamic": true,
+        "endpoints": []
+      },
+      "cors": {
+        "allow_origin": [],
+        "allow_headers": [],
+        "expose_headers": [],
+        "allow_methods": [],
+        "allow_credentials": false,
+        "max_age_sec": null
+      },
+      "auths": [],
+      "rate": null,
+      "version": "0.0.2"
+    }
+  }
+]'
+`;
+
+snapshot[`typegraphs creation 5`] = `
+\`[
+  {
+    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "types": [
+      {
+        "type": "object",
+        "title": "test-multiple-runtimes",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "add": 1,
+          "multiply": 6
+        },
+        "required": [
+          "add",
+          "multiply"
+        ]
+      },
+      {
+        "type": "function",
+        "title": "func_4",
+        "runtime": 1,
+        "policies": [
+          0
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 5,
+        "materializer": 0,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_2",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "first": 3,
+          "second": 4
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_0",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_1",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_3",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "function",
+        "title": "func_10",
+        "runtime": 0,
+        "policies": [
+          1
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 7,
+        "output": 10,
+        "materializer": 2,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_8",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "first": 8,
+          "second": 9
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_6",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_7",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_9",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      }
+    ],
+    "materializers": [
+      {
+        "name": "lambda",
+        "runtime": 1,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "sha256_1ba371f8249eab0c77239207fa3c16506224b5c287f58aa5ff322450a6aee50d",
+          "fn": "lambda x: x['first'] + x['second']"
+        }
+      },
+      {
+        "name": "predefined_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "true"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=({first,second})=>first*second;"
+        }
+      }
+    ],
+    "runtimes": [
+      {
+        "name": "deno",
+        "data": {
+          "worker": "default",
+          "permissions": {}
+        }
+      },
+      {
+        "name": "python_wasi",
+        "data": {
+          "config": null
+        }
+      }
+    ],
+    "policies": [
+      {
+        "name": "__public",
+        "materializer": 1
+      },
+      {
+        "name": "__public",
+        "materializer": 1
+      }
+    ],
+    "meta": {
+      "prefix": null,
+      "secrets": [],
+      "queries": {
+        "dynamic": true,
+        "endpoints": []
+      },
+      "cors": {
+        "allow_origin": [],
+        "allow_headers": [],
+        "expose_headers": [],
+        "allow_methods": [],
+        "allow_credentials": false,
+        "max_age_sec": null
+      },
+      "auths": [],
+      "rate": null,
+      "version": "0.0.2"
+    }
+  }
+]\`
+`;
+
+snapshot[`typegraphs creation 6`] = `
+'[
+  {
+    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "types": [
+      {
+        "type": "object",
+        "title": "test-types",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "one": 1,
+          "two": 6,
+          "three": 11
+        },
+        "required": [
+          "one",
+          "two",
+          "three"
+        ]
+      },
+      {
+        "type": "function",
+        "title": "func_9",
+        "runtime": 0,
+        "policies": [
+          0
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 5,
+        "materializer": 0,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_2",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "a": 3,
+          "b": 4
+        },
+        "required": []
+      },
+      {
+        "type": "integer",
+        "title": "integer_0",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "integer",
+        "title": "integer_1",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "minimum": 12
+      },
+      {
+        "type": "integer",
+        "title": "integer_3",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "minimum": 12,
+        "maximum": 43
+      },
+      {
+        "type": "function",
+        "title": "func_11",
+        "runtime": 0,
+        "policies": [
+          1
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 7,
+        "output": 9,
+        "materializer": 2,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_6",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "id": 8,
+          "post": 9
+        },
+        "required": []
+      },
+      {
+        "type": "integer",
+        "title": "integer_4",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "object",
+        "title": "object_8",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "id": 10,
+          "author": 7
+        },
+        "required": []
+      },
+      {
+        "type": "integer",
+        "title": "integer_7",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "function",
+        "title": "func_13",
+        "runtime": 0,
+        "policies": [
+          2
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 2,
+        "materializer": 4,
+        "rate_weight": null,
+        "rate_calls": false
+      }
+    ],
+    "materializers": [
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=()=>12;"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=(_,{context})=>context.provider===\\\\"internal\\\\";"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=user=>({id:12,user});"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=()=>false;"
+        }
+      },
+      {
+        "name": "import_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "mod": 5,
+          "name": "three",
+          "secrets": []
+        }
+      },
+      {
+        "name": "module",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+0Y7W7bRsy//RSE/kTabNmWnf5Q12JAsx8FOiRoM2BAYBhn6+QIlU7C6bTYMPQme5u92Mg7SZY/1qxoYmypiQSSeDySR/JImos0yWK+clXeeTYYIryaTPQTYf/peZfjzmg4eTUaekNvTPjRyBuNOsPOCaDIFZMAnW+F/cP9T2AwgHdptpbR8l7Br1wxtc44XP/1Zw/iaMFFzgMoRMAlqHsOv8QsV9ECPpgl8Nyh20UWn26ufu9XyP77gAsVhRGXfr2hj4RdIry9vrr2ocCtUZKlUkHCsm71uoGbFGWue6DwD9VYSpbdQwmhTBOwfm5QAxSQDnK5GCRpgJFrvd6yuMKljwXKT/gXd0pDk2uM4dFdpCJXkKcJvyUjvAHl5koWC2VvugCp4D5imJRsbSs3EoovubSdHkpNIuHDGEp6FyxBQuv2IbWgdHq4Uz2ktDPNVJQKFuPmTKartW19qkRZDtK1NzcLyKFRbGGu6jHd2Aw/IrH0DRrfbC2ZzcI4ZYrQ+sWuVB31ICliFSG/69AHr1KUiRkXRULk9JzZdxae2uqBhUewpjVNdfSGtjbFBgjDJaNz+nCHUrypNgruA9RfhBGquIHPfI2H/IPFBZ2QuJZtdRvGtc57bN1LZOxeTptdxhJ+yyagmW95OBWt4LniQduPPMLAlvZdy3CtIzlTx9k6rsVi9oD7ZpKj9eqAqS2YsCjWJqQXe8+z77ZOrJzbBKdtKWTdr9zcJ3yOtreXDrx5q21o4oAiFgNA8Id2tNvIq6bIijkSmNvk4gc+aRnXly5fZWnObeMSEuhrhm5YiIWtkdCOtF6FUu48TWPOhDECwaZ6En1AZ7O1ougBDJlmjYchJ99sQDF0viUoovBqshyNta7pSvPiuGRWo7iNijsmNl536b9zhqeHOg3M6oT4DJ3AI/V/dOl5+/V/PPbO9f8UcMr6/x+p81s11uo+FV/FJdNbqn5hP3PXd6lfkx/L3v+Qm78iuWsVKpqdIxzP8SzQ9a6d31t10gojmSurVSmx2uccRQXWYfk0m2vCClHZhKz3gSXzgNlWrJ+w8mF1d6ElXEzhR/owrC+mlvOFjA91d7I+UpyeVvlNU7w2mlkPzP5Su02j4IcKZ73AMpUvZJSpfKDuJefP9CvwkfyPmf/g9583npzz/yngpPkfm2oZsgWHW4q29yIrlM6Mcx+ww59zSVmObT/KbpdSGSZrSgDUhIOOU0oFG2A9mEPpt5jRNdyUvr7UKGuFbedHvLky+Mn09j08ymeRPoi3dJMdXwtnbeEtTUq9KrkqpGikkU6dlwR5RK3+s45/Hp3/4HU/mP8Mvcn5/p8AvsP+rxqnMD1EaX7ob+c/o53pir74u1MOM0KhoUl7PDPf4ddQ4aSFYR80GbdpcQAm92c4UdCWolsK7OL0VKMaF93gp7U3T/gNOe1MiWjPv2DNCmzapB7FyV2OWsrx0cTTjyTqZV0acMSypakxx5taPYzbtoY5jprmvWYisTOPGHnVNKLcadtq/lUnqGd0W4baLNqWh1xpTXNGJ5NlycfaoaVzVJLmmpl3Cz/WNFAzuoUszs30T+tAhazSwgR63fPi+Q7eGofpbcgTL0kRE2K/p3uJfesZznCGM5zh2+BvL2QQxQAeAAA="
+        }
+      },
+      {
+        "name": "predefined_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "true"
+        }
+      }
+    ],
+    "runtimes": [
+      {
+        "name": "deno",
+        "data": {
+          "worker": "default",
+          "permissions": {}
+        }
+      }
+    ],
+    "policies": [
+      {
+        "name": "__internal",
+        "materializer": 1
+      },
+      {
+        "name": "deny",
+        "materializer": 3
+      },
+      {
+        "name": "__public",
+        "materializer": 6
+      }
+    ],
+    "meta": {
+      "prefix": null,
+      "secrets": [],
+      "queries": {
+        "dynamic": true,
+        "endpoints": []
+      },
+      "cors": {
+        "allow_origin": [],
+        "allow_headers": [],
+        "expose_headers": [],
+        "allow_methods": [],
+        "allow_credentials": false,
+        "max_age_sec": null
+      },
+      "auths": [],
+      "rate": null,
+      "version": "0.0.2"
+    }
+  }
+]'
+`;
