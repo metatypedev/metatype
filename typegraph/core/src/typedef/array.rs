@@ -13,13 +13,13 @@ use crate::{
 };
 
 impl TypeConversion for Array {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Array {
-            base: gen_base(format!("array_{}", self.id)),
+            base: gen_base(format!("array_{}", self.id), runtime_id.unwrap()),
             data: ArrayTypeData {
                 items: with_store(|s| -> Result<_> {
                     let id = s.resolve_proxy(self.data.of)?;
-                    ctx.register_type(s, id)
+                    ctx.register_type(s, id, runtime_id)
                 })?,
                 max_items: self.data.max,
                 min_items: self.data.min,

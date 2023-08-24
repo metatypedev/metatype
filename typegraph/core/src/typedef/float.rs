@@ -13,14 +13,18 @@ use crate::{
 };
 
 impl TypeConversion for Float {
-    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         let enumeration = self
             .data
             .enumeration
             .clone()
             .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
         Ok(TypeNode::Float {
-            base: gen_base_enum(format!("float_{}", self.id), enumeration),
+            base: gen_base_enum(
+                format!("float_{}", self.id),
+                runtime_id.unwrap(),
+                enumeration,
+            ),
             data: FloatTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,

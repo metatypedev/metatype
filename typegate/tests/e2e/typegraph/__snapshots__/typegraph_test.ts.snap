@@ -297,6 +297,216 @@ snapshot[`typegraphs creation 1`] = `
 `;
 
 snapshot[`typegraphs creation 2`] = `
+\`[
+  {
+    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "types": [
+      {
+        "type": "object",
+        "title": "test-multiple-runtimes",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "add": 1,
+          "multiply": 6
+        },
+        "required": [
+          "add",
+          "multiply"
+        ]
+      },
+      {
+        "type": "function",
+        "title": "func_4",
+        "runtime": 1,
+        "policies": [
+          0
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 5,
+        "materializer": 0,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_2",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "first": 3,
+          "second": 4
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_0",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_1",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_3",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "function",
+        "title": "func_10",
+        "runtime": 0,
+        "policies": [
+          1
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 7,
+        "output": 10,
+        "materializer": 2,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_8",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "first": 8,
+          "second": 9
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_6",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_7",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_9",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      }
+    ],
+    "materializers": [
+      {
+        "name": "lambda",
+        "runtime": 1,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "sha256_ca4c84007bbe1e2253363df3d2da8605fc21e36c4c280cbb335b7daf5ce0dc73",
+          "fn": "(lambda x: (x['first'] + x['second']))"
+        }
+      },
+      {
+        "name": "predefined_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "true"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=({first,second})=>first*second;"
+        }
+      }
+    ],
+    "runtimes": [
+      {
+        "name": "deno",
+        "data": {
+          "worker": "default",
+          "permissions": {}
+        }
+      },
+      {
+        "name": "python_wasi",
+        "data": {
+          "config": null
+        }
+      }
+    ],
+    "policies": [
+      {
+        "name": "__public",
+        "materializer": 1
+      },
+      {
+        "name": "__public",
+        "materializer": 1
+      }
+    ],
+    "meta": {
+      "prefix": null,
+      "secrets": [],
+      "queries": {
+        "dynamic": true,
+        "endpoints": []
+      },
+      "cors": {
+        "allow_origin": [],
+        "allow_headers": [],
+        "expose_headers": [],
+        "allow_methods": [],
+        "allow_credentials": false,
+        "max_age_sec": null
+      },
+      "auths": [],
+      "rate": null,
+      "version": "0.0.2"
+    }
+  }
+]\`
+`;
+
+snapshot[`typegraphs creation 3`] = `
 '[
   {
     "\$id": "https://metatype.dev/specs/0.0.2.json",
@@ -513,7 +723,7 @@ snapshot[`typegraphs creation 2`] = `
           "idempotent": true
         },
         "data": {
-          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1X4W7bNhD2bz0Fof6RAEWxbCcFvLkY0A5DgQYz2mwYEAQCZVG2MIkUKGqxZ/hN9jZ7sd2RkiU5SY2uTdAWPiAxyeN9PB7Ju08LkRcZW/vFZvBkMgS5nEz0L8jh72g8HA+C4eQyGI6wA+NBMBq+HAwHzyBVqagkZPC5cri5b0RekNei2Mh0uVLkiimqNgUjv/77j0eydMF4yWJS8ZhJolaMXIm/0yyjZF5FoCXvzAzyO5NlKjgZ+UPfekE+zN/8cVbrzt7GjKs0SZmckqv5uzOYY1mJFDnBlZaSFquQs7UiaV4IqYjyWsVD83zd9PeDjd0vjxoUAnzdNPPmuvfgRFmBpzkrfXBZNPPfQPu9UVhWKXJ2jQGaEeWXSlYL5VgEZKv/o9iCM3sKaiol3TjKT7liSyYd1yN5ymdjj3Cas5l9fSds12vtFPTRThQKYkkzMC2kWG8c+0O9qu3W83fmx+DstZ7lWtbCPOdjTtIQFClf6hVN0+k6Q8MkE1RptW456HvgD2ETVaZSWCMUyQwOs2fFQ8arXFthw7nR0fDM5m4PptaBaU2aSOEAkxTDMLsJPDK6fcC11sz41zfyL8DMvzgwNMFo9oxx2dp/0axiHRx317XhrFQs7p0nS+ElSOemE7eO7+6t67ZHeB8qvAPzULIEMJvbdBDBnKaZCSG2nIfO/HV7yubYrZ/2d9lxrZglRMFyYX0bQlSWznJqXok71VD6ls+6FxxMUVFUEYybh+IX+qmDRquWPlsXomTO3mVcZ4ZQflLxRTuO0rmMXk+h/EiIjFHejZCxiGF7jktmrwicEO6uUbm+Dp15zQ64VZu61uAk/1/KhUwLVZ6rlWTMV+XgCeRI/YfKf6/+j8aT4FT/n0HOzz+FAPyc0VJ1Kr+u+ADxaMmvDUzZxyQpE7pg5Bpv21teVEpXpWhKIH1HTP4AHdp2dpaF+QbKMCYXTKpE31NMM1tCPRKR3bQDhhlhCyNbSCSw1lpNyXu2EDL+0eRqD7byJxd3/BXmU3eqF6fdxTue7LRWMlVJvl8NfRp8T1KmmKOflP4fe//B5eXLe/x/OLk4vf9nkK+Z/3s1CfE+wu6Pk3aqifCeoAGLD7rUeGtTYFvwuu2ox0I14R0BHbSsqIdgFECE6Xo2GYO6KiE8PcQ07kEBQ7SBNRnmCdzPsefYc3fNt8BvgGADEk46ikQrtRKyxTLGeywD/Sgl/GQqiAd9nw2iUqdzoLmtuhl5nC7C90CHLZbA7iOvx/qCkd1neg1mhynC10QHBMPvEQzdHgmHNJqzJWk8JXhc+pR27gF6j31qzFphQ2eDny7GrYRmJXyAtWy04w2WH+OPuX6h3hf+mRPREwAqF3GVQf+Qcn3MJRPww2VPnPckJznJF5D/AB3fWYcAFgAA"
+          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1Y/W7bNhD333qKg/qPtCmKv5IC3lQMaIehQIMFbTYMCAKBtmhbmL5AUYs9w2+yt9mL7Ujqg5LtOO2SYB18QGKRxzsej+TdjzdL4yyiKzdb956N+kiX47H8Rer+Dkf9UW/QH18O+kPRwP7BYNh/3ev3XoCKnBMG0Pu31F3cV0Kv4G2arVm4WHK4opzwdUbh57//ciAKZzTJaQBFElAGfEnhKv0zjCIC18UUufBBjYBfKcvDNIGh23eNV/Dp+t1vZyXv7H1AEx7OQ8omcHX94QzHGMacpTGImRaMZEs/oSsOYZyljAN3Gsa+ca78dOvOSu6ngwJZirauq3HXsrV3ICvQ0pjmLpqcVuPf4fdHxTCMPI3pjXCQB9zNOStm3DIAaSP/CzLThJoTZBPGyNribphwuqDMsh2Iw8QbOZCQmHrmzX1q2k4jx7Et5NKMoy9JhKIZS1dry/xUzmra5fit+lF6aq5j2IYxU9f5mJHER0aYLOSM6tPSjSH+PEoJl2z5ZQnbB24fF1FEPMQ5/HTu4Wa2pBKfJkUspcSHdSu94ajF3XWGlo5pRCpPiQ7KiHCDdztwYHi3x7RGTNnXFnIvUMy96AgqZ1RrFn7ZmH+QqKCaHnuryyQ05zRo7ScN8SYw61bzm2a7fWfbzRbuqvLvUdxndI46q9PU8WBMwki5UHxZ+/b8bbPLatuNH+qzbNlGQOfAcTq/PA2+YObWYqJuiT2RquQp9/QDjqKCkRVT7FcXxc3kVUeOZC1cusrSnFq1yWIeT6hy50Uya/oFaYfRaTG4O03TiJJE95CSCHB5lg3eG8AdEqurWLYrXadus4VmlaK20TvRl1N9nevo9/RI4Ej+H1xgzu/k/9FoODzl/xegR6Zi50kTbLbmS8QLlYRsVUn2yzLzgQC4c7q7QVCFtz3h7uEIqez32qYfDpIkCDy+J0C287NOm50emR/mIcv1rNwJn/W4nM7SJHh44LbVY3cj9F45tXBX7JEfkXgaEEv9wGoCq9vSvjv4VjRKI/QkvBPE8Vdjl9u1PpRQtLy964l9q94+blll2tmA1OqAUgRbmYdkH3xTdpqPWszXk5TyGQsznp/zJaPU5XnvGehI/MfIv/P+G47Gg1P8fwE6P/+cB+CPEcm59vKTLz5UcfDJVwqoZ58AyWxOZhRuxGl7n2QFl5FuOgGE71PKvsMGaRpbwxChFIO9iAUCVIM8pyIqbIA4MIXtRFMmLt8GezZ4o3GuFZ/AR7y1LPheYXUHl/J7kt4nbwSetidycqJPrlmylVxGecGSejZhU+//RHkoMPqzln+O4r/Ly9c79Z/++OJ0/1+A/sv1H6dEZQ+Bz+PQkMhCSP1AxyrOQC+NbEyCiAFvtzltVSFkwWOICMIwpi0NioGFELLyxiNkFzm6p6UxDFqqBDZBQKjgCr79LfNatOxtVQv6BTWYqEkMOqqJFIjBWKNLCde6lOqDiPizSwGH4bEM51jmaNhVz2EkjPUgDdzlWN2ZOq1X/2BotnFVpVODbFhN0pQI9zsgXFdrEl1SG0K6MJiA2C65S1u7o70FA6XOkmFiYy1KV8qsOYlyLMAZe+CyzEjKHnX8fLku8ad2RA5AVXEaFBG2u5DrIZOUw7vTnmoeJzrRiZ6A/gHzrySaABwAAA=="
         }
       },
       {
@@ -574,7 +784,7 @@ snapshot[`typegraphs creation 2`] = `
 ]'
 `;
 
-snapshot[`typegraphs creation 3`] = `
+snapshot[`typegraphs creation 4`] = `
 '[
   {
     "\$id": "https://metatype.dev/specs/0.0.2.json",
@@ -870,7 +1080,217 @@ snapshot[`typegraphs creation 3`] = `
 ]'
 `;
 
-snapshot[`typegraphs creation 4`] = `
+snapshot[`typegraphs creation 5`] = `
+\`[
+  {
+    "\$id": "https://metatype.dev/specs/0.0.2.json",
+    "types": [
+      {
+        "type": "object",
+        "title": "test-multiple-runtimes",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "add": 1,
+          "multiply": 6
+        },
+        "required": [
+          "add",
+          "multiply"
+        ]
+      },
+      {
+        "type": "function",
+        "title": "func_4",
+        "runtime": 1,
+        "policies": [
+          0
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 2,
+        "output": 5,
+        "materializer": 0,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_2",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "first": 3,
+          "second": 4
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_0",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_1",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_3",
+        "runtime": 1,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "function",
+        "title": "func_10",
+        "runtime": 0,
+        "policies": [
+          1
+        ],
+        "config": {},
+        "as_id": false,
+        "input": 7,
+        "output": 10,
+        "materializer": 2,
+        "rate_weight": null,
+        "rate_calls": false
+      },
+      {
+        "type": "object",
+        "title": "object_8",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false,
+        "properties": {
+          "first": 8,
+          "second": 9
+        },
+        "required": []
+      },
+      {
+        "type": "float",
+        "title": "float_6",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_7",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      },
+      {
+        "type": "float",
+        "title": "float_9",
+        "runtime": 0,
+        "policies": [],
+        "config": {},
+        "as_id": false
+      }
+    ],
+    "materializers": [
+      {
+        "name": "lambda",
+        "runtime": 1,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "sha256_1ba371f8249eab0c77239207fa3c16506224b5c287f58aa5ff322450a6aee50d",
+          "fn": "lambda x: x['first'] + x['second']"
+        }
+      },
+      {
+        "name": "predefined_function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "name": "true"
+        }
+      },
+      {
+        "name": "function",
+        "runtime": 0,
+        "effect": {
+          "effect": "none",
+          "idempotent": true
+        },
+        "data": {
+          "script": "var _my_lambda=({first,second})=>first*second;"
+        }
+      }
+    ],
+    "runtimes": [
+      {
+        "name": "deno",
+        "data": {
+          "worker": "default",
+          "permissions": {}
+        }
+      },
+      {
+        "name": "python_wasi",
+        "data": {
+          "config": null
+        }
+      }
+    ],
+    "policies": [
+      {
+        "name": "__public",
+        "materializer": 1
+      },
+      {
+        "name": "__public",
+        "materializer": 1
+      }
+    ],
+    "meta": {
+      "prefix": null,
+      "secrets": [],
+      "queries": {
+        "dynamic": true,
+        "endpoints": []
+      },
+      "cors": {
+        "allow_origin": [],
+        "allow_headers": [],
+        "expose_headers": [],
+        "allow_methods": [],
+        "allow_credentials": false,
+        "max_age_sec": null
+      },
+      "auths": [],
+      "rate": null,
+      "version": "0.0.2"
+    }
+  }
+]\`
+`;
+
+snapshot[`typegraphs creation 6`] = `
 '[
   {
     "\$id": "https://metatype.dev/specs/0.0.2.json",
@@ -1087,7 +1507,7 @@ snapshot[`typegraphs creation 4`] = `
           "idempotent": true
         },
         "data": {
-          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+1X74rjNhDP5zzF4E82OE7i5Lbg9o7CbT8ctOxyt4XCsgTFURJTWzKy3CQEv0nfpi/WGflvvEuv0G7aOzzsEnk0/zQzkn4KZZLG/OjpbPRqNEO6WS7NL1L/1/dnN6P5bHkzn/kzf0H8+dyffTOaja5AeaaZAhj9U+ov7guh6RTey/Skot1ew09cM31KOdz98bsLcRRykfEN5GLDFeg9hx9ilukohB/LKfC9mTdGE5/ub3+ZVMzJhw0XOtpGXAW1wgQFxyT4cHd7F0COqlGSSqUhYem4Gp7hXqLPkwsa/zCMnWLpHgrYKpmA9X3DmqIDOc1UOE3kBjvX+rY1cYtTH3P0n/C/1FSlTGY4pY1xKEWmIZMJf6AkvAXtZVrlobbPYwApeIAcphQ72dqLhOY7rmzHRa9JJAJYQEFjwRIUtB4O0oLCcVFTHyRpylRHUrAYlVMljyfb+lS5shyU6yo3E2ihCSwst+pLsbEVfkRiF5RsHNnGM1ttY8k0sc3ArkKdu5DksY7Q3t02AL8KlIkVF3lC4vS7sh8tXLXlgoVLsJ5qmWrpjWydijMQhytG6wzgEb34T7XpMpJGpw6np+G9QR3vTatVLjLoLBd+Y3HOWxtOJSt4pvmmWyIeYc8q+7GTk060zpPjtDXpmFgdUG+lOCam7oU6OQmLYpMdGti9or1v61PVrek729JoelJVcEL8DNNq7xx4+w6ogmWJqRmxtoIfuo1so61aIs3XKFBuFA8/8JemcX7n8WMqM24aApsOHQbGoLfNRWgbJnSbyK1Y2ltLGXMmyiQQnatfkt/Q2mwTKFYAu6GZ49stp9qcQTNsPUtQs+CuYxkm61TLFeXA8SitZeA2Bm58UZbofzTQf0RZqKJUZ1O9V5y/Egr4zP2PN/+if//7i+V8uP+vQNe8/+nkVVsWcnigbvsg0lybo2YdAF4Da67onGPtRzEe05mGFzsdYXRSg+lTOszOwFxYQxF0jNGRci7oQMLDUvMjnk0feSjV5rvyAnBxKb8KeRDv6FRyAuOcdZ13IinMrOI6V6LxRjGNvibKIroPXhX+fxb/43Z/hv9n/nLY/1egq+7//xXOZwZEN2iwxf/zC3RtNv4lyi0hNIHmLjxfX9hrpBBps2MAy0VXFh9Aqo/ho03Xi4FHCOcM9K2eC/f4afVA589o6eKVQDp/wzTL9V4q8xRTlxaNl5fx67+PW+tpczUgDm9las7L6NY8xlpwm+FTY+02sPUCtM79CrIWFxC0tl9hXvNGaw2atJhcPrdKc8YyFpkySzU2BS2cFz0Zq2k5tvDjRA+qMrYti7Py9WdioIusiqJs9Bq14/qejZqCGTW0iZskj4nRx3TWgMEHGmiggQbq0Z/U+moqABgAAA=="
+          "code": "file:scripts/three.ts;base64:H4sIAAAAAAAA/+0Y7W7bRsy//RSE/kTaZNmWnQzQ1mJAsx8FOiRoM2BAEBhn6+wIk07C6bTYMPQme5u92MjT6cOO16xo422piQSSePw68o6kuUiTLOZrT+W9Z4MRwsV0qp8I+0/fH130xqPpxXjkj/wJ4cdjf/Rdb9Q7AhS5YhKg97mwv7n/CQyH8CbNNjJa3Sv4mSumNhmHqz//cCGOFlzkPIRChFyCuufwU8xyFS3gXbUEvjfy+ijiw/XlrwODHLwNuVDRMuIyqBkGSNgnwpury6sACmSNkiyVChKW9c3rFq5T1LlxQeEfmrGSLLuHEpYyTcD6sUENUUE6zOVimKQhnlzr+1bEJS69L1B/wj/KKSuaXGMqGf1FKnIFeZrwG3LCK1BermSxUPa2D5AKHiCGSck2tvIiofiKS9txUWsSiQAmUNK7YAkSWjcPqQWl4yKnekiJM81UlAoWI3Mm0/XGtj4YVZaDdF3mZgElNIYtqqt6yDY2w49IrIIKjW+21sxmyzhlitD6xTamjl1IilhFKO9qGYBvDGVixkWREDk9Z/athbu2XLBwC9ZdTWO23tDWrtgCYbhktM8AblGLf1eLrixpeGpz9ji8c+TxzluuapNBZ7vwO4sL3spwDK3gueJhN0Q8wjMr7duOTzrWOneO08akI2L2gHwzydEx9VmonZOwKNbeoRd7L2hv2viYuDXnzrYUih6YCA4In6Nb7ZUDr14DRbAKMR1GjK3gD92DbKOsmiIr5khQXRQPP/BJy7i+8vg6S3OuDwQeOlQYaIHeshALWyOhe4hcg1LePE1jzkTlBIKteRJ9SHuztaEYATwNzRpfLjnFZguK4dGzBB0WvHUsR2dtarqyenE8cmtluI2Ga13kJfrvneBfgjoNzOqE+AydwBP1f3zu+/v1fzLxx6f6fwQ4Zv3/j9T51oyNuk/FJ0nJNIvpF/bTe32XBjX5oRT/Nwn8EyqANsHQ7GzhcCFgoS6K3SLQKabWMpK5sjrlFKt9zlFVaD2usRVzTWgQxifkvXcsmYfMtmL9hHUA69szreHsDr6lj0r02Z3lfKQsQN2dbA5UsC9r/LapcFstzIWKv9Rh0yj4xuCsF1jL8oWMMpUP1b3k/Jl+BT6R/zHzT/bzvz+ZnvL/MeCo+R87b7lkCw43dNreiqxQOjPOA8CfAXMuKcux9qPs9ymVYbKmBECdOuhzSqlgC8yFOZRBRxhdw20Z6EuNutbYm77HmyvDH6ofAC5u5TeRPojXdJOdQCtnXeUdS0q9KrkqpGi0kU29lwR5RL8HnnX88+T8B6/7o/nPyJ+e7v8R4Cvs/8w4hekhSjMNaOc/453pir74u1OOaoRCQ5PueGa+I6+hwkkLwz5oOunS4gBM7s9worCrRbcU2MXp0YcZF13jp7U3dPgFJe1MiYjnH4hmBTZtUo/i5K5EreXw/OLLzy3qZV0acA7T0tSYw02tHsa1rWGOo6a524wtdoYWY9+MLMqdtq2WbzpBPaNrBWq3aF8+lkprWjIGmTxLMdYBLZ2DmrTUrHq38GNDA7XKtiWL82r6p22gQmasqA563fPi/h69NQHTbCgTL0kRE2K/p3uJfesJTnCCE5zg8+AvE6v9FQAeAAA="
         }
       },
       {
