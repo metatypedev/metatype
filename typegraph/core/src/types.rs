@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::TypeNode;
+use common::typegraph::{Injection, SingleValue, TypeNode};
 use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
@@ -62,7 +62,7 @@ pub type Either = ConcreteType<TypeEither>;
 pub type WithPolicy = WrapperType<TypePolicy>;
 
 #[derive(Debug)]
-#[enum_dispatch(TypeFun, TypeConversion)]
+#[enum_dispatch(TypeFun, TypeConversion, TypeModifier)]
 pub enum Type {
     Proxy(Proxy),
     Struct(Struct),
@@ -83,7 +83,12 @@ pub trait TypeFun {
     fn get_base(&self) -> Option<&TypeBase>;
     fn get_concrete_type_name(&self) -> Option<String>;
     fn to_string(&self) -> String;
-    fn update_injection(&mut self, injection: String);
+    fn update_injection(&mut self, value: String);
+}
+
+#[enum_dispatch]
+pub trait TypeModifier {
+    fn apply_injection(&self, tpe: &mut TypeNode);
 }
 
 impl<T> TypeFun for ConcreteType<T>
@@ -105,8 +110,26 @@ where
         Some(&self.base)
     }
 
-    fn update_injection(&mut self, injection: String) {
-        self.base.injection = Some(injection);
+    fn update_injection(&mut self, value: String) {
+        self.base.injection = Some(value);
+    }
+}
+
+impl<T> TypeModifier for ConcreteType<T>
+where
+    T: TypeData,
+{
+    fn apply_injection(&self, tpe: &mut TypeNode) {
+        if let Some(base) = self.get_base() {
+            // TODO:
+            // deserialize JSON
+            // match Dynamic, Static... etc
+            if let Some(injection) = base.injection.clone() {
+                tpe.base_mut().injection = Some(Injection::Static(
+                    common::typegraph::InjectionData::SingleValue(SingleValue { value: injection }),
+                ));
+            }
+        }
     }
 }
 
@@ -138,5 +161,12 @@ where
         None
     }
 
-    fn update_injection(&mut self, _injection: String) {}
+    fn update_injection(&mut self, _value: String) {}
+}
+
+impl<T> TypeModifier for WrapperType<T>
+where
+    T: TypeData + WrapperTypeData,
+{
+    fn apply_injection(&self, _tpe: &mut TypeNode) {}
 }
