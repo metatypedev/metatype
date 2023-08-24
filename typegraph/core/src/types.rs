@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::{Injection, SingleValue, TypeNode};
+use common::typegraph::{Injection, TypeNode};
 use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
@@ -88,7 +88,9 @@ pub trait TypeFun {
 
 #[enum_dispatch]
 pub trait TypeModifier {
-    fn apply_injection(&self, tpe: &mut TypeNode);
+    fn apply_injection(&self, tpe: &mut TypeNode) -> Result<()>;
+    // TODO: maybe use the same logic for runtime config?
+    // fn apply_runtime_config(&self, tpe: &mut TypeNode);
 }
 
 impl<T> TypeFun for ConcreteType<T>
@@ -119,17 +121,15 @@ impl<T> TypeModifier for ConcreteType<T>
 where
     T: TypeData,
 {
-    fn apply_injection(&self, tpe: &mut TypeNode) {
+    fn apply_injection(&self, tpe: &mut TypeNode) -> Result<()> {
         if let Some(base) = self.get_base() {
-            // TODO:
-            // deserialize JSON
-            // match Dynamic, Static... etc
             if let Some(injection) = base.injection.clone() {
-                tpe.base_mut().injection = Some(Injection::Static(
-                    common::typegraph::InjectionData::SingleValue(SingleValue { value: injection }),
-                ));
+                let value: Injection =
+                    serde_json::from_str(&injection).map_err(|e| e.to_string())?;
+                tpe.base_mut().injection = Some(value);
             }
         }
+        Ok(())
     }
 }
 
@@ -168,5 +168,7 @@ impl<T> TypeModifier for WrapperType<T>
 where
     T: TypeData + WrapperTypeData,
 {
-    fn apply_injection(&self, _tpe: &mut TypeNode) {}
+    fn apply_injection(&self, _tpe: &mut TypeNode) -> Result<()> {
+        Ok(())
+    }
 }

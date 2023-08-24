@@ -14,7 +14,7 @@ use super::{EffectType, PolicyIndices};
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SingleValue<T> {
-    pub value: T,
+    value: T,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

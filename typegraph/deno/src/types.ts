@@ -79,7 +79,13 @@ export class Typedef {
   }
 
   set(value: unknown) {
-    core.updateTypeInjection(this._id, JSON.stringify(value));
+    core.updateTypeInjection(
+      this._id,
+      JSON.stringify({
+        source: "static",
+        data: { value: `${value}` },
+      }),
+    );
     return this;
   }
 
