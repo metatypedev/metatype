@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Meta } from "../utils/mod.ts";
-import { assertThrows } from "std/testing/asserts.ts";
+import { assertThrows } from "std/assert/mod.ts";
 import { findOperation } from "../../src/graphql.ts";
 import { parse } from "graphql";
 import { None } from "monads";

@@ -15,11 +15,12 @@ use crate::{
 };
 
 impl TypeConversion for Struct {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Object {
             base: gen_base(
                 format!("object_{}", self.id),
                 self.base.runtime_config.clone(),
+                runtime_id.unwrap(),
                 None,
             ),
             data: ObjectTypeData {
@@ -30,7 +31,7 @@ impl TypeConversion for Struct {
                     .map(|(name, type_id)| -> Result<(String, TypeId)> {
                         with_store(|s| -> Result<_> {
                             let id = s.resolve_proxy(*type_id)?;
-                            Ok((name.clone(), ctx.register_type(s, id)?))
+                            Ok((name.clone(), ctx.register_type(s, id, runtime_id)?))
                         })
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,

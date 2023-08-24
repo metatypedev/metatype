@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { MessageEntry, Migrations } from "../typegate/register.ts";
-import { SecretManager, TypeGraph, TypeGraphDS } from "../typegraph.ts";
+import { SecretManager, TypeGraphDS } from "../typegraph/mod.ts";
 
 const Message = {
   INFO: "info",
@@ -56,8 +56,4 @@ export interface PushHandler {
     secretManager: SecretManager,
     response: PushResponse,
   ): Promise<TypeGraphDS>;
-}
-
-export interface InitHandler {
-  (tg: TypeGraph, secretManager: SecretManager, sync: boolean): Promise<void>;
 }

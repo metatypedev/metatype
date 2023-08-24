@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assertEquals, assertExists } from "std/testing/asserts.ts";
+import { assertEquals, assertExists } from "std/assert/mod.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import {
   CreateBucketCommand,

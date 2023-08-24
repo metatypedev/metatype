@@ -14,11 +14,12 @@ use crate::{
 };
 
 impl TypeConversion for Union {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Union {
             base: gen_base(
                 format!("union_{}", self.id),
                 self.base.runtime_config.clone(),
+                runtime_id.unwrap(),
                 None,
             ),
             data: UnionTypeData {
@@ -29,7 +30,7 @@ impl TypeConversion for Union {
                     .map(|vid| {
                         with_store(|s| -> Result<_> {
                             let id = s.resolve_proxy(*vid)?;
-                            ctx.register_type(s, id)
+                            ctx.register_type(s, id, runtime_id)
                         })
                     })
                     .collect::<Result<Vec<_>>>()?,

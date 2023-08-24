@@ -1,0 +1,194 @@
+export const snapshot = {};
+
+snapshot[`Typegraph generation with GraphQL runtime 1`] = `
+'{
+  "\$id": "https://metatype.dev/specs/0.0.2.json",
+  "types": [
+    {
+      "type": "object",
+      "title": "graphql",
+      "runtime": 0,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "user": 1,
+        "createUser": 6
+      },
+      "required": [
+        "user",
+        "createUser"
+      ]
+    },
+    {
+      "type": "function",
+      "title": "func_4",
+      "runtime": 1,
+      "policies": [
+        0
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 2,
+      "output": 4,
+      "materializer": 0,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_3",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 3
+      },
+      "required": []
+    },
+    {
+      "type": "integer",
+      "title": "integer_2",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "object",
+      "title": "object_1",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 5
+      },
+      "required": []
+    },
+    {
+      "type": "integer",
+      "title": "integer_0",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    },
+    {
+      "type": "function",
+      "title": "func_8",
+      "runtime": 1,
+      "policies": [
+        1
+      ],
+      "config": {},
+      "as_id": false,
+      "input": 7,
+      "output": 4,
+      "materializer": 2,
+      "rate_weight": null,
+      "rate_calls": false
+    },
+    {
+      "type": "object",
+      "title": "object_7",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false,
+      "properties": {
+        "id": 8
+      },
+      "required": []
+    },
+    {
+      "type": "integer",
+      "title": "integer_6",
+      "runtime": 1,
+      "policies": [],
+      "config": {},
+      "as_id": false
+    }
+  ],
+  "materializers": [
+    {
+      "name": "query",
+      "runtime": 1,
+      "effect": {
+        "effect": "none",
+        "idempotent": true
+      },
+      "data": {
+        "path": []
+      }
+    },
+    {
+      "name": "predefined_function",
+      "runtime": 0,
+      "effect": {
+        "effect": "none",
+        "idempotent": true
+      },
+      "data": {
+        "name": "true"
+      }
+    },
+    {
+      "name": "mutation",
+      "runtime": 1,
+      "effect": {
+        "effect": "create",
+        "idempotent": false
+      },
+      "data": {
+        "path": []
+      }
+    }
+  ],
+  "runtimes": [
+    {
+      "name": "deno",
+      "data": {
+        "worker": "default",
+        "permissions": {}
+      }
+    },
+    {
+      "name": "graphql",
+      "data": {
+        "endpoint": "https://example.com/api/graphql"
+      }
+    }
+  ],
+  "policies": [
+    {
+      "name": "__public",
+      "materializer": 1
+    },
+    {
+      "name": "__public",
+      "materializer": 1
+    }
+  ],
+  "meta": {
+    "prefix": null,
+    "secrets": [],
+    "queries": {
+      "dynamic": true,
+      "endpoints": []
+    },
+    "cors": {
+      "allow_origin": [],
+      "allow_headers": [],
+      "expose_headers": [],
+      "allow_methods": [],
+      "allow_credentials": false,
+      "max_age_sec": null
+    },
+    "auths": [],
+    "rate": null,
+    "version": "0.0.2"
+  }
+}'
+`;

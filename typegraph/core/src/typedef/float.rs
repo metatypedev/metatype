@@ -13,7 +13,7 @@ use crate::{
 };
 
 impl TypeConversion for Float {
-    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         let enumeration = self
             .data
             .enumeration
@@ -23,6 +23,7 @@ impl TypeConversion for Float {
             base: gen_base(
                 format!("float_{}", self.id),
                 self.base.runtime_config.clone(),
+                runtime_id.unwrap(),
                 enumeration,
             ),
             data: FloatTypeData {

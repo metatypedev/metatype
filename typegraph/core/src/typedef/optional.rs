@@ -14,7 +14,7 @@ use crate::{
 };
 
 impl TypeConversion for Optional {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         let default_value = match self.data.default_item.clone() {
             Some(value) => {
                 let ret = serde_json::from_str(&value).map_err(|s| s.to_string())?;
@@ -27,12 +27,13 @@ impl TypeConversion for Optional {
             base: gen_base(
                 format!("optional_{}", self.id),
                 self.base.runtime_config.clone(),
+                runtime_id.unwrap(),
                 None,
             ),
             data: OptionalTypeData {
                 item: with_store(|s| -> Result<_> {
                     let id = s.resolve_proxy(self.data.of)?;
-                    ctx.register_type(s, id)
+                    ctx.register_type(s, id, runtime_id)
                 })?,
                 default_value,
             },

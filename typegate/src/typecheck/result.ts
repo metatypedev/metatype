@@ -9,7 +9,7 @@ import {
 } from "graphql/ast";
 import { FieldNode, Kind } from "graphql";
 import { isScalar, ObjectNode, Type } from "../type_node.ts";
-import { TypeGraph } from "../typegraph.ts";
+import { TypeGraph } from "../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { getChildTypes } from "../typegraph/visitor.ts";
 import { mapValues } from "std/collections/map_values.ts";

@@ -6,7 +6,7 @@ import * as native from "native";
 import { Resolver, RuntimeInitParams } from "../types.ts";
 import { nativeResult, nativeVoid } from "../utils.ts";
 import { ComputeStage } from "../engine.ts";
-import { TypeGraph } from "../typegraph.ts";
+import { TypeGraph } from "../typegraph/mod.ts";
 import { TemporalRuntimeData } from "../types/typegraph.ts";
 import { Typegate } from "../typegate/mod.ts";
 

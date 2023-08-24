@@ -10,12 +10,15 @@ use crate::typegraph::TypegraphContext;
 
 #[enum_dispatch]
 pub trait TypeConversion {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode>;
+    /// takes already converted runtime id
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode>;
 }
 
+/// takes converted runtime id
 pub fn gen_base(
     name: String,
     runtime_config: Option<Vec<(String, String)>>,
+    runtime_id: u32,
     enumeration: Option<Vec<String>>,
 ) -> TypeNodeBase {
     let mut config: Option<IndexMap<String, serde_json::Value>> = None;
@@ -32,7 +35,7 @@ pub fn gen_base(
         enumeration,
         injection: None,
         policies: Vec::new(),
-        runtime: 0, // resp. BUG: always 0??
+        runtime: runtime_id,
         title: name,
         as_id: false,
     }

@@ -29,15 +29,20 @@ async fn main() -> Result<()> {
         .await
         .unwrap_or_else(|e| warn!("cannot check for update: {}", e));
 
-    let args = Args::try_parse()?;
+    let args = match Args::try_parse() {
+        Ok(cli) => cli,
+        Err(e) if e.kind() == clap::error::ErrorKind::DisplayHelp => {
+            Args::command().print_help()?;
+            return Ok(());
+        }
+        Err(e) => {
+            eprintln!("BUG{:?}", e);
+            return Ok(());
+        }
+    };
 
     if args.version {
         println!("meta {}", common::get_version());
-        return Ok(());
-    }
-
-    if args.help {
-        Args::command().print_help()?;
         return Ok(());
     }
 

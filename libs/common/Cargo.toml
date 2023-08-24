@@ -1,18 +1,19 @@
 [package]
 name = "common"
-version = "0.1.13-0+dev"
+version = "0.1.15-0+dev"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.72"
+anyhow = "1.0.75"
 base64 = "0.21.2"
-flate2 = "1.0.26"
-indexmap = { version = "1.9.3", features = ["serde"] }
+flate2 = "1.0.27"
+# https://github.com/GREsau/schemars/pull/226
+indexmap = { version = "=1.9.3", features = ["serde"] }
 schemars = { version = "0.8.12", features = ["derive", "preserve_order"], optional = true }
-serde = { version = "1.0.171", features = ["derive"] }
-serde_json = { version = "1.0.103", features = ["preserve_order"] }
-serde_with = "3.0.0"
-tar = "0.4.39"
+serde = { version = "1.0.183", features = ["derive"] }
+serde_json = { version = "1.0.105", features = ["preserve_order"] }
+serde_with = "3.2.0"
+tar = "0.4.40"
 ignore = "0.4.20"
 
 [features]

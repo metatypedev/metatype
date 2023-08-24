@@ -15,6 +15,7 @@ LATEST_VERSION=$(curl "$RELEASE_URL/latest" -s -L -I -o /dev/null -w '%{url_effe
 LATEST_VERSION="${LATEST_VERSION##*v}"
 
 PLATFORM="${PLATFORM:-}"
+TMP_DIR=$(mktemp -d)
 OUT_DIR="${OUT_DIR:-/usr/local/bin}"
 VERSION="${VERSION:-$LATEST_VERSION}"
 MACHINE=$(uname -m)
@@ -64,7 +65,7 @@ printf "Detected version: %s\n" "$VERSION"
 ASSET="$NAME-v$VERSION-$PLATFORM"
 DOWNLOAD_URL="$RELEASE_URL/download/v$VERSION/$ASSET.$EXT"
 
-if curl --fail --silent --location --output "$ASSET.$EXT" "$DOWNLOAD_URL"; then
+if curl --fail --silent --location --output "$TMP_DIR/$ASSET.$EXT" "$DOWNLOAD_URL"; then
   printf "Downloaded successfully: %s\n" "$ASSET.$EXT"
 else
   cat >&2 <<EOF
@@ -80,11 +81,11 @@ EOF
   exit 1
 fi
 
-tar -xzf "$ASSET.$EXT" "$EXE"
-rm "$ASSET.$EXT"
-chmod +x "$EXE"
+tar -C "$TMP_DIR" -xzf "$TMP_DIR/$ASSET.$EXT" "$EXE"
+chmod +x "$TMP_DIR/$EXE"
 
 if [ "${OUT_DIR}" = "." ]; then
+  mv "$TMP_DIR/$EXE" .
   printf "\n\n%s has been extracted to your current directory\n" "$EXE"
 else
   cat <<EOF
@@ -96,12 +97,14 @@ $ curl -fsSL $INSTALLER_URL | OUT_DIR=. bash
 EOF
   if [ -w "${OUT_DIR}" ]; then
     read -p "Press enter to continue (or cancel with Ctrl+C):"
-    mv "$EXE" "$OUT_DIR"
+    mv "$TMP_DIR/$EXE" "$OUT_DIR"
   else
-    printf "Your password is required to run \"sudo mv %s %s\":\n" "$EXE" "$OUT_DIR"
-    sudo mv "$EXE" "$OUT_DIR"
+    printf "Sudo is required to run \"sudo mv %s %s\":\n" "$TMP_DIR/$EXE" "$OUT_DIR"
+    sudo mv "$TMP_DIR/$EXE" "$OUT_DIR"
   fi
 fi
+
+rm -r "$TMP_DIR"
 
 OUT_DIR=$(realpath $OUT_DIR)
 if [[ ":$PATH:" != *":$OUT_DIR:"* ]]; then

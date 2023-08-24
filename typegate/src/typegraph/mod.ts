@@ -3,16 +3,16 @@
 
 import type * as ast from "graphql/ast";
 import { Kind } from "graphql";
-import { DenoRuntime } from "./runtimes/deno/deno.ts";
-import { Runtime } from "./runtimes/Runtime.ts";
-import { ensure, ensureNonNullable } from "./utils.ts";
+import { DenoRuntime } from "../runtimes/deno/deno.ts";
+import { Runtime } from "../runtimes/Runtime.ts";
+import { ensure, ensureNonNullable } from "../utils.ts";
 import { typegraph_validate } from "native";
 
 import {
   initAuth,
   internalAuthName,
   nextAuthorizationHeader,
-} from "./services/auth/mod.ts";
+} from "../services/auth/mod.ts";
 
 import {
   isArray,
@@ -27,8 +27,8 @@ import {
   isUnion,
   Type,
   TypeNode,
-} from "./type_node.ts";
-import { Batcher } from "./types.ts";
+} from "../type_node.ts";
+import { Batcher } from "../types.ts";
 
 import type {
   Cors,
@@ -37,11 +37,11 @@ import type {
   Rate,
   TGRuntime as TypeRuntime,
   Typegraph as TypeGraphDS,
-} from "./types/typegraph.ts";
-import { InternalAuth } from "./services/auth/protocols/internal.ts";
-import { Protocol } from "./services/auth/protocols/protocol.ts";
-import { OAuth2Auth } from "./services/auth/protocols/oauth2.ts";
-import { Typegate } from "./typegate/mod.ts";
+} from "../types/typegraph.ts";
+import { InternalAuth } from "../services/auth/protocols/internal.ts";
+import { Protocol } from "../services/auth/protocols/protocol.ts";
+import { OAuth2Auth } from "../services/auth/protocols/oauth2.ts";
+import { Typegate } from "../typegate/mod.ts";
 
 export { Cors, Rate, TypeGraphDS, TypeMaterializer, TypePolicy, TypeRuntime };
 
@@ -63,7 +63,7 @@ export class SecretManager {
     if (valueFromSecrets) {
       ensure(
         !valueFromEnv,
-        `secret ${secretName} cannot override env defined secret`,
+        `secret "${secretName}" from metatype.yaml cannot override a secret defined by environment variable in the typegate: choose one of those two options`,
       );
       return valueFromSecrets;
     }
