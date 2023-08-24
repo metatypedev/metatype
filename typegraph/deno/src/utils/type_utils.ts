@@ -22,10 +22,6 @@ export type InjectionSource =
   | "context"
   | "parent"
   | "secret";
-export type ValueByEffect = {
-  create: unknown;
-  update: unknown;
-  delete: unknown;
-  none: unknown;
-};
+
+export type InjectionValueProcessorType = "ByEffect" | "ByValue";
 export type DynamicValue = "now";

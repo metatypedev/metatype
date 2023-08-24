@@ -239,7 +239,7 @@ impl TypegraphContext {
 
                 let tpe = store.get_type(id)?;
 
-                let type_node = tpe.convert(self, runtime_id)?;
+                let mut type_node = tpe.convert(self, runtime_id)?;
                 tpe.apply_injection(&mut type_node)?;
 
                 self.types[idx] = Some(type_node);

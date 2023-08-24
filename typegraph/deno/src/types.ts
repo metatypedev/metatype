@@ -16,12 +16,8 @@ import {
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
-import { ValueByEffect } from "./utils/type_utils.ts";
-import {
-  serializeInjection,
-  serializeInjectionByEffect,
-} from "./utils/func_utils.ts";
-import { t } from "@typegraph/deno/src/mod.ts";
+import { InjectionValueProcessorType } from "./utils/type_utils.ts";
+import { serializeInjection } from "./utils/func_utils.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -84,56 +80,46 @@ export class Typedef {
     return optional(this, data);
   }
 
-  set(value: unknown) {
+  set(value: unknown, type?: InjectionValueProcessorType) {
     core.updateTypeInjection(
       this._id,
-      serializeInjection("static", value),
+      serializeInjection("static", type, value),
     );
     return this;
   }
 
-  setByEffect(
-    value: ValueByEffect,
-  ) {
-    core.updateTypeInjection(
-      this._id,
-      serializeInjectionByEffect("static", value),
-    );
-    return this;
-  }
-
-  inject(value: string) {
+  inject(value: string, type?: InjectionValueProcessorType) {
     const supported = ["now"];
     if (supported.includes(value)) {
       core.updateTypeInjection(
         this._id,
-        serializeInjection("dynamic", value),
+        serializeInjection("dynamic", type, value),
       );
       return this;
     }
     throw new Error(`generator "${value}" is not supported`);
   }
 
-  fromContext(value: string) {
+  fromContext(value: string, type?: InjectionValueProcessorType) {
     core.updateTypeInjection(
       this._id,
-      serializeInjection("context", value),
+      serializeInjection("context", type, value),
     );
     return this;
   }
 
-  fromSecret(value: string) {
+  fromSecret(value: string, type?: InjectionValueProcessorType) {
     core.updateTypeInjection(
       this._id,
-      serializeInjection("secret", value),
+      serializeInjection("secret", type, value),
     );
     return this;
   }
 
-  fromParent(value: string | TypeProxy) {
+  fromParent(value: string | TypeProxy, type?: InjectionValueProcessorType) {
     let referer: TypeProxy;
     if (typeof value === "string") {
-      referer = t.proxy(value);
+      referer = proxy(value);
     } else {
       referer = value;
     }
@@ -145,6 +131,7 @@ export class Typedef {
       this._id,
       serializeInjection<number>(
         "parent",
+        type,
         placeholderId,
         (x: unknown) => x as number,
       ),
