@@ -82,7 +82,7 @@ impl MaterializerConverter for DenoMaterializer {
                 ("module".to_string(), data)
             }
             Import(import) => {
-                let module_mat = c.register_materializer(s, import.module).unwrap();
+                let module_mat = c.register_materializer(s, import.module).unwrap().0;
                 let data = serde_json::from_value(json!({
                     "mod": module_mat,
                     "name": import.func_name,
@@ -245,7 +245,7 @@ impl MaterializerConverter for PythonMaterializer {
                 ("pymodule".to_string(), data)
             }
             Import(import) => {
-                let module_mat = c.register_materializer(s, import.module).unwrap();
+                let module_mat = c.register_materializer(s, import.module).unwrap().0;
                 let data = serde_json::from_value(json!({
                     "mod": module_mat,
                     "name": import.func_name,
