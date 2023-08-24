@@ -16,6 +16,12 @@ import {
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
+import { ValueByEffect } from "./utils/type_utils.ts";
+import {
+  serializeInjection,
+  serializeInjectionByEffect,
+} from "./utils/func_utils.ts";
+import { t } from "@typegraph/deno/src/mod.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -81,10 +87,67 @@ export class Typedef {
   set(value: unknown) {
     core.updateTypeInjection(
       this._id,
-      JSON.stringify({
-        source: "static",
-        data: { value: `${value}` },
-      }),
+      serializeInjection("static", value),
+    );
+    return this;
+  }
+
+  setByEffect(
+    value: ValueByEffect,
+  ) {
+    core.updateTypeInjection(
+      this._id,
+      serializeInjectionByEffect("static", value),
+    );
+    return this;
+  }
+
+  inject(value: string) {
+    const supported = ["now"];
+    if (supported.includes(value)) {
+      core.updateTypeInjection(
+        this._id,
+        serializeInjection("dynamic", value),
+      );
+      return this;
+    }
+    throw new Error(`generator "${value}" is not supported`);
+  }
+
+  fromContext(value: string) {
+    core.updateTypeInjection(
+      this._id,
+      serializeInjection("context", value),
+    );
+    return this;
+  }
+
+  fromSecret(value: string) {
+    core.updateTypeInjection(
+      this._id,
+      serializeInjection("secret", value),
+    );
+    return this;
+  }
+
+  fromParent(value: string | TypeProxy) {
+    let referer: TypeProxy;
+    if (typeof value === "string") {
+      referer = t.proxy(value);
+    } else {
+      referer = value;
+    }
+    // Note:
+    // 1. _id: index in store
+    // 2. core sdk should replace this value with the appropriate resolved type id
+    const placeholderId = referer._id;
+    core.updateTypeInjection(
+      this._id,
+      serializeInjection<number>(
+        "parent",
+        placeholderId,
+        (x: unknown) => x as number,
+      ),
     );
     return this;
   }
@@ -226,6 +289,10 @@ export function ean() {
 
 export function path() {
   return string({ format: "path" });
+}
+
+export function datetime() {
+  return string({ format: "date-time" });
 }
 
 // Note: enum is a reserved word

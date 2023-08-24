@@ -15,3 +15,17 @@ type PickOptional<T> = Pick<T, OptionalKeys<T>>;
 type Nullable<T> = { [P in keyof T]: T[P] | null };
 
 export type NullableOptional<T> = PickRequired<T> & Nullable<PickOptional<T>>;
+
+export type InjectionSource =
+  | "dynamic"
+  | "static"
+  | "context"
+  | "parent"
+  | "secret";
+export type ValueByEffect = {
+  create: unknown;
+  update: unknown;
+  delete: unknown;
+  none: unknown;
+};
+export type DynamicValue = "now";
