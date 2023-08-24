@@ -1,0 +1,413 @@
+export const snapshot = {};
+
+snapshot[`Serialize typegraph with multiple different runtimes 1`] = `
+"{
+" +
+  '  "\$id": "https://metatype.dev/specs/0.0.2.json",
+' +
+  '  "types": [
+' +
+  "    {
+" +
+  '      "type": "object",
+' +
+  '      "title": "test-multiple-runtimes",
+' +
+  '      "runtime": 4294967295,
+' +
+  '      "policies": [],
+' +
+  '      "config": {},
+' +
+  '      "as_id": false,
+' +
+  '      "properties": {
+' +
+  '        "add": 1,
+' +
+  '        "multiply": 6
+' +
+  "      },
+" +
+  '      "required": [
+' +
+  '        "add",
+' +
+  '        "multiply"
+' +
+  "      ]
+" +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "function",
+' +
+  '      "title": "func_4",
+' +
+  '      "runtime": 1,
+' +
+  '      "policies": [
+' +
+  "        0
+" +
+  "      ],
+" +
+  '      "config": {},
+' +
+  '      "as_id": false,
+' +
+  '      "input": 2,
+' +
+  '      "output": 5,
+' +
+  '      "materializer": 0,
+' +
+  '      "rate_weight": null,
+' +
+  '      "rate_calls": false
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "object",
+' +
+  '      "title": "object_2",
+' +
+  '      "runtime": 1,
+' +
+  '      "policies": [],
+' +
+  '      "config": {},
+' +
+  '      "as_id": false,
+' +
+  '      "properties": {
+' +
+  '        "first": 3,
+' +
+  '        "second": 4
+' +
+  "      },
+" +
+  '      "required": []
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "float",
+' +
+  '      "title": "float_0",
+' +
+  '      "runtime": 1,
+' +
+  '      "policies": [],
+' +
+  '      "config": {},
+' +
+  '      "as_id": false
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "float",
+' +
+  '      "title": "float_1",
+' +
+  '      "runtime": 1,
+' +
+  '      "policies": [],
+' +
+  '      "config": {},
+' +
+  '      "as_id": false
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "float",
+' +
+  '      "title": "float_3",
+' +
+  '      "runtime": 1,
+' +
+  '      "policies": [],
+' +
+  '      "config": {},
+' +
+  '      "as_id": false
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "function",
+' +
+  '      "title": "func_10",
+' +
+  '      "runtime": 0,
+' +
+  '      "policies": [
+' +
+  "        1
+" +
+  "      ],
+" +
+  '      "config": {},
+' +
+  '      "as_id": false,
+' +
+  '      "input": 7,
+' +
+  '      "output": 10,
+' +
+  '      "materializer": 2,
+' +
+  '      "rate_weight": null,
+' +
+  '      "rate_calls": false
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "object",
+' +
+  '      "title": "object_8",
+' +
+  '      "runtime": 0,
+' +
+  '      "policies": [],
+' +
+  '      "config": {},
+' +
+  '      "as_id": false,
+' +
+  '      "properties": {
+' +
+  '        "first": 8,
+' +
+  '        "second": 9
+' +
+  "      },
+" +
+  '      "required": []
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "float",
+' +
+  '      "title": "float_6",
+' +
+  '      "runtime": 0,
+' +
+  '      "policies": [],
+' +
+  '      "config": {},
+' +
+  '      "as_id": false
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "float",
+' +
+  '      "title": "float_7",
+' +
+  '      "runtime": 0,
+' +
+  '      "policies": [],
+' +
+  '      "config": {},
+' +
+  '      "as_id": false
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "type": "float",
+' +
+  '      "title": "float_9",
+' +
+  '      "runtime": 0,
+' +
+  '      "policies": [],
+' +
+  '      "config": {},
+' +
+  '      "as_id": false
+' +
+  "    }
+" +
+  "  ],
+" +
+  '  "materializers": [
+' +
+  "    {
+" +
+  '      "name": "lambda",
+' +
+  '      "runtime": 1,
+' +
+  '      "effect": {
+' +
+  '        "effect": "none",
+' +
+  '        "idempotent": true
+' +
+  "      },
+" +
+  '      "data": {
+' +
+  '        "name": "sha256_ca4c84007bbe1e2253363df3d2da8605fc21e36c4c280cbb335b7daf5ce0dc73",
+' +
+  \`        "fn": "(lambda x: (x['first'] + x['second']))"
+\` +
+  "      }
+" +
+  "    },
+" +
+  "    {
+" +
+  '      "name": "predefined_function",
+' +
+  '      "runtime": 0,
+' +
+  '      "effect": {
+' +
+  '        "effect": "none",
+' +
+  '        "idempotent": true
+' +
+  "      },
+" +
+  '      "data": {
+' +
+  '        "name": "true"
+' +
+  "      }
+" +
+  "    },
+" +
+  "    {
+" +
+  '      "name": "function",
+' +
+  '      "runtime": 0,
+' +
+  '      "effect": {
+' +
+  '        "effect": "none",
+' +
+  '        "idempotent": true
+' +
+  "      },
+" +
+  '      "data": {
+' +
+  '        "script": "var _my_lambda=({first,second})=>first*second;"
+' +
+  "      }
+" +
+  "    }
+" +
+  "  ],
+" +
+  '  "runtimes": [
+' +
+  "    {
+" +
+  '      "name": "deno",
+' +
+  '      "data": {
+' +
+  '        "worker": "default",
+' +
+  '        "permissions": {}
+' +
+  "      }
+" +
+  "    },
+" +
+  "    {
+" +
+  '      "name": "python_wasi",
+' +
+  '      "data": {
+' +
+  '        "config": null
+' +
+  "      }
+" +
+  "    }
+" +
+  "  ],
+" +
+  '  "policies": [
+' +
+  "    {
+" +
+  '      "name": "__public",
+' +
+  '      "materializer": 1
+' +
+  "    },
+" +
+  "    {
+" +
+  '      "name": "__public",
+' +
+  '      "materializer": 1
+' +
+  "    }
+" +
+  "  ],
+" +
+  '  "meta": {
+' +
+  '    "prefix": null,
+' +
+  '    "secrets": [],
+' +
+  '    "queries": {
+' +
+  '      "dynamic": true,
+' +
+  '      "endpoints": []
+' +
+  "    },
+" +
+  '    "cors": {
+' +
+  '      "allow_origin": [],
+' +
+  '      "allow_headers": [],
+' +
+  '      "expose_headers": [],
+' +
+  '      "allow_methods": [],
+' +
+  '      "allow_credentials": false,
+' +
+  '      "max_age_sec": null
+' +
+  "    },
+" +
+  '    "auths": [],
+' +
+  '    "rate": null,
+' +
+  '    "version": "0.0.2"
+' +
+  "  }
+" +
+  "}"
+`;

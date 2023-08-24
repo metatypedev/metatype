@@ -197,6 +197,7 @@ export class MetaTest {
     assertNotEquals(paths.length, 0);
     const first = paths.shift()!;
     const expected = await this.serialize(first, { pretty: true });
+    await this.assertSnapshot(expected);
     for (const path of paths) {
       await this.should(
         `serialize ${path} to the same typegraph as ${first}`,
