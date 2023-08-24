@@ -710,10 +710,7 @@ snapshot[`typegraphs creation 3`] = `
           "idempotent": true
         },
         "data": {
-          "mod": [
-            5,
-            0
-          ],
+          "mod": 5,
           "name": "three",
           "secrets": []
         }
@@ -1497,10 +1494,7 @@ snapshot[`typegraphs creation 6`] = `
           "idempotent": true
         },
         "data": {
-          "mod": [
-            5,
-            0
-          ],
+          "mod": 5,
           "name": "three",
           "secrets": []
         }
