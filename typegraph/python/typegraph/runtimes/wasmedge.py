@@ -1,8 +1,6 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-import base64
-
 from attrs import frozen
 
 from typegraph import effects
@@ -32,15 +30,12 @@ class WasmEdgeRuntime(Runtime):
         inp,
         out,
         effect: Effect = effects.none(),
-        **kwargs
+        **kwargs,
     ):
-        with open(wasm_file, "rb") as f:
-            wasm = base64.b64encode(f.read()).decode("utf-8")
-
         return t.func(
             inp,
             out,
-            WASIMat(self, wasm, func, effect=effect, **kwargs),
+            WASIMat(self, f"file:{wasm_file}", func, effect=effect, **kwargs),
         )
 
 

@@ -61,7 +61,8 @@ impl Action for Deno {
         let loader = Loader::new(config)
             .skip_deno_modules(true)
             .with_postprocessor(postprocess::DenoModules::default().codegen(true))
-            .with_postprocessor(postprocess::PythonModules::default());
+            .with_postprocessor(postprocess::PythonModules::default())
+            .with_postprocessor(postprocess::WasmdegeModules::default());
 
         match loader.load_file(&self.file).await {
             LoaderResult::Loaded(_) => {

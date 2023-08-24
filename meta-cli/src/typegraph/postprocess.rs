@@ -116,6 +116,7 @@ pub use deno_rt::ReformatScripts;
 pub use prisma_rt::EmbedPrismaMigrations;
 pub use prisma_rt::EmbeddedPrismaMigrationOptionsPatch;
 pub use python_rt::PythonModules;
+pub use wasmedge_rt::WasmdegeModules;
 
 pub struct Validator;
 impl PostProcessor for Validator {
@@ -216,7 +217,7 @@ pub mod deno_rt {
 
 pub mod python_rt {
     use super::*;
-    use common::typegraph::runtimes::deno::ModuleMatData;
+    use common::typegraph::runtimes::python::ModuleMatData;
     use std::fs;
 
     #[derive(Default, Debug)]
@@ -238,6 +239,36 @@ pub mod python_rt {
 
                 mat.data = map_from_object(mat_data)?;
                 tg.deps.push(main_path);
+            }
+            Ok(())
+        }
+    }
+}
+
+pub mod wasmedge_rt {
+    use super::*;
+    use common::{archive::encode_to_base_64, typegraph::runtimes::wasmedge::WasiMatData};
+    use std::fs;
+
+    #[derive(Default, Debug)]
+    pub struct WasmdegeModules {}
+
+    impl PostProcessor for WasmdegeModules {
+        fn postprocess(&self, tg: &mut Typegraph, _config: &Config) -> Result<()> {
+            for mat in tg.materializers.iter_mut().filter(|m| m.name == "wasi") {
+                let mut mat_data: WasiMatData = object_from_map(std::mem::take(&mut mat.data))?;
+                let path = mat_data
+                    .wasm
+                    .strip_prefix("file:")
+                    .context("\"file:\" prefix is not present")?;
+
+                // make sure tg_path is absolute
+                let tg_path = fs::canonicalize(tg.path.to_owned().unwrap()).unwrap();
+                let wasi_path = tg_path.parent().unwrap().join(path);
+                mat_data.wasm = encode_to_base_64(&wasi_path)?;
+
+                mat.data = map_from_object(mat_data)?;
+                tg.deps.push(wasi_path);
             }
             Ok(())
         }

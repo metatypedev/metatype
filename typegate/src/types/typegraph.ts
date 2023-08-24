@@ -265,6 +265,9 @@ export type KnownRuntime = {
 } | {
   name: "temporal";
   data: TemporalRuntimeData;
+} | {
+  name: "wasmedge";
+  data: WasmEdgeRuntimeData;
 };
 export type Cardinality = "optional" | "one" | "many";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
@@ -382,6 +385,9 @@ export interface S3RuntimeData {
 export interface TemporalRuntimeData {
   name: string;
   host: string;
+}
+export interface WasmEdgeRuntimeData {
+  config?: string | null;
 }
 export interface UnknownRuntime {
   name: string;

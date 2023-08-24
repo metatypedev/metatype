@@ -244,6 +244,14 @@ interface runtimes {
     from-python-def: func(base: base-materializer, data: materializer-python-def) -> result<materializer-id, error>
     from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>
     from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>
+
+    record materializer-wasi {
+        func-name: string,
+        module: string,
+    }
+
+    register-wasmedge-runtime: func() -> result<runtime-id, error>
+    from-wasi-module: func(base: base-materializer, data: materializer-wasi) -> result<materializer-id, error>
 }
 
 world typegraph {

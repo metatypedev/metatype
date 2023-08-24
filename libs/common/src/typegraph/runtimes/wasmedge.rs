@@ -7,12 +7,13 @@ use serde::{Deserialize, Serialize};
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ModuleMatData {
-    pub code: String,
+pub struct WasiMatData {
+    pub wasm: String,
+    pub func: String,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PythonRuntimeData {
-    pub config: Option<String>, // (pre-commit fails on empty interfaces otherwise)
+pub struct WasmEdgeRuntimeData {
+    pub config: Option<String>, // placeholder (pre-commit fails on empty interfaces otherwise)
 }
