@@ -17,7 +17,12 @@ use crate::{
 impl TypeConversion for Struct {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Object {
-            base: gen_base(format!("object_{}", self.id), runtime_id.unwrap()),
+            base: gen_base(
+                format!("object_{}", self.id),
+                self.base.runtime_config.clone(),
+                runtime_id.unwrap(),
+                None,
+            ),
             data: ObjectTypeData {
                 properties: self
                     .data

@@ -5,7 +5,7 @@ use common::typegraph::{IntegerTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base_enum, TypeConversion},
+    conversion::types::{gen_base, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{Integer, TypeData},
@@ -19,9 +19,11 @@ impl TypeConversion for Integer {
             .enumeration
             .clone()
             .map(|enums| enums.iter().map(|v| format!("{}", v)).collect());
+
         Ok(TypeNode::Integer {
-            base: gen_base_enum(
+            base: gen_base(
                 format!("integer_{}", self.id),
+                self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
                 enumeration,
             ),

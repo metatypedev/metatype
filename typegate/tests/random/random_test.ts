@@ -3,7 +3,7 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-Meta.test("Random", async (t) => {
+Meta.test("Python: Random", async (t) => {
   const e = await t.engine("random/random.py");
 
   await t.should("work", async () => {
@@ -67,34 +67,80 @@ Meta.test("Random", async (t) => {
           array_of_array_of_names
         }
       }
-    `.expectData(
-      {
-        randomList: {
-          array_of_array_of_names: [
-            [
-              "Clayton Tate",
-              "Martin Neal",
-              "Charlie Soto",
-              "Jared Ramirez",
-              "Hilda Bowers",
-              "Derek French",
+    `
+      .expectData(
+        {
+          randomList: {
+            array_of_array_of_names: [
+              [
+                "Olivia Smith",
+                "Sean Atkins",
+                "Arthur Parker",
+                "Jack Chavez",
+                "Hunter Franklin",
+                "Betty Gill",
+                "Louis Reeves",
+                "Rosa Hansen",
+                "Blanche White",
+                "Essie Marsh",
+              ],
+              [
+                "Caleb Meyer",
+                "Glen Hayes",
+                "Bernice Delgado",
+                "Bernice Rose",
+                "Ronnie Vargas",
+              ],
+              [
+                "Marguerite Tyler",
+                "Erik Robinson",
+                "Gregory King",
+                "Essie Collins",
+                "Henrietta Cummings",
+                "Esther Wade",
+                "Shane Holmes",
+                "Jacob Warner",
+                "Gussie Castillo",
+              ],
+              ["Julian Curry"],
+              [
+                "Lelia Daniels",
+                "Gabriel Webster",
+                "Ronald Baker",
+                "Dale Owen",
+                "Harry Poole",
+                "Frank Ward",
+                "Margaret Perez",
+                "Verna Wallace",
+                "Flora Daniels",
+                "Derek Allen",
+              ],
             ],
-            [
-              "Jessie Garza",
-              "Ricardo Maxwell",
-              "Phillip Curtis",
-              "Wesley Sparks",
-              "Russell Lucas",
-              "Tillie Cohen",
-              "Herman Burgess",
-              "Carolyn Potter",
-              "Howard Patton",
-              "Ethan Brady",
-            ],
-          ],
+          },
         },
-      },
-    )
+      )
+      .on(e);
+  });
+});
+
+Meta.test("Deno: Random", async (t) => {
+  const e = await t.engine("random/random.ts");
+
+  await t.should("work", async () => {
+    await gql`
+      query {
+        test1 {
+          email
+          country
+        }
+      }
+    `
+      .expectData({
+        test1: {
+          email: "wubju@de.cg",
+          country: "Guyana",
+        },
+      })
       .on(e);
   });
 });

@@ -16,7 +16,12 @@ use crate::{
 impl TypeConversion for Either {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Either {
-            base: gen_base(format!("either_{}", self.id), runtime_id.unwrap()),
+            base: gen_base(
+                format!("either_{}", self.id),
+                self.base.runtime_config.clone(),
+                runtime_id.unwrap(),
+                None,
+            ),
             data: EitherTypeData {
                 one_of: self
                     .data

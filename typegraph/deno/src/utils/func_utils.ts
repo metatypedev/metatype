@@ -36,3 +36,9 @@ function serializeInjectionByEffect<T>(
     data: Object.fromEntries(dataEntries),
   });
 }
+
+export function serializeRecordValues<T>(
+  obj: Record<string, T>,
+): Array<[string, string]> {
+  return Object.entries(obj).map(([k, v]) => [k, JSON.stringify(v)]);
+}

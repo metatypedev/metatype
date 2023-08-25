@@ -41,6 +41,7 @@ impl Default for TypeBase {
         Self {
             name: None,
             injection: None,
+            runtime_config: None,
         }
     }
 }

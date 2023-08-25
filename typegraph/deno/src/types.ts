@@ -17,7 +17,10 @@ import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
 import { InjectionValueProcessorType } from "./utils/type_utils.ts";
-import { serializeInjection } from "./utils/func_utils.ts";
+import {
+  serializeInjection,
+  serializeRecordValues,
+} from "./utils/func_utils.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -27,16 +30,23 @@ export type PolicySpec = Policy | {
 };
 
 export type Simplified<T> = Omit<T, "of">;
-export type SimplifiedNumeric<T> =
+
+export type SimplifiedBase<T> =
+  & { config?: Record<string, unknown> }
+  & Omit<T, "runtimeConfig">;
+
+export type SimplifiedNumericData<T> =
   & { enumeration?: number[] }
   & Omit<T, "enumeration">;
 
 export class Typedef {
   readonly name?: string;
+  readonly runtimeConfig?: Array<[string, string]>;
   policy: Policy[] | null = null;
 
   constructor(public readonly _id: number, base: TypeBase) {
     this.name = base.name;
+    this.runtimeConfig = base.runtimeConfig;
   }
 
   get repr(): string | null {
@@ -165,8 +175,12 @@ class Boolean extends Typedef {
   }
 }
 
-export function boolean(base: TypeBase = {}) {
-  return new Boolean(core.booleanb(base), base);
+export function boolean(base: SimplifiedBase<TypeBase> = {}) {
+  const completeBase = {
+    ...base,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
+  return new Boolean(core.booleanb(completeBase), completeBase);
 }
 
 class Integer extends Typedef implements Readonly<TypeInteger> {
@@ -189,8 +203,8 @@ class Integer extends Typedef implements Readonly<TypeInteger> {
 }
 
 export function integer(
-  data: SimplifiedNumeric<TypeInteger> = {},
-  base: TypeBase = {},
+  data: SimplifiedNumericData<TypeInteger> = {},
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeData = {
     ...data,
@@ -198,7 +212,15 @@ export function integer(
       ? new Int32Array(data.enumeration)
       : undefined,
   };
-  return new Integer(core.integerb(completeData, base), completeData, base);
+  const completeBase = {
+    ...base,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
+  return new Integer(
+    core.integerb(completeData, completeBase),
+    completeData,
+    completeBase,
+  );
 }
 
 class Float extends Typedef implements Readonly<TypeFloat> {
@@ -221,8 +243,8 @@ class Float extends Typedef implements Readonly<TypeFloat> {
 }
 
 export function float(
-  data: SimplifiedNumeric<TypeFloat> = {},
-  base: TypeBase = {},
+  data: SimplifiedNumericData<TypeFloat> = {},
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeData = {
     ...data,
@@ -230,10 +252,14 @@ export function float(
       ? new Float64Array(data.enumeration)
       : undefined,
   };
+  const completeBase = {
+    ...base,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
   return new Float(
-    core.floatb(completeData, base),
+    core.floatb(completeData, completeBase),
     completeData,
-    base,
+    completeBase,
   );
 }
 
@@ -254,8 +280,15 @@ class StringT extends Typedef implements Readonly<TypeString> {
   }
 }
 
-export function string(data: TypeString = {}, base: TypeBase = {}) {
-  return new StringT(core.stringb(data, base), data, base);
+export function string(
+  data: TypeString = {},
+  base: SimplifiedBase<TypeBase> = {},
+) {
+  const completeBase = {
+    ...base,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
+  return new StringT(core.stringb(data, completeBase), data, completeBase);
 }
 
 export function uuid() {
@@ -283,7 +316,7 @@ export function datetime() {
 }
 
 // Note: enum is a reserved word
-export function enum_(variants: string[], base: TypeBase = {}) {
+export function enum_(variants: string[], base: SimplifiedBase<TypeBase> = {}) {
   return string({
     enumeration: variants.map((variant) => JSON.stringify(variant)),
   }, base);
@@ -307,16 +340,20 @@ class ArrayT extends Typedef {
 export function array(
   variant: Typedef,
   data: Simplified<TypeArray> = {},
-  base: TypeBase = {},
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeData = {
     of: variant._id,
     ...data,
   } as TypeArray;
+  const completeBase = {
+    ...base,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
   return new ArrayT(
-    core.arrayb(completeData, base),
+    core.arrayb(completeData, completeBase),
     completeData,
-    base,
+    completeBase,
   );
 }
 
@@ -334,16 +371,20 @@ class Optional extends Typedef {
 export function optional(
   variant: Typedef,
   data: Simplified<TypeOptional> = {},
-  base: TypeBase = {},
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const completeData = {
     of: variant._id,
     ...data,
   } as TypeOptional;
+  const completeBase = {
+    ...base,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
   return new Optional(
-    core.optionalb(completeData, base),
+    core.optionalb(completeData, completeBase),
     completeData,
-    base,
+    completeBase,
   );
 }
 
@@ -358,15 +399,19 @@ class Union extends Typedef {
 
 export function union(
   variants: Array<Typedef>,
-  base: TypeBase = {},
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const data = {
     variants: new Uint32Array(variants.map((variant) => variant._id)),
   };
+  const completeBase = {
+    ...base,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
   return new Union(
-    core.unionb(data, base),
+    core.unionb(data, completeBase),
     data,
-    base,
+    completeBase,
   );
 }
 
@@ -381,15 +426,19 @@ class Either extends Typedef {
 
 export function either(
   variants: Array<Typedef>,
-  base: TypeBase = {},
+  base: SimplifiedBase<TypeBase> = {},
 ) {
   const data = {
     variants: new Uint32Array(variants.map((variant) => variant._id)),
   };
+  const completeBase = {
+    ...base,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
   return new Either(
-    core.eitherb(data, base),
+    core.eitherb(data, completeBase),
     data,
-    base,
+    completeBase,
   );
 }
 
@@ -403,16 +452,20 @@ export class Struct<P extends { [key: string]: Typedef }> extends Typedef {
 
 export function struct<P extends { [key: string]: Typedef }>(
   props: P,
-  base: TypeBase = {},
+  base: SimplifiedBase<TypeBase> = {},
 ): Struct<P> {
+  const completeBase = {
+    ...base,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
+  };
   return new Struct(
     core.structb({
       props: Object.entries(props).map(([name, typ]) => [name, typ._id]),
-    }, base),
+    }, completeBase),
     {
       props,
     },
-    base,
+    completeBase,
   );
 }
 

@@ -32,7 +32,12 @@ impl TypeConversion for Func {
         })?;
 
         Ok(TypeNode::Function {
-            base: gen_base(format!("func_{}", self.id), runtime_id),
+            base: gen_base(
+                format!("func_{}", self.id),
+                self.base.runtime_config.clone(),
+                runtime_id,
+                None,
+            ),
             data: FunctionTypeData {
                 input,
                 output,

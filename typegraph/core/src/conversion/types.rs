@@ -3,6 +3,7 @@
 
 use common::typegraph::{TypeNode, TypeNodeBase};
 use enum_dispatch::enum_dispatch;
+use indexmap::IndexMap;
 
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
@@ -14,26 +15,28 @@ pub trait TypeConversion {
 }
 
 /// takes converted runtime id
-pub fn gen_base(name: String, runtime_id: u32) -> TypeNodeBase {
+pub fn gen_base(
+    name: String,
+    runtime_config: Option<Vec<(String, String)>>,
+    runtime_id: u32,
+    enumeration: Option<Vec<String>>,
+) -> TypeNodeBase {
+    let mut config: Option<IndexMap<String, serde_json::Value>> = None;
+    if let Some(cfg_list) = runtime_config {
+        let mut map = IndexMap::new();
+        for (k, v) in cfg_list.iter() {
+            map.insert(k.to_string(), serde_json::from_str(v).unwrap());
+        }
+        config = Some(map);
+    }
     TypeNodeBase {
-        config: Default::default(),
+        config: config.unwrap_or(Default::default()),
         description: None,
-        enumeration: None,
+        enumeration,
         injection: None,
         policies: Vec::new(),
         runtime: runtime_id,
         title: name,
         as_id: false,
-    }
-}
-
-pub fn gen_base_enum(
-    name: String,
-    runtime_id: u32,
-    enumeration: Option<Vec<String>>,
-) -> TypeNodeBase {
-    TypeNodeBase {
-        enumeration,
-        ..gen_base(name, runtime_id)
     }
 }
