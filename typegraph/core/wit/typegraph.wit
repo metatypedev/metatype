@@ -258,6 +258,15 @@ interface runtimes {
 
     register-random-runtime: func(data: random-runtime-data) -> result<materializer-id, error>
     create-random-mat: func(base: base-materializer, data: materializer-random) -> result<materializer-id, error>
+
+    // wasmedge
+    record materializer-wasi {
+        func-name: string,
+        module: string,
+    }
+
+    register-wasmedge-runtime: func() -> result<runtime-id, error>
+    from-wasi-module: func(base: base-materializer, data: materializer-wasi) -> result<materializer-id, error>
 }
 
 world typegraph {

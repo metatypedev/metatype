@@ -23,6 +23,7 @@ pub enum Runtime {
     Http(HttpRuntimeData),
     Python,
     Random(RandomRuntimeData),
+    WasmEdge,
 }
 
 #[derive(Debug)]
@@ -69,6 +70,11 @@ pub enum PythonMaterializer {
 #[derive(Debug)]
 pub enum RandomMaterializer {
     Runtime(wit::MaterializerRandom),
+}
+
+#[derive(Debug)]
+pub enum WasiMaterializer {
+    Module(wit::MaterializerWasi),
 }
 
 impl Materializer {
@@ -119,6 +125,14 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn wasi(runtime_id: RuntimeId, data: WasiMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -129,6 +143,7 @@ pub enum MaterializerData {
     Http(MaterializerHttpRequest),
     Python(PythonMaterializer),
     Random(RandomMaterializer),
+    WasmEdge(WasiMaterializer),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -259,6 +274,19 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
     ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
         let mat =
             Materializer::random(base.runtime, RandomMaterializer::Runtime(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn register_wasmedge_runtime(
+    ) -> Result<crate::wit::runtimes::RuntimeId, crate::wit::runtimes::Error> {
+        Ok(with_store_mut(|s| s.register_runtime(Runtime::WasmEdge)))
+    }
+
+    fn from_wasi_module(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerWasi,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::wasi(base.runtime, WasiMaterializer::Module(data), base.effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }

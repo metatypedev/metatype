@@ -1511,6 +1511,24 @@
               "$ref": "#/definitions/TemporalRuntimeData"
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "wasmedge"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/WasmEdgeRuntimeData"
+            }
+          }
         }
       ]
     },
@@ -1745,6 +1763,17 @@
         },
         "host": {
           "type": "string"
+        }
+      }
+    },
+    "WasmEdgeRuntimeData": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },
