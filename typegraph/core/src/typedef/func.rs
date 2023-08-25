@@ -16,23 +16,25 @@ use crate::{
 impl TypeConversion for Func {
     fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
         let input = with_store(|s| -> Result<_> {
-            let inp_id = s.resolve_proxy(self.data.inp)?;
+            let inp_id = s.resolve_proxy(self.data.inp.into())?;
             match s.get_type(inp_id)? {
                 Type::Struct(_) => Ok(ctx.register_type(s, inp_id)?),
                 _ => Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?)),
             }
-        })?;
+        })?
+        .into();
 
         let output = with_store(|s| -> Result<_> {
-            let out_id = s.resolve_proxy(self.data.out)?;
+            let out_id = s.resolve_proxy(self.data.out.into())?;
             ctx.register_type(s, out_id)
-        })?;
+        })?
+        .into();
 
         let materializer =
             with_store(|s| -> Result<_> { ctx.register_materializer(s, self.data.mat) })?;
 
         Ok(TypeNode::Function {
-            base: gen_base(format!("func_{}", self.id)),
+            base: gen_base(format!("func_{}", self.id.0)),
             data: FunctionTypeData {
                 input,
                 output,

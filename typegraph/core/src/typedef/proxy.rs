@@ -1,7 +1,6 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::wit::core::TypeId;
 use common::typegraph::TypeNode;
 use errors::Result;
 
@@ -10,7 +9,7 @@ use crate::{
     errors,
     global_store::{with_store, Store},
     typegraph::TypegraphContext,
-    types::{Proxy, TypeData, WrapperTypeData},
+    types::{Proxy, TypeData, TypeId, WrapperTypeData},
     wit::core::TypeProxy,
 };
 
@@ -34,8 +33,13 @@ impl TypeData for TypeProxy {
 }
 
 impl WrapperTypeData for TypeProxy {
-    fn get_wrapped_type(&self, store: &Store) -> Option<TypeId> {
+    fn resolve(&self, store: &Store) -> Option<TypeId> {
         store.get_type_by_name(&self.name)
+    }
+
+    fn try_resolve(&self, store: &Store) -> Result<TypeId> {
+        self.resolve(store)
+            .ok_or_else(|| format!("could not resolve proxy '{}'", self.name))
     }
 }
 

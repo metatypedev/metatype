@@ -5,6 +5,7 @@ mod conversion;
 mod errors;
 mod global_store;
 mod runtimes;
+mod t;
 mod typedef;
 mod typegraph;
 mod types;
@@ -25,9 +26,9 @@ use types::{
 };
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
-    TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
-    TypegraphInitParams,
+    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc,
+    TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct,
+    TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -78,17 +79,17 @@ impl wit::core::Core for Lib {
         typegraph::finalize()
     }
 
-    fn proxyb(data: TypeProxy) -> Result<TypeId> {
+    fn proxyb(data: TypeProxy) -> Result<CoreTypeId> {
         with_store_mut(move |s| {
             let registered_type = s.type_by_names.get(&data.name);
             match (data.extras.len(), registered_type) {
-                (0, Some(type_id)) => return Ok(*type_id),
-                _ => Ok(s.add_type(|id| Type::Proxy(Proxy { id, data }))),
+                (0, Some(type_id)) => return Ok((*type_id).into()),
+                _ => Ok(s.add_type(|id| Type::Proxy(Proxy { id, data })).into()),
             }
         })
     }
 
-    fn integerb(data: TypeInteger, base: TypeBase) -> Result<TypeId> {
+    fn integerb(data: TypeInteger, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
@@ -101,10 +102,11 @@ impl wit::core::Core for Lib {
         }
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Integer(Integer { id, base, data }))
+                .into()
         }))
     }
 
-    fn floatb(data: TypeFloat, base: TypeBase) -> Result<TypeId> {
+    fn floatb(data: TypeFloat, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
@@ -117,10 +119,11 @@ impl wit::core::Core for Lib {
         }
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Float(Float { id, base, data }))
+                .into()
         }))
     }
 
-    fn booleanb(base: TypeBase) -> Result<TypeId> {
+    fn booleanb(base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
             s.add_type(|id| {
                 Type::Boolean(Boolean {
@@ -129,10 +132,11 @@ impl wit::core::Core for Lib {
                     data: TypeBoolean,
                 })
             })
+            .into()
         }))
     }
 
-    fn stringb(data: TypeString, base: TypeBase) -> Result<TypeId> {
+    fn stringb(data: TypeString, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
@@ -140,17 +144,18 @@ impl wit::core::Core for Lib {
         }
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::String(StringT { id, base, data }))
+                .into()
         }))
     }
 
-    fn arrayb(data: TypeArray, base: TypeBase) -> Result<TypeId> {
+    fn arrayb(data: TypeArray, base: TypeBase) -> Result<CoreTypeId> {
         if let (Some(min), Some(max)) = (data.min, data.max) {
             if min >= max {
                 return Err(errors::invalid_max_value());
             }
         }
         with_store_mut(move |s| -> Result<_> {
-            let base = match s.get_type_name(data.of)? {
+            let base = match s.get_type_name(data.of.into())? {
                 Some(name) => {
                     // TODO
                     let name = format!("{}[]", name);
@@ -161,29 +166,33 @@ impl wit::core::Core for Lib {
                 }
                 None => base,
             };
-            Ok(s.add_type(|id| Type::Array(Array { id, base, data })))
+            Ok(s.add_type(|id| Type::Array(Array { id, base, data }))
+                .into())
         })
     }
 
-    fn optionalb(data: TypeOptional, base: TypeBase) -> Result<TypeId> {
+    fn optionalb(data: TypeOptional, base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Optional(Optional { id, base, data }))
+                .into()
         }))
     }
 
-    fn unionb(data: TypeUnion, base: TypeBase) -> Result<TypeId> {
+    fn unionb(data: TypeUnion, base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Union(Union { id, base, data }))
+                .into()
         }))
     }
 
-    fn eitherb(data: TypeEither, base: TypeBase) -> Result<TypeId> {
+    fn eitherb(data: TypeEither, base: TypeBase) -> Result<CoreTypeId> {
         Ok(with_store_mut(move |s| {
             s.add_type(|id| Type::Either(Either { id, base, data }))
+                .into()
         }))
     }
 
-    fn structb(data: TypeStruct, base: TypeBase) -> Result<TypeId> {
+    fn structb(data: TypeStruct, base: TypeBase) -> Result<CoreTypeId> {
         let mut prop_names = HashSet::new();
         for (name, _) in data.props.iter() {
             if !validate_name(name) {
@@ -197,23 +206,27 @@ impl wit::core::Core for Lib {
 
         Ok(with_store_mut(|s| {
             s.add_type(|id| Type::Struct(Struct { id, base, data }))
+                .into()
         }))
     }
 
-    fn funcb(data: TypeFunc) -> Result<TypeId> {
+    fn funcb(data: TypeFunc) -> Result<CoreTypeId> {
         with_store_mut(|s| {
-            let inp_id = s.resolve_proxy(data.inp)?;
+            let inp_id = s.resolve_proxy(data.inp.into())?;
             let inp_type = s.get_type(inp_id)?;
             if !matches!(inp_type, Type::Struct(_)) {
                 return Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?));
             }
             let base = TypeBase::default();
-            Ok(s.add_type(|id| Type::Func(Func { id, base, data })))
+            Ok(s.add_type(|id| Type::Func(Func { id, base, data })).into())
         })
     }
 
-    fn with_policy(data: TypePolicy) -> Result<TypeId> {
-        with_store_mut(|s| Ok(s.add_type(|id| Type::WithPolicy(WithPolicy { id, data }))))
+    fn with_policy(data: TypePolicy) -> Result<CoreTypeId> {
+        with_store_mut(|s| {
+            Ok(s.add_type(|id| Type::WithPolicy(WithPolicy { id, data }))
+                .into())
+        })
     }
 
     fn register_policy(pol: Policy) -> Result<PolicyId> {
@@ -270,12 +283,15 @@ impl wit::core::Core for Lib {
         .map(|id| (id, name))
     }
 
-    fn get_type_repr(type_id: TypeId) -> Result<String> {
-        with_store(|s| s.get_type_repr(type_id))
+    fn get_type_repr(type_id: CoreTypeId) -> Result<String> {
+        with_store(|s| s.get_type_repr(type_id.into()))
     }
 
-    fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<(), String> {
-        typegraph::expose(fns, namespace)
+    fn expose(fns: Vec<(String, CoreTypeId)>, namespace: Vec<String>) -> Result<(), String> {
+        typegraph::expose(
+            fns.into_iter().map(|(k, ty)| (k, ty.into())).collect(),
+            namespace,
+        )
     }
 }
 

@@ -138,7 +138,7 @@ interface core {
 }
 
 interface runtimes {
-    use core.{error, runtime-id, materializer-id}
+    use core.{error, type-id, runtime-id, materializer-id}
     
     get-deno-runtime: func() -> runtime-id
 
@@ -218,12 +218,13 @@ interface runtimes {
     register-http-runtime: func(data: http-runtime-data) -> result<runtime-id, error>
     http-request: func(base: base-materializer, data: materializer-http-request) -> result<materializer-id, error>
 
-    record prisma-runtime-data {
-        name: string,
-        connection-string-secret: string,
-    }
+    // record prisma-runtime-data {
+    //    name: string,
+    //     connection-string-secret: string,
+    // }
 
     // create-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
+    // prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<type-id>
 }
 
 world typegraph {

@@ -5,11 +5,11 @@ use crate::errors::Result;
 use crate::global_store::with_store;
 use crate::types::Type;
 use crate::types::TypeFun;
-use crate::wit::core::TypeId;
+use crate::types::TypeId;
 use crate::wit::runtimes::Error as TgError;
 
 mod discovery;
-mod registry;
+pub mod registry;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Cardinality {
@@ -34,7 +34,7 @@ fn get_rel_name(wrapper_type: TypeId) -> Result<Option<String>> {
                 }
                 _ => {
                     if let Some(wrapper_type) = ty.as_wrapper_type() {
-                        type_id = wrapper_type.get_wrapped_type(s).unwrap();
+                        type_id = wrapper_type.try_resolve(s)?;
                         continue;
                     } else {
                         // concrete type
@@ -87,15 +87,28 @@ impl RelationshipModel {
 
     pub fn get_rel_name(&self) -> Result<Option<String>> {
         with_store(|s| -> Result<_> {
-            let target_type = s
-                .type_as_struct(self.model_type)?
+            s.type_as_struct(self.model_type)?
                 .data
-                .get_prop(&self.field);
-            target_type
-                .map(get_rel_name)
+                .get_prop(&self.field)
+                .map(|id| get_rel_name(id.into()))
                 .transpose()
                 .map(|o| o.flatten())
         })
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum Side {
+    Left,
+    Right,
+}
+
+impl Side {
+    pub fn opposite(&self) -> Self {
+        match self {
+            Side::Left => Side::Right,
+            Side::Right => Side::Left,
+        }
     }
 }
 
@@ -159,6 +172,28 @@ impl TryFrom<(RelationshipModel, RelationshipModel)> for Relationship {
         };
 
         Ok(Relationship { name, left, right })
+    }
+}
+
+impl Relationship {
+    pub fn side_of_model(&self, model_type: TypeId) -> Option<Side> {
+        if self.left.model_type == self.right.model_type {
+            todo!("self relationship");
+        }
+        if self.left.model_type == model_type {
+            Some(Side::Left)
+        } else if self.right.model_type == model_type {
+            Some(Side::Right)
+        } else {
+            None
+        }
+    }
+
+    pub fn get(&self, side: Side) -> &RelationshipModel {
+        match side {
+            Side::Left => &self.left,
+            Side::Right => &self.right,
+        }
     }
 }
 

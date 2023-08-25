@@ -3,9 +3,10 @@
 
 use crate::errors::Result;
 use crate::global_store::with_store;
+use crate::types::Struct;
 use crate::types::Type;
 use crate::types::TypeFun;
-use crate::wit::core::TypeId;
+use crate::types::TypeId;
 
 use super::relationship::{Cardinality, RelationshipSource};
 
@@ -50,7 +51,7 @@ pub fn as_relationship_source(id: TypeId) -> Result<Option<RelationshipSource>> 
                 }))
             }
             Type::Optional(o) => {
-                let inner = s.get_type(o.data.of)?.get_concrete_type().unwrap(); // TODO
+                let inner = s.get_type(o.data.of.into())?.get_concrete_type().unwrap(); // TODO
                 match s.get_type(inner)? {
                     Type::Struct(s) => Ok(Some(RelationshipSource {
                         wrapper_type: id,
@@ -68,7 +69,7 @@ pub fn as_relationship_source(id: TypeId) -> Result<Option<RelationshipSource>> 
             }
 
             Type::Array(a) => {
-                let inner = s.get_type(a.data.of)?.get_concrete_type().unwrap(); // TODO
+                let inner = s.get_type(a.data.of.into())?.get_concrete_type().unwrap(); // TODO
                 match s.get_type(inner)? {
                     Type::Struct(s) => Ok(Some(RelationshipSource {
                         wrapper_type: id,
@@ -97,7 +98,7 @@ pub fn get_model_type(wrapper_type: TypeId) -> Result<Option<(TypeId, Cardinalit
         match s.get_type(concrete_type)? {
             Type::Struct(_) => Ok(Some((concrete_type, Cardinality::One))),
             Type::Optional(o) => {
-                let inner = s.get_type(o.data.of)?.get_concrete_type().unwrap(); // TODO
+                let inner = s.get_type(o.data.of.into())?.get_concrete_type().unwrap(); // TODO
                 match s.get_type(inner)? {
                     Type::Struct(_) => Ok(Some((inner, Cardinality::Optional))),
                     // TODO less strict?
@@ -109,7 +110,7 @@ pub fn get_model_type(wrapper_type: TypeId) -> Result<Option<(TypeId, Cardinalit
                 }
             }
             Type::Array(a) => {
-                let inner = s.get_type(a.data.of)?.get_concrete_type().unwrap(); // TODO
+                let inner = s.get_type(a.data.of.into())?.get_concrete_type().unwrap(); // TODO
                 match s.get_type(inner)? {
                     Type::Struct(_) => Ok(Some((inner, Cardinality::Many))),
                     // TODO less strict?
@@ -122,6 +123,44 @@ pub fn get_model_type(wrapper_type: TypeId) -> Result<Option<(TypeId, Cardinalit
             }
             // scalar type
             _ => Ok(None),
+        }
+    })
+}
+
+pub fn get_id_field(model_id: TypeId) -> Result<String> {
+    with_store(|s| {
+        let matches = model_id
+            .as_struct(s)?
+            .data
+            .props
+            .iter()
+            .map(|(k, ty)| -> Result<Option<String>> {
+                match s.get_type((*ty).into())? {
+                    Type::Integer(i) => Ok(i.base.as_id.then_some(k.clone())),
+                    Type::String(i) => Ok(i.base.as_id.then_some(k.clone())),
+                    typ => match typ.get_base() {
+                        Some(base) => {
+                            if base.as_id {
+                                Err(format!(
+                                    "id must be on type Integer or String, not {}",
+                                    typ.get_data().variant_name()
+                                ))
+                            } else {
+                                Ok(None)
+                            }
+                        }
+                        None => Ok(None),
+                    },
+                }
+            })
+            .collect::<Result<Vec<Option<String>>>>()?
+            .into_iter()
+            .filter_map(|x| x)
+            .collect::<Vec<_>>();
+        match matches.len() {
+            0 => Err("no id field found".to_string()),
+            1 => Ok(matches.into_iter().next().unwrap()),
+            _ => Err("multiple id fields not supported".to_string()),
         }
     })
 }

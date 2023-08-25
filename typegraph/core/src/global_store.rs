@@ -3,8 +3,8 @@
 
 use crate::errors::{self, Result};
 use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
-use crate::types::{Type, TypeFun};
-use crate::wit::core::{Error as TgError, Policy, PolicyId, RuntimeId, TypeId};
+use crate::types::{Type, TypeFun, TypeId};
+use crate::wit::core::{Error as TgError, Policy, PolicyId, RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use std::{cell::RefCell, collections::HashMap};
 
@@ -66,8 +66,8 @@ impl Store {
 
     pub fn get_type(&self, type_id: TypeId) -> Result<&Type, TgError> {
         self.types
-            .get(type_id as usize)
-            .ok_or_else(|| errors::object_not_found("type", type_id))
+            .get(type_id.0 as usize)
+            .ok_or_else(|| errors::object_not_found("type", type_id.0))
     }
 
     pub fn get_type_name(&self, type_id: TypeId) -> Result<Option<&str>, TgError> {
@@ -87,12 +87,12 @@ impl Store {
 
     pub fn add_type(&mut self, build: impl FnOnce(TypeId) -> Type) -> TypeId {
         let id = self.types.len() as u32;
-        let tpe = build(id);
+        let tpe = build(id.into());
         if let Some(name) = tpe.get_base().and_then(|b| b.name.as_ref()) {
-            self.type_by_names.insert(name.clone(), id);
+            self.type_by_names.insert(name.clone(), id.into());
         }
         self.types.push(tpe);
-        id
+        id.into()
     }
 
     pub fn get_type_repr(&self, id: TypeId) -> Result<String, TgError> {
@@ -176,6 +176,25 @@ impl Store {
             });
             self.deno_modules.insert(file, mat);
             mat
+        }
+    }
+
+    pub fn get_config_flag(&self, type_id: TypeId, flag: &str) -> Result<bool> {
+        todo!()
+    }
+
+    pub fn is_func(&self, type_id: TypeId) -> Result<bool> {
+        match self.get_type(type_id)? {
+            Type::Func(_) => Ok(true),
+            _ => Ok(false),
+        }
+    }
+
+    pub fn resolve_quant(&self, type_id: TypeId) -> Result<TypeId> {
+        match self.get_type(type_id)? {
+            Type::Array(a) => Ok(a.data.of.into()),
+            Type::Optional(o) => Ok(o.data.of.into()),
+            _ => Ok(type_id),
         }
     }
 }

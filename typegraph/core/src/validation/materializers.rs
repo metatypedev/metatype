@@ -28,23 +28,23 @@ impl Materializer {
             DenoMaterializer::Predefined(predef) => {
                 match predef.name.as_str() {
                     "identity" => {
-                        if !type_utils::is_equal(s, func.inp, func.out)? {
+                        if !type_utils::is_equal(s, func.inp.into(), func.out.into())? {
                             return Err(errors::invalid_output_type_predefined(
                                 &predef.name,
-                                &s.get_type_repr(func.inp)?,
-                                &s.get_type_repr(func.out)?,
+                                &s.get_type_repr(func.inp.into())?,
+                                &s.get_type_repr(func.out.into())?,
                             ));
                         }
                     }
 
                     "true" | "false" => {
-                        if let Ok(out_id) = s.resolve_proxy(func.out) {
+                        if let Ok(out_id) = s.resolve_proxy(func.out.into()) {
                             let out_type = s.get_type(out_id)?;
                             let Type::Boolean(_) = out_type else {
                                 return Err(errors::invalid_output_type_predefined(
                                     &predef.name,
                                     "bool",
-                                    &s.get_type_repr(func.out)?,
+                                    &s.get_type_repr(func.out.into())?,
                                 ));
                             };
                         }

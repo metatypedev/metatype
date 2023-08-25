@@ -5,7 +5,7 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime};
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::with_store;
 use crate::host::abi;
-use crate::types::{Type, TypeFun, WrapperTypeData};
+use crate::types::{Type, TypeFun, TypeId, WrapperTypeData};
 use crate::validation::validate_name;
 use crate::{
     errors::{self, Result},
@@ -25,7 +25,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::wit::core::{
-    Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypeId, TypegraphInitParams,
+    Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -198,7 +198,7 @@ impl TypegraphContext {
             let type_id = s.resolve_proxy(type_id)?;
             let tpe = s.get_type(type_id)?;
             let tpe = match tpe {
-                Type::WithPolicy(t) => s.get_type(t.data.get_wrapped_type(s).unwrap())?,
+                Type::WithPolicy(t) => s.get_type(t.data.resolve(s).unwrap())?,
                 _ => tpe,
             };
 
@@ -211,14 +211,14 @@ impl TypegraphContext {
 
             root.required.push(name.clone());
             root.properties
-                .insert(name, self.register_type(s, type_id)?);
+                .insert(name, self.register_type(s, type_id)?.into());
         }
 
         Ok(())
     }
 
-    pub fn register_type(&mut self, store: &Store, id: u32) -> Result<TypeId, TgError> {
-        match self.mapping.types.entry(id) {
+    pub fn register_type(&mut self, store: &Store, id: TypeId) -> Result<TypeId, TgError> {
+        match self.mapping.types.entry(id.into()) {
             Entry::Vacant(e) => {
                 // to prevent infinite loop from circular dependencies,
                 // we allocate first a slot in the array for the type with None
@@ -233,9 +233,9 @@ impl TypegraphContext {
                 let type_node = tpe.convert(self)?;
 
                 self.types[idx] = Some(type_node);
-                Ok(idx as TypeId)
+                Ok((idx as u32).into())
             }
-            Entry::Occupied(e) => Ok(*e.get()),
+            Entry::Occupied(e) => Ok((*e.get()).into()),
         }
     }
 

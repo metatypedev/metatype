@@ -17,7 +17,7 @@ pub fn scan_model(model: &Struct, _registry: &RelationshipRegistry) -> Result<Ve
         // let mut self_relationships = HashSet::new();
 
         for (prop, ty) in model.data.props.iter() {
-            let source = as_relationship_source(*ty)?;
+            let source = as_relationship_source((*ty).into())?;
             if let Some(source) = source {
                 if source.model_type == model.id {
                     result.push(Relationship::self_reference(source, prop)?);
@@ -132,7 +132,7 @@ impl Relationship {
                 .iter()
                 .filter_map(|(k, ty)| {
                     // TODO runtime
-                    as_relationship_source(*ty)
+                    as_relationship_source((*ty).into())
                         .unwrap()
                         .filter(|s| s.model_type == target.model_type)
                         .map(|s| {
@@ -168,7 +168,7 @@ impl Relationship {
                     if k == target_field {
                         None
                     } else {
-                        as_relationship_source(*ty)
+                        as_relationship_source((*ty).into())
                             .unwrap()
                             .filter(|s| s.model_type == source.model_type)
                             .map(|s| {
