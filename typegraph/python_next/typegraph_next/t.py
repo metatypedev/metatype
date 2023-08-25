@@ -3,7 +3,7 @@
 
 import json
 from typing import Dict, List, Optional, Tuple, Union
-from typegraph_next.utils import serialize_record_values
+from typegraph_next.utils import serialize_record_values, serialize_injection
 
 from typing_extensions import Self
 
@@ -30,6 +30,7 @@ from typegraph_next.gen.types import Err
 from typegraph_next.graph.typegraph import core, store
 from typegraph_next.policy import Policy, PolicyPerEffect
 from typegraph_next.runtimes.deno import Materializer
+from typegraph_next.effects import EffectType
 
 
 class typedef:
@@ -76,6 +77,60 @@ class typedef:
         if isinstance(self, optional):
             return self
         return optional(self, default_item=default_value)
+
+    def set(self, value: Union[any, Dict[EffectType, any]]):
+        core.update_type_injection(
+            store, self.id, serialize_injection("static", value=value)
+        )
+        return self
+
+    def inject(self, value: Union[any, Dict[EffectType, any]]):
+        core.update_type_injection(
+            store, self.id, serialize_injection("dynamic", value=value)
+        )
+        return self
+
+    def from_context(self, value: str):
+        core.update_type_injection(
+            store, self.id, serialize_injection("context", value=value)
+        )
+        return self
+
+    def from_secret(self, value: str):
+        core.update_type_injection(
+            store, self.id, serialize_injection("secret", value=value)
+        )
+        return self
+
+    def from_parent(self, value: Union[str, Dict[EffectType, str]]):
+        correct_value = None
+        if isinstance(value, str):
+            correct_value = proxy(value).id
+        else:
+            if isinstance(value, dict):
+                if len(value) > 0 and all(
+                    isinstance(k, EffectType) for k in value.keys()
+                ):
+                    correct_value = {}
+                    for k, v in value.items():
+                        if not isinstance(v, str):
+                            raise Exception(f"type not supported for field {k.name}")
+                        correct_value[k] = proxy(v).id
+                else:
+                    raise Exception("props should be of type EffectType")
+            else:
+                raise Exception("type not supported")
+
+        assert correct_value is not None
+
+        core.update_type_injection(
+            store,
+            self.id,
+            serialize_injection(
+                "parent", value=correct_value, value_mapper=lambda x: x
+            ),
+        )
+        return self
 
 
 class _TypeWithPolicy(typedef):
@@ -131,7 +186,7 @@ class integer(typedef):
         multiple_of: Optional[int] = None,
         enumeration: Optional[List[int]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None
+        config: Optional[Dict[str, any]] = None,
     ):
         data = TypeInteger(
             min=min,
@@ -177,7 +232,7 @@ class float(typedef):
         multiple_of: Optional[float] = None,
         enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None
+        config: Optional[Dict[str, any]] = None,
     ):
         data = TypeFloat(
             min=min,
@@ -235,7 +290,7 @@ class string(typedef):
         format: Optional[str] = None,
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None
+        config: Optional[Dict[str, any]] = None,
     ):
         enum_variants = None
         if enumeration is not None:
@@ -413,7 +468,7 @@ class struct(typedef):
         props: Dict[str, typedef],
         *,
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None
+        config: Optional[Dict[str, str]] = None,
     ):
         data = TypeStruct(props=list((name, tpe.id) for (name, tpe) in props.items()))
 

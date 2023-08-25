@@ -16,11 +16,11 @@ import {
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
-import { InjectionValueProcessorType } from "./utils/type_utils.ts";
 import {
   serializeInjection,
   serializeRecordValues,
 } from "./utils/func_utils.ts";
+import { CREATE, DELETE, effectPrefix, NONE, UPDATE } from "./effects.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -90,69 +90,84 @@ export class Typedef {
     return optional(this, data);
   }
 
-  set(value: unknown, type?: InjectionValueProcessorType) {
+  set(value: unknown) {
     core.updateTypeInjection(
       this._id,
-      serializeInjection("static", type, value),
+      serializeInjection("static", value),
     );
     return this;
   }
 
-  inject(value: string, type?: InjectionValueProcessorType) {
+  inject(value: string) {
     const supported = ["now"];
     if (supported.includes(value)) {
       core.updateTypeInjection(
         this._id,
-        serializeInjection("dynamic", type, value),
+        serializeInjection("dynamic", value),
       );
       return this;
     }
     throw new Error(`generator "${value}" is not supported`);
   }
 
-  fromContext(value: string, type?: InjectionValueProcessorType) {
+  fromContext(value: string) {
     core.updateTypeInjection(
       this._id,
-      serializeInjection("context", type, value),
+      serializeInjection("context", value),
     );
     return this;
   }
 
-  fromSecret(value: string, type?: InjectionValueProcessorType) {
+  fromSecret(value: string) {
     core.updateTypeInjection(
       this._id,
-      serializeInjection("secret", type, value),
+      serializeInjection("secret", value),
     );
     return this;
   }
 
-  fromParent(value: string | TypeProxy, type?: InjectionValueProcessorType) {
-    let referer: TypeProxy;
+  fromParent(value: string | { [x: string]: string }) {
+    let correctValue: any = null;
     if (typeof value === "string") {
-      referer = proxy(value);
+      correctValue = proxy(value)._id;
     } else {
-      referer = value;
+      if (
+        typeof value === "object" &&
+        !Array.isArray(value) &&
+        value !== null
+      ) {
+        const allowedKeys = [UPDATE, DELETE, CREATE, NONE];
+        const isPerEffect = Object.keys(value).every((value) =>
+          allowedKeys.includes(value)
+        );
+        if (isPerEffect) {
+          correctValue = {};
+          for (const [k, v] of Object.entries(value)) {
+            if (typeof v !== "string") {
+              throw new Error(
+                `type not supported for field ${k.split(effectPrefix).pop()}`,
+              );
+            }
+            correctValue[k] = proxy(v)._id;
+          }
+        } else {
+          throw new Error("props should be of type EffectType");
+        }
+      } else {
+        throw new Error("type not supported");
+      }
     }
-    // Note:
-    // 1. _id: index in store
-    // 2. core sdk should replace this value with the appropriate resolved type id
-    const placeholderId = referer._id;
+
     core.updateTypeInjection(
       this._id,
       serializeInjection<number>(
         "parent",
-        type,
-        placeholderId,
+        correctValue,
         (x: unknown) => x as number,
       ),
     );
     return this;
   }
-
-  // config(key: string, value: unknown) {
-  //   // core.updateConfig(this._id, JSON.stringify({ [key]: value }));
-  //   return this;
-  // }
 }
 
 class TypeProxy<T extends Typedef = Typedef> extends Typedef {

@@ -22,6 +22,3 @@ export type InjectionSource =
   | "context"
   | "parent"
   | "secret";
-
-export type InjectionValueProcessorType = "ByEffect" | "ByValue";
-export type DynamicValue = "now";

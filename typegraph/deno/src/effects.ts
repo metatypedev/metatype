@@ -23,3 +23,9 @@ export function delete_(idempotent = true): EffectDelete {
 export function update(idempotent = true): EffectUpdate {
   return { tag: "update", val: idempotent };
 }
+
+export const effectPrefix = "__effect_";
+export const UPDATE = `${effectPrefix}update`;
+export const DELETE = `${effectPrefix}delete`;
+export const CREATE = `${effectPrefix}create`;
+export const NONE = `${effectPrefix}none`;

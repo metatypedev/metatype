@@ -7,6 +7,7 @@ from typegraph_next.gen.exports.runtimes import (
     EffectNone,
     EffectUpdate,
 )
+from enum import auto, Enum
 
 
 def none():
@@ -23,3 +24,17 @@ def update(idempotent: bool = False):
 
 def delete(idempotent: bool = True):
     return EffectDelete(idempotent)
+
+
+# For injections
+class EffectType(Enum):
+    CREATE = auto()
+    UPDATE = auto()
+    DELETE = auto()
+    NONE = auto()
+
+
+CREATE = EffectType.CREATE
+UPDATE = EffectType.UPDATE
+DELETE = EffectType.DELETE
+NONE = EffectType.NONE
