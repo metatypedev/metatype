@@ -18,6 +18,7 @@ interface core {
 
     record type-base {
         name: option<string>,
+        // string => json string
         runtime-config: option<list<tuple<string, string>>>
     }
 

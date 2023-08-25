@@ -3,7 +3,7 @@
 
 import { gql, Meta } from "../utils/mod.ts";
 
-Meta.test("Random", async (t) => {
+Meta.test("Python: Random", async (t) => {
   const e = await t.engine("random/random.py");
 
   await t.should("work", async () => {
@@ -119,6 +119,28 @@ Meta.test("Random", async (t) => {
           },
         },
       )
+      .on(e);
+  });
+});
+
+Meta.test("Deno: Random", async (t) => {
+  const e = await t.engine("random/random.ts");
+
+  await t.should("work", async () => {
+    await gql`
+      query {
+        test1 {
+          email
+          country
+        }
+      }
+    `
+      .expectData({
+        test1: {
+          email: "wubju@de.cg",
+          country: "Guyana",
+        },
+      })
       .on(e);
   });
 });

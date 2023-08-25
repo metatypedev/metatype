@@ -5,12 +5,15 @@ import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
 import { RandomRuntime } from "@typegraph/deno/src/runtimes/random.ts";
 
 typegraph("random", (g) => {
-  const random1 = new RandomRuntime({ seed: 1, reset: "" });
+  const random = new RandomRuntime({ seed: 1, reset: "" });
   const pub = Policy.public();
 
   g.expose({
-    test1: random1.gen(
-      t.struct({ "email": t.integer() }),
+    test1: random.gen(
+      t.struct({
+        email: t.email(),
+        country: t.string({}, { config: { gen: "country", full: true } }),
+      }),
     ).withPolicy(pub),
   });
 });

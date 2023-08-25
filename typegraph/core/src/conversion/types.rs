@@ -25,7 +25,7 @@ pub fn gen_base(
     if let Some(cfg_list) = runtime_config {
         let mut map = IndexMap::new();
         for (k, v) in cfg_list.iter() {
-            map.insert(k.to_string(), serde_json::Value::String(v.to_string()));
+            map.insert(k.to_string(), serde_json::from_str(v).unwrap());
         }
         config = Some(map);
     }

@@ -22,7 +22,7 @@ users = t.struct(
                 "street": t.string(config={"gen": "address"}),
                 "city": t.string(config={"gen": "city"}),
                 "postcode": t.string(config={"gen": "postcode"}),
-                "country": t.string(config={"gen": "country", "full": "true"}),
+                "country": t.string(config={"gen": "country", "full": True}),
             }
         ),
     }

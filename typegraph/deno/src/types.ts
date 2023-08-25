@@ -16,6 +16,7 @@ import {
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
+import { serializeRecordValues } from "./utils/func_utils.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -27,7 +28,7 @@ export type PolicySpec = Policy | {
 export type Simplified<T> = Omit<T, "of">;
 
 export type SimplifiedBase<T> =
-  & { config?: Record<string, string> }
+  & { config?: Record<string, unknown> }
   & Omit<T, "runtimeConfig">;
 
 export type SimplifiedNumericData<T> =
@@ -109,7 +110,7 @@ class Boolean extends Typedef {
 export function boolean(base: SimplifiedBase<TypeBase> = {}) {
   const completeBase = {
     ...base,
-    runtimeConfig: base.config ? Object.entries(base.config) : undefined,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Boolean(core.booleanb(completeBase), completeBase);
 }
@@ -145,7 +146,7 @@ export function integer(
   };
   const completeBase = {
     ...base,
-    runtimeConfig: base.config ? Object.entries(base.config) : undefined,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Integer(
     core.integerb(completeData, completeBase),
@@ -185,7 +186,7 @@ export function float(
   };
   const completeBase = {
     ...base,
-    runtimeConfig: base.config ? Object.entries(base.config) : undefined,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Float(
     core.floatb(completeData, completeBase),
@@ -217,7 +218,7 @@ export function string(
 ) {
   const completeBase = {
     ...base,
-    runtimeConfig: base.config ? Object.entries(base.config) : undefined,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new StringT(core.stringb(data, completeBase), data, completeBase);
 }
@@ -275,7 +276,7 @@ export function array(
   } as TypeArray;
   const completeBase = {
     ...base,
-    runtimeConfig: base.config ? Object.entries(base.config) : undefined,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new ArrayT(
     core.arrayb(completeData, completeBase),
@@ -306,7 +307,7 @@ export function optional(
   } as TypeOptional;
   const completeBase = {
     ...base,
-    runtimeConfig: base.config ? Object.entries(base.config) : undefined,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Optional(
     core.optionalb(completeData, completeBase),
@@ -333,7 +334,7 @@ export function union(
   };
   const completeBase = {
     ...base,
-    runtimeConfig: base.config ? Object.entries(base.config) : undefined,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Union(
     core.unionb(data, completeBase),
@@ -360,7 +361,7 @@ export function either(
   };
   const completeBase = {
     ...base,
-    runtimeConfig: base.config ? Object.entries(base.config) : undefined,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Either(
     core.eitherb(data, completeBase),
@@ -383,7 +384,7 @@ export function struct<P extends { [key: string]: Typedef }>(
 ): Struct<P> {
   const completeBase = {
     ...base,
-    runtimeConfig: base.config ? Object.entries(base.config) : undefined,
+    runtimeConfig: base.config && serializeRecordValues(base.config),
   };
   return new Struct(
     core.structb({

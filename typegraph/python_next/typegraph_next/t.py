@@ -3,6 +3,7 @@
 
 import json
 from typing import Dict, List, Optional, Tuple, Union
+from typegraph_next.utils import serialize_record_values
 
 from typing_extensions import Self
 
@@ -130,7 +131,7 @@ class integer(typedef):
         multiple_of: Optional[int] = None,
         enumeration: Optional[List[int]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None
+        config: Optional[Dict[str, any]] = None
     ):
         data = TypeInteger(
             min=min,
@@ -140,9 +141,7 @@ class integer(typedef):
             multiple_of=multiple_of,
             enumeration=enumeration,
         )
-        runtime_config = (
-            [(k, v) for k, v in config.items()] if config is not None else None
-        )
+        runtime_config = serialize_record_values(config)
         res = core.integerb(
             store, data, TypeBase(name=name, runtime_config=runtime_config)
         )
@@ -176,7 +175,7 @@ class float(typedef):
         multiple_of: Optional[float] = None,
         enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None
+        config: Optional[Dict[str, any]] = None
     ):
         data = TypeFloat(
             min=min,
@@ -186,9 +185,7 @@ class float(typedef):
             multiple_of=multiple_of,
             enumeration=enumeration,
         )
-        runtime_config = (
-            [(k, v) for k, v in config.items()] if config is not None else None
-        )
+        runtime_config = serialize_record_values(config)
         res = core.floatb(
             store, data, TypeBase(name=name, runtime_config=runtime_config)
         )
@@ -206,11 +203,9 @@ class float(typedef):
 
 class boolean(typedef):
     def __init__(
-        self, *, name: Optional[str] = None, config: Optional[Dict[str, str]] = None
+        self, *, name: Optional[str] = None, config: Optional[Dict[str, any]] = None
     ):
-        runtime_config = (
-            [(k, v) for k, v in config.items()] if config is not None else None
-        )
+        runtime_config = serialize_record_values(config)
         res = core.booleanb(store, TypeBase(name=name, runtime_config=runtime_config))
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -234,7 +229,7 @@ class string(typedef):
         format: Optional[str] = None,
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None
+        config: Optional[Dict[str, any]] = None
     ):
         enum_variants = None
         if enumeration is not None:
@@ -244,9 +239,7 @@ class string(typedef):
             min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
         )
 
-        runtime_config = (
-            [(k, v) for k, v in config.items()] if config is not None else None
-        )
+        runtime_config = serialize_record_values(config)
         res = core.stringb(
             store, data, TypeBase(name=name, runtime_config=runtime_config)
         )
@@ -301,7 +294,7 @@ class array(typedef):
         max: Optional[int] = None,
         unique_items: Optional[bool] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None,
+        config: Optional[Dict[str, any]] = None,
     ):
         data = TypeArray(
             of=items.id,
@@ -310,9 +303,7 @@ class array(typedef):
             unique_items=unique_items,
         )
 
-        runtime_config = (
-            [(k, v) for k, v in config.items()] if config is not None else None
-        )
+        runtime_config = serialize_record_values(config)
         res = core.arrayb(
             store, data, TypeBase(name=name, runtime_config=runtime_config)
         )
@@ -342,9 +333,7 @@ class optional(typedef):
             default_item=default_item,
         )
 
-        runtime_config = (
-            [(k, v) for k, v in config.items()] if config is not None else None
-        )
+        runtime_config = serialize_record_values(config)
         res = core.optionalb(
             store, data, TypeBase(name=name, runtime_config=runtime_config)
         )
@@ -367,9 +356,7 @@ class union(typedef):
     ):
         data = TypeUnion(variants=list(map(lambda v: v.id, variants)))
 
-        runtime_config = (
-            [(k, v) for k, v in config.items()] if config is not None else None
-        )
+        runtime_config = serialize_record_values(config)
         res = core.unionb(
             store, data, TypeBase(name=name, runtime_config=runtime_config)
         )
@@ -391,9 +378,7 @@ class either(typedef):
     ):
         data = TypeEither(variants=list(map(lambda v: v.id, variants)))
 
-        runtime_config = (
-            [(k, v) for k, v in config.items()] if config is not None else None
-        )
+        runtime_config = serialize_record_values(config)
         res = core.eitherb(
             store, data, TypeBase(name=name, runtime_config=runtime_config)
         )
@@ -416,9 +401,7 @@ class struct(typedef):
     ):
         data = TypeStruct(props=list((name, tpe.id) for (name, tpe) in props.items()))
 
-        runtime_config = (
-            [(k, v) for k, v in config.items()] if config is not None else None
-        )
+        runtime_config = serialize_record_values(config)
         res = core.structb(
             store, data, base=TypeBase(name=name, runtime_config=runtime_config)
         )
