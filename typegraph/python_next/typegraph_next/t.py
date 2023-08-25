@@ -143,7 +143,9 @@ class integer(typedef):
         )
         runtime_config = serialize_record_values(config)
         res = core.integerb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config, injection=None),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -187,7 +189,9 @@ class float(typedef):
         )
         runtime_config = serialize_record_values(config)
         res = core.floatb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config, injection=None),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -206,7 +210,9 @@ class boolean(typedef):
         self, *, name: Optional[str] = None, config: Optional[Dict[str, any]] = None
     ):
         runtime_config = serialize_record_values(config)
-        res = core.booleanb(store, TypeBase(name=name, runtime_config=runtime_config))
+        res = core.booleanb(
+            store, TypeBase(name=name, runtime_config=runtime_config, injection=None)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -241,7 +247,9 @@ class string(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.stringb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config, injection=None),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -305,7 +313,9 @@ class array(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.arrayb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config, injection=None),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -335,7 +345,9 @@ class optional(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.optionalb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config, injection=None),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -358,7 +370,9 @@ class union(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.unionb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config, injection=None),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -380,7 +394,9 @@ class either(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.eitherb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config, injection=None),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -403,7 +419,9 @@ class struct(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.structb(
-            store, data, base=TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            base=TypeBase(name=name, runtime_config=runtime_config, injection=None),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
