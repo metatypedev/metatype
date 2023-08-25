@@ -80,7 +80,11 @@ class typedef:
 
     def set(self, value: Union[any, Dict[EffectType, any]]):
         core.update_type_injection(
-            store, self.id, serialize_injection("static", value=value)
+            store,
+            self.id,
+            serialize_injection(
+                "static", value=value, value_mapper=lambda x: json.dumps(x)
+            ),
         )
         return self
 

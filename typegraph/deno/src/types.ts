@@ -93,7 +93,7 @@ export class Typedef {
   set(value: unknown) {
     core.updateTypeInjection(
       this._id,
-      serializeInjection("static", value),
+      serializeInjection("static", value, (x: unknown) => JSON.stringify(x)),
     );
     return this;
   }
@@ -160,7 +160,7 @@ export class Typedef {
 
     core.updateTypeInjection(
       this._id,
-      serializeInjection<number>(
+      serializeInjection(
         "parent",
         correctValue,
         (x: unknown) => x as number,

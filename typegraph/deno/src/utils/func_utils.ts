@@ -4,10 +4,10 @@
 import { CREATE, DELETE, effectPrefix, NONE, UPDATE } from "../effects.ts";
 import { InjectionSource } from "./type_utils.ts";
 
-export function serializeInjection<T>(
+export function serializeInjection(
   source: InjectionSource,
   value: unknown,
-  valueMapper = (value: unknown) => JSON.stringify(value) as T,
+  valueMapper = (value: unknown) => value,
 ) {
   if (
     typeof value === "object" &&

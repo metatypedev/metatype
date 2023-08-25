@@ -1,7 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use common::typegraph::{Injection, TypeNode};
+use std::collections::HashMap;
+
+use common::typegraph::{EffectType, Injection, InjectionData, SingleValue, TypeNode};
 use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
@@ -127,7 +129,31 @@ where
             if let Some(injection) = base.injection.clone() {
                 let value: Injection =
                     serde_json::from_str(&injection).map_err(|e| e.to_string())?;
-                tpe.base_mut().injection = Some(value);
+                if let Injection::Parent(data) = value {
+                    let get_correct_id = |v: u32| -> Result<u32> {
+                        with_store(|s| -> Result<u32> {
+                            let id = s.resolve_proxy(v)?;
+                            Ok(id)
+                        })
+                    };
+                    let new_data = match data {
+                        InjectionData::SingleValue(SingleValue { value }) => {
+                            InjectionData::SingleValue(SingleValue {
+                                value: get_correct_id(value)?,
+                            })
+                        }
+                        InjectionData::ValueByEffect(per_effect) => {
+                            let mut new_per_effect: HashMap<EffectType, u32> = HashMap::new();
+                            for (k, v) in per_effect.iter() {
+                                new_per_effect.insert(*k, get_correct_id(*v)?);
+                            }
+                            InjectionData::ValueByEffect(new_per_effect)
+                        }
+                    };
+                    tpe.base_mut().injection = Some(Injection::Parent(new_data));
+                } else {
+                    tpe.base_mut().injection = Some(value);
+                }
             }
         }
         Ok(())

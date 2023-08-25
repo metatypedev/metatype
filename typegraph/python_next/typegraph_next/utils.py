@@ -9,7 +9,7 @@ from typegraph_next.effects import EffectType
 def serialize_injection(
     source: str,
     value: Union[any, Dict[EffectType, any]],
-    value_mapper: Callable[[any], any] = lambda x: json.dumps(x),
+    value_mapper: Callable[[any], any] = lambda x: x,
 ):
     if (
         isinstance(value, dict)
