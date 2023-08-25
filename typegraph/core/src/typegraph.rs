@@ -128,7 +128,7 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
     let default_runtime_idx = with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
 
     ctx.types.push(Some(TypeNode::Object {
-        base: gen_base(params.name, default_runtime_idx),
+        base: gen_base(params.name, None, default_runtime_idx, None),
         data: ObjectTypeData {
             properties: IndexMap::new(),
             required: vec![],

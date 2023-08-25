@@ -3,6 +3,7 @@
 
 import json
 from typing import Dict, List, Optional, Tuple, Union
+from typegraph_next.utils import serialize_record_values
 
 from typing_extensions import Self
 
@@ -33,9 +34,11 @@ from typegraph_next.runtimes.deno import Materializer
 
 class typedef:
     id: int
+    runtime_config: Optional[List[Tuple[str, str]]]
 
     def __init__(self, id: int):
         self.id = id
+        self.runtime_config = None
 
     def __repr__(self):
         res = core.get_type_repr(store, self.id)
@@ -128,6 +131,7 @@ class integer(typedef):
         multiple_of: Optional[int] = None,
         enumeration: Optional[List[int]] = None,
         name: Optional[str] = None,
+        config: Optional[Dict[str, any]] = None
     ):
         data = TypeInteger(
             min=min,
@@ -137,8 +141,10 @@ class integer(typedef):
             multiple_of=multiple_of,
             enumeration=enumeration,
         )
-
-        res = core.integerb(store, data, TypeBase(name=name))
+        runtime_config = serialize_record_values(config)
+        res = core.integerb(
+            store, data, TypeBase(name=name, runtime_config=runtime_config)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -148,6 +154,7 @@ class integer(typedef):
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
         self.enumeration = enumeration
+        self.runtime_config = runtime_config
 
 
 class float(typedef):
@@ -168,6 +175,7 @@ class float(typedef):
         multiple_of: Optional[float] = None,
         enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
+        config: Optional[Dict[str, any]] = None
     ):
         data = TypeFloat(
             min=min,
@@ -177,8 +185,10 @@ class float(typedef):
             multiple_of=multiple_of,
             enumeration=enumeration,
         )
-
-        res = core.floatb(store, data, TypeBase(name=name))
+        runtime_config = serialize_record_values(config)
+        res = core.floatb(
+            store, data, TypeBase(name=name, runtime_config=runtime_config)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -188,18 +198,19 @@ class float(typedef):
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
         self.enumeration = enumeration
+        self.runtime_config = runtime_config
 
 
 class boolean(typedef):
     def __init__(
-        self,
-        *,
-        name: Optional[str] = None,
+        self, *, name: Optional[str] = None, config: Optional[Dict[str, any]] = None
     ):
-        res = core.booleanb(store, TypeBase(name=name))
+        runtime_config = serialize_record_values(config)
+        res = core.booleanb(store, TypeBase(name=name, runtime_config=runtime_config))
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
+        self.runtime_config = runtime_config
 
 
 class string(typedef):
@@ -218,6 +229,7 @@ class string(typedef):
         format: Optional[str] = None,
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
+        config: Optional[Dict[str, any]] = None
     ):
         enum_variants = None
         if enumeration is not None:
@@ -227,7 +239,10 @@ class string(typedef):
             min=min, max=max, pattern=pattern, format=format, enumeration=enum_variants
         )
 
-        res = core.stringb(store, data, TypeBase(name=name))
+        runtime_config = serialize_record_values(config)
+        res = core.stringb(
+            store, data, TypeBase(name=name, runtime_config=runtime_config)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -236,6 +251,7 @@ class string(typedef):
         self.pattern = pattern
         self.format = format
         self.enumeration = enumeration
+        self.runtime_config = runtime_config
 
 
 def uuid() -> string:
@@ -278,6 +294,7 @@ class array(typedef):
         max: Optional[int] = None,
         unique_items: Optional[bool] = None,
         name: Optional[str] = None,
+        config: Optional[Dict[str, any]] = None,
     ):
         data = TypeArray(
             of=items.id,
@@ -286,7 +303,10 @@ class array(typedef):
             unique_items=unique_items,
         )
 
-        res = core.arrayb(store, data, TypeBase(name=name))
+        runtime_config = serialize_record_values(config)
+        res = core.arrayb(
+            store, data, TypeBase(name=name, runtime_config=runtime_config)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -294,6 +314,7 @@ class array(typedef):
         self.max = max
         self.items = items
         self.unique_items = unique_items
+        self.runtime_config = runtime_config
 
 
 class optional(typedef):
@@ -305,18 +326,23 @@ class optional(typedef):
         item: typedef,
         default_item: Optional[str] = None,
         name: Optional[str] = None,
+        config: Optional[Dict[str, str]] = None,
     ):
         data = TypeOptional(
             of=item.id,
             default_item=default_item,
         )
 
-        res = core.optionalb(store, data, TypeBase(name=name))
+        runtime_config = serialize_record_values(config)
+        res = core.optionalb(
+            store, data, TypeBase(name=name, runtime_config=runtime_config)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
         self.item = item
         self.default_item = default_item
+        self.runtime_config = runtime_config
 
 
 class union(typedef):
@@ -326,14 +352,19 @@ class union(typedef):
         self,
         variants: List[typedef],
         name: Optional[str] = None,
+        config: Optional[Dict[str, str]] = None,
     ):
         data = TypeUnion(variants=list(map(lambda v: v.id, variants)))
 
-        res = core.unionb(store, data, TypeBase(name=name))
+        runtime_config = serialize_record_values(config)
+        res = core.unionb(
+            store, data, TypeBase(name=name, runtime_config=runtime_config)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
         self.variants = variants
+        self.runtime_config = runtime_config
 
 
 class either(typedef):
@@ -343,27 +374,42 @@ class either(typedef):
         self,
         variants: List[typedef],
         name: Optional[str] = None,
+        config: Optional[Dict[str, str]] = None,
     ):
         data = TypeEither(variants=list(map(lambda v: v.id, variants)))
 
-        res = core.eitherb(store, data, TypeBase(name=name))
+        runtime_config = serialize_record_values(config)
+        res = core.eitherb(
+            store, data, TypeBase(name=name, runtime_config=runtime_config)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
         self.variants = variants
+        self.runtime_config = runtime_config
 
 
 class struct(typedef):
     props: Dict[str, typedef]
 
-    def __init__(self, props: Dict[str, typedef], *, name: Optional[str] = None):
+    def __init__(
+        self,
+        props: Dict[str, typedef],
+        *,
+        name: Optional[str] = None,
+        config: Optional[Dict[str, str]] = None
+    ):
         data = TypeStruct(props=list((name, tpe.id) for (name, tpe) in props.items()))
 
-        res = core.structb(store, data, base=TypeBase(name=name))
+        runtime_config = serialize_record_values(config)
+        res = core.structb(
+            store, data, base=TypeBase(name=name, runtime_config=runtime_config)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
         self.props = props
+        self.runtime_config = runtime_config
 
 
 class func(typedef):

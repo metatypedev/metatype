@@ -38,7 +38,10 @@ pub struct WrapperType<T: TypeData + WrapperTypeData> {
 #[allow(clippy::derivable_impls)]
 impl Default for TypeBase {
     fn default() -> Self {
-        Self { name: None }
+        Self {
+            name: None,
+            runtime_config: None,
+        }
     }
 }
 

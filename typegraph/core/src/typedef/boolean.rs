@@ -14,7 +14,12 @@ use crate::{
 impl TypeConversion for Boolean {
     fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Boolean {
-            base: gen_base(format!("boolean_{}", self.id), runtime_id.unwrap()),
+            base: gen_base(
+                format!("boolean_{}", self.id),
+                self.base.runtime_config.clone(),
+                runtime_id.unwrap(),
+                None,
+            ),
         })
     }
 }

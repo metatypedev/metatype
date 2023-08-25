@@ -18,6 +18,8 @@ interface core {
 
     record type-base {
         name: option<string>,
+        // string => json string
+        runtime-config: option<list<tuple<string, string>>>
     }
 
     record type-proxy {
@@ -245,6 +247,20 @@ interface runtimes {
     from-python-module: func(base: base-materializer, data: materializer-python-module) -> result<materializer-id, error>
     from-python-import: func(base: base-materializer, data: materializer-python-import) -> result<materializer-id, error>
 
+    // random
+    record random-runtime-data {
+        seed: u32,
+        reset: option<string>,
+    }
+
+    record materializer-random {
+        runtime: runtime-id,
+    }
+
+    register-random-runtime: func(data: random-runtime-data) -> result<materializer-id, error>
+    create-random-mat: func(base: base-materializer, data: materializer-random) -> result<materializer-id, error>
+
+    // wasmedge
     record materializer-wasi {
         func-name: string,
         module: string,
