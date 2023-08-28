@@ -15,10 +15,10 @@ export function serializeInjection(
     value !== null
   ) {
     const allowedKeys = [UPDATE, DELETE, CREATE, NONE];
-    const isByEffect = Object.keys(value).every((value) =>
+    const isPerEffect = Object.keys(value).every((value) =>
       allowedKeys.includes(value)
     );
-    if (isByEffect) {
+    if (isPerEffect) {
       const dataEntries = Object
         .entries(value).map((
           [k, v],

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
-import { PythonRuntime } from "@typegraph/deno/src/runtimes/python.ts";
 import { CREATE, DELETE, NONE, UPDATE } from "@typegraph/deno/src/effects.ts";
+import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
 
 const tpe = t.struct({
   "a": t.integer({}, { name: "A" }),
@@ -28,14 +28,14 @@ const tpe = t.struct({
 });
 
 typegraph("injection", (g) => {
-  const python = new PythonRuntime();
+  const deno = new DenoRuntime();
   const pub = Policy.public();
 
   g.expose({
-    identity: t.func(
+    identity: deno.func(
       t.struct({ input: tpe }),
       tpe,
-      python.fromLambda("lambda x: x['input']"),
+      { code: "({ input }) => input" },
     ).withPolicy(pub),
   });
 });
