@@ -43,7 +43,8 @@ typegraph("injection", (g) => {
         ),
       }),
       {
-        code: "({ input }) => { return {fromInput: input, parent: 1234567 }; }",
+        code:
+          "({ input }) => { return { fromInput: input, parent: 1234567 }; }",
       },
     ).withPolicy(pub),
   });

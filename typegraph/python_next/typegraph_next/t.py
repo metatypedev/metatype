@@ -94,13 +94,13 @@ class typedef:
         )
         return self
 
-    def from_context(self, value: str):
+    def from_context(self, value: Union[str, Dict[EffectType, str]]):
         core.update_type_injection(
             store, self.id, serialize_injection("context", value=value)
         )
         return self
 
-    def from_secret(self, value: str):
+    def from_secret(self, value: Union[str, Dict[EffectType, str]]):
         core.update_type_injection(
             store, self.id, serialize_injection("secret", value=value)
         )
@@ -118,7 +118,9 @@ class typedef:
                     correct_value = {}
                     for k, v in value.items():
                         if not isinstance(v, str):
-                            raise Exception(f"type not supported for field {k.name}")
+                            raise Exception(
+                                f"value for field {k.name} must be a string"
+                            )
                         correct_value[k] = proxy(v).id
                 else:
                     raise Exception("props should be of type EffectType")

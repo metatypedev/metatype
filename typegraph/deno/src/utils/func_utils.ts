@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { CREATE, DELETE, effectPrefix, NONE, UPDATE } from "../effects.ts";
-import { InjectionSource } from "./type_utils.ts";
+import { InjectionSource, InjectionValue } from "./type_utils.ts";
 
 export function serializeInjection(
   source: InjectionSource,
-  value: unknown,
-  valueMapper = (value: unknown) => value,
+  value: InjectionValue<unknown>,
+  valueMapper = (value: InjectionValue<unknown>) => value,
 ) {
   if (
     typeof value === "object" &&
@@ -15,8 +15,8 @@ export function serializeInjection(
     value !== null
   ) {
     const allowedKeys = [UPDATE, DELETE, CREATE, NONE];
-    const isPerEffect = Object.keys(value).every((value) =>
-      allowedKeys.includes(value)
+    const isPerEffect = Object.keys(value).every((propName) =>
+      allowedKeys.includes(propName)
     );
     if (isPerEffect) {
       const dataEntries = Object

@@ -21,6 +21,7 @@ import {
   serializeRecordValues,
 } from "./utils/func_utils.ts";
 import { CREATE, DELETE, effectPrefix, NONE, UPDATE } from "./effects.ts";
+import { InjectionValue } from "./utils/type_utils.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -90,7 +91,7 @@ export class Typedef {
     return optional(this, data);
   }
 
-  set(value: unknown) {
+  set(value: InjectionValue<unknown>) {
     core.updateTypeInjection(
       this._id,
       serializeInjection("static", value, (x: unknown) => JSON.stringify(x)),
@@ -98,19 +99,15 @@ export class Typedef {
     return this;
   }
 
-  inject(value: string) {
-    const supported = ["now"];
-    if (supported.includes(value)) {
-      core.updateTypeInjection(
-        this._id,
-        serializeInjection("dynamic", value),
-      );
-      return this;
-    }
-    throw new Error(`generator "${value}" is not supported`);
+  inject(value: InjectionValue<string>) {
+    core.updateTypeInjection(
+      this._id,
+      serializeInjection("dynamic", value),
+    );
+    return this;
   }
 
-  fromContext(value: string) {
+  fromContext(value: InjectionValue<string>) {
     core.updateTypeInjection(
       this._id,
       serializeInjection("context", value),
@@ -118,7 +115,7 @@ export class Typedef {
     return this;
   }
 
-  fromSecret(value: string) {
+  fromSecret(value: InjectionValue<string>) {
     core.updateTypeInjection(
       this._id,
       serializeInjection("secret", value),
@@ -126,7 +123,7 @@ export class Typedef {
     return this;
   }
 
-  fromParent(value: string | { [x: string]: string }) {
+  fromParent(value: InjectionValue<string>) {
     let correctValue: any = null;
     if (typeof value === "string") {
       correctValue = proxy(value)._id;
@@ -145,7 +142,9 @@ export class Typedef {
           for (const [k, v] of Object.entries(value)) {
             if (typeof v !== "string") {
               throw new Error(
-                `type not supported for field ${k.split(effectPrefix).pop()}`,
+                `value for field ${
+                  k.split(effectPrefix).pop()
+                } must be a string`,
               );
             }
             correctValue[k] = proxy(v)._id;
