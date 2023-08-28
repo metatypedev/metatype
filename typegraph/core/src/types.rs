@@ -91,7 +91,7 @@ pub trait TypeFun {
 
 #[enum_dispatch]
 pub trait TypeModifier {
-    fn apply_injection(&self, tpe: &mut TypeNode) -> Result<()>;
+    fn apply_injection(&self, ctx: &TypegraphContext, tpe: &mut TypeNode) -> Result<()>;
     // TODO: maybe use the same logic for runtime config?
     // fn apply_runtime_config(&self, tpe: &mut TypeNode);
 }
@@ -124,7 +124,7 @@ impl<T> TypeModifier for ConcreteType<T>
 where
     T: TypeData,
 {
-    fn apply_injection(&self, tpe: &mut TypeNode) -> Result<()> {
+    fn apply_injection(&self, ctx: &TypegraphContext, tpe: &mut TypeNode) -> Result<()> {
         if let Some(base) = self.get_base() {
             if let Some(injection) = base.injection.clone() {
                 let value: Injection =
@@ -133,7 +133,10 @@ where
                     let get_correct_id = |v: u32| -> Result<u32> {
                         with_store(|s| -> Result<u32> {
                             let id = s.resolve_proxy(v)?;
-                            Ok(id)
+                            if let Some(index) = ctx.find_type_index_by_store_id(&id) {
+                                return Ok(index);
+                            }
+                            Err(format!("unable to find type for store id {}", id))
                         })
                     };
                     let new_data = match data {
@@ -195,7 +198,7 @@ impl<T> TypeModifier for WrapperType<T>
 where
     T: TypeData + WrapperTypeData,
 {
-    fn apply_injection(&self, _tpe: &mut TypeNode) -> Result<()> {
+    fn apply_injection(&self, _ctx: &TypegraphContext, _tpe: &mut TypeNode) -> Result<()> {
         Ok(())
     }
 }

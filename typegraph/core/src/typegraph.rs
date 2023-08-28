@@ -240,7 +240,7 @@ impl TypegraphContext {
                 let tpe = store.get_type(id)?;
 
                 let mut type_node = tpe.convert(self, runtime_id)?;
-                tpe.apply_injection(&mut type_node)?;
+                tpe.apply_injection(self, &mut type_node)?;
 
                 self.types[idx] = Some(type_node);
                 Ok(idx as TypeId)
@@ -329,5 +329,9 @@ impl TypegraphContext {
             self.runtimes.push(converted);
             Ok(idx as RuntimeId)
         }
+    }
+
+    pub fn find_type_index_by_store_id(&self, id: &u32) -> Option<u32> {
+        self.mapping.types.get(id).copied()
     }
 }
