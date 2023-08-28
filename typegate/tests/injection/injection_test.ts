@@ -262,33 +262,41 @@ Meta.test("Deno: value injection", async (t) => {
   await t.should("work", async () => {
     await gql`
       query {
-        identity(input: {a: 12}) {
-          a
-          context
-          optional_context
-          raw_int
-          raw_obj { in }
-          alt_raw
-          alt_secret
-          alt_context_opt
-          alt_context_opt_missing
-          date
+        test(input: {a: 12}) {
+          fromInput {
+            a
+            context
+            optional_context
+            raw_int
+            raw_obj { in }
+            alt_raw
+            alt_secret
+            alt_context_opt
+            alt_context_opt_missing
+            date
+          }
+          parent
+          fromParent { value }
         }
       }`
       .withContext({
         userId: "123",
       })
       .expectData({
-        identity: {
-          a: 12,
-          context: "123",
-          raw_int: 4,
-          raw_obj: { in: -1 },
-          alt_raw: "2",
-          alt_secret: "3",
-          alt_context_opt: "123",
-          alt_context_opt_missing: "123",
-          date: new Date().toISOString(),
+        test: {
+          fromInput: {
+            a: 12,
+            context: "123",
+            raw_int: 4,
+            raw_obj: { in: -1 },
+            alt_raw: "2",
+            alt_secret: "3",
+            alt_context_opt: "123",
+            alt_context_opt_missing: "123",
+            date: new Date().toISOString(),
+          },
+          parent: 1234567,
+          fromParent: { value: 1234567 },
         },
       })
       .on(e);

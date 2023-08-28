@@ -18,7 +18,6 @@ const tpe = t.struct({
   "context": t.string().fromContext("userId"),
   "optional_context": t.string().optional().fromContext("inexistent"),
   "raw_obj": t.struct({ "in": t.integer() }).set({ "in": -1 }),
-  // "parent": t.struct({ "value": t.integer().fromParent("..") }),
   "alt_raw": t.string().set("2"),
   "alt_secret": t.string().fromSecret("TEST_VAR"),
   "alt_context": t.string().fromContext("userId"),
@@ -32,10 +31,20 @@ typegraph("injection", (g) => {
   const pub = Policy.public();
 
   g.expose({
-    identity: deno.func(
+    test: deno.func(
       t.struct({ input: tpe }),
-      tpe,
-      { code: "({ input }) => input" },
+      t.struct({
+        fromInput: tpe,
+        parent: t.integer({}, { name: "someName" }),
+        fromParent: deno.func(
+          t.struct({ value: t.integer().fromParent("someName") }),
+          t.struct({ value: t.integer() }),
+          { code: "(value) => value" },
+        ),
+      }),
+      {
+        code: "({ input }) => { return {fromInput: input, parent: 1234567 }; }",
+      },
     ).withPolicy(pub),
   });
 });
