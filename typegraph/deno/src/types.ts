@@ -128,32 +128,28 @@ export class Typedef {
     if (typeof value === "string") {
       correctValue = proxy(value)._id;
     } else {
-      if (
-        typeof value === "object" &&
-        !Array.isArray(value) &&
-        value !== null
-      ) {
-        const allowedKeys = [UPDATE, DELETE, CREATE, NONE];
-        const isPerEffect = Object.keys(value).every((value) =>
-          allowedKeys.includes(value)
-        );
-        if (isPerEffect) {
-          correctValue = {};
-          for (const [k, v] of Object.entries(value)) {
-            if (typeof v !== "string") {
-              throw new Error(
-                `value for field ${
-                  k.split(effectPrefix).pop()
-                } must be a string`,
-              );
-            }
-            correctValue[k] = proxy(v)._id;
-          }
-        } else {
-          throw new Error("props should be of type EffectType");
-        }
-      } else {
+      const isObject = typeof value === "object" && !Array.isArray(value) &&
+        value !== null;
+      if (!isObject) {
         throw new Error("type not supported");
+      }
+
+      const allowedKeys = [UPDATE, DELETE, CREATE, NONE];
+      const isPerEffect = Object.keys(value).every((propName) =>
+        allowedKeys.includes(propName)
+      );
+      if (!isPerEffect) {
+        throw new Error("object keys should be of type EffectType");
+      }
+
+      correctValue = {};
+      for (const [k, v] of Object.entries(value)) {
+        if (typeof v !== "string") {
+          throw new Error(
+            `value for field ${k.split(effectPrefix).pop()} must be a string`,
+          );
+        }
+        correctValue[k] = proxy(v)._id;
       }
     }
 

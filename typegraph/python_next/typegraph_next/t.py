@@ -111,21 +111,20 @@ class typedef:
         if isinstance(value, str):
             correct_value = proxy(value).id
         else:
-            if isinstance(value, dict):
-                if len(value) > 0 and all(
-                    isinstance(k, EffectType) for k in value.keys()
-                ):
-                    correct_value = {}
-                    for k, v in value.items():
-                        if not isinstance(v, str):
-                            raise Exception(
-                                f"value for field {k.name} must be a string"
-                            )
-                        correct_value[k] = proxy(v).id
-                else:
-                    raise Exception("props should be of type EffectType")
-            else:
+            if not isinstance(value, dict):
                 raise Exception("type not supported")
+
+            is_per_effect = len(value) > 0 and all(
+                isinstance(k, EffectType) for k in value.keys()
+            )
+            if not is_per_effect:
+                raise Exception("object keys should be of type EffectType")
+
+            correct_value = {}
+            for k, v in value.items():
+                if not isinstance(v, str):
+                    raise Exception(f"value for field {k.name} must be a string")
+                correct_value[k] = proxy(v).id
 
         assert correct_value is not None
 
