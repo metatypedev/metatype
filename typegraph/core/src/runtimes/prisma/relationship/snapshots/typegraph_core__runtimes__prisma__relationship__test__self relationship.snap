@@ -5,25 +5,30 @@ expression: registry
 Ok(
     RelationshipRegistry {
         models: {
-            4: {
-                "children": "NodeToNode",
-                "parent": "NodeToNode",
+            Type#4: RegisteredModel {
+                relationships: {
+                    "children": "NodeToNode",
+                    "parent": "NodeToNode",
+                },
+                name: "Node",
+                id_field: "id",
             },
         },
+        models_by_name: {},
         relationships: {
             "NodeToNode": Relationship {
                 name: "NodeToNode",
                 left: RelationshipModel {
-                    model_type: 4,
+                    model_type: Type#4,
                     model_name: "Node",
-                    wrapper_type: 3,
+                    wrapper_type: Type#3,
                     cardinality: One,
                     field: "children",
                 },
                 right: RelationshipModel {
-                    model_type: 4,
+                    model_type: Type#4,
                     model_name: "Node",
-                    wrapper_type: 2,
+                    wrapper_type: Type#2,
                     cardinality: Many,
                     field: "parent",
                 },

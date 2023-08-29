@@ -32,15 +32,6 @@ pub struct RelationshipRegistry {
 }
 
 impl RelationshipRegistry {
-    // pub fn from(models: &[&Struct]) -> Result<Self> {
-    //     let mut reg = RelationshipRegistry::default();
-    //     for model in models {
-    //         let scanned = scan_model(model, &reg)?;
-    //         reg.add_relationships(scanned);
-    //     }
-    //     Ok(reg)
-    // }
-
     pub fn manage(&mut self, model_id: TypeId) -> Result<()> {
         if !self.models.contains_key(&model_id) {
             with_store(|s| -> Result<()> {

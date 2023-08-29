@@ -1,30 +1,39 @@
 ---
 source: typegraph/core/src/runtimes/prisma/relationship/mod.rs
-expression: registry
+expression: reg
 ---
 RelationshipRegistry {
     models: {
-        4: {
-            "posts": "UserToPost",
+        Type#4: RegisteredModel {
+            relationships: {
+                "posts": "UserToPost",
+            },
+            name: "User",
+            id_field: "id",
         },
-        7: {
-            "author": "UserToPost",
+        Type#7: RegisteredModel {
+            relationships: {
+                "author": "UserToPost",
+            },
+            name: "Post",
+            id_field: "id",
         },
     },
+    models_by_name: {},
     relationships: {
         "UserToPost": Relationship {
             name: "UserToPost",
             left: RelationshipModel {
-                model_type: 4,
+                model_type: Type#4,
                 model_name: "User",
-                wrapper_type: 4,
+                wrapper_type: Type#4,
                 cardinality: One,
                 field: "posts",
             },
             right: RelationshipModel {
-                model_type: 7,
+                model_type: Type#7,
                 model_name: "Post",
-                wrapper_type: 3,
+                wrapper_type: Type#3,
                 cardinality: Many,
                 field: "author",
             },

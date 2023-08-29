@@ -297,88 +297,56 @@ impl wit::core::Core for Lib {
 
 #[cfg(test)]
 mod tests {
-    use crate::errors;
     use crate::global_store::{with_store, with_store_mut};
+    use crate::t::TypeBuilder;
     use crate::test_utils::*;
+    use crate::{errors, t};
 
     #[test]
     fn test_integer_invalid_max() {
-        let res = Lib::integerb(TypeInteger::default().min(12).max(10), TypeBase::default());
+        let res = t::integer().min(12).max(10).build();
         assert_eq!(res, Err(errors::invalid_max_value()));
-        let res = Lib::integerb(
-            TypeInteger::default().x_min(12).x_max(10),
-            TypeBase::default(),
-        );
+        let res = t::integer().x_min(12).x_max(12).build();
         assert_eq!(res, Err(errors::invalid_max_value()));
     }
 
     #[test]
     fn test_number_invalid_max() {
-        let res = Lib::floatb(
-            TypeFloat::default().min(12.34).max(12.3399),
-            TypeBase::default(),
-        );
+        let res = t::float().min(12.34).max(12.3399).build();
         assert_eq!(res, Err(errors::invalid_max_value()));
-        let res = Lib::floatb(
-            TypeFloat::default().x_min(12.6).x_max(12.6),
-            TypeBase::default(),
-        );
+        let res = t::float().x_min(12.34).x_max(12.34).build();
         assert_eq!(res, Err(errors::invalid_max_value()));
     }
 
     #[test]
     fn test_struct_invalid_key() -> Result<(), String> {
-        let res = Lib::structb(
-            TypeStruct::default().prop(
-                "",
-                Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-            ),
-            TypeBase::default(),
-        );
+        let res = t::struct_().prop("", t::integer().build()?).build();
         assert_eq!(res, Err(errors::invalid_prop_key("")));
-        let res = Lib::structb(
-            TypeStruct::default().prop(
-                "hello world",
-                Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-            ),
-            TypeBase::default(),
-        );
+        let res = t::struct_()
+            .prop("hello world", t::integer().build()?)
+            .build();
         assert_eq!(res, Err(errors::invalid_prop_key("hello world")));
         Ok(())
     }
 
     #[test]
     fn test_struct_duplicate_key() -> Result<(), String> {
-        let res = Lib::structb(
-            TypeStruct::default()
-                .prop(
-                    "one",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                )
-                .prop(
-                    "two",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                )
-                .prop(
-                    "one",
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                ),
-            TypeBase::default(),
-        );
+        let res = t::struct_()
+            .prop("one", t::integer().build()?)
+            .prop("two", t::integer().build()?)
+            .prop("one", t::integer().build()?)
+            .build();
         assert_eq!(res, Err(errors::duplicate_key("one")));
         Ok(())
     }
 
     #[test]
     fn test_invalid_input_type() -> Result<(), String> {
-        let inp = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
-        let res = Lib::funcb(TypeFunc::new(
-            inp,
-            Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-            mat,
-        ));
+        let inp = t::integer().build()?;
+        let res = t::func(inp, t::integer().build()?, mat);
+
         assert_eq!(
             res,
             Err(errors::invalid_input_type(&with_store(
@@ -436,8 +404,8 @@ mod tests {
             path: ".".to_string(),
         })
         .unwrap();
-        let tpe = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
-        let res = Lib::expose(vec![("one".to_string(), tpe)], vec![]);
+        let tpe = t::integer().build()?;
+        let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![]);
 
         assert_eq!(
             res,
@@ -468,11 +436,7 @@ mod tests {
         let res = Lib::expose(
             vec![(
                 "".to_string(),
-                Lib::funcb(TypeFunc::new(
-                    Lib::structb(TypeStruct::default(), TypeBase::default())?,
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                    mat,
-                ))?,
+                t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
             vec![],
         );
@@ -481,11 +445,7 @@ mod tests {
         let res = Lib::expose(
             vec![(
                 "hello_world!".to_string(),
-                Lib::funcb(TypeFunc::new(
-                    Lib::structb(TypeStruct::default(), TypeBase::default())?,
-                    Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                    mat,
-                ))?,
+                t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
             vec![],
         );
@@ -511,19 +471,11 @@ mod tests {
             vec![
                 (
                     "one".to_string(),
-                    Lib::funcb(TypeFunc::new(
-                        Lib::structb(TypeStruct::default(), TypeBase::default())?,
-                        Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                        mat,
-                    ))?,
+                    t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
                 ),
                 (
                     "one".to_string(),
-                    Lib::funcb(TypeFunc::new(
-                        Lib::structb(TypeStruct::default(), TypeBase::default())?,
-                        Lib::integerb(TypeInteger::default(), TypeBase::default())?,
-                        mat,
-                    ))?,
+                    t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
                 ),
             ],
             vec![],
@@ -536,21 +488,20 @@ mod tests {
     #[test]
     fn test_successful_serialization() -> Result<(), String> {
         with_store_mut(|s| s.reset());
-        let a = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
-        let b = Lib::integerb(TypeInteger::default().min(12).max(44), TypeBase::default())?;
+        let a = t::integer().build()?;
+        let b = t::integer().min(12).max(44).build()?;
         // -- optional(array(float))
-        let num_idx = Lib::floatb(TypeFloat::default(), TypeBase::default())?;
-        let array_idx = Lib::arrayb(TypeArray::of(num_idx), TypeBase::default())?;
-        let c = Lib::optionalb(TypeOptional::of(array_idx), TypeBase::default())?;
+        let num_idx = t::float().build()?;
+        let array_idx = t::array(num_idx).build()?;
+        let c = t::optional(array_idx).build()?;
         // --
 
-        let s = Lib::structb(
-            TypeStruct::default()
-                .prop("one", a)
-                .prop("two", b)
-                .prop("three", c),
-            TypeBase::default(),
-        )?;
+        let s = t::struct_()
+            .prop("one", a)
+            .prop("two", b)
+            .prop("three", c)
+            .build()?;
+
         Lib::init_typegraph(TypegraphInitParams {
             name: "test".to_string(),
             dynamic: None,
@@ -560,7 +511,7 @@ mod tests {
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;
         Lib::expose(
-            vec![("one".to_string(), Lib::funcb(TypeFunc::new(s, b, mat))?)],
+            vec![("one".to_string(), t::func(s, b, mat)?.into())],
             vec![],
         )?;
         let typegraph = Lib::finalize_typegraph()?;

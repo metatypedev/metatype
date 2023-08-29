@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use std::fmt::Debug;
+
 use common::typegraph::TypeNode;
 use enum_dispatch::enum_dispatch;
 
@@ -13,8 +15,14 @@ use crate::wit::core::{
     TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct TypeId(pub CoreTypeId);
+
+impl Debug for TypeId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Type#{}", self.0)
+    }
+}
 
 impl From<CoreTypeId> for TypeId {
     fn from(id: CoreTypeId) -> Self {

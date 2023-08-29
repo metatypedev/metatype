@@ -4,27 +4,36 @@ expression: registry
 ---
 RelationshipRegistry {
     models: {
-        4: {
-            "posts": "PostAuthor",
+        Type#4: RegisteredModel {
+            relationships: {
+                "posts": "PostAuthor",
+            },
+            name: "User",
+            id_field: "id",
         },
-        8: {
-            "author": "PostAuthor",
+        Type#8: RegisteredModel {
+            relationships: {
+                "author": "PostAuthor",
+            },
+            name: "Post",
+            id_field: "id",
         },
     },
+    models_by_name: {},
     relationships: {
         "PostAuthor": Relationship {
             name: "PostAuthor",
             left: RelationshipModel {
-                model_type: 4,
+                model_type: Type#4,
                 model_name: "User",
-                wrapper_type: 7,
+                wrapper_type: Type#7,
                 cardinality: One,
                 field: "posts",
             },
             right: RelationshipModel {
-                model_type: 8,
+                model_type: Type#8,
                 model_name: "Post",
-                wrapper_type: 3,
+                wrapper_type: Type#3,
                 cardinality: Many,
                 field: "author",
             },

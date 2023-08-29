@@ -1,21 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::errors::Result;
 use crate::global_store::with_store;
+use crate::t::TypeBuilder;
+use crate::types::TypeId;
 pub(crate) use crate::wit::{
-    core::{
-        Core, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeId, TypeInteger, TypeOptional,
-        TypeStruct,
-    },
+    core::{Core, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeInteger, TypeOptional, TypeStruct},
     runtimes::{Effect, MaterializerDenoFunc, Runtimes},
 };
 pub(crate) use crate::Lib;
 pub(crate) use crate::TypegraphInitParams;
-
-pub mod t {
-    use super::*;
-}
+use crate::{errors::Result, t};
 
 #[derive(Default)]
 pub struct PrismaLink {
@@ -38,14 +33,29 @@ impl PrismaLink {
     pub fn build(mut self) -> Result<TypeId> {
         let mut proxy = t::proxy(self.type_name);
         if let Some(rel_name) = self.rel_name.take() {
-            proxy = proxy.ex("rel_name", rel_name);
+            proxy.ex("rel_name", rel_name);
         }
         if let Some(fkey) = self.fkey {
-            proxy = proxy.ex("fkey", format!("{fkey}"));
+            proxy.ex("fkey", format!("{fkey}"));
         }
-        let res = proxy.build();
+        let res = proxy.build()?;
         eprintln!("proxy: {:?}", res);
-        res
+        Ok(res)
+    }
+}
+
+impl MaterializerDenoFunc {
+    pub fn with_code(code: impl Into<String>) -> Self {
+        Self {
+            code: code.into(),
+            secrets: vec![],
+        }
+    }
+}
+
+impl Default for Effect {
+    fn default() -> Self {
+        Self::None
     }
 }
 
@@ -63,5 +73,129 @@ pub fn prisma_linkn(name: impl Into<String>) -> PrismaLink {
     PrismaLink {
         type_name: name.into(),
         ..Default::default()
+    }
+}
+
+pub mod tree {
+    use std::{borrow::Cow, io::Write, rc::Rc};
+
+    use ptree::{Style, TreeItem};
+
+    use crate::{
+        global_store::with_store,
+        types::{Type, TypeFun, TypeId},
+    };
+
+    #[derive(Clone)]
+    struct Node {
+        label: String,
+        type_id: TypeId,
+        parents: Rc<Vec<TypeId>>,
+    }
+
+    impl TreeItem for Node {
+        type Child = Self;
+
+        fn write_self<W: Write>(&self, f: &mut W, _style: &Style) -> std::io::Result<()> {
+            let name = with_store(|s| {
+                let ty = s.get_type(self.type_id).unwrap();
+                match ty {
+                    Type::Proxy(p) => p.data.name.clone(),
+                    _ => ty.get_data().variant_name(),
+                }
+            });
+            write!(f, "{}: {} #{}", self.label, name, self.type_id.0)?;
+            Ok(())
+        }
+
+        fn children(&self) -> Cow<[Self::Child]> {
+            with_store(|s| {
+                let ty = s.get_type(self.type_id).unwrap();
+                if self
+                    .parents
+                    .iter()
+                    .find(|&&parent_id| parent_id == self.type_id)
+                    .is_some()
+                {
+                    Cow::Owned(vec![])
+                } else {
+                    let parents = {
+                        let mut p = (*self.parents).clone();
+                        p.push(self.type_id);
+                        Rc::new(p)
+                    };
+
+                    match s.get_type(self.type_id).unwrap() {
+                        Type::Proxy(_)
+                        | Type::Integer(_)
+                        | Type::Float(_)
+                        | Type::String(_)
+                        | Type::Boolean(_) => Cow::Owned(vec![]),
+                        Type::Struct(ty) => Cow::Owned(
+                            ty.data
+                                .props
+                                .iter()
+                                .map(|(k, id)| Node {
+                                    label: k.clone(),
+                                    type_id: (*id).into(),
+                                    parents: Rc::clone(&parents),
+                                })
+                                .collect(),
+                        ),
+                        Type::Func(ty) => Cow::Owned(vec![
+                            Node {
+                                label: "input".to_string(),
+                                type_id: ty.data.inp.into(),
+                                parents: Rc::clone(&parents),
+                            },
+                            Node {
+                                label: "output".to_string(),
+                                type_id: ty.data.out.into(),
+                                parents: parents,
+                            },
+                        ]),
+                        Type::Array(ty) => Cow::Owned(vec![Node {
+                            label: "item".to_string(),
+                            type_id: ty.data.of.into(),
+                            parents: parents,
+                        }]),
+                        Type::Optional(ty) => Cow::Owned(vec![Node {
+                            label: "item".to_string(),
+                            type_id: ty.data.of.into(),
+                            parents: parents,
+                        }]),
+                        Type::Union(ty) => Cow::Owned(
+                            ty.data
+                                .variants
+                                .iter()
+                                .enumerate()
+                                .map(|(i, id)| Node {
+                                    label: format!("variant_{}", i),
+                                    type_id: (*id).into(),
+                                    parents: Rc::clone(&parents),
+                                })
+                                .collect(),
+                        ),
+                        Type::Either(ty) => Cow::Owned(
+                            ty.data
+                                .variants
+                                .iter()
+                                .enumerate()
+                                .map(|(i, id)| Node {
+                                    label: format!("variant_{}", i),
+                                    type_id: (*id).into(),
+                                    parents: Rc::clone(&parents),
+                                })
+                                .collect(),
+                        ),
+                        Type::WithPolicy(ty) => Cow::Owned(vec![Node {
+                            label: "item".to_string(),
+                            type_id: ty.data.tpe.into(),
+                            parents: parents,
+                        }]),
+                    }
+                }
+            })
+        }
     }
 }

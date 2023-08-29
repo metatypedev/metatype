@@ -3,7 +3,10 @@
 
 use crate::errors::Result;
 use crate::types::TypeId;
-use crate::wit::core::{Core, TypeArray, TypeBase, TypeInteger, TypeOptional, TypeStruct};
+use crate::wit::core::{
+    Core, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeInteger, TypeOptional, TypeProxy,
+    TypeString, TypeStruct,
+};
 
 pub trait TypeBuilder {
     fn build(&mut self) -> Result<TypeId>;
@@ -14,6 +17,11 @@ pub trait ConcreteTypeBuilder: TypeBuilder {
 
     fn named(&mut self, name: impl Into<String>) -> &mut Self {
         self.base_mut().name = Some(name.into());
+        self
+    }
+
+    fn as_id(&mut self) -> &mut Self {
+        self.base_mut().as_id = true;
         self
     }
 }
@@ -27,12 +35,106 @@ pub struct IntegerBuilder {
 impl Default for TypeInteger {
     fn default() -> Self {
         Self {
-            ..Default::default()
+            min: None,
+            max: None,
+            exclusive_minimum: None,
+            exclusive_maximum: None,
+            multiple_of: None,
+            enumeration: None,
         }
     }
 }
 
+impl IntegerBuilder {
+    pub fn min(mut self, min: i32) -> Self {
+        self.data.min = Some(min);
+        self
+    }
+
+    pub fn max(mut self, max: i32) -> Self {
+        self.data.max = Some(max);
+        self
+    }
+
+    pub fn x_min(mut self, min: i32) -> Self {
+        self.data.exclusive_minimum = Some(min);
+        self
+    }
+
+    pub fn x_max(mut self, max: i32) -> Self {
+        self.data.exclusive_maximum = Some(max);
+        self
+    }
+}
+
 pub fn integer() -> IntegerBuilder {
+    Default::default()
+}
+
+#[derive(Default)]
+pub struct FloatBuilder {
+    base: TypeBase,
+    data: TypeFloat,
+}
+
+impl Default for TypeFloat {
+    fn default() -> Self {
+        Self {
+            min: None,
+            max: None,
+            exclusive_minimum: None,
+            exclusive_maximum: None,
+            multiple_of: None,
+            enumeration: None,
+        }
+    }
+}
+
+impl FloatBuilder {
+    pub fn min(mut self, min: f64) -> Self {
+        self.data.min = Some(min);
+        self
+    }
+
+    pub fn max(mut self, max: f64) -> Self {
+        self.data.max = Some(max);
+        self
+    }
+
+    pub fn x_min(mut self, min: f64) -> Self {
+        self.data.exclusive_minimum = Some(min);
+        self
+    }
+
+    pub fn x_max(mut self, max: f64) -> Self {
+        self.data.exclusive_maximum = Some(max);
+        self
+    }
+}
+
+pub fn float() -> FloatBuilder {
+    Default::default()
+}
+
+#[derive(Default)]
+pub struct StringBuilder {
+    base: TypeBase,
+    data: TypeString,
+}
+
+impl Default for TypeString {
+    fn default() -> Self {
+        Self {
+            min: None,
+            max: None,
+            format: None,
+            pattern: None,
+            enumeration: None,
+        }
+    }
+}
+
+pub fn string() -> StringBuilder {
     Default::default()
 }
 
@@ -71,7 +173,9 @@ impl Default for TypeArray {
     fn default() -> Self {
         Self {
             of: u32::max_value(),
-            ..Default::default()
+            min: None,
+            max: None,
+            unique_items: None,
         }
     }
 }
@@ -115,6 +219,64 @@ impl StructBuilder {
     }
 }
 
+#[derive(Default)]
+pub struct FuncBuilder {
+    base: TypeBase,
+    data: TypeFunc,
+}
+
+impl Default for TypeFunc {
+    fn default() -> Self {
+        Self {
+            inp: u32::max_value(),
+            out: u32::max_value(),
+            mat: u32::max_value(),
+        }
+    }
+}
+
+pub fn func(inp: TypeId, out: TypeId, mat: u32) -> Result<TypeId> {
+    FuncBuilder {
+        data: TypeFunc {
+            inp: inp.into(),
+            out: out.into(),
+            mat,
+        },
+        ..Default::default()
+    }
+    .build()
+}
+
+#[derive(Default)]
+pub struct ProxyBuilder {
+    data: TypeProxy,
+}
+
+impl Default for TypeProxy {
+    fn default() -> Self {
+        Self {
+            name: "".to_string(),
+            extras: vec![],
+        }
+    }
+}
+
+impl ProxyBuilder {
+    pub fn ex(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
+        self.data.extras.push((key.into(), value.into()));
+        self
+    }
+}
+
+pub fn proxy(name: impl Into<String>) -> ProxyBuilder {
+    ProxyBuilder {
+        data: TypeProxy {
+            name: name.into(),
+            ..Default::default()
+        },
+    }
+}
+
 macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident ) => {
         impl TypeBuilder for $ty {
@@ -130,9 +292,22 @@ macro_rules! impl_type_builder {
             }
         }
     };
+
+    ( $ty:ty, $build:ident, true ) => {
+        impl TypeBuilder for $ty {
+            fn build(&mut self) -> Result<TypeId> {
+                let builder = std::mem::replace(self, Default::default());
+                Ok($crate::Lib::$build(builder.data)?.into())
+            }
+        }
+    };
 }
 
 impl_type_builder!(IntegerBuilder, integerb);
+impl_type_builder!(FloatBuilder, floatb);
 impl_type_builder!(OptionalBuilder, optionalb);
+impl_type_builder!(StringBuilder, stringb);
 impl_type_builder!(ArrayBuilder, arrayb);
 impl_type_builder!(StructBuilder, structb);
+impl_type_builder!(FuncBuilder, funcb, true);
+impl_type_builder!(ProxyBuilder, proxyb, true);

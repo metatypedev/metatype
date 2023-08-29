@@ -204,29 +204,29 @@ mod test {
     use crate::errors::Result;
     use crate::global_store::with_store;
     use crate::runtimes::prisma::relationship::registry::RelationshipRegistry;
+    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
     use crate::test_utils::*;
 
     #[test]
     fn test_implicit_relationships() -> Result<(), String> {
         let user = t::struct_()
-            .prop("id", t::integer().with_base(|b| b.as_id())?)
+            .prop("id", t::integer().as_id().build()?)
             .prop("name", t::string().build()?)
             .prop("posts", t::array(t::proxy("Post").build()?).build()?)
-            .with_base(|b| b.named("User"))?;
+            .named("User")
+            .build()?;
 
         let post = t::struct_()
-            .prop("id", t::integer().with_base(|b| b.as_id())?)
+            .prop("id", t::integer().as_id().build()?)
             .prop("title", t::string().build()?)
             .prop("author", t::proxy("User").build()?)
-            .with_base(|b| b.named("Post"))?;
+            .named("Post")
+            .build()?;
 
-        let registry = with_store(|s| -> Result<_> {
-            let models = [s.type_as_struct(user)?, s.type_as_struct(post)?];
-            let reg = RelationshipRegistry::from(&models)?;
-            Ok(reg)
-        })?;
+        let mut reg = RelationshipRegistry::default();
+        reg.manage(user)?;
 
-        insta::assert_debug_snapshot!("implicit relationship", registry);
+        insta::assert_debug_snapshot!("implicit relationship", reg);
 
         Ok(())
     }
@@ -234,20 +234,23 @@ mod test {
     #[test]
     fn test_explicit_relationship_name() -> Result<(), String> {
         let user = t::struct_()
-            .prop("id", t::integer().with_base(|b| b.as_id())?)
+            .prop("id", t::integer().as_id().build()?)
             .prop("name", t::string().build()?)
             .prop("posts", t::array(t::proxy("Post").build()?).build()?)
-            .with_base(|b| b.named("User"))?;
+            .named("User")
+            .build()?;
 
         let post = t::struct_()
-            .prop("id", t::integer().with_base(|b| b.as_id())?)
+            .prop("id", t::integer().as_id().build()?)
             .prop("title", t::string().build()?)
             .prop("author", prisma_linkn("User").name("PostAuthor").build()?)
-            .with_base(|b| b.named("Post"))?;
+            .named("Post")
+            .build()?;
 
         let registry = with_store(|s| -> Result<_> {
-            let models = [s.type_as_struct(user)?, s.type_as_struct(post)?];
-            let reg = RelationshipRegistry::from(&models)?;
+            let mut reg = RelationshipRegistry::default();
+            reg.manage(user)?;
+            reg.manage(post)?;
             Ok(reg)
         })?;
 
@@ -259,14 +262,16 @@ mod test {
     #[test]
     fn test_self_relationship() -> Result<(), String> {
         let node = t::struct_()
-            .prop("id", t::string().with_base(|b| b.as_id())?)
+            .prop("id", t::string().as_id().build()?)
             .prop("children", t::array(t::proxy("Node").build()?).build()?)
             .prop("parent", t::proxy("Node").build()?)
-            .with_base(|b| b.named("Node"))?;
+            .named("Node")
+            .build()?;
 
         let registry = with_store(|s| -> Result<_> {
-            let models = [s.type_as_struct(node)?];
-            Ok(RelationshipRegistry::from(&models)?)
+            let mut reg = RelationshipRegistry::default();
+            reg.manage(node)?;
+            Ok(reg)
         });
 
         insta::assert_debug_snapshot!("self relationship", registry);
