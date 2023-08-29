@@ -3,6 +3,7 @@
 
 use crate::errors::Result;
 use crate::global_store::with_store;
+use crate::runtimes::prisma::type_generation::count::Count;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{ProxyResolution, Type};
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
@@ -36,9 +37,11 @@ impl TypeGen for WithNestedCount {
         let mut countable = vec![];
 
         with_store(|s| -> Result<()> {
-            let registry_entry = context.registry.models.get(&self.model_id).unwrap();
+            // let registry_entry = context.registry.models.get(&self.model_id).unwrap();
             for (k, ty) in s.type_as_struct(self.model_id).unwrap().data.props.iter() {
+                println!("prop {k}");
                 if let Some(rel) = context.registry.find_relationship_on(self.model_id, k) {
+                    println!("-- rel {rel:?}");
                     if self.skip.contains(&rel.name) {
                         continue;
                     }
@@ -119,8 +122,11 @@ impl TypeGen for WithNestedCount {
         }
 
         if !countable.is_empty() {
-            todo!()
-            // props.push
+            let mut count = t::struct_();
+            for prop in countable.into_iter() {
+                count.prop(prop, Count.generate(context)?);
+            }
+            st.prop("_count", count.build()?);
         }
 
         st.named(self.name(context)).build()
@@ -136,3 +142,4 @@ impl TypeGen for WithNestedCount {
         format!("{model_name}WithNestedCount{suffix}")
     }
 }
+

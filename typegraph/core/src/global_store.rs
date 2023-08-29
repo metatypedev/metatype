@@ -4,7 +4,9 @@
 use crate::errors::{self, Result};
 use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
 use crate::types::{Type, TypeFun, TypeId};
-use crate::wit::core::{Error as TgError, Policy, PolicyId, RuntimeId, TypeId as CoreTypeId};
+use crate::wit::core::{
+    Error as TgError, Policy, PolicyId, PolicySpec, RuntimeId, TypeId as CoreTypeId,
+};
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use std::{cell::RefCell, collections::HashMap};
 
@@ -54,6 +56,12 @@ impl Store {
     }
 }
 
+pub struct TypeAttributes {
+    pub concrete_type: TypeId,
+    pub proxy_data: Vec<(String, String)>,
+    pub policy_chain: Vec<PolicySpec>,
+}
+
 impl Store {
     pub fn resolve_proxy(&self, type_id: TypeId) -> Result<TypeId, TgError> {
         match self.get_type(type_id)? {
@@ -61,6 +69,37 @@ impl Store {
                 .get_type_by_name(&p.data.name)
                 .ok_or_else(|| errors::unregistered_type_name(&p.data.name)),
             _ => Ok(type_id),
+        }
+    }
+
+    pub fn get_attributes(&self, type_id: TypeId) -> Result<TypeAttributes> {
+        let mut type_id = type_id;
+        let mut proxy_data: Vec<(String, String)> = Vec::new();
+        let mut policy_chain = Vec::new();
+
+        loop {
+            let ty = self.get_type(type_id)?;
+            match ty {
+                Type::Proxy(p) => {
+                    proxy_data.extend(p.data.extras.clone());
+                    type_id = self
+                        .get_type_by_name(&p.data.name)
+                        .ok_or_else(|| errors::unregistered_type_name(&p.data.name))?;
+                    continue;
+                }
+                Type::WithPolicy(p) => {
+                    policy_chain.extend(p.data.chain.clone());
+                    type_id = p.data.tpe.into();
+                    continue;
+                }
+                _ => {
+                    break Ok(TypeAttributes {
+                        concrete_type: type_id,
+                        proxy_data,
+                        policy_chain,
+                    })
+                }
+            }
         }
     }
 

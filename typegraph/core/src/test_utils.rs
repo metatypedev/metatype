@@ -76,6 +76,30 @@ pub fn prisma_linkn(name: impl Into<String>) -> PrismaLink {
     }
 }
 
+pub mod models {
+    use crate::errors::Result;
+    use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+    use crate::types::TypeId;
+
+    pub fn simple_relationship() -> Result<(TypeId, TypeId)> {
+        let user = t::struct_()
+            .prop("id", t::integer().as_id().build()?)
+            .prop("name", t::string().build()?)
+            .prop("posts", t::array(t::proxy("Post").build()?).build()?)
+            .named("User")
+            .build()?;
+
+        let post = t::struct_()
+            .prop("id", t::integer().as_id().build()?)
+            .prop("title", t::string().build()?)
+            .prop("author", t::proxy("User").build()?)
+            .named("Post")
+            .build()?;
+
+        Ok((user, post))
+    }
+}
+
 pub mod tree {
     use std::{borrow::Cow, io::Write, rc::Rc};
 
@@ -93,18 +117,42 @@ pub mod tree {
         parents: Rc<Vec<TypeId>>,
     }
 
+    pub fn print(type_id: TypeId) -> String {
+        let root = Node {
+            label: "root".into(),
+            type_id,
+            parents: Rc::new(vec![]),
+        };
+
+        let mut buf: Vec<u8> = vec![];
+        ptree::write_tree(&root, &mut buf).expect("could not write tree");
+
+        String::from_utf8(buf).unwrap()
+    }
+
     impl TreeItem for Node {
         type Child = Self;
 
         fn write_self<W: Write>(&self, f: &mut W, _style: &Style) -> std::io::Result<()> {
-            let name = with_store(|s| {
+            let (name, title) = with_store(|s| {
                 let ty = s.get_type(self.type_id).unwrap();
                 match ty {
-                    Type::Proxy(p) => p.data.name.clone(),
-                    _ => ty.get_data().variant_name(),
+                    Type::Proxy(p) => (format!("&{}", p.data.name), None),
+                    _ => (
+                        ty.get_data().variant_name(),
+                        ty.get_base().map(|b| b.name.clone()).flatten(),
+                    ),
                 }
             });
-            write!(f, "{}: {} #{}", self.label, name, self.type_id.0)?;
+
+            write!(
+                f,
+                "{}: {}{} #{}",
+                self.label,
+                name,
+                title.map(|t| format!(" '{t}'")).unwrap_or("".to_string()),
+                self.type_id.0
+            )?;
             Ok(())
         }
 
@@ -136,7 +184,7 @@ pub mod tree {
                                 .props
                                 .iter()
                                 .map(|(k, id)| Node {
-                                    label: k.clone(),
+                                    label: format!("[{k}]"),
                                     type_id: (*id).into(),
                                     parents: Rc::clone(&parents),
                                 })

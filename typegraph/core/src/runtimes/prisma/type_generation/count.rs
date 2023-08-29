@@ -9,7 +9,7 @@ use crate::{
 
 use super::{TypeGen, TypeGenContext};
 
-struct Count;
+pub struct Count;
 
 impl TypeGen for Count {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
@@ -18,7 +18,7 @@ impl TypeGen for Count {
             .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
+    fn name(&self, _context: &TypeGenContext) -> String {
         return "_Count".to_string();
     }
 }

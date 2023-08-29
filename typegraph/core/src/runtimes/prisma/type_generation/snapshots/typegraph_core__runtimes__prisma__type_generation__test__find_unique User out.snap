@@ -1,0 +1,15 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+expression: "tree::print(out)"
+---
+root: struct 'UserWithNestedCount' #16
+├─ [id]: integer #0
+├─ [name]: string #1
+├─ [posts]: array 'PostWithNestedCount_excluding_UserToPost[]' #12
+│  └─ item: struct 'PostWithNestedCount_excluding_UserToPost' #11
+│     ├─ [id]: integer #5
+│     └─ [title]: string #6
+└─ [_count]: struct #15
+   └─ [posts]: optional '_Count' #14
+      └─ item: integer #13
+

@@ -1,0 +1,9 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/query_unique_where_expr.rs
+assertion_line: 75
+expression: "tree::print(ty)"
+---
+root: struct 'QueryUniqueUserWhereInput' #9
+└─ [id]: optional #8
+   └─ item: integer #0
+

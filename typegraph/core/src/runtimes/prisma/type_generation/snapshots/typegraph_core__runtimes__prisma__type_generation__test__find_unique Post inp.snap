@@ -1,0 +1,9 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+expression: "tree::print(inp)"
+---
+root: struct #19
+└─ [where]: struct 'QueryUniquePostWhereInput' #18
+   └─ [id]: optional #17
+      └─ item: integer #5
+

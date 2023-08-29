@@ -209,19 +209,7 @@ mod test {
 
     #[test]
     fn test_implicit_relationships() -> Result<(), String> {
-        let user = t::struct_()
-            .prop("id", t::integer().as_id().build()?)
-            .prop("name", t::string().build()?)
-            .prop("posts", t::array(t::proxy("Post").build()?).build()?)
-            .named("User")
-            .build()?;
-
-        let post = t::struct_()
-            .prop("id", t::integer().as_id().build()?)
-            .prop("title", t::string().build()?)
-            .prop("author", t::proxy("User").build()?)
-            .named("Post")
-            .build()?;
+        let (user, _post) = models::simple_relationship()?;
 
         let mut reg = RelationshipRegistry::default();
         reg.manage(user)?;

@@ -55,3 +55,26 @@ impl TypeGenContext {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::test_utils::*;
+
+    #[test]
+    fn test_find_unique() -> Result<()> {
+        let mut context = TypeGenContext::default();
+        let (user, post) = models::simple_relationship()?;
+        context.registry.manage(user)?;
+
+        let (inp, out) = context.find_unique(user)?;
+        insta::assert_snapshot!("find_unique User inp", tree::print(inp));
+        insta::assert_snapshot!("find_unique User out", tree::print(out));
+
+        let (inp, out) = context.find_unique(post)?;
+        insta::assert_snapshot!("find_unique Post inp", tree::print(inp));
+        insta::assert_snapshot!("find_unique Post out", tree::print(out));
+
+        Ok(())
+    }
+}
