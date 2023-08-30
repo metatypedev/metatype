@@ -39,9 +39,7 @@ impl TypeGen for WithNestedCount {
         with_store(|s| -> Result<()> {
             // let registry_entry = context.registry.models.get(&self.model_id).unwrap();
             for (k, ty) in s.type_as_struct(self.model_id).unwrap().data.props.iter() {
-                println!("prop {k}");
                 if let Some(rel) = context.registry.find_relationship_on(self.model_id, k) {
-                    println!("-- rel {rel:?}");
                     if self.skip.contains(&rel.name) {
                         continue;
                     }
@@ -104,7 +102,7 @@ impl TypeGen for WithNestedCount {
         for prop in props.into_iter() {
             let mut ty = prop.ty;
             if let Some(exclude) = prop.nest_count_exclude {
-                ty = context.generate(WithNestedCount {
+                ty = context.generate(&WithNestedCount {
                     model_id: ty,
                     skip: [self.skip.as_slice(), &[exclude]].concat(),
                 })?;
@@ -124,7 +122,7 @@ impl TypeGen for WithNestedCount {
         if !countable.is_empty() {
             let mut count = t::struct_();
             for prop in countable.into_iter() {
-                count.prop(prop, Count.generate(context)?);
+                count.prop(prop, context.generate(&Count)?);
             }
             st.prop("_count", count.build()?);
         }

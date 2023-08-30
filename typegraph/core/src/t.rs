@@ -5,7 +5,7 @@ use crate::errors::Result;
 use crate::types::TypeId;
 use crate::wit::core::{
     Core, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeInteger, TypeOptional, TypeProxy,
-    TypeString, TypeStruct,
+    TypeString, TypeStruct, TypeUnion,
 };
 
 pub trait TypeBuilder {
@@ -24,6 +24,15 @@ pub trait ConcreteTypeBuilder: TypeBuilder {
         self.base_mut().as_id = true;
         self
     }
+}
+
+#[derive(Default)]
+pub struct BooleanBuilder {
+    base: TypeBase,
+}
+
+pub fn boolean() -> BooleanBuilder {
+    Default::default()
 }
 
 #[derive(Default)]
@@ -138,6 +147,13 @@ pub fn string() -> StringBuilder {
     Default::default()
 }
 
+impl StringBuilder {
+    pub fn enum_(&mut self, values: Vec<String>) -> &mut Self {
+        self.data.enumeration = Some(values);
+        self
+    }
+}
+
 #[derive(Default)]
 pub struct OptionalBuilder {
     base: TypeBase,
@@ -191,6 +207,29 @@ pub fn array(ty: TypeId) -> ArrayBuilder {
 }
 
 #[derive(Default)]
+pub struct UnionBuilder {
+    base: TypeBase,
+    data: TypeUnion,
+}
+
+impl Default for TypeUnion {
+    fn default() -> Self {
+        Self {
+            variants: Default::default(),
+        }
+    }
+}
+
+pub fn union(variants: impl IntoIterator<Item = TypeId>) -> UnionBuilder {
+    UnionBuilder {
+        data: TypeUnion {
+            variants: variants.into_iter().map(|tid| tid.0).collect(),
+        },
+        ..Default::default()
+    }
+}
+
+#[derive(Default)]
 pub struct StructBuilder {
     base: TypeBase,
     data: TypeStruct,
@@ -198,7 +237,7 @@ pub struct StructBuilder {
 
 impl Default for TypeStruct {
     fn default() -> Self {
-        Self { props: Vec::new() }
+        Self { props: Vec::new(), additional_props: false, min: None, max: None }
     }
 }
 
@@ -216,6 +255,16 @@ impl StructBuilder {
         self.data
             .props
             .extend(props.into_iter().map(|(name, ty)| (name, ty.into())));
+    }
+
+    pub fn min(&mut self, min: u32) -> &mut Self {
+        self.data.min = Some(min);
+        self
+    }
+
+    pub fn max(&mut self, max: u32) -> &mut Self {
+        self.data.max = Some(max);
+        self
     }
 }
 
@@ -302,12 +351,25 @@ macro_rules! impl_type_builder {
         }
     };
 }
+impl TypeBuilder for BooleanBuilder {
+    fn build(&mut self) -> Result<TypeId> {
+        let builder = std::mem::replace(self, Default::default());
+        Ok(crate::Lib::booleanb(builder.base)?.into())
+    }
+}
+
+impl ConcreteTypeBuilder for BooleanBuilder {
+    fn base_mut(&mut self) -> &mut TypeBase {
+        &mut self.base
+    }
+}
 
 impl_type_builder!(IntegerBuilder, integerb);
 impl_type_builder!(FloatBuilder, floatb);
 impl_type_builder!(OptionalBuilder, optionalb);
 impl_type_builder!(StringBuilder, stringb);
 impl_type_builder!(ArrayBuilder, arrayb);
+impl_type_builder!(UnionBuilder, unionb);
 impl_type_builder!(StructBuilder, structb);
 impl_type_builder!(FuncBuilder, funcb, true);
 impl_type_builder!(ProxyBuilder, proxyb, true);

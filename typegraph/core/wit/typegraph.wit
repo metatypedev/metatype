@@ -84,6 +84,9 @@ interface core {
 
     record type-struct {
         props: list<tuple<string, type-id>>,
+        additional-props: bool,
+        min: option<u32>,
+        max: option<u32>,
     }
     structb: func(data: type-struct, base: type-base) -> result<type-id, error>
 
