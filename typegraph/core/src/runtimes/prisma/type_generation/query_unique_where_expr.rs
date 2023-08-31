@@ -60,4 +60,3 @@ impl TypeGen for QueryUniqueWhereExpr {
         )
     }
 }
-

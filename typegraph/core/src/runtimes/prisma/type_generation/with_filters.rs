@@ -1,3 +1,6 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use crate::{
     errors::Result,
     global_store::with_store,
@@ -206,7 +209,8 @@ impl TypeGen for StringFilter {
                 .prop("contains", type_id)
                 .prop(
                     "mode",
-                    t::string().enum_(vec!["insensitive".to_string()]).build()?,
+                    t::optional(t::string().enum_(vec!["insensitive".to_string()]).build()?)
+                        .build()?,
                 )
                 .build()?,
             // TODO optional feature -- previewFeatures = ["fullTextSearch"]

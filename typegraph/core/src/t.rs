@@ -237,7 +237,12 @@ pub struct StructBuilder {
 
 impl Default for TypeStruct {
     fn default() -> Self {
-        Self { props: Vec::new(), additional_props: false, min: None, max: None }
+        Self {
+            props: Vec::new(),
+            additional_props: false,
+            min: None,
+            max: None,
+        }
     }
 }
 

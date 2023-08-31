@@ -145,9 +145,35 @@ pub mod tree {
                 }
             });
 
+            let enum_variants: Option<Vec<String>> = with_store(|s| {
+                let ty = s.get_type(self.type_id).unwrap();
+                match ty {
+                    Type::Integer(typ) => typ
+                        .data
+                        .enumeration
+                        .clone()
+                        .map(|v| v.iter().map(|v| v.to_string()).collect()),
+                    Type::Float(typ) => typ
+                        .data
+                        .enumeration
+                        .clone()
+                        .map(|v| v.iter().map(|v| v.to_string()).collect()),
+                    Type::String(typ) => typ
+                        .data
+                        .enumeration
+                        .clone()
+                        .map(|v| v.iter().map(|v| format!("'{v}'")).collect()),
+                    _ => None,
+                }
+            });
+
+            let enum_variants = enum_variants
+                .map(|v| format!(" enum{{ {} }}", v.join(", ")))
+                .unwrap_or("".to_string());
+
             write!(
                 f,
-                "{}: {}{} #{}",
+                "{}: {}{} #{}{enum_variants}",
                 self.label,
                 name,
                 title.map(|t| format!(" '{t}'")).unwrap_or("".to_string()),

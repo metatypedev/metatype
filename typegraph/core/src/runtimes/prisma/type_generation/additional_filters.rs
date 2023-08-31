@@ -1,5 +1,5 @@
-use crate::{errors::Result, types::TypeId, global_store::with_store, };
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
+use crate::{errors::Result, global_store::with_store, types::TypeId};
 
 use super::{TypeGen, TypeGenContext};
 

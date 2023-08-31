@@ -1,0 +1,164 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+expression: "tree::print(inp)"
+---
+root: struct #92
+├─ [where]: optional #82
+│  └─ item: struct 'QueryPostWhereInput' #81
+│     ├─ [id]: optional #74
+│     │  └─ item: optional '_integer_filter_c' #21
+│     │     └─ item: union #20
+│     │        ├─ variant_0: union '_integer_filter' #18
+│     │        │  ├─ variant_0: integer #11
+│     │        │  ├─ variant_1: struct #14
+│     │        │  │  └─ [equals]: integer #11
+│     │        │  ├─ variant_2: struct #15
+│     │        │  │  ├─ [lt]: optional #12
+│     │        │  │  │  └─ item: integer #11
+│     │        │  │  ├─ [gt]: optional #12
+│     │        │  │  │  └─ item: integer #11
+│     │        │  │  ├─ [lte]: optional #12
+│     │        │  │  │  └─ item: integer #11
+│     │        │  │  └─ [gte]: optional #12
+│     │        │  │     └─ item: integer #11
+│     │        │  ├─ variant_3: struct #16
+│     │        │  │  └─ [in]: array #13
+│     │        │  │     └─ item: integer #11
+│     │        │  └─ variant_4: struct #17
+│     │        │     └─ [notIn]: array #13
+│     │        │        └─ item: integer #11
+│     │        └─ variant_1: struct #19
+│     │           └─ [not]: union '_integer_filter' #18
+│     │              ├─ variant_0: integer #11
+│     │              ├─ variant_1: struct #14
+│     │              │  └─ [equals]: integer #11
+│     │              ├─ variant_2: struct #15
+│     │              │  ├─ [lt]: optional #12
+│     │              │  │  └─ item: integer #11
+│     │              │  ├─ [gt]: optional #12
+│     │              │  │  └─ item: integer #11
+│     │              │  ├─ [lte]: optional #12
+│     │              │  │  └─ item: integer #11
+│     │              │  └─ [gte]: optional #12
+│     │              │     └─ item: integer #11
+│     │              ├─ variant_3: struct #16
+│     │              │  └─ [in]: array #13
+│     │              │     └─ item: integer #11
+│     │              └─ variant_4: struct #17
+│     │                 └─ [notIn]: array #13
+│     │                    └─ item: integer #11
+│     ├─ [title]: optional #75
+│     │  └─ item: optional '_string_filter_c' #37
+│     │     └─ item: union #36
+│     │        ├─ variant_0: union '_string_filter' #34
+│     │        │  ├─ variant_0: string #23
+│     │        │  ├─ variant_1: struct #26
+│     │        │  │  └─ [equals]: string #23
+│     │        │  ├─ variant_2: struct #27
+│     │        │  │  └─ [in]: array #25
+│     │        │  │     └─ item: string #23
+│     │        │  ├─ variant_3: struct #28
+│     │        │  │  └─ [notIn]: array #25
+│     │        │  │     └─ item: string #23
+│     │        │  ├─ variant_4: struct #31
+│     │        │  │  ├─ [contains]: string #23
+│     │        │  │  └─ [mode]: optional #30
+│     │        │  │     └─ item: string #29 enum{ 'insensitive' }
+│     │        │  ├─ variant_5: struct #32
+│     │        │  │  └─ [search]: string #23
+│     │        │  └─ variant_6: struct #33
+│     │        │     ├─ [startsWith]: optional #24
+│     │        │     │  └─ item: string #23
+│     │        │     └─ [endsWith]: optional #24
+│     │        │        └─ item: string #23
+│     │        └─ variant_1: struct #35
+│     │           └─ [not]: union '_string_filter' #34
+│     │              ├─ variant_0: string #23
+│     │              ├─ variant_1: struct #26
+│     │              │  └─ [equals]: string #23
+│     │              ├─ variant_2: struct #27
+│     │              │  └─ [in]: array #25
+│     │              │     └─ item: string #23
+│     │              ├─ variant_3: struct #28
+│     │              │  └─ [notIn]: array #25
+│     │              │     └─ item: string #23
+│     │              ├─ variant_4: struct #31
+│     │              │  ├─ [contains]: string #23
+│     │              │  └─ [mode]: optional #30
+│     │              │     └─ item: string #29 enum{ 'insensitive' }
+│     │              ├─ variant_5: struct #32
+│     │              │  └─ [search]: string #23
+│     │              └─ variant_6: struct #33
+│     │                 ├─ [startsWith]: optional #24
+│     │                 │  └─ item: string #23
+│     │                 └─ [endsWith]: optional #24
+│     │                    └─ item: string #23
+│     ├─ [AND]: optional #79
+│     │  └─ item: array 'QueryPostWhereInput[]' #78
+│     │     └─ item: &QueryPostWhereInput #77
+│     ├─ [OR]: optional #79
+│     │  └─ item: array 'QueryPostWhereInput[]' #78
+│     │     └─ item: &QueryPostWhereInput #77
+│     └─ [NOT]: optional #80
+│        └─ item: &QueryPostWhereInput #77
+├─ [orderBy]: optional #86
+│  └─ item: array '_7_OrderBy' #85
+│     └─ item: struct #84
+│        ├─ [id]: optional '_Sort' #50
+│        │  └─ item: union #49
+│        │     ├─ variant_0: struct #48
+│        │     │  └─ [sort]: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│        │     └─ variant_1: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│        ├─ [title]: optional '_Sort' #50
+│        │  └─ item: union #49
+│        │     ├─ variant_0: struct #48
+│        │     │  └─ [sort]: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│        │     └─ variant_1: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│        └─ [author]: optional #83
+│           └─ item: array '_4_OrderBy' #54
+│              └─ item: struct #53
+│                 ├─ [id]: optional '_Sort' #50
+│                 │  └─ item: union #49
+│                 │     ├─ variant_0: struct #48
+│                 │     │  └─ [sort]: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                 │     └─ variant_1: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                 ├─ [name]: optional '_Sort' #50
+│                 │  └─ item: union #49
+│                 │     ├─ variant_0: struct #48
+│                 │     │  └─ [sort]: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                 │     └─ variant_1: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                 └─ [posts]: optional '_SortByAggregates' #52
+│                    └─ item: struct #51
+│                       ├─ [_count]: optional '_Sort' #50
+│                       │  └─ item: union #49
+│                       │     ├─ variant_0: struct #48
+│                       │     │  └─ [sort]: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                       │     └─ variant_1: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                       ├─ [_avg]: optional '_Sort' #50
+│                       │  └─ item: union #49
+│                       │     ├─ variant_0: struct #48
+│                       │     │  └─ [sort]: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                       │     └─ variant_1: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                       ├─ [_sum]: optional '_Sort' #50
+│                       │  └─ item: union #49
+│                       │     ├─ variant_0: struct #48
+│                       │     │  └─ [sort]: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                       │     └─ variant_1: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                       ├─ [_min]: optional '_Sort' #50
+│                       │  └─ item: union #49
+│                       │     ├─ variant_0: struct #48
+│                       │     │  └─ [sort]: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                       │     └─ variant_1: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                       └─ [_max]: optional '_Sort' #50
+│                          └─ item: union #49
+│                             ├─ variant_0: struct #48
+│                             │  └─ [sort]: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+│                             └─ variant_1: string '_SortOrder' #46 enum{ 'asc', 'desc' }
+├─ [take]: optional #87
+│  └─ item: integer '_Take' #56
+├─ [skip]: optional #88
+│  └─ item: integer '_Skip' #58
+└─ [distinct]: optional #91
+   └─ item: array '_KeysOf_Post[]' #90
+      └─ item: string '_KeysOf_Post' #89 enum{ 'id', 'title', 'author' }
+

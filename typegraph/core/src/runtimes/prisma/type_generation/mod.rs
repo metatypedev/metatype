@@ -4,7 +4,7 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
-use self::additional_filters::{Skip, Take, Distinct};
+use self::additional_filters::{Distinct, Skip, Take};
 use self::order_by::OrderBy;
 use self::query_unique_where_expr::QueryUniqueWhereExpr;
 use self::query_where_expr::QueryWhereExpr;
@@ -67,7 +67,7 @@ impl TypeGenContext {
                 )
                 .prop(
                     "orderBy",
-                    t::optional(self.generate(&OrderBy(model_id))?).build()?,
+                    t::optional(self.generate(&OrderBy::new(model_id, vec![]))?).build()?,
                 )
                 .prop("take", t::optional(self.generate(&Take)?).build()?)
                 .prop("skip", t::optional(self.generate(&Skip)?).build()?)
@@ -77,6 +77,7 @@ impl TypeGenContext {
                 )
                 .build()?,
             // output
+            // t::integer().build()?
             t::array(self.generate(&WithNestedCount::new(model_id))?).build()?,
         ))
     }
@@ -111,6 +112,23 @@ mod test {
         let (inp, out) = context.find_unique(post)?;
         insta::assert_snapshot!("find_unique Post inp", tree::print(inp));
         insta::assert_snapshot!("find_unique Post out", tree::print(out));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_find_many() -> Result<()> {
+        let mut context = TypeGenContext::default();
+        let (user, post) = models::simple_relationship()?;
+        context.registry.manage(user)?;
+
+        let (inp, out) = context.find_many(user)?;
+        insta::assert_snapshot!("find_many User inp", tree::print(inp));
+        insta::assert_snapshot!("find_many User out", tree::print(out));
+
+        let (inp, out) = context.find_many(post)?;
+        insta::assert_snapshot!("find_many Post inp", tree::print(inp));
+        insta::assert_snapshot!("find_many Post out", tree::print(out));
 
         Ok(())
     }

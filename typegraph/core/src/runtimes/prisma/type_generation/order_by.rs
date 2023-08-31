@@ -1,12 +1,25 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use crate::errors::Result;
 use crate::global_store::with_store;
+use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{ConcreteTypeBuilder, TypeBuilder};
 use crate::types::Type;
 use crate::{t, types::TypeId};
 
 use super::{TypeGen, TypeGenContext};
 
-pub struct OrderBy(pub TypeId);
+pub struct OrderBy {
+    model_id: TypeId,
+    skip_rel: Vec<String>,
+}
+
+impl OrderBy {
+    pub fn new(model_id: TypeId, skip_rel: Vec<String>) -> Self {
+        Self { model_id, skip_rel }
+    }
+}
 
 impl TypeGen for OrderBy {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
@@ -14,11 +27,11 @@ impl TypeGen for OrderBy {
             Optional,
             NonOptional,
             Aggregates,
-            OrderBy(TypeId),
+            OrderBy(TypeId, String),
         }
 
         let props = with_store(|s| {
-            self.0
+            self.model_id
                 .as_struct(s)
                 .unwrap()
                 .data
@@ -30,6 +43,27 @@ impl TypeGen for OrderBy {
                     } else {
                         (*ty, false)
                     };
+
+                    let registry_entry = context.registry.models.get(&self.model_id).unwrap();
+                    let rel = registry_entry.relationships.get(k);
+                    if let Some(rel_name) = rel {
+                        return if self.skip_rel.contains(&rel_name) {
+                            None
+                        } else {
+                            let rel = context.registry.relationships.get(rel_name).unwrap();
+                            match rel
+                                .get(rel.side_of_model(self.model_id).unwrap().opposite())
+                                .cardinality
+                            {
+                                Cardinality::Optional | Cardinality::One => Some((
+                                    k.clone(),
+                                    PropType::OrderBy(ty.into(), rel_name.clone()),
+                                )),
+                                Cardinality::Many => Some((k.clone(), PropType::Aggregates)),
+                            }
+                        };
+                    }
+
                     match TypeId(ty).as_type(s).unwrap() {
                         Type::Boolean(_) | Type::Integer(_) | Type::Float(_) | Type::String(_) => {
                             Some((
@@ -40,14 +74,6 @@ impl TypeGen for OrderBy {
                                     PropType::NonOptional
                                 },
                             ))
-                        }
-                        Type::Struct(_) => Some((k.clone(), PropType::OrderBy(ty.into()))),
-                        Type::Array(arr) => {
-                            if let Type::Struct(_) = TypeId(arr.data.of).as_type(s).unwrap() {
-                                Some((k.clone(), PropType::OrderBy(arr.data.of.into())))
-                            } else {
-                                panic!("array of scalar type not supported by prisma")
-                            }
                         }
                         _ => panic!("type not supported"),
                     }
@@ -63,8 +89,10 @@ impl TypeGen for OrderBy {
                     PropType::Optional => context.generate(&Sort { nullable: true })?,
                     PropType::NonOptional => context.generate(&Sort { nullable: false })?,
                     PropType::Aggregates => context.generate(&SortByAggregates)?,
-                    PropType::OrderBy(ty) => {
-                        t::optional(context.generate(&OrderBy(ty))?).build()?
+                    PropType::OrderBy(ty, rel_name) => {
+                        let mut skip_rel = self.skip_rel.clone();
+                        skip_rel.push(rel_name);
+                        t::optional(context.generate(&OrderBy::new(ty, skip_rel))?).build()?
                     }
                 },
             );
@@ -74,8 +102,19 @@ impl TypeGen for OrderBy {
     }
 
     fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = &context.registry.models.get(&self.0).unwrap().name;
-        format!("_{model_name}_OrderBy")
+        let name = context
+            .registry
+            .models
+            .get(&self.model_id)
+            .unwrap()
+            .name
+            .clone();
+        let suffix = if self.skip_rel.is_empty() {
+            "".to_string()
+        } else {
+            format!("_excluding_{}", self.skip_rel.join("_"))
+        };
+        format!("_{}_OrderBy", self.model_id.0)
     }
 }
 

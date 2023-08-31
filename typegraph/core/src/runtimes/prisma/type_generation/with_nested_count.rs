@@ -140,4 +140,3 @@ impl TypeGen for WithNestedCount {
         format!("{model_name}WithNestedCount{suffix}")
     }
 }
-
