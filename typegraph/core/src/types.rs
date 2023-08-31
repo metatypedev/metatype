@@ -68,6 +68,8 @@ impl Default for TypeBase {
     fn default() -> Self {
         Self {
             name: None,
+            runtime_config: None,
+
             as_id: false,
         }
     }

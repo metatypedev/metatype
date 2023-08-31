@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { Type, TypeNode } from "../type_node.ts";
-import { TypeGraph } from "../typegraph.ts";
+import { TypeGraph } from "../typegraph/mod.ts";
 import { CodeGenerator } from "./code_generator.ts";
 import { mapValues } from "std/collections/map_values.ts";
 import { ErrorEntry, validationContext, ValidatorFn } from "./common.ts";

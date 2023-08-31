@@ -4,11 +4,15 @@
 pub mod deno;
 pub mod graphql;
 pub mod prisma;
+pub mod python;
+pub mod wasi;
+pub mod random;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::global_store::{with_store_mut, Store};
 use crate::wit::runtimes::{
     BaseMaterializer, GraphqlRuntimeData, HttpRuntimeData, MaterializerHttpRequest,
+    RandomRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use crate::{
@@ -19,6 +23,9 @@ use enum_dispatch::enum_dispatch;
 
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
+pub use self::python::PythonMaterializer;
+pub use self::random::RandomMaterializer;
+pub use self::wasi::WasiMaterializer;
 
 type Result<T, E = TgError> = std::result::Result<T, E>;
 
@@ -27,6 +34,9 @@ pub enum Runtime {
     Deno,
     Graphql(GraphqlRuntimeData),
     Http(HttpRuntimeData),
+    Python,
+    Random(RandomRuntimeData),
+    WasmEdge,
 }
 
 #[derive(Debug)]
@@ -68,6 +78,30 @@ impl Materializer {
             data: data.into(),
         }
     }
+
+    fn python(runtime_id: RuntimeId, data: PythonMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
+
+    fn random(runtime_id: RuntimeId, data: RandomMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
+
+    fn wasi(runtime_id: RuntimeId, data: WasiMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -76,6 +110,9 @@ pub enum MaterializerData {
     Deno(DenoMaterializer),
     GraphQL(GraphqlMaterializer),
     Http(MaterializerHttpRequest),
+    Python(PythonMaterializer),
+    Random(RandomMaterializer),
+    WasmEdge(WasiMaterializer),
 }
 
 // impl From<DenoMaterializer> for MaterializerData {
@@ -152,6 +189,73 @@ impl crate::wit::runtimes::Runtimes for crate::Lib {
         data: crate::wit::runtimes::MaterializerHttpRequest,
     ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
         let mat = Materializer::http(base.runtime, data, base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn register_python_runtime(
+    ) -> Result<crate::wit::runtimes::RuntimeId, crate::wit::runtimes::Error> {
+        Ok(with_store_mut(|s| s.register_runtime(Runtime::Python)))
+    }
+
+    fn from_python_lambda(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerPythonLambda,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::python(base.runtime, PythonMaterializer::Lambda(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn from_python_def(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerPythonDef,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::python(base.runtime, PythonMaterializer::Def(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn from_python_module(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerPythonModule,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::python(base.runtime, PythonMaterializer::Module(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn from_python_import(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerPythonImport,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::python(base.runtime, PythonMaterializer::Import(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn register_random_runtime(
+        data: crate::wit::runtimes::RandomRuntimeData,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        Ok(with_store_mut(|s| {
+            s.register_runtime(Runtime::Random(data))
+        }))
+    }
+
+    fn create_random_mat(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerRandom,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat =
+            Materializer::random(base.runtime, RandomMaterializer::Runtime(data), base.effect);
+        Ok(with_store_mut(|s| s.register_materializer(mat)))
+    }
+
+    fn register_wasmedge_runtime(
+    ) -> Result<crate::wit::runtimes::RuntimeId, crate::wit::runtimes::Error> {
+        Ok(with_store_mut(|s| s.register_runtime(Runtime::WasmEdge)))
+    }
+
+    fn from_wasi_module(
+        base: crate::wit::runtimes::BaseMaterializer,
+        data: crate::wit::runtimes::MaterializerWasi,
+    ) -> Result<crate::wit::runtimes::MaterializerId, crate::wit::runtimes::Error> {
+        let mat = Materializer::wasi(base.runtime, WasiMaterializer::Module(data), base.effect);
         Ok(with_store_mut(|s| s.register_materializer(mat)))
     }
 }

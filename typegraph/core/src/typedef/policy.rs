@@ -12,10 +12,10 @@ use crate::{
 use common::typegraph::TypeNode;
 
 impl TypeConversion for WithPolicy {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         with_store(|s| -> Result<_> {
             let tpe = s.get_type(self.data.tpe.into())?;
-            let mut type_node = tpe.convert(ctx)?;
+            let mut type_node = tpe.convert(ctx, runtime_id)?;
             let base = type_node.base_mut();
             base.policies = ctx.register_policy_chain(&self.data.chain)?;
             Ok(type_node)

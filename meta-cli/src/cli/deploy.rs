@@ -152,7 +152,9 @@ impl Deploy<DefaultModeData> {
         let mut loader = Loader::new(Arc::clone(&config))
             .skip_deno_modules(true)
             .with_postprocessor(postprocess::DenoModules::default().codegen(options.codegen))
-            .with_postprocessor(postprocess::PythonModules::default());
+            .with_postprocessor(postprocess::PythonModules::default())
+            .with_postprocessor(postprocess::WasmdegeModules::default());
+
         if !options.no_migration {
             loader = loader.with_postprocessor(
                 EmbedPrismaMigrations::default()
@@ -279,7 +281,7 @@ where
     }
 
     async fn discovery(&self) -> Result<Vec<PathBuf>> {
-        Discovery::new(Arc::clone(&self.config), self.base_dir.clone())
+        Discovery::new(Arc::clone(&self.config), self.base_dir.clone(), false)
             .get_all()
             .await
     }

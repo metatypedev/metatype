@@ -1432,6 +1432,24 @@
             "name": {
               "type": "string",
               "enum": [
+                "python_wasi"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/PythonRuntimeData"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
                 "random"
               ]
             },
@@ -1493,6 +1511,24 @@
               "$ref": "#/definitions/TemporalRuntimeData"
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "data",
+            "name"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "enum": [
+                "wasmedge"
+              ]
+            },
+            "data": {
+              "$ref": "#/definitions/WasmEdgeRuntimeData"
+            }
+          }
         }
       ]
     },
@@ -1539,6 +1575,17 @@
           ]
         },
         "basic_auth_secret": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "PythonRuntimeData": {
+      "type": "object",
+      "properties": {
+        "config": {
           "type": [
             "string",
             "null"
@@ -1716,6 +1763,17 @@
         },
         "host": {
           "type": "string"
+        }
+      }
+    },
+    "WasmEdgeRuntimeData": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       }
     },

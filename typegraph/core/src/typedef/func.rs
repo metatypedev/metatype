@@ -14,11 +14,14 @@ use crate::{
 };
 
 impl TypeConversion for Func {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, _runtime_id: Option<u32>) -> Result<TypeNode> {
+        let (mat_id, runtime_id) =
+            with_store(|s| -> Result<_> { ctx.register_materializer(s, self.data.mat) })?;
+
         let input = with_store(|s| -> Result<_> {
             let inp_id = s.resolve_proxy(self.data.inp.into())?;
             match s.get_type(inp_id)? {
-                Type::Struct(_) => Ok(ctx.register_type(s, inp_id)?),
+                Type::Struct(_) => Ok(ctx.register_type(s, inp_id, Some(runtime_id))?),
                 _ => Err(errors::invalid_input_type(&s.get_type_repr(inp_id)?)),
             }
         })?
@@ -26,19 +29,21 @@ impl TypeConversion for Func {
 
         let output = with_store(|s| -> Result<_> {
             let out_id = s.resolve_proxy(self.data.out.into())?;
-            ctx.register_type(s, out_id)
+            ctx.register_type(s, out_id, Some(runtime_id))
         })?
         .into();
 
-        let materializer =
-            with_store(|s| -> Result<_> { ctx.register_materializer(s, self.data.mat) })?;
-
         Ok(TypeNode::Function {
-            base: gen_base(format!("func_{}", self.id.0)),
+            base: gen_base(
+                format!("func_{}", self.id.0),
+                self.base.runtime_config.clone(),
+                runtime_id,
+                None,
+            ),
             data: FunctionTypeData {
                 input,
                 output,
-                materializer,
+                materializer: mat_id,
                 rate_calls: false,
                 rate_weight: None,
             },

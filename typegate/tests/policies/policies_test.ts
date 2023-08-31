@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import config from "../../src/config.ts";
+import { signJWT } from "../../src/crypto.ts";
 import { gql, Meta } from "../utils/mod.ts";
 
 async function genSecretKey(
@@ -49,6 +50,7 @@ Meta.test("Policies", async (t) => {
       }
     `
       .expectErrorContains("Authorization failed")
+      .expectStatus(401)
       .on(e);
   });
 
@@ -66,6 +68,26 @@ Meta.test("Policies", async (t) => {
           a: 3,
         },
       })
+      .on(e);
+  });
+
+  await t.should("reject explicitly expired jwt", async () => {
+    const claims = {
+      provider: "native",
+      a: "2",
+    };
+    const jwt = await signJWT(claims, -10);
+
+    await gql`
+        query {
+          pol_two(a: 3) {
+            a
+          }
+        }
+      `
+      .withHeaders({ "authorization": `bearer ${jwt}` })
+      .expectErrorContains("jwt expired")
+      .expectStatus(401)
       .on(e);
   });
 

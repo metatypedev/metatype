@@ -14,10 +14,10 @@ use crate::{
 };
 
 impl TypeConversion for Proxy {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         with_store(|s| -> Result<_> {
             let tpe = s.resolve_proxy(self.id).and_then(|id| s.get_type(id))?;
-            tpe.convert(ctx)
+            tpe.convert(ctx, runtime_id)
         })
     }
 }

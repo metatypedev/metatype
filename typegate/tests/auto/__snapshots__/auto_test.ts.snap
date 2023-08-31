@@ -327,8 +327,7 @@ snapshot[`Auto-tests for index 2`] = `
       extensions: {},
       locations: [],
       message: "Validation errors:
-" +
-        "  - at <value>.data.email: string does not statisfy the required format 'email'
+  - at <value>.data.email: string does not statisfy the required format 'email'
 ",
       path: [],
     },
@@ -356,8 +355,7 @@ snapshot[`Auto-tests for prisma 1`] = `
       extensions: {},
       locations: [],
       message: "Validation errors:
-" +
-        "  - at <value>.data.firstname: expected minimum length: 2, got 0
+  - at <value>.data.firstname: expected minimum length: 2, got 0
 ",
       path: [],
     },
@@ -372,8 +370,7 @@ snapshot[`Auto-tests for prisma 2`] = `
       extensions: {},
       locations: [],
       message: "Validation errors:
-" +
-        "  - at <value>.where.firstname: Value does not match to any variant of the either type
+  - at <value>.where.firstname: Value does not match to any variant of the either type
 ",
       path: [],
     },

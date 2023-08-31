@@ -120,16 +120,20 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             },
             ..Default::default()
         },
-        types: vec![Some(TypeNode::Object {
-            base: gen_base(params.name),
-            data: ObjectTypeData {
-                properties: IndexMap::new(),
-                required: vec![],
-            },
-        })],
+        types: vec![],
         ..Default::default()
     };
-    with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
+
+    // register the deno runtime
+    let default_runtime_idx = with_store(|s| ctx.register_runtime(s, s.get_deno_runtime()))?;
+
+    ctx.types.push(Some(TypeNode::Object {
+        base: gen_base(params.name, None, default_runtime_idx, None),
+        data: ObjectTypeData {
+            properties: IndexMap::new(),
+            required: vec![],
+        },
+    }));
 
     TG.with(move |tg| {
         tg.borrow_mut().replace(ctx);
@@ -211,13 +215,18 @@ impl TypegraphContext {
 
             root.required.push(name.clone());
             root.properties
-                .insert(name, self.register_type(s, type_id)?.into());
+                .insert(name, self.register_type(s, type_id, None)?.into());
         }
 
         Ok(())
     }
 
-    pub fn register_type(&mut self, store: &Store, id: TypeId) -> Result<TypeId, TgError> {
+    pub fn register_type(
+        &mut self,
+        store: &Store,
+        id: TypeId,
+        runtime_id: Option<u32>,
+    ) -> Result<TypeId, TgError> {
         match self.mapping.types.entry(id.into()) {
             Entry::Vacant(e) => {
                 // to prevent infinite loop from circular dependencies,
@@ -230,7 +239,7 @@ impl TypegraphContext {
                 self.types.push(None);
 
                 let tpe = store.get_type(id)?;
-                let type_node = tpe.convert(self)?;
+                let type_node = tpe.convert(self, runtime_id)?;
 
                 self.types[idx] = Some(type_node);
                 Ok((idx as u32).into())
@@ -244,17 +253,22 @@ impl TypegraphContext {
         &mut self,
         store: &Store,
         id: u32,
-    ) -> Result<MaterializerId, TgError> {
+    ) -> Result<(MaterializerId, RuntimeId), TgError> {
         match self.mapping.materializers.entry(id) {
             Entry::Vacant(e) => {
                 let idx = self.materializers.len();
                 e.insert(idx as u32);
                 self.materializers.push(None);
                 let converted = convert_materializer(self, store, store.get_materializer(id)?)?;
+                let runtime_id = converted.runtime;
                 self.materializers[idx] = Some(converted);
-                Ok(idx as MaterializerId)
+                Ok((idx as MaterializerId, runtime_id as RuntimeId))
             }
-            Entry::Occupied(e) => Ok(*e.get()),
+            Entry::Occupied(e) => {
+                let mat_idx = *e.get();
+                let mat = self.materializers[mat_idx as usize].as_ref().unwrap();
+                Ok((mat_idx, mat.runtime))
+            }
         }
     }
 

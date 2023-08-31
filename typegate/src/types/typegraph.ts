@@ -251,6 +251,9 @@ export type KnownRuntime = {
   name: "http";
   data: HTTPRuntimeData;
 } | {
+  name: "python_wasi";
+  data: PythonRuntimeData;
+} | {
   name: "random";
   data: RandomRuntimeData;
 } | {
@@ -262,6 +265,9 @@ export type KnownRuntime = {
 } | {
   name: "temporal";
   data: TemporalRuntimeData;
+} | {
+  name: "wasmedge";
+  data: WasmEdgeRuntimeData;
 };
 export type Cardinality = "optional" | "one" | "many";
 export type AuthProtocol = "oauth2" | "jwt" | "basic";
@@ -340,6 +346,9 @@ export interface HTTPRuntimeData {
   cert_secret?: string | null;
   basic_auth_secret?: string | null;
 }
+export interface PythonRuntimeData {
+  config?: string | null;
+}
 export interface RandomRuntimeData {
   seed: number;
   reset?: string | null;
@@ -376,6 +385,9 @@ export interface S3RuntimeData {
 export interface TemporalRuntimeData {
   name: string;
   host: string;
+}
+export interface WasmEdgeRuntimeData {
+  config?: string | null;
 }
 export interface UnknownRuntime {
   name: string;

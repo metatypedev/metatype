@@ -8,17 +8,19 @@ use serde::{Deserialize, Serialize};
 
 use self::{
     deno::DenoRuntimeData, graphql::GraphQLRuntimeData, http::HTTPRuntimeData,
-    prisma::PrismaRuntimeData, random::RandomRuntimeData, s3::S3RuntimeData,
-    temporal::TemporalRuntimeData,
+    prisma::PrismaRuntimeData, python::PythonRuntimeData, random::RandomRuntimeData,
+    s3::S3RuntimeData, temporal::TemporalRuntimeData, wasmedge::WasmEdgeRuntimeData,
 };
 
 pub mod deno;
 pub mod graphql;
 pub mod http;
 pub mod prisma;
+pub mod python;
 pub mod random;
 pub mod s3;
 pub mod temporal;
+pub mod wasmedge;
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -27,10 +29,13 @@ pub enum KnownRuntime {
     Deno(DenoRuntimeData),
     GraphQL(GraphQLRuntimeData),
     HTTP(HTTPRuntimeData),
+    #[serde(rename = "python_wasi")]
+    PythonWasi(PythonRuntimeData),
     Random(RandomRuntimeData),
     Prisma(PrismaRuntimeData),
     S3(S3RuntimeData),
     Temporal(TemporalRuntimeData),
+    WasmEdge(WasmEdgeRuntimeData),
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

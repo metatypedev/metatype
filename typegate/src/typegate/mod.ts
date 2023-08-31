@@ -5,14 +5,18 @@ import config from "../config.ts";
 import { Register } from "./register.ts";
 import * as Sentry from "sentry";
 import { RateLimiter } from "./rate_limiter.ts";
-import { ConnInfo } from "std/http/server.ts";
 import { handlePlaygroundGraphQL } from "../services/playground_service.ts";
 import { ensureJWT, handleAuth } from "../services/auth/mod.ts";
 import { handleInfo } from "../services/info_service.ts";
-import { methodNotAllowed, notFound } from "../services/responses.ts";
+import {
+  jsonError,
+  methodNotAllowed,
+  notFound,
+  serverError,
+} from "../services/responses.ts";
 import { handleRest } from "../services/rest_service.ts";
 import { Engine } from "../engine.ts";
-import { InitHandler, PushHandler, PushResponse } from "../typegate/hooks.ts";
+import { PushHandler, PushResponse } from "../typegate/hooks.ts";
 import { upgradeTypegraph } from "../typegraph/versions.ts";
 import { parseGraphQLTypeGraph } from "../graphql/graphql.ts";
 import * as PrismaHooks from "../runtimes/prisma/hooks/mod.ts";
@@ -21,7 +25,7 @@ import {
   SecretManager,
   TypeGraph,
   TypeGraphDS,
-} from "../typegraph.ts";
+} from "../typegraph/mod.ts";
 import { SystemTypegraph } from "../system_typegraphs.ts";
 import { TypeGraphRuntime } from "../runtimes/typegraph.ts";
 import { dirname, fromFileUrl, join } from "std/path/mod.ts";
@@ -73,7 +77,6 @@ export class Typegate {
   }
 
   #onPushHooks: PushHandler[] = [];
-  #onInitHooks: InitHandler[] = [];
 
   constructor(
     public readonly register: Register,
@@ -87,10 +90,6 @@ export class Typegate {
 
   #onPush(handler: PushHandler) {
     this.#onPushHooks.push(handler);
-  }
-
-  #onInit(handler: InitHandler) {
-    this.#onInitHooks.push(handler);
   }
 
   async #handleOnPushHooks(
@@ -107,19 +106,10 @@ export class Typegate {
     return res;
   }
 
-  async #handleOnInitHooks(
-    typegraph: TypeGraph,
-    secretManager: SecretManager,
-    sync: boolean,
-  ): Promise<void> {
-    await Promise.all(
-      this.#onInitHooks.map((handler) =>
-        handler(typegraph, secretManager, sync)
-      ),
-    );
-  }
-
-  async handle(request: Request, connInfo: ConnInfo): Promise<Response> {
+  async handle(
+    request: Request,
+    connInfo: Deno.ServeHandlerInfo,
+  ): Promise<Response> {
     try {
       const url = new URL(request.url);
 
@@ -148,11 +138,16 @@ export class Typegate {
         return handleAuth(request, engine, new Headers(cors));
       }
 
-      const [context, headers] = await ensureJWT(
+      const jwtCheck = await ensureJWT(
         request,
         engine,
         new Headers(cors),
-      );
+      ).catch((e) => e);
+      if (jwtCheck instanceof Error) {
+        return jsonError(jwtCheck.message, new Headers(), 401);
+      }
+
+      const [context, headers] = jwtCheck;
 
       const identifier = resolveIdentifier(request, engine, context, connInfo);
       const limit = await this.limiter.getLimitForEngine(engine, identifier);
@@ -193,7 +188,7 @@ export class Typegate {
     } catch (e) {
       Sentry.captureException(e);
       console.error(e);
-      return new Response("ko", { status: 500 });
+      return serverError();
     }
   }
 
@@ -235,7 +230,6 @@ export class Typegate {
     const engine = await this.initEngine(
       tg,
       secretManager,
-      false,
       SystemTypegraph.getCustomRuntimes(this),
       enableIntrospection,
     );
@@ -249,7 +243,6 @@ export class Typegate {
   async initEngine(
     tgDS: TypeGraphDS,
     secretManager: SecretManager,
-    sync: boolean, // redis synchronization ??
     customRuntime: RuntimeResolver = {},
     enableIntrospection: boolean,
   ): Promise<Engine> {
@@ -274,8 +267,6 @@ export class Typegate {
       customRuntime,
       introspection,
     );
-
-    this.#handleOnInitHooks(tg, secretManager, sync);
 
     const engine = new Engine(tg);
     await engine.registerEndpoints();

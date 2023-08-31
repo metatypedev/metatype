@@ -25,9 +25,14 @@ impl TypeStruct {
 }
 
 impl TypeConversion for Struct {
-    fn convert(&self, ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Object {
-            base: gen_base(format!("object_{}", self.id.0)),
+            base: gen_base(
+                format!("object_{}", self.id.0),
+                self.base.runtime_config.clone(),
+                runtime_id.unwrap(),
+                None,
+            ),
             data: ObjectTypeData {
                 properties: self
                     .data
@@ -36,7 +41,7 @@ impl TypeConversion for Struct {
                     .map(|(name, type_id)| -> Result<(String, TypeId)> {
                         with_store(|s| -> Result<_> {
                             let id = s.resolve_proxy((*type_id).into())?;
-                            Ok((name.clone(), ctx.register_type(s, id)?.into()))
+                            Ok((name.clone(), ctx.register_type(s, id, runtime_id)?.into()))
                         })
                     })
                     .collect::<Result<IndexMap<_, _>>>()?,

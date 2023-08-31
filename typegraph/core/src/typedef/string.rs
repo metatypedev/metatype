@@ -5,7 +5,7 @@ use common::typegraph::{StringFormat, StringTypeData, TypeNode};
 use errors::Result;
 
 use crate::{
-    conversion::types::{gen_base_enum, TypeConversion},
+    conversion::types::{gen_base, TypeConversion},
     errors,
     typegraph::TypegraphContext,
     types::{StringT, TypeData},
@@ -13,7 +13,7 @@ use crate::{
 };
 
 impl TypeConversion for StringT {
-    fn convert(&self, _ctx: &mut TypegraphContext) -> Result<TypeNode> {
+    fn convert(&self, _ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         let format: Option<StringFormat> = match self.data.format.clone() {
             Some(format) => {
                 let ret =
@@ -23,8 +23,10 @@ impl TypeConversion for StringT {
             None => None,
         };
         Ok(TypeNode::String {
-            base: gen_base_enum(
+            base: gen_base(
                 format!("string_{}", self.id.0),
+                self.base.runtime_config.clone(),
+                runtime_id.unwrap(),
                 self.data.enumeration.clone(),
             ),
             data: StringTypeData {

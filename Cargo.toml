@@ -8,5 +8,5 @@ members = [
   "libs/macros",
   "typegraph/core"
 ]
-# https://github.com/prisma/quaint/issues/392
+
 resolver = "2"

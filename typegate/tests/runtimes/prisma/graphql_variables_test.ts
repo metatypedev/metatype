@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 
 import { v4 } from "std/uuid/mod.ts";
-import { assert } from "std/testing/asserts.ts";
+import { assert } from "std/assert/mod.ts";
 import { dropSchemas, recreateMigrations } from "../../utils/migrations.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 

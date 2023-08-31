@@ -18,7 +18,7 @@ export async function shell(
     stdout: "piped",
     stderr: "inherit",
     stdin: "piped",
-    env: { RUST_LOG: "info,meta=trace" },
+    env: {},
   }).spawn();
 
   if (stdin != null) {

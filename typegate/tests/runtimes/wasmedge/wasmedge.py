@@ -1,20 +1,19 @@
-from pathlib import Path
+from typegraph_next import t, typegraph
+from typegraph_next.graph.typegraph import Graph
+from typegraph_next.policy import Policy
+from typegraph_next.runtimes.wasmedge import WasmEdgeRuntime
 
-from typegraph import TypeGraph, policies, t
-from typegraph.runtimes.wasmedge import WasmEdgeRuntime
 
-this_dir = Path(__file__).parent
-
-with TypeGraph("wasmedge") as g:
-    public = policies.public()
+@typegraph()
+def wasmedge(g: Graph):
+    pub = Policy.public()
     wasmedge = WasmEdgeRuntime()
 
     g.expose(
         test=wasmedge.wasi(
-            this_dir.joinpath("rust.wasm"),
-            "add",
             t.struct({"a": t.float(), "b": t.float()}),
             t.integer(),
-        ),
-        default_policy=[public],
+            wasm="rust.wasm",
+            func="add",
+        ).with_policy(pub),
     )

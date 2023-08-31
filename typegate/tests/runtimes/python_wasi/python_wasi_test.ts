@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Elastic License 2.0.
 // SPDX-License-Identifier: Elastic-2.0
 
-import { assert, assertEquals } from "std/testing/asserts.ts";
+import { assert, assertEquals } from "std/assert/mod.ts";
 import { gql, Meta } from "../../utils/mod.ts";
 import { PythonVirtualMachine } from "../../../src/runtimes/python_wasi/python_vm.ts";
 
@@ -140,6 +140,74 @@ Meta.test("Python WASI runtime", async (t) => {
 
     console.log(`duration: ${duration}ms`);
     assert(duration < 600, `Python WASI runtime was too slow: ${duration}ms`);
+  });
+});
+
+Meta.test("Deno: def, lambda, import", async (t) => {
+  const e = await t.engine("runtimes/python_wasi/python_wasi.ts");
+  await t.should("work with def", async () => {
+    await gql`
+      query {
+        identityLambda(
+          input: {
+            a: "hello",
+            b: [1, 2, "three"]
+          }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityLambda: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("work with def", async () => {
+    await gql`
+      query {
+        identityDef(
+          input: {
+            a: "hello",
+            b: [1, 2, "three"]
+          }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityDef: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(e);
+  });
+
+  await t.should("work with module import", async () => {
+    await gql`
+      query {
+        identityMod(input: {
+          a: "hello",
+          b: [1, 2, "three"],
+        }) {
+          a
+          b
+        }
+      }
+    `
+      .expectData({
+        identityMod: {
+          a: "hello",
+          b: [1, 2, "three"],
+        },
+      })
+      .on(e);
   });
 });
 

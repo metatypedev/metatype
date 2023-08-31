@@ -70,10 +70,11 @@ impl Action for Serialize {
 
         loader = loader
             .with_postprocessor(postprocess::DenoModules::default())
-            .with_postprocessor(postprocess::PythonModules::default());
+            .with_postprocessor(postprocess::PythonModules::default())
+            .with_postprocessor(postprocess::WasmdegeModules::default());
 
         let paths = if self.files.is_empty() {
-            Discovery::new(Arc::clone(&config), dir.clone())
+            Discovery::new(Arc::clone(&config), dir.clone(), false)
                 .get_all()
                 .await?
         } else {

@@ -5,7 +5,7 @@ import { ComputeStage } from "../engine.ts";
 import { FieldNode, Kind, SelectionSetNode } from "graphql";
 import * as ast from "graphql/ast";
 import { distinct } from "std/collections/distinct.ts";
-import { PossibleSelectionFields, TypeGraph } from "../typegraph.ts";
+import { PossibleSelectionFields, TypeGraph } from "../typegraph/mod.ts";
 import { ObjectNode } from "../type_node.ts";
 import { ensure } from "../utils.ts";
 import { getChildId, getChildNode, startsWith } from "../utils/stage_id.ts";
