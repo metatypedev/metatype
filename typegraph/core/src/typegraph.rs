@@ -5,7 +5,7 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime};
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::with_store;
 use crate::host::abi;
-use crate::types::{Type, TypeFun, TypeModifier, WrapperTypeData};
+use crate::types::{Type, TypeFun, WrapperTypeData};
 use crate::validation::validate_name;
 use crate::{
     errors::{self, Result},
@@ -203,6 +203,7 @@ impl TypegraphContext {
             let tpe = s.get_type(type_id)?;
             let tpe = match tpe {
                 Type::WithPolicy(t) => t.data.get_wrapped_type(s).unwrap(),
+                Type::WithInjection(t) => t.data.get_wrapped_type(s).unwrap(),
                 _ => tpe,
             };
             if !matches!(tpe, Type::Func(_)) {
@@ -239,8 +240,7 @@ impl TypegraphContext {
 
                 let tpe = store.get_type(id)?;
 
-                let mut type_node = tpe.convert(self, runtime_id)?;
-                tpe.apply_injection(self, &mut type_node)?;
+                let type_node = tpe.convert(self, runtime_id)?;
 
                 self.types[idx] = Some(type_node);
                 Ok(idx as TypeId)

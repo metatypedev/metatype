@@ -9,6 +9,7 @@ from typing_extensions import Self
 
 from typegraph_next.gen.exports.core import (
     PolicyPerEffect as WitPolicyPerEffect,
+    TypeWithInjection,
 )
 from typegraph_next.gen.exports.core import (
     PolicySpecPerEffect,
@@ -73,38 +74,35 @@ class typedef:
 
         return _TypeWithPolicy(res.value, self, policies)
 
+    def _with_injection(self, injection: str) -> Self:
+        res = core.with_injection(
+            store, TypeWithInjection(tpe=self.id, injection=injection)
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        return _TypeWrapper(res.value, self)
+
     def optional(self, default_value: Optional[str] = None) -> "optional":
         if isinstance(self, optional):
             return self
         return optional(self, default_item=default_value)
 
     def set(self, value: Union[any, Dict[EffectType, any]]):
-        core.update_type_injection(
-            store,
-            self.id,
+        return self._with_injection(
             serialize_injection(
                 "static", value=value, value_mapper=lambda x: json.dumps(x)
             ),
         )
-        return self
 
     def inject(self, value: Union[any, Dict[EffectType, any]]):
-        core.update_type_injection(
-            store, self.id, serialize_injection("dynamic", value=value)
-        )
-        return self
+        return self._with_injection(serialize_injection("dynamic", value=value))
 
     def from_context(self, value: Union[str, Dict[EffectType, str]]):
-        core.update_type_injection(
-            store, self.id, serialize_injection("context", value=value)
-        )
-        return self
+        return self._with_injection(serialize_injection("context", value=value))
 
     def from_secret(self, value: Union[str, Dict[EffectType, str]]):
-        core.update_type_injection(
-            store, self.id, serialize_injection("secret", value=value)
-        )
-        return self
+        return self._with_injection(serialize_injection("secret", value=value))
 
     def from_parent(self, value: Union[str, Dict[EffectType, str]]):
         correct_value = None
@@ -128,14 +126,11 @@ class typedef:
 
         assert correct_value is not None
 
-        core.update_type_injection(
-            store,
-            self.id,
+        return self._with_injection(
             serialize_injection(
                 "parent", value=correct_value, value_mapper=lambda x: x
             ),
         )
-        return self
 
 
 class _TypeWithPolicy(typedef):
@@ -155,6 +150,25 @@ class _TypeWithPolicy(typedef):
     def __getattr__(self, name):
         if name == "policy":
             return self.policy
+        return getattr(self.base, name)
+
+
+# self.id refer to the wrapper id
+# self.* refer to the base id
+class _TypeWrapper(typedef):
+    base: "typedef"
+
+    def __init__(
+        self,
+        id: int,
+        base: "typedef",
+    ):
+        super().__init__(id)
+        self.base = base
+
+    def __getattr__(self, name):
+        if name == "id":
+            return self.id
         return getattr(self.base, name)
 
 
@@ -340,6 +354,10 @@ def ean() -> string:
 
 def path() -> string:
     return string(format="path")
+
+
+def datetime() -> string:
+    return string(format="date-time")
 
 
 def enum(

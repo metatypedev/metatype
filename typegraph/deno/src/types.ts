@@ -91,36 +91,40 @@ export class Typedef {
     return optional(this, data);
   }
 
+  private withInjection(injection: string) {
+    const wrapperId = core.withInjection({
+      tpe: this._id,
+      injection,
+    });
+    return new Proxy(this, {
+      get(target, prop, receiver) {
+        return prop === "_id" ? wrapperId : Reflect.get(target, prop, receiver);
+      },
+    }) as this;
+  }
+
   set(value: InjectionValue<unknown>) {
-    core.updateTypeInjection(
-      this._id,
+    return this.withInjection(
       serializeInjection("static", value, (x: unknown) => JSON.stringify(x)),
     );
-    return this;
   }
 
   inject(value: InjectionValue<string>) {
-    core.updateTypeInjection(
-      this._id,
+    return this.withInjection(
       serializeInjection("dynamic", value),
     );
-    return this;
   }
 
   fromContext(value: InjectionValue<string>) {
-    core.updateTypeInjection(
-      this._id,
+    return this.withInjection(
       serializeInjection("context", value),
     );
-    return this;
   }
 
   fromSecret(value: InjectionValue<string>) {
-    core.updateTypeInjection(
-      this._id,
+    return this.withInjection(
       serializeInjection("secret", value),
     );
-    return this;
   }
 
   fromParent(value: InjectionValue<string>) {
@@ -153,15 +157,13 @@ export class Typedef {
       }
     }
 
-    core.updateTypeInjection(
-      this._id,
+    return this.withInjection(
       serializeInjection(
         "parent",
         correctValue,
         (x: unknown) => x as number,
       ),
     );
-    return this;
   }
 }
 

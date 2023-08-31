@@ -18,13 +18,13 @@ use indoc::formatdoc;
 use regex::Regex;
 use types::{
     Array, Boolean, Either, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
-    TypeBoolean, TypeFun, Union, WithPolicy,
+    TypeBoolean, Union, WithInjection, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
     ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
     TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
-    TypegraphInitParams,
+    TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -73,15 +73,6 @@ impl wit::core::Core for Lib {
 
     fn finalize_typegraph() -> Result<String> {
         typegraph::finalize()
-    }
-
-    fn update_type_injection(id: TypeId, value: String) -> Result<()> {
-        with_store_mut(|s| {
-            let tpe_id = s.resolve_proxy(id)?;
-            let tpe = s.get_type_mut(tpe_id)?;
-            tpe.update_injection(value);
-            Ok(())
-        })
     }
 
     fn proxyb(data: TypeProxy) -> Result<TypeId> {
@@ -205,6 +196,10 @@ impl wit::core::Core for Lib {
             let base = TypeBase::default();
             Ok(s.add_type(|id| Type::Func(Func { id, base, data })))
         })
+    }
+
+    fn with_injection(data: TypeWithInjection) -> Result<TypeId> {
+        with_store_mut(|s| Ok(s.add_type(|id| Type::WithInjection(WithInjection { id, data }))))
     }
 
     fn with_policy(data: TypePolicy) -> Result<TypeId> {

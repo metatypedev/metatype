@@ -1,9 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::HashMap;
-
-use common::typegraph::{EffectType, Injection, InjectionData, SingleValue, TypeNode};
+use common::typegraph::TypeNode;
 use enum_dispatch::enum_dispatch;
 
 use crate::conversion::types::TypeConversion;
@@ -12,7 +10,7 @@ use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
     TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId, TypeInteger, TypeOptional,
-    TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion, TypeWithInjection,
 };
 
 pub trait TypeData {
@@ -62,10 +60,13 @@ pub type Array = ConcreteType<TypeArray>;
 pub type Optional = ConcreteType<TypeOptional>;
 pub type Union = ConcreteType<TypeUnion>;
 pub type Either = ConcreteType<TypeEither>;
+
+// Note: TypePolicy|TypeWithInjection|Proxy => Struct | Integer | ...
 pub type WithPolicy = WrapperType<TypePolicy>;
+pub type WithInjection = WrapperType<TypeWithInjection>;
 
 #[derive(Debug)]
-#[enum_dispatch(TypeFun, TypeConversion, TypeModifier)]
+#[enum_dispatch(TypeFun, TypeConversion)]
 pub enum Type {
     Proxy(Proxy),
     Struct(Struct),
@@ -79,6 +80,7 @@ pub enum Type {
     Union(Union),
     Either(Either),
     WithPolicy(WithPolicy),
+    WithInjection(WithInjection),
 }
 
 #[enum_dispatch]
@@ -86,14 +88,6 @@ pub trait TypeFun {
     fn get_base(&self) -> Option<&TypeBase>;
     fn get_concrete_type_name(&self) -> Option<String>;
     fn to_string(&self) -> String;
-    fn update_injection(&mut self, value: String);
-}
-
-#[enum_dispatch]
-pub trait TypeModifier {
-    fn apply_injection(&self, ctx: &TypegraphContext, tpe: &mut TypeNode) -> Result<()>;
-    // TODO: maybe use the same logic for runtime config?
-    // fn apply_runtime_config(&self, tpe: &mut TypeNode);
 }
 
 impl<T> TypeFun for ConcreteType<T>
@@ -113,53 +107,6 @@ where
 
     fn get_base(&self) -> Option<&TypeBase> {
         Some(&self.base)
-    }
-
-    fn update_injection(&mut self, value: String) {
-        self.base.injection = Some(value);
-    }
-}
-
-impl<T> TypeModifier for ConcreteType<T>
-where
-    T: TypeData,
-{
-    fn apply_injection(&self, ctx: &TypegraphContext, tpe: &mut TypeNode) -> Result<()> {
-        if let Some(base) = self.get_base() {
-            if let Some(injection) = base.injection.clone() {
-                let value: Injection =
-                    serde_json::from_str(&injection).map_err(|e| e.to_string())?;
-                if let Injection::Parent(data) = value {
-                    let get_correct_id = |v: u32| -> Result<u32> {
-                        with_store(|s| -> Result<u32> {
-                            let id = s.resolve_proxy(v)?;
-                            if let Some(index) = ctx.find_type_index_by_store_id(&id) {
-                                return Ok(index);
-                            }
-                            Err(format!("unable to find type for store id {}", id))
-                        })
-                    };
-                    let new_data = match data {
-                        InjectionData::SingleValue(SingleValue { value }) => {
-                            InjectionData::SingleValue(SingleValue {
-                                value: get_correct_id(value)?,
-                            })
-                        }
-                        InjectionData::ValueByEffect(per_effect) => {
-                            let mut new_per_effect: HashMap<EffectType, u32> = HashMap::new();
-                            for (k, v) in per_effect.iter() {
-                                new_per_effect.insert(*k, get_correct_id(*v)?);
-                            }
-                            InjectionData::ValueByEffect(new_per_effect)
-                        }
-                    };
-                    tpe.base_mut().injection = Some(Injection::Parent(new_data));
-                } else {
-                    tpe.base_mut().injection = Some(value);
-                }
-            }
-        }
-        Ok(())
     }
 }
 
@@ -189,16 +136,5 @@ where
 
     fn get_base(&self) -> Option<&TypeBase> {
         None
-    }
-
-    fn update_injection(&mut self, _value: String) {}
-}
-
-impl<T> TypeModifier for WrapperType<T>
-where
-    T: TypeData + WrapperTypeData,
-{
-    fn apply_injection(&self, _ctx: &TypegraphContext, _tpe: &mut TypeNode) -> Result<()> {
-        Ok(())
     }
 }

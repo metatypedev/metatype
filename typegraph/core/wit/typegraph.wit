@@ -22,7 +22,13 @@ interface core {
         // string => json string
         runtime-config: option<list<tuple<string, string>>>
     }
-    update-type-injection: func(id: u32, value: string) -> result<_, error>
+
+    record type-with-injection {
+        tpe: type-id,
+        injection: string
+    }
+
+    with-injection: func(data: type-with-injection) -> result<type-id, error>
 
     record type-proxy {
         name: string,
