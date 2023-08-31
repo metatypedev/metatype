@@ -37,7 +37,11 @@ typegraph("injection", (g) => {
         fromInput: tpe,
         parent: t.integer({}, { name: "someName" }),
         fromParent: deno.func(
-          t.struct({ value: t.integer().fromParent("someName") }),
+          t.struct({
+            value: t.integer().fromParent({
+              [NONE]: "someName",
+            }),
+          }),
           t.struct({ value: t.integer() }),
           { code: "(value) => value" },
         ),

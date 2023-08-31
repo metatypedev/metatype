@@ -155,13 +155,15 @@ export class Typedef {
       }
 
       correctValue = {};
-      for (const [k, v] of Object.entries(value)) {
+      for (const symbol of symbols) {
+        const v = (value as any)?.[symbol];
+        if (v === undefined) continue;
         if (typeof v !== "string") {
           throw new Error(
-            `value for field ${k.toString()} must be a string`,
+            `value for field ${symbol.toString()} must be a string`,
           );
         }
-        correctValue[k] = proxy(v)._id;
+        correctValue[symbol] = proxy(v)._id;
       }
     }
 
