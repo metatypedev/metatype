@@ -24,8 +24,13 @@ export function update(idempotent = true): EffectUpdate {
   return { tag: "update", val: idempotent };
 }
 
-export const effectPrefix = "__effect_";
-export const UPDATE = `${effectPrefix}update`;
-export const DELETE = `${effectPrefix}delete`;
-export const CREATE = `${effectPrefix}create`;
-export const NONE = `${effectPrefix}none`;
+export const UPDATE = Symbol("update");
+export const DELETE = Symbol("delete");
+export const CREATE = Symbol("create");
+export const NONE = Symbol("none");
+export type PerEffect = {
+  [CREATE]?: string;
+  [UPDATE]?: string;
+  [DELETE]?: string;
+  [NONE]?: string;
+};

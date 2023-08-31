@@ -20,7 +20,7 @@ import {
   serializeInjection,
   serializeRecordValues,
 } from "./utils/func_utils.ts";
-import { CREATE, DELETE, effectPrefix, NONE, UPDATE } from "./effects.ts";
+import { CREATE, DELETE, NONE, UPDATE } from "./effects.ts";
 import { InjectionValue } from "./utils/type_utils.ts";
 
 export type PolicySpec = Policy | {
@@ -138,10 +138,18 @@ export class Typedef {
         throw new Error("type not supported");
       }
 
-      const allowedKeys = [UPDATE, DELETE, CREATE, NONE];
-      const isPerEffect = Object.keys(value).every((propName) =>
-        allowedKeys.includes(propName)
-      );
+      // Note:
+      // Symbol changes the behavior of keys, values, entries => props are skipped
+      const symbols = [UPDATE, DELETE, CREATE, NONE];
+      const noOtherType = Object.keys(value).length == 0;
+      const isPerEffect = noOtherType &&
+        symbols
+          .map((symbol) => (value as any)?.[symbol] !== undefined)
+          .reduce(
+            (result, curr) => result || curr,
+            false,
+          );
+
       if (!isPerEffect) {
         throw new Error("object keys should be of type EffectType");
       }
@@ -150,7 +158,7 @@ export class Typedef {
       for (const [k, v] of Object.entries(value)) {
         if (typeof v !== "string") {
           throw new Error(
-            `value for field ${k.split(effectPrefix).pop()} must be a string`,
+            `value for field ${k.toString()} must be a string`,
           );
         }
         correctValue[k] = proxy(v)._id;

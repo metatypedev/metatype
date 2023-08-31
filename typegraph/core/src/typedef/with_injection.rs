@@ -60,7 +60,7 @@ impl TypeData for TypeWithInjection {
             InjectionData::ValueByEffect(t) => {
                 let mut res: Vec<String> = vec![];
                 for (effect, value) in t.iter() {
-                    res.push(format!("{:?}:{:?}", effect, value));
+                    res.push(format!("{:?}:{}", effect, value));
                 }
                 res.join(", ")
             }

@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { PerEffect } from "../effects.ts";
+
 type RequiredKeys<T> = {
   [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K;
 }[keyof T];
@@ -23,4 +25,4 @@ export type InjectionSource =
   | "parent"
   | "secret";
 
-export type InjectionValue<T> = T | { [x: string]: T };
+export type InjectionValue<T> = T | PerEffect;

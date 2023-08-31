@@ -1,8 +1,16 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { CREATE, DELETE, effectPrefix, NONE, UPDATE } from "../effects.ts";
+import { CREATE, DELETE, NONE, UPDATE } from "../effects.ts";
 import { InjectionSource, InjectionValue } from "./type_utils.ts";
+
+export function stringifySymbol(symbol: symbol) {
+  const name = symbol.toString().match(/\((.+)\)/)?.[1];
+  if (!name) {
+    throw new Error("unable to determine symbol name");
+  }
+  return name;
+}
 
 export function serializeInjection(
   source: InjectionSource,
@@ -14,15 +22,29 @@ export function serializeInjection(
     !Array.isArray(value) &&
     value !== null
   ) {
-    const allowedKeys = [UPDATE, DELETE, CREATE, NONE];
-    const isPerEffect = Object.keys(value).every((propName) =>
-      allowedKeys.includes(propName)
-    );
+    // Note:
+    // Symbol changes the behavior of keys, values, entries => props are skipped
+    const symbols = [UPDATE, DELETE, CREATE, NONE];
+    const noOtherType = Object.keys(value).length == 0;
+    const isPerEffect = noOtherType &&
+      symbols
+        .map((symbol) => (value as any)?.[symbol] !== undefined)
+        .reduce(
+          (result, curr) => result || curr,
+          false,
+        );
+
     if (isPerEffect) {
-      const dataEntries = Object
-        .entries(value).map((
-          [k, v],
-        ) => [k.split(effectPrefix).pop(), valueMapper(v)]);
+      const dataEntries = symbols.map(
+        (symbol) => {
+          const valueGiven = (value as any)?.[symbol];
+          return [
+            stringifySymbol(symbol),
+            valueGiven && valueMapper(valueGiven),
+          ];
+        },
+      );
+
       return JSON.stringify({
         source,
         data: Object.fromEntries(dataEntries),
