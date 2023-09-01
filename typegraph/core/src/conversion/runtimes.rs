@@ -3,6 +3,7 @@
 
 use crate::errors::Result;
 use crate::global_store::Store;
+use crate::runtimes::prisma::ConversionContext;
 use crate::runtimes::{
     DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, PythonMaterializer,
     RandomMaterializer, Runtime, WasiMaterializer,
@@ -13,6 +14,7 @@ use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
 use common::typegraph::runtimes::http::HTTPRuntimeData;
+use common::typegraph::runtimes::prisma::{PrismaRuntimeData, Relationship};
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
@@ -99,39 +101,6 @@ impl MaterializerConverter for DenoMaterializer {
                 }))
                 .unwrap();
                 ("predefined_function".to_string(), data)
-            }
-        };
-        Ok(Materializer {
-            name,
-            runtime,
-            effect: effect.into(),
-            data,
-        })
-    }
-}
-
-impl MaterializerConverter for GraphqlMaterializer {
-    fn convert(
-        &self,
-        c: &mut TypegraphContext,
-        s: &Store,
-        runtime_id: RuntimeId,
-        effect: WitEffect,
-    ) -> Result<common::typegraph::Materializer> {
-        let runtime = c.register_runtime(s, runtime_id)?;
-        let (name, data) = match self {
-            GraphqlMaterializer::Query(d) => {
-                let mut data = IndexMap::new();
-                data.insert("path".to_string(), serde_json::to_value(&d.path).unwrap());
-                ("query".to_string(), data)
-            }
-            GraphqlMaterializer::Mutation(d) => {
-                let mut data = IndexMap::new();
-                data.insert(
-                    "path".to_string(),
-                    serde_json::to_value(&d.path).unwrap(), // TODO error
-                );
-                ("mutation".to_string(), data)
             }
         };
         Ok(Materializer {
@@ -326,11 +295,22 @@ pub fn convert_materializer(
     mat.data.convert(c, s, mat.runtime_id, mat.effect)
 }
 
+pub enum ConvertedRuntime {
+    Converted(TGRuntime),
+    Lazy(Box<dyn FnOnce(RuntimeId, &Store, &mut TypegraphContext) -> Result<TGRuntime> + 'static>),
+}
+
+impl From<TGRuntime> for ConvertedRuntime {
+    fn from(runtime: TGRuntime) -> Self {
+        ConvertedRuntime::Converted(runtime)
+    }
+}
+
 pub fn convert_runtime(
-    _c: &mut TypegraphContext,
-    _s: &Store,
+    c: &mut TypegraphContext,
+    s: &Store,
     runtime: &Runtime,
-) -> Result<TGRuntime> {
+) -> Result<ConvertedRuntime> {
     use KnownRuntime::*;
 
     match runtime {
@@ -339,13 +319,13 @@ pub fn convert_runtime(
                 worker: "default".to_string(),
                 permissions: Default::default(),
             };
-            Ok(TGRuntime::Known(Deno(data)))
+            Ok(TGRuntime::Known(Deno(data)).into())
         }
         Runtime::Graphql(d) => {
             let data = GraphQLRuntimeData {
                 endpoint: d.endpoint.clone(),
             };
-            Ok(TGRuntime::Known(GraphQL(data)))
+            Ok(TGRuntime::Known(GraphQL(data)).into())
         }
         Runtime::Http(d) => {
             let data = HTTPRuntimeData {
@@ -353,17 +333,53 @@ pub fn convert_runtime(
                 cert_secret: d.cert_secret.clone(),
                 basic_auth_secret: d.basic_auth_secret.clone(),
             };
-            Ok(TGRuntime::Known(HTTP(data)))
+            Ok(TGRuntime::Known(HTTP(data)).into())
         }
-        Runtime::Python => Ok(TGRuntime::Known(PythonWasi(PythonRuntimeData {
-            config: None,
-        }))),
+        Runtime::Python => {
+            Ok(TGRuntime::Known(PythonWasi(PythonRuntimeData { config: None })).into())
+        }
         Runtime::Random(d) => Ok(TGRuntime::Known(Random(RandomRuntimeData {
             seed: d.seed,
             reset: d.reset.clone(),
-        }))),
-        Runtime::WasmEdge => Ok(TGRuntime::Known(WasmEdge(WasmEdgeRuntimeData {
-            config: None,
-        }))),
+        }))
+        .into()),
+        Runtime::WasmEdge => {
+            Ok(TGRuntime::Known(WasmEdge(WasmEdgeRuntimeData { config: None })).into())
+        }
+        Runtime::Prisma(d, reg) => {
+            // let conv = ConversionContext {
+            //
+            // };
+            let reg = reg.borrow();
+            let models: Vec<_> = reg.models.iter().map(|(type_id, _)| type_id.clone()).collect();
+            let d = d.clone();
+            let relationships = reg.relationships.clone();
+            Ok(ConvertedRuntime::Lazy(Box::new(
+                move |runtime_id, store, tg| {
+                    let mut conversion_context = ConversionContext {
+                        runtime_id,
+                        store,
+                        tg_context: tg,
+                    };
+                    Ok(TGRuntime::Known(Prisma(PrismaRuntimeData {
+                        name: d.name.clone(),
+                        connection_string_secret: d.connection_string_secret.clone(),
+                        models: models
+                            .into_iter()
+                            .map(|id| {
+                                Ok(conversion_context.tg_context.register_type(store, id.into(), Some(runtime_id))?.into())
+                            })
+                            .collect::<Result<Vec<_>>>()?,
+                        relationships: relationships
+                            .into_iter()
+                            .map(|(_name, rel)| -> Result<_> {
+                                conversion_context.convert_relationship(rel)
+                            })
+                            .collect::<Result<Vec<_>>>()?,
+                        migration_options: None,
+                    })))
+                },
+            )))
+        }
     }
 }

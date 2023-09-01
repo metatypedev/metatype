@@ -277,13 +277,14 @@ interface runtimes {
     register-wasmedge-runtime: func() -> result<runtime-id, error>
     from-wasi-module: func(base: base-materializer, data: materializer-wasi) -> result<materializer-id, error>
 
-    // record prisma-runtime-data {
-    //    name: string,
-    //     connection-string-secret: string,
-    // }
+    // prisma
+    record prisma-runtime-data {
+        name: string,
+        connection-string-secret: string,
+    }
 
-    // create-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
-    // prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<type-id>
+    register-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
+    prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
 }
 
 world typegraph {

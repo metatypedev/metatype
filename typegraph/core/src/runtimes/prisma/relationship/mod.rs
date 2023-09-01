@@ -118,7 +118,7 @@ impl Side {
 /// (Optional, Many) [Left] 0..1 --> 0..n [Right]
 /// (One, Many) [Left] 1..1 --> 0..n [Right]
 /// The model on the right will have the foreign key
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Relationship {
     pub name: String,
     pub left: RelationshipModel,

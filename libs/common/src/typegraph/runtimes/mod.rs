@@ -39,7 +39,7 @@ pub enum KnownRuntime {
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct UnknownRuntime {
     pub name: String,
     pub data: IndexMap<String, serde_json::Value>,

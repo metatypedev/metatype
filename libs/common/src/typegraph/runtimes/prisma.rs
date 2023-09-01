@@ -39,9 +39,9 @@ pub struct RelationshipModel {
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Relationship {
-    name: String,
-    left: RelationshipModel,
-    right: RelationshipModel,
+    pub name: String,
+    pub left: RelationshipModel,
+    pub right: RelationshipModel,
 }
 
 #[cfg_attr(feature = "codegen", derive(JsonSchema))]

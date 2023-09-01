@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::conversion::runtimes::{convert_materializer, convert_runtime};
+use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::with_store;
 use crate::host::abi;
@@ -325,7 +325,16 @@ impl TypegraphContext {
             let converted = convert_runtime(self, store, store.get_runtime(id)?)?;
             let idx = self.runtimes.len();
             self.mapping.runtimes.insert(id, idx as u32);
-            self.runtimes.push(converted);
+            match converted {
+                ConvertedRuntime::Converted(rt) => self.runtimes.push(rt),
+                ConvertedRuntime::Lazy(lazy) => {
+                    // we allocate first a slot in the array, as the lazy conversion might register
+                    // other runtimes
+                    self.runtimes.push(TGRuntime::Unknown(Default::default()));
+                    let rt = lazy(idx as u32, store, self)?;
+                    self.runtimes[idx] = rt;
+                }
+            };
             Ok(idx as RuntimeId)
         }
     }
