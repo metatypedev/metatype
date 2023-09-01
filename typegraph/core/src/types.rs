@@ -40,7 +40,6 @@ impl Default for TypeBase {
     fn default() -> Self {
         Self {
             name: None,
-            injection: None,
             runtime_config: None,
         }
     }

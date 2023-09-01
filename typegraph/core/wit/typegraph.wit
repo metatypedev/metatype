@@ -17,8 +17,6 @@ interface core {
     type type-id = u32
     record type-base {
         name: option<string>,
-        // json
-        injection: option<string>,
         // string => json string
         runtime-config: option<list<tuple<string, string>>>
     }
