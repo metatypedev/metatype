@@ -6626,9 +6626,9 @@ dependencies = [
 
 [[package]]
 name = "swc_ecma_transforms_typescript"
-version = "0.180.33"
+version = "0.180.36"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea349e787a62af0dcf1b8b52d507045345871571c18cb78a2f892912f7d6b753"
+checksum = "24f5517491b43112f1560e1acd9fbf28ababc0e551ea395f05efaeee7dff1ece"
 dependencies = [
  "serde",
  "swc_atoms",
