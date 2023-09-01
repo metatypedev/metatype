@@ -219,7 +219,7 @@ class integer(typedef):
         res = core.integerb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, injection=None),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -265,7 +265,7 @@ class float(typedef):
         res = core.floatb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, injection=None),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -284,9 +284,7 @@ class boolean(typedef):
         self, *, name: Optional[str] = None, config: Optional[Dict[str, any]] = None
     ):
         runtime_config = serialize_record_values(config)
-        res = core.booleanb(
-            store, TypeBase(name=name, runtime_config=runtime_config, injection=None)
-        )
+        res = core.booleanb(store, TypeBase(name=name, runtime_config=runtime_config))
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -323,7 +321,7 @@ class string(typedef):
         res = core.stringb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, injection=None),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -393,7 +391,7 @@ class array(typedef):
         res = core.arrayb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, injection=None),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -425,7 +423,7 @@ class optional(typedef):
         res = core.optionalb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, injection=None),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -450,7 +448,7 @@ class union(typedef):
         res = core.unionb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, injection=None),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -474,7 +472,7 @@ class either(typedef):
         res = core.eitherb(
             store,
             data,
-            TypeBase(name=name, runtime_config=runtime_config, injection=None),
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -499,7 +497,7 @@ class struct(typedef):
         res = core.structb(
             store,
             data,
-            base=TypeBase(name=name, runtime_config=runtime_config, injection=None),
+            base=TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
