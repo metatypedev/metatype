@@ -164,3 +164,8 @@ pub fn get_id_field(model_id: TypeId) -> Result<String> {
         }
     })
 }
+
+pub fn get_type_name(type_id: TypeId) -> Result<String> {
+    with_store(|s| s.get_type_name(type_id).map(|n| n.map(|n| n.to_string())))?
+        .ok_or_else(|| "prisma model must be named".to_string())
+}

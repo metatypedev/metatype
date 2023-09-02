@@ -4,6 +4,7 @@
 use crate::errors::Result;
 use crate::global_store::with_store;
 use crate::runtimes::prisma::type_generation::count::Count;
+use crate::runtimes::prisma::type_utils::get_type_name;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{ProxyResolution, Type};
 use crate::{runtimes::prisma::relationship::Cardinality, types::TypeId};
@@ -131,7 +132,7 @@ impl TypeGen for WithNestedCount {
     }
 
     fn name(&self, context: &TypeGenContext) -> String {
-        let model_name = &context.registry.models.get(&self.model_id).unwrap().name;
+        let model_name = get_type_name(self.model_id).unwrap();
         let suffix = if self.skip.is_empty() {
             "".to_string()
         } else {

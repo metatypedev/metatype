@@ -17,11 +17,14 @@ impl TypeConversion for Union {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Union {
             base: gen_base(
-                format!("union_{}", self.id.0),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("union_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
-                None,
-            ),
+            )
+            .build(),
             data: UnionTypeData {
                 any_of: self
                     .data

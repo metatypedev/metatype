@@ -27,9 +27,9 @@ pub mod where_;
 pub mod with_filters;
 mod with_nested_count;
 
-#[derive(Default)]
-struct TypeGenContext {
-    registry: RelationshipRegistry,
+#[derive(Default, Debug)]
+pub struct TypeGenContext {
+    pub registry: RelationshipRegistry,
     cache: HashMap<String, TypeId>,
 }
 

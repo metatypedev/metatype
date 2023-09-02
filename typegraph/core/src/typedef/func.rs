@@ -35,11 +35,14 @@ impl TypeConversion for Func {
 
         Ok(TypeNode::Function {
             base: gen_base(
-                format!("func_{}", self.id.0),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("func_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id,
-                None,
-            ),
+            )
+            .build(),
             data: FunctionTypeData {
                 input,
                 output,

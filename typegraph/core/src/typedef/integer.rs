@@ -22,11 +22,16 @@ impl TypeConversion for Integer {
 
         Ok(TypeNode::Integer {
             base: gen_base(
-                format!("integer_{}", self.id.0),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("integer_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
-                enumeration,
-            ),
+            )
+            .enum_(enumeration)
+            .as_id(self.base.as_id)
+            .build(),
             data: IntegerTypeData {
                 minimum: self.data.min,
                 maximum: self.data.max,

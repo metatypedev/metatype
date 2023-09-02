@@ -3,7 +3,7 @@
 
 use crate::errors::Result;
 use crate::global_store::Store;
-use crate::runtimes::prisma::ConversionContext;
+use crate::runtimes::prisma::{with_prisma_runtime, ConversionContext};
 use crate::runtimes::{
     DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, PythonMaterializer,
     RandomMaterializer, Runtime, WasiMaterializer,
@@ -297,7 +297,7 @@ pub fn convert_materializer(
 
 pub enum ConvertedRuntime {
     Converted(TGRuntime),
-    Lazy(Box<dyn FnOnce(RuntimeId, &Store, &mut TypegraphContext) -> Result<TGRuntime> + 'static>),
+    Lazy(Box<dyn FnOnce(RuntimeId, &Store, &mut TypegraphContext) -> Result<TGRuntime>>),
 }
 
 impl From<TGRuntime> for ConvertedRuntime {
@@ -346,38 +346,44 @@ pub fn convert_runtime(
         Runtime::WasmEdge => {
             Ok(TGRuntime::Known(WasmEdge(WasmEdgeRuntimeData { config: None })).into())
         }
-        Runtime::Prisma(d, reg) => {
-            // let conv = ConversionContext {
-            //
-            // };
-            let reg = reg.borrow();
-            let models: Vec<_> = reg.models.iter().map(|(type_id, _)| type_id.clone()).collect();
+        Runtime::Prisma(d, _) => {
             let d = d.clone();
-            let relationships = reg.relationships.clone();
             Ok(ConvertedRuntime::Lazy(Box::new(
                 move |runtime_id, store, tg| {
-                    let mut conversion_context = ConversionContext {
-                        runtime_id,
-                        store,
-                        tg_context: tg,
-                    };
-                    Ok(TGRuntime::Known(Prisma(PrismaRuntimeData {
-                        name: d.name.clone(),
-                        connection_string_secret: d.connection_string_secret.clone(),
-                        models: models
-                            .into_iter()
-                            .map(|id| {
-                                Ok(conversion_context.tg_context.register_type(store, id.into(), Some(runtime_id))?.into())
-                            })
-                            .collect::<Result<Vec<_>>>()?,
-                        relationships: relationships
-                            .into_iter()
-                            .map(|(_name, rel)| -> Result<_> {
-                                conversion_context.convert_relationship(rel)
-                            })
-                            .collect::<Result<Vec<_>>>()?,
-                        migration_options: None,
-                    })))
+                    with_prisma_runtime(runtime_id, |ctx| {
+                        let reg = &ctx.registry;
+                        let models: Vec<_> = reg
+                            .models
+                            .iter()
+                            .map(|(type_id, _)| type_id.clone())
+                            .collect();
+                        let relationships = reg.relationships.clone();
+                        let mut conversion_context = ConversionContext {
+                            runtime_id,
+                            store,
+                            tg_context: tg,
+                        };
+                        Ok(TGRuntime::Known(Prisma(PrismaRuntimeData {
+                            name: d.name.clone(),
+                            connection_string_secret: d.connection_string_secret.clone(),
+                            models: models
+                                .into_iter()
+                                .map(|id| {
+                                    Ok(conversion_context
+                                        .tg_context
+                                        .register_type(store, id.into(), Some(runtime_id))?
+                                        .into())
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                            relationships: relationships
+                                .into_iter()
+                                .map(|(_name, rel)| -> Result<_> {
+                                    conversion_context.convert_relationship(rel)
+                                })
+                                .collect::<Result<Vec<_>>>()?,
+                            migration_options: None,
+                        })))
+                    })
                 },
             )))
         }

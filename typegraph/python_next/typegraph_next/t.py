@@ -119,7 +119,8 @@ class integer(typedef):
     exclusive_minimum: Optional[int] = None
     exclusive_maximum: Optional[int] = None
     multiple_of: Optional[int] = None
-    enumeration: Optional[List[int]] = (None,)
+    enumeration: Optional[List[int]] = None
+    as_id: bool
 
     def __init__(
         self,
@@ -131,7 +132,8 @@ class integer(typedef):
         multiple_of: Optional[int] = None,
         enumeration: Optional[List[int]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None
+        config: Optional[Dict[str, any]] = None,
+        as_id: bool = False,
     ):
         data = TypeInteger(
             min=min,
@@ -143,7 +145,7 @@ class integer(typedef):
         )
         runtime_config = serialize_record_values(config)
         res = core.integerb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store, data, TypeBase(name=name, runtime_config=runtime_config, as_id=as_id)
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -155,6 +157,7 @@ class integer(typedef):
         self.multiple_of = multiple_of
         self.enumeration = enumeration
         self.runtime_config = runtime_config
+        self.as_id = as_id
 
 
 class float(typedef):
@@ -175,7 +178,7 @@ class float(typedef):
         multiple_of: Optional[float] = None,
         enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None
+        config: Optional[Dict[str, any]] = None,
     ):
         data = TypeFloat(
             min=min,
@@ -219,17 +222,19 @@ class string(typedef):
     pattern: Optional[str] = None
     format: Optional[str] = None
     enumeration: Optional[List[str]] = None
+    as_id: bool
 
     def __init__(
         self,
         *,
-        min: Optional[float] = None,
-        max: Optional[float] = None,
+        min: Optional[int] = None,
+        max: Optional[int] = None,
         pattern: Optional[str] = None,
         format: Optional[str] = None,
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None
+        config: Optional[Dict[str, any]] = None,
+        as_id: bool = False,
     ):
         enum_variants = None
         if enumeration is not None:
@@ -241,7 +246,7 @@ class string(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.stringb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store, data, TypeBase(name=name, runtime_config=runtime_config, as_id=as_id)
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -252,10 +257,11 @@ class string(typedef):
         self.format = format
         self.enumeration = enumeration
         self.runtime_config = runtime_config
+        self.as_id = as_id
 
 
-def uuid() -> string:
-    return string(format="uuid")
+def uuid(*, config: Optional[Dict[str, any]] = None, as_id: bool = False) -> string:
+    return string(format="uuid", config=config, as_id=as_id)
 
 
 def email() -> string:
@@ -305,7 +311,7 @@ class array(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.arrayb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store, data, TypeBase(name=name, runtime_config=runtime_config, as_id=False)
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -335,7 +341,7 @@ class optional(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.optionalb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store, data, TypeBase(name=name, runtime_config=runtime_config, as_id=False)
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -358,7 +364,7 @@ class union(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.unionb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store, data, TypeBase(name=name, runtime_config=runtime_config, as_id=False)
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -380,7 +386,7 @@ class either(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.eitherb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store, data, TypeBase(name=name, runtime_config=runtime_config, as_id=False)
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -391,19 +397,32 @@ class either(typedef):
 
 class struct(typedef):
     props: Dict[str, typedef]
+    additional_props: bool
+    min: Optional[int]
+    max: Optional[int]
 
     def __init__(
         self,
         props: Dict[str, typedef],
         *,
+        additional_props: bool = False,
+        min: Optional[int] = None,
+        max: Optional[int] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None
+        config: Optional[Dict[str, str]] = None,
     ):
-        data = TypeStruct(props=list((name, tpe.id) for (name, tpe) in props.items()))
+        data = TypeStruct(
+            props=list((name, tpe.id) for (name, tpe) in props.items()),
+            additional_props=additional_props,
+            min=min,
+            max=max,
+        )
 
         runtime_config = serialize_record_values(config)
         res = core.structb(
-            store, data, base=TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            base=TypeBase(name=name, runtime_config=runtime_config, as_id=False),
         )
         if isinstance(res, Err):
             raise Exception(res.value)

@@ -22,13 +22,19 @@ impl TypeConversion for StringT {
             }
             None => None,
         };
+
         Ok(TypeNode::String {
             base: gen_base(
-                format!("string_{}", self.id.0),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("string_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
-                self.data.enumeration.clone(),
-            ),
+            )
+            .enum_(self.data.enumeration.clone())
+            .as_id(self.base.as_id)
+            .build(),
             data: StringTypeData {
                 min_length: self.data.min,
                 max_length: self.data.max,

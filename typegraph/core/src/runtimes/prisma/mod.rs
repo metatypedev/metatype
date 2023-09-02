@@ -6,24 +6,67 @@ pub mod relationship;
 pub mod type_generation;
 mod type_utils;
 
+use std::fmt::Debug;
+
 use common::typegraph::runtimes::prisma as cm;
 use common::typegraph::Materializer;
 use indexmap::IndexMap;
 
 use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
-use crate::global_store::Store;
+use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::runtimes::{self as wit, RuntimeId};
 
-use self::relationship::registry::RelationshipRegistry;
-use self::relationship::{Relationship, RelationshipModel, Cardinality};
+use self::relationship::{Cardinality, Relationship, RelationshipModel};
+use self::type_generation::TypeGenContext;
+
+use super::Runtime;
+
+pub struct PrismaRuntimeContext(std::cell::RefCell<Option<TypeGenContext>>);
+
+impl Debug for PrismaRuntimeContext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let inner = self.0.borrow();
+        f.debug_tuple("PrismaRuntimeContext").field(&inner).finish()
+    }
+}
+
+impl Default for PrismaRuntimeContext {
+    fn default() -> Self {
+        Self(std::cell::RefCell::new(Some(TypeGenContext::default())))
+    }
+}
+
+pub fn with_prisma_runtime<R>(
+    runtime_id: RuntimeId,
+    f: impl FnOnce(&mut TypeGenContext) -> Result<R>,
+) -> Result<R> {
+    let mut ctx = with_store(|s| -> Result<_> {
+        match s.get_runtime(runtime_id)? {
+            Runtime::Prisma(_, ctx) => Ok(ctx
+                .0
+                .borrow_mut()
+                .take()
+                .ok_or_else(|| "prisma runtime context already borrowed".to_string())?),
+            _ => Err("not a prisma runtime".to_string()),
+        }
+    })?;
+
+    let res = f(&mut ctx)?;
+
+    with_store(move |s| match s.get_runtime(runtime_id).unwrap() {
+        Runtime::Prisma(_, c) => c.0.borrow_mut().replace(ctx),
+        _ => unreachable!(),
+    });
+
+    Ok(res)
+}
 
 #[derive(Debug)]
 pub struct PrismaMaterializer {
     pub table: String,
     pub operation: String,
-    pub effect: wit::Effect,
 }
 
 impl MaterializerConverter for PrismaMaterializer {
@@ -91,5 +134,3 @@ impl From<Cardinality> for cm::Cardinality {
         }
     }
 }
-
-

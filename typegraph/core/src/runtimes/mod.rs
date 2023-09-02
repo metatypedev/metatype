@@ -8,10 +8,10 @@ pub mod python;
 pub mod random;
 pub mod wasi;
 
-use std::cell::RefCell;
-
 use crate::conversion::runtimes::MaterializerConverter;
-use crate::global_store::{with_store_mut, Store};
+use crate::global_store::{with_store, with_store_mut, Store};
+use crate::runtimes::prisma::with_prisma_runtime;
+use crate::t;
 use crate::wit::core::{RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
@@ -22,8 +22,8 @@ use enum_dispatch::enum_dispatch;
 
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
-use self::prisma::PrismaMaterializer;
 use self::prisma::relationship::registry::RelationshipRegistry;
+use self::prisma::{PrismaMaterializer, PrismaRuntimeContext};
 pub use self::python::PythonMaterializer;
 pub use self::random::RandomMaterializer;
 pub use self::wasi::WasiMaterializer;
@@ -38,7 +38,7 @@ pub enum Runtime {
     Python,
     Random(RandomRuntimeData),
     WasmEdge,
-    Prisma(PrismaRuntimeData, RefCell<RelationshipRegistry>),
+    Prisma(PrismaRuntimeData, PrismaRuntimeContext),
 }
 
 #[derive(Debug)]
@@ -98,6 +98,14 @@ impl Materializer {
     }
 
     fn wasi(runtime_id: RuntimeId, data: WasiMaterializer, effect: wit::Effect) -> Self {
+        Self {
+            runtime_id,
+            effect,
+            data: data.into(),
+        }
+    }
+
+    fn prisma(runtime_id: RuntimeId, data: PrismaMaterializer, effect: wit::Effect) -> Self {
         Self {
             runtime_id,
             effect,
@@ -260,12 +268,26 @@ impl wit::Runtimes for crate::Lib {
 
     fn register_prisma_runtime(data: wit::PrismaRuntimeData) -> Result<wit::RuntimeId, wit::Error> {
         Ok(with_store_mut(|s| {
-            s.register_runtime(Runtime::Prisma(data, RefCell::new(Default::default())))
+            s.register_runtime(Runtime::Prisma(data, Default::default()))
         }))
     }
 
     fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        let (inp, out) = with_prisma_runtime(runtime, |ctx| ctx.find_unique(model.into()))?;
 
-        todo!()
+        let mat = PrismaMaterializer {
+            table: with_store(|s| -> Result<_> {
+                Ok(s.get_type_name(model.into())?
+                    .map(|n| n.to_string())
+                    .unwrap_or_else(|| "prisma model must be named".to_string()))
+            })?,
+            operation: "findUnique".to_string(),
+        };
+
+        let mat_id = with_store_mut(|s| {
+            s.register_materializer(Materializer::prisma(runtime, mat, wit::Effect::None))
+        });
+
+        Ok(t::func(inp, out, mat_id)?.into())
     }
 }

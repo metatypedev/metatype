@@ -28,11 +28,14 @@ impl TypeConversion for Struct {
     fn convert(&self, ctx: &mut TypegraphContext, runtime_id: Option<u32>) -> Result<TypeNode> {
         Ok(TypeNode::Object {
             base: gen_base(
-                format!("object_{}", self.id.0),
+                self.base
+                    .name
+                    .clone()
+                    .unwrap_or_else(|| format!("object_{}", self.id.0)),
                 self.base.runtime_config.clone(),
                 runtime_id.unwrap(),
-                None,
-            ),
+            )
+            .build(),
             data: ObjectTypeData {
                 properties: self
                     .data

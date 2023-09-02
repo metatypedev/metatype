@@ -1,10 +1,10 @@
 use common::typegraph::Materializer;
 use indexmap::IndexMap;
 
-use crate::wit::runtimes::{self as wit, RuntimeId};
+use crate::conversion::runtimes::MaterializerConverter;
 use crate::errors::Result;
 use crate::typegraph::TypegraphContext;
-use crate::conversion::runtimes::MaterializerConverter;
+use crate::wit::runtimes::{self as wit, RuntimeId};
 
 #[derive(Debug)]
 pub enum GraphqlMaterializer {
@@ -44,5 +44,3 @@ impl MaterializerConverter for GraphqlMaterializer {
         })
     }
 }
-
-
