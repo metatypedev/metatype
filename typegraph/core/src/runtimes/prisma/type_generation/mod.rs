@@ -113,6 +113,22 @@ impl TypeGenContext {
         ))
     }
 
+    pub fn create_many(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+        self.registry.manage(model_id)?;
+
+        Ok((
+            // input
+            t::struct_()
+                .prop(
+                    "data",
+                    t::array(self.generate(&InputType::new(model_id))?).build()?,
+                )
+                .build()?,
+            // output
+            t::struct_().prop("count", t::integer().build()?).build()?,
+        ))
+    }
+
     fn generate(&mut self, generator: &impl TypeGen) -> Result<TypeId> {
         let type_name = generator.name(self);
         if let Some(type_id) = self.cache.get(&type_name) {
@@ -129,95 +145,42 @@ impl TypeGenContext {
 mod test {
     use super::*;
     use crate::test_utils::*;
+    use paste::paste;
 
-    #[test]
-    fn test_find_unique() -> Result<()> {
-        let mut context = TypeGenContext::default();
+    macro_rules! test_op {
+        ( $op_name:ident ) => {
+            paste! {
+                #[test]
+                fn [<test _ $op_name>]() -> Result<()> {
+                    let mut context = TypeGenContext::default();
 
-        let (user, post) = models::simple_relationship()?;
-        context.registry.manage(user)?;
+                    let record = models::simple_record()?;
+                    context.registry.manage(record)?;
+                    let (inp, out) = context.$op_name(record)?;
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " Record inp"), tree::print(inp));
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " Record out"), tree::print(out));
 
-        let (inp, out) = context.find_unique(user)?;
-        insta::assert_snapshot!("find_unique User inp", tree::print(inp));
-        insta::assert_snapshot!("find_unique User out", tree::print(out));
+                    let (user, post) = models::simple_relationship()?;
+                    context.registry.manage(user)?;
 
-        let (inp, out) = context.find_unique(post)?;
-        insta::assert_snapshot!("find_unique Post inp", tree::print(inp));
-        insta::assert_snapshot!("find_unique Post out", tree::print(out));
+                    let (inp, out) = context.$op_name(user)?;
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " User inp"), tree::print(inp));
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " User out"), tree::print(out));
 
-        Ok(())
+                    let (inp, out) = context.$op_name(post)?;
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " Post inp"), tree::print(inp));
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " Post out"), tree::print(out));
+
+                    Ok(())
+                }
+
+            }
+        };
     }
 
-    #[test]
-    fn test_find_many() -> Result<()> {
-        let mut context = TypeGenContext::default();
-
-        let record = models::simple_record()?;
-        context.registry.manage(record)?;
-        let (inp, out) = context.find_many(record)?;
-        insta::assert_snapshot!("find_many Record inp", tree::print(inp));
-        insta::assert_snapshot!("find_many Record out", tree::print(out));
-
-        let (user, post) = models::simple_relationship()?;
-        context.registry.manage(user)?;
-
-        let (inp, out) = context.find_many(user)?;
-        insta::assert_snapshot!("find_many User inp", tree::print(inp));
-        insta::assert_snapshot!("find_many User out", tree::print(out));
-
-        let (inp, out) = context.find_many(post)?;
-        insta::assert_snapshot!("find_many Post inp", tree::print(inp));
-        insta::assert_snapshot!("find_many Post out", tree::print(out));
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_find_first() -> Result<()> {
-        // input types are the same as find_many's
-
-        let mut context = TypeGenContext::default();
-
-        let record = models::simple_record()?;
-        context.registry.manage(record)?;
-        let (_inp, out) = context.find_first(record)?;
-        // insta::assert_snapshot!("find_first Record inp", tree::print(inp));
-        insta::assert_snapshot!("find_first Record out", tree::print(out));
-
-        let (user, post) = models::simple_relationship()?;
-        context.registry.manage(user)?;
-
-        let (_inp, out) = context.find_first(user)?;
-        // insta::assert_snapshot!("find_first User inp", tree::print(inp));
-        insta::assert_snapshot!("find_first User out", tree::print(out));
-
-        let (_inp, out) = context.find_first(post)?;
-        // insta::assert_snapshot!("find_first Post inp", tree::print(inp));
-        insta::assert_snapshot!("find_first Post out", tree::print(out));
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_create_one() -> Result<()> {
-        let mut context = TypeGenContext::default();
-
-        let record = models::simple_record()?;
-        context.registry.manage(record)?;
-        let (inp, out) = context.create_one(record)?;
-        insta::assert_snapshot!("create_one Record inp", tree::print(inp));
-        insta::assert_snapshot!("create_one Record out", tree::print(out));
-
-        let (user, post) = models::simple_relationship()?;
-        context.registry.manage(user)?;
-        let (inp, out) = context.create_one(user)?;
-        insta::assert_snapshot!("create_one User inp", tree::print(inp));
-        insta::assert_snapshot!("create_one User out", tree::print(out));
-
-        let (inp, out) = context.create_one(post)?;
-        insta::assert_snapshot!("create_one Post inp", tree::print(inp));
-        insta::assert_snapshot!("create_one Post out", tree::print(out));
-
-        Ok(())
-    }
+    test_op!(find_unique);
+    test_op!(find_many);
+    test_op!(find_first);
+    test_op!(create_one);
+    test_op!(create_many);
 }

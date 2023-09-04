@@ -26,9 +26,9 @@ use types::{
 };
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc,
-    TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct,
-    TypeUnion, TypegraphInitParams, PolicySpec,
+    ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFloat,
+    TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString,
+    TypeStruct, TypeUnion, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -287,7 +287,11 @@ impl wit::core::Core for Lib {
         with_store(|s| s.get_type_repr(type_id.into()))
     }
 
-    fn expose(fns: Vec<(String, CoreTypeId)>, namespace: Vec<String>, default_policy: Option<Vec<PolicySpec>>) -> Result<(), String> {
+    fn expose(
+        fns: Vec<(String, CoreTypeId)>,
+        namespace: Vec<String>,
+        default_policy: Option<Vec<PolicySpec>>,
+    ) -> Result<(), String> {
         typegraph::expose(
             fns.into_iter().map(|(k, ty)| (k, ty.into())).collect(),
             namespace,
@@ -383,7 +387,7 @@ mod tests {
     fn test_no_active_context() -> Result<(), String> {
         with_store_mut(|s| s.reset());
         assert_eq!(
-            Lib::expose(vec![], vec![]),
+            Lib::expose(vec![], vec![], None),
             Err(errors::expected_typegraph_context())
         );
 
@@ -406,7 +410,7 @@ mod tests {
         })
         .unwrap();
         let tpe = t::integer().build()?;
-        let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![]);
+        let res = Lib::expose(vec![("one".to_string(), tpe.into())], vec![], None);
 
         assert_eq!(
             res,
@@ -440,6 +444,7 @@ mod tests {
                 t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
             vec![],
+            None,
         );
         assert_eq!(res, Err(errors::invalid_export_name("")));
 
@@ -449,6 +454,7 @@ mod tests {
                 t::func(t::struct_().build()?, t::integer().build()?, mat)?.into(),
             )],
             vec![],
+            None,
         );
         assert_eq!(res, Err(errors::invalid_export_name("hello_world!")));
 
@@ -480,6 +486,7 @@ mod tests {
                 ),
             ],
             vec![],
+            None,
         );
         assert_eq!(res, Err(errors::duplicate_export_name("one")));
 
@@ -514,6 +521,7 @@ mod tests {
         Lib::expose(
             vec![("one".to_string(), t::func(s, b, mat)?.into())],
             vec![],
+            None,
         )?;
         let typegraph = Lib::finalize_typegraph()?;
         insta::assert_snapshot!(typegraph);

@@ -7597,6 +7597,7 @@ dependencies = [
  "indoc",
  "insta",
  "once_cell",
+ "paste",
  "pathdiff",
  "ptree",
  "regex",

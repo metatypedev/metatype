@@ -145,13 +145,11 @@ macro_rules! prisma_op {
             operation: $name.to_string(),
         };
 
-        let mat_id = with_store_mut(|s| {
-            s.register_materializer(Materializer::prisma($rt, mat, $effect))
-        });
+        let mat_id =
+            with_store_mut(|s| s.register_materializer(Materializer::prisma($rt, mat, $effect)));
 
         Ok(t::func(inp, out, mat_id)?.into())
     }};
-
 
     ( $rt:expr, $model:expr, $fn:ident, $name:expr ) => {
         prisma_op!($rt, $model, $fn, $name, WitEffect::None)
@@ -311,6 +309,22 @@ impl wit::Runtimes for crate::Lib {
     }
 
     fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
-        prisma_op!(runtime, model, create_one, "createOne", WitEffect::Create(false))
+        prisma_op!(
+            runtime,
+            model,
+            create_one,
+            "createOne",
+            WitEffect::Create(false)
+        )
+    }
+
+    fn prisma_create_many(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(
+            runtime,
+            model,
+            create_many,
+            "createMany",
+            WitEffect::Create(false)
+        )
     }
 }
