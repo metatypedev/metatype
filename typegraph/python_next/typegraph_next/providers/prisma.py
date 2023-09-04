@@ -40,3 +40,12 @@ class PrismaRuntime(Runtime):
         if isinstance(type_id, Err):
             raise Exception(type_id.value)
         return t.typedef(type_id.value)
+
+    def find_first(self, model: Union[str, t.typedef]) -> t.typedef:
+        if isinstance(model, str):
+            model = t.ref(model)
+        type_id = runtimes.prisma_find_first(store, self.id, model.id)
+        if isinstance(type_id, Err):
+            raise Exception(type_id.value)
+        return t.typedef(type_id.value)
+

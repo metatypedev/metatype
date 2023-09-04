@@ -20,13 +20,12 @@ use crate::types::{ProxyResolution, Type, TypeFun, TypeId};
 
 mod additional_filters;
 mod count;
-pub mod find_unique;
 mod order_by;
-pub mod out_type;
+mod out_type;
 mod query_unique_where_expr;
-pub mod query_where_expr;
-pub mod where_;
-pub mod with_filters;
+mod query_where_expr;
+mod where_;
+mod with_filters;
 mod with_nested_count;
 
 #[derive(Default, Debug)]

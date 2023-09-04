@@ -132,6 +132,27 @@ pub enum MaterializerData {
 //     }
 // }
 
+macro_rules! prisma_op {
+    ( $rt:expr, $model:expr, $fn:ident, $name:expr ) => {{
+        let (inp, out) = with_prisma_runtime($rt, |ctx| ctx.$fn($model.into()))?;
+
+        let mat = PrismaMaterializer {
+            table: with_store(|s| -> Result<_> {
+                Ok(s.get_type_name($model.into())?
+                    .map(|n| n.to_string())
+                    .unwrap_or_else(|| "prisma model must be named".to_string()))
+            })?,
+            operation: $name.to_string(),
+        };
+
+        let mat_id = with_store_mut(|s| {
+            s.register_materializer(Materializer::prisma($rt, mat, wit::Effect::None))
+        });
+
+        Ok(t::func(inp, out, mat_id)?.into())
+    }};
+}
+
 impl wit::Runtimes for crate::Lib {
     fn get_deno_runtime() -> RuntimeId {
         with_store_mut(|s| s.get_deno_runtime())
@@ -273,40 +294,15 @@ impl wit::Runtimes for crate::Lib {
     }
 
     fn prisma_find_unique(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
-        let (inp, out) = with_prisma_runtime(runtime, |ctx| ctx.find_unique(model.into()))?;
-
-        let mat = PrismaMaterializer {
-            table: with_store(|s| -> Result<_> {
-                Ok(s.get_type_name(model.into())?
-                    .map(|n| n.to_string())
-                    .unwrap_or_else(|| "prisma model must be named".to_string()))
-            })?,
-            operation: "findUnique".to_string(),
-        };
-
-        let mat_id = with_store_mut(|s| {
-            s.register_materializer(Materializer::prisma(runtime, mat, wit::Effect::None))
-        });
-
-        Ok(t::func(inp, out, mat_id)?.into())
+        prisma_op!(runtime, model, find_unique, "findUnique")
     }
 
     fn prisma_find_many(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
-        let (inp, out) = with_prisma_runtime(runtime, |ctx| ctx.find_many(model.into()))?;
+        prisma_op!(runtime, model, find_many, "findMany")
+    }
 
-        let mat = PrismaMaterializer {
-            table: with_store(|s| -> Result<_> {
-                Ok(s.get_type_name(model.into())?
-                    .map(|n| n.to_string())
-                    .unwrap_or_else(|| "prisma model must be named".to_string()))
-            })?,
-            operation: "findMany".to_string(),
-        };
-
-        let mat_id = with_store_mut(|s| {
-            s.register_materializer(Materializer::prisma(runtime, mat, wit::Effect::None))
-        });
-
-        Ok(t::func(inp, out, mat_id)?.into())
+    fn prisma_find_first(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(runtime, model, find_first, "findFirst")
     }
 }
+
