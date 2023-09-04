@@ -11,6 +11,7 @@ from typegraph_next.gen.exports.core import (
     PolicyPerEffect as WitPolicyPerEffect,
 )
 from typegraph_next.gen.exports.core import (
+    PolicySpec as WitPolicySpec,
     PolicySpecPerEffect,
     PolicySpecSimple,
     TypeBase,
@@ -28,7 +29,7 @@ from typegraph_next.gen.exports.core import (
 )
 from typegraph_next.gen.types import Err
 from typegraph_next.graph.typegraph import core, store
-from typegraph_next.policy import Policy, PolicyPerEffect
+from typegraph_next.policy import Policy, PolicyPerEffect, PolicySpec, get_policy_chain
 from typegraph_next.runtimes.deno import Materializer
 
 
@@ -46,24 +47,12 @@ class typedef:
             raise Exception(res.value)
         return res.value
 
-    def with_policy(self, *policies: Union[Policy, PolicyPerEffect]) -> Self:
+    def with_policy(self, *policies: Optional[PolicySpec]) -> Self:
         res = core.with_policy(
             store,
             TypePolicy(
                 tpe=self.id,
-                chain=[
-                    PolicySpecSimple(value=p.id)
-                    if isinstance(p, Policy)
-                    else PolicySpecPerEffect(
-                        value=WitPolicyPerEffect(
-                            create=p.create and p.create.id,
-                            update=p.update and p.update.id,
-                            delete=p.delete and p.delete.id,
-                            none=p.none and p.none.id,
-                        )
-                    )
-                    for p in policies
-                ],
+                chain=get_policy_chain(policies),
             ),
         )
 

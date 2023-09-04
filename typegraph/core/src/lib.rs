@@ -28,7 +28,7 @@ use validation::validate_name;
 use wit::core::{
     ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc,
     TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct,
-    TypeUnion, TypegraphInitParams,
+    TypeUnion, TypegraphInitParams, PolicySpec,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -287,10 +287,11 @@ impl wit::core::Core for Lib {
         with_store(|s| s.get_type_repr(type_id.into()))
     }
 
-    fn expose(fns: Vec<(String, CoreTypeId)>, namespace: Vec<String>) -> Result<(), String> {
+    fn expose(fns: Vec<(String, CoreTypeId)>, namespace: Vec<String>, default_policy: Option<Vec<PolicySpec>>) -> Result<(), String> {
         typegraph::expose(
             fns.into_iter().map(|(k, ty)| (k, ty.into())).collect(),
             namespace,
+            default_policy,
         )
     }
 }

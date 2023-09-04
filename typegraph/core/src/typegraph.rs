@@ -3,9 +3,10 @@
 
 use crate::conversion::runtimes::{convert_materializer, convert_runtime, ConvertedRuntime};
 use crate::conversion::types::{gen_base, TypeConversion};
-use crate::global_store::with_store;
+use crate::global_store::{with_store, with_store_mut};
 use crate::host::abi;
-use crate::types::{Type, TypeFun, TypeId, WrapperTypeData};
+use crate::t;
+use crate::types::{Type, TypeFun, TypeId, WithPolicy, WrapperTypeData};
 use crate::validation::validate_name;
 use crate::{
     errors::{self, Result},
@@ -25,7 +26,8 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::wit::core::{
-    Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypegraphInitParams,
+    Error as TgError, MaterializerId, PolicyId, PolicySpec, RuntimeId, TypePolicy,
+    TypegraphInitParams,
 };
 
 #[derive(Default)]
@@ -171,7 +173,59 @@ pub fn finalize() -> Result<String> {
     serde_json::to_string(&tg).map_err(|e| e.to_string())
 }
 
-pub fn expose(fns: Vec<(String, TypeId)>, namespace: Vec<String>) -> Result<()> {
+pub fn expose(
+    fns: Vec<(String, TypeId)>,
+    namespace: Vec<String>,
+    default_policy: Option<Vec<PolicySpec>>,
+) -> Result<()> {
+    let fns = with_store_mut(move |s| {
+        fns.into_iter()
+            .map(|(name, fn_id)| -> Result<_> {
+                let fn_id = s.resolve_proxy(fn_id.into())?;
+
+                let has_policy = {
+                    let tpe = s.get_type(fn_id)?;
+                    match tpe {
+                        Type::WithPolicy(typ) => {
+                            let tpe = s.get_type(typ.data.tpe.into())?;
+                            match tpe {
+                                Type::Func(_) => {}
+                                _ => {
+                                    return Err(errors::invalid_export_type(
+                                        &name,
+                                        &tpe.to_string(),
+                                    ))
+                                }
+                            }
+                            true
+                        }
+                        Type::Func(_) => false,
+                        _ => return Err(errors::invalid_export_type(&name, &tpe.to_string())),
+                    }
+                };
+
+                Ok((
+                    name,
+                    default_policy
+                        .as_ref()
+                        .filter(|_| !has_policy)
+                        .map(|p| {
+                            s.add_type(|id| {
+                                Type::WithPolicy(WithPolicy {
+                                    id,
+                                    data: TypePolicy {
+                                        tpe: fn_id.into(),
+                                        chain: p.clone(),
+                                    },
+                                })
+                            })
+                        })
+                        .unwrap_or(fn_id),
+                ))
+            })
+            .collect::<Result<Vec<_>>>()
+    })?;
+
     with_tg_mut(|ctx| -> Result<()> {
         if !namespace.is_empty() {
             return Err(String::from("namespaces not supported"));
@@ -200,15 +254,7 @@ impl TypegraphContext {
                 return Err(errors::invalid_export_name(&name));
             }
             let type_id = s.resolve_proxy(type_id)?;
-            let tpe = s.get_type(type_id)?;
-            let tpe = match tpe {
-                Type::WithPolicy(t) => s.get_type(t.data.resolve(s).unwrap())?,
-                _ => tpe,
-            };
 
-            if !matches!(tpe, Type::Func(_)) {
-                return Err(errors::invalid_export_type(&name, &tpe.to_string()));
-            }
             if root.properties.contains_key(&name) {
                 return Err(errors::duplicate_export_name(&name));
             }

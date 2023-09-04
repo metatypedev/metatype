@@ -44,20 +44,20 @@ Meta.test("prisma", async (t) => {
       .on(e);
   });
 
-  // await t.should("insert a simple record", async () => {
-  //   await gql`
-  //     mutation {
-  //       createOneRecord(data: { name: "name", age: 1 }) {
-  //         id
-  //       }
-  //     }
-  //   `
-  //     .expectBody(({ data }) => {
-  //       assert(v4.validate(data.createOneRecord.id));
-  //     })
-  //     .on(e);
-  // });
-  //
+  await t.should("insert a simple record", async () => {
+    await gql`
+      mutation {
+        createOneRecord(data: { name: "name", age: 1 }) {
+          id
+        }
+      }
+    `
+      .expectBody(({ data }) => {
+        assert(v4.validate(data.createOneRecord.id));
+      })
+      .on(e);
+  });
+
   // await t.should("update a simple record", async () => {
   //   const id = "b7831fd1-799d-4b20-9a84-830588f750a2";
   //   await gql`

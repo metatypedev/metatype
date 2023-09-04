@@ -36,9 +36,10 @@ def prisma(g: Graph):
     # ).named("users")
 
     g.expose(
-        findRecord=db.find_unique(record).with_policy(public),
-        findManyRecords=db.find_many(record).with_policy(public),
-        #     createOneRecord=db.create(record),
+        public,
+        findRecord=db.find_unique(record),
+        findManyRecords=db.find_many(record),
+        createOneRecord=db.create(record),
         #     deleteOneRecord=db.delete(record),
         #     updateOneRecord=db.update(record),
         #     createUser=db.create(users),

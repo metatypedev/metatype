@@ -3,16 +3,20 @@
 
 from dataclasses import dataclass
 from re import Pattern
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 from typegraph_next.gen.exports.core import (
     ContextCheckPattern,
     ContextCheckValue,
     Err,
     MaterializerId,
+    PolicySpecPerEffect,
 )
 from typegraph_next.gen.exports.core import (
     Policy as WitPolicy,
+    PolicySpec as WitPolicySpec,
+    PolicySpecSimple,
+    PolicySpecPerEffect as WitPolicyPerEffect,
 )
 from typegraph_next.gen.exports.runtimes import MaterializerDenoPredefined
 from typegraph_next.wit import core, runtimes, store
@@ -87,3 +91,27 @@ class PolicyPerEffect:
     update: Optional[Policy] = None
     delete: Optional[Policy] = None
     none: Optional[Policy] = None
+
+
+SinglePolicySpec = Union[Policy, PolicyPerEffect]
+
+PolicySpec = Union[SinglePolicySpec, List[SinglePolicySpec]]
+
+
+def get_policy_chain(policies: PolicySpec) -> List[WitPolicySpec]:
+    if not isinstance(policies, list) and not isinstance(policies, tuple):
+        policies = (policies,)
+
+    return [
+        PolicySpecSimple(value=p.id)
+        if isinstance(p, Policy)
+        else PolicySpecPerEffect(
+            value=WitPolicyPerEffect(
+                create=p.create and p.create.id,
+                update=p.update and p.update.id,
+                delete=p.delete and p.delete.id,
+                none=p.none and p.none.id,
+            )
+        )
+        for p in policies
+    ]
