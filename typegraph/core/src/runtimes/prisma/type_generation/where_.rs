@@ -1,6 +1,10 @@
+// Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
+// SPDX-License-Identifier: MPL-2.0
+
 use crate::{
     errors::Result,
     global_store::with_store,
+    runtimes::prisma::type_utils::get_type_name,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };
@@ -45,7 +49,7 @@ impl TypeGen for Where {
                         relations: false,
                     });
                 } else {
-                    let attrs = s.get_attributes(self.model_id)?;
+                    let attrs = s.get_attributes((*ty).into())?;
                     match attrs.concrete_type.as_type(s)? {
                         // different runtime
                         Type::Func(_) => continue,
@@ -95,5 +99,24 @@ impl TypeGen for Where {
         let model_name = &context.registry.models.get(&self.model_id).unwrap().name;
         let suffix = if !self.relations { "_norel" } else { "" };
         format!("{model_name}Where{suffix}")
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::super::*;
+    use super::*;
+    use crate::test_utils::*;
+
+    #[test]
+    fn test_generate_where() -> Result<()> {
+        let mut context = TypeGenContext::default();
+        let record = models::simple_record()?;
+        context.registry.manage(record)?;
+
+        let where_type = context.generate(&Where::new(record, false))?;
+        insta::assert_snapshot!("where Record", tree::print(where_type));
+
+        Ok(())
     }
 }

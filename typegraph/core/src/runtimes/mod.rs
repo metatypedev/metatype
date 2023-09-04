@@ -290,4 +290,23 @@ impl wit::Runtimes for crate::Lib {
 
         Ok(t::func(inp, out, mat_id)?.into())
     }
+
+    fn prisma_find_many(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        let (inp, out) = with_prisma_runtime(runtime, |ctx| ctx.find_many(model.into()))?;
+
+        let mat = PrismaMaterializer {
+            table: with_store(|s| -> Result<_> {
+                Ok(s.get_type_name(model.into())?
+                    .map(|n| n.to_string())
+                    .unwrap_or_else(|| "prisma model must be named".to_string()))
+            })?,
+            operation: "findMany".to_string(),
+        };
+
+        let mat_id = with_store_mut(|s| {
+            s.register_materializer(Materializer::prisma(runtime, mat, wit::Effect::None))
+        });
+
+        Ok(t::func(inp, out, mat_id)?.into())
+    }
 }

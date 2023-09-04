@@ -20,8 +20,20 @@ pub trait ConcreteTypeBuilder: TypeBuilder {
         self
     }
 
-    fn as_id(&mut self) -> &mut Self {
-        self.base_mut().as_id = true;
+    fn as_id(&mut self, as_id: bool) -> &mut Self {
+        self.base_mut().as_id = as_id;
+        self
+    }
+
+    fn config(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
+        let runtime_config = &mut self.base_mut().runtime_config;
+        if runtime_config.is_none() {
+            *runtime_config = Some(Default::default());
+        }
+        runtime_config
+            .as_mut()
+            .unwrap()
+            .push((key.into(), value.into()));
         self
     }
 }
@@ -148,8 +160,18 @@ pub fn string() -> StringBuilder {
 }
 
 impl StringBuilder {
+    pub fn format(&mut self, format: impl Into<String>) -> &mut Self {
+        self.data.format = Some(format.into());
+        self
+    }
+
     pub fn enum_(&mut self, values: Vec<String>) -> &mut Self {
-        self.data.enumeration = Some(values);
+        self.data.enumeration = Some(
+            values
+                .into_iter()
+                .map(|v| serde_json::to_string(&serde_json::Value::String(v)).unwrap())
+                .collect(),
+        );
         self
     }
 }

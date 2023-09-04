@@ -56,6 +56,7 @@ impl Store {
     }
 }
 
+#[derive(Debug)]
 pub struct TypeAttributes {
     pub concrete_type: TypeId,
     pub proxy_data: Vec<(String, String)>,

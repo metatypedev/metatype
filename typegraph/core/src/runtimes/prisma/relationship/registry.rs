@@ -53,6 +53,12 @@ impl RelationshipRegistry {
                 let relationships = scan_model(model, self)?;
                 for rel in relationships {
                     let rel_name = rel.name.clone();
+                    let rel = match self.relationships.entry(rel_name.clone()) {
+                        // TODO assert that the relationship is the same
+                        Entry::Occupied(_) => &rel,
+                        Entry::Vacant(e) => e.insert(rel),
+                    };
+
                     if rel.left.model_type == model_id {
                         entry
                             .relationships

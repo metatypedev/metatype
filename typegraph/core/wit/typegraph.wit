@@ -285,6 +285,7 @@ interface runtimes {
 
     register-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
     prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
 }
 
 world typegraph {

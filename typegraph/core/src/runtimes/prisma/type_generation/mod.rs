@@ -102,6 +102,7 @@ mod test {
     #[test]
     fn test_find_unique() -> Result<()> {
         let mut context = TypeGenContext::default();
+
         let (user, post) = models::simple_relationship()?;
         context.registry.manage(user)?;
 
@@ -119,6 +120,13 @@ mod test {
     #[test]
     fn test_find_many() -> Result<()> {
         let mut context = TypeGenContext::default();
+
+        let record = models::simple_record()?;
+        context.registry.manage(record)?;
+        let (inp, out) = context.find_many(record)?;
+        insta::assert_snapshot!("find_many Record inp", tree::print(inp));
+        insta::assert_snapshot!("find_many Record out", tree::print(out));
+
         let (user, post) = models::simple_relationship()?;
         context.registry.manage(user)?;
 

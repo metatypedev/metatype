@@ -30,20 +30,20 @@ Meta.test("prisma", async (t) => {
       .on(e);
   });
 
-  // await t.should("return no data when empty", async () => {
-  //   await gql`
-  //     query {
-  //       findManyRecords {
-  //         id
-  //       }
-  //     }
-  //   `
-  //     .expectData({
-  //       findManyRecords: [],
-  //     })
-  //     .on(e);
-  // });
-  //
+  await t.should("return no data when empty", async () => {
+    await gql`
+      query {
+        findManyRecords {
+          id
+        }
+      }
+    `
+      .expectData({
+        findManyRecords: [],
+      })
+      .on(e);
+  });
+
   // await t.should("insert a simple record", async () => {
   //   await gql`
   //     mutation {

@@ -222,25 +222,24 @@ mod test {
     #[test]
     fn test_explicit_relationship_name() -> Result<(), String> {
         let user = t::struct_()
-            .prop("id", t::integer().as_id().build()?)
+            .prop("id", t::integer().as_id(true).build()?)
             .prop("name", t::string().build()?)
             .prop("posts", t::array(t::proxy("Post").build()?).build()?)
             .named("User")
             .build()?;
 
         let post = t::struct_()
-            .prop("id", t::integer().as_id().build()?)
+            .prop("id", t::integer().as_id(true).build()?)
             .prop("title", t::string().build()?)
             .prop("author", prisma_linkn("User").name("PostAuthor").build()?)
             .named("Post")
             .build()?;
 
-        let registry = with_store(|s| -> Result<_> {
-            let mut reg = RelationshipRegistry::default();
-            reg.manage(user)?;
-            reg.manage(post)?;
-            Ok(reg)
-        })?;
+        let mut reg = RelationshipRegistry::default();
+        reg.manage(user)?;
+        reg.manage(post)?;
+
+        let registry = reg;
 
         insta::assert_debug_snapshot!("explicitly named relationship", registry);
 
@@ -250,7 +249,7 @@ mod test {
     #[test]
     fn test_self_relationship() -> Result<(), String> {
         let node = t::struct_()
-            .prop("id", t::string().as_id().build()?)
+            .prop("id", t::string().as_id(true).build()?)
             .prop("children", t::array(t::proxy("Node").build()?).build()?)
             .prop("parent", t::proxy("Node").build()?)
             .named("Node")

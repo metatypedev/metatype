@@ -81,16 +81,32 @@ pub mod models {
     use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
     use crate::types::TypeId;
 
+    pub fn simple_record() -> Result<TypeId> {
+        t::struct_()
+            .named("Record")
+            .prop(
+                "id",
+                t::string()
+                    .as_id(true)
+                    .format("uuid")
+                    .config("auto", "true")
+                    .build()?,
+            )
+            .prop("name", t::string().build()?)
+            .prop("age", t::optional(t::integer().build()?).build()?)
+            .build()
+    }
+
     pub fn simple_relationship() -> Result<(TypeId, TypeId)> {
         let user = t::struct_()
-            .prop("id", t::integer().as_id().build()?)
+            .prop("id", t::integer().as_id(true).build()?)
             .prop("name", t::string().build()?)
             .prop("posts", t::array(t::proxy("Post").build()?).build()?)
             .named("User")
             .build()?;
 
         let post = t::struct_()
-            .prop("id", t::integer().as_id().build()?)
+            .prop("id", t::integer().as_id(true).build()?)
             .prop("title", t::string().build()?)
             .prop("author", t::proxy("User").build()?)
             .named("Post")
