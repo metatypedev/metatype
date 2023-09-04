@@ -5,6 +5,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 use self::additional_filters::{Distinct, Skip, Take};
+use self::input_type::InputType;
 use self::order_by::OrderBy;
 use self::out_type::OutType;
 use self::query_unique_where_expr::QueryUniqueWhereExpr;
@@ -20,6 +21,7 @@ use crate::types::{ProxyResolution, Type, TypeFun, TypeId};
 
 mod additional_filters;
 mod count;
+mod input_type;
 mod order_by;
 mod out_type;
 mod query_unique_where_expr;
@@ -95,6 +97,19 @@ impl TypeGenContext {
             self.find_many_inp(model_id)?,
             // output
             t::optional(self.generate(&OutType::new(model_id))?).build()?,
+        ))
+    }
+
+    pub fn create_one(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+        self.registry.manage(model_id)?;
+
+        Ok((
+            // input
+            t::struct_()
+                .prop("data", self.generate(&InputType::new(model_id))?)
+                .build()?,
+            // output
+            self.generate(&OutType::new(model_id))?,
         ))
     }
 
@@ -179,6 +194,29 @@ mod test {
         let (_inp, out) = context.find_first(post)?;
         // insta::assert_snapshot!("find_first Post inp", tree::print(inp));
         insta::assert_snapshot!("find_first Post out", tree::print(out));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_create_one() -> Result<()> {
+        let mut context = TypeGenContext::default();
+
+        let record = models::simple_record()?;
+        context.registry.manage(record)?;
+        let (inp, out) = context.create_one(record)?;
+        insta::assert_snapshot!("create_one Record inp", tree::print(inp));
+        insta::assert_snapshot!("create_one Record out", tree::print(out));
+
+        let (user, post) = models::simple_relationship()?;
+        context.registry.manage(user)?;
+        let (inp, out) = context.create_one(user)?;
+        insta::assert_snapshot!("create_one User inp", tree::print(inp));
+        insta::assert_snapshot!("create_one User out", tree::print(out));
+
+        let (inp, out) = context.create_one(post)?;
+        insta::assert_snapshot!("create_one Post inp", tree::print(inp));
+        insta::assert_snapshot!("create_one Post out", tree::print(out));
 
         Ok(())
     }

@@ -304,5 +304,8 @@ impl wit::Runtimes for crate::Lib {
     fn prisma_find_first(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
         prisma_op!(runtime, model, find_first, "findFirst")
     }
-}
 
+    fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(runtime, model, create_one, "createOne")
+    }
+}

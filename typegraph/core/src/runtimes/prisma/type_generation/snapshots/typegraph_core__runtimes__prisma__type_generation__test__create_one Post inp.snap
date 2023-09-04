@@ -1,0 +1,22 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+expression: "tree::print(inp)"
+---
+root: struct #44
+└─ [data]: struct '_PostInputType' #43
+   ├─ [id]: optional #34
+   │  └─ item: integer #14
+   ├─ [title]: string #15
+   └─ [author]: optional #42
+      └─ item: struct #41
+         ├─ [create]: optional #36
+         │  └─ item: struct '_UserInputType_excluding_UserToPost' #35
+         │     ├─ [id]: integer #9
+         │     └─ [name]: string #10
+         └─ [connect]: optional #40
+            └─ item: struct 'UserWhere_norel' #39
+               ├─ [id]: optional #37
+               │  └─ item: integer #9
+               └─ [name]: optional #38
+                  └─ item: string #10
+

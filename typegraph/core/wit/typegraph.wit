@@ -287,6 +287,7 @@ interface runtimes {
     prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
     prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
     prisma-find-first: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
 }
 
 world typegraph {

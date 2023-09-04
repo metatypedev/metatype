@@ -64,6 +64,7 @@ impl TypeGen for OutType {
                     match s.get_attributes(id.into())?.concrete_type.as_type(s)? {
                         Type::Func(_) => {
                             // skip, other runtime
+                            continue;
                         }
                         _ => props.push(Prop {
                             key: k.to_string(),

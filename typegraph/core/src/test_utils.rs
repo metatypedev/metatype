@@ -106,7 +106,10 @@ pub mod models {
             .build()?;
 
         let post = t::struct_()
-            .prop("id", t::integer().as_id(true).build()?)
+            .prop(
+                "id",
+                t::integer().as_id(true).config("auto", "true").build()?,
+            )
             .prop("title", t::string().build()?)
             .prop("author", t::proxy("User").build()?)
             .named("Post")
