@@ -9,8 +9,8 @@ use crate::errors::Result;
 use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
-    TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId, TypeInteger, TypeOptional,
-    TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeFuncWithApply, TypeId, TypeInteger,
+    TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 
 pub trait TypeData {
@@ -60,6 +60,7 @@ pub type Optional = ConcreteType<TypeOptional>;
 pub type Union = ConcreteType<TypeUnion>;
 pub type Either = ConcreteType<TypeEither>;
 pub type WithPolicy = WrapperType<TypePolicy>;
+pub type WithApply = WrapperType<TypeFuncWithApply>;
 
 #[derive(Debug)]
 #[enum_dispatch(TypeFun, TypeConversion)]
@@ -76,6 +77,7 @@ pub enum Type {
     Union(Union),
     Either(Either),
     WithPolicy(WithPolicy),
+    WithApply(WithApply),
 }
 
 #[enum_dispatch]

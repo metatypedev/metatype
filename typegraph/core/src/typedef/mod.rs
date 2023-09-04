@@ -13,3 +13,4 @@ pub mod proxy;
 pub mod string;
 pub mod struct_;
 pub mod union;
+pub mod with_apply;
