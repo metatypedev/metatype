@@ -28,11 +28,7 @@ export function serializeInjection(
     const noOtherType = Object.keys(value).length == 0;
     const isPerEffect = noOtherType &&
       symbols
-        .map((symbol) => (value as any)?.[symbol] !== undefined)
-        .reduce(
-          (result, curr) => result || curr,
-          false,
-        );
+        .some((symbol) => (value as any)?.[symbol] !== undefined);
 
     if (isPerEffect) {
       const dataEntries = symbols.map(
