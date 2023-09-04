@@ -189,6 +189,16 @@ impl Relationship {
         }
     }
 
+    pub fn side_of_type(&self, type_id: TypeId) -> Option<Side> {
+        if self.left.wrapper_type == type_id {
+            Some(Side::Left)
+        } else if self.right.wrapper_type == type_id {
+            Some(Side::Right)
+        } else {
+            None
+        }
+    }
+
     pub fn get(&self, side: Side) -> &RelationshipModel {
         match side {
             Side::Left => &self.left,

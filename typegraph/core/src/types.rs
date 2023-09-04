@@ -30,6 +30,12 @@ impl From<CoreTypeId> for TypeId {
     }
 }
 
+impl From<&CoreTypeId> for TypeId {
+    fn from(id: &CoreTypeId) -> Self {
+        Self(*id)
+    }
+}
+
 impl From<TypeId> for CoreTypeId {
     fn from(id: TypeId) -> Self {
         id.0

@@ -63,7 +63,7 @@ root: struct #125
 │     │        │  ├─ variant_4: struct #17
 │     │        │  │  ├─ [contains]: string #9
 │     │        │  │  └─ [mode]: optional #16
-│     │        │  │     └─ item: string #15 enum{ 'insensitive' }
+│     │        │  │     └─ item: string #15 enum{ '"insensitive"' }
 │     │        │  ├─ variant_5: struct #18
 │     │        │  │  └─ [search]: string #9
 │     │        │  └─ variant_6: struct #19
@@ -85,7 +85,7 @@ root: struct #125
 │     │              ├─ variant_4: struct #17
 │     │              │  ├─ [contains]: string #9
 │     │              │  └─ [mode]: optional #16
-│     │              │     └─ item: string #15 enum{ 'insensitive' }
+│     │              │     └─ item: string #15 enum{ '"insensitive"' }
 │     │              ├─ variant_5: struct #18
 │     │              │  └─ [search]: string #9
 │     │              └─ variant_6: struct #19
@@ -107,58 +107,58 @@ root: struct #125
 │        ├─ [id]: optional '_Sort' #49
 │        │  └─ item: union #48
 │        │     ├─ variant_0: struct #47
-│        │     │  └─ [sort]: string '_SortOrder' #45 enum{ 'asc', 'desc' }
-│        │     └─ variant_1: string '_SortOrder' #45 enum{ 'asc', 'desc' }
+│        │     │  └─ [sort]: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
 │        ├─ [title]: optional '_Sort' #49
 │        │  └─ item: union #48
 │        │     ├─ variant_0: struct #47
-│        │     │  └─ [sort]: string '_SortOrder' #45 enum{ 'asc', 'desc' }
-│        │     └─ variant_1: string '_SortOrder' #45 enum{ 'asc', 'desc' }
+│        │     │  └─ [sort]: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
+│        │     └─ variant_1: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
 │        └─ [author]: optional #116
 │           └─ item: array '_70_OrderBy' #89
 │              └─ item: struct #88
 │                 ├─ [id]: optional '_Sort' #49
 │                 │  └─ item: union #48
 │                 │     ├─ variant_0: struct #47
-│                 │     │  └─ [sort]: string '_SortOrder' #45 enum{ 'asc', 'desc' }
-│                 │     └─ variant_1: string '_SortOrder' #45 enum{ 'asc', 'desc' }
+│                 │     │  └─ [sort]: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
+│                 │     └─ variant_1: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
 │                 ├─ [name]: optional '_Sort' #49
 │                 │  └─ item: union #48
 │                 │     ├─ variant_0: struct #47
-│                 │     │  └─ [sort]: string '_SortOrder' #45 enum{ 'asc', 'desc' }
-│                 │     └─ variant_1: string '_SortOrder' #45 enum{ 'asc', 'desc' }
+│                 │     │  └─ [sort]: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
+│                 │     └─ variant_1: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
 │                 └─ [posts]: optional '_SortByAggregates' #87
 │                    └─ item: struct #86
 │                       ├─ [_count]: optional '_Sort' #49
 │                       │  └─ item: union #48
 │                       │     ├─ variant_0: struct #47
-│                       │     │  └─ [sort]: string '_SortOrder' #45 enum{ 'asc', 'desc' }
-│                       │     └─ variant_1: string '_SortOrder' #45 enum{ 'asc', 'desc' }
+│                       │     │  └─ [sort]: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
+│                       │     └─ variant_1: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
 │                       ├─ [_avg]: optional '_Sort' #49
 │                       │  └─ item: union #48
 │                       │     ├─ variant_0: struct #47
-│                       │     │  └─ [sort]: string '_SortOrder' #45 enum{ 'asc', 'desc' }
-│                       │     └─ variant_1: string '_SortOrder' #45 enum{ 'asc', 'desc' }
+│                       │     │  └─ [sort]: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
+│                       │     └─ variant_1: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
 │                       ├─ [_sum]: optional '_Sort' #49
 │                       │  └─ item: union #48
 │                       │     ├─ variant_0: struct #47
-│                       │     │  └─ [sort]: string '_SortOrder' #45 enum{ 'asc', 'desc' }
-│                       │     └─ variant_1: string '_SortOrder' #45 enum{ 'asc', 'desc' }
+│                       │     │  └─ [sort]: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
+│                       │     └─ variant_1: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
 │                       ├─ [_min]: optional '_Sort' #49
 │                       │  └─ item: union #48
 │                       │     ├─ variant_0: struct #47
-│                       │     │  └─ [sort]: string '_SortOrder' #45 enum{ 'asc', 'desc' }
-│                       │     └─ variant_1: string '_SortOrder' #45 enum{ 'asc', 'desc' }
+│                       │     │  └─ [sort]: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
+│                       │     └─ variant_1: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
 │                       └─ [_max]: optional '_Sort' #49
 │                          └─ item: union #48
 │                             ├─ variant_0: struct #47
-│                             │  └─ [sort]: string '_SortOrder' #45 enum{ 'asc', 'desc' }
-│                             └─ variant_1: string '_SortOrder' #45 enum{ 'asc', 'desc' }
+│                             │  └─ [sort]: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
+│                             └─ variant_1: string '_SortOrder' #45 enum{ '"asc"', '"desc"' }
 ├─ [take]: optional #120
 │  └─ item: integer '_Take' #56
 ├─ [skip]: optional #121
 │  └─ item: integer '_Skip' #58
 └─ [distinct]: optional #124
    └─ item: array '_KeysOf_Post[]' #123
-      └─ item: string '_KeysOf_Post' #122 enum{ 'id', 'title', 'author' }
+      └─ item: string '_KeysOf_Post' #122 enum{ '"id"', '"title"', '"author"' }
 
