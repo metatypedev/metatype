@@ -17,7 +17,8 @@ impl TypeConversion for WithApply {
             let tpe = s.get_type(self.data.tpe_func)?;
             let type_node = tpe.convert(ctx, runtime_id)?;
             // TODO:
-            // self.data.tpe_apply;
+            // self.data.apply_value;
+            // validate with serde
             Ok(type_node)
         })
     }
@@ -25,7 +26,7 @@ impl TypeConversion for WithApply {
 
 impl TypeData for TypeFuncWithApply {
     fn get_display_params_into(&self, params: &mut Vec<String>) {
-        params.push(format!("apply='[{}]'", "TODO"));
+        params.push(format!("apply='[{}]'", self.apply_value));
     }
 
     fn variant_name(&self) -> String {

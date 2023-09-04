@@ -98,7 +98,7 @@ interface core {
 
     record type-func-with-apply {
         tpe-func: type-id,
-        tpe-apply: type-id
+        apply-value: string
     }
     with-apply: func(data: type-func-with-apply) -> result<type-id, error>
 

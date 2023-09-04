@@ -413,6 +413,48 @@ export class Func<
     this.out = out;
     this.mat = mat;
   }
+
+  apply(value: Record<string, unknown>): this {
+    const asApplyValue = (node: any, path: string[] = []) => {
+      if (node === null || node === undefined) {
+        throw new Error(
+          `unsupported value "${node}" at ${path.join(".")}`,
+        );
+      }
+      if (node instanceof Typedef) {
+        return { target: node._id };
+      }
+      if (typeof node === "object") {
+        if (Array.isArray(node)) {
+          return { injection: node };
+        }
+        const newObj = {} as any;
+        for (const [k, v] of Object.entries(node)) {
+          newObj[k] = asApplyValue(v, [...path, k]);
+        }
+        return newObj;
+      }
+      const allowed = ["number", "string", "boolean"];
+      if (allowed.includes(typeof node)) {
+        return { injection: node };
+      }
+      throw new Error(
+        `unsupported type "${typeof node}" at ${path.join(".")}`,
+      );
+    };
+    const wrapperFuncId = core.withApply({
+      tpeFunc: this._id,
+      applyValue: JSON.stringify(asApplyValue(value)),
+    });
+
+    return new Proxy(this, {
+      get(target, prop, receiver) {
+        return prop === "_id"
+          ? wrapperFuncId
+          : Reflect.get(target, prop, receiver);
+      },
+    }) as this;
+  }
 }
 
 export function func<
