@@ -1,0 +1,34 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+expression: "tree::print(inp)"
+---
+root: struct #38
+├─ [data]: struct '_User_UpdateInput' #35
+│  ├─ [id]: optional #21
+│  │  └─ item: integer #13
+│  ├─ [name]: optional #22
+│  │  └─ item: string #14
+│  └─ [posts]: optional #34
+│     └─ item: struct #33
+│        ├─ [create]: optional #25
+│        │  └─ item: struct '_Post_CreateInput_excluding_UserToPost' #24
+│        │     ├─ [id]: optional #23
+│        │     │  └─ item: integer #18
+│        │     └─ [title]: string #19
+│        ├─ [connect]: optional #29
+│        │  └─ item: struct 'PostWhere_norel' #28
+│        │     ├─ [id]: optional #26
+│        │     │  └─ item: integer #18
+│        │     └─ [title]: optional #27
+│        │        └─ item: string #19
+│        └─ [createMany]: optional #32
+│           └─ item: struct #31
+│              └─ [data]: array '_Post_CreateInput_excluding_UserToPost[]' #30
+│                 └─ item: struct '_Post_CreateInput_excluding_UserToPost' #24
+│                    ├─ [id]: optional #23
+│                    │  └─ item: integer #18
+│                    └─ [title]: string #19
+└─ [where]: struct 'QueryUniqueUserWhereInput' #37
+   └─ [id]: optional #36
+      └─ item: integer #13
+

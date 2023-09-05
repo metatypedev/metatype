@@ -3,7 +3,7 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
 root: struct #7
-└─ [data]: struct '_RecordInputType' #6
+└─ [data]: struct '_Record_CreateInput' #6
    ├─ [id]: optional #5
    │  └─ item: string #0
    ├─ [name]: string #1

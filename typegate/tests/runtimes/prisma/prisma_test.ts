@@ -58,67 +58,67 @@ Meta.test("prisma", async (t) => {
       .on(e);
   });
 
-  // await t.should("update a simple record", async () => {
-  //   const id = "b7831fd1-799d-4b20-9a84-830588f750a2";
-  //   await gql`
-  //     mutation {
-  //       createOneRecord(
-  //         data: {
-  //           id: ${id}
-  //           name: "name"
-  //           age: 1
-  //         }
-  //       ) {
-  //         id
-  //       }
-  //     }
-  //   `
-  //     .expectData({
-  //       createOneRecord: { id },
-  //     })
-  //     .on(e);
-  //
-  //   await gql`
-  //     mutation {
-  //       updateOneRecord(
-  //         where: {
-  //           id: ${id}
-  //         }
-  //         data: {
-  //           name: "name2"
-  //         }
-  //       ) {
-  //         id
-  //         name
-  //       }
-  //     }
-  //   `
-  //     .expectData({
-  //       updateOneRecord: { id, name: "name2" },
-  //     })
-  //     .on(e);
-  //
-  //   await gql`
-  //     query {
-  //       findManyRecords(
-  //         where: { id: ${id} }
-  //       ) {
-  //         id
-  //         name
-  //       }
-  //     }
-  //   `
-  //     .expectData({
-  //       findManyRecords: [
-  //         {
-  //           id,
-  //           name: "name2",
-  //         },
-  //       ],
-  //     })
-  //     .on(e);
-  // });
-  //
+  await t.should("update a simple record", async () => {
+    const id = "b7831fd1-799d-4b20-9a84-830588f750a2";
+    await gql`
+      mutation {
+        createOneRecord(
+          data: {
+            id: ${id}
+            name: "name"
+            age: 1
+          }
+        ) {
+          id
+        }
+      }
+    `
+      .expectData({
+        createOneRecord: { id },
+      })
+      .on(e);
+
+    await gql`
+      mutation {
+        updateOneRecord(
+          where: {
+            id: ${id}
+          }
+          data: {
+            name: "name2"
+          }
+        ) {
+          id
+          name
+        }
+      }
+    `
+      .expectData({
+        updateOneRecord: { id, name: "name2" },
+      })
+      .on(e);
+
+    await gql`
+      query {
+        findManyRecords(
+          where: { id: ${id} }
+        ) {
+          id
+          name
+        }
+      }
+    `
+      .expectData({
+        findManyRecords: [
+          {
+            id,
+            name: "name2",
+          },
+        ],
+      })
+      .on(e);
+  });
+
   // await t.should("delete a simple record", async () => {
   //   const id = "b7831fd1-799d-4b20-9a84-830588f750a3";
   //   await gql`

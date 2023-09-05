@@ -106,7 +106,7 @@ impl TypeGenContext {
         Ok((
             // input
             t::struct_()
-                .prop("data", self.generate(&InputType::new(model_id))?)
+                .prop("data", self.generate(&InputType::for_create(model_id))?)
                 .build()?,
             // output
             self.generate(&OutType::new(model_id))?,
@@ -121,11 +121,28 @@ impl TypeGenContext {
             t::struct_()
                 .prop(
                     "data",
-                    t::array(self.generate(&InputType::new(model_id))?).build()?,
+                    t::array(self.generate(&InputType::for_create(model_id))?).build()?,
                 )
                 .build()?,
             // output
             t::struct_().prop("count", t::integer().build()?).build()?,
+        ))
+    }
+
+    pub fn update_one(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+        self.registry.manage(model_id)?;
+
+        Ok((
+            // input
+            t::struct_()
+                .prop("data", self.generate(&InputType::for_update(model_id))?)
+                .prop(
+                    "where",
+                    self.generate(&QueryUniqueWhereExpr::new(model_id))?,
+                )
+                .build()?,
+            //output
+            self.generate(&OutType::new(model_id))?,
         ))
     }
 
@@ -183,4 +200,5 @@ mod test {
     test_op!(find_first);
     test_op!(create_one);
     test_op!(create_many);
+    test_op!(update_one);
 }

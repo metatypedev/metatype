@@ -8,18 +8,44 @@ use crate::runtimes::prisma::{relationship::Cardinality, type_generation::where_
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
 use crate::types::{Type, TypeId};
 
-use super::TypeGen;
+use super::{TypeGen, TypeGenContext};
+
+
+#[derive(Clone, Copy)]
+enum Operation {
+    Create,
+    Update,
+}
+
+impl Operation {
+    fn is_update(&self) -> bool {
+        match self {
+            Operation::Create => false,
+            Operation::Update => true,
+        }
+    }
+}
 
 pub struct InputType {
     model_id: TypeId,
     skip_rel: Vec<String>,
+    operation: Operation,
 }
 
 impl InputType {
-    pub fn new(model_id: TypeId) -> Self {
+    pub fn for_create(model_id: TypeId) -> Self {
         Self {
             model_id,
             skip_rel: vec![],
+            operation: Operation::Create,
+        }
+    }
+
+    pub fn for_update(model_id: TypeId) -> Self {
+        Self {
+            model_id,
+            skip_rel: vec![],
+            operation: Operation::Update,
         }
     }
 }
@@ -27,8 +53,8 @@ impl InputType {
 impl TypeGen for InputType {
     fn generate(
         &self,
-        context: &mut super::TypeGenContext,
-    ) -> crate::errors::Result<crate::types::TypeId> {
+        context: &mut TypeGenContext,
+    ) -> Result<TypeId> {
         enum PropType {
             Scalar {
                 type_id: TypeId,
@@ -88,10 +114,9 @@ impl TypeGen for InputType {
         for prop in props.into_iter() {
             match prop.typ {
                 PropType::Scalar { type_id, auto } => {
-                    // TODO update??
                     builder.prop(
                         prop.key,
-                        if auto {
+                        if self.operation.is_update() || auto {
                             t::optional(type_id).build()?
                         } else {
                             type_id
@@ -111,6 +136,7 @@ impl TypeGen for InputType {
                             v.push(rel_name.clone());
                             v
                         },
+                        operation: Operation::Create,
                     })?;
                     let mut inner = t::struct_();
                     inner.prop("create", t::optional(create).build()?);
@@ -132,6 +158,7 @@ impl TypeGen for InputType {
                         );
                     }
 
+                    // TODO what if cardinality is Cardinality::One ??
                     builder.prop(prop.key, t::optional(inner.max(1).build()?).build()?);
                 }
             }
@@ -140,7 +167,7 @@ impl TypeGen for InputType {
         builder.named(self.name(context)).build()
     }
 
-    fn name(&self, context: &super::TypeGenContext) -> String {
+    fn name(&self, context: &TypeGenContext) -> String {
         let model_name = context
             .registry
             .models
@@ -153,6 +180,10 @@ impl TypeGen for InputType {
         } else {
             format!("_excluding_{}", self.skip_rel.join("And"))
         };
-        format!("_{model_name}InputType{suffix}")
+        let op = match self.operation {
+            Operation::Create => "Create",
+            Operation::Update => "Update",
+        };
+        format!("_{model_name}_{op}Input{suffix}")
     }
 }

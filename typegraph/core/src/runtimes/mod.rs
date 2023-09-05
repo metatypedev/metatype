@@ -327,4 +327,14 @@ impl wit::Runtimes for crate::Lib {
             WitEffect::Create(false)
         )
     }
+
+    fn prisma_update_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(
+            runtime,
+            model,
+            update_one,
+            "updateOne",
+            WitEffect::Update(false)
+        )
+    }
 }

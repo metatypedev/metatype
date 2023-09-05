@@ -41,7 +41,7 @@ def prisma(g: Graph):
         findManyRecords=db.find_many(record),
         createOneRecord=db.create(record),
         #     deleteOneRecord=db.delete(record),
-        #     updateOneRecord=db.update(record),
+        updateOneRecord=db.update(record),
         #     createUser=db.create(users),
         #     findUniqueUser=db.find_unique(users),
         #     findMessages=db.find_many(messages),

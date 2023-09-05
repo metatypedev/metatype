@@ -3,14 +3,14 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(inp)"
 ---
 root: struct #33
-└─ [data]: array '_UserInputType[]' #32
-   └─ item: struct '_UserInputType' #31
+└─ [data]: array '_User_CreateInput[]' #32
+   └─ item: struct '_User_CreateInput' #31
       ├─ [id]: integer #11
       ├─ [name]: string #12
       └─ [posts]: optional #30
          └─ item: struct #29
             ├─ [create]: optional #21
-            │  └─ item: struct '_PostInputType_excluding_UserToPost' #20
+            │  └─ item: struct '_Post_CreateInput_excluding_UserToPost' #20
             │     ├─ [id]: optional #19
             │     │  └─ item: integer #16
             │     └─ [title]: string #17
@@ -22,8 +22,8 @@ root: struct #33
             │        └─ item: string #17
             └─ [createMany]: optional #28
                └─ item: struct #27
-                  └─ [data]: array '_PostInputType_excluding_UserToPost[]' #26
-                     └─ item: struct '_PostInputType_excluding_UserToPost' #20
+                  └─ [data]: array '_Post_CreateInput_excluding_UserToPost[]' #26
+                     └─ item: struct '_Post_CreateInput_excluding_UserToPost' #20
                         ├─ [id]: optional #19
                         │  └─ item: integer #16
                         └─ [title]: string #17
