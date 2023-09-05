@@ -26,7 +26,16 @@ typegraph("test-apply", (g) => {
       .apply({
         input: {
           id: 1,
+        },
+      })
+      .apply({
+        input: {
           infos: { age: t.integer({ min: 14 }) },
+        },
+      })
+      .apply({
+        input: {
+          id: 2,
         },
       })
       .withPolicy(pub),

@@ -203,7 +203,6 @@ impl TypegraphContext {
             let tpe = s.get_type(type_id)?;
             let tpe = match tpe {
                 Type::WithPolicy(t) => t.data.get_wrapped_type(s).unwrap(),
-                Type::WithApply(t) => t.data.get_wrapped_type(s).unwrap(),
                 _ => tpe,
             };
             if !matches!(tpe, Type::Func(_)) {

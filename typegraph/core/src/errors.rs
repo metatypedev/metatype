@@ -35,6 +35,10 @@ pub fn invalid_export_type(name: &str, got: &str) -> TgError {
     format!("expected a Func to be exposed, got {got} under the name '{name}'")
 }
 
+pub fn expected_typenode_func(got: &str) -> TgError {
+    format!("expected a Function, got {got}")
+}
+
 pub fn invalid_export_name(name: &str) -> TgError {
     format!("invalid export name '{name}': allowed characters are ascii letters and underscores")
 }
