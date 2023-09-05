@@ -54,12 +54,12 @@ impl WrapperTypeData for TypeFuncWithApply {
     }
 }
 
-fn convert_applied_input_as_struct(root: Value) -> Result<u32> {
+fn convert_applied_input_as_struct(root: Value, depth: u32) -> Result<u32> {
     match root {
         Value::Object(ref props) => {
             for (k, _v) in props.iter() {
                 // check if ApplyValue leaf
-                if (k.eq("id") || k.eq("set")) && props.len() == 1 {
+                if (k.eq("id") || k.eq("set")) && depth != 0 && props.len() == 1 {
                     let value: Result<ApplyValue, String> =
                         serde_json::from_value(root.clone()).map_err(|e| e.to_string());
                     if let Ok(value) = value {
@@ -70,7 +70,7 @@ fn convert_applied_input_as_struct(root: Value) -> Result<u32> {
                         }
                     }
                 }
-                // traverse_applied_input(v))
+                // new_map.set(*k, traverse_applied_input(v, depth + 1))
             }
         }
         value => return Err(format!("expected object, got {:?}", value)),
@@ -82,8 +82,8 @@ fn convert_applied_input_as_struct(root: Value) -> Result<u32> {
 // Examples:
 // 1. struct(a, struct(b, c)) is a supertype of itself
 // 2. two types are the same regardless of their other attributes, or wrappers(opt, injection)
-// struct(a, struct(b, c)) is a supertype of struct(a, struct(c.max(1234))))
-// struct(optional(a)) is a supertype of struct(a)
+//  struct(a, struct(b, c.min(2))) is a supertype of struct(struct(c.max(1))))
+//  struct(optional(a)) is a supertype of struct(a) (reverse is true)
 fn validate_supertype(_left_id: u32, _right_id: u32) -> Result<()> {
     // TODO:
     Ok(())
@@ -92,7 +92,7 @@ fn validate_supertype(_left_id: u32, _right_id: u32) -> Result<()> {
 fn build_applied_input(input_id: u32, apply_value: String) -> Result<u32> {
     let root: Value = serde_json::from_str(&apply_value).unwrap();
 
-    let new_id = convert_applied_input_as_struct(root)?;
+    let new_id = convert_applied_input_as_struct(root, 0)?;
 
     validate_supertype(input_id, new_id)?;
 
