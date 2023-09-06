@@ -70,6 +70,34 @@ impl Store {
             .ok_or_else(|| errors::object_not_found("type", type_id))
     }
 
+    pub fn get_type_by_path(
+        &self,
+        struct_id: TypeId,
+        path: &Vec<String>,
+    ) -> Result<(&Type, TypeId), TgError> {
+        let mut ret = (self.get_type(struct_id)?, struct_id);
+
+        let mut curr_path = vec![];
+        let mut pos = curr_path.len();
+        while pos != path.len() {
+            let mut found = false;
+            if let Type::Struct(t) = ret.0 {
+                for (k, v) in t.data.props.iter() {
+                    if k.eq(&path[pos]) {
+                        ret = (self.get_type(*v)?, *v);
+                        found = true;
+                    }
+                }
+            }
+            if !found {
+                return Err(errors::object_not_found_at_path(&curr_path));
+            }
+            curr_path.push(path[pos].clone());
+            pos = curr_path.len();
+        }
+        Ok(ret)
+    }
+
     pub fn get_type_mut(&mut self, type_id: TypeId) -> Result<&mut Type, TgError> {
         self.types
             .get_mut(type_id as usize)

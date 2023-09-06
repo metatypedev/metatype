@@ -55,6 +55,10 @@ pub fn object_not_found(kind: &str, id: u32) -> TgError {
     format!("{kind} #{id} not found")
 }
 
+pub fn object_not_found_at_path(path: &[String]) -> TgError {
+    format!("object not found at path {}", path.join("."))
+}
+
 pub fn unknown_predefined_function(name: &str, runtime: &str) -> TgError {
     format!("unknown predefined function {name} for runtime {runtime}")
 }

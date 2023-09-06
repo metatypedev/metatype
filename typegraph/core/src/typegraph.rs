@@ -334,4 +334,14 @@ impl TypegraphContext {
     pub fn find_type_index_by_store_id(&self, id: &u32) -> Option<u32> {
         self.mapping.types.get(id).copied()
     }
+
+    pub fn get_correct_id(&self, id: u32) -> Result<u32> {
+        with_store(|s| {
+            let id = s.resolve_proxy(id)?;
+            if let Some(index) = self.find_type_index_by_store_id(&id) {
+                return Ok(index);
+            }
+            Err(format!("unable to find type for store id {}", id))
+        })
+    }
 }

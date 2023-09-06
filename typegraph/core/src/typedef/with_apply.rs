@@ -9,7 +9,8 @@ use crate::{
     global_store::{with_store, Store},
     typegraph::TypegraphContext,
     types::{Type, TypeData, WithApply, WrapperTypeData},
-    wit::core::TypeFuncWithApply,
+    wit::core::{Core, TypeBase, TypeFuncWithApply, TypeStruct},
+    Lib,
 };
 use common::typegraph::TypeNode;
 use serde::{Deserialize, Serialize};
@@ -29,7 +30,8 @@ impl TypeConversion for WithApply {
             let mut type_node = tpe.convert(ctx, runtime_id)?;
             match type_node.borrow_mut() {
                 TypeNode::Function { data, .. } => {
-                    data.input = build_applied_input(data.input, self.data.apply_value.clone())?
+                    data.input =
+                        build_applied_input(ctx, data.input, self.data.apply_value.clone())?
                 }
                 _ => return Err(errors::expected_typenode_func(type_node.type_name())),
             }
@@ -54,50 +56,65 @@ impl WrapperTypeData for TypeFuncWithApply {
     }
 }
 
-fn convert_applied_input_as_struct(root: Value, depth: u32) -> Result<u32> {
-    match root {
-        Value::Object(ref props) => {
-            for (k, _v) in props.iter() {
-                // check if ApplyValue leaf
-                if (k.eq("id") || k.eq("set")) && depth != 0 && props.len() == 1 {
-                    let value: Result<ApplyValue, String> =
-                        serde_json::from_value(root.clone()).map_err(|e| e.to_string());
-                    if let Ok(value) = value {
-                        match value {
-                            ApplyValue::Inherit(_path) => {
-                                /* get canonical index from store id */
-                            }
-                            ApplyValue::Set(_set) => {
-                                /* create new type, with static injection */
+fn convert_applied_input_as_type(
+    _ctx: &mut TypegraphContext,
+    supertype_id: u32,
+    root: serde_json::Value,
+    depth: u32,
+) -> Result<u32> {
+    with_store(|s| {
+        match root {
+            Value::Object(ref props) => {
+                let mut new_props = vec![];
+                for (k, _v) in props.iter() {
+                    // check if ApplyValue leaf
+                    if (k.eq("inherit") || k.eq("set")) && depth != 0 && props.len() == 1 {
+                        let value: Result<ApplyValue, String> =
+                            serde_json::from_value(root.clone()).map_err(|e| e.to_string());
+                        if let Ok(value) = value {
+                            match value {
+                                ApplyValue::Inherit(path) => {
+                                    let (_, inherit_id) =
+                                        s.get_type_by_path(supertype_id, &path)?;
+                                    new_props.push((k.clone(), inherit_id));
+                                }
+                                ApplyValue::Set(_set) => {
+                                    /* create new type, with static injection */
+                                }
                             }
                         }
                     }
+                    // let _new_id =
+                    //     convert_applied_input_as_type(ctx, supertype_id, v.clone(), depth + 1)?;
+                    // TODO: wrap with injection
+                    // new_props.push((k.clone(), _new_id));
                 }
-                // new_map.set(*k, traverse_applied_input(v, depth + 1))
+
+                let _gen_id = Lib::structb(
+                    TypeStruct {
+                        props: new_props.clone(),
+                    },
+                    TypeBase {
+                        ..Default::default()
+                    },
+                )?;
+                // Ok(gen_id)
             }
+            value => return Err(format!("expected object, got {:?}", value)),
         }
-        value => return Err(format!("expected object, got {:?}", value)),
-    }
-    // build root TypeStruct
-    Ok(0) // return new id
+        // build root TypeStruct
+        Ok(0) // return new id
+    })
 }
 
-// Examples:
-// 1. struct(a, struct(b, c)) is a supertype of itself
-// 2. two types are the same regardless of their other attributes, or wrappers(opt, injection)
-//  struct(a, struct(b, c.min(2))) is a supertype of struct(struct(c.max(1))))
-//  struct(optional(a)) is a supertype of struct(a) (reverse is true)
-fn validate_supertype(_left_id: u32, _right_id: u32) -> Result<()> {
-    // TODO:
-    Ok(())
-}
-
-fn build_applied_input(input_id: u32, apply_value: String) -> Result<u32> {
+fn build_applied_input(
+    ctx: &mut TypegraphContext,
+    input_id: u32,
+    apply_value: String,
+) -> Result<u32> {
     let root: Value = serde_json::from_str(&apply_value).unwrap();
 
-    let new_id = convert_applied_input_as_struct(root, 0)?;
-
-    validate_supertype(input_id, new_id)?;
+    let _new_id = convert_applied_input_as_type(ctx, input_id, root, 0)?;
 
     Ok(input_id) // should be new_id
 }
