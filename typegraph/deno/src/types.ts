@@ -23,6 +23,7 @@ import {
 } from "./utils/func_utils.ts";
 import { CREATE, DELETE, NONE, UPDATE } from "./effects.ts";
 import { InjectionValue } from "./utils/type_utils.ts";
+import { InheritDef } from "./typegraph.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -505,7 +506,7 @@ export class Func<
     this.mat = mat;
   }
 
-  apply(value: Record<string, unknown>): this {
+  apply(value: Record<string, unknown | InheritDef>): this {
     const wrapperFuncId = core.withApply({
       tpeFunc: this._id,
       applyValue: JSON.stringify(asApplyValue(value)),

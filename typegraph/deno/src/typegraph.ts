@@ -16,7 +16,10 @@ interface TypegraphArgs {
 
 interface TypegraphBuilderArgs {
   expose: (exports: Exports) => void;
+  inherit: () => InheritDef;
 }
+
+export class InheritDef {}
 
 type TypegraphBuilder = (g: TypegraphBuilderArgs) => void;
 
@@ -58,6 +61,9 @@ export function typegraph(
         Object.entries(exports).map(([name, fn]) => [name, fn._id]),
         [],
       );
+    },
+    inherit: () => {
+      return new InheritDef();
     },
   };
 

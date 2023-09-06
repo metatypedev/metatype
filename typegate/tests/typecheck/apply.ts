@@ -30,7 +30,7 @@ typegraph("test-apply", (g) => {
       })
       .apply({
         input: {
-          infos: { age: t.integer({ min: 14 }) },
+          infos: { age: g.inherit() },
         },
       })
       .apply({

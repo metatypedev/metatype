@@ -19,7 +19,7 @@ use serde_json::Value;
 #[serde(rename_all = "lowercase")]
 pub enum ApplyValue {
     Set(Value),
-    Id(u32),
+    Inherit(Vec<String>),
 }
 
 impl TypeConversion for WithApply {
@@ -64,8 +64,11 @@ fn convert_applied_input_as_struct(root: Value, depth: u32) -> Result<u32> {
                         serde_json::from_value(root.clone()).map_err(|e| e.to_string());
                     if let Ok(value) = value {
                         match value {
-                            ApplyValue::Id(_id) => { /* get canonical index from store id */ }
-                            ApplyValue::Set(_set) => { /* create new type, with static injection */
+                            ApplyValue::Inherit(_path) => {
+                                /* get canonical index from store id */
+                            }
+                            ApplyValue::Set(_set) => {
+                                /* create new type, with static injection */
                             }
                         }
                     }

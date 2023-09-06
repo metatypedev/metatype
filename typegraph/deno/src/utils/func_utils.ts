@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { ApplyTree } from "./type_utils.ts";
-import { Typedef } from "../types.ts";
+import { ApplyTree, ApplyValue } from "./type_utils.ts";
 import { CREATE, DELETE, NONE, UPDATE } from "../effects.ts";
 import { InjectionSource, InjectionValue } from "./type_utils.ts";
+import { InheritDef } from "../typegraph.ts";
 
 export function stringifySymbol(symbol: symbol) {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -55,21 +55,24 @@ export function serializeInjection(
     data: { value: valueMapper(value) },
   });
 }
-//main
+
 export function serializeRecordValues<T>(
   obj: Record<string, T>,
 ): Array<[string, string]> {
   return Object.entries(obj).map(([k, v]) => [k, JSON.stringify(v)]);
 }
 
-export function asApplyValue(node: any, path: string[] = []): ApplyTree {
+export function asApplyValue(
+  node: InheritDef | unknown,
+  path: string[] = [],
+): ApplyTree {
   if (node === null || node === undefined) {
     throw new Error(
       `unsupported value "${node}" at ${path.join(".")}`,
     );
   }
-  if (node instanceof Typedef) {
-    return { id: node._id };
+  if (node instanceof InheritDef) {
+    return { inherit: path };
   }
   if (typeof node === "object") {
     if (Array.isArray(node)) {
@@ -83,7 +86,7 @@ export function asApplyValue(node: any, path: string[] = []): ApplyTree {
   }
   const allowed = ["number", "string", "boolean"];
   if (allowed.includes(typeof node)) {
-    return { set: node };
+    return { set: node as ApplyValue };
   }
   throw new Error(
     `unsupported type "${typeof node}" at ${path.join(".")}`,
