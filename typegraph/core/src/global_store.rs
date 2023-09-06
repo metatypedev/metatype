@@ -87,13 +87,16 @@ impl Store {
                         ret = (self.get_type(*v)?, *v);
                         found = true;
                     }
+                    if found {
+                        break;
+                    }
                 }
-            }
-            if !found {
-                return Err(errors::object_not_found_at_path(&curr_path));
             }
             curr_path.push(path[pos].clone());
             pos = curr_path.len();
+            if !found {
+                return Err(errors::object_not_found_at_path(&curr_path));
+            }
         }
         Ok(ret)
     }
