@@ -10,7 +10,6 @@ use crate::types::{Type, TypeId};
 
 use super::{TypeGen, TypeGenContext};
 
-
 #[derive(Clone, Copy)]
 enum Operation {
     Create,
@@ -51,10 +50,7 @@ impl InputType {
 }
 
 impl TypeGen for InputType {
-    fn generate(
-        &self,
-        context: &mut TypeGenContext,
-    ) -> Result<TypeId> {
+    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
         enum PropType {
             Scalar {
                 type_id: TypeId,

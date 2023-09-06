@@ -10,6 +10,7 @@ use self::order_by::OrderBy;
 use self::out_type::OutType;
 use self::query_unique_where_expr::QueryUniqueWhereExpr;
 use self::query_where_expr::QueryWhereExpr;
+use self::update_input::UpdateInput;
 use self::with_nested_count::WithNestedCount;
 
 use super::relationship::registry::RelationshipRegistry;
@@ -26,6 +27,7 @@ mod order_by;
 mod out_type;
 mod query_unique_where_expr;
 mod query_where_expr;
+mod update_input;
 mod where_;
 mod with_filters;
 mod with_nested_count;
@@ -146,6 +148,23 @@ impl TypeGenContext {
         ))
     }
 
+    pub fn update_many(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+        self.registry.manage(model_id)?;
+
+        Ok((
+            // input
+            t::struct_()
+                .prop("data", self.generate(&UpdateInput::new(model_id))?)
+                .prop(
+                    "where",
+                    t::optional(self.generate(&QueryWhereExpr::new(model_id))?).build()?,
+                )
+                .build()?,
+            // output
+            t::struct_().prop("count", t::integer().build()?).build()?,
+        ))
+    }
+
     fn generate(&mut self, generator: &impl TypeGen) -> Result<TypeId> {
         let type_name = generator.name(self);
         if let Some(type_id) = self.cache.get(&type_name) {
@@ -201,4 +220,5 @@ mod test {
     test_op!(create_one);
     test_op!(create_many);
     test_op!(update_one);
+    test_op!(update_many);
 }

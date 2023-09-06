@@ -290,6 +290,7 @@ interface runtimes {
     prisma-create-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
     prisma-create-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
     prisma-update-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-update-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
 }
 
 world typegraph {

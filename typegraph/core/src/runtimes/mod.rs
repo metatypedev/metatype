@@ -337,4 +337,14 @@ impl wit::Runtimes for crate::Lib {
             WitEffect::Update(false)
         )
     }
+
+    fn prisma_update_many(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(
+            runtime,
+            model,
+            update_many,
+            "updateMany",
+            WitEffect::Update(false)
+        )
+    }
 }
