@@ -347,4 +347,14 @@ impl wit::Runtimes for crate::Lib {
             WitEffect::Update(false)
         )
     }
+
+    fn prisma_upsert_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(
+            runtime,
+            model,
+            upsert_one,
+            "upsertOne",
+            WitEffect::Create(true)
+        )
+    }
 }

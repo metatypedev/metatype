@@ -165,6 +165,25 @@ impl TypeGenContext {
         ))
     }
 
+    pub fn upsert_one(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+        self.registry.manage(model_id)?;
+
+        Ok((
+            // input
+            t::struct_()
+                .prop(
+                    "where",
+                    self.generate(&QueryUniqueWhereExpr::new(model_id))?,
+                )
+                .prop("create", self.generate(&InputType::for_create(model_id))?)
+                .prop("update", self.generate(&UpdateInput::new(model_id))?)
+                // .prop("update", self.generate(&InputType::for_update(model_id))?)
+                .build()?,
+            // output
+            self.generate(&OutType::new(model_id))?,
+        ))
+    }
+
     fn generate(&mut self, generator: &impl TypeGen) -> Result<TypeId> {
         let type_name = generator.name(self);
         if let Some(type_id) = self.cache.get(&type_name) {
@@ -221,4 +240,5 @@ mod test {
     test_op!(create_many);
     test_op!(update_one);
     test_op!(update_many);
+    // test_op!(upsert_one);  -- this reuse already tested types
 }
