@@ -119,65 +119,65 @@ Meta.test("prisma", async (t) => {
       .on(e);
   });
 
-  // await t.should("delete a simple record", async () => {
-  //   const id = "b7831fd1-799d-4b20-9a84-830588f750a3";
-  //   await gql`
-  //     mutation {
-  //       createOneRecord(
-  //         data: {
-  //           id: ${id}
-  //           name: "name"
-  //           age: 1
-  //         }
-  //       ) {
-  //         id
-  //       }
-  //     }
-  //   `
-  //     .expectData({
-  //       createOneRecord: { id },
-  //     })
-  //     .on(e);
-  //   await gql`
-  //     mutation {
-  //       deleteOneRecord(
-  //         where: {
-  //           id: ${id}
-  //         }
-  //       ) {
-  //         id
-  //       }
-  //     }
-  //   `
-  //     .expectData({
-  //       deleteOneRecord: { id },
-  //     })
-  //     .on(e);
-  // });
-  //
-  // await t.should("refuse to insert if not unique", async () => {
-  //   const id = "b7831fd1-799d-4b20-9a84-830588f750ae";
-  //   const q = gql`
-  //   mutation {
-  //     createOneRecord(
-  //       data: {
-  //         id: ${id}
-  //         name: "name"
-  //         age: 1
-  //       }
-  //     ) {
-  //       id
-  //     }
-  //   }
-  // `;
-  //   await q
-  //     .expectData({
-  //       createOneRecord: { id },
-  //     })
-  //     .on(e);
-  //
-  //   await q
-  //     .expectErrorContains("Unique constraint failed on the fields: (`id`)")
-  //     .on(e);
-  // });
+  await t.should("delete a simple record", async () => {
+    const id = "b7831fd1-799d-4b20-9a84-830588f750a3";
+    await gql`
+      mutation {
+        createOneRecord(
+          data: {
+            id: ${id}
+            name: "name"
+            age: 1
+          }
+        ) {
+          id
+        }
+      }
+    `
+      .expectData({
+        createOneRecord: { id },
+      })
+      .on(e);
+    await gql`
+      mutation {
+        deleteOneRecord(
+          where: {
+            id: ${id}
+          }
+        ) {
+          id
+        }
+      }
+    `
+      .expectData({
+        deleteOneRecord: { id },
+      })
+      .on(e);
+  });
+
+  await t.should("refuse to insert if not unique", async () => {
+    const id = "b7831fd1-799d-4b20-9a84-830588f750ae";
+    const q = gql`
+    mutation {
+      createOneRecord(
+        data: {
+          id: ${id}
+          name: "name"
+          age: 1
+        }
+      ) {
+        id
+      }
+    }
+  `;
+    await q
+      .expectData({
+        createOneRecord: { id },
+      })
+      .on(e);
+
+    await q
+      .expectErrorContains("Unique constraint failed on the fields: (`id`)")
+      .on(e);
+  });
 });

@@ -354,7 +354,27 @@ impl wit::Runtimes for crate::Lib {
             model,
             upsert_one,
             "upsertOne",
-            WitEffect::Create(true)
+            WitEffect::Update(true)
+        )
+    }
+
+    fn prisma_delete_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(
+            runtime,
+            model,
+            delete_one,
+            "deleteOne",
+            WitEffect::Delete(true)
+        )
+    }
+
+    fn prisma_delete_many(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(
+            runtime,
+            model,
+            delete_many,
+            "deleteMany",
+            WitEffect::Delete(true)
         )
     }
 }
