@@ -70,6 +70,12 @@ impl Store {
             .ok_or_else(|| errors::object_not_found("type", type_id))
     }
 
+    pub fn get_type_mut(&mut self, type_id: TypeId) -> Result<&mut Type, TgError> {
+        self.types
+            .get_mut(type_id as usize)
+            .ok_or_else(|| errors::object_not_found("type", type_id))
+    }
+
     pub fn get_type_by_name(&self, name: &str) -> Option<TypeId> {
         self.type_by_names.get(name).copied()
     }
