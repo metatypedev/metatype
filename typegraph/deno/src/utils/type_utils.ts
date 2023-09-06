@@ -1,6 +1,8 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+import { PerEffect } from "../effects.ts";
+
 type RequiredKeys<T> = {
   [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K;
 }[keyof T];
@@ -20,3 +22,11 @@ type SetValue = string | number | boolean;
 export type ApplyTree =
   | { set: SetValue | Array<SetValue> }
   | { id: number };
+
+export type InjectionSource =
+  | "dynamic"
+  | "static"
+  | "context"
+  | "parent"
+  | "secret";
+export type InjectionValue<T> = T | PerEffect;

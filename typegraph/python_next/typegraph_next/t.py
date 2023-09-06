@@ -3,12 +3,13 @@
 
 import json
 from typing import Dict, List, Optional, Tuple, Union
-from typegraph_next.utils import serialize_record_values
+from typegraph_next.utils import serialize_record_values, serialize_injection
 
 from typing_extensions import Self
 
 from typegraph_next.gen.exports.core import (
     PolicyPerEffect as WitPolicyPerEffect,
+    TypeWithInjection,
 )
 from typegraph_next.gen.exports.core import (
     PolicySpecPerEffect,
@@ -30,6 +31,7 @@ from typegraph_next.gen.types import Err
 from typegraph_next.graph.typegraph import core, store
 from typegraph_next.policy import Policy, PolicyPerEffect
 from typegraph_next.runtimes.deno import Materializer
+from typegraph_next.effects import EffectType
 
 
 class typedef:
@@ -72,10 +74,63 @@ class typedef:
 
         return _TypeWithPolicy(res.value, self, policies)
 
+    def _with_injection(self, injection: str) -> Self:
+        res = core.with_injection(
+            store, TypeWithInjection(tpe=self.id, injection=injection)
+        )
+        if isinstance(res, Err):
+            raise Exception(res.value)
+
+        return _TypeWrapper(res.value, self)
+
     def optional(self, default_value: Optional[str] = None) -> "optional":
         if isinstance(self, optional):
             return self
         return optional(self, default_item=default_value)
+
+    def set(self, value: Union[any, Dict[EffectType, any]]):
+        return self._with_injection(
+            serialize_injection(
+                "static", value=value, value_mapper=lambda x: json.dumps(x)
+            ),
+        )
+
+    def inject(self, value: Union[any, Dict[EffectType, any]]):
+        return self._with_injection(serialize_injection("dynamic", value=value))
+
+    def from_context(self, value: Union[str, Dict[EffectType, str]]):
+        return self._with_injection(serialize_injection("context", value=value))
+
+    def from_secret(self, value: Union[str, Dict[EffectType, str]]):
+        return self._with_injection(serialize_injection("secret", value=value))
+
+    def from_parent(self, value: Union[str, Dict[EffectType, str]]):
+        correct_value = None
+        if isinstance(value, str):
+            correct_value = proxy(value).id
+        else:
+            if not isinstance(value, dict):
+                raise Exception("type not supported")
+
+            is_per_effect = len(value) > 0 and all(
+                isinstance(k, EffectType) for k in value.keys()
+            )
+            if not is_per_effect:
+                raise Exception("object keys should be of type EffectType")
+
+            correct_value = {}
+            for k, v in value.items():
+                if not isinstance(v, str):
+                    raise Exception(f"value for field {k.name} must be a string")
+                correct_value[k] = proxy(v).id
+
+        assert correct_value is not None
+
+        return self._with_injection(
+            serialize_injection(
+                "parent", value=correct_value, value_mapper=lambda x: x
+            ),
+        )
 
 
 class _TypeWithPolicy(typedef):
@@ -95,6 +150,25 @@ class _TypeWithPolicy(typedef):
     def __getattr__(self, name):
         if name == "policy":
             return self.policy
+        return getattr(self.base, name)
+
+
+# self.id refer to the wrapper id
+# self.* refer to the base id
+class _TypeWrapper(typedef):
+    base: "typedef"
+
+    def __init__(
+        self,
+        id: int,
+        base: "typedef",
+    ):
+        super().__init__(id)
+        self.base = base
+
+    def __getattr__(self, name):
+        if name == "id":
+            return self.id
         return getattr(self.base, name)
 
 
@@ -131,7 +205,7 @@ class integer(typedef):
         multiple_of: Optional[int] = None,
         enumeration: Optional[List[int]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None
+        config: Optional[Dict[str, any]] = None,
     ):
         data = TypeInteger(
             min=min,
@@ -143,7 +217,9 @@ class integer(typedef):
         )
         runtime_config = serialize_record_values(config)
         res = core.integerb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -175,7 +251,7 @@ class float(typedef):
         multiple_of: Optional[float] = None,
         enumeration: Optional[List[float]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None
+        config: Optional[Dict[str, any]] = None,
     ):
         data = TypeFloat(
             min=min,
@@ -187,7 +263,9 @@ class float(typedef):
         )
         runtime_config = serialize_record_values(config)
         res = core.floatb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -229,7 +307,7 @@ class string(typedef):
         format: Optional[str] = None,
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None
+        config: Optional[Dict[str, any]] = None,
     ):
         enum_variants = None
         if enumeration is not None:
@@ -241,7 +319,9 @@ class string(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.stringb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -272,6 +352,10 @@ def ean() -> string:
 
 def path() -> string:
     return string(format="path")
+
+
+def datetime() -> string:
+    return string(format="date-time")
 
 
 def enum(
@@ -305,7 +389,9 @@ class array(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.arrayb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -335,7 +421,9 @@ class optional(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.optionalb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -358,7 +446,9 @@ class union(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.unionb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -380,7 +470,9 @@ class either(typedef):
 
         runtime_config = serialize_record_values(config)
         res = core.eitherb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -397,13 +489,15 @@ class struct(typedef):
         props: Dict[str, typedef],
         *,
         name: Optional[str] = None,
-        config: Optional[Dict[str, str]] = None
+        config: Optional[Dict[str, str]] = None,
     ):
         data = TypeStruct(props=list((name, tpe.id) for (name, tpe) in props.items()))
 
         runtime_config = serialize_record_values(config)
         res = core.structb(
-            store, data, base=TypeBase(name=name, runtime_config=runtime_config)
+            store,
+            data,
+            base=TypeBase(name=name, runtime_config=runtime_config),
         )
         if isinstance(res, Err):
             raise Exception(res.value)

@@ -203,6 +203,7 @@ impl TypegraphContext {
             let tpe = s.get_type(type_id)?;
             let tpe = match tpe {
                 Type::WithPolicy(t) => t.data.get_wrapped_type(s).unwrap(),
+                Type::WithInjection(t) => t.data.get_wrapped_type(s).unwrap(),
                 _ => tpe,
             };
             if !matches!(tpe, Type::Func(_)) {
@@ -238,6 +239,7 @@ impl TypegraphContext {
                 self.types.push(None);
 
                 let tpe = store.get_type(id)?;
+
                 let type_node = tpe.convert(self, runtime_id)?;
 
                 self.types[idx] = Some(type_node);
@@ -327,5 +329,9 @@ impl TypegraphContext {
             self.runtimes.push(converted);
             Ok(idx as RuntimeId)
         }
+    }
+
+    pub fn find_type_index_by_store_id(&self, id: &u32) -> Option<u32> {
+        self.mapping.types.get(id).copied()
     }
 }

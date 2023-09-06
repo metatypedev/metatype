@@ -16,7 +16,13 @@ import {
 import { Materializer } from "./runtimes/mod.ts";
 import { mapValues } from "./deps.ts";
 import Policy from "./policy.ts";
-import { asApplyValue, serializeRecordValues } from "./utils/func_utils.ts";
+import {
+  asApplyValue,
+  serializeInjection,
+  serializeRecordValues,
+} from "./utils/func_utils.ts";
+import { CREATE, DELETE, NONE, UPDATE } from "./effects.ts";
+import { InjectionValue } from "./utils/type_utils.ts";
 
 export type PolicySpec = Policy | {
   none: Policy;
@@ -84,6 +90,87 @@ export class Typedef {
       return this;
     }
     return optional(this, data);
+  }
+
+  private withInjection(injection: string) {
+    const wrapperId = core.withInjection({
+      tpe: this._id,
+      injection,
+    });
+    return new Proxy(this, {
+      get(target, prop, receiver) {
+        return prop === "_id" ? wrapperId : Reflect.get(target, prop, receiver);
+      },
+    }) as this;
+  }
+
+  set(value: InjectionValue<unknown>) {
+    return this.withInjection(
+      serializeInjection("static", value, (x: unknown) => JSON.stringify(x)),
+    );
+  }
+
+  inject(value: InjectionValue<string>) {
+    return this.withInjection(
+      serializeInjection("dynamic", value),
+    );
+  }
+
+  fromContext(value: InjectionValue<string>) {
+    return this.withInjection(
+      serializeInjection("context", value),
+    );
+  }
+
+  fromSecret(value: InjectionValue<string>) {
+    return this.withInjection(
+      serializeInjection("secret", value),
+    );
+  }
+
+  fromParent(value: InjectionValue<string>) {
+    let correctValue: any = null;
+    if (typeof value === "string") {
+      correctValue = proxy(value)._id;
+    } else {
+      const isObject = typeof value === "object" && !Array.isArray(value) &&
+        value !== null;
+      if (!isObject) {
+        throw new Error("type not supported");
+      }
+
+      // Note:
+      // Symbol changes the behavior of keys, values, entries => props are skipped
+      const symbols = [UPDATE, DELETE, CREATE, NONE];
+      const noOtherType = Object.keys(value).length == 0;
+      const isPerEffect = noOtherType &&
+        symbols
+          .some((symbol) => (value as any)?.[symbol] !== undefined);
+
+      if (!isPerEffect) {
+        throw new Error("object keys should be of type EffectType");
+      }
+
+      correctValue = {};
+      for (const symbol of symbols) {
+        const v = (value as any)?.[symbol];
+        if (v === undefined) continue;
+        if (typeof v !== "string") {
+          throw new Error(
+            `value for field ${symbol.toString()} must be a string`,
+          );
+        }
+        correctValue[symbol] = proxy(v)._id;
+      }
+    }
+
+    return this.withInjection(
+      serializeInjection(
+        "parent",
+        correctValue,
+        (x: unknown) => x as number,
+      ),
+    );
   }
 }
 
@@ -241,6 +328,10 @@ export function ean() {
 
 export function path() {
   return string({ format: "path" });
+}
+
+export function datetime() {
+  return string({ format: "date-time" });
 }
 
 // Note: enum is a reserved word
