@@ -43,21 +43,24 @@ trait TypeGen {
     fn name(&self, context: &TypeGenContext) -> String;
 }
 
+pub struct OperationTypes {
+    pub input: TypeId,
+    pub output: TypeId,
+}
+
 impl TypeGenContext {
-    pub fn find_unique(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn find_unique(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
-        Ok((
-            // input
-            t::struct_()
+        Ok(OperationTypes {
+            input: t::struct_()
                 .prop(
                     "where",
                     t::optional(self.generate(&QueryUniqueWhereExpr::new(model_id))?).build()?,
                 )
                 .build()?,
-            // output
-            t::optional(self.generate(&WithNestedCount::new(model_id))?).build()?,
-        ))
+            output: t::optional(self.generate(&WithNestedCount::new(model_id))?).build()?,
+        })
     }
 
     fn find_many_inp(&mut self, model_id: TypeId) -> Result<TypeId> {
@@ -79,98 +82,84 @@ impl TypeGenContext {
             .build()?)
     }
 
-    pub fn find_many(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn find_many(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
-        Ok((
-            // input
-            self.find_many_inp(model_id)?,
-            // output
-            // t::integer().build()?
-            t::array(self.generate(&WithNestedCount::new(model_id))?).build()?,
-        ))
+        Ok(OperationTypes {
+            input: self.find_many_inp(model_id)?,
+            output: t::array(self.generate(&WithNestedCount::new(model_id))?).build()?,
+        })
     }
 
-    pub fn find_first(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn find_first(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
-        Ok((
-            // input
-            self.find_many_inp(model_id)?,
-            // output
-            t::optional(self.generate(&OutType::new(model_id))?).build()?,
-        ))
+        Ok(OperationTypes {
+            input: self.find_many_inp(model_id)?,
+            output: t::optional(self.generate(&OutType::new(model_id))?).build()?,
+        })
     }
 
-    pub fn create_one(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn create_one(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
-        Ok((
-            // input
-            t::struct_()
+        Ok(OperationTypes {
+            input: t::struct_()
                 .prop("data", self.generate(&InputType::for_create(model_id))?)
                 .build()?,
-            // output
-            self.generate(&OutType::new(model_id))?,
-        ))
+            output: self.generate(&OutType::new(model_id))?,
+        })
     }
 
-    pub fn create_many(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn create_many(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
-        Ok((
-            // input
-            t::struct_()
+        Ok(OperationTypes {
+            input: t::struct_()
                 .prop(
                     "data",
                     t::array(self.generate(&InputType::for_create(model_id))?).build()?,
                 )
                 .build()?,
-            // output
-            t::struct_().prop("count", t::integer().build()?).build()?,
-        ))
+            output: t::struct_().prop("count", t::integer().build()?).build()?,
+        })
     }
 
-    pub fn update_one(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn update_one(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
-        Ok((
-            // input
-            t::struct_()
+        Ok(OperationTypes {
+            input: t::struct_()
                 .prop("data", self.generate(&InputType::for_update(model_id))?)
                 .prop(
                     "where",
                     self.generate(&QueryUniqueWhereExpr::new(model_id))?,
                 )
                 .build()?,
-            //output
-            self.generate(&OutType::new(model_id))?,
-        ))
+            output: self.generate(&OutType::new(model_id))?,
+        })
     }
 
-    pub fn update_many(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn update_many(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
-        Ok((
-            // input
-            t::struct_()
+        Ok(OperationTypes {
+            input: t::struct_()
                 .prop("data", self.generate(&UpdateInput::new(model_id))?)
                 .prop(
                     "where",
                     t::optional(self.generate(&QueryWhereExpr::new(model_id))?).build()?,
                 )
                 .build()?,
-            // output
-            t::struct_().prop("count", t::integer().build()?).build()?,
-        ))
+            output: t::struct_().prop("count", t::integer().build()?).build()?,
+        })
     }
 
-    pub fn upsert_one(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn upsert_one(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
-        Ok((
-            // input
-            t::struct_()
+        Ok(OperationTypes {
+            input: t::struct_()
                 .prop(
                     "where",
                     self.generate(&QueryUniqueWhereExpr::new(model_id))?,
@@ -179,39 +168,34 @@ impl TypeGenContext {
                 .prop("update", self.generate(&UpdateInput::new(model_id))?)
                 // .prop("update", self.generate(&InputType::for_update(model_id))?)
                 .build()?,
-            // output
-            self.generate(&OutType::new(model_id))?,
-        ))
+            output: self.generate(&OutType::new(model_id))?,
+        })
     }
 
-    pub fn delete_one(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn delete_one(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
-        Ok((
-            // input
-            t::struct_()
+        Ok(OperationTypes {
+            input: t::struct_()
                 .prop(
                     "where",
                     self.generate(&QueryUniqueWhereExpr::new(model_id))?,
                 )
                 .build()?,
-            // output
-            self.generate(&OutType::new(model_id))?,
-        ))
+            output: self.generate(&OutType::new(model_id))?,
+        })
     }
 
-    pub fn delete_many(&mut self, model_id: TypeId) -> Result<(TypeId, TypeId)> {
+    pub fn delete_many(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
-        Ok((
-            // input
-            t::struct_()
+        Ok(OperationTypes {
+            input: t::struct_()
                 .prop(
                     "where",
                     t::optional(self.generate(&QueryWhereExpr::new(model_id))?).build()?,
                 )
                 .build()?,
-            // output
-            t::struct_().prop("count", t::integer().build()?).build()?,
-        ))
+            output: t::struct_().prop("count", t::integer().build()?).build()?,
+        })
     }
 
     fn generate(&mut self, generator: &impl TypeGen) -> Result<TypeId> {
@@ -241,20 +225,20 @@ mod test {
 
                     let record = models::simple_record()?;
                     context.registry.manage(record)?;
-                    let (inp, out) = context.$op_name(record)?;
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " Record inp"), tree::print(inp));
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " Record out"), tree::print(out));
+                    let types = context.$op_name(record)?;
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " Record inp"), tree::print(types.input));
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " Record out"), tree::print(types.output));
 
                     let (user, post) = models::simple_relationship()?;
                     context.registry.manage(user)?;
 
-                    let (inp, out) = context.$op_name(user)?;
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " User inp"), tree::print(inp));
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " User out"), tree::print(out));
+                    let types = context.$op_name(user)?;
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " User inp"), tree::print(types.input));
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " User out"), tree::print(types.output));
 
-                    let (inp, out) = context.$op_name(post)?;
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " Post inp"), tree::print(inp));
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " Post out"), tree::print(out));
+                    let types = context.$op_name(post)?;
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " Post inp"), tree::print(types.input));
+                    insta::assert_snapshot!(concat!(stringify!($op_name), " Post out"), tree::print(types.output));
 
                     Ok(())
                 }

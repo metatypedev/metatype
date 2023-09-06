@@ -134,7 +134,7 @@ pub enum MaterializerData {
 
 macro_rules! prisma_op {
     ( $rt:expr, $model:expr, $fn:ident, $name:expr, $effect:expr ) => {{
-        let (inp, out) = with_prisma_runtime($rt, |ctx| ctx.$fn($model.into()))?;
+        let types = with_prisma_runtime($rt, |ctx| ctx.$fn($model.into()))?;
 
         let mat = PrismaMaterializer {
             table: with_store(|s| -> Result<_> {
@@ -148,7 +148,7 @@ macro_rules! prisma_op {
         let mat_id =
             with_store_mut(|s| s.register_materializer(Materializer::prisma($rt, mat, $effect)));
 
-        Ok(t::func(inp, out, mat_id)?.into())
+        Ok(t::func(types.input, types.output, mat_id)?.into())
     }};
 
     ( $rt:expr, $model:expr, $fn:ident, $name:expr ) => {
