@@ -62,6 +62,10 @@ export function serializeRecordValues<T>(
   return Object.entries(obj).map(([k, v]) => [k, JSON.stringify(v)]);
 }
 
+// TODO:
+// simply enumerate all paths instead
+// this should prevent recursion in core sdk and make validation easier
+// (just walk the path list iteratively)
 export function asApplyValue(
   node: InheritDef | unknown,
   path: string[] = [],

@@ -279,7 +279,31 @@ interface runtimes {
 interface utils {
     type error = string
     type type-id = u32
-    gen-applyb: func(supertype-id: type-id, apply-json: string) -> result<type-id, error>
+
+
+    // Example:
+    // apply({a: 1, { b: {c: g.inherit(), d: [1, 2, 3]}})
+    // produces a list of apply-path
+    // [ 
+    //  { path: [a], value: { inherit: false, payload: 1 } } 
+    //  { path: [b, c], value: { inherit: true } } 
+    //  { path: [b, d], value: { inherit: false, payload: [1, 2, 3] } } 
+    // ]
+    record apply-value {
+        inherit: bool,
+        payload: option<string>
+    }
+
+    record apply-path {
+        path: list<string>,
+        value: apply-value,
+    }
+
+    record apply {
+        paths: list<apply-path>
+    }
+
+    gen-applyb: func(supertype-id: type-id, data: apply) -> result<type-id, error>
 }
 
 world typegraph {
