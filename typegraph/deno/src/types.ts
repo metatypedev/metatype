@@ -1,7 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { core } from "./wit.ts";
+import { core, wit_utils } from "./wit.ts";
 import {
   PolicyPerEffect,
   TypeArray,
@@ -507,20 +507,12 @@ export class Func<
   }
 
   apply(value: Record<string, unknown | InheritDef>) {
-    // const wrapperFuncId = core.withApply({
-    //   tpeFunc: this._id,
-    //   applyValue: JSON.stringify(asApplyValue(value)),
-    // });
-
-    // return new Proxy(this, {
-    //   get(target, prop, receiver) {
-    //     return prop === "_id"
-    //       ? wrapperFuncId
-    //       : Reflect.get(target, prop, receiver);
-    //   },
-    // }) as this;
+    // const example_id = wit_utils.genApplyb(
+    //   this.inp._id,
+    //   JSON.stringify(asApplyValue(value)),
+    // );
     return func(
-      this.inp, // use: core.build_apply_input(this.inp._id, JSON.stringify(asApplyValue(value)))
+      new Typedef(this.inp._id, { name: this.inp.name }) as Struct<P>,
       this.out,
       this.mat,
     );

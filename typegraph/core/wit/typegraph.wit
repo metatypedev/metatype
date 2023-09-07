@@ -102,12 +102,6 @@ interface core {
     }
     funcb: func(data: type-func) -> result<type-id, error>
 
-    // record type-func-with-apply {
-    //    tpe-func: type-id,
-    //    apply-value: string
-    // }
-    // with-apply: func(data: type-func-with-apply) -> result<type-id, error>
-
     type policy-id = u32
 
     record policy {
@@ -281,7 +275,15 @@ interface runtimes {
     from-wasi-module: func(base: base-materializer, data: materializer-wasi) -> result<materializer-id, error>
 }
 
+
+interface utils {
+    type error = string
+    type type-id = u32
+    gen-applyb: func(supertype-id: type-id, apply-json: string) -> result<type-id, error>
+}
+
 world typegraph {
     export core
     export runtimes
+    export utils
 }

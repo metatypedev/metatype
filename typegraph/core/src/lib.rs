@@ -8,6 +8,7 @@ mod runtimes;
 mod typedef;
 mod typegraph;
 mod types;
+mod utils;
 mod validation;
 
 use std::collections::HashSet;
@@ -35,7 +36,7 @@ pub mod wit {
 
     export_typegraph!(Lib);
 
-    pub use exports::metatype::typegraph::{core, runtimes};
+    pub use exports::metatype::typegraph::{core, runtimes, utils};
 }
 
 #[cfg(feature = "wasm")]
