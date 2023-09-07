@@ -2,12 +2,12 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.output)"
 ---
-root: optional #100
-└─ item: struct '_UserOutputType' #99
-   ├─ [id]: integer #66
-   ├─ [name]: string #67
-   └─ [posts]: array '_PostOutputType_excluding_UserToPost[]' #98
-      └─ item: struct '_PostOutputType_excluding_UserToPost' #97
-         ├─ [id]: integer #71
-         └─ [title]: string #72
+root: optional #110
+└─ item: struct '_UserOutputType' #109
+   ├─ [id]: integer #68
+   ├─ [name]: string #69
+   └─ [posts]: array '_PostOutputType_excluding_UserToPost[]' #108
+      └─ item: struct '_PostOutputType_excluding_UserToPost' #107
+         ├─ [id]: integer #73
+         └─ [title]: string #74
 

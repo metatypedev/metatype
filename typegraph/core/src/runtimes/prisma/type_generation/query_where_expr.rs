@@ -19,8 +19,9 @@ impl QueryWhereExpr {
 
 impl TypeGen for QueryWhereExpr {
     fn generate(&self, context: &mut super::TypeGenContext) -> Result<TypeId> {
-        let where_type = context.generate(&Where::new(self.model_id, false))?;
-        let extended_type = context.generate(&WithFilters::new(where_type, false))?;
+        let where_type = context.generate(&Where::new(self.model_id, true))?;
+        let extended_type =
+            context.generate(&WithFilters::new(where_type, self.model_id, false))?;
 
         let props = with_store(|s| {
             extended_type

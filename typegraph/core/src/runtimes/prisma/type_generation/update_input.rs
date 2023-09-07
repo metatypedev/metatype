@@ -25,6 +25,11 @@ impl TypeGen for UpdateInput {
             Integer,
             Float,
             String,
+            // scalar list: only supported in PostgreSQL, CockroachDB and MongoDB
+            // see: https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#relational-databases
+            Array(TypeId),
+            // TODO: (mongo only) composite types
+            // see: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#composite-type-methods
         }
         struct Prop {
             key: String,
@@ -52,6 +57,17 @@ impl TypeGen for UpdateInput {
                     Type::Integer(_) => Some(PropType::Integer),
                     Type::Float(_) => Some(PropType::Float),
                     Type::String(_) => Some(PropType::String),
+                    Type::Array(inner) => {
+                        if context
+                            .registry
+                            .find_relationship_on(self.model_id, k)
+                            .is_some()
+                        {
+                            None // relationship
+                        } else {
+                            Some(PropType::Array(inner.data.of.into())) // scalar list
+                        }
+                    }
                     _ => None,
                 };
 
@@ -88,6 +104,15 @@ impl TypeGen for UpdateInput {
                     t::struct_()
                         .prop("increment", prop.wrapped_type_id)
                         .build()?,
+                ])
+                .build()?,
+
+                // https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#scalar-list-methods
+                PropType::Array(item_type) => t::union([
+                    prop.type_id,
+                    t::struct_().prop("set", prop.type_id).build()?,
+                    t::struct_().prop("push", item_type).build()?,
+                    // "unset": mongo only
                 ])
                 .build()?,
             };

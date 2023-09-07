@@ -2,26 +2,26 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.output)"
 ---
-root: struct #75
-├─ [_count]: struct '_Record_AggrCount' #66
-│  ├─ [_all]: optional #65
-│  │  └─ item: integer #64
-│  ├─ [id]: optional #65
-│  │  └─ item: integer #64
-│  ├─ [name]: optional #65
-│  │  └─ item: integer #64
-│  └─ [age]: optional #65
-│     └─ item: integer #64
-├─ [_avg]: struct '_Record_NumberAgg_avg' #69
-│  └─ [age]: optional #68
-│     └─ item: float #67
-├─ [_sum]: struct '_Record_NumberAgg' #74
-│  └─ [age]: optional #71
-│     └─ item: integer #70
-├─ [_min]: struct '_Record_NumberAgg' #74
-│  └─ [age]: optional #71
-│     └─ item: integer #70
-└─ [_max]: struct '_Record_NumberAgg' #74
-   └─ [age]: optional #71
-      └─ item: integer #70
+root: struct #77
+├─ [_count]: struct '_Record_AggrCount' #68
+│  ├─ [_all]: optional #67
+│  │  └─ item: integer #66
+│  ├─ [id]: optional #67
+│  │  └─ item: integer #66
+│  ├─ [name]: optional #67
+│  │  └─ item: integer #66
+│  └─ [age]: optional #67
+│     └─ item: integer #66
+├─ [_avg]: struct '_Record_NumberAgg_avg' #71
+│  └─ [age]: optional #70
+│     └─ item: float #69
+├─ [_sum]: struct '_Record_NumberAgg' #76
+│  └─ [age]: optional #73
+│     └─ item: integer #72
+├─ [_min]: struct '_Record_NumberAgg' #76
+│  └─ [age]: optional #73
+│     └─ item: integer #72
+└─ [_max]: struct '_Record_NumberAgg' #76
+   └─ [age]: optional #73
+      └─ item: integer #72
 

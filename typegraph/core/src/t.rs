@@ -4,8 +4,8 @@
 use crate::errors::Result;
 use crate::types::TypeId;
 use crate::wit::core::{
-    Core, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeInteger, TypeOptional, TypeProxy,
-    TypeString, TypeStruct, TypeUnion,
+    Core, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeInteger, TypeOptional,
+    TypeProxy, TypeString, TypeStruct, TypeUnion,
 };
 
 pub trait TypeBuilder {
@@ -252,6 +252,29 @@ pub fn union(variants: impl IntoIterator<Item = TypeId>) -> UnionBuilder {
 }
 
 #[derive(Default)]
+pub struct EitherBuilder {
+    base: TypeBase,
+    data: TypeEither,
+}
+
+impl Default for TypeEither {
+    fn default() -> Self {
+        Self {
+            variants: Default::default(),
+        }
+    }
+}
+
+pub fn either(variants: impl IntoIterator<Item = TypeId>) -> EitherBuilder {
+    EitherBuilder {
+        data: TypeEither {
+            variants: variants.into_iter().map(|tid| tid.0).collect(),
+        },
+        ..Default::default()
+    }
+}
+
+#[derive(Default)]
 pub struct StructBuilder {
     base: TypeBase,
     data: TypeStruct,
@@ -397,6 +420,7 @@ impl_type_builder!(OptionalBuilder, optionalb);
 impl_type_builder!(StringBuilder, stringb);
 impl_type_builder!(ArrayBuilder, arrayb);
 impl_type_builder!(UnionBuilder, unionb);
+impl_type_builder!(EitherBuilder, eitherb);
 impl_type_builder!(StructBuilder, structb);
 impl_type_builder!(FuncBuilder, funcb, true);
 impl_type_builder!(ProxyBuilder, proxyb, true);

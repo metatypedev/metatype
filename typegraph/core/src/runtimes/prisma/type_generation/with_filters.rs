@@ -12,12 +12,17 @@ use super::{TypeGen, TypeGenContext};
 
 pub struct WithFilters {
     type_id: TypeId,
-    skip_rel: bool,
+    model_id: TypeId,
+    skip_rel: bool, // TODO list??
 }
 
 impl WithFilters {
-    pub fn new(type_id: TypeId, skip_rel: bool) -> Self {
-        Self { type_id, skip_rel }
+    pub fn new(type_id: TypeId, model_id: TypeId, skip_rel: bool) -> Self {
+        Self {
+            type_id,
+            model_id,
+            skip_rel,
+        }
     }
 }
 
@@ -27,7 +32,12 @@ impl TypeGen for WithFilters {
             Boolean,
             Number(NumberType),
             String,
-            Object,
+            Model(TypeId),
+            // TODO aggregates??
+            // scalar list
+            Array(TypeId),
+            // TODO (mongo only): composite types
+            // see: https://www.prisma.io/docs/reference/api-reference/prisma-client-reference#composite-type-filters
         }
         struct Prop {
             key: String,
@@ -46,16 +56,24 @@ impl TypeGen for WithFilters {
                     ty = s.get_type(id)?;
                 }
 
-                match ty {
-                    Type::Struct(_) => {
-                        if !self.skip_rel {
-                            props.push(Prop {
-                                key: k.to_string(),
-                                type_id: id,
-                                prop_type: PropType::Object,
-                            });
-                        }
+                // TODO relationship
+                let rel = context.registry.find_relationship_on(self.model_id, k);
+                if let Some(rel) = rel {
+                    if self.skip_rel {
+                        continue;
                     }
+
+                    let target_model =
+                        rel.get(rel.side_of_model(self.model_id).unwrap().opposite());
+                    props.push(Prop {
+                        key: k.to_string(),
+                        type_id: id,
+                        prop_type: PropType::Model(target_model.model_type),
+                    });
+                    continue;
+                }
+
+                match ty {
                     Type::Optional(_) => return Err("optional of optional!?".to_string()),
                     Type::Boolean(_) => {
                         props.push(Prop {
@@ -64,7 +82,7 @@ impl TypeGen for WithFilters {
                             prop_type: PropType::Boolean,
                         });
                     }
-                    Type::Integer(n) => {
+                    Type::Integer(_) => {
                         props.push(Prop {
                             key: k.to_string(),
                             type_id: id,
@@ -85,6 +103,13 @@ impl TypeGen for WithFilters {
                             prop_type: PropType::String,
                         });
                     }
+                    Type::Array(inner) => {
+                        props.push(Prop {
+                            key: k.to_string(),
+                            type_id: id,
+                            prop_type: PropType::Array(inner.data.of.into()),
+                        });
+                    }
                     _ => {
                         return Err(format!(
                             "type '{}' not supported by prisma",
@@ -103,8 +128,10 @@ impl TypeGen for WithFilters {
                 PropType::Boolean => context.generate(&CompleteFilter(BooleanFilter))?,
                 PropType::Number(num) => context.generate(&CompleteFilter(NumberFilter(num)))?,
                 PropType::String => context.generate(&CompleteFilter(StringFilter))?,
-                PropType::Object => context.generate(&WithFilters {
-                    type_id: prop.type_id,
+                PropType::Array(of) => context.generate(&CompleteFilter(ScalarListFilter(of)))?,
+                PropType::Model(target_model_id) => context.generate(&WithFilters {
+                    type_id: target_model_id,
+                    model_id: target_model_id, // TODO ???
                     skip_rel: true,
                 })?,
             };
@@ -142,6 +169,7 @@ impl TypeGen for BooleanFilter {
         t::union([
             t::boolean().build()?,
             t::struct_().prop("equals", t::boolean().build()?).build()?,
+            t::struct_().prop("not", t::boolean().build()?).build()?,
         ])
         .named(self.name(context))
         .build()
@@ -167,9 +195,10 @@ impl TypeGen for NumberFilter {
         };
         let opt_type_id = t::optional(type_id).build()?;
         let array_type_id = t::array(type_id).build()?;
-        t::union([
+        t::either([
             type_id,
             t::struct_().prop("equals", type_id).build()?,
+            t::struct_().prop("not", type_id).build()?,
             t::struct_()
                 .prop("lt", opt_type_id)
                 .prop("gt", opt_type_id)
@@ -203,6 +232,7 @@ impl TypeGen for StringFilter {
         t::union([
             type_id,
             t::struct_().prop("equals", type_id).build()?,
+            t::struct_().prop("not", type_id).build()?,
             t::struct_().prop("in", array_type_id).build()?,
             t::struct_().prop("notIn", array_type_id).build()?,
             t::struct_()
@@ -227,5 +257,44 @@ impl TypeGen for StringFilter {
 
     fn name(&self, context: &TypeGenContext) -> String {
         "_string_filter".to_string()
+    }
+}
+
+struct ScalarListFilter(TypeId);
+
+impl TypeGen for ScalarListFilter {
+    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+        with_store(|s| -> Result<()> {
+            match self.0.as_type(s)? {
+                Type::Optional(_) => Err("array of optional not supported".to_owned()), // TODO
+                _ => Ok(()),
+            }
+        })?;
+
+        // we can use union here instead of either since the structs do not have
+        // overlapping fields.
+        // Union validation is more efficient.
+        t::union([
+            t::struct_().prop("has", self.0).build()?,
+            t::struct_()
+                .prop("hasEvery", t::array(self.0).build()?)
+                .build()?,
+            t::struct_()
+                .prop("hasSome", t::array(self.0).build()?)
+                .build()?,
+            t::struct_()
+                .prop("isEmpty", t::boolean().build()?)
+                .build()?,
+            // TODO "isSet": mongo only
+            t::struct_()
+                .prop("equals", t::array(self.0).build()?)
+                .build()?,
+        ])
+        .named(self.name(context))
+        .build()
+    }
+
+    fn name(&self, context: &TypeGenContext) -> String {
+        format!("_list_filter_{}", self.0 .0)
     }
 }

@@ -34,11 +34,28 @@ enum PrismaRegisterEngineOut {
 
 #[deno]
 fn prisma_register_engine(input: PrismaRegisterEngineInp) -> PrismaRegisterEngineOut {
-    match RT.block_on(engine::register_engine(input.datamodel, input.engine_name)) {
+    let datamodel = prisma_models::psl::reformat(&input.datamodel, 4);
+
+    let datamodel = match datamodel {
+        Some(dm) => dm,
+        None => {
+            log::error!("Error formatting datamodel:\n{}", input.datamodel);
+            return PrismaRegisterEngineOut::Err {
+                message: "Error formatting datamodel".to_string(),
+            };
+        }
+    };
+
+    log::info!("Reformatted datamodel:\n{}", datamodel);
+
+    match RT.block_on(engine::register_engine(datamodel, input.engine_name)) {
         Ok(()) => PrismaRegisterEngineOut::Ok,
-        Err(e) => PrismaRegisterEngineOut::Err {
-            message: e.to_string(),
-        },
+        Err(e) => {
+            log::error!("Error registering engine: {:?}", e);
+            PrismaRegisterEngineOut::Err {
+                message: e.to_string(),
+            }
+        }
     }
 }
 

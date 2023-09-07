@@ -51,13 +51,15 @@ impl TypeGen for OrderBy {
                             None
                         } else {
                             let rel = context.registry.relationships.get(rel_name).unwrap();
-                            match rel
-                                .get(rel.side_of_model(self.model_id).unwrap().opposite())
-                                .cardinality
-                            {
+                            let relationship_model =
+                                rel.get(rel.side_of_model(self.model_id).unwrap().opposite());
+                            match relationship_model.cardinality {
                                 Cardinality::Optional | Cardinality::One => Some((
                                     k.clone(),
-                                    PropType::OrderBy(ty.into(), rel_name.clone()),
+                                    PropType::OrderBy(
+                                        relationship_model.model_type,
+                                        rel_name.clone(),
+                                    ),
                                 )),
                                 Cardinality::Many => Some((k.clone(), PropType::Aggregates)),
                             }
@@ -75,6 +77,7 @@ impl TypeGen for OrderBy {
                                 },
                             ))
                         }
+                        Type::Array(_) => None, // TODO: can we order by an array?
                         _ => panic!("type not supported"),
                     }
                 })
@@ -102,19 +105,19 @@ impl TypeGen for OrderBy {
     }
 
     fn name(&self, context: &TypeGenContext) -> String {
-        let name = context
-            .registry
-            .models
-            .get(&self.model_id)
-            .unwrap()
-            .name
-            .clone();
+        // let name = context
+        //     .registry
+        //     .models
+        //     .get(&self.model_id)
+        //     .unwrap()
+        //     .name
+        //     .clone();
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {
             format!("_excluding_{}", self.skip_rel.join("_"))
         };
-        format!("_{}_OrderBy", self.model_id.0)
+        format!("_{}_OrderBy{suffix}", self.model_id.0)
     }
 }
 

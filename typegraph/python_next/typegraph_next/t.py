@@ -91,7 +91,7 @@ class ref(typedef):
     name: str
 
     def __init__(self, name: str):
-        res = core.proxyb(store, TypeProxy(name=name))
+        res = core.proxyb(store, TypeProxy(name=name, extras=[]))
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)
@@ -179,7 +179,7 @@ class float(typedef):
         )
         runtime_config = serialize_record_values(config)
         res = core.floatb(
-            store, data, TypeBase(name=name, runtime_config=runtime_config)
+            store, data, TypeBase(name=name, runtime_config=runtime_config, as_id=False)
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -198,7 +198,9 @@ class boolean(typedef):
         self, *, name: Optional[str] = None, config: Optional[Dict[str, any]] = None
     ):
         runtime_config = serialize_record_values(config)
-        res = core.booleanb(store, TypeBase(name=name, runtime_config=runtime_config))
+        res = core.booleanb(
+            store, TypeBase(name=name, runtime_config=runtime_config, as_id=False)
+        )
         if isinstance(res, Err):
             raise Exception(res.value)
         super().__init__(res.value)

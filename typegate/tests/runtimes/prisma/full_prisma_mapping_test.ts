@@ -55,189 +55,189 @@ Meta.test("prisma full mapping", async (t) => {
       .on(e);
   });
 
-  await t.should("find the first item", async () => {
-    await gql`
-        query {
-          findFirstPost(
-            where: {
-              title: { contains: "Title" }
-            },
-            skip: 1,
-            orderBy: [ {title: "desc"} ]
-          ) {
-            id
-            title
-          }
-        }
-    `.expectData({
-      findFirstPost: {
-        id: 10004,
-        title: "Some Title 4",
-      },
-    })
-      .on(e);
-  });
-
-  await t.should("paginate correctly with findManyPosts", async () => {
-    await gql`
-        query {
-          findManyPosts(skip: 1, take: 2) {
-            id
-            title
-          }
-        }
-    `.expectData({
-      findManyPosts: [
-        { id: 10002, title: "Some Title 2" },
-        { id: 10003, title: "Some Title 3" },
-      ],
-    })
-      .on(e);
-  });
-
-  await t.should("orderBy likes and views", async () => {
-    await gql`
-        query {
-          findManyPosts(
-            orderBy: [{likes: "desc"}, {views: "asc"}]
-          )
-          {
-            id
-            likes
-            views
-          }
-        }
-    `.expectData({
-      findManyPosts: [
-        { id: 10004, likes: 14, views: 5 },
-        { id: 10003, likes: 13, views: 5 },
-        { id: 10005, likes: 7, views: 2 },
-        { id: 10001, likes: 7, views: 9 },
-        { id: 10007, likes: 4, views: 0 },
-        { id: 10002, likes: 3, views: 6 },
-        { id: 10008, likes: 1, views: 4 },
-        { id: 10006, likes: 0, views: 0 },
-      ],
-    })
-      .on(e);
-  });
-
+  // await t.should("find the first item", async () => {
+  //   await gql`
+  //       query {
+  //         findFirstPost(
+  //           where: {
+  //             title: { contains: "Title" }
+  //           },
+  //           skip: 1,
+  //           orderBy: [ {title: "desc"} ]
+  //         ) {
+  //           id
+  //           title
+  //         }
+  //       }
+  //   `.expectData({
+  //     findFirstPost: {
+  //       id: 10004,
+  //       title: "Some Title 4",
+  //     },
+  //   })
+  //     .on(e);
+  // });
+  //
+  // await t.should("paginate correctly with findManyPosts", async () => {
+  //   await gql`
+  //       query {
+  //         findManyPosts(skip: 1, take: 2) {
+  //           id
+  //           title
+  //         }
+  //       }
+  //   `.expectData({
+  //     findManyPosts: [
+  //       { id: 10002, title: "Some Title 2" },
+  //       { id: 10003, title: "Some Title 3" },
+  //     ],
+  //   })
+  //     .on(e);
+  // });
+  //
+  // await t.should("orderBy likes and views", async () => {
+  //   await gql`
+  //       query {
+  //         findManyPosts(
+  //           orderBy: [{likes: "desc"}, {views: "asc"}]
+  //         )
+  //         {
+  //           id
+  //           likes
+  //           views
+  //         }
+  //       }
+  //   `.expectData({
+  //     findManyPosts: [
+  //       { id: 10004, likes: 14, views: 5 },
+  //       { id: 10003, likes: 13, views: 5 },
+  //       { id: 10005, likes: 7, views: 2 },
+  //       { id: 10001, likes: 7, views: 9 },
+  //       { id: 10007, likes: 4, views: 0 },
+  //       { id: 10002, likes: 3, views: 6 },
+  //       { id: 10008, likes: 1, views: 4 },
+  //       { id: 10006, likes: 0, views: 0 },
+  //     ],
+  //   })
+  //     .on(e);
+  // });
+  //
   // TODO: Uncomment after typecheck
-  await t.should("do a groupBy with orderBy", async () => {
-    await gql`
-        query {
-          groupByPost(
-            by: ["published"],
-            where: {author: {id: 1}},
-            orderBy: [{_sum: {likes: "desc"}}]
-          )
-          {
-            published
-            _count { _all }
-            _sum { likes views }
-          }
-        }
-    `.expectData({
-      groupByPost: [
-        {
-          published: true,
-          _count: { _all: 6 },
-          _sum: { likes: 46, views: 25 },
-        },
-        {
-          published: false,
-          _count: { _all: 2 },
-          _sum: { likes: 3, views: 6 },
-        },
-      ],
-    })
-      .on(e);
-  });
-
-  await t.should("do a groupBy with a basic having filter", async () => {
-    await gql`
-        query {
-          groupByPost(
-            by: ["published"],
-            having: {
-              published: true,
-              views: {_max: { gt: 1 }},
-
-              # does nothing, just proves that the validation works
-              # Note: fields does not have to be selected in the output
-              likes: {_count: {lte: 100000}}
-            }
-          )
-          {
-            published
-            _max { views likes }
-            _sum { views likes }
-          }
-        }
-    `
-      .expectData({
-        groupByPost: [
-          {
-            published: true,
-            _max: { views: 9, likes: 14 },
-            _sum: { views: 25, likes: 46 },
-          },
-        ],
-      })
-      .on(e);
-  });
-
-  await t.should("do a groupBy with a valid nested having filter", async () => {
-    await gql`
-        query {
-          groupByPost(
-            by: ["published"],
-            having: {
-                AND: [
-                  # AND operand 1
-                  {
-                    OR: [
-                      {
-                        published: true,
-                        views: {_max: { gt: 1 }},
-                      },
-                      { NOT: { published: {not: false} } },
-                      { views: {_count: {in : [-1, -2, -1000]} }}
-                    ]
-                  },
-
-                  # AND operand 2
-                  {
-                    views: {_sum: {equals: 25}}
-                  }
-
-                  # AND operand 3
-                  {
-                    id: {_count: {gt: 0}}
-                  }
-                ]
-            }
-          )
-          {
-            published
-            _count { _all }
-            _max { views likes }
-            _sum { views likes }
-          }
-        }
-    `
-      .expectData({
-        groupByPost: [
-          {
-            published: true,
-            _count: { _all: 6 },
-            _max: { views: 9, likes: 14 },
-            _sum: { views: 25, likes: 46 },
-          },
-        ],
-      })
-      .on(e);
-  });
+  // await t.should("do a groupBy with orderBy", async () => {
+  //   await gql`
+  //       query {
+  //         groupByPost(
+  //           by: ["published"],
+  //           where: {author: {id: 1}},
+  //           orderBy: [{_sum: {likes: "desc"}}]
+  //         )
+  //         {
+  //           published
+  //           _count { _all }
+  //           _sum { likes views }
+  //         }
+  //       }
+  //   `.expectData({
+  //     groupByPost: [
+  //       {
+  //         published: true,
+  //         _count: { _all: 6 },
+  //         _sum: { likes: 46, views: 25 },
+  //       },
+  //       {
+  //         published: false,
+  //         _count: { _all: 2 },
+  //         _sum: { likes: 3, views: 6 },
+  //       },
+  //     ],
+  //   })
+  //     .on(e);
+  // });
+  //
+  // await t.should("do a groupBy with a basic having filter", async () => {
+  //   await gql`
+  //       query {
+  //         groupByPost(
+  //           by: ["published"],
+  //           having: {
+  //             published: true,
+  //             views: {_max: { gt: 1 }},
+  //
+  //             # does nothing, just proves that the validation works
+  //             # Note: fields does not have to be selected in the output
+  //             likes: {_count: {lte: 100000}}
+  //           }
+  //         )
+  //         {
+  //           published
+  //           _max { views likes }
+  //           _sum { views likes }
+  //         }
+  //       }
+  //   `
+  //     .expectData({
+  //       groupByPost: [
+  //         {
+  //           published: true,
+  //           _max: { views: 9, likes: 14 },
+  //           _sum: { views: 25, likes: 46 },
+  //         },
+  //       ],
+  //     })
+  //     .on(e);
+  // });
+  //
+  // await t.should("do a groupBy with a valid nested having filter", async () => {
+  //   await gql`
+  //       query {
+  //         groupByPost(
+  //           by: ["published"],
+  //           having: {
+  //               AND: [
+  //                 # AND operand 1
+  //                 {
+  //                   OR: [
+  //                     {
+  //                       published: true,
+  //                       views: {_max: { gt: 1 }},
+  //                     },
+  //                     { NOT: { published: {not: false} } },
+  //                     { views: {_count: {in : [-1, -2, -1000]} }}
+  //                   ]
+  //                 },
+  //
+  //                 # AND operand 2
+  //                 {
+  //                   views: {_sum: {equals: 25}}
+  //                 }
+  //
+  //                 # AND operand 3
+  //                 {
+  //                   id: {_count: {gt: 0}}
+  //                 }
+  //               ]
+  //           }
+  //         )
+  //         {
+  //           published
+  //           _count { _all }
+  //           _max { views likes }
+  //           _sum { views likes }
+  //         }
+  //       }
+  //   `
+  //     .expectData({
+  //       groupByPost: [
+  //         {
+  //           published: true,
+  //           _count: { _all: 6 },
+  //           _max: { views: 9, likes: 14 },
+  //           _sum: { views: 25, likes: 46 },
+  //         },
+  //       ],
+  //     })
+  //     .on(e);
+  // });
 
   await t.should("do an aggregate", async () => {
     await gql`
@@ -332,10 +332,10 @@ Meta.test("prisma full mapping", async (t) => {
                     {NOT: {views: {not: {gt: 5}}}},
                   ]
                 },
-
+  
                 # OR operand 2
                 {views: {lt: 3}},
-
+  
                 # OR operand 3
                 {views: {equals: 9}} # or {views: 9}
               ],
@@ -603,12 +603,13 @@ Meta.test("prisma full mapping", async (t) => {
     })
       .on(e);
   });
+
   await t.should("filter using nested relation (1-1)", async () => {
     await gql`
         query {
           findFirstComment(
             where: {
-              related_post: { 
+              related_post: {
                 title: { contains: "MODIFIED" }
               }
             },

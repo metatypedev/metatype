@@ -3,6 +3,7 @@
 
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
+use std::fmt::format;
 
 use self::additional_filters::{Distinct, Skip, Take};
 use self::aggregate::{CountOutput, NumberAggregateOutput};
@@ -247,6 +248,7 @@ impl TypeGenContext {
         } else {
             let type_id = generator.generate(self)?;
             self.cache.insert(type_name, type_id);
+            // TODO check generated type name
             Ok(type_id)
         }
     }

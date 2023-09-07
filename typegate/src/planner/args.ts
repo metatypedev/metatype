@@ -418,7 +418,8 @@ class ArgumentCollector {
       } catch (error) {
         if (
           error instanceof TypeMismatchError ||
-          error instanceof MandatoryArgumentError
+          error instanceof MandatoryArgumentError ||
+          error instanceof UnexpectedPropertiesError
         ) {
           continue;
         }
@@ -510,11 +511,11 @@ class ArgumentCollector {
 
     const unexpectedProps = Object.keys(fieldByKeys);
     if (unexpectedProps.length > 0) {
-      const details = [
-        unexpectedProps.map((name) => `'${name}'`).join(", "),
-        `for argument ${this.currentNodeDetails}`,
-      ].join(" ");
-      throw new Error(`Unexpected props ${details}`);
+      throw new UnexpectedPropertiesError(
+        unexpectedProps,
+        this.currentNodeDetails,
+        Object.keys(props),
+      );
     }
 
     return (...params: Parameters<ComputeArg>) =>
@@ -744,6 +745,22 @@ class TypeMismatchError extends Error {
     const errorMessage = [
       `Type mismatch: got '${actual}' but expected ${exp}`,
       `for argument ${argDetails}`,
+    ].join(" ");
+    super(errorMessage);
+  }
+}
+
+class UnexpectedPropertiesError extends Error {
+  constructor(
+    props: string[],
+    nodeDetails: string,
+    validProps: string[],
+  ) {
+    const name = props.length === 1 ? "property" : "properties";
+    const errorMessage = [
+      `Unexpected ${name} '${props.join(", ")}'`,
+      `for argument ${nodeDetails};`,
+      `valid properties are: ${validProps.join(", ")}`,
     ].join(" ");
     super(errorMessage);
   }

@@ -738,21 +738,6 @@ dependencies = [
 [[package]]
 name = "builtin-psl-connectors"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
-dependencies = [
- "connection-string",
- "either",
- "enumflags2",
- "indoc",
- "lsp-types",
- "once_cell",
- "psl-core 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "regex",
-]
-
-[[package]]
-name = "builtin-psl-connectors"
-version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c90047725a05a6ef02e32ac97e"
 dependencies = [
  "connection-string",
@@ -761,7 +746,7 @@ dependencies = [
  "indoc",
  "lsp-types",
  "once_cell",
- "psl-core 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "psl-core",
  "regex",
 ]
 
@@ -1367,7 +1352,7 @@ source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c
 dependencies = [
  "base64 0.13.1",
  "once_cell",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "psl",
  "regex",
 ]
 
@@ -1499,16 +1484,6 @@ dependencies = [
 [[package]]
 name = "diagnostics"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
-dependencies = [
- "colored",
- "indoc",
- "pest",
-]
-
-[[package]]
-name = "diagnostics"
-version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c90047725a05a6ef02e32ac97e"
 dependencies = [
  "colored",
@@ -1626,8 +1601,8 @@ source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c
 dependencies = [
  "bigdecimal",
  "indexmap 1.9.3",
- "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-models",
+ "psl",
  "schema",
  "serde 1.0.188",
  "serde_json",
@@ -3359,7 +3334,7 @@ dependencies = [
  "notify-debouncer-mini",
  "openssl",
  "pathdiff",
- "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
+ "prisma-models",
  "project-root",
  "question",
  "reqwest",
@@ -3597,9 +3572,9 @@ dependencies = [
  "itertools 0.10.5",
  "mongodb",
  "mongodb-client",
- "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-models",
+ "prisma-value",
+ "psl",
  "query-connector",
  "query-engine-metrics",
  "rand 0.7.3",
@@ -3628,7 +3603,7 @@ dependencies = [
  "mongodb-client",
  "mongodb-schema-describer",
  "once_cell",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "psl",
  "regex",
  "schema-connector",
  "serde_json",
@@ -3753,8 +3728,8 @@ dependencies = [
  "num-derive 0.4.0",
  "num-traits 0.2.16",
  "once_cell",
- "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-models",
+ "psl",
  "query-connector",
  "query-core",
  "query-engine-metrics",
@@ -4276,27 +4251,14 @@ dependencies = [
 [[package]]
 name = "parser-database"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
-dependencies = [
- "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "either",
- "enumflags2",
- "indexmap 1.9.3",
- "rustc-hash",
- "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
-]
-
-[[package]]
-name = "parser-database"
-version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c90047725a05a6ef02e32ac97e"
 dependencies = [
- "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "diagnostics",
  "either",
  "enumflags2",
  "indexmap 1.9.3",
  "rustc-hash",
- "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "schema-ast",
 ]
 
 [[package]]
@@ -4651,19 +4613,6 @@ dependencies = [
 [[package]]
 name = "prisma-models"
 version = "0.0.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
-dependencies = [
- "bigdecimal",
- "chrono",
- "itertools 0.10.5",
- "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "thiserror",
-]
-
-[[package]]
-name = "prisma-models"
-version = "0.0.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c90047725a05a6ef02e32ac97e"
 dependencies = [
  "bigdecimal",
@@ -4671,24 +4620,9 @@ dependencies = [
  "cuid",
  "itertools 0.10.5",
  "nanoid",
- "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-value",
+ "psl",
  "thiserror",
- "uuid",
-]
-
-[[package]]
-name = "prisma-value"
-version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
-dependencies = [
- "base64 0.13.1",
- "bigdecimal",
- "chrono",
- "once_cell",
- "regex",
- "serde 1.0.188",
- "serde_json",
  "uuid",
 ]
 
@@ -4840,41 +4774,10 @@ dependencies = [
 [[package]]
 name = "psl"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
-dependencies = [
- "builtin-psl-connectors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "psl-core 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
-]
-
-[[package]]
-name = "psl"
-version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c90047725a05a6ef02e32ac97e"
 dependencies = [
- "builtin-psl-connectors 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl-core 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
-]
-
-[[package]]
-name = "psl-core"
-version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
-dependencies = [
- "bigdecimal",
- "chrono",
- "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "enumflags2",
- "indoc",
- "itertools 0.10.5",
- "lsp-types",
- "once_cell",
- "parser-database 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "regex",
- "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "serde 1.0.188",
- "serde_json",
- "url",
+ "builtin-psl-connectors",
+ "psl-core",
 ]
 
 [[package]]
@@ -4884,16 +4787,16 @@ source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c
 dependencies = [
  "bigdecimal",
  "chrono",
- "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "diagnostics",
  "enumflags2",
  "indoc",
  "itertools 0.10.5",
  "lsp-types",
  "once_cell",
- "parser-database 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "parser-database",
+ "prisma-value",
  "regex",
- "schema-ast 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "schema-ast",
  "serde 1.0.188",
  "serde_json",
  "url",
@@ -5021,8 +4924,8 @@ dependencies = [
  "futures",
  "indexmap 1.9.3",
  "itertools 0.10.5",
- "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-models",
+ "prisma-value",
  "serde 1.0.188",
  "serde_json",
  "thiserror",
@@ -5049,8 +4952,8 @@ dependencies = [
  "once_cell",
  "opentelemetry 0.17.0",
  "petgraph 0.4.13",
- "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-models",
+ "psl",
  "query-connector",
  "query-engine-metrics",
  "schema",
@@ -5315,8 +5218,8 @@ dependencies = [
  "itertools 0.10.5",
  "mongodb-query-connector",
  "once_cell",
- "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-models",
+ "psl",
  "quaint",
  "query-core",
  "serde 1.0.188",
@@ -5669,19 +5572,9 @@ version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c90047725a05a6ef02e32ac97e"
 dependencies = [
  "once_cell",
- "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-models",
+ "psl",
  "rustc-hash",
-]
-
-[[package]]
-name = "schema-ast"
-version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-engines?tag=5.0.0#6b0aef69b7cdfc787f822ecd7cdc76d5f1991584"
-dependencies = [
- "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.0.0)",
- "pest",
- "pest_derive",
 ]
 
 [[package]]
@@ -5689,7 +5582,7 @@ name = "schema-ast"
 version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c90047725a05a6ef02e32ac97e"
 dependencies = [
- "diagnostics 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "diagnostics",
  "pest",
  "pest_derive",
 ]
@@ -5701,7 +5594,7 @@ source = "git+https://github.com/prisma/prisma-engines?tag=5.1.1#6a3747c37ff169c
 dependencies = [
  "chrono",
  "enumflags2",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "psl",
  "quaint",
  "serde 1.0.188",
  "serde_json",
@@ -5722,7 +5615,7 @@ dependencies = [
  "json-rpc-api-build",
  "jsonrpc-core",
  "mongodb-schema-connector",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "psl",
  "schema-connector",
  "serde 1.0.188",
  "serde_json",
@@ -6372,9 +6265,9 @@ dependencies = [
  "itertools 0.10.5",
  "once_cell",
  "opentelemetry 0.17.0",
- "prisma-models 0.0.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-models",
+ "prisma-value",
+ "psl",
  "quaint",
  "query-connector",
  "rand 0.7.3",
@@ -6401,8 +6294,8 @@ dependencies = [
  "enumflags2",
  "indoc",
  "once_cell",
- "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-value",
+ "psl",
  "quaint",
  "regex",
  "schema-connector",
@@ -6432,8 +6325,8 @@ dependencies = [
  "indexmap 1.9.3",
  "indoc",
  "once_cell",
- "prisma-value 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
- "psl 0.1.0 (git+https://github.com/prisma/prisma-engines?tag=5.1.1)",
+ "prisma-value",
+ "psl",
  "quaint",
  "regex",
  "serde 1.0.188",

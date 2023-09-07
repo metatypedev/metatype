@@ -1,54 +1,61 @@
-from typegraph import TypeGraph, policies, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph_next import typegraph, Policy, t, Graph
+from typegraph_next.providers.prisma import PrismaRuntime
 
-with TypeGraph("prisma") as g:
+
+@typegraph()
+def prisma(g: Graph):
     # schema ref:
     # https://www.prisma.io/docs/reference/api-reference/prisma-client-reference
 
     db = PrismaRuntime("prisma", "POSTGRES")
-    public = policies.public()
+    public = Policy.public()
 
     user = t.struct(
         {
-            "id": t.integer().as_id,
+            "id": t.integer(as_id=True),
             "name": t.string(),
             "age": t.integer().optional(),
             "coinflips": t.array(t.boolean()),
             "city": t.string(),
-            "posts": t.array(g("Post")),
-            "extended_profile": g("ExtendedProfile").optional(),
+            "posts": t.array(t.ref("Post")),
+            "extended_profile": t.ref("ExtendedProfile").optional(),
         },
-    ).named("User")
+        name="User",
+    )
 
     post = t.struct(
         {
-            "id": t.integer().as_id,
+            "id": t.integer(as_id=True),
             "title": t.string(),
             "views": t.integer(),
             "likes": t.integer(),
             "published": t.boolean(),
-            "author": g("User"),
-            "comments": t.array(g("Comment")),
-        }
-    ).named("Post")
+            "author": t.ref("User"),
+            "comments": t.array(t.ref("Comment")),
+        },
+        name="Post",
+    )
 
     comment = t.struct(
         {
-            "id": t.integer().as_id,
+            "id": t.integer(as_id=True),
             "content": t.string(),
-            "related_post": g("Post"),
-        }
-    ).named("Comment")
+            "related_post": t.ref("Post"),
+        },
+        name="Comment",
+    )
 
     extended_profile = t.struct(
         {
-            "id": t.integer().as_id,
+            "id": t.integer(as_id=True),
             "bio": t.string(),
-            "user": g("User"),
-        }
-    ).named("ExtendedProfile")
+            "user": t.ref("User"),
+        },
+        name="ExtendedProfile",
+    )
 
     g.expose(
+        public,
         findManyUsers=db.find_many(user),
         findUniqueUser=db.find_unique(user),
         findFirstUser=db.find_first(user),
@@ -61,11 +68,10 @@ with TypeGraph("prisma") as g:
         findUniquePost=db.find_unique(post),
         createManyPosts=db.create_many(post),
         updateManyPosts=db.update_many(post),
-        groupByPost=db.group_by(post),
+        # groupByPost=db.group_by(post),
         aggregatePost=db.aggregate(post),
         createOnePost=db.create(post),
         findManyExtendedProfile=db.find_many(extended_profile),
         createOneExtendedProfile=db.create(extended_profile),
         createOneComment=db.create(comment),
-        default_policy=[public],
     )
