@@ -506,19 +506,24 @@ export class Func<
     this.mat = mat;
   }
 
-  apply(value: Record<string, unknown | InheritDef>): this {
-    const wrapperFuncId = core.withApply({
-      tpeFunc: this._id,
-      applyValue: JSON.stringify(asApplyValue(value)),
-    });
+  apply(value: Record<string, unknown | InheritDef>) {
+    // const wrapperFuncId = core.withApply({
+    //   tpeFunc: this._id,
+    //   applyValue: JSON.stringify(asApplyValue(value)),
+    // });
 
-    return new Proxy(this, {
-      get(target, prop, receiver) {
-        return prop === "_id"
-          ? wrapperFuncId
-          : Reflect.get(target, prop, receiver);
-      },
-    }) as this;
+    // return new Proxy(this, {
+    //   get(target, prop, receiver) {
+    //     return prop === "_id"
+    //       ? wrapperFuncId
+    //       : Reflect.get(target, prop, receiver);
+    //   },
+    // }) as this;
+    return func(
+      this.inp, // use: core.build_apply_input(this.inp._id, JSON.stringify(asApplyValue(value)))
+      this.out,
+      this.mat,
+    );
   }
 }
 

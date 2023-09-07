@@ -18,13 +18,13 @@ use indoc::formatdoc;
 use regex::Regex;
 use types::{
     Array, Boolean, Either, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
-    TypeBoolean, Union, WithApply, WithInjection, WithPolicy,
+    TypeBoolean, Union, WithInjection, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
-    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc,
-    TypeFuncWithApply, TypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString,
-    TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
+    ContextCheck, Policy, PolicyId, TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId,
+    TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -196,10 +196,6 @@ impl wit::core::Core for Lib {
             let base = TypeBase::default();
             Ok(s.add_type(|id| Type::Func(Func { id, base, data })))
         })
-    }
-
-    fn with_apply(data: TypeFuncWithApply) -> Result<TypeId> {
-        with_store_mut(|s| Ok(s.add_type(|id| Type::WithApply(WithApply { id, data }))))
     }
 
     fn with_injection(data: TypeWithInjection) -> Result<TypeId> {

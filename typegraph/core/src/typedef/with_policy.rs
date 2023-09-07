@@ -62,16 +62,6 @@ impl TypeData for TypePolicy {
 
 impl WrapperTypeData for TypePolicy {
     fn get_wrapped_type<'a>(&self, store: &'a Store) -> Option<&'a Type> {
-        store.get_type(self.tpe).ok().map(|tpe| match tpe {
-            // Note: a func can be behind nested WithApply wrappers
-            Type::WithApply(t) => {
-                let mut wrapped = t.data.get_wrapped_type(store).unwrap();
-                while let Type::WithApply(t) = wrapped {
-                    wrapped = t.data.get_wrapped_type(store).unwrap()
-                }
-                wrapped
-            }
-            _ => tpe,
-        })
+        store.get_type(self.tpe).ok()
     }
 }

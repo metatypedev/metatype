@@ -102,11 +102,11 @@ interface core {
     }
     funcb: func(data: type-func) -> result<type-id, error>
 
-    record type-func-with-apply {
-        tpe-func: type-id,
-        apply-value: string
-    }
-    with-apply: func(data: type-func-with-apply) -> result<type-id, error>
+    // record type-func-with-apply {
+    //    tpe-func: type-id,
+    //    apply-value: string
+    // }
+    // with-apply: func(data: type-func-with-apply) -> result<type-id, error>
 
     type policy-id = u32
 
