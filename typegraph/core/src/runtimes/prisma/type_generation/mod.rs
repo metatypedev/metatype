@@ -5,6 +5,7 @@ use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 
 use self::additional_filters::{Distinct, Skip, Take};
+use self::aggregate::{CountOutput, NumberAggregateOutput};
 use self::input_type::InputType;
 use self::order_by::OrderBy;
 use self::out_type::OutType;
@@ -21,6 +22,7 @@ use crate::t::{self, TypeBuilder};
 use crate::types::{ProxyResolution, Type, TypeFun, TypeId};
 
 mod additional_filters;
+mod aggregate;
 mod count;
 mod input_type;
 mod order_by;
@@ -63,6 +65,7 @@ impl TypeGenContext {
         })
     }
 
+    // TODO typegen
     fn find_many_inp(&mut self, model_id: TypeId) -> Result<TypeId> {
         Ok(t::struct_()
             .prop(
@@ -100,6 +103,44 @@ impl TypeGenContext {
         })
     }
 
+    pub fn aggregate(&mut self, model_id: TypeId) -> Result<OperationTypes> {
+        self.registry.manage(model_id)?;
+
+        Ok(OperationTypes {
+            input: self.find_many_inp(model_id)?,
+            // TODO typegen
+            output: t::struct_()
+                .prop("_count", self.generate(&CountOutput::new(model_id))?)
+                .prop(
+                    "_avg",
+                    self.generate(&NumberAggregateOutput::new(model_id, true))?,
+                )
+                .prop(
+                    "_sum",
+                    self.generate(&NumberAggregateOutput::new(model_id, false))?,
+                )
+                .prop(
+                    "_min",
+                    self.generate(&NumberAggregateOutput::new(model_id, false))?,
+                )
+                .prop(
+                    "_max",
+                    self.generate(&NumberAggregateOutput::new(model_id, false))?,
+                )
+                .min(1)
+                .build()?,
+        })
+    }
+
+    pub fn count(&mut self, model_id: TypeId) -> Result<OperationTypes> {
+        self.registry.manage(model_id)?;
+
+        Ok(OperationTypes {
+            input: self.find_many_inp(model_id)?,
+            output: self.generate(&CountOutput::new(model_id))?,
+        })
+    }
+
     pub fn create_one(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
@@ -121,6 +162,7 @@ impl TypeGenContext {
                     t::array(self.generate(&InputType::for_create(model_id))?).build()?,
                 )
                 .build()?,
+            // TODO typegen: BatchOutput
             output: t::struct_().prop("count", t::integer().build()?).build()?,
         })
     }
@@ -217,44 +259,94 @@ mod test {
     use paste::paste;
 
     macro_rules! test_op {
-        ( $op_name:ident ) => {
+        ( $op_name:ident, $test_inp:expr, $test_out:expr ) => {
             paste! {
                 #[test]
                 fn [<test _ $op_name>]() -> Result<()> {
-                    let mut context = TypeGenContext::default();
-
-                    let record = models::simple_record()?;
-                    context.registry.manage(record)?;
-                    let types = context.$op_name(record)?;
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " Record inp"), tree::print(types.input));
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " Record out"), tree::print(types.output));
-
-                    let (user, post) = models::simple_relationship()?;
-                    context.registry.manage(user)?;
-
-                    let types = context.$op_name(user)?;
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " User inp"), tree::print(types.input));
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " User out"), tree::print(types.output));
-
-                    let types = context.$op_name(post)?;
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " Post inp"), tree::print(types.input));
-                    insta::assert_snapshot!(concat!(stringify!($op_name), " Post out"), tree::print(types.output));
-
-                    Ok(())
+                    test_op_body!($op_name, $test_inp, $test_out)
                 }
-
             }
         };
+
+        ( $op_name:ident ) => {
+            test_op!($op_name, true, true);
+        };
+
+        ( $op_name:ident, input_only ) => {
+            test_op!($op_name, true, false);
+        };
+
+        ( $op_name:ident, output_only ) => {
+            test_op!($op_name, false, true);
+        };
+    }
+
+    macro_rules! test_op_body {
+        ( $op_name:ident, $test_inp:expr, $test_out:expr ) => {{
+            let mut context = TypeGenContext::default();
+
+            let record = models::simple_record()?;
+            context.registry.manage(record)?;
+            let types = context.$op_name(record)?;
+            if $test_inp {
+                insta::assert_snapshot!(
+                    concat!(stringify!($op_name), " Record inp"),
+                    tree::print(types.input)
+                );
+            }
+            if $test_out {
+                insta::assert_snapshot!(
+                    concat!(stringify!($op_name), " Record out"),
+                    tree::print(types.output)
+                );
+            }
+
+            let (user, post) = models::simple_relationship()?;
+            context.registry.manage(user)?;
+
+            let types = context.$op_name(user)?;
+            if $test_inp {
+                insta::assert_snapshot!(
+                    concat!(stringify!($op_name), " User inp"),
+                    tree::print(types.input)
+                );
+            }
+
+            if $test_out {
+                insta::assert_snapshot!(
+                    concat!(stringify!($op_name), " User out"),
+                    tree::print(types.output)
+                );
+            }
+
+            let types = context.$op_name(post)?;
+            if $test_inp {
+                insta::assert_snapshot!(
+                    concat!(stringify!($op_name), " Post inp"),
+                    tree::print(types.input)
+                );
+            }
+            if $test_out {
+                insta::assert_snapshot!(
+                    concat!(stringify!($op_name), " Post out"),
+                    tree::print(types.output)
+                );
+            }
+
+            Ok(())
+        }};
     }
 
     test_op!(find_unique);
     test_op!(find_many);
-    test_op!(find_first);
-    test_op!(create_one);
+    test_op!(find_first, output_only);
+    test_op!(aggregate, output_only);
+    test_op!(create_one, input_only);
     test_op!(create_many);
-    test_op!(update_one);
-    test_op!(update_many);
+    test_op!(update_one, input_only);
+    test_op!(update_many, input_only);
     // the following operations reuse already tests types, so no need to test them
+    // test_op!(count);
     // test_op!(upsert_one);
     // test_op!(delete_one);
     // test_op!(delete_many);

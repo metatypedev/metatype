@@ -308,6 +308,14 @@ impl wit::Runtimes for crate::Lib {
         prisma_op!(runtime, model, find_first, "findFirst")
     }
 
+    fn prisma_aggregate(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(runtime, model, aggregate, "aggregate")
+    }
+
+    fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(runtime, model, count, "count")
+    }
+
     fn prisma_create_one(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
         prisma_op!(
             runtime,

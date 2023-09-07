@@ -1,6 +1,6 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(out)"
+expression: "tree::print(types.output)"
 ---
 root: optional #100
 └─ item: struct '_UserOutputType' #99

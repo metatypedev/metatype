@@ -155,7 +155,7 @@ impl TypeGen for InputType {
                     }
 
                     // TODO what if cardinality is Cardinality::One ??
-                    builder.prop(prop.key, t::optional(inner.max(1).build()?).build()?);
+                    builder.prop(prop.key, t::optional(inner.min(1).max(1).build()?).build()?);
                 }
             }
         }
