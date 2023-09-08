@@ -24,17 +24,13 @@ typegraph("test-apply", (g) => {
       { code: "({ student }) => student" },
     )
       .apply({
-        input: {
-          student: {
-            id: 2,
-          },
+        student: {
+          id: 2,
         },
       })
       .apply({
-        input: {
-          student: {
-            id: 3,
-          },
+        student: {
+          id: 3,
         },
       })
       .withPolicy(pub),

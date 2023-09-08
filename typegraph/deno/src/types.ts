@@ -510,12 +510,11 @@ export class Func<
   apply(value: Record<string, unknown | InheritDef>) {
     const data: Apply = { paths: [] };
     buildApplyData(value, data);
-    // const example_id = wit_utils.genApplyb(
-    //   this.inp._id,
-    //   data,
-    // );
+    const _exampleId = wit_utils.genApplyb(
+      this.inp._id,
+      data,
+    );
 
-    throw Error(JSON.stringify(data));
     return func(
       new Typedef(this.inp._id, { name: this.inp.name }) as Struct<P>,
       this.out,

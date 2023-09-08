@@ -78,21 +78,21 @@ impl Store {
         let mut ret = (self.get_type(struct_id)?, struct_id);
 
         let mut curr_path = vec![];
-        let mut found = false;
         for chunk in path {
             if let Type::Struct(t) = ret.0 {
+                let mut found = false;
                 for (k, v) in t.data.props.iter() {
                     if *k == *chunk {
                         ret = (self.get_type(*v)?, *v);
                         found = true;
                     }
-                    if found {
-                        break;
-                    }
                 }
                 curr_path.push(chunk.clone());
+                if !found {
+                    return Err(errors::invalid_path(&curr_path));
+                }
             } else {
-                return Err(errors::object_not_found_at_path(&curr_path));
+                return Err(errors::expect_object_at_path(&curr_path));
             }
         }
 
