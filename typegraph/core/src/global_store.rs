@@ -78,12 +78,11 @@ impl Store {
         let mut ret = (self.get_type(struct_id)?, struct_id);
 
         let mut curr_path = vec![];
-        let mut pos = curr_path.len();
-        while pos != path.len() {
-            let mut found = false;
+        let mut found = false;
+        for chunk in path {
             if let Type::Struct(t) = ret.0 {
                 for (k, v) in t.data.props.iter() {
-                    if k.eq(&path[pos]) {
+                    if *k == *chunk {
                         ret = (self.get_type(*v)?, *v);
                         found = true;
                     }
@@ -91,13 +90,12 @@ impl Store {
                         break;
                     }
                 }
-            }
-            curr_path.push(path[pos].clone());
-            pos = curr_path.len();
-            if !found {
+                curr_path.push(chunk.clone());
+            } else {
                 return Err(errors::object_not_found_at_path(&curr_path));
             }
         }
+
         Ok(ret)
     }
 

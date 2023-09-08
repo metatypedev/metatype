@@ -25,17 +25,16 @@ typegraph("test-apply", (g) => {
     )
       .apply({
         input: {
-          id: 1,
+          student: {
+            id: 2,
+          },
         },
       })
       .apply({
         input: {
-          infos: { age: g.inherit() },
-        },
-      })
-      .apply({
-        input: {
-          id: 2,
+          student: {
+            id: 3,
+          },
         },
       })
       .withPolicy(pub),

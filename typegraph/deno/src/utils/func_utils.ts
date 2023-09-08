@@ -1,10 +1,10 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { ApplyTree, ApplyValue } from "./type_utils.ts";
 import { CREATE, DELETE, NONE, UPDATE } from "../effects.ts";
 import { InjectionSource, InjectionValue } from "./type_utils.ts";
 import { InheritDef } from "../typegraph.ts";
+import { Apply } from "../../gen/exports/metatype-typegraph-utils.d.ts";
 
 export function stringifySymbol(symbol: symbol) {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -62,35 +62,45 @@ export function serializeRecordValues<T>(
   return Object.entries(obj).map(([k, v]) => [k, JSON.stringify(v)]);
 }
 
-// TODO:
-// simply enumerate all paths instead
-// this should prevent recursion in core sdk and make validation easier
-// (just walk the path list iteratively)
-export function asApplyValue(
+export function buildApplyData(
   node: InheritDef | unknown,
+  data: Apply,
   path: string[] = [],
-): ApplyTree {
+): void {
   if (node === null || node === undefined) {
     throw new Error(
       `unsupported value "${node}" at ${path.join(".")}`,
     );
   }
   if (node instanceof InheritDef) {
-    return { inherit: path };
+    data.paths.push({
+      path: path,
+      value: { inherit: true },
+    });
+    return;
   }
   if (typeof node === "object") {
     if (Array.isArray(node)) {
-      return { set: node };
+      data.paths.push({
+        path: path,
+        value: { inherit: false, payload: JSON.stringify(node) },
+      });
+      return;
     }
     const newObj = {} as any;
     for (const [k, v] of Object.entries(node)) {
-      newObj[k] = asApplyValue(v, [...path, k]);
+      buildApplyData(v, data, [...path, k]);
     }
-    return newObj;
+    return;
   }
+
   const allowed = ["number", "string", "boolean"];
   if (allowed.includes(typeof node)) {
-    return { set: node as ApplyValue };
+    data.paths.push({
+      path: path,
+      value: { inherit: false, payload: JSON.stringify(node) },
+    });
+    return;
   }
   throw new Error(
     `unsupported type "${typeof node}" at ${path.join(".")}`,

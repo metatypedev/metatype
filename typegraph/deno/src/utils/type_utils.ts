@@ -18,12 +18,6 @@ type Nullable<T> = { [P in keyof T]: T[P] | null };
 
 export type NullableOptional<T> = PickRequired<T> & Nullable<PickOptional<T>>;
 
-type SetValue = string | number | boolean;
-export type ApplyValue = SetValue | Array<SetValue>;
-export type ApplyTree =
-  | { set: ApplyValue }
-  | { inherit: Array<string> };
-
 export type InjectionSource =
   | "dynamic"
   | "static"
