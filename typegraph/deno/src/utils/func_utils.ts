@@ -79,11 +79,15 @@ export function buildApplyData(
     });
     return;
   }
+
+  const asStaticInjection = (value: any) =>
+    serializeInjection("static", value, (x: unknown) => JSON.stringify(x));
+
   if (typeof node === "object") {
     if (Array.isArray(node)) {
       data.paths.push({
         path: path,
-        value: { inherit: false, payload: JSON.stringify(node) },
+        value: { inherit: false, payload: asStaticInjection(node) },
       });
       return;
     }
@@ -98,7 +102,7 @@ export function buildApplyData(
   if (allowed.includes(typeof node)) {
     data.paths.push({
       path: path,
-      value: { inherit: false, payload: JSON.stringify(node) },
+      value: { inherit: false, payload: asStaticInjection(node) },
     });
     return;
   }
