@@ -7,14 +7,114 @@ use crate::{
     errors::Result,
     global_store::with_store,
     types::{Type, TypeFun},
-    wit::core::{Core, TypeBase, TypeId, TypeStruct, TypeWithInjection},
+    wit::{
+        core::{Core, TypeBase, TypeId, TypeStruct, TypeWithInjection},
+        utils::{Apply, ApplyPath, ApplyValue},
+    },
     Lib,
 };
+
+#[derive(Debug, Clone)]
+struct PathTree {
+    // pub parent: Option<&'a mut Box<PathTree<'a>>>,
+    pub entries: Vec<PathTree>,
+    pub name: String,
+    pub value: ApplyValue,
+}
+
+impl PathTree {
+    fn new(name: String, value: ApplyValue) -> PathTree {
+        Self {
+            entries: vec![],
+            name,
+            value,
+        }
+    }
+
+    // pub fn is_leaf(&self) -> bool {
+    //     self.entries.len() == 0
+    // }
+
+    fn build_helper(
+        parent: &mut PathTree,
+        description: &ApplyPath,
+        depth: usize,
+    ) -> Result<(), String> {
+        if depth < description.path.len() {
+            let item = &description.path[depth];
+            let child = match parent.find(item) {
+                Some(child) => child,
+                None => {
+                    parent.add(PathTree::new(item.to_string(), description.value.clone()));
+                    parent
+                        .find(item)
+                        .ok_or("node incorrectly added into tree".to_string())?
+                }
+            };
+            PathTree::build_helper(child, description, depth + 1)?
+        }
+        Ok(())
+    }
+
+    pub fn build_from(apply: &Apply) -> Result<PathTree, String> {
+        let mut root = PathTree::new(
+            "root".to_string(),
+            ApplyValue {
+                inherit: false,
+                payload: None,
+            },
+        );
+        for descr in apply.paths.iter() {
+            PathTree::build_helper(&mut root, descr, 0)?;
+        }
+        Ok(root)
+    }
+
+    pub fn find(&mut self, other_name: &str) -> Option<&mut PathTree> {
+        self.entries
+            .iter_mut()
+            .find(|entry| entry.name.eq(other_name))
+    }
+
+    pub fn add(&mut self, entry: PathTree) {
+        self.entries.push(entry);
+    }
+
+    fn print_helper(lines: &mut String, node: &PathTree, depth: u32) {
+        if depth == 0 {
+            lines.push_str(&node.name);
+        } else {
+            let name = node.name.clone();
+            let inherit = node.value.inherit;
+            lines.push_str(&format!(
+                "{:indent$}└── [{name} ({inherit})]",
+                "",
+                indent = ((depth as usize) - 1) * 4
+            ));
+        }
+
+        for entry in node.entries.iter() {
+            PathTree::print_helper(lines, entry, depth + 1)
+        }
+    }
+}
+
+impl ToString for PathTree {
+    fn to_string(&self) -> String {
+        let mut lines = String::new();
+        PathTree::print_helper(&mut lines, self, 0);
+        lines
+    }
+}
 
 impl crate::wit::utils::Utils for crate::Lib {
     fn gen_applyb(supertype_id: TypeId, apply: crate::wit::utils::Apply) -> Result<TypeId> {
         // Walk supertype and enumerate ALL possible paths
         // get that path
+
+        let _apply_tree = PathTree::build_from(&apply)?;
+
+        // print_tree(&apply_tree, 0);
 
         // let root_props: Vec<(String, u32)> = vec![];
         let mut obj_cache: HashMap<String, TypeId> = HashMap::new();
