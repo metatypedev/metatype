@@ -112,8 +112,9 @@ pub struct ItemNode {
 }
 
 // scheme similar to `types: TypeNode[]` in typegate
-// item node wrappers are ordered in such a way that
-// the top items are the leaves
+// Item node wrappers are ordered in such a way that
+// 1. the last items are the leaves
+// 2. first item is guaranteed to be the root node
 pub fn flatten_to_sorted_items_array(path_tree: &PathTree) -> Result<Vec<ItemNode>, String> {
     let mut index = 0;
     let mut levels = vec![vec![ItemNode {

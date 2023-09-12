@@ -7,7 +7,7 @@ Meta.test("deno(sdk): apply", async (t) => {
   const e = await t.engine("typecheck/apply.ts");
 
   await t.should(
-    "work as normal if if all each node has g.inherit() flag",
+    "work as normal if all nodes have g.inherit() flag",
     async () => {
       await gql`
       query {

@@ -286,8 +286,8 @@ interface utils {
     // produces a list of apply-path
     // [ 
     //  { path: [a], value: { inherit: false, payload: 1 } } 
-    //  { path: [b, c], value: { inherit: true } } 
-    //  { path: [b, d], value: { inherit: false, payload: [1, 2, 3] } } 
+    //  { path: [a, b, c], value: { inherit: true } } 
+    //  { path: [a, b, d], value: { inherit: false, payload: [1, 2, 3] } } 
     // ]
     record apply-value {
         inherit: bool,
