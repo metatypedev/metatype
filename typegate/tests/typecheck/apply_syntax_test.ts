@@ -10,27 +10,54 @@ Meta.test("deno(sdk): apply", async (t) => {
     "work as normal if all nodes have g.inherit() flag",
     async () => {
       await gql`
-      query {
-        test(
-          student: {
-            id: 1,
-            name: "Jake",
-            infos: { age: 15 }
+        query {
+          testInvariantA (
+            student: {
+              id: 1,
+              name: "Jake",
+              infos: { age: 15 }
+            }
+          ) {
+          id
+          name
+          infos { age school }
           }
-        ) {
-         id
-         name
-         infos { age school }
         }
-      }
-    `
-        .expectData({
-          test: {
-            id: 1,
-            name: "Jake",
-            infos: { age: 15 },
-          },
-        })
+      `.expectData({
+        testInvariantA: {
+          id: 1,
+          name: "Jake",
+          infos: { age: 15 },
+        },
+      })
+        .on(e);
+    },
+  );
+
+  await t.should(
+    "work as normal if all first level nodes have g.inherit()",
+    async () => {
+      await gql`
+        query {
+          testInvariantB (
+            student: {
+              id: 1,
+              name: "Jake",
+              infos: { age: 15 }
+            }
+          ) {
+          id
+          name
+          infos { age school }
+          }
+        }
+      `.expectData({
+        testInvariantB: {
+          id: 1,
+          name: "Jake",
+          infos: { age: 15 },
+        },
+      })
         .on(e);
     },
   );
