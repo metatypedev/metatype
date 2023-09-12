@@ -25,12 +25,12 @@ typegraph("test-apply", (g) => {
     )
       .apply({
         student: {
-          id: 2,
-        },
-      })
-      .apply({
-        student: {
-          id: 3,
+          id: g.inherit(),
+          name: g.inherit(),
+          infos: {
+            age: g.inherit(),
+            school: g.inherit(),
+          },
         },
       })
       .withPolicy(pub),

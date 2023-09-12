@@ -12,21 +12,21 @@ use crate::{
 pub struct PathTree {
     pub entries: Vec<PathTree>,
     pub name: String,
-    pub value: ApplyValue,
+    pub path_infos: ApplyPath,
 }
 
 impl PathTree {
-    fn new(name: String, value: ApplyValue) -> PathTree {
+    fn new(name: String, path_infos: ApplyPath) -> PathTree {
         Self {
             entries: vec![],
             name,
-            value,
+            path_infos,
         }
     }
 
-    // pub fn is_leaf(&self) -> bool {
-    //     self.entries.len() == 0
-    // }
+    pub fn is_leaf(&self) -> bool {
+        self.entries.is_empty()
+    }
 
     fn build_helper(
         parent: &mut PathTree,
@@ -38,7 +38,7 @@ impl PathTree {
             let child = match parent.find(chunk) {
                 Some(child) => child,
                 None => {
-                    parent.add(PathTree::new(chunk.to_string(), description.value.clone()));
+                    parent.add(PathTree::new(chunk.to_string(), description.clone()));
                     parent
                         .find(chunk)
                         .ok_or("node incorrectly added into tree".to_string())?
@@ -52,9 +52,12 @@ impl PathTree {
     pub fn build_from(apply: &Apply) -> Result<PathTree, String> {
         let mut root = PathTree::new(
             "root".to_string(),
-            ApplyValue {
-                inherit: false,
-                payload: None,
+            ApplyPath {
+                path: vec![],
+                value: ApplyValue {
+                    inherit: false,
+                    payload: None,
+                },
             },
         );
         for descr in apply.paths.iter() {
@@ -78,7 +81,7 @@ impl PathTree {
             lines.push_str(&node.name);
         } else {
             let name = node.name.clone();
-            let inherit = node.value.inherit;
+            let inherit = node.path_infos.value.inherit;
             lines.push_str(&format!(
                 "{:indent$}└── [{name} ({inherit})]",
                 "",
@@ -111,7 +114,7 @@ pub struct ItemNode {
 // scheme similar to `types: TypeNode[]` in typegate
 // item node wrappers are ordered in such a way that
 // the top items are the leaves
-pub fn flatten_to_items_array(path_tree: &PathTree) -> Result<Vec<ItemNode>, String> {
+pub fn flatten_to_sorted_items_array(path_tree: &PathTree) -> Result<Vec<ItemNode>, String> {
     let mut index = 0;
     let mut levels = vec![vec![ItemNode {
         parent_index: None,

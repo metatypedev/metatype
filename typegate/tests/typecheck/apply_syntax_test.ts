@@ -6,9 +6,10 @@ import { gql, Meta } from "../utils/mod.ts";
 Meta.test("deno(sdk): apply", async (t) => {
   const e = await t.engine("typecheck/apply.ts");
 
-  // withApply wrapper should have no effect on func behavior
-  await t.should("work", async () => {
-    await gql`
+  await t.should(
+    "work as normal if if all each node has g.inherit() flag",
+    async () => {
+      await gql`
       query {
         test(
           student: {
@@ -23,13 +24,14 @@ Meta.test("deno(sdk): apply", async (t) => {
         }
       }
     `
-      .expectData({
-        test: {
-          id: 1,
-          name: "Jake",
-          infos: { age: 15 },
-        },
-      })
-      .on(e);
-  });
+        .expectData({
+          test: {
+            id: 1,
+            name: "Jake",
+            infos: { age: 15 },
+          },
+        })
+        .on(e);
+    },
+  );
 });

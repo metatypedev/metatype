@@ -14,44 +14,74 @@ mod apply;
 
 impl crate::wit::utils::Utils for crate::Lib {
     fn gen_applyb(supertype_id: TypeId, apply: crate::wit::utils::Apply) -> Result<TypeId> {
-        // Walk supertype and enumerate ALL possible paths
-        // get that path
-
         let apply_tree = apply::PathTree::build_from(&apply)?;
-        let item_list = apply::flatten_to_items_array(&apply_tree)?;
+        let mut item_list = apply::flatten_to_sorted_items_array(&apply_tree)?;
         let p2c_indices = apply::build_parent_to_child_indices(&item_list);
+        // item_list index => (node name, store id)
+        let mut idx_to_store_id_cache: HashMap<u32, (String, u32)> = HashMap::new();
 
-        if true {
-            return Err(format!("!!! {:?}", p2c_indices));
-        }
+        while !item_list.is_empty() {
+            let item = match item_list.pop() {
+                Some(value) => value,
+                None => break,
+            };
 
-        // finalize all possible paths
-        let mut finalized_paths: HashMap<Vec<String>, TypeId> = HashMap::new();
-        for field in &apply.paths {
-            let id = with_store(|s| -> Result<TypeId> {
-                let id = s.get_type_by_path(supertype_id, &field.path)?.1;
-                Ok(id)
-            })?;
-            if field.value.inherit {
-                // keep id
-                finalized_paths.insert(field.path.clone(), id);
-            } else {
-                // use WithInjection id
-                let payload = field.value.payload.clone().ok_or(format!(
-                    "cannot set undefined value at {:?}",
-                    field.path.join(".")
-                ))?;
-                let new_id = Lib::with_injection(TypeWithInjection {
-                    tpe: id,
-                    injection: payload,
+            if item.node.is_leaf() {
+                let path_infos = item.node.path_infos;
+                let apply_value = path_infos.value;
+                let id = with_store(|s| -> Result<TypeId> {
+                    let id = s.get_type_by_path(supertype_id, &path_infos.path)?.1;
+                    Ok(id)
                 })?;
-                finalized_paths.insert(field.path.clone(), new_id);
+
+                if apply_value.inherit {
+                    // if inherit, keep original id
+                    idx_to_store_id_cache.insert(item.index, (item.node.name, id));
+                } else {
+                    // has static injection
+                    let payload = apply_value.payload.ok_or(format!(
+                        "cannot set undefined value at {:?}",
+                        path_infos.path.join(".")
+                    ))?;
+                    let new_id = Lib::with_injection(TypeWithInjection {
+                        tpe: id,
+                        injection: payload,
+                    })?;
+
+                    idx_to_store_id_cache.insert(item.index, (item.node.name, new_id));
+                }
+            } else {
+                // parent node => must be a struct
+                // * assume child ids are already in cache
+                let child_indices = p2c_indices.get(&item.index).unwrap();
+                if child_indices.is_empty() {
+                    return Err(format!("parent item at index {} has no child", item.index));
+                }
+
+                let mut props = vec![];
+                for idx in child_indices {
+                    let prop = idx_to_store_id_cache.get(idx).ok_or(format!(
+                        "store id for item at index {idx} was not yet generated"
+                    ))?;
+                    props.push(prop.clone());
+                }
+
+                let id = Lib::structb(TypeStruct { props }, TypeBase::default())?;
+                idx_to_store_id_cache.insert(item.index, (item.node.name, id));
             }
         }
 
-        // Note: if used out of scope even with proper imports Lib::some_type() panics
-        let example = Lib::structb(TypeStruct { props: vec![] }, TypeBase::default())?;
+        let (_root_name, root_id) = idx_to_store_id_cache
+            .get(&0)
+            .ok_or("root type does not have any field".to_string())?;
 
-        Ok(example)
+        // if true {
+        //     return Err(format!(
+        //         "{_root_name} with cache {:?}",
+        //         idx_to_store_id_cache
+        //     ));
+        // }
+
+        Ok(*root_id)
     }
 }
