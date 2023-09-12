@@ -41,7 +41,6 @@ Meta.test("deno(sdk): apply", async (t) => {
         query {
           testInvariantB (
             student: {
-              id: 1,
               name: "Jake",
               infos: { age: 15 }
             }
@@ -53,7 +52,7 @@ Meta.test("deno(sdk): apply", async (t) => {
         }
       `.expectData({
         testInvariantB: {
-          id: 1,
+          id: 1234,
           name: "Jake",
           infos: { age: 15 },
         },

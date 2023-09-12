@@ -52,7 +52,6 @@ impl crate::wit::utils::Utils for crate::Lib {
                 }
             } else {
                 // parent node => must be a struct
-                // * assume child ids are already in cache
                 let child_indices = p2c_indices.get(&item.index).unwrap();
                 if child_indices.is_empty() {
                     return Err(format!("parent item at index {} has no child", item.index));
@@ -60,6 +59,7 @@ impl crate::wit::utils::Utils for crate::Lib {
 
                 let mut props = vec![];
                 for idx in child_indices {
+                    // cache must hit
                     let prop = idx_to_store_id_cache.get(idx).ok_or(format!(
                         "store id for item at index {idx} was not yet generated"
                     ))?;

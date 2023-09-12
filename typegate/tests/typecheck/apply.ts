@@ -16,14 +16,14 @@ const student = t.struct({
 typegraph("test-apply", (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
-  const identity = deno.func(
+  const identityStudent = deno.func(
     t.struct({ student }),
     student,
     { code: "({ student }) => student" },
   );
 
   g.expose({
-    testInvariantA: identity.apply({
+    testInvariantA: identityStudent.apply({
       student: {
         id: g.inherit(),
         name: g.inherit(),
@@ -33,12 +33,21 @@ typegraph("test-apply", (g) => {
         },
       },
     }).withPolicy(pub),
-    testInvariantB: identity.apply({
-      student: {
-        id: g.inherit(),
-        name: g.inherit(),
-        infos: g.inherit(),
-      },
-    }).withPolicy(pub),
+    testInvariantB: identityStudent
+      .apply({
+        student: {
+          id: g.inherit(),
+          name: g.inherit(),
+          infos: g.inherit(),
+        },
+      })
+      .apply({
+        student: {
+          id: 1234,
+          name: g.inherit(),
+          infos: g.inherit(),
+        },
+      })
+      .withPolicy(pub),
   });
 });
