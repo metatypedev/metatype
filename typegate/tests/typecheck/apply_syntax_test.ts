@@ -18,9 +18,9 @@ Meta.test("deno(sdk): apply", async (t) => {
               infos: { age: 15 }
             }
           ) {
-          id
-          name
-          infos { age school }
+            id
+            name
+            infos { age school }
           }
         }
       `.expectData({
@@ -35,7 +35,7 @@ Meta.test("deno(sdk): apply", async (t) => {
   );
 
   await t.should(
-    "work as normal if all first level nodes have g.inherit()",
+    "work as normal after invariant apply + work with partial static injections",
     async () => {
       await gql`
         query {
@@ -43,18 +43,30 @@ Meta.test("deno(sdk): apply", async (t) => {
             student: {
               name: "Jake",
               infos: { age: 15 }
+              distinctions: { medals: 7 }
             }
           ) {
-          id
-          name
-          infos { age school }
+            id
+            name
+            infos { age school }
+            distinctions {
+              awards { name points }
+              medals
+            }
           }
         }
       `.expectData({
         testInvariantB: {
-          id: 1234,
-          name: "Jake",
-          infos: { age: 15 },
+          id: 1234, // from apply
+          name: "Jake", // from user
+          infos: { age: 15 }, // from user
+          distinctions: {
+            awards: [ // from apply
+              { name: "Chess", points: 1000 },
+              { name: "Math Olympiad", points: 100 },
+            ],
+            medals: 7, // from user
+          },
         },
       })
         .on(e);

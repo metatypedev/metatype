@@ -11,6 +11,13 @@ const student = t.struct({
     age: t.integer({ min: 10 }),
     school: t.string().optional(),
   }),
+  distinctions: t.struct({
+    awards: t.array(t.struct({
+      name: t.string(),
+      points: t.integer(),
+    })).optional(),
+    medals: t.integer().optional(),
+  }).optional(),
 }, { name: "Student" });
 
 typegraph("test-apply", (g) => {
@@ -35,17 +42,27 @@ typegraph("test-apply", (g) => {
     }).withPolicy(pub),
     testInvariantB: identityStudent
       .apply({
+        // inherit all first depth nodes => behave the same as a func without apply
         student: {
           id: g.inherit(),
           name: g.inherit(),
           infos: g.inherit(),
+          distinctions: g.inherit(),
         },
       })
       .apply({
+        // partial injection
         student: {
           id: 1234,
           name: g.inherit(),
           infos: g.inherit(),
+          distinctions: {
+            awards: [
+              { name: "Chess", points: 1000 },
+              { name: "Math Olympiad", points: 100 },
+            ],
+            medals: g.inherit(),
+          },
         },
       })
       .withPolicy(pub),
