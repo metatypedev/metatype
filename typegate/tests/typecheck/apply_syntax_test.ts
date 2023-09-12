@@ -11,23 +11,27 @@ Meta.test("deno(sdk): apply", async (t) => {
     async () => {
       await gql`
         query {
-          testInvariantA (
+          testInvariant (
             student: {
-              id: 1,
-              name: "Jake",
+              id: 1
+              name: "Jake"
               infos: { age: 15 }
             }
           ) {
-            id
-            name
-            infos { age school }
+            student {
+              id
+              name
+              infos { age school }
+            }
           }
         }
       `.expectData({
-        testInvariantA: {
-          id: 1,
-          name: "Jake",
-          infos: { age: 15 },
+        testInvariant: {
+          student: {
+            id: 1,
+            name: "Jake",
+            infos: { age: 15 },
+          },
         },
       })
         .on(e);
@@ -35,37 +39,52 @@ Meta.test("deno(sdk): apply", async (t) => {
   );
 
   await t.should(
-    "work as normal after invariant apply + work with partial static injections",
+    "compose apply and work with partial static injections",
     async () => {
       await gql`
         query {
-          testInvariantB (
+          applyComposition (
             student: {
-              name: "Jake",
+              name: "Jake"
               infos: { age: 15 }
               distinctions: { medals: 7 }
             }
+            grades: { year: 2023 }
           ) {
-            id
-            name
-            infos { age school }
-            distinctions {
-              awards { name points }
-              medals
+            student {
+              id
+              name
+              infos { age school }
+              distinctions {
+                awards { name points }
+                medals
+              }
+            }
+            grades {
+              year
+              subjects { name score }
             }
           }
         }
       `.expectData({
-        testInvariantB: {
-          id: 1234, // from apply
-          name: "Jake", // from user
-          infos: { age: 15 }, // from user
-          distinctions: {
-            awards: [ // from apply
-              { name: "Chess", points: 1000 },
-              { name: "Math Olympiad", points: 100 },
+        applyComposition: {
+          student: {
+            id: 1234, // from apply 1
+            name: "Jake", // from user
+            infos: { age: 15 }, // from user
+            distinctions: {
+              awards: [ // from apply 1
+                { name: "Chess", points: 1000 },
+                { name: "Math Olympiad", points: 100 },
+              ],
+              medals: 7, // from user
+            },
+          },
+          grades: {
+            year: 2023, // from user
+            subjects: [ // from apply 2
+              { name: "Math", score: 60 },
             ],
-            medals: 7, // from user
           },
         },
       })

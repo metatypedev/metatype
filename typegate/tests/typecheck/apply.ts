@@ -20,17 +20,29 @@ const student = t.struct({
   }).optional(),
 }, { name: "Student" });
 
+const grades = t.struct({
+  year: t.integer({ min: 2000 }),
+  subjects: t.array(
+    t.struct({
+      name: t.string(),
+      score: t.integer(),
+    }),
+  ),
+});
+
+const tpe = t.struct({ student, grades: grades.optional() });
+
 typegraph("test-apply", (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
   const identityStudent = deno.func(
-    t.struct({ student }),
-    student,
-    { code: "({ student }) => student" },
+    tpe,
+    tpe,
+    { code: "({ student, grades }) => { return { student, grades } }" },
   );
 
   g.expose({
-    testInvariantA: identityStudent.apply({
+    testInvariant: identityStudent.apply({
       student: {
         id: g.inherit(),
         name: g.inherit(),
@@ -39,19 +51,20 @@ typegraph("test-apply", (g) => {
           school: g.inherit(),
         },
       },
+      // grades: g.inherit(), // implicit
     }).withPolicy(pub),
-    testInvariantB: identityStudent
+
+    applyComposition: identityStudent
       .apply({
-        // inherit all first depth nodes => behave the same as a func without apply
-        student: {
-          id: g.inherit(),
-          name: g.inherit(),
-          infos: g.inherit(),
-          distinctions: g.inherit(),
+        // student: g.inherit(), // implicit
+        grades: {
+          year: g.inherit(),
+          subjects: [
+            { name: "Math", score: 60 },
+          ],
         },
       })
       .apply({
-        // partial injection
         student: {
           id: 1234,
           name: g.inherit(),
@@ -64,6 +77,7 @@ typegraph("test-apply", (g) => {
             medals: g.inherit(),
           },
         },
+        // grades: g.inherit(), // implicit
       })
       .withPolicy(pub),
   });

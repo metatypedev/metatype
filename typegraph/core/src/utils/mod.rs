@@ -12,8 +12,31 @@ use crate::{
 
 mod apply;
 
+fn find_missing_props(
+    old_props: &Vec<(String, u32)>,
+    new_props: &Vec<(String, u32)>,
+) -> Vec<(String, u32)> {
+    let mut missing_props = vec![];
+    for (k_old, v_old) in old_props {
+        let mut is_missing = true;
+        for (k_new, _) in new_props {
+            if k_old.eq(k_new) {
+                is_missing = false;
+                break;
+            }
+        }
+        if is_missing {
+            missing_props.push((k_old.clone(), *v_old));
+        }
+    }
+    missing_props
+}
+
 impl crate::wit::utils::Utils for crate::Lib {
     fn gen_applyb(supertype_id: TypeId, apply: crate::wit::utils::Apply) -> Result<TypeId> {
+        if apply.paths.is_empty() {
+            return Err("apply object is empty".to_string());
+        }
         let apply_tree = apply::PathTree::build_from(&apply)?;
         let mut item_list = apply::flatten_to_sorted_items_array(&apply_tree)?;
         let p2c_indices = apply::build_parent_to_child_indices(&item_list);
@@ -66,6 +89,27 @@ impl crate::wit::utils::Utils for crate::Lib {
                     props.push(prop.clone());
                 }
 
+                if item.parent_index.is_none() {
+                    // if root, props g.inherit() should be implicit
+                    // TODO: maybe enable implicit g.inherit() for subtypes if possible?
+                    let old_props = with_store(|s| -> Result<Vec<(String, u32)>> {
+                        let tpe = s.get_type(supertype_id)?;
+                        match tpe {
+                            crate::types::Type::Struct(t) => Ok(t.data.props.clone()),
+                            _ => Err(format!(
+                                "supertype (store id {}) is not a struct",
+                                supertype_id
+                            )),
+                        }
+                    })?;
+
+                    let missing_props = find_missing_props(&old_props, &props);
+
+                    for pair in missing_props {
+                        props.push(pair);
+                    }
+                }
+
                 let id = Lib::structb(TypeStruct { props }, TypeBase::default())?;
                 idx_to_store_id_cache.insert(item.index, (item.node.name, id));
             }
@@ -74,13 +118,6 @@ impl crate::wit::utils::Utils for crate::Lib {
         let (_root_name, root_id) = idx_to_store_id_cache
             .get(&0)
             .ok_or("root type does not have any field".to_string())?;
-
-        // if true {
-        //     return Err(format!(
-        //         "{_root_name} with cache {:?}",
-        //         idx_to_store_id_cache
-        //     ));
-        // }
 
         Ok(*root_id)
     }
