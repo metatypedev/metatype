@@ -4,7 +4,7 @@
 import { CREATE, DELETE, NONE, UPDATE } from "../effects.ts";
 import { InjectionSource, InjectionValue } from "./type_utils.ts";
 import { InheritDef } from "../typegraph.ts";
-import { Apply } from "../../gen/exports/metatype-typegraph-utils.d.ts";
+import { ApplyPath } from "../../gen/exports/metatype-typegraph-utils.d.ts";
 
 export function stringifySymbol(symbol: symbol) {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -64,20 +64,20 @@ export function serializeRecordValues<T>(
 
 export function buildApplyData(
   node: InheritDef | unknown,
-  data: Apply,
-  path: string[] = [],
-): void {
+  paths: ApplyPath[] = [],
+  currPath: string[] = [],
+): ApplyPath[] {
   if (node === null || node === undefined) {
     throw new Error(
-      `unsupported value "${node}" at ${path.join(".")}`,
+      `unsupported value "${node}" at ${currPath.join(".")}`,
     );
   }
   if (node instanceof InheritDef) {
-    data.paths.push({
-      path: path,
+    paths.push({
+      path: currPath,
       value: { inherit: true },
     });
-    return;
+    return paths;
   }
 
   const asStaticInjection = (value: any) =>
@@ -85,28 +85,27 @@ export function buildApplyData(
 
   if (typeof node === "object") {
     if (Array.isArray(node)) {
-      data.paths.push({
-        path: path,
+      paths.push({
+        path: currPath,
         value: { inherit: false, payload: asStaticInjection(node) },
       });
-      return;
+      return paths;
     }
-    const newObj = {} as any;
     for (const [k, v] of Object.entries(node)) {
-      buildApplyData(v, data, [...path, k]);
+      buildApplyData(v, paths, [...currPath, k]);
     }
-    return;
+    return paths;
   }
 
   const allowed = ["number", "string", "boolean"];
   if (allowed.includes(typeof node)) {
-    data.paths.push({
-      path: path,
+    paths.push({
+      path: currPath,
       value: { inherit: false, payload: asStaticInjection(node) },
     });
-    return;
+    return paths;
   }
   throw new Error(
-    `unsupported type "${typeof node}" at ${path.join(".")}`,
+    `unsupported type "${typeof node}" at ${currPath.join(".")}`,
   );
 }

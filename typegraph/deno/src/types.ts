@@ -508,16 +508,17 @@ export class Func<
   }
 
   apply(value: Record<string, unknown | InheritDef>) {
-    const data: Apply = { paths: [] };
-    buildApplyData(value, data);
-    const exampleId = wit_utils.genApplyb(
+    const data: Apply = {
+      paths: buildApplyData(value),
+    };
+
+    const applyId = wit_utils.genApplyb(
       this.inp._id,
       data,
     );
 
     return func(
-      // TODO: copy props?
-      new Typedef(exampleId, {}) as Struct<P>,
+      new Typedef(applyId, {}) as Struct<P>,
       this.out,
       this.mat,
     );

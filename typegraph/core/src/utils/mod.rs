@@ -13,9 +13,20 @@ use crate::{
 mod apply;
 
 fn find_missing_props(
-    old_props: &Vec<(String, u32)>,
+    supertype_id: u32,
     new_props: &Vec<(String, u32)>,
-) -> Vec<(String, u32)> {
+) -> Result<Vec<(String, u32)>> {
+    let old_props = with_store(|s| -> Result<Vec<(String, u32)>> {
+        let tpe = s.get_type(supertype_id)?;
+        match tpe {
+            crate::types::Type::Struct(t) => Ok(t.data.props.clone()),
+            _ => Err(format!(
+                "supertype (store id {}) is not a struct",
+                supertype_id
+            )),
+        }
+    })?;
+
     let mut missing_props = vec![];
     for (k_old, v_old) in old_props {
         let mut is_missing = true;
@@ -26,10 +37,11 @@ fn find_missing_props(
             }
         }
         if is_missing {
-            missing_props.push((k_old.clone(), *v_old));
+            missing_props.push((k_old, v_old));
         }
     }
-    missing_props
+
+    Ok(missing_props)
 }
 
 impl crate::wit::utils::Utils for crate::Lib {
@@ -91,18 +103,7 @@ impl crate::wit::utils::Utils for crate::Lib {
 
                 if item.parent_index.is_none() {
                     // if root, props g.inherit() should be implicit
-                    let old_props = with_store(|s| -> Result<Vec<(String, u32)>> {
-                        let tpe = s.get_type(supertype_id)?;
-                        match tpe {
-                            crate::types::Type::Struct(t) => Ok(t.data.props.clone()),
-                            _ => Err(format!(
-                                "supertype (store id {}) is not a struct",
-                                supertype_id
-                            )),
-                        }
-                    })?;
-
-                    let missing_props = find_missing_props(&old_props, &props);
+                    let missing_props = find_missing_props(supertype_id, &props)?;
                     for pair in missing_props {
                         props.push(pair);
                     }

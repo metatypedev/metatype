@@ -99,21 +99,16 @@ impl Store {
         let mut curr_path = vec![];
         for chunk in path {
             let unwrapped_id = self.resolve_quantifier(ret.1)?;
-            let unwrapped = self.get_type(unwrapped_id)?;
-            if let Type::Struct(t) = unwrapped {
-                let mut found = false;
-                for (k, v) in t.data.props.iter() {
-                    if *k == *chunk {
-                        ret = (self.get_type(*v)?, *v);
-                        found = true;
-                    }
+            match self.get_type(unwrapped_id)? {
+                Type::Struct(t) => {
+                    let result = t.data.props.iter().find(|(k, _)| k.eq(chunk));
+                    ret = match result {
+                        Some((_, id)) => (self.get_type(*id)?, *id),
+                        None => return Err(errors::invalid_path(&curr_path)),
+                    };
+                    curr_path.push(chunk.clone());
                 }
-                curr_path.push(chunk.clone());
-                if !found {
-                    return Err(errors::invalid_path(&curr_path));
-                }
-            } else {
-                return Err(errors::expect_object_at_path(&curr_path));
+                _ => return Err(errors::expect_object_at_path(&curr_path)),
             }
         }
 
