@@ -1,10 +1,9 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-import { CREATE, DELETE, NONE, UPDATE } from "../effects.ts";
-import { InjectionSource, InjectionValue } from "./type_utils.ts";
 import { InheritDef } from "../typegraph.ts";
 import { ApplyPath } from "../../gen/exports/metatype-typegraph-utils.d.ts";
+import { serializeStaticInjection } from "./injection_utils.ts";
 
 export function stringifySymbol(symbol: symbol) {
   const name = symbol.toString().match(/\((.+)\)/)?.[1];
@@ -12,48 +11,6 @@ export function stringifySymbol(symbol: symbol) {
     throw new Error("unable to determine symbol name");
   }
   return name;
-}
-
-export function serializeInjection(
-  source: InjectionSource,
-  value: InjectionValue<unknown>,
-  valueMapper = (value: InjectionValue<unknown>) => value,
-) {
-  if (
-    typeof value === "object" &&
-    !Array.isArray(value) &&
-    value !== null
-  ) {
-    // Note:
-    // Symbol changes the behavior of keys, values, entries => props are skipped
-    const symbols = [UPDATE, DELETE, CREATE, NONE];
-    const noOtherType = Object.keys(value).length == 0;
-    const isPerEffect = noOtherType &&
-      symbols
-        .some((symbol) => (value as any)?.[symbol] !== undefined);
-
-    if (isPerEffect) {
-      const dataEntries = symbols.map(
-        (symbol) => {
-          const valueGiven = (value as any)?.[symbol];
-          return [
-            stringifySymbol(symbol),
-            valueGiven && valueMapper(valueGiven),
-          ];
-        },
-      );
-
-      return JSON.stringify({
-        source,
-        data: Object.fromEntries(dataEntries),
-      });
-    }
-  }
-
-  return JSON.stringify({
-    source,
-    data: { value: valueMapper(value) },
-  });
 }
 
 export function serializeRecordValues<T>(
@@ -75,19 +32,16 @@ export function buildApplyData(
   if (node instanceof InheritDef) {
     paths.push({
       path: currPath,
-      value: { inherit: true },
+      value: { inherit: true, payload: node.payload },
     });
     return paths;
   }
-
-  const asStaticInjection = (value: any) =>
-    serializeInjection("static", value, (x: unknown) => JSON.stringify(x));
 
   if (typeof node === "object") {
     if (Array.isArray(node)) {
       paths.push({
         path: currPath,
-        value: { inherit: false, payload: asStaticInjection(node) },
+        value: { inherit: false, payload: serializeStaticInjection(node) },
       });
       return paths;
     }
@@ -101,7 +55,7 @@ export function buildApplyData(
   if (allowed.includes(typeof node)) {
     paths.push({
       path: currPath,
-      value: { inherit: false, payload: asStaticInjection(node) },
+      value: { inherit: false, payload: serializeStaticInjection(node) },
     });
     return paths;
   }

@@ -91,4 +91,54 @@ Meta.test("deno(sdk): apply", async (t) => {
         .on(e);
     },
   );
+
+  await t.should(
+    "work with injections",
+    async () => {
+      await gql`
+        query {
+          injectionInherit (
+            student: {
+              name: "Kyle"
+            }
+          ) {
+            student {
+              id
+              name
+              infos { age school }
+            }
+            grades {
+              year
+              subjects { name score }
+            }
+          }
+        }
+      `
+        .withContext({
+          year: 2000,
+          subjects: [
+            { name: "Math", score: 24 },
+            { name: "English", score: 68 },
+          ],
+          personalInfos: { age: 17 },
+        })
+        .expectData({
+          injectionInherit: {
+            student: {
+              id: 1234,
+              name: "Kyle",
+              infos: { age: 17 },
+            },
+            grades: {
+              year: 2000,
+              subjects: [
+                { name: "Math", score: 24 },
+                { name: "English", score: 68 },
+              ],
+            },
+          },
+        })
+        .on(e);
+    },
+  );
 });

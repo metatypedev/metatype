@@ -69,11 +69,11 @@ impl crate::wit::utils::Utils for crate::Lib {
                     Ok(id)
                 })?;
 
-                if apply_value.inherit {
+                if apply_value.inherit && apply_value.payload.is_none() {
                     // if inherit, keep original id
                     idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id));
                 } else {
-                    // has static injection
+                    // has injection
                     let payload = apply_value.payload.ok_or(format!(
                         "cannot set undefined value at {:?}",
                         path_infos.path.join(".")

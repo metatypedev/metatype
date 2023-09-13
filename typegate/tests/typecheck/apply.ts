@@ -3,6 +3,7 @@
 
 import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
 import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
+import { NONE } from "@typegraph/deno/src/effects.ts";
 
 const student = t.struct({
   id: t.integer(),
@@ -74,9 +75,25 @@ typegraph("test-apply", (g) => {
         // student: g.inherit(), // implicit
         grades: {
           year: g.inherit(),
-          subjects: [
+          subjects: g.inherit().set([ // sugar
             { name: "Math", score: 60 },
-          ],
+          ]),
+        },
+      })
+      .withPolicy(pub),
+
+    injectionInherit: identityStudent
+      .apply({
+        student: {
+          id: 1234,
+          name: g.inherit(),
+          infos: g.inherit().fromContext("personalInfos"),
+        },
+        grades: {
+          year: g.inherit().set(2000),
+          subjects: g.inherit().fromContext({
+            [NONE]: "subjects",
+          }),
         },
       })
       .withPolicy(pub),
