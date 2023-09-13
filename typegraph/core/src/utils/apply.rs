@@ -77,16 +77,17 @@ impl PathTree {
     }
 
     fn print_helper(lines: &mut String, node: &PathTree, depth: u32) {
-        if depth == 0 {
-            lines.push_str(&node.name);
-        } else {
+        if depth >= 1 {
             let name = node.name.clone();
             let inherit = node.path_infos.value.inherit;
+            let spaces = 4;
             lines.push_str(&format!(
                 "{:indent$}└── [{name} ({inherit})]",
                 "",
-                indent = ((depth as usize) - 1) * 4
+                indent = ((depth as usize) - 1) * spaces
             ));
+        } else {
+            lines.push_str(&node.name);
         }
 
         for entry in node.entries.iter() {
@@ -105,62 +106,64 @@ impl ToString for PathTree {
 
 // Type utility for wrapping a node with index information
 #[derive(Debug, Clone)]
-pub struct ItemNode {
+pub struct ItemNode<'a> {
     pub parent_index: Option<u32>,
     pub index: u32,
-    pub node: PathTree,
+    pub node: &'a PathTree,
 }
 
-// scheme similar to `types: TypeNode[]` in typegate
+// Scheme similar to `types: TypeNode[]` in typegate
 // Item node wrappers are ordered in such a way that
-// 1. the last items are the leaves
-// 2. first item is guaranteed to be the root node
+// 1. The last items are the leaves
+// 2. The first item is guaranteed to be the root node
 pub fn flatten_to_sorted_items_array(path_tree: &PathTree) -> Result<Vec<ItemNode>, String> {
     let mut index = 0;
     let mut levels = vec![vec![ItemNode {
         parent_index: None,
         index,
-        node: path_tree.clone(),
+        node: path_tree,
     }]];
 
     loop {
-        if let Some(parents) = levels.last() {
-            let mut current: Vec<ItemNode> = vec![];
-            for parent in parents {
-                for entry in parent.node.entries.iter() {
-                    index += 1;
-                    current.push(ItemNode {
-                        parent_index: Some(parent.index),
-                        index,
-                        node: entry.clone(),
-                    });
+        let previous_level = levels.last();
+        match previous_level {
+            Some(parents) => {
+                let mut current_level = vec![];
+                for parent in parents {
+                    for entry in parent.node.entries.iter() {
+                        index += 1;
+                        current_level.push(ItemNode {
+                            parent_index: Some(parent.index),
+                            index,
+                            node: entry,
+                        });
+                    }
                 }
+                if current_level.is_empty() {
+                    // all nodes traversed
+                    break;
+                }
+                levels.push(current_level);
             }
-            if current.is_empty() {
-                // all leaves reached
-                break;
-            }
-            levels.push(current);
-        } else {
-            panic!("first level must be populated");
+            None => panic!("first level must be populated"),
         }
     }
 
     // flatten the tree to a 1D array
     let final_size = (index + 1) as usize;
-    let mut tmp_list = vec![None; final_size];
+    let mut tmp_result = vec![None; final_size];
 
     for level in levels {
-        for entity in level {
-            let pos = entity.index as usize;
-            match tmp_list.get(pos).unwrap() {
+        for item in level {
+            let pos = item.index as usize;
+            match tmp_result.get(pos).unwrap() {
                 None => {
-                    tmp_list[pos] = Some(entity);
+                    tmp_result[pos] = Some(item);
                 }
                 Some(value) => {
                     return Err(format!(
                         "index {} is already filled with {:?}",
-                        entity.index, value
+                        item.index, value
                     ))
                 }
             }
@@ -168,7 +171,7 @@ pub fn flatten_to_sorted_items_array(path_tree: &PathTree) -> Result<Vec<ItemNod
     }
 
     let mut result = vec![];
-    for (i, item) in tmp_list.iter().enumerate() {
+    for (i, item) in tmp_result.iter().enumerate() {
         result.push(item.clone().ok_or(format!("index {} is vacant", i))?)
     }
 
@@ -177,13 +180,12 @@ pub fn flatten_to_sorted_items_array(path_tree: &PathTree) -> Result<Vec<ItemNod
 
 pub fn build_parent_to_child_indices(item_list: &Vec<ItemNode>) -> HashMap<u32, Vec<u32>> {
     let mut map: HashMap<u32, Vec<u32>> = HashMap::new();
-
     for item in item_list {
         if let Some(parent_index) = item.parent_index {
-            map.entry(parent_index).or_insert_with(Vec::new);
-            map.get_mut(&parent_index).unwrap().push(item.index);
+            map.entry(parent_index)
+                .or_insert_with(Vec::new)
+                .push(item.index);
         }
     }
-
     map
 }

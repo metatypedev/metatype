@@ -56,15 +56,6 @@ typegraph("test-apply", (g) => {
 
     applyComposition: identityStudent
       .apply({
-        // student: g.inherit(), // implicit
-        grades: {
-          year: g.inherit(),
-          subjects: [
-            { name: "Math", score: 60 },
-          ],
-        },
-      })
-      .apply({
         student: {
           id: 1234,
           name: g.inherit(),
@@ -78,6 +69,15 @@ typegraph("test-apply", (g) => {
           },
         },
         // grades: g.inherit(), // implicit
+      })
+      .apply({
+        // student: g.inherit(), // implicit
+        grades: {
+          year: g.inherit(),
+          subjects: [
+            { name: "Math", score: 60 },
+          ],
+        },
       })
       .withPolicy(pub),
   });

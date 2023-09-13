@@ -50,7 +50,7 @@ impl crate::wit::utils::Utils for crate::Lib {
             };
 
             if item.node.is_leaf() {
-                let path_infos = item.node.path_infos;
+                let path_infos = item.node.path_infos.clone();
                 let apply_value = path_infos.value;
                 let id = with_store(|s| -> Result<TypeId> {
                     let id = s.get_type_by_path(supertype_id, &path_infos.path)?.1;
@@ -59,7 +59,7 @@ impl crate::wit::utils::Utils for crate::Lib {
 
                 if apply_value.inherit {
                     // if inherit, keep original id
-                    idx_to_store_id_cache.insert(item.index, (item.node.name, id));
+                    idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id));
                 } else {
                     // has static injection
                     let payload = apply_value.payload.ok_or(format!(
@@ -71,7 +71,7 @@ impl crate::wit::utils::Utils for crate::Lib {
                         injection: payload,
                     })?;
 
-                    idx_to_store_id_cache.insert(item.index, (item.node.name, new_id));
+                    idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), new_id));
                 }
             } else {
                 // parent node => must be a struct
@@ -91,7 +91,6 @@ impl crate::wit::utils::Utils for crate::Lib {
 
                 if item.parent_index.is_none() {
                     // if root, props g.inherit() should be implicit
-                    // TODO: maybe enable implicit g.inherit() for subtypes if possible?
                     let old_props = with_store(|s| -> Result<Vec<(String, u32)>> {
                         let tpe = s.get_type(supertype_id)?;
                         match tpe {
@@ -104,14 +103,13 @@ impl crate::wit::utils::Utils for crate::Lib {
                     })?;
 
                     let missing_props = find_missing_props(&old_props, &props);
-
                     for pair in missing_props {
                         props.push(pair);
                     }
                 }
 
                 let id = Lib::structb(TypeStruct { props }, TypeBase::default())?;
-                idx_to_store_id_cache.insert(item.index, (item.node.name, id));
+                idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id));
             }
         }
 
