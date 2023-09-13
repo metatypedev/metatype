@@ -70,7 +70,7 @@ impl crate::wit::utils::Utils for crate::Lib {
                 })?;
 
                 if apply_value.inherit && apply_value.payload.is_none() {
-                    // if inherit, keep original id
+                    // if inherit and no injection, keep original id
                     idx_to_store_id_cache.insert(item.index, (item.node.name.clone(), id));
                 } else {
                     // has injection

@@ -3,7 +3,7 @@
 
 import json
 from typing import Dict, List, Optional, Tuple, Union
-from typegraph_next.utils import serialize_record_values, serialize_injection
+from typegraph_next.utils import serialize_record_values, build_apply_data
 
 from typing_extensions import Self
 
@@ -27,11 +27,19 @@ from typegraph_next.gen.exports.core import (
     TypeProxy,
     TypeStruct,
 )
+from typegraph_next.gen.exports.utils import Apply
+
 from typegraph_next.gen.types import Err
 from typegraph_next.graph.typegraph import core, store
+from typegraph_next.wit import wit_utils
 from typegraph_next.policy import Policy, PolicyPerEffect
 from typegraph_next.runtimes.deno import Materializer
 from typegraph_next.effects import EffectType
+from typegraph_next.injection import (
+    serialize_generic_injection,
+    serialize_parent_injection,
+    serialize_static_injection,
+)
 
 
 class typedef:
@@ -89,48 +97,19 @@ class typedef:
         return optional(self, default_item=default_value)
 
     def set(self, value: Union[any, Dict[EffectType, any]]):
-        return self._with_injection(
-            serialize_injection(
-                "static", value=value, value_mapper=lambda x: json.dumps(x)
-            ),
-        )
+        return self._with_injection(serialize_static_injection(value))
 
     def inject(self, value: Union[any, Dict[EffectType, any]]):
-        return self._with_injection(serialize_injection("dynamic", value=value))
+        return self._with_injection(serialize_generic_injection("dynamic", value))
 
     def from_context(self, value: Union[str, Dict[EffectType, str]]):
-        return self._with_injection(serialize_injection("context", value=value))
+        return self._with_injection(serialize_generic_injection("context", value))
 
     def from_secret(self, value: Union[str, Dict[EffectType, str]]):
-        return self._with_injection(serialize_injection("secret", value=value))
+        return self._with_injection(serialize_generic_injection("secret", value))
 
     def from_parent(self, value: Union[str, Dict[EffectType, str]]):
-        correct_value = None
-        if isinstance(value, str):
-            correct_value = proxy(value).id
-        else:
-            if not isinstance(value, dict):
-                raise Exception("type not supported")
-
-            is_per_effect = len(value) > 0 and all(
-                isinstance(k, EffectType) for k in value.keys()
-            )
-            if not is_per_effect:
-                raise Exception("object keys should be of type EffectType")
-
-            correct_value = {}
-            for k, v in value.items():
-                if not isinstance(v, str):
-                    raise Exception(f"value for field {k.name} must be a string")
-                correct_value[k] = proxy(v).id
-
-        assert correct_value is not None
-
-        return self._with_injection(
-            serialize_injection(
-                "parent", value=correct_value, value_mapper=lambda x: x
-            ),
-        )
+        return self._with_injection(serialize_parent_injection(value))
 
 
 class _TypeWithPolicy(typedef):
@@ -520,3 +499,13 @@ class func(typedef):
         super().__init__(id)
         self.inp = inp
         self.out = out
+        self.mat = mat
+
+    def apply(self, value: Dict[str, any]) -> "func":
+        data = Apply(paths=build_apply_data(value))
+        apply_id = wit_utils.gen_applyb(store, self.inp.id, data=data)
+
+        if isinstance(apply_id, Err):
+            raise Exception(apply_id.value)
+
+        return func(typedef(id=apply_id.value), self.out, self.mat)

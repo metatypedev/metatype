@@ -52,6 +52,11 @@ class Graph:
     def expose(self, **kwargs: "t.func"):
         self.typegraph.expose(**kwargs)
 
+    def inherit(self):
+        from typegraph_next.injection import InheritDef
+
+        return InheritDef()
+
 
 def typegraph(
     name: Optional[str] = None,

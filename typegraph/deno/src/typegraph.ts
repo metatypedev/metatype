@@ -26,7 +26,7 @@ interface TypegraphBuilderArgs {
 }
 
 export class InheritDef {
-  constructor(public payload: string | undefined = undefined) {}
+  public payload: string | undefined;
   set(value: InjectionValue<unknown>) {
     this.payload = serializeStaticInjection(value);
     return this;
