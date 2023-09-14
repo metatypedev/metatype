@@ -1,234 +1,266 @@
-from typegraph import TypeGraph, t
-from typegraph.providers.prisma.runtimes.prisma import PrismaRuntime
+from typegraph_next import typegraph, t, Policy, Graph
+from typegraph_next.providers.prisma import PrismaRuntime
 
-with TypeGraph("simple-model") as g1:
+
+@typegraph()
+def simple_model(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
+            "id": t.integer(as_id=True).config("auto"),
             "name": t.string(),
-        }
-    ).named("User")
+        },
+        name="User",
+    )
 
-    g1.expose(
+    g.expose(
         createUser=db.create(user),
     )
 
 
-with TypeGraph("one-to-many") as g2:
+@typegraph()
+def one_to_many(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.integer().as_id,
-            "posts": db.link(t.array(g2("Post")), "postAuthor"),
-        }
-    ).named("User")
+            "id": t.integer(as_id=True),
+            "posts": db.link(t.array(t.ref("Post")), "postAuthor"),
+        },
+        name="User",
+    )
 
     post = t.struct(
         {
-            "id": t.integer().as_id,
-            "author": db.link(g2("User"), "postAuthor"),
-        }
-    ).named("Post")
+            "id": t.integer(as_id=True).as_id,
+            "author": db.link("User", "postAuthor"),
+        },
+        name="Post",
+    )
 
-    g2.expose(
+    g.expose(
         createUser=db.create(user),
         createPost=db.create(post),
     )
 
 
-with TypeGraph("implicit-one-to-many") as g3:
+@typegraph()
+def implicit_one_to_many(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
-            "posts": t.array(g3("Post")),
-        }
-    ).named("User")
+            "id": t.integer(as_id=True).config("auto"),
+            "posts": t.array(t.ref("Post")),
+        },
+        name="User",
+    )
 
     post = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
-            "author": g3("User"),
-        }
-    ).named("Post")
+            "id": t.integer(as_id=True).config("auto"),
+            "author": t.ref("User"),
+        },
+        name="Post",
+    )
 
-    g3.expose(
+    g.expose(
         createUser=db.create(user),
         createPost=db.create(post),
     )
 
 
-with TypeGraph("optional-one-to-many") as g4:
+@typegraph()
+def optional_one_to_many(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
-            "posts": t.array(g4("Post")),
-        }
-    ).named("User")
+            "id": t.integer(as_id=True).config("auto"),
+            "posts": t.array(t.ref("Post")),
+        },
+        name="User",
+    )
 
     post = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
-            "author": g4("User").optional(),
-        }
-    ).named("Post")
+            "id": t.integer(as_id=True).config("auto"),
+            "author": t.ref("User").optional(),
+        },
+        name="Post",
+    )
 
-    g4.expose(
+    g.expose(
         createUser=db.create(user),
         createPost=db.create(post),
     )
 
 
-with TypeGraph("one-to-one") as g5:
+@typegraph()
+def one_to_one(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.integer().as_id,
-            "profile": db.link(g5("Profile").optional(), "userProfile"),
-        }
-    ).named("User")
+            "id": t.integer(as_id=True),
+            "profile": db.link(t.ref("Profile").optional(), "userProfile"),
+        },
+        name="User",
+    )
 
     profile = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
-            "user": db.link(g5("User"), "userProfile"),
-        }
-    ).named("Profile")
+            "id": t.uuid(as_id=True).config("auto"),
+            "user": db.link("User", "userProfile"),
+        },
+        name="Profile",
+    )
 
-    g5.expose(
+    g.expose(
         createUser=db.create(user),
         createProfile=db.create(profile),
     )
 
 
-with TypeGraph("implicit-one-to-one") as g6:
+@typegraph()
+def implicit_one_to_one(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
-            "profile": g6("Profile").optional().config("unique"),
-        }
-    ).named("User")
+            "id": t.integer(as_id=True).config("auto"),
+            "profile": t.ref("Profile").optional().config("unique"),
+        },
+        name="User",
+    )
 
     profile = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
-            "user": g6("User"),
-        }
-    ).named("Profile")
+            "id": t.uuid(as_id=True).config("auto"),
+            "user": t.ref("User"),
+        },
+        name="Profile",
+    )
 
-    g6.expose(
+    g.expose(
         createUser=db.create(user),
         createProfile=db.create(profile),
     )
 
 
-with TypeGraph("optional-one-to-one") as g7:
+@typegraph()
+def optional_one_to_one(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
-            "profile": g7("Profile").optional(),
-        }
-    ).named("User")
+            "id": t.integer(as_id=True).config("auto"),
+            "profile": t.ref("Profile").optional(),
+        },
+        name="User",
+    )
 
     profile = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
-            "user": db.link(g7("User").optional(), fkey=True),
-        }
-    ).named("Profile")
+            "id": t.uuid(as_id=True).config("auto"),
+            "user": db.link(t.ref("User").optional(), fkey=True),
+        },
+        name="Profile",
+    )
 
-    g7.expose(
+    g.expose(
         createUser=db.create(user),
         createProfile=db.create(profile),
     )
 
 
-with TypeGraph("semi-implicit-one-to-one") as g8:
+@typegraph()
+def semi_implicit_one_to_one(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.integer().as_id,
-            "profile": db.link(g8("Profile").optional(), "userProfile"),
-        }
-    ).named("User")
-
-    profile = t.struct({"id": t.uuid().as_id.config("auto"), "user": g8("User")}).named(
-        "Profile"
+            "id": t.integer(as_id=True),
+            "profile": db.link(t.ref("Profile").optional(), "userProfile"),
+        },
+        name="User",
     )
 
-    g8.expose(
+    profile = t.struct(
+        {"id": t.uuid().as_id.config("auto"), "user": t.ref("User")}, name="Profile"
+    )
+
+    g.expose(
         createUser=db.create(user),
         createProfile=db.create(profile),
     )
 
 
-with TypeGraph("semi-implicit-one-to-one-2") as g9:
+@typegraph()
+def semi_implicit_one_to_one_2(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.integer().as_id,
-            "profile": g9("Profile").optional(),
-        }
-    ).named("User")
+            "id": t.integer(as_id=True),
+            "profile": t.ref("Profile").optional(),
+        },
+        name="User",
+    )
 
     profile = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
-            "user": db.link(g9("User"), "userProfile"),
-        }
-    ).named("Profile")
+            "id": t.uuid(as_id=True).config("auto"),
+            "user": db.link("User", "userProfile"),
+        },
+        name="Profile",
+    )
 
-    g9.expose(
+    g.expose(
         createUser=db.create(user),
         createProfile=db.create(profile),
     )
 
-with TypeGraph("one-to-many-self") as g10:
+
+@typegraph()
+def one_to_one_self(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     tree_node = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
-            "parent": g10("TreeNode"),
-            "children": t.array(g10("TreeNode")),
-        }
-    ).named("TreeNode")
+            "id": t.integer(as_id=True).config("auto"),
+            "parent": t.ref("TreeNode"),
+            "children": t.array(t.ref("TreeNode")),
+        },
+        name="TreeNode",
+    )
 
-    g10.expose(
+    g.expose(
         createTreeNode=db.create(tree_node),
     )
 
 
-with TypeGraph("explicit-one-to-many-self") as g11:
+@typegraph()
+def one_to_one_self_2(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     tree_node = t.struct(
         {
-            "id": t.integer().as_id.config("auto"),
-            "parent": db.link(g11("TreeNode"), field="children"),
-            "children": db.link(t.array(g11("TreeNode")), field="parent"),
-        }
-    ).named("TreeNode")
+            "id": t.integer(as_id=True).config("auto"),
+            "parent": db.link("TreeNode", field="children"),
+            "children": db.link(t.array(t.ref("TreeNode")), field="parent"),
+        },
+        name="TreeNode",
+    )
 
-    g11.expose(
+    g.expose(
         createTreeNode=db.create(tree_node),
     )
 
 
-with TypeGraph("one-to-many-self-2") as g12:
+@typegraph()
+def one_to_many_self(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     tree_node = t.struct(
@@ -236,15 +268,17 @@ with TypeGraph("one-to-many-self-2") as g12:
             "id": t.integer().as_id.config("auto"),
             "children": t.array(g12("TreeNode")),
             "parent": g12("TreeNode"),
-        }
-    ).named("TreeNode")
+        },
+        name="TreeNode",
+    )
 
-    g12.expose(
+    g.expose(
         createTreeNode=db.create(tree_node),
     )
 
 
-with TypeGraph("explicit-one-to-many-self-2") as g13:
+@typegraph()
+def one_to_many_self_2(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     tree_node = t.struct(
@@ -260,33 +294,38 @@ with TypeGraph("explicit-one-to-many-self-2") as g13:
     )
 
 
-with TypeGraph("one-to-one-self") as g14:
+@typegraph()
+def one_to_one_self(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     list_node = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
-            "next": g14("ListNode").optional().config("unique"),
-            "prev": g14("ListNode").optional(),
-        }
-    ).named("ListNode")
+            "id": t.uuid(as_id=True).config("auto"),
+            "next": t.ref("ListNode").optional().config("unique"),
+            "prev": t.ref("ListNode").optional(),
+        },
+        name="ListNode",
+    )
 
-    g14.expose(
+    g.expose(
         createListNode=db.create(list_node),
     )
 
-with TypeGraph("one-to-one-self-2") as g15:
+
+@typegraph()
+def one_to_one_self_2(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     list_node = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
-            "prev": g15("ListNode").optional(),
-            "next": g15("ListNode").optional().config("unique"),
-        }
-    ).named("ListNode")
+            "id": t.uuid(as_id=True).config("auto"),
+            "prev": t.ref("ListNode").optional(),
+            "next": t.ref("ListNode").optional().config("unique"),
+        },
+        name="ListNode",
+    )
 
-    g15.expose(
+    g.expose(
         createListNode=db.create(list_node),
     )
 
@@ -322,80 +361,89 @@ with TypeGraph("one-to-one-self-2") as g15:
 #     )
 
 
-with TypeGraph("multiple-relationships") as g17:
+@typegraph()
+def multiple_relationship(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
+            "id": t.uuid(as_id=True).config("auto"),
             "email": t.email().config("unique"),
-            "posts": db.link(t.array(g17("Post")), field="author"),
+            "posts": db.link(t.array(t.ref("Post")), field="author"),
             "favorite_post": t.optional(g17("Post")).config("unique"),
-        }
-    ).named("User")
+        },
+        name="User",
+    )
 
     post = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
-            "title": t.string().min(10).max(256),
-            "content": t.string().min(1000),
-            "author": g17("User"),
-            "favorite_of": db.link(t.array(g17("User")), field="favorite_post"),
+            "id": t.uuid(as_id=True).config("auto"),
+            "title": t.string(min=10, max=256),
+            "content": t.string(min=1000),
+            "author": t.ref("User"),
+            "favorite_of": db.link(t.array(t.ref("User")), field="favorite_post"),
         }
     ).named("Post")
 
-    g17.expose(
+    g.expose(
         createUser=db.create(user),
         createPost=db.create(post),
     )
 
-with TypeGraph("multiple-relationships-2") as g18:
+
+@typegraph()
+def multiple_relationship_2(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     user = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
+            "id": t.uuid(as_id=True).config("auto"),
             "email": t.email().config("unique"),
-            "posts": db.link(t.array(g18("Post")), field="author"),
-            "published_posts": db.link(t.array(g18("Post")), name="PostPublisher"),
-            "favorite_post": t.optional(g18("Post")).config("unique"),
-        }
-    ).named("User")
+            "posts": db.link(t.array(t.ref("Post")), field="author"),
+            "published_posts": db.link(t.array(t.ref("Post")), name="PostPublisher"),
+            "favorite_post": t.optional(t.ref("Post")).config("unique"),
+        },
+        name="User",
+    )
 
     post = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
-            "title": t.string().min(10).max(256),
-            "content": t.string().min(1000),
-            "author": g18("User"),
-            "publisher": db.link(g18("User").optional(), name="PostPublisher"),
-            "favorite_of": db.link(t.array(g18("User")), field="favorite_post"),
+            "id": t.uuid(as_id=True).as_id.config("auto"),
+            "title": t.string(min=10, max=256),
+            "content": t.string(min=1000),
+            "author": t.ref("User"),
+            "publisher": db.link(t.ref("User").optional(), name="PostPublisher"),
+            "favorite_of": db.link(t.array(t.ref("User")), field="favorite_post"),
             # "favorite_of": t.array(g("User")),
-        }
-    ).named("Post")
+        },
+        name="Post",
+    )
 
     # TODO db.create(user) fails here
-    g18.expose(
+    g.expose(
         createUser=db.find_unique(user),
         createPost=db.find_unique(post),
     )
 
-with TypeGraph("multiple-self-relationships") as g19:
+
+@typegraph()
+def multiple_relationship_3(g: Graph):
     db = PrismaRuntime("test", "POSTGRES")
 
     person = t.struct(
         {
-            "id": t.uuid().as_id.config("auto"),
+            "id": t.uuid(as_id=True).config("auto"),
             "personal_hero": db.link(
-                g19("Person").optional().config("unique"), field="hero_of"
+                t.ref("Person").optional().config("unique"), field="hero_of"
             ),
-            "hero_of": g19("Person").optional(),
-            "mother": g19("Person").optional(),
-            "children": db.link(t.array(g19("Person")), field="mother"),
-        }
-    ).named("Person")
+            "hero_of": t.ref("Person").optional(),
+            "mother": t.ref("Person").optional(),
+            "children": db.link(t.array(t.ref("Person")), field="mother"),
+        },
+        name="Person",
+    )
 
     # TODO db.create(user) fails here
-    g19.expose(
+    g.expose(
         createPerson=db.find_unique(person),
     )
