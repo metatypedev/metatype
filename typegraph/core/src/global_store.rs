@@ -92,12 +92,12 @@ impl Store {
     pub fn get_type_by_path(
         &self,
         struct_id: TypeId,
-        path: &Vec<String>,
+        path: &[String],
     ) -> Result<(&Type, TypeId), TgError> {
         let mut ret = (self.get_type(struct_id)?, struct_id);
 
         let mut curr_path = vec![];
-        for chunk in path {
+        for (pos, chunk) in path.iter().enumerate() {
             let unwrapped_id = self.resolve_wrapper(ret.1)?;
             match self.get_type(unwrapped_id)? {
                 Type::Struct(t) => {
@@ -107,8 +107,9 @@ impl Store {
                         Some((_, id)) => (self.get_type(*id)?, *id),
                         None => {
                             return Err(errors::invalid_path(
-                                &curr_path,
-                                t.data
+                                pos,
+                                path,
+                                &t.data
                                     .props
                                     .iter()
                                     .map(|v| format!("{:?}", v.0.clone()))
