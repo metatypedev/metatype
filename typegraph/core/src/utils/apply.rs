@@ -79,10 +79,20 @@ impl PathTree {
     fn print_helper(lines: &mut String, node: &PathTree, depth: u32) {
         if depth >= 1 {
             let name = node.name.clone();
-            let inherit = node.path_infos.value.inherit;
+            let payload = node
+                .path_infos
+                .value
+                .payload
+                .clone()
+                .unwrap_or("--".to_string());
             let spaces = 4;
+            let symbol = if node.entries.len() == 1 || depth != 0 {
+                "└─"
+            } else {
+                "├─"
+            };
             lines.push_str(&format!(
-                "{:indent$}└── [{name} ({inherit})]",
+                "{:indent$}{symbol} [{name} ({payload})]",
                 "",
                 indent = ((depth as usize) - 1) * spaces
             ));

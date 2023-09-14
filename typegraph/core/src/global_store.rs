@@ -102,11 +102,20 @@ impl Store {
             match self.get_type(unwrapped_id)? {
                 Type::Struct(t) => {
                     let result = t.data.props.iter().find(|(k, _)| k.eq(chunk));
+                    curr_path.push(chunk.clone());
                     ret = match result {
                         Some((_, id)) => (self.get_type(*id)?, *id),
-                        None => return Err(errors::invalid_path(&curr_path)),
+                        None => {
+                            return Err(errors::invalid_path(
+                                &curr_path,
+                                t.data
+                                    .props
+                                    .iter()
+                                    .map(|v| format!("{:?}", v.0.clone()))
+                                    .collect::<Vec<String>>(),
+                            ));
+                        }
                     };
-                    curr_path.push(chunk.clone());
                 }
                 _ => return Err(errors::expect_object_at_path(&curr_path)),
             }

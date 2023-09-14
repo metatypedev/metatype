@@ -51,8 +51,13 @@ pub fn object_not_found(kind: &str, id: u32) -> TgError {
     format!("{kind} #{id} not found")
 }
 
-pub fn invalid_path(path: &[String]) -> TgError {
-    format!("invalid path {}", path.join("."))
+pub fn invalid_path(path: &[String], curr_keys: Vec<String>) -> TgError {
+    format!(
+        "invalid path {:?}, none of {} matches the chunk {:?}",
+        path.join("."),
+        curr_keys.join(", "),
+        path.last().unwrap_or(&"".to_string()),
+    )
 }
 
 pub fn expect_object_at_path(path: &[String]) -> TgError {
