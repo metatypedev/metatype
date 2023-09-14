@@ -12,7 +12,7 @@ def serialize_record_values(obj: Union[Dict[str, any], None]):
     return [(k, json.dumps(v)) for k, v in obj.items()] if obj is not None else None
 
 
-def build_apply_data(node: any, paths: List[ApplyPath] = [], curr_path: List[str] = []):
+def build_apply_data(node: any, paths: List[ApplyPath], curr_path: List[str]):
     if node is None:
         raise Exception(f"unsupported value {str(node)} at {'.'.join(curr_path)},")
 

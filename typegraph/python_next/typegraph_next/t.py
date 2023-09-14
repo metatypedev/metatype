@@ -502,7 +502,7 @@ class func(typedef):
         self.mat = mat
 
     def apply(self, value: Dict[str, any]) -> "func":
-        data = Apply(paths=build_apply_data(value))
+        data = Apply(paths=build_apply_data(value, [], []))
         apply_id = wit_utils.gen_applyb(store, self.inp.id, data=data)
 
         if isinstance(apply_id, Err):

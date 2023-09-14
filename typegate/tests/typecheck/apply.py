@@ -25,6 +25,17 @@ def test_apply_python(g: Graph):
     )
 
     g.expose(
+        invariantApply=identity_simple.apply(
+            {
+                "two": {
+                    "apply": g.inherit(),
+                    "user": g.inherit(),
+                    "set": g.inherit(),
+                    "context": g.inherit(),
+                }
+                # "one": g.inherit()  # implicit
+            }
+        ).with_policy(public),
         simpleInjection=identity_simple.apply({"one": "ONE!"})
         .apply(
             {

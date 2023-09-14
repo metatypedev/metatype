@@ -144,6 +144,44 @@ Meta.test("deno(sdk): apply", async (t) => {
 
 Meta.test("python(sdk): apply", async (t) => {
   const e = await t.engine("typecheck/apply.py");
+  await t.should(
+    "work as normal if all nodes have g.inherit() flag",
+    async () => {
+      await gql`
+        query {
+          invariantApply (
+            one: "1"
+            two: {
+              apply: 2
+              set: 3
+              user: 4
+              context: "5"
+            }
+          ) {
+            one
+            two {
+              apply
+              set
+              user
+              context
+            }
+          }
+        }
+      `
+        .expectData({
+          invariantApply: {
+            one: "1",
+            two: {
+              apply: 2,
+              set: 3,
+              user: 4,
+              context: "5",
+            },
+          },
+        })
+        .on(e);
+    },
+  );
 
   await t.should(
     "work with apply composition and injections",
