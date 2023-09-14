@@ -172,10 +172,20 @@ impl wit::core::Core for Lib {
     }
 
     fn optionalb(data: TypeOptional, base: TypeBase) -> Result<CoreTypeId> {
-        Ok(with_store_mut(move |s| {
-            s.add_type(|id| Type::Optional(Optional { id, base, data }))
-                .into()
-        }))
+        with_store_mut(move |s| -> Result<_> {
+            let base = match s.get_type_name(data.of.into())? {
+                Some(name) => {
+                    let name = format!("{}?", name);
+                    TypeBase {
+                        name: Some(name),
+                        ..base
+                    }
+                }
+                None => base,
+            };
+            Ok(s.add_type(|id| Type::Optional(Optional { id, base, data }))
+                .into())
+        })
     }
 
     fn unionb(data: TypeUnion, base: TypeBase) -> Result<CoreTypeId> {
