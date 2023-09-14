@@ -103,6 +103,7 @@ export async function handleGraphQL(
 
     return jsonOk(res, headers);
   } catch (e) {
+    // throw e;
     if (e instanceof ResolverError) {
       logger.error(`field err: ${e.message}`);
       return jsonError(e.message, headers, 502);

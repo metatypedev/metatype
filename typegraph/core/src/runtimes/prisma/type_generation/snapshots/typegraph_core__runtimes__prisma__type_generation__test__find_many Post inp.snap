@@ -2,7 +2,7 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.input)"
 ---
-root: struct #145
+root: struct '_Post_QueryInput' #145
 ├─ [where]: optional #133
 │  └─ item: struct 'QueryPostWhereInput' #132
 │     ├─ [id]: optional #121

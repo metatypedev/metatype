@@ -1,0 +1,32 @@
+---
+source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
+expression: "tree::print(types.output)"
+---
+root: array '_User_GroupByResult' #190
+└─ item: struct #189
+   ├─ [id]: integer #119
+   ├─ [name]: string #120
+   ├─ [posts]: array 'Post[]' #122
+   │  └─ item: &Post #121
+   ├─ [_count]: struct '_User_AggrCount' #178
+   │  ├─ [_all]: optional #177
+   │  │  └─ item: integer #176
+   │  ├─ [id]: optional #177
+   │  │  └─ item: integer #176
+   │  ├─ [name]: optional #177
+   │  │  └─ item: integer #176
+   │  └─ [posts]: optional #177
+   │     └─ item: integer #176
+   ├─ [_avg]: struct '_User_SelectNumbers__1' #183
+   │  └─ [id]: optional #182
+   │     └─ item: float #181
+   ├─ [_sum]: struct '_User_SelectNumbers_' #188
+   │  └─ [id]: optional #185
+   │     └─ item: integer #184
+   ├─ [_min]: struct '_User_SelectNumbers_' #188
+   │  └─ [id]: optional #185
+   │     └─ item: integer #184
+   └─ [_max]: struct '_User_SelectNumbers_' #188
+      └─ [id]: optional #185
+         └─ item: integer #184
+

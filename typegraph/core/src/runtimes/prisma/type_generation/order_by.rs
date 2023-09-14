@@ -4,6 +4,7 @@
 use crate::errors::Result;
 use crate::global_store::with_store;
 use crate::runtimes::prisma::relationship::Cardinality;
+use crate::runtimes::prisma::type_generation::with_filters::{NumberType, WithAggregateFilters};
 use crate::t::{ConcreteTypeBuilder, TypeBuilder};
 use crate::types::Type;
 use crate::{t, types::TypeId};
@@ -13,11 +14,28 @@ use super::{TypeGen, TypeGenContext};
 pub struct OrderBy {
     model_id: TypeId,
     skip_rel: Vec<String>,
+    aggregates: bool,
 }
 
 impl OrderBy {
-    pub fn new(model_id: TypeId, skip_rel: Vec<String>) -> Self {
-        Self { model_id, skip_rel }
+    pub fn new(model_id: TypeId) -> Self {
+        Self {
+            model_id,
+            skip_rel: vec![],
+            aggregates: false,
+        }
+    }
+
+    pub fn skip(mut self, rel_names: Vec<String>) -> Self {
+        self.skip_rel = rel_names;
+        self
+    }
+
+    pub fn with_aggregates(self) -> Self {
+        Self {
+            aggregates: true,
+            ..self
+        }
     }
 }
 
@@ -84,7 +102,21 @@ impl TypeGen for OrderBy {
                 .collect::<Vec<_>>()
         });
 
-        let mut builder = t::struct_();
+        // let props = if self.aggregates {
+        //     let mut props = props;
+        //     for agg in ["_count", "_avg", "_sum", "_min", "_max"] {
+        //         props.push((agg.to_string(), PropType::Optional));
+        //     }
+        //     props
+        // } else {
+        //     props
+        // };
+
+        let mut builder = if self.aggregates {
+            t::struct_extends(context.generate(&AggregateSorting::new(self.model_id))?)?
+        } else {
+            t::struct_()
+        };
         for (k, v) in props {
             builder.prop(
                 k,
@@ -95,13 +127,22 @@ impl TypeGen for OrderBy {
                     PropType::OrderBy(ty, rel_name) => {
                         let mut skip_rel = self.skip_rel.clone();
                         skip_rel.push(rel_name);
-                        t::optional(context.generate(&OrderBy::new(ty, skip_rel))?).build()?
+                        t::optional(context.generate(&OrderBy::new(ty).skip(skip_rel))?).build()?
                     }
                 },
             );
         }
 
+        // let array_item = if self.aggregates {
+        //     context.generate(&WithAggregateFilters::new(self.model_id, builder.build()?))?
+        // } else {
+        //     builder.build()?
+        // };
         t::array(builder.build()?).named(self.name(context)).build()
+
+        // t::array(context.generate(&WithAggregateFilters::new(self.model_id, builder.build()?))?)
+        //     .named(self.name(context))
+        //     .build()
     }
 
     fn name(&self, context: &TypeGenContext) -> String {
@@ -117,7 +158,12 @@ impl TypeGen for OrderBy {
         } else {
             format!("_excluding_{}", self.skip_rel.join("_"))
         };
-        format!("_{}_OrderBy{suffix}", self.model_id.0)
+        let suffix2 = if self.aggregates {
+            "_with_aggregates"
+        } else {
+            ""
+        };
+        format!("_{}_OrderBy{suffix}{suffix2}", self.model_id.0)
     }
 }
 
@@ -197,3 +243,155 @@ impl TypeGen for SortByAggregates {
         "_SortByAggregates".to_string()
     }
 }
+
+struct AggregateSorting {
+    model_id: TypeId,
+}
+
+impl AggregateSorting {
+    fn new(model_id: TypeId) -> Self {
+        Self { model_id }
+    }
+}
+
+impl TypeGen for AggregateSorting {
+    fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+        use AggregateSortingProp as Prop;
+
+        let props = with_store(|s| -> Result<_> {
+            self.model_id
+                .as_struct(s)?
+                .data
+                .props
+                .iter()
+                .map(|(k, type_id)| -> Result<_> {
+                    let attrs = s.get_attributes(type_id.into())?;
+                    let typ = s.get_type(attrs.concrete_type)?;
+                    let (typ, is_optional) = match typ {
+                        Type::Optional(inner) => (
+                            s.get_type(s.get_attributes(inner.data.of.into())?.concrete_type)?,
+                            true,
+                        ),
+                        _ => (typ, false),
+                    };
+                    match typ {
+                        Type::Integer(_) | Type::Float(_) => Ok(Prop {
+                            key: k.clone(),
+                            number_type: true,
+                            optional: is_optional,
+                        }),
+                        _ => Ok(Prop {
+                            key: k.clone(),
+                            number_type: false,
+                            optional: is_optional,
+                        }),
+                    }
+                })
+                .collect::<Result<Vec<_>>>()
+        })?;
+
+        let mut builder = t::struct_();
+        let count = t::optional(
+            t::struct_from(props.iter().filter_map(|p| {
+                p.generate(context, true)
+                    .unwrap()
+                    .map(|ty| (p.key.clone(), ty))
+            }))
+            .build()?,
+        )
+        .build()?;
+        let others = t::optional(
+            t::struct_from(props.iter().filter_map(|p| {
+                p.generate(context, false)
+                    .unwrap()
+                    .map(|ty| (p.key.clone(), ty))
+            }))
+            .build()?,
+        )
+        .build()?;
+        builder
+            .prop("_count", count)
+            .prop("_avg", others)
+            .prop("_sum", others)
+            .prop("_min", others)
+            .prop("_max", others)
+            .named(self.name(context))
+            .build()
+    }
+
+    fn name(&self, context: &TypeGenContext) -> String {
+        let name = context
+            .registry
+            .models
+            .get(&self.model_id)
+            .unwrap()
+            .name
+            .clone();
+        format!("_{}_AggregateSorting", name)
+    }
+}
+
+struct AggregateSortingProp {
+    key: String,
+    number_type: bool,
+    optional: bool,
+}
+
+impl AggregateSortingProp {
+    fn generate(&self, context: &mut TypeGenContext, count: bool) -> Result<Option<TypeId>> {
+        Ok(match count {
+            true => Some(context.generate(&Sort {
+                nullable: self.optional,
+            })?),
+            false => {
+                if self.number_type {
+                    Some(context.generate(&Sort {
+                        nullable: self.optional,
+                    })?)
+                } else {
+                    None
+                }
+            }
+        })
+    }
+}
+
+// struct AggregateFiltering {
+//     model_id: TypeId,
+// }
+//
+// impl AggregateFiltering {
+//     fn new(model_id: TypeId) -> Self {
+//         Self { model_id }
+//     }
+// }
+//
+// impl TypeGen for AggregateFiltering {
+//     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
+//         let model = context.registry.models.get(&self.model_id).unwrap();
+//         let mut builder = t::struct_();
+//         for field in &model.fields {
+//             let ty = context.generate(&AggregateFilteringField::new(
+//                 self.model_id,
+//                 field.name.clone(),
+//             ))?;
+//             builder.prop(field.name.clone(), ty);
+//         }
+//
+//         t::optional(builder.build()?)
+//             .named(self.name(context))
+//             .build()
+//     }
+//
+//     fn name(&self, context: &TypeGenContext) -> String {
+//         let name = context
+//             .registry
+//             .models
+//             .get(&self.model_id)
+//             .unwrap()
+//             .name
+//             .clone();
+//         format!("_{}_AggregateFiltering", name)
+//     }
+// }
+//

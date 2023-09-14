@@ -68,7 +68,7 @@ def prisma(g: Graph):
         findUniquePost=db.find_unique(post),
         createManyPosts=db.create_many(post),
         updateManyPosts=db.update_many(post),
-        # groupByPost=db.group_by(post),
+        groupByPost=db.group_by(post),
         aggregatePost=db.aggregate(post),
         createOnePost=db.create(post),
         findManyExtendedProfile=db.find_many(extended_profile),

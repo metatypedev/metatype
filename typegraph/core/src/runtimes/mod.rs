@@ -312,6 +312,10 @@ impl wit::Runtimes for crate::Lib {
         prisma_op!(runtime, model, aggregate, "aggregate")
     }
 
+    fn prisma_group_by(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
+        prisma_op!(runtime, model, group_by, "groupBy")
+    }
+
     fn prisma_count(runtime: RuntimeId, model: CoreTypeId) -> Result<CoreTypeId, wit::Error> {
         prisma_op!(runtime, model, count, "count")
     }

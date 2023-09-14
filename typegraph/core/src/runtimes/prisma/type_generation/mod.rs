@@ -7,9 +7,11 @@ use std::fmt::format;
 
 use self::additional_filters::{Distinct, Skip, Take};
 use self::aggregate::{CountOutput, NumberAggregateOutput};
+use self::group_by::GroupByResult;
 use self::input_type::InputType;
 use self::order_by::OrderBy;
 use self::out_type::OutType;
+use self::query_input_type::QueryInputType;
 use self::query_unique_where_expr::QueryUniqueWhereExpr;
 use self::query_where_expr::QueryWhereExpr;
 use self::update_input::UpdateInput;
@@ -25,9 +27,11 @@ use crate::types::{ProxyResolution, Type, TypeFun, TypeId};
 mod additional_filters;
 mod aggregate;
 mod count;
+pub mod group_by;
 mod input_type;
 mod order_by;
 mod out_type;
+pub mod query_input_type;
 mod query_unique_where_expr;
 mod query_where_expr;
 mod update_input;
@@ -52,6 +56,10 @@ pub struct OperationTypes {
 }
 
 impl TypeGenContext {
+    fn get_model_name(&self, model_id: TypeId) -> &str {
+        &self.registry.models.get(&model_id).unwrap().name
+    }
+
     pub fn find_unique(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
@@ -66,31 +74,11 @@ impl TypeGenContext {
         })
     }
 
-    // TODO typegen
-    fn find_many_inp(&mut self, model_id: TypeId) -> Result<TypeId> {
-        Ok(t::struct_()
-            .prop(
-                "where",
-                t::optional(self.generate(&QueryWhereExpr::new(model_id))?).build()?,
-            )
-            .prop(
-                "orderBy",
-                t::optional(self.generate(&OrderBy::new(model_id, vec![]))?).build()?,
-            )
-            .prop("take", t::optional(self.generate(&Take)?).build()?)
-            .prop("skip", t::optional(self.generate(&Skip)?).build()?)
-            .prop(
-                "distinct",
-                t::optional(self.generate(&Distinct(model_id))?).build()?,
-            )
-            .build()?)
-    }
-
     pub fn find_many(&mut self, model_id: TypeId) -> Result<OperationTypes> {
         self.registry.manage(model_id)?;
 
         Ok(OperationTypes {
-            input: self.find_many_inp(model_id)?,
+            input: self.generate(&QueryInputType::new(model_id, false))?,
             output: t::array(self.generate(&WithNestedCount::new(model_id))?).build()?,
         })
     }
@@ -99,7 +87,7 @@ impl TypeGenContext {
         self.registry.manage(model_id)?;
 
         Ok(OperationTypes {
-            input: self.find_many_inp(model_id)?,
+            input: self.generate(&QueryInputType::new(model_id, false))?,
             output: t::optional(self.generate(&OutType::new(model_id))?).build()?,
         })
     }
@@ -108,7 +96,7 @@ impl TypeGenContext {
         self.registry.manage(model_id)?;
 
         Ok(OperationTypes {
-            input: self.find_many_inp(model_id)?,
+            input: self.generate(&QueryInputType::new(model_id, false))?,
             // TODO typegen
             output: t::struct_()
                 .prop("_count", self.generate(&CountOutput::new(model_id))?)
@@ -137,8 +125,17 @@ impl TypeGenContext {
         self.registry.manage(model_id)?;
 
         Ok(OperationTypes {
-            input: self.find_many_inp(model_id)?,
+            input: self.generate(&QueryInputType::new(model_id, false))?,
             output: self.generate(&CountOutput::new(model_id))?,
+        })
+    }
+
+    pub fn group_by(&mut self, model_id: TypeId) -> Result<OperationTypes> {
+        self.registry.manage(model_id)?;
+
+        Ok(OperationTypes {
+            input: self.generate(&QueryInputType::new(model_id, true))?,
+            output: self.generate(&GroupByResult::new(model_id))?,
         })
     }
 
@@ -343,6 +340,7 @@ mod test {
     test_op!(find_many);
     test_op!(find_first, output_only);
     test_op!(aggregate, output_only);
+    test_op!(group_by);
     test_op!(create_one, input_only);
     test_op!(create_many);
     test_op!(update_one, input_only);
