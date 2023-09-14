@@ -33,7 +33,7 @@ const grades = t.struct({
 
 const tpe = t.struct({ student, grades: grades.optional() });
 
-typegraph("test-apply", (g) => {
+typegraph("test-apply-deno", (g) => {
   const deno = new DenoRuntime();
   const pub = Policy.public();
   const identityStudent = deno.func(
@@ -54,7 +54,6 @@ typegraph("test-apply", (g) => {
       },
       // grades: g.inherit(), // implicit
     }).withPolicy(pub),
-
     applyComposition: identityStudent
       .apply({
         student: {

@@ -146,83 +146,36 @@ Meta.test("python(sdk): apply", async (t) => {
   const e = await t.engine("typecheck/apply.py");
 
   await t.should(
-    "work as normal if all nodes have g.inherit() flag",
+    "work with apply composition and injections",
     async () => {
       await gql`
         query {
-          testInvariant (
-            student: {
-              id: 1
-              name: "Jake"
-              infos: { age: 15 }
-            }
+          simpleInjection (
+            two: { user: 4444 }
           ) {
-            student {
-              id
-              name
-              infos { age school }
+            one
+            two {
+              set
+              user
+              context
             }
           }
         }
-      `.expectData({
-        testInvariant: {
-          student: {
-            id: 1,
-            name: "Jake",
-            infos: { age: 15 },
+      `
+        .withContext({
+          someValue: "THREE!!",
+        })
+        .expectData({
+          simpleInjection: {
+            one: "ONE!", // apply
+            two: {
+              set: 2,
+              user: 4444,
+              context: "THREE!!",
+            },
           },
-        },
-      })
+        })
         .on(e);
     },
   );
-
-  // await t.should(
-  //   "work with injections",
-  //   async () => {
-  //     await gql`
-  //       query {
-  //         injectionInherit (
-  //           student: {
-  //             name: "Kyle"
-  //           }
-  //         ) {
-  //           student {
-  //             id
-  //             name
-  //             infos { age school }
-  //           }
-  //           grades {
-  //             year
-  //             subjects { name score }
-  //           }
-  //         }
-  //       }
-  //     `
-  //       .withContext({
-  //         subjects: [
-  //           { name: "Math", score: 24 },
-  //           { name: "English", score: 68 },
-  //         ],
-  //         personalInfos: { age: 17 },
-  //       })
-  //       .expectData({
-  //         injectionInherit: {
-  //           student: {
-  //             id: 1234, // from apply
-  //             name: "Kyle", // from user
-  //             infos: { age: 17 }, // from context
-  //           },
-  //           grades: {
-  //             year: 2000, // from explicit injection set(..)
-  //             subjects: [ // from context
-  //               { name: "Math", score: 24 },
-  //               { name: "English", score: 68 },
-  //             ],
-  //           },
-  //         },
-  //       })
-  //       .on(e);
-  //   },
-  // );
 });
