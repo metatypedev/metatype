@@ -35,6 +35,7 @@ def serialize_generic_injection(source: str, value: Union[any, Dict[EffectType, 
     allowed = ["dynamic", "context", "secret"]
     if source in allowed:
         return serialize_injection(source, value=value)
+    raise Exception(f"source must be one of ${', '.join(allowed)}")
 
 
 def serialize_parent_injection(value: Union[str, Dict[EffectType, str]]):

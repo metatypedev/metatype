@@ -65,7 +65,7 @@ impl Store {
     }
 
     // unwrap type id inside array, optional, or WithInjection
-    pub fn resolve_quantifier(&self, type_id: TypeId) -> Result<TypeId, TgError> {
+    pub fn resolve_wrapper(&self, type_id: TypeId) -> Result<TypeId, TgError> {
         let mut id = self.resolve_proxy(type_id)?;
         loop {
             let tpe = self.get_type(id)?;
@@ -98,7 +98,7 @@ impl Store {
 
         let mut curr_path = vec![];
         for chunk in path {
-            let unwrapped_id = self.resolve_quantifier(ret.1)?;
+            let unwrapped_id = self.resolve_wrapper(ret.1)?;
             match self.get_type(unwrapped_id)? {
                 Type::Struct(t) => {
                     let result = t.data.props.iter().find(|(k, _)| k.eq(chunk));
