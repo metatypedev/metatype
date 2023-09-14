@@ -283,6 +283,12 @@ interface runtimes {
         connection-string-secret: string,
     }
 
+    record prisma-link-data {
+        target-type: type-id,
+        relationship-name: option<string>,
+        foreign-key: option<bool>,
+    }
+
     register-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>
     prisma-find-unique: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
     prisma-find-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
@@ -297,6 +303,7 @@ interface runtimes {
     prisma-upsert-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
     prisma-delete-one: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
     prisma-delete-many: func(runtime: runtime-id, model: type-id) -> result<type-id, error>
+    prisma-link: func(data: prisma-link-data) -> result<type-id, error>
 }
 
 world typegraph {

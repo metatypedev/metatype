@@ -1,12 +1,12 @@
 # Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 # SPDX-License-Identifier: MPL-2.0
 
-from typing import Union
+from typing import Union, Optional
 
 from typegraph_next.runtimes.base import Runtime
 from typegraph_next.wit import runtimes, store
 from typegraph_next.gen.types import Err
-from typegraph_next.gen.exports.runtimes import PrismaRuntimeData
+from typegraph_next.gen.exports.runtimes import PrismaRuntimeData, PrismaLinkData
 from typegraph_next import t
 
 
@@ -128,3 +128,32 @@ class PrismaRuntime(Runtime):
         if isinstance(type_id, Err):
             raise Exception(type_id.value)
         return t.typedef(type_id.value)
+
+    def link(
+        self,
+        target_type: str,
+        name: Optional[str] = None,
+        *,
+        fkey: Optional[bool] = None
+    ):
+        return prisma_link(target_type, name=name, fkey=fkey)
+
+
+def prisma_link(
+    target_type: Union[str, t.typedef],
+    name: Optional[str] = None,
+    *,
+    fkey: Optional[bool] = None
+):
+    if isinstance(target_type, str):
+        target_type = t.ref(target_type)
+    type_id = runtimes.prisma_link(
+        store,
+        PrismaLinkData(
+            target_type=target_type.id, relationship_name=name, foreign_key=fkey
+        ),
+    )
+
+    if isinstance(type_id, Err):
+        raise Exception(type_id.value)
+    return t.typedef(type_id.value)

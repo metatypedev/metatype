@@ -15,7 +15,7 @@ use crate::t;
 use crate::wit::core::{RuntimeId, TypeId as CoreTypeId};
 use crate::wit::runtimes::{
     self as wit, BaseMaterializer, Error as TgError, GraphqlRuntimeData, HttpRuntimeData,
-    MaterializerHttpRequest, PrismaRuntimeData, RandomRuntimeData,
+    MaterializerHttpRequest, PrismaLinkData, PrismaRuntimeData, RandomRuntimeData,
 };
 use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use enum_dispatch::enum_dispatch;
@@ -23,6 +23,7 @@ use enum_dispatch::enum_dispatch;
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
 use self::prisma::relationship::registry::RelationshipRegistry;
+use self::prisma::relationship::{prisma_link, prisma_linkn};
 use self::prisma::{PrismaMaterializer, PrismaRuntimeContext};
 pub use self::python::PythonMaterializer;
 pub use self::random::RandomMaterializer;
@@ -388,5 +389,16 @@ impl wit::Runtimes for crate::Lib {
             "deleteMany",
             WitEffect::Delete(true)
         )
+    }
+
+    fn prisma_link(data: PrismaLinkData) -> Result<CoreTypeId, wit::Error> {
+        let mut builder = prisma_link(data.target_type.into())?;
+        if let Some(name) = data.relationship_name {
+            builder = builder.name(name);
+        }
+        if let Some(fkey) = data.foreign_key {
+            builder = builder.fkey(fkey);
+        }
+        Ok(builder.build()?.into())
     }
 }
