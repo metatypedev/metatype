@@ -15,13 +15,19 @@ interface core {
     finalize-typegraph: func() -> result<string, error>
 
     type type-id = u32
-
     record type-base {
         name: option<string>,
         // string => json string
         runtime-config: option<list<tuple<string, string>>>,
         as-id: bool,
     }
+
+    record type-with-injection {
+        tpe: type-id,
+        injection: string
+    }
+
+    with-injection: func(data: type-with-injection) -> result<type-id, error>
 
     record type-proxy {
         name: string,

@@ -9,11 +9,11 @@ root: struct #44
    ├─ [title]: string #15
    └─ [author]: optional #42
       └─ item: struct #41
-         ├─ [create]: optional #36
+         ├─ [create]: optional '_User_CreateInput_excluding_UserToPost?' #36
          │  └─ item: struct '_User_CreateInput_excluding_UserToPost' #35
          │     ├─ [id]: integer #9
          │     └─ [name]: string #10
-         └─ [connect]: optional #40
+         └─ [connect]: optional 'UserWhere_norel?' #40
             └─ item: struct 'UserWhere_norel' #39
                ├─ [id]: optional #37
                │  └─ item: integer #9

@@ -3,9 +3,9 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.input)"
 ---
 root: struct '_Record_QueryInput_group_by' #103
-├─ [where]: optional #46
+├─ [where]: optional 'QueryRecordWhereInput?' #46
 │  └─ item: struct 'QueryRecordWhereInput' #45
-│     ├─ [id]: optional #25
+│     ├─ [id]: optional '_string_filter_c?' #25
 │     │  └─ item: optional '_string_filter_c' #24
 │     │     └─ item: union #23
 │     │        ├─ variant_0: union '_string_filter' #21
@@ -55,7 +55,7 @@ root: struct '_Record_QueryInput_group_by' #103
 │     │                 │  └─ item: string #9
 │     │                 └─ [endsWith]: optional #10
 │     │                    └─ item: string #9
-│     ├─ [name]: optional #26
+│     ├─ [name]: optional '_string_filter_c?' #26
 │     │  └─ item: optional '_string_filter_c' #24
 │     │     └─ item: union #23
 │     │        ├─ variant_0: union '_string_filter' #21
@@ -105,7 +105,7 @@ root: struct '_Record_QueryInput_group_by' #103
 │     │                 │  └─ item: string #9
 │     │                 └─ [endsWith]: optional #10
 │     │                    └─ item: string #9
-│     ├─ [age]: optional #39
+│     ├─ [age]: optional '_integer_filter_c?' #39
 │     │  └─ item: optional '_integer_filter_c' #38
 │     │     └─ item: union #37
 │     │        ├─ variant_0: either '_integer_filter' #35
@@ -151,15 +151,15 @@ root: struct '_Record_QueryInput_group_by' #103
 │     │              └─ variant_5: struct #34
 │     │                 └─ [notIn]: array #29
 │     │                    └─ item: integer #27
-│     ├─ [AND]: optional #43
+│     ├─ [AND]: optional 'QueryRecordWhereInput[]?' #43
 │     │  └─ item: array 'QueryRecordWhereInput[]' #42
 │     │     └─ item: &QueryRecordWhereInput #41
-│     ├─ [OR]: optional #43
+│     ├─ [OR]: optional 'QueryRecordWhereInput[]?' #43
 │     │  └─ item: array 'QueryRecordWhereInput[]' #42
 │     │     └─ item: &QueryRecordWhereInput #41
-│     └─ [NOT]: optional #44
+│     └─ [NOT]: optional 'QueryRecordWhereInput?' #44
 │        └─ item: &QueryRecordWhereInput #41
-├─ [orderBy]: optional #62
+├─ [orderBy]: optional '_4_OrderBy_with_aggregates?' #62
 │  └─ item: array '_4_OrderBy_with_aggregates' #61
 │     └─ item: struct #60
 │        ├─ [_count]: optional #56
@@ -228,16 +228,16 @@ root: struct '_Record_QueryInput_group_by' #103
 │              │  ├─ [sort]: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
 │              │  └─ [nulls]: string '_NullsOrder' #48 enum{ '"first"', '"last"' }
 │              └─ variant_1: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
-├─ [take]: optional #64
+├─ [take]: optional '_Take?' #64
 │  └─ item: integer '_Take' #63
-├─ [skip]: optional #66
+├─ [skip]: optional '_Skip?' #66
 │  └─ item: integer '_Skip' #65
 ├─ [by]: array '_Record_GroupingFields' #68
 │  └─ item: string #67 enum{ '"id"', '"name"', '"age"' }
-└─ [having]: optional #102
+└─ [having]: optional '_Record_Having?' #102
    └─ item: union '_Record_Having' #101
       ├─ variant_0: struct '_72WithFilters_norel_with_aggregates' #94
-      │  ├─ [id]: optional #73
+      │  ├─ [id]: optional '_string_filter_c?' #73
       │  │  └─ item: optional '_string_filter_c' #24
       │  │     └─ item: union #23
       │  │        ├─ variant_0: union '_string_filter' #21
@@ -287,7 +287,7 @@ root: struct '_Record_QueryInput_group_by' #103
       │  │                 │  └─ item: string #9
       │  │                 └─ [endsWith]: optional #10
       │  │                    └─ item: string #9
-      │  ├─ [name]: optional #74
+      │  ├─ [name]: optional '_string_filter_c?' #74
       │  │  └─ item: optional '_string_filter_c' #24
       │  │     └─ item: union #23
       │  │        ├─ variant_0: union '_string_filter' #21
@@ -337,7 +337,7 @@ root: struct '_Record_QueryInput_group_by' #103
       │  │                 │  └─ item: string #9
       │  │                 └─ [endsWith]: optional #10
       │  │                    └─ item: string #9
-      │  └─ [age]: optional #93
+      │  └─ [age]: optional '_integer_filter_with_aggregates_c?' #93
       │     └─ item: optional '_integer_filter_with_aggregates_c' #92
       │        └─ item: union #91
       │           ├─ variant_0: union #89

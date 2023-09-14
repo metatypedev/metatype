@@ -8,12 +8,12 @@ root: struct #30
    ├─ [name]: string #10
    └─ [posts]: optional #28
       └─ item: struct #27
-         ├─ [create]: optional #19
+         ├─ [create]: optional '_Post_CreateInput_excluding_UserToPost?' #19
          │  └─ item: struct '_Post_CreateInput_excluding_UserToPost' #18
          │     ├─ [id]: optional #17
          │     │  └─ item: integer #14
          │     └─ [title]: string #15
-         ├─ [connect]: optional #23
+         ├─ [connect]: optional 'PostWhere_norel?' #23
          │  └─ item: struct 'PostWhere_norel' #22
          │     ├─ [id]: optional #20
          │     │  └─ item: integer #14

@@ -23,3 +23,14 @@ export function delete_(idempotent = true): EffectDelete {
 export function update(idempotent = true): EffectUpdate {
   return { tag: "update", val: idempotent };
 }
+
+export const UPDATE = Symbol("update");
+export const DELETE = Symbol("delete");
+export const CREATE = Symbol("create");
+export const NONE = Symbol("none");
+export type PerEffect = {
+  [CREATE]?: string;
+  [UPDATE]?: string;
+  [DELETE]?: string;
+  [NONE]?: string;
+};

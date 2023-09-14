@@ -12,7 +12,7 @@ use crate::global_store::{with_store, Store};
 use crate::typegraph::TypegraphContext;
 use crate::wit::core::{
     TypeArray, TypeBase, TypeEither, TypeFloat, TypeFunc, TypeId as CoreTypeId, TypeInteger,
-    TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion,
+    TypeOptional, TypePolicy, TypeProxy, TypeString, TypeStruct, TypeUnion, TypeWithInjection,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -95,8 +95,10 @@ pub type Array = ConcreteType<TypeArray>;
 pub type Optional = ConcreteType<TypeOptional>;
 pub type Union = ConcreteType<TypeUnion>;
 pub type Either = ConcreteType<TypeEither>;
+
+// Note: TypePolicy|TypeWithInjection|Proxy => Struct | Integer | ...
 pub type WithPolicy = WrapperType<TypePolicy>;
-// pub type WithConfig = WrapperType<TypeWithConfig>;
+pub type WithInjection = WrapperType<TypeWithInjection>;
 
 #[derive(Debug)]
 #[enum_dispatch(TypeFun, TypeConversion)]
@@ -113,6 +115,7 @@ pub enum Type {
     Union(Union),
     Either(Either),
     WithPolicy(WithPolicy),
+    WithInjection(WithInjection),
 }
 
 #[enum_dispatch]

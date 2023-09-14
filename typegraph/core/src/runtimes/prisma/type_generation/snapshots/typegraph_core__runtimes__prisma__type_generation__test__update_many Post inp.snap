@@ -20,9 +20,9 @@ root: struct #134
 │        ├─ variant_0: string #69
 │        └─ variant_1: struct #110
 │           └─ [set]: string #69
-└─ [where]: optional #133
+└─ [where]: optional 'QueryPostWhereInput?' #133
    └─ item: struct 'QueryPostWhereInput' #132
-      ├─ [id]: optional #121
+      ├─ [id]: optional '_integer_filter_c?' #121
       │  └─ item: optional '_integer_filter_c' #51
       │     └─ item: union #50
       │        ├─ variant_0: either '_integer_filter' #48
@@ -68,7 +68,7 @@ root: struct #134
       │              └─ variant_5: struct #47
       │                 └─ [notIn]: array #42
       │                    └─ item: integer #40
-      ├─ [title]: optional #122
+      ├─ [title]: optional '_string_filter_c?' #122
       │  └─ item: optional '_string_filter_c' #37
       │     └─ item: union #36
       │        ├─ variant_0: union '_string_filter' #34
@@ -118,9 +118,9 @@ root: struct #134
       │                 │  └─ item: string #22
       │                 └─ [endsWith]: optional #23
       │                    └─ item: string #22
-      ├─ [author]: optional #126
+      ├─ [author]: optional '_67WithFilters_norel?' #126
       │  └─ item: struct '_67WithFilters_norel' #125
-      │     ├─ [id]: optional #123
+      │     ├─ [id]: optional '_integer_filter_c?' #123
       │     │  └─ item: optional '_integer_filter_c' #51
       │     │     └─ item: union #50
       │     │        ├─ variant_0: either '_integer_filter' #48
@@ -166,7 +166,7 @@ root: struct #134
       │     │              └─ variant_5: struct #47
       │     │                 └─ [notIn]: array #42
       │     │                    └─ item: integer #40
-      │     └─ [name]: optional #124
+      │     └─ [name]: optional '_string_filter_c?' #124
       │        └─ item: optional '_string_filter_c' #37
       │           └─ item: union #36
       │              ├─ variant_0: union '_string_filter' #34
@@ -216,12 +216,12 @@ root: struct #134
       │                       │  └─ item: string #22
       │                       └─ [endsWith]: optional #23
       │                          └─ item: string #22
-      ├─ [AND]: optional #130
+      ├─ [AND]: optional 'QueryPostWhereInput[]?' #130
       │  └─ item: array 'QueryPostWhereInput[]' #129
       │     └─ item: &QueryPostWhereInput #128
-      ├─ [OR]: optional #130
+      ├─ [OR]: optional 'QueryPostWhereInput[]?' #130
       │  └─ item: array 'QueryPostWhereInput[]' #129
       │     └─ item: &QueryPostWhereInput #128
-      └─ [NOT]: optional #131
+      └─ [NOT]: optional 'QueryPostWhereInput?' #131
          └─ item: &QueryPostWhereInput #128
 

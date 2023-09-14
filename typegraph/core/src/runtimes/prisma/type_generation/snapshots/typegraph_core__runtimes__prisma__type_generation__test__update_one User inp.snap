@@ -1,6 +1,6 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(inp)"
+expression: "tree::print(types.input)"
 ---
 root: struct #38
 ├─ [data]: struct '_User_UpdateInput' #35
@@ -10,12 +10,12 @@ root: struct #38
 │  │  └─ item: string #14
 │  └─ [posts]: optional #34
 │     └─ item: struct #33
-│        ├─ [create]: optional #25
+│        ├─ [create]: optional '_Post_CreateInput_excluding_UserToPost?' #25
 │        │  └─ item: struct '_Post_CreateInput_excluding_UserToPost' #24
 │        │     ├─ [id]: optional #23
 │        │     │  └─ item: integer #18
 │        │     └─ [title]: string #19
-│        ├─ [connect]: optional #29
+│        ├─ [connect]: optional 'PostWhere_norel?' #29
 │        │  └─ item: struct 'PostWhere_norel' #28
 │        │     ├─ [id]: optional #26
 │        │     │  └─ item: integer #18

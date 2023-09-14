@@ -237,6 +237,11 @@ pub mod tree {
                             type_id: ty.data.tpe.into(),
                             parents: parents,
                         }]),
+                        Type::WithInjection(ty) => Cow::Owned(vec![Node {
+                            label: "item".to_string(),
+                            type_id: ty.data.tpe.into(),
+                            parents: parents,
+                        }]),
                     }
                 }
             })

@@ -3,9 +3,9 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.input)"
 ---
 root: struct '_Post_QueryInput' #145
-├─ [where]: optional #133
+├─ [where]: optional 'QueryPostWhereInput?' #133
 │  └─ item: struct 'QueryPostWhereInput' #132
-│     ├─ [id]: optional #121
+│     ├─ [id]: optional '_integer_filter_c?' #121
 │     │  └─ item: optional '_integer_filter_c' #38
 │     │     └─ item: union #37
 │     │        ├─ variant_0: either '_integer_filter' #35
@@ -51,7 +51,7 @@ root: struct '_Post_QueryInput' #145
 │     │              └─ variant_5: struct #34
 │     │                 └─ [notIn]: array #29
 │     │                    └─ item: integer #27
-│     ├─ [title]: optional #122
+│     ├─ [title]: optional '_string_filter_c?' #122
 │     │  └─ item: optional '_string_filter_c' #24
 │     │     └─ item: union #23
 │     │        ├─ variant_0: union '_string_filter' #21
@@ -101,9 +101,9 @@ root: struct '_Post_QueryInput' #145
 │     │                 │  └─ item: string #9
 │     │                 └─ [endsWith]: optional #10
 │     │                    └─ item: string #9
-│     ├─ [author]: optional #126
+│     ├─ [author]: optional '_72WithFilters_norel?' #126
 │     │  └─ item: struct '_72WithFilters_norel' #125
-│     │     ├─ [id]: optional #123
+│     │     ├─ [id]: optional '_integer_filter_c?' #123
 │     │     │  └─ item: optional '_integer_filter_c' #38
 │     │     │     └─ item: union #37
 │     │     │        ├─ variant_0: either '_integer_filter' #35
@@ -149,7 +149,7 @@ root: struct '_Post_QueryInput' #145
 │     │     │              └─ variant_5: struct #34
 │     │     │                 └─ [notIn]: array #29
 │     │     │                    └─ item: integer #27
-│     │     └─ [name]: optional #124
+│     │     └─ [name]: optional '_string_filter_c?' #124
 │     │        └─ item: optional '_string_filter_c' #24
 │     │           └─ item: union #23
 │     │              ├─ variant_0: union '_string_filter' #21
@@ -199,15 +199,15 @@ root: struct '_Post_QueryInput' #145
 │     │                       │  └─ item: string #9
 │     │                       └─ [endsWith]: optional #10
 │     │                          └─ item: string #9
-│     ├─ [AND]: optional #130
+│     ├─ [AND]: optional 'QueryPostWhereInput[]?' #130
 │     │  └─ item: array 'QueryPostWhereInput[]' #129
 │     │     └─ item: &QueryPostWhereInput #128
-│     ├─ [OR]: optional #130
+│     ├─ [OR]: optional 'QueryPostWhereInput[]?' #130
 │     │  └─ item: array 'QueryPostWhereInput[]' #129
 │     │     └─ item: &QueryPostWhereInput #128
-│     └─ [NOT]: optional #131
+│     └─ [NOT]: optional 'QueryPostWhereInput?' #131
 │        └─ item: &QueryPostWhereInput #128
-├─ [orderBy]: optional #139
+├─ [orderBy]: optional '_75_OrderBy?' #139
 │  └─ item: array '_75_OrderBy' #138
 │     └─ item: struct #137
 │        ├─ [id]: optional '_Sort' #51
@@ -220,7 +220,7 @@ root: struct '_Post_QueryInput' #145
 │        │     ├─ variant_0: struct #49
 │        │     │  └─ [sort]: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
 │        │     └─ variant_1: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
-│        └─ [author]: optional #136
+│        └─ [author]: optional '_72_OrderBy_excluding_UserToPost?' #136
 │           └─ item: array '_72_OrderBy_excluding_UserToPost' #135
 │              └─ item: struct #134
 │                 ├─ [id]: optional '_Sort' #51
@@ -233,11 +233,11 @@ root: struct '_Post_QueryInput' #145
 │                       ├─ variant_0: struct #49
 │                       │  └─ [sort]: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
 │                       └─ variant_1: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
-├─ [take]: optional #140
+├─ [take]: optional '_Take?' #140
 │  └─ item: integer '_Take' #58
-├─ [skip]: optional #141
+├─ [skip]: optional '_Skip?' #141
 │  └─ item: integer '_Skip' #60
-└─ [distinct]: optional #144
+└─ [distinct]: optional '_KeysOf_Post[]?' #144
    └─ item: array '_KeysOf_Post[]' #143
       └─ item: string '_KeysOf_Post' #142 enum{ '"id"', '"title"', '"author"' }
 

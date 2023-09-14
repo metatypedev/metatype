@@ -254,7 +254,15 @@ impl TypegraphContext {
                 return Err(errors::invalid_export_name(&name));
             }
             let type_id = s.resolve_proxy(type_id)?;
-
+            let tpe = s.get_type(type_id)?;
+            let tpe = match tpe {
+                Type::WithPolicy(t) => t.data.try_resolve(s)?.as_type(s)?,
+                Type::WithInjection(t) => t.data.try_resolve(s)?.as_type(s)?,
+                _ => tpe,
+            };
+            if !matches!(tpe, Type::Func(_)) {
+                return Err(errors::invalid_export_type(&name, &tpe.to_string()));
+            }
             if root.properties.contains_key(&name) {
                 return Err(errors::duplicate_export_name(&name));
             }
@@ -285,6 +293,7 @@ impl TypegraphContext {
                 self.types.push(None);
 
                 let tpe = store.get_type(id)?;
+
                 let type_node = tpe.convert(self, runtime_id)?;
 
                 self.types[idx] = Some(type_node);
@@ -383,5 +392,9 @@ impl TypegraphContext {
             };
             Ok(idx as RuntimeId)
         }
+    }
+
+    pub fn find_type_index_by_store_id(&self, id: TypeId) -> Option<u32> {
+        self.mapping.types.get(&id.into()).copied()
     }
 }

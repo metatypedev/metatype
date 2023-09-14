@@ -22,13 +22,13 @@ use indoc::formatdoc;
 use regex::Regex;
 use types::{
     Array, Boolean, Either, Float, Func, Integer, Optional, Proxy, StringT, Struct, Type,
-    TypeBoolean, Union, WithPolicy,
+    TypeBoolean, Union, WithInjection, WithPolicy,
 };
 use validation::validate_name;
 use wit::core::{
     ContextCheck, Policy, PolicyId, PolicySpec, TypeArray, TypeBase, TypeEither, TypeFloat,
     TypeFunc, TypeId as CoreTypeId, TypeInteger, TypeOptional, TypePolicy, TypeProxy, TypeString,
-    TypeStruct, TypeUnion, TypegraphInitParams,
+    TypeStruct, TypeUnion, TypeWithInjection, TypegraphInitParams,
 };
 use wit::runtimes::{MaterializerDenoFunc, Runtimes};
 
@@ -229,6 +229,15 @@ impl wit::core::Core for Lib {
             }
             let base = TypeBase::default();
             Ok(s.add_type(|id| Type::Func(Func { id, base, data })).into())
+        })
+    }
+
+    fn with_injection(data: TypeWithInjection) -> Result<CoreTypeId> {
+        with_store_mut(|s| {
+            Ok(
+                s.add_type(|id| Type::WithInjection(WithInjection { id, data }))
+                    .into(),
+            )
         })
     }
 

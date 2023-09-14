@@ -1,8 +1,8 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(out)"
+expression: "tree::print(types.output)"
 ---
-root: optional #29
+root: optional 'UserWithNestedCount?' #29
 └─ item: struct 'UserWithNestedCount' #28
    ├─ [id]: integer #11
    ├─ [name]: string #12

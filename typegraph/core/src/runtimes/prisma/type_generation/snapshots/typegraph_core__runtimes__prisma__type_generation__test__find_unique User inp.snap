@@ -1,9 +1,9 @@
 ---
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
-expression: "tree::print(inp)"
+expression: "tree::print(types.input)"
 ---
 root: struct #22
-└─ [where]: optional #21
+└─ [where]: optional 'QueryUniqueUserWhereInput?' #21
    └─ item: struct 'QueryUniqueUserWhereInput' #20
       └─ [id]: optional #19
          └─ item: integer #11

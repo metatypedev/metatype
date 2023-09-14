@@ -3,9 +3,9 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.input)"
 ---
 root: struct '_User_QueryInput_group_by' #175
-├─ [where]: optional #146
+├─ [where]: optional 'QueryUserWhereInput?' #146
 │  └─ item: struct 'QueryUserWhereInput' #145
-│     ├─ [id]: optional #134
+│     ├─ [id]: optional '_integer_filter_c?' #134
 │     │  └─ item: optional '_integer_filter_c' #38
 │     │     └─ item: union #37
 │     │        ├─ variant_0: either '_integer_filter' #35
@@ -51,7 +51,7 @@ root: struct '_User_QueryInput_group_by' #175
 │     │              └─ variant_5: struct #34
 │     │                 └─ [notIn]: array #29
 │     │                    └─ item: integer #27
-│     ├─ [name]: optional #135
+│     ├─ [name]: optional '_string_filter_c?' #135
 │     │  └─ item: optional '_string_filter_c' #24
 │     │     └─ item: union #23
 │     │        ├─ variant_0: union '_string_filter' #21
@@ -101,9 +101,9 @@ root: struct '_User_QueryInput_group_by' #175
 │     │                 │  └─ item: string #9
 │     │                 └─ [endsWith]: optional #10
 │     │                    └─ item: string #9
-│     ├─ [posts]: optional #139
+│     ├─ [posts]: optional '_126WithFilters_norel?' #139
 │     │  └─ item: struct '_126WithFilters_norel' #138
-│     │     ├─ [id]: optional #136
+│     │     ├─ [id]: optional '_integer_filter_c?' #136
 │     │     │  └─ item: optional '_integer_filter_c' #38
 │     │     │     └─ item: union #37
 │     │     │        ├─ variant_0: either '_integer_filter' #35
@@ -149,7 +149,7 @@ root: struct '_User_QueryInput_group_by' #175
 │     │     │              └─ variant_5: struct #34
 │     │     │                 └─ [notIn]: array #29
 │     │     │                    └─ item: integer #27
-│     │     └─ [title]: optional #137
+│     │     └─ [title]: optional '_string_filter_c?' #137
 │     │        └─ item: optional '_string_filter_c' #24
 │     │           └─ item: union #23
 │     │              ├─ variant_0: union '_string_filter' #21
@@ -199,15 +199,15 @@ root: struct '_User_QueryInput_group_by' #175
 │     │                       │  └─ item: string #9
 │     │                       └─ [endsWith]: optional #10
 │     │                          └─ item: string #9
-│     ├─ [AND]: optional #143
+│     ├─ [AND]: optional 'QueryUserWhereInput[]?' #143
 │     │  └─ item: array 'QueryUserWhereInput[]' #142
 │     │     └─ item: &QueryUserWhereInput #141
-│     ├─ [OR]: optional #143
+│     ├─ [OR]: optional 'QueryUserWhereInput[]?' #143
 │     │  └─ item: array 'QueryUserWhereInput[]' #142
 │     │     └─ item: &QueryUserWhereInput #141
-│     └─ [NOT]: optional #144
+│     └─ [NOT]: optional 'QueryUserWhereInput?' #144
 │        └─ item: &QueryUserWhereInput #141
-├─ [orderBy]: optional #156
+├─ [orderBy]: optional '_123_OrderBy_with_aggregates?' #156
 │  └─ item: array '_123_OrderBy_with_aggregates' #155
 │     └─ item: struct #154
 │        ├─ [_count]: optional #148
@@ -292,16 +292,16 @@ root: struct '_User_QueryInput_group_by' #175
 │                    ├─ variant_0: struct #49
 │                    │  └─ [sort]: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
 │                    └─ variant_1: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
-├─ [take]: optional #157
+├─ [take]: optional '_Take?' #157
 │  └─ item: integer '_Take' #63
-├─ [skip]: optional #158
+├─ [skip]: optional '_Skip?' #158
 │  └─ item: integer '_Skip' #65
 ├─ [by]: array '_User_GroupingFields' #160
 │  └─ item: string #159 enum{ '"id"', '"name"' }
-└─ [having]: optional #174
+└─ [having]: optional '_User_Having?' #174
    └─ item: union '_User_Having' #173
       ├─ variant_0: struct '_163WithFilters_norel_with_aggregates' #166
-      │  ├─ [id]: optional #164
+      │  ├─ [id]: optional '_integer_filter_with_aggregates_c?' #164
       │  │  └─ item: optional '_integer_filter_with_aggregates_c' #92
       │  │     └─ item: union #91
       │  │        ├─ variant_0: union #89
@@ -569,7 +569,7 @@ root: struct '_User_QueryInput_group_by' #175
       │  │                    └─ variant_5: struct #34
       │  │                       └─ [notIn]: array #29
       │  │                          └─ item: integer #27
-      │  └─ [name]: optional #165
+      │  └─ [name]: optional '_string_filter_c?' #165
       │     └─ item: optional '_string_filter_c' #24
       │        └─ item: union #23
       │           ├─ variant_0: union '_string_filter' #21
