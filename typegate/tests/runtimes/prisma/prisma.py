@@ -17,23 +17,25 @@ def prisma(g: Graph):
         name="Record",
     )
 
-    # messages = t.struct(
-    #     {
-    #         "id": t.integer().as_id,
-    #         "time": t.integer(),
-    #         "message": t.string(),
-    #         "sender": db.link(g("users"), "messageSender"),
-    #     }
-    # ).named("messages")
-    #
-    # users = t.struct(
-    #     {
-    #         "id": t.integer().as_id.config("auto"),
-    #         "email": t.string(),
-    #         "name": t.string(),
-    #         "messages": db.link(t.array(g("messages")), "messageSender"),
-    #     }
-    # ).named("users")
+    messages = t.struct(
+        {
+            "id": t.integer(as_id=True),
+            "time": t.integer(),
+            "message": t.string(),
+            "sender": db.link("users", "messageSender"),
+        },
+        name="messages",
+    )
+
+    users = t.struct(
+        {
+            "id": t.integer(as_id=True, config={"auto": True}),
+            "email": t.string(),
+            "name": t.string(),
+            "messages": db.link(t.array(t.ref("messages")), "messageSender"),
+        },
+        name="users",
+    )
 
     g.expose(
         public,
@@ -42,9 +44,9 @@ def prisma(g: Graph):
         createOneRecord=db.create(record),
         deleteOneRecord=db.delete(record),
         updateOneRecord=db.update(record),
-        # createUser=db.create(users),
-        # findUniqueUser=db.find_unique(users),
-        # findMessages=db.find_many(messages),
-        # updateUser=db.update(users),
-        # deleteMessages=db.delete_many(messages),
+        createUser=db.create(users),
+        findUniqueUser=db.find_unique(users),
+        findMessages=db.find_many(messages),
+        updateUser=db.update(users),
+        deleteMessages=db.delete_many(messages),
     )

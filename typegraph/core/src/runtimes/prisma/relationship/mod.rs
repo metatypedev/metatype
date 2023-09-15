@@ -160,7 +160,7 @@ impl TryFrom<(RelationshipModel, RelationshipModel)> for Relationship {
                         .map(|s| s.to_string())
                         .ok_or_else(|| "Prisma model must have explicit name".to_string())
                 })?;
-                format!("{}To{}", left_name, right_name)
+                format!("__rel_{}_{}_1", right_name, left_name)
             }
             (Some(name), None) => name,
             (None, Some(name)) => name,

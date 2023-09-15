@@ -72,10 +72,14 @@ class typedef:
 
         return _TypeWrapper(res.value, self)
 
-    def optional(self, default_value: Optional[str] = None) -> "optional":
+    def optional(
+        self,
+        default_value: Optional[str] = None,
+        config: Optional[Dict[str, str]] = None,
+    ) -> "optional":
         if isinstance(self, optional):
             return self
-        return optional(self, default_item=default_value)
+        return optional(self, default_item=default_value, config=config)
 
     def set(self, value: Union[any, Dict[EffectType, any]]):
         return self._with_injection(

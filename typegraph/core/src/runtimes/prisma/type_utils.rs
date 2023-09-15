@@ -71,7 +71,8 @@ pub fn as_relationship_source(id: TypeId) -> Result<Option<RelationshipSource>> 
             }
 
             Type::Array(a) => {
-                let inner = s.get_type(a.data.of.into())?.get_concrete_type().unwrap(); // TODO
+                let attrs = s.get_attributes(a.data.of.into())?;
+                let inner = attrs.concrete_type;
                 match s.get_type(inner)? {
                     Type::Struct(s) => Ok(Some(RelationshipSource {
                         wrapper_type: id,

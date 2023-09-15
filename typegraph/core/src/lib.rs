@@ -80,13 +80,7 @@ impl wit::core::Core for Lib {
     }
 
     fn proxyb(data: TypeProxy) -> Result<CoreTypeId> {
-        with_store_mut(move |s| {
-            let registered_type = s.type_by_names.get(&data.name);
-            match (data.extras.len(), registered_type) {
-                (0, Some(type_id)) => return Ok((*type_id).into()),
-                _ => Ok(s.add_type(|id| Type::Proxy(Proxy { id, data })).into()),
-            }
-        })
+        with_store_mut(move |s| Ok(s.add_type(|id| Type::Proxy(Proxy { id, data })).into()))
     }
 
     fn integerb(data: TypeInteger, base: TypeBase) -> Result<CoreTypeId> {
@@ -316,6 +310,13 @@ impl wit::core::Core for Lib {
             namespace,
             default_policy,
         )
+    }
+}
+
+#[macro_export]
+macro_rules! log {
+    ($($arg:tt)*) => {
+        $crate::host::abi::log(&format!($($arg)*));
     }
 }
 

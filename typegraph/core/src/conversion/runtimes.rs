@@ -297,7 +297,7 @@ pub fn convert_materializer(
 
 pub enum ConvertedRuntime {
     Converted(TGRuntime),
-    Lazy(Box<dyn FnOnce(RuntimeId, &Store, &mut TypegraphContext) -> Result<TGRuntime>>),
+    Lazy(Box<dyn FnOnce(RuntimeId, RuntimeId, &Store, &mut TypegraphContext) -> Result<TGRuntime>>),
 }
 
 impl From<TGRuntime> for ConvertedRuntime {
@@ -349,7 +349,7 @@ pub fn convert_runtime(
         Runtime::Prisma(d, _) => {
             let d = d.clone();
             Ok(ConvertedRuntime::Lazy(Box::new(
-                move |runtime_id, store, tg| {
+                move |runtime_id, runtime_idx, store, tg| {
                     with_prisma_runtime(runtime_id, |ctx| {
                         let reg = &ctx.registry;
                         let models: Vec<_> = reg
@@ -371,7 +371,7 @@ pub fn convert_runtime(
                                 .map(|id| {
                                     Ok(conversion_context
                                         .tg_context
-                                        .register_type(store, id.into(), Some(runtime_id))?
+                                        .register_type(store, id.into(), Some(runtime_idx))?
                                         .into())
                                 })
                                 .collect::<Result<Vec<_>>>()?,

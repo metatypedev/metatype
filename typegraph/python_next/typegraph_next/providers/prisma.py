@@ -134,7 +134,7 @@ class PrismaRuntime(Runtime):
         target_type: str,
         name: Optional[str] = None,
         *,
-        fkey: Optional[bool] = None
+        fkey: Optional[bool] = None,
     ):
         return prisma_link(target_type, name=name, fkey=fkey)
 
@@ -143,7 +143,7 @@ def prisma_link(
     target_type: Union[str, t.typedef],
     name: Optional[str] = None,
     *,
-    fkey: Optional[bool] = None
+    fkey: Optional[bool] = None,
 ):
     if isinstance(target_type, str):
         target_type = t.ref(target_type)

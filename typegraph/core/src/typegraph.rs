@@ -254,15 +254,11 @@ impl TypegraphContext {
                 return Err(errors::invalid_export_name(&name));
             }
             let type_id = s.resolve_proxy(type_id)?;
-            let tpe = s.get_type(type_id)?;
-            let tpe = match tpe {
-                Type::WithPolicy(t) => t.data.try_resolve(s)?.as_type(s)?,
-                Type::WithInjection(t) => t.data.try_resolve(s)?.as_type(s)?,
-                _ => tpe,
-            };
+            let tpe = s.get_attributes(type_id)?.concrete_type.as_type(s)?;
             if !matches!(tpe, Type::Func(_)) {
                 return Err(errors::invalid_export_type(&name, &tpe.to_string()));
             }
+
             if root.properties.contains_key(&name) {
                 return Err(errors::duplicate_export_name(&name));
             }
@@ -386,7 +382,7 @@ impl TypegraphContext {
                     // we allocate first a slot in the array, as the lazy conversion might register
                     // other runtimes
                     self.runtimes.push(TGRuntime::Unknown(Default::default()));
-                    let rt = lazy(idx as u32, store, self)?;
+                    let rt = lazy(id, idx as u32, store, self)?;
                     self.runtimes[idx] = rt;
                 }
             };
