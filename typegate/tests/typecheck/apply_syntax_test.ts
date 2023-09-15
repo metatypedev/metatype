@@ -216,4 +216,71 @@ Meta.test("python(sdk): apply", async (t) => {
         .on(e);
     },
   );
+
+  await t.should(
+    "work with self-refering type",
+    async () => {
+      await gql`
+        query {
+          selfReferingType (
+            a: "A1"
+            b: {
+              nested: {
+                b: {
+                  nested: {
+                    a: "A3"
+                  }
+                }
+              }
+            }
+          ) {
+            a # A1
+            b {
+              nested {
+                a # A2 (set)
+                b {
+                  nested {
+                    a # A3
+                    b {
+                      nested {
+                        a # A4 (context)
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `
+        .withContext({
+          nestedB: {
+            nested: {
+              a: "A4 from context",
+            },
+          },
+        })
+        .expectData({
+          selfReferingType: {
+            a: "A1",
+            b: {
+              nested: {
+                a: "A2",
+                b: {
+                  nested: {
+                    a: "A3",
+                    b: {
+                      nested: {
+                        a: "A4 from context",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        })
+        .on(e);
+    },
+  );
 });
