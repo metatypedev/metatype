@@ -73,6 +73,7 @@ impl Store {
                 Type::Array(t) => t.data.of,
                 Type::Optional(t) => t.data.of,
                 Type::WithInjection(t) => t.data.tpe,
+                Type::Proxy(t) => self.resolve_proxy(t.id)?,
                 _ => id,
             };
             if id == new_id {

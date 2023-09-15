@@ -246,6 +246,7 @@ Meta.test("python(sdk): apply", async (t) => {
                         a # A4 (context)
                       }
                     }
+                    direct { a }
                   }
                 }
               }
@@ -273,6 +274,9 @@ Meta.test("python(sdk): apply", async (t) => {
                       nested: {
                         a: "A4 from context",
                       },
+                    },
+                    direct: {
+                      a: "direct A3",
                     },
                   },
                 },

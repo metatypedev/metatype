@@ -17,7 +17,11 @@ simple_tpe = t.struct(
 
 
 self_ref_tpe = t.struct(
-    {"a": t.string(), "b": t.struct({"nested": t.ref("SelfRef")}).optional()},
+    {
+        "a": t.string(),
+        "b": t.struct({"nested": t.ref("SelfRef")}).optional(),
+        "direct": t.ref("SelfRef").optional(),
+    },
     name="SelfRef",
 )
 
@@ -67,6 +71,7 @@ def test_apply_python(g: Graph):
                             "nested": {
                                 "a": g.inherit(),  # A3
                                 "b": g.inherit().from_context("nestedB"),
+                                "direct": {"a": "direct A3"},
                             }
                         },
                     }
