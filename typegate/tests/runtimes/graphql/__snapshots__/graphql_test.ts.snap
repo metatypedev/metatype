@@ -57,7 +57,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
     },
     {
       "type": "object",
-      "title": "object_1",
+      "title": "User",
       "runtime": 1,
       "policies": [],
       "config": {},

@@ -196,7 +196,7 @@ class integer(typedef):
         enumeration: Optional[List[int]] = None,
         name: Optional[str] = None,
         config: Optional[Dict[str, any]] = None,
-        as_id: bool = False,,
+        as_id: bool = False,
     ):
         data = TypeInteger(
             min=min,
@@ -231,7 +231,7 @@ class float(typedef):
     exclusive_minimum: Optional[float] = None
     exclusive_maximum: Optional[float] = None
     multiple_of: Optional[float] = None
-    enumeration: Optional[List[float]] = (None,)
+    enumeration: Optional[List[float]] = None
 
     def __init__(
         self,
@@ -302,7 +302,7 @@ class string(typedef):
         format: Optional[str] = None,
         enumeration: Optional[List[str]] = None,
         name: Optional[str] = None,
-        config: Optional[Dict[str, any]] = None,,
+        config: Optional[Dict[str, any]] = None,
         as_id: bool = False,
     ):
         enum_variants = None
@@ -504,10 +504,8 @@ class struct(typedef):
         runtime_config = serialize_record_values(config)
         res = core.structb(
             store,
-           
             data,
-           
-            base=TypeBase(name=name, runtime_config=runtime_config, as_id=False),,
+            base=TypeBase(name=name, runtime_config=runtime_config, as_id=False),
         )
         if isinstance(res, Err):
             raise Exception(res.value)
@@ -530,3 +528,7 @@ class func(typedef):
         super().__init__(id)
         self.inp = inp
         self.out = out
+
+
+def gen(out: typedef, mat: Materializer):
+    return func(struct({}), out, mat)

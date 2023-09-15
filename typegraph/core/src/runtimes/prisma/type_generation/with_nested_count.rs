@@ -27,11 +27,17 @@ impl WithNestedCount {
 
 impl TypeGen for WithNestedCount {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        struct Prop {
-            key: String,
-            ty: TypeId,
-            nest_count_exclude: Option<String>,
-            cardinality: Cardinality,
+        enum Prop {
+            Prisma {
+                key: String,
+                ty: TypeId,
+                nest_count_exclude: Option<String>,
+                cardinality: Cardinality,
+            },
+            Other {
+                key: String,
+                typ: TypeId,
+            },
         }
 
         let mut props = vec![];
@@ -49,7 +55,7 @@ impl TypeGen for WithNestedCount {
                         rel.get(rel.side_of_model(self.model_id).unwrap().opposite());
                     match relation_model.cardinality {
                         Cardinality::Optional => {
-                            props.push(Prop {
+                            props.push(Prop::Prisma {
                                 key: k.clone(),
                                 ty: relation_model.model_type,
                                 nest_count_exclude: Some(rel.name.clone()),
@@ -58,7 +64,7 @@ impl TypeGen for WithNestedCount {
                             countable.push(k.clone());
                         }
                         Cardinality::Many => {
-                            props.push(Prop {
+                            props.push(Prop::Prisma {
                                 key: k.clone(),
                                 ty: relation_model.model_type,
                                 nest_count_exclude: Some(rel.name.clone()),
@@ -67,7 +73,7 @@ impl TypeGen for WithNestedCount {
                             countable.push(k.clone());
                         }
                         Cardinality::One => {
-                            props.push(Prop {
+                            props.push(Prop::Prisma {
                                 key: k.clone(),
                                 ty: relation_model.model_type,
                                 nest_count_exclude: None,
@@ -76,17 +82,20 @@ impl TypeGen for WithNestedCount {
                         }
                     }
                 } else {
-                    match TypeId(*ty)
+                    let type_id = TypeId(*ty)
                         .concrete_type_id(s, ProxyResolution::Force)?
-                        .unwrap()
-                        .as_type(s)?
-                    {
+                        .unwrap();
+                    match type_id.as_type(s)? {
                         Type::Func(_) => {
-                            continue;
+                            // TODO what if it is a nested prisma query/mutation?
+                            props.push(Prop::Other {
+                                key: k.clone(),
+                                typ: type_id,
+                            })
                         }
                         _ => {
                             // simple type
-                            props.push(Prop {
+                            props.push(Prop::Prisma {
                                 key: k.clone(),
                                 ty: (*ty).into(),
                                 nest_count_exclude: None,
@@ -101,23 +110,35 @@ impl TypeGen for WithNestedCount {
 
         let mut st = t::struct_();
         for prop in props.into_iter() {
-            let mut ty = prop.ty;
-            if let Some(exclude) = prop.nest_count_exclude {
-                ty = context.generate(&WithNestedCount {
-                    model_id: ty,
-                    skip: [self.skip.as_slice(), &[exclude]].concat(),
-                })?;
-            }
-            match prop.cardinality {
-                Cardinality::Optional => {
-                    ty = t::optional(ty.into()).build()?;
+            match prop {
+                Prop::Prisma {
+                    key,
+                    ty,
+                    nest_count_exclude,
+                    cardinality,
+                } => {
+                    let mut ty = ty;
+                    if let Some(exclude) = nest_count_exclude {
+                        ty = context.generate(&WithNestedCount {
+                            model_id: ty,
+                            skip: [self.skip.as_slice(), &[exclude]].concat(),
+                        })?;
+                    }
+                    match cardinality {
+                        Cardinality::Optional => {
+                            ty = t::optional(ty.into()).build()?;
+                        }
+                        Cardinality::Many => {
+                            ty = t::array(ty.into()).build()?;
+                        }
+                        Cardinality::One => {}
+                    }
+                    st.prop(key, ty.into());
                 }
-                Cardinality::Many => {
-                    ty = t::array(ty.into()).build()?;
+                Prop::Other { key, typ } => {
+                    st.prop(key, typ.into());
                 }
-                Cardinality::One => {}
             }
-            st.prop(prop.key, ty.into());
         }
 
         if !countable.is_empty() {

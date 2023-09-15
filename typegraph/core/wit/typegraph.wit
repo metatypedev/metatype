@@ -197,7 +197,7 @@ interface runtimes {
     }
 
     record materializer-graphql-query {
-        path: list<string>,
+        path: option<list<string>>,
     }
 
     register-graphql-runtime: func(data: graphql-runtime-data) -> result<runtime-id, error>
