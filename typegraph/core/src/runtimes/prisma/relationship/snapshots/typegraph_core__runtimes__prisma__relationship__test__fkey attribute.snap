@@ -6,36 +6,36 @@ RelationshipRegistry {
     models: {
         Type#4: RegisteredModel {
             relationships: {
-                "posts": "__rel_Post_User_1",
+                "profile": "__rel_User_Profile_1",
             },
             name: "User",
             id_field: "id",
         },
         Type#8: RegisteredModel {
             relationships: {
-                "author": "__rel_Post_User_1",
+                "user": "__rel_User_Profile_1",
             },
-            name: "Post",
+            name: "Profile",
             id_field: "id",
         },
     },
     models_by_name: {},
     relationships: {
-        "__rel_Post_User_1": Relationship {
-            name: "__rel_Post_User_1",
+        "__rel_User_Profile_1": Relationship {
+            name: "__rel_User_Profile_1",
             left: RelationshipModel {
+                model_type: Type#8,
+                model_name: "Profile",
+                wrapper_type: Type#3,
+                cardinality: Optional,
+                field: "user",
+            },
+            right: RelationshipModel {
                 model_type: Type#4,
                 model_name: "User",
                 wrapper_type: Type#7,
-                cardinality: One,
-                field: "posts",
-            },
-            right: RelationshipModel {
-                model_type: Type#8,
-                model_name: "Post",
-                wrapper_type: Type#3,
-                cardinality: Many,
-                field: "author",
+                cardinality: Optional,
+                field: "profile",
             },
         },
     },

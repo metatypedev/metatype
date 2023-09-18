@@ -20,32 +20,38 @@ pub enum Cardinality {
     Many,
 }
 
-fn get_rel_name(wrapper_type: TypeId) -> Result<Option<String>> {
-    with_store(|s| {
-        let mut type_id = wrapper_type;
+// fn get_rel_name(wrapper_type: TypeId) -> Result<Option<String>> {
+//     with_store(|s| {
+//         let mut type_id = wrapper_type;
+//
+//         loop {
+//             let ty = s.get_type(type_id)?;
+//             match ty {
+//                 Type::Proxy(p) => {
+//                     if let Some(name) = p.data.get_extra("rel_name") {
+//                         return Ok(Some(name.to_string()));
+//                     }
+//                     type_id = s.resolve_proxy(type_id)?;
+//                     continue;
+//                 }
+//                 _ => {
+//                     if let Some(wrapper_type) = ty.as_wrapper_type() {
+//                         type_id = wrapper_type.try_resolve(s)?;
+//                         continue;
+//                     } else {
+//                         // concrete type
+//                         return Ok(None);
+//                     }
+//                 }
+//             }
+//         }
+//     })
+// }
 
-        loop {
-            let ty = s.get_type(type_id)?;
-            match ty {
-                Type::Proxy(p) => {
-                    if let Some(name) = p.data.get_extra("rel_name") {
-                        return Ok(Some(name.to_string()));
-                    }
-                    type_id = s.resolve_proxy(type_id)?;
-                    continue;
-                }
-                _ => {
-                    if let Some(wrapper_type) = ty.as_wrapper_type() {
-                        type_id = wrapper_type.try_resolve(s)?;
-                        continue;
-                    } else {
-                        // concrete type
-                        return Ok(None);
-                    }
-                }
-            }
-        }
-    })
+#[derive(Clone, Debug)]
+pub struct TargetAttributes {
+    fkey: Option<bool>,
+    unique: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -65,6 +71,7 @@ pub struct RelationshipTarget {
     // /// cardinality for the other side of the relationship;
     // /// telling whether the field has a type M, M?, or M[]
     // pub cardinality: Cardinality,
+    pub attrs: TargetAttributes,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -76,29 +83,31 @@ pub struct RelationshipModel {
     pub field: String,
 }
 
-impl RelationshipModel {
-    pub fn from_source(source: RelationshipSource, field: String) -> Self {
-        Self {
-            model_type: source.model_type,
-            model_name: source.model_type_name,
-            wrapper_type: source.wrapper_type,
-            cardinality: source.cardinality,
-            field,
-        }
-    }
-
-    pub fn get_rel_name(&self) -> Result<Option<String>> {
-        with_store(|s| -> Result<_> {
-            s.type_as_struct(self.model_type)?
-                .data
-                .get_prop(&self.field)
-                .map(|id| get_rel_name(id.into()))
-                .transpose()
-                .map(|o| o.flatten())
-        })
-    }
-}
-
+// impl RelationshipModel {
+//     pub fn from_source(source: RelationshipSource, field: String, attrs: TargetAttributes) -> Self {
+//         Self {
+//             model_type: source.model_type,
+//             model_name: source.model_type_name,
+//             wrapper_type: source.wrapper_type,
+//             cardinality: source.cardinality,
+//             fkey: attrs.has_fkey,
+//             unique: attrs.unique,
+//             field,
+//         }
+//     }
+//
+//     pub fn get_rel_name(&self) -> Result<Option<String>> {
+//         with_store(|s| -> Result<_> {
+//             s.type_as_struct(self.model_type)?
+//                 .data
+//                 .get_prop(&self.field)
+//                 .map(|id| get_rel_name(id.into()))
+//                 .transpose()
+//                 .map(|o| o.flatten())
+//         })
+//     }
+// }
+//
 #[derive(Debug, Clone, Copy)]
 pub enum Side {
     Left,
@@ -127,55 +136,73 @@ pub struct Relationship {
     pub right: RelationshipModel,
 }
 
-impl TryFrom<(RelationshipModel, RelationshipModel)> for Relationship {
-    type Error = TgError;
-
-    fn try_from(pair: (RelationshipModel, RelationshipModel)) -> Result<Self, Self::Error> {
-        let (first, second) = pair;
-        let (left, right) = match (first.cardinality, second.cardinality) {
-            (Cardinality::One, Cardinality::One)
-            | (Cardinality::Optional, Cardinality::Optional) => {
-                todo!()
-            }
-            (Cardinality::One, Cardinality::Optional)
-            | (Cardinality::One, Cardinality::Many)
-            | (Cardinality::Optional, Cardinality::Many) => (first, second),
-            (Cardinality::Optional, Cardinality::One)
-            | (Cardinality::Many, Cardinality::One)
-            | (Cardinality::Many, Cardinality::Optional) => (second, first),
-            (Cardinality::Many, Cardinality::Many) => {
-                return Err("Many to many relationship not supported".to_string());
-            }
-        };
-
-        let name = match (left.get_rel_name()?, right.get_rel_name()?) {
-            (None, None) => {
-                let left_name = with_store(|s| -> Result<_> {
-                    s.get_type_name(left.model_type)?
-                        .map(|s| s.to_string())
-                        .ok_or_else(|| "Prisma model must have explicit name".to_string())
-                })?;
-                let right_name = with_store(|s| -> Result<_> {
-                    s.get_type_name(right.model_type)?
-                        .map(|s| s.to_string())
-                        .ok_or_else(|| "Prisma model must have explicit name".to_string())
-                })?;
-                format!("__rel_{}_{}_1", right_name, left_name)
-            }
-            (Some(name), None) => name,
-            (None, Some(name)) => name,
-            (Some(name1), Some(name2)) => {
-                if name1 == name2 {
-                    name1
-                } else {
-                    return Err("Relationship names do not match".to_string());
-                }
-            }
-        };
-
-        Ok(Relationship { name, left, right })
-    }
-}
+// impl TryFrom<(RelationshipModel, RelationshipModel)> for Relationship {
+//     type Error = TgError;
+//
+//     fn try_from(pair: (RelationshipModel, RelationshipModel)) -> Result<Self, Self::Error> {
+//         let (first, second) = pair;
+//         let (left, right) = match (first.cardinality, second.cardinality) {
+//             (Cardinality::One, Cardinality::One)
+//             | (Cardinality::Optional, Cardinality::Optional) => {
+//                 match (first.has_fkey, second.has_fkey) {
+//                     (true, false) => (second, first),
+//                     (false, true) => (first, second),
+//                     (true, true) => {
+//                         return Err("Relationship must have at most one foreign key".to_string())
+//                     }
+//                     (false, false) => match (first.unique, second.unique) {
+//                         (true, false) => (second, first),
+//                         (false, true) => (first, second),
+//                         (true, true) => {
+//                             return Err("Relationship must have at most one unique side".to_string())
+//                         }
+//                         (false, false) => {
+//                             return Err(
+//                                 "Relationship must have at least one unique side".to_string()
+//                             )
+//                         }
+//                     },
+//                 }
+//             }
+//             (Cardinality::One, Cardinality::Optional)
+//             | (Cardinality::One, Cardinality::Many)
+//             | (Cardinality::Optional, Cardinality::Many) => (first, second),
+//             (Cardinality::Optional, Cardinality::One)
+//             | (Cardinality::Many, Cardinality::One)
+//             | (Cardinality::Many, Cardinality::Optional) => (second, first),
+//             (Cardinality::Many, Cardinality::Many) => {
+//                 return Err("Many to many relationship not supported".to_string());
+//             }
+//         };
+//
+//         let name = match (left.get_rel_name()?, right.get_rel_name()?) {
+//             (None, None) => {
+//                 let left_name = with_store(|s| -> Result<_> {
+//                     s.get_type_name(left.model_type)?
+//                         .map(|s| s.to_string())
+//                         .ok_or_else(|| "Prisma model must have explicit name".to_string())
+//                 })?;
+//                 let right_name = with_store(|s| -> Result<_> {
+//                     s.get_type_name(right.model_type)?
+//                         .map(|s| s.to_string())
+//                         .ok_or_else(|| "Prisma model must have explicit name".to_string())
+//                 })?;
+//                 format!("__rel_{}_{}_1", right_name, left_name)
+//             }
+//             (Some(name), None) => name,
+//             (None, Some(name)) => name,
+//             (Some(name1), Some(name2)) => {
+//                 if name1 == name2 {
+//                     name1
+//                 } else {
+//                     return Err("Relationship names do not match".to_string());
+//                 }
+//             }
+//         };
+//
+//         Ok(Relationship { name, left, right })
+//     }
+// }
 
 impl Relationship {
     pub fn side_of_model(&self, model_type: TypeId) -> Option<Side> {
@@ -214,6 +241,7 @@ pub struct PrismaLink {
     type_name: String,
     rel_name: Option<String>,
     fkey: Option<bool>,
+    target_field: Option<String>,
 }
 
 impl PrismaLink {
@@ -235,9 +263,17 @@ impl PrismaLink {
         if let Some(fkey) = self.fkey {
             proxy.ex("fkey", format!("{fkey}"));
         }
+        if let Some(target_field) = self.target_field.take() {
+            proxy.ex("target_field", target_field);
+        }
         let res = proxy.build()?;
         eprintln!("proxy: {:?}", res);
         Ok(res)
+    }
+
+    pub fn field(mut self, field: impl Into<String>) -> Self {
+        self.target_field = Some(field.into());
+        self
     }
 }
 
@@ -260,11 +296,15 @@ pub fn prisma_linkn(name: impl Into<String>) -> PrismaLink {
 
 use registry::RelationshipRegistry;
 
+use self::discovery::Candidate;
+use self::discovery::CandidatePair;
+
 #[cfg(test)]
 mod test {
     use super::prisma_linkn;
     use crate::errors::Result;
     use crate::global_store::with_store;
+    use crate::runtimes::prisma::relationship::prisma_link;
     use crate::runtimes::prisma::relationship::registry::RelationshipRegistry;
     use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
     use crate::test_utils::*;
@@ -301,9 +341,63 @@ mod test {
         reg.manage(user)?;
         reg.manage(post)?;
 
-        let registry = reg;
+        insta::assert_debug_snapshot!("explicitly named relationship", reg);
 
-        insta::assert_debug_snapshot!("explicitly named relationship", registry);
+        Ok(())
+    }
+
+    #[test]
+    fn test_fkey_attribute() -> Result<(), String> {
+        let user = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop(
+                "profile",
+                prisma_link(t::optional(t::proxy("Profile").build()?).build()?)?
+                    .fkey(true)
+                    .build()?,
+            )
+            .named("User")
+            .build()?;
+
+        let profile = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("user", t::optional(t::proxy("User").build()?).build()?)
+            .named("Profile")
+            .build()?;
+
+        let mut reg = RelationshipRegistry::default();
+        reg.manage(user)?;
+        reg.manage(profile)?;
+
+        insta::assert_debug_snapshot!("fkey attribute", reg);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_unique_attribute() -> Result<(), String> {
+        let user = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop(
+                "profile",
+                t::optional(t::proxy("Profile").build()?)
+                    .config("unique", "true")
+                    .build()?,
+            )
+            .named("User")
+            .build()?;
+
+        let profile = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("user", t::optional(t::proxy("User").build()?).build()?)
+            .named("Profile")
+            .build()?;
+
+        let mut reg = RelationshipRegistry::default();
+        reg.manage(user)?;
+        reg.manage(profile)?;
+
+        insta::assert_debug_snapshot!("unique attribute", reg);
 
         Ok(())
     }

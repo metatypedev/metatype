@@ -339,8 +339,8 @@ def uuid(*, config: Optional[Dict[str, any]] = None, as_id: bool = False) -> str
     return string(format="uuid", config=config, as_id=as_id)
 
 
-def email() -> string:
-    return string(format="email")
+def email(*, config: Optional[Dict[str, any]] = None, as_id: bool = False) -> string:
+    return string(format="email", config=config, as_id=as_id)
 
 
 def uri() -> string:

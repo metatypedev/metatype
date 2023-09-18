@@ -135,8 +135,9 @@ class PrismaRuntime(Runtime):
         name: Optional[str] = None,
         *,
         fkey: Optional[bool] = None,
+        field: Optional[str] = None,
     ):
-        return prisma_link(target_type, name=name, fkey=fkey)
+        return prisma_link(target_type, name=name, fkey=fkey, field=field)
 
 
 def prisma_link(
@@ -144,13 +145,17 @@ def prisma_link(
     name: Optional[str] = None,
     *,
     fkey: Optional[bool] = None,
+    field: Optional[str] = None,
 ):
     if isinstance(target_type, str):
         target_type = t.ref(target_type)
     type_id = runtimes.prisma_link(
         store,
         PrismaLinkData(
-            target_type=target_type.id, relationship_name=name, foreign_key=fkey
+            target_type=target_type.id,
+            relationship_name=name,
+            foreign_key=fkey,
+            target_field=field,
         ),
     )
 

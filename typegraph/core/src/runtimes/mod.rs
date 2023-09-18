@@ -399,6 +399,9 @@ impl wit::Runtimes for crate::Lib {
         if let Some(fkey) = data.foreign_key {
             builder = builder.fkey(fkey);
         }
+        if let Some(field) = data.target_field {
+            builder = builder.field(field);
+        }
         Ok(builder.build()?.into())
     }
 }

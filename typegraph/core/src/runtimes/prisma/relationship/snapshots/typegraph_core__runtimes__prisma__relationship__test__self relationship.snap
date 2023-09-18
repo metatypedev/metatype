@@ -7,8 +7,8 @@ Ok(
         models: {
             Type#4: RegisteredModel {
                 relationships: {
-                    "children": "NodeToNode",
-                    "parent": "NodeToNode",
+                    "children": "__rel_Node_Node_1",
+                    "parent": "__rel_Node_Node_1",
                 },
                 name: "Node",
                 id_field: "id",
@@ -16,8 +16,8 @@ Ok(
         },
         models_by_name: {},
         relationships: {
-            "NodeToNode": Relationship {
-                name: "NodeToNode",
+            "__rel_Node_Node_1": Relationship {
+                name: "__rel_Node_Node_1",
                 left: RelationshipModel {
                     model_type: Type#4,
                     model_name: "Node",
@@ -33,6 +33,12 @@ Ok(
                     field: "parent",
                 },
             },
+        },
+        complete_registrations: {
+            Type#4,
+        },
+        counter: RefCell {
+            value: 1,
         },
     },
 )

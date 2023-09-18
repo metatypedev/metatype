@@ -1,6 +1,6 @@
 ---
 source: typegraph/core/src/runtimes/prisma/relationship/mod.rs
-expression: registry
+expression: reg
 ---
 RelationshipRegistry {
     models: {
@@ -38,5 +38,12 @@ RelationshipRegistry {
                 field: "author",
             },
         },
+    },
+    complete_registrations: {
+        Type#4,
+        Type#8,
+    },
+    counter: RefCell {
+        value: 1,
     },
 }
