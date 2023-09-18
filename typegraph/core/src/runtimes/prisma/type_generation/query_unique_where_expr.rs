@@ -25,18 +25,20 @@ impl TypeGen for QueryUniqueWhereExpr {
 
             let mut props = vec![];
             for (k, ty) in model.data.props.iter() {
-                let attrs = s.get_attributes((*ty).into())?;
+                let attrs = s.get_attributes(ty.into())?;
                 let is_id = attrs
                     .concrete_type
                     .as_type(s)?
                     .get_base()
                     .ok_or_else(|| "expected a concrete type".to_string())?
                     .as_id;
-                let is_unique = attrs
-                    .proxy_data
-                    .iter()
-                    .find(|(k, v)| k == "unique" && v == "true")
-                    .is_some();
+                let is_unique = s.get_type(ty.into())?.get_base().map_or(false, |base| {
+                    base.runtime_config
+                        .iter()
+                        .flatten()
+                        .find_map(|(k, v)| (k == "unique").then(|| v.clone()))
+                        .map_or(false, |v| v == "true")
+                });
                 if s.is_func(attrs.concrete_type)? || (!is_id && !is_unique) {
                     continue;
                 }
