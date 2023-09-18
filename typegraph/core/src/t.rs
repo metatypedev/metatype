@@ -54,6 +54,7 @@ pub struct IntegerBuilder {
     data: TypeInteger,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TypeInteger {
     fn default() -> Self {
         Self {
@@ -103,6 +104,7 @@ pub struct FloatBuilder {
     data: TypeFloat,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TypeFloat {
     fn default() -> Self {
         Self {
@@ -152,6 +154,7 @@ pub struct StringBuilder {
     data: TypeString,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TypeString {
     fn default() -> Self {
         Self {
@@ -244,6 +247,7 @@ pub struct UnionBuilder {
     data: TypeUnion,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TypeUnion {
     fn default() -> Self {
         Self {
@@ -267,6 +271,7 @@ pub struct EitherBuilder {
     data: TypeEither,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TypeEither {
     fn default() -> Self {
         Self {
@@ -290,6 +295,7 @@ pub struct StructBuilder {
     data: TypeStruct,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for TypeStruct {
     fn default() -> Self {
         Self {
@@ -413,7 +419,7 @@ macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident ) => {
         impl TypeBuilder for $ty {
             fn build(&mut self) -> Result<TypeId> {
-                let builder = std::mem::replace(self, Default::default());
+                let builder = std::mem::take(self);
                 Ok($crate::Lib::$build(builder.data, builder.base)?.into())
             }
         }
@@ -428,7 +434,7 @@ macro_rules! impl_type_builder {
     ( $ty:ty, $build:ident, true ) => {
         impl TypeBuilder for $ty {
             fn build(&mut self) -> Result<TypeId> {
-                let builder = std::mem::replace(self, Default::default());
+                let builder = std::mem::take(self);
                 Ok($crate::Lib::$build(builder.data)?.into())
             }
         }
@@ -436,7 +442,7 @@ macro_rules! impl_type_builder {
 }
 impl TypeBuilder for BooleanBuilder {
     fn build(&mut self) -> Result<TypeId> {
-        let builder = std::mem::replace(self, Default::default());
+        let builder = std::mem::take(self);
         Ok(crate::Lib::booleanb(builder.base)?.into())
     }
 }

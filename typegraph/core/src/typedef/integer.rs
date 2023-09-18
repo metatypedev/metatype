@@ -30,7 +30,7 @@ impl TypeConversion for Integer {
                 runtime_id.unwrap(),
             )
             .enum_(enumeration)
-            .as_id(self.base.as_id)
+            .id(self.base.as_id)
             .build(),
             data: IntegerTypeData {
                 minimum: self.data.min,

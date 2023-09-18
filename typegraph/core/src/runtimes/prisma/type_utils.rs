@@ -86,7 +86,7 @@ pub fn get_id_field(model_id: TypeId) -> Result<String> {
             })
             .collect::<Result<Vec<Option<String>>>>()?
             .into_iter()
-            .filter_map(|x| x)
+            .flatten()
             .collect::<Vec<_>>();
         match matches.len() {
             0 => Err("no id field found".to_string()),
@@ -121,7 +121,7 @@ impl<'a> RuntimeConfig<'a> {
             .last()
             .map(|v| serde_json::from_str(v))
             .transpose()
-            .map_err(|e| format!("invalid config value for {}: {}", key, e).into())
+            .map_err(|e| format!("invalid config value for {}: {}", key, e))
     }
 }
 

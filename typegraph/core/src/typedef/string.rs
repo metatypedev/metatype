@@ -33,7 +33,7 @@ impl TypeConversion for StringT {
                 runtime_id.unwrap(),
             )
             .enum_(self.data.enumeration.clone())
-            .as_id(self.base.as_id)
+            .id(self.base.as_id)
             .build(),
             data: StringTypeData {
                 min_length: self.data.min,

@@ -1,7 +1,7 @@
 from typegraph_next import typegraph, t, Graph, Policy
 from typegraph_next.providers.prisma import PrismaRuntime
 from typegraph_next.runtimes.graphql import GraphQLRuntime
-from typegraph_next.runtimes.random import RandomMat, RandomRuntime
+from typegraph_next.runtimes.random import RandomRuntime
 
 
 @typegraph()

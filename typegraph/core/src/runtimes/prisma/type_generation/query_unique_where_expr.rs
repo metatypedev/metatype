@@ -50,7 +50,7 @@ impl TypeGen for QueryUniqueWhereExpr {
 
         let mut st = t::struct_();
         for (k, ty) in props.into_iter() {
-            st.prop(k, t::optional(ty.into()).build()?);
+            st.prop(k, t::optional(ty).build()?);
         }
         st.named(self.name(context)).build()
     }

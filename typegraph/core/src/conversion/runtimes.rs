@@ -295,9 +295,12 @@ pub fn convert_materializer(
     mat.data.convert(c, s, mat.runtime_id, mat.effect)
 }
 
+type RuntimeInitializer =
+    Box<dyn FnOnce(RuntimeId, RuntimeId, &Store, &mut TypegraphContext) -> Result<TGRuntime>>;
+
 pub enum ConvertedRuntime {
     Converted(TGRuntime),
-    Lazy(Box<dyn FnOnce(RuntimeId, RuntimeId, &Store, &mut TypegraphContext) -> Result<TGRuntime>>),
+    Lazy(RuntimeInitializer),
 }
 
 impl From<TGRuntime> for ConvertedRuntime {
@@ -352,11 +355,7 @@ pub fn convert_runtime(
                 move |runtime_id, runtime_idx, store, tg| {
                     with_prisma_runtime(runtime_id, |ctx| {
                         let reg = &ctx.registry;
-                        let models: Vec<_> = reg
-                            .models
-                            .iter()
-                            .map(|(type_id, _)| type_id.clone())
-                            .collect();
+                        let models: Vec<_> = reg.models.keys().cloned().collect();
                         let relationships = reg.relationships.clone();
                         let mut conversion_context = ConversionContext {
                             runtime_id,
@@ -371,13 +370,13 @@ pub fn convert_runtime(
                                 .map(|id| {
                                     Ok(conversion_context
                                         .tg_context
-                                        .register_type(store, id.into(), Some(runtime_idx))?
+                                        .register_type(store, id, Some(runtime_idx))?
                                         .into())
                                 })
                                 .collect::<Result<Vec<_>>>()?,
                             relationships: relationships
-                                .into_iter()
-                                .map(|(_name, rel)| -> Result<_> {
+                                .into_values()
+                                .map(|rel| -> Result<_> {
                                     conversion_context.convert_relationship(rel)
                                 })
                                 .collect::<Result<Vec<_>>>()?,

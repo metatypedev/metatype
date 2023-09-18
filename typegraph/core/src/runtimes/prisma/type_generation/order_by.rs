@@ -64,7 +64,7 @@ impl TypeGen for OrderBy {
                     let registry_entry = context.registry.models.get(&self.model_id).unwrap();
                     let rel = registry_entry.relationships.get(k);
                     if let Some(rel_name) = rel {
-                        return if self.skip_rel.contains(&rel_name) {
+                        return if self.skip_rel.contains(rel_name) {
                             None
                         } else {
                             let rel = context.registry.relationships.get(rel_name).unwrap();

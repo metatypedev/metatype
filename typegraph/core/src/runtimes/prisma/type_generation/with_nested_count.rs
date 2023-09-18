@@ -126,17 +126,17 @@ impl TypeGen for WithNestedCount {
                     }
                     match cardinality {
                         Cardinality::Optional => {
-                            ty = t::optional(ty.into()).build()?;
+                            ty = t::optional(ty).build()?;
                         }
                         Cardinality::Many => {
-                            ty = t::array(ty.into()).build()?;
+                            ty = t::array(ty).build()?;
                         }
                         Cardinality::One => {}
                     }
-                    st.prop(key, ty.into());
+                    st.prop(key, ty);
                 }
                 Prop::Other { key, typ } => {
-                    st.prop(key, typ.into());
+                    st.prop(key, typ);
                 }
             }
         }

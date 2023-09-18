@@ -23,16 +23,7 @@ impl TypeGen for QueryWhereExpr {
         let extended_type =
             context.generate(&WithFilters::new(where_type, self.model_id, false))?;
 
-        let props = with_store(|s| {
-            extended_type
-                .as_struct(s)
-                .unwrap()
-                .data
-                .props
-                .iter()
-                .cloned()
-                .collect::<Vec<_>>()
-        });
+        let props = with_store(|s| extended_type.as_struct(s).unwrap().data.props.to_vec());
 
         let name = self.name(context);
         let self_ref = t::proxy(&name).build()?;

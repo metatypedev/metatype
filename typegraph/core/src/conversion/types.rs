@@ -63,7 +63,7 @@ impl TypeNodeBaseBuilder {
         self
     }
 
-    pub fn as_id(mut self, b: bool) -> Self {
+    pub fn id(mut self, b: bool) -> Self {
         self.as_id = b;
         self
     }

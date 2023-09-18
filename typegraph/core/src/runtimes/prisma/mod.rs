@@ -117,7 +117,7 @@ impl<'a> ConversionContext<'a> {
         Ok(cm::RelationshipModel {
             type_idx: self
                 .tg_context
-                .register_type(self.store, model.model_type.into(), Some(self.runtime_id))?
+                .register_type(self.store, model.model_type, Some(self.runtime_id))?
                 .into(),
             field: model.field,
             cardinality: model.cardinality.into(),

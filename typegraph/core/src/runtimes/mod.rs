@@ -38,7 +38,7 @@ pub enum Runtime {
     Python,
     Random(RandomRuntimeData),
     WasmEdge,
-    Prisma(PrismaRuntimeData, PrismaRuntimeContext),
+    Prisma(PrismaRuntimeData, Box<PrismaRuntimeContext>),
 }
 
 #[derive(Debug)]

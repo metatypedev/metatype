@@ -19,6 +19,6 @@ impl TypeGen for Count {
     }
 
     fn name(&self, _context: &TypeGenContext) -> String {
-        return "_Count".to_string();
+        "_Count".to_string()
     }
 }

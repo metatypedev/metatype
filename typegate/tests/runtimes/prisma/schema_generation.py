@@ -1,4 +1,4 @@
-from typegraph_next import typegraph, t, Policy, Graph
+from typegraph_next import typegraph, t, Graph
 from typegraph_next.providers.prisma import PrismaRuntime
 
 

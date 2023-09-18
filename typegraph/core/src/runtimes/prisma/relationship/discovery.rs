@@ -99,7 +99,7 @@ impl Candidate {
     fn into_pair(self, registry: &RelationshipRegistry) -> Result<CandidatePair> {
         let alternatives = self.get_alternatives(registry)?;
         match alternatives.len() {
-            0 => Err(format!("no alternatives found for {:?}", self).into()),
+            0 => Err(format!("no alternatives found for {:?}", self)),
             1 => {
                 let target = alternatives.into_iter().next().unwrap();
                 Ok(CandidatePair(self, target))

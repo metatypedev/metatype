@@ -180,7 +180,7 @@ pub fn expose(
     let fns = with_store_mut(move |s| {
         fns.into_iter()
             .map(|(name, fn_id)| -> Result<_> {
-                let fn_id = s.resolve_proxy(fn_id.into())?;
+                let fn_id = s.resolve_proxy(fn_id)?;
 
                 let has_policy = {
                     let tpe = s.get_type(fn_id)?;

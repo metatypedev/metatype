@@ -142,7 +142,7 @@ impl TypeGen for WithFilters {
             builder.prop(prop.key, t::optional(ty).build()?);
         }
 
-        Ok(builder.build()?)
+        builder.build()
     }
 
     fn name(&self, _context: &TypeGenContext) -> String {
@@ -424,7 +424,7 @@ impl AvgFilter {
 impl TypeGen for AvgFilter {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
         let keys = get_props(self.model_id, |s, k, type_id| {
-            let typ = s.get_type(type_id.into()).unwrap();
+            let typ = s.get_type(type_id).unwrap();
             let non_opt_type = match typ {
                 Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
                 _ => typ,
@@ -468,7 +468,7 @@ impl SumFilter {
 impl TypeGen for SumFilter {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
         let props = get_props(self.model_id, |s, k, type_id| {
-            let typ = s.get_type(type_id.into()).unwrap();
+            let typ = s.get_type(type_id).unwrap();
             let non_opt_type = match typ {
                 Type::Optional(inner) => s.get_type(inner.data.of.into()).unwrap(),
                 _ => typ,

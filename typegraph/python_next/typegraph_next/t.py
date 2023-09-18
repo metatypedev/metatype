@@ -8,13 +8,9 @@ from typegraph_next.utils import serialize_record_values, serialize_injection
 from typing_extensions import Self
 
 from typegraph_next.gen.exports.core import (
-    PolicyPerEffect as WitPolicyPerEffect,
     TypeWithInjection,
 )
 from typegraph_next.gen.exports.core import (
-    PolicySpec as WitPolicySpec,
-    PolicySpecPerEffect,
-    PolicySpecSimple,
     TypeBase,
     TypeFunc,
     TypeInteger,

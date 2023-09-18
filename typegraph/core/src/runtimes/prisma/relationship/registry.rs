@@ -120,21 +120,12 @@ impl RelationshipRegistry {
 
     pub fn manage(&mut self, model_id: TypeId) -> Result<()> {
         if self.complete_registrations.contains(&model_id) {
-            return Ok(());
+            Ok(())
         } else {
             let related_models = with_store(|s| -> Result<_> {
                 let mut related_models = vec![];
 
                 let model = s.type_as_struct(model_id)?;
-                // let mut entry = RegisteredModel {
-                //     relationships: HashMap::new(),
-                //     name: model
-                //         .base
-                //         .name
-                //         .clone()
-                //         .ok_or_else(|| "prisma model requires a name".to_string())?,
-                //     id_field: get_id_field(model_id)?,
-                // };
 
                 if let Entry::Vacant(e) = self.models.entry(model_id) {
                     e.insert(RegisteredModel {
@@ -156,33 +147,6 @@ impl RelationshipRegistry {
                         }
                     }
                 }
-
-                // for rel in relationships {
-                //     let rel_name = rel.name.clone();
-                //     let rel = match self.relationships.entry(rel_name.clone()) {
-                //         // TODO assert that the relationship is the same
-                //         Entry::Occupied(_) => &rel,
-                //         Entry::Vacant(e) => e.insert(rel),
-                //     };
-                //
-                //     if rel.left.model_type == model_id {
-                //         entry
-                //             .relationships
-                //             .insert(rel.left.field.clone(), rel_name.clone());
-                //     } else {
-                //         related_models.push(rel.left.model_type);
-                //     }
-                //
-                //     if rel.right.model_type == model_id {
-                //         entry
-                //             .relationships
-                //             .insert(rel.right.field.clone(), rel_name.clone());
-                //     } else {
-                //         related_models.push(rel.right.model_type);
-                //     }
-                // }
-                //
-                // self.models.insert(model_id, entry);
 
                 Ok(related_models)
             })?;
