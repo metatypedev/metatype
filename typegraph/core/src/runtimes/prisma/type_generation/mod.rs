@@ -1,6 +1,13 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+//! This module is responsible for generating the types for prisma operations.
+//!
+//! Implementing the `TypeGen` trait will allow to generate and cache a type
+//! in the `TypeGenContext`.
+//! Type generation should always be done through the `TypeGenContext` to enable
+//! the cache. Do not call `TypeGen::generate` directly.
+
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::fmt::format;
@@ -239,13 +246,31 @@ impl TypeGenContext {
     }
 
     fn generate(&mut self, generator: &impl TypeGen) -> Result<TypeId> {
+        //! Generates a type and caches it, or returns the cached type if it
+        //! already exists.
+
         let type_name = generator.name(self);
         if let Some(type_id) = self.cache.get(&type_name) {
             Ok(*type_id)
         } else {
             let type_id = generator.generate(self)?;
+            with_store(|s| -> Result<_> {
+                let name = type_id
+                    .as_type(s)?
+                    .get_base()
+                    .ok_or_else(|| "Generated type must be a concrete type".to_string())?
+                    .name
+                    .as_ref()
+                    .ok_or_else(|| "Generated type must have name".to_string())?;
+                match name == &type_name {
+                    true => Ok(()),
+                    false => Err(format!(
+                        "Generated type name mismatch: expected {}, got {}",
+                        type_name, name
+                    )),
+                }
+            })?;
             self.cache.insert(type_name, type_id);
-            // TODO check generated type name
             Ok(type_id)
         }
     }

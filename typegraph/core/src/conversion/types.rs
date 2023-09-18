@@ -40,14 +40,12 @@ pub fn gen_base(
 
 impl TypeNodeBaseBuilder {
     pub fn build(self) -> TypeNodeBase {
-        let mut config: Option<IndexMap<String, serde_json::Value>> = None;
-        if let Some(cfg_list) = self.runtime_config {
-            let mut map = IndexMap::new();
-            for (k, v) in cfg_list.iter() {
-                map.insert(k.to_string(), serde_json::from_str(v).unwrap());
-            }
-            config = Some(map);
-        }
+        let config = self.runtime_config.map(|c| {
+            c.iter()
+                .map(|(k, v)| (k.to_string(), serde_json::from_str(v).unwrap()))
+                .collect::<IndexMap<_, _>>()
+        });
+
         TypeNodeBase {
             config: config.unwrap_or(Default::default()),
             description: None,

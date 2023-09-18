@@ -382,7 +382,8 @@ impl Default for TypeProxy {
 }
 
 impl ProxyBuilder {
-    pub fn ex(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
+    /// Adds extra data entry in the proxy
+    pub fn set(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
         self.data.extras.push((key.into(), value.into()));
         self
     }

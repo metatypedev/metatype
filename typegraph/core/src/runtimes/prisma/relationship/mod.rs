@@ -258,13 +258,13 @@ impl PrismaLink {
     pub fn build(mut self) -> Result<TypeId> {
         let mut proxy = t::proxy(self.type_name);
         if let Some(rel_name) = self.rel_name.take() {
-            proxy.ex("rel_name", rel_name);
+            proxy.set("rel_name", rel_name);
         }
         if let Some(fkey) = self.fkey {
-            proxy.ex("fkey", format!("{fkey}"));
+            proxy.set("fkey", format!("{fkey}"));
         }
         if let Some(target_field) = self.target_field.take() {
-            proxy.ex("target_field", target_field);
+            proxy.set("target_field", target_field);
         }
         let res = proxy.build()?;
         eprintln!("proxy: {:?}", res);
