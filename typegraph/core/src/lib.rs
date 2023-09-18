@@ -323,9 +323,162 @@ macro_rules! log {
 #[cfg(test)]
 mod tests {
     use crate::global_store::{with_store, with_store_mut};
-    use crate::t::TypeBuilder;
-    use crate::test_utils::*;
-    use crate::{errors, t};
+    use crate::wit::core::Cors;
+    use crate::wit::{
+        core::{
+            Core, MaterializerId, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeId, TypeInteger,
+            TypeOptional, TypeStruct,
+        },
+        runtimes::{Effect, MaterializerDenoFunc, Runtimes},
+    };
+    use crate::Lib;
+    use crate::TypegraphInitParams;
+
+    impl Default for TypegraphInitParams {
+        fn default() -> Self {
+            Self {
+                name: "".to_string(),
+                dynamic: None,
+                folder: None,
+                path: ".".to_string(),
+                prefix: None,
+                secrets: vec![],
+                cors: Cors {
+                    allow_origin: vec![],
+                    allow_headers: vec![],
+                    expose_headers: vec![],
+                    allow_methods: vec![],
+                    allow_credentials: false,
+                    max_age_sec: None,
+                },
+                auths: vec![],
+                rate: None,
+            }
+        }
+    }
+
+    impl Default for TypeInteger {
+        fn default() -> Self {
+            Self {
+                min: None,
+                max: None,
+                exclusive_minimum: None,
+                exclusive_maximum: None,
+                multiple_of: None,
+                enumeration: None,
+            }
+        }
+    }
+
+    impl TypeInteger {
+        fn min(mut self, min: i32) -> Self {
+            self.min = Some(min);
+            self
+        }
+        fn max(mut self, max: i32) -> Self {
+            self.max = Some(max);
+            self
+        }
+        fn x_min(mut self, x_min: i32) -> Self {
+            self.exclusive_minimum = Some(x_min);
+            self
+        }
+        fn x_max(mut self, x_max: i32) -> Self {
+            self.exclusive_maximum = Some(x_max);
+            self
+        }
+    }
+
+    impl Default for TypeFloat {
+        fn default() -> Self {
+            Self {
+                min: None,
+                max: None,
+                exclusive_minimum: None,
+                exclusive_maximum: None,
+                multiple_of: None,
+                enumeration: None,
+            }
+        }
+    }
+
+    impl TypeFloat {
+        fn min(mut self, min: f64) -> Self {
+            self.min = Some(min);
+            self
+        }
+        fn max(mut self, max: f64) -> Self {
+            self.max = Some(max);
+            self
+        }
+        fn x_min(mut self, x_min: f64) -> Self {
+            self.exclusive_minimum = Some(x_min);
+            self
+        }
+        fn x_max(mut self, x_max: f64) -> Self {
+            self.exclusive_maximum = Some(x_max);
+            self
+        }
+    }
+
+    impl TypeArray {
+        fn of(index: u32) -> Self {
+            Self {
+                of: index,
+                min: None,
+                max: None,
+                unique_items: None,
+            }
+        }
+    }
+
+    impl TypeOptional {
+        fn of(index: u32) -> Self {
+            Self {
+                of: index,
+                default_item: None,
+            }
+        }
+    }
+
+    impl Default for TypeStruct {
+        fn default() -> Self {
+            Self { props: vec![] }
+        }
+    }
+
+    impl TypeStruct {
+        fn prop(mut self, key: impl Into<String>, type_id: TypeId) -> Self {
+            self.props.push((key.into(), type_id));
+            self
+        }
+    }
+
+    impl TypeFunc {
+        fn new(inp: TypeId, out: TypeId, mat: MaterializerId) -> Self {
+            Self { inp, out, mat }
+        }
+    }
+
+    impl MaterializerDenoFunc {
+        fn with_code(code: impl Into<String>) -> Self {
+            Self {
+                code: code.into(),
+                secrets: vec![],
+            }
+        }
+
+        // fn with_secrets(mut self, secrets: impl Into<Vec<String>>) -> Self {
+        //     self.secrets = secrets.into();
+        //     self
+        // }
+    }
+
+    impl Default for Effect {
+        fn default() -> Self {
+            Self::None
+        }
+    }
 
     #[test]
     fn test_integer_invalid_max() {
@@ -389,6 +542,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })?;
         assert_eq!(
             Lib::init_typegraph(TypegraphInitParams {
@@ -396,6 +550,7 @@ mod tests {
                 dynamic: None,
                 folder: None,
                 path: ".".to_string(),
+                ..Default::default()
             }),
             Err(errors::nested_typegraph_context("test-1"))
         );
@@ -427,6 +582,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })
         .unwrap();
         let tpe = t::integer().build()?;
@@ -451,6 +607,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })?;
 
         let mat = Lib::register_deno_func(
@@ -489,6 +646,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })?;
 
         let mat =
@@ -535,6 +693,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })?;
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;

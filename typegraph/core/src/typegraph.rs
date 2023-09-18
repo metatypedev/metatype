@@ -119,7 +119,16 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
                 dynamic: params.dynamic.unwrap_or(true),
                 endpoints,
             },
-            ..Default::default()
+
+            cors: params.cors.into(),
+            auths: params
+                .auths
+                .iter()
+                .map(|auth| auth.convert())
+                .collect::<Result<Vec<_>>>()?,
+            prefix: params.prefix,
+            rate: params.rate.map(|v| v.into()),
+            secrets: params.secrets,
         },
         types: vec![],
         ..Default::default()

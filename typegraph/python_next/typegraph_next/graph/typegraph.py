@@ -6,7 +6,13 @@ import inspect
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, List, Optional, Union
 
-from typegraph_next.gen.exports.core import TypegraphInitParams
+from typegraph_next.gen.exports.core import (
+    Auth,
+    Rate,
+    Cors,
+    TypegraphInitParams,
+)
+
 from typegraph_next.gen.types import Err
 from typegraph_next.policy import PolicyPerEffect, PolicySpec, get_policy_chain, Policy
 from typegraph_next.wit import core, store
@@ -21,14 +27,41 @@ class Typegraph:
     folder: Optional[str]
     path: str
     _context: List["Typegraph"] = []
+    auths: Optional[List[Auth]]
+    rate: Optional[Rate]
+    cors: Optional[Cors]
+    prefix: Optional[str]
+    secrets: Optional[List[str]]
 
     def __init__(
-        self, name: str, dynamic: Optional[bool] = None, folder: Optional[str] = None
+        self,
+        name: str,
+        dynamic: Optional[bool] = None,
+        folder: Optional[str] = None,
+        *,
+        auths: Optional[List[Auth]] = None,
+        rate: Optional[Rate] = None,
+        cors: Optional[Cors] = None,
+        prefix: Optional[str] = None,
+        secrets: Optional[List[str]] = None,
     ):
         self.name = name
         self.dynamic = dynamic
         self.folder = folder
         self.path = str(Path(inspect.stack()[2].filename).resolve().parent)
+
+        self.auths = auths or []
+        self.rate = rate
+        self.cors = cors or Cors(
+            allow_origin=[],
+            allow_headers=[],
+            expose_headers=[],
+            allow_methods=[],
+            allow_credentials=False,
+            max_age_sec=None,
+        )
+        self.prefix = prefix
+        self.secrets = secrets or []
 
     @classmethod
     def get_active(cls) -> Optional["Typegraph"]:
@@ -72,6 +105,11 @@ def typegraph(
     *,
     dynamic: Optional[bool] = None,
     folder: Optional[str] = None,
+    auths: Optional[List[Auth]] = None,
+    rate: Optional[Rate] = None,
+    cors: Optional[Cors] = None,
+    prefix: Optional[str] = None,
+    secrets: Optional[List[str]] = None,
 ) -> Callable[[Callable[[Graph], None]], Typegraph]:
     def decorator(builder: Callable[[Graph], None]) -> Typegraph:
         actual_name = name
@@ -81,13 +119,31 @@ def typegraph(
             # To kebab case
             actual_name = re.sub("_", "-", builder.__name__)
 
-        tg = Typegraph(actual_name, dynamic, folder)
+        tg = Typegraph(
+            name=actual_name,
+            dynamic=dynamic,
+            folder=folder,
+            auths=auths,
+            rate=rate,
+            cors=cors,
+            prefix=prefix,
+            secrets=secrets,
+        )
 
         Typegraph._context.append(tg)
+
         core.init_typegraph(
             store,
             TypegraphInitParams(
-                name=tg.name, dynamic=tg.dynamic, folder=tg.folder, path=tg.path
+                name=tg.name,
+                dynamic=tg.dynamic,
+                folder=tg.folder,
+                path=tg.path,
+                auths=tg.auths,
+                rate=tg.rate,
+                cors=tg.cors,
+                prefix=tg.prefix,
+                secrets=tg.secrets,
             ),
         )
 
