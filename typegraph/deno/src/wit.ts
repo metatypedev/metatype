@@ -7,3 +7,13 @@ import * as js from "../gen/typegraph_core.js";
 
 export const core = js.core as typeof ExportsMetatypeTypegraphCore;
 export const runtimes = js.runtimes as typeof ExportsMetatypeTypegraphRuntimes;
+
+export type {
+  Auth,
+  AuthProtocol,
+  AuthProtocolBasic,
+  AuthProtocolJwt,
+  AuthProtocolOauth2,
+  Cors,
+  Rate,
+} from "../gen/exports/metatype-typegraph-core.d.ts";

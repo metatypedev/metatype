@@ -4,6 +4,7 @@
 import * as t from "./types.ts";
 import { core } from "../gen/typegraph_core.js";
 import { caller, dirname, fromFileUrl } from "./deps.ts";
+import { Auth, Cors, Rate } from "./wit.ts";
 
 type Exports = Record<string, t.Func>;
 
@@ -12,6 +13,11 @@ interface TypegraphArgs {
   dynamic?: boolean;
   folder?: string;
   builder: TypegraphBuilder;
+  prefix?: string;
+  secrets?: Array<string>;
+  cors?: Cors;
+  auths?: Array<Auth>;
+  rate?: Rate;
 }
 
 interface TypegraphBuilderArgs {
@@ -39,7 +45,16 @@ export function typegraph(
     ? { name: nameOrArgs }
     : nameOrArgs;
 
-  const { name, dynamic, folder } = args;
+  const {
+    name,
+    dynamic,
+    folder,
+    auths,
+    cors,
+    prefix,
+    rate,
+    secrets,
+  } = args;
   const builder = "builder" in args
     ? args.builder as TypegraphBuilder
     : maybeBuilder!;
@@ -50,7 +65,22 @@ export function typegraph(
   }
   const path = dirname(fromFileUrl(file));
 
-  core.initTypegraph({ name, dynamic, path, folder });
+  const tgParams = {
+    prefix,
+    secrets: secrets ?? [],
+    cors: cors ?? {
+      allowCredentials: false,
+      allowHeaders: [],
+      allowMethods: [],
+      allowOrigin: [],
+      exposeHeaders: [],
+      maxAgeSec: undefined,
+    } as Cors,
+    auths: auths ?? [],
+    rate,
+  };
+
+  core.initTypegraph({ name, dynamic, path, folder, ...tgParams });
 
   const g: TypegraphBuilderArgs = {
     expose: (exports) => {
