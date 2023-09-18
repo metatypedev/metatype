@@ -1,6 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
+use crate::errors::Result;
 use common::typegraph::{Auth, AuthProtocol, Cors, Rate};
 use indexmap::IndexMap;
 
@@ -22,21 +23,7 @@ impl From<crate::wit::core::AuthProtocol> for AuthProtocol {
         match value {
             crate::wit::core::AuthProtocol::Oauth2 => AuthProtocol::OAuth2,
             crate::wit::core::AuthProtocol::Jwt => AuthProtocol::Jwt,
-            crate::wit::core::AuthProtocol::Basic => AuthProtocol::OAuth2,
-        }
-    }
-}
-
-impl From<crate::wit::core::Auth> for Auth {
-    fn from(value: crate::wit::core::Auth) -> Self {
-        let mut auth_data = IndexMap::new();
-        for (k, v) in value.auth_data {
-            auth_data.insert(k, serde_json::from_str(&v).unwrap());
-        }
-        Auth {
-            name: value.name,
-            protocol: value.protocol.into(),
-            auth_data,
+            crate::wit::core::AuthProtocol::Basic => AuthProtocol::Basic,
         }
     }
 }
@@ -50,5 +37,22 @@ impl From<crate::wit::core::Rate> for Rate {
             context_identifier: value.context_identifier,
             local_excess: value.local_excess,
         }
+    }
+}
+
+impl crate::wit::core::Auth {
+    pub fn convert(&self) -> Result<Auth> {
+        let mut auth_data = IndexMap::new();
+        for (k, v) in self.auth_data.iter() {
+            auth_data.insert(
+                k.clone(),
+                serde_json::from_str(v).map_err(|e| format!("error at key {:?}: {}", k, e))?,
+            );
+        }
+        Ok(Auth {
+            name: self.name.clone(),
+            protocol: self.protocol.into(),
+            auth_data,
+        })
     }
 }

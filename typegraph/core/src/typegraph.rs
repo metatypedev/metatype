@@ -123,8 +123,8 @@ pub fn init(params: TypegraphInitParams) -> Result<()> {
             auths: params
                 .auths
                 .iter()
-                .map(|auth| auth.to_owned().into())
-                .collect(),
+                .map(|auth| auth.convert())
+                .collect::<Result<Vec<_>>>()?,
             prefix: params.prefix,
             rate: params.rate.map(|v| v.into()),
             secrets: params.secrets,
