@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MPL-2.0
 
 from typegraph_next import t, typegraph
+from typegraph_next.graph.params import Auth, Cors, Rate
 from typegraph_next.graph.typegraph import Graph
 from typegraph_next.policy import Policy
 from typegraph_next.runtimes.deno import DenoRuntime
@@ -30,7 +31,25 @@ complexType = t.struct(
 )
 
 
-@typegraph()
+@typegraph(
+    secrets=["secret1", "secret2", "secret3"],
+    cors=Cors(
+        allow_credentials=False,
+        allow_headers=[],
+        allow_methods=["GET"],
+        allow_origin=["*"],
+        expose_headers=[],
+        max_age_sec=120,
+    ),
+    auths=[Auth.hmac256("testAuth")],
+    rate=Rate(
+        window_sec=60,
+        window_limit=128,
+        query_limit=8,
+        local_excess=5,
+        context_identifier="user",
+    ),
+)
 def test_complex_types(g: Graph):
     deno = DenoRuntime()
     pub = Policy.public()
