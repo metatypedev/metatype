@@ -55,7 +55,7 @@ impl TypeGen for QueryUniqueWhereExpr {
         st.named(self.name(context)).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
+    fn name(&self, _context: &TypeGenContext) -> String {
         let name = with_store(|s| s.get_type_name(self.model_id).unwrap().unwrap().to_string());
         format!("QueryUnique{}WhereInput", name)
     }

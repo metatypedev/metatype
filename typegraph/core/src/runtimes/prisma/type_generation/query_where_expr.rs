@@ -3,7 +3,7 @@
 
 use crate::global_store::with_store;
 use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
-use crate::{errors::Result, global_store::with_store_mut, types::TypeId};
+use crate::{errors::Result, types::TypeId};
 
 use super::{where_::Where, with_filters::WithFilters, TypeGen};
 

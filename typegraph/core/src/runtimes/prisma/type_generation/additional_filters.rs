@@ -13,7 +13,7 @@ impl TypeGen for Take {
         t::integer().x_min(0).named(self.name(context)).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
+    fn name(&self, _context: &TypeGenContext) -> String {
         "_Take".to_string()
     }
 }
@@ -25,7 +25,7 @@ impl TypeGen for Skip {
         t::integer().x_min(0).named(self.name(context)).build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
+    fn name(&self, _context: &TypeGenContext) -> String {
         "_Skip".to_string()
     }
 }

@@ -6,7 +6,7 @@ use crate::{
     global_store::with_store,
     runtimes::prisma::type_generation::{
         where_::Where,
-        with_filters::{NumberFilter, NumberType, WithFilters},
+        with_filters::{NumberType, WithFilters},
     },
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},

@@ -22,8 +22,7 @@ use enum_dispatch::enum_dispatch;
 
 pub use self::deno::{DenoMaterializer, MaterializerDenoImport, MaterializerDenoModule};
 pub use self::graphql::GraphqlMaterializer;
-use self::prisma::relationship::registry::RelationshipRegistry;
-use self::prisma::relationship::{prisma_link, prisma_linkn};
+use self::prisma::relationship::prisma_link;
 use self::prisma::{PrismaMaterializer, PrismaRuntimeContext};
 pub use self::python::PythonMaterializer;
 pub use self::random::RandomMaterializer;

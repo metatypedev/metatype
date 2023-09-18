@@ -4,7 +4,6 @@
 use crate::errors::Result;
 use crate::global_store::with_store;
 use crate::runtimes::prisma::relationship::Cardinality;
-use crate::runtimes::prisma::type_generation::with_filters::{NumberType, WithAggregateFilters};
 use crate::t::{ConcreteTypeBuilder, TypeBuilder};
 use crate::types::Type;
 use crate::{t, types::TypeId};
@@ -146,13 +145,13 @@ impl TypeGen for OrderBy {
     }
 
     fn name(&self, context: &TypeGenContext) -> String {
-        // let name = context
-        //     .registry
-        //     .models
-        //     .get(&self.model_id)
-        //     .unwrap()
-        //     .name
-        //     .clone();
+        let name = context
+            .registry
+            .models
+            .get(&self.model_id)
+            .unwrap()
+            .name
+            .clone();
         let suffix = if self.skip_rel.is_empty() {
             "".to_string()
         } else {
@@ -163,7 +162,7 @@ impl TypeGen for OrderBy {
         } else {
             ""
         };
-        format!("_{}_OrderBy{suffix}{suffix2}", self.model_id.0)
+        format!("_{}_OrderBy{suffix}{suffix2}", name)
     }
 }
 
@@ -239,7 +238,7 @@ impl TypeGen for SortByAggregates {
             .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
+    fn name(&self, _context: &TypeGenContext) -> String {
         "_SortByAggregates".to_string()
     }
 }

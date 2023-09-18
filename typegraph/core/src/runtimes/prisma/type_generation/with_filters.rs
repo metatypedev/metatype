@@ -48,7 +48,6 @@ impl TypeGen for WithFilters {
         }
         struct Prop {
             key: String,
-            type_id: TypeId,
             prop_type: PropType,
         }
 
@@ -74,7 +73,6 @@ impl TypeGen for WithFilters {
                         rel.get(rel.side_of_model(self.model_id).unwrap().opposite());
                     props.push(Prop {
                         key: k.to_string(),
-                        type_id: id,
                         prop_type: PropType::Model(target_model.model_type),
                     });
                     continue;
@@ -85,35 +83,30 @@ impl TypeGen for WithFilters {
                     Type::Boolean(_) => {
                         props.push(Prop {
                             key: k.to_string(),
-                            type_id: id,
                             prop_type: PropType::Boolean,
                         });
                     }
                     Type::Integer(_) => {
                         props.push(Prop {
                             key: k.to_string(),
-                            type_id: id,
                             prop_type: PropType::Number(NumberType::Integer),
                         });
                     }
-                    Type::Float(n) => {
+                    Type::Float(_) => {
                         props.push(Prop {
                             key: k.to_string(),
-                            type_id: id,
                             prop_type: PropType::Number(NumberType::Float),
                         });
                     }
                     Type::String(_) => {
                         props.push(Prop {
                             key: k.to_string(),
-                            type_id: id,
                             prop_type: PropType::String,
                         });
                     }
                     Type::Array(inner) => {
                         props.push(Prop {
                             key: k.to_string(),
-                            type_id: id,
                             prop_type: PropType::Array(inner.data.of.into()),
                         });
                     }
@@ -192,7 +185,7 @@ impl TypeGen for BooleanFilter {
         .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
+    fn name(&self, _context: &TypeGenContext) -> String {
         "_boolean_filter".to_string()
     }
 }
@@ -258,7 +251,7 @@ impl TypeGen for NumberFilter {
         }
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
+    fn name(&self, _context: &TypeGenContext) -> String {
         let suffix = if self.with_aggregates {
             "_with_aggregates"
         } else {
@@ -305,7 +298,7 @@ impl TypeGen for StringFilter {
         .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
+    fn name(&self, _context: &TypeGenContext) -> String {
         "_string_filter".to_string()
     }
 }
@@ -344,7 +337,7 @@ impl TypeGen for ScalarListFilter {
         .build()
     }
 
-    fn name(&self, context: &TypeGenContext) -> String {
+    fn name(&self, _context: &TypeGenContext) -> String {
         format!("_list_filter_{}", self.0 .0)
     }
 }
@@ -352,12 +345,6 @@ impl TypeGen for ScalarListFilter {
 pub struct WithAggregateFilters {
     model_id: TypeId,
     type_id: TypeId,
-}
-
-impl WithAggregateFilters {
-    pub fn new(model_id: TypeId, type_id: TypeId) -> Self {
-        Self { model_id, type_id }
-    }
 }
 
 impl TypeGen for WithAggregateFilters {
@@ -402,7 +389,7 @@ impl CountFilter {
 
 impl TypeGen for CountFilter {
     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-        let keys = get_props(self.model_id, |s, k, type_id| Some(k.to_string()));
+        let keys = get_props(self.model_id, |_s, k, _type_id| Some(k.to_string()));
 
         gen_aggregate_filter(
             context,

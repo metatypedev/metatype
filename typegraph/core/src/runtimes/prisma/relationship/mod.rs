@@ -5,10 +5,7 @@ use crate::errors::Result;
 use crate::global_store::with_store;
 use crate::t;
 use crate::t::TypeBuilder;
-use crate::types::Type;
-use crate::types::TypeFun;
 use crate::types::TypeId;
-use crate::wit::runtimes::Error as TgError;
 
 mod discovery;
 pub mod registry;
@@ -20,60 +17,6 @@ pub enum Cardinality {
     Many,
 }
 
-// fn get_rel_name(wrapper_type: TypeId) -> Result<Option<String>> {
-//     with_store(|s| {
-//         let mut type_id = wrapper_type;
-//
-//         loop {
-//             let ty = s.get_type(type_id)?;
-//             match ty {
-//                 Type::Proxy(p) => {
-//                     if let Some(name) = p.data.get_extra("rel_name") {
-//                         return Ok(Some(name.to_string()));
-//                     }
-//                     type_id = s.resolve_proxy(type_id)?;
-//                     continue;
-//                 }
-//                 _ => {
-//                     if let Some(wrapper_type) = ty.as_wrapper_type() {
-//                         type_id = wrapper_type.try_resolve(s)?;
-//                         continue;
-//                     } else {
-//                         // concrete type
-//                         return Ok(None);
-//                     }
-//                 }
-//             }
-//         }
-//     })
-// }
-
-#[derive(Clone, Debug)]
-pub struct TargetAttributes {
-    fkey: Option<bool>,
-    unique: bool,
-}
-
-#[derive(Clone, Debug)]
-pub struct RelationshipSource {
-    pub model_type: TypeId,
-    pub model_type_name: String,
-    pub wrapper_type: TypeId,
-    pub cardinality: Cardinality,
-}
-
-// no wrapper type; to be determined later
-#[derive(Clone, Debug)]
-pub struct RelationshipTarget {
-    pub model_type: TypeId,
-    /// field of this model pointing to the other side of the relationship
-    pub field: String,
-    // /// cardinality for the other side of the relationship;
-    // /// telling whether the field has a type M, M?, or M[]
-    // pub cardinality: Cardinality,
-    pub attrs: TargetAttributes,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct RelationshipModel {
     pub model_type: TypeId,
@@ -83,31 +26,6 @@ pub struct RelationshipModel {
     pub field: String,
 }
 
-// impl RelationshipModel {
-//     pub fn from_source(source: RelationshipSource, field: String, attrs: TargetAttributes) -> Self {
-//         Self {
-//             model_type: source.model_type,
-//             model_name: source.model_type_name,
-//             wrapper_type: source.wrapper_type,
-//             cardinality: source.cardinality,
-//             fkey: attrs.has_fkey,
-//             unique: attrs.unique,
-//             field,
-//         }
-//     }
-//
-//     pub fn get_rel_name(&self) -> Result<Option<String>> {
-//         with_store(|s| -> Result<_> {
-//             s.type_as_struct(self.model_type)?
-//                 .data
-//                 .get_prop(&self.field)
-//                 .map(|id| get_rel_name(id.into()))
-//                 .transpose()
-//                 .map(|o| o.flatten())
-//         })
-//     }
-// }
-//
 #[derive(Debug, Clone, Copy)]
 pub enum Side {
     Left,
@@ -295,9 +213,6 @@ pub fn prisma_linkn(name: impl Into<String>) -> PrismaLink {
 }
 
 use registry::RelationshipRegistry;
-
-use self::discovery::Candidate;
-use self::discovery::CandidatePair;
 
 #[cfg(test)]
 mod test {

@@ -2,12 +2,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 // use super::errors;
-use crate::{
-    errors::Result,
-    global_store::with_store,
-    runtimes::prisma::type_utils::get_id_field,
-    types::{Struct, TypeId},
-};
+use crate::errors::Result;
+use crate::global_store::with_store;
+use crate::runtimes::prisma::type_utils::get_id_field;
+use crate::types::TypeId;
 #[cfg(test)]
 use indexmap::IndexSet as HashSet;
 #[cfg(test)]
@@ -71,7 +69,7 @@ impl RelationshipRegistry {
                 e.insert(rel_name);
                 Ok(())
             }
-            E::Occupied(e) => Err("cannot readd relationship".to_string()),
+            E::Occupied(_e) => Err("cannot readd relationship".to_string()),
         }
     }
 

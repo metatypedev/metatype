@@ -4,9 +4,7 @@
 use crate::errors::{self, Result};
 use crate::runtimes::{DenoMaterializer, Materializer, MaterializerDenoModule, Runtime};
 use crate::types::{Type, TypeFun, TypeId};
-use crate::wit::core::{
-    Error as TgError, Policy, PolicyId, PolicySpec, RuntimeId, TypeId as CoreTypeId,
-};
+use crate::wit::core::{Error as TgError, Policy, PolicyId, PolicySpec, RuntimeId};
 use crate::wit::runtimes::{Effect, MaterializerDenoPredefined, MaterializerId};
 use std::{cell::RefCell, collections::HashMap};
 
@@ -225,9 +223,9 @@ impl Store {
         }
     }
 
-    pub fn get_config_flag(&self, type_id: TypeId, flag: &str) -> Result<bool> {
-        todo!()
-    }
+    // pub fn get_config_flag(&self, type_id: TypeId, flag: &str) -> Result<bool> {
+    //     todo!()
+    // }
 
     pub fn is_func(&self, type_id: TypeId) -> Result<bool> {
         match self.get_type(type_id)? {

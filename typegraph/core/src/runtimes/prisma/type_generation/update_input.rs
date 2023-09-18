@@ -45,7 +45,7 @@ impl TypeGen for UpdateInput {
                 let attrs = s.get_attributes(type_id.into())?;
                 // TODO check injection
                 let typ = attrs.concrete_type.as_type(s)?;
-                let (typ, nullable) = match typ {
+                let (typ, _nullable) = match typ {
                     Type::Optional(ty) => (s.get_type(ty.data.of.into())?, true),
                     _ => (typ, false),
                 };

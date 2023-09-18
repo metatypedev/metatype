@@ -5,8 +5,8 @@ use crate::errors::Result;
 use crate::global_store::Store;
 use crate::runtimes::prisma::{with_prisma_runtime, ConversionContext};
 use crate::runtimes::{
-    DenoMaterializer, GraphqlMaterializer, Materializer as RawMaterializer, PythonMaterializer,
-    RandomMaterializer, Runtime, WasiMaterializer,
+    DenoMaterializer, Materializer as RawMaterializer, PythonMaterializer, RandomMaterializer,
+    Runtime, WasiMaterializer,
 };
 use crate::wit::core::RuntimeId;
 use crate::wit::runtimes::{HttpMethod, MaterializerHttpRequest};
@@ -14,7 +14,7 @@ use crate::{typegraph::TypegraphContext, wit::runtimes::Effect as WitEffect};
 use common::typegraph::runtimes::deno::DenoRuntimeData;
 use common::typegraph::runtimes::graphql::GraphQLRuntimeData;
 use common::typegraph::runtimes::http::HTTPRuntimeData;
-use common::typegraph::runtimes::prisma::{PrismaRuntimeData, Relationship};
+use common::typegraph::runtimes::prisma::PrismaRuntimeData;
 use common::typegraph::runtimes::python::PythonRuntimeData;
 use common::typegraph::runtimes::random::RandomRuntimeData;
 use common::typegraph::runtimes::wasmedge::WasmEdgeRuntimeData;
@@ -307,8 +307,8 @@ impl From<TGRuntime> for ConvertedRuntime {
 }
 
 pub fn convert_runtime(
-    c: &mut TypegraphContext,
-    s: &Store,
+    _c: &mut TypegraphContext,
+    _s: &Store,
     runtime: &Runtime,
 ) -> Result<ConvertedRuntime> {
     use KnownRuntime::*;

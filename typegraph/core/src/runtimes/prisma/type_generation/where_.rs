@@ -4,7 +4,6 @@
 use crate::{
     errors::Result,
     global_store::with_store,
-    runtimes::prisma::type_utils::get_type_name,
     t::{self, ConcreteTypeBuilder, TypeBuilder},
     types::{Type, TypeId},
 };

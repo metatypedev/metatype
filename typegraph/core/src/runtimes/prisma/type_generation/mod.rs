@@ -8,15 +8,11 @@
 //! Type generation should always be done through the `TypeGenContext` to enable
 //! the cache. Do not call `TypeGen::generate` directly.
 
-use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use std::fmt::format;
 
-use self::additional_filters::{Distinct, Skip, Take};
 use self::aggregate::{CountOutput, NumberAggregateOutput};
 use self::group_by::GroupByResult;
 use self::input_type::InputType;
-use self::order_by::OrderBy;
 use self::out_type::OutType;
 use self::query_input_type::QueryInputType;
 use self::query_unique_where_expr::QueryUniqueWhereExpr;
@@ -29,7 +25,7 @@ use crate::errors::Result;
 use crate::global_store::with_store;
 use crate::runtimes::prisma::relationship::Cardinality;
 use crate::t::{self, TypeBuilder};
-use crate::types::{ProxyResolution, Type, TypeFun, TypeId};
+use crate::types::{TypeFun, TypeId};
 
 mod additional_filters;
 mod aggregate;

@@ -6,7 +6,7 @@ use crate::{
     errors::Result,
     global_store::{with_store, Store},
     typegraph::TypegraphContext,
-    types::{Type, TypeData, TypeId, WithInjection, WrapperTypeData},
+    types::{TypeData, TypeId, WithInjection, WrapperTypeData},
     wit::core::TypeWithInjection,
 };
 use common::typegraph::{EffectType, Injection, InjectionData, SingleValue, TypeNode};
@@ -95,7 +95,7 @@ impl TypeData for TypeWithInjection {
 }
 
 impl WrapperTypeData for TypeWithInjection {
-    fn resolve(&self, store: &Store) -> Option<TypeId> {
+    fn resolve(&self, _store: &Store) -> Option<TypeId> {
         Some(self.tpe.into())
     }
 }

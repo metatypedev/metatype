@@ -5,8 +5,7 @@ use crate::conversion::runtimes::{convert_materializer, convert_runtime, Convert
 use crate::conversion::types::{gen_base, TypeConversion};
 use crate::global_store::{with_store, with_store_mut};
 use crate::host::abi;
-use crate::t;
-use crate::types::{Type, TypeFun, TypeId, WithPolicy, WrapperTypeData};
+use crate::types::{Type, TypeFun, TypeId, WithPolicy};
 use crate::validation::validate_name;
 use crate::{
     errors::{self, Result},
