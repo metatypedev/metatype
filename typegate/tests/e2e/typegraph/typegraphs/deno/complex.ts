@@ -4,6 +4,7 @@
 // TODO: use import map
 import { Policy, t, typegraph } from "@typegraph/deno/src/mod.ts";
 import { DenoRuntime } from "@typegraph/deno/src/runtimes/deno.ts";
+import { Auth } from "@typegraph/deno/src/params.ts";
 
 const someType = t.struct({
   one: t.array(t.integer(), { min: 3 }, { name: "Two" }),
@@ -24,18 +25,43 @@ const complexType = t.struct({
   an_email: t.email(),
 }, { name: "ComplexType" });
 
-typegraph("test-complex-types", (g) => {
-  const deno = new DenoRuntime();
-  const pub = Policy.public();
+typegraph(
+  {
+    name: "test-complex-types",
+    secrets: ["secret1", "secret2", "secret3"],
+    rate: {
+      windowSec: 60,
+      windowLimit: 128,
+      queryLimit: 8,
+      localExcess: 5,
+      contextIdentifier: "user",
+    },
+    cors: {
+      allowCredentials: false,
+      allowHeaders: [],
+      allowMethods: ["GET"],
+      allowOrigin: ["*"],
+      exposeHeaders: [],
+      maxAgeSec: 120,
+    },
+    auths: [
+      Auth.basic(["testBasicAuth"]),
+      Auth.hmac256("testHmacAuth"),
+    ],
+  },
+  (g) => {
+    const deno = new DenoRuntime();
+    const pub = Policy.public();
 
-  g.expose({
-    test: deno.func(
-      complexType,
-      t.boolean(),
-      {
-        code: "() => true",
-        effect: { tag: "none" } as any,
-      },
-    ).withPolicy(pub),
-  });
-});
+    g.expose({
+      test: deno.func(
+        complexType,
+        t.boolean(),
+        {
+          code: "() => true",
+          effect: { tag: "none" } as any,
+        },
+      ).withPolicy(pub),
+    });
+  },
+);

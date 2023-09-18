@@ -41,7 +41,7 @@ complexType = t.struct(
         expose_headers=[],
         max_age_sec=120,
     ),
-    auths=[Auth.hmac256("testAuth")],
+    auths=[Auth.basic(["testBasicAuth"]), Auth.hmac256("testHmacAuth")],
     rate=Rate(
         window_sec=60,
         window_limit=128,

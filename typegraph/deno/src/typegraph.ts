@@ -17,7 +17,7 @@ interface TypegraphArgs {
   secrets?: Array<string>;
   cors?: Cors;
   auths?: Array<Auth>;
-  rate?: Array<Rate>;
+  rate?: Rate;
 }
 
 interface TypegraphBuilderArgs {
