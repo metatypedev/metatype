@@ -223,10 +223,6 @@ impl Store {
         }
     }
 
-    // pub fn get_config_flag(&self, type_id: TypeId, flag: &str) -> Result<bool> {
-    //     todo!()
-    // }
-
     pub fn is_func(&self, type_id: TypeId) -> Result<bool> {
         match self.get_type(type_id)? {
             Type::Func(_) => Ok(true),

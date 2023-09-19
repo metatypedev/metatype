@@ -118,18 +118,6 @@ impl Candidate {
         }
     }
 
-    // fn into_relationship(self, registry: &RelationshipRegistry) -> Result<Relationship> {
-    //     let alternatives = self.get_alternatives()?;
-    //     match alternatives.len() {
-    //         0 => Err(format!("no alternatives found for {:?}", self).into()),
-    //         1 => {
-    //             let target = alternatives.into_iter().next().unwrap();
-    //             Relationship::from_candidates(CandidatePair(self, target), registry)
-    //         }
-    //         _ => Err(format!("multiple alternative targets found for {:?}", self).into()),
-    //     }
-    // }
-
     /// get potential targets for this candidate
     fn get_alternatives(&self, registry: &RelationshipRegistry) -> Result<Vec<Candidate>> {
         let candidates = with_store(|s| -> Result<_> {
@@ -142,22 +130,6 @@ impl Candidate {
                     Candidate::new(self.model_type, k.clone(), ty.into(), Some(self))
                         .map(|maybe_candidate| {
                             maybe_candidate.filter(|c| !registry.has(c.model_type, &c.field_name))
-                            // .filter(|c| {
-                            //     // TODO move to constructor
-                            //     c.model_type == self.source_model
-                            //         && c.source_model == self.model_type
-                            // })
-                            // match relationship name
-                            // .filter(|c| match (&c.relationship_name, &self.relationship_name) {
-                            //     (Some(a), Some(b)) => a == b,
-                            //     _ => true,
-                            // })
-                            // .filter(|c| {
-                            //     c.target_field.as_ref().map(|f| f == &self.field_name).unwrap_or(true)
-                            //         && self.target_field.as_ref().map(|f| f == &c.field_name).unwrap_or(true)
-                            // })
-
-                            // TODO match target field
                         })
                         .transpose()
                 })
@@ -320,8 +292,7 @@ pub fn scan_model(model: &Struct, registry: &RelationshipRegistry) -> Result<Vec
             Candidate::new(model.get_id(), k.clone(), ty.into(), None).transpose()
         })
         .collect::<Result<Vec<_>>>()?;
-    eprintln!("candidates: {:#?}", candidates);
-    // TODO: remove duplicate for self-references
+
     candidates
         .into_iter()
         .map(|c| c.into_pair(registry))

@@ -101,16 +101,6 @@ impl TypeGen for OrderBy {
                 .collect::<Vec<_>>()
         });
 
-        // let props = if self.aggregates {
-        //     let mut props = props;
-        //     for agg in ["_count", "_avg", "_sum", "_min", "_max"] {
-        //         props.push((agg.to_string(), PropType::Optional));
-        //     }
-        //     props
-        // } else {
-        //     props
-        // };
-
         let mut builder = if self.aggregates {
             t::struct_extends(context.generate(&AggregateSorting::new(self.model_id))?)?
         } else {
@@ -132,16 +122,7 @@ impl TypeGen for OrderBy {
             );
         }
 
-        // let array_item = if self.aggregates {
-        //     context.generate(&WithAggregateFilters::new(self.model_id, builder.build()?))?
-        // } else {
-        //     builder.build()?
-        // };
         t::array(builder.build()?).named(self.name(context)).build()
-
-        // t::array(context.generate(&WithAggregateFilters::new(self.model_id, builder.build()?))?)
-        //     .named(self.name(context))
-        //     .build()
     }
 
     fn name(&self, context: &TypeGenContext) -> String {
@@ -354,43 +335,3 @@ impl AggregateSortingProp {
         })
     }
 }
-
-// struct AggregateFiltering {
-//     model_id: TypeId,
-// }
-//
-// impl AggregateFiltering {
-//     fn new(model_id: TypeId) -> Self {
-//         Self { model_id }
-//     }
-// }
-//
-// impl TypeGen for AggregateFiltering {
-//     fn generate(&self, context: &mut TypeGenContext) -> Result<TypeId> {
-//         let model = context.registry.models.get(&self.model_id).unwrap();
-//         let mut builder = t::struct_();
-//         for field in &model.fields {
-//             let ty = context.generate(&AggregateFilteringField::new(
-//                 self.model_id,
-//                 field.name.clone(),
-//             ))?;
-//             builder.prop(field.name.clone(), ty);
-//         }
-//
-//         t::optional(builder.build()?)
-//             .named(self.name(context))
-//             .build()
-//     }
-//
-//     fn name(&self, context: &TypeGenContext) -> String {
-//         let name = context
-//             .registry
-//             .models
-//             .get(&self.model_id)
-//             .unwrap()
-//             .name
-//             .clone();
-//         format!("_{}_AggregateFiltering", name)
-//     }
-// }
-//
