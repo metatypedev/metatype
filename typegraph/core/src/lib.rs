@@ -274,6 +274,7 @@ impl wit::core::Core for Lib {
 mod tests {
     use crate::errors;
     use crate::global_store::{with_store, with_store_mut};
+    use crate::wit::core::Cors;
     use crate::wit::{
         core::{
             Core, MaterializerId, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeId, TypeInteger,
@@ -283,6 +284,29 @@ mod tests {
     };
     use crate::Lib;
     use crate::TypegraphInitParams;
+
+    impl Default for TypegraphInitParams {
+        fn default() -> Self {
+            Self {
+                name: "".to_string(),
+                dynamic: None,
+                folder: None,
+                path: ".".to_string(),
+                prefix: None,
+                secrets: vec![],
+                cors: Cors {
+                    allow_origin: vec![],
+                    allow_headers: vec![],
+                    expose_headers: vec![],
+                    allow_methods: vec![],
+                    allow_credentials: false,
+                    max_age_sec: None,
+                },
+                auths: vec![],
+                rate: None,
+            }
+        }
+    }
 
     impl Default for TypeInteger {
         fn default() -> Self {
@@ -502,6 +526,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })?;
         assert_eq!(
             Lib::init_typegraph(TypegraphInitParams {
@@ -509,6 +534,7 @@ mod tests {
                 dynamic: None,
                 folder: None,
                 path: ".".to_string(),
+                ..Default::default()
             }),
             Err(errors::nested_typegraph_context("test-1"))
         );
@@ -540,6 +566,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })
         .unwrap();
         let tpe = Lib::integerb(TypeInteger::default(), TypeBase::default())?;
@@ -564,6 +591,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })?;
 
         let mat = Lib::register_deno_func(
@@ -610,6 +638,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })?;
 
         let mat =
@@ -666,6 +695,7 @@ mod tests {
             dynamic: None,
             folder: None,
             path: ".".to_string(),
+            ..Default::default()
         })?;
         let mat =
             Lib::register_deno_func(MaterializerDenoFunc::with_code("() => 12"), Effect::None)?;

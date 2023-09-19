@@ -4,11 +4,48 @@ interface core {
 
     type error = string
 
+    // typegraph description
+    record cors {
+        allow-origin: list<string>,
+        allow-headers: list<string>,
+        expose-headers: list<string>,
+        allow-methods: list<string>,
+        allow-credentials: bool,
+        max-age-sec: option<u32>
+    }
+
+    variant auth-protocol {
+        oauth2,
+        jwt,
+        basic,
+    }
+
+    record auth {
+        name: string,
+        protocol: auth-protocol,
+        // string => json string
+        auth-data: list<tuple<string, string>>,
+    }
+
+    record rate {
+        window-limit: u32,
+        window-sec: u32,
+        query-limit: u32,
+        context-identifier: option<string>,
+        local-excess: u32,
+    }
+
     record typegraph-init-params {
         name: string,
         dynamic: option<bool>,
         folder: option<string>,
         path: string,
+        // TypeMeta
+        prefix: option<string>,
+        secrets: list<string>,
+        cors: cors,
+        auths: list<auth>,
+        rate: option<rate>,
     }
 
     init-typegraph: func(params: typegraph-init-params) -> result<_, error>
