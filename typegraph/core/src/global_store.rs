@@ -71,6 +71,7 @@ impl Store {
         }
     }
 
+    /// Collect all the data from all wrapper types, and get the concrete type
     pub fn get_attributes(&self, type_id: TypeId) -> Result<TypeAttributes> {
         let mut type_id = type_id;
         let mut proxy_data: Vec<(String, String)> = Vec::new();
