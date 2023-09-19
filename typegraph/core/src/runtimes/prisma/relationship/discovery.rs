@@ -13,6 +13,7 @@ use super::RelationshipRegistry;
 #[derive(Debug)]
 pub struct Candidate {
     pub source_model: TypeId,
+    pub source_model_name: String,
     pub field_name: String,
     pub wrapper_type: TypeId,
     pub model_type: TypeId,
@@ -48,6 +49,14 @@ impl Candidate {
                         }
                     }
 
+                    let source_model_name = s
+                        .get_type(source_model)?
+                        .get_base()
+                        .unwrap()
+                        .name
+                        .clone()
+                        .ok_or_else(|| String::from("model must have name"))?;
+
                     let model_name = s
                         .get_type(target_type)?
                         .get_base()
@@ -81,6 +90,7 @@ impl Candidate {
 
                     Ok(Some(Candidate {
                         source_model,
+                        source_model_name,
                         field_name: field,
                         wrapper_type: type_id,
                         model_type: target_type,
@@ -100,7 +110,11 @@ impl Candidate {
     fn into_pair(self, registry: &RelationshipRegistry) -> Result<CandidatePair> {
         let alternatives = self.get_alternatives(registry)?;
         match alternatives.len() {
-            0 => Err(format!("no alternatives found for {:?}", self)),
+            0 => Err(errors::no_relationship_target(
+                &self.source_model_name,
+                &self.field_name,
+                &self.model_name,
+            )),
             1 => {
                 let target = alternatives.into_iter().next().unwrap();
                 Ok(CandidatePair(self, target))

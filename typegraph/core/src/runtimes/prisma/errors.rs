@@ -31,3 +31,7 @@ pub fn conflicting_attributes(
     ]
     .join(" ")
 }
+
+pub fn no_relationship_target(model: &str, field: &str, target_model: &str) -> Error {
+    format!(r#"Relationship target field not found for "{model}::{field}" on {target_model:?}."#)
+}

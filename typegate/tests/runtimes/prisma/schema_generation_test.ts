@@ -452,6 +452,7 @@ Meta.test("schema generation", async (t) => {
         `,
       );
 
+      // TODO fix
       // await assertGeneratedSchema(
       //   "multiple-self-relationships",
       //   outdent`
@@ -470,6 +471,4 @@ Meta.test("schema generation", async (t) => {
       // );
     },
   );
-
-  // TODO test missing target
 });

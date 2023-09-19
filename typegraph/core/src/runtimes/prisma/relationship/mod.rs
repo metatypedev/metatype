@@ -371,4 +371,27 @@ mod test {
 
         Ok(())
     }
+
+    #[test]
+    fn test_missing_target() -> Result<(), String> {
+        let user = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("profile", prisma_linkn("Profile").fkey(true).build()?)
+            .named("User")
+            .build()?;
+
+        let _profile = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .named("Profile")
+            .build()?;
+
+        let mut reg = RelationshipRegistry::default();
+        let res = reg.manage(user);
+        assert_eq!(
+            res,
+            Err(errors::no_relationship_target("User", "profile", "Profile"))
+        );
+
+        Ok(())
+    }
 }
