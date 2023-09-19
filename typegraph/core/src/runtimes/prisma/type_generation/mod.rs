@@ -257,7 +257,7 @@ impl TypeGenContext {
                     .ok_or_else(|| "Generated type must be a concrete type".to_string())?
                     .name
                     .as_ref()
-                    .ok_or_else(|| "Generated type must have name".to_string())?;
+                    .ok_or_else(|| format!("Generated type must have name: {type_name}"))?;
                 match name == &type_name {
                     true => Ok(()),
                     false => Err(format!(

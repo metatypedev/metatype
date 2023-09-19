@@ -1,16 +1,7 @@
 // Copyright Metatype OÜ, licensed under the Mozilla Public License Version 2.0.
 // SPDX-License-Identifier: MPL-2.0
 
-use crate::global_store::with_store;
-use crate::t::TypeBuilder;
-use crate::types::TypeId;
-pub(crate) use crate::wit::{
-    core::{Core, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeInteger, TypeOptional, TypeStruct},
-    runtimes::{Effect, MaterializerDenoFunc, Runtimes},
-};
-pub(crate) use crate::Lib;
-pub(crate) use crate::TypegraphInitParams;
-use crate::{errors::Result, t};
+pub(crate) use crate::wit::runtimes::{Effect, MaterializerDenoFunc};
 
 impl MaterializerDenoFunc {
     pub fn with_code(code: impl Into<String>) -> Self {
@@ -154,7 +145,6 @@ pub mod tree {
 
         fn children(&self) -> Cow<[Self::Child]> {
             with_store(|s| {
-                let ty = s.get_type(self.type_id).unwrap();
                 if self
                     .parents
                     .iter()

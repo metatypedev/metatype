@@ -322,15 +322,12 @@ macro_rules! log {
 
 #[cfg(test)]
 mod tests {
+    use crate::errors;
     use crate::global_store::{with_store, with_store_mut};
+    use crate::t::{self, TypeBuilder};
+    use crate::wit::core::Core;
     use crate::wit::core::Cors;
-    use crate::wit::{
-        core::{
-            Core, MaterializerId, TypeArray, TypeBase, TypeFloat, TypeFunc, TypeId, TypeInteger,
-            TypeOptional, TypeStruct,
-        },
-        runtimes::{Effect, MaterializerDenoFunc, Runtimes},
-    };
+    use crate::wit::runtimes::{Effect, MaterializerDenoFunc, Runtimes};
     use crate::Lib;
     use crate::TypegraphInitParams;
 
@@ -354,129 +351,6 @@ mod tests {
                 auths: vec![],
                 rate: None,
             }
-        }
-    }
-
-    impl Default for TypeInteger {
-        fn default() -> Self {
-            Self {
-                min: None,
-                max: None,
-                exclusive_minimum: None,
-                exclusive_maximum: None,
-                multiple_of: None,
-                enumeration: None,
-            }
-        }
-    }
-
-    impl TypeInteger {
-        fn min(mut self, min: i32) -> Self {
-            self.min = Some(min);
-            self
-        }
-        fn max(mut self, max: i32) -> Self {
-            self.max = Some(max);
-            self
-        }
-        fn x_min(mut self, x_min: i32) -> Self {
-            self.exclusive_minimum = Some(x_min);
-            self
-        }
-        fn x_max(mut self, x_max: i32) -> Self {
-            self.exclusive_maximum = Some(x_max);
-            self
-        }
-    }
-
-    impl Default for TypeFloat {
-        fn default() -> Self {
-            Self {
-                min: None,
-                max: None,
-                exclusive_minimum: None,
-                exclusive_maximum: None,
-                multiple_of: None,
-                enumeration: None,
-            }
-        }
-    }
-
-    impl TypeFloat {
-        fn min(mut self, min: f64) -> Self {
-            self.min = Some(min);
-            self
-        }
-        fn max(mut self, max: f64) -> Self {
-            self.max = Some(max);
-            self
-        }
-        fn x_min(mut self, x_min: f64) -> Self {
-            self.exclusive_minimum = Some(x_min);
-            self
-        }
-        fn x_max(mut self, x_max: f64) -> Self {
-            self.exclusive_maximum = Some(x_max);
-            self
-        }
-    }
-
-    impl TypeArray {
-        fn of(index: u32) -> Self {
-            Self {
-                of: index,
-                min: None,
-                max: None,
-                unique_items: None,
-            }
-        }
-    }
-
-    impl TypeOptional {
-        fn of(index: u32) -> Self {
-            Self {
-                of: index,
-                default_item: None,
-            }
-        }
-    }
-
-    impl Default for TypeStruct {
-        fn default() -> Self {
-            Self { props: vec![] }
-        }
-    }
-
-    impl TypeStruct {
-        fn prop(mut self, key: impl Into<String>, type_id: TypeId) -> Self {
-            self.props.push((key.into(), type_id));
-            self
-        }
-    }
-
-    impl TypeFunc {
-        fn new(inp: TypeId, out: TypeId, mat: MaterializerId) -> Self {
-            Self { inp, out, mat }
-        }
-    }
-
-    impl MaterializerDenoFunc {
-        fn with_code(code: impl Into<String>) -> Self {
-            Self {
-                code: code.into(),
-                secrets: vec![],
-            }
-        }
-
-        // fn with_secrets(mut self, secrets: impl Into<Vec<String>>) -> Self {
-        //     self.secrets = secrets.into();
-        //     self
-        // }
-    }
-
-    impl Default for Effect {
-        fn default() -> Self {
-            Self::None
         }
     }
 

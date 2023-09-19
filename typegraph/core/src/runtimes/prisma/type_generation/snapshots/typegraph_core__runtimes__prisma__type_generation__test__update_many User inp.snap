@@ -2,27 +2,27 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.input)"
 ---
-root: struct #101
-├─ [data]: struct '_User_UpdateInput' #80
-│  ├─ [id]: optional #76
-│  │  └─ item: union #75
+root: struct #102
+├─ [data]: struct '_User_UpdateInput' #81
+│  ├─ [id]: optional #77
+│  │  └─ item: union #76
 │  │     ├─ variant_0: integer #63
-│  │     ├─ variant_1: struct #71
+│  │     ├─ variant_1: struct #72
 │  │     │  └─ [set]: integer #63
-│  │     ├─ variant_2: struct #72
+│  │     ├─ variant_2: struct #73
 │  │     │  └─ [multiply]: integer #63
-│  │     ├─ variant_3: struct #73
+│  │     ├─ variant_3: struct #74
 │  │     │  └─ [decrement]: integer #63
-│  │     └─ variant_4: struct #74
+│  │     └─ variant_4: struct #75
 │  │        └─ [increment]: integer #63
-│  └─ [name]: optional #79
-│     └─ item: union #78
+│  └─ [name]: optional #80
+│     └─ item: union #79
 │        ├─ variant_0: string #64
-│        └─ variant_1: struct #77
+│        └─ variant_1: struct #78
 │           └─ [set]: string #64
-└─ [where]: optional 'QueryUserWhereInput?' #100
-   └─ item: struct 'QueryUserWhereInput' #99
-      ├─ [id]: optional '_integer_filter_c?' #88
+└─ [where]: optional 'QueryUserWhereInput?' #101
+   └─ item: struct 'QueryUserWhereInput' #100
+      ├─ [id]: optional '_integer_filter_c?' #89
       │  └─ item: optional '_integer_filter_c' #51
       │     └─ item: union #50
       │        ├─ variant_0: either '_integer_filter' #48
@@ -68,7 +68,7 @@ root: struct #101
       │              └─ variant_5: struct #47
       │                 └─ [notIn]: array #42
       │                    └─ item: integer #40
-      ├─ [name]: optional '_string_filter_c?' #89
+      ├─ [name]: optional '_string_filter_c?' #90
       │  └─ item: optional '_string_filter_c' #37
       │     └─ item: union #36
       │        ├─ variant_0: union '_string_filter' #34
@@ -118,9 +118,9 @@ root: struct #101
       │                 │  └─ item: string #22
       │                 └─ [endsWith]: optional #23
       │                    └─ item: string #22
-      ├─ [posts]: optional '_70WithFilters_norel?' #93
-      │  └─ item: struct '_70WithFilters_norel' #92
-      │     ├─ [id]: optional '_integer_filter_c?' #90
+      ├─ [posts]: optional '_71WithFilters_norel?' #94
+      │  └─ item: struct '_71WithFilters_norel' #93
+      │     ├─ [id]: optional '_integer_filter_c?' #91
       │     │  └─ item: optional '_integer_filter_c' #51
       │     │     └─ item: union #50
       │     │        ├─ variant_0: either '_integer_filter' #48
@@ -166,7 +166,7 @@ root: struct #101
       │     │              └─ variant_5: struct #47
       │     │                 └─ [notIn]: array #42
       │     │                    └─ item: integer #40
-      │     └─ [title]: optional '_string_filter_c?' #91
+      │     └─ [title]: optional '_string_filter_c?' #92
       │        └─ item: optional '_string_filter_c' #37
       │           └─ item: union #36
       │              ├─ variant_0: union '_string_filter' #34
@@ -216,12 +216,12 @@ root: struct #101
       │                       │  └─ item: string #22
       │                       └─ [endsWith]: optional #23
       │                          └─ item: string #22
-      ├─ [AND]: optional 'QueryUserWhereInput[]?' #97
-      │  └─ item: array 'QueryUserWhereInput[]' #96
-      │     └─ item: &QueryUserWhereInput #95
-      ├─ [OR]: optional 'QueryUserWhereInput[]?' #97
-      │  └─ item: array 'QueryUserWhereInput[]' #96
-      │     └─ item: &QueryUserWhereInput #95
-      └─ [NOT]: optional 'QueryUserWhereInput?' #98
-         └─ item: &QueryUserWhereInput #95
+      ├─ [AND]: optional 'QueryUserWhereInput[]?' #98
+      │  └─ item: array 'QueryUserWhereInput[]' #97
+      │     └─ item: &QueryUserWhereInput #96
+      ├─ [OR]: optional 'QueryUserWhereInput[]?' #98
+      │  └─ item: array 'QueryUserWhereInput[]' #97
+      │     └─ item: &QueryUserWhereInput #96
+      └─ [NOT]: optional 'QueryUserWhereInput?' #99
+         └─ item: &QueryUserWhereInput #96
 

@@ -2,29 +2,29 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.input)"
 ---
-root: struct #33
-└─ [data]: array '_User_CreateInput[]' #32
-   └─ item: struct '_User_CreateInput' #31
+root: struct #34
+└─ [data]: array '_User_CreateInput[]' #33
+   └─ item: struct '_User_CreateInput' #32
       ├─ [id]: integer #11
       ├─ [name]: string #12
-      └─ [posts]: optional #30
-         └─ item: struct #29
-            ├─ [create]: optional '_Post_CreateInput_excluding_UserToPost?' #21
-            │  └─ item: struct '_Post_CreateInput_excluding_UserToPost' #20
-            │     ├─ [id]: optional #19
+      └─ [posts]: optional #31
+         └─ item: struct #30
+            ├─ [create]: optional '_Post_CreateInput_excluding___rel_Post_User_1?' #22
+            │  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #21
+            │     ├─ [id]: optional #20
             │     │  └─ item: integer #16
             │     └─ [title]: string #17
-            ├─ [connect]: optional 'PostWhere_norel?' #25
-            │  └─ item: struct 'PostWhere_norel' #24
-            │     ├─ [id]: optional #22
+            ├─ [connect]: optional 'PostWhere_norel?' #26
+            │  └─ item: struct 'PostWhere_norel' #25
+            │     ├─ [id]: optional #23
             │     │  └─ item: integer #16
-            │     └─ [title]: optional #23
+            │     └─ [title]: optional #24
             │        └─ item: string #17
-            └─ [createMany]: optional #28
-               └─ item: struct #27
-                  └─ [data]: array '_Post_CreateInput_excluding_UserToPost[]' #26
-                     └─ item: struct '_Post_CreateInput_excluding_UserToPost' #20
-                        ├─ [id]: optional #19
+            └─ [createMany]: optional #29
+               └─ item: struct #28
+                  └─ [data]: array '_Post_CreateInput_excluding___rel_Post_User_1[]' #27
+                     └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #21
+                        ├─ [id]: optional #20
                         │  └─ item: integer #16
                         └─ [title]: string #17
 

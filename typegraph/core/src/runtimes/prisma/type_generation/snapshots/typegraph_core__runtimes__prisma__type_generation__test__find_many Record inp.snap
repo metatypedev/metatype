@@ -159,8 +159,8 @@ root: struct '_Record_QueryInput' #65
 │     │     └─ item: &QueryRecordWhereInput #41
 │     └─ [NOT]: optional 'QueryRecordWhereInput?' #44
 │        └─ item: &QueryRecordWhereInput #41
-├─ [orderBy]: optional '_4_OrderBy?' #57
-│  └─ item: array '_4_OrderBy' #56
+├─ [orderBy]: optional '_Record_OrderBy?' #57
+│  └─ item: array '_Record_OrderBy' #56
 │     └─ item: struct #55
 │        ├─ [id]: optional '_Sort' #51
 │        │  └─ item: union #50
@@ -182,7 +182,7 @@ root: struct '_Record_QueryInput' #65
 │  └─ item: integer '_Take' #58
 ├─ [skip]: optional '_Skip?' #61
 │  └─ item: integer '_Skip' #60
-└─ [distinct]: optional '_KeysOf_Record[]?' #64
-   └─ item: array '_KeysOf_Record[]' #63
-      └─ item: string '_KeysOf_Record' #62 enum{ '"id"', '"name"', '"age"' }
+└─ [distinct]: optional '_KeysOf_Record?' #64
+   └─ item: array '_KeysOf_Record' #63
+      └─ item: string #62 enum{ '"id"', '"name"', '"age"' }
 

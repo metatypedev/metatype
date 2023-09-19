@@ -326,7 +326,7 @@ mod test {
             .named("Node")
             .build()?;
 
-        let registry = with_store(|s| -> Result<_> {
+        let registry = with_store(|_| -> Result<_> {
             let mut reg = RelationshipRegistry::default();
             reg.manage(node)?;
             Ok(reg)

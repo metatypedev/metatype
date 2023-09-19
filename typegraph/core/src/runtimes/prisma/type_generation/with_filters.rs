@@ -224,6 +224,7 @@ impl TypeGen for NumberFilter {
                 t::struct_().prop("_min", base).build()?,
                 t::struct_().prop("_max", base).build()?,
             ])
+            .named(self.name(context))
             .build()
         } else {
             let type_id = match self.number_type {

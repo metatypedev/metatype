@@ -44,7 +44,9 @@ impl TypeGen for Distinct {
             })
         })?;
 
-        t::array(t::string().enum_(cols).named(self.name(context)).build()?).build()
+        t::array(t::string().enum_(cols).build()?)
+            .named(self.name(context))
+            .build()
     }
 
     fn name(&self, context: &TypeGenContext) -> String {
