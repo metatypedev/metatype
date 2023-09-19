@@ -20,9 +20,9 @@ root: struct #135
 │        ├─ variant_0: string #69
 │        └─ variant_1: struct #111
 │           └─ [set]: string #69
-└─ [where]: optional 'QueryPostWhereInput?' #134
+└─ [where]: optional '_134_QueryPostWhereInput?' #134
    └─ item: struct 'QueryPostWhereInput' #133
-      ├─ [id]: optional '_integer_filter_c?' #122
+      ├─ [id]: optional '_122__integer_filter_c?' #122
       │  └─ item: optional '_integer_filter_c' #51
       │     └─ item: union #50
       │        ├─ variant_0: either '_integer_filter' #48
@@ -68,7 +68,7 @@ root: struct #135
       │              └─ variant_5: struct #47
       │                 └─ [notIn]: array #42
       │                    └─ item: integer #40
-      ├─ [title]: optional '_string_filter_c?' #123
+      ├─ [title]: optional '_123__string_filter_c?' #123
       │  └─ item: optional '_string_filter_c' #37
       │     └─ item: union #36
       │        ├─ variant_0: union '_string_filter' #34
@@ -118,9 +118,9 @@ root: struct #135
       │                 │  └─ item: string #22
       │                 └─ [endsWith]: optional #23
       │                    └─ item: string #22
-      ├─ [author]: optional '_67WithFilters_norel?' #127
+      ├─ [author]: optional '_127__67WithFilters_norel?' #127
       │  └─ item: struct '_67WithFilters_norel' #126
-      │     ├─ [id]: optional '_integer_filter_c?' #124
+      │     ├─ [id]: optional '_124__integer_filter_c?' #124
       │     │  └─ item: optional '_integer_filter_c' #51
       │     │     └─ item: union #50
       │     │        ├─ variant_0: either '_integer_filter' #48
@@ -166,7 +166,7 @@ root: struct #135
       │     │              └─ variant_5: struct #47
       │     │                 └─ [notIn]: array #42
       │     │                    └─ item: integer #40
-      │     └─ [name]: optional '_string_filter_c?' #125
+      │     └─ [name]: optional '_125__string_filter_c?' #125
       │        └─ item: optional '_string_filter_c' #37
       │           └─ item: union #36
       │              ├─ variant_0: union '_string_filter' #34
@@ -216,12 +216,12 @@ root: struct #135
       │                       │  └─ item: string #22
       │                       └─ [endsWith]: optional #23
       │                          └─ item: string #22
-      ├─ [AND]: optional 'QueryPostWhereInput[]?' #131
-      │  └─ item: array 'QueryPostWhereInput[]' #130
+      ├─ [AND]: optional '_131__130_QueryPostWhereInput[]?' #131
+      │  └─ item: array '_130_QueryPostWhereInput[]' #130
       │     └─ item: &QueryPostWhereInput #129
-      ├─ [OR]: optional 'QueryPostWhereInput[]?' #131
-      │  └─ item: array 'QueryPostWhereInput[]' #130
+      ├─ [OR]: optional '_131__130_QueryPostWhereInput[]?' #131
+      │  └─ item: array '_130_QueryPostWhereInput[]' #130
       │     └─ item: &QueryPostWhereInput #129
-      └─ [NOT]: optional 'QueryPostWhereInput?' #132
+      └─ [NOT]: optional '_132_QueryPostWhereInput?' #132
          └─ item: &QueryPostWhereInput #129
 

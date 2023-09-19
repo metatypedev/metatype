@@ -3,9 +3,9 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.input)"
 ---
 root: struct '_Record_QueryInput' #65
-├─ [where]: optional 'QueryRecordWhereInput?' #46
+├─ [where]: optional '_46_QueryRecordWhereInput?' #46
 │  └─ item: struct 'QueryRecordWhereInput' #45
-│     ├─ [id]: optional '_string_filter_c?' #25
+│     ├─ [id]: optional '_25__string_filter_c?' #25
 │     │  └─ item: optional '_string_filter_c' #24
 │     │     └─ item: union #23
 │     │        ├─ variant_0: union '_string_filter' #21
@@ -55,7 +55,7 @@ root: struct '_Record_QueryInput' #65
 │     │                 │  └─ item: string #9
 │     │                 └─ [endsWith]: optional #10
 │     │                    └─ item: string #9
-│     ├─ [name]: optional '_string_filter_c?' #26
+│     ├─ [name]: optional '_26__string_filter_c?' #26
 │     │  └─ item: optional '_string_filter_c' #24
 │     │     └─ item: union #23
 │     │        ├─ variant_0: union '_string_filter' #21
@@ -105,7 +105,7 @@ root: struct '_Record_QueryInput' #65
 │     │                 │  └─ item: string #9
 │     │                 └─ [endsWith]: optional #10
 │     │                    └─ item: string #9
-│     ├─ [age]: optional '_integer_filter_c?' #39
+│     ├─ [age]: optional '_39__integer_filter_c?' #39
 │     │  └─ item: optional '_integer_filter_c' #38
 │     │     └─ item: union #37
 │     │        ├─ variant_0: either '_integer_filter' #35
@@ -151,15 +151,15 @@ root: struct '_Record_QueryInput' #65
 │     │              └─ variant_5: struct #34
 │     │                 └─ [notIn]: array #29
 │     │                    └─ item: integer #27
-│     ├─ [AND]: optional 'QueryRecordWhereInput[]?' #43
-│     │  └─ item: array 'QueryRecordWhereInput[]' #42
+│     ├─ [AND]: optional '_43__42_QueryRecordWhereInput[]?' #43
+│     │  └─ item: array '_42_QueryRecordWhereInput[]' #42
 │     │     └─ item: &QueryRecordWhereInput #41
-│     ├─ [OR]: optional 'QueryRecordWhereInput[]?' #43
-│     │  └─ item: array 'QueryRecordWhereInput[]' #42
+│     ├─ [OR]: optional '_43__42_QueryRecordWhereInput[]?' #43
+│     │  └─ item: array '_42_QueryRecordWhereInput[]' #42
 │     │     └─ item: &QueryRecordWhereInput #41
-│     └─ [NOT]: optional 'QueryRecordWhereInput?' #44
+│     └─ [NOT]: optional '_44_QueryRecordWhereInput?' #44
 │        └─ item: &QueryRecordWhereInput #41
-├─ [orderBy]: optional '_Record_OrderBy?' #57
+├─ [orderBy]: optional '_57__Record_OrderBy?' #57
 │  └─ item: array '_Record_OrderBy' #56
 │     └─ item: struct #55
 │        ├─ [id]: optional '_Sort' #51
@@ -178,11 +178,11 @@ root: struct '_Record_QueryInput' #65
 │              │  ├─ [sort]: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
 │              │  └─ [nulls]: string '_NullsOrder' #48 enum{ '"first"', '"last"' }
 │              └─ variant_1: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
-├─ [take]: optional '_Take?' #59
+├─ [take]: optional '_59__Take?' #59
 │  └─ item: integer '_Take' #58
-├─ [skip]: optional '_Skip?' #61
+├─ [skip]: optional '_61__Skip?' #61
 │  └─ item: integer '_Skip' #60
-└─ [distinct]: optional '_KeysOf_Record?' #64
+└─ [distinct]: optional '_64__KeysOf_Record?' #64
    └─ item: array '_KeysOf_Record' #63
       └─ item: string #62 enum{ '"id"', '"name"', '"age"' }
 

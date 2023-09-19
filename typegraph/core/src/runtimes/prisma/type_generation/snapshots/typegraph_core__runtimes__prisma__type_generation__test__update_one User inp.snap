@@ -10,12 +10,12 @@ root: struct #39
 │  │  └─ item: string #14
 │  └─ [posts]: optional #35
 │     └─ item: struct #34
-│        ├─ [create]: optional '_Post_CreateInput_excluding___rel_Post_User_1?' #26
+│        ├─ [create]: optional '_26__Post_CreateInput_excluding___rel_Post_User_1?' #26
 │        │  └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #25
 │        │     ├─ [id]: optional #24
 │        │     │  └─ item: integer #18
 │        │     └─ [title]: string #19
-│        ├─ [connect]: optional 'PostWhere_norel?' #30
+│        ├─ [connect]: optional '_30_PostWhere_norel?' #30
 │        │  └─ item: struct 'PostWhere_norel' #29
 │        │     ├─ [id]: optional #27
 │        │     │  └─ item: integer #18
@@ -23,7 +23,7 @@ root: struct #39
 │        │        └─ item: string #19
 │        └─ [createMany]: optional #33
 │           └─ item: struct #32
-│              └─ [data]: array '_Post_CreateInput_excluding___rel_Post_User_1[]' #31
+│              └─ [data]: array '_31__Post_CreateInput_excluding___rel_Post_User_1[]' #31
 │                 └─ item: struct '_Post_CreateInput_excluding___rel_Post_User_1' #25
 │                    ├─ [id]: optional #24
 │                    │  └─ item: integer #18

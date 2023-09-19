@@ -197,7 +197,7 @@ class Boolean extends Typedef {
   }
 }
 
-export function boolean(base: SimplifiedBase<TypeBase>) {
+export function boolean(base: SimplifiedBase<TypeBase> = {}) {
   const completeBase = {
     ...base,
     asId: false,

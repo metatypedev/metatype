@@ -2,7 +2,7 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.output)"
 ---
-root: optional 'RecordWithNestedCount?' #10
+root: optional '_10_RecordWithNestedCount?' #10
 └─ item: struct 'RecordWithNestedCount' #9
    ├─ [id]: string #0
    ├─ [name]: string #1

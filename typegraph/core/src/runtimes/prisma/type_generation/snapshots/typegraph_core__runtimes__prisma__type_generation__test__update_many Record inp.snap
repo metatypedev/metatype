@@ -27,9 +27,9 @@ root: struct #60
 │        │  └─ [decrement]: integer #2
 │        └─ variant_4: struct #14
 │           └─ [increment]: integer #2
-└─ [where]: optional 'QueryRecordWhereInput?' #59
+└─ [where]: optional '_59_QueryRecordWhereInput?' #59
    └─ item: struct 'QueryRecordWhereInput' #58
-      ├─ [id]: optional '_string_filter_c?' #38
+      ├─ [id]: optional '_38__string_filter_c?' #38
       │  └─ item: optional '_string_filter_c' #37
       │     └─ item: union #36
       │        ├─ variant_0: union '_string_filter' #34
@@ -79,7 +79,7 @@ root: struct #60
       │                 │  └─ item: string #22
       │                 └─ [endsWith]: optional #23
       │                    └─ item: string #22
-      ├─ [name]: optional '_string_filter_c?' #39
+      ├─ [name]: optional '_39__string_filter_c?' #39
       │  └─ item: optional '_string_filter_c' #37
       │     └─ item: union #36
       │        ├─ variant_0: union '_string_filter' #34
@@ -129,7 +129,7 @@ root: struct #60
       │                 │  └─ item: string #22
       │                 └─ [endsWith]: optional #23
       │                    └─ item: string #22
-      ├─ [age]: optional '_integer_filter_c?' #52
+      ├─ [age]: optional '_52__integer_filter_c?' #52
       │  └─ item: optional '_integer_filter_c' #51
       │     └─ item: union #50
       │        ├─ variant_0: either '_integer_filter' #48
@@ -175,12 +175,12 @@ root: struct #60
       │              └─ variant_5: struct #47
       │                 └─ [notIn]: array #42
       │                    └─ item: integer #40
-      ├─ [AND]: optional 'QueryRecordWhereInput[]?' #56
-      │  └─ item: array 'QueryRecordWhereInput[]' #55
+      ├─ [AND]: optional '_56__55_QueryRecordWhereInput[]?' #56
+      │  └─ item: array '_55_QueryRecordWhereInput[]' #55
       │     └─ item: &QueryRecordWhereInput #54
-      ├─ [OR]: optional 'QueryRecordWhereInput[]?' #56
-      │  └─ item: array 'QueryRecordWhereInput[]' #55
+      ├─ [OR]: optional '_56__55_QueryRecordWhereInput[]?' #56
+      │  └─ item: array '_55_QueryRecordWhereInput[]' #55
       │     └─ item: &QueryRecordWhereInput #54
-      └─ [NOT]: optional 'QueryRecordWhereInput?' #57
+      └─ [NOT]: optional '_57_QueryRecordWhereInput?' #57
          └─ item: &QueryRecordWhereInput #54
 

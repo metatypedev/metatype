@@ -2,7 +2,7 @@
 source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.output)"
 ---
-root: optional '_PostOutputType?' #146
+root: optional '_146__PostOutputType?' #146
 └─ item: struct '_PostOutputType' #145
    ├─ [id]: integer #73
    ├─ [title]: string #74

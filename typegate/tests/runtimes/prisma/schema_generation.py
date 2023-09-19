@@ -470,24 +470,28 @@ def multiple_relationships_2(g: Graph):
     )
 
 
-# @typegraph()
-# def multiple_self_relationships(g: Graph):
-#     db = PrismaRuntime("test", "POSTGRES")
-#
-#     person = t.struct(
-#         {
-#             "id": t.uuid(as_id=True, config={"auto": True}),
-#             "personal_hero": db.link(
-#                 t.ref("Person").optional(config={"unique": True}), field="hero_of"
-#             ),
-#             "hero_of": t.ref("Person").optional(),
-#             "mother": t.ref("Person").optional(),
-#             "children": db.link(t.array(t.ref("Person")), field="mother"),
-#         },
-#         name="Person",
-#     )
-#
-#     # TODO db.create(user) fails here
-#     g.expose(
-#         createPerson=db.find_unique(person),
-#     )
+@typegraph()
+def multiple_self_relationships(g: Graph):
+    db = PrismaRuntime("test", "POSTGRES")
+
+    person = t.struct(
+        {
+            "id": t.uuid(as_id=True, config={"auto": True}),
+            "personal_hero": db.link(
+                t.ref("Person").optional(config={"unique": True}),
+                field="hero_of"
+                # t.ref("Person").optional(),
+                # field="hero_of",
+                # unique=True,
+            ),
+            "hero_of": t.ref("Person").optional(),
+            "mother": t.ref("Person").optional(),
+            "children": db.link(t.array(t.ref("Person")), field="mother"),
+        },
+        name="Person",
+    )
+
+    # TODO db.create(user) fails here
+    g.expose(
+        createPerson=db.find_unique(person),
+    )

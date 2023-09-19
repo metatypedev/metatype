@@ -136,8 +136,11 @@ class PrismaRuntime(Runtime):
         *,
         fkey: Optional[bool] = None,
         field: Optional[str] = None,
+        unique: Optional[bool] = None,
     ):
-        return prisma_link(target_type, name=name, fkey=fkey, field=field)
+        return prisma_link(
+            target_type, name=name, fkey=fkey, field=field, unique=unique
+        )
 
 
 def prisma_link(
@@ -146,6 +149,7 @@ def prisma_link(
     *,
     fkey: Optional[bool] = None,
     field: Optional[str] = None,
+    unique: Optional[bool] = None,
 ):
     if isinstance(target_type, str):
         target_type = t.ref(target_type)
@@ -156,6 +160,7 @@ def prisma_link(
             relationship_name=name,
             foreign_key=fkey,
             target_field=field,
+            unique=unique,
         ),
     )
 

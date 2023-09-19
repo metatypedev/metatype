@@ -68,8 +68,7 @@ impl TypeGen for OrderBy {
                             None
                         } else {
                             let rel = context.registry.relationships.get(rel_name).unwrap();
-                            let relationship_model =
-                                rel.get(rel.side_of_model(self.model_id).unwrap().opposite());
+                            let relationship_model = rel.get_opposite_of(self.model_id, k).unwrap();
                             match relationship_model.cardinality {
                                 Cardinality::Optional | Cardinality::One => Some((
                                     k.clone(),

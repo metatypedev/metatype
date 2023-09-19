@@ -7,11 +7,19 @@ use crate::wit::core::Error;
 //     format!("relationship target not found for  {source_model}::{field}")
 // }
 
-pub fn ambiguous_side(first_model: &str, second_model: &str) -> Error {
+pub fn ambiguous_side(
+    first_model: &str,
+    first_field: &str,
+    second_model: &str,
+    second_field: &str,
+) -> Error {
     [
         "Ambiguous side:",
         "cannot determine which model should have the foreign key:",
-        &format!("{:?} or {:?}", first_model, second_model),
+        &format!(
+            "{}::{} or {}::{}",
+            first_model, first_field, second_model, second_field
+        ),
         "Please add 'fkey' or 'unique' attribute on one side",
     ]
     .join(" ")

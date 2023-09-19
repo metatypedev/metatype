@@ -3,9 +3,9 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.input)"
 ---
 root: struct '_User_QueryInput' #107
-├─ [where]: optional 'QueryUserWhereInput?' #96
+├─ [where]: optional '_96_QueryUserWhereInput?' #96
 │  └─ item: struct 'QueryUserWhereInput' #95
-│     ├─ [id]: optional '_integer_filter_c?' #84
+│     ├─ [id]: optional '_84__integer_filter_c?' #84
 │     │  └─ item: optional '_integer_filter_c' #38
 │     │     └─ item: union #37
 │     │        ├─ variant_0: either '_integer_filter' #35
@@ -51,7 +51,7 @@ root: struct '_User_QueryInput' #107
 │     │              └─ variant_5: struct #34
 │     │                 └─ [notIn]: array #29
 │     │                    └─ item: integer #27
-│     ├─ [name]: optional '_string_filter_c?' #85
+│     ├─ [name]: optional '_85__string_filter_c?' #85
 │     │  └─ item: optional '_string_filter_c' #24
 │     │     └─ item: union #23
 │     │        ├─ variant_0: union '_string_filter' #21
@@ -101,9 +101,9 @@ root: struct '_User_QueryInput' #107
 │     │                 │  └─ item: string #9
 │     │                 └─ [endsWith]: optional #10
 │     │                    └─ item: string #9
-│     ├─ [posts]: optional '_76WithFilters_norel?' #89
+│     ├─ [posts]: optional '_89__76WithFilters_norel?' #89
 │     │  └─ item: struct '_76WithFilters_norel' #88
-│     │     ├─ [id]: optional '_integer_filter_c?' #86
+│     │     ├─ [id]: optional '_86__integer_filter_c?' #86
 │     │     │  └─ item: optional '_integer_filter_c' #38
 │     │     │     └─ item: union #37
 │     │     │        ├─ variant_0: either '_integer_filter' #35
@@ -149,7 +149,7 @@ root: struct '_User_QueryInput' #107
 │     │     │              └─ variant_5: struct #34
 │     │     │                 └─ [notIn]: array #29
 │     │     │                    └─ item: integer #27
-│     │     └─ [title]: optional '_string_filter_c?' #87
+│     │     └─ [title]: optional '_87__string_filter_c?' #87
 │     │        └─ item: optional '_string_filter_c' #24
 │     │           └─ item: union #23
 │     │              ├─ variant_0: union '_string_filter' #21
@@ -199,15 +199,15 @@ root: struct '_User_QueryInput' #107
 │     │                       │  └─ item: string #9
 │     │                       └─ [endsWith]: optional #10
 │     │                          └─ item: string #9
-│     ├─ [AND]: optional 'QueryUserWhereInput[]?' #93
-│     │  └─ item: array 'QueryUserWhereInput[]' #92
+│     ├─ [AND]: optional '_93__92_QueryUserWhereInput[]?' #93
+│     │  └─ item: array '_92_QueryUserWhereInput[]' #92
 │     │     └─ item: &QueryUserWhereInput #91
-│     ├─ [OR]: optional 'QueryUserWhereInput[]?' #93
-│     │  └─ item: array 'QueryUserWhereInput[]' #92
+│     ├─ [OR]: optional '_93__92_QueryUserWhereInput[]?' #93
+│     │  └─ item: array '_92_QueryUserWhereInput[]' #92
 │     │     └─ item: &QueryUserWhereInput #91
-│     └─ [NOT]: optional 'QueryUserWhereInput?' #94
+│     └─ [NOT]: optional '_94_QueryUserWhereInput?' #94
 │        └─ item: &QueryUserWhereInput #91
-├─ [orderBy]: optional '_User_OrderBy?' #101
+├─ [orderBy]: optional '_101__User_OrderBy?' #101
 │  └─ item: array '_User_OrderBy' #100
 │     └─ item: struct #99
 │        ├─ [id]: optional '_Sort' #51
@@ -247,11 +247,11 @@ root: struct '_User_QueryInput' #107
 │                    ├─ variant_0: struct #49
 │                    │  └─ [sort]: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
 │                    └─ variant_1: string '_SortOrder' #47 enum{ '"asc"', '"desc"' }
-├─ [take]: optional '_Take?' #102
+├─ [take]: optional '_102__Take?' #102
 │  └─ item: integer '_Take' #58
-├─ [skip]: optional '_Skip?' #103
+├─ [skip]: optional '_103__Skip?' #103
 │  └─ item: integer '_Skip' #60
-└─ [distinct]: optional '_KeysOf_User?' #106
+└─ [distinct]: optional '_106__KeysOf_User?' #106
    └─ item: array '_KeysOf_User' #105
       └─ item: string #104 enum{ '"id"', '"name"', '"posts"' }
 

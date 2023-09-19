@@ -20,9 +20,9 @@ root: struct #102
 │        ├─ variant_0: string #64
 │        └─ variant_1: struct #78
 │           └─ [set]: string #64
-└─ [where]: optional 'QueryUserWhereInput?' #101
+└─ [where]: optional '_101_QueryUserWhereInput?' #101
    └─ item: struct 'QueryUserWhereInput' #100
-      ├─ [id]: optional '_integer_filter_c?' #89
+      ├─ [id]: optional '_89__integer_filter_c?' #89
       │  └─ item: optional '_integer_filter_c' #51
       │     └─ item: union #50
       │        ├─ variant_0: either '_integer_filter' #48
@@ -68,7 +68,7 @@ root: struct #102
       │              └─ variant_5: struct #47
       │                 └─ [notIn]: array #42
       │                    └─ item: integer #40
-      ├─ [name]: optional '_string_filter_c?' #90
+      ├─ [name]: optional '_90__string_filter_c?' #90
       │  └─ item: optional '_string_filter_c' #37
       │     └─ item: union #36
       │        ├─ variant_0: union '_string_filter' #34
@@ -118,9 +118,9 @@ root: struct #102
       │                 │  └─ item: string #22
       │                 └─ [endsWith]: optional #23
       │                    └─ item: string #22
-      ├─ [posts]: optional '_71WithFilters_norel?' #94
+      ├─ [posts]: optional '_94__71WithFilters_norel?' #94
       │  └─ item: struct '_71WithFilters_norel' #93
-      │     ├─ [id]: optional '_integer_filter_c?' #91
+      │     ├─ [id]: optional '_91__integer_filter_c?' #91
       │     │  └─ item: optional '_integer_filter_c' #51
       │     │     └─ item: union #50
       │     │        ├─ variant_0: either '_integer_filter' #48
@@ -166,7 +166,7 @@ root: struct #102
       │     │              └─ variant_5: struct #47
       │     │                 └─ [notIn]: array #42
       │     │                    └─ item: integer #40
-      │     └─ [title]: optional '_string_filter_c?' #92
+      │     └─ [title]: optional '_92__string_filter_c?' #92
       │        └─ item: optional '_string_filter_c' #37
       │           └─ item: union #36
       │              ├─ variant_0: union '_string_filter' #34
@@ -216,12 +216,12 @@ root: struct #102
       │                       │  └─ item: string #22
       │                       └─ [endsWith]: optional #23
       │                          └─ item: string #22
-      ├─ [AND]: optional 'QueryUserWhereInput[]?' #98
-      │  └─ item: array 'QueryUserWhereInput[]' #97
+      ├─ [AND]: optional '_98__97_QueryUserWhereInput[]?' #98
+      │  └─ item: array '_97_QueryUserWhereInput[]' #97
       │     └─ item: &QueryUserWhereInput #96
-      ├─ [OR]: optional 'QueryUserWhereInput[]?' #98
-      │  └─ item: array 'QueryUserWhereInput[]' #97
+      ├─ [OR]: optional '_98__97_QueryUserWhereInput[]?' #98
+      │  └─ item: array '_97_QueryUserWhereInput[]' #97
       │     └─ item: &QueryUserWhereInput #96
-      └─ [NOT]: optional 'QueryUserWhereInput?' #99
+      └─ [NOT]: optional '_99_QueryUserWhereInput?' #99
          └─ item: &QueryUserWhereInput #96
 

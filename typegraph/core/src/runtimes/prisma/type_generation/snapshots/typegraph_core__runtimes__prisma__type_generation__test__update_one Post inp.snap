@@ -10,11 +10,11 @@ root: struct #56
 │  │  └─ item: string #19
 │  └─ [author]: optional #52
 │     └─ item: struct #51
-│        ├─ [create]: optional '_User_CreateInput_excluding___rel_Post_User_1?' #46
+│        ├─ [create]: optional '_46__User_CreateInput_excluding___rel_Post_User_1?' #46
 │        │  └─ item: struct '_User_CreateInput_excluding___rel_Post_User_1' #45
 │        │     ├─ [id]: integer #13
 │        │     └─ [name]: string #14
-│        └─ [connect]: optional 'UserWhere_norel?' #50
+│        └─ [connect]: optional '_50_UserWhere_norel?' #50
 │           └─ item: struct 'UserWhere_norel' #49
 │              ├─ [id]: optional #47
 │              │  └─ item: integer #13

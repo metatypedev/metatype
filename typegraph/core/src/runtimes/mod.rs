@@ -393,6 +393,9 @@ impl wit::Runtimes for crate::Lib {
         if let Some(field) = data.target_field {
             builder = builder.field(field);
         }
+        if let Some(unique) = data.unique {
+            builder = builder.unique(unique);
+        }
         Ok(builder.build()?.into())
     }
 }

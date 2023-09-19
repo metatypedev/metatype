@@ -69,8 +69,7 @@ impl TypeGen for WithFilters {
                         continue;
                     }
 
-                    let target_model =
-                        rel.get(rel.side_of_model(self.model_id).unwrap().opposite());
+                    let target_model = rel.get_opposite_of(self.model_id, k).unwrap();
                     props.push(Prop {
                         key: k.to_string(),
                         prop_type: PropType::Model(target_model.model_type),

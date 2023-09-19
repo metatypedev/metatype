@@ -51,8 +51,7 @@ impl TypeGen for WithNestedCount {
                         continue;
                     }
                     // TODO get_concrete_type(resolve_proxy=true)
-                    let relation_model =
-                        rel.get(rel.side_of_model(self.model_id).unwrap().opposite());
+                    let relation_model = rel.get_opposite_of(self.model_id, k).unwrap();
                     match relation_model.cardinality {
                         Cardinality::Optional => {
                             props.push(Prop::Prisma {

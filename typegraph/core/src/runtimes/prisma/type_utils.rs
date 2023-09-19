@@ -14,8 +14,8 @@ use super::relationship::Cardinality;
 
 impl TypeAttributes {
     pub fn is_unique_ref(&self) -> Result<bool> {
-        with_store(|s| {
-            let base = self.concrete_type.as_type(s).unwrap().get_base().unwrap();
+        with_store(|s| -> Result<_> {
+            let base = self.concrete_type.as_type(s)?.get_base().unwrap();
             Ok(base
                 .runtime_config
                 .iter()

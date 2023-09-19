@@ -238,7 +238,7 @@ impl CandidatePair {
                             (true, false) => Ok(Self(first, second)),
                             (false, true) => Ok(Self(second, first)),
                             (true, true) => Err(errors::conflicting_attributes("unique", &first.model_name, &second.field_name, &second.model_name, &first.field_name)),
-                            (false, false) => Err(errors::ambiguous_side(&first.model_name, &second.model_name)),
+                            (false, false) => Err(errors::ambiguous_side(&first.model_name, &second.field_name, &second.model_name, &first.field_name)),
                         }
                     }
                 }

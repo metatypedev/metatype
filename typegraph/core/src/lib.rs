@@ -149,36 +149,47 @@ impl wit::core::Core for Lib {
             }
         }
         with_store_mut(move |s| -> Result<_> {
-            let base = match s.get_type_name(data.of.into())? {
-                Some(name) => {
-                    // TODO
-                    let name = format!("{}[]", name);
-                    TypeBase {
-                        name: Some(name),
-                        ..base
-                    }
-                }
-                None => base,
+            let inner_name = match base.name {
+                Some(_) => None,
+                None => s.get_type_name(data.of.into())?.map(|s| s.to_owned()),
             };
-            Ok(s.add_type(|id| Type::Array(Array { id, base, data }))
-                .into())
+            Ok(s.add_type(|id| {
+                let base = match inner_name {
+                    Some(name) => {
+                        let name = format!("_{}_{}[]", id.0, name);
+                        TypeBase {
+                            name: Some(name),
+                            ..base
+                        }
+                    }
+                    None => base,
+                };
+                Type::Array(Array { id, base, data })
+            })
+            .into())
         })
     }
 
     fn optionalb(data: TypeOptional, base: TypeBase) -> Result<CoreTypeId> {
         with_store_mut(move |s| -> Result<_> {
-            let base = match s.get_type_name(data.of.into())? {
-                Some(name) => {
-                    let name = format!("{}?", name);
-                    TypeBase {
-                        name: Some(name),
-                        ..base
-                    }
-                }
-                None => base,
+            let inner_name = match base.name {
+                Some(_) => None,
+                None => s.get_type_name(data.of.into())?.map(|s| s.to_owned()),
             };
-            Ok(s.add_type(|id| Type::Optional(Optional { id, base, data }))
-                .into())
+            Ok(s.add_type(|id| {
+                let base = match inner_name {
+                    Some(name) => {
+                        let name = format!("_{}_{}?", id.0, name);
+                        TypeBase {
+                            name: Some(name),
+                            ..base
+                        }
+                    }
+                    None => base,
+                };
+                Type::Optional(Optional { id, base, data })
+            })
+            .into())
         })
     }
 

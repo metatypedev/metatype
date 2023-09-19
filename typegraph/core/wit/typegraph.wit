@@ -331,6 +331,7 @@ interface runtimes {
         relationship-name: option<string>,
         foreign-key: option<bool>,
         target-field: option<string>,
+        unique: option<bool>,
     }
 
     register-prisma-runtime: func(data: prisma-runtime-data) -> result<runtime-id, error>

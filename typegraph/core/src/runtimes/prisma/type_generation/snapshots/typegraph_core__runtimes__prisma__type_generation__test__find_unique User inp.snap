@@ -3,7 +3,7 @@ source: typegraph/core/src/runtimes/prisma/type_generation/mod.rs
 expression: "tree::print(types.input)"
 ---
 root: struct #23
-└─ [where]: optional 'QueryUniqueUserWhereInput?' #22
+└─ [where]: optional '_22_QueryUniqueUserWhereInput?' #22
    └─ item: struct 'QueryUniqueUserWhereInput' #21
       └─ [id]: optional #20
          └─ item: integer #11

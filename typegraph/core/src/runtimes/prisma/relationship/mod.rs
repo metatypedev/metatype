@@ -33,6 +33,7 @@ pub enum Side {
 }
 
 impl Side {
+    #[allow(dead_code)]
     pub fn opposite(&self) -> Self {
         match self {
             Side::Left => Side::Right,
@@ -54,17 +55,46 @@ pub struct Relationship {
     pub right: RelationshipModel,
 }
 
+pub enum SideOfModel {
+    Left,
+    Right,
+    Both,
+    None,
+}
+
 impl Relationship {
-    pub fn side_of_model(&self, model_type: TypeId) -> Option<Side> {
-        if self.left.model_type == self.right.model_type {
-            todo!("self relationship");
+    pub fn get_opposite_of(&self, model_id: TypeId, field: &str) -> Option<&RelationshipModel> {
+        use SideOfModel as S;
+        match self.side_of_model(model_id) {
+            S::Both => {
+                if self.left.field == field {
+                    Some(&self.right)
+                } else if self.right.field == field {
+                    Some(&self.left)
+                } else {
+                    unreachable!()
+                }
+            }
+            S::Left => Some(&self.right),
+            S::Right => Some(&self.left),
+            S::None => None,
         }
-        if self.left.model_type == model_type {
-            Some(Side::Left)
+    }
+
+    fn side_of_model(&self, model_type: TypeId) -> SideOfModel {
+        use SideOfModel as S;
+        if self.left.model_type == self.right.model_type {
+            if self.left.model_type == model_type {
+                S::Both
+            } else {
+                S::None
+            }
+        } else if self.left.model_type == model_type {
+            S::Left
         } else if self.right.model_type == model_type {
-            Some(Side::Right)
+            S::Right
         } else {
-            None
+            S::None
         }
     }
 
@@ -92,6 +122,7 @@ pub struct PrismaLink {
     rel_name: Option<String>,
     fkey: Option<bool>,
     target_field: Option<String>,
+    unique: bool,
 }
 
 impl PrismaLink {
@@ -102,6 +133,16 @@ impl PrismaLink {
 
     pub fn fkey(mut self, fk: bool) -> Self {
         self.fkey = Some(fk);
+        self
+    }
+
+    pub fn field(mut self, field: impl Into<String>) -> Self {
+        self.target_field = Some(field.into());
+        self
+    }
+
+    pub fn unique(mut self, unique: bool) -> Self {
+        self.unique = unique;
         self
     }
 
@@ -119,11 +160,6 @@ impl PrismaLink {
         let res = proxy.build()?;
         eprintln!("proxy: {:?}", res);
         Ok(res)
-    }
-
-    pub fn field(mut self, field: impl Into<String>) -> Self {
-        self.target_field = Some(field.into());
-        self
     }
 }
 
@@ -150,7 +186,6 @@ use registry::RelationshipRegistry;
 mod test {
     use super::prisma_linkn;
     use crate::errors::Result;
-    use crate::global_store::with_store;
     use crate::runtimes::prisma::errors;
     use crate::runtimes::prisma::relationship::prisma_link;
     use crate::runtimes::prisma::relationship::registry::RelationshipRegistry;
@@ -283,9 +318,15 @@ mod test {
 
         let mut reg = RelationshipRegistry::default();
         let res = reg.manage(user);
-        assert_eq!(res, Err(errors::ambiguous_side("Profile", "User")));
+        assert_eq!(
+            res,
+            Err(errors::ambiguous_side("Profile", "user", "User", "profile"))
+        );
         let res = reg.manage(profile);
-        assert_eq!(res, Err(errors::ambiguous_side("User", "Profile")));
+        assert_eq!(
+            res,
+            Err(errors::ambiguous_side("User", "profile", "Profile", "user"))
+        );
 
         let user = t::struct_()
             .prop("id", t::integer().as_id(true).build()?)
@@ -304,9 +345,15 @@ mod test {
 
         let mut reg = RelationshipRegistry::default();
         let res = reg.manage(user);
-        assert_eq!(res, Err(errors::ambiguous_side("Profile", "User")));
+        assert_eq!(
+            res,
+            Err(errors::ambiguous_side("Profile", "user", "User", "profile"))
+        );
         let res = reg.manage(profile);
-        assert_eq!(res, Err(errors::ambiguous_side("User", "Profile")));
+        assert_eq!(
+            res,
+            Err(errors::ambiguous_side("User", "profile", "Profile", "user"))
+        );
 
         Ok(())
     }

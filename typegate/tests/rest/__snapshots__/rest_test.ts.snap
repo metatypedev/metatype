@@ -4,6 +4,44 @@ snapshot[`Rest queries in Deno 1`] = `
 {
   components: {
     schemas: {
+      ComplexType: {
+        properties: {
+          a: {
+            title: "integer_4",
+            type: "integer",
+          },
+          b: {
+            properties: {
+              c: {
+                title: "integer_5",
+                type: "integer",
+              },
+            },
+            title: "object_6",
+            type: "object",
+          },
+          d: {
+            title: "string_7",
+            type: "string",
+          },
+          e: {
+            title: "optional_12",
+            type: [
+              "null",
+              "array",
+            ],
+          },
+          f: {
+            enum: [
+              "1",
+              "2.5",
+            ],
+            title: "float_13",
+          },
+        },
+        title: "ComplexType",
+        type: "object",
+      },
       Error: {
         properties: {
           extensions: {
@@ -34,6 +72,36 @@ snapshot[`Rest queries in Deno 1`] = `
           "message",
           "extensions",
         ],
+        type: "object",
+      },
+      Post: {
+        properties: {
+          author: {
+            properties: {
+              id: {
+                title: "integer_0",
+                type: "integer",
+              },
+            },
+            title: "User",
+            type: "object",
+          },
+          id: {
+            title: "integer_2",
+            type: "integer",
+          },
+        },
+        title: "Post",
+        type: "object",
+      },
+      User: {
+        properties: {
+          id: {
+            title: "integer_0",
+            type: "integer",
+          },
+        },
+        title: "User",
         type: "object",
       },
       array_11: {
@@ -96,74 +164,6 @@ snapshot[`Rest queries in Deno 1`] = `
       integer_9: {
         title: "integer_9",
         type: "integer",
-      },
-      object_14: {
-        properties: {
-          a: {
-            title: "integer_4",
-            type: "integer",
-          },
-          b: {
-            properties: {
-              c: {
-                title: "integer_5",
-                type: "integer",
-              },
-            },
-            title: "object_6",
-            type: "object",
-          },
-          d: {
-            title: "string_7",
-            type: "string",
-          },
-          e: {
-            title: "optional_12",
-            type: [
-              "null",
-              "array",
-            ],
-          },
-          f: {
-            enum: [
-              "1",
-              "2.5",
-            ],
-            title: "float_13",
-          },
-        },
-        title: "object_14",
-        type: "object",
-      },
-      object_1: {
-        properties: {
-          id: {
-            title: "integer_0",
-            type: "integer",
-          },
-        },
-        title: "object_1",
-        type: "object",
-      },
-      object_3: {
-        properties: {
-          author: {
-            properties: {
-              id: {
-                title: "integer_0",
-                type: "integer",
-              },
-            },
-            title: "object_1",
-            type: "object",
-          },
-          id: {
-            title: "integer_2",
-            type: "integer",
-          },
-        },
-        title: "object_3",
-        type: "object",
       },
       object_6: {
         properties: {
@@ -256,7 +256,7 @@ snapshot[`Rest queries in Deno 1`] = `
                           title: "float_13",
                         },
                       },
-                      title: "object_14",
+                      title: "ComplexType",
                       type: "object",
                     },
                   },
@@ -328,7 +328,7 @@ snapshot[`Rest queries in Deno 1`] = `
                               type: "integer",
                             },
                           },
-                          title: "object_1",
+                          title: "User",
                           type: "object",
                         },
                         id: {
@@ -336,7 +336,7 @@ snapshot[`Rest queries in Deno 1`] = `
                           type: "integer",
                         },
                       },
-                      title: "object_3",
+                      title: "Post",
                       type: "object",
                     },
                   },
@@ -408,7 +408,7 @@ snapshot[`Rest queries in Deno 1`] = `
                               type: "integer",
                             },
                           },
-                          title: "object_1",
+                          title: "User",
                           type: "object",
                         },
                         id: {
@@ -416,7 +416,7 @@ snapshot[`Rest queries in Deno 1`] = `
                           type: "integer",
                         },
                       },
-                      title: "object_3",
+                      title: "Post",
                       type: "object",
                     },
                   },
@@ -565,6 +565,32 @@ snapshot[`Rest queries in Deno 2`] = `
 snapshot[`Rest schema generator 1`] = `
 {
   refs: Map(7) {
+    "ComplexType" => {
+      properties: {
+        a: {
+          title: "integer_0",
+          type: "integer",
+        },
+        b: {
+          properties: {
+            c: {
+              title: "integer_1",
+              type: "integer",
+            },
+            d: {
+              "\$ref": "#/components/schemas/ComplexType",
+            },
+          },
+          title: "object_3",
+          type: "object",
+        },
+        e: {
+          "\$ref": "#/components/schemas/ComplexType",
+        },
+      },
+      title: "ComplexType",
+      type: "object",
+    },
     "Query" => {
       properties: {
         identity: {
@@ -580,17 +606,17 @@ snapshot[`Rest schema generator 1`] = `
                   type: "integer",
                 },
                 d: {
-                  "\$ref": "#/components/schemas/object_5",
+                  "\$ref": "#/components/schemas/ComplexType",
                 },
               },
               title: "object_3",
               type: "object",
             },
             e: {
-              "\$ref": "#/components/schemas/object_5",
+              "\$ref": "#/components/schemas/ComplexType",
             },
           },
-          title: "object_5",
+          title: "ComplexType",
           type: "object",
         },
       },
@@ -612,36 +638,10 @@ snapshot[`Rest schema generator 1`] = `
           type: "integer",
         },
         d: {
-          "\$ref": "#/components/schemas/object_5",
+          "\$ref": "#/components/schemas/ComplexType",
         },
       },
       title: "object_3",
-      type: "object",
-    },
-    "object_5" => {
-      properties: {
-        a: {
-          title: "integer_0",
-          type: "integer",
-        },
-        b: {
-          properties: {
-            c: {
-              title: "integer_1",
-              type: "integer",
-            },
-            d: {
-              "\$ref": "#/components/schemas/object_5",
-            },
-          },
-          title: "object_3",
-          type: "object",
-        },
-        e: {
-          "\$ref": "#/components/schemas/object_5",
-        },
-      },
-      title: "object_5",
       type: "object",
     },
     "object_6" => {
@@ -659,17 +659,17 @@ snapshot[`Rest schema generator 1`] = `
                   type: "integer",
                 },
                 d: {
-                  "\$ref": "#/components/schemas/object_5",
+                  "\$ref": "#/components/schemas/ComplexType",
                 },
               },
               title: "object_3",
               type: "object",
             },
             e: {
-              "\$ref": "#/components/schemas/object_5",
+              "\$ref": "#/components/schemas/ComplexType",
             },
           },
-          title: "object_5",
+          title: "ComplexType",
           type: "object",
         },
       },
@@ -693,17 +693,17 @@ snapshot[`Rest schema generator 1`] = `
                       type: "integer",
                     },
                     d: {
-                      "\$ref": "#/components/schemas/object_5",
+                      "\$ref": "#/components/schemas/ComplexType",
                     },
                   },
                   title: "object_3",
                   type: "object",
                 },
                 e: {
-                  "\$ref": "#/components/schemas/object_5",
+                  "\$ref": "#/components/schemas/ComplexType",
                 },
               },
-              title: "object_5",
+              title: "ComplexType",
               type: "object",
             },
           },
@@ -733,17 +733,17 @@ snapshot[`Rest schema generator 1`] = `
                       type: "integer",
                     },
                     d: {
-                      "\$ref": "#/components/schemas/object_5",
+                      "\$ref": "#/components/schemas/ComplexType",
                     },
                   },
                   title: "object_3",
                   type: "object",
                 },
                 e: {
-                  "\$ref": "#/components/schemas/object_5",
+                  "\$ref": "#/components/schemas/ComplexType",
                 },
               },
-              title: "object_5",
+              title: "ComplexType",
               type: "object",
             },
           },
@@ -767,17 +767,17 @@ snapshot[`Rest schema generator 1`] = `
               type: "integer",
             },
             d: {
-              "\$ref": "#/components/schemas/object_5",
+              "\$ref": "#/components/schemas/ComplexType",
             },
           },
           title: "object_3",
           type: "object",
         },
         e: {
-          "\$ref": "#/components/schemas/object_5",
+          "\$ref": "#/components/schemas/ComplexType",
         },
       },
-      title: "object_5",
+      title: "ComplexType",
       type: "object",
     },
     2 => {
@@ -795,17 +795,17 @@ snapshot[`Rest schema generator 1`] = `
                   type: "integer",
                 },
                 d: {
-                  "\$ref": "#/components/schemas/object_5",
+                  "\$ref": "#/components/schemas/ComplexType",
                 },
               },
               title: "object_3",
               type: "object",
             },
             e: {
-              "\$ref": "#/components/schemas/object_5",
+              "\$ref": "#/components/schemas/ComplexType",
             },
           },
-          title: "object_5",
+          title: "ComplexType",
           type: "object",
         },
       },
@@ -825,17 +825,17 @@ snapshot[`Rest schema generator 1`] = `
               type: "integer",
             },
             d: {
-              "\$ref": "#/components/schemas/object_5",
+              "\$ref": "#/components/schemas/ComplexType",
             },
           },
           title: "object_3",
           type: "object",
         },
         e: {
-          "\$ref": "#/components/schemas/object_5",
+          "\$ref": "#/components/schemas/ComplexType",
         },
       },
-      title: "object_5",
+      title: "ComplexType",
       type: "object",
     },
     4 => {
@@ -849,7 +849,7 @@ snapshot[`Rest schema generator 1`] = `
           type: "integer",
         },
         d: {
-          "\$ref": "#/components/schemas/object_5",
+          "\$ref": "#/components/schemas/ComplexType",
         },
       },
       title: "object_3",
@@ -874,17 +874,17 @@ snapshot[`Rest schema generator 1`] = `
                   type: "integer",
                 },
                 d: {
-                  "\$ref": "#/components/schemas/object_5",
+                  "\$ref": "#/components/schemas/ComplexType",
                 },
               },
               title: "object_3",
               type: "object",
             },
             e: {
-              "\$ref": "#/components/schemas/object_5",
+              "\$ref": "#/components/schemas/ComplexType",
             },
           },
-          title: "object_5",
+          title: "ComplexType",
           type: "object",
         },
       },

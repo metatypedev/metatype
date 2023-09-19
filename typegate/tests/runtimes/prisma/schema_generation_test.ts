@@ -452,23 +452,22 @@ Meta.test("schema generation", async (t) => {
         `,
       );
 
-      // TODO fix
-      // await assertGeneratedSchema(
-      //   "multiple-self-relationships",
-      //   outdent`
-      //     model Person {
-      //         id String @db.Uuid @id @default(uuid())
-      //         personal_hero Person? @relation(name: "__rel_Person_Person_2", fields: [personal_heroId], references: [id])
-      //         personal_heroId String? @db.Uuid
-      //         hero_of Person? @relation(name: "__rel_Person_Person_2")
-      //         mother Person? @relation(name: "__rel_Person_Person_4", fields: [motherId], references: [id])
-      //         motherId String? @db.Uuid
-      //         children Person[] @relation(name: "__rel_Person_Person_4")
-      //
-      //         @@unique(personal_heroId)
-      //     }
-      //   `,
-      // );
+      await assertGeneratedSchema(
+        "multiple-self-relationships",
+        outdent`
+          model Person {
+              id String @db.Uuid @id @default(uuid())
+              personal_hero Person? @relation(name: "__rel_Person_Person_1", fields: [personal_heroId], references: [id])
+              personal_heroId String? @db.Uuid
+              hero_of Person? @relation(name: "__rel_Person_Person_1")
+              mother Person? @relation(name: "__rel_Person_Person_2", fields: [motherId], references: [id])
+              motherId String? @db.Uuid
+              children Person[] @relation(name: "__rel_Person_Person_2")
+      
+              @@unique(personal_heroId)
+          }
+        `,
+      );
     },
   );
 });
