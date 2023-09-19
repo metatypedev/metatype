@@ -258,10 +258,7 @@ Meta.test("schema generation", async (t) => {
       );
     },
   );
-  //
-  // // // TODO fails optional one-to-one with ambiguous direction
-  // // //
-  // //
+
   await t.should(
     "generate datamodel with semi-implicit one to one relationship",
     async () => {

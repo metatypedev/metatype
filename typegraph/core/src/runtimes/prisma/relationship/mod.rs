@@ -151,6 +151,7 @@ mod test {
     use super::prisma_linkn;
     use crate::errors::Result;
     use crate::global_store::with_store;
+    use crate::runtimes::prisma::errors;
     use crate::runtimes::prisma::relationship::prisma_link;
     use crate::runtimes::prisma::relationship::registry::RelationshipRegistry;
     use crate::t::{self, ConcreteTypeBuilder, TypeBuilder};
@@ -258,13 +259,115 @@ mod test {
             .named("Node")
             .build()?;
 
-        let registry = with_store(|_| -> Result<_> {
-            let mut reg = RelationshipRegistry::default();
-            reg.manage(node)?;
-            Ok(reg)
-        });
+        let mut reg = RelationshipRegistry::default();
+        reg.manage(node)?;
 
-        insta::assert_debug_snapshot!("self relationship", registry);
+        insta::assert_debug_snapshot!("self relationship", reg);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_ambiguous_side() -> Result<(), String> {
+        let user = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("profile", t::proxy("Profile").build()?)
+            .named("User")
+            .build()?;
+
+        let profile = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("user", t::proxy("User").build()?)
+            .named("Profile")
+            .build()?;
+
+        let mut reg = RelationshipRegistry::default();
+        let res = reg.manage(user);
+        assert_eq!(res, Err(errors::ambiguous_side("Profile", "User")));
+        let res = reg.manage(profile);
+        assert_eq!(res, Err(errors::ambiguous_side("User", "Profile")));
+
+        let user = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop(
+                "profile",
+                t::optional(t::proxy("Profile").build()?).build()?,
+            )
+            .named("User")
+            .build()?;
+
+        let profile = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("user", t::optional(t::proxy("User").build()?).build()?)
+            .named("Profile")
+            .build()?;
+
+        let mut reg = RelationshipRegistry::default();
+        let res = reg.manage(user);
+        assert_eq!(res, Err(errors::ambiguous_side("Profile", "User")));
+        let res = reg.manage(profile);
+        assert_eq!(res, Err(errors::ambiguous_side("User", "Profile")));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_conflicting_attributes() -> Result<(), String> {
+        let user = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("profile", prisma_linkn("Profile").fkey(true).build()?)
+            .named("User")
+            .build()?;
+
+        let profile = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("user", prisma_linkn("User").fkey(true).build()?)
+            .named("Profile")
+            .build()?;
+
+        let mut reg = RelationshipRegistry::default();
+        let res = reg.manage(user);
+        assert_eq!(
+            res,
+            Err(errors::conflicting_attributes(
+                "fkey", "Profile", "user", "User", "profile"
+            ))
+        );
+        let res = reg.manage(profile);
+        assert_eq!(
+            res,
+            Err(errors::conflicting_attributes(
+                "fkey", "User", "profile", "Profile", "user"
+            ))
+        );
+
+        let user = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("profile", prisma_linkn("Profile").fkey(false).build()?)
+            .named("User")
+            .build()?;
+
+        let profile = t::struct_()
+            .prop("id", t::integer().as_id(true).build()?)
+            .prop("user", prisma_linkn("User").fkey(false).build()?)
+            .named("Profile")
+            .build()?;
+
+        let mut reg = RelationshipRegistry::default();
+        let res = reg.manage(user);
+        assert_eq!(
+            res,
+            Err(errors::conflicting_attributes(
+                "fkey", "Profile", "user", "User", "profile"
+            ))
+        );
+        let res = reg.manage(profile);
+        assert_eq!(
+            res,
+            Err(errors::conflicting_attributes(
+                "fkey", "User", "profile", "Profile", "user"
+            ))
+        );
 
         Ok(())
     }

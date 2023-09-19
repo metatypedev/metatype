@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use crate::global_store::with_store;
+use crate::runtimes::prisma::errors;
 use crate::runtimes::prisma::type_utils::as_relationship_target;
 use crate::types::{TypeFun, TypeId};
 use crate::{errors::Result, types::Struct};
@@ -210,16 +211,9 @@ impl CandidatePair {
                     (Some(true), Some(false)) => Ok(Self(first, second)),
                     (Some(false), Some(true)) => Ok(Self(second, first)),
                     (Some(true), Some(true)) => {
-                        todo!(
-                            "conflicting fkey: {} and {}",
-                            first.field_name,
-                            second.field_name
-                        )
+                        Err(errors::conflicting_attributes("fkey", &first.model_name, &second.field_name, &second.model_name, &first.field_name))
                     }
-                    (Some(false), Some(false)) => Err(format!(
-                        "no fkey: {} and {}",
-                        first.field_name, second.field_name
-                    )),
+                    (Some(false), Some(false)) => Err(errors::conflicting_attributes("fkey", &first.model_name, &second.field_name, &second.model_name, &first.field_name)),
                     (Some(true), None) => Ok(Self(first, second)),
                     (Some(false), None) => Ok(Self(second, first)),
                     (None, Some(true)) => Ok(Self(second, first)),
@@ -229,14 +223,8 @@ impl CandidatePair {
                         match (first.unique, second.unique) {
                             (true, false) => Ok(Self(first, second)),
                             (false, true) => Ok(Self(second, first)),
-                            (true, true) => Err(format!(
-                                "conflicting unique: {} and {}",
-                                first.field_name, second.field_name
-                            )),
-                            (false, false) => Err(format!(
-                                "no unique: {} and {}",
-                                first.field_name, second.field_name
-                            )),
+                            (true, true) => Err(errors::conflicting_attributes("unique", &first.model_name, &second.field_name, &second.model_name, &first.field_name)),
+                            (false, false) => Err(errors::ambiguous_side(&first.model_name, &second.model_name)),
                         }
                     }
                 }

@@ -49,14 +49,6 @@ pub struct Materializer {
 }
 
 impl Materializer {
-    // fn new(base: wit::BaseMaterializer, data: impl Into<MaterializerData>) -> Self {
-    //     Self {
-    //         runtime_id: base.runtime,
-    //         effect: base.effect,
-    //         data: data.into(),
-    //     }
-    // }
-
     fn deno(data: DenoMaterializer, effect: wit::Effect) -> Self {
         Self {
             runtime_id: with_store_mut(|s| s.get_deno_runtime()),
