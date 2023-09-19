@@ -36,7 +36,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "object",
-        "title": "object_18",
+        "title": "ComplexType",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -179,7 +179,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "object",
-        "title": "object_4",
+        "title": "SomeType",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -192,7 +192,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "array",
-        "title": "array_1",
+        "title": "Two",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -210,7 +210,7 @@ snapshot[`typegraphs creation 1`] = `
       },
       {
         "type": "optional",
-        "title": "optional_3",
+        "title": "_3_SomeType?",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -570,7 +570,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "function",
-        "title": "func_9",
+        "title": "func_10",
         "runtime": 0,
         "policies": [
           0
@@ -625,7 +625,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "function",
-        "title": "func_11",
+        "title": "func_12",
         "runtime": 0,
         "policies": [
           1
@@ -640,7 +640,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "object",
-        "title": "object_6",
+        "title": "User",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -661,7 +661,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "object",
-        "title": "object_8",
+        "title": "Post",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -682,7 +682,7 @@ snapshot[`typegraphs creation 3`] = `
       },
       {
         "type": "function",
-        "title": "func_13",
+        "title": "func_14",
         "runtime": 0,
         "policies": [
           2
@@ -859,7 +859,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "object",
-        "title": "object_18",
+        "title": "ComplexType",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -1002,7 +1002,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "object",
-        "title": "object_4",
+        "title": "SomeType",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -1015,7 +1015,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "array",
-        "title": "array_1",
+        "title": "Two",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -1033,7 +1033,7 @@ snapshot[`typegraphs creation 4`] = `
       },
       {
         "type": "optional",
-        "title": "optional_3",
+        "title": "_3_SomeType?",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -1463,7 +1463,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "object",
-        "title": "object_6",
+        "title": "User",
         "runtime": 0,
         "policies": [],
         "config": {},
@@ -1484,7 +1484,7 @@ snapshot[`typegraphs creation 6`] = `
       },
       {
         "type": "object",
-        "title": "object_8",
+        "title": "Post",
         "runtime": 0,
         "policies": [],
         "config": {},

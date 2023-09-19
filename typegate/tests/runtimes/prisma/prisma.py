@@ -14,7 +14,7 @@ def prisma(g: Graph):
             "name": t.string(),
             "age": t.integer().optional(),
         },
-        name="Record",
+        name="record",
     )
 
     messages = t.struct(
