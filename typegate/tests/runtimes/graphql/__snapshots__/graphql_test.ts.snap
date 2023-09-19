@@ -120,7 +120,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
         "idempotent": true
       },
       "data": {
-        "path": []
+        "path": null
       }
     },
     {
@@ -142,7 +142,7 @@ snapshot[`Typegraph generation with GraphQL runtime 1`] = `
         "idempotent": false
       },
       "data": {
-        "path": []
+        "path": null
       }
     }
   ],
