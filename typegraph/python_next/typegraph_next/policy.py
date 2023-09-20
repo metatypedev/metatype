@@ -26,6 +26,9 @@ class Policy:
     id: int
     name: str
 
+    # class attributes
+    __public: Optional["Policy"] = None
+
     def __init__(self, id: int, name: str):
         self.id = id
         self.name = name
@@ -39,7 +42,10 @@ class Policy:
             raise Exception(res.value)
         mat_id = res.value
 
-        return cls.create("__public", mat_id)
+        if cls.__public is None:
+            cls.__public = cls.create("__public", mat_id)
+
+        return cls.__public
 
     @classmethod
     def context(cls, key: str, check: Union[str, Pattern]) -> "Policy":

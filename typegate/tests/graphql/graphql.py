@@ -1,7 +1,9 @@
-from typegraph import TypeGraph, effects, policies, t
-from typegraph.runtimes.graphql import GraphQLRuntime
+from typegraph_next import typegraph, effects, Policy, t, Graph
+from typegraph_next.runtimes.graphql import GraphQLRuntime
 
-with TypeGraph("graphql") as g:
+
+@typegraph()
+def graphql(g: Graph):
     gql = GraphQLRuntime("https://example.com/api/graphql")
 
     user = t.struct(
@@ -9,11 +11,12 @@ with TypeGraph("graphql") as g:
             "id": t.integer(),
             "email": t.string(),
             "name": t.string(),
-        }
-    ).named("User")
+        },
+        name="User",
+    )
 
-    user_by_id = gql.query(t.struct({"id": t.integer()}), g("User")).add_policy(
-        policies.public()
+    user_by_id = gql.query(t.struct({"id": t.integer()}), t.ref("User")).with_policy(
+        Policy.public()
     )
     update_user = gql.mutation(
         t.struct(
@@ -23,14 +26,14 @@ with TypeGraph("graphql") as g:
                     {
                         "name": t.string().optional(),
                         "email": t.string().optional(),
-                    }
-                )
-                .min(1)
-                .named("UserUpdate"),
+                    },
+                    min=1,
+                    name="UserUpdate",
+                ),
             }
         ),
-        g("User"),
+        t.ref("User"),
         effect=effects.update(idempotent=True),
-    ).add_policy(policies.public())
+    ).with_policy(Policy.public())
 
     g.expose(user=user_by_id, updateUser=update_user)
